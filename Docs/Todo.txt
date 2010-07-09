@@ -1,0 +1,8 @@
+TODO
+----
+
+Start/Endpoints of queries can only start on nodes only. Instead of selecting the nearest node the nearest edge should be selected.
+
+The server part is mostly adapted from the boost http examples. It should be replaced with a self-written front-end
+
+The KD-Tree uses a lot of RAM. An own implementation might be better.

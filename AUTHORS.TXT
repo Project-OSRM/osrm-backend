@@ -1,0 +1,7 @@
+The following people contributed code to the Open Source Routing Machine:
+
+Christian Vetter 
+Dennis Luxen
+
+Note:
+http server ripped from Boost http example 3

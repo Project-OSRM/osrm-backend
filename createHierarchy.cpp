@@ -1,0 +1,130 @@
+/*
+    open source routing machine
+    Copyright (C) Dennis Luxen, 2010
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+//g++ createHierarchy.cpp -fopenmp -Wno-deprecated -o createHierarchy -O3 -march=native -DNDEBUG
+
+#define VERBOSE(x) x
+#define VERBOSE2(x)
+
+#include <climits>
+#include <fstream>
+#include <istream>
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <vector>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+#include "typedefs.h"
+#include "Contractor/GraphLoader.h"
+#include "Contractor/BinaryHeap.h"
+#include "Contractor/Contractor.h"
+#include "Contractor/ContractionCleanup.h"
+#include "Contractor/DynamicGraph.h"
+
+using namespace std;
+
+typedef ContractionCleanup::Edge::EdgeData EdgeData;
+typedef DynamicGraph<EdgeData>::InputEdge GraphEdge;
+
+vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
+
+int main (int argc, char *argv[])
+{
+    if(argc <= 1)
+    {
+        cerr << "usage: " << endl << argv[0] << " <osmr-data>" << endl;
+        exit(-1);
+    }
+    cout << "preprocessing data from input file " << argv[1] << endl;
+
+    ifstream in;
+    in.open (argv[1]);
+    if (!in.is_open()) {
+        cerr << "Cannot open " << argv[1] << endl; exit(-1);
+    }
+    vector<ImportEdge> edgeList;
+    const NodeID n = readOSMRGraphFromStream(in, edgeList, int2ExtNodeMap);
+    in.close();
+
+    char nodeOut[1024];
+    char edgeOut[1024];
+    strcpy(nodeOut, argv[1]);
+    strcpy(edgeOut, argv[1]);
+    strcat(nodeOut, ".nodes");
+    strcat(edgeOut, ".hsgr");
+    ofstream mapOutFile(nodeOut, ios::binary);
+
+    //Serializing the node map.
+    for(NodeID i = 0; i < int2ExtNodeMap->size(); i++)
+    {
+        //mapOutFile.write((char *)&(i), sizeof(NodeID));
+        mapOutFile.write((char *)&(int2ExtNodeMap->at(i)), sizeof(NodeInfo));
+    }
+    mapOutFile.close();
+    int2ExtNodeMap->clear();
+
+    Contractor* contractor = new Contractor( n, edgeList );
+    contractor->Run();
+
+    contractor->checkForAllOrigEdges(edgeList);
+
+    std::vector< ContractionCleanup::Edge > contractedEdges;
+    contractor->GetEdges( contractedEdges );
+
+    ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
+    cleanup->Run();
+
+    std::vector< GraphEdge> cleanedEdgeList;
+    cleanup->GetData(cleanedEdgeList);
+
+    ofstream edgeOutFile(edgeOut, ios::binary);
+
+    //Serializing the edge list.
+    for(std::vector< GraphEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++)
+    {
+        int distance= it->data.distance;
+        assert(distance > 0);
+        bool shortcut= it->data.shortcut;
+        bool forward= it->data.forward;
+        bool backward= it->data.backward;
+        NodeID middle= it->data.middle;
+        NodeID source = it->source;
+        NodeID target = it->target;
+
+        edgeOutFile.write((char *)&(distance), sizeof(int));
+        edgeOutFile.write((char *)&(shortcut), sizeof(bool));
+        edgeOutFile.write((char *)&(forward), sizeof(bool));
+        edgeOutFile.write((char *)&(backward), sizeof(bool));
+        edgeOutFile.write((char *)&(middle), sizeof(NodeID));
+
+        edgeOutFile.write((char *)&(source), sizeof(NodeID));
+        edgeOutFile.write((char *)&(target), sizeof(NodeID));
+    }
+    edgeOutFile.close();
+    cleanedEdgeList.clear();
+
+    delete cleanup;
+    delete contractor;
+    delete int2ExtNodeMap;
+}

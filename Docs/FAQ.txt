@@ -1,0 +1,37 @@
+FAQ
+---
+
+Q: What platforms does OSMR run on?
+A: Virtually any Unix-like platform with g++ installed. It has been developed
+   under Linux and tested on MacOS X 10.6. It should run under Windows as well
+   though the code will need some adjustments.
+   
+Q: What is the workflow to get the engine up and running
+A: Road network extraction->Preprocessing->Startup 
+
+Q: What does OSRM stand for?
+A: It is an abbreviation for Open Source Routing Machine.
+
+Q: What does HSGR stand for?
+A: It is an abbreviation for Hierarchy Search GRaph.
+
+Q: What is the .nodes file?
+A: It is a map that translates between internal and external Node IDs. Remember
+   that external NodeIDs can be arbitrary and non-contigous. Internally the
+   nodes are numbered from 0 to n-1.
+
+Q: The routing engine crashes with a seg-fault
+A: Check the startup parameters.
+
+Q: Something about the route is odd. I know that there is a better path
+A: Most probably it is missing data in the OSM file.
+
+Q: I work for this company that would like to use the code, but we are hesistant
+   because of the license.
+A: Contact me. Probably, we can work something out.
+
+Q: How fast is this thing?
+A: Good question. Here is a number. The engine was able to handle more than
+   2800 requests per Minute on the German road network with the travel time
+   metric on a Core 2 Duo. This also includes transfer of data across a 
+   switched 100MBit/s LAN. So, I guess it's fair to say it's fast.
