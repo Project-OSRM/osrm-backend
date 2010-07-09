@@ -27,11 +27,11 @@ preprocessing runs in three steps, all done by seperate programs.
 
 'extractNetwork file.osm' extracts the road network of an osm file. This is
 necessary, because the osm data is not made to support fast routing out of the
-box. The output of the step is a file called 'file.osmr'
+box. The output of the step is a file called 'file.osrm'
 
 'createHierarchy file.osmr' preprocesses the road network and computes additional
 information that is exploited later to speed up the path computation. The output
-of this step consists of two file 'file.osmr.hsgr' and 'file.osm.hsgr'. The first
+of this step consists of two file 'file.osrm.hsgr' and 'file.osrm.nodes'. The first
 file is the so-called hierarchy that speeds up the path computation while the
 latter one carries (among other things) geographical information.
 
