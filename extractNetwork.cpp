@@ -197,8 +197,9 @@ int main (int argc, char *argv[])
         {
             NodeMap::iterator it = AllNodes.find(UsedNodes[i]);
             assert(it!=AllNodes.end());
-            fout << UsedNodes[i] << " " << it->second.lon << " " << it->second.lat << "\n" << flush;
+            fout << UsedNodes[i] << " " << it->second.lon << " " << it->second.lat << "\n";
         }
+        fout << flush;
         UsedNodes.clear();
         fout << stats.numberOfEdges << endl;
         for(vector<_Way>::size_type i = 0; i < UsedWays.size(); i++)
