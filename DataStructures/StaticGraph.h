@@ -58,8 +58,6 @@ public:
                 ++edge;
             }
             _nodes[node].firstEdge = position; //=edge
-            //            _nodes[node].edges = edge - lastEdge;
-            //            _nodes[node].size =  edge - lastEdge;
             position += edge - lastEdge; //remove
         }
         _edges.resize( position ); //(edge)
@@ -125,15 +123,11 @@ public:
         return smallestEdge;
     }
 
-
 private:
 
     struct _StrNode {
         //index of the first edge
         EdgeIterator firstEdge;
-        //amount of edges
-        //        unsigned edges;
-        //        unsigned size;
     };
 
     struct _StrEdge {

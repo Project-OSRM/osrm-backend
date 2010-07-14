@@ -40,13 +40,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <kdtree++/kdtree.hpp>
 
-typedef KDTree::KDTree<2, duplet, std::pointer_to_binary_function<duplet,int,double> > duplet_tree_type;
+typedef KDTree::KDTree<2, NodeInfo, std::pointer_to_binary_function<NodeInfo,int,int> > KDTreeType;
 
 class NodeInformationHelpDesk{
 public:
     ~NodeInformationHelpDesk();
     NodeInformationHelpDesk() { int2ExtNodeMap = new vector<NodeInfo>();}
-    duplet_tree_type * initKDTree(ifstream& input);
+    KDTreeType * initKDTree(ifstream& input);
 
     NodeID getExternalNodeID(const NodeID node);
     NodeInfo& getExternalNodeInfo(const NodeID node);
@@ -58,15 +58,15 @@ public:
     inline NodeID findNearestNodeIDForLatLon(const int lat, const int lon, NodeCoords<NodeID> * data) const
     {
 
-       duplet dup = *(kdtree->find_nearest(duplet(0, lat, lon)).first);
-       data->id = dup.id;
-       data->lat = dup.d[1];
-       data->lon = dup.d[0];
+       NodeInfo nearestNeighbor = *(kdtree->find_nearest(NodeInfo(lat, lon, 0)).first);
+       data->id = nearestNeighbor.id;
+       data->lat = nearestNeighbor.lat;
+       data->lon = nearestNeighbor.lon;
        return data->id;
     }
 private:
     vector<NodeInfo> * int2ExtNodeMap;
-    duplet_tree_type * kdtree;
+    KDTreeType * kdtree;
 };
 
 //////////////////
@@ -82,24 +82,22 @@ NodeInformationHelpDesk::~NodeInformationHelpDesk(){
 /* @brief: initialize kd-tree and internal->external node id map
  *
  */
-duplet_tree_type * NodeInformationHelpDesk::initKDTree(ifstream& in)
+KDTreeType * NodeInformationHelpDesk::initKDTree(ifstream& in)
 {
-//    NodeID i = 0;
     while(!in.eof())
     {
         NodeInfo b;
         in.read((char *)&b, sizeof(b));
         int2ExtNodeMap->push_back(b);
-       // i++;
     }
     in.close();
 
-    duplet_tree_type * tree = new duplet_tree_type(std::ptr_fun(return_dup));
+    KDTreeType * tree = new KDTreeType(std::ptr_fun(return_dup));
     NodeID id = 0;
     for(vector<NodeInfo>::iterator it = int2ExtNodeMap->begin(); it != int2ExtNodeMap->end(); it++)
     {
-        duplet super_dupre(id, it->lat, it->lon);
-        tree->insert(super_dupre);
+        it->id = id;
+        tree->insert(*it);
         id++;
     }
     kdtree = tree;

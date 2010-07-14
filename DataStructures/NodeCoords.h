@@ -21,13 +21,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef _NODE_COORDS_H
 #define _NODE_COORDS_H
 
+#include <cassert>
 #include <limits>
+
+#include "../typedefs.h"
 
 template<typename NodeT>
 struct NodeCoords {
     typedef unsigned key_type;
 
-
+    typedef int value_type;
     NodeCoords(int _lat, int _lon, NodeT _id) : lat(_lat), lon(_lon), id(_id) {}
     NodeCoords() : lat(UINT_MAX), lon(UINT_MAX), id(UINT_MAX) {}
     int lat;
@@ -51,36 +54,21 @@ bool operator < (const NodeCoords<NodeT> & a, const NodeCoords<NodeT> & b)
     return a.id < b.id;
 }
 
-struct duplet
+inline int return_dup( NodeCoords<unsigned int> n, int k )
 {
-    typedef int value_type;
-
-    inline value_type operator[](int const N) const { return d[N]; }
-
-    inline bool operator==(duplet const& other) const
-                       {
-        return this->d[0] == other.d[0] && this->d[1] == other.d[1];
-                       }
-
-    inline bool operator!=(duplet const& other) const
-                       {
-        return this->d[0] != other.d[0] || this->d[1] != other.d[1];
-                       }
-
-    friend std::ostream & operator<<(std::ostream & o, duplet const& d)
+    switch(k)
     {
-        return o << "(" << d[0] << "," << d[1] << ")";
+    case 0:
+        return n.lat;
+        break;
+    case 1:
+        return n.lon;
+        break;
+    default:
+        assert(false);
+        return UINT_MAX;
+        break;
     }
-    duplet(unsigned _id, int x, int y)
-    {
-        id = _id;
-        d[0] = x;
-        d[1] = y;
-    }
-    unsigned int id;
-    value_type d[2];
-};
-
-inline double return_dup( duplet d, int k ) { return d[k]; }
+}
 
 #endif //_NODE_COORDS_H
