@@ -25,7 +25,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <deque>
 
 #include "BinaryHeap.h"
-#include "DynamicGraph.h"
+//#include "DynamicGraph.h"
 #include "../typedefs.h"
 
 struct _HeapData {
@@ -35,12 +35,12 @@ struct _HeapData {
 
 typedef BinaryHeap< NodeID, int, int, _HeapData, MapStorage< NodeID, unsigned > > _Heap;
 
-template<typename EdgeData, typename KDTST = NodeInformationHelpDesk>
+template<typename EdgeData, typename GraphT, typename KDTST = NodeInformationHelpDesk>
 class SearchEngine {
 private:
-    const DynamicGraph<EdgeData> * _graph;
+    const GraphT * _graph;
 public:
-    SearchEngine(DynamicGraph<EdgeData> * g, KDTST * k) : _graph(g), kdtree(k) {}
+    SearchEngine(GraphT * g, KDTST * k) : _graph(g), kdtree(k) {}
     ~SearchEngine() {}
 
     NodeInfo& getNodeInfo(NodeID id) const
@@ -136,7 +136,7 @@ private:
             _forwardHeap->DeleteAll();
             return;
         }
-        for ( typename DynamicGraph<EdgeData>::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
+        for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
             const NodeID to = _graph->GetTarget(edge);
             const int edgeWeight = _graph->GetEdgeData(edge).distance;
 
@@ -163,9 +163,9 @@ private:
     bool _UnpackEdge( const NodeID source, const NodeID target, std::vector< NodeID >* path ) {
         assert(source != target);
         //find edge first.
-        typename DynamicGraph<EdgeData>::EdgeIterator smallestEdge = SPECIAL_EDGEID;
+        typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
         EdgeWeight smallestWeight = UINT_MAX;
-        for(typename DynamicGraph<EdgeData>::EdgeIterator eit = _graph->BeginEdges(source); eit < _graph->EndEdges(source); eit++)
+        for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(source); eit < _graph->EndEdges(source); eit++)
         {
             //const NodeID target = GetTarget(edge);
             const EdgeWeight weight = _graph->GetEdgeData(eit).distance;
@@ -178,7 +178,7 @@ private:
         }
         if(smallestEdge == SPECIAL_EDGEID)
         {
-            for(typename DynamicGraph<EdgeData>::EdgeIterator eit = _graph->BeginEdges(target); eit < _graph->EndEdges(target); eit++)
+            for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(target); eit < _graph->EndEdges(target); eit++)
             {
                 //const NodeID target = GetTarget(edge);
                 const EdgeWeight weight = _graph->GetEdgeData(eit).distance;

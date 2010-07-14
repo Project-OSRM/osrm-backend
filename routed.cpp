@@ -36,13 +36,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include "HttpServer/server.h"
+#include "DataStructures/StaticGraph.h"
 
 using namespace std;
 
 //typedef google::dense_hash_map<NodeID, NodeInfo> NodeMap;
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
-typedef DynamicGraph<EdgeData>::InputEdge GraphEdge;
-typedef http::server server;
+typedef StaticGraph<EdgeData>::InputEdge GraphEdge;
+typedef http::server<StaticGraph<EdgeData> > server;
 
 //NodeMap * int2ExtNodeMap = new NodeMap();
 
@@ -109,11 +110,11 @@ int main (int argc, char *argv[])
 
     time = get_timestamp();
     cout << "building search graph ..." << flush;
-    DynamicGraph<EdgeData> * graph = new DynamicGraph<EdgeData>(kdtreeService->getNumberOfNodes()-1, edgelist);
+    StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(kdtreeService->getNumberOfNodes()-1, edgelist);
     cout << "checking sanity ..." << flush;
     NodeID numberOfNodes = graph->GetNumberOfNodes();
      for ( NodeID node = 0; node < numberOfNodes; ++node ) {
-         for ( DynamicGraph<EdgeData>::EdgeIterator edge = graph->BeginEdges( node ), endEdges = graph->EndEdges( node ); edge != endEdges; ++edge ) {
+         for ( StaticGraph<EdgeData>::EdgeIterator edge = graph->BeginEdges( node ), endEdges = graph->EndEdges( node ); edge != endEdges; ++edge ) {
              const NodeID start = node;
              const NodeID target = graph->GetTarget( edge );
              const EdgeData& data = graph->GetEdgeData( edge );
@@ -136,7 +137,7 @@ int main (int argc, char *argv[])
      }
      cout << "ok" << endl;
 
-    SearchEngine<EdgeData> * sEngine = new SearchEngine<EdgeData>(graph, kdtreeService);
+    SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, kdtreeService);
     cout << "in " << get_timestamp() - time << "s" << endl;
 
     time = get_timestamp();
@@ -150,7 +151,7 @@ int main (int argc, char *argv[])
         cout << "starting web server ..." << flush;
         // Run server in background thread.
         server s("0.0.0.0", "5000", omp_get_num_procs(), sEngine);
-        boost::thread t(boost::bind(&http::server::run, &s));
+        boost::thread t(boost::bind(&server::run, &s));
         cout << "ok" << endl;
 
         // Restore previous signals.

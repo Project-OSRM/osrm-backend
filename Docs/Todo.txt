@@ -7,6 +7,6 @@ The server part is mostly adapted from the boost http examples. It should be rep
 
 The KD-Tree uses a lot of RAM. An own implementation might be better.
 
-Dynamic Graph shall be replaced with a static one for queries
-
 Use Boost to compress all in-/output streams to the file system
+
+Rework extractor to be fully externalized
