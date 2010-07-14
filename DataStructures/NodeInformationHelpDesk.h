@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-#ifndef KDTREE_H_
+#ifndef NODEINFORMATIONHELPDESK_H_
 #define NODEINFORMATIONHELPDESK_H_
 
 #include <omp.h>
@@ -40,18 +40,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <kdtree++/kdtree.hpp>
 
-typedef KDTree::KDTree<2, NodeInfo, std::pointer_to_binary_function<NodeInfo,int,int> > KDTreeType;
+typedef KDTree::KDTree<2, NodeInfo > KDTreeType;
 
 class NodeInformationHelpDesk{
 public:
     ~NodeInformationHelpDesk();
-    NodeInformationHelpDesk() { int2ExtNodeMap = new vector<NodeInfo>();}
+    NodeInformationHelpDesk() { int2ExtNodeMap = new vector<KDTreeType::iterator>();}
     KDTreeType * initKDTree(ifstream& input);
 
     NodeID getExternalNodeID(const NodeID node);
-    NodeInfo& getExternalNodeInfo(const NodeID node);
-    int getLatitudeOfNode(const NodeID node);
-    int getLongitudeOfNode(const NodeID node);
+    const NodeInfo& getExternalNodeInfo(const NodeID node) const;
+    int getLatitudeOfNode(const NodeID node) const;
+    int getLongitudeOfNode(const NodeID node) const;
 
     NodeID getNumberOfNodes() const { return int2ExtNodeMap->size(); }
 
@@ -65,7 +65,7 @@ public:
        return data->id;
     }
 private:
-    vector<NodeInfo> * int2ExtNodeMap;
+    vector<KDTreeType::iterator> * int2ExtNodeMap;
     KDTreeType * kdtree;
 };
 
@@ -84,56 +84,41 @@ NodeInformationHelpDesk::~NodeInformationHelpDesk(){
  */
 KDTreeType * NodeInformationHelpDesk::initKDTree(ifstream& in)
 {
+    kdtree = new KDTreeType();
+    NodeID id = 0;
     while(!in.eof())
     {
         NodeInfo b;
         in.read((char *)&b, sizeof(b));
-        int2ExtNodeMap->push_back(b);
-    }
-    in.close();
-
-    KDTreeType * tree = new KDTreeType(std::ptr_fun(return_dup));
-    NodeID id = 0;
-    for(vector<NodeInfo>::iterator it = int2ExtNodeMap->begin(); it != int2ExtNodeMap->end(); it++)
-    {
-        it->id = id;
-        tree->insert(*it);
+        b.id = id;
+        KDTreeType::iterator kdit = kdtree->insert(b);
+        int2ExtNodeMap->push_back(kdit);
         id++;
     }
-    kdtree = tree;
-    return tree;
+    in.close();
+//    kdtree->optimise();
+    return kdtree;
 }
 
 NodeID NodeInformationHelpDesk::getExternalNodeID(const NodeID node)
 {
-//    google::dense_hash_map<NodeID, NodeInfo>::iterator temp = int2ExtNodeMap->find(node);
-//    if(temp == int2ExtNodeMap->end())
-//        return UINT_MAX;
-//    return temp->second.id;
-    return int2ExtNodeMap->at(node).id;
+
+    return int2ExtNodeMap->at(node)->id;
 }
 
-NodeInfo& NodeInformationHelpDesk::getExternalNodeInfo(const NodeID node)
+const NodeInfo& NodeInformationHelpDesk::getExternalNodeInfo(const NodeID node) const
 {
-    return int2ExtNodeMap->at(node);
+    return *(int2ExtNodeMap->at(node) );
 }
 
-int NodeInformationHelpDesk::getLatitudeOfNode(const NodeID node)
+int NodeInformationHelpDesk::getLatitudeOfNode(const NodeID node) const
 {
-//    google::dense_hash_map<NodeID, NodeInfo>::iterator temp = int2ExtNodeMap->find(node);
-//    if(temp == int2ExtNodeMap->end())
-//        return UINT_MAX;
-//    return temp->second.lat;
-    return int2ExtNodeMap->at(node).lat;
+    return int2ExtNodeMap->at(node)->lat;
 }
 
-int NodeInformationHelpDesk::getLongitudeOfNode(const NodeID node)
+int NodeInformationHelpDesk::getLongitudeOfNode(const NodeID node) const
 {
-//    google::dense_hash_map<NodeID, NodeInfo>::iterator temp = int2ExtNodeMap->find(node);
-//    if(temp == int2ExtNodeMap->end())
-//        return UINT_MAX;
-//    return temp->second.lon;
-    return int2ExtNodeMap->at(node).lon;
+    return int2ExtNodeMap->at(node)->lon;
 }
 
-#endif /*KDTREE_H_*/
+#endif /*NODEINFORMATIONHELPDESK_H_*/

@@ -25,7 +25,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <deque>
 
 #include "BinaryHeap.h"
-//#include "DynamicGraph.h"
 #include "../typedefs.h"
 
 struct _HeapData {
@@ -43,7 +42,7 @@ public:
     SearchEngine(GraphT * g, KDTST * k) : _graph(g), kdtree(k) {}
     ~SearchEngine() {}
 
-    NodeInfo& getNodeInfo(NodeID id) const
+    const NodeInfo& getNodeInfo(NodeID id) const
     {
         return kdtree->getExternalNodeInfo(id);
     }

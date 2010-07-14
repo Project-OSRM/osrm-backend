@@ -40,12 +40,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 using namespace std;
 
-//typedef google::dense_hash_map<NodeID, NodeInfo> NodeMap;
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef StaticGraph<EdgeData>::InputEdge GraphEdge;
 typedef http::server<StaticGraph<EdgeData> > server;
-
-//NodeMap * int2ExtNodeMap = new NodeMap();
 
 /*
  * TODO: Description of command line arguments
@@ -53,7 +50,7 @@ typedef http::server<StaticGraph<EdgeData> > server;
 
 int main (int argc, char *argv[])
 {
-    double time; // timemeasure
+    double time;
 
     if(argc < 2)
     {

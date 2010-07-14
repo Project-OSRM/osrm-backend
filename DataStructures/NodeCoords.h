@@ -35,17 +35,33 @@ struct NodeCoords {
     NodeCoords() : lat(UINT_MAX), lon(UINT_MAX), id(UINT_MAX) {}
     int lat;
     int lon;
-    unsigned int id;
+    NodeT id;
 
     static NodeCoords<NodeT> min_value()
-    {
+            {
         return NodeCoords<NodeT>(0,0,numeric_limits<NodeT>::min());
-    }
+            }
     static NodeCoords<NodeT> max_value()
-    {
+            {
         return NodeCoords<NodeT>(numeric_limits<int>::max(), numeric_limits<int>::max(), numeric_limits<NodeT>::max());
-    }
+            }
 
+    value_type operator[](size_t n) const
+    {
+        switch(n)
+        {
+        case 0:
+            return lat;
+            break;
+        case 1:
+            return lon;
+            break;
+        default:
+            assert(false);
+            return UINT_MAX;
+            break;
+        }
+    }
 };
 
 template<typename NodeT>
@@ -53,22 +69,4 @@ bool operator < (const NodeCoords<NodeT> & a, const NodeCoords<NodeT> & b)
 {
     return a.id < b.id;
 }
-
-inline int return_dup( NodeCoords<unsigned int> n, int k )
-{
-    switch(k)
-    {
-    case 0:
-        return n.lat;
-        break;
-    case 1:
-        return n.lon;
-        break;
-    default:
-        assert(false);
-        return UINT_MAX;
-        break;
-    }
-}
-
 #endif //_NODE_COORDS_H
