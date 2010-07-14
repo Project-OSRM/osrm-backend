@@ -38,28 +38,90 @@ namespace http {
 
 
 /// Represents a single connection from a client.
+template<typename GraphT>
 class connection
-: public boost::enable_shared_from_this<connection>,
+: public boost::enable_shared_from_this<connection<GraphT> >,
 private boost::noncopyable
 {
 public:
     /// Construct a connection with the given io_service.
     explicit connection(boost::asio::io_service& io_service,
-            request_handler& handler);
+            request_handler<GraphT>& handler)
+    : strand_(io_service),
+      socket_(io_service),
+      request_handler_(handler)
+    {
+    }
 
     /// Get the socket associated with the connection.
-    boost::asio::ip::tcp::socket& socket();
+    boost::asio::ip::tcp::socket& socket()
+    {
+        return socket_;
+    }
 
     /// Start the first asynchronous operation for the connection.
-    void start();
+    void start()
+    {
+        socket_.async_read_some(boost::asio::buffer(buffer_),
+                strand_.wrap(
+                        boost::bind(&connection<GraphT>::handle_read, this->shared_from_this(),
+                                boost::asio::placeholders::error,
+                                boost::asio::placeholders::bytes_transferred)));
+    }
 
 private:
     /// Handle completion of a read operation.
     void handle_read(const boost::system::error_code& e,
-            std::size_t bytes_transferred);
+            std::size_t bytes_transferred)
+    {
+        if (!e)
+        {
+            boost::tribool result;
+            boost::tie(result, boost::tuples::ignore) = request_parser_.parse(
+                    request_, buffer_.data(), buffer_.data() + bytes_transferred);
+
+            if (result)
+            {
+                request_handler_.handle_request(request_, reply_);
+                boost::asio::async_write(socket_, reply_.to_buffers(),
+                        strand_.wrap(
+                                boost::bind(&connection<GraphT>::handle_write, this->shared_from_this(),
+                                        boost::asio::placeholders::error)));
+            }
+            else if (!result)
+            {
+                reply_ = reply::stock_reply(reply::bad_request);
+                boost::asio::async_write(socket_, reply_.to_buffers(),
+                        strand_.wrap(
+                                boost::bind(&connection<GraphT>::handle_write, this->shared_from_this(),
+                                        boost::asio::placeholders::error)));
+            }
+            else
+            {
+                socket_.async_read_some(boost::asio::buffer(buffer_),
+                        strand_.wrap(
+                                boost::bind(&connection<GraphT>::handle_read, this->shared_from_this(),
+                                        boost::asio::placeholders::error,
+                                        boost::asio::placeholders::bytes_transferred)));
+            }
+        }
+    }
 
     /// Handle completion of a write operation.
-    void handle_write(const boost::system::error_code& e);
+    void handle_write(const boost::system::error_code& e)
+    {
+        if (!e)
+        {
+            // Initiate graceful connection closure.
+            boost::system::error_code ignored_ec;
+            socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+        }
+
+        // No new asynchronous operations are started. This means that all shared_ptr
+        // references to the connection object will disappear and the object will be
+        // destroyed automatically after this handler returns. The connection class's
+        // destructor closes the socket.
+    }
 
     /// Strand to ensure the connection's handlers are not called concurrently.
     boost::asio::io_service::strand strand_;
@@ -68,7 +130,7 @@ private:
     boost::asio::ip::tcp::socket socket_;
 
     /// The handler used to process the incoming request.
-    request_handler& request_handler_;
+    request_handler<GraphT>& request_handler_;
 
     /// Buffer for incoming data.
     boost::array<char, 8192> buffer_;
@@ -81,83 +143,8 @@ private:
 
     /// The reply to be sent back to the client.
     reply reply_;
+
 };
-
-typedef boost::shared_ptr<connection> connection_ptr;
-
-
-connection::connection(boost::asio::io_service& io_service,
-        request_handler& handler)
-: strand_(io_service),
-  socket_(io_service),
-  request_handler_(handler)
-{
-}
-
-boost::asio::ip::tcp::socket& connection::socket()
-{
-    return socket_;
-}
-
-void connection::start()
-{
-    socket_.async_read_some(boost::asio::buffer(buffer_),
-            strand_.wrap(
-                    boost::bind(&connection::handle_read, shared_from_this(),
-                            boost::asio::placeholders::error,
-                            boost::asio::placeholders::bytes_transferred)));
-}
-
-void connection::handle_read(const boost::system::error_code& e,
-        std::size_t bytes_transferred)
-{
-    if (!e)
-    {
-        boost::tribool result;
-        boost::tie(result, boost::tuples::ignore) = request_parser_.parse(
-                request_, buffer_.data(), buffer_.data() + bytes_transferred);
-
-        if (result)
-        {
-            request_handler_.handle_request(request_, reply_);
-            boost::asio::async_write(socket_, reply_.to_buffers(),
-                    strand_.wrap(
-                            boost::bind(&connection::handle_write, shared_from_this(),
-                                    boost::asio::placeholders::error)));
-        }
-        else if (!result)
-        {
-            reply_ = reply::stock_reply(reply::bad_request);
-            boost::asio::async_write(socket_, reply_.to_buffers(),
-                    strand_.wrap(
-                            boost::bind(&connection::handle_write, shared_from_this(),
-                                    boost::asio::placeholders::error)));
-        }
-        else
-        {
-            socket_.async_read_some(boost::asio::buffer(buffer_),
-                    strand_.wrap(
-                            boost::bind(&connection::handle_read, shared_from_this(),
-                                    boost::asio::placeholders::error,
-                                    boost::asio::placeholders::bytes_transferred)));
-        }
-    }
-}
-
-void connection::handle_write(const boost::system::error_code& e)
-{
-    if (!e)
-    {
-        // Initiate graceful connection closure.
-        boost::system::error_code ignored_ec;
-        socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
-    }
-
-    // No new asynchronous operations are started. This means that all shared_ptr
-    // references to the connection object will disappear and the object will be
-    // destroyed automatically after this handler returns. The connection class's
-    // destructor closes the socket.
-}
 
 } // namespace http
 

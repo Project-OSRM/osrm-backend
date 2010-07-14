@@ -39,11 +39,12 @@ struct reply;
 struct request;
 
 /// The common handler for all incoming requests.
+template<typename GraphT>
 class request_handler : private boost::noncopyable
 {
 public:
     /// Construct with a directory containing files to be served.
-    explicit request_handler(SearchEngine<EdgeData> * s) : sEngine(s){}
+    explicit request_handler(SearchEngine<EdgeData, GraphT> * s) : sEngine(s){}
 
     /// Handle a request and produce a reply.
     void handle_request(const request& req, reply& rep){
@@ -162,7 +163,7 @@ public:
 
 private:
     //SearchEngine object that is queried
-    SearchEngine<EdgeData> * sEngine;
+    SearchEngine<EdgeData, GraphT> * sEngine;
 };
 
 } // namespace ROUTER

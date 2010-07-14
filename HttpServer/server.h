@@ -38,15 +38,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 namespace http {
 
 /// The top-level class of the HTTP server.
+template<typename GraphT>
 class server: private boost::noncopyable
 {
 public:
     /// Construct the server to listen on the specified TCP address and port, and
     /// serve up files from the given directory.
-    explicit server(const std::string& address, const std::string& port, std::size_t thread_pool_size, SearchEngine<EdgeData, NodeInformationHelpDesk> * s)
+    explicit server(const std::string& address, const std::string& port, std::size_t thread_pool_size, SearchEngine<EdgeData, GraphT, NodeInformationHelpDesk> * s)
     : thread_pool_size_(thread_pool_size),
       acceptor_(io_service_),
-      new_connection_(new connection(io_service_, request_handler_)),
+      new_connection_(new connection<GraphT>(io_service_, request_handler_)),
       request_handler_(s),
       sEngine(s)
     {
@@ -86,13 +87,15 @@ public:
     }
 
 private:
+    typedef boost::shared_ptr<connection<GraphT> > connection_ptr;
+
     /// Handle completion of an asynchronous accept operation.
     void handle_accept(const boost::system::error_code& e)
     {
         if (!e)
         {
             new_connection_->start();
-            new_connection_.reset(new connection(io_service_, request_handler_));
+            new_connection_.reset(new connection<GraphT>(io_service_, request_handler_));
             acceptor_.async_accept(new_connection_->socket(),
                     boost::bind(&server::handle_accept, this,
                             boost::asio::placeholders::error));
@@ -112,10 +115,10 @@ private:
     connection_ptr new_connection_;
 
     /// The handler for all incoming requests.
-    request_handler request_handler_;
+    request_handler<GraphT> request_handler_;
 
     /// The object to query the Routing Engine
-    SearchEngine<EdgeData> * sEngine;
+    SearchEngine<EdgeData, GraphT> * sEngine;
 
 };
 
