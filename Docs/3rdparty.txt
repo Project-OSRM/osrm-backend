@@ -3,3 +3,4 @@ Third Party Libraries:
 Boost		1.37+
 kdtree++	0.7+	(0.62 does not work with g++ 4.0+)
 sparsehash 	1.4+
+stxxl		1.2.1+

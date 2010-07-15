@@ -35,3 +35,10 @@ A: Good question. Here is a number. The engine was able to handle more than
    2800 requests per Minute on the German road network with the travel time
    metric on a Core 2 Duo. This also includes transfer of data across a 
    switched 100MBit/s LAN. So, I guess it's fair to say it's fast.
+   
+Q: What is the difference between extractNetwork and extractLargeNetwork?
+A: extractNetwork does all of its magic in RAM, while extractLargeNetwork uses the
+   stxxl library to store the data in external memory. Use the first one for small
+   networks, but beware of running out of RAM. Swapping is the kiss of death. For
+   larger networks use extractLargeNetwork. It will be somewhat slower on the 
+   smaller files, but way faster with large ones like the planet file.
