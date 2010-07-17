@@ -52,12 +52,7 @@ struct _Stats {
     NodeID numberOfNodes;
     NodeID numberOfEdges;
     NodeID numberOfWays;
-    //    NodeID numberOfPlaces;
-    //    NodeID numberOfOutlines;
     NodeID numberOfMaxspeed;
-    //    NodeID numberOfZeroSpeed;
-    //    NodeID numberOfDefaultCitySpeed;
-    //    NodeID numberOfCityEdges;
 };
 
 struct Settings {
