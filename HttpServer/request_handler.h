@@ -53,7 +53,6 @@ public:
             std::string command;
             std::size_t first_amp_pos = request.find_first_of("&");
             command = request.substr(1,first_amp_pos-1);
-//            cout << "command: " << command << endl;
             if(command == "locate")
             {
                 std::size_t last_amp_pos = request.find_last_of("&");
@@ -69,7 +68,7 @@ public:
 
                 std::stringstream out1;
                 out1 << setprecision(10);
-                out1 << "<name>Nearest Place in map to " << lat/100000. << "," << lon/10000. << ": node with id " << start << "</name>";
+                out1 << "<name>Nearest Place in map to " << lat/100000. << "," << lon/100000. << ": node with id " << start << "</name>";
                 rep.content.append(out1.str());
                 rep.content.append("<Point>");
 
