@@ -30,11 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <google/sparse_hash_map>
 
-#include <stxxl/mng>
-#include <stxxl/ksort>
-#include <stxxl/sort>
-#include <stxxl/vector>
-#include <stxxl/bits/io/syscall_file.h>
+#include <stxxl.h>
 
 #include "typedefs.h"
 #include "DataStructures/extractorStructs.h"
