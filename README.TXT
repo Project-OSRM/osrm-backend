@@ -10,13 +10,15 @@ dependencies are installed:
  - sparsehash   1.4+
  - g++			4.4+
  - libxml2
- - make 
+ - scons 		1.20
+ - stxxl		1.2.1+
 
-Once the dependencies are properly installed running 'make' should build the 
-binaries. The Makefile has been built for Ubuntu 10.04, but it should work 
-under any recent Linux. It is possible to build and run the binaries under
-OS X, but for the time being manual compilation is required. Nevertheless,
-the code should compile under any recent flavor of UNIX.
+Building the binaries is done by using scons. It should check for required
+libraries and header files and report missing ones.
+
+Once the dependencies are properly installed running 'scons' should build the 
+binaries. The Sconstruct has been built for Ubuntu 10.04, but it should work 
+under any recent Linux. 
 
 Running the Server
 ---
