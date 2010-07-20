@@ -18,7 +18,7 @@ else:  #Mac OS X
 env.Append(CCFLAGS = ' -O3')
 print "Compiling with: ", env['CC']
 conf = Configure(env)
-if not conf.CheckCC():
+if not conf.CheckCXX():
 	print "No suitable C++ Compiler installed"
 	Exit(-1)
 if not conf.CheckHeader('omp.h'):
