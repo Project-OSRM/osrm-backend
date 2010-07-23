@@ -74,7 +74,7 @@ public:
 
                 std::stringstream out2;
                 out2 << setprecision(10);
-                out2 << "<coordinates>" << data->lat / 100000. << "," << data->lon / 100000.  << "</coordinates>";
+                out2 << "<coordinates>" << data->lon / 100000. << "," << data->lat / 100000.  << "</coordinates>";
                 rep.content.append(out2.str());
                 rep.content.append("</Point>");
                 rep.content.append("</Placemark>");
