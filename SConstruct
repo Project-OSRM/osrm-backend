@@ -4,25 +4,30 @@ import os
 import sys
 
 AddOption('--cxx', dest='cxx', type='string', nargs=1, action='store', metavar='STRING', help='C++ Compiler')
-AddOption('--verbosity', dest='cxx', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
+AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
+AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
 env = Environment(COMPILER = GetOption('cxx'))
-if not GetOption('cxx') == '':
-	env.Replace(CXX = GetOption('cxx'))
+if GetOption('cxx') is None:
+    #default Compiler
+    print 'Using default C++ Compiler: ', env['CXX']
+else:
+    print 'Using user supplied C++ Compiler: ', env['CXX']
+    env.Replace(CXX = GetOption('cxx'))
+
 if sys.platform == 'win32':
-    #SCons really wants to use Microsoft compiler :D
-    print "Compiling has not been done on Windows"
+    #SCons really wants to use Microsoft compiler
+    print "Compiling is not yet supported on Windows"
     Exit(-1)
 else:  #Mac OS X
     if sys.platform == 'darwin':
         print "Compiling is experimental on Mac"
         env.Append(CPPPATH = ['/opt/local/include/', '/opt/local/include/libxml2'])
 	env.Append(LIBPATH = ['/opt/local/lib'])
-	#env.Replace(CC = "g++-mp-4.4") 
     else:
         env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 
 env.Append(CCFLAGS = ' -O3')
-print "Compiling with: ", env['CXX']
+#print "Compiling with: ", env['CXX']
 conf = Configure(env)
 if not conf.CheckCXX():
 	print "No suitable C++ Compiler installed"
