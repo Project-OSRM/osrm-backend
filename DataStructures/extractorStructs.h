@@ -24,23 +24,23 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cmath>
 
 /*     Default Speed Profile:
-        motorway        120
-        motorway_link   80
-        trunk           100
-        trunk_link      80
-        secondary       100
+        motorway        110
+        motorway_link   90
+        trunk           90
+        trunk_link      70
+        primary         70
+        primary_link    60
+        secondary       60
         secondary_link  50
-        primary         100
-        primary_link    50
-        tertiary        100
+        tertiary        55
         unclassified    50
-        residential     50
-        living_street   30
-        service         20
+        residential     40
+        living_street   10
+        service         30
  */
 
-string names[13] = { "motorway", "motorway_link", "trunk", "trunk_link", "secondary", "secondary_link", "primary", "primary_link", "tertiary", "unclassified", "residential", "living_street", "service" };
-double speeds[13] = { 120, 80, 100, 80, 100, 50, 100, 50, 100, 50, 50 , 30, 20};
+string names[13] = { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "unclassified", "residential", "living_street", "service" };
+double speeds[13] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 50, 40 , 10, 30};
 
 struct _Node : NodeInfo{
 	bool trafficSignal;
