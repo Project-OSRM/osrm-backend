@@ -16,11 +16,31 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef EXTRACTORSTRUCTS_H_
 #define EXTRACTORSTRUCTS_H_
 
+#include <cmath>
+
+/*     Default Speed Profile:
+        motorway        120
+        motorway_link   80
+        trunk           100
+        trunk_link      80
+        secondary       100
+        secondary_link  50
+        primary         100
+        primary_link    50
+        tertiary        100
+        unclassified    50
+        residential     50
+        living_street   30
+        service         20
+ */
+
+string names[13] = { "motorway", "motorway_link", "trunk", "trunk_link", "secondary", "secondary_link", "primary", "primary_link", "tertiary", "unclassified", "residential", "living_street", "service" };
+double speeds[13] = { 120, 80, 100, 80, 100, 50, 100, 50, 100, 50, 50 , 30, 20};
 
 struct _Node : NodeInfo{
 	bool trafficSignal;

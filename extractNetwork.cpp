@@ -49,25 +49,7 @@ int main (int argc, char *argv[])
         exit(-1);
     }
     cout << "reading input file. This may take some time ..." << flush;
-    /*
-     Default Speed Profile:
-        motorway        120
-        motorway_link   80
-        trunk           100
-        trunk_link      80
-        secondary       100
-        secondary_link  50
-        primary         100
-        primary_link    50
-        tertiary        100
-        unclassified    50
-        residential     50
-        living_street   30
-        service         20
-     */
 
-    string names[13] = { "motorway", "motorway_link", "trunk", "trunk_link", "secondary", "secondary_link", "primary", "primary_link", "tertiary", "unclassified", "residential", "living_street", "service" };
-    double speeds[13] = { 120, 80, 100, 80, 100, 50, 100, 50, 100, 50, 50 , 30, 20};
     settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+13);
     settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+13);
 
