@@ -51,6 +51,12 @@ if not conf.CheckLib('boost_thread'):
 	if not conf.CheckLib('boost_thread-mt'):
 		print "boost thread library not found. Exiting"
 		Exit(-1)
+	else:
+		env.Append(CCFLAGS = ' -lboost_thread-mt')
+		env.Append(LINKFLAGS = ' -lboost_thread-mt')
+else:
+	env.Append(CCFLAGS = ' -lboost_thread-mt')
+	env.Append(LINKFLAGS = ' -lboost_thread-mt')
 if not conf.CheckCXXHeader('boost/thread.hpp'):
 	print "boost thread header not found. Exiting"
 	Exit(-1)
@@ -66,9 +72,6 @@ if not conf.CheckCXXHeader('boost/noncopyable.hpp'):
 if not conf.CheckCXXHeader('boost/shared_ptr.hpp'):
 	print "boost/shared_ptr.hpp not found. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('kdtree++/kdtree.hpp'):
-	print "kdtree++/kdtree.hpp not found. Exiting"
-	Exit(-1)
 if not conf.CheckLib('stxxl'):
 	print "stxxl library not found. Exiting"
 	Exit(-1)
@@ -78,8 +81,8 @@ env.Append(LINKFLAGS = ' -fopenmp')
 env.Program("extractNetwork.cpp")
 env.Program("extractLargeNetwork.cpp")	
 env.Program("createHierarchy.cpp")
-env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_thread -lboost_system')
-env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_thread -lboost_system')
+env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system')
+env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system')
 env.Program("routed.cpp")
 env = conf.Finish()
 
