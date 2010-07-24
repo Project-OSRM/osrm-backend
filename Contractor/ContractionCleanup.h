@@ -109,10 +109,10 @@ public:
         cout << "Postprocessing Time: " << time << " s" << endl;
     }
 
-    template< class Edge >
-    void GetData( std::vector< Edge >& edges ) {
+    template< class EdgeT >
+    void GetData( std::vector< EdgeT >& edges ) {
         for ( int edge = 0, endEdges = ( int ) _graph.size(); edge != endEdges; ++edge ) {
-            Edge newEdge;
+            EdgeT newEdge;
             newEdge.source = _graph[edge].source;
             newEdge.target = _graph[edge].target;
 
