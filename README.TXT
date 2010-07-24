@@ -6,15 +6,19 @@ installing dependencies and running make should suffic. Make sure the following
 dependencies are installed:
 
  - Boost		1.37+
- - kdtree++	    0.7+ (0.62 does not work with g++ 4.0+)
  - sparsehash   1.4+
- - g++			4.4+
- - libxml2
- - scons 		1.20
+ - g++			4.2+ (with warnings and unsupported), 4.4+
+ - libxml2		2.7+
+ - scons 		1.20+
  - stxxl		1.2.1+
 
 Building the binaries is done by using scons. It should check for required
-libraries and header files and report missing ones.
+libraries and header files and report missing ones.The Scons script accepts
+two optional parameters:
+
+--cxx=XYZ lets you specify to use C++ compiler XYZ[[BR]]
+--stxxlroot=/path/to/stxxl lets you specify the path to the root directory 
+          of the stxxl library if it's installed in a non default location
 
 Once the dependencies are properly installed running 'scons' should build the 
 binaries. The Sconstruct has been built for Ubuntu 10.04, but it should work 
