@@ -215,9 +215,6 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings, _Stats& sta
 							}
 						}
 					} else {
-						//                        string key( ( const char* ) k );
-						//                        int index = -1;// settings.accessList.indexOf( key );
-						//                        if ( index != -1 ) { //&& index < way.accessPriority ) {
 						if ( xmlStrEqual( value, ( const xmlChar* ) "private" ) == 1
 								|| xmlStrEqual( value, ( const xmlChar* ) "no" ) == 1
 								|| xmlStrEqual( value, ( const xmlChar* ) "agricultural" ) == 1
@@ -233,7 +230,6 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings, _Stats& sta
 						) {
 							way.access = true;
 						}
-						//                        }
 					}
 
 					if ( k != NULL )
@@ -248,7 +244,6 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings, _Stats& sta
 					xmlFree( ref );
 				}
 			}
-
 			xmlFree( childName );
 		}
 	}
@@ -317,7 +312,6 @@ _Node _ReadXMLNode( xmlTextReaderPtr& inputReader ) {
 	return node;
 }
 
-
 double ApproximateDistance( const int lat1, const int lon1, const int lat2, const int lon2 ) {
 	static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
 	///Earth's quatratic mean radius for WGS-84
@@ -332,6 +326,5 @@ double ApproximateDistance( const int lat1, const int lon1, const int lat2, cons
 	double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
 	return EARTH_RADIUS_IN_METERS * distanceArc;
 }
-
 
 #endif /* EXTRACTORSTRUCTS_H_ */
