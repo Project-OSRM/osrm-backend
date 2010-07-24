@@ -4,6 +4,7 @@ import os
 import sys
 
 AddOption('--cxx', dest='cxx', type='string', nargs=1, action='store', metavar='STRING', help='C++ Compiler')
+AddOption('--stxxlroot', dest='stxxlroot', type='string', nargs=1, action='store', metavar='STRING', help='root directory of STXXL')
 AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
 AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
 env = Environment(COMPILER = GetOption('cxx'))
@@ -13,7 +14,10 @@ if GetOption('cxx') is None:
 else:
     print 'Using user supplied C++ Compiler: ', env['CXX']
     env.Replace(CXX = GetOption('cxx'))
-
+if GetOption('stxxlroot') is not None:
+   env.Append(CPPPATH = GetOption('stxxlroot')+'/include')
+   env.Append(LIBPATH = GetOption('stxxlroot')+'/lib')
+   print 'STXXLROOT = ', GetOption('stxxlroot')
 if sys.platform == 'win32':
     #SCons really wants to use Microsoft compiler
     print "Compiling is not yet supported on Windows"
