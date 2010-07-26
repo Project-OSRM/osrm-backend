@@ -2,7 +2,7 @@ Compilation
 ---
 
 Compiling the source code is easy. If you are running a decent linux 
-installing dependencies and running make should suffic. Make sure the following
+installing dependencies and running make should suffice. Make sure the following
 dependencies are installed:
 
  - Boost		1.37+
