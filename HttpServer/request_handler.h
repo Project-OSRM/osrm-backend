@@ -36,7 +36,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 namespace http {
 
 struct reply;
-struct request;
+struct Request;
 
 /// The common handler for all incoming requests.
 template<typename GraphT>
@@ -47,7 +47,7 @@ public:
     explicit request_handler(SearchEngine<EdgeData, GraphT> * s) : sEngine(s){}
 
     /// Handle a request and produce a reply.
-    void handle_request(const request& req, reply& rep){
+    void handle_request(const Request& req, reply& rep){
         try {
             std::string request(req.uri);
             std::string command;
@@ -152,7 +152,7 @@ public:
                 rep.headers[2].value = "attachment; filename=\"route.kml\"";
                 return;
             }
-            rep = reply::stock_reply(reply::not_found);
+            rep = reply::stock_reply(reply::bad_request);
             return;
         } catch(std::exception& e)
         {
