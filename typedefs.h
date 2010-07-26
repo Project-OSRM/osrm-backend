@@ -25,6 +25,10 @@ using namespace std;
 
 #define VERBOSE(x) x
 #define VERBOSE2(x)
+#ifdef STXXL_VERBOSE_LEVEL
+#undef STXXL_VERBOSE_LEVEL
+#endif
+#define STXXL_VERBOSE_LEVEL -100
 
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
