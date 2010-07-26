@@ -39,21 +39,21 @@ struct NodeCoords {
 
     static NodeCoords<NodeT> min_value()
             {
-        return NodeCoords<NodeT>(0,0,numeric_limits<NodeT>::min());
+        return NodeCoords<NodeT>(-90*100000,-180*100000,numeric_limits<NodeT>::min());
             }
     static NodeCoords<NodeT> max_value()
             {
-        return NodeCoords<NodeT>(numeric_limits<int>::max(), numeric_limits<int>::max(), numeric_limits<NodeT>::max());
+        return NodeCoords<NodeT>(90*100000, 180*100000, numeric_limits<NodeT>::max());
             }
 
     value_type operator[](size_t n) const
     {
         switch(n)
         {
-        case 0:
+        case 1:
             return lat;
             break;
-        case 1:
+        case 0:
             return lon;
             break;
         default:
@@ -63,10 +63,4 @@ struct NodeCoords {
         }
     }
 };
-
-template<typename NodeT>
-bool operator < (const NodeCoords<NodeT> & a, const NodeCoords<NodeT> & b)
-{
-    return a.id < b.id;
-}
 #endif //_NODE_COORDS_H

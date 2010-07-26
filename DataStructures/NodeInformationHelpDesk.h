@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef NODEINFORMATIONHELPDESK_H_
 #define NODEINFORMATIONHELPDESK_H_
@@ -37,88 +37,87 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 #include "../typedefs.h"
+#include "StaticKDTree.h"
 
-#include <kdtree++/kdtree.hpp>
-
-typedef KDTree::KDTree<2, NodeInfo > KDTreeType;
+typedef KDTree::StaticKDTree<2, int, NodeID> KDTreeType;
 
 class NodeInformationHelpDesk{
 public:
-    ~NodeInformationHelpDesk();
-    NodeInformationHelpDesk() { int2ExtNodeMap = new vector<KDTreeType::iterator>();}
-    KDTreeType * initKDTree(ifstream& input);
+	NodeInformationHelpDesk() { int2ExtNodeMap = new vector<KDTreeType::InputPoint>();}
+	KDTreeType * initKDTree(ifstream& input);
 
-    NodeID getExternalNodeID(const NodeID node);
-    const NodeInfo& getExternalNodeInfo(const NodeID node) const;
-    int getLatitudeOfNode(const NodeID node) const;
-    int getLongitudeOfNode(const NodeID node) const;
+	NodeID getExternalNodeID(const NodeID node);
+	void getExternalNodeInfo(const NodeID node, NodeInfo * info) const;
+	int getLatitudeOfNode(const NodeID node) const;
+	int getLongitudeOfNode(const NodeID node) const;
 
-    NodeID getNumberOfNodes() const { return int2ExtNodeMap->size(); }
+	NodeID getNumberOfNodes() const { return int2ExtNodeMap->size(); }
 
-    inline NodeID findNearestNodeIDForLatLon(const int lat, const int lon, NodeCoords<NodeID> * data) const
-    {
-
-       NodeInfo nearestNeighbor = *(kdtree->find_nearest(NodeInfo(lat, lon, 0)).first);
-       data->id = nearestNeighbor.id;
-       data->lat = nearestNeighbor.lat;
-       data->lon = nearestNeighbor.lon;
-       return data->id;
-    }
+	inline NodeID findNearestNodeIDForLatLon(const int lat, const int lon, NodeCoords<NodeID> * data) const
+	{
+		KDTreeType::InputPoint i;
+		KDTreeType::InputPoint o;
+		i.coordinates[0] = lat;
+		i.coordinates[1] = lon;
+		kdtree->NearestNeighbor(&o, i);
+		data->id = o.data;
+		data->lat = o.coordinates[0];
+		data->lon = o.coordinates[1];
+		return data->id;
+	}
 private:
-    vector<KDTreeType::iterator> * int2ExtNodeMap;
-    KDTreeType * kdtree;
+	vector<KDTreeType::InputPoint> * int2ExtNodeMap;
+	KDTreeType * kdtree;
 };
 
 //////////////////
 //implementation//
 //////////////////
 
-NodeInformationHelpDesk::~NodeInformationHelpDesk(){
-    //	delete graph;
-    //	delete calc;
-    //	delete c;
-}
-
 /* @brief: initialize kd-tree and internal->external node id map
  *
  */
 KDTreeType * NodeInformationHelpDesk::initKDTree(ifstream& in)
 {
-    kdtree = new KDTreeType();
-    NodeID id = 0;
-    while(!in.eof())
-    {
-        NodeInfo b;
-        in.read((char *)&b, sizeof(b));
-        b.id = id;
-        KDTreeType::iterator kdit = kdtree->insert(b);
-        int2ExtNodeMap->push_back(kdit);
-        id++;
-    }
-    in.close();
-//    kdtree->optimise();
-    return kdtree;
+	NodeID id = 0;
+	while(!in.eof())
+	{
+		NodeInfo b;
+		in.read((char *)&b, sizeof(b));
+		b.id = id;
+		KDTreeType::InputPoint p;
+		p.coordinates[0] = b.lat;
+		p.coordinates[1] = b.lon;
+		p.data = id;
+		int2ExtNodeMap->push_back(p);
+		id++;
+	}
+	in.close();
+	kdtree = new KDTreeType(int2ExtNodeMap);
+	return kdtree;
 }
 
 NodeID NodeInformationHelpDesk::getExternalNodeID(const NodeID node)
 {
 
-    return int2ExtNodeMap->at(node)->id;
+	return int2ExtNodeMap->at(node).data;
 }
 
-const NodeInfo& NodeInformationHelpDesk::getExternalNodeInfo(const NodeID node) const
+void NodeInformationHelpDesk::getExternalNodeInfo(const NodeID node, NodeInfo * info) const
 {
-    return *(int2ExtNodeMap->at(node) );
+	info->id = int2ExtNodeMap->at(node).data;
+	info->lat = int2ExtNodeMap->at(node).coordinates[0];
+	info->lon = int2ExtNodeMap->at(node).coordinates[1];
 }
 
 int NodeInformationHelpDesk::getLatitudeOfNode(const NodeID node) const
 {
-    return int2ExtNodeMap->at(node)->lat;
+	return int2ExtNodeMap->at(node).coordinates[0];
 }
 
 int NodeInformationHelpDesk::getLongitudeOfNode(const NodeID node) const
 {
-    return int2ExtNodeMap->at(node)->lon;
+	return int2ExtNodeMap->at(node).coordinates[1];
 }
 
 #endif /*NODEINFORMATIONHELPDESK_H_*/

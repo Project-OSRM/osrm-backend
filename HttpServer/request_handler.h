@@ -126,14 +126,16 @@ public:
                 rep.content.append("<coordinates>\n");
                 if(distance != std::numeric_limits<unsigned int>::max())
                 {   //A route has been found
+                	NodeInfo * info = new NodeInfo();
                     for(vector<NodeID>::iterator it = path->begin(); it != path->end(); it++)
                     {
-                        NodeInfo info = sEngine-> getNodeInfo(*it);
+                        sEngine-> getNodeInfo(*it, info);
                         stringstream nodeout;
                         nodeout << std::setprecision(10);
-                        nodeout << info.lon/100000. << "," << info.lat/100000. << " " << endl;
+                        nodeout << info->lon/100000. << "," << info->lat/100000. << " " << endl;
                         rep.content.append(nodeout.str());
                     }
+                    delete info;
                 }
                 rep.content.append("</coordinates>");
                 rep.content.append("</LineString>");
@@ -164,7 +166,6 @@ private:
     //SearchEngine object that is queried
     SearchEngine<EdgeData, GraphT> * sEngine;
 };
-
-} // namespace ROUTER
+}
 
 #endif // HTTP_ROUTER_REQUEST_HANDLER_HPP

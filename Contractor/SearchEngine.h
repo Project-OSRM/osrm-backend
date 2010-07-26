@@ -39,23 +39,23 @@ class SearchEngine {
 private:
     const GraphT * _graph;
 public:
-    SearchEngine(GraphT * g, KDTST * k) : _graph(g), kdtree(k) {}
+    SearchEngine(GraphT * g, KDTST * k) : _graph(g), nodeHelpDesk(k) {}
     ~SearchEngine() {}
 
-    const NodeInfo& getNodeInfo(NodeID id) const
+    const void getNodeInfo(NodeID id, NodeInfo * info) const
     {
-        return kdtree->getExternalNodeInfo(id);
+    	nodeHelpDesk->getExternalNodeInfo(id, info);
     }
 
     unsigned int numberOfNodes() const
     {
-        return kdtree->getNumberOfNodes();
+        return nodeHelpDesk->getNumberOfNodes();
     }
 
     unsigned int ComputeRoute(NodeID start, NodeID target, vector<NodeID> * path)
     {
-        _Heap * _forwardHeap = new _Heap(kdtree->getNumberOfNodes());
-        _Heap * _backwardHeap = new _Heap(kdtree->getNumberOfNodes());
+        _Heap * _forwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
+        _Heap * _backwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
         NodeID middle = ( NodeID ) 0;
         unsigned int _upperbound = std::numeric_limits<unsigned int>::max();
         _forwardHeap->Insert(start, 0, start);
@@ -93,16 +93,10 @@ public:
             packedPath.push_back( pathNode );
         }
 
-        //        for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
-        //        {
-        //            cout << packedPath[i] << endl;
-        //        }
-
         // push start node explicitely
         path->push_back(packedPath[0]);
         for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
         {
-            //            path->push_back(*it);
             _UnpackEdge(packedPath[i], packedPath[i+1], path);
         }
 
@@ -115,10 +109,10 @@ public:
 
     unsigned int findNearestNodeForLatLon(const int lat, const int lon, NodeCoords<NodeID> * data) const
     {
-        return kdtree->findNearestNodeIDForLatLon(  lat,  lon, data);
+        return nodeHelpDesk->findNearestNodeIDForLatLon(  lat,  lon, data);
     }
 private:
-    KDTST * kdtree;
+    KDTST * nodeHelpDesk;
 
     void _RoutingStep(_Heap * _forwardHeap, _Heap *_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound)
     {
@@ -189,7 +183,6 @@ private:
                 }
             }
         }
-
 
         assert(smallestWeight != SPECIAL_EDGEID);
 
