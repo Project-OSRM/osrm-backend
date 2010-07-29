@@ -63,7 +63,6 @@ public:
         _edges.resize( position ); //(edge)
         edge = 0;
         for ( NodeIterator node = 0; node < _numNodes; ++node ) {
-            //            for ( EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node].firstEdge + _nodes[node].edges; i != e; ++i ) {
             for ( EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
                 _edges[i].target = graph[edge].target;
                 _edges[i].data = graph[edge].data;
