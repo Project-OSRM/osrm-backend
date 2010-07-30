@@ -121,7 +121,6 @@ int main (int argc, char *argv[])
             name.append(".osrm");
         }
 
-
         ofstream fout;
         fout.open(name.c_str());
 

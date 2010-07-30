@@ -29,8 +29,10 @@ else:  #Mac OS X
 	env.Append(LIBPATH = ['/opt/local/lib'])
     else:
         env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
-
-env.Append(CCFLAGS = ' -O3')
+if GetOption('buildconfiguration') == 'debug':
+	env.Append(CCFLAGS = ' -g3')
+else:
+	env.Append(CCFLAGS = ' -O3')
 #print "Compiling with: ", env['CXX']
 conf = Configure(env)
 if not conf.CheckCXX():
