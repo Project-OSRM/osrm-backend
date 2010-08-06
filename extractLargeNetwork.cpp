@@ -209,7 +209,7 @@ int main (int argc, char *argv[])
 		cout << "ok, after " << get_timestamp() - time << "s" << endl;
 		time = get_timestamp();
 
-		cout << "writing confirmed ways ..." << endl;
+		cout << "writing confirmed ways ..." << flush;
 
 		for(STXXLEdgeVector::iterator eit = confirmedEdges.begin(); eit != confirmedEdges.end(); eit++)
 		{
