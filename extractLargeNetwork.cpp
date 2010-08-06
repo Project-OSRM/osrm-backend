@@ -37,224 +37,231 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 using namespace std;
 typedef google::dense_hash_map<NodeID, _Node> NodeMap;
+typedef stxxl::vector<NodeID> STXXLNodeIDVector;
+typedef stxxl::vector<_Node> STXXLNodeVector;
+typedef stxxl::vector<_Edge> STXXLEdgeVector;
 
-_Stats stats;
 Settings settings;
 vector<NodeID> SignalNodes;
-
+STXXLNodeIDVector usedNodes;
+STXXLNodeVector allNodes;
+STXXLNodeVector confirmedNodes;
+STXXLEdgeVector allEdges;
+STXXLEdgeVector confirmedEdges;
 NodeMap * nodeMap = new NodeMap();
 
 int main (int argc, char *argv[])
 {
-	if(argc <= 1)
-	{
-		cerr << "usage: " << endl << argv[0] << " <file.osm>" << endl;
-		exit(-1);
-	}
-	cout << "reading input file. This may take some time ..." << flush;
-	double time = get_timestamp();
-	settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+13);
-	settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+13);
+    if(argc <= 1)
+    {
+        cerr << "usage: " << endl << argv[0] << " <file.osm>" << endl;
+        exit(-1);
+    }
+    cout << "reading input file. This may take some time ..." << flush;
+    double time = get_timestamp();
+    settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+13);
+    settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+13);
 
-	xmlTextReaderPtr inputReader = xmlNewTextReaderFilename( argv[1] );
-	ofstream allNodeFile("_allnodes", ios::binary);
-	ofstream usedNodesFile("_usednodes", ios::binary);
-	ofstream wayFile("_ways", ios::binary);
-	nodeMap->set_empty_key(UINT_MAX);
-	try {
-		while ( xmlTextReaderRead( inputReader ) == 1 ) {
-			const int type = xmlTextReaderNodeType( inputReader );
+    xmlTextReaderPtr inputReader = xmlNewTextReaderFilename( argv[1] );
+    nodeMap->set_empty_key(UINT_MAX);
+    try {
+        while ( xmlTextReaderRead( inputReader ) == 1 ) {
+            const int type = xmlTextReaderNodeType( inputReader );
 
-			//1 is Element
-			if ( type != 1 )
-				continue;
+            //1 is Element
+            if ( type != 1 )
+                continue;
 
-			xmlChar* currentName = xmlTextReaderName( inputReader );
-			if ( currentName == NULL )
-				continue;
+            xmlChar* currentName = xmlTextReaderName( inputReader );
+            if ( currentName == NULL )
+                continue;
 
-			if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
-				stats.numberOfNodes++;
-				_Node node = _ReadXMLNode( inputReader );
-				allNodeFile.write((char *)&node, sizeof(node));// << node.id << node.lat << node.lon << node.trafficSignal << endl;
+            if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
+                _Node node = _ReadXMLNode( inputReader );
+                allNodes.push_back(node);
+                if ( node.trafficSignal )
+                    SignalNodes.push_back( node.id );
 
-				if ( node.trafficSignal )
-					SignalNodes.push_back( node.id );
+            }
+            else if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
+                _Way way = _ReadXMLWay( inputReader, settings );
 
-			}
-			else if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
-				stats.numberOfWays++;
-				_Way way = _ReadXMLWay( inputReader, settings, stats );
+                if ( way.usefull && way.access && way.path.size() ) {
+                    for ( unsigned i = 0; i < way.path.size(); ++i ) {
+                        usedNodes.push_back(way.path[i]);
+                    }
 
-				if ( way.usefull && way.access && way.path.size() ) {
-					for ( unsigned i = 0; i < way.path.size(); ++i ) {
-						usedNodesFile.write((char *)&way.path[i], sizeof(NodeID));
-					}
+                    if ( way.direction == _Way::opposite )
+                        std::reverse( way.path.begin(), way.path.end() );
 
-					if ( way.direction == _Way::opposite )
-						std::reverse( way.path.begin(), way.path.end() );
+                    {
+                        vector< NodeID > & path = way.path;
+                        double speed = way.maximumSpeed;
+                        assert(way.type > -1 || way.maximumSpeed != -1);
+                        assert(path.size()>0);
 
-					stats.numberOfEdges += ( int ) way.path.size() - 1;
-					{
-						vector< NodeID > & path = way.path;
-						double speed = way.maximumSpeed;
-						assert(way.type > -1 || way.maximumSpeed != -1);
-						assert(path.size()>0);
+                        for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++)
+                        {
+                            _Edge e;
+                            e.start = way.path[n];
+                            e.target = way.path[n+1];
+                            e.type = way.type;
+                            e.direction = way.direction;
+                            e.speed = way.maximumSpeed;
+                            allEdges.push_back(e);
+                        }
+                    }
+                }
+            }
+            xmlFree( currentName );
+        }
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
+        unsigned memory_to_use = 1024 * 1024 * 1024;
 
-						for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++)
-						{
-							//serialize edge (path[n], path[n+1])
-							wayFile.write((char*)&way.path[n], sizeof(NodeID));
-							wayFile.write((char*)&way.path[n+1], sizeof(NodeID));
-							wayFile.write((char*)&way.type, sizeof(short));
-							wayFile.write((char*)&way.direction, sizeof(short));
-							wayFile.write((char*)&way.maximumSpeed, sizeof(double));
-						}
-					}
-				}
-			}
-			xmlFree( currentName );
-		}
-		allNodeFile.close();
-		usedNodesFile.close();
-		wayFile.close();
-		cout << "ok, after " << get_timestamp() - time << "s" << endl;
-		time = get_timestamp();
-		unsigned memory_to_use = 1024 * 1024 * 1024;
+        cout << "Sorting used nodes ..." << flush;
+        stxxl::sort(usedNodes.begin(), usedNodes.end(), Cmp(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
+        cout << "Erasing duplicate entries ..." << flush;
+        stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodes.begin(),usedNodes.end() ) ;
+        usedNodes.resize ( NewEnd - usedNodes.begin() );
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
 
-		stxxl::syscall_file f("_usednodes", stxxl::file::DIRECT | stxxl::file::RDWR);
-		typedef stxxl::vector<NodeID> usedNodesVectorType;
+        cout << "Sorting all nodes ..." << flush;
+        stxxl::ksort(allNodes.begin(), allNodes.end(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
 
-		usedNodesVectorType usedNodes( &f);
-		cout << "Sorting used nodes ..." << flush;
-		stxxl::sort(usedNodes.begin(), usedNodes.end(), Cmp(), memory_to_use);
-		cout << "ok, after " << get_timestamp() - time << "s" << endl;
-		time = get_timestamp();
-		cout << "Erasing duplicate entries ..." << flush;
-		stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodes.begin(),usedNodes.end() ) ;
-		usedNodes.resize ( NewEnd - usedNodes.begin() );
-		cout << "ok, after " << get_timestamp() - time << "s" << endl;
-		time = get_timestamp();
+        string name(argv[1]);
+        int pos=name.find(".osm"); // pos=9
+        if(pos!=string::npos)
+        {
+            name.replace(pos, 5, ".osrm");
+        } else {
+            name.append(".osrm");
+        }
 
-		stxxl::syscall_file fallnodes("_allnodes", stxxl::file::DIRECT | stxxl::file::RDWR);
-		typedef stxxl::vector< _Node > second_vector_type;
+        ofstream fout;
+        fout.open(name.c_str());
+        //        ifstream inway("_ways", ios::binary);
 
-		second_vector_type van(&fallnodes);
-		cout << "Sorting all nodes ..." << flush;
-		stxxl::ksort(van.begin(), van.end(), memory_to_use);
-		cout << "ok, after " << get_timestamp() - time << "s" << endl;
-		time = get_timestamp();
+        cout << "Writing used nodes ..." << flush;
+        NodeID counter = 0;
+        NodeID notfound = 0;
+        STXXLNodeVector::iterator nvit = allNodes.begin();
+        STXXLNodeIDVector::iterator niit = usedNodes.begin();
+        while(niit != usedNodes.end() && nvit != allNodes.end())
+        {
+            if(*niit < nvit->id){
+                niit++;
+                continue;
+            }
+            if(*niit > nvit->id)
+            {
+                nvit++;
+                continue;
+            }
+            if(*niit == nvit->id)
+            {
+                confirmedNodes.push_back(*nvit);
+                nodeMap->insert(std::make_pair(nvit->id, *nvit));
+                niit++;
+                nvit++;
+            }
+        }
+        fout << confirmedNodes.size() << endl;
+        for(STXXLNodeVector::iterator ut = confirmedNodes.begin(); ut != confirmedNodes.end(); ut++)
+        {
+            fout << ut->id<< " " << ut->lon << " " << ut->lat << "\n";
+        }
 
-		cout << endl << "Statistics: " << endl;
-		cout << "All Nodes: " << stats.numberOfNodes << endl;
-		cout << "Used Nodes: " << nodeMap->size() << endl;
-		cout << "Number of Ways: " << stats.numberOfWays << endl;
-		cout << "Edges in graph: " << stats.numberOfEdges << endl;
-		cout << "Number of ways with maxspeed information: " << stats.numberOfMaxspeed << endl;
-		cout << "Number of nodes with traffic lights: " << SignalNodes.size() << endl;
-		cout << "finished loading data" << endl;
-		cout << "calculated edge weights and writing to disk ..." << flush;
-		string name(argv[1]);
-		int pos=name.find(".osm"); // pos=9
-		if(pos!=string::npos)
-		{
-			name.replace(pos, 5, ".osrm");
-		} else {
-			name.append(".osrm");
-		}
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
 
-		ofstream fout;
-		fout.open(name.c_str());
-		ifstream inall("_allnodes", ios::binary);
-		ifstream inuse("_usednodes", ios::binary);
-		ifstream inway("_ways", ios::binary);
+        cout << "confirming used ways ..." << endl;
+        for(STXXLEdgeVector::iterator eit = allEdges.begin(); eit != allEdges.end(); eit++)
+        {
+            assert(eit->type > -1 || eit->speed != -1);
 
-		cout << "Writing used nodes ..." << flush;
-		fout << usedNodes.size() << endl;
-		NodeID counter = 0;
-		for(usedNodesVectorType::iterator it = usedNodes.begin(); it!=usedNodes.end(); it++)
-		{
-			NodeID currentNodeID = *it;
-			_Node current_Node;
-			inall.read((char *)&current_Node, sizeof(_Node));
-			while(currentNodeID!=current_Node.id)
-			{
-				inall.read((char *)&current_Node, sizeof(_Node));
-			}
-			fout << current_Node.id<< " " << current_Node.lon << " " << current_Node.lat << "\n";
-			nodeMap->insert(std::make_pair(current_Node.id, current_Node));
-			counter++;
-		}
-		cout << "ok, after " << get_timestamp() - time << "s" << endl;
-		time = get_timestamp();
+            NodeMap::iterator startit = nodeMap->find(eit->start);
+            if(startit == nodeMap->end())
+            {
+                continue;
+            }
+            NodeMap::iterator targetit = nodeMap->find(eit->target);
 
-		cout << "writing used ways ..." << endl;
-		NodeID start, target;
-		short type, direction;
-		double maximumSpeed;
-		fout << stats.numberOfEdges << "\n";
-		while(!inway.eof())
-		{
+            if(targetit == nodeMap->end())
+            {
+                continue;
+            }
+            confirmedEdges.push_back(*eit);
+        }
+        fout << confirmedEdges.size() << "\n";
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
 
-			inway.read((char*)&start, sizeof(NodeID));
-			inway.read((char*)&target, sizeof(NodeID));
-			inway.read((char*)&type, sizeof(short));
-			inway.read((char*)&direction, sizeof(short));
-			inway.read((char*)&maximumSpeed, sizeof(double));
-			assert(type > -1 || maximumSpeed != -1);
+        cout << "writing confirmed ways ..." << endl;
 
-			NodeMap::iterator startit = nodeMap->find(start);
-			if(startit == nodeMap->end())
-			{
-				cerr << "Node " << start << " missing albeit referenced in way. Edge skipped" << endl;
-				continue;
-			}
-			NodeMap::iterator targetit = nodeMap->find(target);
+        for(STXXLEdgeVector::iterator eit = confirmedEdges.begin(); eit != confirmedEdges.end(); eit++)
+        {
+            NodeMap::iterator startit = nodeMap->find(eit->start);
+            if(startit == nodeMap->end())
+            {
+                continue;
+            }
+            NodeMap::iterator targetit = nodeMap->find(eit->target);
 
-			if(targetit == nodeMap->end())
-			{
-				cerr << "Node << " << target << "missing albeit reference in a way. Edge skipped" << endl;
-				continue;
-			}
+            if(targetit == nodeMap->end())
+            {
+                continue;
+            }
+            double distance = ApproximateDistance(startit->second.lat, startit->second.lon, targetit->second.lat, targetit->second.lon);
+            if(eit->speed == -1)
+                eit->speed = settings.speedProfile.speed[eit->type];
+            double weight = ( distance * 10. ) / (eit->speed / 3.6);
+            double intWeight = max(1, (int) weight);
+            switch(eit->direction)
+            {
+            case _Way::notSure:
+                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 0 << " " << intWeight << "\n";
+                break;
+            case _Way::oneway:
+                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 1 << " " << intWeight << "\n";
+                break;
+            case _Way::bidirectional:
+                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 0 << " " << intWeight << "\n";
+                break;
+            case _Way::opposite:
+                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 1 << " " << intWeight << "\n";
+                break;
+            default:
+                assert(false);
+                break;
+            }
+        }
+        fout.close();
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
+    } catch ( const std::exception& e ) {
+        cerr <<  "Caught Execption:" << e.what() << endl;
+        return false;
+    }
 
-			double distance = ApproximateDistance(startit->second.lat, startit->second.lon, targetit->second.lat, targetit->second.lon);
-			if(maximumSpeed == -1)
-				maximumSpeed = settings.speedProfile.speed[type];
-			double weight = ( distance * 10. ) / (maximumSpeed / 3.6);
-			double intWeight = max(1, (int) weight);
-			switch(direction)
-			{
-			case _Way::notSure:
-				fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 0 << " " << intWeight << "\n";
-				break;
-			case _Way::oneway:
-				fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 1 << " " << intWeight << "\n";
-				break;
-			case _Way::bidirectional:
-				fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 0 << " " << intWeight << "\n";
-				break;
-			case _Way::opposite:
-				fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 1 << " " << intWeight << "\n";
-				break;
-			default:
-				assert(false);
-				break;
-			}
-		}
-		inway.close();
-		fout.close();
-		cout << "ok, after " << get_timestamp() - time << "s" << endl;
-		time = get_timestamp();
-	} catch ( const std::exception& e ) {
-		cerr <<  "Caught Execption:" << e.what() << endl;
-		return false;
-	}
-	SignalNodes.clear();
-	xmlFreeTextReader(inputReader);
+    cout << endl << "Statistics:" << endl;
+    cout << "-----------" << endl;
+    cout << "Usable Nodes: " << confirmedNodes.size() << endl;
+    cout << "Usable Ways : " << confirmedEdges.size() << endl;
 
-	remove("_allnodes");
-	remove("_usednodes");
-	remove("_ways");
-	return true;
+    SignalNodes.clear();
+    usedNodes.clear();
+    allNodes.clear();
+    confirmedNodes.clear();
+    allEdges.clear();
+    confirmedEdges.clear();
+
+    xmlFreeTextReader(inputReader);
+    return 0;
 }
 
