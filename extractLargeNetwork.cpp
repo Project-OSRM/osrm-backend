@@ -187,7 +187,7 @@ int main (int argc, char *argv[])
 		cout << "ok, after " << get_timestamp() - time << "s" << endl;
 		time = get_timestamp();
 
-		cout << "confirming used ways ..." << endl;
+		cout << "confirming used ways ..." << flush;
 		for(STXXLEdgeVector::iterator eit = allEdges.begin(); eit != allEdges.end(); eit++)
 		{
 			assert(eit->type > -1 || eit->speed != -1);
