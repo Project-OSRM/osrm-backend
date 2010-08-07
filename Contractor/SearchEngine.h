@@ -32,7 +32,7 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p) { }
 };
 
-typedef BinaryHeap< NodeID, int, int, _HeapData, SparseStorage< NodeID, unsigned > > _Heap;
+typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage< NodeID, unsigned > > _Heap;
 
 template<typename EdgeData, typename GraphT, typename KDTST = NodeInformationHelpDesk>
 class SearchEngine {

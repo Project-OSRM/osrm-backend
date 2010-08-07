@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <algorithm>
 #include <map>
 #include <google/dense_hash_map>
+#include <google/sparse_hash_map>
 
 template< typename NodeID, typename Key >
 class ArrayStorage {
@@ -70,10 +71,10 @@ private:
 };
 
 template< typename NodeID, typename Key >
-class SparseStorage {
+class DenseStorage {
 public:
 
-    SparseStorage( size_t size = 0 ) { nodes.set_empty_key(UINT_MAX); }
+    DenseStorage( size_t size = 0 ) { nodes.set_empty_key(UINT_MAX); }
 
     Key &operator[]( NodeID node ) {
         return nodes[node];
@@ -86,6 +87,25 @@ public:
 private:
     google::dense_hash_map< NodeID, Key > nodes;
 };
+
+template< typename NodeID, typename Key >
+class SparseStorage {
+public:
+	
+    SparseStorage( size_t size = 0 ) {  }
+	
+    Key &operator[]( NodeID node ) {
+        return nodes[node];
+    }
+	
+    void Clear() {
+        nodes.clear();
+    }
+	
+private:
+    google::sparse_hash_map< NodeID, Key > nodes;
+};
+
 
 template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = ArrayStorage< NodeID, Key > >
 class BinaryHeap {
