@@ -53,6 +53,9 @@ if not conf.CheckCXXHeader('google/sparse_hash_map'):
 if not conf.CheckCXXHeader('boost/asio.hpp'):
 	print "boost/asio.hpp not found. Exiting"
 	Exit(-1)
+if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
+	print "bz2 library not found. Exiting"
+	Exit(-1)
 if not conf.CheckLib('boost_thread'):
 	if not conf.CheckLib('boost_thread-mt'):
 		print "boost thread library not found. Exiting"
@@ -87,8 +90,8 @@ env.Append(LINKFLAGS = ' -fopenmp')
 env.Program("extractNetwork.cpp")
 env.Program("extractLargeNetwork.cpp")	
 env.Program("createHierarchy.cpp")
-env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system')
-env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system')
+env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2')
+env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2')
 env.Program("routed.cpp")
 env = conf.Finish()
 
