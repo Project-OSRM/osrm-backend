@@ -18,8 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef BZ2INPUTREADER_H
-#define BZ2INPUTREADER_H
+#ifndef INPUTREADERFACTORY_H
+#define INPUTREADERFACTORY_H
 
 #include <stdio.h>
 #include <string.h>
@@ -74,11 +74,10 @@ xmlTextReaderPtr inputReaderFactory( const char* name )
             delete context;
             return NULL;
         }
-
         return xmlReaderForIO( readFromBz2Stream, closeBz2Stream, (void*) context, NULL, NULL, 0 );
     } else {
         return xmlNewTextReaderFilename(name);
     }
 }
 
-#endif // BZ2INPUTREADER_H
+#endif // INPUTREADERFACTORY_H
