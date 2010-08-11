@@ -21,38 +21,49 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef INPUTREADERFACTORY_H
 #define INPUTREADERFACTORY_H
 
-#include <stdio.h>
-#include <string.h>
+#include <bzlib.h>
 #include <libxml/xmlreader.h>
 
-#include <bzlib.h>
-
-struct Context {
+struct BZ2Context {
     FILE* file;
     BZFILE* bz2;
     bool error;
+    int nUnused;
+    char unused[BZ_MAX_UNUSED];
 };
 
 int readFromBz2Stream( void* pointer, char* buffer, int len )
 {
-    Context* context = (Context*) pointer;
-    if ( len == 0 || context->error )
-        return 0;
-
+    void *unusedTmpVoid=NULL;
+    char *unusedTmp=NULL;
+    BZ2Context* context = (BZ2Context*) pointer;
+    if ( len == 0 || context->error || feof(context->file) )
+        return -1;
     int error = 0;
     int read = BZ2_bzRead( &error, context->bz2, buffer, len );
     if ( error == BZ_OK )
         return read;
 
-    context->error = true;
     if ( error == BZ_STREAM_END )
+    {
+        BZ2_bzReadGetUnused(&error, context->bz2, &unusedTmpVoid, &context->nUnused);
+        unusedTmp = (char*)unusedTmpVoid;
+        for(int i=0;i<context->nUnused;i++) {
+            context->unused[i] = unusedTmp[i];
+        }
+        BZ2_bzReadClose(&error, context->bz2);
+        if(BZ_OK != error) { context->error = true; return 0;};
+        context->bz2 = BZ2_bzReadOpen(&error, context->file, 0, 0, context->unused, context->nUnused);
+        if(NULL == context->bz2) { context->error = true; return 0;};
         return read;
+    }
+    context->error = true;
     return 0;
 }
 
 int closeBz2Stream( void *pointer )
 {
-    Context* context = (Context*) pointer;
+    BZ2Context* context = (BZ2Context*) pointer;
     BZ2_bzclose( context->bz2 );
     fclose( context->file );
     delete context;
@@ -65,11 +76,11 @@ xmlTextReaderPtr inputReaderFactory( const char* name )
 
     if(inputName.find(".osm.bz2")!=string::npos)
     {
-        Context* context = new Context;
+        BZ2Context* context = new BZ2Context;
         context->error = false;
         context->file = fopen( name, "r" );
         int error;
-        context->bz2 = BZ2_bzReadOpen( &error, context->file, 0, 0, NULL, 0 );
+        context->bz2 = BZ2_bzReadOpen( &error, context->file, 0, 0, context->unused, context->nUnused );
         if ( context->bz2 == NULL || context->file == NULL ) {
             delete context;
             return NULL;
