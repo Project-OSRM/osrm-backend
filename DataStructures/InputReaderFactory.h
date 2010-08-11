@@ -27,7 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 struct BZ2Context {
     FILE* file;
     BZFILE* bz2;
-    bool error;
+    int error;
     int nUnused;
     char unused[BZ_MAX_UNUSED];
 };
@@ -37,28 +37,30 @@ int readFromBz2Stream( void* pointer, char* buffer, int len )
     void *unusedTmpVoid=NULL;
     char *unusedTmp=NULL;
     BZ2Context* context = (BZ2Context*) pointer;
-    if ( len == 0 || context->error || feof(context->file) )
-        return -1;
-    int error = 0;
-    int read = BZ2_bzRead( &error, context->bz2, buffer, len );
-    if ( error == BZ_OK )
-        return read;
-
-    if ( error == BZ_STREAM_END )
-    {
-        BZ2_bzReadGetUnused(&error, context->bz2, &unusedTmpVoid, &context->nUnused);
-        unusedTmp = (char*)unusedTmpVoid;
-        for(int i=0;i<context->nUnused;i++) {
-            context->unused[i] = unusedTmp[i];
-        }
-        BZ2_bzReadClose(&error, context->bz2);
-        if(BZ_OK != error) { context->error = true; return 0;};
-        context->bz2 = BZ2_bzReadOpen(&error, context->file, 0, 0, context->unused, context->nUnused);
-        if(NULL == context->bz2) { context->error = true; return 0;};
-        return read;
+    int read = 0;
+    while(0 == read && !(BZ_STREAM_END == context->error && 0 == context->nUnused && feof(context->file))) {
+        read = BZ2_bzRead(&context->error, context->bz2, buffer, len);
+        if(BZ_OK == context->error) {
+            return read;
+        } else if(BZ_STREAM_END == context->error) {
+            BZ2_bzReadGetUnused(&context->error, context->bz2, &unusedTmpVoid, &context->nUnused);
+            if(BZ_OK != context->error) { cerr << "Could not BZ2_bzReadGetUnused" << endl; exit(-1);};
+            unusedTmp = (char*)unusedTmpVoid;
+            for(int i=0;i<context->nUnused;i++) {
+                context->unused[i] = unusedTmp[i];
+            }
+            BZ2_bzReadClose(&context->error, context->bz2);
+            if(BZ_OK != context->error) { cerr << "Could not BZ2_bzReadClose" << endl; exit(-1);};
+            context->error = BZ_STREAM_END; // set to the stream end for next call to this function
+            if(0 == context->nUnused && feof(context->file)) {
+                return read;
+            } else {
+                context->bz2 = BZ2_bzReadOpen(&context->error, context->file, 0, 0, context->unused, context->nUnused);
+                if(NULL == context->bz2){ cerr << "Could not open file" << endl; exit(-1);};
+            }
+        } else { cerr << "Could not read bz2 file" << endl; exit(-1); }
     }
-    context->error = true;
-    return 0;
+    return read;
 }
 
 int closeBz2Stream( void *pointer )
