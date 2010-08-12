@@ -88,7 +88,7 @@ int main (int argc, char *argv[])
                     SignalNodes.push_back( node.id );
 
             }
-            else if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
+            if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
                 _Way way = _ReadXMLWay( inputReader, settings );
 
                 if ( way.usefull && way.access && way.path.size() ) {
@@ -117,6 +117,9 @@ int main (int argc, char *argv[])
                         }
                     }
                 }
+            }
+            if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
+
             }
             xmlFree( currentName );
         }
