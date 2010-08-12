@@ -81,7 +81,7 @@ public:
     }
 
     unsigned GetOutDegree( const NodeIterator &n ) const {
-        return _nodes[n].edges;
+        return BeginEdges(n)-EndEdges(n) - 1;
     }
 
     NodeIterator GetTarget( const EdgeIterator &e ) const {
