@@ -85,6 +85,9 @@ int main (int argc, char *argv[])
     int2ExtNodeMap->clear();
 
     Contractor* contractor = new Contractor( n, edgeList );
+
+    cout << "Number of connected components: " << contractor->GetNumberOfComponents() << endl;
+
     contractor->Run();
 
     contractor->checkForAllOrigEdges(edgeList);
