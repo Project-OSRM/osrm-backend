@@ -136,12 +136,14 @@ int main (int argc, char *argv[])
 		}
 	}
 	cout << "in " << get_timestamp() - time << "s" << endl;
+	time = get_timestamp();
 	cout << "building search graph ..." << flush;
 
 	SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, kdtreeService);
 	cout << "in " << get_timestamp() - time << "s" << endl;
 
 	time = get_timestamp();
+
 	try {
 		// Block all signals for background thread.
 		sigset_t new_mask;
