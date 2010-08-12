@@ -130,6 +130,10 @@ int main (int argc, char *argv[])
 				}
 			}
 		}
+		if(graph->GetOutDegree(node) == 0)
+		{
+		    cerr << "found node with degree 0: " << node << endl;
+		}
 	}
 	cout << "in " << get_timestamp() - time << "s" << endl;
 	cout << "building search graph ..." << flush;
