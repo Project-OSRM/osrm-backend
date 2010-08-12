@@ -483,8 +483,6 @@ public:
                 if(tmp > largestRun)
                 {
                     largestRun = tmp;
-                } else {
-                    cout << tmp << " " << flush;
                 }
                 tmp = 1;
                 unique++;
