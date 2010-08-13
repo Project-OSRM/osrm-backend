@@ -221,7 +221,7 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
                         string route( (const char* ) value );
                         if (route == "ferry") {
                             for ( int i = 0; i < settings.speedProfile.names.size(); i++ ) {
-                                way.maximumSpeed = 25;
+                                way.maximumSpeed = 5;
                                 way.usefull = true;
                                 way.direction == _Way::oneway;
                             }
@@ -293,23 +293,27 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
                             }
                         }
                     } else {
-                        if ( xmlStrEqual( value, ( const xmlChar* ) "private" ) == 1
-                                || xmlStrEqual( value, ( const xmlChar* ) "no" ) == 1
-                                || xmlStrEqual( value, ( const xmlChar* ) "agricultural" ) == 1
-                                || xmlStrEqual( value, ( const xmlChar* ) "forestry" ) == 1
-                                || xmlStrEqual( value, ( const xmlChar* ) "delivery" ) == 1
-                        ) {
-                            way.access = false;
-                        }
-                        else if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1
-                                || xmlStrEqual( value, ( const xmlChar* ) "designated" ) == 1
-                                || xmlStrEqual( value, ( const xmlChar* ) "official" ) == 1
-                                || xmlStrEqual( value, ( const xmlChar* ) "permissive" ) == 1
-                        ) {
-                            way.access = true;
+                        if ( xmlStrEqual( k, (const xmlChar*) "access" ))
+                        {
+                            if ( xmlStrEqual( value, ( const xmlChar* ) "private" ) == 1)
+
+                                if ( xmlStrEqual( value, ( const xmlChar* ) "private" ) == 1
+                                        || xmlStrEqual( value, ( const xmlChar* ) "no" ) == 1
+                                        || xmlStrEqual( value, ( const xmlChar* ) "agricultural" ) == 1
+                                        || xmlStrEqual( value, ( const xmlChar* ) "forestry" ) == 1
+                                        || xmlStrEqual( value, ( const xmlChar* ) "delivery" ) == 1
+                                ) {
+                                    way.access = false;
+                                }
+                                else if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1
+                                        || xmlStrEqual( value, ( const xmlChar* ) "designated" ) == 1
+                                        || xmlStrEqual( value, ( const xmlChar* ) "official" ) == 1
+                                        || xmlStrEqual( value, ( const xmlChar* ) "permissive" ) == 1
+                                ) {
+                                    way.access = true;
+                                }
                         }
                     }
-
                     if ( k != NULL )
                         xmlFree( k );
                     if ( value != NULL )
