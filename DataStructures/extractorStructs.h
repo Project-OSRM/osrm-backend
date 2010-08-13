@@ -313,6 +313,16 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
                                     way.access = true;
                                 }
                         }
+                        if ( xmlStrEqual( k, (const xmlChar*) "motorcar" ))
+                        {
+                            if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1)
+                            {
+                                way.access = true;
+                            } else if ( xmlStrEqual( k, (const xmlChar*) "no" )) {
+                                way.access = false;
+                            }
+
+                        }
                     }
                     if ( k != NULL )
                         xmlFree( k );

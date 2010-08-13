@@ -61,6 +61,7 @@ int main (int argc, char *argv[])
         cerr << "usage: " << endl << argv[0] << " <file.osm>" << endl;
         exit(-1);
     }
+    cout << "extracting data from input file " << argv[1] << endl;
     cout << "reading input file. This may take some time ..." << flush;
     xmlTextReaderPtr inputReader = inputReaderFactory(argv[1]);
 
