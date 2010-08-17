@@ -133,10 +133,10 @@ public:
         delete[] kdtree;
     }
 
-    bool NearestNeighbor( InputPoint* result, const InputPoint& point, double radius = std::numeric_limits< T >::max() ) {
+    bool NearestNeighbor( InputPoint* result, const InputPoint& point ) {
         Metric distance;
         bool found = false;
-        double nearestDistance = radius;
+        double nearestDistance = std::numeric_limits< T >::max();
         std::stack< NNTree > s;
         s.push ( NNTree ( 0, size, 0, boundingBox ) );
         while ( !s.empty() ) {
