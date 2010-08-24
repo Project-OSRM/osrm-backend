@@ -126,7 +126,7 @@ private:
             }
         }
         if ( distance > *_upperbound ) {
-            _forwardHeap->DeleteAll();
+            _forwardHeap->Clear();
             return;
         }
         for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {

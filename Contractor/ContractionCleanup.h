@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef CONTRACTIONCLEANUP_H_INCLUDED
 #define CONTRACTIONCLEANUP_H_INCLUDED
@@ -234,6 +234,9 @@ private:
         }
         cout << "Removed " << _graph.size() - usefull << " useless shortcuts" << endl;
         _graph.resize( usefull );
+        for ( int threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+            delete threadData[threadNum];
+        }
     }
 
     template< class EdgeAllowed, class StallEdgeAllowed > void _ComputeStep( _Heap* heapForward, _Heap* heapBackward, const EdgeAllowed& edgeAllowed, const StallEdgeAllowed& stallEdgeAllowed, NodeID* middle, int* targetDistance ) {
@@ -250,7 +253,7 @@ private:
         }
 
         if ( distance > *targetDistance ) {
-            heapForward->DeleteAll();
+            heapForward->Clear();
             return;
         }
         for ( int edge = _firstEdge[node], endEdges = _firstEdge[node + 1]; edge != endEdges; ++edge ) {

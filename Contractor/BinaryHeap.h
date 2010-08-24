@@ -125,6 +125,7 @@ public:
         heap.resize( 1 );
         insertedNodes.clear();
         heap[0].weight = 0;
+        nodeIndex.Clear();
     }
 
     Key Size() const {
@@ -181,13 +182,6 @@ public:
         insertedNodes[removedIndex].key = 0;
         CheckHeap();
         return insertedNodes[removedIndex].node;
-    }
-
-    void DeleteAll() {
-        for ( typename std::vector< HeapElement >::iterator i = heap.begin() + 1, iend = heap.end(); i != iend; ++i )
-            insertedNodes[i->index].key = 0;
-        heap.resize( 1 );
-        heap[0].weight = 0;
     }
 
     void DecreaseKey( NodeID node, Weight weight ) {
