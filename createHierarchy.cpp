@@ -45,7 +45,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 using namespace std;
 
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
-typedef DynamicGraph<EdgeData>::InputEdge GraphEdge;
+typedef DynamicGraph<EdgeData>::InputEdge GridEdge;
 
 vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
 
@@ -86,7 +86,7 @@ int main (int argc, char *argv[])
 
     Contractor* contractor = new Contractor( n, edgeList );
 
-    cout << "Number of connected components: " << contractor->GetNumberOfComponents() << endl;
+//    cout << "Number of connected components: " << contractor->GetNumberOfComponents() << endl;
 
     contractor->Run();
 
@@ -98,13 +98,13 @@ int main (int argc, char *argv[])
     ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
     cleanup->Run();
 
-    std::vector< GraphEdge> cleanedEdgeList;
+    std::vector< GridEdge> cleanedEdgeList;
     cleanup->GetData(cleanedEdgeList);
 
     ofstream edgeOutFile(edgeOut, ios::binary);
 
     //Serializing the edge list.
-    for(std::vector< GraphEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++)
+    for(std::vector< GridEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++)
     {
         int distance= it->data.distance;
         assert(distance > 0);
