@@ -32,7 +32,7 @@ else:  #Mac OS X
 if GetOption('buildconfiguration') == 'debug':
 	env.Append(CCFLAGS = ' -g3')
 else:
-	env.Append(CCFLAGS = ' -O3')
+	env.Append(CCFLAGS = ' -O3 -DNDEBUG')
 #print "Compiling with: ", env['CXX']
 conf = Configure(env)
 if not conf.CheckCXX():
