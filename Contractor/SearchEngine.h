@@ -126,7 +126,7 @@ private:
             }
         }
         if ( distance > *_upperbound ) {
-            _forwardHeap->Clear();
+            _forwardHeap->DeleteAll();
             return;
         }
         for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
@@ -184,7 +184,7 @@ private:
             }
         }
 
-        assert(smallestWeight != SPECIAL_EDGEID);
+        assert(smallestWeight != SPECIAL_EDGEID); //no edge found. This should not happen at all!
 
         const EdgeData ed = _graph->GetEdgeData(smallestEdge);
         if(ed.shortcut)

@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef BINARYHEAP_H_INCLUDED
 #define BINARYHEAP_H_INCLUDED
@@ -91,17 +91,17 @@ private:
 template< typename NodeID, typename Key >
 class SparseStorage {
 public:
-	
+
     SparseStorage( size_t size = 0 ) {  }
-	
+
     Key &operator[]( NodeID node ) {
         return nodes[node];
     }
-	
+
     void Clear() {
         nodes.clear();
     }
-	
+
 private:
     google::sparse_hash_map< NodeID, Key > nodes;
 };
@@ -182,6 +182,13 @@ public:
         insertedNodes[removedIndex].key = 0;
         CheckHeap();
         return insertedNodes[removedIndex].node;
+    }
+
+    void DeleteAll() {
+        for ( typename std::vector< HeapElement >::iterator i = heap.begin() + 1, iend = heap.end(); i != iend; ++i )
+            insertedNodes[i->index].key = 0;
+        heap.resize( 1 );
+        heap[0].weight = 0;
     }
 
     void DecreaseKey( NodeID node, Weight weight ) {
