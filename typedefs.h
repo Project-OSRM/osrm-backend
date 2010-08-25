@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 
+#include <climits>
+
 using namespace std;
 
 #define VERBOSE(x) x

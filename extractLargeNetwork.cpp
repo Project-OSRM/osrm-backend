@@ -52,6 +52,7 @@ STXXLNodeVector allNodes;
 STXXLNodeVector confirmedNodes;
 STXXLEdgeVector allEdges;
 STXXLEdgeVector confirmedEdges;
+
 NodeMap * nodeMap = new NodeMap();
 
 int main (int argc, char *argv[])
@@ -244,6 +245,7 @@ int main (int argc, char *argv[])
                 eit->speed = settings.speedProfile.speed[eit->type];
             double weight = ( distance * 10. ) / (eit->speed / 3.6);
             double intWeight = max(1, (int) weight);
+
             switch(eit->direction)
             {
             case _Way::notSure:
@@ -265,7 +267,6 @@ int main (int argc, char *argv[])
         }
         fout.close();
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
     } catch ( const std::exception& e ) {
         cerr <<  "Caught Execption:" << e.what() << endl;
         return false;
@@ -282,8 +283,7 @@ int main (int argc, char *argv[])
     confirmedNodes.clear();
     allEdges.clear();
     confirmedEdges.clear();
-
-    //    xmlFreeTextReader(inputReader);
+    xmlFreeTextReader(inputReader);
+    delete nodeMap;
     return 0;
 }
-
