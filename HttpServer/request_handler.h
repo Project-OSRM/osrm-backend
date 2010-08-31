@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef HTTP_ROUTER_REQUEST_HANDLER_HPP
 #define HTTP_ROUTER_REQUEST_HANDLER_HPP
@@ -58,8 +58,8 @@ public:
                 std::size_t last_amp_pos = request.find_last_of("&");
                 int lat = static_cast<int>(100000*atof(request.substr(first_amp_pos+1, request.length()-last_amp_pos-1).c_str()));
                 int lon = static_cast<int>(100000*atof(request.substr(last_amp_pos+1).c_str()));
-                NodeCoords<NodeID> * data = new NodeCoords<NodeID>();
-                NodeID start = sEngine->findNearestNodeForLatLon(lat, lon, data);
+                _Coordinate result;
+                sEngine->findNearestNodeForLatLon(_Coordinate(lat, lon), result);
 
                 rep.status = reply::ok;
                 rep.content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -68,13 +68,13 @@ public:
 
                 std::stringstream out1;
                 out1 << setprecision(10);
-                out1 << "<name>Nearest Place in map to " << lat/100000. << "," << lon/100000. << ": node with id " << start << "</name>";
+                out1 << "<name>Nearest Place in map to " << lat/100000. << "," << lon/100000. << "</name>";
                 rep.content.append(out1.str());
                 rep.content.append("<Point>");
 
                 std::stringstream out2;
                 out2 << setprecision(10);
-                out2 << "<coordinates>" << data->lon / 100000. << "," << data->lat / 100000.  << "</coordinates>";
+                out2 << "<coordinates>" << result.lon / 100000. << "," << result.lat / 100000.  << "</coordinates>";
                 rep.content.append(out2.str());
                 rep.content.append("</Point>");
                 rep.content.append("</Placemark>");
@@ -87,7 +87,6 @@ public:
                 rep.headers[1].value = "application/vnd.google-earth.kml+xml";
                 rep.headers[2].name = "Content-Disposition";
                 rep.headers[2].value = "attachment; filename=\"placemark.kml\"";
-                delete data;
                 return;
             }
             if(command == "route")
@@ -102,12 +101,12 @@ public:
                 int lat2 = static_cast<int>(100000*atof(request.substr(third_amp_pos+1, request.length()-fourth_amp_pos-1).c_str()));
                 int lon2 = static_cast<int>(100000*atof(request.substr(fourth_amp_pos+1).c_str()));
 
-                NodeCoords<NodeID> * startData = new NodeCoords<NodeID>();
-                NodeCoords<NodeID> * targetData = new NodeCoords<NodeID>();
+                _Coordinate startCoord(lat1, lon1);
+                _Coordinate targetCoord(lat2, lon2);
                 vector<NodeID> * path = new vector<NodeID>();
-                NodeID start = sEngine->findNearestNodeForLatLon(lat1, lon1, startData);
-                NodeID target = sEngine->findNearestNodeForLatLon(lat2, lon2, targetData);
-                unsigned int distance = sEngine->ComputeRoute(start, target, path);
+                PhantomNodes * phantomNodes = new PhantomNodes();
+                sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
+                unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
 
                 rep.status = reply::ok;
                 rep.content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -124,19 +123,29 @@ public:
                 rep.content.append("<tessellate>1</tessellate>");
                 rep.content.append("<altitudeMode>absolute</altitudeMode>");
                 rep.content.append("<coordinates>\n");
+
                 if(distance != std::numeric_limits<unsigned int>::max())
                 {   //A route has been found
-                	NodeInfo * info = new NodeInfo();
+                    stringstream startOut;
+                    startOut << std::setprecision(10);
+                    startOut << phantomNodes->startCoord.lon/100000. << "," << phantomNodes->startCoord.lat/100000. << " \n";
+                    rep.content.append(startOut.str());
+
+                    _Coordinate result;
                     for(vector<NodeID>::iterator it = path->begin(); it != path->end(); it++)
                     {
-                        sEngine-> getNodeInfo(*it, info);
+                        sEngine-> getNodeInfo(*it, result);
                         stringstream nodeout;
                         nodeout << std::setprecision(10);
-                        nodeout << info->lon/100000. << "," << info->lat/100000. << " " << endl;
+                        nodeout << result.lon/100000. << "," << result.lat/100000. << " " << "\n";
                         rep.content.append(nodeout.str());
                     }
-                    delete info;
+                    stringstream targetOut;
+                    targetOut << std::setprecision(10);
+                    targetOut << phantomNodes->targetCoord.lon/100000. << "," << phantomNodes->targetCoord.lat/100000. << " \n";
+                    rep.content.append(targetOut.str());
                 }
+
                 rep.content.append("</coordinates>");
                 rep.content.append("</LineString>");
                 rep.content.append("</Placemark>");
@@ -150,6 +159,9 @@ public:
                 rep.headers[1].value = "application/vnd.google-earth.kml+xml";
                 rep.headers[2].name = "Content-Disposition";
                 rep.headers[2].value = "attachment; filename=\"route.kml\"";
+
+                delete path;
+                delete phantomNodes;
                 return;
             }
             rep = reply::stock_reply(reply::bad_request);

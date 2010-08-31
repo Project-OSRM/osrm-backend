@@ -293,8 +293,7 @@ public:
         for ( int threadNum = 0; threadNum < maxThreads; ++threadNum ) {
             threadData.push_back( new _ThreadData( numberOfNodes ) );
         }
-        cout << numberOfNodes << " nodes, " << _graph->GetNumberOfEdges() << " edges" << endl;
-        cout << "using " << maxThreads << " threads" << endl;
+        cout << "Contractor is using " << maxThreads << " threads" << endl;
 
         NodeID levelID = 0;
         NodeID iteration = 0;
@@ -519,7 +518,6 @@ private:
         }
         delete bfsStack;
     }
-
 
     double _Timestamp() {
         return time(NULL);

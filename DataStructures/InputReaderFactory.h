@@ -66,7 +66,6 @@ int readFromBz2Stream( void* pointer, char* buffer, int len )
 int closeBz2Stream( void *pointer )
 {
     BZ2Context* context = (BZ2Context*) pointer;
-    BZ2_bzclose( context->bz2 );
     fclose( context->file );
     delete context;
     return 0;

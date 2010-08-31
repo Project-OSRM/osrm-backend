@@ -37,7 +37,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "typedefs.h"
 #include "DataStructures/InputReaderFactory.h"
-#include "DataStructures/extractorStructs.h"
+#include "DataStructures/ExtractorStructs.h"
 
 using namespace std;
 typedef google::dense_hash_map<NodeID, _Node> NodeMap;

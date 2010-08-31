@@ -23,6 +23,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <climits>
 #include <cmath>
+#include <string>
+#include <libxml/xmlreader.h>
 
 /*     Default Speed Profile:
         motorway        110
@@ -41,7 +43,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
         ferry           25
  */
 
-string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "unclassified", "residential", "living_street", "service", "ferry" };
+std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "unclassified", "residential", "living_street", "service", "ferry" };
 double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 50, 40 , 10, 30, 25};
 
 struct _Node : NodeInfo{
@@ -67,7 +69,8 @@ struct _Node : NodeInfo{
 struct _Coordinate {
     int lat;
     int lon;
-    _Coordinate () : lat(INT_MIN), lon(INT_MIN) {};
+    _Coordinate () : lat(INT_MIN), lon(INT_MIN) {}
+    _Coordinate (int t, int n) : lat(t) , lon(n) {}
 };
 
 struct _Way {
@@ -90,6 +93,7 @@ struct _Relation {
 struct _Edge {
     _Edge() {};
     _Edge(NodeID s, NodeID t) : start(s), target(t) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp) { }
     NodeID start;
     NodeID target;
     short type;
@@ -348,12 +352,12 @@ _Node _ReadXMLNode( xmlTextReaderPtr& inputReader ) {
 
     xmlChar* attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "lat" );
     if ( attribute != NULL ) {
-        node.lat =  static_cast<NodeID>(100000*atof(( const char* ) attribute ) );
+        node.lat =  static_cast<NodeID>(100000.*atof(( const char* ) attribute ) );
         xmlFree( attribute );
     }
     attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "lon" );
     if ( attribute != NULL ) {
-        node.lon =  static_cast<NodeID>(100000*atof(( const char* ) attribute ));
+        node.lon =  static_cast<NodeID>(100000.*atof(( const char* ) attribute ));
         xmlFree( attribute );
     }
     attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "id" );

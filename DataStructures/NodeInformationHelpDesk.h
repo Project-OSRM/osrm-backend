@@ -21,103 +21,48 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef NODEINFORMATIONHELPDESK_H_
 #define NODEINFORMATIONHELPDESK_H_
 
-#include <omp.h>
-
-#include <climits>
-#include <cstdlib>
-
-#include <algorithm>
-#include <deque>
 #include <fstream>
 #include <iostream>
-#include <limits>
-#include <list>
-#include <stack>
-#include <string>
 #include <vector>
 
 #include "../typedefs.h"
-#include "StaticKDTree.h"
+#include "NNGrid.h"
+#include "PhantomNodes.h"
 
-typedef KDTree::StaticKDTree<2, int, NodeID> KDTreeType;
+typedef NNGrid::NNGrid Grid;
 
 class NodeInformationHelpDesk{
 public:
-	NodeInformationHelpDesk() { int2ExtNodeMap = new vector<KDTreeType::InputPoint>();}
-	KDTreeType * initKDTree(ifstream& input);
-
-	NodeID getExternalNodeID(const NodeID node);
-	void getExternalNodeInfo(const NodeID node, NodeInfo * info) const;
-	int getLatitudeOfNode(const NodeID node) const;
-	int getLongitudeOfNode(const NodeID node) const;
-
-	NodeID getNumberOfNodes() const { return int2ExtNodeMap->size(); }
-
-	inline NodeID findNearestNodeIDForLatLon(const int lat, const int lon, NodeCoords<NodeID> * data) const
+	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput) { numberOfNodes = 0; int2ExtNodeMap = new vector<_Coordinate>(); g = new Grid(ramIndexInput,fileIndexInput); }
+	~NodeInformationHelpDesk() { delete int2ExtNodeMap; delete g; }
+	void initNNGrid(ifstream& in)
 	{
-		KDTreeType::InputPoint i;
-		KDTreeType::InputPoint o;
-		i.coordinates[0] = lat;
-		i.coordinates[1] = lon;
-		kdtree->NearestNeighbor(&o, i);
-		data->id = o.data;
-		data->lat = o.coordinates[0];
-		data->lon = o.coordinates[1];
-		return data->id;
+	    while(!in.eof())
+	    {
+	        NodeInfo b;
+	        in.read((char *)&b, sizeof(b));
+	        int2ExtNodeMap->push_back(_Coordinate(b.lat, b.lon));
+	        numberOfNodes++;
+	    }
+	    in.close();
+	    g->OpenIndexFiles();
+	}
+
+	int getLatitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lat; }
+
+	int getLongitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lon; }
+
+	NodeID getNumberOfNodes() const { return numberOfNodes; }
+
+	inline void findNearestNodeIDForLatLon(const _Coordinate coord, _Coordinate& result) { result = g->FindNearestPointOnEdge(coord); }
+
+	inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * phantomNodes) {
+	    g->FindRoutingStarts(start, target, phantomNodes);
 	}
 private:
-	vector<KDTreeType::InputPoint> * int2ExtNodeMap;
-	KDTreeType * kdtree;
+	vector<_Coordinate> * int2ExtNodeMap;
+	Grid * g;
+	unsigned numberOfNodes;
 };
-
-//////////////////
-//implementation//
-//////////////////
-
-/* @brief: initialize kd-tree and internal->external node id map
- *
- */
-KDTreeType * NodeInformationHelpDesk::initKDTree(ifstream& in)
-{
-	NodeID id = 0;
-	while(!in.eof())
-	{
-		NodeInfo b;
-		in.read((char *)&b, sizeof(b));
-		b.id = id;
-		KDTreeType::InputPoint p;
-		p.coordinates[0] = b.lat;
-		p.coordinates[1] = b.lon;
-		p.data = id;
-		int2ExtNodeMap->push_back(p);
-		id++;
-	}
-	in.close();
-	kdtree = new KDTreeType(int2ExtNodeMap);
-	return kdtree;
-}
-
-NodeID NodeInformationHelpDesk::getExternalNodeID(const NodeID node)
-{
-
-	return int2ExtNodeMap->at(node).data;
-}
-
-void NodeInformationHelpDesk::getExternalNodeInfo(const NodeID node, NodeInfo * info) const
-{
-	info->id = int2ExtNodeMap->at(node).data;
-	info->lat = int2ExtNodeMap->at(node).coordinates[0];
-	info->lon = int2ExtNodeMap->at(node).coordinates[1];
-}
-
-int NodeInformationHelpDesk::getLatitudeOfNode(const NodeID node) const
-{
-	return int2ExtNodeMap->at(node).coordinates[0];
-}
-
-int NodeInformationHelpDesk::getLongitudeOfNode(const NodeID node) const
-{
-	return int2ExtNodeMap->at(node).coordinates[1];
-}
 
 #endif /*NODEINFORMATIONHELPDESK_H_*/

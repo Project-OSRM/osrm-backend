@@ -41,7 +41,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 using namespace std;
 
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
-typedef StaticGraph<EdgeData>::InputEdge GraphEdge;
+typedef StaticGraph<EdgeData>::InputEdge GridEdge;
 typedef http::server<StaticGraph<EdgeData> > server;
 
 /*
@@ -52,27 +52,23 @@ int main (int argc, char *argv[])
 {
 	double time;
 
-	if(argc < 2)
+	if(argc < 4)
 	{
-		cerr << "Correct usage:" << endl << argv[0] << " <hsgr data> <nodes data>" << endl;
+		cerr << "Correct usage:" << endl << argv[0] << " <hsgr data> <nodes data> <ram index> <file index>" << endl;
 		exit(-1);
 	}
 
-	if (argv[0] == 0) {
-		cerr << "Missing data files!" << endl;
-		return -1;
-	}
 	ifstream in(argv[1], ios::binary);
 	ifstream in2(argv[2], ios::binary);
-	NodeInformationHelpDesk * kdtreeService = new NodeInformationHelpDesk();
+	NodeInformationHelpDesk * nodeInfoHelper = new NodeInformationHelpDesk(argv[3], argv[4]);
 
 	time = get_timestamp();
 	cout << "deserializing edge data from " << argv[1] << " ..." << flush;
 
-	std::vector< GraphEdge> edgelist;
+	std::vector< GridEdge> * edgelist = new std::vector< GridEdge>();
 	while(!in.eof())
 	{
-		GraphEdge g;
+		GridEdge g;
 		EdgeData e;
 
 		int distance;
@@ -94,19 +90,18 @@ int main (int argc, char *argv[])
 		e.backward = backward; e.distance = distance; e.forward = forward; e.middle = middle; e.shortcut = shortcut;
 		g.data = e; g.source = source; g.target = target;
 
-		edgelist.push_back(g);
+		edgelist->push_back(g);
 	}
 
 	in.close();
 	cout << "in " << get_timestamp() - time << "s" << endl;
-	cout << "search graph has " << edgelist.size() << " edges" << endl;
 	time = get_timestamp();
-	cout << "deserializing node map and building kd-tree ..." << flush;
-	kdtreeService->initKDTree(in2);
+	cout << "deserializing node map and building nearest neighbor grid ..." << flush;
+	nodeInfoHelper->initNNGrid(in2);
 	cout << "in " << get_timestamp() - time << "s" << endl;
-
 	time = get_timestamp();
-	StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(kdtreeService->getNumberOfNodes()-1, edgelist);
+	StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(nodeInfoHelper->getNumberOfNodes()-1, *edgelist);
+	delete edgelist;
 	cout << "checking data sanity ..." << flush;
 	NodeID numberOfNodes = graph->GetNumberOfNodes();
 	for ( NodeID node = 0; node < numberOfNodes; ++node ) {
@@ -139,7 +134,7 @@ int main (int argc, char *argv[])
 	time = get_timestamp();
 	cout << "building search graph ..." << flush;
 
-	SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, kdtreeService);
+	SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeInfoHelper);
 	cout << "in " << get_timestamp() - time << "s" << endl;
 
 	time = get_timestamp();
@@ -178,6 +173,8 @@ int main (int argc, char *argv[])
 		std::cerr << "exception: " << e.what() << "\n";
 	}
 	cout << "graceful shutdown after " << get_timestamp() - time << "s" << endl;
-	delete kdtreeService;
+	delete sEngine;
+	delete graph;
+	delete nodeInfoHelper;
 	return 0;
 }

@@ -16,12 +16,17 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 //g++ createHierarchy.cpp -fopenmp -Wno-deprecated -o createHierarchy -O3 -march=native -DNDEBUG
 
 #define VERBOSE(x) x
 #define VERBOSE2(x)
+
+#ifdef NDEBUG
+#undef VERBOSE
+#undef VERBOSE2
+#endif
 
 #include <climits>
 #include <fstream>
@@ -42,10 +47,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Contractor/ContractionCleanup.h"
 #include "Contractor/DynamicGraph.h"
 
+#include "DataStructures/NNGrid.h"
+
 using namespace std;
 
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge GridEdge;
+typedef NNGrid::NNGrid Grid;
 
 vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
 
@@ -69,24 +77,54 @@ int main (int argc, char *argv[])
 
     char nodeOut[1024];
     char edgeOut[1024];
+    char ramIndexOut[1024];
+    char fileIndexOut[1024];
     strcpy(nodeOut, argv[1]);
     strcpy(edgeOut, argv[1]);
+    strcpy(ramIndexOut, argv[1]);
+    strcpy(fileIndexOut, argv[1]);
+
     strcat(nodeOut, ".nodes");
     strcat(edgeOut, ".hsgr");
+    strcat(ramIndexOut, ".ramIndex");
+    strcat(fileIndexOut, ".fileIndex");
     ofstream mapOutFile(nodeOut, ios::binary);
+
+    Grid * g = new Grid();
+    cout << "building grid ..." << flush;
+    Percent p(edgeList.size());
+    for(NodeID i = 0; i < edgeList.size(); i++)
+    {
+        p.printIncrement();
+        int slat = int2ExtNodeMap->at(edgeList[i].source()).lat;
+        int slon = int2ExtNodeMap->at(edgeList[i].source()).lon;
+        int tlat = int2ExtNodeMap->at(edgeList[i].target()).lat;
+        int tlon = int2ExtNodeMap->at(edgeList[i].target()).lon;
+        g->AddEdge(
+                _Edge(
+                        edgeList[i].source(),
+                        edgeList[i].target(),
+                        0,
+                        ((edgeList[i].isBackward() && edgeList[i].isForward()) ? 0 : 1),
+                        edgeList[i].weight()
+                ),
+
+                _Coordinate(slat, slon),
+                _Coordinate(tlat, tlon)
+        );
+    }
+    g->ConstructGrid(ramIndexOut, fileIndexOut);
+    delete g;
 
     //Serializing the node map.
     for(NodeID i = 0; i < int2ExtNodeMap->size(); i++)
     {
-        //mapOutFile.write((char *)&(i), sizeof(NodeID));
         mapOutFile.write((char *)&(int2ExtNodeMap->at(i)), sizeof(NodeInfo));
     }
     mapOutFile.close();
     int2ExtNodeMap->clear();
 
     Contractor* contractor = new Contractor( n, edgeList );
-
-//    cout << "Number of connected components: " << contractor->GetNumberOfComponents() << endl;
 
     contractor->Run();
 

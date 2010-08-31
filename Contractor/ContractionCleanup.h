@@ -58,7 +58,6 @@ private:
         }
     };
 
-
 public:
 
     struct Edge {

@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define _NODE_COORDS_H
 
 #include <cassert>
+#include <cstddef>
 #include <limits>
 
 #include "../typedefs.h"
@@ -63,4 +64,5 @@ struct NodeCoords {
         }
     }
 };
+
 #endif //_NODE_COORDS_H
