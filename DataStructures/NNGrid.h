@@ -517,6 +517,7 @@ private:
         assert(cellMap->find(fileIndex) != cellMap->end());
         if(cellIndex[cellMap->find(fileIndex)->second] == UINT_MAX)
         {
+            delete cellMap;
             return;
         }
         unsigned position = cellIndex[cellMap->find(fileIndex)->second] + 32*32*sizeof(unsigned) ;
