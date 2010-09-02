@@ -246,20 +246,21 @@ int main (int argc, char *argv[])
             double weight = ( distance * 10. ) / (eit->speed / 3.6);
             int intWeight = max(1, (int) weight);
             int intDist = max(1, (int)distance);
+            int ferryIndex = settings.indexInAccessListOf("ferry");
 
             switch(eit->direction)
             {
             case _Way::notSure:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
                 break;
             case _Way::oneway:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
                 break;
             case _Way::bidirectional:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
                 break;
             case _Way::opposite:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
                 break;
             default:
                 assert(false);

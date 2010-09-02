@@ -52,7 +52,7 @@ typedef NodeCoords<NodeID> NodeInfo;
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
-#include "Contractor/DynamicGraph.h"
+#include "DataStructures/DynamicGraph.h"
 #include "Contractor/SearchEngine.h"
 
 #endif /* TYPEDEFS_H_ */

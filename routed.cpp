@@ -47,7 +47,6 @@ typedef http::server<StaticGraph<EdgeData> > server;
 /*
  * TODO: Description of command line arguments
  */
-
 int main (int argc, char *argv[])
 {
 	double time;
@@ -99,38 +98,38 @@ int main (int argc, char *argv[])
 	cout << "deserializing node map and building nearest neighbor grid ..." << flush;
 	nodeInfoHelper->initNNGrid(in2);
 	cout << "in " << get_timestamp() - time << "s" << endl;
-	time = get_timestamp();
+//	time = get_timestamp();
 	StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(nodeInfoHelper->getNumberOfNodes()-1, *edgelist);
 	delete edgelist;
-	cout << "checking data sanity ..." << flush;
-	NodeID numberOfNodes = graph->GetNumberOfNodes();
-	for ( NodeID node = 0; node < numberOfNodes; ++node ) {
-		for ( StaticGraph<EdgeData>::EdgeIterator edge = graph->BeginEdges( node ), endEdges = graph->EndEdges( node ); edge != endEdges; ++edge ) {
-			const NodeID start = node;
-			const NodeID target = graph->GetTarget( edge );
-			const EdgeData& data = graph->GetEdgeData( edge );
-			const NodeID middle = data.middle;
-			assert(start != target);
-			if(data.shortcut)
-			{
-				if(graph->FindEdge(start, middle) == SPECIAL_EDGEID && graph->FindEdge(middle, start) == SPECIAL_EDGEID)
-				{
-					assert(false);
-					cerr << "hierarchy broken" << endl; exit(-1);
-				}
-				if(graph->FindEdge(middle, target) == SPECIAL_EDGEID && graph->FindEdge(target, middle) == SPECIAL_EDGEID)
-				{
-					assert(false);
-					cerr << "hierarchy broken" << endl; exit(-1);
-				}
-			}
-		}
-		if(graph->GetOutDegree(node) == 0)
-		{
-		    cerr << "found node with degree 0: " << node << endl;
-		}
-	}
-	cout << "in " << get_timestamp() - time << "s" << endl;
+//	cout << "checking data sanity ..." << flush;
+//	NodeID numberOfNodes = graph->GetNumberOfNodes();
+//	for ( NodeID node = 0; node < numberOfNodes; ++node ) {
+//		for ( StaticGraph<EdgeData>::EdgeIterator edge = graph->BeginEdges( node ), endEdges = graph->EndEdges( node ); edge != endEdges; ++edge ) {
+//			const NodeID start = node;
+//			const NodeID target = graph->GetTarget( edge );
+//			const EdgeData& data = graph->GetEdgeData( edge );
+//			const NodeID middle = data.middle;
+//			assert(start != target);
+//			if(data.shortcut)
+//			{
+//				if(graph->FindEdge(start, middle) == SPECIAL_EDGEID && graph->FindEdge(middle, start) == SPECIAL_EDGEID)
+//				{
+//					assert(false);
+//					cerr << "hierarchy broken" << endl; exit(-1);
+//				}
+//				if(graph->FindEdge(middle, target) == SPECIAL_EDGEID && graph->FindEdge(target, middle) == SPECIAL_EDGEID)
+//				{
+//					assert(false);
+//					cerr << "hierarchy broken" << endl; exit(-1);
+//				}
+//			}
+//		}
+//		if(graph->GetOutDegree(node) == 0)
+//		{
+//		    cerr << "found node with degree 0: " << node << endl;
+//		}
+//	}
+//	cout << "in " << get_timestamp() - time << "s" << endl;
 	time = get_timestamp();
 	cout << "building search graph ..." << flush;
 

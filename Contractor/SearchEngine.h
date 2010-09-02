@@ -73,7 +73,7 @@ public:
                 currentEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
             if(currentEdge != UINT_MAX && _graph->GetEdgeData(currentEdge).forward && phantomNodes->startRatio < phantomNodes->targetRatio)
             { //upperbound auf kantenlänge setzen
-                cout << "start and target on same edge" << endl;
+//                cout << "start and target on same edge" << endl;
                 onSameEdge = true;
                 _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
             } else if (currentEdge != UINT_MAX && !_graph->GetEdgeData(currentEdge).backward) {

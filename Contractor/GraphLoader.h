@@ -45,6 +45,7 @@ template<typename EdgeT>
 inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
     NodeID n, source, target, id;
     EdgeID m;
+    bool locatable;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     ext2IntNodeMap.set_empty_key(UINT_MAX);
@@ -62,7 +63,7 @@ inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vect
     for (EdgeID i=0; i<m; i++) {
         EdgeWeight weight;
         int length;
-        in >> source >> target >> length >> dir >> weight;
+        in >> source >> target >> length >> dir >> weight >> locatable;
 
         assert(length > 0);
         assert(weight > 0);
@@ -91,7 +92,7 @@ inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vect
 
         if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }
 
-        EdgeT inputEdge(source, target, weight, forward, backward);
+        EdgeT inputEdge(source, target, weight, forward, backward, locatable);
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();

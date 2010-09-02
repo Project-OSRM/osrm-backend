@@ -44,7 +44,7 @@ public:
     /** Default constructor. target and weight are set to 0.*/
     Edge() { assert(false); } //shall not be used.
 
-    explicit Edge(NodeID s, NodeID t, EdgeWeight w, bool f, bool b) : _source(s), _target(t), _weight(w), forward(f), backward(b) { }
+    explicit Edge(NodeID s, NodeID t, EdgeWeight w, bool f, bool b, bool l) : _source(s), _target(t), _weight(w), forward(f), backward(b), locatable(l) { }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source;}
@@ -54,12 +54,15 @@ public:
 
     bool isForward() const { return forward; }
 
+    bool isLocatable() const { return locatable; }
+
 private:
     NodeID _source;
     NodeID _target;
-    EdgeWeight _weight:30;
+    EdgeWeight _weight:29;
     bool forward:1;
     bool backward:1;
+    bool locatable:1;
 };
 
 typedef Edge ImportEdge;

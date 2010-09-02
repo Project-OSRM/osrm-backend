@@ -45,8 +45,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Contractor/BinaryHeap.h"
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
-#include "Contractor/DynamicGraph.h"
-
 #include "DataStructures/NNGrid.h"
 
 using namespace std;
@@ -95,6 +93,8 @@ int main (int argc, char *argv[])
     Percent p(edgeList.size());
     for(NodeID i = 0; i < edgeList.size(); i++)
     {
+        if(!edgeList[i].isLocatable())
+            continue;
         p.printIncrement();
         int slat = int2ExtNodeMap->at(edgeList[i].source()).lat;
         int slon = int2ExtNodeMap->at(edgeList[i].source()).lon;

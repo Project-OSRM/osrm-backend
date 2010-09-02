@@ -25,7 +25,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #else
 #include <algorithm>
 #endif
-#include "DynamicGraph.h"
+#include "../DataStructures/DynamicGraph.h"
 #include <algorithm>
 #include <ctime>
 #include <vector>
@@ -460,64 +460,7 @@ public:
         }
     }
 
-    NodeID GetNumberOfComponents()
-    {
-        NodeID unique = 1;
-        NodeID largestRun = 0;
-        NodeID tmp = 1;
-        _components = new std::vector<NodeID>(_graph->GetNumberOfNodes(), 0);
-        for(NodeID i = 0; i < _graph->GetNumberOfNodes(); i++)
-        {
-            BFSAtNode(i);
-        }
-#ifdef _GLIBCXX_PARALLEL
-        __gnu_parallel::sort( _components->begin(), _components->end() );
-#else
-        std::sort(_components->begin(), _components->end());
-#endif
-
-        for(NodeID i = 0; i < _graph->GetNumberOfNodes()-1; i++)
-        {
-            if( _components->at(i) != _components->at(i+1)){
-                if(tmp > largestRun)
-                {
-                    largestRun = tmp;
-                }
-                tmp = 1;
-                unique++;
-            }
-            else
-                tmp++;
-        }
-        if(tmp > largestRun)
-            largestRun = tmp;
-        _components->clear();
-        cout << "Largest component has size: " << largestRun << endl;
-        return unique;
-    }
-
 private:
-
-    void BFSAtNode(const NodeID n){
-        std::stack<NodeID> * bfsStack = new std::stack<NodeID>();
-        if(_components->at(n) != 0)
-            return;
-        _components->at(n) = n+1;
-        bfsStack->push(n);
-        while(!bfsStack->empty())
-        {
-            NodeID node = bfsStack->top();
-            bfsStack->pop();
-            for(_DynamicGraph::EdgeIterator e = _graph->BeginEdges(node); e < _graph->EndEdges(node); e++)
-            {
-                if(_components->at(_graph->GetTarget(e))!=0)
-                    continue;
-                _components->at(_graph->GetTarget(e)) = n+1;
-                bfsStack->push(_graph->GetTarget(e));
-            }
-        }
-        delete bfsStack;
-    }
 
     double _Timestamp() {
         return time(NULL);
