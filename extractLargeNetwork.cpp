@@ -244,21 +244,22 @@ int main (int argc, char *argv[])
             if(eit->speed == -1)
                 eit->speed = settings.speedProfile.speed[eit->type];
             double weight = ( distance * 10. ) / (eit->speed / 3.6);
-            double intWeight = max(1, (int) weight);
+            int intWeight = max(1, (int) weight);
+            int intDist = max(1, (int)distance);
 
             switch(eit->direction)
             {
             case _Way::notSure:
-                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 0 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << "\n";
                 break;
             case _Way::oneway:
-                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 1 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << "\n";
                 break;
             case _Way::bidirectional:
-                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 0 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << "\n";
                 break;
             case _Way::opposite:
-                fout << startit->first << " " << targetit->first << " " << max(1, (int)distance) << " " << 1 << " " << intWeight << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << "\n";
                 break;
             default:
                 assert(false);

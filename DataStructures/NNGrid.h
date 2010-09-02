@@ -247,7 +247,6 @@ public:
     }
 
     bool FindRoutingStarts(const _Coordinate startCoord, const _Coordinate targetCoord, PhantomNodes * routingStarts) {
-
         unsigned fileIndex = getFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_Edge> candidates;
         double timestamp = get_timestamp();

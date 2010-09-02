@@ -48,9 +48,9 @@ public:
 	    g->OpenIndexFiles();
 	}
 
-	int getLatitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lat; }
+	inline int getLatitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lat; }
 
-	int getLongitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lon; }
+	inline int getLongitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lon; }
 
 	NodeID getNumberOfNodes() const { return numberOfNodes; }
 

@@ -34,6 +34,7 @@ namespace http {
 /// A reply to be sent to a client.
 struct reply
 {
+    reply() { content.reserve(1000000); }
 	/// The status of the reply.
 	enum status_type
 	{

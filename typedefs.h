@@ -26,6 +26,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 #include <climits>
+#include <cstring>
+#include <string>
 
 using namespace std;
 

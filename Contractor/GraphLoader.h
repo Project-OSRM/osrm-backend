@@ -78,7 +78,7 @@ inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vect
 
 //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
-        if( intNodeID == ext2IntNodeMap.end())
+        if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end())
         {
         	cerr << "after " << edgeList.size() << " edges" << endl;
         	cerr << "->" << source << "," << target << "," << length << "," << dir << "," << weight << endl;
@@ -86,7 +86,7 @@ inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vect
         }
         source = intNodeID->second;
         intNodeID = ext2IntNodeMap.find(target);
-        if(intNodeID == ext2IntNodeMap.end()) { cerr << "unresolved target NodeID : " << target << endl; exit(0); }
+        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) { cerr << "unresolved target NodeID : " << target << endl; exit(0); }
         target = intNodeID->second;
 
         if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }

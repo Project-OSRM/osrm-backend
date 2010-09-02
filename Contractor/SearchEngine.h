@@ -44,7 +44,7 @@ public:
     SearchEngine(GraphT * g, NodeHelperT * nh) : _graph(g), nodeHelpDesk(nh) {}
     ~SearchEngine() {}
 
-    const void getNodeInfo(NodeID id, _Coordinate& result) const
+    inline const void getNodeInfo(NodeID id, _Coordinate& result) const
     {
         result.lat = nodeHelpDesk->getLatitudeOfNode(id);
         result.lon = nodeHelpDesk->getLongitudeOfNode(id);

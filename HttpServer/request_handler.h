@@ -33,6 +33,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../typedefs.h"
 
+//#include <valgrind/callgrind.h>
+
 namespace http {
 
 struct reply;
@@ -43,7 +45,6 @@ template<typename GraphT>
 class request_handler : private boost::noncopyable
 {
 public:
-    /// Construct with a directory containing files to be served.
     explicit request_handler(SearchEngine<EdgeData, GraphT> * s) : sEngine(s){}
 
     /// Handle a request and produce a reply.
@@ -91,6 +92,8 @@ public:
             }
             if(command == "route")
             {
+//                CALLGRIND_START_INSTRUMENTATION;
+                double timestamp = get_timestamp();
                 //http://localhost:5000/route&45.1427&12.14144&54.8733&8.59438
                 std::size_t second_amp_pos = request.find_first_of("&", first_amp_pos+1);
                 std::size_t third_amp_pos = request.find_first_of("&", second_amp_pos+1);
@@ -103,58 +106,88 @@ public:
 
                 _Coordinate startCoord(lat1, lon1);
                 _Coordinate targetCoord(lat2, lon2);
+                double timestamp2 = get_timestamp();
+//                cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
+
+
                 vector<NodeID> * path = new vector<NodeID>();
                 PhantomNodes * phantomNodes = new PhantomNodes();
+                timestamp = get_timestamp();
                 sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
+                timestamp2 = get_timestamp();
+//                cout << "routing starts in " << timestamp2 - timestamp << "s" << endl;
+                timestamp = get_timestamp();
                 unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
-
+                timestamp2 = get_timestamp();
+//                cout << "shortest path in " << timestamp2 - timestamp << "s" << endl;
+                timestamp = get_timestamp();
                 rep.status = reply::ok;
-                rep.content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-                rep.content.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">");
-                rep.content.append("<Document>");
-                rep.content.append("<Placemark>");
-                rep.content.append("<name>OSM Routing Engine (c) Dennis Luxen and others </name>");
-                std::stringstream out1;
-                out1 << std::setprecision(10);
-                out1 << "<description>Route from " << lat1/100000. << "," << lon1/100000. << " to " << lat2/100000. << "," << lon2/100000. << "</description>" << " ";
-                rep.content.append(out1.str());
-                rep.content.append("<LineString>");
-                rep.content.append("<extrude>1</extrude>");
-                rep.content.append("<tessellate>1</tessellate>");
-                rep.content.append("<altitudeMode>absolute</altitudeMode>");
-                rep.content.append("<coordinates>\n");
+
+                string tmp;
+
+                rep.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+                rep.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">");
+                rep.content += ("<Document>");
+                rep.content += ("<Placemark>");
+                rep.content += ("<name>OSM Routing Engine (c) Dennis Luxen and others </name>");
+
+                rep.content += "<description>Route from ";
+                doubleToString( lat1/100000., tmp);
+                rep.content += tmp;
+                rep.content += ",";
+                doubleToString( lon1/100000., tmp);
+                rep.content += tmp;
+                rep.content += " to ";
+                doubleToString( lat2/100000., tmp);
+                rep.content += tmp;
+                rep.content += ",";
+                doubleToString( lon2/100000., tmp);
+                rep.content += tmp;
+                rep.content += "</description> ";
+                rep.content += ("<LineString>");
+                rep.content += ("<extrude>1</extrude>");
+                rep.content += ("<tessellate>1</tessellate>");
+                rep.content += ("<altitudeMode>absolute</altitudeMode>");
+                rep.content += ("<coordinates>\n");
+
 
                 if(distance != std::numeric_limits<unsigned int>::max())
                 {   //A route has been found
-                    stringstream startOut;
-                    startOut << std::setprecision(10);
-                    startOut << phantomNodes->startCoord.lon/100000. << "," << phantomNodes->startCoord.lat/100000. << " \n";
-                    rep.content.append(startOut.str());
+                    doubleToString(phantomNodes->startCoord.lon/100000., tmp);
+                    rep.content += tmp;
+                    rep.content += (",");
+                    doubleToString(phantomNodes->startCoord.lat/100000., tmp);
+                    rep.content += tmp;
+                    rep.content += (" ");
 
                     _Coordinate result;
                     for(vector<NodeID>::iterator it = path->begin(); it != path->end(); it++)
                     {
-                        sEngine-> getNodeInfo(*it, result);
-                        stringstream nodeout;
-                        nodeout << std::setprecision(10);
-                        nodeout << result.lon/100000. << "," << result.lat/100000. << " " << "\n";
-                        rep.content.append(nodeout.str());
+                        sEngine->getNodeInfo(*it, result);
+                        doubleToString(result.lon/100000., tmp);
+                        rep.content += tmp;
+                        rep.content += (",");
+                        doubleToString(result.lat/100000., tmp);
+                        rep.content += tmp;
+                        rep.content += (" ");
                     }
-                    stringstream targetOut;
-                    targetOut << std::setprecision(10);
-                    targetOut << phantomNodes->targetCoord.lon/100000. << "," << phantomNodes->targetCoord.lat/100000. << " \n";
-                    rep.content.append(targetOut.str());
+                    doubleToString(phantomNodes->targetCoord.lon/100000., tmp);
+                    rep.content += tmp;
+                    rep.content += (",");
+                    doubleToString(phantomNodes->targetCoord.lat/100000., tmp);
+                    rep.content += tmp;
                 }
 
-                rep.content.append("</coordinates>");
-                rep.content.append("</LineString>");
-                rep.content.append("</Placemark>");
-                rep.content.append("</Document>");
-                rep.content.append("</kml>");
+                rep.content += ("</coordinates>");
+                rep.content += ("</LineString>");
+                rep.content += ("</Placemark>");
+                rep.content += ("</Document>");
+                rep.content += ("</kml>");
 
                 rep.headers.resize(3);
                 rep.headers[0].name = "Content-Length";
-                rep.headers[0].value = boost::lexical_cast<std::string>(rep.content.size());
+                intToString(rep.content.size(), tmp);
+                rep.headers[0].value = tmp;
                 rep.headers[1].name = "Content-Type";
                 rep.headers[1].value = "application/vnd.google-earth.kml+xml";
                 rep.headers[2].name = "Content-Disposition";
@@ -162,6 +195,9 @@ public:
 
                 delete path;
                 delete phantomNodes;
+                timestamp2 = get_timestamp();
+//                cout << "description in " << timestamp2 - timestamp << "s" << endl;
+//                CALLGRIND_STOP_INSTRUMENTATION;
                 return;
             }
             rep = reply::stock_reply(reply::bad_request);
@@ -177,6 +213,25 @@ public:
 private:
     //SearchEngine object that is queried
     SearchEngine<EdgeData, GraphT> * sEngine;
+
+    /* used to be boosts lexical cast, but this was too slow */
+    inline void doubleToString(const double value, std::string & output)
+    {
+       // The largest 32-bit integer is 4294967295, that is 10 chars
+       // On the safe side, add 1 for sign, and 1 for trailing zero
+       char buffer[12] ;
+       sprintf(buffer, "%f", value) ;
+       output = buffer ;
+    }
+
+    inline void intToString(const int value, std::string & output)
+    {
+       // The largest 32-bit integer is 4294967295, that is 10 chars
+       // On the safe side, add 1 for sign, and 1 for trailing zero
+       char buffer[12] ;
+       sprintf(buffer, "%i", value) ;
+       output = buffer ;
+    }
 };
 }
 

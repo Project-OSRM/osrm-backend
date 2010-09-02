@@ -71,8 +71,7 @@ public:
 
 private:
     /// Handle completion of a read operation.
-    void handle_read(const boost::system::error_code& e,
-            std::size_t bytes_transferred)
+    void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred)
     {
         if (!e)
         {
