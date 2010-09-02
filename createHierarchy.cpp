@@ -128,8 +128,9 @@ int main (int argc, char *argv[])
 
     contractor->Run();
 
+    cout << "checking data sanity ..." << flush;
     contractor->checkForAllOrigEdges(edgeList);
-
+    cout << "ok" << endl;
     std::vector< ContractionCleanup::Edge > contractedEdges;
     contractor->GetEdges( contractedEdges );
 
