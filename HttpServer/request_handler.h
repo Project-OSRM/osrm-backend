@@ -104,7 +104,7 @@ public:
                 _Coordinate startCoord(lat1, lon1);
                 _Coordinate targetCoord(lat2, lon2);
                 double timestamp2 = get_timestamp();
-                                cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
+                //cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
 
 
                 vector<NodeID> * path = new vector<NodeID>();
@@ -112,11 +112,11 @@ public:
                 timestamp = get_timestamp();
                 sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
                 timestamp2 = get_timestamp();
-                                cout << "routing starts in " << timestamp2 - timestamp << "s" << endl;
+                //cout << "routing starts in " << timestamp2 - timestamp << "s" << endl;
                 timestamp = get_timestamp();
                 unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
                 timestamp2 = get_timestamp();
-                                cout << "shortest path in " << timestamp2 - timestamp << "s" << endl;
+                //cout << "shortest path in " << timestamp2 - timestamp << "s" << endl;
                 timestamp = get_timestamp();
                 rep.status = reply::ok;
 
@@ -193,7 +193,7 @@ public:
                 delete path;
                 delete phantomNodes;
                 timestamp2 = get_timestamp();
-                                cout << "description in " << timestamp2 - timestamp << "s" << endl;
+                //cout << "description in " << timestamp2 - timestamp << "s" << endl;
                 return;
             }
             rep = reply::stock_reply(reply::bad_request);
