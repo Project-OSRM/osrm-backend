@@ -29,11 +29,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "NNGrid.h"
 #include "PhantomNodes.h"
 
-typedef NNGrid::NNGrid Grid;
+typedef NNGrid::NNGrid<false> ReadOnlyGrid;
 
 class NodeInformationHelpDesk{
 public:
-	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput) { numberOfNodes = 0; int2ExtNodeMap = new vector<_Coordinate>(); g = new Grid(ramIndexInput,fileIndexInput); }
+	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput) { numberOfNodes = 0; int2ExtNodeMap = new vector<_Coordinate>(); g = new ReadOnlyGrid(ramIndexInput,fileIndexInput); }
 	~NodeInformationHelpDesk() { delete int2ExtNodeMap; delete g; }
 	void initNNGrid(ifstream& in)
 	{
@@ -61,7 +61,7 @@ public:
 	}
 private:
 	vector<_Coordinate> * int2ExtNodeMap;
-	Grid * g;
+	ReadOnlyGrid * g;
 	unsigned numberOfNodes;
 };
 

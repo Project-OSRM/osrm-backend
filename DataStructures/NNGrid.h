@@ -144,10 +144,11 @@ static void getListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& 
     bresenham(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
 }
 
+template<bool WriteAccess = false>
 class NNGrid {
 
 public:
-    NNGrid() { ramIndexTable.resize((1024*1024), UINT_MAX); }
+    NNGrid() { ramIndexTable.resize((1024*1024), UINT_MAX); if( WriteAccess) { entries = new stxxl::vector<GridEdgeData>(); }}
 
     NNGrid(const char* rif, const char* iif) {
         ramIndexTable.resize((1024*1024), UINT_MAX);
@@ -158,6 +159,11 @@ public:
     ~NNGrid() {
         if(ramInFile.is_open()) ramInFile.close();
         if(indexInFile.is_open()) indexInFile.close();
+
+        if (WriteAccess)
+        {
+            delete entries;
+        }
     }
 
     void OpenIndexFiles()
@@ -183,7 +189,7 @@ public:
         getListOfIndexesForEdgeAndGridSize(start, target, indexList);
         for(int i = 0; i < indexList.size(); i++)
         {
-            entries.push_back(GridEdgeData(edge, indexList[i].first, indexList[i].second));
+            entries->push_back(GridEdgeData(edge, indexList[i].first, indexList[i].second));
         }
     }
 
@@ -192,18 +198,18 @@ public:
         double timestamp = get_timestamp();
         //create index file on disk, old one is over written
         indexOutFile.open(fileIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
-        cout << "sorting grid data consisting of " << entries.size() << " edges..." << flush;
+        cout << "sorting grid data consisting of " << entries->size() << " edges..." << flush;
         //sort entries
-        stxxl::sort(entries.begin(), entries.end(), CompareGridEdgeDataByRamIndex(), 1024*1024*1024);
+        stxxl::sort(entries->begin(), entries->end(), CompareGridEdgeDataByRamIndex(), 1024*1024*1024);
         cout << "ok in " << (get_timestamp() - timestamp) << "s" << endl;
         std::vector<GridEdgeData> entriesInFileWithRAMSameIndex;
-        unsigned indexInRamTable = entries.begin()->ramIndex;
+        unsigned indexInRamTable = entries->begin()->ramIndex;
         unsigned lastPositionInIndexFile = 0;
         unsigned numberOfUsedCells = 0;
         unsigned maxNumberOfRAMCellElements = 0;
         cout << "writing data ..." << flush;
-        Percent p(entries.size());
-        for(stxxl::vector<GridEdgeData>::iterator vt = entries.begin(); vt != entries.end(); vt++)
+        Percent p(entries->size());
+        for(stxxl::vector<GridEdgeData>::iterator vt = entries->begin(); vt != entries->end(); vt++)
         {
             p.printIncrement();
             if(vt->ramIndex != indexInRamTable)
@@ -587,7 +593,7 @@ private:
     ofstream indexOutFile;
     ifstream indexInFile;
     ifstream ramInFile;
-    stxxl::vector<GridEdgeData> entries;
+    stxxl::vector<GridEdgeData> * entries;
     std::vector<unsigned> ramIndexTable; //4 MB for first level index in RAM
 };
 }

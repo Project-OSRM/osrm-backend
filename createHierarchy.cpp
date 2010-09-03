@@ -51,7 +51,7 @@ using namespace std;
 
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge GridEdge;
-typedef NNGrid::NNGrid Grid;
+typedef NNGrid::NNGrid<true> WritableGrid;
 
 vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
 
@@ -88,7 +88,7 @@ int main (int argc, char *argv[])
     strcat(fileIndexOut, ".fileIndex");
     ofstream mapOutFile(nodeOut, ios::binary);
 
-    Grid * g = new Grid();
+    WritableGrid * g = new WritableGrid();
     cout << "building grid ..." << flush;
     Percent p(edgeList.size());
     for(NodeID i = 0; i < edgeList.size(); i++)
