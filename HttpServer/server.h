@@ -42,8 +42,7 @@ template<typename GraphT>
 class server: private boost::noncopyable
 {
 public:
-    /// Construct the server to listen on the specified TCP address and port, and
-    /// serve up files from the given directory.
+    /// Construct the server to listen on the specified TCP address and port
     explicit server(const std::string& address, const std::string& port, std::size_t thread_pool_size, SearchEngine<EdgeData, GraphT, NodeInformationHelpDesk> * s)
     : thread_pool_size_(thread_pool_size),
       acceptor_(io_service_),
@@ -70,8 +69,7 @@ public:
         std::vector<boost::shared_ptr<boost::thread> > threads;
         for (std::size_t i = 0; i < thread_pool_size_; ++i)
         {
-            boost::shared_ptr<boost::thread> thread(new boost::thread(
-                    boost::bind(&boost::asio::io_service::run, &io_service_)));
+            boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_)));
             threads.push_back(thread);
         }
 
@@ -96,9 +94,7 @@ private:
         {
             new_connection_->start();
             new_connection_.reset(new connection<GraphT>(io_service_, request_handler_));
-            acceptor_.async_accept(new_connection_->socket(),
-                    boost::bind(&server::handle_accept, this,
-                            boost::asio::placeholders::error));
+            acceptor_.async_accept(new_connection_->socket(), boost::bind(&server::handle_accept, this, boost::asio::placeholders::error));
         }
     }
 

@@ -33,8 +33,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../typedefs.h"
 
-//#include <valgrind/callgrind.h>
-
 namespace http {
 
 struct reply;
@@ -92,7 +90,6 @@ public:
             }
             if(command == "route")
             {
-//                CALLGRIND_START_INSTRUMENTATION;
                 double timestamp = get_timestamp();
                 //http://localhost:5000/route&45.1427&12.14144&54.8733&8.59438
                 std::size_t second_amp_pos = request.find_first_of("&", first_amp_pos+1);
@@ -107,7 +104,7 @@ public:
                 _Coordinate startCoord(lat1, lon1);
                 _Coordinate targetCoord(lat2, lon2);
                 double timestamp2 = get_timestamp();
-//                cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
+                                cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
 
 
                 vector<NodeID> * path = new vector<NodeID>();
@@ -115,11 +112,11 @@ public:
                 timestamp = get_timestamp();
                 sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
                 timestamp2 = get_timestamp();
-//                cout << "routing starts in " << timestamp2 - timestamp << "s" << endl;
+                                cout << "routing starts in " << timestamp2 - timestamp << "s" << endl;
                 timestamp = get_timestamp();
                 unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
                 timestamp2 = get_timestamp();
-//                cout << "shortest path in " << timestamp2 - timestamp << "s" << endl;
+                                cout << "shortest path in " << timestamp2 - timestamp << "s" << endl;
                 timestamp = get_timestamp();
                 rep.status = reply::ok;
 
@@ -132,16 +129,16 @@ public:
                 rep.content += ("<name>OSM Routing Engine (c) Dennis Luxen and others </name>");
 
                 rep.content += "<description>Route from ";
-                doubleToString( lat1/100000., tmp);
+                convertLatLon(lat1, tmp);
                 rep.content += tmp;
                 rep.content += ",";
-                doubleToString( lon1/100000., tmp);
+                convertLatLon(lon1, tmp);
                 rep.content += tmp;
                 rep.content += " to ";
-                doubleToString( lat2/100000., tmp);
+                convertLatLon(lat2, tmp);
                 rep.content += tmp;
                 rep.content += ",";
-                doubleToString( lon2/100000., tmp);
+                convertLatLon(lon2, tmp);
                 rep.content += tmp;
                 rep.content += "</description> ";
                 rep.content += ("<LineString>");
@@ -153,7 +150,7 @@ public:
 
                 if(distance != std::numeric_limits<unsigned int>::max())
                 {   //A route has been found
-                    doubleToString(phantomNodes->startCoord.lon/100000., tmp);
+                    convertLatLon(phantomNodes->startCoord.lon, tmp);
                     rep.content += tmp;
                     rep.content += (",");
                     doubleToString(phantomNodes->startCoord.lat/100000., tmp);
@@ -164,17 +161,17 @@ public:
                     for(vector<NodeID>::iterator it = path->begin(); it != path->end(); it++)
                     {
                         sEngine->getNodeInfo(*it, result);
-                        doubleToString(result.lon/100000., tmp);
+                        convertLatLon(result.lon, tmp);
                         rep.content += tmp;
                         rep.content += (",");
-                        doubleToString(result.lat/100000., tmp);
+                        convertLatLon(result.lat, tmp);
                         rep.content += tmp;
                         rep.content += (" ");
                     }
-                    doubleToString(phantomNodes->targetCoord.lon/100000., tmp);
+                    convertLatLon(targetCoord.lon, tmp);
                     rep.content += tmp;
                     rep.content += (",");
-                    doubleToString(phantomNodes->targetCoord.lat/100000., tmp);
+                    convertLatLon(targetCoord.lat, tmp);
                     rep.content += tmp;
                 }
 
@@ -196,8 +193,7 @@ public:
                 delete path;
                 delete phantomNodes;
                 timestamp2 = get_timestamp();
-//                cout << "description in " << timestamp2 - timestamp << "s" << endl;
-//                CALLGRIND_STOP_INSTRUMENTATION;
+                                cout << "description in " << timestamp2 - timestamp << "s" << endl;
                 return;
             }
             rep = reply::stock_reply(reply::bad_request);
@@ -217,20 +213,59 @@ private:
     /* used to be boosts lexical cast, but this was too slow */
     inline void doubleToString(const double value, std::string & output)
     {
-       // The largest 32-bit integer is 4294967295, that is 10 chars
-       // On the safe side, add 1 for sign, and 1 for trailing zero
-       char buffer[12] ;
-       sprintf(buffer, "%f", value) ;
-       output = buffer ;
+        // The largest 32-bit integer is 4294967295, that is 10 chars
+        // On the safe side, add 1 for sign, and 1 for trailing zero
+        char buffer[12] ;
+        sprintf(buffer, "%f", value) ;
+        output = buffer ;
     }
 
     inline void intToString(const int value, std::string & output)
     {
-       // The largest 32-bit integer is 4294967295, that is 10 chars
-       // On the safe side, add 1 for sign, and 1 for trailing zero
-       char buffer[12] ;
-       sprintf(buffer, "%i", value) ;
-       output = buffer ;
+        // The largest 32-bit integer is 4294967295, that is 10 chars
+        // On the safe side, add 1 for sign, and 1 for trailing zero
+        char buffer[12] ;
+        sprintf(buffer, "%i", value) ;
+        output = buffer ;
+    }
+
+    inline void convertLatLon(const int value, std::string & output)
+    {
+        char buffer[100];
+        buffer[10] = 0; // Nullterminierung
+        char* string = printInt< 10, 5 >( buffer, value );
+        output = string;
+    }
+
+    // precision: Nachkommastellen
+    // length: Maximallänge inklusive Komma
+    template< int length, int precision >
+    inline char* printInt( char* buffer, int value )
+    {
+        bool minus = false;
+        if ( value < 0 ) {
+            minus = true;
+            value = -value;
+        }
+        buffer += length - 1;
+        for ( int i = 0; i < precision; i++ ) {
+            *buffer = '0' + ( value % 10 );
+            value /= 10;
+            buffer--;
+        }
+        *buffer = '.';
+        buffer--;
+        for ( int i = precision + 1; i < length; i++ ) {
+            *buffer = '0' + ( value % 10 );
+            value /= 10;
+            if ( value == 0 ) break;
+            buffer--;
+        }
+        if ( minus ) {
+            buffer--;
+            *buffer = '-';
+        }
+        return buffer;
     }
 };
 }
