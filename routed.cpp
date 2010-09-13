@@ -64,7 +64,7 @@ int main (int argc, char *argv[])
 	time = get_timestamp();
 	cout << "deserializing edge data from " << argv[1] << " ..." << flush;
 
-	std::vector< GridEdge> * edgelist = new std::vector< GridEdge>();
+	std::vector< GridEdge> * edgeList = new std::vector< GridEdge>();
 	while(!in.eof())
 	{
 		GridEdge g;
@@ -89,7 +89,7 @@ int main (int argc, char *argv[])
 		e.backward = backward; e.distance = distance; e.forward = forward; e.middle = middle; e.shortcut = shortcut;
 		g.data = e; g.source = source; g.target = target;
 
-		edgelist->push_back(g);
+		edgeList->push_back(g);
 	}
 
 	in.close();
@@ -99,8 +99,8 @@ int main (int argc, char *argv[])
 	nodeInfoHelper->initNNGrid(in2);
 	cout << "in " << get_timestamp() - time << "s" << endl;
 //	time = get_timestamp();
-	StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(nodeInfoHelper->getNumberOfNodes()-1, *edgelist);
-	delete edgelist;
+	StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(nodeInfoHelper->getNumberOfNodes()-1, *edgeList);
+	delete edgeList;
 //	cout << "checking data sanity ..." << flush;
 //	NodeID numberOfNodes = graph->GetNumberOfNodes();
 //	for ( NodeID node = 0; node < numberOfNodes; ++node ) {

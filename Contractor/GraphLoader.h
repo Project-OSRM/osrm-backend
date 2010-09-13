@@ -96,6 +96,7 @@ inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vect
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();
+    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     cout << "ok" << endl;
     return n;
 }

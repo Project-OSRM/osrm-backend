@@ -93,9 +93,9 @@ int main (int argc, char *argv[])
     Percent p(edgeList.size());
     for(NodeID i = 0; i < edgeList.size(); i++)
     {
+        p.printIncrement();
         if(!edgeList[i].isLocatable())
             continue;
-        p.printIncrement();
         int slat = int2ExtNodeMap->at(edgeList[i].source()).lat;
         int slon = int2ExtNodeMap->at(edgeList[i].source()).lon;
         int tlat = int2ExtNodeMap->at(edgeList[i].target()).lat;
@@ -123,9 +123,12 @@ int main (int argc, char *argv[])
     }
     mapOutFile.close();
     int2ExtNodeMap->clear();
+    delete int2ExtNodeMap;
 
+    cout << "initializing contractor ..." << flush;
     Contractor* contractor = new Contractor( n, edgeList );
-
+    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    cout << "ok" << endl;
     contractor->Run();
 
     cout << "checking data sanity ..." << flush;
@@ -143,8 +146,11 @@ int main (int argc, char *argv[])
     ofstream edgeOutFile(edgeOut, ios::binary);
 
     //Serializing the edge list.
+    cout << "Serializing edges " << flush;
+    p.reinit(cleanedEdgeList.size());
     for(std::vector< GridEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++)
     {
+        p.printIncrement();
         int distance= it->data.distance;
         assert(distance > 0);
         bool shortcut= it->data.shortcut;
@@ -168,5 +174,4 @@ int main (int argc, char *argv[])
 
     delete cleanup;
     delete contractor;
-    delete int2ExtNodeMap;
 }

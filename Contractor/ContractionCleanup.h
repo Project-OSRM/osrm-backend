@@ -42,8 +42,11 @@ private:
             parent = p;
         }
     };
+#ifdef _MANYCORES
+    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, DenseStorage<NodeID, NodeID> > _Heap;
+#else
     typedef BinaryHeap< NodeID, NodeID, int, _HeapData > _Heap;
-
+#endif
     struct _ThreadData {
         _Heap* _heapForward;
         _Heap* _heapBackward;
@@ -99,11 +102,8 @@ public:
     }
 
     void Run() {
-
         double time = _Timestamp();
-
         RemoveUselessShortcuts();
-
         time = _Timestamp() - time;
         cout << "Postprocessing Time: " << time << " s" << endl;
     }
@@ -159,7 +159,11 @@ private:
 #else
         sort( _graph.begin(), _graph.end(), Edge::CompareBySource );
 #endif
+        try {
         _firstEdge.resize( _numNodes + 1 );
+        } catch(...) {
+            cerr << "Not enough RAM on machine" << endl;
+        }
         _firstEdge[0] = 0;
         for ( NodeID i = 0, node = 0; i < ( NodeID ) _graph.size(); i++ ) {
             while ( _graph[i].source != node )
