@@ -73,7 +73,7 @@ public:
                 currentEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
             if(currentEdge != UINT_MAX && _graph->GetEdgeData(currentEdge).forward && phantomNodes->startRatio < phantomNodes->targetRatio)
             { //upperbound auf kantenlänge setzen
-//                cout << "start and target on same edge" << endl;
+                //                cout << "start and target on same edge" << endl;
                 onSameEdge = true;
                 _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
             } else if (currentEdge != UINT_MAX && !_graph->GetEdgeData(currentEdge).backward) {
@@ -168,6 +168,30 @@ public:
         delete _backwardHeap;
 
         return _upperbound/10;
+    }
+
+    unsigned int ComputeDistanceBetweenNodes(NodeID start, NodeID target)
+    {
+        _Heap * _forwardHeap = new _Heap(_graph->GetNumberOfNodes());
+        _Heap * _backwardHeap = new _Heap(_graph->GetNumberOfNodes());
+        NodeID middle = ( NodeID ) 0;
+        unsigned int _upperbound = std::numeric_limits<unsigned int>::max();
+
+        _forwardHeap->Insert(start, 0, start);
+        _backwardHeap->Insert(target, 0, target);
+
+        while(_forwardHeap->Size() + _backwardHeap->Size() > 0)
+        {
+            if ( _forwardHeap->Size() > 0 ) {
+                _RoutingStep( _forwardHeap, _backwardHeap, true, &middle, &_upperbound );
+            }
+            if ( _backwardHeap->Size() > 0 ) {
+                _RoutingStep( _backwardHeap, _forwardHeap, false, &middle, &_upperbound );
+            }
+        }
+        delete _forwardHeap;
+        delete _backwardHeap;
+        return _upperbound;
     }
 
     inline unsigned int findNearestNodeForLatLon(const _Coordinate& coord, _Coordinate& result) const
