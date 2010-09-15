@@ -22,7 +22,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define STATICGRAPH_H_INCLUDED
 
 #include <vector>
+#ifdef _GLIBCXX_PARALLEL
+#include <parallel/algorithm>
+#else
 #include <algorithm>
+#endif
 
 #include "../typedefs.h"
 
@@ -45,8 +49,11 @@ public:
     };
 
     StaticGraph( int nodes, std::vector< InputEdge > &graph ) {
-
+#ifdef _GLIBCXX_PARALLEL
+        __gnu_parallel::sort( graph.begin(), graph.end() );
+#else
         std::sort( graph.begin(), graph.end() );
+#endif
         _numNodes = nodes;
         _numEdges = ( EdgeIterator ) graph.size();
         _nodes.resize( _numNodes + 1);
