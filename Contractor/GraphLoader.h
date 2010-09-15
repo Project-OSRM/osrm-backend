@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef CREATEGRAPH_H
 #define GRAPHLOADER_H
@@ -42,7 +42,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef google::dense_hash_map<NodeID, NodeID> ExternalNodeMap;
 
 template<typename EdgeT>
-inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
+NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
     NodeID n, source, target, id;
     EdgeID m;
     bool locatable;
@@ -77,13 +77,13 @@ inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vect
         if(length == 0)
         { cerr << "loaded null length edge" << endl; exit(1); }
 
-//         translate the external NodeIDs to internal IDs
+        //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
         if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end())
         {
-        	cerr << "after " << edgeList.size() << " edges" << endl;
-        	cerr << "->" << source << "," << target << "," << length << "," << dir << "," << weight << endl;
-        	cerr << "unresolved source NodeID: " << source << endl; exit(0);
+            cerr << "after " << edgeList.size() << " edges" << endl;
+            cerr << "->" << source << "," << target << "," << length << "," << dir << "," << weight << endl;
+            cerr << "unresolved source NodeID: " << source << endl; exit(0);
         }
         source = intNodeID->second;
         intNodeID = ext2IntNodeMap.find(target);
@@ -101,4 +101,34 @@ inline NodeID readOSMRGraphFromStream(istream &in, vector<EdgeT>& edgeList, vect
     return n;
 }
 
+template<typename EdgeT>
+void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
+    while(!in.eof())
+    {
+        EdgeT g;
+        EdgeData e;
+
+        int distance;
+        bool shortcut;
+        bool forward;
+        bool backward;
+        NodeID middle;
+        NodeID source;
+        NodeID target;
+
+        in.read((char *)&(distance), sizeof(int));
+        assert(distance > 0);
+        in.read((char *)&(shortcut), sizeof(bool));
+        in.read((char *)&(forward), sizeof(bool));
+        in.read((char *)&(backward), sizeof(bool));
+        in.read((char *)&(middle), sizeof(NodeID));
+        in.read((char *)&(source), sizeof(NodeID));
+        in.read((char *)&(target), sizeof(NodeID));
+        e.backward = backward; e.distance = distance; e.forward = forward; e.middle = middle; e.shortcut = shortcut;
+        g.data = e; g.source = source; g.target = target;
+
+        edgeList->push_back(g);
+    }
+
+}
 #endif // CREATEGRAPH_H

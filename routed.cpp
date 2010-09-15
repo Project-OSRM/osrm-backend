@@ -36,6 +36,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include "HttpServer/server.h"
+#include "Contractor/GraphLoader.h"
 #include "DataStructures/StaticGraph.h"
 
 using namespace std;
@@ -49,131 +50,73 @@ typedef http::server<StaticGraph<EdgeData> > server;
  */
 int main (int argc, char *argv[])
 {
-	double time;
+    if(argc < 4)
+    {
+        cerr << "Correct usage:" << endl << argv[0] << " <hsgr data> <nodes data> <ram index> <file index>" << endl;
+        exit(-1);
+    }
 
-	if(argc < 4)
-	{
-		cerr << "Correct usage:" << endl << argv[0] << " <hsgr data> <nodes data> <ram index> <file index>" << endl;
-		exit(-1);
-	}
+    ifstream hsgrInStream(argv[1], ios::binary);
+    ifstream nodesInStream(argv[2], ios::binary);
+    NodeInformationHelpDesk * nodeInfoHelper = new NodeInformationHelpDesk(argv[3], argv[4]);
 
-	ifstream in(argv[1], ios::binary);
-	ifstream in2(argv[2], ios::binary);
-	NodeInformationHelpDesk * nodeInfoHelper = new NodeInformationHelpDesk(argv[3], argv[4]);
+    double time = get_timestamp();
+    cout << "deserializing edge data from " << argv[1] << " ..." << flush;
 
-	time = get_timestamp();
-	cout << "deserializing edge data from " << argv[1] << " ..." << flush;
+    std::vector< GridEdge> * edgeList = new std::vector< GridEdge>();
+    readHSGRFromStream(hsgrInStream, edgeList);
+    hsgrInStream.close();
+    cout << "in " << get_timestamp() - time << "s" << endl;
+    time = get_timestamp();
+    cout << "deserializing node map and building nearest neighbor grid ..." << flush;
+    nodeInfoHelper->initNNGrid(nodesInStream);
+    cout << "in " << get_timestamp() - time << "s" << endl;
+    StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(nodeInfoHelper->getNumberOfNodes()-1, *edgeList);
+    delete edgeList;
+    time = get_timestamp();
+    cout << "constructing search graph ..." << flush;
 
-	std::vector< GridEdge> * edgeList = new std::vector< GridEdge>();
-	while(!in.eof())
-	{
-		GridEdge g;
-		EdgeData e;
+    SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeInfoHelper);
+    cout << "in " << get_timestamp() - time << "s" << endl;
 
-		int distance;
-		bool shortcut;
-		bool forward;
-		bool backward;
-		NodeID middle;
-		NodeID source;
-		NodeID target;
+    time = get_timestamp();
 
-		in.read((char *)&(distance), sizeof(int));
-		assert(distance > 0);
-		in.read((char *)&(shortcut), sizeof(bool));
-		in.read((char *)&(forward), sizeof(bool));
-		in.read((char *)&(backward), sizeof(bool));
-		in.read((char *)&(middle), sizeof(NodeID));
-		in.read((char *)&(source), sizeof(NodeID));
-		in.read((char *)&(target), sizeof(NodeID));
-		e.backward = backward; e.distance = distance; e.forward = forward; e.middle = middle; e.shortcut = shortcut;
-		g.data = e; g.source = source; g.target = target;
+    try {
+        // Block all signals for background thread.
+        sigset_t new_mask;
+        sigfillset(&new_mask);
+        sigset_t old_mask;
+        pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 
-		edgeList->push_back(g);
-	}
+        cout << "starting web server ..." << flush;
+        // Run server in background thread.
+        server s("0.0.0.0", "5000", omp_get_num_procs(), sEngine);
+        boost::thread t(boost::bind(&server::run, &s));
+        cout << "ok" << endl;
 
-	in.close();
-	cout << "in " << get_timestamp() - time << "s" << endl;
-	time = get_timestamp();
-	cout << "deserializing node map and building nearest neighbor grid ..." << flush;
-	nodeInfoHelper->initNNGrid(in2);
-	cout << "in " << get_timestamp() - time << "s" << endl;
-//	time = get_timestamp();
-	StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(nodeInfoHelper->getNumberOfNodes()-1, *edgeList);
-	delete edgeList;
-//	cout << "checking data sanity ..." << flush;
-//	NodeID numberOfNodes = graph->GetNumberOfNodes();
-//	for ( NodeID node = 0; node < numberOfNodes; ++node ) {
-//		for ( StaticGraph<EdgeData>::EdgeIterator edge = graph->BeginEdges( node ), endEdges = graph->EndEdges( node ); edge != endEdges; ++edge ) {
-//			const NodeID start = node;
-//			const NodeID target = graph->GetTarget( edge );
-//			const EdgeData& data = graph->GetEdgeData( edge );
-//			const NodeID middle = data.middle;
-//			assert(start != target);
-//			if(data.shortcut)
-//			{
-//				if(graph->FindEdge(start, middle) == SPECIAL_EDGEID && graph->FindEdge(middle, start) == SPECIAL_EDGEID)
-//				{
-//					assert(false);
-//					cerr << "hierarchy broken" << endl; exit(-1);
-//				}
-//				if(graph->FindEdge(middle, target) == SPECIAL_EDGEID && graph->FindEdge(target, middle) == SPECIAL_EDGEID)
-//				{
-//					assert(false);
-//					cerr << "hierarchy broken" << endl; exit(-1);
-//				}
-//			}
-//		}
-//		if(graph->GetOutDegree(node) == 0)
-//		{
-//		    cerr << "found node with degree 0: " << node << endl;
-//		}
-//	}
-//	cout << "in " << get_timestamp() - time << "s" << endl;
-	time = get_timestamp();
-	cout << "building search graph ..." << flush;
+        // Restore previous signals.
+        pthread_sigmask(SIG_SETMASK, &old_mask, 0);
 
-	SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeInfoHelper);
-	cout << "in " << get_timestamp() - time << "s" << endl;
-
-	time = get_timestamp();
-
-	try {
-		// Block all signals for background thread.
-		sigset_t new_mask;
-		sigfillset(&new_mask);
-		sigset_t old_mask;
-		pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
-
-		cout << "starting web server ..." << flush;
-		// Run server in background thread.
-		server s("0.0.0.0", "5000", omp_get_num_procs(), sEngine);
-		boost::thread t(boost::bind(&server::run, &s));
-		cout << "ok" << endl;
-
-		// Restore previous signals.
-		pthread_sigmask(SIG_SETMASK, &old_mask, 0);
-
-		// Wait for signal indicating time to shut down.
-		sigset_t wait_mask;
-		sigemptyset(&wait_mask);
-		sigaddset(&wait_mask, SIGINT);
-		sigaddset(&wait_mask, SIGQUIT);
-		sigaddset(&wait_mask, SIGTERM);
-		pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
-		int sig = 0;
-		sigwait(&wait_mask, &sig);
-		// Stop the server.
-		s.stop();
-		t.join();
-	}
-	catch (std::exception& e)
-	{
-		std::cerr << "exception: " << e.what() << "\n";
-	}
-	cout << "graceful shutdown after " << get_timestamp() - time << "s" << endl;
-	delete sEngine;
-	delete graph;
-	delete nodeInfoHelper;
-	return 0;
+        // Wait for signal indicating time to shut down.
+        sigset_t wait_mask;
+        sigemptyset(&wait_mask);
+        sigaddset(&wait_mask, SIGINT);
+        sigaddset(&wait_mask, SIGQUIT);
+        sigaddset(&wait_mask, SIGTERM);
+        pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
+        int sig = 0;
+        sigwait(&wait_mask, &sig);
+        // Stop the server.
+        s.stop();
+        t.join();
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << "exception: " << e.what() << "\n";
+    }
+    cout << "graceful shutdown after " << get_timestamp() - time << "s" << endl;
+    delete sEngine;
+    delete graph;
+    delete nodeInfoHelper;
+    return 0;
 }

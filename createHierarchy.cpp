@@ -70,7 +70,7 @@ int main (int argc, char *argv[])
         cerr << "Cannot open " << argv[1] << endl; exit(-1);
     }
     vector<ImportEdge> edgeList;
-    const NodeID n = readOSMRGraphFromStream(in, edgeList, int2ExtNodeMap);
+    const NodeID n = readOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
     in.close();
 
     char nodeOut[1024];
