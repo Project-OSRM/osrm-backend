@@ -168,10 +168,10 @@ public:
                         rep.content += tmp;
                         rep.content += (" ");
                     }
-                    convertLatLon(targetCoord.lon, tmp);
+                    convertLatLon(phantomNodes->targetCoord.lon, tmp);
                     rep.content += tmp;
                     rep.content += (",");
-                    convertLatLon(targetCoord.lat, tmp);
+                    convertLatLon(phantomNodes->targetCoord.lat, tmp);
                     rep.content += tmp;
                 }
 

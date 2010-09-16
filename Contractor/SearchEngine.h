@@ -30,7 +30,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 struct _HeapData {
     NodeID parent;
-    _HeapData( NodeID p ) : parent(p) { }
+    bool stalled;
+    _HeapData( NodeID p ) : parent(p) , stalled(false) { }
 };
 
 typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage< NodeID, unsigned > > _Heap;
@@ -151,10 +152,10 @@ public:
         packedPath.push_back( middle );
         pathNode = middle;
 
-        while ( pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ) {
+        do {
             pathNode = _backwardHeap->GetData( pathNode ).parent;
             packedPath.push_back( pathNode );
-        }
+        } while ( pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ) ;
 
         // push start node explicitely
         path->push_back(packedPath[0]);
