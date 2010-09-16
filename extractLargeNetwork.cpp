@@ -107,6 +107,9 @@ int main (int argc, char *argv[])
                         assert(way.type > -1 || way.maximumSpeed != -1);
                         assert(path.size()>0);
 
+                        if(way.maximumSpeed == -1)
+                            way.maximumSpeed = settings.speedProfile.speed[way.type];
+
                         for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++)
                         {
                             _Edge e;

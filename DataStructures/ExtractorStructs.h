@@ -217,8 +217,6 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
                             if ( way.direction == _Way::notSure ) {
                                 way.direction = _Way::oneway;
                             }
-                            if ( way.maximumSpeed == -1 )
-                                way.maximumSpeed = 10;
                             way.usefull = true;
                         }
                     } else if ( xmlStrEqual( k, ( const xmlChar* ) "route" ) == 1 ) {
