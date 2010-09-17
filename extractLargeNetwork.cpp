@@ -103,7 +103,7 @@ int main (int argc, char *argv[])
 
                     {
                         vector< NodeID > & path = way.path;
-                        double speed = way.maximumSpeed;
+//                        double speed = way.maximumSpeed;
                         assert(way.type > -1 || way.maximumSpeed != -1);
                         assert(path.size()>0);
 
@@ -146,7 +146,7 @@ int main (int argc, char *argv[])
         time = get_timestamp();
 
         cout << "Sorting all nodes ..." << flush;
-        stxxl::ksort(allNodes.begin(), allNodes.end(), memory_to_use);
+        stxxl::sort(allNodes.begin(), allNodes.end(), CmpNodeByID(), memory_to_use);
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
@@ -290,5 +290,6 @@ int main (int argc, char *argv[])
     confirmedEdges.clear();
     xmlFreeTextReader(inputReader);
     delete nodeMap;
+    cout << "finished." << endl;
     return 0;
 }

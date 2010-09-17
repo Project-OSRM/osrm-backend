@@ -40,11 +40,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
         residential     40
         living_street   10
         service         30
-        ferry           25
+        ferry           5
  */
 
 std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "unclassified", "residential", "living_street", "service", "ferry" };
-double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 25};
+double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 5};
 
 struct _Node : NodeInfo{
     bool trafficSignal;
@@ -173,6 +173,24 @@ struct CompareEdgeByTarget : public std::binary_function<_Edge, _Edge, bool>
     }
 };
 
+struct CmpNodeByID : public std::binary_function<_Node, _Node, bool>
+{
+    typedef _Node value_type;
+    bool operator ()  (const _Node & a, const _Node & b) const
+    {
+        return a.id < b.id;
+    }
+    value_type max_value()
+    {
+        return _Node::max_value();
+    }
+    value_type min_value()
+    {
+        return _Node::min_value();
+    }
+};
+
+
 _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
     _Way way;
     way.direction = _Way::notSure;
@@ -180,7 +198,7 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
     way.type = -1;
     way.usefull = false;
     way.access = true;
-
+    //    cout << "new way" << endl;
     if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
         const int depth = xmlTextReaderDepth( inputReader );
         while ( xmlTextReaderRead( inputReader ) == 1 ) {
@@ -204,7 +222,13 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
             if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
                 xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
                 xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
+                //                cout << "->k=" << k << ", v=" << value << endl;
                 if ( k != NULL && value != NULL ) {
+
+                    if ( xmlStrEqual( k, ( const xmlChar* ) "name" ) == 1 ) {
+                        //write into namedb and note nameid at edge.
+                    }
+
                     if ( xmlStrEqual( k, ( const xmlChar* ) "oneway" ) == 1 ) {
                         if ( xmlStrEqual( value, ( const xmlChar* ) "no" ) == 1 || xmlStrEqual( value, ( const xmlChar* ) "false" ) == 1 || xmlStrEqual( value, ( const xmlChar* ) "0" ) == 1 )
                             way.direction = _Way::bidirectional;
@@ -218,14 +242,20 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
                                 way.direction = _Way::oneway;
                             }
                             way.usefull = true;
+                            if(way.type == -1)
+                                way.type = 9;
                         }
                     } else if ( xmlStrEqual( k, ( const xmlChar* ) "route" ) == 1 ) {
-                        string route( (const char* ) value );
-                        if (route == "ferry") {
+                        string name( (const char* ) value );
+                        if (name == "ferry") {
                             for ( int i = 0; i < settings.speedProfile.names.size(); i++ ) {
-                                way.maximumSpeed = 5;
-                                way.usefull = true;
-                                way.direction == _Way::oneway;
+                                if ( name == settings.speedProfile.names[i] ) {
+                                    way.type = i;
+                                    way.maximumSpeed = settings.speedProfile.speed[i];
+                                    way.usefull = true;
+                                    way.direction == _Way::bidirectional;
+                                    break;
+                                }
                             }
                         }
                     } else if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
@@ -341,6 +371,7 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
             xmlFree( childName );
         }
     }
+    assert(way.type > -1 || way.maximumSpeed != -1);
     return way;
 }
 
