@@ -139,7 +139,11 @@ public:
         }
 
         if ( _upperbound == std::numeric_limits< unsigned int >::max() || onSameEdge )
+        {
+            delete _forwardHeap;
+            delete _backwardHeap;
             return _upperbound;
+        }
 
         NodeID pathNode = middle;
         deque< NodeID > packedPath;
@@ -152,16 +156,19 @@ public:
         packedPath.push_back( middle );
         pathNode = middle;
 
-        do {
+        while ( pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ){
             pathNode = _backwardHeap->GetData( pathNode ).parent;
             packedPath.push_back( pathNode );
-        } while ( pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ) ;
+        }
 
         // push start node explicitely
         path->push_back(packedPath[0]);
-        for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
+        if(packedPath[0] != packedPath[1])
         {
-            _UnpackEdge(packedPath[i], packedPath[i+1], path);
+            for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
+            {
+                _UnpackEdge(packedPath[i], packedPath[i+1], path);
+            }
         }
 
         packedPath.clear();
