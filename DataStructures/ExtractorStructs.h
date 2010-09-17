@@ -198,7 +198,7 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
     way.type = -1;
     way.usefull = false;
     way.access = true;
-    //    cout << "new way" << endl;
+//    cout << "new way" << endl;
     if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
         const int depth = xmlTextReaderDepth( inputReader );
         while ( xmlTextReaderRead( inputReader ) == 1 ) {
@@ -222,7 +222,7 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
             if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
                 xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
                 xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
-                //                cout << "->k=" << k << ", v=" << value << endl;
+//                cout << "->k=" << k << ", v=" << value << endl;
                 if ( k != NULL && value != NULL ) {
 
                     if ( xmlStrEqual( k, ( const xmlChar* ) "name" ) == 1 ) {
@@ -371,7 +371,6 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
             xmlFree( childName );
         }
     }
-    assert(way.type > -1 || way.maximumSpeed != -1);
     return way;
 }
 
