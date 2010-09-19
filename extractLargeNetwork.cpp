@@ -67,8 +67,8 @@ int main (int argc, char *argv[])
     xmlTextReaderPtr inputReader = inputReaderFactory(argv[1]);
 
     double time = get_timestamp();
-    settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+13);
-    settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+13);
+    settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+14);
+    settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+14);
 
     nodeMap->set_empty_key(UINT_MAX);
     try {
