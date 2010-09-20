@@ -26,7 +26,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <algorithm>
 #endif
 #include "../DataStructures/DynamicGraph.h"
-#include <algorithm>
 #include <ctime>
 #include <vector>
 #include <queue>
