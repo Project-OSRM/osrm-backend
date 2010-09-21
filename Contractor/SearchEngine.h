@@ -74,14 +74,14 @@ public:
             bool reverse = false;
             EdgeID currentEdge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2 );
             if(currentEdge == UINT_MAX){
-                delete _forwardHeap;
-                delete _backwardHeap;
-                return _upperbound;
+                currentEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
+                reverse = true;
             }
 
             if(currentEdge == UINT_MAX){
-                currentEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
-                reverse = true;
+                delete _forwardHeap;
+                delete _backwardHeap;
+                return _upperbound;
             }
 
             if(phantomNodes->startRatio < phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).forward) {
