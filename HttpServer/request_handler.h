@@ -103,21 +103,21 @@ public:
 
                 _Coordinate startCoord(lat1, lon1);
                 _Coordinate targetCoord(lat2, lon2);
-                double timestamp2 = get_timestamp();
+//                double timestamp2 = get_timestamp();
                 //cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
 
 
                 vector<NodeID> * path = new vector<NodeID>();
                 PhantomNodes * phantomNodes = new PhantomNodes();
-                timestamp = get_timestamp();
+//                timestamp = get_timestamp();
                 sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
-                timestamp2 = get_timestamp();
+//                timestamp2 = get_timestamp();
                 //cout << "routing starts in " << timestamp2 - timestamp << "s" << endl;
-                timestamp = get_timestamp();
+//                timestamp = get_timestamp();
                 unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
-                timestamp2 = get_timestamp();
+//                timestamp2 = get_timestamp();
                 //cout << "shortest path in " << timestamp2 - timestamp << "s" << endl;
-                timestamp = get_timestamp();
+//                timestamp = get_timestamp();
                 rep.status = reply::ok;
 
                 string tmp;
@@ -192,7 +192,7 @@ public:
 
                 delete path;
                 delete phantomNodes;
-                timestamp2 = get_timestamp();
+//                timestamp2 = get_timestamp();
                 //cout << "description in " << timestamp2 - timestamp << "s" << endl;
                 return;
             }
