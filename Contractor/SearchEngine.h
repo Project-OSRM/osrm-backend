@@ -74,6 +74,12 @@ public:
             bool reverse = false;
             EdgeID currentEdge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2 );
             if(currentEdge == UINT_MAX){
+                delete _forwardHeap;
+                delete _backwardHeap;
+                return _upperbound;
+            }
+
+            if(currentEdge == UINT_MAX){
                 currentEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
                 reverse = true;
             }
@@ -108,6 +114,12 @@ public:
                 edge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
                 reverse = true;
             }
+            if(edge == UINT_MAX){
+                delete _forwardHeap;
+                delete _backwardHeap;
+                return _upperbound;
+            }
+
             EdgeWeight w = _graph->GetEdgeData( edge ).distance;
             if( (_graph->GetEdgeData( edge ).backward && !reverse) || (_graph->GetEdgeData( edge ).forward && reverse) )
                 _forwardHeap->Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
@@ -122,6 +134,12 @@ public:
                 edge = _graph->FindEdge( phantomNodes->targetNode2, phantomNodes->targetNode1 );
                 reverse = true;
             }
+            if(edge == UINT_MAX){
+                delete _forwardHeap;
+                delete _backwardHeap;
+                return _upperbound;
+            }
+
             EdgeWeight w = _graph->GetEdgeData( edge ).distance;
             if( (_graph->GetEdgeData( edge ).backward && !reverse) || (_graph->GetEdgeData( edge ).forward && reverse) )
                 _backwardHeap->Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
