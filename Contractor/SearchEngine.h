@@ -59,6 +59,7 @@ public:
     unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<NodeID> * path, _Coordinate& startCoord, _Coordinate& targetCoord)
     {
         bool onSameEdge = false;
+        bool onSameEdgeReversed = false;
         _Heap * _forwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
         _Heap * _backwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
         NodeID middle = ( NodeID ) 0;
@@ -67,67 +68,73 @@ public:
         if(phantomNodes->startNode1 == UINT_MAX || phantomNodes->startNode2 == UINT_MAX)
             return _upperbound;
 
-        if( (phantomNodes->startNode1 == phantomNodes->targetNode1 && phantomNodes->startNode2 == phantomNodes->targetNode2 ) )
+        if( (phantomNodes->startNode1 == phantomNodes->targetNode1 && phantomNodes->startNode2 == phantomNodes->targetNode2 ) ||
+                (phantomNodes->startNode1 == phantomNodes->targetNode2 && phantomNodes->startNode2 == phantomNodes->targetNode1 ) )
         {
+            bool reverse = false;
             EdgeID currentEdge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2 );
-            if(currentEdge == UINT_MAX)
+            if(currentEdge == UINT_MAX){
                 currentEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
-            if(currentEdge != UINT_MAX && _graph->GetEdgeData(currentEdge).forward && phantomNodes->startRatio < phantomNodes->targetRatio)
-            { //upperbound auf kantenlänge setzen
-                //                cout << "start and target on same edge" << endl;
-                onSameEdge = true;
-                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
-            } else if (currentEdge != UINT_MAX && !_graph->GetEdgeData(currentEdge).backward) {
-                EdgeWeight w = _graph->GetEdgeData( currentEdge ).distance;
-                _forwardHeap->Insert(phantomNodes->startNode2, absDouble(w*phantomNodes->startRatio), phantomNodes->startNode2);
-                _backwardHeap->Insert(phantomNodes->startNode1, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode1);
-            } else if (currentEdge != UINT_MAX && _graph->GetEdgeData(currentEdge).backward)
-            {
-                onSameEdge = true;
-                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
+                reverse = true;
             }
-        } else {
-            if(phantomNodes->startNode1 != UINT_MAX)
-            {
-                EdgeID forwardEdge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2);
-                if(forwardEdge == UINT_MAX)
-                    forwardEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
-                if(forwardEdge != UINT_MAX && _graph->GetEdgeData(forwardEdge).forward )
-                { //insert forward edge (coord, s1) in forward heap;
-                    EdgeWeight w = _graph->GetEdgeData(forwardEdge ).distance;
-                    _forwardHeap->Insert(phantomNodes->startNode1, absDouble(w*phantomNodes->startRatio), phantomNodes->startNode1);
-                }
-                EdgeID backEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1);
-                if(backEdge == UINT_MAX)
-                    backEdge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2 );
-                if(backEdge != UINT_MAX && _graph->GetEdgeData(backEdge).backward )
-                { //insert forward edge (coord, s2) in forward heap;
-                    EdgeWeight w = _graph->GetEdgeData( backEdge ).distance;
-                    _forwardHeap->Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
-                }
-            }
-            if(phantomNodes->targetNode1 != UINT_MAX)
-            {
-                EdgeID forwardEdge = _graph->FindEdge( phantomNodes->targetNode1, phantomNodes->targetNode2);
-                if(forwardEdge == UINT_MAX)
-                    forwardEdge = _graph->FindEdge( phantomNodes->targetNode2, phantomNodes->targetNode1 );
 
-                if(forwardEdge != UINT_MAX && _graph->GetEdgeData(forwardEdge).forward )
-                { //insert forward edge (coord, s1) in forward heap;
-                    EdgeWeight w = _graph->GetEdgeData( forwardEdge ).distance;
-                    _backwardHeap->Insert(phantomNodes->targetNode1, absDouble(w * phantomNodes->targetRatio), phantomNodes->targetNode1);
-                }
-                EdgeID backwardEdge = _graph->FindEdge( phantomNodes->targetNode2, phantomNodes->targetNode1);
-                if(backwardEdge == UINT_MAX)
-                    backwardEdge = _graph->FindEdge( phantomNodes->targetNode1, phantomNodes->targetNode2 );
-                if(backwardEdge != UINT_MAX && _graph->GetEdgeData( backwardEdge ).backward )
-                { //insert forward edge (coord, s2) in forward heap;
-                    EdgeWeight w = _graph->GetEdgeData( backwardEdge ).distance;
-                    _backwardHeap->Insert(phantomNodes->targetNode2, absDouble(w - w * phantomNodes->targetRatio), phantomNodes->targetNode2);
-                }
+            if(phantomNodes->startRatio < phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).forward) {
+                onSameEdge = true;
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
+            } else if(phantomNodes->startRatio > phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).backward && !reverse)
+            {
+                onSameEdge = true;
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
+            } else if(phantomNodes->startRatio < phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).backward) {
+                onSameEdge = true;
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
+            } else if(phantomNodes->startRatio > phantomNodes->targetRatio) {
+                onSameEdgeReversed = true;
+
+                _Coordinate result;
+                getNodeInfo(phantomNodes->startNode1, result);
+                getNodeInfo(phantomNodes->startNode2, result);
+
+                EdgeWeight w = _graph->GetEdgeData( currentEdge ).distance;
+                _forwardHeap->Insert(phantomNodes->startNode2, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode2);
+                _backwardHeap->Insert(phantomNodes->startNode1, absDouble(  w-w*phantomNodes->targetRatio), phantomNodes->startNode1);
             }
+
+        } else if(phantomNodes->startNode1 != UINT_MAX)
+        {
+            bool reverse = false;
+            EdgeID edge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2);
+            if(edge == UINT_MAX){
+                edge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
+                reverse = true;
+            }
+            EdgeWeight w = _graph->GetEdgeData( edge ).distance;
+            if( (_graph->GetEdgeData( edge ).backward && !reverse) || (_graph->GetEdgeData( edge ).forward && reverse) )
+                _forwardHeap->Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
+            if( (_graph->GetEdgeData( edge ).backward && reverse) || (_graph->GetEdgeData( edge ).forward && !reverse) )
+                _forwardHeap->Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
+        }
+        if(phantomNodes->targetNode1 != UINT_MAX && !onSameEdgeReversed)
+        {
+            bool reverse = false;
+            EdgeID edge = _graph->FindEdge( phantomNodes->targetNode1, phantomNodes->targetNode2);
+            if(edge == UINT_MAX){
+                edge = _graph->FindEdge( phantomNodes->targetNode2, phantomNodes->targetNode1 );
+                reverse = true;
+            }
+            EdgeWeight w = _graph->GetEdgeData( edge ).distance;
+            if( (_graph->GetEdgeData( edge ).backward && !reverse) || (_graph->GetEdgeData( edge ).forward && reverse) )
+                _backwardHeap->Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
+            if( (_graph->GetEdgeData( edge ).backward && reverse) || (_graph->GetEdgeData( edge ).forward && !reverse) )
+                _backwardHeap->Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->startRatio), phantomNodes->targetNode1);
         }
 
+        NodeID sourceHeapNode = 0;
+        NodeID targetHeapNode = 0;
+        if(onSameEdgeReversed) {
+            sourceHeapNode = _forwardHeap->Min();
+            targetHeapNode = _backwardHeap->Min();
+        }
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0)
         {
             if ( _forwardHeap->Size() > 0 ) {
@@ -148,7 +155,7 @@ public:
         NodeID pathNode = middle;
         deque< NodeID > packedPath;
 
-        while ( pathNode != phantomNodes->startNode1 && pathNode != phantomNodes->startNode2 ) {
+        while ( onSameEdgeReversed ? pathNode != sourceHeapNode : pathNode != phantomNodes->startNode1 && pathNode != phantomNodes->startNode2 ) {
             pathNode = _forwardHeap->GetData( pathNode ).parent;
             packedPath.push_front( pathNode );
         }
@@ -156,14 +163,14 @@ public:
         packedPath.push_back( middle );
         pathNode = middle;
 
-        while ( pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ){
+        while ( onSameEdgeReversed ? pathNode != targetHeapNode : pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ){
             pathNode = _backwardHeap->GetData( pathNode ).parent;
             packedPath.push_back( pathNode );
         }
 
         // push start node explicitely
         path->push_back(packedPath[0]);
-        if(packedPath[0] != packedPath[1])
+        //        if(packedPath[0] != packedPath[1])
         {
             for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
             {
