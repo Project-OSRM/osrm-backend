@@ -94,6 +94,9 @@ public:
             } else if(phantomNodes->startRatio < phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).backward) {
                 onSameEdge = true;
                 _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
+            } else if(phantomNodes->startRatio > phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).forward && _graph->GetEdgeData(currentEdge).backward) {
+                onSameEdge = true;
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
             } else if(phantomNodes->startRatio > phantomNodes->targetRatio) {
                 onSameEdgeReversed = true;
 
