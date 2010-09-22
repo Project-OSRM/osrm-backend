@@ -29,9 +29,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 struct _HeapData {
-    NodeID parent;
-    bool stalled;
-    _HeapData( NodeID p ) : parent(p) , stalled(false) { }
+    NodeID parent:31;
+    bool stalled:1;
+    _HeapData( NodeID p ) : parent(p), stalled(false) { }
 };
 
 typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage< NodeID, unsigned > > _Heap;
