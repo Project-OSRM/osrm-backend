@@ -156,7 +156,7 @@ int main (int argc, char *argv[])
         bool shortcut= it->data.shortcut;
         bool forward= it->data.forward;
         bool backward= it->data.backward;
-        NodeID middle= it->data.middle;
+        NodeID middle= it->data.middleName.middle;
         NodeID source = it->source;
         NodeID target = it->target;
 

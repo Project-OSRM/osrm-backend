@@ -92,7 +92,7 @@ NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 
         if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }
 
-        EdgeT inputEdge(source, target, weight, forward, backward, locatable);
+        EdgeT inputEdge(source, target, edgeList.size(), weight, forward, backward, locatable);
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();
@@ -124,7 +124,7 @@ void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         in.read((char *)&(middle), sizeof(NodeID));
         in.read((char *)&(source), sizeof(NodeID));
         in.read((char *)&(target), sizeof(NodeID));
-        e.backward = backward; e.distance = distance; e.forward = forward; e.middle = middle; e.shortcut = shortcut;
+        e.backward = backward; e.distance = distance; e.forward = forward; e.middleName.middle = middle; e.shortcut = shortcut;
         g.data = e; g.source = source; g.target = target;
 
         edgeList->push_back(g);

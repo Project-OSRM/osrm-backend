@@ -36,23 +36,29 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class Contractor {
 
+private:
+
+    union _MiddleName {
+        NodeID middle;
+        NodeID nameID;
+    };
+
 public:
 
     struct Witness {
         NodeID source;
         NodeID target;
-        NodeID middle;
+        _MiddleName middleName;
     };
 
 private:
-
     struct _EdgeData {
         int distance;
         unsigned originalEdges : 29;
         bool shortcut : 1;
         bool forward : 1;
         bool backward : 1;
-        NodeID middle;
+        _MiddleName middleName;
     } data;
 
     struct _HeapData {
@@ -192,7 +198,7 @@ public:
                 continue;
             }
             edge.data.shortcut = false;
-            edge.data.middle = 0;
+            edge.data.middleName.nameID = i->name();
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
             edge.data.originalEdges = 1;
@@ -223,7 +229,7 @@ public:
             forwardEdge.target = backwardEdge.target = target;
             forwardEdge.data.forward = backwardEdge.data.backward = true;
             forwardEdge.data.backward = backwardEdge.data.forward = false;
-            forwardEdge.data.middle = backwardEdge.data.middle = 0;
+            forwardEdge.data.middleName.nameID = backwardEdge.data.middleName.nameID = 0;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
             forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
@@ -388,7 +394,7 @@ public:
                             continue;
                         if ( data.shortcut != edge.data.shortcut )
                             continue;
-                        if ( data.middle != edge.data.middle )
+                        if ( data.middleName.middle != edge.data.middleName.middle )
                             continue;
                         data.forward |= edge.data.forward;
                         data.backward |= edge.data.backward;
@@ -451,7 +457,7 @@ public:
                 newEdge.target = target;
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
-                newEdge.data.middle = data.middle;
+                newEdge.data.middleName.middle = data.middleName.middle;
                 newEdge.data.forward = data.forward;
                 newEdge.data.backward = data.backward;
                 edges.push_back( newEdge );
@@ -526,7 +532,7 @@ private:
                 const NodeID start = node;
                 const NodeID target = _graph->GetTarget( edge );
                 const _EdgeData& data = _graph->GetEdgeData( edge );
-                const NodeID middle = data.middle;
+                const NodeID middle = data.middleName.middle;
                 assert(start != target);
                 if(data.shortcut)
                 {
@@ -541,7 +547,8 @@ private:
                         return false;
                     }
                 } else {
-                    assert(data.middle == 0);
+                    //can't rely on that, because we save the nameID instead
+                    assert(data.middleName.nameID == 0);
                 }
             }
         }
@@ -604,7 +611,7 @@ private:
                         newEdge.data.distance = pathDistance;
                         newEdge.data.forward = true;
                         newEdge.data.backward = false;
-                        newEdge.data.middle = node;
+                        newEdge.data.middleName.middle = node;
                         newEdge.data.shortcut = true;
                         newEdge.data.originalEdges = outData.originalEdges + inData.originalEdges;
                         data->insertedEdges.push_back( newEdge );

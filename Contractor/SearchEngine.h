@@ -56,7 +56,7 @@ public:
         return nodeHelpDesk->getNumberOfNodes();
     }
 
-    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<NodeID> * path, _Coordinate& startCoord, _Coordinate& targetCoord)
+    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<std::pair<NodeID, NodeID> > * path, _Coordinate& startCoord, _Coordinate& targetCoord)
     {
         bool onSameEdge = false;
         bool onSameEdgeReversed = false;
@@ -189,9 +189,12 @@ public:
             packedPath.push_back( pathNode );
         }
 
+
+
         // push start node explicitely
-        path->push_back(packedPath[0]);
-        //        if(packedPath[0] != packedPath[1])
+        NodeID nameID = GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, packedPath[0]);
+
+        path->push_back(std::make_pair(packedPath[0], nameID) );
         {
             for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
             {
@@ -239,6 +242,16 @@ public:
     {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
     }
+
+    inline NodeID GetNameIDForOriginDestinationNodeID(NodeID s, NodeID t) const {
+        assert(s!=t);
+        EdgeID e = _graph->FindEdge( s, t );
+        if(e == UINT_MAX)
+            e = _graph->FindEdge( t, s );
+        assert(e != UINT_MAX);
+        const EdgeData ed = _graph->GetEdgeData(e);
+        return ed.middleName.nameID;
+    }
 private:
     NodeHelperT * nodeHelpDesk;
 
@@ -281,7 +294,7 @@ private:
         }
     }
 
-    bool _UnpackEdge( const NodeID source, const NodeID target, std::vector< NodeID >* path ) {
+    bool _UnpackEdge( const NodeID source, const NodeID target, std::vector< std::pair<NodeID, NodeID> >* path ) {
         assert(source != target);
         //find edge first.
         typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
@@ -315,13 +328,14 @@ private:
         const EdgeData ed = _graph->GetEdgeData(smallestEdge);
         if(ed.shortcut)
         {//unpack
-            const NodeID middle = ed.middle;
+            const NodeID middle = ed.middleName.middle;
             _UnpackEdge(source, middle, path);
             _UnpackEdge(middle, target, path);
             return false;
         } else {
             assert(!ed.shortcut);
-            path->push_back(target);
+            //todo: push nameID along with target as a pair: push_back(std::make_pair(target, nameID))
+            path->push_back(std::make_pair(target, ed.middleName.nameID) );
             return true;
         }
     }

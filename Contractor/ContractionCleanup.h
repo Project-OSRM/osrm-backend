@@ -60,6 +60,10 @@ private:
             delete _heapForward;
         }
     };
+    union _MiddleName {
+        NodeID nameID;
+        NodeID middle;
+    };
 
 public:
 
@@ -71,7 +75,7 @@ public:
             bool shortcut : 1;
             bool forward : 1;
             bool backward : 1;
-            NodeID middle;
+            _MiddleName middleName;
         } data;
 
         //sorts by source and other attributes
@@ -88,7 +92,7 @@ public:
         }
 
         bool operator== ( const Edge& right ) const {
-            return ( source == right.source && target == right.target && data.distance == right.data.distance && data.shortcut == right.data.shortcut && data.forward == right.data.forward && data.backward == right.data.backward && data.middle == right.data.middle );
+            return ( source == right.source && target == right.target && data.distance == right.data.distance && data.shortcut == right.data.shortcut && data.forward == right.data.forward && data.backward == right.data.backward && data.middleName.middle == right.data.middleName.middle );
         }
     };
 
@@ -118,7 +122,7 @@ public:
             newEdge.data.distance = _graph[edge].data.distance;
             newEdge.data.shortcut = _graph[edge].data.shortcut;
             if ( newEdge.data.shortcut )
-                newEdge.data.middle = _graph[edge].data.middle;
+                newEdge.data.middleName = _graph[edge].data.middleName;
             newEdge.data.forward = _graph[edge].data.forward;
             newEdge.data.backward = _graph[edge].data.backward;
             edges.push_back( newEdge );
@@ -211,7 +215,7 @@ private:
                     Contractor::Witness temp;
                     temp.source = _graph[i].source;
                     temp.target = _graph[i].target;
-                    temp.middle = _graph[i].data.middle;
+                    temp.middleName.middle = _graph[i].data.middleName.middle;
                 }
             }
             if ( _graph[i].data.backward ) {
@@ -222,7 +226,7 @@ private:
                     Contractor::Witness temp;
                     temp.source = _graph[i].target;
                     temp.target = _graph[i].source;
-                    temp.middle = _graph[i].data.middle;
+                    temp.middleName.middle = _graph[i].data.middleName.middle;
                 }
             }
         }

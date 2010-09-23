@@ -107,7 +107,7 @@ public:
                 //cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
 
 
-                vector<NodeID> * path = new vector<NodeID>();
+                vector<std::pair<NodeID, NodeID> > * path = new vector<std::pair<NodeID, NodeID> >();
                 PhantomNodes * phantomNodes = new PhantomNodes();
 //                timestamp = get_timestamp();
                 sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
@@ -157,10 +157,11 @@ public:
                     rep.content += tmp;
                     rep.content += (" ");
 
+
                     _Coordinate result;
-                    for(vector<NodeID>::iterator it = path->begin(); it != path->end(); it++)
+                    for(vector<std::pair<NodeID, NodeID> >::iterator it = path->begin(); it != path->end(); it++)
                     {
-                        sEngine->getNodeInfo(*it, result);
+                        sEngine->getNodeInfo(it->first, result);
                         convertLatLon(result.lon, tmp);
                         rep.content += tmp;
                         rep.content += (",");
@@ -168,6 +169,7 @@ public:
                         rep.content += tmp;
                         rep.content += (" ");
                     }
+
                     convertLatLon(phantomNodes->targetCoord.lon, tmp);
                     rep.content += tmp;
                     rep.content += (",");
