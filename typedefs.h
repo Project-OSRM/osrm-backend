@@ -41,6 +41,7 @@ using namespace std;
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
 typedef unsigned int EdgeWeight;
+
 static const NodeID SPECIAL_NODEID = UINT_MAX;
 static const EdgeID SPECIAL_EDGEID = UINT_MAX;
 

@@ -43,6 +43,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
         ferry           5
  */
 
+typedef google::dense_hash_map<string, NodeID> StringMap;
+
 std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "unclassified", "residential", "living_street", "service", "ferry" };
 double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 5};
 
@@ -78,6 +80,7 @@ struct _Way {
     enum {
         notSure = 0, oneway, bidirectional, opposite
     } direction;
+    unsigned nameID;
     double maximumSpeed;
     bool usefull:1;
     bool access:1;
@@ -99,6 +102,7 @@ struct _Edge {
     short type;
     short direction;
     double speed;
+    unsigned nameID;
 
     _Coordinate startCoord;
     _Coordinate targetCoord;
@@ -191,7 +195,7 @@ struct CmpNodeByID : public std::binary_function<_Node, _Node, bool>
 };
 
 
-_Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
+_Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings, string& name) {
     _Way way;
     way.direction = _Way::notSure;
     way.maximumSpeed = -1;
@@ -226,7 +230,13 @@ _Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings ) {
                 if ( k != NULL && value != NULL ) {
 
                     if ( xmlStrEqual( k, ( const xmlChar* ) "name" ) == 1 ) {
-                        //write into namedb and note nameid at edge.
+                        name = string((char *) value);
+                    } else if ( xmlStrEqual( k, ( const xmlChar* ) "ref" ) == 1 ) {
+                    	if(name == "")
+                    	{
+                    		name = string((char *) value);
+//                    		cout << ", ref: " << name << endl;
+                    	}
                     }
 
                     if ( xmlStrEqual( k, ( const xmlChar* ) "oneway" ) == 1 ) {
@@ -457,5 +467,20 @@ double ApproximateDistance( const int lat1, const int lon1, const int lat2, cons
     double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
     return EARTH_RADIUS_IN_METERS * distanceArc;
 }
+
+string GetRandomString() {
+    char s[128];
+	static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < 128; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+    s[128] = 0;
+    return string(s);
+}
+
 
 #endif /* EXTRACTORSTRUCTS_H_ */

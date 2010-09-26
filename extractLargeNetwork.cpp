@@ -44,6 +44,7 @@ typedef google::dense_hash_map<NodeID, _Node> NodeMap;
 typedef stxxl::vector<NodeID> STXXLNodeIDVector;
 typedef stxxl::vector<_Node> STXXLNodeVector;
 typedef stxxl::vector<_Edge> STXXLEdgeVector;
+typedef stxxl::vector<string> STXXLStringVector;
 
 Settings settings;
 vector<NodeID> SignalNodes;
@@ -52,8 +53,10 @@ STXXLNodeVector allNodes;
 STXXLNodeVector confirmedNodes;
 STXXLEdgeVector allEdges;
 STXXLEdgeVector confirmedEdges;
+STXXLStringVector nameVector;
 
 NodeMap * nodeMap = new NodeMap();
+StringMap * stringMap = new StringMap();
 
 int main (int argc, char *argv[])
 {
@@ -71,6 +74,7 @@ int main (int argc, char *argv[])
     settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+14);
 
     nodeMap->set_empty_key(UINT_MAX);
+    stringMap->set_empty_key(GetRandomString());
     try {
         while ( xmlTextReaderRead( inputReader ) == 1 ) {
             const int type = xmlTextReaderNodeType( inputReader );
@@ -91,35 +95,49 @@ int main (int argc, char *argv[])
 
             }
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
-                _Way way = _ReadXMLWay( inputReader, settings );
+            	string name;
+                _Way way = _ReadXMLWay( inputReader, settings, name );
 
                 if ( way.usefull && way.access && way.path.size() ) {
+                    StringMap::iterator strit = stringMap->find(name);
+                    if(name == "") {
+                    	way.nameID = UINT_MAX;
+                    } else {
+                    	if(strit == stringMap->end())
+                    	{
+                    		way.nameID = nameVector.size();
+                    		nameVector.push_back(name);
+                    		stringMap->insert(std::make_pair(name, way.nameID) );
+//                    		cout << "found name ID: " << way.nameID << " (" << name << ")" << endl;
+                    	} else {
+                    		way.nameID = strit->second;
+//                    		cout << "name with ID " << way.nameID << " already existing (" << name << ")" << endl;
+                    	}
+                    }
                     for ( unsigned i = 0; i < way.path.size(); ++i ) {
                         usedNodes.push_back(way.path[i]);
                     }
 
-                    if ( way.direction == _Way::opposite )
+                    if ( way.direction == _Way::opposite ){
                         std::reverse( way.path.begin(), way.path.end() );
+                    }
+                    vector< NodeID > & path = way.path;
+                    assert(way.type > -1 || way.maximumSpeed != -1);
+                    assert(path.size()>0);
 
+                    if(way.maximumSpeed == -1)
+                    	way.maximumSpeed = settings.speedProfile.speed[way.type];
+
+                    for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++)
                     {
-                        vector< NodeID > & path = way.path;
-//                        double speed = way.maximumSpeed;
-                        assert(way.type > -1 || way.maximumSpeed != -1);
-                        assert(path.size()>0);
-
-                        if(way.maximumSpeed == -1)
-                            way.maximumSpeed = settings.speedProfile.speed[way.type];
-
-                        for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++)
-                        {
-                            _Edge e;
-                            e.start = way.path[n];
-                            e.target = way.path[n+1];
-                            e.type = way.type;
-                            e.direction = way.direction;
-                            e.speed = way.maximumSpeed;
-                            allEdges.push_back(e);
-                        }
+                    	_Edge e;
+                    	e.start = way.path[n];
+                    	e.target = way.path[n+1];
+                    	e.type = way.type;
+                    	e.direction = way.direction;
+                    	e.speed = way.maximumSpeed;
+                    	e.nameID = way.nameID;
+                    	allEdges.push_back(e);
                     }
                 }
             }
@@ -128,6 +146,7 @@ int main (int argc, char *argv[])
             }
             xmlFree( currentName );
         }
+        cout << "raw no. of names: " << nameVector.size() << endl;
         cout << "raw no. of nodes: " << allNodes.size() << endl;
         cout << "raw no. of edges: " << allEdges.size() << endl;
 
@@ -251,6 +270,7 @@ int main (int argc, char *argv[])
             int intDist = max(1, (int)distance);
             int ferryIndex = settings.indexInAccessListOf("ferry");
 
+            //Todo: write nameID and type of edge to osrm
             switch(eit->direction)
             {
             case _Way::notSure:
@@ -270,6 +290,8 @@ int main (int argc, char *argv[])
                 break;
             }
         }
+        //Todo: serialize list of names
+
         fout.close();
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
     } catch ( const std::exception& e ) {
@@ -288,8 +310,10 @@ int main (int argc, char *argv[])
     confirmedNodes.clear();
     allEdges.clear();
     confirmedEdges.clear();
+    nameVector.clear();
     xmlFreeTextReader(inputReader);
     delete nodeMap;
+    delete stringMap;
     cout << "finished." << endl;
     return 0;
 }
