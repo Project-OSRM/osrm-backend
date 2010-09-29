@@ -192,7 +192,7 @@ public:
 
 
         // push start node explicitely
-        NodeID nameID = GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, packedPath[0]);
+        NodeID nameID = GetNameIDForOriginDestinationNodeID( (phantomNodes->startNode1 == packedPath[0] ? phantomNodes->startNode2 : phantomNodes->startNode1) , packedPath[0]);
 
         path->push_back(std::make_pair(packedPath[0], nameID) );
         {
