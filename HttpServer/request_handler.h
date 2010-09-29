@@ -103,21 +103,11 @@ public:
 
                 _Coordinate startCoord(lat1, lon1);
                 _Coordinate targetCoord(lat2, lon2);
-//                double timestamp2 = get_timestamp();
-                //cout << "coordinates in " << timestamp2 - timestamp << "s" << endl;
 
-
-                vector<std::pair<NodeID, NodeID> > * path = new vector<std::pair<NodeID, NodeID> >();
+                vector<NodeID > * path = new vector<NodeID >();
                 PhantomNodes * phantomNodes = new PhantomNodes();
-//                timestamp = get_timestamp();
                 sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
-//                timestamp2 = get_timestamp();
-                //cout << "routing starts in " << timestamp2 - timestamp << "s" << endl;
-//                timestamp = get_timestamp();
                 unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
-//                timestamp2 = get_timestamp();
-                //cout << "shortest path in " << timestamp2 - timestamp << "s" << endl;
-//                timestamp = get_timestamp();
                 rep.status = reply::ok;
 
                 string tmp;
@@ -125,6 +115,11 @@ public:
                 rep.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
                 rep.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">");
                 rep.content += ("<Document>");
+
+                if(distance != std::numeric_limits<unsigned int>::max())
+                    computeDescription(tmp, path, phantomNodes);
+
+//                rep.content += tmp;
                 rep.content += ("<Placemark>");
                 rep.content += ("<name>OSM Routing Engine (c) Dennis Luxen and others </name>");
 
@@ -145,7 +140,7 @@ public:
                 rep.content += ("<extrude>1</extrude>");
                 rep.content += ("<tessellate>1</tessellate>");
                 rep.content += ("<altitudeMode>absolute</altitudeMode>");
-                rep.content += ("<coordinates>\n");
+                rep.content += ("<coordinates>");
 
 
                 if(distance != std::numeric_limits<unsigned int>::max())
@@ -156,12 +151,10 @@ public:
                     doubleToString(phantomNodes->startCoord.lat/100000., tmp);
                     rep.content += tmp;
                     rep.content += (" ");
-
-
                     _Coordinate result;
-                    for(vector<std::pair<NodeID, NodeID> >::iterator it = path->begin(); it != path->end(); it++)
+                    for(vector<NodeID >::iterator it = path->begin(); it != path->end(); it++)
                     {
-                        sEngine->getNodeInfo(it->first, result);
+                        sEngine->getNodeInfo(*it, result);
                         convertLatLon(result.lon, tmp);
                         rep.content += tmp;
                         rep.content += (",");
@@ -269,6 +262,121 @@ private:
         }
         return buffer;
     }
+
+    void computeDescription(string &tmp, vector<NodeID> * path, PhantomNodes * phantomNodes)
+    {
+        _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
+        _Coordinate next, current, lastPlace;
+        stringstream numberString;
+
+        double tempDist = 0;
+        NodeID nextID = UINT_MAX;
+        NodeID nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
+        short type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
+        lastPlace.lat = phantomNodes->startCoord.lat;
+        lastPlace.lon = phantomNodes->startCoord.lon;
+        short nextType = SHRT_MAX;
+        short prevType = SHRT_MAX;
+        tmp += "<Placemark><Name>";
+        for(vector<NodeID >::iterator it = path->begin(); it != path->end(); it++)
+        {
+            sEngine->getNodeInfo(*it, current);
+            if(it==path->end()-1){
+                next = _Coordinate(phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
+                nextID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+                nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+            } else {
+                sEngine->getNodeInfo(*(it+1), next);
+                nextID = sEngine->GetNameIDForOriginDestinationNodeID(*it, *(it+1));
+                nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(*it, *(it+1));
+            }
+            if(nextID == nameID) {
+                tempDist += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
+            } else {
+                if(type == 0 && prevType != 0)
+                    tmp += "enter motorway and ";
+                if(type != 0 && prevType == 0 )
+                    tmp += "leave motorway and ";
+
+                double angle = GetAngleBetweenTwoEdges(previous, current, next);
+                tmp += "follow road ";
+                tmp += sEngine->GetNameForNameID(nameID);
+                tmp += " (type: ";
+                numberString << type;
+                tmp += numberString.str();
+                numberString.str("");
+                tmp += ")</Name><Description>drive for ";
+                numberString << ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon)+tempDist;
+                tmp += numberString.str();
+                numberString.str("");
+                tmp += "m </Description>";
+                string lat; string lon;
+                convertLatLon(lastPlace.lon, lon);
+                convertLatLon(lastPlace.lat, lat);
+                lastPlace = current;
+                tmp += "<Point><Coordinates>";
+                tmp += lon;
+                tmp += ",";
+                tmp += lat;
+                tmp += "</Coordinates></Point>";
+                tmp += "</Placemark>";
+                tmp += "<Placemark><Name>";
+                if(angle > 160 && angle < 200) {
+                    tmp += /* " (" << angle << ")*/"drive ahead, ";
+                } else if (angle > 290 && angle <= 360) {
+                    tmp += /*" (" << angle << ")*/ "turn sharp left, ";
+                } else if (angle > 245 && angle <= 290) {
+                    tmp += /*" (" << angle << ")*/ "turn left, ";
+                } else if (angle > 200 && angle <= 245) {
+                    tmp += /*" (" << angle << ") */"bear left, ";
+                } else if (angle > 115 && angle <= 160) {
+                    tmp += /*" (" << angle << ") */"bear right, ";
+                } else if (angle > 70 && angle <= 115) {
+                    tmp += /*" (" << angle << ") */"turn right, ";
+                } else {
+                    tmp += /*" (" << angle << ") */"turn sharp right, ";
+                }
+                tempDist = 0;
+                prevType = type;
+            }
+            nameID = nextID;
+            previous = current;
+            type = nextType;
+        }
+        nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+        type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+        tmp += "follow road ";
+        tmp += sEngine->GetNameForNameID(nameID);
+        tmp += " (type: ";
+        numberString << type;
+        tmp += numberString.str();
+        numberString.str("");
+        tmp += ")</name><Description> drive for ";
+        numberString << (previous.lat, previous.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon) + tempDist;
+        tmp += numberString.str();
+        numberString.str("");
+        tmp += "m</Description>";
+        string lat; string lon;
+        convertLatLon(lastPlace.lon, lon);
+        convertLatLon(lastPlace.lat, lat);
+        tmp += "<Point><Coordinates>";
+        tmp += lon;
+        tmp += ",";
+        tmp += lat;
+        tmp += "</Coordinates></Point>";
+        tmp += "</Placemark>";
+        tmp += "<Placemark><Name>you have reached your destination</Name>";
+        tmp += "<Description>End of Route</Description>";
+        convertLatLon(phantomNodes->targetCoord.lon, lon);
+        convertLatLon(phantomNodes->targetCoord.lat, lat);
+        tmp += "<Point><Coordinates>";
+        tmp += lon;
+        tmp += ",";
+        tmp += lat;
+        tmp +="</Coordinates></Point>";
+        tmp += "</Placemark>";
+    }
+
 };
 }
 

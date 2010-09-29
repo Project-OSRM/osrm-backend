@@ -50,9 +50,9 @@ typedef http::server<StaticGraph<EdgeData> > server;
  */
 int main (int argc, char *argv[])
 {
-    if(argc < 4)
+    if(argc < 5)
     {
-        cerr << "Correct usage:" << endl << argv[0] << " <hsgr data> <nodes data> <ram index> <file index>" << endl;
+        cerr << "Correct usage:" << endl << argv[0] << " <hsgr data> <nodes data> <ram index> <file index> <names data>" << endl;
         exit(-1);
     }
 
@@ -74,11 +74,36 @@ int main (int argc, char *argv[])
     StaticGraph<EdgeData> * graph = new StaticGraph<EdgeData>(nodeInfoHelper->getNumberOfNodes()-1, *edgeList);
     delete edgeList;
     time = get_timestamp();
+    cout << "deserializing street names ..." << flush;
+    ifstream namesInStream(argv[5], ios::binary);
+    unsigned size = 0;
+    namesInStream.read((char *)&size, sizeof(unsigned));
+    vector<unsigned> * nameIndex = new vector<unsigned>(size, 0);
+    vector<string> * names = new vector<string>();
+//    names->push_back("");
+    for(int i = 0; i<size; i++)
+        namesInStream.read((char *)&(nameIndex->at(i)), sizeof(unsigned));
+
+    for(int i = 0; i<size-1; i++){
+        string tempString;
+        for(int j = 0; j < nameIndex->at(i+1) - nameIndex->at(i); j++){
+            char c;
+            namesInStream.read(&c, sizeof(char));
+            tempString.append(1, c);
+        }
+        names->push_back(tempString);
+        tempString = "";
+    }
+    delete nameIndex;
+
+    namesInStream.close();
+    cout << "in " << get_timestamp() - time << "s" << endl;
+    time = get_timestamp();
+
     cout << "constructing search graph ..." << flush;
 
-    SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeInfoHelper);
+    SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeInfoHelper, names);
     cout << "in " << get_timestamp() - time << "s" << endl;
-
     time = get_timestamp();
 
     try {
@@ -115,6 +140,7 @@ int main (int argc, char *argv[])
         std::cerr << "exception: " << e.what() << "\n";
     }
     cout << "graceful shutdown after " << get_timestamp() - time << "s" << endl;
+    delete names;
     delete sEngine;
     delete graph;
     delete nodeInfoHelper;

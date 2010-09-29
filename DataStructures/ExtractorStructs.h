@@ -26,6 +26,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <libxml/xmlreader.h>
 
+#include "Util.h"
+
 /*     Default Speed Profile:
         motorway        110
         motorway_link   90
@@ -113,13 +115,13 @@ struct Settings {
         vector< double > speed;
         vector< string > names;
     } speedProfile;
-    vector<string> accessList;
+//    vector<string> accessList;
     int trafficLightPenalty;
     int indexInAccessListOf( const string & key)
     {
-        for(int i = 0; i< accessList.size(); i++)
+        for(int i = 0; i< speedProfile.names.size(); i++)
         {
-            if(accessList[i] == key)
+            if(speedProfile.names[i] == key)
                 return i;
         }
         return -1;
@@ -466,6 +468,30 @@ double ApproximateDistance( const int lat1, const int lon1, const int lat2, cons
     double tmp = cos( lat1/100000. * DEG_TO_RAD ) * cos( lat2/100000. * DEG_TO_RAD );
     double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
     return EARTH_RADIUS_IN_METERS * distanceArc;
+}
+
+/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
+double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const _Coordinate& B)
+{
+//    double a = ApproximateDistance(A.lat, A.lon, C.lat, C.lon); //first edge segment
+//    double b = ApproximateDistance(B.lat, B.lon, C.lat, C.lon); //second edge segment
+//    double c = ApproximateDistance(A.lat, A.lon, B.lat, B.lon); //third edgefrom triangle
+//
+//    double cosAlpha = (a*a + b*b - c*c)/ (2*a*b);
+//
+//    double alpha = ( (acos(cosAlpha) * 180.0 / M_PI) * (cosAlpha > 0 ? -1 : 1) ) + 180;
+//    return alpha;
+//    V = <x2 - x1, y2 - y1>
+    int v1x = A.lon - C.lon;
+    int v1y = A.lat - C.lat;
+    int v2x = B.lon - C.lon;
+    int v2y = B.lat - C.lat;
+
+    double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
+    while(angle < 0)
+        angle += 360;
+
+    return angle;
 }
 
 string GetRandomString() {

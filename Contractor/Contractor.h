@@ -58,6 +58,7 @@ private:
         bool shortcut : 1;
         bool forward : 1;
         bool backward : 1;
+        short type;
         _MiddleName middleName;
     } data;
 
@@ -199,6 +200,7 @@ public:
             }
             edge.data.shortcut = false;
             edge.data.middleName.nameID = i->name();
+            edge.data.type = i->type();
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
             edge.data.originalEdges = 1;
@@ -218,6 +220,9 @@ public:
         for ( NodeID i = 0; i < edges.size(); ) {
             const NodeID source = edges[i].source;
             const NodeID target = edges[i].target;
+            const NodeID middle = edges[i].data.middleName.nameID;
+            const short type = edges[i].data.type;
+            assert(type >= 0);
             //remove eigenloops
             if ( source == target ) {
                 i++;
@@ -229,7 +234,8 @@ public:
             forwardEdge.target = backwardEdge.target = target;
             forwardEdge.data.forward = backwardEdge.data.backward = true;
             forwardEdge.data.backward = backwardEdge.data.forward = false;
-            forwardEdge.data.middleName.nameID = backwardEdge.data.middleName.nameID = 0;
+            forwardEdge.data.type = backwardEdge.data.type = type;
+            forwardEdge.data.middleName.nameID = backwardEdge.data.middleName.nameID = middle;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
             forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
@@ -457,7 +463,15 @@ public:
                 newEdge.target = target;
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
-                newEdge.data.middleName.middle = data.middleName.middle;
+                if(data.shortcut) {
+                    newEdge.data.middleName.middle = data.middleName.middle;
+                    newEdge.data.type = -1;
+                } else {
+                    newEdge.data.middleName.nameID = data.middleName.nameID;
+                    newEdge.data.type = data.type;
+                    assert(newEdge.data.type >= 0);
+                }
+
                 newEdge.data.forward = data.forward;
                 newEdge.data.backward = data.backward;
                 edges.push_back( newEdge );
@@ -546,9 +560,6 @@ private:
                         assert(false);
                         return false;
                     }
-                } else {
-                    //can't rely on that, because we save the nameID instead
-                    assert(data.middleName.nameID == 0);
                 }
             }
         }
@@ -557,7 +568,6 @@ private:
 
     template< bool Simulate > bool _Contract( _ThreadData* data, NodeID node, _ContractionInformation* stats = NULL ) {
         _Heap& heap = data->heap;
-        //std::vector< Witness >& witnessList = data->witnessList;
 
         for ( _DynamicGraph::EdgeIterator inEdge = _graph->BeginEdges( node ), endInEdges = _graph->EndEdges( node ); inEdge != endInEdges; ++inEdge ) {
             const _EdgeData& inData = _graph->GetEdgeData( inEdge );

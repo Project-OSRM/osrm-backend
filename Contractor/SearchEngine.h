@@ -40,9 +40,10 @@ template<typename EdgeData, typename GraphT, typename NodeHelperT = NodeInformat
 class SearchEngine {
 private:
     const GraphT * _graph;
+    std::vector<string> * _names;
     inline double absDouble(double input) { if(input < 0) return input*(-1); else return input;}
 public:
-    SearchEngine(GraphT * g, NodeHelperT * nh) : _graph(g), nodeHelpDesk(nh) {}
+    SearchEngine(GraphT * g, NodeHelperT * nh, vector<string> * n = new vector<string>()) : _graph(g), nodeHelpDesk(nh), _names(n) {}
     ~SearchEngine() {}
 
     inline const void getNodeInfo(NodeID id, _Coordinate& result) const
@@ -56,10 +57,14 @@ public:
         return nodeHelpDesk->getNumberOfNodes();
     }
 
-    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<std::pair<NodeID, NodeID> > * path, _Coordinate& startCoord, _Coordinate& targetCoord)
+    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<NodeID > * path, _Coordinate& startCoord, _Coordinate& targetCoord)
     {
         bool onSameEdge = false;
         bool onSameEdgeReversed = false;
+        bool startReverse = false;
+        bool targetReverse = false;
+
+
         _Heap * _forwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
         _Heap * _backwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
         NodeID middle = ( NodeID ) 0;
@@ -111,11 +116,10 @@ public:
 
         } else if(phantomNodes->startNode1 != UINT_MAX)
         {
-            bool reverse = false;
             EdgeID edge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2);
             if(edge == UINT_MAX){
                 edge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
-                reverse = true;
+                startReverse = true;
             }
             if(edge == UINT_MAX){
                 delete _forwardHeap;
@@ -124,18 +128,17 @@ public:
             }
 
             EdgeWeight w = _graph->GetEdgeData( edge ).distance;
-            if( (_graph->GetEdgeData( edge ).backward && !reverse) || (_graph->GetEdgeData( edge ).forward && reverse) )
+            if( (_graph->GetEdgeData( edge ).backward && !startReverse) || (_graph->GetEdgeData( edge ).forward && startReverse) )
                 _forwardHeap->Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
-            if( (_graph->GetEdgeData( edge ).backward && reverse) || (_graph->GetEdgeData( edge ).forward && !reverse) )
+            if( (_graph->GetEdgeData( edge ).backward && startReverse) || (_graph->GetEdgeData( edge ).forward && !startReverse) )
                 _forwardHeap->Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
         }
         if(phantomNodes->targetNode1 != UINT_MAX && !onSameEdgeReversed)
         {
-            bool reverse = false;
             EdgeID edge = _graph->FindEdge( phantomNodes->targetNode1, phantomNodes->targetNode2);
             if(edge == UINT_MAX){
                 edge = _graph->FindEdge( phantomNodes->targetNode2, phantomNodes->targetNode1 );
-                reverse = true;
+                targetReverse = true;
             }
             if(edge == UINT_MAX){
                 delete _forwardHeap;
@@ -144,9 +147,9 @@ public:
             }
 
             EdgeWeight w = _graph->GetEdgeData( edge ).distance;
-            if( (_graph->GetEdgeData( edge ).backward && !reverse) || (_graph->GetEdgeData( edge ).forward && reverse) )
+            if( (_graph->GetEdgeData( edge ).backward && !targetReverse) || (_graph->GetEdgeData( edge ).forward && targetReverse) )
                 _backwardHeap->Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
-            if( (_graph->GetEdgeData( edge ).backward && reverse) || (_graph->GetEdgeData( edge ).forward && !reverse) )
+            if( (_graph->GetEdgeData( edge ).backward && targetReverse) || (_graph->GetEdgeData( edge ).forward && !targetReverse) )
                 _backwardHeap->Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->startRatio), phantomNodes->targetNode1);
         }
 
@@ -180,7 +183,7 @@ public:
             pathNode = _forwardHeap->GetData( pathNode ).parent;
             packedPath.push_front( pathNode );
         }
-
+        NodeID realStart = pathNode;
         packedPath.push_back( middle );
         pathNode = middle;
 
@@ -189,12 +192,7 @@ public:
             packedPath.push_back( pathNode );
         }
 
-
-
-        // push start node explicitely
-        NodeID nameID = GetNameIDForOriginDestinationNodeID( (phantomNodes->startNode1 == packedPath[0] ? phantomNodes->startNode2 : phantomNodes->startNode1) , packedPath[0]);
-
-        path->push_back(std::make_pair(packedPath[0], nameID) );
+        path->push_back(packedPath[0] );
         {
             for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
             {
@@ -235,7 +233,7 @@ public:
 
     inline unsigned int findNearestNodeForLatLon(const _Coordinate& coord, _Coordinate& result) const
     {
-        nodeHelpDesk->findNearestNodeIDForLatLon( coord, result );
+        nodeHelpDesk->findNearestNodeCoordForLatLon( coord, result );
     }
 
     inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * routingStarts)
@@ -251,6 +249,21 @@ public:
         assert(e != UINT_MAX);
         const EdgeData ed = _graph->GetEdgeData(e);
         return ed.middleName.nameID;
+    }
+
+    inline std::string& GetNameForNameID(const NodeID nameID) const {
+        assert(nameID < _names->size());
+        return _names->at(nameID);
+    }
+
+    inline short GetTypeOfEdgeForOriginDestinationNodeID(NodeID s, NodeID t) const {
+        assert(s!=t);
+        EdgeID e = _graph->FindEdge( s, t );
+        if(e == UINT_MAX)
+            e = _graph->FindEdge( t, s );
+        assert(e != UINT_MAX);
+        const EdgeData ed = _graph->GetEdgeData(e);
+        return ed.type;
     }
 private:
     NodeHelperT * nodeHelpDesk;
@@ -294,7 +307,7 @@ private:
         }
     }
 
-    bool _UnpackEdge( const NodeID source, const NodeID target, std::vector< std::pair<NodeID, NodeID> >* path ) {
+    bool _UnpackEdge( const NodeID source, const NodeID target, std::vector< NodeID >* path ) {
         assert(source != target);
         //find edge first.
         typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
@@ -334,8 +347,7 @@ private:
             return false;
         } else {
             assert(!ed.shortcut);
-            //todo: push nameID along with target as a pair: push_back(std::make_pair(target, nameID))
-            path->push_back(std::make_pair(target, ed.middleName.nameID) );
+            path->push_back(target);
             return true;
         }
     }

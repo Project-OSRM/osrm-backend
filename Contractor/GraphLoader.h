@@ -45,7 +45,7 @@ template<typename EdgeT>
 NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
     NodeID n, source, target, id;
     EdgeID m;
-    bool locatable;
+    short locatable;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     ext2IntNodeMap.set_empty_key(UINT_MAX);
@@ -62,9 +62,10 @@ NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; i++) {
         EdgeWeight weight;
+        short type;
+        NodeID nameID;
         int length;
-        in >> source >> target >> length >> dir >> weight >> locatable;
-
+        in >> source >> target >> length >> dir >> weight >> type >> nameID;
         assert(length > 0);
         assert(weight > 0);
         assert(0<=dir && dir<=2);
@@ -92,7 +93,7 @@ NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 
         if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }
 
-        EdgeT inputEdge(source, target, edgeList.size(), weight, forward, backward, locatable);
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type );
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();
@@ -112,6 +113,7 @@ void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         bool shortcut;
         bool forward;
         bool backward;
+        short type;
         NodeID middle;
         NodeID source;
         NodeID target;
@@ -122,9 +124,10 @@ void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         in.read((char *)&(forward), sizeof(bool));
         in.read((char *)&(backward), sizeof(bool));
         in.read((char *)&(middle), sizeof(NodeID));
+        in.read((char *)&(type), sizeof(short));
         in.read((char *)&(source), sizeof(NodeID));
         in.read((char *)&(target), sizeof(NodeID));
-        e.backward = backward; e.distance = distance; e.forward = forward; e.middleName.middle = middle; e.shortcut = shortcut;
+        e.backward = backward; e.distance = distance; e.forward = forward; e.middleName.middle = middle; e.shortcut = shortcut; e.type = type;
         g.data = e; g.source = source; g.target = target;
 
         edgeList->push_back(g);

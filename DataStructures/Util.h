@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define TIMEUTIL_H_
 
 #include <climits>
+#include <cmath>
 #include <cstdlib>
 #include <sys/time.h>
 
@@ -32,5 +33,8 @@ inline double get_timestamp()
     gettimeofday(&tp, NULL);
     return double(tp.tv_sec) + tp.tv_usec / 1000000.;
 }
+
+double y2lat(double a) { return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2); }
+double lat2y(double a) { return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2)); }
 
 #endif /* TIMEUTIL_H_ */

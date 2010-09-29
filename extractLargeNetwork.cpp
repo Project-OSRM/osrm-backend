@@ -75,7 +75,8 @@ int main (int argc, char *argv[])
 
     nodeMap->set_empty_key(UINT_MAX);
     stringMap->set_empty_key(GetRandomString());
-    try {
+    stringMap->insert(std::make_pair("", 0));
+        try {
         while ( xmlTextReaderRead( inputReader ) == 1 ) {
             const int type = xmlTextReaderNodeType( inputReader );
 
@@ -100,19 +101,15 @@ int main (int argc, char *argv[])
 
                 if ( way.usefull && way.access && way.path.size() ) {
                     StringMap::iterator strit = stringMap->find(name);
-                    if(name == "") {
-                    	way.nameID = UINT_MAX;
+                    if(strit == stringMap->end())
+                    {
+                        way.nameID = nameVector.size();
+                        nameVector.push_back(name);
+                        stringMap->insert(std::make_pair(name, way.nameID) );
+                        //                    		cout << "found name ID: " << way.nameID << " (" << name << ")" << endl;
                     } else {
-                    	if(strit == stringMap->end())
-                    	{
-                    		way.nameID = nameVector.size();
-                    		nameVector.push_back(name);
-                    		stringMap->insert(std::make_pair(name, way.nameID) );
-//                    		cout << "found name ID: " << way.nameID << " (" << name << ")" << endl;
-                    	} else {
-                    		way.nameID = strit->second;
-//                    		cout << "name with ID " << way.nameID << " already existing (" << name << ")" << endl;
-                    	}
+                        way.nameID = strit->second;
+                        //                    		cout << "name with ID " << way.nameID << " already existing (" << name << ")" << endl;
                     }
                     for ( unsigned i = 0; i < way.path.size(); ++i ) {
                         usedNodes.push_back(way.path[i]);
@@ -269,31 +266,56 @@ int main (int argc, char *argv[])
             int intWeight = max(1, (int) weight);
             int intDist = max(1, (int)distance);
             int ferryIndex = settings.indexInAccessListOf("ferry");
+            assert(ferryIndex != -1);
 
-            //Todo: write nameID and type of edge to osrm
             switch(eit->direction)
             {
             case _Way::notSure:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             case _Way::oneway:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             case _Way::bidirectional:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             case _Way::opposite:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << (eit->type == ferryIndex ? false :true ) << "\n";
+                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             default:
                 assert(false);
                 break;
             }
         }
-        //Todo: serialize list of names
-
         fout.close();
+
+        name.append(".names");
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
+        cout << "writing street name index ..." << flush;
+
+        vector<unsigned> * nameIndex = new vector<unsigned>(nameVector.size()+1, 0);
+        unsigned currentNameIndex = 0;
+        for(int i = 0; i < nameVector.size(); i++) {
+            nameIndex->at(i) = currentNameIndex;
+            currentNameIndex += nameVector[i].length();
+        }
+        nameIndex->at(nameVector.size()) = currentNameIndex;
+        ofstream nameOutFile(name.c_str(), ios::binary);
+        unsigned sizeOfNameIndex = nameIndex->size();
+        nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
+
+        for(int i = 0; i < nameIndex->size(); i++) {
+            nameOutFile.write((char *)&(nameIndex->at(i)), sizeof(unsigned));
+        }
+        for(int i = 0; i < nameVector.size(); i++){
+            nameOutFile << nameVector[i];
+        }
+
+        nameOutFile.close();
+        delete nameIndex;
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+
     } catch ( const std::exception& e ) {
         cerr <<  "Caught Execption:" << e.what() << endl;
         return false;

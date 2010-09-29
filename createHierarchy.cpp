@@ -156,16 +156,24 @@ int main (int argc, char *argv[])
         bool shortcut= it->data.shortcut;
         bool forward= it->data.forward;
         bool backward= it->data.backward;
-        NodeID middle= it->data.middleName.middle;
+        NodeID middle;
+        if(shortcut)
+            middle = it->data.middleName.middle;
+        else {
+            middle = it->data.middleName.nameID;
+            assert (middle < 10000);
+        }
+
         NodeID source = it->source;
         NodeID target = it->target;
+        short type = it->data.type;
 
         edgeOutFile.write((char *)&(distance), sizeof(int));
         edgeOutFile.write((char *)&(shortcut), sizeof(bool));
         edgeOutFile.write((char *)&(forward), sizeof(bool));
         edgeOutFile.write((char *)&(backward), sizeof(bool));
         edgeOutFile.write((char *)&(middle), sizeof(NodeID));
-
+        edgeOutFile.write((char *)&(type), sizeof(short));
         edgeOutFile.write((char *)&(source), sizeof(NodeID));
         edgeOutFile.write((char *)&(target), sizeof(NodeID));
     }
@@ -174,4 +182,5 @@ int main (int argc, char *argv[])
 
     delete cleanup;
     delete contractor;
+    cout << "finished" << endl;
 }

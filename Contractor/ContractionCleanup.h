@@ -75,6 +75,7 @@ public:
             bool shortcut : 1;
             bool forward : 1;
             bool backward : 1;
+            short type;
             _MiddleName middleName;
         } data;
 
@@ -121,10 +122,10 @@ public:
 
             newEdge.data.distance = _graph[edge].data.distance;
             newEdge.data.shortcut = _graph[edge].data.shortcut;
-            if ( newEdge.data.shortcut )
-                newEdge.data.middleName = _graph[edge].data.middleName;
+            newEdge.data.middleName = _graph[edge].data.middleName;
             newEdge.data.forward = _graph[edge].data.forward;
             newEdge.data.backward = _graph[edge].data.backward;
+            newEdge.data.type = _graph[edge].data.type;
             edges.push_back( newEdge );
         }
 #ifdef _GLIBCXX_PARALLEL
