@@ -107,10 +107,7 @@ public:
     }
 
     void Run() {
-        double time = _Timestamp();
         RemoveUselessShortcuts();
-        time = _Timestamp() - time;
-        cout << "Postprocessing Time: " << time << " s" << endl;
     }
 
     template< class EdgeT >

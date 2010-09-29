@@ -132,7 +132,7 @@ int main (int argc, char *argv[])
     contractor->Run();
 
     cout << "checking data sanity ..." << flush;
-    contractor->checkForAllOrigEdges(edgeList);
+    contractor->CheckForAllOrigEdges(edgeList);
     cout << "ok" << endl;
     std::vector< ContractionCleanup::Edge > contractedEdges;
     contractor->GetEdges( contractedEdges );
@@ -142,6 +142,14 @@ int main (int argc, char *argv[])
 
     std::vector< GridEdge> cleanedEdgeList;
     cleanup->GetData(cleanedEdgeList);
+
+    cout << "computing turn vector info ..." << flush;
+    vector<bool> * forwardTurnInfo = new vector<bool>();
+    vector<bool> * backwardTurnInfo = new vector<bool>();
+    contractor->ComputeTurnInfoVector(cleanedEdgeList, forwardTurnInfo, backwardTurnInfo);
+    assert(backwardTurnInfo->size() == forwardTurnInfo->size());
+    //todo: serialize info somewhere
+    cout << "ok" << endl;
 
     ofstream edgeOutFile(edgeOut, ios::binary);
 
@@ -182,5 +190,7 @@ int main (int argc, char *argv[])
 
     delete cleanup;
     delete contractor;
+    delete forwardTurnInfo;
+    delete backwardTurnInfo;
     cout << "finished" << endl;
 }

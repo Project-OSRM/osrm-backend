@@ -274,7 +274,7 @@ public:
     }
 
     template< class InputEdge >
-    void checkForAllOrigEdges(std::vector< InputEdge >& inputEdges)
+    void CheckForAllOrigEdges(std::vector< InputEdge >& inputEdges)
     {
         for(unsigned int i = 0; i < inputEdges.size(); i++)
         {
@@ -292,6 +292,29 @@ public:
                     found = true;
             }
             assert(found);
+        }
+    }
+
+    template< class InputEdge >
+    void ComputeTurnInfoVector(std::vector< InputEdge >& inputEdges, std::vector<bool> * forwardTurnInfo, std::vector<bool> * backwardTurnInfo)
+    {
+        forwardTurnInfo->resize(inputEdges.size(), false);
+        backwardTurnInfo->resize(inputEdges.size(), false);
+        for(unsigned n = 0; n < inputEdges.size(); n++) {
+            if(inputEdges[n].data.forward)
+            {
+                NodeID target = inputEdges[n].target;
+                if(_graph->BeginEdges(target)+1 < _graph->EndEdges(target)) {
+                    forwardTurnInfo->at(n) = true;
+                }
+            }
+            if(inputEdges[n].data.backward)
+            {
+                NodeID source = inputEdges[n].source;
+                if(_graph->BeginEdges(source)+1 < _graph->EndEdges(source)) {
+                    backwardTurnInfo->at(n) = true;
+                }
+            }
         }
     }
 
@@ -480,7 +503,6 @@ public:
     }
 
 private:
-
     double _Timestamp() {
         return time(NULL);
     }
