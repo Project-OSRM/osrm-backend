@@ -50,7 +50,7 @@ typedef http::server<StaticGraph<EdgeData> > server;
  */
 int main (int argc, char *argv[])
 {
-    if(argc < 5)
+    if(argc < 6)
     {
         cerr << "Correct usage:" << endl << argv[0] << " <hsgr data> <nodes data> <ram index> <file index> <names data>" << endl;
         exit(-1);
