@@ -268,6 +268,9 @@ int main (int argc, char *argv[])
             int ferryIndex = settings.indexInAccessListOf("ferry");
             assert(ferryIndex != -1);
 
+            if(eit->type == ferryIndex)
+                cout << "ferry index: " << ferryIndex << endl;
+
             switch(eit->direction)
             {
             case _Way::notSure:

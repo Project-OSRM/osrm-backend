@@ -113,6 +113,8 @@ void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         bool shortcut;
         bool forward;
         bool backward;
+        bool forwardTurn;
+        bool backwardTurn;
         short type;
         NodeID middle;
         NodeID source;
@@ -120,6 +122,8 @@ void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
 
         in.read((char *)&(distance), sizeof(int));
         assert(distance > 0);
+        in.read((char *)&(forwardTurn), sizeof(bool));
+        in.read((char *)&(backwardTurn), sizeof(bool));
         in.read((char *)&(shortcut), sizeof(bool));
         in.read((char *)&(forward), sizeof(bool));
         in.read((char *)&(backward), sizeof(bool));
@@ -128,6 +132,7 @@ void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         in.read((char *)&(source), sizeof(NodeID));
         in.read((char *)&(target), sizeof(NodeID));
         e.backward = backward; e.distance = distance; e.forward = forward; e.middleName.middle = middle; e.shortcut = shortcut; e.type = type;
+        e.forwardTurn = forwardTurn; e.backwardTurn = backwardTurn;
         g.data = e; g.source = source; g.target = target;
 
         edgeList->push_back(g);

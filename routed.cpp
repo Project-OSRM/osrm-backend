@@ -80,7 +80,6 @@ int main (int argc, char *argv[])
     namesInStream.read((char *)&size, sizeof(unsigned));
     vector<unsigned> * nameIndex = new vector<unsigned>(size, 0);
     vector<string> * names = new vector<string>();
-//    names->push_back("");
     for(int i = 0; i<size; i++)
         namesInStream.read((char *)&(nameIndex->at(i)), sizeof(unsigned));
 

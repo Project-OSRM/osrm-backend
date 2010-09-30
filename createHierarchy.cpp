@@ -144,11 +144,7 @@ int main (int argc, char *argv[])
     cleanup->GetData(cleanedEdgeList);
 
     cout << "computing turn vector info ..." << flush;
-    vector<bool> * forwardTurnInfo = new vector<bool>();
-    vector<bool> * backwardTurnInfo = new vector<bool>();
-    contractor->ComputeTurnInfoVector(cleanedEdgeList, forwardTurnInfo, backwardTurnInfo);
-    assert(backwardTurnInfo->size() == forwardTurnInfo->size());
-    //todo: serialize info somewhere
+    contractor->ComputeTurnInfoVector(cleanedEdgeList);
     cout << "ok" << endl;
 
     ofstream edgeOutFile(edgeOut, ios::binary);
@@ -176,7 +172,12 @@ int main (int argc, char *argv[])
         NodeID target = it->target;
         short type = it->data.type;
 
+        bool forwardTurn = it->data.forwardTurn;
+        bool backwardTurn = it->data.backwardTurn;
+
         edgeOutFile.write((char *)&(distance), sizeof(int));
+        edgeOutFile.write((char *)&(forwardTurn), sizeof(bool));
+        edgeOutFile.write((char *)&(backwardTurn), sizeof(bool));
         edgeOutFile.write((char *)&(shortcut), sizeof(bool));
         edgeOutFile.write((char *)&(forward), sizeof(bool));
         edgeOutFile.write((char *)&(backward), sizeof(bool));
@@ -190,7 +191,5 @@ int main (int argc, char *argv[])
 
     delete cleanup;
     delete contractor;
-    delete forwardTurnInfo;
-    delete backwardTurnInfo;
     cout << "finished" << endl;
 }

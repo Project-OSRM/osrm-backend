@@ -75,7 +75,9 @@ public:
             bool shortcut : 1;
             bool forward : 1;
             bool backward : 1;
-            short type;
+            short type:6;
+            bool forwardTurn:1;
+            bool backwardTurn:1;
             _MiddleName middleName;
         } data;
 

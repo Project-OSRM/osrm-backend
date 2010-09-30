@@ -295,24 +295,20 @@ public:
         }
     }
 
+    /* check if its possible to turn at the end of an edge */
     template< class InputEdge >
-    void ComputeTurnInfoVector(std::vector< InputEdge >& inputEdges, std::vector<bool> * forwardTurnInfo, std::vector<bool> * backwardTurnInfo)
-    {
-        forwardTurnInfo->resize(inputEdges.size(), false);
-        backwardTurnInfo->resize(inputEdges.size(), false);
+    void ComputeTurnInfoVector( std::vector< InputEdge >& inputEdges ) {
         for(unsigned n = 0; n < inputEdges.size(); n++) {
-            if(inputEdges[n].data.forward)
-            {
+            if(inputEdges[n].data.forward) {
                 NodeID target = inputEdges[n].target;
                 if(_graph->BeginEdges(target)+1 < _graph->EndEdges(target)) {
-                    forwardTurnInfo->at(n) = true;
+                    inputEdges[n].data.forwardTurn = true;
                 }
             }
-            if(inputEdges[n].data.backward)
-            {
+            if(inputEdges[n].data.backward) {
                 NodeID source = inputEdges[n].source;
                 if(_graph->BeginEdges(source)+1 < _graph->EndEdges(source)) {
-                    backwardTurnInfo->at(n) = true;
+                    inputEdges[n].data.backwardTurn = true;
                 }
             }
         }
