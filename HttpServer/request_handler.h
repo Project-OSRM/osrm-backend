@@ -118,7 +118,8 @@ public:
 
                 if(distance != std::numeric_limits<unsigned int>::max())
                     computeDescription(tmp, path, phantomNodes);
-//                cout << tmp << endl;
+                cout << tmp << endl;
+
 //                rep.content += tmp;
                 rep.content += ("<Placemark>");
                 rep.content += ("<name>OSM Routing Engine (c) Dennis Luxen and others </name>");
@@ -299,8 +300,8 @@ private:
                     tmp += "leave motorway and ";
 
                 double angle = GetAngleBetweenTwoEdges(previous, current, next);
-                if(it->turn)
-                    tmp += " turn! ";
+//                if(it->turn)
+//                    tmp += " turn! ";
                 tmp += "follow road ";
                 if(nameID != 0)
                     tmp += sEngine->GetNameForNameID(nameID);
