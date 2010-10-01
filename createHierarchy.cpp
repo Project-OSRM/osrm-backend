@@ -128,7 +128,6 @@ int main (int argc, char *argv[])
     cout << "initializing contractor ..." << flush;
     Contractor* contractor = new Contractor( n, edgeList );
     vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
-    cout << "ok" << endl;
     contractor->Run();
 
     cout << "checking data sanity ..." << flush;

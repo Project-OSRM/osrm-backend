@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <algorithm>
 #endif
 #include "../DataStructures/DynamicGraph.h"
+#include "../DataStructures/Percent.h"
 #include <ctime>
 #include <vector>
 #include <queue>
@@ -262,7 +263,7 @@ public:
                 }
             }
         }
-        cout << "Removed " << edges.size() - edge << " edges of " << edges.size() << endl;
+        cout << "ok" << endl << "removed " << edges.size() - edge << " edges of " << edges.size() << endl;
         edges.resize( edge );
         _graph = new _DynamicGraph( nodes, edges );
 
@@ -317,6 +318,7 @@ public:
     void Run() {
         const NodeID numberOfNodes = _graph->GetNumberOfNodes();
         _LogData log;
+        Percent p (numberOfNodes);
 
         int maxThreads = omp_get_max_threads();
         std::vector < _ThreadData* > threadData;
@@ -339,7 +341,7 @@ public:
         for ( int x = 0; x < ( int ) numberOfNodes; ++x )
             nodeData[remainingNodes[x].first].bias = x;
 
-        cout << "Initialise Elimination PQ... " << endl;
+        cout << "initializing elimination PQ ..." << flush;
         _LogItem statistics0;
         statistics0.updating = _Timestamp();
 #pragma omp parallel
@@ -350,13 +352,13 @@ public:
                 nodePriority[x] = _Evaluate( data, &nodeData[x], x );
             }
         }
-        cout << "done" << endl;
+        cout << "ok" << endl;
 
         statistics0.updating = _Timestamp() - statistics0.updating;
         log.Insert( statistics0 );
-
-        log.PrintHeader();
-        statistics0.PrintStatistics( 0 );
+        cout << "preprocessing ..." << flush;
+//        log.PrintHeader();
+//        statistics0.PrintStatistics( 0 );
 
         while ( levelID < numberOfNodes ) {
             _LogItem statistics;
@@ -448,7 +450,7 @@ public:
             timeLast = _Timestamp();
 
             //output some statistics
-            statistics.PrintStatistics( iteration + 1 );
+//            statistics.PrintStatistics( iteration + 1 );
             //LogVerbose( wxT( "Printed" ) );
 
             //remove contracted nodes from the pool
@@ -456,6 +458,7 @@ public:
             remainingNodes.resize( firstIndependent );
             std::vector< std::pair< NodeID, bool > >( remainingNodes ).swap( remainingNodes );
             log.Insert( statistics );
+            p.printStatus(levelID);
         }
 
         for ( int threadNum = 0; threadNum < maxThreads; threadNum++ ) {
@@ -463,8 +466,8 @@ public:
             delete threadData[threadNum];
         }
 
-        log.PrintSummary();
-        cout << "Total Time: " << log.GetSum().GetTotalTime()<< " s" << endl;
+//        log.PrintSummary();
+//        cout << "Total Time: " << log.GetSum().GetTotalTime()<< " s" << endl;
         cout << "checking sanity of generated data ..." << flush;
         _CheckCH<_EdgeData>();
         cout << "ok" << endl;
