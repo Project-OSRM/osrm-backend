@@ -34,6 +34,12 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p), stalled(false) { }
 };
 
+struct _PathData {
+    _PathData(NodeID n, bool t) : node(n), turn(t) { }
+    NodeID node:31;
+    bool turn:1;
+};
+
 typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage< NodeID, unsigned > > _Heap;
 
 template<typename EdgeData, typename GraphT, typename NodeHelperT = NodeInformationHelpDesk>
@@ -57,7 +63,7 @@ public:
         return nodeHelpDesk->getNumberOfNodes();
     }
 
-    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<NodeID > * path, _Coordinate& startCoord, _Coordinate& targetCoord)
+    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<_PathData > * path, _Coordinate& startCoord, _Coordinate& targetCoord)
     {
         bool onSameEdge = false;
         bool onSameEdgeReversed = false;
@@ -192,7 +198,8 @@ public:
             packedPath.push_back( pathNode );
         }
 
-        path->push_back(packedPath[0] );
+
+        path->push_back( _PathData(packedPath[0], false) );
         {
             for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
             {
@@ -307,9 +314,10 @@ private:
         }
     }
 
-    bool _UnpackEdge( const NodeID source, const NodeID target, std::vector< NodeID >* path ) {
+    bool _UnpackEdge( const NodeID source, const NodeID target, std::vector< _PathData >* path ) {
         assert(source != target);
         //find edge first.
+        bool forward = true;
         typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
         EdgeWeight smallestWeight = UINT_MAX;
         for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(source); eit < _graph->EndEdges(source); eit++)
@@ -331,6 +339,7 @@ private:
                     if(_graph->GetTarget(eit) == source && weight < smallestWeight && _graph->GetEdgeData(eit).backward)
                     {
                         smallestEdge = eit; smallestWeight = weight;
+                        forward = false;
                     }
                 }
             }
@@ -347,7 +356,7 @@ private:
             return false;
         } else {
             assert(!ed.shortcut);
-            path->push_back(target);
+            path->push_back(_PathData(target, (forward ? ed.forwardTurn : ed.backwardTurn) ) );
             return true;
         }
     }
