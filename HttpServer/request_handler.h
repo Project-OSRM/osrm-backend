@@ -233,8 +233,8 @@ private:
         output = string;
     }
 
-    // precision: Nachkommastellen
-    // length: Maximallänge inklusive Komma
+    // precision:  position after decimal point
+    // length: maximum number of digits including comma and decimals
     template< int length, int precision >
     inline char* printInt( char* buffer, int value )
     {
@@ -337,13 +337,13 @@ private:
                     tmp += /* " (" << angle << ")*/"drive ahead, ";
                 } else if (angle > 290 && angle <= 360) {
                     tmp += /*" (" << angle << ")*/ "turn sharp left, ";
-                } else if (angle > 245 && angle <= 290) {
+                } else if (angle > 230 && angle <= 290) {
                     tmp += /*" (" << angle << ")*/ "turn left, ";
-                } else if (angle > 200 && angle <= 245) {
+                } else if (angle > 200 && angle <= 230) {
                     tmp += /*" (" << angle << ") */"bear left, ";
-                } else if (angle > 115 && angle <= 160) {
+                } else if (angle > 130 && angle <= 160) {
                     tmp += /*" (" << angle << ") */"bear right, ";
-                } else if (angle > 70 && angle <= 115) {
+                } else if (angle > 70 && angle <= 130) {
                     tmp += /*" (" << angle << ") */"turn right, ";
                 } else {
                     tmp += /*" (" << angle << ") */"turn sharp right, ";
@@ -363,8 +363,12 @@ private:
         numberString << type;
         tmp += numberString.str();
         numberString.str("");
+        tmp += ", id: ";
+        numberString << nameID;
+        tmp += numberString.str();
+        numberString.str("");
         tmp += ")</name>\n <Description> drive for ";
-        numberString << (previous.lat, previous.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon) + tempDist;
+        numberString << ApproximateDistance(previous.lat, previous.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon) + tempDist;
         tmp += numberString.str();
         numberString.str("");
         tmp += "m</Description>\n ";

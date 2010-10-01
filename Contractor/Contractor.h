@@ -59,7 +59,9 @@ private:
         bool shortcut : 1;
         bool forward : 1;
         bool backward : 1;
-        short type;
+        short type:6;
+        bool forwardTurn:1;
+        bool backwardTurn:1;
         _MiddleName middleName;
     } data;
 
@@ -209,6 +211,8 @@ public:
             std::swap( edge.source, edge.target );
             edge.data.forward = i->isBackward();
             edge.data.backward = i->isForward();
+            edge.data.forwardTurn = i->isForwardTurn();
+            edge.data.backwardTurn = i->isBackwardTurn();
             edges.push_back( edge );
         }
         std::vector< InputEdge >().swap( inputEdges ); //free memory
@@ -296,25 +300,6 @@ public:
         }
     }
 
-    /* check if its possible to turn at the end of an edge */
-    template< class InputEdge >
-    void ComputeTurnInfoVector( std::vector< InputEdge >& inputEdges ) {
-        for(unsigned n = 0; n < inputEdges.size(); n++) {
-            if(inputEdges[n].data.forward) {
-                NodeID target = inputEdges[n].target;
-                if(_graph->BeginEdges(target)+1 < _graph->EndEdges(target)) {
-                    inputEdges[n].data.forwardTurn = true;
-                }
-            }
-            if(inputEdges[n].data.backward) {
-                NodeID source = inputEdges[n].source;
-                if(_graph->BeginEdges(source)+1 < _graph->EndEdges(source)) {
-                    inputEdges[n].data.backwardTurn = true;
-                }
-            }
-        }
-    }
-
     void Run() {
         const NodeID numberOfNodes = _graph->GetNumberOfNodes();
         _LogData log;
@@ -357,8 +342,8 @@ public:
         statistics0.updating = _Timestamp() - statistics0.updating;
         log.Insert( statistics0 );
         cout << "preprocessing ..." << flush;
-//        log.PrintHeader();
-//        statistics0.PrintStatistics( 0 );
+        //        log.PrintHeader();
+        //        statistics0.PrintStatistics( 0 );
 
         while ( levelID < numberOfNodes ) {
             _LogItem statistics;
@@ -450,7 +435,7 @@ public:
             timeLast = _Timestamp();
 
             //output some statistics
-//            statistics.PrintStatistics( iteration + 1 );
+            //            statistics.PrintStatistics( iteration + 1 );
             //LogVerbose( wxT( "Printed" ) );
 
             //remove contracted nodes from the pool
@@ -466,8 +451,8 @@ public:
             delete threadData[threadNum];
         }
 
-//        log.PrintSummary();
-//        cout << "Total Time: " << log.GetSum().GetTotalTime()<< " s" << endl;
+        //        log.PrintSummary();
+        //        cout << "Total Time: " << log.GetSum().GetTotalTime()<< " s" << endl;
         cout << "checking sanity of generated data ..." << flush;
         _CheckCH<_EdgeData>();
         cout << "ok" << endl;
@@ -495,6 +480,8 @@ public:
                 }
 
                 newEdge.data.forward = data.forward;
+                newEdge.data.forwardTurn = data.forwardTurn;
+                newEdge.data.backwardTurn = data.backwardTurn;
                 newEdge.data.backward = data.backward;
                 edges.push_back( newEdge );
             }

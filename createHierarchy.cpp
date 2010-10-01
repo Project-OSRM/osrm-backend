@@ -51,6 +51,7 @@ using namespace std;
 
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge GridEdge;
+typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef NNGrid::NNGrid<true> WritableGrid;
 
 vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
@@ -72,6 +73,13 @@ int main (int argc, char *argv[])
     vector<ImportEdge> edgeList;
     const NodeID n = readOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
     in.close();
+
+    StaticGraph<EdgeData> * staticGraph = new StaticGraph<EdgeData>( n, edgeList );
+
+    cout << "computing turn vector info ..." << flush;
+    staticGraph->ComputeTurnInformation( edgeList );
+    cout << "ok" << endl;
+    delete staticGraph;
 
     char nodeOut[1024];
     char edgeOut[1024];
@@ -127,7 +135,7 @@ int main (int argc, char *argv[])
 
     cout << "initializing contractor ..." << flush;
     Contractor* contractor = new Contractor( n, edgeList );
-    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+
     contractor->Run();
 
     cout << "checking data sanity ..." << flush;
@@ -141,10 +149,6 @@ int main (int argc, char *argv[])
 
     std::vector< GridEdge> cleanedEdgeList;
     cleanup->GetData(cleanedEdgeList);
-
-    cout << "computing turn vector info ..." << flush;
-    contractor->ComputeTurnInfoVector(cleanedEdgeList);
-    cout << "ok" << endl;
 
     ofstream edgeOutFile(edgeOut, ios::binary);
 
@@ -177,6 +181,7 @@ int main (int argc, char *argv[])
         edgeOutFile.write((char *)&(distance), sizeof(int));
         edgeOutFile.write((char *)&(forwardTurn), sizeof(bool));
         edgeOutFile.write((char *)&(backwardTurn), sizeof(bool));
+        assert(forwardTurn && backwardTurn);
         edgeOutFile.write((char *)&(shortcut), sizeof(bool));
         edgeOutFile.write((char *)&(forward), sizeof(bool));
         edgeOutFile.write((char *)&(backward), sizeof(bool));

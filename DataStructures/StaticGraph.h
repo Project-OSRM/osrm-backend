@@ -29,6 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 #include "../typedefs.h"
+#include "ImportEdge.h"
 
 template< typename EdgeData>
 class StaticGraph {
@@ -74,6 +75,39 @@ public:
                 _edges[i].target = graph[edge].target;
                 _edges[i].data = graph[edge].data;
                 assert(_edges[i].data.distance > 0);
+                edge++;
+            }
+        }
+    }
+
+    //Attention: Use this constructor only to if you know what you are doing
+    //           Edges do not have any weight. _edges[i].data is undefined!
+    StaticGraph( int nodes, std::vector< ImportEdge > &graph ) {
+#ifdef _GLIBCXX_PARALLEL
+        __gnu_parallel::sort( graph.begin(), graph.end() );
+#else
+        std::sort( graph.begin(), graph.end() );
+#endif
+        _numNodes = nodes;
+        _numEdges = ( EdgeIterator ) graph.size();
+        _nodes.resize( _numNodes + 1);
+        EdgeIterator edge = 0;
+        EdgeIterator position = 0;
+        for ( NodeIterator node = 0; node <= _numNodes; ++node ) {
+            EdgeIterator lastEdge = edge;
+            while ( edge < _numEdges && graph[edge].source() == node ) {
+                ++edge;
+            }
+            _nodes[node].firstEdge = position; //=edge
+            position += edge - lastEdge; //remove
+        }
+        _edges.resize( position ); //(edge)
+        edge = 0;
+        for ( NodeIterator node = 0; node < _numNodes; ++node ) {
+            for ( EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
+                _edges[i].target = graph[edge].target();
+//                _edges[i].data = graph[edge].data;
+//                assert(_edges[i].data.distance > 0);
                 edge++;
             }
         }
@@ -127,6 +161,36 @@ public:
             }
         }
         return smallestEdge;
+    }
+
+
+    /* check if its possible to turn at the end of an edge */
+    template< class InputEdge >
+    void ComputeTurnInformation( std::vector< InputEdge >& inputEdges ) {
+        unsigned count = 0;
+        for(unsigned n = 0; n < inputEdges.size(); n++) {
+            NodeIterator target = inputEdges[n].target();
+            NodeIterator source = inputEdges[n].source();
+
+            if(inputEdges[n].isForward() ) {
+                EdgeIterator begin = BeginEdges(target);
+                EdgeIterator end = EndEdges(target);
+                if( begin + ( inputEdges[n].isBackward() ? 2 : 1 ) < end ) {
+                    inputEdges[n].setForwardTurn( true );
+                    count++;
+                }
+            }
+
+            if(inputEdges[n].isBackward() ) {
+                EdgeIterator begin = BeginEdges(source);
+                EdgeIterator end = EndEdges(source);
+                if( begin + ( inputEdges[n].isForward() ? 2 : 1 ) < end ) {
+                    inputEdges[n].setBackwardTurn( true );
+                    count ++;
+                }
+            }
+        }
+        cout << "allowed turns: " << count << endl;
     }
 
 private:
