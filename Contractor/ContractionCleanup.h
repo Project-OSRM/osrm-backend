@@ -125,6 +125,8 @@ public:
             newEdge.data.forward = _graph[edge].data.forward;
             newEdge.data.backward = _graph[edge].data.backward;
             newEdge.data.type = _graph[edge].data.type;
+            newEdge.data.forwardTurn = _graph[edge].data.forwardTurn;
+            newEdge.data.backwardTurn = _graph[edge].data.backwardTurn;
             edges.push_back( newEdge );
         }
 #ifdef _GLIBCXX_PARALLEL

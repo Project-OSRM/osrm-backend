@@ -181,7 +181,6 @@ int main (int argc, char *argv[])
         edgeOutFile.write((char *)&(distance), sizeof(int));
         edgeOutFile.write((char *)&(forwardTurn), sizeof(bool));
         edgeOutFile.write((char *)&(backwardTurn), sizeof(bool));
-        assert(forwardTurn && backwardTurn);
         edgeOutFile.write((char *)&(shortcut), sizeof(bool));
         edgeOutFile.write((char *)&(forward), sizeof(bool));
         edgeOutFile.write((char *)&(backward), sizeof(bool));
