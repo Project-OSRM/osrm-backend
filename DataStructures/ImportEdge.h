@@ -63,7 +63,6 @@ public:
     void setForwardTurn(bool f) { forwardTurn = f; }
     void setBackwardTurn(bool b) { backwardTurn = b; }
 
-private:
     NodeID _source:31;
     NodeID _target:31;
     NodeID _name:31;
@@ -73,6 +72,14 @@ private:
     bool forwardTurn:1;
     bool backwardTurn:1;
     short _type;
+};
+
+struct MinimalEdgeData
+{
+public:
+    EdgeWeight distance;
+    bool forward;
+    bool backward;
 };
 
 typedef Edge ImportEdge;

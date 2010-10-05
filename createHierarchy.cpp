@@ -46,6 +46,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
 #include "DataStructures/NNGrid.h"
+#include "DataStructures/TurnInfoFactory.h"
 
 using namespace std;
 
@@ -74,12 +75,11 @@ int main (int argc, char *argv[])
     const NodeID n = readOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
     in.close();
 
-    StaticGraph<EdgeData> * staticGraph = new StaticGraph<EdgeData>( n, edgeList );
-
     cout << "computing turn vector info ..." << flush;
-    staticGraph->ComputeTurnInformation( edgeList );
+    TurnInfoFactory * infoFactory = new TurnInfoFactory(n, edgeList);
+    infoFactory->Run();
+    delete infoFactory;
     cout << "ok" << endl;
-    delete staticGraph;
 
     char nodeOut[1024];
     char edgeOut[1024];
