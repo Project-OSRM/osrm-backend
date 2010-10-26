@@ -319,7 +319,7 @@ public:
             }
         }
 
-        _Coordinate nearest, tmp;
+        _Coordinate nearest(numeric_limits<int>::max(), numeric_limits<int>::max()), tmp;
         double dist = numeric_limits<double>::max();
         timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++)
