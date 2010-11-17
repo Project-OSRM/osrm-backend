@@ -66,13 +66,9 @@ private:
     } data;
 
     struct _HeapData {
-        //short hops;
-        //_HeapData() {
-        //	hops = 0;
-        //}
-        //_HeapData( int h ) {
-        //	hops = h;
-        //}
+        bool target;
+        _HeapData() : target(false) {}
+        _HeapData( bool t ) : target(t) {}
     };
 
     typedef DynamicGraph< _EdgeData > _DynamicGraph;
@@ -495,11 +491,12 @@ private:
 
     bool _ConstructCH( _DynamicGraph* _graph );
 
-    void _Dijkstra( NodeID source, const int maxDistance, _ThreadData* data ){
+    void _Dijkstra( NodeID source, const int maxDistance, const unsigned numTargets, _ThreadData* data ){
 
         _Heap& heap = data->heap;
 
         int nodes = 0;
+        unsigned targetsFound = 0;
         while ( heap.Size() > 0 ) {
             const NodeID node = heap.DeleteMin();
             const int distance = heap.GetKey( node );
@@ -511,6 +508,11 @@ private:
             //Destination settled?
             if ( distance > maxDistance )
                 return;
+            if( heap.GetData( node ).target ) {
+            	targetsFound++;
+            	if ( targetsFound >= numTargets )
+            		return;
+            }
 
             //iterate over all edges of node
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
@@ -593,6 +595,7 @@ private:
             if ( node != source )
                 heap.Insert( node, inData.distance, _HeapData() );
             int maxDistance = 0;
+            unsigned numTargets = 0;
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _EdgeData& outData = _graph->GetEdgeData( outEdge );
@@ -602,12 +605,15 @@ private:
                 const int pathDistance = inData.distance + outData.distance;
                 maxDistance = std::max( maxDistance, pathDistance );
                 if ( !heap.WasInserted( target ) )
-                    heap.Insert( target, pathDistance, _HeapData() );
+                    heap.Insert( target, pathDistance, _HeapData(true) );
                 else if ( pathDistance < heap.GetKey( target ) )
                     heap.DecreaseKey( target, pathDistance );
             }
 
-            _Dijkstra( source, maxDistance, data );
+            if( Simulate )
+            	_Dijkstra( source, maxDistance, 500, data );
+            else
+            	_Dijkstra( source, maxDistance, 1000, data );
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _EdgeData& outData = _graph->GetEdgeData( outEdge );
