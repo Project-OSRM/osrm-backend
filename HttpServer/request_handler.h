@@ -116,10 +116,10 @@ public:
                 rep.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">");
                 rep.content += ("<Document>");
 
-                if(distance != std::numeric_limits<unsigned int>::max())
+/*                if(distance != std::numeric_limits<unsigned int>::max())
                     computeDescription(tmp, path, phantomNodes);
                 cout << tmp << endl;
-
+*/
 //                rep.content += tmp;
                 rep.content += ("<Placemark>");
                 rep.content += ("<name>OSM Routing Engine (c) Dennis Luxen and others </name>");
