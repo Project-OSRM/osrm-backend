@@ -168,7 +168,6 @@ int main (int argc, char *argv[])
             middle = it->data.middleName.middle;
         else {
             middle = it->data.middleName.nameID;
-            assert (middle < 10000);
         }
 
         NodeID source = it->source;

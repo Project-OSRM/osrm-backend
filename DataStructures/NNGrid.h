@@ -261,7 +261,6 @@ public:
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
             }
         }
-
         _Coordinate tmp;
         double dist = numeric_limits<double>::max();
         timestamp = get_timestamp();
@@ -279,7 +278,6 @@ public:
                 routingStarts->startCoord.lon = tmp.lon;
             }
         }
-
         fileIndex = getFileIndexForLatLon(targetCoord.lat, targetCoord.lon);
         candidates.clear();
         timestamp = get_timestamp();
@@ -288,7 +286,6 @@ public:
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
             }
         }
-
         dist = numeric_limits<double>::max();
         timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++)
@@ -318,7 +315,6 @@ public:
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
             }
         }
-
         _Coordinate nearest(numeric_limits<int>::max(), numeric_limits<int>::max()), tmp;
         double dist = numeric_limits<double>::max();
         timestamp = get_timestamp();
@@ -510,6 +506,7 @@ private:
         {
             for(int j = 0; j < 32; j++)
             {
+                assert(cellMap->size() >= 0);
                 unsigned fileIndex = lineBase + i*32768 + columnBase+j;
                 unsigned cellIndex = i*32+j;
                 cellMap->insert(std::make_pair(fileIndex, cellIndex));
@@ -551,6 +548,7 @@ private:
             result.push_back(e);
             numberOfEdgesInFileBucket++;
         } while(true);
+
         delete cellMap;
     }
 

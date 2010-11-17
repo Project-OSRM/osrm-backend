@@ -54,7 +54,9 @@ public:
 
 	NodeID getNumberOfNodes() const { return numberOfNodes; }
 
-	inline void findNearestNodeCoordForLatLon(const _Coordinate coord, _Coordinate& result) { result = g->FindNearestPointOnEdge(coord); }
+	inline void findNearestNodeCoordForLatLon(const _Coordinate coord, _Coordinate& result) {
+	    result = g->FindNearestPointOnEdge(coord);
+	}
 
 	inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * phantomNodes) {
 	    g->FindRoutingStarts(start, target, phantomNodes);
