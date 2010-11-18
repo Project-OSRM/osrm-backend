@@ -272,6 +272,10 @@ public:
         const EdgeData ed = _graph->GetEdgeData(e);
         return ed.type;
     }
+
+    inline void RegisterThread(const unsigned k, const unsigned v) {
+    	nodeHelpDesk->RegisterThread(k,v);
+    }
 private:
     NodeHelperT * nodeHelpDesk;
 
