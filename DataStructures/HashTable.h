@@ -16,33 +16,32 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
+
+  Created on: 18.11.2010
+  Author: dennis
 */
 
-#ifndef TIMEUTIL_H_
-#define TIMEUTIL_H_
+#ifndef HASHTABLE_H_
+#define HASHTABLE_H_
 
-#include <climits>
-#include <cmath>
-#include <cstdlib>
-#include <sys/time.h>
+#include <google/sparse_hash_map>
 
-/** Returns a timestamp (now) in seconds (incl. a fractional part). */
-inline double get_timestamp()
-{
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    return double(tp.tv_sec) + tp.tv_usec / 1000000.;
-}
+template<typename keyT, typename valueT>
+class HashTable {
+	typedef google::sparse_hash_map<keyT, valueT> MyHashTable;
+public:
+	HashTable() { }
+	HashTable(const unsigned size) {
+		table.resize(size);
+	}
+	void Add(const keyT& key, const valueT& value){
+		table[key] = value;
+	}
+	valueT Find(const keyT& key) {
+		return table.find(key)->second;
+	}
+private:
+	MyHashTable table;
+};
 
-double y2lat(double a) { return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2); }
-double lat2y(double a) { return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2)); }
-
-inline unsigned boost_thread_id_hash(boost::thread::id const& id)
-{
-	std::stringstream ostr;
-	ostr << id;
-	std::tr1::hash<std::string> h;
-	return h(ostr.str());
-}
-
-#endif /* TIMEUTIL_H_ */
+#endif /* HASHTABLE_H_ */

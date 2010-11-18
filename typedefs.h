@@ -29,6 +29,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cstring>
 #include <string>
 
+#include <boost/thread.hpp>
+
 using namespace std;
 
 #define VERBOSE(x) x
@@ -45,6 +47,7 @@ typedef unsigned int EdgeWeight;
 static const NodeID SPECIAL_NODEID = UINT_MAX;
 static const EdgeID SPECIAL_EDGEID = UINT_MAX;
 
+#include "DataStructures/HashTable.h"
 #include "DataStructures/NodeCoords.h"
 typedef NodeCoords<NodeID> NodeInfo;
 #include "DataStructures/Util.h"

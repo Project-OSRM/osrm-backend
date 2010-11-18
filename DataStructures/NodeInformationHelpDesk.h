@@ -61,6 +61,10 @@ public:
 	inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * phantomNodes) {
 	    g->FindRoutingStarts(start, target, phantomNodes);
 	}
+
+	inline void RegisterThread(const unsigned k, const unsigned v) {
+		g->threadLookup.table.Add(k, v);
+	}
 private:
 	vector<_Coordinate> * int2ExtNodeMap;
 	ReadOnlyGrid * g;

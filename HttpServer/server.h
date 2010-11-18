@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef HTTP_ROUTER_SERVER_HPP
 #define HTTP_ROUTER_SERVER_HPP
@@ -42,79 +42,80 @@ template<typename GraphT>
 class server: private boost::noncopyable
 {
 public:
-    /// Construct the server to listen on the specified TCP address and port
-    explicit server(const std::string& address, const std::string& port, std::size_t thread_pool_size, SearchEngine<EdgeData, GraphT, NodeInformationHelpDesk> * s)
-    : thread_pool_size_(thread_pool_size),
-      acceptor_(io_service_),
-      new_connection_(new connection<GraphT>(io_service_, request_handler_)),
-      request_handler_(s),
-      sEngine(s)
-    {
-        // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-        boost::asio::ip::tcp::resolver resolver(io_service_);
-        boost::asio::ip::tcp::resolver::query query(address, port);
-        boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
+	/// Construct the server to listen on the specified TCP address and port
+	explicit server(const std::string& address, const std::string& port, std::size_t thread_pool_size, SearchEngine<EdgeData, GraphT, NodeInformationHelpDesk> * s)
+	: thread_pool_size_(thread_pool_size),
+	  acceptor_(io_service_),
+	  new_connection_(new connection<GraphT>(io_service_, request_handler_)),
+	  request_handler_(s),
+	  sEngine(s)
+	{
+		// Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
+		boost::asio::ip::tcp::resolver resolver(io_service_);
+		boost::asio::ip::tcp::resolver::query query(address, port);
+		boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 
-        acceptor_.open(endpoint.protocol());
-        acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-        acceptor_.bind(endpoint);
-        acceptor_.listen();
-        acceptor_.async_accept(new_connection_->socket(), boost::bind(&server::handle_accept, this, boost::asio::placeholders::error));
-    }
+		acceptor_.open(endpoint.protocol());
+		acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+		acceptor_.bind(endpoint);
+		acceptor_.listen();
+		acceptor_.async_accept(new_connection_->socket(), boost::bind(&server::handle_accept, this, boost::asio::placeholders::error));
+	}
 
-    /// Run the server's io_service loop.
-    void run()
-    {
-        // Create a pool of threads to run all of the io_services.
-        std::vector<boost::shared_ptr<boost::thread> > threads;
-        for (std::size_t i = 0; i < thread_pool_size_; ++i)
-        {
-            boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_)));
-            threads.push_back(thread);
-        }
+	/// Run the server's io_service loop.
+	void run()
+	{
+		// Create a pool of threads to run all of the io_services.
+		std::vector<boost::shared_ptr<boost::thread> > threads;
+		for (std::size_t i = 0; i < thread_pool_size_; ++i)
+		{
+			boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_)));
+			sEngine->RegisterThread( boost_thread_id_hash( thread->get_id() ), threads.size());
+			threads.push_back(thread);
+		}
 
-        // Wait for all threads in the pool to exit.
-        for (std::size_t i = 0; i < threads.size(); ++i)
-            threads[i]->join();
-    }
+		// Wait for all threads in the pool to exit.
+		for (std::size_t i = 0; i < threads.size(); ++i)
+			threads[i]->join();
+	}
 
-    /// Stop the server.
-    void stop()
-    {
-        io_service_.stop();
-    }
+	/// Stop the server.
+	void stop()
+	{
+		io_service_.stop();
+	}
 
 private:
-    typedef boost::shared_ptr<connection<GraphT> > connection_ptr;
+	typedef boost::shared_ptr<connection<GraphT> > connection_ptr;
 
-    /// Handle completion of an asynchronous accept operation.
-    void handle_accept(const boost::system::error_code& e)
-    {
-        if (!e)
-        {
-            new_connection_->start();
-            new_connection_.reset(new connection<GraphT>(io_service_, request_handler_));
-            acceptor_.async_accept(new_connection_->socket(), boost::bind(&server::handle_accept, this, boost::asio::placeholders::error));
-        }
-    }
+	/// Handle completion of an asynchronous accept operation.
+	void handle_accept(const boost::system::error_code& e)
+	{
+		if (!e)
+		{
+			new_connection_->start();
+			new_connection_.reset(new connection<GraphT>(io_service_, request_handler_));
+			acceptor_.async_accept(new_connection_->socket(), boost::bind(&server::handle_accept, this, boost::asio::placeholders::error));
+		}
+	}
 
-    /// The number of threads that will call io_service::run().
-    std::size_t thread_pool_size_;
+	/// The number of threads that will call io_service::run().
+	std::size_t thread_pool_size_;
 
-    /// The io_service used to perform asynchronous operations.
-    boost::asio::io_service io_service_;
+	/// The io_service used to perform asynchronous operations.
+	boost::asio::io_service io_service_;
 
-    /// Acceptor used to listen for incoming connections.
-    boost::asio::ip::tcp::acceptor acceptor_;
+	/// Acceptor used to listen for incoming connections.
+	boost::asio::ip::tcp::acceptor acceptor_;
 
-    /// The next connection to be accepted.
-    connection_ptr new_connection_;
+	/// The next connection to be accepted.
+	connection_ptr new_connection_;
 
-    /// The handler for all incoming requests.
-    request_handler<GraphT> request_handler_;
+	/// The handler for all incoming requests.
+	request_handler<GraphT> request_handler_;
 
-    /// The object to query the Routing Engine
-    SearchEngine<EdgeData, GraphT> * sEngine;
+	/// The object to query the Routing Engine
+	SearchEngine<EdgeData, GraphT> * sEngine;
 
 };
 
