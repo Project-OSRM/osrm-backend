@@ -46,7 +46,7 @@ public:
 		std::string command;
 		std::size_t firstAmpPosition = request.find_first_of("&");
 		command = request.substr(1,firstAmpPosition-1);
-		std::cout << "[debug] looking for handler for command: " << command << std::endl;
+//		std::cout << "[debug] looking for handler for command: " << command << std::endl;
 		try {
 			if(pluginMap.Holds(command)) {
 
