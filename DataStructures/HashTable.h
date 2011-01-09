@@ -37,8 +37,22 @@ public:
 	void Add(const keyT& key, const valueT& value){
 		table[key] = value;
 	}
+	void Set(const keyT& key, const valueT& value){
+		table[key] = value;
+	}
 	valueT Find(const keyT& key) {
+		if(table.find(key) == table.end())
+			return valueT();
 		return table.find(key)->second;
+	}
+
+	bool Holds(const keyT& key) {
+		if(table.find(key) == table.end())
+			return false;
+		return true;
+	}
+	void EraseAll() {
+		table.clear();
 	}
 private:
 	MyHashTable table;

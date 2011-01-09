@@ -41,12 +41,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 #include "typedefs.h"
-#include "Contractor/GraphLoader.h"
-#include "Contractor/BinaryHeap.h"
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
+#include "DataStructures/BinaryHeap.h"
 #include "DataStructures/NNGrid.h"
 #include "DataStructures/TurnInfoFactory.h"
+#include "Util/BaseConfiguration.h"
+#include "Util/InputFileUtil.h"
+#include "Util/GraphLoader.h"
 
 using namespace std;
 
@@ -54,6 +56,7 @@ typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge GridEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef NNGrid::NNGrid<true> WritableGrid;
+typedef BaseConfiguration ContractorConfiguration;
 
 vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
 
@@ -64,6 +67,16 @@ int main (int argc, char *argv[])
         cerr << "usage: " << endl << argv[0] << " <osmr-data>" << endl;
         exit(-1);
     }
+
+	//todo: check if contractor exists
+	unsigned numberOfThreads = omp_get_num_procs();
+	if(testDataFile("contractor.ini")) {
+		ContractorConfiguration contractorConfig("contractor.ini");
+		if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
+			numberOfThreads = atoi( contractorConfig.GetParameter("Threads").c_str() );
+	}
+	omp_set_num_threads(numberOfThreads);
+
     cout << "preprocessing data from input file " << argv[1] << endl;
 
     ifstream in;

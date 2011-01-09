@@ -27,6 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -58,284 +59,284 @@ STXXLStringVector nameVector;
 NodeMap * nodeMap = new NodeMap();
 StringMap * stringMap = new StringMap();
 
-int main (int argc, char *argv[])
-{
-    if(argc <= 1)
-    {
-        cerr << "usage: " << endl << argv[0] << " <file.osm>" << endl;
-        exit(-1);
-    }
-    cout << "extracting data from input file " << argv[1] << endl;
-    cout << "reading input file. This may take some time ..." << flush;
-    xmlTextReaderPtr inputReader = inputReaderFactory(argv[1]);
 
-    double time = get_timestamp();
-    settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+14);
-    settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+14);
+int main (int argc, char *argv[]) {
+	if(argc <= 1) {
+		cerr << "usage: " << endl << argv[0] << " <file.osm>" << endl;
+		exit(-1);
+	}
 
-    nodeMap->set_empty_key(UINT_MAX);
-    stringMap->set_empty_key(GetRandomString());
-    stringMap->insert(std::make_pair("", 0));
-        try {
-        while ( xmlTextReaderRead( inputReader ) == 1 ) {
-            const int type = xmlTextReaderNodeType( inputReader );
+	cout << "extracting data from input file " << argv[1] << endl;
+	cout << "reading input file. This may take some time ..." << flush;
+	xmlTextReaderPtr inputReader = inputReaderFactory(argv[1]);
 
-            //1 is Element
-            if ( type != 1 )
-                continue;
+	double time = get_timestamp();
+	settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+14);
+	settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+14);
 
-            xmlChar* currentName = xmlTextReaderName( inputReader );
-            if ( currentName == NULL )
-                continue;
+	nodeMap->set_empty_key(UINT_MAX);
+	stringMap->set_empty_key(GetRandomString());
+	stringMap->insert(std::make_pair("", 0));
+	try {
+		while ( xmlTextReaderRead( inputReader ) == 1 ) {
+			const int type = xmlTextReaderNodeType( inputReader );
 
-            if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
-                _Node node = _ReadXMLNode( inputReader );
-                allNodes.push_back(node);
-                if ( node.trafficSignal )
-                    SignalNodes.push_back( node.id );
+			//1 is Element
+			if ( type != 1 )
+				continue;
 
-            }
-            if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
-            	string name;
-                _Way way = _ReadXMLWay( inputReader, settings, name );
+			xmlChar* currentName = xmlTextReaderName( inputReader );
+			if ( currentName == NULL )
+				continue;
 
-                if ( way.usefull && way.access && way.path.size() ) {
-                    StringMap::iterator strit = stringMap->find(name);
-                    if(strit == stringMap->end())
-                    {
-                        way.nameID = nameVector.size();
-                        nameVector.push_back(name);
-                        stringMap->insert(std::make_pair(name, way.nameID) );
-                        //                    		cout << "found name ID: " << way.nameID << " (" << name << ")" << endl;
-                    } else {
-                        way.nameID = strit->second;
-                        //                    		cout << "name with ID " << way.nameID << " already existing (" << name << ")" << endl;
-                    }
-                    for ( unsigned i = 0; i < way.path.size(); ++i ) {
-                        usedNodes.push_back(way.path[i]);
-                    }
+			if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
+				_Node node = _ReadXMLNode( inputReader );
+				allNodes.push_back(node);
+				if ( node.trafficSignal )
+					SignalNodes.push_back( node.id );
 
-                    if ( way.direction == _Way::opposite ){
-                        std::reverse( way.path.begin(), way.path.end() );
-                    }
-                    vector< NodeID > & path = way.path;
-                    assert(way.type > -1 || way.maximumSpeed != -1);
-                    assert(path.size()>0);
+			}
+			if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
+				string name;
+				_Way way = _ReadXMLWay( inputReader, settings, name );
 
-                    if(way.maximumSpeed == -1)
-                    	way.maximumSpeed = settings.speedProfile.speed[way.type];
+				if ( way.usefull && way.access && way.path.size() ) {
+					StringMap::iterator strit = stringMap->find(name);
+					if(strit == stringMap->end())
+					{
+						way.nameID = nameVector.size();
+						nameVector.push_back(name);
+						stringMap->insert(std::make_pair(name, way.nameID) );
+						//                    		cout << "found name ID: " << way.nameID << " (" << name << ")" << endl;
+					} else {
+						way.nameID = strit->second;
+						//                    		cout << "name with ID " << way.nameID << " already existing (" << name << ")" << endl;
+					}
+					for ( unsigned i = 0; i < way.path.size(); ++i ) {
+						usedNodes.push_back(way.path[i]);
+					}
 
-                    for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++)
-                    {
-                    	_Edge e;
-                    	e.start = way.path[n];
-                    	e.target = way.path[n+1];
-                    	e.type = way.type;
-                    	e.direction = way.direction;
-                    	e.speed = way.maximumSpeed;
-                    	e.nameID = way.nameID;
-                    	allEdges.push_back(e);
-                    }
-                }
-            }
-            if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
+					if ( way.direction == _Way::opposite ){
+						std::reverse( way.path.begin(), way.path.end() );
+					}
+					vector< NodeID > & path = way.path;
+					assert(way.type > -1 || way.maximumSpeed != -1);
+					assert(path.size()>0);
 
-            }
-            xmlFree( currentName );
-        }
-        cout << "raw no. of names: " << nameVector.size() << endl;
-        cout << "raw no. of nodes: " << allNodes.size() << endl;
-        cout << "raw no. of edges: " << allEdges.size() << endl;
+					if(way.maximumSpeed == -1)
+						way.maximumSpeed = settings.speedProfile.speed[way.type];
 
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-        unsigned memory_to_use = 1024 * 1024 * 1024;
+					for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++)
+					{
+						_Edge e;
+						e.start = way.path[n];
+						e.target = way.path[n+1];
+						e.type = way.type;
+						e.direction = way.direction;
+						e.speed = way.maximumSpeed;
+						e.nameID = way.nameID;
+						allEdges.push_back(e);
+					}
+				}
+			}
+			if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
 
-        cout << "Sorting used nodes ..." << flush;
-        stxxl::sort(usedNodes.begin(), usedNodes.end(), Cmp(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-        cout << "Erasing duplicate entries ..." << flush;
-        stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodes.begin(),usedNodes.end() ) ;
-        usedNodes.resize ( NewEnd - usedNodes.begin() );
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
+			}
+			xmlFree( currentName );
+		}
+		cout << "raw no. of names: " << nameVector.size() << endl;
+		cout << "raw no. of nodes: " << allNodes.size() << endl;
+		cout << "raw no. of edges: " << allEdges.size() << endl;
 
-        cout << "Sorting all nodes ..." << flush;
-        stxxl::sort(allNodes.begin(), allNodes.end(), CmpNodeByID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
+		unsigned memory_to_use = 1024 * 1024 * 1024;
 
-        string name(argv[1]);
-        int pos;
-        pos = name.find(".osm.bz2");
-        if(pos!=string::npos)
-        {
-            name.replace(pos, 8, ".osrm");
-        } else {
-            pos=name.find(".osm");
-            if(pos!=string::npos)
-            {
-                name.replace(pos, 5, ".osrm");
-            } else {
-                name.append(".osrm");
-            }
-        }
+		cout << "Sorting used nodes ..." << flush;
+		stxxl::sort(usedNodes.begin(), usedNodes.end(), Cmp(), memory_to_use);
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
+		cout << "Erasing duplicate entries ..." << flush;
+		stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodes.begin(),usedNodes.end() ) ;
+		usedNodes.resize ( NewEnd - usedNodes.begin() );
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
 
-        ofstream fout;
-        fout.open(name.c_str());
+		cout << "Sorting all nodes ..." << flush;
+		stxxl::sort(allNodes.begin(), allNodes.end(), CmpNodeByID(), memory_to_use);
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
 
-        cout << "Confirming used nodes ..." << flush;
-        NodeID counter = 0;
-        NodeID notfound = 0;
-        STXXLNodeVector::iterator nvit = allNodes.begin();
-        STXXLNodeIDVector::iterator niit = usedNodes.begin();
-        while(niit != usedNodes.end() && nvit != allNodes.end())
-        {
-            if(*niit < nvit->id){
-                niit++;
-                continue;
-            }
-            if(*niit > nvit->id)
-            {
-                nvit++;
-                continue;
-            }
-            if(*niit == nvit->id)
-            {
-                confirmedNodes.push_back(*nvit);
-                nodeMap->insert(std::make_pair(nvit->id, *nvit));
-                niit++;
-                nvit++;
-            }
-        }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
+		string name(argv[1]);
+		int pos;
+		pos = name.find(".osm.bz2");
+		if(pos!=string::npos)
+		{
+			name.replace(pos, 8, ".osrm");
+		} else {
+			pos=name.find(".osm");
+			if(pos!=string::npos)
+			{
+				name.replace(pos, 5, ".osrm");
+			} else {
+				name.append(".osrm");
+			}
+		}
 
-        cout << "Writing used nodes ..." << flush;
-        fout << confirmedNodes.size() << endl;
-        for(STXXLNodeVector::iterator ut = confirmedNodes.begin(); ut != confirmedNodes.end(); ut++)
-        {
-            fout << ut->id<< " " << ut->lon << " " << ut->lat << "\n";
-        }
+		ofstream fout;
+		fout.open(name.c_str());
 
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
+		cout << "Confirming used nodes ..." << flush;
+		NodeID counter = 0;
+		NodeID notfound = 0;
+		STXXLNodeVector::iterator nvit = allNodes.begin();
+		STXXLNodeIDVector::iterator niit = usedNodes.begin();
+		while(niit != usedNodes.end() && nvit != allNodes.end())
+		{
+			if(*niit < nvit->id){
+				niit++;
+				continue;
+			}
+			if(*niit > nvit->id)
+			{
+				nvit++;
+				continue;
+			}
+			if(*niit == nvit->id)
+			{
+				confirmedNodes.push_back(*nvit);
+				nodeMap->insert(std::make_pair(nvit->id, *nvit));
+				niit++;
+				nvit++;
+			}
+		}
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
 
-        cout << "confirming used ways ..." << flush;
-        for(STXXLEdgeVector::iterator eit = allEdges.begin(); eit != allEdges.end(); eit++)
-        {
-            assert(eit->type > -1 || eit->speed != -1);
+		cout << "Writing used nodes ..." << flush;
+		fout << confirmedNodes.size() << endl;
+		for(STXXLNodeVector::iterator ut = confirmedNodes.begin(); ut != confirmedNodes.end(); ut++)
+		{
+			fout << ut->id<< " " << ut->lon << " " << ut->lat << "\n";
+		}
 
-            NodeMap::iterator startit = nodeMap->find(eit->start);
-            if(startit == nodeMap->end())
-            {
-                continue;
-            }
-            NodeMap::iterator targetit = nodeMap->find(eit->target);
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
 
-            if(targetit == nodeMap->end())
-            {
-                continue;
-            }
-            confirmedEdges.push_back(*eit);
-        }
-        fout << confirmedEdges.size() << "\n";
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
+		cout << "confirming used ways ..." << flush;
+		for(STXXLEdgeVector::iterator eit = allEdges.begin(); eit != allEdges.end(); eit++)
+		{
+			assert(eit->type > -1 || eit->speed != -1);
 
-        cout << "writing confirmed ways ..." << flush;
+			NodeMap::iterator startit = nodeMap->find(eit->start);
+			if(startit == nodeMap->end())
+			{
+				continue;
+			}
+			NodeMap::iterator targetit = nodeMap->find(eit->target);
 
-        for(STXXLEdgeVector::iterator eit = confirmedEdges.begin(); eit != confirmedEdges.end(); eit++)
-        {
-            NodeMap::iterator startit = nodeMap->find(eit->start);
-            if(startit == nodeMap->end())
-            {
-                continue;
-            }
-            NodeMap::iterator targetit = nodeMap->find(eit->target);
+			if(targetit == nodeMap->end())
+			{
+				continue;
+			}
+			confirmedEdges.push_back(*eit);
+		}
+		fout << confirmedEdges.size() << "\n";
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
 
-            if(targetit == nodeMap->end())
-            {
-                continue;
-            }
-            double distance = ApproximateDistance(startit->second.lat, startit->second.lon, targetit->second.lat, targetit->second.lon);
-            if(eit->speed == -1)
-                eit->speed = settings.speedProfile.speed[eit->type];
-            double weight = ( distance * 10. ) / (eit->speed / 3.6);
-            int intWeight = max(1, (int) weight);
-            int intDist = max(1, (int)distance);
-            int ferryIndex = settings.indexInAccessListOf("ferry");
-            assert(ferryIndex != -1);
+		cout << "writing confirmed ways ..." << flush;
 
-            switch(eit->direction)
-            {
-            case _Way::notSure:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            case _Way::oneway:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            case _Way::bidirectional:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            case _Way::opposite:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            default:
-                assert(false);
-                break;
-            }
-        }
-        fout.close();
+		for(STXXLEdgeVector::iterator eit = confirmedEdges.begin(); eit != confirmedEdges.end(); eit++)
+		{
+			NodeMap::iterator startit = nodeMap->find(eit->start);
+			if(startit == nodeMap->end())
+			{
+				continue;
+			}
+			NodeMap::iterator targetit = nodeMap->find(eit->target);
 
-        name.append(".names");
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-        cout << "writing street name index ..." << flush;
+			if(targetit == nodeMap->end())
+			{
+				continue;
+			}
+			double distance = ApproximateDistance(startit->second.lat, startit->second.lon, targetit->second.lat, targetit->second.lon);
+			if(eit->speed == -1)
+				eit->speed = settings.speedProfile.speed[eit->type];
+			double weight = ( distance * 10. ) / (eit->speed / 3.6);
+			int intWeight = max(1, (int) weight);
+			int intDist = max(1, (int)distance);
+			int ferryIndex = settings.indexInAccessListOf("ferry");
+			assert(ferryIndex != -1);
 
-        vector<unsigned> * nameIndex = new vector<unsigned>(nameVector.size()+1, 0);
-        unsigned currentNameIndex = 0;
-        for(int i = 0; i < nameVector.size(); i++) {
-            nameIndex->at(i) = currentNameIndex;
-            currentNameIndex += nameVector[i].length();
-        }
-        nameIndex->at(nameVector.size()) = currentNameIndex;
-        ofstream nameOutFile(name.c_str(), ios::binary);
-        unsigned sizeOfNameIndex = nameIndex->size();
-        nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
+			switch(eit->direction)
+			{
+			case _Way::notSure:
+				fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+				break;
+			case _Way::oneway:
+				fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+				break;
+			case _Way::bidirectional:
+				fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+				break;
+			case _Way::opposite:
+				fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+				break;
+			default:
+				assert(false);
+				break;
+			}
+		}
+		fout.close();
 
-        for(int i = 0; i < nameIndex->size(); i++) {
-            nameOutFile.write((char *)&(nameIndex->at(i)), sizeof(unsigned));
-        }
-        for(int i = 0; i < nameVector.size(); i++){
-            nameOutFile << nameVector[i];
-        }
+		name.append(".names");
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		time = get_timestamp();
+		cout << "writing street name index ..." << flush;
 
-        nameOutFile.close();
-        delete nameIndex;
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+		vector<unsigned> * nameIndex = new vector<unsigned>(nameVector.size()+1, 0);
+		unsigned currentNameIndex = 0;
+		for(int i = 0; i < nameVector.size(); i++) {
+			nameIndex->at(i) = currentNameIndex;
+			currentNameIndex += nameVector[i].length();
+		}
+		nameIndex->at(nameVector.size()) = currentNameIndex;
+		ofstream nameOutFile(name.c_str(), ios::binary);
+		unsigned sizeOfNameIndex = nameIndex->size();
+		nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
-    } catch ( const std::exception& e ) {
-        cerr <<  "Caught Execption:" << e.what() << endl;
-        return false;
-    }
+		for(int i = 0; i < nameIndex->size(); i++) {
+			nameOutFile.write((char *)&(nameIndex->at(i)), sizeof(unsigned));
+		}
+		for(int i = 0; i < nameVector.size(); i++){
+			nameOutFile << nameVector[i];
+		}
 
-    cout << endl << "Statistics:" << endl;
-    cout << "-----------" << endl;
-    cout << "Usable Nodes: " << confirmedNodes.size() << endl;
-    cout << "Usable Ways : " << confirmedEdges.size() << endl;
+		nameOutFile.close();
+		delete nameIndex;
+		cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
-    SignalNodes.clear();
-    usedNodes.clear();
-    allNodes.clear();
-    confirmedNodes.clear();
-    allEdges.clear();
-    confirmedEdges.clear();
-    nameVector.clear();
-    xmlFreeTextReader(inputReader);
-    delete nodeMap;
-    delete stringMap;
-    cout << "finished." << endl;
-    return 0;
+	} catch ( const std::exception& e ) {
+		cerr <<  "Caught Execption:" << e.what() << endl;
+		return false;
+	}
+
+	cout << endl << "Statistics:" << endl;
+	cout << "-----------" << endl;
+	cout << "Usable Nodes: " << confirmedNodes.size() << endl;
+	cout << "Usable Ways : " << confirmedEdges.size() << endl;
+
+	SignalNodes.clear();
+	usedNodes.clear();
+	allNodes.clear();
+	confirmedNodes.clear();
+	allEdges.clear();
+	confirmedEdges.clear();
+	nameVector.clear();
+	xmlFreeTextReader(inputReader);
+	delete nodeMap;
+	delete stringMap;
+	cout << "finished." << endl;
+	return 0;
 }

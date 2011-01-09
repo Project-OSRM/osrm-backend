@@ -60,8 +60,7 @@ static unsigned getFileIndexForLatLon(const int lt, const int ln)
 	return fileIndex;
 }
 
-static unsigned getRAMIndexFromFileIndex(const int fileIndex)
-{
+static unsigned getRAMIndexFromFileIndex(const int fileIndex) {
 	unsigned fileLine = fileIndex / 32768;
 	fileLine = fileLine / 32;
 	fileLine = fileLine * 1024;
@@ -158,21 +157,16 @@ class NNGrid {
 		ifstream stream;
 	};
 
-	struct ThreadLookupTable{
-		HashTable<unsigned, unsigned> table;
-	};
+	typedef HashTable<unsigned, unsigned> ThreadLookupTable;
 public:
 	ThreadLookupTable threadLookup;
 
-
 	NNGrid() { ramIndexTable.resize((1024*1024), UINT_MAX); if( WriteAccess) { entries = new stxxl::vector<GridEdgeData>(); }}
 
-	NNGrid(const char* rif, const char* iif) {
+	NNGrid(const char* rif, const char* iif, unsigned numberOfThreads = omp_get_num_procs()) {
 		ramIndexTable.resize((1024*1024), UINT_MAX);
 //		indexInFile.open(iif, std::ios::in | std::ios::binary);
 		ramInFile.open(rif, std::ios::in | std::ios::binary);
-
-		cout << "opening grid file for " << omp_get_num_procs() << " threads" << endl;
 
 		for(int i = 0; i< omp_get_num_procs(); i++) {
 			indexFileStreams.push_back(new _ThreadData(iif));
@@ -183,19 +177,17 @@ public:
 		if(ramInFile.is_open()) ramInFile.close();
 //		if(indexInFile.is_open()) indexInFile.close();
 
-		if (WriteAccess)
-		{
+		if (WriteAccess) {
 			delete entries;
 		}
 
-#pragma omp parallel for
 		for(int i = 0; i< indexFileStreams.size(); i++) {
 			delete indexFileStreams[i];
 		}
+		threadLookup.EraseAll();
 	}
 
-	void OpenIndexFiles()
-	{
+	void OpenIndexFiles() {
 		assert(ramInFile.is_open());
 //		assert(indexInFile.is_open());
 
@@ -513,7 +505,7 @@ private:
 	void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_Edge>& result)
 	{
 //		cout << "thread: " << boost::this_thread::get_id() << ", hash: " << boost_thread_id_hash(boost::this_thread::get_id()) << ", id: " << threadLookup.table.Find(boost_thread_id_hash(boost::this_thread::get_id())) << endl;
-		unsigned threadID = threadLookup.table.Find(boost_thread_id_hash(boost::this_thread::get_id()));
+		unsigned threadID = threadLookup.Find(boost_thread_id_hash(boost::this_thread::get_id()));
 		unsigned ramIndex = getRAMIndexFromFileIndex(fileIndex);
 		unsigned startIndexInFile = ramIndexTable[ramIndex];
 //		ifstream indexInFile( indexFileStreams[threadID]->stream );

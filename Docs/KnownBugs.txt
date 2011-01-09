@@ -1,0 +1,5 @@
+- extractorLargeNetwork finishes with: 
+  terminate called after throwing an instance of 'stxxl::resource_error'
+  what():  Error in function void stxxl::mutex::lock() pthread_mutex_lock(&_mutex) Invalid argument
+
+ This ist a known, albeit odd behavior that is caused by a bug in stxxl. It can be ignored

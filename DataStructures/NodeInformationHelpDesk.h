@@ -33,19 +33,24 @@ typedef NNGrid::NNGrid<false> ReadOnlyGrid;
 
 class NodeInformationHelpDesk{
 public:
-	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput) { numberOfNodes = 0; int2ExtNodeMap = new vector<_Coordinate>(); g = new ReadOnlyGrid(ramIndexInput,fileIndexInput); }
-	~NodeInformationHelpDesk() { delete int2ExtNodeMap; delete g; }
-	void initNNGrid(ifstream& in)
-	{
-	    while(!in.eof())
-	    {
-	        NodeInfo b;
-	        in.read((char *)&b, sizeof(b));
-	        int2ExtNodeMap->push_back(_Coordinate(b.lat, b.lon));
-	        numberOfNodes++;
-	    }
-	    in.close();
-	    g->OpenIndexFiles();
+	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput) {
+		readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
+		int2ExtNodeMap = new vector<_Coordinate>();
+		numberOfNodes = 0;
+	}
+	~NodeInformationHelpDesk() {
+		delete int2ExtNodeMap;
+		delete readOnlyGrid;
+	}
+	void initNNGrid(ifstream& in) {
+		while(!in.eof()) {
+			NodeInfo b;
+			in.read((char *)&b, sizeof(b));
+			int2ExtNodeMap->push_back(_Coordinate(b.lat, b.lon));
+			numberOfNodes++;
+		}
+		in.close();
+		readOnlyGrid->OpenIndexFiles();
 	}
 
 	inline int getLatitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lat; }
@@ -53,21 +58,22 @@ public:
 	inline int getLongitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lon; }
 
 	NodeID getNumberOfNodes() const { return numberOfNodes; }
+	NodeID getNumberOfNodes2() const { return int2ExtNodeMap->size(); }
 
 	inline void findNearestNodeCoordForLatLon(const _Coordinate coord, _Coordinate& result) {
-	    result = g->FindNearestPointOnEdge(coord);
+		result = readOnlyGrid->FindNearestPointOnEdge(coord);
 	}
 
 	inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * phantomNodes) {
-	    g->FindRoutingStarts(start, target, phantomNodes);
+		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes);
 	}
 
 	inline void RegisterThread(const unsigned k, const unsigned v) {
-		g->threadLookup.table.Add(k, v);
+		readOnlyGrid->threadLookup.Add(k, v);
 	}
 private:
 	vector<_Coordinate> * int2ExtNodeMap;
-	ReadOnlyGrid * g;
+	ReadOnlyGrid * readOnlyGrid;
 	unsigned numberOfNodes;
 };
 

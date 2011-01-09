@@ -301,7 +301,7 @@ public:
         _LogData log;
         Percent p (numberOfNodes);
 
-        int maxThreads = omp_get_max_threads();
+        unsigned maxThreads = omp_get_max_threads();
         std::vector < _ThreadData* > threadData;
         for ( int threadNum = 0; threadNum < maxThreads; ++threadNum ) {
             threadData.push_back( new _ThreadData( numberOfNodes ) );

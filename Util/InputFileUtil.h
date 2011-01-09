@@ -16,22 +16,28 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
-#ifndef HTTP_HEADER_HPP
-#define HTTP_HEADER_HPP
+#ifndef INPUTFILEUTIL_H_
+#define INPUTFILEUTIL_H_
 
-#include <string>
+#include <fstream>
 
-namespace http {
-
-
-struct header
-{
-  std::string name;
-  std::string value;
-};
-
+// Check if file exists and if it can be opened for reading with ifstream an object
+bool testDataFile(const char *filename){
+	std::ifstream in(filename, std::ios::binary);
+	if(in.fail())       {
+		std::cerr << "[error] Failed to open file " << filename << " for reading." << std::endl;
+		return false;
+	}
+	return true;
+}
+bool testDataFiles(int argc, char *argv[]){
+	for(int i = 0; i < argc; ++i) {
+		if(testDataFile(argv[i])==false)
+			return false;
+	}
+	return true;
 }
 
-#endif
+#endif /* INPUTFILEUTIL_H_ */

@@ -52,11 +52,11 @@ static const EdgeID SPECIAL_EDGEID = UINT_MAX;
 typedef NodeCoords<NodeID> NodeInfo;
 #include "DataStructures/Util.h"
 #include "DataStructures/NodeInformationHelpDesk.h"
-#include "Contractor/BinaryHeap.h"
+#include "DataStructures/BinaryHeap.h"
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 #include "DataStructures/DynamicGraph.h"
-#include "Contractor/SearchEngine.h"
+//#include "Contractor/SearchEngine.h"
 
 #endif /* TYPEDEFS_H_ */
