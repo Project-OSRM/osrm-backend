@@ -1,6 +1,7 @@
 #Sconstruct
 
 import os
+import os.path
 import sys
 
 AddOption('--cxx', dest='cxx', type='string', nargs=1, action='store', metavar='STRING', help='C++ Compiler')
@@ -35,9 +36,6 @@ else:
 	env.Append(CCFLAGS = ' -O3 -DNDEBUG')
 #print "Compiling with: ", env['CXX']
 conf = Configure(env)
-if not conf.CheckCXX():
-	print "No suitable C++ Compiler installed"
-	Exit(-1)
 if not conf.CheckHeader('omp.h'):
 	print "Compiler does not support OpenMP. Exiting"
 	Exit(-1)
@@ -81,6 +79,9 @@ if not conf.CheckCXXHeader('boost/noncopyable.hpp'):
 if not conf.CheckCXXHeader('boost/shared_ptr.hpp'):
 	print "boost/shared_ptr.hpp not found. Exiting"
 	Exit(-1)
+if not conf.CheckCXXHeader('boost/program_options.hpp'):
+	print "boost/shared_ptr.hpp not found. Exiting"
+	Exit(-1)
 if not conf.CheckLib('stxxl'):
 	print "stxxl library not found. Exiting"
 	Exit(-1)
@@ -90,8 +91,10 @@ env.Append(LINKFLAGS = ' -fopenmp')
 env.Program("extractNetwork.cpp")
 env.Program("extractLargeNetwork.cpp")	
 env.Program("createHierarchy.cpp")
+if os.path.exists("many-to-many.cpp"):
+	env.Program("many-to-many.cpp")
 env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2')
-env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2')
+env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lboost_program_options')
 env.Program("routed.cpp")
 env = conf.Finish()
 
