@@ -54,16 +54,14 @@ if not conf.CheckCXXHeader('boost/asio.hpp'):
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
-if not conf.CheckLib('boost_thread'):
-	if not conf.CheckLib('boost_thread-mt'):
+if not conf.CheckLibWithHeader('boost_thread', 'boost/thread.hpp', 'CXX'):
+	if not conf.CheckLibWithHeader('boost_thread-mt', 'boost/thread.hpp', 'CXX'):
 		print "boost thread library not found. Exiting"
 		Exit(-1)
 	else:
+		print "using boost -mt"
 		env.Append(CCFLAGS = ' -lboost_thread-mt')
 		env.Append(LINKFLAGS = ' -lboost_thread-mt')
-else:
-	env.Append(CCFLAGS = ' -lboost_thread-mt')
-	env.Append(LINKFLAGS = ' -lboost_thread-mt')
 if not conf.CheckCXXHeader('boost/thread.hpp'):
 	print "boost thread header not found. Exiting"
 	Exit(-1)
@@ -82,7 +80,7 @@ if not conf.CheckCXXHeader('boost/shared_ptr.hpp'):
 if not conf.CheckCXXHeader('boost/program_options.hpp'):
 	print "boost/shared_ptr.hpp not found. Exiting"
 	Exit(-1)
-if not conf.CheckLib('stxxl'):
+if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
 	print "stxxl library not found. Exiting"
 	Exit(-1)
 
