@@ -25,6 +25,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cmath>
 #include <cstdlib>
 #include <sys/time.h>
+#include <tr1/functional_hash.h>
+#include <boost/thread.hpp>
 
 /** Returns a timestamp (now) in seconds (incl. a fractional part). */
 inline double get_timestamp()

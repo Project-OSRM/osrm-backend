@@ -24,8 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 #include <cmath>
 #include <string>
-#include <libxml/xmlreader.h>
-
+#include "HashTable.h"
 #include "Util.h"
 
 /*     Default Speed Profile:
@@ -45,7 +44,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
         ferry           5
  */
 
-typedef google::dense_hash_map<string, NodeID> StringMap;
+typedef HashTable<std::string, NodeID> StringMap;
 
 std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "unclassified", "residential", "living_street", "service", "ferry" };
 double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 5};

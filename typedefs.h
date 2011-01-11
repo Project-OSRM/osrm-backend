@@ -30,7 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 
 #include <boost/thread.hpp>
-
+#include <libxml/xmlreader.h>
 using namespace std;
 
 #define VERBOSE(x) x
