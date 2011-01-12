@@ -25,8 +25,8 @@ struct GridEdgeData {
     GridEdgeData(_Edge e, unsigned f, unsigned r) : edge(e), fileIndex(f), ramIndex(r) {}
     GridEdgeData() {}
     _Edge edge;
-    unsigned ramIndex;
     unsigned fileIndex;
+    unsigned ramIndex;
     bool operator< ( const GridEdgeData& right ) const {
         if(right.edge.start != edge.start)
             return right.edge.start < edge.start;

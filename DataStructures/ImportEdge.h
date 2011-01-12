@@ -69,9 +69,9 @@ public:
     EdgeWeight _weight:31;
     bool forward:1;
     bool backward:1;
+    short _type;
     bool forwardTurn:1;
     bool backwardTurn:1;
-    short _type;
 };
 
 struct MinimalEdgeData
