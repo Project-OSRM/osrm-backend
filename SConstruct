@@ -42,6 +42,9 @@ if not conf.CheckHeader('omp.h'):
 if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
 	Exit(-1)
+if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
+	print "libxml2 library or header not found. Exiting"
+	Exit(-1)
 if not conf.CheckCXXHeader('stxxl.h'):
 	print "Could not locate stxxl header. Exiting"
 	Exit(-1)
@@ -82,6 +85,9 @@ if not conf.CheckCXXHeader('boost/program_options.hpp'):
 	Exit(-1)
 if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
 	print "stxxl library not found. Exiting"
+	Exit(-1)
+if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'):
+	print "Google Protobuffer library not found. Exiting"
 	Exit(-1)
 
 env.Append(CCFLAGS = ' -fopenmp')
