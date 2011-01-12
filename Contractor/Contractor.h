@@ -275,21 +275,17 @@ public:
     }
 
     template< class InputEdge >
-    void CheckForAllOrigEdges(std::vector< InputEdge >& inputEdges)
-    {
-        for(unsigned int i = 0; i < inputEdges.size(); i++)
-        {
+    void CheckForAllOrigEdges(std::vector< InputEdge >& inputEdges) {
+        for(unsigned int i = 0; i < inputEdges.size(); i++) {
             bool found = false;
             _DynamicGraph::EdgeIterator eit = _graph->BeginEdges(inputEdges[i].source());
-            for(;eit<_graph->EndEdges(inputEdges[i].source()); eit++)
-            {
-                if(_graph->GetEdgeData(eit).distance = inputEdges[i].weight())
+            for(;eit<_graph->EndEdges(inputEdges[i].source()); eit++) {
+                if(_graph->GetEdgeData(eit).distance == inputEdges[i].weight())
                     found = true;
             }
             eit = _graph->BeginEdges(inputEdges[i].target());
-            for(;eit<_graph->EndEdges(inputEdges[i].target()); eit++)
-            {
-                if(_graph->GetEdgeData(eit).distance = inputEdges[i].weight())
+            for(;eit<_graph->EndEdges(inputEdges[i].target()); eit++) {
+                if(_graph->GetEdgeData(eit).distance == inputEdges[i].weight())
                     found = true;
             }
             assert(found);
@@ -303,7 +299,7 @@ public:
 
         unsigned maxThreads = omp_get_max_threads();
         std::vector < _ThreadData* > threadData;
-        for ( int threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+        for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
             threadData.push_back( new _ThreadData( numberOfNodes ) );
         }
         cout << "Contractor is using " << maxThreads << " threads" << endl;
@@ -388,7 +384,7 @@ public:
             timeLast = _Timestamp();
 
             //insert new edges
-            for ( int threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+            for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
                 _ThreadData& data = *threadData[threadNum];
                 for ( int i = 0; i < ( int ) data.insertedEdges.size(); ++i ) {
                     const _ImportEdge& edge = data.insertedEdges[i];
@@ -442,14 +438,11 @@ public:
             p.printStatus(levelID);
         }
 
-        for ( int threadNum = 0; threadNum < maxThreads; threadNum++ ) {
-            //            _witnessList.insert( _witnessList.end(), threadData[threadNum]->witnessList.begin(), threadData[threadNum]->witnessList.end() );
+        for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
             delete threadData[threadNum];
         }
 
-        //        log.PrintSummary();
-        //        cout << "Total Time: " << log.GetSum().GetTotalTime()<< " s" << endl;
-        cout << "checking sanity of generated data ..." << flush;
+        cout << "[contractor] checking sanity of generated data ..." << flush;
         _CheckCH<_EdgeData>();
         cout << "ok" << endl;
     }
@@ -595,7 +588,7 @@ private:
             if ( node != source )
                 heap.Insert( node, inData.distance, _HeapData() );
             int maxDistance = 0;
-            unsigned numTargets = 0;
+            //unsigned numTargets = 0;
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _EdgeData& outData = _graph->GetEdgeData( outEdge );

@@ -1,0 +1,53 @@
+/** Copyright (c) 2010 Scott A. Crosby. <scott@sacrosby.com>
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as 
+   published by the Free Software Foundation, either version 3 of the 
+   License, or (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
+option java_package = "crosby.binary";
+package OSMPBF;
+
+//protoc --java_out=../.. fileformat.proto
+
+
+//
+//  STORAGE LAYER: Storing primitives.
+//
+
+message Blob {
+  optional bytes raw = 1; // No compression
+  optional int32 raw_size = 2; // When compressed, the uncompressed size
+
+  // Possible compressed versions of the data.
+  optional bytes zlib_data = 3;
+
+  // PROPOSED feature for LZMA compressed data. SUPPORT IS NOT REQUIRED.
+  optional bytes lzma_data = 4;
+
+  // Formerly used for bzip2 compressed data. Depreciated in 2010.
+  optional bytes OBSOLETE_bzip2_data = 5 [deprecated=true]; // Don't reuse this tag number.
+}
+
+/* A file contains an sequence of fileblock headers, each prefixed by
+their length in network byte order, followed by a data block
+containing the actual data. types staring with a "_" are reserved.
+*/
+
+message BlobHeader {
+  required string type = 1;
+  optional bytes indexdata = 2;
+  required int32 datasize = 3;
+}
+
+

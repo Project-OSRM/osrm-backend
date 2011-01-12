@@ -1,0 +1,226 @@
+/** Copyright (c) 2010 Scott A. Crosby. <scott@sacrosby.com>
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as 
+   published by the Free Software Foundation, either version 3 of the 
+   License, or (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
+option java_package = "crosby.binary";
+package OSMPBF;
+
+/* OSM Binary file format 
+
+This is the master schema file of the OSM binary file format. This
+file is designed to support limited random-access and future
+extendability.
+
+A binary OSM file consists of a sequence of FileBlocks (please see
+fileformat.proto). The first fileblock contains a serialized instance
+of HeaderBlock, followed by a sequence of PrimitiveBlock blocks that
+contain the primitives.
+
+Each primitiveblock is designed to be independently parsable. It
+contains a string table storing all strings in that block (keys and
+values in tags, roles in relations, usernames, etc.) as well as
+metadata containing the precision of coordinates or timestamps in that
+block.
+
+A primitiveblock contains a sequence of primitive groups, each
+containing primitives of the same type (nodes, densenodes, ways,
+relations). Coordinates are stored in signed 64-bit integers. Lat&lon
+are measured in units <granularity> nanodegrees. The default of
+granularity of 100 nanodegrees corresponds to about 1cm on the ground,
+and a full lat or lon fits into 32 bits.
+
+Converting an integer to a lattitude or longitude uses the formula:
+$OUT = IN * granularity / 10**9$. Many encoding schemes use delta
+coding when representing nodes and relations.
+
+*/
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+
+/* Contains the file header. */
+
+message HeaderBlock {
+  optional HeaderBBox bbox = 1;
+  /* Additional tags to aid in parsing this dataset */
+  repeated string required_features = 4;
+  repeated string optional_features = 5;
+
+  optional string writingprogram = 16; 
+  optional string source = 17; // From the bbox field.
+}
+
+
+/** The bounding box field in the OSM header. BBOX, as used in the OSM
+header. Units are always in nanodegrees -- they do not obey
+granularity rules. */
+
+message HeaderBBox {
+   required sint64 left = 1;
+   required sint64 right = 2;
+   required sint64 top = 3;
+   required sint64 bottom = 4;
+}
+
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+
+message PrimitiveBlock {
+  required StringTable stringtable = 1;
+  repeated PrimitiveGroup primitivegroup = 2;
+
+  // Granularity, units of nanodegrees, used to store coordinates in this block
+  optional int32 granularity = 17 [default=100]; 
+  // Offset value between the output coordinates coordinates and the granularity grid in unites of nanodegrees.
+  optional int64 lat_offset = 19 [default=0];
+  optional int64 lon_offset = 20 [default=0]; 
+
+// Granularity of dates, normally represented in units of milliseconds since the 1970 epoch.
+  optional int32 date_granularity = 18 [default=1000]; 
+
+
+  // Proposed extension:
+  //optional BBox bbox = XX;
+}
+
+// Group of OSMPrimitives. All primitives in a group must be the same type.
+message PrimitiveGroup {
+  repeated Node     nodes = 1;
+  optional DenseNodes dense = 2;
+  repeated Way      ways = 3;
+  repeated Relation relations = 4;
+  repeated ChangeSet changesets = 5;
+}
+
+
+/** String table, contains the common strings in each block.
+
+ Note that we reserve index '0' as a delimiter, so the entry at that
+ index in the table is ALWAYS blank and unused.
+
+ */
+message StringTable {
+   repeated bytes s = 1;
+}
+
+/* Optional metadata that may be included into each primitive. */
+message Info {
+   optional int32 version = 1 [default = -1];
+   optional int64 timestamp = 2;
+   optional int64 changeset = 3;
+   optional int32 uid = 4;
+   optional uint32 user_sid = 5; // String IDs
+}
+
+/** Optional metadata that may be included into each primitive. Special dense format used in DenseNodes. */
+message DenseInfo {
+   repeated int32 version = 1 [packed = true]; 
+   repeated sint64 timestamp = 2 [packed = true]; // DELTA coded
+   repeated sint64 changeset = 3 [packed = true]; // DELTA coded
+   repeated sint32 uid = 4 [packed = true]; // DELTA coded
+   repeated sint32 user_sid = 5 [packed = true]; // String IDs for usernames. DELTA coded
+}
+
+
+// THIS IS STUB DESIGN FOR CHANGESETS. NOT USED RIGHT NOW.
+// TODO:    REMOVE THIS?
+message ChangeSet {
+   required int64 id = 1;
+//   
+//   // Parallel arrays.
+//   repeated uint32 keys = 2 [packed = true]; // String IDs.
+//   repeated uint32 vals = 3 [packed = true]; // String IDs.
+//
+//   optional Info info = 4;
+
+//   optional int64 created_at = 8;
+//   optional int64 closetime_delta = 9;
+//   optional bool open = 10;
+//   optional HeaderBBox bbox = 11;
+}
+
+
+message Node {
+   required sint64 id = 1;
+   // Parallel arrays.
+   repeated uint32 keys = 2 [packed = true]; // String IDs.
+   repeated uint32 vals = 3 [packed = true]; // String IDs.
+
+   optional Info info = 4; // May be omitted in omitmeta
+
+   required sint64 lat = 8;
+   required sint64 lon = 9;
+}
+
+/* Used to densly represent a sequence of nodes that do not have any tags.
+
+We represent these nodes columnwise as five columns: ID's, lats, and
+lons, all delta coded. When metadata is not omitted, 
+
+We encode keys & vals for all nodes as a single array of integers
+containing key-stringid and val-stringid, using a stringid of 0 as a
+delimiter between nodes.
+
+   ( (<keyid> <valid>)* '0' )*
+ */
+
+message DenseNodes {
+   repeated sint64 id = 1 [packed = true]; // DELTA coded
+
+   //repeated Info info = 4;
+   optional DenseInfo denseinfo = 5;
+
+   repeated sint64 lat = 8 [packed = true]; // DELTA coded
+   repeated sint64 lon = 9 [packed = true]; // DELTA coded
+
+   // Special packing of keys and vals into one array. May be empty if all nodes in this block are tagless.
+   repeated int32 keys_vals = 10 [packed = true]; 
+}
+
+
+message Way {
+   required int64 id = 1;
+   // Parallel arrays.
+   repeated uint32 keys = 2 [packed = true];
+   repeated uint32 vals = 3 [packed = true];
+
+   optional Info info = 4;
+
+   repeated sint64 refs = 8 [packed = true];  // DELTA coded
+}
+
+message Relation {
+  enum MemberType {
+    NODE = 0;
+    WAY = 1;
+    RELATION = 2;
+  } 
+   required int64 id = 1;
+
+   // Parallel arrays.
+   repeated uint32 keys = 2 [packed = true];
+   repeated uint32 vals = 3 [packed = true];
+
+   optional Info info = 4;
+
+   // Parallel arrays
+   repeated int32 roles_sid = 8 [packed = true];
+   repeated sint64 memids = 9 [packed = true]; // DELTA encoded
+   repeated MemberType types = 10 [packed = true];
+}
+

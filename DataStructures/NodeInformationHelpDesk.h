@@ -66,6 +66,7 @@ public:
 
 	inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * phantomNodes) {
 		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes);
+		return true;
 	}
 
 	inline void RegisterThread(const unsigned k, const unsigned v) {

@@ -50,8 +50,6 @@ std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "p
 double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 5};
 
 struct _Node : NodeInfo{
-    bool trafficSignal;
-
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
     _Node() {}
 
@@ -77,15 +75,26 @@ struct _Coordinate {
 };
 
 struct _Way {
+    _Way() {
+        direction = _Way::notSure;
+        maximumSpeed = -1;
+        type = -1;
+        useful = false;
+        access = true;
+    }
+
     std::vector< NodeID > path;
     enum {
         notSure = 0, oneway, bidirectional, opposite
     } direction;
+    unsigned id;
     unsigned nameID;
+    std::string name;
     double maximumSpeed;
-    bool usefull:1;
+    bool useful:1;
     bool access:1;
     short type;
+    HashTable<std::string, std::string> keyVals;
 };
 
 struct _Relation {
@@ -114,11 +123,11 @@ struct Settings {
         vector< double > speed;
         vector< string > names;
     } speedProfile;
-//    vector<string> accessList;
-    int trafficLightPenalty;
+    //    vector<string> accessList;
+    //    int trafficLightPenalty;
     int indexInAccessListOf( const string & key)
     {
-        for(int i = 0; i< speedProfile.names.size(); i++)
+        for(unsigned i = 0; i< speedProfile.names.size(); i++)
         {
             if(speedProfile.names[i] == key)
                 return i;
@@ -195,265 +204,6 @@ struct CmpNodeByID : public std::binary_function<_Node, _Node, bool>
     }
 };
 
-
-_Way _ReadXMLWay( xmlTextReaderPtr& inputReader, Settings& settings, string& name) {
-    _Way way;
-    way.direction = _Way::notSure;
-    way.maximumSpeed = -1;
-    way.type = -1;
-    way.usefull = false;
-    way.access = true;
-//    cout << "new way" << endl;
-    if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
-        const int depth = xmlTextReaderDepth( inputReader );
-        while ( xmlTextReaderRead( inputReader ) == 1 ) {
-            const int childType = xmlTextReaderNodeType( inputReader );
-            if ( childType != 1 && childType != 15 )
-                continue;
-            const int childDepth = xmlTextReaderDepth( inputReader );
-            xmlChar* childName = xmlTextReaderName( inputReader );
-            if ( childName == NULL )
-                continue;
-
-            if ( depth == childDepth && childType == 15 && xmlStrEqual( childName, ( const xmlChar* ) "way" ) == 1 ) {
-                xmlFree( childName );
-                break;
-            }
-            if ( childType != 1 ) {
-                xmlFree( childName );
-                continue;
-            }
-
-            if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
-                xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
-                xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
-//                cout << "->k=" << k << ", v=" << value << endl;
-                if ( k != NULL && value != NULL ) {
-
-                    if ( xmlStrEqual( k, ( const xmlChar* ) "name" ) == 1 ) {
-                        name = string((char *) value);
-                    } else if ( xmlStrEqual( k, ( const xmlChar* ) "ref" ) == 1 ) {
-                    	if(name == "")
-                    	{
-                    		name = string((char *) value);
-//                    		cout << ", ref: " << name << endl;
-                    	}
-                    }
-
-                    if ( xmlStrEqual( k, ( const xmlChar* ) "oneway" ) == 1 ) {
-                        if ( xmlStrEqual( value, ( const xmlChar* ) "no" ) == 1 || xmlStrEqual( value, ( const xmlChar* ) "false" ) == 1 || xmlStrEqual( value, ( const xmlChar* ) "0" ) == 1 )
-                            way.direction = _Way::bidirectional;
-                        else if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1 || xmlStrEqual( value, ( const xmlChar* ) "true" ) == 1 || xmlStrEqual( value, ( const xmlChar* ) "1" ) == 1 )
-                            way.direction = _Way::oneway;
-                        else if ( xmlStrEqual( value, ( const xmlChar* ) "-1" ) == 1 )
-                            way.direction = _Way::opposite;
-                    } else if ( xmlStrEqual( k, ( const xmlChar* ) "junction" ) == 1 ) {
-                        if ( xmlStrEqual( value, ( const xmlChar* ) "roundabout" ) == 1 ) {
-                            if ( way.direction == _Way::notSure ) {
-                                way.direction = _Way::oneway;
-                            }
-                            way.usefull = true;
-                            if(way.type == -1)
-                                way.type = 9;
-                        }
-                    } else if ( xmlStrEqual( k, ( const xmlChar* ) "route" ) == 1 ) {
-                        string name( (const char* ) value );
-                        if (name == "ferry") {
-                            for ( int i = 0; i < settings.speedProfile.names.size(); i++ ) {
-                                if ( name == settings.speedProfile.names[i] ) {
-                                    way.type = i;
-                                    way.maximumSpeed = settings.speedProfile.speed[i];
-                                    way.usefull = true;
-                                    way.direction == _Way::bidirectional;
-                                    break;
-                                }
-                            }
-                        }
-                    } else if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
-                        string name( ( const char* ) value );
-                        for ( int i = 0; i < settings.speedProfile.names.size(); i++ ) {
-                            if ( name == settings.speedProfile.names[i] ) {
-                                way.type = i;
-                                way.usefull = true;
-                                break;
-                            }
-                        }
-                        if ( name == "motorway"  ) {
-                            if ( way.direction == _Way::notSure ) {
-                                way.direction = _Way::oneway;
-                            }
-                        } else if ( name == "motorway_link" ) {
-                            if ( way.direction == _Way::notSure ) {
-                                way.direction = _Way::oneway;
-                            }
-                        }
-                    } else if ( xmlStrEqual( k, ( const xmlChar* ) "maxspeed" ) == 1 ) {
-                        double maxspeed = atof(( const char* ) value );
-
-                        xmlChar buffer[100];
-                        xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lf", maxspeed );
-                        if ( xmlStrEqual( value, buffer ) == 1 ) {
-                            way.maximumSpeed = maxspeed;
-                        } else {
-                            xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lf kmh", maxspeed );
-                            if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                way.maximumSpeed = maxspeed;
-                            } else {
-                                xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lfkmh", maxspeed );
-                                if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                    way.maximumSpeed = maxspeed;
-                                } else {
-                                    xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lf km/h", maxspeed );
-                                    if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                        way.maximumSpeed = maxspeed;
-                                    } else {
-                                        xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lfkm/h", maxspeed );
-                                        if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                            way.maximumSpeed = maxspeed;
-                                        } else {
-                                            xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lf mph", maxspeed );
-                                            if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                                way.maximumSpeed = maxspeed;
-                                            } else {
-                                                xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lfmph", maxspeed );
-                                                if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                                    way.maximumSpeed = maxspeed;
-                                                } else {
-                                                    xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lf mp/h", maxspeed );
-                                                    if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                                        way.maximumSpeed = maxspeed;
-                                                    } else {
-                                                        xmlStrPrintf( buffer, 100, ( const xmlChar* ) "%.lfmp/h", maxspeed );
-                                                        if ( xmlStrEqual( value, buffer ) == 1 ) {
-                                                            way.maximumSpeed = maxspeed;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        if ( xmlStrEqual( k, (const xmlChar*) "access" ))
-                        {
-                            if ( xmlStrEqual( value, ( const xmlChar* ) "private" ) == 1)
-
-                                if ( xmlStrEqual( value, ( const xmlChar* ) "private" ) == 1
-                                        || xmlStrEqual( value, ( const xmlChar* ) "no" ) == 1
-                                        || xmlStrEqual( value, ( const xmlChar* ) "agricultural" ) == 1
-                                        || xmlStrEqual( value, ( const xmlChar* ) "forestry" ) == 1
-                                        || xmlStrEqual( value, ( const xmlChar* ) "delivery" ) == 1
-                                ) {
-                                    way.access = false;
-                                }
-                                else if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1
-                                        || xmlStrEqual( value, ( const xmlChar* ) "designated" ) == 1
-                                        || xmlStrEqual( value, ( const xmlChar* ) "official" ) == 1
-                                        || xmlStrEqual( value, ( const xmlChar* ) "permissive" ) == 1
-                                ) {
-                                    way.access = true;
-                                }
-                        }
-                        if ( xmlStrEqual( k, (const xmlChar*) "motorcar" ))
-                        {
-                            if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1)
-                            {
-                                way.access = true;
-                            } else if ( xmlStrEqual( k, (const xmlChar*) "no" )) {
-                                way.access = false;
-                            }
-
-                        }
-                    }
-                    if ( k != NULL )
-                        xmlFree( k );
-                    if ( value != NULL )
-                        xmlFree( value );
-                }
-            } else if ( xmlStrEqual( childName, ( const xmlChar* ) "nd" ) == 1 ) {
-                xmlChar* ref = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "ref" );
-                if ( ref != NULL ) {
-                    way.path.push_back( atoi(( const char* ) ref ) );
-                    xmlFree( ref );
-                }
-            }
-            xmlFree( childName );
-        }
-    }
-    return way;
-}
-
-_Node _ReadXMLNode( xmlTextReaderPtr& inputReader ) {
-    _Node node;
-    node.trafficSignal = false;
-
-    xmlChar* attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "lat" );
-    if ( attribute != NULL ) {
-        node.lat =  static_cast<NodeID>(100000.*atof(( const char* ) attribute ) );
-        xmlFree( attribute );
-    }
-    attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "lon" );
-    if ( attribute != NULL ) {
-        node.lon =  static_cast<NodeID>(100000.*atof(( const char* ) attribute ));
-        xmlFree( attribute );
-    }
-    attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "id" );
-    if ( attribute != NULL ) {
-        node.id =  atoi(( const char* ) attribute );
-        xmlFree( attribute );
-    }
-
-    if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
-        const int depth = xmlTextReaderDepth( inputReader );
-        while ( xmlTextReaderRead( inputReader ) == 1 ) {
-            const int childType = xmlTextReaderNodeType( inputReader );
-            // 1 = Element, 15 = EndElement
-            if ( childType != 1 && childType != 15 )
-                continue;
-            const int childDepth = xmlTextReaderDepth( inputReader );
-            xmlChar* childName = xmlTextReaderName( inputReader );
-            if ( childName == NULL )
-                continue;
-
-            if ( depth == childDepth && childType == 15 && xmlStrEqual( childName, ( const xmlChar* ) "node" ) == 1 ) {
-                xmlFree( childName );
-                break;
-            }
-            if ( childType != 1 ) {
-                xmlFree( childName );
-                continue;
-            }
-
-            if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
-                xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
-                xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
-                if ( k != NULL && value != NULL ) {
-                    if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
-                        if ( xmlStrEqual( value, ( const xmlChar* ) "traffic_signals" ) == 1 )
-                            node.trafficSignal = true;
-                    }
-                }
-                if ( k != NULL )
-                    xmlFree( k );
-                if ( value != NULL )
-                    xmlFree( value );
-            }
-
-            xmlFree( childName );
-        }
-    }
-    return node;
-}
-
-_Relation _ReadXMLRelation ( xmlTextReaderPtr& inputReader ) {
-    _Relation relation;
-    relation.type = _Relation::unknown;
-
-    return relation;
-}
-
 double ApproximateDistance( const int lat1, const int lon1, const int lat2, const int lon2 ) {
     static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
     ///Earth's quatratic mean radius for WGS-84
@@ -472,15 +222,15 @@ double ApproximateDistance( const int lat1, const int lon1, const int lat2, cons
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
 double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const _Coordinate& B)
 {
-//    double a = ApproximateDistance(A.lat, A.lon, C.lat, C.lon); //first edge segment
-//    double b = ApproximateDistance(B.lat, B.lon, C.lat, C.lon); //second edge segment
-//    double c = ApproximateDistance(A.lat, A.lon, B.lat, B.lon); //third edgefrom triangle
-//
-//    double cosAlpha = (a*a + b*b - c*c)/ (2*a*b);
-//
-//    double alpha = ( (acos(cosAlpha) * 180.0 / M_PI) * (cosAlpha > 0 ? -1 : 1) ) + 180;
-//    return alpha;
-//    V = <x2 - x1, y2 - y1>
+    //    double a = ApproximateDistance(A.lat, A.lon, C.lat, C.lon); //first edge segment
+    //    double b = ApproximateDistance(B.lat, B.lon, C.lat, C.lon); //second edge segment
+    //    double c = ApproximateDistance(A.lat, A.lon, B.lat, B.lon); //third edgefrom triangle
+    //
+    //    double cosAlpha = (a*a + b*b - c*c)/ (2*a*b);
+    //
+    //    double alpha = ( (acos(cosAlpha) * 180.0 / M_PI) * (cosAlpha > 0 ? -1 : 1) ) + 180;
+    //    return alpha;
+    //    V = <x2 - x1, y2 - y1>
     int v1x = A.lon - C.lon;
     int v1y = A.lat - C.lat;
     int v2x = B.lon - C.lon;
@@ -495,10 +245,10 @@ double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const
 
 string GetRandomString() {
     char s[128];
-	static const char alphanum[] =
-        "0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
+    static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
 
     for (int i = 0; i < 128; ++i) {
         s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];

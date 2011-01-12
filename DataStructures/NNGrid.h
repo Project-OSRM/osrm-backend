@@ -181,7 +181,7 @@ public:
 			delete entries;
 		}
 
-		for(int i = 0; i< indexFileStreams.size(); i++) {
+		for(unsigned i = 0; i< indexFileStreams.size(); i++) {
 			delete indexFileStreams[i];
 		}
 		threadLookup.EraseAll();
@@ -207,7 +207,7 @@ public:
 
 		std::vector<std::pair<unsigned, unsigned> > indexList;
 		getListOfIndexesForEdgeAndGridSize(start, target, indexList);
-		for(int i = 0; i < indexList.size(); i++)
+		for(unsigned i = 0; i < indexList.size(); i++)
 		{
 			entries->push_back(GridEdgeData(edge, indexList[i].first, indexList[i].second));
 		}
@@ -381,7 +381,7 @@ private:
 			}
 		}
 
-		for(int i = 0; i < entriesWithSameRAMIndex.size() -1; i++)
+		for(unsigned i = 0; i < entriesWithSameRAMIndex.size() -1; i++)
 		{
 			assert(entriesWithSameRAMIndex[i].ramIndex== entriesWithSameRAMIndex[i+1].ramIndex);
 		}
@@ -431,7 +431,7 @@ private:
 		}
 
 		//write contents of tmpbuffer to disk
-		for(int i = 0; i < indexIntoTmpBuffer; i++)
+		for(unsigned i = 0; i < indexIntoTmpBuffer; i++)
 		{
 			indexOutFile.write(&(tmpBuffer->at(i)), sizeof(char));
 			numberOfWrittenBytes += sizeof(char);
@@ -448,7 +448,7 @@ private:
 		unsigned counter = 0;
 		unsigned max = UINT_MAX;
 
-		for(int i = 0; i < vectorWithSameFileIndex.size()-1; i++)
+		for(unsigned i = 0; i < vectorWithSameFileIndex.size()-1; i++)
 		{
 			assert( vectorWithSameFileIndex[i].fileIndex == vectorWithSameFileIndex[i+1].fileIndex );
 			assert( vectorWithSameFileIndex[i].ramIndex == vectorWithSameFileIndex[i+1].ramIndex );
@@ -457,44 +457,44 @@ private:
 		for(std::vector<GridEdgeData>::const_iterator et = vectorWithSameFileIndex.begin(); et != vectorWithSameFileIndex.end(); et++)
 		{
 			char * start = (char *)&et->edge.start;
-			for(int i = 0; i < sizeof(NodeID); i++)
+			for(unsigned i = 0; i < sizeof(NodeID); i++)
 			{
 				tmpBuffer->at(index+counter) = start[i];
 				counter++;
 			}
 			char * target = (char *)&et->edge.target;
-			for(int i = 0; i < sizeof(NodeID); i++)
+			for(unsigned i = 0; i < sizeof(NodeID); i++)
 			{
 				tmpBuffer->at(index+counter) = target[i];
 				counter++;
 			}
 			char * slat = (char *) &(et->edge.startCoord.lat);
-			for(int i = 0; i < sizeof(int); i++)
+			for(unsigned i = 0; i < sizeof(int); i++)
 			{
 				tmpBuffer->at(index+counter) = slat[i];
 				counter++;
 			}
 			char * slon = (char *) &(et->edge.startCoord.lon);
-			for(int i = 0; i < sizeof(int); i++)
+			for(unsigned i = 0; i < sizeof(int); i++)
 			{
 				tmpBuffer->at(index+counter) = slon[i];
 				counter++;
 			}
 			char * tlat = (char *) &(et->edge.targetCoord.lat);
-			for(int i = 0; i < sizeof(int); i++)
+			for(unsigned i = 0; i < sizeof(int); i++)
 			{
 				tmpBuffer->at(index+counter) = tlat[i];
 				counter++;
 			}
 			char * tlon = (char *) &(et->edge.targetCoord.lon);
-			for(int i = 0; i < sizeof(int); i++)
+			for(unsigned i = 0; i < sizeof(int); i++)
 			{
 				tmpBuffer->at(index+counter) = tlon[i];
 				counter++;
 			}
 		}
 		char * umax = (char *) &max;
-		for(int i = 0; i < sizeof(unsigned); i++)
+		for(unsigned i = 0; i < sizeof(unsigned); i++)
 		{
 			tmpBuffer->at(index+counter) = umax[i];
 			counter++;

@@ -31,7 +31,7 @@ else:  #Mac OS X
     else:
         env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 if GetOption('buildconfiguration') == 'debug':
-	env.Append(CCFLAGS = ' -g3')
+	env.Append(CCFLAGS = ' -Wall -g3')
 else:
 	env.Append(CCFLAGS = ' -O3 -DNDEBUG')
 #print "Compiling with: ", env['CXX']
@@ -86,13 +86,16 @@ if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
 
 env.Append(CCFLAGS = ' -fopenmp')
 env.Append(LINKFLAGS = ' -fopenmp')
+env.StaticObject("DataStructures/pbf-proto/fileformat.pb.cc")
+env.StaticObject("DataStructures/pbf-proto/osmformat.pb.cc")
 env.Program("extractNetwork.cpp")
 env.Program("extractLargeNetwork.cpp")	
 env.Program("createHierarchy.cpp")
 if os.path.exists("many-to-many.cpp"):
 	env.Program("many-to-many.cpp")
-env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2')
-env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lboost_program_options')
+env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz -lprotobuf')
+env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz -lboost_program_options')
+env.Append(LINKFLAGS = ' -lprotobuf DataStructures/pbf-proto/fileformat.pb.o DataStructures/pbf-proto/osmformat.pb.o')
 env.Program("routed.cpp")
 env = conf.Finish()
 

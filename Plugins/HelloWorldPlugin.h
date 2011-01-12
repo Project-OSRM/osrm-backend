@@ -15,7 +15,7 @@
 class HelloWorldPlugin : public BasePlugin {
 public:
 	HelloWorldPlugin() {}
-	~HelloWorldPlugin() { std::cout << GetDescriptor() << " destructor" << std::endl; }
+	~HelloWorldPlugin() { /*std::cout << GetDescriptor() << " destructor" << std::endl;*/ }
 	std::string GetDescriptor() { return std::string("hello"); }
 	void HandleRequest(std::vector<std::string> parameters, http::Reply& reply) {
 		std::cout << "[hello world]: runnning handler" << std::endl;
@@ -23,7 +23,7 @@ public:
 		reply.content.append("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
 		std::stringstream content;
 		content << "Number of parameters: " << parameters.size() << "<br>";
-		for(int i = 0; i < parameters.size(); i++) {
+		for(unsigned i = 0; i < parameters.size(); i++) {
 			content << parameters[i] << "<br>";
 		}
 		reply.content.append(content.str());
