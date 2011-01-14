@@ -187,7 +187,7 @@ public:
             pathNode = _forwardHeap->GetData( pathNode ).parent;
             packedPath.push_front( pathNode );
         }
-//        NodeID realStart = pathNode;
+        //        NodeID realStart = pathNode;
         packedPath.push_back( middle );
         pathNode = middle;
 
@@ -275,7 +275,7 @@ public:
     }
 
     inline void RegisterThread(const unsigned k, const unsigned v) {
-    	nodeHelpDesk->RegisterThread(k,v);
+        nodeHelpDesk->RegisterThread(k,v);
     }
 private:
 
@@ -294,12 +294,23 @@ private:
             _forwardHeap->DeleteAll();
             return;
         }
+        //Stalling
+
         for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
             const NodeID to = _graph->GetTarget(edge);
-            const int edgeWeight = _graph->GetEdgeData(edge).distance;
+            const EdgeWeight edgeWeight = _graph->GetEdgeData(edge).distance;
 
             assert( edgeWeight > 0 );
             const int toDistance = distance + edgeWeight;
+
+            if(_forwardHeap->WasInserted( to )) {
+                if(!forwardDirection ? _graph->GetEdgeData(edge).forward : _graph->GetEdgeData(edge).backward) {
+                    if(_forwardHeap->GetKey( to ) + edgeWeight < distance) {
+//                        std::cout << "[stalled] node " << node << std::endl;
+                        return;
+                    }
+                }
+            }
 
             if(forwardDirection ? _graph->GetEdgeData(edge).forward : _graph->GetEdgeData(edge).backward )
             {
