@@ -46,6 +46,7 @@ template<typename EdgeData, typename GraphT, typename NodeHelperT = NodeInformat
 class SearchEngine {
 private:
     const GraphT * _graph;
+    NodeHelperT * nodeHelpDesk;
     std::vector<string> * _names;
     inline double absDouble(double input) { if(input < 0) return input*(-1); else return input;}
 public:
@@ -186,7 +187,7 @@ public:
             pathNode = _forwardHeap->GetData( pathNode ).parent;
             packedPath.push_front( pathNode );
         }
-        NodeID realStart = pathNode;
+//        NodeID realStart = pathNode;
         packedPath.push_back( middle );
         pathNode = middle;
 
@@ -238,11 +239,14 @@ public:
     inline unsigned int findNearestNodeForLatLon(const _Coordinate& coord, _Coordinate& result) const
     {
         nodeHelpDesk->findNearestNodeCoordForLatLon( coord, result );
+        return 0;
+
     }
 
     inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * routingStarts)
     {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
+        return true;
     }
 
     inline NodeID GetNameIDForOriginDestinationNodeID(NodeID s, NodeID t) const {
@@ -274,7 +278,6 @@ public:
     	nodeHelpDesk->RegisterThread(k,v);
     }
 private:
-    NodeHelperT * nodeHelpDesk;
 
     void _RoutingStep(_Heap * _forwardHeap, _Heap *_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound)
     {

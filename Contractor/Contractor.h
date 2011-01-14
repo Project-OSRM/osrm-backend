@@ -54,7 +54,7 @@ public:
 
 private:
     struct _EdgeData {
-        int distance;
+        unsigned distance;
         unsigned originalEdges : 29;
         bool shortcut : 1;
         bool forward : 1;
@@ -250,15 +250,15 @@ public:
             }
             //merge edges (s,t) and (t,s) into bidirectional edge
             if ( forwardEdge.data.distance == backwardEdge.data.distance ) {
-                if ( forwardEdge.data.distance != std::numeric_limits< int >::max() ) {
+                if ( (int)forwardEdge.data.distance != std::numeric_limits< int >::max() ) {
                     forwardEdge.data.backward = true;
                     edges[edge++] = forwardEdge;
                 }
             } else { //insert seperate edges
-                if ( forwardEdge.data.distance != std::numeric_limits< int >::max() ) {
+                if ( (int)forwardEdge.data.distance != std::numeric_limits< int >::max() ) {
                     edges[edge++] = forwardEdge;
                 }
-                if ( backwardEdge.data.distance != std::numeric_limits< int >::max() ) {
+                if ( (int)backwardEdge.data.distance != std::numeric_limits< int >::max() ) {
                     edges[edge++] = backwardEdge;
                 }
             }

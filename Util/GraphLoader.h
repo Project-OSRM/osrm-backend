@@ -45,7 +45,6 @@ template<typename EdgeT>
 NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
     NodeID n, source, target, id;
     EdgeID m;
-    short locatable;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     ext2IntNodeMap.set_empty_key(UINT_MAX);

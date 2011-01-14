@@ -246,7 +246,7 @@ public:
 			}
 			entriesInFileWithRAMSameIndex.push_back(*vt);
 		}
-		unsigned numberOfBytesInCell = FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
+		/*unsigned numberOfBytesInCell = */FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
 		ramIndexTable[indexInRamTable] = lastPositionInIndexFile;
 		numberOfUsedCells++;
 		entriesInFileWithRAMSameIndex.clear();
@@ -402,7 +402,7 @@ private:
 				// start in cellIndex vermerken
 				int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
 				int localCellIndex = cellMap->find(localFileIndex)->second;
-				int localRamIndex = getRAMIndexFromFileIndex(localFileIndex);
+				/*int localRamIndex = */getRAMIndexFromFileIndex(localFileIndex);
 				assert(cellMap->find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap->end());
 
 				cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
@@ -416,7 +416,7 @@ private:
 		assert(cellMap->find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap->end());
 		int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
 		int localCellIndex = cellMap->find(localFileIndex)->second;
-		int localRamIndex = getRAMIndexFromFileIndex(localFileIndex);
+		/*int localRamIndex = */getRAMIndexFromFileIndex(localFileIndex);
 
 		cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
 		indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);

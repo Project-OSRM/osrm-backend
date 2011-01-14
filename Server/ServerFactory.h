@@ -72,7 +72,7 @@ struct ServerFactory {
 		if(serverConfig.GetParameter("Port") == "")
 			serverConfig.SetParameter("Port", "5000");
 
-		if(atoi(serverConfig.GetParameter("Threads").c_str()) != 0 && atoi(serverConfig.GetParameter("Threads").c_str()) <= threads)
+		if(atoi(serverConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(serverConfig.GetParameter("Threads").c_str()) <= threads)
 			threads = atoi( serverConfig.GetParameter("Threads").c_str() );
 
 		Server * server = new Server(serverConfig.GetParameter("IP"), serverConfig.GetParameter("Port"), threads);

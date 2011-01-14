@@ -53,17 +53,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 using namespace std;
 
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
-typedef DynamicGraph<EdgeData>::InputEdge GridEdge;
+typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef NNGrid::NNGrid<true> WritableGrid;
 typedef BaseConfiguration ContractorConfiguration;
 
 vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
 
-int main (int argc, char *argv[])
-{
-    if(argc <= 1)
-    {
+int main (int argc, char *argv[]) {
+    if(argc <= 1) {
         cerr << "usage: " << endl << argv[0] << " <osmr-data>" << endl;
         exit(-1);
     }
@@ -72,8 +70,8 @@ int main (int argc, char *argv[])
 	unsigned numberOfThreads = omp_get_num_procs();
 	if(testDataFile("contractor.ini")) {
 		ContractorConfiguration contractorConfig("contractor.ini");
-		if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
-			numberOfThreads = atoi( contractorConfig.GetParameter("Threads").c_str() );
+		if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
+			numberOfThreads = (unsigned)atoi( contractorConfig.GetParameter("Threads").c_str() );
 	}
 	omp_set_num_threads(numberOfThreads);
 
@@ -112,8 +110,7 @@ int main (int argc, char *argv[])
     WritableGrid * g = new WritableGrid();
     cout << "building grid ..." << flush;
     Percent p(edgeList.size());
-    for(NodeID i = 0; i < edgeList.size(); i++)
-    {
+    for(NodeID i = 0; i < edgeList.size(); i++) {
         p.printIncrement();
         if(!edgeList[i].isLocatable())
             continue;
@@ -160,7 +157,7 @@ int main (int argc, char *argv[])
     ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
     cleanup->Run();
 
-    std::vector< GridEdge> cleanedEdgeList;
+    std::vector< InputEdge> cleanedEdgeList;
     cleanup->GetData(cleanedEdgeList);
 
     ofstream edgeOutFile(edgeOut, ios::binary);
@@ -168,7 +165,7 @@ int main (int argc, char *argv[])
     //Serializing the edge list.
     cout << "Serializing edges " << flush;
     p.reinit(cleanedEdgeList.size());
-    for(std::vector< GridEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++)
+    for(std::vector< InputEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++)
     {
         p.printIncrement();
         int distance= it->data.distance;

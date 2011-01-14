@@ -257,5 +257,6 @@ string GetRandomString() {
     return string(s);
 }
 
+typedef google::dense_hash_map<NodeID, _Node> NodeMap;
 
 #endif /* EXTRACTORSTRUCTS_H_ */

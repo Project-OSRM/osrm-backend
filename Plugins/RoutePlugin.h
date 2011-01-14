@@ -34,7 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/StrIngUtil.h"
 
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
-typedef StaticGraph<EdgeData>::InputEdge GridEdge;
+typedef StaticGraph<EdgeData>::InputEdge InputEdge;
 
 class RoutePlugin : public BasePlugin {
 public:
@@ -46,10 +46,9 @@ public:
 		nodeHelpDesk->initNNGrid(nodesInStream);
 
 		//Deserialize road network graph
-		std::vector< GridEdge> * edgeList = new std::vector< GridEdge>();
+		std::vector< InputEdge> * edgeList = new std::vector< InputEdge>();
 		readHSGRFromStream(hsgrInStream, edgeList);
 		hsgrInStream.close();
-
 		graph = new StaticGraph<EdgeData>(nodeHelpDesk->getNumberOfNodes()-1, *edgeList);
 		delete edgeList;
 
