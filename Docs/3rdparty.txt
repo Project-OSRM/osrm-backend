@@ -5,3 +5,5 @@ Boost		1.37+
 sparsehash 	1.4+
 stxxl		1.2.1+
 libz2-dev	1.0.5+
+protobuffer 2.3.0+
+zlib        1.2.3.4+
