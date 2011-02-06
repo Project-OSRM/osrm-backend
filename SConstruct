@@ -43,7 +43,7 @@ if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
 	Exit(-1)
 if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
-	print "libxml2 library or header not found. Exiting"
+	print "zlib library or header not found. Exiting"
 	Exit(-1)
 if not conf.CheckCXXHeader('stxxl.h'):
 	print "Could not locate stxxl header. Exiting"
