@@ -20,7 +20,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #ifndef BASIC_DATASTRUCTURES_H
 #define BASIC_DATASTRUCTURES_H
-
 #include <string>
 #include <boost/lexical_cast.hpp>
 
@@ -39,7 +38,17 @@ const char crlf[]		             = { '\r', '\n' };
 struct Header {
   std::string name;
   std::string value;
+  void Clear() {
+      name.clear();
+      value.clear();
+  }
 };
+
+enum CompressionType {
+    none,
+    gzipRFC1952,
+    deflateRFC1951
+} Compression;
 
 struct Request {
 	std::string uri;
@@ -55,8 +64,19 @@ struct Reply {
 
 	std::vector<Header> headers;
 	std::string content;
-	std::vector<boost::asio::const_buffer> toBuffers();
+    std::vector<boost::asio::const_buffer> toBuffers();
+    std::vector<boost::asio::const_buffer> HeaderstoBuffers();
 	static Reply stockReply(status_type status);
+	void setSize(unsigned size) {
+	    for (std::size_t i = 0; i < headers.size(); ++i) {
+	            Header& h = headers[i];
+	            if("Content-Length" == h.name) {
+	                std::stringstream sizeString;
+	                sizeString << size;
+	                h.value = sizeString.str();
+	            }
+	    }
+	}
 };
 
 boost::asio::const_buffer ToBuffer(Reply::status_type status) {
@@ -94,6 +114,21 @@ std::vector<boost::asio::const_buffer> Reply::toBuffers(){
 	buffers.push_back(boost::asio::buffer(crlf));
 	buffers.push_back(boost::asio::buffer(content));
 	return buffers;
+}
+
+std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
+    std::vector<boost::asio::const_buffer> buffers;
+    buffers.push_back(ToBuffer(status));
+    for (std::size_t i = 0; i < headers.size(); ++i) {
+        Header& h = headers[i];
+//        std::cout << h.name << ": " << h.value << std::endl;
+        buffers.push_back(boost::asio::buffer(h.name));
+        buffers.push_back(boost::asio::buffer(seperators));
+        buffers.push_back(boost::asio::buffer(h.value));
+        buffers.push_back(boost::asio::buffer(crlf));
+    }
+    buffers.push_back(boost::asio::buffer(crlf));
+    return buffers;
 }
 
 Reply Reply::stockReply(Reply::status_type status) {
