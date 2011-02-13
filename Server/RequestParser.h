@@ -164,10 +164,11 @@ private:
             } else {
                 state_ = header_name;
                 if(header.name == "Accept-Encoding") {
-                    if(header.value.find("deflate") != std::string::npos)
+                	/* giving gzip precedence over deflate */
+                	if(header.value.find("deflate") != std::string::npos)
                         *compressionType = deflateRFC1951;
-//                    if(header.value.find("gzip") != std::string::npos)
-//                        *compressionType = gzipRFC1952;
+                    if(header.value.find("gzip") != std::string::npos)
+                        *compressionType = gzipRFC1952;
                 }
                 header.Clear();
                 header.name.push_back(input);

@@ -45,7 +45,7 @@ struct Header {
 };
 
 enum CompressionType {
-    none,
+    noCompression,
     gzipRFC1952,
     deflateRFC1951
 } Compression;
