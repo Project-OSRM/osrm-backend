@@ -51,6 +51,11 @@ public:
 
 		int lat = static_cast<int>(100000.*atof(parameters[0].c_str()));
 		int lon = static_cast<int>(100000.*atof(parameters[1].c_str()));
+
+		if(lat>90*100000 || lat <-90*100000 || lon>180*100000 || lon <-180*100000) {
+		    reply = http::Reply::stockReply(http::Reply::badRequest);
+		    return;
+		}
 		//query to helpdesk
 		_Coordinate result;
 		nodeHelpDesk->findNearestNodeCoordForLatLon(_Coordinate(lat, lon), result);

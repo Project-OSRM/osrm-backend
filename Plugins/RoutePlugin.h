@@ -81,6 +81,16 @@ public:
 		int lat2 = static_cast<int>(100000.*atof(parameters[2].c_str()));
 		int lon2 = static_cast<int>(100000.*atof(parameters[3].c_str()));
 
+        if(lat1>90*100000 || lat1 <-90*100000 || lon1>180*100000 || lon1 <-180*100000) {
+            reply = http::Reply::stockReply(http::Reply::badRequest);
+            return;
+        }
+
+        if(lat2>90*100000 || lat2 <-90*100000 || lon2>180*100000 || lon2 <-180*100000) {
+            reply = http::Reply::stockReply(http::Reply::badRequest);
+            return;
+        }
+
 		_Coordinate startCoord(lat1, lon1);
 		_Coordinate targetCoord(lat2, lon2);
 
