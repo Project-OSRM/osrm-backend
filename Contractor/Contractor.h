@@ -44,15 +44,6 @@ private:
         NodeID nameID;
     };
 
-public:
-
-    struct Witness {
-        NodeID source;
-        NodeID target;
-        _MiddleName middleName;
-    };
-
-private:
     struct _EdgeData {
         unsigned distance;
         unsigned originalEdges : 29;
@@ -78,7 +69,6 @@ private:
     struct _ThreadData {
         _Heap heap;
         std::vector< _ImportEdge > insertedEdges;
-        std::vector< Witness > witnessList;
         _ThreadData( NodeID nodes ): heap( nodes ) {
         }
     };
