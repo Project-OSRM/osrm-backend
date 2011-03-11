@@ -52,6 +52,7 @@ public:
 		return true;
 	}
 	void EraseAll() {
+	    if(table.size() > 0)
 		table.clear();
 	}
 private:
