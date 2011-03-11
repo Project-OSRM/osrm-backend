@@ -54,12 +54,6 @@ public:
                 }
                 config.close();
             }
-
-
-//            for (boost::program_options::detail::config_file_iterator i(config, options), e ; i != e; ++i) {
-//                std::cout << "[config] " << i->string_key << " = " << i->value[0] << std::endl;
-//                parameters.Add(i->string_key, i->value[0]);
-//            }
         } catch(std::exception& e) {
             std::cerr << "[config] .ini not found -> Exception: " <<e.what() << std::endl;
             if(config.is_open())
@@ -113,7 +107,6 @@ private:
     }
 
     HashTable<std::string, std::string> parameters;
-    //Speichert alle Einträge aus INI Datei
 };
 
 #endif /* BASECONFIGURATION_H_ */
