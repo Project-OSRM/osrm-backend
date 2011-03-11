@@ -33,7 +33,7 @@ else:  #Mac OS X
 if GetOption('buildconfiguration') == 'debug':
 	env.Append(CCFLAGS = ' -Wall -g3')
 else:
-	env.Append(CCFLAGS = ' -O3 -DNDEBUG')
+	env.Append(CCFLAGS = ' -O3 -DNDEBUG -march=native')
 #print "Compiling with: ", env['CXX']
 conf = Configure(env)
 if not conf.CheckHeader('omp.h'):
@@ -80,15 +80,14 @@ if not conf.CheckCXXHeader('boost/noncopyable.hpp'):
 if not conf.CheckCXXHeader('boost/shared_ptr.hpp'):
 	print "boost/shared_ptr.hpp not found. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('boost/program_options.hpp'):
-	print "boost/shared_ptr.hpp not found. Exiting"
-	Exit(-1)
 if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
 	print "stxxl library not found. Exiting"
 	Exit(-1)
 if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'):
 	print "Google Protobuffer library not found. Exiting"
 	Exit(-1)
+#if os.sysconf('SC_NPROCESSORS_ONLN') > 1:
+#	env.Append(CCFLAGS = ' -D_GLIBCXX_PARALLEL');
 
 env.Append(CCFLAGS = ' -fopenmp')
 env.Append(LINKFLAGS = ' -fopenmp')
@@ -100,7 +99,7 @@ env.Program("createHierarchy.cpp")
 if os.path.exists("many-to-many.cpp"):
 	env.Program("many-to-many.cpp")
 env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz -lprotobuf')
-env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz -lboost_program_options')
+env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz')
 env.Append(LINKFLAGS = ' -lprotobuf DataStructures/pbf-proto/fileformat.pb.o DataStructures/pbf-proto/osmformat.pb.o')
 env.Program("routed.cpp")
 env = conf.Finish()
