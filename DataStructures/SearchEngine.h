@@ -40,6 +40,26 @@ struct _PathData {
     bool turn:1;
 };
 
+struct _Statistics {
+    _Statistics () : insertedNodes(0), stalledNodes(0), meetingNodes(0), deleteMins(0), decreasedNodes(0), oqf(0), eqf(0), df(0), preprocTime(0) {};
+    void Reset() {
+        insertedNodes = 0;
+        stalledNodes = 0;
+        meetingNodes = 0;
+        deleteMins = 0;
+        decreasedNodes = 0;
+    }
+    unsigned insertedNodes;
+    unsigned stalledNodes;
+    unsigned meetingNodes;
+    unsigned deleteMins;
+    unsigned decreasedNodes;
+    unsigned oqf;
+    unsigned eqf;
+    unsigned df;
+    double preprocTime;
+};
+
 typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage< NodeID, unsigned > > _Heap;
 
 template<typename EdgeData, typename GraphT, typename NodeHelperT = NodeInformationHelpDesk>
@@ -64,6 +84,7 @@ public:
     }
 
     unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<_PathData > * path, _Coordinate& startCoord, _Coordinate& targetCoord) {
+
         bool onSameEdge = false;
         bool onSameEdgeReversed = false;
         bool startReverse = false;
@@ -130,11 +151,11 @@ public:
                 delete _backwardHeap;
                 return _upperbound;
             }
-
-            EdgeWeight w = _graph->GetEdgeData( edge ).distance;
-            if( (_graph->GetEdgeData( edge ).backward && !startReverse) || (_graph->GetEdgeData( edge ).forward && startReverse) )
+            const EdgeData& ed = _graph->GetEdgeData(edge);
+            EdgeWeight w = ed.distance;
+            if( (ed.backward && !startReverse) || (ed.forward && startReverse) )
                 _forwardHeap->Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
-            if( (_graph->GetEdgeData( edge ).backward && startReverse) || (_graph->GetEdgeData( edge ).forward && !startReverse) )
+            if( (ed.backward && startReverse) || (ed.forward && !startReverse) )
                 _forwardHeap->Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
         }
         if(phantomNodes->targetNode1 != UINT_MAX && !onSameEdgeReversed)
@@ -150,12 +171,15 @@ public:
                 return _upperbound;
             }
 
-            EdgeWeight w = _graph->GetEdgeData( edge ).distance;
-            if( (_graph->GetEdgeData( edge ).backward && !targetReverse) || (_graph->GetEdgeData( edge ).forward && targetReverse) )
+            const EdgeData& ed = _graph->GetEdgeData(edge);
+            EdgeWeight w = ed.distance;
+
+            if( (ed.backward && !targetReverse) || (ed.forward && targetReverse) )
                 _backwardHeap->Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
-            if( (_graph->GetEdgeData( edge ).backward && targetReverse) || (_graph->GetEdgeData( edge ).forward && !targetReverse) )
+            if( (ed.backward && targetReverse) || (ed.forward && !targetReverse) )
                 _backwardHeap->Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->startRatio), phantomNodes->targetNode1);
         }
+//        double time = get_timestamp();
 
         NodeID sourceHeapNode = 0;
         NodeID targetHeapNode = 0;
@@ -172,9 +196,10 @@ public:
                 _RoutingStep( _backwardHeap, _forwardHeap, false, &middle, &_upperbound );
             }
         }
+//        std::cout << "[debug] computing distance took " << get_timestamp() - time << std::endl;
+//        time = get_timestamp();
 
-        if ( _upperbound == std::numeric_limits< unsigned int >::max() || onSameEdge )
-        {
+        if ( _upperbound == std::numeric_limits< unsigned int >::max() || onSameEdge ) {
             delete _forwardHeap;
             delete _backwardHeap;
             return _upperbound;
@@ -196,7 +221,6 @@ public:
             packedPath.push_back( pathNode );
         }
 
-
         path->push_back( _PathData(packedPath[0], false) );
         {
             for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
@@ -208,12 +232,12 @@ public:
         packedPath.clear();
         delete _forwardHeap;
         delete _backwardHeap;
+//        std::cout << "[debug] unpacking path took " << get_timestamp() - time << std::endl;
 
         return _upperbound/10;
     }
 
-    unsigned int ComputeDistanceBetweenNodes(NodeID start, NodeID target)
-    {
+    unsigned int ComputeDistanceBetweenNodes(NodeID start, NodeID target) {
         _Heap * _forwardHeap = new _Heap(_graph->GetNumberOfNodes());
         _Heap * _backwardHeap = new _Heap(_graph->GetNumberOfNodes());
         NodeID middle = ( NodeID ) 0;
@@ -229,6 +253,30 @@ public:
             }
             if ( _backwardHeap->Size() > 0 ) {
                 _RoutingStep( _backwardHeap, _forwardHeap, false, &middle, &_upperbound );
+            }
+        }
+        delete _forwardHeap;
+        delete _backwardHeap;
+        return _upperbound;
+    }
+
+    unsigned int ComputeDistanceBetweenNodesWithStats(NodeID start, NodeID target, _Statistics& stats) {
+        _Heap * _forwardHeap = new _Heap(_graph->GetNumberOfNodes());
+        _Heap * _backwardHeap = new _Heap(_graph->GetNumberOfNodes());
+        NodeID middle = ( NodeID ) 0;
+        unsigned int _upperbound = std::numeric_limits<unsigned int>::max();
+
+        _forwardHeap->Insert(start, 0, start);
+        _backwardHeap->Insert(target, 0, target);
+        stats.insertedNodes += 2;
+
+        while(_forwardHeap->Size() + _backwardHeap->Size() > 0)
+        {
+            if ( _forwardHeap->Size() > 0 ) {
+                _RoutingStepWithStats( _forwardHeap, _backwardHeap, true, &middle, &_upperbound, stats );
+            }
+            if ( _backwardHeap->Size() > 0 ) {
+                _RoutingStepWithStats( _backwardHeap, _forwardHeap, false, &middle, &_upperbound, stats );
             }
         }
         delete _forwardHeap;
@@ -279,8 +327,7 @@ public:
     }
 private:
 
-    void _RoutingStep(_Heap * _forwardHeap, _Heap *_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound)
-    {
+    inline void _RoutingStep(_Heap * _forwardHeap, _Heap *_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound) {
         const NodeID node = _forwardHeap->DeleteMin();
         const unsigned int distance = _forwardHeap->GetKey( node );
         if ( _backwardHeap->WasInserted( node ) ) {
@@ -294,17 +341,21 @@ private:
             _forwardHeap->DeleteAll();
             return;
         }
-        //Stalling
+
 
         for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
+            const EdgeData& ed = _graph->GetEdgeData(edge);
+//            if(!ed.shortcut)
+//                continue;
             const NodeID to = _graph->GetTarget(edge);
-            const EdgeWeight edgeWeight = _graph->GetEdgeData(edge).distance;
+            const EdgeWeight edgeWeight = ed.distance;
 
             assert( edgeWeight > 0 );
             const int toDistance = distance + edgeWeight;
 
+            //Stalling
             if(_forwardHeap->WasInserted( to )) {
-                if(!forwardDirection ? _graph->GetEdgeData(edge).forward : _graph->GetEdgeData(edge).backward) {
+                if(!forwardDirection ? ed.forward : ed.backward) {
                     if(_forwardHeap->GetKey( to ) + edgeWeight < distance) {
 //                        std::cout << "[stalled] node " << node << std::endl;
                         return;
@@ -312,17 +363,68 @@ private:
                 }
             }
 
-            if(forwardDirection ? _graph->GetEdgeData(edge).forward : _graph->GetEdgeData(edge).backward )
-            {
+            if(forwardDirection ? ed.forward : ed.backward ) {
                 //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !_forwardHeap->WasInserted( to ) )
-                {
+                if ( !_forwardHeap->WasInserted( to ) ) {
                     _forwardHeap->Insert( to, toDistance, node );
                 }
                 //Found a shorter Path -> Update distance
                 else if ( toDistance < _forwardHeap->GetKey( to ) ) {
                     _forwardHeap->GetData( to ).parent = node;
                     _forwardHeap->DecreaseKey( to, toDistance );
+                    //new parent
+                }
+            }
+        }
+    }
+
+    inline void _RoutingStepWithStats( _Heap * _forwardHeap, _Heap *_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound, _Statistics& stats) {
+        const NodeID node = _forwardHeap->DeleteMin();
+        stats.deleteMins++;
+        const unsigned int distance = _forwardHeap->GetKey( node );
+        if ( _backwardHeap->WasInserted( node ) ) {
+            const unsigned int newDistance = _backwardHeap->GetKey( node ) + distance;
+            if ( newDistance < *_upperbound ) {
+                *middle = node;
+                *_upperbound = newDistance;
+            }
+        }
+        if ( distance > *_upperbound ) {
+            stats.meetingNodes++;
+            _forwardHeap->DeleteAll();
+            return;
+        }
+
+
+        for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
+            const EdgeData& ed = _graph->GetEdgeData(edge);
+            const NodeID to = _graph->GetTarget(edge);
+            const EdgeWeight edgeWeight = ed.distance;
+
+            assert( edgeWeight > 0 );
+            const int toDistance = distance + edgeWeight;
+
+            //Stalling
+            if(_forwardHeap->WasInserted( to )) {
+                if(!forwardDirection ? ed.forward : ed.backward) {
+                    if(_forwardHeap->GetKey( to ) + edgeWeight < distance) {
+                        stats.stalledNodes++;
+                        return;
+                    }
+                }
+            }
+
+            if(forwardDirection ? ed.forward : ed.backward ) {
+                //New Node discovered -> Add to Heap + Node Info Storage
+                if ( !_forwardHeap->WasInserted( to ) ) {
+                    _forwardHeap->Insert( to, toDistance, node );
+                    stats.insertedNodes++;
+                }
+                //Found a shorter Path -> Update distance
+                else if ( toDistance < _forwardHeap->GetKey( to ) ) {
+                    _forwardHeap->GetData( to ).parent = node;
+                    _forwardHeap->DecreaseKey( to, toDistance );
+                    stats.decreasedNodes++;
                     //new parent
                 }
             }
@@ -362,7 +464,7 @@ private:
 
         assert(smallestWeight != SPECIAL_EDGEID); //no edge found. This should not happen at all!
 
-        const EdgeData ed = _graph->GetEdgeData(smallestEdge);
+        const EdgeData& ed = _graph->GetEdgeData(smallestEdge);
         if(ed.shortcut)
         {//unpack
             const NodeID middle = ed.middleName.middle;
