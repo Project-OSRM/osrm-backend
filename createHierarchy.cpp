@@ -175,7 +175,6 @@ int main (int argc, char *argv[]) {
     	}
     }
     levelOutFile.close();
-    delete levelInfo;
     std::vector< ContractionCleanup::Edge > contractedEdges;
     contractor->GetEdges( contractedEdges );
     delete contractor;
