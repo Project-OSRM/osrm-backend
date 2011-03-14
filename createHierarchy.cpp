@@ -62,7 +62,7 @@ vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
 
 int main (int argc, char *argv[]) {
     if(argc <= 1) {
-        cerr << "usage: " << endl << argv[0] << " <osmr-data>" << endl;
+        cerr << "usage: " << endl << argv[0] << " <osrm-data>" << endl;
         exit(-1);
     }
 
@@ -75,7 +75,12 @@ int main (int argc, char *argv[]) {
 	}
 	omp_set_num_threads(numberOfThreads);
 
-    cout << "preprocessing data from input file " << argv[1] << endl;
+    cout << "preprocessing data from input file " << argv[1];
+#ifdef _GLIBCXX_PARALLEL
+    cout << " using STL parallel mode" << std::endl;
+#else
+    cout << " using STL serial mode" << std::endl;
+#endif
 
     ifstream in;
     in.open (argv[1]);
@@ -153,12 +158,15 @@ int main (int argc, char *argv[]) {
     cout << "ok" << endl;
     std::vector< ContractionCleanup::Edge > contractedEdges;
     contractor->GetEdges( contractedEdges );
+    delete contractor;
 
     ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
+    contractedEdges.clear();
     cleanup->Run();
 
     std::vector< InputEdge> cleanedEdgeList;
     cleanup->GetData(cleanedEdgeList);
+    delete cleanup;
 
     ofstream edgeOutFile(edgeOut, ios::binary);
 
@@ -201,7 +209,5 @@ int main (int argc, char *argv[]) {
     edgeOutFile.close();
     cleanedEdgeList.clear();
 
-    delete cleanup;
-    delete contractor;
     cout << "finished" << endl;
 }
