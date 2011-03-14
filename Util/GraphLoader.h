@@ -305,9 +305,6 @@ unsigned readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         if(middle > numberOfNodes)
         	numberOfNodes = middle;
 
-
-        std::cout << "loaded edge (" << source << "," << target << ")" << std::endl;
-
         edgeList->push_back(g);
     }
     return numberOfNodes+1;
