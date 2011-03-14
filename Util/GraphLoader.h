@@ -265,9 +265,10 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 }
 
 template<typename EdgeT>
-void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
-    while(!in.eof())
-    {
+unsigned readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
+	unsigned numberOfNodes = 0;
+	ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
+    while(!in.eof()) {
         EdgeT g;
         EdgeData e;
 
@@ -297,8 +298,18 @@ void readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         e.forwardTurn = forwardTurn; e.backwardTurn = backwardTurn;
         g.data = e; g.source = source; g.target = target;
 
+        if(source > numberOfNodes)
+        	numberOfNodes = source;
+        if(target > numberOfNodes)
+        	numberOfNodes = target;
+        if(middle > numberOfNodes)
+        	numberOfNodes = middle;
+
+
+        std::cout << "loaded edge (" << source << "," << target << ")" << std::endl;
+
         edgeList->push_back(g);
     }
-
+    return numberOfNodes+1;
 }
 #endif // CREATEGRAPH_H

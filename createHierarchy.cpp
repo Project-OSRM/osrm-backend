@@ -44,6 +44,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
 #include "DataStructures/BinaryHeap.h"
+#include "DataStructures/LevelInformation.h"
 #include "DataStructures/NNGrid.h"
 #include "DataStructures/TurnInfoFactory.h"
 #include "Util/BaseConfiguration.h"
@@ -101,15 +102,18 @@ int main (int argc, char *argv[]) {
     char edgeOut[1024];
     char ramIndexOut[1024];
     char fileIndexOut[1024];
+    char levelInfoOut[1024];
     strcpy(nodeOut, argv[1]);
     strcpy(edgeOut, argv[1]);
     strcpy(ramIndexOut, argv[1]);
     strcpy(fileIndexOut, argv[1]);
+    strcpy(levelInfoOut, argv[1]);
 
     strcat(nodeOut, ".nodes");
     strcat(edgeOut, ".hsgr");
     strcat(ramIndexOut, ".ramIndex");
     strcat(fileIndexOut, ".fileIndex");
+    strcat(levelInfoOut, ".levels");
     ofstream mapOutFile(nodeOut, ios::binary);
 
     WritableGrid * g = new WritableGrid();
@@ -139,9 +143,9 @@ int main (int argc, char *argv[]) {
     g->ConstructGrid(ramIndexOut, fileIndexOut);
     delete g;
 
+    unsigned numberOfNodes = int2ExtNodeMap->size();
     //Serializing the node map.
-    for(NodeID i = 0; i < int2ExtNodeMap->size(); i++)
-    {
+    for(NodeID i = 0; i < int2ExtNodeMap->size(); i++) {
         mapOutFile.write((char *)&(int2ExtNodeMap->at(i)), sizeof(NodeInfo));
     }
     mapOutFile.close();
@@ -156,6 +160,22 @@ int main (int argc, char *argv[]) {
     cout << "checking data sanity ..." << flush;
     contractor->CheckForAllOrigEdges(edgeList);
     cout << "ok" << endl;
+    LevelInformation * levelInfo = contractor->GetLevelInformation();
+    ofstream levelOutFile(levelInfoOut, ios::binary);
+    unsigned numberOfLevels = levelInfo->GetNumberOfLevels();
+    levelOutFile.write((char *)&numberOfLevels, sizeof(unsigned));
+    for(unsigned currentLevel = 0; currentLevel < levelInfo->GetNumberOfLevels(); currentLevel++ ) {
+    	std::vector<unsigned> & level = levelInfo->GetLevel(currentLevel);
+    	unsigned sizeOfLevel = level.size();
+    	levelOutFile.write((char *)&sizeOfLevel, sizeof(unsigned));
+    	for(unsigned currentLevelEntry = 0; currentLevelEntry < sizeOfLevel; currentLevelEntry++) {
+    		unsigned node = level[currentLevelEntry];
+    		assert(node < numberOfNodes);
+    		levelOutFile.write((char *)&node, sizeof(unsigned));
+    	}
+    }
+    levelOutFile.close();
+    delete levelInfo;
     std::vector< ContractionCleanup::Edge > contractedEdges;
     contractor->GetEdges( contractedEdges );
     delete contractor;

@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <algorithm>
 #endif
 #include "../DataStructures/DynamicGraph.h"
+#include "../DataStructures/LevelInformation.h"
 #include "../DataStructures/Percent.h"
 #include <ctime>
 #include <vector>
@@ -95,75 +96,6 @@ private:
         bool operator()( std::pair< NodeID, bool > nodeData ) {
             return !nodeData.second;
         }
-    };
-
-    struct _LogItem {
-        unsigned iteration;
-        NodeID nodes;
-        double contraction;
-        double independent;
-        double inserting;
-        double removing;
-        double updating;
-
-        _LogItem() {
-            iteration = nodes = contraction = independent = inserting = removing = updating = 0;
-        }
-
-        double GetTotalTime() const {
-            return contraction + independent + inserting + removing + updating;
-        }
-
-        void PrintStatistics( int interation ) const {
-            cout << iteration << "\t" << nodes << "\t" << independent << "\t" << contraction << "\t" << inserting << "\t" << removing  << "\t" << updating << endl;
-        }
-    };
-
-    class _LogData {
-    public:
-
-        std::vector < _LogItem > iterations;
-
-        unsigned GetNIterations() {
-            return ( unsigned ) iterations.size();
-        }
-
-        _LogItem GetSum() const {
-            _LogItem sum;
-            sum.iteration = ( unsigned ) iterations.size();
-
-            for ( int i = 0, e = ( int ) iterations.size(); i < e; ++i ) {
-                sum.nodes += iterations[i].nodes;
-                sum.contraction += iterations[i].contraction;
-                sum.independent += iterations[i].independent;
-                sum.inserting += iterations[i].inserting;
-                sum.removing += iterations[i].removing;
-                sum.updating += iterations[i].updating;
-            }
-
-            return sum;
-        }
-
-        void PrintHeader() const {
-            cout << "Iteration\tNodes\tIndependent\tContraction\tInserting\tRemoving\tUpdating" << endl;
-        }
-
-        void PrintSummary() const {
-            PrintHeader();
-            GetSum().PrintStatistics(( int ) iterations.size() );
-        }
-
-        void Print() const {
-            PrintHeader();
-            for ( int i = 0, e = ( int ) iterations.size(); i < e; ++i ) {
-                iterations[i].PrintStatistics( i );
-            }
-        }
-
-        void Insert( const _LogItem& data ) {
-            iterations.push_back( data );
-        }
-
     };
 
 public:
@@ -256,12 +188,13 @@ public:
         cout << "ok" << endl << "removed " << edges.size() - edge << " edges of " << edges.size() << endl;
         edges.resize( edge );
         _graph = new _DynamicGraph( nodes, edges );
-
         std::vector< _ImportEdge >().swap( edges );
+        _levelInformation = new LevelInformation();
     }
 
     ~Contractor() {
         delete _graph;
+        delete _levelInformation;
     }
 
     template< class InputEdge >
@@ -284,7 +217,6 @@ public:
 
     void Run() {
         const NodeID numberOfNodes = _graph->GetNumberOfNodes();
-        _LogData log;
         Percent p (numberOfNodes);
 
         unsigned maxThreads = omp_get_max_threads();
@@ -295,7 +227,6 @@ public:
         cout << "Contractor is using " << maxThreads << " threads" << endl;
 
         NodeID levelID = 0;
-        NodeID iteration = 0;
         std::vector< std::pair< NodeID, bool > > remainingNodes( numberOfNodes );
         std::vector< double > nodePriority( numberOfNodes );
         std::vector< _PriorityData > nodeData( numberOfNodes );
@@ -309,8 +240,6 @@ public:
             nodeData[remainingNodes[x].first].bias = x;
 
         cout << "initializing elimination PQ ..." << flush;
-        _LogItem statistics0;
-        statistics0.updating = _Timestamp();
 #pragma omp parallel
         {
             _ThreadData* data = threadData[omp_get_thread_num()];
@@ -321,15 +250,9 @@ public:
         }
         cout << "ok" << endl;
 
-        statistics0.updating = _Timestamp() - statistics0.updating;
-        log.Insert( statistics0 );
         cout << "preprocessing ..." << flush;
-        //        log.PrintHeader();
-        //        statistics0.PrintStatistics( 0 );
 
         while ( levelID < numberOfNodes ) {
-            _LogItem statistics;
-            statistics.iteration = iteration++;
             const int last = ( int ) remainingNodes.size();
 
             //determine independent node set
@@ -342,8 +265,6 @@ public:
             _NodePartitionor functor;
             const std::vector < std::pair < NodeID, bool > >::const_iterator first = stable_partition( remainingNodes.begin(), remainingNodes.end(), functor );
             const int firstIndependent = first - remainingNodes.begin();
-            statistics.nodes = last - firstIndependent;
-            statistics.independent += _Timestamp() - timeLast;
             timeLast = _Timestamp();
 
             //contract independent nodes
@@ -358,8 +279,6 @@ public:
                 }
                 std::sort( data->insertedEdges.begin(), data->insertedEdges.end() );
             }
-            statistics.contraction += _Timestamp() - timeLast;
-            timeLast = _Timestamp();
 
 #pragma omp parallel
             {
@@ -367,11 +286,9 @@ public:
 #pragma omp for schedule ( guided ) nowait
                 for ( int position = firstIndependent ; position < last; ++position ) {
                     NodeID x = remainingNodes[position].first;
-                    _DeleteIncommingEdges( data, x );
+                    _DeleteIncomingEdges( data, x );
                 }
             }
-            statistics.removing += _Timestamp() - timeLast;
-            timeLast = _Timestamp();
 
             //insert new edges
             for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
@@ -400,8 +317,6 @@ public:
                 }
                 std::vector< _ImportEdge >().swap( data.insertedEdges );
             }
-            statistics.inserting += _Timestamp() - timeLast;
-            timeLast = _Timestamp();
 
             //update priorities
 #pragma omp parallel
@@ -413,20 +328,17 @@ public:
                     _UpdateNeighbours( &nodePriority, &nodeData, data, x );
                 }
             }
-            statistics.updating += _Timestamp() - timeLast;
-            timeLast = _Timestamp();
-
-            //output some statistics
-            //            statistics.PrintStatistics( iteration + 1 );
-            //LogVerbose( wxT( "Printed" ) );
 
             //remove contracted nodes from the pool
             levelID += last - firstIndependent;
             remainingNodes.resize( firstIndependent );
             std::vector< std::pair< NodeID, bool > >( remainingNodes ).swap( remainingNodes );
-            log.Insert( statistics );
             p.printStatus(levelID);
         }
+
+    	for ( _DynamicGraph::NodeIterator n = 0; n < _graph->GetNumberOfNodes(); n++ ) {
+    		_levelInformation->Add(nodeData[n].depth, n);
+    	}
 
         for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
             delete threadData[threadNum];
@@ -465,6 +377,10 @@ public:
                 edges.push_back( newEdge );
             }
         }
+    }
+
+    LevelInformation * GetLevelInformation() {
+    	return _levelInformation;
     }
 
 private:
@@ -628,19 +544,12 @@ private:
                         data->insertedEdges.push_back( newEdge );
                     }
                 }
-                /*else if ( !Simulate ) {
-						Witness witness;
-						witness.source = source;
-						witness.target = target;
-						witness.middle = node;
-						witnessList.push_back( witness );
-					}*/
             }
         }
         return true;
     }
 
-    bool _DeleteIncommingEdges( _ThreadData* data, NodeID node ) {
+    bool _DeleteIncomingEdges( _ThreadData* data, NodeID node ) {
         std::vector < NodeID > neighbours;
 
         //find all neighbours
@@ -733,6 +642,7 @@ private:
         return true;
     }
 
+    LevelInformation * _levelInformation;
     _DynamicGraph* _graph;
     std::vector<NodeID> * _components;
 
