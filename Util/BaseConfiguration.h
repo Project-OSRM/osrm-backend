@@ -23,9 +23,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <iostream>
 #include <string>
-#include <set>
-#include <sstream>
-#include <string>
 #include <exception>
 #include <fstream>
 
@@ -47,9 +44,7 @@ public:
                     getline (config,line);
                     std::vector<std::string> tokens;
                     Tokenize(line, tokens);
-                    if(tokens.size() != 2)
-                        continue;
-                    else
+                    if(2 == tokens.size() )
                         parameters.Add(tokens[0], tokens[1]);
                 }
                 config.close();
