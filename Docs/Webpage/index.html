@@ -1,0 +1,157 @@
+<html><head>
+  <meta http-equiv="Content-type" content="text/html; charset=iso-8859-1">
+  <title>Open Source Routing Machine</title>
+  <link href="osrm.css" rel="stylesheet" type="text/css">
+</head><body>
+   
+<div id="mainnav" class="nav">
+    <ul>
+      <a href="http://sourceforge.net/apps/trac/routed/wiki">Wiki</a></li><li><a href="http://sourceforge.net/apps/trac/routed/timeline">Timeline</a></li><li><a href="http://sourceforge.net/apps/trac/routed/roadmap">Roadmap</a></li><li><a href="http://sourceforge.net/apps/trac/routed/browser">Browse Source</a></li><li><a href="http://sourceforge.net/apps/trac/routed/report">View Tickets</a></li><li><a href="http://sourceforge.net/apps/trac/routed/newticket">New Ticket</a></li><li class="last"><a href="http://sourceforge.net/apps/trac/routed/search">Search</a></li>
+
+    </ul>
+  </div>
+
+<img src="osrm3.png" alt="Logo" >
+<p> The Open Source Routing Machine (<strong>OSRM</strong>) is a C++ implementation of a high-performance routing engine for shortest paths in road networks.
+It combines sophisticated routing algorithms with the open and free road network data of the <a href="http://www.openstreetmap.org">OpenStreetMap</a> (OSM) project.
+Shortest path computation on a <strong>continental sized network</strong> can take up to several seconds if it is done without a so-called speedup-technique.
+OSRM is able to compute and output a shortest path between any origin and destination within a few miliseconds.
+Since it is designed with <strong>OpenStreetMap</strong> compatibility in mind, OSM data files can be easily imported. 
+A <a href="http://routingdemo.geofabrik.de/">demo installation</a> is provided by our friends at <a href="http://www.geofabrik.de">Geofabrik</a>. OSRM is under active development.
+</p>
+
+<p style="padding-bottom: 0px;"> The key features of <b>OSRM</b> are:
+</p>
+
+<ul style="margin-left: 20px;">
+
+  <li> High Performance Routing Algorithm </li>
+  <li> Easy import of OSM data files. </li>
+  <li> Written entirely in C++ and available under the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License</a> for anyone to use. </li>
+  <li> Ability to handle continental sized networks. </li>
+  <li> Influenced by current and ongoing academic research. [<a href="http://algo2.iti.kit.edu/routeplanning.php">more info</a>]
+  </li>
+</ul>
+
+
+<ul>
+  <li> <b>General Instructions</b> [<a href="http://sourceforge.net/apps/trac/routed/wiki/RunInstructions">html</a>]
+  </li>
+  <li> <b>Readme</b> [<a href="http://sourceforge.net/apps/trac/routed/wiki/ReadMe">html</a>] </li>
+</ul>
+<br>
+
+<h2> Support </h2>
+
+<p> Questions concerning use and development of the <b>OSRM</b> should be posted to the <a href="https://sourceforge.net/projects/routed/forums/forum/1175398">Help Forum</a>. </p>
+
+<p> Bugs should be reported by filing a ticket in the <a href="http://sourceforge.net/apps/trac/routed/newticket">Bug Tracker</a>
+</p>
+
+<h2> License </h2>
+
+<p> OSRM is free, open source, and available under the <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License</a>. 
+Companies with concerns about the AGPL should contact us to work something out.</p>
+
+<h2> Platforms supported </h2>
+
+<table>
+
+  <tbody>
+    <tr>
+      <td> <b>Operating Systems</b> </td>
+      <td> <b>Compilers</b> </td>
+      <td> <b>Third Party dependencies</b> </td>
+    </tr>
+    <tr>
+      <td>
+       Linux (kernel &gt;= 2.6.25)<br>
+     	 Mac OS X<br>
+     	 FreeBSD
+      </td>
+      <td> 
+      	g++ 4.2.3 (with warnings and unsupported)<br>
+      	g++ 4.3+ <br>
+			llvm-g++/dragonegg 2.8+ </td>
+      <td>
+      Boost 1.37+<br>
+      sparsehash 1.4+<br>
+      libxml2 2.7+<br>
+      scons 1.20+<br>
+      stxxl 1.2.1+  <br>
+      libprotobuf 2.30+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h2> Current version </h2>
+
+<p> Version 0.1 (July 10, 2010) is a baseline release. It has basic features. While it is safe to use this version, the code in svn trunk is much more advanced.</p>
+
+<h2> Major improvements in the latest svn code </h2>
+<table>
+
+  <tbody>
+    <tr>
+    <td>
+
+<ul>
+
+  <li> Improved memory consumption </li>
+  <li> Origin and Destination can be on arbitrary points of any street segment </li>
+  <li> Support for PBF and BZ2 compressed OSM files </li>
+  <li> Support for http 1.1 gzip/deflate compression </li>
+  <li> Server can be bound to any IP/Port in the system </li>
+  <li> many, many bug fixes </li>
+  <li> many under-the-hood improvements </li>
+  <li> For a detailed list, please read the the <a href="http://sourceforge.net/apps/trac/routed/timeline">Timeline</a>. </li>
+</ul>
+</td>
+      <td>
+      
+<script tystxxlpe="text/javascript" src="http://www.ohloh.net/p/487596/widgets/project_basic_stats.js"></script>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<h2> Links/Download </h2>
+
+<table border="1">
+
+  <tbody>
+    <tr>
+      <td> 
+      </td>
+      <td> <b>Current Stable Version </b> </td>
+      <td> <b>Previous Stable Version </b> </td>
+      <td> <b>Development Version (subversion) </b> </td>
+    </tr>
+    <tr>
+      <td>
+      
+         Download: [<a href="http://sourceforge.net/projects/osrm/">sf.net page</a>] 
+      
+      </td>
+      <td> [<a href="https://sourceforge.net/projects/routed/files/">0.1</a>]
+tar.bz2 (sf.net) </td>
+      <td> [none yet]
+tar.bz2 (sf.net) </td>
+      <td> subversion checkout </td>
+    </tr>
+    <tr>
+      <td>
+       Subversion repository: 
+      </td>
+      <td> [see above]
+		</td>
+      <td> [Browse] [Checkout]
+		</td>
+      <td> [<a href="http://routed.svn.sourceforge.net/viewvc/routed/osrm/">Browse</a>]
+[<a href="https://svn.project-osrm.org/svnroot/routed/osrm/">Checkout</a>]
+</td>
+    </tr>
+  </tbody>
+</table>
+
+</body></html>
