@@ -61,10 +61,8 @@ public:
 		ioService.stop();
 	}
 
-
-
-	RequestHandler * GetRequestHandlerPtr() {
-		return &requestHandler;
+	RequestHandler & GetRequestHandlerPtr() {
+		return requestHandler;
 	}
 
 private:

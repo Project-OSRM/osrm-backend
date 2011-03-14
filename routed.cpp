@@ -56,16 +56,16 @@ int main (int argc, char *argv[])
 
 		ServerConfiguration serverConfig("server.ini");
 		Server * s = ServerFactory::CreateServer(serverConfig);
-		RequestHandler * h = s->GetRequestHandlerPtr();
+		RequestHandler & h = s->GetRequestHandlerPtr();
 
 		BasePlugin * helloWorld = new HelloWorldPlugin();
-		h->RegisterPlugin(helloWorld);
+		h.RegisterPlugin(helloWorld);
 
 		BasePlugin * locate = new LocatePlugin(
 				serverConfig.GetParameter("ramIndex"),
 				serverConfig.GetParameter("fileIndex"),
 				serverConfig.GetParameter("nodesData"));
-		h->RegisterPlugin(locate);
+		h.RegisterPlugin(locate);
 
 		BasePlugin * route = new RoutePlugin(
 				serverConfig.GetParameter("hsgrData"),
@@ -73,7 +73,7 @@ int main (int argc, char *argv[])
 				serverConfig.GetParameter("fileIndex"),
 				serverConfig.GetParameter("nodesData"),
 				serverConfig.GetParameter("namesData"));
-		h->RegisterPlugin(route);
+		h.RegisterPlugin(route);
 
 		boost::thread t(boost::bind(&Server::Run, s));
 
