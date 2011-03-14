@@ -32,6 +32,7 @@ struct GridEdgeData {
             return right.edge.start < edge.start;
         if(right.edge.target != edge.target)
             return right.edge.target < edge.target;
+        return false;
     }
     bool operator==( const GridEdgeData& right ) const {
         return right.edge.start == edge.start && right.edge.target == edge.target;
