@@ -34,10 +34,15 @@ namespace http {
 
 class RequestHandler : private boost::noncopyable {
 public:
-	explicit RequestHandler() { }
+	explicit RequestHandler() : _pluginCount(0) { }
 
 	~RequestHandler() {
-		pluginMap.EraseAll();
+
+	    for(unsigned i = 0; i < _pluginVector.size(); i++) {
+	        BasePlugin * tempPointer = _pluginVector[i];
+	        delete tempPointer;
+	    }
+
 	}
 
 	void handle_request(const Request& req, Reply& rep){
@@ -59,7 +64,7 @@ public:
 //				std::cout << "[debug] found handler for '" << command << "' at version: " << pluginMap.Find(command)->GetVersionString() << std::endl;
 //				std::cout << "[debug] remaining parameters: " << parameters.size() << std::endl;
 				rep.status = Reply::ok;
-				pluginMap.Find(command)->HandleRequest(parameters, rep );
+				_pluginVector[pluginMap.Find(command)]->HandleRequest(parameters, rep );
 			} else {
 				rep = Reply::stockReply(Reply::badRequest);
 			}
@@ -73,12 +78,15 @@ public:
 
 	void RegisterPlugin(BasePlugin * plugin) {
 		std::cout << "[handler] registering plugin " << plugin->GetDescriptor() << std::endl;
-		pluginMap.Add(plugin->GetDescriptor(), plugin);
+		pluginMap.Add(plugin->GetDescriptor(), _pluginCount);
+		_pluginVector.push_back(plugin);
+		_pluginCount++;
 	}
 
 private:
-	boost::mutex pluginMutex;
-	HashTable<std::string, BasePlugin *> pluginMap;
+	HashTable<std::string, unsigned> pluginMap;
+	std::vector<BasePlugin *> _pluginVector;
+	unsigned _pluginCount;
 };
 } // namespace http
 

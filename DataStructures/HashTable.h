@@ -53,8 +53,9 @@ public:
 	}
 	void EraseAll() {
 	    if(table.size() > 0)
-		table.clear();
+	        table.clear();
 	}
+
 private:
 	MyHashTable table;
 };

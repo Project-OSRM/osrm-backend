@@ -89,10 +89,6 @@ int main (int argc, char *argv[])
 		std::cout << std::endl << "[server] shutting down" << std::endl;
 		s->Stop();
 		t.join();
-		delete helloWorld;
-		delete locate;
-		delete route;
-		delete h;
 		delete s;
 	} catch (std::exception& e) {
 		std::cerr << "[fatal error] exception: " << e.what() << std::endl;
