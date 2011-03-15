@@ -101,7 +101,8 @@ private:
 public:
 
     template< class InputEdge >
-    Contractor( int nodes, std::vector< InputEdge >& inputEdges ) {
+    Contractor( int nodes, std::vector< InputEdge >& inputEdges, unsigned eqf = 2, unsigned oqf = 1, unsigned df = 1) : edgeQuotionFactor(eqf), originalQuotientFactor(oqf), depthFactor(df), maxDepth(0) {
+
         std::vector< _ImportEdge > edges;
         edges.reserve( 2 * inputEdges.size() );
         for ( typename std::vector< InputEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
@@ -111,14 +112,12 @@ public:
 
             edge.data.distance = std::max((int)i->weight(), 1 );
             assert( edge.data.distance > 0 );
+#ifdef DEBUG
             if ( edge.data.distance > 24 * 60 * 60 * 10 ) {
                 cout << "Edge Weight too large -> May lead to invalid CH" << endl;
                 continue;
             }
-            if ( edge.data.distance <= 0 ) {
-                cout <<  "Edge Weight too small -> May lead to invalid CH or Crashes"<< endl;
-                continue;
-            }
+#endif
             edge.data.shortcut = false;
             edge.data.middleName.nameID = i->name();
             edge.data.type = i->type();
@@ -197,6 +196,8 @@ public:
         delete _levelInformation;
     }
 
+    int GetNumberOfLevels() const { return maxDepth; }
+
     template< class InputEdge >
     void CheckForAllOrigEdges(std::vector< InputEdge >& inputEdges) {
         for(unsigned int i = 0; i < inputEdges.size(); i++) {
@@ -248,15 +249,12 @@ public:
                 nodePriority[x] = _Evaluate( data, &nodeData[x], x );
             }
         }
-        cout << "ok" << endl;
-
-        cout << "preprocessing ..." << flush;
+        cout << "ok" << endl << "preprocessing ..." << flush;
 
         while ( levelID < numberOfNodes ) {
             const int last = ( int ) remainingNodes.size();
 
             //determine independent node set
-            double timeLast = _Timestamp();
 #pragma omp parallel for schedule ( guided )
             for ( int i = 0; i < last; ++i ) {
                 const NodeID node = remainingNodes[i].first;
@@ -265,7 +263,6 @@ public:
             _NodePartitionor functor;
             const std::vector < std::pair < NodeID, bool > >::const_iterator first = stable_partition( remainingNodes.begin(), remainingNodes.end(), functor );
             const int firstIndependent = first - remainingNodes.begin();
-            timeLast = _Timestamp();
 
             //contract independent nodes
 #pragma omp parallel
@@ -336,9 +333,9 @@ public:
             p.printStatus(levelID);
         }
 
-    	for ( _DynamicGraph::NodeIterator n = 0; n < _graph->GetNumberOfNodes(); n++ ) {
-    		_levelInformation->Add(nodeData[n].depth, n);
-    	}
+        for ( _DynamicGraph::NodeIterator n = 0; n < _graph->GetNumberOfNodes(); n++ ) {
+            _levelInformation->Add(nodeData[n].depth, n);
+        }
 
         for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
             delete threadData[threadNum];
@@ -347,6 +344,7 @@ public:
         cout << "[contractor] checking sanity of generated data ..." << flush;
         _CheckCH<_EdgeData>();
         cout << "ok" << endl;
+        std::cout << "[contractor] max level: " << maxDepth << std::endl;
     }
 
     template< class Edge >
@@ -380,14 +378,10 @@ public:
     }
 
     LevelInformation * GetLevelInformation() {
-    	return _levelInformation;
+        return _levelInformation;
     }
 
 private:
-    double _Timestamp() {
-        return time(NULL);
-    }
-
     bool _ConstructCH( _DynamicGraph* _graph );
 
     void _Dijkstra( NodeID source, const int maxDistance, const unsigned numTargets, _ThreadData* data ){
@@ -408,9 +402,9 @@ private:
             if ( distance > maxDistance )
                 return;
             if( heap.GetData( node ).target ) {
-            	targetsFound++;
-            	if ( targetsFound >= numTargets )
-            		return;
+                targetsFound++;
+                if ( targetsFound >= numTargets )
+                    return;
             }
 
             //iterate over all edges of node
@@ -439,11 +433,14 @@ private:
 
         //perform simulated contraction
         _Contract< true > ( data, node, &stats );
-
+        if(nodeData->depth > maxDepth) {
+#pragma omp critical
+            maxDepth = nodeData->depth;
+        }
         // Result will contain the priority
         if ( stats.edgesDeleted == 0 || stats.originalEdgesDeleted == 0 )
-            return 1 * nodeData->depth;
-        return 2 * ((( double ) stats.edgesAdded ) / stats.edgesDeleted ) + 1 * ((( double ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + 1 * nodeData->depth;
+            return depthFactor * nodeData->depth;
+        return edgeQuotionFactor * ((( double ) stats.edgesAdded ) / stats.edgesDeleted ) + originalQuotientFactor * ((( double ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + depthFactor * nodeData->depth;
     }
 
     template< class Edge >
@@ -483,8 +480,9 @@ private:
             const NodeID source = _graph->GetTarget( inEdge );
             if ( Simulate ) {
                 assert( stats != NULL );
-                stats->edgesDeleted++;
-                stats->originalEdgesDeleted += inData.originalEdges;
+                unsigned factor = (inData.forward && inData.backward ? 2 : 1 );
+                stats->edgesDeleted+=factor;
+                stats->originalEdgesDeleted += factor*inData.originalEdges;
             }
             if ( !inData.backward )
                 continue;
@@ -510,9 +508,9 @@ private:
             }
 
             if( Simulate )
-            	_Dijkstra( source, maxDistance, 500, data );
+                _Dijkstra( source, maxDistance, 500, data );
             else
-            	_Dijkstra( source, maxDistance, 1000, data );
+                _Dijkstra( source, maxDistance, 1000, data );
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _EdgeData& outData = _graph->GetEdgeData( outEdge );
@@ -525,8 +523,8 @@ private:
                 if ( pathDistance <= distance ) {
                     if ( Simulate ) {
                         assert( stats != NULL );
-                        stats->edgesAdded += 2;
-                        stats->originalEdgesAdded += 2 * ( outData.originalEdges + inData.originalEdges );
+                        stats->edgesAdded++;
+                        stats->originalEdgesAdded += ( outData.originalEdges + inData.originalEdges );
                     } else {
                         _ImportEdge newEdge;
                         newEdge.source = source;
@@ -565,12 +563,6 @@ private:
 
         for ( int i = 0, e = ( int ) neighbours.size(); i < e; ++i ) {
             const NodeID u = neighbours[i];
-            //_DynamicGraph::EdgeIterator edge = _graph->FindEdge( u, node );
-            //assert( edge != _graph->EndEdges( u ) );
-            //while ( edge != _graph->EndEdges( u ) ) {
-            //	_graph->DeleteEdge( u, edge );
-            //	edge = _graph->FindEdge( u, node );
-            //}
             _graph->DeleteEdgesTo( u, node );
         }
 
@@ -645,7 +637,10 @@ private:
     LevelInformation * _levelInformation;
     _DynamicGraph* _graph;
     std::vector<NodeID> * _components;
-
+    unsigned edgeQuotionFactor;
+    unsigned originalQuotientFactor;
+    unsigned depthFactor;
+    int maxDepth;
 };
 
 #endif // CONTRACTOR_H_INCLUDED
