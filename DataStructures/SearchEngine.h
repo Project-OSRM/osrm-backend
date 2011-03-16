@@ -29,9 +29,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 struct _HeapData {
-    NodeID parent:31;
-    bool stalled:1;
-    _HeapData( NodeID p ) : parent(p), stalled(false) { }
+    NodeID parent;
+    _HeapData( NodeID p ) : parent(p) { }
 };
 
 struct _PathData {
