@@ -104,7 +104,6 @@ public:
     }
 
     EdgeIterator BeginEdges( const NodeIterator &n ) const {
-        //assert( EndEdges( n ) - EdgeIterator( _nodes[n].firstEdge ) <= 100 );
         return EdgeIterator( _nodes[n].firstEdge );
     }
 
