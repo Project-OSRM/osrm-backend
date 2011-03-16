@@ -30,6 +30,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <google/dense_hash_map>
 #include <google/sparse_hash_map>
 
+struct _SimpleHeapData {
+    NodeID parent;
+    _SimpleHeapData( NodeID p ) : parent(p) { }
+};
+
 template< typename NodeID, typename Key >
 class ArrayStorage {
 public:
