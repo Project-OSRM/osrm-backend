@@ -74,7 +74,7 @@ public:
                 _Relation r;
                 r.type = _Relation::unknown;
                 if(!(*relationCallback)(r))
-                    std::cerr << "[error] relation not parsed" << std::endl;
+                    std::cerr << "[XMLParser] relation not parsed" << std::endl;
             }
             xmlFree( currentName );
         }
