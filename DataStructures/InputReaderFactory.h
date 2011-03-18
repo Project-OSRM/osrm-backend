@@ -77,7 +77,7 @@ xmlTextReaderPtr inputReaderFactory( const char* name )
 
     if(inputName.find(".osm.bz2")!=string::npos)
     {
-        BZ2Context* context = new BZ2Context;
+        BZ2Context* context = new BZ2Context();
         context->error = false;
         context->file = fopen( name, "r" );
         int error;
