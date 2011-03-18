@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
@@ -29,8 +29,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cstring>
 #include <string>
 
-#include <boost/thread.hpp>
-#include <libxml/xmlreader.h>
 using namespace std;
 
 #define VERBOSE(x) x
@@ -47,6 +45,11 @@ typedef unsigned int EdgeWeight;
 static const NodeID SPECIAL_NODEID = UINT_MAX;
 static const EdgeID SPECIAL_EDGEID = UINT_MAX;
 
+#ifndef _ONLYTYPEDEFS
+#include <boost/thread.hpp>
+#include <libxml/xmlreader.h>
+#endif //_ONLYTYPEDEFS
+
 #include "DataStructures/HashTable.h"
 #include "DataStructures/NodeCoords.h"
 typedef NodeCoords<NodeID> NodeInfo;
@@ -57,6 +60,5 @@ typedef NodeCoords<NodeID> NodeInfo;
 #include "Contractor/ContractionCleanup.h"
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 #include "DataStructures/DynamicGraph.h"
-//#include "Contractor/SearchEngine.h"
 
 #endif /* TYPEDEFS_H_ */
