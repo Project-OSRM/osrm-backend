@@ -276,7 +276,7 @@ public:
 			}
 		}
 
-		std::cout << "[debug] " << candidates.size() << " start candidates" << std::endl;
+//		std::cout << "[debug] " << candidates.size() << " start candidates" << std::endl;
 		_Coordinate tmp;
 		double dist = numeric_limits<double>::max();
 		timestamp = get_timestamp();
@@ -284,7 +284,7 @@ public:
 			double r = 0.;
 			double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
 			if(tmpDist < dist) {
-			    std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
+//			    std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
 			    routingStarts->startNode1 = it->start;
 				routingStarts->startNode2 = it->target;
 				routingStarts->startRatio = r;
@@ -303,7 +303,7 @@ public:
 				GetContentsOfFileBucket(fileIndex+i+j, candidates);
 			}
 		}
-        std::cout << "[debug] " << candidates.size() << " target candidates" << std::endl;
+//        std::cout << "[debug] " << candidates.size() << " target candidates" << std::endl;
 		dist = numeric_limits<double>::max();
 		timestamp = get_timestamp();
 		for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++)
@@ -312,7 +312,7 @@ public:
 			double tmpDist = ComputeDistance(targetCoord, it->startCoord, it->targetCoord, tmp, &r);
 			if(tmpDist < dist)
 			{
-			    std::cout << "[debug] target distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
+//			    std::cout << "[debug] target distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
 			    routingStarts->targetNode1 = it->start;
 				routingStarts->targetNode2 = it->target;
 				routingStarts->targetRatio = r;
