@@ -67,14 +67,13 @@ int main (int argc, char *argv[]) {
         exit(-1);
     }
 
-	//todo: check if contractor exists
-	unsigned numberOfThreads = omp_get_num_procs();
-	if(testDataFile("contractor.ini")) {
-		ContractorConfiguration contractorConfig("contractor.ini");
-		if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
-			numberOfThreads = (unsigned)atoi( contractorConfig.GetParameter("Threads").c_str() );
-	}
-	omp_set_num_threads(numberOfThreads);
+    unsigned numberOfThreads = omp_get_num_procs();
+    if(testDataFile("contractor.ini")) {
+        ContractorConfiguration contractorConfig("contractor.ini");
+        if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
+            numberOfThreads = (unsigned)atoi( contractorConfig.GetParameter("Threads").c_str() );
+    }
+    omp_set_num_threads(numberOfThreads);
 
     cout << "preprocessing data from input file " << argv[1];
 #ifdef _GLIBCXX_PARALLEL
@@ -90,13 +89,14 @@ int main (int argc, char *argv[]) {
     }
     vector<ImportEdge> edgeList;
     const NodeID n = readOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
+    unsigned numberOfNodes = int2ExtNodeMap->size();
     in.close();
 
-    cout << "computing turn vector info ..." << flush;
-    TurnInfoFactory * infoFactory = new TurnInfoFactory(n, edgeList);
-    infoFactory->Run();
-    delete infoFactory;
-    cout << "ok" << endl;
+    //    cout << "computing turn vector info ..." << flush;
+    //    TurnInfoFactory * infoFactory = new TurnInfoFactory(n, edgeList);
+    //    infoFactory->Run();
+    //    delete infoFactory;
+    //    cout << "ok" << endl;
 
     char nodeOut[1024];
     char edgeOut[1024];
@@ -114,65 +114,31 @@ int main (int argc, char *argv[]) {
     strcat(ramIndexOut, ".ramIndex");
     strcat(fileIndexOut, ".fileIndex");
     strcat(levelInfoOut, ".levels");
-    ofstream mapOutFile(nodeOut, ios::binary);
-
-    WritableGrid * g = new WritableGrid();
-    cout << "building grid ..." << flush;
-    Percent p(edgeList.size());
-    for(NodeID i = 0; i < edgeList.size(); i++) {
-        p.printIncrement();
-        if(!edgeList[i].isLocatable())
-            continue;
-        int slat = int2ExtNodeMap->at(edgeList[i].source()).lat;
-        int slon = int2ExtNodeMap->at(edgeList[i].source()).lon;
-        int tlat = int2ExtNodeMap->at(edgeList[i].target()).lat;
-        int tlon = int2ExtNodeMap->at(edgeList[i].target()).lon;
-        g->AddEdge(
-                _Edge(
-                        edgeList[i].source(),
-                        edgeList[i].target(),
-                        0,
-                        ((edgeList[i].isBackward() && edgeList[i].isForward()) ? 0 : 1),
-                        edgeList[i].weight()
-                ),
-
-                _Coordinate(slat, slon),
-                _Coordinate(tlat, tlon)
-        );
-    }
-    g->ConstructGrid(ramIndexOut, fileIndexOut);
-    delete g;
-
-    unsigned numberOfNodes = int2ExtNodeMap->size();
-    //Serializing the node map.
-    for(NodeID i = 0; i < int2ExtNodeMap->size(); i++) {
-        mapOutFile.write((char *)&(int2ExtNodeMap->at(i)), sizeof(NodeInfo));
-    }
-    mapOutFile.close();
-    int2ExtNodeMap->clear();
-    delete int2ExtNodeMap;
 
     cout << "initializing contractor ..." << flush;
     Contractor* contractor = new Contractor( n, edgeList );
-
     contractor->Run();
 
-    cout << "checking data sanity ..." << flush;
-    contractor->CheckForAllOrigEdges(edgeList);
-    cout << "ok" << endl;
     LevelInformation * levelInfo = contractor->GetLevelInformation();
+    std::cout << "sorting level info" << std::endl;
+    for(unsigned currentLevel = levelInfo->GetNumberOfLevels(); currentLevel>0; currentLevel--) {
+        std::vector<unsigned> & level = levelInfo->GetLevel(currentLevel-1);
+        std::sort(level.begin(), level.end());
+    }
+
+    std::cout << "writing level info" << std::endl;
     ofstream levelOutFile(levelInfoOut, ios::binary);
     unsigned numberOfLevels = levelInfo->GetNumberOfLevels();
     levelOutFile.write((char *)&numberOfLevels, sizeof(unsigned));
     for(unsigned currentLevel = 0; currentLevel < levelInfo->GetNumberOfLevels(); currentLevel++ ) {
-    	std::vector<unsigned> & level = levelInfo->GetLevel(currentLevel);
-    	unsigned sizeOfLevel = level.size();
-    	levelOutFile.write((char *)&sizeOfLevel, sizeof(unsigned));
-    	for(unsigned currentLevelEntry = 0; currentLevelEntry < sizeOfLevel; currentLevelEntry++) {
-    		unsigned node = level[currentLevelEntry];
-    		assert(node < numberOfNodes);
-    		levelOutFile.write((char *)&node, sizeof(unsigned));
-    	}
+        std::vector<unsigned> & level = levelInfo->GetLevel(currentLevel);
+        unsigned sizeOfLevel = level.size();
+        levelOutFile.write((char *)&sizeOfLevel, sizeof(unsigned));
+        for(unsigned currentLevelEntry = 0; currentLevelEntry < sizeOfLevel; currentLevelEntry++) {
+            unsigned node = level[currentLevelEntry];
+            levelOutFile.write((char *)&node, sizeof(unsigned));
+            assert(node < numberOfNodes);
+        }
     }
     levelOutFile.close();
     std::vector< ContractionCleanup::Edge > contractedEdges;
@@ -187,13 +153,10 @@ int main (int argc, char *argv[]) {
     cleanup->GetData(cleanedEdgeList);
     delete cleanup;
 
-    ofstream edgeOutFile(edgeOut, ios::binary);
-
-    //Serializing the edge list.
     cout << "Serializing edges " << flush;
-    p.reinit(cleanedEdgeList.size());
-    for(std::vector< InputEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++)
-    {
+    ofstream edgeOutFile(edgeOut, ios::binary);
+    Percent p(cleanedEdgeList.size());
+    for(std::vector< InputEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++) {
         p.printIncrement();
         int distance= it->data.distance;
         assert(distance > 0);
@@ -227,6 +190,24 @@ int main (int argc, char *argv[]) {
     }
     edgeOutFile.close();
     cleanedEdgeList.clear();
+
+    std::cout << "writing node map ..." << std::flush;
+    ofstream mapOutFile(nodeOut, ios::binary);
+
+    for(NodeID i = 0; i < int2ExtNodeMap->size(); i++) {
+
+        mapOutFile.write((char *)&(int2ExtNodeMap->at(i)), sizeof(NodeInfo));
+    }
+    mapOutFile.close();
+    std::cout << "ok" << std::endl;
+
+    WritableGrid * writeableGrid = new WritableGrid();
+    cout << "building grid ..." << flush;
+    writeableGrid->ConstructGrid(edgeList, int2ExtNodeMap, ramIndexOut, fileIndexOut);
+    delete writeableGrid;
+
+    int2ExtNodeMap->clear();
+    delete int2ExtNodeMap;
 
     cout << "finished" << endl;
 }

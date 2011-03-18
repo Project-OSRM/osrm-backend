@@ -36,7 +36,7 @@ public:
     }
     ~XMLParser() {}
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*relationCallbackPointer)(_Relation), bool (*wayCallbackPointer)(_Way) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*relationCallbackPointer)(_Relation), bool (*wayCallbackPointer)(_Way), bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
         relationCallback = *relationCallbackPointer;

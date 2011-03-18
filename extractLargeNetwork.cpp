@@ -47,6 +47,7 @@ unsigned globalRelationCounter = 0;
 ExtractorCallbacks * extractCallBacks;
 
 bool nodeFunction(_Node n);
+bool adressFunction(_Node n, HashTable<std::string, std::string> keyVals);
 bool relationFunction(_Relation r);
 bool wayFunction(_Way w);
 
@@ -76,12 +77,14 @@ int main (int argc, char *argv[]) {
             outputFileName.append(".osrm");
         }
     }
+    std::string adressFileName(outputFileName);
 
     STXXLNodeIDVector * usedNodes       = new STXXLNodeIDVector();
     STXXLNodeVector   * allNodes        = new STXXLNodeVector();
     STXXLNodeVector   * confirmedNodes  = new STXXLNodeVector();
     STXXLEdgeVector   * allEdges        = new STXXLEdgeVector();
     STXXLEdgeVector   * confirmedEdges  = new STXXLEdgeVector();
+    STXXLAddressVector* adressVector    = new STXXLAddressVector();
     STXXLStringVector * nameVector      = new STXXLStringVector();
 
     NodeMap * nodeMap = new NodeMap();
@@ -95,14 +98,15 @@ int main (int argc, char *argv[]) {
     nodeMap->set_empty_key(UINT_MAX);
     stringMap->set_empty_key(GetRandomString());
     stringMap->insert(std::make_pair("", 0));
-    extractCallBacks = new ExtractorCallbacks(allNodes, usedNodes, allEdges,  nameVector, settings, stringMap);
+    extractCallBacks = new ExtractorCallbacks(allNodes, usedNodes, allEdges,  nameVector, adressVector, settings, stringMap);
 
     BaseParser<_Node, _Relation, _Way> * parser;
-    if(isPBF)
+    if(isPBF) {
         parser = new PBFParser(argv[1]);
-    else
+    } else {
         parser = new XMLParser(argv[1]);
-    parser->RegisterCallbacks(&nodeFunction, &relationFunction, &wayFunction);
+    }
+    parser->RegisterCallbacks(&nodeFunction, &relationFunction, &wayFunction, &adressFunction);
     if(parser->Init()) {
         parser->Parse();
     } else {
@@ -116,6 +120,7 @@ int main (int argc, char *argv[]) {
         std::cout << "[info] no. of used nodes:    " << usedNodes->size()     << std::endl;
         std::cout << "[info] raw no. of edges:     " << allEdges->size()      << std::endl;
         std::cout << "[info] raw no. of relations: " << globalRelationCounter << std::endl;
+        std::cout << "[info] raw no. of addresses: " << adressVector->size()  << std::endl;
 
         std::cout << "[info] parsing through input file took " << get_timestamp() - time << "seconds" << std::endl;
         time = get_timestamp();
@@ -124,6 +129,8 @@ int main (int argc, char *argv[]) {
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
         stxxl::sort(usedNodes->begin(), usedNodes->end(), Cmp(), memory_to_use);
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        std::cout << "[debug] highest node id: " << usedNodes->back() << std::endl;
+
         time = get_timestamp();
         std::cout << "[extractor] Erasing duplicate entries ... " << std::flush;
         stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodes->begin(),usedNodes->end() ) ;
@@ -159,6 +166,7 @@ int main (int argc, char *argv[]) {
             }
         }
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "[debug] no of entries in nodemap" << nodeMap->size() << std::endl;
         time = get_timestamp();
 
         cout << "[extractor] Writing used nodes        ... " << flush;
@@ -175,14 +183,12 @@ int main (int argc, char *argv[]) {
             assert(eit->type > -1 || eit->speed != -1);
 
             NodeMap::iterator startit = nodeMap->find(eit->start);
-            if(startit == nodeMap->end())
-            {
+            if(startit == nodeMap->end()) {
                 continue;
             }
             NodeMap::iterator targetit = nodeMap->find(eit->target);
 
-            if(targetit == nodeMap->end())
-            {
+            if(targetit == nodeMap->end()) {
                 continue;
             }
             confirmedEdges->push_back(*eit);
@@ -242,7 +248,6 @@ int main (int argc, char *argv[]) {
         unsigned currentNameIndex = 0;
         unsigned elementCounter(0);
         for(STXXLStringVector::iterator it = nameVector->begin(); it != nameVector->end(); it++) {
-//        for(unsigned i = 0; i < nameVector->size(); i++) {
             nameIndex->at(elementCounter) = currentNameIndex;
             currentNameIndex += it->length();
             elementCounter++;
@@ -263,6 +268,17 @@ int main (int argc, char *argv[]) {
         delete nameIndex;
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
+        time = get_timestamp();
+        std::cout << "[extractor] writing address list      ... " << std::flush;
+
+        adressFileName.append(".address");
+        std::ofstream addressOutFile(adressFileName.c_str());
+        for(STXXLAddressVector::iterator it = adressVector->begin(); it != adressVector->end(); it++) {
+            addressOutFile << it->node.id << "|" << it->node.lat << "|" << it->node.lon << "|" << it->city << "|" << it->street << "|" << it->housenumber << "|" << it->state << "|" << it->country << "\n";
+        }
+        addressOutFile.close();
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+
     } catch ( const std::exception& e ) {
         std::cerr <<  "Caught Execption:" << e.what() << std::endl;
         return false;
@@ -277,6 +293,7 @@ int main (int argc, char *argv[]) {
     delete nodeMap;
     delete confirmedNodes;
     delete confirmedEdges;
+    delete adressVector;
     delete parser;
     cout << "[extractor] finished." << endl;
     return 0;
@@ -286,6 +303,12 @@ bool nodeFunction(_Node n) {
     extractCallBacks->nodeFunction(n);
     return true;
 }
+
+bool adressFunction(_Node n, HashTable<std::string, std::string> keyVals){
+    extractCallBacks->adressFunction(n, keyVals);
+    return true;
+}
+
 bool relationFunction(_Relation r) {
     globalRelationCounter++;
     return true;

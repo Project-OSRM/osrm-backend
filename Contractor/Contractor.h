@@ -132,7 +132,7 @@ public:
             edge.data.backwardTurn = i->isBackwardTurn();
             edges.push_back( edge );
         }
-        std::vector< InputEdge >().swap( inputEdges ); //free memory
+//        std::vector< InputEdge >().swap( inputEdges ); //free memory
 #ifdef _GLIBCXX_PARALLEL
         __gnu_parallel::sort( edges.begin(), edges.end() );
 #else
@@ -388,24 +388,15 @@ private:
 
         _Heap& heap = data->heap;
 
-        int nodes = 0;
-        unsigned targetsFound = 0;
+        unsigned nodes = 0;
         while ( heap.Size() > 0 ) {
             const NodeID node = heap.DeleteMin();
             const int distance = heap.GetKey( node );
-            //const int hops = heap.GetData( node ).hops;
-            if ( nodes++ > 1000 )
+            if ( nodes++ > numTargets )
                 return;
-            //if ( hops >= 5 )
-            //	return;
             //Destination settled?
             if ( distance > maxDistance )
                 return;
-            if( heap.GetData( node ).target ) {
-                targetsFound++;
-                if ( targetsFound >= numTargets )
-                    return;
-            }
 
             //iterate over all edges of node
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {

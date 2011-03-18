@@ -21,27 +21,36 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GRIDEDGE_H_
 #define GRIDEDGE_H_
 
-struct GridEdgeData {
-    GridEdgeData(_Edge e, unsigned f, unsigned r) : edge(e), fileIndex(f), ramIndex(r) {}
-    GridEdgeData() {}
-    _Edge edge;
+struct _GridEdge {
+    _GridEdge(NodeID s, NodeID t, _Coordinate sc, _Coordinate tc) : start(s), target(t), startCoord(sc), targetCoord(tc) {}
+    _GridEdge() {}
+    NodeID start;
+    NodeID target;
+    _Coordinate startCoord;
+    _Coordinate targetCoord;
+};
+
+struct GridEntry {
+    GridEntry() {}
+    GridEntry(_GridEdge e, unsigned f, unsigned r) : edge(e), fileIndex(f), ramIndex(r) {}
+    _GridEdge edge;
     unsigned fileIndex;
     unsigned ramIndex;
-    bool operator< ( const GridEdgeData& right ) const {
+    bool operator< ( const GridEntry& right ) const {
         if(right.edge.start != edge.start)
             return right.edge.start < edge.start;
         if(right.edge.target != edge.target)
             return right.edge.target < edge.target;
         return false;
     }
-    bool operator==( const GridEdgeData& right ) const {
+    bool operator==( const GridEntry& right ) const {
         return right.edge.start == edge.start && right.edge.target == edge.target;
     }
 };
 
 struct CompareGridEdgeDataByFileIndex
 {
-    bool operator ()  (const GridEdgeData & a, const GridEdgeData & b) const
+    bool operator ()  (const GridEntry & a, const GridEntry & b) const
     {
         return a.fileIndex < b.fileIndex;
     }
@@ -49,21 +58,21 @@ struct CompareGridEdgeDataByFileIndex
 
 struct CompareGridEdgeDataByRamIndex
 {
-    typedef GridEdgeData value_type;
+    typedef GridEntry value_type;
 
-    bool operator ()  (const GridEdgeData & a, const GridEdgeData & b) const
+    bool operator ()  (const GridEntry & a, const GridEntry & b) const
     {
         return a.ramIndex < b.ramIndex;
     }
     value_type max_value()
     {
-        GridEdgeData e;
+        GridEntry e;
         e.ramIndex = (1024*1024) - 1;
         return e;
     }
     value_type min_value()
     {
-        GridEdgeData e;
+        GridEntry e;
         e.ramIndex = 0;
         return e;
     }

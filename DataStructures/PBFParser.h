@@ -62,10 +62,11 @@ public:
         groupCount = 0;
     }
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*relationCallbackPointer)(_Relation), bool (*wayCallbackPointer)(_Way) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*relationCallbackPointer)(_Relation), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
         relationCallback = *relationCallbackPointer;
+        addressCallback = *addressCallbackPointer;
         return true;
     }
 
@@ -145,6 +146,7 @@ private:
         int m_lastDenseLongitude = 0;
 
         for(int i = 0; i < dense.id_size(); i++) {
+            HashTable<std::string, std::string> keyVals;
             m_lastDenseID += dense.id( i );
             m_lastDenseLatitude += dense.lat( i );
             m_lastDenseLongitude += dense.lon( i );
@@ -158,13 +160,17 @@ private:
                     denseTagIndex++;
                     break;
                 }
-                //int keyValue = dense.keys_vals ( denseTagIndex+1 );
+                int keyValue = dense.keys_vals ( denseTagIndex+1 );
                 /* Key/Value Pairs are known from here on */
                 //              std::cout << "[debug] node: " << n.id << std::endl;
                 //              std::cout << "[debug]  key = " << PBFprimitiveBlock.stringtable().s(tagValue).data() << ", value: " << PBFprimitiveBlock.stringtable().s(keyValue).data() << std::endl;
-
+                std::string key = PBFprimitiveBlock.stringtable().s(tagValue).data();
+                std::string value = PBFprimitiveBlock.stringtable().s(keyValue).data();
+                keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
+            if(!(*addressCallback)(n, keyVals))
+                std::cerr << "[PBFParser] adress not parsed" << std::endl;
 
             if(!(*nodeCallback)(n))
                 std::cerr << "[PBFParser] dense node not parsed" << std::endl;
@@ -287,6 +293,7 @@ private:
         ret = inflate( &compressedDataStream, Z_FINISH );
         if ( ret != Z_STREAM_END ) {
             std::cerr << "[error] failed to inflate zlib stream" << std::endl;
+            std::cerr << "[error] Error type: " << ret << std::endl;
             return false;
         }
 
@@ -413,7 +420,7 @@ private:
     bool (*nodeCallback)(_Node);
     bool (*wayCallback)(_Way);
     bool (*relationCallback)(_Relation);
-
+    bool (*addressCallback)(_Node, HashTable<std::string, std::string>);
     /* the input stream to parse */
     std::fstream input;
 };

@@ -21,11 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef NNGRID_H_
 #define NNGRID_H_
 
-#include <fstream>
-
+#include <algorithm>
 #include <cassert>
-#include <limits>
 #include <cmath>
+#include <fstream>
+#include <limits>
 #include <vector>
 #include <stxxl.h>
 
@@ -37,12 +37,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Percent.h"
 #include "PhantomNodes.h"
 #include "Util.h"
-
 #include "StaticGraph.h"
 
 namespace NNGrid{
-static unsigned getFileIndexForLatLon(const int lt, const int ln)
-{
+static unsigned GetFileIndexForLatLon(const int lt, const int ln) {
 	double lat = lt/100000.;
 	double lon = ln/100000.;
 
@@ -60,7 +58,7 @@ static unsigned getFileIndexForLatLon(const int lt, const int ln)
 	return fileIndex;
 }
 
-static unsigned getRAMIndexFromFileIndex(const int fileIndex) {
+static unsigned GetRAMIndexFromFileIndex(const int fileIndex) {
 	unsigned fileLine = fileIndex / 32768;
 	fileLine = fileLine / 32;
 	fileLine = fileLine * 1024;
@@ -75,8 +73,7 @@ static inline int signum(int x){
 	return (x > 0) ? 1 : (x < 0) ? -1 : 0;
 }
 
-static void bresenham(int xstart,int ystart,int xend,int yend, std::vector<std::pair<unsigned, unsigned> > &indexList)
-{
+static void GetIndicesByBresenhamsAlgorithm(int xstart,int ystart,int xend,int yend, std::vector<std::pair<unsigned, unsigned> > &indexList) {
 	int x, y, t, dx, dy, incx, incy, pdx, pdy, ddx, ddy, es, el, err;
 
 	dx = xend - xstart;
@@ -87,13 +84,11 @@ static void bresenham(int xstart,int ystart,int xend,int yend, std::vector<std::
 	if(dx<0) dx = -dx;
 	if(dy<0) dy = -dy;
 
-	if (dx>dy)
-	{
+	if (dx>dy) {
 		pdx=incx; pdy=0;
 		ddx=incx; ddy=incy;
 		es =dy;   el =dx;
-	} else
-	{
+	} else {
 		pdx=0;    pdy=incy;
 		ddx=incx; ddy=incy;
 		es =dx;   el =dy;
@@ -103,33 +98,29 @@ static void bresenham(int xstart,int ystart,int xend,int yend, std::vector<std::
 	err = el/2;
 	{
 		int fileIndex = (y-1)*32768 + x;
-		int ramIndex = getRAMIndexFromFileIndex(fileIndex);
+		int ramIndex = GetRAMIndexFromFileIndex(fileIndex);
 		indexList.push_back(std::make_pair(fileIndex, ramIndex));
 	}
 
-	for(t=0; t<el; ++t)
-	{
+	for(t=0; t<el; ++t) {
 		err -= es;
-		if(err<0)
-		{
+		if(err<0) {
 			err += el;
 			x += ddx;
 			y += ddy;
-		} else
-		{
+		} else {
 			x += pdx;
 			y += pdy;
 		}
 		{
 			int fileIndex = (y-1)*32768 + x;
-			int ramIndex = getRAMIndexFromFileIndex(fileIndex);
+			int ramIndex = GetRAMIndexFromFileIndex(fileIndex);
 			indexList.push_back(std::make_pair(fileIndex, ramIndex));
 		}
 	}
 }
 
-static void getListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<std::pair<unsigned, unsigned> > &indexList)
-{
+static void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<std::pair<unsigned, unsigned> > &indexList) {
 	double lat1 = start.lat/100000.;
 	double lon1 = start.lon/100000.;
 
@@ -142,7 +133,7 @@ static void getListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& 
 	double x2 = ( lon2 + 180.0 ) / 360.0;
 	double y2 = ( lat2 + 90.0 ) / 180.0;
 
-	bresenham(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
+	GetIndicesByBresenhamsAlgorithm(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
 }
 
 template<bool WriteAccess = false>
@@ -161,7 +152,7 @@ class NNGrid {
 public:
 	ThreadLookupTable threadLookup;
 
-	NNGrid() { ramIndexTable.resize((1024*1024), UINT_MAX); if( WriteAccess) { entries = new stxxl::vector<GridEdgeData>(); }}
+	NNGrid() { ramIndexTable.resize((1024*1024), UINT_MAX); if( WriteAccess) { entries = new stxxl::vector<GridEntry>(); }}
 
 	NNGrid(const char* rif, const char* iif, unsigned numberOfThreads = omp_get_num_procs()) {
 		ramIndexTable.resize((1024*1024), UINT_MAX);
@@ -175,7 +166,6 @@ public:
 
 	~NNGrid() {
 		if(ramInFile.is_open()) ramInFile.close();
-//		if(indexInFile.is_open()) indexInFile.close();
 
 		if (WriteAccess) {
 			delete entries;
@@ -185,14 +175,13 @@ public:
 			delete indexFileStreams[i];
 		}
 		threadLookup.EraseAll();
+		ramIndexTable.clear();
 	}
 
 	void OpenIndexFiles() {
 		assert(ramInFile.is_open());
-//		assert(indexInFile.is_open());
 
-		for(int i = 0; i < 1024*1024; i++)
-		{
+		for(int i = 0; i < 1024*1024; i++) {
 			unsigned temp;
 			ramInFile.read((char*)&temp, sizeof(unsigned));
 			ramIndexTable[i] = temp;
@@ -200,21 +189,26 @@ public:
 		ramInFile.close();
 	}
 
-	void AddEdge(_Edge edge, _Coordinate start, _Coordinate target)
-	{
-		edge.startCoord = start;
-		edge.targetCoord = target;
+	template<typename EdgeT, typename NodeInfoT>
+	void ConstructGrid(std::vector<EdgeT> & edgeList, vector<NodeInfoT> * int2ExtNodeMap, char * ramIndexOut, char * fileIndexOut) {
+	    Percent p(edgeList.size());
+	    for(NodeID i = 0; i < edgeList.size(); i++) {
+	            p.printIncrement();
+	            if( edgeList[i].isLocatable() == false )
+	                continue;
+	            EdgeT edge = edgeList[i];
 
-		std::vector<std::pair<unsigned, unsigned> > indexList;
-		getListOfIndexesForEdgeAndGridSize(start, target, indexList);
-		for(unsigned i = 0; i < indexList.size(); i++)
-		{
-			entries->push_back(GridEdgeData(edge, indexList[i].first, indexList[i].second));
-		}
-	}
-
-	void ConstructGrid(char * ramIndexOut, char * fileIndexOut)
-	{
+	            int slat = int2ExtNodeMap->at(edge.source()).lat;
+	            int slon = int2ExtNodeMap->at(edge.source()).lon;
+	            int tlat = int2ExtNodeMap->at(edge.target()).lat;
+	            int tlon = int2ExtNodeMap->at(edge.target()).lon;
+	            AddEdge( _GridEdge(
+	                    edgeList[i].source(),
+	                    edgeList[i].target(),
+	                    _Coordinate(slat, slon),
+	                    _Coordinate(tlat, tlon) )
+	            );
+	        }
 		double timestamp = get_timestamp();
 		//create index file on disk, old one is over written
 		indexOutFile.open(fileIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
@@ -222,18 +216,16 @@ public:
 		//sort entries
 		stxxl::sort(entries->begin(), entries->end(), CompareGridEdgeDataByRamIndex(), 1024*1024*1024);
 		cout << "ok in " << (get_timestamp() - timestamp) << "s" << endl;
-		std::vector<GridEdgeData> entriesInFileWithRAMSameIndex;
+		std::vector<GridEntry> entriesInFileWithRAMSameIndex;
 		unsigned indexInRamTable = entries->begin()->ramIndex;
 		unsigned lastPositionInIndexFile = 0;
 		unsigned numberOfUsedCells = 0;
 		unsigned maxNumberOfRAMCellElements = 0;
 		cout << "writing data ..." << flush;
-		Percent p(entries->size());
-		for(stxxl::vector<GridEdgeData>::iterator vt = entries->begin(); vt != entries->end(); vt++)
-		{
+		p.reinit(entries->size());
+		for(stxxl::vector<GridEntry>::iterator vt = entries->begin(); vt != entries->end(); vt++) {
 			p.printIncrement();
-			if(vt->ramIndex != indexInRamTable)
-			{
+			if(vt->ramIndex != indexInRamTable) {
 				unsigned numberOfBytesInCell = FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
 				if(entriesInFileWithRAMSameIndex.size() > maxNumberOfRAMCellElements)
 					maxNumberOfRAMCellElements = entriesInFileWithRAMSameIndex.size();
@@ -253,9 +245,8 @@ public:
 
 		assert(entriesInFileWithRAMSameIndex.size() == 0);
 
-		for(int i = 0; i < 1024*1024; i++)
-		{
-			if(ramIndexTable[i] != UINT_MAX){
+		for(int i = 0; i < 1024*1024; i++) {
+			if(ramIndexTable[i] != UINT_MAX) {
 				numberOfUsedCells--;
 			}
 		}
@@ -272,25 +263,29 @@ public:
 		ramFile.close();
 	}
 
-	bool FindRoutingStarts(const _Coordinate startCoord, const _Coordinate targetCoord, PhantomNodes * routingStarts) {
-		unsigned fileIndex = getFileIndexForLatLon(startCoord.lat, startCoord.lon);
+	bool FindRoutingStarts(const _Coordinate& startCoord, const _Coordinate& targetCoord, PhantomNodes * routingStarts) {
+
+	    /** search for point on edge close to source */
+		unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
 		std::vector<_Edge> candidates;
 		double timestamp = get_timestamp();
-		for(int j = -32768; j < (32768+1); j+=32768){
-			for(int i = -1; i < 2; i++){
+
+		for(int j = -32768; j < (32768+1); j+=32768) {
+		    for(int i = -1; i < 2; i++){
 				GetContentsOfFileBucket(fileIndex+i+j, candidates);
 			}
 		}
+
+		std::cout << "[debug] " << candidates.size() << " start candidates" << std::endl;
 		_Coordinate tmp;
 		double dist = numeric_limits<double>::max();
 		timestamp = get_timestamp();
-		for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++)
-		{
+		for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
 			double r = 0.;
 			double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
-			if(tmpDist < dist)
-			{
-				routingStarts->startNode1 = it->start;
+			if(tmpDist < dist) {
+			    std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
+			    routingStarts->startNode1 = it->start;
 				routingStarts->startNode2 = it->target;
 				routingStarts->startRatio = r;
 				dist = tmpDist;
@@ -298,14 +293,17 @@ public:
 				routingStarts->startCoord.lon = tmp.lon;
 			}
 		}
-		fileIndex = getFileIndexForLatLon(targetCoord.lat, targetCoord.lon);
-		candidates.clear();
+        candidates.clear();
+
+		/** search for point on edge close to target */
+		fileIndex = GetFileIndexForLatLon(targetCoord.lat, targetCoord.lon);
 		timestamp = get_timestamp();
-		for(int j = -32768; j < (32768+1); j+=32768){
+		for(int j = -32768; j < (32768+1); j+=32768) {
 			for(int i = -1; i < 2; i++){
 				GetContentsOfFileBucket(fileIndex+i+j, candidates);
 			}
 		}
+        std::cout << "[debug] " << candidates.size() << " target candidates" << std::endl;
 		dist = numeric_limits<double>::max();
 		timestamp = get_timestamp();
 		for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++)
@@ -314,7 +312,8 @@ public:
 			double tmpDist = ComputeDistance(targetCoord, it->startCoord, it->targetCoord, tmp, &r);
 			if(tmpDist < dist)
 			{
-				routingStarts->targetNode1 = it->start;
+			    std::cout << "[debug] target distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
+			    routingStarts->targetNode1 = it->start;
 				routingStarts->targetNode2 = it->target;
 				routingStarts->targetRatio = r;
 				dist = tmpDist;
@@ -325,25 +324,22 @@ public:
 		return true;
 	}
 
-	_Coordinate FindNearestPointOnEdge(const _Coordinate& inputCoordinate)
-	{
-		unsigned fileIndex = getFileIndexForLatLon(inputCoordinate.lat, inputCoordinate.lon);
+	_Coordinate FindNearestPointOnEdge(const _Coordinate& inputCoordinate) {
+	    unsigned fileIndex = GetFileIndexForLatLon(inputCoordinate.lat, inputCoordinate.lon);
 		std::vector<_Edge> candidates;
 		double timestamp = get_timestamp();
-		for(int j = -32768; j < (32768+1); j+=32768){
-			for(int i = -1; i < 2; i++){
+		for(int j = -32768; j < (32768+1); j+=32768) {
+			for(int i = -1; i < 2; i++) {
 				GetContentsOfFileBucket(fileIndex+i+j, candidates);
 			}
 		}
 		_Coordinate nearest(numeric_limits<int>::max(), numeric_limits<int>::max()), tmp;
 		double dist = numeric_limits<double>::max();
 		timestamp = get_timestamp();
-		for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++)
-		{
+		for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
 			double r = 0.;
 			double tmpDist = ComputeDistance(inputCoordinate, it->startCoord, it->targetCoord, tmp, &r);
-			if(tmpDist < dist)
-			{
+			if(tmpDist < dist) {
 				dist = tmpDist;
 				nearest = tmp;
 			}
@@ -352,7 +348,7 @@ public:
 	}
 
 private:
-	unsigned FillCell(std::vector<GridEdgeData>& entriesWithSameRAMIndex, unsigned fileOffset )
+	unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset )
 	{
 		vector<char> * tmpBuffer = new vector<char>();
 		tmpBuffer->resize(32*32*4096,0);
@@ -388,13 +384,13 @@ private:
 
 		//sort & unique
 		std::sort(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end(), CompareGridEdgeDataByFileIndex());
-		std::vector<GridEdgeData>::iterator uniqueEnd = std::unique(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end());
+		std::vector<GridEntry>::iterator uniqueEnd = std::unique(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end());
 
 		//traverse each file bucket and write its contents to disk
-		std::vector<GridEdgeData> entriesWithSameFileIndex;
+		std::vector<GridEntry> entriesWithSameFileIndex;
 		unsigned fileIndex = entriesWithSameRAMIndex.begin()->fileIndex;
 
-		for(std::vector<GridEdgeData>::iterator it = entriesWithSameRAMIndex.begin(); it != uniqueEnd; it++)
+		for(std::vector<GridEntry>::iterator it = entriesWithSameRAMIndex.begin(); it != uniqueEnd; it++)
 		{
 			assert(cellMap->find(it->fileIndex) != cellMap->end() ); //asserting that file index belongs to cell index
 			if(it->fileIndex != fileIndex)
@@ -402,21 +398,21 @@ private:
 				// start in cellIndex vermerken
 				int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
 				int localCellIndex = cellMap->find(localFileIndex)->second;
-				/*int localRamIndex = */getRAMIndexFromFileIndex(localFileIndex);
+				/*int localRamIndex = */GetRAMIndexFromFileIndex(localFileIndex);
 				assert(cellMap->find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap->end());
 
 				cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
 				indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
 				entriesWithSameFileIndex.clear(); //todo: in flushEntries erledigen.
 			}
-			GridEdgeData data = *it;
+			GridEntry data = *it;
 			entriesWithSameFileIndex.push_back(data);
 			fileIndex = it->fileIndex;
 		}
 		assert(cellMap->find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap->end());
 		int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
 		int localCellIndex = cellMap->find(localFileIndex)->second;
-		/*int localRamIndex = */getRAMIndexFromFileIndex(localFileIndex);
+		/*int localRamIndex = */GetRAMIndexFromFileIndex(localFileIndex);
 
 		cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
 		indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
@@ -442,7 +438,7 @@ private:
 		return numberOfWrittenBytes;
 	}
 
-	unsigned FlushEntriesWithSameFileIndexToBuffer(const std::vector<GridEdgeData> &vectorWithSameFileIndex, vector<char> * tmpBuffer, const unsigned index)
+	unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> * tmpBuffer, const unsigned index)
 	{
 		tmpBuffer->resize(tmpBuffer->size()+(sizeof(NodeID)+sizeof(NodeID)+4*sizeof(int)+sizeof(unsigned))*vectorWithSameFileIndex.size() );
 		unsigned counter = 0;
@@ -454,7 +450,9 @@ private:
 			assert( vectorWithSameFileIndex[i].ramIndex == vectorWithSameFileIndex[i+1].ramIndex );
 		}
 
-		for(std::vector<GridEdgeData>::const_iterator et = vectorWithSameFileIndex.begin(); et != vectorWithSameFileIndex.end(); et++)
+        sort( vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end() );
+        std::vector<GridEntry>::const_iterator newEnd = unique(vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end());
+		for(std::vector<GridEntry>::const_iterator et = vectorWithSameFileIndex.begin(); et != newEnd; et++)
 		{
 			char * start = (char *)&et->edge.start;
 			for(unsigned i = 0; i < sizeof(NodeID); i++)
@@ -502,11 +500,9 @@ private:
 		return counter;
 	}
 
-	void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_Edge>& result)
-	{
-//		cout << "thread: " << boost::this_thread::get_id() << ", hash: " << boost_thread_id_hash(boost::this_thread::get_id()) << ", id: " << threadLookup.table.Find(boost_thread_id_hash(boost::this_thread::get_id())) << endl;
+	void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_Edge>& result) {
 		unsigned threadID = threadLookup.Find(boost_thread_id_hash(boost::this_thread::get_id()));
-		unsigned ramIndex = getRAMIndexFromFileIndex(fileIndex);
+		unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
 		unsigned startIndexInFile = ramIndexTable[ramIndex];
 //		ifstream indexInFile( indexFileStreams[threadID]->stream );
 		if(startIndexInFile == UINT_MAX){
@@ -576,9 +572,16 @@ private:
 		delete cellMap;
 	}
 
+    void AddEdge(_GridEdge edge) {
+        std::vector<std::pair<unsigned, unsigned> > indexList;
+        GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
+        for(unsigned i = 0; i < indexList.size(); i++) {
+            entries->push_back(GridEntry(edge, indexList[i].first, indexList[i].second));
+        }
+    }
+
 	/* More or less from monav project, thanks */
-	double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r)
-	{
+	double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
 		const double vY = (double)target.lon - (double)source.lon;
 		const double vX = (double)target.lat - (double)source.lat;
 
@@ -587,18 +590,17 @@ private:
 
 		const double lengthSquared = vX * vX + vY * vY;
 
-		if(lengthSquared != 0)
-		{
+		if(lengthSquared != 0) {
 			*r = (vX * wX + vY * wY) / lengthSquared;
 		}
 		double percentage = *r;
-		if(*r <=0 ){
+		if(*r <=0 ) {
 			nearest.lat = source.lat;
 			nearest.lon = source.lon;
 			percentage = 0;
 			return wY * wY + wX * wX;
 		}
-		if( *r>= 1){
+		if( *r>= 1) {
 			nearest.lat = target.lat;
 			nearest.lon = target.lon;
 			percentage = 1;
@@ -615,10 +617,9 @@ private:
 	}
 
 	ofstream indexOutFile;
-//	ifstream indexInFile;
 	ifstream ramInFile;
 	std::vector < _ThreadData* > indexFileStreams;
-	stxxl::vector<GridEdgeData> * entries;
+	stxxl::vector<GridEntry> * entries;
 	std::vector<unsigned> ramIndexTable; //4 MB for first level index in RAM
 };
 }

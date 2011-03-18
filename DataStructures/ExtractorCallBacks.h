@@ -27,7 +27,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef stxxl::vector<NodeID> STXXLNodeIDVector;
 typedef stxxl::vector<_Node> STXXLNodeVector;
 typedef stxxl::vector<_Edge> STXXLEdgeVector;
+typedef stxxl::vector<_Address> STXXLAddressVector;
 typedef stxxl::vector<string> STXXLStringVector;
+
 
 class ExtractorCallbacks{
 private:
@@ -35,15 +37,17 @@ private:
     STXXLNodeIDVector * usedNodes;
     STXXLEdgeVector * allEdges;
     STXXLStringVector * nameVector;
+    STXXLAddressVector * addressVector;
     Settings settings;
     StringMap * stringMap;
 
 public:
-    ExtractorCallbacks(STXXLNodeVector * aNodes, STXXLNodeIDVector * uNodes, STXXLEdgeVector * aEdges,  STXXLStringVector * nVector, Settings s, StringMap * strMap){
+    ExtractorCallbacks(STXXLNodeVector * aNodes, STXXLNodeIDVector * uNodes, STXXLEdgeVector * aEdges,  STXXLStringVector * nVector, STXXLAddressVector * adrVector, Settings s, StringMap * strMap){
         allNodes = aNodes;
         usedNodes = uNodes;
         allEdges = aEdges;
         nameVector = nVector;
+        addressVector = adrVector;
         settings = s;
         stringMap = strMap;
     }
@@ -56,14 +60,33 @@ public:
         delete stringMap;
     }
 
+    bool adressFunction(_Node n, HashTable<std::string, std::string> &keyVals) {
+        std::string housenumber(keyVals.Find("addr:housenumber"));
+        std::string housename(keyVals.Find("addr:housename"));
+        std::string street(keyVals.Find("addr:street"));
+        std::string state(keyVals.Find("addr:state"));
+        std::string country(keyVals.Find("addr:country"));
+        std::string postcode(keyVals.Find("addr:postcode"));
+        std::string city(keyVals.Find("addr:city"));
+
+        if(housenumber != "" || housename != "" || street != "") {
+            if(housenumber == "")
+                housenumber = housename;
+            addressVector->push_back(_Address(n, housenumber, street, state, country, postcode, city));
+        }
+        return true;
+    }
+
     bool nodeFunction(_Node &n) {
         allNodes->push_back(n);
         return true;
     }
+
     bool relationFunction(_Relation &r) {
         //do nothing;
         return true;
     }
+
     bool wayFunction(_Way &w) {
         std::string highway( w.keyVals.Find("highway") );
         std::string name( w.keyVals.Find("name") );

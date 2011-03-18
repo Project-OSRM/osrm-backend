@@ -53,16 +53,13 @@ struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
     _Node() {}
 
-    static _Node min_value()
-    {
+    static _Node min_value() {
         return _Node(0,0,0);
     }
-    static _Node max_value()
-    {
+    static _Node max_value() {
         return _Node(numeric_limits<int>::max(), numeric_limits<int>::max(), numeric_limits<unsigned int>::max());
     }
-    NodeID key() const
-    {
+    NodeID key() const {
         return id;
     }
 };
@@ -95,6 +92,26 @@ struct _Way {
     bool access:1;
     short type;
     HashTable<std::string, std::string> keyVals;
+};
+
+struct _Address {
+    _Address() {}
+    _Address(_Node n, std::string h, std::string str, std::string sta, std::string p, std::string ci, std::string co) {
+        node = n;
+        housenumber = h;
+        street = str;
+        state = sta;
+        postcode = p;
+        city = ci;
+        country = co;
+    }
+    _Node node;
+    std::string housenumber;
+    std::string street;
+    std::string state;
+    std::string postcode;
+    std::string city;
+    std::string country;
 };
 
 struct _Relation {
