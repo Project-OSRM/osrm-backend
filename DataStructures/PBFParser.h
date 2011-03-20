@@ -161,9 +161,6 @@ private:
                     break;
                 }
                 int keyValue = dense.keys_vals ( denseTagIndex+1 );
-                /* Key/Value Pairs are known from here on */
-                //              std::cout << "[debug] node: " << n.id << std::endl;
-                //              std::cout << "[debug]  key = " << PBFprimitiveBlock.stringtable().s(tagValue).data() << ", value: " << PBFprimitiveBlock.stringtable().s(keyValue).data() << std::endl;
                 std::string key = PBFprimitiveBlock.stringtable().s(tagValue).data();
                 std::string value = PBFprimitiveBlock.stringtable().s(keyValue).data();
                 keyVals.Add(key, value);
@@ -206,7 +203,6 @@ private:
                 }
                 assert(inputWay.keys_size() == inputWay.vals_size());
                 for(int i = 0; i < inputWay.keys_size(); i++) {
-                    //                    std::cout << "[debug] key: " << PBFprimitiveBlock.stringtable().s(inputWay.keys(i)) << ", val: " << PBFprimitiveBlock.stringtable().s(inputWay.vals(i)) << std::endl;
                     const std::string key = PBFprimitiveBlock.stringtable().s(inputWay.keys(i));
                     const std::string val = PBFprimitiveBlock.stringtable().s(inputWay.vals(i));
                     w.keyVals.Add(key, val);
@@ -232,7 +228,7 @@ private:
             entityTypeIndicator = TypeRelation;
         }
         if ( group.has_dense() )  {
-            entityTypeIndicator =  TypeDenseNode;
+            entityTypeIndicator = TypeDenseNode;
             assert( group.dense().id_size() != 0 );
         }
         assert( entityTypeIndicator != 0 );
@@ -242,7 +238,6 @@ private:
         blockCount++;
         currentGroupID = 0;
         currentEntityID = 0;
-//        int stringCount = PBFprimitiveBlock.stringtable().s_size();
     }
 
     /* Reverses Network Byte Order into something usable */
@@ -406,11 +401,6 @@ private:
 
     int currentGroupID;
     int currentEntityID;
-    //    bool m_loadBlock;
-    //    long long m_lastDenseID;
-    //    long long m_lastDenseLatitude;
-    //    long long m_lastDenseLongitude;
-    //    int m_lastDenseTag;
 
     /* counting the number of read blocks and groups */
     unsigned groupCount;
