@@ -53,11 +53,6 @@ public:
     }
 
     ~ExtractorCallbacks() {
-        delete allNodes;
-        delete usedNodes;
-        delete allEdges;
-        delete nameVector;
-        delete stringMap;
     }
 
     bool adressFunction(_Node n, HashTable<std::string, std::string> &keyVals) {
