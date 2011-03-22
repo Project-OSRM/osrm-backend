@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define EXTRACTORCALLBACKS_H_
 
 #include <stxxl.h>
+#include <vector>
 #include "ExtractorStructs.h"
 
 typedef stxxl::vector<NodeID> STXXLNodeIDVector;
@@ -33,8 +34,10 @@ typedef stxxl::vector<string> STXXLStringVector;
 
 class ExtractorCallbacks{
 private:
+    static const unsigned MAX_LOCAL_VECTOR_SIZE = 100;
+
     STXXLNodeVector * allNodes;
-    STXXLNodeIDVector * usedNodes;
+    STXXLNodeIDVector * usedNodeIDs;
     STXXLEdgeVector * allEdges;
     STXXLStringVector * nameVector;
     STXXLAddressVector * addressVector;
@@ -44,7 +47,7 @@ private:
 public:
     ExtractorCallbacks(STXXLNodeVector * aNodes, STXXLNodeIDVector * uNodes, STXXLEdgeVector * aEdges,  STXXLStringVector * nVector, STXXLAddressVector * adrVector, Settings s, StringMap * strMap){
         allNodes = aNodes;
-        usedNodes = uNodes;
+        usedNodeIDs = uNodes;
         allEdges = aEdges;
         nameVector = nVector;
         addressVector = adrVector;
@@ -55,6 +58,7 @@ public:
     ~ExtractorCallbacks() {
     }
 
+    /** warning: caller needs to take care of synchronization! */
     bool adressFunction(_Node n, HashTable<std::string, std::string> &keyVals) {
         std::string housenumber(keyVals.Find("addr:housenumber"));
         std::string housename(keyVals.Find("addr:housename"));
@@ -72,6 +76,7 @@ public:
         return true;
     }
 
+    /** warning: caller needs to take care of synchronization! */
     bool nodeFunction(_Node &n) {
         allNodes->push_back(n);
         return true;
@@ -82,6 +87,7 @@ public:
         return true;
     }
 
+    /** warning: caller needs to take care of synchronization! */
     bool wayFunction(_Way &w) {
         std::string highway( w.keyVals.Find("highway") );
         std::string name( w.keyVals.Find("name") );
@@ -181,7 +187,7 @@ public:
                 w.nameID = strit->second;
             }
             for ( unsigned i = 0; i < w.path.size(); ++i ) {
-                usedNodes->push_back(w.path[i]);
+                usedNodeIDs->push_back(w.path[i]);
             }
 
             if ( w.direction == _Way::opposite ){

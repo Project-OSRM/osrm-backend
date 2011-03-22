@@ -50,8 +50,8 @@ std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "p
 double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 5};
 
 struct _Node : NodeInfo{
-    _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
-    _Node() {}
+    _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id), used(false) {}
+    _Node() : used(false) {}
 
     static _Node min_value() {
         return _Node(0,0,0);
@@ -62,6 +62,8 @@ struct _Node : NodeInfo{
     NodeID key() const {
         return id;
     }
+
+    bool used;
 };
 
 struct _Coordinate {
@@ -121,18 +123,27 @@ struct _Relation {
 };
 
 struct _Edge {
-    _Edge() {};
-    _Edge(NodeID s, NodeID t) : start(s), target(t) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp) { }
+    _Edge() : used(false) {};
+    _Edge(NodeID s, NodeID t) : start(s), target(t), used(false) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), used(false) { }
     NodeID start;
     NodeID target;
-    short type;
+    short type:15;
     short direction;
     double speed;
     unsigned nameID;
+    bool used:1;
 
     _Coordinate startCoord;
     _Coordinate targetCoord;
+
+    static _Edge min_value() {
+        return _Edge(0,0);
+    }
+    static _Edge max_value() {
+        return _Edge(numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max());
+    }
+
 };
 
 struct Settings {
@@ -142,10 +153,8 @@ struct Settings {
     } speedProfile;
     //    vector<string> accessList;
     //    int trafficLightPenalty;
-    int indexInAccessListOf( const string & key)
-    {
-        for(unsigned i = 0; i< speedProfile.names.size(); i++)
-        {
+    int indexInAccessListOf( const string & key) {
+        for(unsigned i = 0; i< speedProfile.names.size(); i++) {
             if(speedProfile.names[i] == key)
                 return i;
         }
@@ -153,41 +162,47 @@ struct Settings {
     }
 };
 
-struct Cmp : public std::binary_function<NodeID, NodeID, bool>
-{
+struct Cmp : public std::binary_function<NodeID, NodeID, bool> {
     typedef NodeID value_type;
-    bool operator ()  (const NodeID & a, const NodeID & b) const
-    {
+    bool operator ()  (const NodeID & a, const NodeID & b) const {
         return a < b;
     }
-    value_type max_value()
-    {
+    value_type max_value() {
         return 0xffffffff;
     }
-    value_type min_value()
-    {
+    value_type min_value() {
         return 0x0;
     }
 };
 
-struct CompareEdgeByStart : public std::binary_function<_Edge, _Edge, bool>
-{
-    typedef _Edge value_type;
-    bool operator ()  (const _Edge & a, const _Edge & b) const
-    {
-        return a.start < b.start;
+struct CmpNodeByID : public std::binary_function<_Node, _Node, bool> {
+    typedef _Node value_type;
+    bool operator ()  (const _Node & a, const _Node & b) const {
+        return a.id < b.id;
     }
-    value_type max_value()
-    {
-        return _Edge(UINT_MAX, UINT_MAX);
+    value_type max_value()  {
+        return _Node::max_value();
     }
-    value_type min_value()
-    {
-        return _Edge(0, 0);
+    value_type min_value() {
+        return _Node::min_value();
     }
 };
 
-struct CompareEdgeByTarget : public std::binary_function<_Edge, _Edge, bool>
+struct CmpEdgeByStartID : public std::binary_function<_Edge, _Edge, bool>
+{
+    typedef _Edge value_type;
+    bool operator ()  (const _Edge & a, const _Edge & b) const {
+        return a.start < b.start;
+    }
+    value_type max_value() {
+        return _Edge::max_value();
+    }
+    value_type min_value() {
+        return _Edge::min_value();
+    }
+};
+
+struct CmpEdgeByTargetID : public std::binary_function<_Edge, _Edge, bool>
 {
     typedef _Edge value_type;
     bool operator ()  (const _Edge & a, const _Edge & b) const
@@ -196,32 +211,19 @@ struct CompareEdgeByTarget : public std::binary_function<_Edge, _Edge, bool>
     }
     value_type max_value()
     {
-        return _Edge(UINT_MAX, UINT_MAX);
+        return _Edge::max_value();
     }
     value_type min_value()
     {
-        return _Edge(0, 0);
-    }
-};
-
-struct CmpNodeByID : public std::binary_function<_Node, _Node, bool>
-{
-    typedef _Node value_type;
-    bool operator ()  (const _Node & a, const _Node & b) const
-    {
-        return a.id < b.id;
-    }
-    value_type max_value()
-    {
-        return _Node::max_value();
-    }
-    value_type min_value()
-    {
-        return _Node::min_value();
+        return _Edge::min_value();
     }
 };
 
 double ApproximateDistance( const int lat1, const int lon1, const int lat2, const int lon2 ) {
+    assert(lat1 != INT_MIN);
+    assert(lon1 != INT_MIN);
+    assert(lat2 != INT_MIN);
+    assert(lon2 != INT_MIN);
     static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
     ///Earth's quatratic mean radius for WGS-84
     static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
@@ -237,8 +239,7 @@ double ApproximateDistance( const int lat1, const int lon1, const int lat2, cons
 }
 
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
-double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const _Coordinate& B)
-{
+double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const _Coordinate& B) {
     //    double a = ApproximateDistance(A.lat, A.lon, C.lat, C.lon); //first edge segment
     //    double b = ApproximateDistance(B.lat, B.lon, C.lat, C.lon); //second edge segment
     //    double c = ApproximateDistance(A.lat, A.lon, B.lat, B.lon); //third edgefrom triangle

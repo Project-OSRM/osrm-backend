@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 #define STXXL_VERBOSE_LEVEL -1000
 
+#include <algorithm>
 #include <cassert>
 #include <climits>
 #include <cstdio>
@@ -51,6 +52,9 @@ bool adressFunction(_Node n, HashTable<std::string, std::string> keyVals);
 bool relationFunction(_Relation r);
 bool wayFunction(_Way w);
 
+template<class ClassT>
+bool removeIfUnused(ClassT n) { return (false == n.used); }
+
 int main (int argc, char *argv[]) {
     if(argc <= 1) {
         std::cerr << "usage: " << endl << argv[0] << " <file.osm>" << std::endl;
@@ -79,15 +83,14 @@ int main (int argc, char *argv[]) {
     }
     std::string adressFileName(outputFileName);
 
-    STXXLNodeIDVector * usedNodes       = new STXXLNodeIDVector();
-    STXXLNodeVector   * allNodes        = new STXXLNodeVector();
-    STXXLNodeVector   * confirmedNodes  = new STXXLNodeVector();
-    STXXLEdgeVector   * allEdges        = new STXXLEdgeVector();
-    STXXLEdgeVector   * confirmedEdges  = new STXXLEdgeVector();
-    STXXLAddressVector* adressVector    = new STXXLAddressVector();
-    STXXLStringVector * nameVector      = new STXXLStringVector();
+    STXXLNodeIDVector usedNodeIDs;
+    STXXLNodeVector   allNodes;
+    STXXLEdgeVector   allEdges;
+    STXXLAddressVector adressVector;
+    STXXLStringVector  nameVector;
+    unsigned usedNodeCounter = 0;
+    unsigned usedEdgeCounter = 0;
 
-    NodeMap * nodeMap = new NodeMap();
     StringMap * stringMap = new StringMap();
     Settings settings;
     settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+14);
@@ -95,10 +98,9 @@ int main (int argc, char *argv[]) {
 
     double time = get_timestamp();
 
-    nodeMap->set_empty_key(UINT_MAX);
     stringMap->set_empty_key(GetRandomString());
     stringMap->insert(std::make_pair("", 0));
-    extractCallBacks = new ExtractorCallbacks(allNodes, usedNodes, allEdges,  nameVector, adressVector, settings, stringMap);
+    extractCallBacks = new ExtractorCallbacks(&allNodes, &usedNodeIDs, &allEdges,  &nameVector, &adressVector, settings, stringMap);
 
     BaseParser<_Node, _Relation, _Way> * parser;
     if(isPBF) {
@@ -113,33 +115,34 @@ int main (int argc, char *argv[]) {
         std::cerr << "[error] parser not initialized!" << std::endl;
         exit(-1);
     }
+    /* flush needs to be called to flush the remaining local vector elements */
+    delete parser;
 
     try {
-        std::cout << "[info] raw no. of names:     " << nameVector->size()    << std::endl;
-        std::cout << "[info] raw no. of nodes:     " << allNodes->size()      << std::endl;
-        std::cout << "[info] no. of used nodes:    " << usedNodes->size()     << std::endl;
-        std::cout << "[info] raw no. of edges:     " << allEdges->size()      << std::endl;
-        std::cout << "[info] raw no. of relations: " << globalRelationCounter << std::endl;
-        std::cout << "[info] raw no. of addresses: " << adressVector->size()  << std::endl;
+        //        std::cout << "[info] raw no. of names:     " << nameVector.size()    << std::endl;
+        //        std::cout << "[info] raw no. of nodes:     " << allNodes.size()      << std::endl;
+        //        std::cout << "[info] no. of used nodes:    " << usedNodeIDs.size()     << std::endl;
+        //        std::cout << "[info] raw no. of edges:     " << allEdges.size()      << std::endl;
+        //        std::cout << "[info] raw no. of relations: " << globalRelationCounter << std::endl;
+        //        std::cout << "[info] raw no. of addresses: " << adressVector.size()  << std::endl;
 
-        std::cout << "[info] parsing through input file took " << get_timestamp() - time << "seconds" << std::endl;
+        std::cout << "[extractor] parsing finished after " << get_timestamp() - time << "seconds" << std::endl;
         time = get_timestamp();
         unsigned memory_to_use = 1024 * 1024 * 1024;
 
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
-        stxxl::sort(usedNodes->begin(), usedNodes->end(), Cmp(), memory_to_use);
+        stxxl::sort(usedNodeIDs.begin(), usedNodeIDs.end(), Cmp(), memory_to_use);
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        std::cout << "[debug] highest node id: " << usedNodes->back() << std::endl;
 
         time = get_timestamp();
-        std::cout << "[extractor] Erasing duplicate entries ... " << std::flush;
-        stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodes->begin(),usedNodes->end() ) ;
-        usedNodes->resize ( NewEnd - usedNodes->begin() );
+        std::cout << "[extractor] Erasing duplicate nodes   ... " << std::flush;
+        stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodeIDs.begin(),usedNodeIDs.end() ) ;
+        usedNodeIDs.resize ( NewEnd - usedNodeIDs.begin() );
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
         std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
-        stxxl::sort(allNodes->begin(), allNodes->end(), CmpNodeByID(), memory_to_use);
+        stxxl::sort(allNodes.begin(), allNodes.end(), CmpNodeByID(), memory_to_use);
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
@@ -147,68 +150,108 @@ int main (int argc, char *argv[]) {
         fout.open(outputFileName.c_str());
 
         cout << "[extractor] Confirming used nodes     ... " << flush;
-        STXXLNodeVector::iterator nvit = allNodes->begin();
-        STXXLNodeIDVector::iterator niit = usedNodes->begin();
-        while(niit != usedNodes->end() && nvit != allNodes->end()) {
-            if(*niit < nvit->id){
-                niit++;
+        STXXLNodeVector::iterator nodesIT = allNodes.begin();
+        STXXLNodeIDVector::iterator usedNodeIDsIT = usedNodeIDs.begin();
+        while(usedNodeIDsIT != usedNodeIDs.end() && nodesIT != allNodes.end()) {
+            if(*usedNodeIDsIT < nodesIT->id){
+                usedNodeIDsIT++;
                 continue;
             }
-            if(*niit > nvit->id) {
-                nvit++;
+            if(*usedNodeIDsIT > nodesIT->id) {
+                nodesIT++;
                 continue;
             }
-            if(*niit == nvit->id) {
-                confirmedNodes->push_back(*nvit);
-                nodeMap->insert(std::make_pair(nvit->id, *nvit));
-                niit++;
-                nvit++;
+            if(*usedNodeIDsIT == nodesIT->id) {
+                nodesIT->used = true;
+                usedNodeCounter++;
+                usedNodeIDsIT++;
+                nodesIT++;
             }
         }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        std::cout << "[debug] no of entries in nodemap" << nodeMap->size() << std::endl;
+        cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        cout << "[extractor] Writing used nodes        ... " << flush;
-        fout << confirmedNodes->size() << endl;
-        for(STXXLNodeVector::iterator ut = confirmedNodes->begin(); ut != confirmedNodes->end(); ut++) {
-            fout << ut->id<< " " << ut->lon << " " << ut->lat << "\n";
+//        std::cout << "[extractor] Erasing unused nodes      ... " << std::flush;
+//        allNodes.resize(std::remove_if(allNodes.begin(), allNodes.end(), removeIfUnused<_Node>)-allNodes.begin());
+//
+//        cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+//        time = get_timestamp();
+
+        std::cout << "[extractor] Writing used nodes        ... " << std::flush;
+        fout << usedNodeCounter << endl;
+        for(STXXLNodeVector::iterator ut = allNodes.begin(); ut != allNodes.end(); ut++) {
+            if(ut->used)
+                fout << ut->id<< " " << ut->lon << " " << ut->lat << "\n";
         }
 
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        cout << "[extractor] confirming used ways      ... " << flush;
-        for(STXXLEdgeVector::iterator eit = allEdges->begin(); eit != allEdges->end(); eit++) {
-            assert(eit->type > -1 || eit->speed != -1);
-
-            NodeMap::iterator startit = nodeMap->find(eit->start);
-            if(startit == nodeMap->end()) {
-                continue;
-            }
-            NodeMap::iterator targetit = nodeMap->find(eit->target);
-
-            if(targetit == nodeMap->end()) {
-                continue;
-            }
-            confirmedEdges->push_back(*eit);
-        }
-        fout << confirmedEdges->size() << "\n";
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
-        cout << "[extractor] writing confirmed ways    ... " << flush;
-        for(STXXLEdgeVector::iterator eit = confirmedEdges->begin(); eit != confirmedEdges->end(); eit++) {
-            NodeMap::iterator startit = nodeMap->find(eit->start);
-            if(startit == nodeMap->end()) {
-                continue;
-            }
-            NodeMap::iterator targetit = nodeMap->find(eit->target);
+        // Sort edges by start.
+        std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
+        stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByStartID(), memory_to_use);
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time = get_timestamp();
 
-            if(targetit == nodeMap->end()) {
+        std::cout << "[extractor] Setting start coords      ... " << std::flush;
+        // Traverse list of edges and nodes in parallel and set start coord
+        nodesIT = allNodes.begin();
+        STXXLEdgeVector::iterator edgeIT = allEdges.begin();
+        while(edgeIT != allEdges.end() && nodesIT != allNodes.end()) {
+            if(edgeIT->start < nodesIT->id){
+                edgeIT++;
                 continue;
             }
-            double distance = ApproximateDistance(startit->second.lat, startit->second.lon, targetit->second.lat, targetit->second.lon);
+            if(edgeIT->start > nodesIT->id) {
+                nodesIT++;
+                continue;
+            }
+            if(edgeIT->start == nodesIT->id) {
+                edgeIT->startCoord.lat = nodesIT->lat;
+                edgeIT->startCoord.lon = nodesIT->lon;
+                edgeIT++;
+            }
+        }
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time = get_timestamp();
+
+        // Sort Edges by target
+        std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
+        stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByTargetID(), memory_to_use);
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time = get_timestamp();
+
+        std::cout << "[extractor] Setting target coords     ... " << std::flush;
+        // Traverse list of edges and nodes in parallel and set target coord
+        nodesIT = allNodes.begin();
+        edgeIT = allEdges.begin();
+        while(edgeIT != allEdges.end() && nodesIT != allNodes.end()) {
+            if(edgeIT->target < nodesIT->id){
+                edgeIT++;
+                continue;
+            }
+            if(edgeIT->target > nodesIT->id) {
+                nodesIT++;
+                continue;
+            }
+            if(edgeIT->startCoord.lat != INT_MIN && edgeIT->target == nodesIT->id) {
+                edgeIT->targetCoord.lat = nodesIT->lat;
+                edgeIT->targetCoord.lon = nodesIT->lon;
+                edgeIT->used = true;
+                usedEdgeCounter++;
+                edgeIT++;
+            }
+        }
+
+        fout << usedEdgeCounter << "\n";
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
+
+        cout << "[extractor] writing confirmed edges   ... " << flush;
+        for(STXXLEdgeVector::iterator eit = allEdges.begin(); eit != allEdges.end(); eit++) {
+            if(eit->used == false)
+                continue;
+            double distance = ApproximateDistance(eit->startCoord.lat, eit->startCoord.lon, eit->targetCoord.lat, eit->targetCoord.lon);
             if(eit->speed == -1)
                 eit->speed = settings.speedProfile.speed[eit->type];
             double weight = ( distance * 10. ) / (eit->speed / 3.6);
@@ -219,16 +262,16 @@ int main (int argc, char *argv[]) {
 
             switch(eit->direction) {
             case _Way::notSure:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+                fout << eit->start << " " << eit->target << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             case _Way::oneway:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+                fout << eit->start << " " << eit->target << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             case _Way::bidirectional:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+                fout << eit->start << " " << eit->target << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             case _Way::opposite:
-                fout << startit->first << " " << targetit->first << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
+                fout << eit->start << " " << eit->target << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
                 break;
             default:
                 std::cerr << "[error] edge with no direction: " << eit->direction << std::endl;
@@ -240,19 +283,18 @@ int main (int argc, char *argv[]) {
 
         outputFileName.append(".names");
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-//        std::cout << "[debug] written edges: " << testCounter << std::endl;
         time = get_timestamp();
         std::cout << "[extractor] writing street name index ... " << std::flush;
 
-        std::vector<unsigned> * nameIndex = new std::vector<unsigned>(nameVector->size()+1, 0);
+        std::vector<unsigned> * nameIndex = new std::vector<unsigned>(nameVector.size()+1, 0);
         unsigned currentNameIndex = 0;
         unsigned elementCounter(0);
-        for(STXXLStringVector::iterator it = nameVector->begin(); it != nameVector->end(); it++) {
+        for(STXXLStringVector::iterator it = nameVector.begin(); it != nameVector.end(); it++) {
             nameIndex->at(elementCounter) = currentNameIndex;
             currentNameIndex += it->length();
             elementCounter++;
         }
-        nameIndex->at(nameVector->size()) = currentNameIndex;
+        nameIndex->at(nameVector.size()) = currentNameIndex;
         ofstream nameOutFile(outputFileName.c_str(), ios::binary);
         unsigned sizeOfNameIndex = nameIndex->size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
@@ -260,7 +302,7 @@ int main (int argc, char *argv[]) {
         for(unsigned i = 0; i < nameIndex->size(); i++) {
             nameOutFile.write((char *)&(nameIndex->at(i)), sizeof(unsigned));
         }
-        for(STXXLStringVector::iterator it = nameVector->begin(); it != nameVector->end(); it++) {
+        for(STXXLStringVector::iterator it = nameVector.begin(); it != nameVector.end(); it++) {
             nameOutFile << *it;
         }
 
@@ -268,33 +310,23 @@ int main (int argc, char *argv[]) {
         delete nameIndex;
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
-        time = get_timestamp();
-        std::cout << "[extractor] writing address list      ... " << std::flush;
-
-        adressFileName.append(".address");
-        std::ofstream addressOutFile(adressFileName.c_str());
-        for(STXXLAddressVector::iterator it = adressVector->begin(); it != adressVector->end(); it++) {
-            addressOutFile << it->node.id << "|" << it->node.lat << "|" << it->node.lon << "|" << it->city << "|" << it->street << "|" << it->housenumber << "|" << it->state << "|" << it->country << "\n";
-        }
-        addressOutFile.close();
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        //        time = get_timestamp();
+        //        std::cout << "[extractor] writing address list      ... " << std::flush;
+        //
+        //        adressFileName.append(".address");
+        //        std::ofstream addressOutFile(adressFileName.c_str());
+        //        for(STXXLAddressVector::iterator it = adressVector.begin(); it != adressVector.end(); it++) {
+        //            addressOutFile << it->node.id << "|" << it->node.lat << "|" << it->node.lon << "|" << it->city << "|" << it->street << "|" << it->housenumber << "|" << it->state << "|" << it->country << "\n";
+        //        }
+        //        addressOutFile.close();
+        //        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
     } catch ( const std::exception& e ) {
         std::cerr <<  "Caught Execption:" << e.what() << std::endl;
         return false;
     }
 
-    std::cout << "[info] Statistics:" << std::endl;
-    std::cout << "[info] -----------" << std::endl;
-    std::cout << "[info] Usable Nodes: " << confirmedNodes->size() << std::endl;
-    std::cout << "[info] Usable Edges: " << confirmedEdges->size() << std::endl;
-
     delete extractCallBacks;
-    delete nodeMap;
-    delete confirmedNodes;
-    delete confirmedEdges;
-    delete adressVector;
-    delete parser;
     cout << "[extractor] finished." << endl;
     return 0;
 }

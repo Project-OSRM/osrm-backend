@@ -46,12 +46,24 @@ class PBFParser : public BaseParser<_Node, _Relation, _Way> {
         BigEndian = 2
     };
 
-    short entityTypeIndicator;
+    struct _ThreadData {
+        int currentGroupID;
+        int currentEntityID;
+        short entityTypeIndicator;
+
+        OSMPBF::BlobHeader PBFBlobHeader;
+        OSMPBF::Blob PBFBlob;
+
+        OSMPBF::HeaderBlock PBFHeaderBlock;
+        OSMPBF::PrimitiveBlock PBFprimitiveBlock;
+
+        std::vector<char> charBuffer;
+    };
 
 public:
     PBFParser(const char * fileName) {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
-
+        //        omp_set_num_threads(1);
         input.open(fileName, std::ios::in | std::ios::binary);
 
         if (!input) {
@@ -74,6 +86,11 @@ public:
         if(input.is_open())
             input.close();
 
+        unsigned maxThreads = omp_get_max_threads();
+        for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+            delete threadDataVector[threadNum];
+        }
+
         google::protobuf::ShutdownProtobufLibrary();
 
         std::cout << "[info] blocks: " << blockCount << std::endl;
@@ -81,22 +98,30 @@ public:
     }
 
     bool Init() {
-        if(!readPBFBlobHeader(input)) {
+        /** Init Vector with ThreadData Objects */
+        unsigned maxThreads = omp_get_max_threads();
+        for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+            threadDataVector.push_back( new _ThreadData( ) );
+        }
+
+        _ThreadData initData;
+        /** read Header */
+        if(!readPBFBlobHeader(input, &initData)) {
             return false;
         }
 
-        if(readBlob(input)) {
-            char data[charBuffer.size()];
-            for(unsigned i = 0; i < charBuffer.size(); i++ ){
-                data[i] = charBuffer[i];
+        if(readBlob(input, &initData)) {
+            char data[initData.charBuffer.size()];
+            for(unsigned i = 0; i < initData.charBuffer.size(); i++ ){
+                data[i] = initData.charBuffer[i];
             }
-            if(!PBFHeaderBlock.ParseFromArray(data, charBuffer.size() ) ) {
+            if(!initData.PBFHeaderBlock.ParseFromArray(data, initData.charBuffer.size() ) ) {
                 std::cerr << "[error] Header not parseable!" << std::endl;
                 return false;
             }
 
-            for(int i = 0; i < PBFHeaderBlock.required_features_size(); i++) {
-                const std::string& feature = PBFHeaderBlock.required_features( i );
+            for(int i = 0; i < initData.PBFHeaderBlock.required_features_size(); i++) {
+                const std::string& feature = initData.PBFHeaderBlock.required_features( i );
                 bool supported = false;
                 if ( feature == "OsmSchema-V0.6" )
                     supported = true;
@@ -115,31 +140,42 @@ public:
     }
 
     bool Parse() {
-        //parse through all Blocks
-        while(readNextBlock(input)) {
+#pragma omp parallel
+        {
+            _ThreadData * threadData = threadDataVector[omp_get_thread_num()];
+            //parse through all Blocks
+            bool keepRunning = true;
+            //        while(readNextBlock(input)) {
+            do{
+#pragma omp critical
+                {
+                    keepRunning = readNextBlock(input, threadData);
+                }
+                if(keepRunning) {
+                    loadBlock(threadData);
+                    for(int i = 0; i < threadData->PBFprimitiveBlock.primitivegroup_size(); i++) {
+                        threadData->currentGroupID = i;
+                        loadGroup(threadData);
 
-            loadBlock();
-            for(int i = 0; i < PBFprimitiveBlock.primitivegroup_size(); i++) {
-                currentGroupID = i;
-                loadGroup();
-
-                if(entityTypeIndicator == TypeNode)
-                    parseNode();
-                if(entityTypeIndicator == TypeWay)
-                    parseWay();
-                if(entityTypeIndicator == TypeRelation)
-                    parseRelation();
-                if(entityTypeIndicator == TypeDenseNode)
-                    parseDenseNode();
-            }
+                        if(threadData->entityTypeIndicator == TypeNode)
+                            parseNode(threadData);
+                        if(threadData->entityTypeIndicator == TypeWay)
+                            parseWay(threadData);
+                        if(threadData->entityTypeIndicator == TypeRelation)
+                            parseRelation(threadData);
+                        if(threadData->entityTypeIndicator == TypeDenseNode)
+                            parseDenseNode(threadData);
+                    }
+                }
+            }while(keepRunning);
         }
         return true;
     }
 
 private:
 
-    void parseDenseNode() {
-        const OSMPBF::DenseNodes& dense = PBFprimitiveBlock.primitivegroup( currentGroupID ).dense();
+    void parseDenseNode(_ThreadData * threadData) {
+        const OSMPBF::DenseNodes& dense = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).dense();
         int denseTagIndex = 0;
         int m_lastDenseID = 0;
         int m_lastDenseLatitude = 0;
@@ -152,8 +188,8 @@ private:
             m_lastDenseLongitude += dense.lon( i );
             _Node n;
             n.id = m_lastDenseID;
-            n.lat = 100000*( ( double ) m_lastDenseLatitude * PBFprimitiveBlock.granularity() + PBFprimitiveBlock.lat_offset() ) / NANO;
-            n.lon = 100000*( ( double ) m_lastDenseLongitude * PBFprimitiveBlock.granularity() + PBFprimitiveBlock.lon_offset() ) / NANO;
+            n.lat = 100000*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() +threadData-> PBFprimitiveBlock.lat_offset() ) / NANO;
+            n.lon = 100000*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
             while (denseTagIndex < dense.keys_vals_size()) {
                 int tagValue = dense.keys_vals( denseTagIndex );
                 if(tagValue == 0) {
@@ -161,39 +197,51 @@ private:
                     break;
                 }
                 int keyValue = dense.keys_vals ( denseTagIndex+1 );
-                std::string key = PBFprimitiveBlock.stringtable().s(tagValue).data();
-                std::string value = PBFprimitiveBlock.stringtable().s(keyValue).data();
+                std::string key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
+                std::string value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
                 keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
-            if(!(*addressCallback)(n, keyVals))
-                std::cerr << "[PBFParser] adress not parsed" << std::endl;
+#pragma omp critical
+            {
+                if(!(*addressCallback)(n, keyVals))
+                    std::cerr << "[PBFParser] adress not parsed" << std::endl;
+            }
 
-            if(!(*nodeCallback)(n))
-                std::cerr << "[PBFParser] dense node not parsed" << std::endl;
+#pragma omp critical
+            {
+                if(!(*nodeCallback)(n))
+                    std::cerr << "[PBFParser] dense node not parsed" << std::endl;
+            }
         }
     }
 
-    void parseNode() {
+    void parseNode(_ThreadData * threadData) {
         _Node n;
-        if(!(*nodeCallback)(n))
-            std::cerr << "[PBFParser] simple node not parsed" << std::endl;
+#pragma omp critical
+        {
+            if(!(*nodeCallback)(n))
+                std::cerr << "[PBFParser] simple node not parsed" << std::endl;
+        }
     }
 
-    void parseRelation() {
-        const OSMPBF::PrimitiveGroup& group = PBFprimitiveBlock.primitivegroup( currentGroupID );
+    void parseRelation(_ThreadData * threadData) {
+        const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
         for(int i = 0; i < group.relations_size(); i++ ) {
             _Relation r;
             r.type = _Relation::unknown;
-            if(!(*relationCallback)(r))
-                std::cerr << "[PBFParser] relation not parsed" << std::endl;
+#pragma omp critical
+            {
+                if(!(*relationCallback)(r))
+                    std::cerr << "[PBFParser] relation not parsed" << std::endl;
+            }
         }
     }
 
-    void parseWay() {
-        if( PBFprimitiveBlock.primitivegroup( currentGroupID ).ways_size() > 0) {
-            for(int i = 0; i < PBFprimitiveBlock.primitivegroup( currentGroupID ).ways_size(); i++) {
-                const OSMPBF::Way& inputWay = PBFprimitiveBlock.primitivegroup( currentGroupID ).ways( i );
+    void parseWay(_ThreadData * threadData) {
+        if( threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size() > 0) {
+            for(int i = 0; i < threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size(); i++) {
+                const OSMPBF::Way& inputWay = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways( i );
                 _Way w;
                 w.id = inputWay.id();
                 unsigned pathNode(0);
@@ -203,41 +251,47 @@ private:
                 }
                 assert(inputWay.keys_size() == inputWay.vals_size());
                 for(int i = 0; i < inputWay.keys_size(); i++) {
-                    const std::string key = PBFprimitiveBlock.stringtable().s(inputWay.keys(i));
-                    const std::string val = PBFprimitiveBlock.stringtable().s(inputWay.vals(i));
+                    const std::string key = threadData->PBFprimitiveBlock.stringtable().s(inputWay.keys(i));
+                    const std::string val = threadData->PBFprimitiveBlock.stringtable().s(inputWay.vals(i));
                     w.keyVals.Add(key, val);
                 }
-                if(!(*wayCallback)(w)) {
-                    std::cerr << "[PBFParser] way not parsed" << std::endl;
+#pragma omp critical
+                {
+                    if(!(*wayCallback)(w)) {
+                        std::cerr << "[PBFParser] way not parsed" << std::endl;
+                    }
                 }
             }
         }
     }
 
-    void loadGroup() {
+    void loadGroup(_ThreadData * threadData) {
+#pragma omp atomic
         groupCount++;
-        const OSMPBF::PrimitiveGroup& group = PBFprimitiveBlock.primitivegroup( currentGroupID );
-        entityTypeIndicator = 0;
+
+        const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
+        threadData->entityTypeIndicator = 0;
         if ( group.nodes_size() != 0 ) {
-            entityTypeIndicator = TypeNode;
+            threadData->entityTypeIndicator = TypeNode;
         }
         if ( group.ways_size() != 0 ) {
-            entityTypeIndicator = TypeWay;
+            threadData->entityTypeIndicator = TypeWay;
         }
         if ( group.relations_size() != 0 ) {
-            entityTypeIndicator = TypeRelation;
+            threadData->entityTypeIndicator = TypeRelation;
         }
         if ( group.has_dense() )  {
-            entityTypeIndicator = TypeDenseNode;
+            threadData->entityTypeIndicator = TypeDenseNode;
             assert( group.dense().id_size() != 0 );
         }
-        assert( entityTypeIndicator != 0 );
+        assert( threadData->entityTypeIndicator != 0 );
     }
 
-    void loadBlock() {
+    void loadBlock(_ThreadData * threadData) {
+#pragma omp critical
         blockCount++;
-        currentGroupID = 0;
-        currentEntityID = 0;
+        threadData->currentGroupID = 0;
+        threadData->currentEntityID = 0;
     }
 
     /* Reverses Network Byte Order into something usable */
@@ -247,7 +301,7 @@ private:
         return x;
     }
 
-    bool readPBFBlobHeader(std::fstream& stream) {
+    bool readPBFBlobHeader(std::fstream& stream, _ThreadData * threadData) {
         int size(0);
         stream.read((char *)&size, sizeof(int));
         size = swapEndian(size);
@@ -262,18 +316,18 @@ private:
             stream.read(&data[i], 1);
         }
 
-        if ( !PBFBlobHeader.ParseFromArray( data, size ) ) {
+        if ( !(threadData->PBFBlobHeader).ParseFromArray( data, size ) ){
             return false;
         }
         return true;
     }
 
-    bool unpackZLIB(std::fstream & stream) {
-        unsigned rawSize = PBFBlob.raw_size();
+    bool unpackZLIB(std::fstream & stream, _ThreadData * threadData) {
+        unsigned rawSize = threadData->PBFBlob.raw_size();
         char unpackedDataArray[rawSize];
         z_stream compressedDataStream;
-        compressedDataStream.next_in = ( unsigned char* ) PBFBlob.zlib_data().data();
-        compressedDataStream.avail_in = PBFBlob.zlib_data().size();
+        compressedDataStream.next_in = ( unsigned char* ) threadData->PBFBlob.zlib_data().data();
+        compressedDataStream.avail_in = threadData->PBFBlob.zlib_data().size();
         compressedDataStream.next_out = ( unsigned char* ) unpackedDataArray;
         compressedDataStream.avail_out = rawSize;
         compressedDataStream.zalloc = Z_NULL;
@@ -298,22 +352,22 @@ private:
             return false;
         }
 
-        charBuffer.clear(); charBuffer.resize(rawSize);
+        threadData->charBuffer.clear(); threadData->charBuffer.resize(rawSize);
         for(unsigned i = 0; i < rawSize; i++) {
-            charBuffer[i] = unpackedDataArray[i];
+            threadData->charBuffer[i] = unpackedDataArray[i];
         }
         return true;
     }
 
-    bool unpackLZMA(std::fstream & stream) {
+    bool unpackLZMA(std::fstream & stream, _ThreadData * threadData) {
         return false;
     }
 
-    bool readBlob(std::fstream& stream) {
+    bool readBlob(std::fstream& stream, _ThreadData * threadData) {
         if(stream.eof())
             return false;
 
-        int size = PBFBlobHeader.datasize();
+        int size = threadData->PBFBlobHeader.datasize();
         if ( size < 0 || size > MAX_BLOB_SIZE ) {
             std::cerr << "[error] invalid Blob size:" << size << std::endl;
             return false;
@@ -324,25 +378,25 @@ private:
             stream.read(&data[i], 1);
         }
 
-        if ( !PBFBlob.ParseFromArray( data, size ) ) {
+        if ( !threadData->PBFBlob.ParseFromArray( data, size ) ) {
             std::cerr << "[error] failed to parse blob" << std::endl;
             return false;
         }
 
-        if ( PBFBlob.has_raw() ) {
-            const std::string& data = PBFBlob.raw();
-            charBuffer.clear();
-            charBuffer.resize( data.size() );
+        if ( threadData->PBFBlob.has_raw() ) {
+            const std::string& data = threadData->PBFBlob.raw();
+            threadData->charBuffer.clear();
+            threadData->charBuffer.resize( data.size() );
             for ( unsigned i = 0; i < data.size(); i++ ) {
-                charBuffer[i] = data[i];
+                threadData->charBuffer[i] = data[i];
             }
-        } else if ( PBFBlob.has_zlib_data() ) {
-            if ( !unpackZLIB(stream) ) {
+        } else if ( threadData->PBFBlob.has_zlib_data() ) {
+            if ( !unpackZLIB(stream, threadData) ) {
                 std::cerr << "[error] zlib data encountered that could not be unpacked" << std::endl;
                 return false;
             }
-        } else if ( PBFBlob.has_lzma_data() ) {
-            if ( !unpackLZMA(stream) )
+        } else if ( threadData->PBFBlob.has_lzma_data() ) {
+            if ( !unpackLZMA(stream, threadData) )
                 std::cerr << "[error] lzma data encountered that could not be unpacked" << std::endl;
             return false;
         } else {
@@ -352,34 +406,34 @@ private:
         return true;
     }
 
-    bool readNextBlock(std::fstream& stream) {
+    bool readNextBlock(std::fstream& stream, _ThreadData * threadData) {
         if(stream.eof()) {
             return false;
         }
 
-        if ( !readPBFBlobHeader(stream) )
+        if ( !readPBFBlobHeader(stream, threadData) )
             return false;
 
-        if ( PBFBlobHeader.type() != "OSMData" ) {
-            std::cerr << "[error] invalid block type, found" << PBFBlobHeader.type().data() << "instead of OSMData" << std::endl;
+        if ( threadData->PBFBlobHeader.type() != "OSMData" ) {
+            std::cerr << "[error] invalid block type, found" << threadData->PBFBlobHeader.type().data() << "instead of OSMData" << std::endl;
             return false;
         }
 
-        if ( !readBlob(stream) )
+        if ( !readBlob(stream, threadData) )
             return false;
 
-        char data[charBuffer.size()];
-        for(unsigned i = 0; i < charBuffer.size(); i++ ){
-            data[i] = charBuffer[i];
+        char data[threadData->charBuffer.size()];
+        for(unsigned i = 0; i < threadData->charBuffer.size(); i++ ){
+            data[i] = threadData->charBuffer[i];
         }
-        if ( !PBFprimitiveBlock.ParseFromArray( data, charBuffer.size() ) ) {
+        if ( !threadData->PBFprimitiveBlock.ParseFromArray( data, threadData-> charBuffer.size() ) ) {
             std::cerr << "[error] failed to parse PrimitiveBlock" << std::endl;
             return false;
         }
         return true;
     }
 
-    Endianness getMachineEndianness() {
+    static Endianness getMachineEndianness() {
         int i(1);
         char *p = (char *) &i;
         if (p[0] == 1)
@@ -390,17 +444,6 @@ private:
     static const int NANO = 1000 * 1000 * 1000;
     static const int MAX_BLOB_HEADER_SIZE = 64 * 1024;
     static const int MAX_BLOB_SIZE = 32 * 1024 * 1024;
-
-    OSMPBF::BlobHeader PBFBlobHeader;
-    OSMPBF::Blob PBFBlob;
-
-    OSMPBF::HeaderBlock PBFHeaderBlock;
-    OSMPBF::PrimitiveBlock PBFprimitiveBlock;
-
-    std::vector<char> charBuffer;
-
-    int currentGroupID;
-    int currentEntityID;
 
     /* counting the number of read blocks and groups */
     unsigned groupCount;
@@ -413,6 +456,10 @@ private:
     bool (*addressCallback)(_Node, HashTable<std::string, std::string>);
     /* the input stream to parse */
     std::fstream input;
+
+    /* ThreadData Array */
+    std::vector < _ThreadData* > threadDataVector;
+
 };
 
 #endif /* PBFPARSER_H_ */
