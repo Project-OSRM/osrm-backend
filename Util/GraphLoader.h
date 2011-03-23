@@ -100,7 +100,76 @@ NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     cout << "ok" << endl;
     return n;
 }
+template<typename EdgeT>
+NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
+    NodeID n, source, target, id;
+    EdgeID m;
+    short dir;
+    int xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
+    ExternalNodeMap ext2IntNodeMap;
+    ext2IntNodeMap.set_empty_key(UINT_MAX);
+//    in >> n;
+    in.read((char*)&n, sizeof(NodeID));
+    VERBOSE(cout << "Importing n = " << n << " nodes ..." << flush;)
+    for (NodeID i=0; i<n;i++) {
+//        in >> id >> ycoord >> xcoord;
+        in.read((char*)&id, sizeof(unsigned));
+        in.read((char*)&ycoord, sizeof(int));
+        in.read((char*)&xcoord, sizeof(int));
+        int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
+        ext2IntNodeMap.insert(make_pair(id, i));
+    }
+//    in >> m;
+    in.read((char*)&m, sizeof(unsigned));
+    VERBOSE(cout << " and " << m << " edges ..." << flush;)
 
+    edgeList.reserve(m);
+    for (EdgeID i=0; i<m; i++) {
+        EdgeWeight weight;
+        short type;
+        NodeID nameID;
+        int length;
+//        in >> source >> target >> length >> dir >> weight >> type >> nameID;
+        in.read((char*)&source, sizeof(unsigned));
+        in.read((char*)&target, sizeof(unsigned));
+        in.read((char*)&length, sizeof(int));
+        in.read((char*)&dir,    sizeof(short));
+        in.read((char*)&weight, sizeof(int));
+        in.read((char*)&type,   sizeof(short));
+        in.read((char*)&nameID ,sizeof(unsigned));
+        assert(length > 0);
+        assert(weight > 0);
+        assert(0<=dir && dir<=2);
+
+        bool forward = true;
+        bool backward = true;
+        if (1 == dir) { backward = false; }
+        if (2 == dir) { forward = false; }
+
+        if(length == 0) { cerr << "loaded null length edge" << endl; exit(1); }
+
+        //         translate the external NodeIDs to internal IDs
+        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
+        if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
+            cerr << "after " << edgeList.size() << " edges" << endl;
+            cerr << "->" << source << "," << target << "," << length << "," << dir << "," << weight << endl;
+            cerr << "unresolved source NodeID: " << source << endl; exit(0);
+        }
+        source = intNodeID->second;
+        intNodeID = ext2IntNodeMap.find(target);
+        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) { cerr << "unresolved target NodeID : " << target << endl; exit(0); }
+        target = intNodeID->second;
+
+        if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }
+
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type );
+        edgeList.push_back(inputEdge);
+    }
+    ext2IntNodeMap.clear();
+    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    cout << "ok" << endl;
+    return n;
+}
 template<typename EdgeT>
 NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
     NodeID n, source, target, id;

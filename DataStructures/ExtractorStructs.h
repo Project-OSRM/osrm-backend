@@ -50,8 +50,8 @@ std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "p
 double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 5};
 
 struct _Node : NodeInfo{
-    _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id), used(false) {}
-    _Node() : used(false) {}
+    _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
+    _Node() {}
 
     static _Node min_value() {
         return _Node(0,0,0);
@@ -62,8 +62,6 @@ struct _Node : NodeInfo{
     NodeID key() const {
         return id;
     }
-
-    bool used;
 };
 
 struct _Coordinate {
@@ -123,16 +121,15 @@ struct _Relation {
 };
 
 struct _Edge {
-    _Edge() : used(false) {};
-    _Edge(NodeID s, NodeID t) : start(s), target(t), used(false) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), used(false) { }
+    _Edge() {};
+    _Edge(NodeID s, NodeID t) : start(s), target(t) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp) { }
     NodeID start;
     NodeID target;
-    short type:15;
+    short type;
     short direction;
     double speed;
     unsigned nameID;
-    bool used:1;
 
     _Coordinate startCoord;
     _Coordinate targetCoord;

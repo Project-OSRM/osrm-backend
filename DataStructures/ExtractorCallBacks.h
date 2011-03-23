@@ -60,6 +60,7 @@ public:
 
     /** warning: caller needs to take care of synchronization! */
     bool adressFunction(_Node n, HashTable<std::string, std::string> &keyVals) {
+        /*
         std::string housenumber(keyVals.Find("addr:housenumber"));
         std::string housename(keyVals.Find("addr:housename"));
         std::string street(keyVals.Find("addr:street"));
@@ -73,6 +74,7 @@ public:
                 housenumber = housename;
             addressVector->push_back(_Address(n, housenumber, street, state, country, postcode, city));
         }
+         */
         return true;
     }
 

@@ -115,7 +115,6 @@ int main (int argc, char *argv[]) {
         std::cerr << "[error] parser not initialized!" << std::endl;
         exit(-1);
     }
-    /* flush needs to be called to flush the remaining local vector elements */
     delete parser;
 
     try {
@@ -146,10 +145,11 @@ int main (int argc, char *argv[]) {
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        ofstream fout;
-        fout.open(outputFileName.c_str());
+        std::ofstream fout;
+        fout.open(outputFileName.c_str(), std::ios::binary);
+        fout.write((char*)&usedNodeCounter, sizeof(unsigned));
 
-        cout << "[extractor] Confirming used nodes     ... " << flush;
+        std::cout << "[extractor] Confirming used nodes     ... " << std::flush;
         STXXLNodeVector::iterator nodesIT = allNodes.begin();
         STXXLNodeIDVector::iterator usedNodeIDsIT = usedNodeIDs.begin();
         while(usedNodeIDsIT != usedNodeIDs.end() && nodesIT != allNodes.end()) {
@@ -162,29 +162,25 @@ int main (int argc, char *argv[]) {
                 continue;
             }
             if(*usedNodeIDsIT == nodesIT->id) {
-                nodesIT->used = true;
+                fout.write((char*)&(nodesIT->id), sizeof(unsigned));
+                fout.write((char*)&(nodesIT->lon), sizeof(int));
+                fout.write((char*)&(nodesIT->lat), sizeof(int));
+//                std::cout << "serializing: " << nodesIT->id << ", lat: " << nodesIT->lat << ", lon: " << nodesIT->lon << std::endl;
                 usedNodeCounter++;
                 usedNodeIDsIT++;
                 nodesIT++;
             }
         }
-        cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-//        std::cout << "[extractor] Erasing unused nodes      ... " << std::flush;
-//        allNodes.resize(std::remove_if(allNodes.begin(), allNodes.end(), removeIfUnused<_Node>)-allNodes.begin());
-//
-//        cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-//        time = get_timestamp();
+        std::cout << "[extractor] setting number of nodes   ... " << std::flush;
+        std::ios::pos_type positionInFile = fout.tellp();
+        fout.seekp(std::ios::beg);
+        fout.write((char*)&usedNodeCounter, sizeof(unsigned));
+        fout.seekp(positionInFile);
 
-        std::cout << "[extractor] Writing used nodes        ... " << std::flush;
-        fout << usedNodeCounter << endl;
-        for(STXXLNodeVector::iterator ut = allNodes.begin(); ut != allNodes.end(); ut++) {
-            if(ut->used)
-                fout << ut->id<< " " << ut->lon << " " << ut->lat << "\n";
-        }
-
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok" << std::endl;
         time = get_timestamp();
 
         // Sort edges by start.
@@ -194,6 +190,7 @@ int main (int argc, char *argv[]) {
         time = get_timestamp();
 
         std::cout << "[extractor] Setting start coords      ... " << std::flush;
+        fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
         // Traverse list of edges and nodes in parallel and set start coord
         nodesIT = allNodes.begin();
         STXXLEdgeVector::iterator edgeIT = allEdges.begin();
@@ -237,55 +234,61 @@ int main (int argc, char *argv[]) {
             if(edgeIT->startCoord.lat != INT_MIN && edgeIT->target == nodesIT->id) {
                 edgeIT->targetCoord.lat = nodesIT->lat;
                 edgeIT->targetCoord.lon = nodesIT->lon;
-                edgeIT->used = true;
+
+                double distance = ApproximateDistance(edgeIT->startCoord.lat, edgeIT->startCoord.lon, nodesIT->lat, nodesIT->lon);
+                if(edgeIT->speed == -1)
+                    edgeIT->speed = settings.speedProfile.speed[edgeIT->type];
+                double weight = ( distance * 10. ) / (edgeIT->speed / 3.6);
+                int intWeight = max(1, (int) weight);
+                int intDist = max(1, (int)distance);
+                int ferryIndex = settings.indexInAccessListOf("ferry");
+                assert(ferryIndex != -1);
+                short zero = 0;
+                short one = 1;
+
+                fout.write((char*)&edgeIT->start, sizeof(unsigned));
+                fout.write((char*)&edgeIT->target, sizeof(unsigned));
+                fout.write((char*)&intDist, sizeof(int));
+                switch(edgeIT->direction) {
+                case _Way::notSure:
+                    fout.write((char*)&zero, sizeof(short));
+                    break;
+                case _Way::oneway:
+                    fout.write((char*)&one, sizeof(short));
+                    break;
+                case _Way::bidirectional:
+                    fout.write((char*)&zero, sizeof(short));
+
+                    break;
+                case _Way::opposite:
+                    fout.write((char*)&one, sizeof(short));
+                    break;
+                default:
+                    std::cerr << "[error] edge with no direction: " << edgeIT->direction << std::endl;
+                    assert(false);
+                    break;
+                }
+                fout.write((char*)&intWeight, sizeof(int));
+                short edgeType = edgeIT->type;
+                fout.write((char*)&edgeType, sizeof(short));
+                fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
+
                 usedEdgeCounter++;
                 edgeIT++;
             }
         }
-
-        fout << usedEdgeCounter << "\n";
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        cout << "[extractor] writing confirmed edges   ... " << flush;
-        for(STXXLEdgeVector::iterator eit = allEdges.begin(); eit != allEdges.end(); eit++) {
-            if(eit->used == false)
-                continue;
-            double distance = ApproximateDistance(eit->startCoord.lat, eit->startCoord.lon, eit->targetCoord.lat, eit->targetCoord.lon);
-            if(eit->speed == -1)
-                eit->speed = settings.speedProfile.speed[eit->type];
-            double weight = ( distance * 10. ) / (eit->speed / 3.6);
-            int intWeight = max(1, (int) weight);
-            int intDist = max(1, (int)distance);
-            int ferryIndex = settings.indexInAccessListOf("ferry");
-            assert(ferryIndex != -1);
-
-            switch(eit->direction) {
-            case _Way::notSure:
-                fout << eit->start << " " << eit->target << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            case _Way::oneway:
-                fout << eit->start << " " << eit->target << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            case _Way::bidirectional:
-                fout << eit->start << " " << eit->target << " " << intDist << " " << 0 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            case _Way::opposite:
-                fout << eit->start << " " << eit->target << " " << intDist << " " << 1 << " " << intWeight << " " << eit->type << " " << eit->nameID << "\n";
-                break;
-            default:
-                std::cerr << "[error] edge with no direction: " << eit->direction << std::endl;
-                assert(false);
-                break;
-            }
-        }
-        fout.close();
-
-        outputFileName.append(".names");
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
-        std::cout << "[extractor] writing street name index ... " << std::flush;
 
+        std::cout << "[extractor] setting number of edges   ... " << std::flush;
+        fout.seekp(positionInFile);
+        fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
+        fout.close();
+        std::cout << "ok" << std::endl;
+        time = get_timestamp();
+
+
+        std::cout << "[extractor] writing street name index ... " << std::flush;
         std::vector<unsigned> * nameIndex = new std::vector<unsigned>(nameVector.size()+1, 0);
         unsigned currentNameIndex = 0;
         unsigned elementCounter(0);
@@ -295,7 +298,8 @@ int main (int argc, char *argv[]) {
             elementCounter++;
         }
         nameIndex->at(nameVector.size()) = currentNameIndex;
-        ofstream nameOutFile(outputFileName.c_str(), ios::binary);
+        outputFileName.append(".names");
+        std::ofstream nameOutFile(outputFileName.c_str(), std::ios::binary);
         unsigned sizeOfNameIndex = nameIndex->size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
@@ -327,7 +331,7 @@ int main (int argc, char *argv[]) {
     }
 
     delete extractCallBacks;
-    cout << "[extractor] finished." << endl;
+    std::cout << "[extractor] finished." << std::endl;
     return 0;
 }
 

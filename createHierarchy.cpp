@@ -88,8 +88,7 @@ int main (int argc, char *argv[]) {
         cerr << "Cannot open " << argv[1] << endl; exit(-1);
     }
     vector<ImportEdge> edgeList;
-    const NodeID n = readOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
-    unsigned numberOfNodes = int2ExtNodeMap->size();
+    const NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
     in.close();
 
     //    cout << "computing turn vector info ..." << flush;
@@ -137,7 +136,7 @@ int main (int argc, char *argv[]) {
         for(unsigned currentLevelEntry = 0; currentLevelEntry < sizeOfLevel; currentLevelEntry++) {
             unsigned node = level[currentLevelEntry];
             levelOutFile.write((char *)&node, sizeof(unsigned));
-            assert(node < numberOfNodes);
+            assert(node < n);
         }
     }
     levelOutFile.close();
@@ -195,7 +194,6 @@ int main (int argc, char *argv[]) {
     ofstream mapOutFile(nodeOut, ios::binary);
 
     for(NodeID i = 0; i < int2ExtNodeMap->size(); i++) {
-
         mapOutFile.write((char *)&(int2ExtNodeMap->at(i)), sizeof(NodeInfo));
     }
     mapOutFile.close();
