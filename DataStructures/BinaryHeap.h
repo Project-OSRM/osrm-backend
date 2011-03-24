@@ -29,11 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <map>
 #include <google/dense_hash_map>
 #include <google/sparse_hash_map>
-
-struct _SimpleHeapData {
-    NodeID parent;
-    _SimpleHeapData( NodeID p ) : parent(p) { }
-};
+#include <google/sparsetable>
 
 template< typename NodeID, typename Key >
 class ArrayStorage {
@@ -111,8 +107,20 @@ private:
     google::sparse_hash_map< NodeID, Key > nodes;
 };
 
+class SparseTableStorage : public google::sparsetable<NodeID> {
+public:
+    SparseTableStorage(size_t n) : google::sparsetable<NodeID>(n){ }
+    void Clear() {
+        google::sparsetable<NodeID>::clear();
+    }
+};
 
-template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = ArrayStorage< NodeID, Key > >
+struct _SimpleHeapData {
+    NodeID parent;
+    _SimpleHeapData( NodeID p ) : parent(p) { }
+};
+
+template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = SparseTableStorage >
 class BinaryHeap {
 private:
     BinaryHeap( const BinaryHeap& right );
