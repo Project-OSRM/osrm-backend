@@ -120,7 +120,7 @@ struct _SimpleHeapData {
     _SimpleHeapData( NodeID p ) : parent(p) { }
 };
 
-template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = SparseTableStorage >
+template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = ArrayStorage<NodeID, NodeID> >
 class BinaryHeap {
 private:
     BinaryHeap( const BinaryHeap& right );

@@ -35,6 +35,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <libxml/xmlreader.h>
 #include <google/sparse_hash_map>
+#include <unistd.h>
 #include <stxxl.h>
 
 #include "typedefs.h"
@@ -43,6 +44,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DataStructures/ExtractorStructs.h"
 #include "DataStructures/PBFParser.h"
 #include "DataStructures/XMLParser.h"
+#include "Util/BaseConfiguration.h"
+#include "Util/InputFileUtil.h"
+
+typedef BaseConfiguration ExtractorConfiguration;
 
 unsigned globalRelationCounter = 0;
 ExtractorCallbacks * extractCallBacks;
@@ -82,6 +87,21 @@ int main (int argc, char *argv[]) {
         }
     }
     std::string adressFileName(outputFileName);
+
+
+
+    unsigned amountOfRAM = 1;
+    unsigned installedRAM = (sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE));
+    if(installedRAM < 2097422336) {
+        std::cout << "[Warning] Machine has less than 2GB RAM." << std::endl;
+    }
+    if(testDataFile("extractor.ini")) {
+        ExtractorConfiguration extractorConfig("extractor.ini");
+        unsigned memoryAmountFromFile = atoi(extractorConfig.GetParameter("Memory").c_str());
+        if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024*1024))
+            amountOfRAM = memoryAmountFromFile;
+        std::cout << "[extractor] using " << amountOfRAM << " GB of RAM for buffers" << std::endl;
+    }
 
     STXXLNodeIDVector usedNodeIDs;
     STXXLNodeVector   allNodes;
@@ -127,7 +147,7 @@ int main (int argc, char *argv[]) {
 
         std::cout << "[extractor] parsing finished after " << get_timestamp() - time << "seconds" << std::endl;
         time = get_timestamp();
-        unsigned memory_to_use = 1024 * 1024 * 1024;
+        unsigned memory_to_use = amountOfRAM * 1024 * 1024 * 1024;
 
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
         stxxl::sort(usedNodeIDs.begin(), usedNodeIDs.end(), Cmp(), memory_to_use);
@@ -165,7 +185,7 @@ int main (int argc, char *argv[]) {
                 fout.write((char*)&(nodesIT->id), sizeof(unsigned));
                 fout.write((char*)&(nodesIT->lon), sizeof(int));
                 fout.write((char*)&(nodesIT->lat), sizeof(int));
-//                std::cout << "serializing: " << nodesIT->id << ", lat: " << nodesIT->lat << ", lon: " << nodesIT->lon << std::endl;
+                //                std::cout << "serializing: " << nodesIT->id << ", lat: " << nodesIT->lat << ", lon: " << nodesIT->lon << std::endl;
                 usedNodeCounter++;
                 usedNodeIDsIT++;
                 nodesIT++;
