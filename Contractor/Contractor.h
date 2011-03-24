@@ -65,7 +65,7 @@ private:
     };
 
     typedef DynamicGraph< _EdgeData > _DynamicGraph;
-    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, SparseTableStorage> _Heap;
+    typedef BinaryHeap< NodeID, NodeID, int, _HeapData> _Heap;
     typedef _DynamicGraph::InputEdge _ImportEdge;
 
     struct _ThreadData {
