@@ -45,7 +45,7 @@ static unsigned GetFileIndexForLatLon(const int lt, const int ln) {
 	double lon = ln/100000.;
 
 	double x = ( lon + 180.0 ) / 360.0;
-	double y = ( lat + 90.0 ) / 180.0;
+	double y = ( lat + 180.0 ) / 360.0;
 
 	assert( x<=1.0 && x >= 0);
 	assert( y<=1.0 && y >= 0);
@@ -125,13 +125,13 @@ static void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& 
 	double lon1 = start.lon/100000.;
 
 	double x1 = ( lon1 + 180.0 ) / 360.0;
-	double y1 = ( lat1 + 90.0 ) / 180.0;
+	double y1 = ( lat1 + 180.0 ) / 360.0;
 
 	double lat2 = target.lat/100000.;
 	double lon2 = target.lon/100000.;
 
 	double x2 = ( lon2 + 180.0 ) / 360.0;
-	double y2 = ( lat2 + 90.0 ) / 180.0;
+	double y2 = ( lat2 + 180.0 ) / 360.0;
 
 	GetIndicesByBresenhamsAlgorithm(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
 }
@@ -198,9 +198,9 @@ public:
 	                continue;
 	            EdgeT edge = edgeList[i];
 
-	            int slat = int2ExtNodeMap->at(edge.source()).lat;
+	            int slat = 100000*lat2y(static_cast<double>(int2ExtNodeMap->at(edge.source()).lat)/100000.);
 	            int slon = int2ExtNodeMap->at(edge.source()).lon;
-	            int tlat = int2ExtNodeMap->at(edge.target()).lat;
+	            int tlat = 100000*lat2y(static_cast<double>(int2ExtNodeMap->at(edge.target()).lat)/100000.);
 	            int tlon = int2ExtNodeMap->at(edge.target()).lon;
 	            AddEdge( _GridEdge(
 	                    edgeList[i].source(),
@@ -263,7 +263,10 @@ public:
 		ramFile.close();
 	}
 
-	bool FindRoutingStarts(const _Coordinate& startCoord, const _Coordinate& targetCoord, PhantomNodes * routingStarts) {
+	bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes * routingStarts) {
+
+	    _Coordinate startCoord(100000*(lat2y(static_cast<double>(start.lat)/100000.)), start.lon);
+	    _Coordinate targetCoord(100000*(lat2y(static_cast<double>(target.lat)/100000.)), target.lon);
 
 	    /** search for point on edge close to source */
 		unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
@@ -289,7 +292,7 @@ public:
 				routingStarts->startNode2 = it->target;
 				routingStarts->startRatio = r;
 				dist = tmpDist;
-				routingStarts->startCoord.lat = tmp.lat;
+				routingStarts->startCoord.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
 				routingStarts->startCoord.lon = tmp.lon;
 			}
 		}
@@ -317,7 +320,7 @@ public:
 				routingStarts->targetNode2 = it->target;
 				routingStarts->targetRatio = r;
 				dist = tmpDist;
-				routingStarts->targetCoord.lat = tmp.lat;
+				routingStarts->targetCoord.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
 				routingStarts->targetCoord.lon = tmp.lon;
 			}
 		}
@@ -325,7 +328,7 @@ public:
 	}
 
 	_Coordinate FindNearestPointOnEdge(const _Coordinate& inputCoordinate) {
-	    unsigned fileIndex = GetFileIndexForLatLon(inputCoordinate.lat, inputCoordinate.lon);
+	    unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
 		std::vector<_Edge> candidates;
 		double timestamp = get_timestamp();
 		for(int j = -32768; j < (32768+1); j+=32768) {
@@ -344,6 +347,7 @@ public:
 				nearest = tmp;
 			}
 		}
+		nearest.lat = 100000*(y2lat(static_cast<double>(nearest.lat)/100000.));
 		return nearest;
 	}
 
