@@ -63,7 +63,7 @@ class PBFParser : public BaseParser<_Node, _Relation, _Way> {
 public:
     PBFParser(const char * fileName) {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
-        //        omp_set_num_threads(1);
+        omp_set_num_threads(1);
         input.open(fileName, std::ios::in | std::ios::binary);
 
         if (!input) {
