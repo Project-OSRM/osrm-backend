@@ -33,12 +33,6 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p) { }
 };
 
-struct _PathData {
-    _PathData(NodeID n, bool t) : node(n), turn(t) { }
-    NodeID node:31;
-    bool turn:1;
-};
-
 struct _Statistics {
     _Statistics () : insertedNodes(0), stalledNodes(0), meetingNodes(0), deleteMins(0), decreasedNodes(0), oqf(0), eqf(0), df(0), preprocTime(0) {};
     void Reset() {
@@ -220,12 +214,10 @@ public:
             packedPath.push_back( pathNode );
         }
 
-        path->push_back( _PathData(packedPath[0], false) );
+        path->push_back( _PathData(packedPath[0]) );
+        for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
         {
-            for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
-            {
-                _UnpackEdge(packedPath[i], packedPath[i+1], path);
-            }
+            _UnpackEdge(packedPath[i], packedPath[i+1], path);
         }
 
         packedPath.clear();
@@ -472,7 +464,7 @@ private:
             return false;
         } else {
             assert(!ed.shortcut);
-            path->push_back(_PathData(target, (forward ? ed.forwardTurn : ed.backwardTurn) ) );
+            path->push_back(_PathData(target) );
             return true;
         }
     }

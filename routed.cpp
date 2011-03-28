@@ -30,6 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Server/ServerConfiguration.h"
 #include "Server/ServerFactory.h"
 
+#include "Plugins/BasicDescriptor.h"
 #include "Plugins/HelloWorldPlugin.h"
 #include "Plugins/LocatePlugin.h"
 #include "Plugins/RoutePlugin.h"
@@ -67,7 +68,7 @@ int main (int argc, char *argv[])
 				serverConfig.GetParameter("nodesData"));
 		h.RegisterPlugin(locate);
 
-		BasePlugin * route = new RoutePlugin(
+		BasePlugin * route = new RoutePlugin<BasicDescriptor>(
 				serverConfig.GetParameter("hsgrData"),
 				serverConfig.GetParameter("ramIndex"),
 				serverConfig.GetParameter("fileIndex"),
