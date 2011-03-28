@@ -185,7 +185,6 @@ int main (int argc, char *argv[]) {
                 fout.write((char*)&(nodesIT->id), sizeof(unsigned));
                 fout.write((char*)&(nodesIT->lon), sizeof(int));
                 fout.write((char*)&(nodesIT->lat), sizeof(int));
-                //                std::cout << "serializing: " << nodesIT->id << ", lat: " << nodesIT->lat << ", lon: " << nodesIT->lon << std::endl;
                 usedNodeCounter++;
                 usedNodeIDsIT++;
                 nodesIT++;
@@ -310,24 +309,15 @@ int main (int argc, char *argv[]) {
 
         std::cout << "[extractor] writing street name index ... " << std::flush;
         std::vector<unsigned> * nameIndex = new std::vector<unsigned>(nameVector.size()+1, 0);
-        unsigned currentNameIndex = 0;
-        unsigned elementCounter(0);
-        for(STXXLStringVector::iterator it = nameVector.begin(); it != nameVector.end(); it++) {
-            nameIndex->at(elementCounter) = currentNameIndex;
-            currentNameIndex += it->length();
-            elementCounter++;
-        }
-        nameIndex->at(nameVector.size()) = currentNameIndex;
         outputFileName.append(".names");
         std::ofstream nameOutFile(outputFileName.c_str(), std::ios::binary);
         unsigned sizeOfNameIndex = nameIndex->size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
-        for(unsigned i = 0; i < nameIndex->size(); i++) {
-            nameOutFile.write((char *)&(nameIndex->at(i)), sizeof(unsigned));
-        }
         for(STXXLStringVector::iterator it = nameVector.begin(); it != nameVector.end(); it++) {
-            nameOutFile << *it;
+            unsigned lengthOfRawString = strlen(it->c_str());
+            nameOutFile.write((char *)&(lengthOfRawString), sizeof(unsigned));
+            nameOutFile.write(it->c_str(), lengthOfRawString);
         }
 
         nameOutFile.close();
