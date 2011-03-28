@@ -56,7 +56,6 @@ using namespace std;
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
-typedef NNGrid::NNGrid<true> WritableGrid;
 typedef BaseConfiguration ContractorConfiguration;
 
 vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();

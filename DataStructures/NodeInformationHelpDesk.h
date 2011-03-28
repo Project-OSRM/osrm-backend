@@ -29,8 +29,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "NNGrid.h"
 #include "PhantomNodes.h"
 
-typedef NNGrid::NNGrid<false> ReadOnlyGrid;
-
 class NodeInformationHelpDesk{
 public:
 	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput) {

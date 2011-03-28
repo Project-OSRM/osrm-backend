@@ -628,4 +628,7 @@ private:
 };
 }
 
+typedef NNGrid::NNGrid<false> ReadOnlyGrid;
+typedef NNGrid::NNGrid<true > WritableGrid;
+
 #endif /* NNGRID_H_ */
