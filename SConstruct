@@ -94,6 +94,7 @@ env.Append(LINKFLAGS = ' -fopenmp')
 env.StaticObject("DataStructures/pbf-proto/fileformat.pb.cc")
 env.StaticObject("DataStructures/pbf-proto/osmformat.pb.cc")
 env.Program("extractor.cpp")
+env.Program("createHierarchy.cpp")
 if os.path.exists("many-to-many.cpp"):
 	env.Program("many-to-many.cpp")
 env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz -lprotobuf')
