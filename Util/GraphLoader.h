@@ -108,18 +108,15 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
     int xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     ext2IntNodeMap.set_empty_key(UINT_MAX);
-//    in >> n;
     in.read((char*)&n, sizeof(NodeID));
     VERBOSE(cout << "Importing n = " << n << " nodes ..." << flush;)
     for (NodeID i=0; i<n;i++) {
-//        in >> id >> ycoord >> xcoord;
         in.read((char*)&id, sizeof(unsigned));
         in.read((char*)&ycoord, sizeof(int));
         in.read((char*)&xcoord, sizeof(int));
         int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
         ext2IntNodeMap.insert(make_pair(id, i));
     }
-//    in >> m;
     in.read((char*)&m, sizeof(unsigned));
     VERBOSE(cout << " and " << m << " edges ..." << flush;)
 
@@ -129,7 +126,6 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
         short type;
         NodeID nameID;
         int length;
-//        in >> source >> target >> length >> dir >> weight >> type >> nameID;
         in.read((char*)&source, sizeof(unsigned));
         in.read((char*)&target, sizeof(unsigned));
         in.read((char*)&length, sizeof(int));
@@ -137,6 +133,7 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
         in.read((char*)&weight, sizeof(int));
         in.read((char*)&type,   sizeof(short));
         in.read((char*)&nameID ,sizeof(unsigned));
+
         assert(length > 0);
         assert(weight > 0);
         assert(0<=dir && dir<=2);
