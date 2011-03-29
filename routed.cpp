@@ -33,6 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/BasicDescriptor.h"
 #include "Plugins/HelloWorldPlugin.h"
 #include "Plugins/LocatePlugin.h"
+#include "Plugins/NearestPlugin.h"
 #include "Plugins/RoutePlugin.h"
 #include "Util/InputFileUtil.h"
 
@@ -62,11 +63,17 @@ int main (int argc, char *argv[])
 		BasePlugin * helloWorld = new HelloWorldPlugin();
 		h.RegisterPlugin(helloWorld);
 
-		BasePlugin * locate = new LocatePlugin(
-				serverConfig.GetParameter("ramIndex"),
-				serverConfig.GetParameter("fileIndex"),
-				serverConfig.GetParameter("nodesData"));
-		h.RegisterPlugin(locate);
+        BasePlugin * locate = new LocatePlugin(
+                serverConfig.GetParameter("ramIndex"),
+                serverConfig.GetParameter("fileIndex"),
+                serverConfig.GetParameter("nodesData"));
+        h.RegisterPlugin(locate);
+
+        BasePlugin * nearest = new NearestPlugin(
+                serverConfig.GetParameter("ramIndex"),
+                serverConfig.GetParameter("fileIndex"),
+                serverConfig.GetParameter("nodesData"));
+        h.RegisterPlugin(nearest);
 
 		BasePlugin * route = new RoutePlugin<BasicDescriptor>(
 				serverConfig.GetParameter("hsgrData"),

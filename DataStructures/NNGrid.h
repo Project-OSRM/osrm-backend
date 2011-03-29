@@ -327,7 +327,7 @@ public:
 		return true;
 	}
 
-	_Coordinate FindNearestPointOnEdge(const _Coordinate& inputCoordinate) {
+	void FindNearestNodeInGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
 	    unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
 		std::vector<_Edge> candidates;
 		double timestamp = get_timestamp();
@@ -336,7 +336,7 @@ public:
 				GetContentsOfFileBucket(fileIndex+i+j, candidates);
 			}
 		}
-		_Coordinate nearest(numeric_limits<int>::max(), numeric_limits<int>::max()), tmp;
+		_Coordinate tmp;
 		double dist = numeric_limits<double>::max();
 		timestamp = get_timestamp();
 		for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
@@ -344,12 +344,33 @@ public:
 			double tmpDist = ComputeDistance(inputCoordinate, it->startCoord, it->targetCoord, tmp, &r);
 			if(tmpDist < dist) {
 				dist = tmpDist;
-				nearest = tmp;
+				outputCoordinate = tmp;
 			}
 		}
-		nearest.lat = 100000*(y2lat(static_cast<double>(nearest.lat)/100000.));
-		return nearest;
+		outputCoordinate.lat = 100000*(y2lat(static_cast<double>(outputCoordinate.lat)/100000.));
 	}
+
+    void FindNearestPointOnEdge(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
+        unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
+         std::vector<_Edge> candidates;
+         for(int j = -32768; j < (32768+1); j+=32768) {
+             for(int i = -1; i < 2; i++) {
+                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
+             }
+         }
+         _Coordinate tmp;
+         double dist = numeric_limits<double>::max();
+         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+             double r = 0.;
+             double tmpDist = ComputeDistance(inputCoordinate, it->startCoord, it->targetCoord, tmp, &r);
+             if(tmpDist < dist) {
+                 dist = tmpDist;
+                 outputCoordinate.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
+                 outputCoordinate.lon = tmp.lon;
+             }
+         }
+    }
+
 
 private:
 	unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset )

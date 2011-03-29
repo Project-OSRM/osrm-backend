@@ -58,13 +58,17 @@ public:
 	NodeID getNumberOfNodes() const { return numberOfNodes; }
 	NodeID getNumberOfNodes2() const { return int2ExtNodeMap->size(); }
 
-	inline void findNearestNodeCoordForLatLon(const _Coordinate coord, _Coordinate& result) {
-		result = readOnlyGrid->FindNearestPointOnEdge(coord);
+	inline void FindNearestNodeCoordForLatLon(const _Coordinate coord, _Coordinate& result) {
+		readOnlyGrid->FindNearestNodeInGraph(coord, result);
 	}
 
 	inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * phantomNodes) {
 		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes);
 		return true;
+	}
+
+	inline void FindNearestPointOnEdge(const _Coordinate & input, _Coordinate& output){
+	    readOnlyGrid->FindNearestPointOnEdge(input, output);
 	}
 
 	inline void RegisterThread(const unsigned k, const unsigned v) {

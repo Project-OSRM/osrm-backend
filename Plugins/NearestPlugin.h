@@ -18,8 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef LOCATEPLUGIN_H_
-#define LOCATEPLUGIN_H_
+#ifndef NearestPlugin_H_
+#define NearestPlugin_H_
 
 #include <fstream>
 
@@ -28,19 +28,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/NodeInformationHelpDesk.h"
 
 /*
- * This Plugin locates the nearest node in the road network for a given coordinate.
+ * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
-class LocatePlugin : public BasePlugin {
+class NearestPlugin : public BasePlugin {
 public:
-	LocatePlugin(std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath) {
+	NearestPlugin(std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath) {
 		nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str());
 		ifstream nodesInStream(nodesPath.c_str(), ios::binary);
 		nodeHelpDesk->initNNGrid(nodesInStream);
 	}
-	~LocatePlugin() {
+	~NearestPlugin() {
 		delete nodeHelpDesk;
 	}
-	std::string GetDescriptor() { return std::string("locate"); }
+	std::string GetDescriptor() { return std::string("nearest"); }
 	std::string GetVersionString() { return std::string("0.3 (DL)"); }
 	void HandleRequest(std::vector<std::string> parameters, http::Reply& reply) {
 		//check number of parameters
@@ -58,7 +58,7 @@ public:
 		}
 		//query to helpdesk
 		_Coordinate result;
-		nodeHelpDesk->FindNearestNodeCoordForLatLon(_Coordinate(lat, lon), result);
+		nodeHelpDesk->FindNearestPointOnEdge(_Coordinate(lat, lon), result);
 
 		//Write to stream
 		reply.status = http::Reply::ok;
@@ -93,4 +93,4 @@ private:
 	NodeInformationHelpDesk * nodeHelpDesk;
 };
 
-#endif /* LOCATEPLUGIN_H_ */
+#endif /* NearestPlugin_H_ */
