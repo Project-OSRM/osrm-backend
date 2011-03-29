@@ -290,8 +290,6 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     char d;
     EdgeID m;
     int dir;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext2IntNodeMap;
-    ext2IntNodeMap.set_empty_key(UINT_MAX);
     in >> d;
     in >> n;
     in >> m;
@@ -324,7 +322,6 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
         EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
         edgeList.push_back(inputEdge);
     }
-    ext2IntNodeMap.clear();
     vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     cout << "ok" << endl;
     return n;
