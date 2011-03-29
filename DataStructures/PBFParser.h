@@ -113,11 +113,7 @@ public:
         }
 
         if(readBlob(input, &initData)) {
-            char data[initData.charBuffer.size()];
-            for(unsigned i = 0; i < initData.charBuffer.size(); i++ ){
-                data[i] = initData.charBuffer[i];
-            }
-            if(!initData.PBFHeaderBlock.ParseFromArray(data, initData.charBuffer.size() ) ) {
+            if(!initData.PBFHeaderBlock.ParseFromArray(&(initData.charBuffer[0]), initData.charBuffer.size() ) ) {
                 std::cerr << "[error] Header not parseable!" << std::endl;
                 return false;
             }
@@ -314,9 +310,7 @@ private:
             return false;
         }
         char data[size];
-        for(int i = 0; i < size; i++) {
-            stream.read(&data[i], 1);
-        }
+        stream.read(data, size*sizeof(data[0]));
 
         if ( !(threadData->PBFBlobHeader).ParseFromArray( data, size ) ){
             return false;
@@ -376,9 +370,7 @@ private:
         }
 
         char data[size];
-        for(int i = 0; i < size; i++) {
-            stream.read(&data[i], 1);
-        }
+        stream.read(data, sizeof(data[0])*size);
 
         if ( !threadData->PBFBlob.ParseFromArray( data, size ) ) {
             std::cerr << "[error] failed to parse blob" << std::endl;
@@ -424,11 +416,7 @@ private:
         if ( !readBlob(stream, threadData) )
             return false;
 
-        char data[threadData->charBuffer.size()];
-        for(unsigned i = 0; i < threadData->charBuffer.size(); i++ ){
-            data[i] = threadData->charBuffer[i];
-        }
-        if ( !threadData->PBFprimitiveBlock.ParseFromArray( data, threadData-> charBuffer.size() ) ) {
+        if ( !threadData->PBFprimitiveBlock.ParseFromArray( &(threadData->charBuffer[0]), threadData-> charBuffer.size() ) ) {
             std::cerr << "[error] failed to parse PrimitiveBlock" << std::endl;
             return false;
         }
