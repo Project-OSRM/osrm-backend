@@ -156,9 +156,8 @@ env.Program("extractor.cpp")
 env.Program("createHierarchy.cpp")
 if os.path.exists("many-to-many.cpp"):
 	env.Program("many-to-many.cpp")
-env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz -lprotobuf')
-env.Append(LINKFLAGS = ' -lboost_regex -lboost_iostreams -lboost_system -lbz2 -lz')
-env.Append(LINKFLAGS = ' -lprotobuf DataStructures/pbf-proto/fileformat.pb.o DataStructures/pbf-proto/osmformat.pb.o')
+env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lbz2 -lz -lprotobuf')
+env.Append(LINKFLAGS = '-lboost_system DataStructures/pbf-proto/fileformat.pb.o DataStructures/pbf-proto/osmformat.pb.o')
 env.Program("routed.cpp")
 env = conf.Finish()
 
