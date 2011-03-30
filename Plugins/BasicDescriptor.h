@@ -266,7 +266,7 @@ public:
         intToString(reply.content.size(), tmp);
         reply.headers[0].value = tmp;
         reply.headers[1].name = "Content-Type";
-        reply.headers[1].value = "application/vnd.google-earth.kml+xml";
+        reply.headers[1].value = "application/vnd.google-earth.kml+xml; charset=UTF-8";
         reply.headers[2].name = "Content-Disposition";
         reply.headers[2].value = "attachment; filename=\"route.kml\"";
 
