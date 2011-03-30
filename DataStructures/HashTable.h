@@ -56,6 +56,10 @@ public:
 	        table.clear();
 	}
 
+	inline
+	valueT & operator[] (keyT key) {
+        return table[key];
+	}
 private:
 	MyHashTable table;
 };
