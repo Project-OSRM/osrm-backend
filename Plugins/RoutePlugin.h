@@ -59,14 +59,14 @@ public:
         namesInStream.read((char *)&size, sizeof(unsigned));
         names = new std::vector<std::string>();
 
+        char buf[1024];
         for(unsigned i = 0; i < size; i++) {
             unsigned sizeOfString = 0;
             namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
-            char * buf = new char[1024];
+            memset(buf, 0, 1024*sizeof(char));
             namesInStream.read(buf, sizeOfString);
             std::string currentStreetName(buf);
             names->push_back(currentStreetName);
-            delete[] buf;
         }
 
         //init complete search engine
