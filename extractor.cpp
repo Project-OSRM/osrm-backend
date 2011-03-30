@@ -251,7 +251,7 @@ int main (int argc, char *argv[]) {
                 continue;
             }
             if(edgeIT->target == nodesIT->id) {
-                if(edgeIT->startCoord.lat != INT_MIN) {
+                if(edgeIT->startCoord.lat != INT_MIN && edgeIT->startCoord.lon != INT_MIN) {
                     edgeIT->targetCoord.lat = nodesIT->lat;
                     edgeIT->targetCoord.lon = nodesIT->lon;
 

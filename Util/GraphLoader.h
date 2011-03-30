@@ -148,13 +148,19 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
         //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
         if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
-            cerr << "after " << edgeList.size() << " edges" << endl;
-            cerr << "->" << source << "," << target << "," << length << "," << dir << "," << weight << endl;
-            cerr << "unresolved source NodeID: " << source << endl; exit(0);
+#ifndef NDEBUG
+            cerr << "[warning] unresolved source NodeID: " << source << endl;
+#endif
+            continue;
         }
         source = intNodeID->second;
         intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) { cerr << "unresolved target NodeID : " << target << endl; exit(0); }
+        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
+#ifndef NDEBUG
+           cerr << "unresolved target NodeID : " << target << endl;
+#endif
+           continue;
+        }
         target = intNodeID->second;
 
         if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }
