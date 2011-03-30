@@ -113,6 +113,9 @@ if not conf.CheckLibWithHeader('boost_thread', 'boost/thread.hpp', 'CXX'):
 if not conf.CheckCXXHeader('boost/thread.hpp'):
 	print "boost thread header not found. Exiting"
 	Exit(-1)
+if not conf.CheckLib('boost_system', language="C++"):
+	print "boost_system library not found. Exiting"
+	Exit(-1)
 if not conf.CheckCXXHeader('boost/bind.hpp'):
 	print "boost/bind.hpp not found. Exiting"
 	Exit(-1)
