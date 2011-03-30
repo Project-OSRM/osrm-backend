@@ -250,48 +250,49 @@ int main (int argc, char *argv[]) {
                 nodesIT++;
                 continue;
             }
-            if(edgeIT->startCoord.lat != INT_MIN && edgeIT->target == nodesIT->id) {
-                edgeIT->targetCoord.lat = nodesIT->lat;
-                edgeIT->targetCoord.lon = nodesIT->lon;
+            if(edgeIT->target == nodesIT->id) {
+                if(edgeIT->startCoord.lat != INT_MIN) {
+                    edgeIT->targetCoord.lat = nodesIT->lat;
+                    edgeIT->targetCoord.lon = nodesIT->lon;
 
-                double distance = ApproximateDistance(edgeIT->startCoord.lat, edgeIT->startCoord.lon, nodesIT->lat, nodesIT->lon);
-                if(edgeIT->speed == -1)
-                    edgeIT->speed = settings.speedProfile.speed[edgeIT->type];
-                double weight = ( distance * 10. ) / (edgeIT->speed / 3.6);
-                int intWeight = max(1, (int) weight);
-                int intDist = max(1, (int)distance);
-                int ferryIndex = settings.indexInAccessListOf("ferry");
-                assert(ferryIndex != -1);
-                short zero = 0;
-                short one = 1;
+                    double distance = ApproximateDistance(edgeIT->startCoord.lat, edgeIT->startCoord.lon, nodesIT->lat, nodesIT->lon);
+                    if(edgeIT->speed == -1)
+                        edgeIT->speed = settings.speedProfile.speed[edgeIT->type];
+                    double weight = ( distance * 10. ) / (edgeIT->speed / 3.6);
+                    int intWeight = max(1, (int) weight);
+                    int intDist = max(1, (int)distance);
+                    int ferryIndex = settings.indexInAccessListOf("ferry");
+                    assert(ferryIndex != -1);
+                    short zero = 0;
+                    short one = 1;
 
-                fout.write((char*)&edgeIT->start, sizeof(unsigned));
-                fout.write((char*)&edgeIT->target, sizeof(unsigned));
-                fout.write((char*)&intDist, sizeof(int));
-                switch(edgeIT->direction) {
-                case _Way::notSure:
-                    fout.write((char*)&zero, sizeof(short));
-                    break;
-                case _Way::oneway:
-                    fout.write((char*)&one, sizeof(short));
-                    break;
-                case _Way::bidirectional:
-                    fout.write((char*)&zero, sizeof(short));
+                    fout.write((char*)&edgeIT->start, sizeof(unsigned));
+                    fout.write((char*)&edgeIT->target, sizeof(unsigned));
+                    fout.write((char*)&intDist, sizeof(int));
+                    switch(edgeIT->direction) {
+                    case _Way::notSure:
+                        fout.write((char*)&zero, sizeof(short));
+                        break;
+                    case _Way::oneway:
+                        fout.write((char*)&one, sizeof(short));
+                        break;
+                    case _Way::bidirectional:
+                        fout.write((char*)&zero, sizeof(short));
 
-                    break;
-                case _Way::opposite:
-                    fout.write((char*)&one, sizeof(short));
-                    break;
-                default:
-                    std::cerr << "[error] edge with no direction: " << edgeIT->direction << std::endl;
-                    assert(false);
-                    break;
+                        break;
+                    case _Way::opposite:
+                        fout.write((char*)&one, sizeof(short));
+                        break;
+                    default:
+                        std::cerr << "[error] edge with no direction: " << edgeIT->direction << std::endl;
+                        assert(false);
+                        break;
+                    }
+                    fout.write((char*)&intWeight, sizeof(int));
+                    short edgeType = edgeIT->type;
+                    fout.write((char*)&edgeType, sizeof(short));
+                    fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
                 }
-                fout.write((char*)&intWeight, sizeof(int));
-                short edgeType = edgeIT->type;
-                fout.write((char*)&edgeType, sizeof(short));
-                fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
-
                 usedEdgeCounter++;
                 edgeIT++;
             }
