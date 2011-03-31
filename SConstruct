@@ -141,9 +141,10 @@ if not (conf.CheckBoost('1.37')):
 	Exit(-1);
 #check for protobuf 2.3.0, else rebuild proto files
 if not (conf.CheckProtobuf('2.3.0')):
-	if not (env.Detect('protoc')):
-		print 'protobuffer compiler not found'
-		Exit(-1);
+	print 'libprotobuf version >= 2.3.0 needed'
+if not (env.Detect('protoc')):
+	print 'protobuffer compiler not found'
+	Exit(-1);
 
 protobld = Builder(action = 'protoc -I=DataStructures/pbf-proto --cpp_out=DataStructures/pbf-proto $SOURCE')
 env.Append(BUILDERS = {'Protobuf' : protobld})
