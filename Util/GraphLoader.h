@@ -292,14 +292,16 @@ NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 template<typename EdgeT>
 
 NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
+    ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
     NodeID n, source, target;
+    unsigned numberOfNodes = 0;
     char d;
     EdgeID m;
     int dir;// direction (0 = open, 1 = forward, 2+ = open)
     in >> d;
     in >> n;
     in >> m;
-    std::cout << n << " nodes and " << m << " edges ..." << flush;
+    std::cout << "expecting " << n << " nodes and " << m << " edges ..." << flush;
 
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; i++) {
@@ -327,10 +329,20 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 
         EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
         edgeList.push_back(inputEdge);
+        if( nodeMap.find(source) == nodeMap.end()) {
+            nodeMap[numberOfNodes] = source;
+            numberOfNodes++;
+        }
+        if( nodeMap.find(target) == nodeMap.end()) {
+            nodeMap[numberOfNodes] = target;
+            numberOfNodes++;
+        }
     }
     vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     cout << "ok" << endl;
-    return n;
+    std::cout << "imported " << numberOfNodes << " nodes and " << edgeList.size() << " edges" << std::endl;
+    nodeMap.clear();
+    return numberOfNodes;
 }
 
 template<typename EdgeT>
