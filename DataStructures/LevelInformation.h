@@ -30,8 +30,10 @@ public:
 		return levelInfos->size();
 	}
 
-	std::vector<unsigned> & GetLevel(unsigned level) {
-		assert(level < levelInfos->size());
+	std::vector<unsigned> & GetLevel(const unsigned level) {
+		if(levelInfos->size() <= level)
+			levelInfos->resize(level+1);
+		assert(levelInfos->size() >= level);
 		return (*levelInfos)[level];
 	}
 
