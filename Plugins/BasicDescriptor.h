@@ -29,11 +29,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASICDESCRIPTOR_H_
 #define BASICDESCRIPTOR_H_
 
-struct _PathData {
-    _PathData(NodeID n) : node(n) { }
-    NodeID node;
-};
-
 class BasicDescriptor {
 public:
     template<class SearchEngineT>

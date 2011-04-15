@@ -27,6 +27,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "HashTable.h"
 #include "Util.h"
 
+struct _PathData {
+    _PathData(NodeID n) : node(n) { }
+    NodeID node;
+};
+
 /*     Default Speed Profile:
         motorway        110
         motorway_link   90
