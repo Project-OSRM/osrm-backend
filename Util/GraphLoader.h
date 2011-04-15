@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef CREATEGRAPH_H
+#ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
 #include <cassert>
@@ -325,19 +325,17 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
         if(weight == 0)
         { cerr << "loaded null length edge" << endl; exit(1); }
 
-        if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }
-
-        EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
-        edgeList.push_back(inputEdge);
         if( nodeMap.find(source) == nodeMap.end()) {
-            nodeMap[numberOfNodes] = source;
+            nodeMap.insert(std::make_pair(source, numberOfNodes ));
             numberOfNodes++;
         }
         if( nodeMap.find(target) == nodeMap.end()) {
-            nodeMap[numberOfNodes] = target;
+            nodeMap.insert(std::make_pair(target, numberOfNodes));
             numberOfNodes++;
         }
-    }
+        EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
+        edgeList.push_back(inputEdge);
+   }
     vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     cout << "ok" << endl;
     std::cout << "imported " << numberOfNodes << " nodes and " << edgeList.size() << " edges" << std::endl;
@@ -390,4 +388,4 @@ unsigned readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
     }
     return numberOfNodes+1;
 }
-#endif // CREATEGRAPH_H
+#endif // GRAPHLOADER_H
