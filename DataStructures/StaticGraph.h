@@ -92,13 +92,14 @@ public:
         return BeginEdges(n)-EndEdges(n) - 1;
     }
 
-    NodeIterator GetTarget( const EdgeIterator &e ) const {
+    inline NodeIterator GetTarget( const EdgeIterator &e ) const {
         return NodeIterator( _edges[e].target );
     }
 
-    EdgeData &GetEdgeData( const EdgeIterator &e ) {
+    inline EdgeData &GetEdgeData( const EdgeIterator &e ) {
         return _edges[e].data;
     }
+
     const EdgeData &GetEdgeData( const EdgeIterator &e ) const {
         return _edges[e].data;
     }
