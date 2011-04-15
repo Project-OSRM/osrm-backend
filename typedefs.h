@@ -48,12 +48,12 @@ static const EdgeID SPECIAL_EDGEID = UINT_MAX;
 #ifndef _ONLYTYPEDEFS
 #include <boost/thread.hpp>
 #include <libxml/xmlreader.h>
+#include "DataStructures/Util.h"
 #endif //_ONLYTYPEDEFS
 
 #include "DataStructures/HashTable.h"
 #include "DataStructures/NodeCoords.h"
 typedef NodeCoords<NodeID> NodeInfo;
-#include "DataStructures/Util.h"
 #include "DataStructures/NodeInformationHelpDesk.h"
 #include "DataStructures/BinaryHeap.h"
 #include "Contractor/Contractor.h"
