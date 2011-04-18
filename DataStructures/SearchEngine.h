@@ -298,6 +298,16 @@ public:
         return ed.middleName.nameID;
     }
 
+    inline NodeID GetWeightForOriginDestinationNodeID(NodeID s, NodeID t) const {
+        assert(s!=t);
+        EdgeID e = _graph->FindEdge( s, t );
+        if(e == UINT_MAX)
+            e = _graph->FindEdge( t, s );
+        assert(e != UINT_MAX);
+        const EdgeData ed = _graph->GetEdgeData(e);
+        return ed.distance;
+    }
+
     inline std::string& GetNameForNameID(const NodeID nameID) const {
         assert(nameID < _names->size());
         return _names->at(nameID);

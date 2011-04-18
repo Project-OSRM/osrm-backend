@@ -37,7 +37,7 @@ public:
         string shortDirection = "E";
         int lastPosition = 0;
         int position = 0;
-        int travelTimeOnSegment = 0;
+        unsigned durationOfInstruction = 0;
         double lastAngle = 0.;
 
         reply.content += ("{\n");
@@ -131,10 +131,12 @@ public:
                     next = _Coordinate(phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
                     nextID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
                     nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+                    durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
                 } else {
                     sEngine->getNodeInfo((it+1)->node, next);
                     nextID = sEngine->GetNameIDForOriginDestinationNodeID(it->node, (it+1)->node);
                     nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(it->node, (it+1)->node);
+                    durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(it->node, (it+1)->node);
                 }
 
                 if(nextID == nameID) {
@@ -148,7 +150,7 @@ public:
                     if(nameID != 0)
                         routeInstructionString += sEngine->GetNameForNameID(nameID);
                     routeInstructionString += "\",";
-                    distanceOfInstruction = ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon)+tempDist;
+                    distanceOfInstruction += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon)+tempDist;
                     entireDistance += distanceOfInstruction;
                     intNumberString.str("");
                     intNumberString << 10*(round(distanceOfInstruction/10.));;
@@ -160,11 +162,11 @@ public:
                     routeInstructionString += intNumberString.str();
                     routeInstructionString += ",";
                     intNumberString.str("");
-                    intNumberString << travelTimeOnSegment;
+                    intNumberString << durationOfInstruction/10;
                     routeInstructionString += intNumberString.str();
                     routeInstructionString += ",\"";
                     intNumberString.str("");
-                    intNumberString << 10*(round(distanceOfInstruction/10.));;
+                    intNumberString << 10*(round(distanceOfInstruction/10.));
                     routeInstructionString += intNumberString.str();
                     routeInstructionString += "m\",\"";
                     routeInstructionString += shortDirection;
@@ -199,6 +201,7 @@ public:
                     lastAngle = angle;
                     tempDist = 0;
                     prevType = type;
+                    durationOfInstruction = 0;
                 }
                 nameID = nextID;
                 previous = current;
@@ -206,6 +209,7 @@ public:
             }
             nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+            durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             routeInstructionString += " at ";
             routeInstructionString += sEngine->GetNameForNameID(nameID);
             routeInstructionString += "\",";
@@ -219,9 +223,9 @@ public:
             numberString << lastPosition;
             routeInstructionString += numberString.str();
             routeInstructionString += ",";
-            numberString.str("");
-            numberString << travelTimeOnSegment;
-            routeInstructionString += numberString.str();
+            intNumberString.str("");
+            intNumberString << durationOfInstruction/10;
+            routeInstructionString += intNumberString.str();
             routeInstructionString += ",\"";
             intNumberString.str("");
             intNumberString << 10*(round(distanceOfInstruction/10.));;
@@ -253,7 +257,7 @@ public:
             routeSummaryString += s.str();
             routeSummaryString += ",\n      \"total_time\":";
             //give travel time in minutes
-            int travelTime = (distance/60) + 1;
+            int travelTime = distance;
             s.str("");
             s << travelTime;
             routeSummaryString += s.str();
