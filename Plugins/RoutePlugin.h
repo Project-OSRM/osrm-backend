@@ -120,7 +120,13 @@ public:
         unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
         reply.status = http::Reply::ok;
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
-        switch(descriptorTable[routeParameters.options.Find("output")]){
+        std::string JSONParameter = routeParameters.options.Find("jsonp");
+        if("" != JSONParameter) {
+            reply.content += JSONParameter;
+            reply.content += "(\n";
+        }
+        unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
+        switch(descriptorType){
         case 0:
             desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
             break;
@@ -131,10 +137,48 @@ public:
             desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
             break;
         }
-//        JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > desc;
-        desc->Run(reply, path, phantomNodes, sEngine, distance);
 
-        std::cout << reply.content << std::endl;
+        desc->Run(reply, path, phantomNodes, sEngine, distance);
+        if("" != JSONParameter) {
+            reply.content += ")\n";
+        }
+
+        reply.headers.resize(3);
+        reply.headers[0].name = "Content-Length";
+        std::string tmp;
+        intToString(reply.content.size(), tmp);
+        reply.headers[0].value = tmp;
+        switch(descriptorType){
+        case 0:
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "application/vnd.google-earth.kml+xml; charset=UTF-8";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"route.kml\"";
+
+            break;
+        case 1:
+            if("" != JSONParameter){
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "text/javascript";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "attachment; filename=\"route.js\"";
+            } else {
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "application/json";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "attachment; filename=\"route.json\"";
+            }
+
+            break;
+        default:
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "application/vnd.google-earth.kml+xml; charset=UTF-8";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"route.kml\"";
+
+            break;
+        }
+
         delete desc;
         delete path;
         delete phantomNodes;

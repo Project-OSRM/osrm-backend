@@ -69,14 +69,18 @@ public:
 				        std::string p = item.substr(0, found);
 				        std::transform(p.begin(), p.end(), p.begin(), (int(*)(int)) std::tolower);
 				        std::string o = item.substr(found+1);
-				        std::transform(o.begin(), o.end(), o.begin(), (int(*)(int)) std::tolower);
+				        if("jsonp" != p)
+				            std::transform(o.begin(), o.end(), o.begin(), (int(*)(int)) std::tolower);
 				        routeParameters.options.Set(p, o);
 				    }
 				}
+
 //				std::cout << "[debug] found handler for '" << command << "' at version: " << pluginMap.Find(command)->GetVersionString() << std::endl;
 //				std::cout << "[debug] remaining parameters: " << parameters.size() << std::endl;
 				rep.status = Reply::ok;
 				_pluginVector[pluginMap.Find(command)]->HandleRequest(routeParameters, rep );
+
+//				std::cout << rep.content << std::endl;
 			} else {
 				rep = Reply::stockReply(Reply::badRequest);
 			}
