@@ -11,20 +11,27 @@
 #include <sstream>
 
 #include "BasePlugin.h"
+#include "RouteParameters.h"
 
 class HelloWorldPlugin : public BasePlugin {
 public:
 	HelloWorldPlugin() {}
 	~HelloWorldPlugin() { /*std::cout << GetDescriptor() << " destructor" << std::endl;*/ }
 	std::string GetDescriptor() { return std::string("hello"); }
-	void HandleRequest(std::vector<std::string> parameters, http::Reply& reply) {
+	void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
 		std::cout << "[hello world]: runnning handler" << std::endl;
 		reply.status = http::Reply::ok;
 		reply.content.append("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
 		std::stringstream content;
-		content << "Number of parameters: " << parameters.size() << "<br>";
-		for(unsigned i = 0; i < parameters.size(); i++) {
-			content << parameters[i] << "<br>";
+		content << "Number of parameters: " << routeParameters.parameters.size() << "<br>";
+		for(unsigned i = 0; i < routeParameters.parameters.size(); i++) {
+			content << routeParameters.parameters[i] << "<br>";
+		}
+		content << "Number Of Options: " << routeParameters.options.Size() << "<br>";
+		RouteParameters::OptionsIterator optionsIT = routeParameters.options.begin();
+		for(;optionsIT != routeParameters.options.end(); optionsIT++) {
+		    content << "param  = " << optionsIT->first  << ": ";
+		    content << "option = " << optionsIT->second << "<br>";
 		}
 		reply.content.append(content.str());
 		reply.content.append("</body></html>");

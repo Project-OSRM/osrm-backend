@@ -21,14 +21,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
+#include <algorithm>
+#include <cctype> // std::tolower
+#include <string>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include <boost/noncopyable.hpp>
 
 #include "BasicDatastructures.h"
-
 #include "../DataStructures/HashTable.h"
 #include "../Plugins/BasePlugin.h"
+#include "../Plugins/RouteParameters.h"
 
 namespace http {
 
@@ -55,16 +58,25 @@ public:
 		try {
 			if(pluginMap.Holds(command)) {
 
-				std::vector<std::string> parameters;
+				RouteParameters routeParameters;
 				std::stringstream ss(( firstAmpPosition == std::string::npos ? "" : request.substr(firstAmpPosition+1) ));
 				std::string item;
 				while(std::getline(ss, item, '&')) {
-					parameters.push_back(item);
+				    size_t found = item.find('=');
+				    if(found == std::string::npos) {
+				        routeParameters.parameters.push_back(item);
+				    } else {
+				        std::string p = item.substr(0, found);
+				        std::transform(p.begin(), p.end(), p.begin(), (int(*)(int)) std::tolower);
+				        std::string o = item.substr(found+1);
+				        std::transform(o.begin(), o.end(), o.begin(), (int(*)(int)) std::tolower);
+				        routeParameters.options.Set(p, o);
+				    }
 				}
 //				std::cout << "[debug] found handler for '" << command << "' at version: " << pluginMap.Find(command)->GetVersionString() << std::endl;
 //				std::cout << "[debug] remaining parameters: " << parameters.size() << std::endl;
 				rep.status = Reply::ok;
-				_pluginVector[pluginMap.Find(command)]->HandleRequest(parameters, rep );
+				_pluginVector[pluginMap.Find(command)]->HandleRequest(routeParameters, rep );
 			} else {
 				rep = Reply::stockReply(Reply::badRequest);
 			}

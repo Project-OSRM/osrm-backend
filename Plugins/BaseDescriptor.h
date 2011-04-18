@@ -18,24 +18,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef BASEPLUGIN_H_
-#define BASEPLUGIN_H_
+#ifndef BASE_DESCRIPTOR_H_
+#define BASE_DESCRIPTOR_H_
 
 #include <cassert>
 #include <string>
 #include <vector>
+#include <cstdio>
 
-#include "RouteParameters.h"
-#include "../Server/BasicDatastructures.h"
+#include "../typedefs.h"
+#include "../DataStructures/ExtractorStructs.h"
+#include "../Util/StrIngUtil.h"
 
-class BasePlugin {
+template<class SearchEngineT>
+class BaseDescriptor {
 public:
-	BasePlugin() { }
+    BaseDescriptor() { }
 	//Maybe someone can explain the pure virtual destructor thing to me (dennis)
-	virtual ~BasePlugin() { }
-	virtual std::string GetDescriptor() = 0;
-	virtual std::string GetVersionString() = 0;
-	virtual void HandleRequest(RouteParameters routeParameters, http::Reply& reply) = 0;
+	virtual ~BaseDescriptor() { }
+    virtual void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) = 0;
+
 };
 
-#endif /* BASEPLUGIN_H_ */
+#endif /* BASE_DESCRIPTOR_H_ */

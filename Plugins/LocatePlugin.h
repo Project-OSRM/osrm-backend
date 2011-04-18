@@ -24,6 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <fstream>
 
 #include "BasePlugin.h"
+#include "RouteParameters.h"
 
 #include "../DataStructures/NodeInformationHelpDesk.h"
 
@@ -42,15 +43,15 @@ public:
 	}
 	std::string GetDescriptor() { return std::string("locate"); }
 	std::string GetVersionString() { return std::string("0.3 (DL)"); }
-	void HandleRequest(std::vector<std::string> parameters, http::Reply& reply) {
+	void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
 		//check number of parameters
-		if(parameters.size() != 2) {
+		if(routeParameters.parameters.size() != 2) {
 			reply = http::Reply::stockReply(http::Reply::badRequest);
 			return;
 		}
 
-		int lat = static_cast<int>(100000.*atof(parameters[0].c_str()));
-		int lon = static_cast<int>(100000.*atof(parameters[1].c_str()));
+		int lat = static_cast<int>(100000.*atof(routeParameters.parameters[0].c_str()));
+		int lon = static_cast<int>(100000.*atof(routeParameters.parameters[1].c_str()));
 
 		if(lat>90*100000 || lat <-90*100000 || lon>180*100000 || lon <-180*100000) {
 		    reply = http::Reply::stockReply(http::Reply::badRequest);

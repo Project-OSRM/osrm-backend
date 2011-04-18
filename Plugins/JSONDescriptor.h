@@ -18,20 +18,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#include <cstdio>
-#include <string>
-#include <vector>
-
-#include "../typedefs.h"
-#include "../DataStructures/ExtractorStructs.h"
-#include "../Util/StrIngUtil.h"
+#include "BaseDescriptor.h"
 
 #ifndef JSONDESCRIPTOR_H_
 #define JSONDESCRIPTOR_H_
 
-class JSONDescriptor {
+template<class SearchEngineT>
+class JSONDescriptor : public BaseDescriptor<SearchEngineT> {
 public:
-    template<class SearchEngineT>
     void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
         string tmp;
         string routeGeometryString;

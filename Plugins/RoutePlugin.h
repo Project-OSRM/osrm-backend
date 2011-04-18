@@ -26,7 +26,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
+#include "BaseDescriptor.h"
 #include "BasePlugin.h"
+#include "RouteParameters.h"
+#include "KMLDescriptor.h"
+#include "JSONDescriptor.h"
+
+#include "../DataStructures/HashTable.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/SearchEngine.h"
 
@@ -36,7 +42,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef StaticGraph<EdgeData>::InputEdge InputEdge;
 
-template <class DescriptorT>
 class RoutePlugin : public BasePlugin {
 public:
     RoutePlugin(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath) {
@@ -71,28 +76,30 @@ public:
 
         //init complete search engine
         sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names);
-        descriptor = new DescriptorT();
+        descriptorTable.Set("", 0); //default descriptor
+        descriptorTable.Set("kml", 0);
+        descriptorTable.Set("json", 1);
     }
     ~RoutePlugin() {
         delete names;
         delete sEngine;
         delete graph;
         delete nodeHelpDesk;
-        delete descriptor;
     }
+
     std::string GetDescriptor() { return std::string("route"); }
     std::string GetVersionString() { return std::string("0.3 (DL)"); }
-    void HandleRequest(std::vector<std::string> parameters, http::Reply& reply) {
+    void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
         //check number of parameters
-        if(parameters.size() != 4) {
+        if(routeParameters.parameters.size() != 4) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
 
-        int lat1 = static_cast<int>(100000.*atof(parameters[0].c_str()));
-        int lon1 = static_cast<int>(100000.*atof(parameters[1].c_str()));
-        int lat2 = static_cast<int>(100000.*atof(parameters[2].c_str()));
-        int lon2 = static_cast<int>(100000.*atof(parameters[3].c_str()));
+        int lat1 = static_cast<int>(100000.*atof(routeParameters.parameters[0].c_str()));
+        int lon1 = static_cast<int>(100000.*atof(routeParameters.parameters[1].c_str()));
+        int lat2 = static_cast<int>(100000.*atof(routeParameters.parameters[2].c_str()));
+        int lon2 = static_cast<int>(100000.*atof(routeParameters.parameters[3].c_str()));
 
         if(lat1>90*100000 || lat1 <-90*100000 || lon1>180*100000 || lon1 <-180*100000) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
@@ -112,8 +119,23 @@ public:
         sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
         unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
         reply.status = http::Reply::ok;
-        descriptor->Run(reply, path, phantomNodes, sEngine, distance);
+        BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
+        switch(descriptorTable[routeParameters.options.Find("output")]){
+        case 0:
+            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            break;
+        case 1:
+            desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            break;
+        default:
+            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            break;
+        }
+//        JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > desc;
+        desc->Run(reply, path, phantomNodes, sEngine, distance);
 
+        std::cout << reply.content << std::endl;
+        delete desc;
         delete path;
         delete phantomNodes;
         return;
@@ -123,7 +145,7 @@ private:
     SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine;
     std::vector<std::string> * names;
     StaticGraph<EdgeData> * graph;
-    DescriptorT * descriptor;
+    HashTable<std::string, unsigned> descriptorTable;
 };
 
 

@@ -19,7 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
   Created on: 18.11.2010
   Author: dennis
-*/
+ */
 
 #ifndef HASHTABLE_H_
 #define HASHTABLE_H_
@@ -28,40 +28,50 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 template<typename keyT, typename valueT>
 class HashTable {
-	typedef google::sparse_hash_map<keyT, valueT> MyHashTable;
+    typedef google::sparse_hash_map<keyT, valueT> MyHashTable;
 public:
-	HashTable() { }
-	HashTable(const unsigned size) {
-		table.resize(size);
-	}
-	void Add(const keyT& key, const valueT& value){
-		table[key] = value;
-	}
-	void Set(const keyT& key, const valueT& value){
-		table[key] = value;
-	}
-	valueT Find(const keyT& key) {
-		if(table.find(key) == table.end())
-			return valueT();
-		return table.find(key)->second;
-	}
+    typedef typename google::sparse_hash_map<keyT, valueT>::const_iterator MyIterator;
+    HashTable() { }
+    HashTable(const unsigned size) {
+        table.resize(size);
+    }
+    void Add(const keyT& key, const valueT& value){
+        table[key] = value;
+    }
+    void Set(const keyT& key, const valueT& value){
+        table[key] = value;
+    }
+    valueT Find(const keyT& key) {
+        if(table.find(key) == table.end())
+            return valueT();
+        return table.find(key)->second;
+    }
 
-	bool Holds(const keyT& key) {
-		if(table.find(key) == table.end())
-			return false;
-		return true;
-	}
-	void EraseAll() {
-	    if(table.size() > 0)
-	        table.clear();
-	}
+    bool Holds(const keyT& key) {
+        if(table.find(key) == table.end())
+            return false;
+        return true;
+    }
+    void EraseAll() {
+        if(table.size() > 0)
+            table.clear();
+    }
 
-	inline
-	valueT & operator[] (keyT key) {
+    inline
+    valueT & operator[] (keyT key) {
         return table[key];
-	}
+    }
+    unsigned Size() const {
+        return table.size();
+    }
+    MyIterator begin() const {
+        return table.begin();
+    }
+    MyIterator end() const {
+        return table.end();
+    }
 private:
-	MyHashTable table;
+    MyHashTable table;
 };
 
 #endif /* HASHTABLE_H_ */

@@ -18,24 +18,18 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef BASEPLUGIN_H_
-#define BASEPLUGIN_H_
+#ifndef ROUTE_PARAMETERS_H
+#define ROUTE_PARAMETERS_H
 
-#include <cassert>
 #include <string>
 #include <vector>
+#include "../DataStructures/HashTable.h"
 
-#include "RouteParameters.h"
-#include "../Server/BasicDatastructures.h"
-
-class BasePlugin {
-public:
-	BasePlugin() { }
-	//Maybe someone can explain the pure virtual destructor thing to me (dennis)
-	virtual ~BasePlugin() { }
-	virtual std::string GetDescriptor() = 0;
-	virtual std::string GetVersionString() = 0;
-	virtual void HandleRequest(RouteParameters routeParameters, http::Reply& reply) = 0;
+struct RouteParameters {
+    std::vector<std::string> parameters;
+    HashTable<std::string, std::string> options;
+    typedef HashTable<std::string, std::string>::MyIterator OptionsIterator;
 };
 
-#endif /* BASEPLUGIN_H_ */
+
+#endif /*ROUTE_PARAMETERS_H*/
