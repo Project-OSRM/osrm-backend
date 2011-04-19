@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef JSONDESCRIPTOR_H_
 #define JSONDESCRIPTOR_H_
 
-template<class SearchEngineT>
+template<class SearchEngineT, bool SimplifyRoute = false>
 class JSONDescriptor : public BaseDescriptor<SearchEngineT> {
 public:
     void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
@@ -102,7 +102,7 @@ public:
             position++;
 
             _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
-            _Coordinate next, current, lastPlace;
+            _Coordinate next, current, lastPlace, startOfSegment;
             stringstream numberString;
             stringstream intNumberString;
 
@@ -118,14 +118,7 @@ public:
             short prevType = SHRT_MAX;
             for(vector< _PathData >::iterator it = path->begin(); it != path->end(); it++) {
                 sEngine->getNodeInfo(it->node, current);
-                convertLatLon(current.lat, tmp);
-                routeGeometryString += "      [";
-                routeGeometryString += tmp;
-                routeGeometryString += ", ";
-                convertLatLon(current.lon, tmp);
-                routeGeometryString += tmp;
-                routeGeometryString += "],\n";
-                position++;
+                startOfSegment = previous;
 
                 if(it==path->end()-1){
                     next = _Coordinate(phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
@@ -138,7 +131,18 @@ public:
                     nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(it->node, (it+1)->node);
                     durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(it->node, (it+1)->node);
                 }
-
+                double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
+                if(178 > angle || 182 < angle || false == SimplifyRoute) {
+                    convertLatLon(current.lat, tmp);
+                    routeGeometryString += "      [";
+                    routeGeometryString += tmp;
+                    routeGeometryString += ", ";
+                    convertLatLon(current.lon, tmp);
+                    routeGeometryString += tmp;
+                    routeGeometryString += "],\n";
+                    position++;
+                    startOfSegment = current;
+                }
                 if(nextID == nameID) {
                     tempDist += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
                 } else {
@@ -182,8 +186,7 @@ public:
                     lastPlace = current;
                     routeInstructionString += "      [\"";
 
-                    double angle = GetAngleBetweenTwoEdges(previous, current, next);
-                    if(angle > 160 && angle < 200) {
+                     if(angle > 160 && angle < 200) {
                         routeInstructionString += /* " (" << angle << ")*/"Continue";
                     } else if (angle > 290 && angle <= 360) {
                         routeInstructionString += /*" (" << angle << ")*/ "Turn sharp left";

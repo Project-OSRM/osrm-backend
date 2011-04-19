@@ -126,15 +126,26 @@ public:
             reply.content += "(\n";
         }
         unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
+        const bool simplifiedRoute = (routeParameters.options.Find("simplified") == "yes");
+        //todo: put options in a seperate struct and pass it to the descriptor
         switch(descriptorType){
         case 0:
-            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            if(simplifiedRoute)
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true >();
+            else
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false >();
             break;
         case 1:
-            desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            if(simplifiedRoute)
+                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true >();
+            else
+                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false >();
             break;
         default:
-            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            if(simplifiedRoute)
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true >();
+            else
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false >();
             break;
         }
 

@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef KML_DESCRIPTOR_H_
 #define KML_DESCRIPTOR_H_
 
-template<class SearchEngineT>
+template<class SearchEngineT, bool SimplifyRoute = false>
 class KMLDescriptor : public BaseDescriptor<SearchEngineT>{
 public:
     void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
@@ -80,7 +80,7 @@ public:
 
             reply.content += ("\t</Placemark>\n");
             _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
-            _Coordinate next, current, lastPlace;
+            _Coordinate next, current, lastPlace, startOfSegment;
             stringstream numberString;
 
             double tempDist = 0;
@@ -96,13 +96,7 @@ public:
             reply.content += "\t<Placemark>\n\t\t<name><![CDATA[";
             for(vector< _PathData >::iterator it = path->begin(); it != path->end(); it++) {
                 sEngine->getNodeInfo(it->node, current);
-                convertLatLon(current.lon, tmp);
-                lineString += tmp;
-                lineString += ",";
-                convertLatLon(current.lat, tmp);
-                lineString += tmp;
-                lineString += " ";
-
+                startOfSegment = previous;
                 if(it==path->end()-1){
                     next = _Coordinate(phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
                     nextID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
@@ -113,6 +107,16 @@ public:
                     nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(it->node, (it+1)->node);
                 }
 
+                double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
+                if(178 > angle || 182 < angle || false == SimplifyRoute) {
+                    convertLatLon(current.lon, tmp);
+                    lineString += tmp;
+                    lineString += ",";
+                    convertLatLon(current.lat, tmp);
+                    lineString += tmp;
+                    lineString += " ";
+                    startOfSegment = current;
+                }
 
                 if(nextID == nameID) {
                     tempDist += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
@@ -122,7 +126,7 @@ public:
                     if(type != 0 && prevType == 0 )
                         reply.content += "leave motorway and ";
 
-                    double angle = GetAngleBetweenTwoEdges(previous, current, next);
+                    //double angle = GetAngleBetweenTwoEdges(previous, current, next);
                     reply.content += "follow road ";
                     if(nameID != 0)
                         reply.content += sEngine->GetNameForNameID(nameID);
