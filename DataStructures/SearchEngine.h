@@ -83,8 +83,8 @@ public:
         bool startReverse = false;
         bool targetReverse = false;
 
-        _Heap * _forwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
-        _Heap * _backwardHeap = new _Heap(nodeHelpDesk->getNumberOfNodes());
+        _Heap _forwardHeap(nodeHelpDesk->getNumberOfNodes());
+        _Heap _backwardHeap(nodeHelpDesk->getNumberOfNodes());
         NodeID middle = ( NodeID ) 0;
         unsigned int _upperbound = std::numeric_limits<unsigned int>::max();
 
@@ -102,8 +102,6 @@ public:
             }
 
             if(currentEdge == UINT_MAX){
-                delete _forwardHeap;
-                delete _backwardHeap;
                 return _upperbound;
             }
 
@@ -128,39 +126,33 @@ public:
                 getNodeInfo(phantomNodes->startNode2, result);
 
                 EdgeWeight w = _graph->GetEdgeData( currentEdge ).distance;
-                _forwardHeap->Insert(phantomNodes->startNode2, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode2);
-                _backwardHeap->Insert(phantomNodes->startNode1, absDouble(  w-w*phantomNodes->targetRatio), phantomNodes->startNode1);
+                _forwardHeap.Insert(phantomNodes->startNode2, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode2);
+                _backwardHeap.Insert(phantomNodes->startNode1, absDouble(  w-w*phantomNodes->targetRatio), phantomNodes->startNode1);
             }
 
-        } else if(phantomNodes->startNode1 != UINT_MAX)
-        {
+        } else if(phantomNodes->startNode1 != UINT_MAX) {
             EdgeID edge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2);
             if(edge == UINT_MAX){
                 edge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
                 startReverse = true;
             }
             if(edge == UINT_MAX){
-                delete _forwardHeap;
-                delete _backwardHeap;
                 return _upperbound;
             }
             const EdgeData& ed = _graph->GetEdgeData(edge);
             EdgeWeight w = ed.distance;
             if( (ed.backward && !startReverse) || (ed.forward && startReverse) )
-                _forwardHeap->Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
+                _forwardHeap.Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
             if( (ed.backward && startReverse) || (ed.forward && !startReverse) )
-                _forwardHeap->Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
+                _forwardHeap.Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
         }
-        if(phantomNodes->targetNode1 != UINT_MAX && !onSameEdgeReversed)
-        {
+        if(phantomNodes->targetNode1 != UINT_MAX && !onSameEdgeReversed) {
             EdgeID edge = _graph->FindEdge( phantomNodes->targetNode1, phantomNodes->targetNode2);
             if(edge == UINT_MAX){
                 edge = _graph->FindEdge( phantomNodes->targetNode2, phantomNodes->targetNode1 );
                 targetReverse = true;
             }
             if(edge == UINT_MAX){
-                delete _forwardHeap;
-                delete _backwardHeap;
                 return _upperbound;
             }
 
@@ -168,33 +160,30 @@ public:
             EdgeWeight w = ed.distance;
 
             if( (ed.backward && !targetReverse) || (ed.forward && targetReverse) )
-                _backwardHeap->Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
+                _backwardHeap.Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
             if( (ed.backward && targetReverse) || (ed.forward && !targetReverse) )
-                _backwardHeap->Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->startRatio), phantomNodes->targetNode1);
+                _backwardHeap.Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->startRatio), phantomNodes->targetNode1);
         }
 //        double time = get_timestamp();
 
         NodeID sourceHeapNode = 0;
         NodeID targetHeapNode = 0;
         if(onSameEdgeReversed) {
-            sourceHeapNode = _forwardHeap->Min();
-            targetHeapNode = _backwardHeap->Min();
+            sourceHeapNode = _forwardHeap.Min();
+            targetHeapNode = _backwardHeap.Min();
         }
-        while(_forwardHeap->Size() + _backwardHeap->Size() > 0)
-        {
-            if ( _forwardHeap->Size() > 0 ) {
-                _RoutingStep( _forwardHeap, _backwardHeap, true, &middle, &_upperbound );
+        while(_forwardHeap.Size() + _backwardHeap.Size() > 0) {
+            if ( _forwardHeap.Size() > 0 ) {
+                _RoutingStep( &_forwardHeap, &_backwardHeap, true, &middle, &_upperbound );
             }
-            if ( _backwardHeap->Size() > 0 ) {
-                _RoutingStep( _backwardHeap, _forwardHeap, false, &middle, &_upperbound );
+            if ( _backwardHeap.Size() > 0 ) {
+                _RoutingStep( &_backwardHeap, &_forwardHeap, false, &middle, &_upperbound );
             }
         }
 //        std::cout << "[debug] computing distance took " << get_timestamp() - time << std::endl;
 //        time = get_timestamp();
 
         if ( _upperbound == std::numeric_limits< unsigned int >::max() || onSameEdge ) {
-            delete _forwardHeap;
-            delete _backwardHeap;
             return _upperbound;
         }
 
@@ -202,7 +191,7 @@ public:
         deque< NodeID > packedPath;
 
         while ( onSameEdgeReversed ? pathNode != sourceHeapNode : pathNode != phantomNodes->startNode1 && pathNode != phantomNodes->startNode2 ) {
-            pathNode = _forwardHeap->GetData( pathNode ).parent;
+            pathNode = _forwardHeap.GetData( pathNode ).parent;
             packedPath.push_front( pathNode );
         }
         //        NodeID realStart = pathNode;
@@ -210,19 +199,16 @@ public:
         pathNode = middle;
 
         while ( onSameEdgeReversed ? pathNode != targetHeapNode : pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ){
-            pathNode = _backwardHeap->GetData( pathNode ).parent;
+            pathNode = _backwardHeap.GetData( pathNode ).parent;
             packedPath.push_back( pathNode );
         }
 
         path->push_back( _PathData(packedPath[0]) );
-        for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++)
-        {
+        for(deque<NodeID>::size_type i = 0; i < packedPath.size()-1; i++) {
             _UnpackEdge(packedPath[i], packedPath[i+1], path);
         }
 
         packedPath.clear();
-        delete _forwardHeap;
-        delete _backwardHeap;
 //        std::cout << "[debug] unpacking path took " << get_timestamp() - time << std::endl;
 
         return _upperbound/10;

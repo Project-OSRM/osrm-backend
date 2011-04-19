@@ -71,9 +71,6 @@ public:
 	    readOnlyGrid->FindNearestPointOnEdge(input, output);
 	}
 
-	inline void RegisterThread(const unsigned k, const unsigned v) {
-		readOnlyGrid->threadLookup.Add(k, v);
-	}
 private:
 	vector<_Coordinate> * int2ExtNodeMap;
 	ReadOnlyGrid * readOnlyGrid;

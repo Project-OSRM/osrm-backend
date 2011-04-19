@@ -138,30 +138,13 @@ static void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& 
 
 template<bool WriteAccess = false>
 class NNGrid {
-	struct _ThreadData{
-		_ThreadData(const char * iif) {
-			stream.open(iif, std::ios::in | std::ios::binary);
-		}
-		~_ThreadData() {
-			stream.close();
-		}
-		ifstream stream;
-	};
-
-	typedef HashTable<unsigned, unsigned> ThreadLookupTable;
 public:
-	ThreadLookupTable threadLookup;
-
 	NNGrid() { ramIndexTable.resize((1024*1024), UINT_MAX); if( WriteAccess) { entries = new stxxl::vector<GridEntry>(); }}
 
-	NNGrid(const char* rif, const char* iif, unsigned numberOfThreads = omp_get_num_procs()) {
+	NNGrid(const char* rif, const char* _i, unsigned numberOfThreads = omp_get_num_procs()) {
+	    iif = _i;
 		ramIndexTable.resize((1024*1024), UINT_MAX);
-//		indexInFile.open(iif, std::ios::in | std::ios::binary);
 		ramInFile.open(rif, std::ios::in | std::ios::binary);
-
-		for(int i = 0; i< omp_get_num_procs(); i++) {
-			indexFileStreams.push_back(new _ThreadData(iif));
-		}
 	}
 
 	~NNGrid() {
@@ -170,12 +153,6 @@ public:
 		if (WriteAccess) {
 			delete entries;
 		}
-
-		for(unsigned i = 0; i< indexFileStreams.size(); i++) {
-			delete indexFileStreams[i];
-		}
-		threadLookup.EraseAll();
-		ramIndexTable.clear();
 	}
 
 	void OpenIndexFiles() {
@@ -526,21 +503,21 @@ private:
 	}
 
 	void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_Edge>& result) {
-		unsigned threadID = threadLookup.Find(boost_thread_id_hash(boost::this_thread::get_id()));
+//		unsigned threadID = threadLookup.Find(boost_thread_id_hash(boost::this_thread::get_id()));
 		unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
 		unsigned startIndexInFile = ramIndexTable[ramIndex];
 //		ifstream indexInFile( indexFileStreams[threadID]->stream );
 		if(startIndexInFile == UINT_MAX){
 			return;
 		}
-
+		std::ifstream localStream(iif, std::ios::in | std::ios::binary);
 		std::vector<unsigned> cellIndex;
 		cellIndex.resize(32*32);
 		google::dense_hash_map< unsigned, unsigned > * cellMap = new google::dense_hash_map< unsigned, unsigned >(1024);
 		cellMap->set_empty_key(UINT_MAX);
 
 
-		indexFileStreams[threadID]->stream.seekg(startIndexInFile);
+		localStream.seekg(startIndexInFile);
 
 		unsigned lineBase = ramIndex/1024;
 		lineBase = lineBase*32*32768;
@@ -561,7 +538,7 @@ private:
 		unsigned numOfElementsInCell = 0;
 		for(int i = 0; i < 32*32; i++)
 		{
-			indexFileStreams[threadID]->stream.read((char *)&cellIndex[i], sizeof(unsigned));
+		    localStream.read((char *)&cellIndex[i], sizeof(unsigned));
 			numOfElementsInCell += cellIndex[i];
 		}
 		assert(cellMap->find(fileIndex) != cellMap->end());
@@ -571,18 +548,18 @@ private:
 			return;
 		}
 		unsigned position = cellIndex[cellMap->find(fileIndex)->second] + 32*32*sizeof(unsigned) ;
-		indexFileStreams[threadID]->stream.seekg(position);
+		localStream.seekg(position);
 		unsigned numberOfEdgesInFileBucket = 0;
 		NodeID start, target; int slat, slon, tlat, tlon;
 		do{
-			indexFileStreams[threadID]->stream.read((char *)&(start), sizeof(NodeID));
-			if(start == UINT_MAX || indexFileStreams[threadID]->stream.eof())
+		    localStream.read((char *)&(start), sizeof(NodeID));
+			if(localStream.eof() || start == UINT_MAX)
 				break;
-			indexFileStreams[threadID]->stream.read((char *)&(target), sizeof(NodeID));
-			indexFileStreams[threadID]->stream.read((char *)&(slat), sizeof(int));
-			indexFileStreams[threadID]->stream.read((char *)&(slon), sizeof(int));
-			indexFileStreams[threadID]->stream.read((char *)&(tlat), sizeof(int));
-			indexFileStreams[threadID]->stream.read((char *)&(tlon), sizeof(int));
+			localStream.read((char *)&(target), sizeof(NodeID));
+			localStream.read((char *)&(slat), sizeof(int));
+			localStream.read((char *)&(slon), sizeof(int));
+			localStream.read((char *)&(tlat), sizeof(int));
+			localStream.read((char *)&(tlon), sizeof(int));
 
 			_Edge e(start, target);
 			e.startCoord.lat = slat;
@@ -593,7 +570,7 @@ private:
 			result.push_back(e);
 			numberOfEdgesInFileBucket++;
 		} while(true);
-
+		localStream.close();
 		delete cellMap;
 	}
 
@@ -643,9 +620,9 @@ private:
 
 	ofstream indexOutFile;
 	ifstream ramInFile;
-	std::vector < _ThreadData* > indexFileStreams;
 	stxxl::vector<GridEntry> * entries;
 	std::vector<unsigned> ramIndexTable; //4 MB for first level index in RAM
+	const char * iif;
 };
 }
 
