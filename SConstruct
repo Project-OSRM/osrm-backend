@@ -142,6 +142,7 @@ if not (conf.CheckBoost('1.37')):
 #check for protobuf 2.3.0, else rebuild proto files
 if not (conf.CheckProtobuf('2.3.0')):
 	print 'libprotobuf version >= 2.3.0 needed'
+	Exit(-1);
 if not (env.Detect('protoc')):
 	print 'protobuffer compiler not found'
 	Exit(-1);
