@@ -295,7 +295,6 @@ public:
     }
 
     inline std::string& GetNameForNameID(const NodeID nameID) const {
-        assert(nameID < _names->size());
         return _names->at(nameID);
     }
 
