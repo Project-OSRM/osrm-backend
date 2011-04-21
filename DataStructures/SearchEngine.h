@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "BinaryHeap.h"
 #include "PhantomNodes.h"
+#include "../Util/StrIngUtil.h"
 #include "../typedefs.h"
 
 struct _HeapData {
@@ -294,8 +295,12 @@ public:
         return ed.distance;
     }
 
-    inline std::string& GetNameForNameID(const NodeID nameID) const {
-        return _names->at(nameID);
+    inline std::string &GetNameForNameID(const NodeID nameID) const {
+        return (nameID >= names->size() ? _names->at(0) : _names->at(nameID) );
+    }
+
+    inline std::string GetEscapedNameForNameID(const NodeID nameID) const {
+        return (nameID >= names->size() ? _names->at(0) : replaceAll(_names->at(nameID), "\"", "\\\"") );
     }
 
     inline short GetTypeOfEdgeForOriginDestinationNodeID(NodeID s, NodeID t) const {
