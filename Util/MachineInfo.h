@@ -35,15 +35,15 @@ unsigned GetPhysicalmemory(void){
 #elif defined(__APPLE__)
 	int mib[2] = {CTL_HW, HW_MEMSIZE};
 	long long memsize;
-	size_t len;
-	
-	len = sizeof(memsize);
+	size_t len = sizeof(memsize);
 	sysctl(mib, 2, &memsize, &len, NULL, 0);
-    
 	return memsize/1024;
+	
 #else
-	std::cout << "[Warning] Compiling on unknown architecture." << std::endl << "Please file a ticket at http://project-osrm.org" << std::endl;
+	std::cout << "[Warning] Compiling on unknown architecture." << std::endl 
+		<< "Please file a ticket at http://project-osrm.org" << std::endl;
 	return 2048*1024; /* 128 Mb default memory */
+
 #endif
 }
 #endif
