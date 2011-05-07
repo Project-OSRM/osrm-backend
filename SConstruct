@@ -53,7 +53,7 @@ AddOption('--cxx', dest='cxx', type='string', nargs=1, action='store', metavar='
 AddOption('--stxxlroot', dest='stxxlroot', type='string', nargs=1, action='store', metavar='STRING', help='root directory of STXXL')
 AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
 AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
-env = Environment(COMPILER = GetOption('cxx'))
+env = Environment(ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cxx'))
 if GetOption('cxx') is None:
     #default Compiler
     print 'Using default C++ Compiler: ', env['CXX']
@@ -83,7 +83,10 @@ else:
 conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf' : CheckProtobuf })
 if not conf.CheckHeader('omp.h'):
 	print "Compiler does not support OpenMP. Exiting"
-	Exit(-1)
+	if sys.platform == 'darwin':
+		print "Continuing because we are on Mac. This might be fatal."
+	else:
+		Exit(-1)
 if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
 	Exit(-1)

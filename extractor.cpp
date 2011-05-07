@@ -46,6 +46,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DataStructures/XMLParser.h"
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
+#include "Util/MachineInfo.h"
 
 typedef BaseConfiguration ExtractorConfiguration;
 
@@ -62,7 +63,7 @@ bool removeIfUnused(ClassT n) { return (false == n.used); }
 
 int main (int argc, char *argv[]) {
     if(argc <= 1) {
-        std::cerr << "usage: " << endl << argv[0] << " <file.osm>" << std::endl;
+        std::cerr << "usage: " << endl << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>" << std::endl;
         exit(-1);
     }
 
@@ -91,8 +92,8 @@ int main (int argc, char *argv[]) {
 
 
     unsigned amountOfRAM = 1;
-    unsigned installedRAM = (sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE));
-    if(installedRAM < 2097422336) {
+    unsigned installedRAM = GetPhysicalmemory(); 
+	if(installedRAM < 2048264) {
         std::cout << "[Warning] Machine has less than 2GB RAM." << std::endl;
     }
     if(testDataFile("extractor.ini")) {
