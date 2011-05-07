@@ -29,7 +29,7 @@ extern "C" {
 
 /* Returns the physical memory size in kilobytes */
 unsigned GetPhysicalmemory(void){
-#if defined(SUN5) || defined(LINUX)
+#if defined(SUN5) || defined(__linux__)
 	return (sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE));
 	
 #elif defined(__APPLE__)
