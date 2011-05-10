@@ -23,9 +23,20 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef JSONDESCRIPTOR_H_
 #define JSONDESCRIPTOR_H_
 
+static double areaThresholds[19] = { 5000, 5000, 5000, 5000, 5000, 2500, 2000, 1500, 800, 400, 250, 150, 100, 75, 25, 20, 10, 5 };
+
 template<class SearchEngineT, bool SimplifyRoute = false>
 class JSONDescriptor : public BaseDescriptor<SearchEngineT> {
+private:
+    short zoom;
 public:
+    JSONDescriptor() : zoom(18) {}
+    void SetZoom(const unsigned short z) {
+        if(z > 18)
+            zoom = 18;
+        zoom = z;
+    }
+
     void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
         string tmp;
         string routeGeometryString;
@@ -40,19 +51,22 @@ public:
         unsigned durationOfInstruction = 0;
         double lastAngle = 0.;
 
-        reply.content += ("{\n");
-        reply.content += ("  \"version\":0.3,\n");
+        unsigned painted = 0;
+        unsigned omitted = 0;
+
+        reply.content += ("{");
+        reply.content += ("\"version\":0.3,");
 
         if(distance != UINT_MAX) {
-            reply.content += ("  \"status\":0,\n");
-            reply.content += ("  \"status_message\":");
-            reply.content += "\"Found route between points\",\n";
+            reply.content += ("\"status\":0,");
+            reply.content += ("\"status_message\":");
+            reply.content += "\"Found route between points\",";
             unsigned streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            startPointName = sEngine->GetNameForNameID(streetID);
+            startPointName = sEngine->GetEscapedNameForNameID(streetID);
             streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            endPointName = sEngine->GetNameForNameID(streetID);
+            endPointName = sEngine->GetEscapedNameForNameID(streetID);
 
-            routeInstructionString += "      [\"Head ";
+            routeInstructionString += "[\"Head ";
             _Coordinate tmpCoord;
             if(path->size() > 0)
                 sEngine->getNodeInfo(path->begin()->node, tmpCoord);
@@ -93,12 +107,12 @@ public:
 
             //put start coord to linestring;
             convertLatLon(phantomNodes->startCoord.lat, tmp);
-            routeGeometryString += "      [";
+            routeGeometryString += "[";
             routeGeometryString += tmp;
             routeGeometryString += ", ";
             convertLatLon(phantomNodes->startCoord.lon, tmp);
             routeGeometryString += tmp;
-            routeGeometryString += "],\n";
+            routeGeometryString += "],";
             position++;
 
             _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
@@ -132,16 +146,21 @@ public:
                     durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(it->node, (it+1)->node);
                 }
                 double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
-                if(178 > angle || 182 < angle || false == SimplifyRoute) {
+                double area = fabs(0.5*( startOfSegment.lon*(current.lat - next.lat) + current.lon*(next.lat - startOfSegment.lat) + next.lon*(startOfSegment.lat - current.lat)  ) );
+//                std::cout << "Area for: " << area << std::endl;
+                if(area > areaThresholds[zoom] || false == SimplifyRoute) {
+                    painted++;
                     convertLatLon(current.lat, tmp);
-                    routeGeometryString += "      [";
+                    routeGeometryString += "[";
                     routeGeometryString += tmp;
                     routeGeometryString += ", ";
                     convertLatLon(current.lon, tmp);
                     routeGeometryString += tmp;
-                    routeGeometryString += "],\n";
+                    routeGeometryString += "],";
                     position++;
                     startOfSegment = current;
+                } else {
+                    omitted++;
                 }
                 if(nextID == nameID) {
                     tempDist += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
@@ -152,7 +171,7 @@ public:
                         routeInstructionString += ",leave motorway and ";
                     routeInstructionString += " on ";
                     if(nameID != 0)
-                        routeInstructionString += sEngine->GetNameForNameID(nameID);
+                        routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
                     routeInstructionString += "\",";
                     distanceOfInstruction += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon)+tempDist;
                     entireDistance += distanceOfInstruction;
@@ -178,13 +197,13 @@ public:
                     numberString.str("");
                     numberString << fixed << setprecision(2) << lastAngle;
                     routeInstructionString += numberString.str();
-                    routeInstructionString += "],\n";
+                    routeInstructionString += "],";
 
                     string lat; string lon;
                     convertLatLon(lastPlace.lon, lon);
                     convertLatLon(lastPlace.lat, lat);
                     lastPlace = current;
-                    routeInstructionString += "      [\"";
+                    routeInstructionString += "[\"";
 
                      if(angle > 160 && angle < 200) {
                         routeInstructionString += /* " (" << angle << ")*/"Continue";
@@ -214,7 +233,7 @@ public:
             type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             routeInstructionString += " at ";
-            routeInstructionString += sEngine->GetNameForNameID(nameID);
+            routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
             routeInstructionString += "\",";
             distanceOfInstruction = ApproximateDistance(previous.lat, previous.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon) + tempDist;
             entireDistance += distanceOfInstruction;
@@ -239,58 +258,58 @@ public:
             numberString.str("");
             numberString << fixed << setprecision(2) << lastAngle;
             routeInstructionString += numberString.str();
-            routeInstructionString += "]\n";
+            routeInstructionString += "]";
 
             string lat; string lon;
 
             //put targetCoord to linestring
             convertLatLon(phantomNodes->targetCoord.lat, tmp);
-            routeGeometryString += "      [";
+            routeGeometryString += "[";
             routeGeometryString += tmp;
             routeGeometryString += ", ";
             convertLatLon(phantomNodes->targetCoord.lon, tmp);
             routeGeometryString += tmp;
-            routeGeometryString += "]\n";
+            routeGeometryString += "]";
             position++;
 
             //give complete distance in meters;
             ostringstream s;
             s << 10*(round(entireDistance/10.));
-            routeSummaryString += "      \"total_distance\":";
+            routeSummaryString += "\"total_distance\":";
             routeSummaryString += s.str();
-            routeSummaryString += ",\n      \"total_time\":";
+            routeSummaryString += ",\"total_time\":";
             //give travel time in minutes
             int travelTime = distance;
             s.str("");
             s << travelTime;
             routeSummaryString += s.str();
-            routeSummaryString += ",\n      \"start_point\":\"";
+            routeSummaryString += ",\"start_point\":\"";
             routeSummaryString += startPointName;
-            routeSummaryString += "\",\n      \"end_point\":\"";
+            routeSummaryString += "\",\"end_point\":\"";
             routeSummaryString += endPointName;
-            routeSummaryString += "\"\n";
+            routeSummaryString += "\"";
         } else {
-            reply.content += ("  \"status\":207,\n");
-            reply.content += ("  \"status_message\":");
-            reply.content += "\"Cannot find route between points\",\n";
-            routeSummaryString += "      \"total_distance\":0";
-            routeSummaryString += ",\n      \"total_time\":0";
-            routeSummaryString += ",\n      \"start_point\":\"";
-            routeSummaryString += "\",\n      \"end_point\":\"";
-            routeSummaryString += "\"\n";
+            reply.content += ("\"status\":207,");
+            reply.content += ("\"status_message\":");
+            reply.content += "\"Cannot find route between points\",";
+            routeSummaryString += "\"total_distance\":0";
+            routeSummaryString += ",\"total_time\":0";
+            routeSummaryString += ",\"start_point\":\"";
+            routeSummaryString += "\",\"end_point\":\"";
+            routeSummaryString += "\"";
         }
-        reply.content += "   \"route_summary\": {\n";
+        reply.content += "\"route_summary\": {";
         reply.content += routeSummaryString;
-        reply.content += "   },\n";
-        reply.content += "   \"route_geometry\": [\n";
+        reply.content += "},";
+        reply.content += "\"route_geometry\": [";
         reply.content += routeGeometryString;
-        reply.content += "   ],\n";
-        reply.content += "   \"route_instructions\": [\n";
+        reply.content += "],";
+        reply.content += "\"route_instructions\": [";
         reply.content += routeInstructionString;
-        reply.content += "   ],\n";
-        reply.content += "   \"transactionId\": \"OSRM Routing Engine JSON Descriptor (beta)\"\n";
+        reply.content += "],";
+        reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (beta)\"";
         reply.content += "}";
+        //std::cout << "zoom: " << zoom << ", threshold: " << areaThresholds[zoom] << ", painted: " << painted << ", omitted: " << omitted << std::endl;
     }
-private:
 };
 #endif /* JSONDESCRIPTOR_H_ */

@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef ROUTEPLUGIN_H_
 #define ROUTEPLUGIN_H_
 
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -127,6 +128,12 @@ public:
         }
         unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
         const bool simplifiedRoute = (routeParameters.options.Find("simplified") == "yes");
+        unsigned short zoom;
+        if(routeParameters.options.Find("z") != ""){
+            zoom = atoi(routeParameters.options.Find("z").c_str());
+            if(18 < zoom)
+                zoom = 18;
+        }
         //todo: put options in a seperate struct and pass it to the descriptor
         switch(descriptorType){
         case 0:
@@ -148,7 +155,7 @@ public:
                 desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false >();
             break;
         }
-
+        desc->SetZoom(zoom);
         desc->Run(reply, path, phantomNodes, sEngine, distance);
         if("" != JSONParameter) {
             reply.content += ")\n";
@@ -175,7 +182,7 @@ public:
                 reply.headers[2].value = "attachment; filename=\"route.js\"";
             } else {
                 reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/json";
+                reply.headers[1].value = "application/x-javascript";
                 reply.headers[2].name = "Content-Disposition";
                 reply.headers[2].value = "attachment; filename=\"route.json\"";
             }

@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../typedefs.h"
 #include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/HashTable.h"
 #include "../Util/StrIngUtil.h"
 
 template<class SearchEngineT>
@@ -37,6 +38,7 @@ public:
 	//Maybe someone can explain the pure virtual destructor thing to me (dennis)
 	virtual ~BaseDescriptor() { }
     virtual void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) = 0;
+    virtual void SetZoom(const unsigned short z) = 0;
 
 };
 

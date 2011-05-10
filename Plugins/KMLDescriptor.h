@@ -24,6 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 template<class SearchEngineT, bool SimplifyRoute = false>
 class KMLDescriptor : public BaseDescriptor<SearchEngineT>{
 public:
+    void SetZoom(const unsigned short z) { }
     void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
         string tmp;
         string lineString;
