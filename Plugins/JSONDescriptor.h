@@ -163,7 +163,9 @@ public:
                     omitted++;
                 }
                 if(nextID == nameID) {
-                    tempDist += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
+                    double _dist = ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
+                    tempDist += _dist;
+                    entireDistance += _dist;
                 } else {
                     if(type == 0 && prevType != 0)
                         routeInstructionString += ",enter motorway and ";
@@ -173,8 +175,9 @@ public:
                     if(nameID != 0)
                         routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
                     routeInstructionString += "\",";
-                    distanceOfInstruction += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon)+tempDist;
-                    entireDistance += distanceOfInstruction;
+                    double _dist = ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
+                    distanceOfInstruction += _dist + tempDist;
+                    entireDistance += _dist;
                     intNumberString.str("");
                     intNumberString << 10*(round(distanceOfInstruction/10.));;
                     routeInstructionString += intNumberString.str();
@@ -223,6 +226,7 @@ public:
                     lastAngle = angle;
                     tempDist = 0;
                     prevType = type;
+                    distanceOfInstruction = 0;
                     durationOfInstruction = 0;
                 }
                 nameID = nextID;
