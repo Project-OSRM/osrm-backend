@@ -48,7 +48,7 @@ int main (int argc, char *argv[])
 	}
 
 	try {
-		std::cout << "[server] starting up engines" << std::endl;
+		std::cout << "[server] starting up engines, compiled at " << __TIMESTAMP__ << std::endl;
 		int sig = 0;
 		sigset_t new_mask;
 		sigset_t old_mask;
