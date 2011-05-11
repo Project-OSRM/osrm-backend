@@ -25,15 +25,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 static double areaThresholds[19] = { 5000, 5000, 5000, 5000, 5000, 2500, 2000, 1500, 800, 400, 250, 150, 100, 75, 25, 20, 10, 5 };
 
-template<class SearchEngineT, bool SimplifyRoute = false>
+template<class SearchEngineT, bool GeometryOn = true, bool InstructionsOn = true>
 class JSONDescriptor : public BaseDescriptor<SearchEngineT> {
 private:
     short zoom;
 public:
     JSONDescriptor() : zoom(18) {}
     void SetZoom(const unsigned short z) {
-        if(z > 18)
-            zoom = 18;
+        if(z > 19)
+            zoom = 19;
         zoom = z;
     }
 
@@ -147,8 +147,8 @@ public:
                 }
                 double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
                 double area = fabs(0.5*( startOfSegment.lon*(current.lat - next.lat) + current.lon*(next.lat - startOfSegment.lat) + next.lon*(startOfSegment.lat - current.lat)  ) );
-//                std::cout << "Area for: " << area << std::endl;
-                if(area > areaThresholds[zoom] || false == SimplifyRoute) {
+                //                std::cout << "Area for: " << area << std::endl;
+                if(area > areaThresholds[zoom] || 19 == zoom) {
                     painted++;
                     convertLatLon(current.lat, tmp);
                     routeGeometryString += "[";
@@ -205,7 +205,7 @@ public:
                     lastPlace = current;
                     routeInstructionString += "[\"";
 
-                     if(angle > 160 && angle < 200) {
+                    if(angle > 160 && angle < 200) {
                         routeInstructionString += /* " (" << angle << ")*/"Continue";
                     } else if (angle > 290 && angle <= 360) {
                         routeInstructionString += /*" (" << angle << ")*/ "Turn sharp left";
@@ -277,6 +277,8 @@ public:
             s << 10*(round(entireDistance/10.));
             routeSummaryString += "\"total_distance\":";
             routeSummaryString += s.str();
+
+
             routeSummaryString += ",\"total_time\":";
             //give travel time in minutes
             int travelTime = distance;
@@ -302,10 +304,14 @@ public:
         reply.content += routeSummaryString;
         reply.content += "},";
         reply.content += "\"route_geometry\": [";
-        reply.content += routeGeometryString;
+        if(GeometryOn) {
+            reply.content += routeGeometryString;
+        }
         reply.content += "],";
         reply.content += "\"route_instructions\": [";
-        reply.content += routeInstructionString;
+        if(GeometryOn || InstructionsOn) {
+            reply.content += routeInstructionString;
+        }
         reply.content += "],";
         reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (beta)\"";
         reply.content += "}";

@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef KML_DESCRIPTOR_H_
 #define KML_DESCRIPTOR_H_
 
-template<class SearchEngineT, bool SimplifyRoute = false>
+template<class SearchEngineT, bool Geometry = true>
 class KMLDescriptor : public BaseDescriptor<SearchEngineT>{
 public:
     void SetZoom(const unsigned short z) { }
@@ -30,6 +30,7 @@ public:
         string lineString;
         string startName;
         string targetName;
+        double entireDistance = 0;
         string direction = "East";
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         reply.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
@@ -85,7 +86,6 @@ public:
             stringstream numberString;
 
             double tempDist = 0;
-            double entireDistance = 0;
             double lengthOfInstruction = 0;
             NodeID nextID = UINT_MAX;
             NodeID nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
@@ -109,7 +109,7 @@ public:
                 }
 
                 double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
-                if(178 > angle || 182 < angle || false == SimplifyRoute) {
+                if(178 > angle || 182 < angle) {
                     convertLatLon(current.lon, tmp);
                     lineString += tmp;
                     lineString += ",";
@@ -218,6 +218,13 @@ public:
             lineString += ",";
             convertLatLon(phantomNodes->targetCoord.lat, tmp);
             lineString += tmp;
+	    if(!Geometry){
+
+               reply.content = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+               reply.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
+               reply.content += ("<Document>\n");
+            }
+
 
             reply.content += "\t<Placemark>\n"
                     "\t\t<name><![CDATA[Route from ";
@@ -241,15 +248,19 @@ public:
             reply.content += s.str();
 
             reply.content += " minutes)]]>"
-                    "</description>\n"
-                    "\t\t<GeometryCollection>\n"
+                    "</description>\n";
+
+	    if(Geometry) {
+
+       	    reply.content += "\t\t<GeometryCollection>\n"
                     "\t\t\t<LineString>\n"
                     "\t\t\t\t<coordinates>";
             reply.content += lineString;
             reply.content += "</coordinates>\n"
                     "\t\t\t</LineString>\n"
-                    "\t\t</GeometryCollection>\n"
-                    "\t</Placemark>\n";
+                    "\t\t</GeometryCollection>\n";
+	    }
+            reply.content += "\t</Placemark>\n";
         }
         reply.content += "</Document>\n</kml>";
     }

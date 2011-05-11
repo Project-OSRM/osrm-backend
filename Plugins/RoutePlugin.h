@@ -102,6 +102,12 @@ public:
         int lat2 = static_cast<int>(100000.*atof(routeParameters.parameters[2].c_str()));
         int lon2 = static_cast<int>(100000.*atof(routeParameters.parameters[3].c_str()));
 
+        bool geometry(true);
+
+        if("false" == routeParameters.options["geometry"]) {
+            geometry = false;
+        }
+
         if(lat1>90*100000 || lat1 <-90*100000 || lon1>180*100000 || lon1 <-180*100000) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
@@ -127,8 +133,7 @@ public:
             reply.content += "(\n";
         }
         unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
-        const bool simplifiedRoute = (routeParameters.options.Find("simplified") == "yes");
-        unsigned short zoom;
+        unsigned short zoom = 18;
         if(routeParameters.options.Find("z") != ""){
             zoom = atoi(routeParameters.options.Find("z").c_str());
             if(18 < zoom)
@@ -137,22 +142,25 @@ public:
         //todo: put options in a seperate struct and pass it to the descriptor
         switch(descriptorType){
         case 0:
-            if(simplifiedRoute)
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true >();
+            if(geometry)
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true>();
             else
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false >();
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false>();
+
             break;
         case 1:
-            if(simplifiedRoute)
-                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true >();
+            if(geometry)
+                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true>();
             else
-                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false >();
+                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false>();
+
             break;
         default:
-            if(simplifiedRoute)
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true >();
+            if(geometry)
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true>();
             else
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false >();
+                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false>();
+
             break;
         }
         desc->SetZoom(zoom);
