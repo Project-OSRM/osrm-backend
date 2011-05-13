@@ -315,7 +315,7 @@ public:
         reply.content += "],";
         reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (beta)\"";
         reply.content += "}";
-        //std::cout << "zoom: " << zoom << ", threshold: " << areaThresholds[zoom] << ", painted: " << painted << ", omitted: " << omitted << std::endl;
+        //std::cout << "zoom: " << config.z << ", threshold: " << areaThresholds[config.z] << ", painted: " << painted << ", omitted: " << omitted << std::endl;
     }
 };
 #endif /* JSONDESCRIPTOR_H_ */
