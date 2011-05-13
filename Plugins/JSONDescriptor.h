@@ -309,7 +309,7 @@ public:
         }
         reply.content += "],";
         reply.content += "\"route_instructions\": [";
-        if(config.geometry || config.instructions) {
+        if(config.instructions) {
             reply.content += routeInstructionString;
         }
         reply.content += "],";
