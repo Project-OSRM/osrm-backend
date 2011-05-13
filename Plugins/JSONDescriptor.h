@@ -165,9 +165,9 @@ public:
                     entireDistance += _dist;
                 } else {
                     if(type == 0 && prevType != 0)
-                        routeInstructionString += ",enter motorway and ";
+                        routeInstructionString += ",enter motorway, ";
                     if(type != 0 && prevType == 0 )
-                        routeInstructionString += ",leave motorway and ";
+                        routeInstructionString += ",leave motorway, ";
                     routeInstructionString += "\", \"";
                     if(nameID != 0)
                         routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
