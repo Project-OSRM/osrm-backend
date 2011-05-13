@@ -111,7 +111,6 @@ public:
             convertLatLon(phantomNodes->startCoord.lon, tmp);
             routeGeometryString += tmp;
             routeGeometryString += "],";
-            position++;
 
             _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
             _Coordinate next, current, lastPlace, startOfSegment;
