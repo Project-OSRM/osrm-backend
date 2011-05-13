@@ -295,12 +295,12 @@ public:
         return ed.distance;
     }
 
-    inline std::string &GetNameForNameID(const NodeID nameID) const {
+    inline std::string &GetUnescapedNameForNameID(const NodeID nameID) const {
         return (nameID >= _names->size() ? _names->at(0) : _names->at(nameID) );
     }
 
     inline std::string GetEscapedNameForNameID(const NodeID nameID) const {
-        return (nameID >= _names->size() ? _names->at(0) : replaceAll(_names->at(nameID), "\"", "\\\"") );
+        return ( nameID >= _names->size() ? std::string("") : HTMLEntitize(_names->at(nameID)) );
     }
 
     inline short GetTypeOfEdgeForOriginDestinationNodeID(NodeID s, NodeID t) const {

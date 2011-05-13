@@ -79,12 +79,31 @@ inline void doubleToString(const double value, std::string & output)
     output = buffer ;
 }
 
+inline std::string & replaceAll(std::string &s, const std::string &sub, const std::string &other) {
+    assert(!sub.empty());
+    size_t b = 0;
+    for (;;) {
+        b = s.find(sub, b);
+        if (b == s.npos) break;
+        s.replace(b, sub.size(), other);
+        b += other.size();
+    }
+    return s;
+}
 
-std::string replaceAll( std::string result, const std::string& replaceWhat, const std::string& replaceWithWhat) {
-    while(true) {
-        const int pos = result.find(replaceWhat);
-        if (pos==-1) break;
-        result.replace(pos,replaceWhat.size(),replaceWithWhat);
+std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]"};
+std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;" };
+
+std::string HTMLEntitize( std::string result) {
+    for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); i++) {
+        result = replaceAll(result, originals[i], entities[i]);
+    }
+    return result;
+}
+
+std::string HTMLDeEntitize( std::string result) {
+    for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); i++) {
+        result = replaceAll(result, entities[i], originals[i]);
     }
     return result;
 }
