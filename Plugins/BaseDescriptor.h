@@ -31,6 +31,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/HashTable.h"
 #include "../Util/StrIngUtil.h"
 
+struct DescriptorConfig {
+    DescriptorConfig() : instructions(true), geometry(true), z(18) {}
+    bool instructions;
+    bool geometry;
+    unsigned short z;
+};
+
 template<class SearchEngineT>
 class BaseDescriptor {
 public:
@@ -38,7 +45,7 @@ public:
 	//Maybe someone can explain the pure virtual destructor thing to me (dennis)
 	virtual ~BaseDescriptor() { }
     virtual void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) = 0;
-    virtual void SetZoom(const unsigned short z) = 0;
+    virtual void SetConfig(const DescriptorConfig config) = 0;
 
 };
 

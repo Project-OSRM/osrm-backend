@@ -23,18 +23,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef JSONDESCRIPTOR_H_
 #define JSONDESCRIPTOR_H_
 
-static double areaThresholds[19] = { 5000, 5000, 5000, 5000, 5000, 2500, 2000, 1500, 800, 400, 250, 150, 100, 75, 25, 20, 10, 5 };
+static double areaThresholds[19] = { 5000, 5000, 5000, 5000, 5000, 2500, 2000, 1500, 800, 400, 250, 150, 100, 75, 25, 20, 10, 5, 0 };
 
-template<class SearchEngineT, bool GeometryOn = true, bool InstructionsOn = true>
+template<class SearchEngineT>
 class JSONDescriptor : public BaseDescriptor<SearchEngineT> {
 private:
-    short zoom;
+    DescriptorConfig config;
 public:
-    JSONDescriptor() : zoom(18) {}
-    void SetZoom(const unsigned short z) {
-        if(z > 19)
-            zoom = 19;
-        zoom = z;
+    JSONDescriptor() {}
+    void SetConfig(const DescriptorConfig c) {
+        config = c;
     }
 
     void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
@@ -148,7 +146,7 @@ public:
                 double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
                 double area = fabs(0.5*( startOfSegment.lon*(current.lat - next.lat) + current.lon*(next.lat - startOfSegment.lat) + next.lon*(startOfSegment.lat - current.lat)  ) );
                 //                std::cout << "Area for: " << area << std::endl;
-                if(area > areaThresholds[zoom] || 19 == zoom) {
+                if(area > areaThresholds[config.z] || 19 == config.z) {
                     painted++;
                     convertLatLon(current.lat, tmp);
                     routeGeometryString += "[";
@@ -171,7 +169,7 @@ public:
                         routeInstructionString += ",enter motorway and ";
                     if(type != 0 && prevType == 0 )
                         routeInstructionString += ",leave motorway and ";
-                    routeInstructionString += " on ";
+                    routeInstructionString += "\", \"";
                     if(nameID != 0)
                         routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
                     routeInstructionString += "\",";
@@ -236,7 +234,7 @@ public:
             nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            routeInstructionString += " at ";
+            routeInstructionString += "\", \"";
             routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
             routeInstructionString += "\",";
             distanceOfInstruction = ApproximateDistance(previous.lat, previous.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon) + tempDist;
@@ -282,7 +280,6 @@ public:
             routeSummaryString += "\"total_distance\":";
             routeSummaryString += s.str();
 
-
             routeSummaryString += ",\"total_time\":";
             //give travel time in minutes
             int travelTime = distance;
@@ -308,12 +305,12 @@ public:
         reply.content += routeSummaryString;
         reply.content += "},";
         reply.content += "\"route_geometry\": [";
-        if(GeometryOn) {
+        if(config.geometry) {
             reply.content += routeGeometryString;
         }
         reply.content += "],";
         reply.content += "\"route_instructions\": [";
-        if(GeometryOn || InstructionsOn) {
+        if(config.geometry || config.instructions) {
             reply.content += routeInstructionString;
         }
         reply.content += "],";

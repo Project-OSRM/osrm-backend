@@ -21,10 +21,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef KML_DESCRIPTOR_H_
 #define KML_DESCRIPTOR_H_
 
-template<class SearchEngineT, bool Geometry = true>
+#include "BaseDescriptor.h"
+
+template<class SearchEngineT>
 class KMLDescriptor : public BaseDescriptor<SearchEngineT>{
+private:
+    DescriptorConfig config;
 public:
-    void SetZoom(const unsigned short z) { }
+    void SetConfig(const DescriptorConfig c) { config = c; }
     void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
         string tmp;
         string lineString;
@@ -38,9 +42,9 @@ public:
 
         if(distance != UINT_MAX) {
             unsigned streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            startName = sEngine->GetNameForNameID(streetID);
+            startName = sEngine->GetEscapedNameForNameID(streetID);
             streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            targetName = sEngine->GetNameForNameID(streetID);
+            targetName = sEngine->GetEscapedNameForNameID(streetID);
 
             reply.content += ("\t<Placemark>\n");
             reply.content += ("\t\t<name><![CDATA[Start from ");
@@ -130,7 +134,7 @@ public:
                     //double angle = GetAngleBetweenTwoEdges(previous, current, next);
                     reply.content += "follow road ";
                     if(nameID != 0)
-                        reply.content += sEngine->GetNameForNameID(nameID);
+                        reply.content += sEngine->GetEscapedNameForNameID(nameID);
                     /*
                 reply.content += " (type: ";
                 numberString << type;
@@ -186,7 +190,7 @@ public:
             nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             reply.content += "follow road ";
-            reply.content += sEngine->GetNameForNameID(nameID);
+            reply.content += sEngine->GetEscapedNameForNameID(nameID);
 //            reply.content += " (type: ";
 //            numberString << type;
 //            reply.content += numberString.str();
@@ -218,7 +222,7 @@ public:
             lineString += ",";
             convertLatLon(phantomNodes->targetCoord.lat, tmp);
             lineString += tmp;
-	    if(!Geometry){
+	    if(!config.geometry){
 
                reply.content = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
                reply.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
@@ -250,7 +254,7 @@ public:
             reply.content += " minutes)]]>"
                     "</description>\n";
 
-	    if(Geometry) {
+	    if(config.geometry) {
 
        	    reply.content += "\t\t<GeometryCollection>\n"
                     "\t\t\t<LineString>\n"

@@ -132,6 +132,7 @@ public:
             reply.content += JSONParameter;
             reply.content += "(\n";
         }
+        DescriptorConfig descriptorConfig;
         unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
         unsigned short zoom = 18;
         if(routeParameters.options.Find("z") != ""){
@@ -139,31 +140,30 @@ public:
             if(18 < zoom)
                 zoom = 18;
         }
-        //todo: put options in a seperate struct and pass it to the descriptor
+        descriptorConfig.z = zoom;
+        if(routeParameters.options.Find("instructions") == "false") {
+            descriptorConfig.instructions = false;
+        }
+        if(routeParameters.options.Find("geometry") == "false" ) {
+            descriptorConfig.geometry = false;
+        }
+
+
         switch(descriptorType){
         case 0:
-            if(geometry)
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true>();
-            else
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false>();
+            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
         case 1:
-            if(geometry)
-                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true>();
-            else
-                desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false>();
+            desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
         default:
-            if(geometry)
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, true>();
-            else
-                desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> >, false>();
+            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
         }
-        desc->SetZoom(zoom);
+        desc->SetConfig(descriptorConfig);
         desc->Run(reply, path, phantomNodes, sEngine, distance);
         if("" != JSONParameter) {
             reply.content += ")\n";
