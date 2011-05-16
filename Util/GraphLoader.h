@@ -336,7 +336,7 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
         EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
         edgeList.push_back(inputEdge);
    }
-    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     cout << "ok" << endl;
     std::cout << "imported " << numberOfNodes << " nodes and " << edgeList.size() << " edges" << std::endl;
     nodeMap.clear();
