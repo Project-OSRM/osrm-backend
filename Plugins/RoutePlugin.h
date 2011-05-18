@@ -45,7 +45,7 @@ typedef StaticGraph<EdgeData>::InputEdge InputEdge;
 
 class RoutePlugin : public BasePlugin {
 public:
-    RoutePlugin(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath) {
+    RoutePlugin(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route") {
         //Init nearest neighbor data structure
         nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str());
         ifstream nodesInStream(nodesPath.c_str(), ios::binary);
@@ -80,6 +80,7 @@ public:
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("kml", 0);
         descriptorTable.Set("json", 1);
+        pluginDescriptorString = psd;
     }
     ~RoutePlugin() {
         delete names;
@@ -88,7 +89,7 @@ public:
         delete nodeHelpDesk;
     }
 
-    std::string GetDescriptor() { return std::string("route"); }
+    std::string GetDescriptor() { return pluginDescriptorString; }
     std::string GetVersionString() { return std::string("0.3 (DL)"); }
     void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
         //check number of parameters
@@ -216,6 +217,7 @@ private:
     std::vector<std::string> * names;
     StaticGraph<EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
+    std::string pluginDescriptorString;
 };
 
 
