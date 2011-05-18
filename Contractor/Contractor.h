@@ -370,8 +370,6 @@ public:
                 }
 
                 newEdge.data.forward = data.forward;
-                newEdge.data.forwardTurn = data.forwardTurn;
-                newEdge.data.backwardTurn = data.backwardTurn;
                 newEdge.data.backward = data.backward;
                 edges.push_back( newEdge );
             }

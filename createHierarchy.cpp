@@ -46,7 +46,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DataStructures/BinaryHeap.h"
 #include "DataStructures/LevelInformation.h"
 #include "DataStructures/NNGrid.h"
-#include "DataStructures/TurnInfoFactory.h"
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
@@ -89,12 +88,6 @@ int main (int argc, char *argv[]) {
     vector<ImportEdge> edgeList;
     const NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
     in.close();
-
-    //    cout << "computing turn vector info ..." << flush;
-    //    TurnInfoFactory * infoFactory = new TurnInfoFactory(n, edgeList);
-    //    infoFactory->Run();
-    //    delete infoFactory;
-    //    cout << "ok" << endl;
 
     char nodeOut[1024];
     char edgeOut[1024];
@@ -172,12 +165,7 @@ int main (int argc, char *argv[]) {
         NodeID target = it->target;
         short type = it->data.type;
 
-        bool forwardTurn = it->data.forwardTurn;
-        bool backwardTurn = it->data.backwardTurn;
-
         edgeOutFile.write((char *)&(distance), sizeof(int));
-        edgeOutFile.write((char *)&(forwardTurn), sizeof(bool));
-        edgeOutFile.write((char *)&(backwardTurn), sizeof(bool));
         edgeOutFile.write((char *)&(shortcut), sizeof(bool));
         edgeOutFile.write((char *)&(forward), sizeof(bool));
         edgeOutFile.write((char *)&(backward), sizeof(bool));
