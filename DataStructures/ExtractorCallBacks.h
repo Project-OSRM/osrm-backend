@@ -101,10 +101,10 @@ public:
         std::string access( w.keyVals.Find("access") );
         std::string motorcar( w.keyVals.Find("motorcar") );
 
-        if ( name != "" ) {
-            w.name = name;
-        } else if ( ref != "" ) {
+        if ( ref != "" ) {
             w.name = ref;
+        } else if ( name != "" ) {
+            w.name = name;
         }
 
         if ( oneway != "" ) {
