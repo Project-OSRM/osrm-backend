@@ -163,7 +163,7 @@ public:
             if( (ed.backward && !targetReverse) || (ed.forward && targetReverse) )
                 _backwardHeap.Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
             if( (ed.backward && targetReverse) || (ed.forward && !targetReverse) )
-                _backwardHeap.Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->startRatio), phantomNodes->targetNode1);
+                _backwardHeap.Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->targetRatio), phantomNodes->targetNode1);
         }
 //        double time = get_timestamp();
 
