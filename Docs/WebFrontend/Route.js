@@ -98,6 +98,7 @@ function reroute() {
 function showResultsDragRoute(response) {
     if (response) {
     	//Display Route    	showRouteGeometry(response);    }
+  	markersLayer.clearMarkers();
     ISCALCULATING = false;
 }
 
@@ -112,7 +113,6 @@ function showResultsRoute(response) {
 		else{
 			showRouteGeometry(response);
 		}
-    	
     	
         //Show Route Summary
         var output = '<p class="routeSummaryHL">Some information about your Way <br> from \'<span class="routeSummaryHLlight">'+response.route_summary.start_point+'</span>\' to \'<span class="routeSummaryHLlight">'+response.route_summary.end_point+'</span>\'</p>';

@@ -61,6 +61,36 @@ function init(){
 		displayProjection: new OpenLayers.Projection("EPSG:4326")
 	} );
 	//Add the base layers.
+	
+	var coverageLayer = new OpenLayers.Layer.Vector("Coverage", {
+        style: {
+                    strokeColor: "#000000",
+                    strokeTransparency: 0.5,
+                    strokeWidth: 4
+        }
+    });
+	if("map.project-osrm.org" == location.host) {
+	    var coveragePointList = [
+	        new OpenLayers.Geometry.Point(-11.99, 58.80),
+	        new OpenLayers.Geometry.Point(-11.99, 35.30),
+	        new OpenLayers.Geometry.Point(-7.57, 35.30),
+	        new OpenLayers.Geometry.Point(9.22, 38.24),
+	        new OpenLayers.Geometry.Point(15.38, 35.39),
+	        new OpenLayers.Geometry.Point(18.92, 40.02),
+	        new OpenLayers.Geometry.Point(15.70, 42.25),
+	        new OpenLayers.Geometry.Point(15.70, 55.40),
+	        new OpenLayers.Geometry.Point(30.31, 60.29),
+	        new OpenLayers.Geometry.Point(30.31, 71.27),
+	        new OpenLayers.Geometry.Point(21.01, 71.27),
+	        new OpenLayers.Geometry.Point(-11.99, 58.80)
+	    ];
+	
+	    var line_string = new OpenLayers.Geometry.LineString(coveragePointList).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+	    coverageLayer.addFeatures([new OpenLayers.Feature.Vector(line_string)]);
+	
+	    map.addLayer(coverageLayer);
+	}
+	
 	map.addLayer(new OpenLayers.Layer.OSM.Mapnik("Mapnik"));
 	map.addLayer(new OpenLayers.Layer.OSM.MapQuest("MapQuest"));
 	map.addLayer(new OpenLayers.Layer.OSM.Osmarender("Osmarender"));
@@ -109,9 +139,9 @@ function init(){
 			if(!ISCALCULATING){ routing(true); }},
 		  onComplete: function(feature, pixel){
 			feature.move(map.getLonLatFromPixel(pixel));
-			if(!ISCALCULATING){ routing(false); }},
+			routing(false); },
 		  onLeave: function(f){
-		  	alert("here");
+			alert("here");
 			if(!ISCALCULATING){ routing(false); }}
 		});
     map.addControl(dragFeatures);
