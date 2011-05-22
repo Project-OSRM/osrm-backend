@@ -1,6 +1,6 @@
 <?
     $url = $_SERVER['HTTP_HOST'];
-    if($url == "map.project-osrm.org") {
+    if($url == "map.project-osrm.org" || $url == "www.map.project-osrm.org") {
     	$file = file_get_contents('map.html');
 		echo $file;
     	return;
