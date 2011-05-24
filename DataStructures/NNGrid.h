@@ -584,40 +584,43 @@ private:
         }
     }
 
-    /* More or less from monav project, thanks */
     double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
-        const double vY = (double)target.lon - (double)source.lon;
-        const double vX = (double)target.lat - (double)source.lat;
 
-        const double wY = (double)inputPoint.lon - (double)source.lon;
-        const double wX = (double)inputPoint.lat - (double)source.lat;
+	    const double x = (double)inputPoint.lat;
+	    const double y = (double)inputPoint.lon;
+	    const double a = (double)source.lat;
+	    const double b = (double)source.lon;
+	    const double c = (double)target.lat;
+	    const double d = (double)target.lon;
+	    double p,q,mX,nY;
+	    if(c != a){
+		    const double m = (d-b)/(c-a); // slope
+		    // Projection of (x,y) on line joining (a,b) and (c,d)
+		    p = ((x + (m*y)) + (m*m*a - m*b))/(1 + m*m);
+		    q = b + m*(p - a);
+	    }
+	    else{
+		    p = c;
+		    q = y;
+	    }
+	    nY = (d*p - c*q)/(a*d - b*c);
+	    mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
+	    *r = mX;
+	    if(*r<=0){
+		    nearest.lat = source.lat;
+		    nearest.lon = source.lon;
+		    return ((b - y)*(b - y) + (a - x)*(a - x));
+	    }
+	    else if(*r >= 1){
+		    nearest.lat = target.lat;
+		    nearest.lon = target.lon;
+		    return ((d - y)*(d - y) + (c - x)*(c - x));
 
-        const double lengthSquared = vX * vX + vY * vY;
-
-        if(lengthSquared != 0) {
-            *r = (vX * wX + vY * wY) / lengthSquared;
-        }
-        double percentage = *r;
-        if(*r <=0 ) {
-            nearest.lat = source.lat;
-            nearest.lon = source.lon;
-            percentage = 0;
-            return wY * wY + wX * wX;
-        }
-        if( *r>= 1) {
-            nearest.lat = target.lat;
-            nearest.lon = target.lon;
-            percentage = 1;
-            const double dY = (double)inputPoint.lon - (double)target.lon;
-            const double dX = (double)inputPoint.lat - (double)target.lat;
-            return dY * dY + dX * dX;
-        }
-
-        nearest.lat = (double)source.lat + ( (*r) * vX );
-        nearest.lon = (double)source.lon + ( (*r) * vY );
-        const double dX = (double)source.lat + (*r) * vX - (double)inputPoint.lat;
-        const double dY = (double)source.lon + (*r) * vY - (double)inputPoint.lon;
-        return dY*dY + dX*dX;
+	    }
+	    // point lies in between
+	    nearest.lat = p;
+	    nearest.lon = q;
+	    return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
     ofstream indexOutFile;
