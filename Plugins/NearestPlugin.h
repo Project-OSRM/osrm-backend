@@ -25,6 +25,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "BasePlugin.h"
 #include "RouteParameters.h"
+
+#include "ObjectForPluginStruct.h"
+
 #include "../DataStructures/NodeInformationHelpDesk.h"
 #include "../DataStructures/HashTable.h"
 #include "../Util/StrIngUtil.h"
@@ -34,16 +37,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath) {
-        nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str());
-        ifstream nodesInStream(nodesPath.c_str(), ios::binary);
-        nodeHelpDesk->initNNGrid(nodesInStream);
+    NearestPlugin(ObjectsForQueryStruct * objects) {
+        nodeHelpDesk = objects->nodeHelpDesk;
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("kml", 0);
         descriptorTable.Set("json", 1);
-    }
-    ~NearestPlugin() {
-        delete nodeHelpDesk;
     }
     std::string GetDescriptor() { return std::string("nearest"); }
     std::string GetVersionString() { return std::string("0.3 (DL)"); }

@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <fstream>
 
+#include "ObjectForPluginStruct.h"
 #include "BasePlugin.h"
 #include "RouteParameters.h"
 
@@ -33,14 +34,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 class LocatePlugin : public BasePlugin {
 public:
-	LocatePlugin(std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath) {
-		nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str());
-		ifstream nodesInStream(nodesPath.c_str(), ios::binary);
-		nodeHelpDesk->initNNGrid(nodesInStream);
-	}
-	~LocatePlugin() {
-		delete nodeHelpDesk;
-	}
+    LocatePlugin(ObjectsForQueryStruct * objects) {
+        nodeHelpDesk = objects->nodeHelpDesk;
+    }
 	std::string GetDescriptor() { return std::string("locate"); }
 	std::string GetVersionString() { return std::string("0.3 (DL)"); }
 	void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {

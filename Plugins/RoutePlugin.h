@@ -27,6 +27,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
+#include "ObjectForPluginStruct.h"
+
 #include "BaseDescriptor.h"
 #include "BasePlugin.h"
 #include "RouteParameters.h"
@@ -37,56 +39,24 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/SearchEngine.h"
 
-#include "../Util/GraphLoader.h"
 #include "../Util/StrIngUtil.h"
-
-typedef ContractionCleanup::Edge::EdgeData EdgeData;
-typedef StaticGraph<EdgeData>::InputEdge InputEdge;
 
 class RoutePlugin : public BasePlugin {
 public:
-    RoutePlugin(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route") {
-        //Init nearest neighbor data structure
-        nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str());
-        ifstream nodesInStream(nodesPath.c_str(), ios::binary);
-        ifstream hsgrInStream(hsgrPath.c_str(), ios::binary);
-        nodeHelpDesk->initNNGrid(nodesInStream);
 
-        //Deserialize road network graph
-        std::vector< InputEdge> * edgeList = new std::vector< InputEdge>();
-        readHSGRFromStream(hsgrInStream, edgeList);
-        hsgrInStream.close();
-        graph = new StaticGraph<EdgeData>(nodeHelpDesk->getNumberOfNodes()-1, *edgeList);
-        delete edgeList;
+    RoutePlugin(ObjectsForQueryStruct * objects, std::string psd = "route") : pluginDescriptorString(psd) {
+        nodeHelpDesk = objects->nodeHelpDesk;
+        graph = objects->graph;
+        names = objects->names;
 
-        //deserialize street name list
-        ifstream namesInStream(namesPath.c_str(), ios::binary);
-        unsigned size = 0;
-        namesInStream.read((char *)&size, sizeof(unsigned));
-        names = new std::vector<std::string>();
-
-        char buf[1024];
-        for(unsigned i = 0; i < size; i++) {
-            unsigned sizeOfString = 0;
-            namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
-            memset(buf, 0, 1024*sizeof(char));
-            namesInStream.read(buf, sizeOfString);
-            std::string currentStreetName(buf);
-            names->push_back(currentStreetName);
-        }
-
-        //init complete search engine
         sEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names);
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("kml", 0);
         descriptorTable.Set("json", 1);
-        pluginDescriptorString = psd;
     }
+
     ~RoutePlugin() {
-        delete names;
         delete sEngine;
-        delete graph;
-        delete nodeHelpDesk;
     }
 
     std::string GetDescriptor() { return pluginDescriptorString; }
