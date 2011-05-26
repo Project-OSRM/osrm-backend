@@ -75,7 +75,7 @@ struct ServerFactory {
 		if(atoi(serverConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(serverConfig.GetParameter("Threads").c_str()) <= threads)
 			threads = atoi( serverConfig.GetParameter("Threads").c_str() );
 
-		std::cout << "[info] http 1.1 compression handled by zlib version " << zlibVersion() << std::endl;
+		std::cout << "[server] http 1.1 compression handled by zlib version " << zlibVersion() << std::endl;
 		Server * server = new Server(serverConfig.GetParameter("IP"), serverConfig.GetParameter("Port"), threads);
 		return server;
 	}
