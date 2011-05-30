@@ -54,6 +54,37 @@ struct _Statistics {
     double preprocTime;
 };
 
+struct _InsertedNodes {
+    NodeID forward1;
+    NodeID forward2;
+    NodeID backward1;
+    NodeID backward2;
+    _InsertedNodes() : forward1(UINT_MAX), forward2(UINT_MAX), backward1(UINT_MAX), backward2(UINT_MAX) {};
+    void BackInsert(NodeID n) {
+        if(backward1 == UINT_MAX) {
+            backward1 = n;
+        } else {
+            backward2 = n;
+        }
+    }
+    void ForwInsert( NodeID n) {
+        if(forward1 == UINT_MAX) {
+            forward1 = n;
+        } else {
+            forward2 = n;
+        }
+    }
+
+    inline bool isForwardInserted(NodeID n) {
+        return forward1 == n || forward2 == n;
+    }
+
+    inline bool isBackwardInserted (NodeID n) {
+        return backward1 == n || backward2 == n;
+    }
+};
+
+
 typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage< NodeID, unsigned > > _Heap;
 
 template<typename EdgeData, typename GraphT, typename NodeHelperT = NodeInformationHelpDesk>
@@ -84,8 +115,10 @@ public:
         bool startReverse = false;
         bool targetReverse = false;
 
+        _InsertedNodes _insertedNodes;
         _Heap _forwardHeap(nodeHelpDesk->getNumberOfNodes());
         _Heap _backwardHeap(nodeHelpDesk->getNumberOfNodes());
+
         NodeID middle = ( NodeID ) 0;
         unsigned int _upperbound = std::numeric_limits<unsigned int>::max();
 
@@ -122,30 +155,34 @@ public:
             } else if(phantomNodes->startRatio > phantomNodes->targetRatio) {
                 onSameEdgeReversed = true;
 
-                _Coordinate result;
-                getNodeInfo(phantomNodes->startNode1, result);
-                getNodeInfo(phantomNodes->startNode2, result);
-
                 EdgeWeight w = _graph->GetEdgeData( currentEdge ).distance;
                 _forwardHeap.Insert(phantomNodes->startNode2, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode2);
+                _insertedNodes.ForwInsert(phantomNodes->startNode2);
                 _backwardHeap.Insert(phantomNodes->startNode1, absDouble(  w-w*phantomNodes->targetRatio), phantomNodes->startNode1);
+                _insertedNodes.BackInsert(phantomNodes->startNode1);
             }
+        }
 
-        } else if(phantomNodes->startNode1 != UINT_MAX) {
+        if(phantomNodes->startNode1 != UINT_MAX) {
             EdgeID edge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2);
             if(edge == UINT_MAX){
                 edge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
+                if(edge == UINT_MAX){
+                    return _upperbound;
+                }
                 startReverse = true;
-            }
-            if(edge == UINT_MAX){
-                return _upperbound;
             }
             const EdgeData& ed = _graph->GetEdgeData(edge);
             EdgeWeight w = ed.distance;
-            if( (ed.backward && !startReverse) || (ed.forward && startReverse) )
+
+            if( (ed.backward && !startReverse) || (ed.forward && startReverse) ){
                 _forwardHeap.Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
-            if( (ed.backward && startReverse) || (ed.forward && !startReverse) )
+                _insertedNodes.ForwInsert(phantomNodes->startNode1);
+            }
+            if( (ed.backward && startReverse) || (ed.forward && !startReverse) ) {
                 _forwardHeap.Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
+                _insertedNodes.ForwInsert(phantomNodes->startNode2);
+            }
         }
         if(phantomNodes->targetNode1 != UINT_MAX && !onSameEdgeReversed) {
             EdgeID edge = _graph->FindEdge( phantomNodes->targetNode1, phantomNodes->targetNode2);
@@ -160,19 +197,17 @@ public:
             const EdgeData& ed = _graph->GetEdgeData(edge);
             EdgeWeight w = ed.distance;
 
-            if( (ed.backward && !targetReverse) || (ed.forward && targetReverse) )
+            if( (ed.backward && !targetReverse) || (ed.forward && targetReverse) ) {
                 _backwardHeap.Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
-            if( (ed.backward && targetReverse) || (ed.forward && !targetReverse) )
+                _insertedNodes.BackInsert(phantomNodes->targetNode2);
+            }
+            if( (ed.backward && targetReverse) || (ed.forward && !targetReverse) ) {
                 _backwardHeap.Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->targetRatio), phantomNodes->targetNode1);
+                _insertedNodes.BackInsert(phantomNodes->targetNode1);
+            }
         }
-//        double time = get_timestamp();
+        //        double time = get_timestamp();
 
-        NodeID sourceHeapNode = 0;
-        NodeID targetHeapNode = 0;
-        if(onSameEdgeReversed) {
-            sourceHeapNode = _forwardHeap.Min();
-            targetHeapNode = _backwardHeap.Min();
-        }
         while(_forwardHeap.Size() + _backwardHeap.Size() > 0) {
             if ( _forwardHeap.Size() > 0 ) {
                 _RoutingStep( &_forwardHeap, &_backwardHeap, true, &middle, &_upperbound );
@@ -181,8 +216,8 @@ public:
                 _RoutingStep( &_backwardHeap, &_forwardHeap, false, &middle, &_upperbound );
             }
         }
-//        std::cout << "[debug] computing distance took " << get_timestamp() - time << std::endl;
-//        time = get_timestamp();
+        //        std::cout << "[debug] computing distance took " << get_timestamp() - time << std::endl;
+        //        time = get_timestamp();
 
         if ( _upperbound == std::numeric_limits< unsigned int >::max() || onSameEdge ) {
             return _upperbound;
@@ -191,7 +226,7 @@ public:
         NodeID pathNode = middle;
         deque< NodeID > packedPath;
 
-        while ( onSameEdgeReversed ? pathNode != sourceHeapNode : pathNode != phantomNodes->startNode1 && pathNode != phantomNodes->startNode2 ) {
+        while ( false == _insertedNodes.isForwardInserted(pathNode) ) {
             pathNode = _forwardHeap.GetData( pathNode ).parent;
             packedPath.push_front( pathNode );
         }
@@ -199,7 +234,7 @@ public:
         packedPath.push_back( middle );
         pathNode = middle;
 
-        while ( onSameEdgeReversed ? pathNode != targetHeapNode : pathNode != phantomNodes->targetNode2 && pathNode != phantomNodes->targetNode1 ){
+        while ( false == _insertedNodes.isBackwardInserted(pathNode) ){
             pathNode = _backwardHeap.GetData( pathNode ).parent;
             packedPath.push_back( pathNode );
         }
@@ -210,7 +245,7 @@ public:
         }
 
         packedPath.clear();
-//        std::cout << "[debug] unpacking path took " << get_timestamp() - time << std::endl;
+        //        std::cout << "[debug] unpacking path took " << get_timestamp() - time << std::endl;
 
         return _upperbound/10;
     }
@@ -336,8 +371,8 @@ private:
 
         for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
             const EdgeData& ed = _graph->GetEdgeData(edge);
-//            if(!ed.shortcut)
-//                continue;
+            //            if(!ed.shortcut)
+            //                continue;
             const NodeID to = _graph->GetTarget(edge);
             const EdgeWeight edgeWeight = ed.distance;
 
@@ -348,7 +383,7 @@ private:
             if(_forwardHeap->WasInserted( to )) {
                 if(!forwardDirection ? ed.forward : ed.backward) {
                     if(_forwardHeap->GetKey( to ) + edgeWeight < distance) {
-//                        std::cout << "[stalled] node " << node << std::endl;
+                        //                        std::cout << "[stalled] node " << node << std::endl;
                         return;
                     }
                 }
