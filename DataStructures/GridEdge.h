@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 struct _GridEdge {
     _GridEdge(NodeID s, NodeID t, _Coordinate sc, _Coordinate tc) : start(s), target(t), startCoord(sc), targetCoord(tc) {}
-    _GridEdge() {}
+    _GridEdge() : start(UINT_MAX), target(UINT_MAX) {}
     NodeID start;
     NodeID target;
     _Coordinate startCoord;
@@ -31,7 +31,7 @@ struct _GridEdge {
 };
 
 struct GridEntry {
-    GridEntry() {}
+    GridEntry() : fileIndex(UINT_MAX), ramIndex(UINT_MAX){}
     GridEntry(_GridEdge e, unsigned f, unsigned r) : edge(e), fileIndex(f), ramIndex(r) {}
     _GridEdge edge;
     unsigned fileIndex;
