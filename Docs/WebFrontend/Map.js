@@ -23,7 +23,7 @@
  * Description: JS file to show a map, for markers, left slide div, ...
  *
  * @author Pascal Neis, pascal@neis-one.org 
- * @version 0.1 2011-05-15
+ * @version 0.1.1 2011-06-09
  */
 
 //======================
@@ -116,8 +116,10 @@ function init(){
                         externalGraphic: '${icon}',
                         // Makes sure the background graphic is placed correctly relative
                         // to the external graphic.
-                        backgroundXOffset: 0,
-                        backgroundYOffset: -7,
+                        backgroundXOffset: -11,
+                        backgroundYOffset: -40,
+                        graphicXOffset: -11,
+                        graphicYOffset: -40,
                         
                         // Set the z-indexes of both graphics to make sure the background
                         // graphics stay in the background (shadows on top of markers looks
@@ -129,7 +131,7 @@ function init(){
                         graphicWidth: 22,
                         graphicHeight: 34
                     }),
-                    rendererOptions: {yOrdering: true}
+                    //rendererOptions: {yOrdering: true}
                 }
            );
     // Add a drag feature control to move features around.
@@ -141,7 +143,6 @@ function init(){
 			feature.move(map.getLonLatFromPixel(pixel));
 			routing(false); },
 		  onLeave: function(f){
-			alert("here");
 			if(!ISCALCULATING){ routing(false); }}
 		});
     map.addControl(dragFeatures);
