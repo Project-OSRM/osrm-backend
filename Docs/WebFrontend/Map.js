@@ -129,9 +129,9 @@ function init(){
 
                         pointRadius: 10,
                         graphicWidth: 22,
-                        graphicHeight: 34
+                        graphicHeight: 40
                     }),
-                    //rendererOptions: {yOrdering: true}
+                    rendererOptions: {yOrdering: true}
                 }
            );
     // Add a drag feature control to move features around.
