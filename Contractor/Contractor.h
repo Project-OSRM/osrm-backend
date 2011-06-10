@@ -78,9 +78,7 @@ private:
     struct _PriorityData {
         int depth;
         NodeID bias;
-        _PriorityData() {
-            depth = 0;
-        }
+        _PriorityData() : depth(0), bias(0) { }
     };
 
     struct _ContractionInformation {
