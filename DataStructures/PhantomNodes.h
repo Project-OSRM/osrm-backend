@@ -33,6 +33,31 @@ struct PhantomNodes {
     double targetRatio;
     _Coordinate startCoord;
     _Coordinate targetCoord;
+    void Reset() {
+        startNode1 = UINT_MAX;
+        startNode2 = UINT_MAX;
+        targetNode1 = UINT_MAX;
+        targetNode2 = UINT_MAX;
+        startRatio = 1.;
+        targetRatio = 1.;
+    }
+};
+
+std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
+    out << "startNode1: " << pn.startNode1 << std::endl;
+    out << "startNode2: " << pn.startNode2 << std::endl;
+    out << "targetNode1: " << pn.targetNode1 << std::endl;
+    out << "targetNode2: " << pn.targetNode2 << std::endl;
+    out << "startCoord: " << pn.startCoord << std::endl;
+    out << "targetCoord: " << pn.targetCoord << std::endl;
+    return out;
+}
+
+struct NodesOfEdge {
+    NodeID startID;
+    NodeID destID;
+    double ratio;
+    _Coordinate projectedPoint;
 };
 
 #endif /* PHANTOMNODES_H_ */
