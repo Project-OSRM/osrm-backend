@@ -76,6 +76,11 @@ struct _Coordinate {
     _Coordinate (int t, int n) : lat(t) , lon(n) {}
 };
 
+ostream & operator<<(ostream & out, const _Coordinate & c){
+    out << "(" << c.lat << "," << c.lon << ")";
+    return out;
+}
+
 struct _Way {
     _Way() {
         direction = _Way::notSure;
