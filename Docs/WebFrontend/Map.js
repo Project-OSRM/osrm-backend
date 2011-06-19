@@ -160,6 +160,9 @@ function init(){
 	if (!map.getCenter()){
 		map.setCenter(new OpenLayers.LonLat(600000, 6600000),6);
 	}
+	
+	//Check if the URL contains some GET parameter, e.g. for the route
+	checkURL();
 }
 
 //Helper Functions
@@ -177,4 +180,42 @@ function checkReturn(textfieldname,e){
 function closeOpenDiv(name){ 
 	if(document.getElementById(name).style.display == 'none'){ document.getElementById(name).style.display = ''; }
 	else{ document.getElementById(name).style.display = 'none'; }
+}
+
+//URL Functions
+function checkURL(){
+	var getObjs = new Array();
+	var getString = document.location.search.substr(1,document.location.search.length);
+	if(getString != ''){
+		var getArray=getString.split('&');
+		for(i=0 ; i<getArray.length ; ++i){
+			var v='';
+			var vArr = getArray[i].split('=');
+			if(vArr.length>1){ v = vArr[1]; }
+			getObjs[unescape(vArr[0])]=unescape(v);
+		}
+	}
+	
+	var fr = getObjectOfArray(getObjs, "fr");
+	var to = getObjectOfArray(getObjs, "to");
+	
+	if(fr != 'undefined' && to != 'undefined'){
+		//From
+		var fr_pos = fr.split(',');
+		var fr_lonlat = new OpenLayers.LonLat(fr_pos[1],fr_pos[0]);
+		setMarkerAndZoom('start', fr_lonlat);
+		isStartPointSet = true;
+		//To
+		var to_pos = to.split(',');
+		var to_lonlat = new OpenLayers.LonLat(to_pos[1],to_pos[0]);
+		setMarker('end', to_lonlat);
+		isEndPointSet = true;
+		//Calculate the route
+		routing(false);
+	}
+}
+
+function getObjectOfArray(objects, elementName){
+	if(!objects[elementName]){ return 'undefined'; }
+	return objects[elementName];
 }

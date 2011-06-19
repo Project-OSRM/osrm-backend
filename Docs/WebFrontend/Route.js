@@ -113,10 +113,18 @@ function showResultsRoute(response) {
 		else{
 			showRouteGeometry(response);
 		}
+		
+		//Create Link of the route
+		var startFeat = getMarkerByName('start');
+		var endFeat = getMarkerByName('end');
+		var from = new OpenLayers.LonLat(startFeat.geometry.x,startFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
+		var to = new OpenLayers.LonLat(endFeat.geometry.x,endFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
+		var routeLink = document.URL+'?fr='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&to='+to.lat.toFixed(6)+','+to.lon.toFixed(6);
+		routeLink = '<a target=\"_blank\" href="'+routeLink+'\">Your link to the route ...</a>';
     	
         //Show Route Summary
         var output = '<p class="routeSummaryHL">Some information about your Way <br> from \'<span class="routeSummaryHLlight">'+response.route_summary.start_point+'</span>\' to \'<span class="routeSummaryHLlight">'+response.route_summary.end_point+'</span>\'</p>';
-        output += '<p class="routeSummary">Distance: <span class="routeSummarybold">'+response.route_summary.total_distance/1000+' km</span> - Duration: <span class="routeSummarybold">'+secondsToTime(response.route_summary.total_time)+'</span></p><p class="routeInstructionsHL"> Your Route-Instructions:</p>';
+        output += '<p class="routeSummary">Distance: <span class="routeSummarybold">'+response.route_summary.total_distance/1000+' km</span> - Duration: <span class="routeSummarybold">'+secondsToTime(response.route_summary.total_time)+'</span></p><p>'+routeLink+'</p><pclass="routeInstructionsHL"> The Route-Instructions:</p>';
         //Show Route Instructions
         output += '<table>';
         var lengthOfArray = response.route_instructions.length;

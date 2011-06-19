@@ -101,7 +101,7 @@ function showResultsGeocode(response) {
 		}		
 		html += '</table>';
 		
-		markerzoom(markername, lonlat);
+		setMarkerAndZoom(markername, lonlat);
 	}
 	
     
@@ -114,10 +114,22 @@ function showResultsGeocode(response) {
 }
 
 /*
- * markerzoom()-Function to set a marker on the map
+ * setMarkerAndZoom()-Function to set a marker on the map and zoom
  */
-function markerzoom(markername,lonlat){
-	lonlat.transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+function setMarkerAndZoom(markername,lonlat){
+	setMarker(markername,lonlat);
+	
+	//Hack - FIXME !
+	lonlat.lon -= 500;
+	//Set Center
+	map.setCenter(lonlat, 15);
+}
+
+/*
+ * setMarker()-Function to set a marker on the map
+ */
+function setMarker(markername,lonlat){
+	lonlat.transform(EPSG_4326, EPSG_900913);
 	for(var i= 0; i<dragLayer.features.length; i++){
 		if(dragLayer.features[i].name == markername){ dragLayer.removeFeatures([dragLayer.features[i]]); }	
 	}
@@ -133,11 +145,6 @@ function markerzoom(markername,lonlat){
 		
 	point.name = markername;
 	dragLayer.addFeatures([point]);
-
-	//Hack - FIXME !
-	lonlat.lon -= 500;
-	//Set Center
-	map.setCenter(lonlat, 15);
 }
 
 /*
