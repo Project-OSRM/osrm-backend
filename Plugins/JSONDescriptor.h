@@ -19,6 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 
 #include "BaseDescriptor.h"
+#include "../DataStructures/PolylineCompressor.h"
 
 #ifndef JSONDESCRIPTOR_H_
 #define JSONDESCRIPTOR_H_
@@ -29,6 +30,7 @@ template<class SearchEngineT>
 class JSONDescriptor : public BaseDescriptor<SearchEngineT> {
 private:
     DescriptorConfig config;
+    vector<_Coordinate> polyline;
 public:
     JSONDescriptor() {}
     void SetConfig(const DescriptorConfig c) {
@@ -104,13 +106,7 @@ public:
             routeInstructionString += direction;
 
             //put start coord to linestring;
-            convertLatLon(phantomNodes->startCoord.lat, tmp);
-            routeGeometryString += "[";
-            routeGeometryString += tmp;
-            routeGeometryString += ", ";
-            convertLatLon(phantomNodes->startCoord.lon, tmp);
-            routeGeometryString += tmp;
-            routeGeometryString += "],";
+            polyline.push_back(phantomNodes->startCoord);
 
             _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
             _Coordinate next, current, lastPlace, startOfSegment;
@@ -147,13 +143,8 @@ public:
                 //                std::cout << "Area for: " << area << std::endl;
                 if(area > areaThresholds[config.z] || 19 == config.z) {
                     painted++;
-                    convertLatLon(current.lat, tmp);
-                    routeGeometryString += "[";
-                    routeGeometryString += tmp;
-                    routeGeometryString += ", ";
-                    convertLatLon(current.lon, tmp);
-                    routeGeometryString += tmp;
-                    routeGeometryString += "],";
+                	polyline.push_back(current);
+
                     position++;
                     startOfSegment = current;
                 } else {
@@ -200,8 +191,6 @@ public:
                     routeInstructionString += "],";
 
                     string lat; string lon;
-                    convertLatLon(lastPlace.lon, lon);
-                    convertLatLon(lastPlace.lat, lat);
                     lastPlace = current;
                     routeInstructionString += "[\"";
 
@@ -264,13 +253,7 @@ public:
             string lat; string lon;
 
             //put targetCoord to linestring
-            convertLatLon(phantomNodes->targetCoord.lat, tmp);
-            routeGeometryString += "[";
-            routeGeometryString += tmp;
-            routeGeometryString += ", ";
-            convertLatLon(phantomNodes->targetCoord.lon, tmp);
-            routeGeometryString += tmp;
-            routeGeometryString += "]";
+            polyline.push_back(phantomNodes->targetCoord);
             position++;
 
             //give complete distance in meters;
@@ -305,6 +288,11 @@ public:
         reply.content += "},";
         reply.content += "\"route_geometry\": [";
         if(config.geometry) {
+        	if(config.encodeGeometry)
+        		config.pc.printEncodedString(polyline, routeGeometryString);
+        	else
+        		config.pc.printUnencodedString(polyline, routeGeometryString);
+
             reply.content += routeGeometryString;
         }
         reply.content += "],";

@@ -29,13 +29,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 #include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/PolylineCompressor.h"
 #include "../Util/StrIngUtil.h"
 
 struct DescriptorConfig {
-    DescriptorConfig() : instructions(true), geometry(true), z(18) {}
+    DescriptorConfig() : instructions(true), geometry(true), encodeGeometry(false), z(18) {}
     bool instructions;
     bool geometry;
+    bool encodeGeometry;
     unsigned short z;
+
+    PolylineCompressor pc;
 };
 
 template<class SearchEngineT>
