@@ -25,57 +25,59 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class PolylineCompressor {
 private:
-	inline string encodeSignedNumber(int number) const {
-	    int signedNumber = number << 1;
-	    if (number < 0) {
-	        signedNumber = ~(signedNumber);
-	    }
-	    return (encodeNumber(signedNumber));
-	}
+    inline string encodeSignedNumber(int number) const {
+        int signedNumber = number << 1;
+        if (number < 0) {
+            signedNumber = ~(signedNumber);
+        }
+        return (encodeNumber(signedNumber));
+    }
 
-	inline string encodeNumber(int numberToEncode) const {
-	    ostringstream encodeString;
+    inline string encodeNumber(int numberToEncode) const {
+        ostringstream encodeString;
 
-	    while (numberToEncode >= 0x20) {
-	        int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
-	        encodeString << (static_cast<char> (nextValue));
-	        numberToEncode >>= 5;
-	    }
+        while (numberToEncode >= 0x20) {
+            int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
+            encodeString << (static_cast<char> (nextValue));
+            numberToEncode >>= 5;
+        }
 
-	    numberToEncode += 63;
-	    encodeString << (static_cast<char> (numberToEncode));
+        numberToEncode += 63;
+        encodeString << (static_cast<char> (numberToEncode));
 
-	    return encodeString.str();
-	}
+        return encodeString.str();
+    }
 public:
-	inline void printEncodedString(vector<_Coordinate>& polyline, string &output) {
-	    output += "\"";
-		output += encodeSignedNumber(polyline[0].lat);
-		output += encodeSignedNumber(polyline[0].lon);
-		for(unsigned i = 1; i < polyline.size(); i++) {
-			output += encodeSignedNumber(polyline[i].lat - polyline[i-1].lat);
-			output += encodeSignedNumber(polyline[i].lon - polyline[i-1].lon);
-		}
-		output += "\"";
-	}
+    inline void printEncodedString(vector<_Coordinate>& polyline, string &output) {
+        output += "\"";
+        if(polyline.size() > 0) {
+            output += encodeSignedNumber(polyline[0].lat);
+            output += encodeSignedNumber(polyline[0].lon);
+        }
+        for(unsigned i = 1; i < polyline.size(); i++) {
+            output += encodeSignedNumber(polyline[i].lat - polyline[i-1].lat);
+            output += encodeSignedNumber(polyline[i].lon - polyline[i-1].lon);
+        }
+        output += "\"";
+    }
 
-	inline void printUnencodedString(vector<_Coordinate> & polyline, string & output) {
-	    output += "[";
-		string tmp;
-		for(unsigned i = 0; i < polyline.size(); i++) {
-			convertLatLon(polyline[i].lat, tmp);
-			output += "[";
-			output += tmp;
-			convertLatLon(polyline[i].lon, tmp);
-			output += ", ";
-			output += tmp;
-			output += "]";
-			if( i < polyline.size()-1 ) {
-				output += ",";
-			}
-		}
-		output += "]";
-	}
+    inline void printUnencodedString(vector<_Coordinate> & polyline, string & output) {
+        output += "[";
+        string tmp;
+        for(unsigned i = 0; i < polyline.size(); i++) {
+            convertLatLon(polyline[i].lat, tmp);
+            output += "[";
+            output += tmp;
+            convertLatLon(polyline[i].lon, tmp);
+            output += ", ";
+            output += tmp;
+            output += "]";
+            if( i < polyline.size()-1 ) {
+                output += ",";
+            }
+        }
+        output += "]";
+    }
 };
 
 #endif /* POLYLINECOMPRESSOR_H_ */
