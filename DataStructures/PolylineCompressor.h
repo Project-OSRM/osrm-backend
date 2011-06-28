@@ -49,15 +49,18 @@ private:
 	}
 public:
 	inline void printEncodedString(vector<_Coordinate>& polyline, string &output) {
+	    output += "\"";
 		output += encodeSignedNumber(polyline[0].lat);
 		output += encodeSignedNumber(polyline[0].lon);
 		for(unsigned i = 1; i < polyline.size(); i++) {
 			output += encodeSignedNumber(polyline[i].lat - polyline[i-1].lat);
 			output += encodeSignedNumber(polyline[i].lon - polyline[i-1].lon);
 		}
+		output += "\"";
 	}
 
 	inline void printUnencodedString(vector<_Coordinate> & polyline, string & output) {
+	    output += "[";
 		string tmp;
 		for(unsigned i = 0; i < polyline.size(); i++) {
 			convertLatLon(polyline[i].lat, tmp);
@@ -71,7 +74,7 @@ public:
 				output += ",";
 			}
 		}
-
+		output += "]";
 	}
 };
 

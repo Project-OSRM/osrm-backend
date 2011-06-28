@@ -286,7 +286,7 @@ public:
         reply.content += "\"route_summary\": {";
         reply.content += routeSummaryString;
         reply.content += "},";
-        reply.content += "\"route_geometry\": [";
+        reply.content += "\"route_geometry\": ";
         if(config.geometry) {
         	if(config.encodeGeometry)
         		config.pc.printEncodedString(polyline, routeGeometryString);
@@ -295,7 +295,7 @@ public:
 
             reply.content += routeGeometryString;
         }
-        reply.content += "],";
+        reply.content += ",";
         reply.content += "\"route_instructions\": [";
         if(config.instructions) {
             reply.content += routeInstructionString;
