@@ -47,6 +47,18 @@ private:
 
         return encodeString.str();
     }
+
+    inline void replaceBackslash(string & str) {
+        size_t found = 0;
+        do {
+            found = str.find("\\", found);
+            if(found ==string::npos)
+                break;
+            str.insert(found, "\\");
+            found+=2;
+        } while(true);
+    }
+
 public:
     inline void printEncodedString(vector<_Coordinate>& polyline, string &output) {
         output += "\"";
@@ -59,6 +71,7 @@ public:
             output += encodeSignedNumber(polyline[i].lon - polyline[i-1].lon);
         }
         output += "\"";
+        replaceBackslash(output);
     }
 
     inline void printUnencodedString(vector<_Coordinate> & polyline, string & output) {
