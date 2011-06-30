@@ -90,7 +90,7 @@ function showResultsGeocode(response) {
 			html += '<td class="'+rowstyle+'">';
 			if(result.display_name){
 				var new_display_name = result.display_name;//.replace(/,/g, ",<br />")
-				html += '<a href="#" onclick="javascript:markerzoom(\''+markername+'\', new OpenLayers.LonLat('+result.lon+','+result.lat+'));">'+new_display_name.trim()+'</a>';
+				html += '<a href="#" onclick="javascript:setMarkerAndZoom(\''+markername+'\', new OpenLayers.LonLat('+result.lon+','+result.lat+'));">'+new_display_name.trim()+'</a>';
 			}
 			html += "</td></tr>";
 			
