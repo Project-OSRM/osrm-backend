@@ -288,6 +288,9 @@ function decodeRouteGeometry(encoded, precision) {
 	return array;
 }
 
+/*
+ * createShortLink()-Function to "create" shortlink of a route
+ */
 function createShortLink(str){
 	var script = document.createElement('script');
     script.type = 'text/javascript';
@@ -296,6 +299,9 @@ function createShortLink(str){
     document.body.appendChild(script);
 }
 
+/*
+ * showRouteLink()-Function
+ */
 function showRouteLink(response){
 	document.getElementById('routelink').innerHTML = '<span class="routeSummarybold"> >> Your ShortLink:</span> <a href="'+response.ShortURL+'">'+response.ShortURL+'</a>';
 }
