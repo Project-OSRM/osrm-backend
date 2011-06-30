@@ -34,6 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "RouteParameters.h"
 #include "KMLDescriptor.h"
 #include "JSONDescriptor.h"
+#include "GPXDescriptor.h"
 
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/StaticGraph.h"
@@ -53,6 +54,7 @@ public:
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("kml", 0);
         descriptorTable.Set("json", 1);
+        descriptorTable.Set("gpx", 2);
     }
 
     ~RoutePlugin() {
@@ -132,6 +134,10 @@ public:
             desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
+        case 2:
+            desc = new GPXDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+
+            break;
         default:
             desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
@@ -168,6 +174,13 @@ public:
                 reply.headers[2].name = "Content-Disposition";
                 reply.headers[2].value = "attachment; filename=\"route.json\"";
             }
+
+            break;
+        case 2:
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "application/gpx+xml; charset=UTF-8";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"route.gpx\"";
 
             break;
         default:
