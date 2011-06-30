@@ -38,6 +38,10 @@ using namespace std;
 #endif
 #define STXXL_VERBOSE_LEVEL -100
 
+#define INFO(x) std::cout << "[info " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
+#define ERR(x) std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; exit(-1);
+#define WARN(x) std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
+
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
 typedef unsigned int EdgeWeight;
