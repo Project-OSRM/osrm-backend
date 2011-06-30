@@ -23,12 +23,13 @@
  * Description: JS file for routing
  *
  * @author Pascal Neis, pascal@neis-one.org 
- * @version 0.1 2011-05-15
+ * @version 0.2 2011-06-23
  */
 
 //======================
 // OBJECTS
 //Map
+var HOST_WEBSITE = 'http://map.project-osrm.org/';//location.host
 var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-de/';
 var ISCALCULATING = false;
 var EPSG_4326 = new OpenLayers.Projection("EPSG:4326");
@@ -80,7 +81,7 @@ function routing(isDragRoute){
     }
     
     script.src = HOST_ROUTING_URL + "&"+from.lat + '&' + from.lon + '&' + to.lat + '&' + to.lon +
-    	'&z='+this.map.getZoom()+'&output=json&jsonp='+callBackFunction+instructions;//+'&simplified=yes';
+    	'&z='+this.map.getZoom()+'&output=json&jsonp='+callBackFunction+instructions+'&geomformat=cmp';//+'&simplified=yes';    	
     document.body.appendChild(script);
 }
 
@@ -119,22 +120,22 @@ function showResultsRoute(response) {
 		var endFeat = getMarkerByName('end');
 		var from = new OpenLayers.LonLat(startFeat.geometry.x,startFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
 		var to = new OpenLayers.LonLat(endFeat.geometry.x,endFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
-		var routeLink = document.URL+'?fr='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&to='+to.lat.toFixed(6)+','+to.lon.toFixed(6);
-		routeLink = '<a target=\"_blank\" href="'+routeLink+'\">Your link to the route ...</a>';
-    	
+		var routelink = '<div id="routelink"><input name="routelink" type="submit" title="Get Link" onClick="createShortLink(\''+HOST_WEBSITE+'?fr='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&to='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'\');" value="Get Link"></div>';
+		    	
         //Show Route Summary
         var output = '<p class="routeSummaryHL">Some information about your Way <br> from \'<span class="routeSummaryHLlight">'+response.route_summary.start_point+'</span>\' to \'<span class="routeSummaryHLlight">'+response.route_summary.end_point+'</span>\'</p>';
-        output += '<p class="routeSummary">Distance: <span class="routeSummarybold">'+response.route_summary.total_distance/1000+' km</span> - Duration: <span class="routeSummarybold">'+secondsToTime(response.route_summary.total_time)+'</span></p><p>'+routeLink+'</p><pclass="routeInstructionsHL"> The Route-Instructions:</p>';
+        output += '<p class="routeSummary">Distance: <span class="routeSummarybold">'+response.route_summary.total_distance/1000+' km</span> - Duration: <span class="routeSummarybold">'+secondsToTime(response.route_summary.total_time)+'</span></p><p>'+routelink+'</p><pclass="routeInstructionsHL"> The Route-Instructions:</p>';
         //Show Route Instructions
         output += '<table>';
         var lengthOfArray = response.route_instructions.length;
+        var geometry = decodeRouteGeometry(response.route_geometry, 5);
         for (var i = 0; i < lengthOfArray; i++) {
         	//odd or even ?
         	var rowstyle='routeInstructionsOdd';
         	if(i%2==0){ rowstyle='routeInstructionsEven'; }
 
             var indexPos = response.route_instructions[i][3];
-            var point = new OpenLayers.Geometry.Point(response.route_geometry[indexPos][1], response.route_geometry[indexPos][0]);
+            var point = new OpenLayers.Geometry.Point(geometry[indexPos][1], geometry[indexPos][0]);
         	            output += '<tr class="'+rowstyle+'"><td align="right" valign="top"><span class="routeSummarybold">'+(i+1)+'.</span></td><td class="'+rowstyle+'"><a href="#" class="nolinkStyle" onclick="setMapCenter(new OpenLayers.LonLat('+point.x+','+point.y+'));">'+response.route_instructions[i][0]+' on '+response.route_instructions[i][1]+' for '+getDistanceWithUnit(response.route_instructions[i][2])+'</a></td></tr>';        }
         output += '</table>';
         //alert(vectorLayerRoute.features[0].geometry.getVertices());
@@ -147,10 +148,15 @@ function showResultsRoute(response) {
  * showResultsRoute()-Function to show route result
  */
 function showRouteGeometry(response) {
-    if (response) {    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);    	var lengthOfArray = response.route_geometry.length;
-        var points = [];        points.length = lengthOfArray;
+    if (response) {    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);
+
+    	// now with compression of the route geometry
+        var geometry = decodeRouteGeometry(response.route_geometry, 5);
+       	var lengthOfArray = geometry.length;
+        var points = [];
+        points.length = lengthOfArray;
         
-        //Create Route Layer for Display        for (var i = 0; i < lengthOfArray; i++) {            var point = new OpenLayers.Geometry.Point(                    response.route_geometry[i][1], response.route_geometry[i][0]).transform(EPSG_4326, EPSG_900913);            points.push(point);
+        //Create Route Layer for Display        for (var i = 0; i < lengthOfArray; i++) {            var point = new OpenLayers.Geometry.Point(geometry[i][1], geometry[i][0]).transform(EPSG_4326, EPSG_900913);            points.push(point);
             	
 			if(i % 1024 == 0 && i>0 || i==lengthOfArray-1){
 				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points), null, {
@@ -162,12 +168,6 @@ function showRouteGeometry(response) {
 				points = [];
 				points.push(point);
 			}        }
-        /*var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points), null, {
-					strokeColor: "#0033ff",
-					strokeOpacity: 0.7,
-					strokeWidth: 5
-				});
-		vectorLayerRoute.addFeatures([feature]);*/
    }
 }
 
@@ -175,7 +175,11 @@ function showRouteGeometry(response) {
  * showNoNameStreets()-Function to show route result
  */
 function showNoNameStreets(response) {
-    if (response) {    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);    	var lengthOfArray = response.route_geometry.length;
+    if (response) {    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);
+    	
+    	// now with compression of the route geometry
+        var geometry = decodeRouteGeometry(response.route_geometry, 5);
+       	var lengthOfArray = geometry.length;
         var points = [];        points.length = lengthOfArray;
         
         //Check if a instruction has no name !
@@ -191,7 +195,7 @@ function showNoNameStreets(response) {
         
         //Create Route Layer for Display
         var color = "#0033ff";
-        var changeColor = false;        for (var i = 0; i < lengthOfArray; i++) {            var point = new OpenLayers.Geometry.Point(                    response.route_geometry[i][1], response.route_geometry[i][0]).transform(EPSG_4326, EPSG_900913);            points.push(point);
+        var changeColor = false;        for (var i = 0; i < lengthOfArray; i++) {            var point = new OpenLayers.Geometry.Point(geometry[i][1], geometry[i][0]).transform(EPSG_4326, EPSG_900913);            points.push(point);
             
             if(colors[i] != undefined){ changeColor=true;}
             	
@@ -208,15 +212,12 @@ function showNoNameStreets(response) {
 				if(colors[i] != undefined){ color = colors[i]; }
 				changeColor=false;
 			}        }
-        /*var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points), null, {
-					strokeColor: "#0033ff",
-					strokeOpacity: 0.7,
-					strokeWidth: 5
-				});
-		vectorLayerRoute.addFeatures([feature]);*/
    }
 }
 
+/*
+ * secondsToTime()-Function to transform seconds to a time string
+ */
 function secondsToTime(seconds){
    seconds = parseInt(seconds);
    minutes = parseInt(seconds/60);
@@ -232,12 +233,18 @@ function secondsToTime(seconds){
    }
 }
 
+/*
+ * getDistanceWithUnit()-Function to return a distance with units
+ */
 function getDistanceWithUnit(distance){
 	distance = parseInt(distance);
 	if(distance >= 1000){ return (parseInt(distance/1000))+' km'; }
 	else{ return distance+' m'; }
 }
 
+/*
+ * setMapCenter()-Function to add a marker and center the map
+ */
 function setMapCenter(lonlat){
 	lonlat.transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
 
@@ -247,7 +254,48 @@ function setMapCenter(lonlat){
     var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
     var icon = new OpenLayers.Icon('img/marker.png',size,offset);
     markersLayer.addMarker(new OpenLayers.Marker(lonlat,icon));
-	
+
 	//Hack - FIXME !
 	map.setCenter(new OpenLayers.LonLat(lonlat.lon-200, lonlat.lat), 17);
+}
+
+/*
+ * decodeRouteGeometry()-Function to decode encoded Route Geometry
+ */
+function decodeRouteGeometry(encoded, precision) {
+	precision = Math.pow(10, -precision);
+	var len = encoded.length, index=0, lat=0, lng = 0, array = [];
+	while (index < len) {
+		var b, shift = 0, result = 0;
+		do {
+			b = encoded.charCodeAt(index++) - 63;
+			result |= (b & 0x1f) << shift;
+			shift += 5;
+		} while (b >= 0x20);
+		var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+		lat += dlat;
+		shift = 0;
+		result = 0;
+		do {
+			b = encoded.charCodeAt(index++) - 63;
+			result |= (b & 0x1f) << shift;
+			shift += 5;
+		} while (b >= 0x20);
+		var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+		lng += dlng;
+		array.push([lat * precision, lng * precision]);
+	}
+	return array;
+}
+
+function createShortLink(str){
+	var script = document.createElement('script');
+    script.type = 'text/javascript';
+    var callBackFunction = 'showRouteLink';
+    script.src = 'http://map.project-osrm.org/shorten/'+str+'&jsonp=showRouteLink';  	
+    document.body.appendChild(script);
+}
+
+function showRouteLink(response){
+	document.getElementById('routelink').innerHTML = '<span class="routeSummarybold"> >> Your ShortLink:</span> <a href="'+response.ShortURL+'">'+response.ShortURL+'</a>';
 }
