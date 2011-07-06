@@ -107,4 +107,8 @@ std::string HTMLDeEntitize( std::string result) {
     }
     return result;
 }
+
+bool StringStartsWith(string & input, string & prefix) {
+    return (input.find(prefix) == 0);
+}
 #endif /* STRINGUTIL_H_ */
