@@ -294,6 +294,8 @@ public:
         		config.pc.printUnencodedString(polyline, routeGeometryString);
 
             reply.content += routeGeometryString;
+        } else {
+            reply.content += "[]";
         }
         reply.content += ",";
         reply.content += "\"route_instructions\": [";
