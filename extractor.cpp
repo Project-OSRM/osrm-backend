@@ -242,7 +242,7 @@ int main (int argc, char *argv[]) {
         }
 
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        //todo: serialize restrictions
+        //serialize restrictions
         ofstream restrictionsOutstream;
         restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);
         restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
