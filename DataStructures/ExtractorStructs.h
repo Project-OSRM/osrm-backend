@@ -372,10 +372,10 @@ string GetRandomString() {
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz";
 
-    for (int i = 0; i < 128; ++i) {
+    for (int i = 0; i < 127; ++i) {
         s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
     }
-    s[128] = 0;
+    s[127] = 0;
     return string(s);
 }
 
