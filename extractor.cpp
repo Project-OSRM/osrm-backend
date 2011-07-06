@@ -50,12 +50,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 typedef BaseConfiguration ExtractorConfiguration;
 
-unsigned globalRelationCounter = 0;
+unsigned globalRestrictionCounter = 0;
 ExtractorCallbacks * extractCallBacks;
 
 bool nodeFunction(_Node n);
-bool adressFunction(_Node n, HashTable<std::string, std::string> keyVals);
-bool relationFunction(_Relation r);
+bool adressFunction(_Node n, HashTable<string, string> keyVals);
+bool restrictionFunction(_RawRestrictionContainer r);
 bool wayFunction(_Way w);
 
 template<class ClassT>
@@ -63,14 +63,15 @@ bool removeIfUnused(ClassT n) { return (false == n.used); }
 
 int main (int argc, char *argv[]) {
     if(argc <= 1) {
-        std::cerr << "usage: " << endl << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>" << std::endl;
+        cerr << "usage: " << endl << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>" << endl;
         exit(-1);
     }
 
-    std::cout << "[extractor] extracting data from input file " << argv[1] << std::endl;
+    cout << "[extractor] extracting data from input file " << argv[1] << endl;
     bool isPBF = false;
-    std::string outputFileName(argv[1]);
-    std::string::size_type pos = outputFileName.find(".osm.bz2");
+    string outputFileName(argv[1]);
+    string restrictionsFileName(argv[1]);
+    string::size_type pos = outputFileName.find(".osm.bz2");
     if(pos==string::npos) {
         pos = outputFileName.find(".osm.pbf");
         if(pos!=string::npos) {
@@ -79,36 +80,34 @@ int main (int argc, char *argv[]) {
     }
     if(pos!=string::npos) {
         outputFileName.replace(pos, 8, ".osrm");
+        restrictionsFileName.replace(pos, 8, ".osrm.restrictions");
     } else {
         pos=outputFileName.find(".osm");
         if(pos!=string::npos) {
             outputFileName.replace(pos, 5, ".osrm");
+            restrictionsFileName.replace(pos, 5, ".osrm.restrictions");
         } else {
             outputFileName.append(".osrm");
+            restrictionsFileName.append(".osrm.restrictions");
         }
     }
-    std::string adressFileName(outputFileName);
-
-
+    string adressFileName(outputFileName);
 
     unsigned amountOfRAM = 1;
     unsigned installedRAM = GetPhysicalmemory(); 
-	if(installedRAM < 2048264) {
-        std::cout << "[Warning] Machine has less than 2GB RAM." << std::endl;
+    if(installedRAM < 2048264) {
+        cout << "[Warning] Machine has less than 2GB RAM." << endl;
     }
     if(testDataFile("extractor.ini")) {
         ExtractorConfiguration extractorConfig("extractor.ini");
         unsigned memoryAmountFromFile = atoi(extractorConfig.GetParameter("Memory").c_str());
         if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024*1024))
             amountOfRAM = memoryAmountFromFile;
-        std::cout << "[extractor] using " << amountOfRAM << " GB of RAM for buffers" << std::endl;
+        cout << "[extractor] using " << amountOfRAM << " GB of RAM for buffers" << endl;
     }
 
-    STXXLNodeIDVector usedNodeIDs;
-    STXXLNodeVector   allNodes;
-    STXXLEdgeVector   allEdges;
-    STXXLAddressVector adressVector;
-    STXXLStringVector  nameVector;
+    STXXLContainers externalMemory;
+
     unsigned usedNodeCounter = 0;
     unsigned usedEdgeCounter = 0;
 
@@ -120,60 +119,148 @@ int main (int argc, char *argv[]) {
     double time = get_timestamp();
 
     stringMap->set_empty_key(GetRandomString());
-    stringMap->insert(std::make_pair("", 0));
-    extractCallBacks = new ExtractorCallbacks(&allNodes, &usedNodeIDs, &allEdges,  &nameVector, &adressVector, settings, stringMap);
+    stringMap->insert(make_pair("", 0));
+    extractCallBacks = new ExtractorCallbacks(&externalMemory, settings, stringMap);
 
-    BaseParser<_Node, _Relation, _Way> * parser;
+    BaseParser<_Node, _RawRestrictionContainer, _Way> * parser;
     if(isPBF) {
         parser = new PBFParser(argv[1]);
     } else {
         parser = new XMLParser(argv[1]);
     }
-    parser->RegisterCallbacks(&nodeFunction, &relationFunction, &wayFunction, &adressFunction);
+    parser->RegisterCallbacks(&nodeFunction, &restrictionFunction, &wayFunction, &adressFunction);
     if(parser->Init()) {
         parser->Parse();
     } else {
-        std::cerr << "[error] parser not initialized!" << std::endl;
+        cerr << "[error] parser not initialized!" << endl;
         exit(-1);
     }
     delete parser;
 
     try {
-        //        std::cout << "[info] raw no. of names:     " << nameVector.size()    << std::endl;
-        //        std::cout << "[info] raw no. of nodes:     " << allNodes.size()      << std::endl;
-        //        std::cout << "[info] no. of used nodes:    " << usedNodeIDs.size()     << std::endl;
-        //        std::cout << "[info] raw no. of edges:     " << allEdges.size()      << std::endl;
-        //        std::cout << "[info] raw no. of relations: " << globalRelationCounter << std::endl;
-        //        std::cout << "[info] raw no. of addresses: " << adressVector.size()  << std::endl;
+//        INFO("raw no. of names:        " << externalMemory.nameVector.size());
+//        INFO("raw no. of nodes:        " << externalMemory.allNodes.size());
+//        INFO("no. of used nodes:       " << externalMemory.usedNodeIDs.size());
+//        INFO("raw no. of edges:        " << externalMemory.allEdges.size());
+//        INFO("raw no. of ways:         " << externalMemory.wayStartEndVector.size());
+//        INFO("raw no. of addresses:    " << externalMemory.adressVector.size());
+//        INFO("raw no. of restrictions: " << externalMemory.restrictionsVector.size());
 
-        std::cout << "[extractor] parsing finished after " << get_timestamp() - time << "seconds" << std::endl;
+        cout << "[extractor] parsing finished after " << get_timestamp() - time << "seconds" << endl;
         time = get_timestamp();
         unsigned memory_to_use = amountOfRAM * 1024 * 1024 * 1024;
 
-        std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
-        stxxl::sort(usedNodeIDs.begin(), usedNodeIDs.end(), Cmp(), memory_to_use);
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        cout << "[extractor] Sorting used nodes        ... " << flush;
+        stxxl::sort(externalMemory.usedNodeIDs.begin(), externalMemory.usedNodeIDs.end(), Cmp(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         time = get_timestamp();
-        std::cout << "[extractor] Erasing duplicate nodes   ... " << std::flush;
-        stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodeIDs.begin(),usedNodeIDs.end() ) ;
-        usedNodeIDs.resize ( NewEnd - usedNodeIDs.begin() );
+        cout << "[extractor] Erasing duplicate nodes   ... " << flush;
+        stxxl::vector<NodeID>::iterator NewEnd = unique ( externalMemory.usedNodeIDs.begin(),externalMemory.usedNodeIDs.end() ) ;
+        externalMemory.usedNodeIDs.resize ( NewEnd - externalMemory.usedNodeIDs.begin() );
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
-        std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
-        stxxl::sort(allNodes.begin(), allNodes.end(), CmpNodeByID(), memory_to_use);
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        cout << "[extractor] Sorting all nodes         ... " << flush;
+        stxxl::sort(externalMemory.allNodes.begin(), externalMemory.allNodes.end(), CmpNodeByID(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
-        std::ofstream fout;
-        fout.open(outputFileName.c_str(), std::ios::binary);
-        fout.write((char*)&usedNodeCounter, sizeof(unsigned));
+        cout << "[extractor] Sorting used ways         ... " << flush;
+        stxxl::sort(externalMemory.wayStartEndVector.begin(), externalMemory.wayStartEndVector.end(), CmpWayStartAndEnd(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
-        std::cout << "[extractor] Confirming used nodes     ... " << std::flush;
-        STXXLNodeVector::iterator nodesIT = allNodes.begin();
-        STXXLNodeIDVector::iterator usedNodeIDsIT = usedNodeIDs.begin();
-        while(usedNodeIDsIT != usedNodeIDs.end() && nodesIT != allNodes.end()) {
+        cout << "[extractor] Sorting restrctns. by from... " << flush;
+        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionByFrom(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+
+        cout << "[extractor] Fixing restriction starts ... " << flush;
+        STXXLRestrictionsVector::iterator restrictionsIT = externalMemory.restrictionsVector.begin();
+        STXXLWayIDStartEndVector::iterator wayStartAndEndEdgeIT = externalMemory.wayStartEndVector.begin();
+
+        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
+            if(wayStartAndEndEdgeIT->wayID < restrictionsIT->fromWay){
+                wayStartAndEndEdgeIT++;
+                continue;
+            }
+            if(wayStartAndEndEdgeIT->wayID > restrictionsIT->fromWay) {
+                restrictionsIT++;
+                continue;
+            }
+            assert(wayStartAndEndEdgeIT->wayID == restrictionsIT->fromWay);
+            NodeID viaNode = restrictionsIT->restriction.viaNode;
+
+            if(wayStartAndEndEdgeIT->firstStart == viaNode) {
+                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->firstTarget;
+            } else if(wayStartAndEndEdgeIT->firstTarget == viaNode) {
+                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->firstStart;
+            } else if(wayStartAndEndEdgeIT->lastStart == viaNode) {
+                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->lastTarget;
+            } else if(wayStartAndEndEdgeIT->lastTarget == viaNode) {
+                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->lastStart;
+            }
+            restrictionsIT++;
+        }
+
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        time = get_timestamp();
+
+        cout << "[extractor] Sorting restrctns. by to  ... " << flush;
+        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionByTo(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+
+        time = get_timestamp();
+        unsigned usableRestrictionsCounter(0);
+        cout << "[extractor] Fixing restriction ends   ... " << flush;
+        restrictionsIT = externalMemory.restrictionsVector.begin();
+        wayStartAndEndEdgeIT = externalMemory.wayStartEndVector.begin();
+        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() &&
+                restrictionsIT != externalMemory.restrictionsVector.end()) {
+            if(wayStartAndEndEdgeIT->wayID < restrictionsIT->toWay){
+                wayStartAndEndEdgeIT++;
+                continue;
+            }
+            if(wayStartAndEndEdgeIT->wayID > restrictionsIT->toWay) {
+                restrictionsIT++;
+                continue;
+            }
+            NodeID viaNode = restrictionsIT->restriction.viaNode;
+            if(wayStartAndEndEdgeIT->lastStart == viaNode) {
+                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->lastTarget;
+            } else if(wayStartAndEndEdgeIT->lastTarget == viaNode) {
+                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->lastStart;
+            } else if(wayStartAndEndEdgeIT->firstStart == viaNode) {
+                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->firstTarget;
+            } else if(wayStartAndEndEdgeIT->firstTarget == viaNode) {
+                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->firstStart;
+            }
+
+            if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
+                usableRestrictionsCounter++;
+            }
+            restrictionsIT++;
+        }
+
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        //todo: serialize restrictions
+        ofstream restrictionsOutstream;
+        restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);
+        restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
+        for(restrictionsIT = externalMemory.restrictionsVector.begin(); restrictionsIT != externalMemory.restrictionsVector.end(); restrictionsIT++) {
+            if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
+                restrictionsOutstream.write((char *)&(restrictionsIT->restriction), sizeof(_Restriction));
+            }
+        }
+        restrictionsOutstream.close();
+
+        ofstream fout;
+        fout.open(outputFileName.c_str(), ios::binary);
+        fout.write((char*)&usedNodeCounter, sizeof(unsigned));
+        time = get_timestamp();
+        cout << "[extractor] Confirming used nodes     ... " << flush;
+        STXXLNodeVector::iterator nodesIT = externalMemory.allNodes.begin();
+        STXXLNodeIDVector::iterator usedNodeIDsIT = externalMemory.usedNodeIDs.begin();
+        while(usedNodeIDsIT != externalMemory.usedNodeIDs.end() && nodesIT != externalMemory.allNodes.end()) {
             if(*usedNodeIDsIT < nodesIT->id){
                 usedNodeIDsIT++;
                 continue;
@@ -191,30 +278,31 @@ int main (int argc, char *argv[]) {
                 nodesIT++;
             }
         }
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
-        std::cout << "[extractor] setting number of nodes   ... " << std::flush;
-        std::ios::pos_type positionInFile = fout.tellp();
-        fout.seekp(std::ios::beg);
+        cout << "[extractor] setting number of nodes   ... " << flush;
+        ios::pos_type positionInFile = fout.tellp();
+        fout.seekp(ios::beg);
         fout.write((char*)&usedNodeCounter, sizeof(unsigned));
         fout.seekp(positionInFile);
 
-        std::cout << "ok" << std::endl;
+        cout << "ok" << endl;
         time = get_timestamp();
 
         // Sort edges by start.
-        std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
-        stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByStartID(), memory_to_use);
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        cout << "[extractor] Sorting edges by start    ... " << flush;
+        stxxl::sort(externalMemory.allEdges.begin(), externalMemory.allEdges.end(), CmpEdgeByStartID(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
-        std::cout << "[extractor] Setting start coords      ... " << std::flush;
+        cout << "[extractor] Setting start coords      ... " << flush;
         fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
         // Traverse list of edges and nodes in parallel and set start coord
-        nodesIT = allNodes.begin();
-        STXXLEdgeVector::iterator edgeIT = allEdges.begin();
-        while(edgeIT != allEdges.end() && nodesIT != allNodes.end()) {
+        nodesIT = externalMemory.allNodes.begin();
+        STXXLEdgeVector::iterator edgeIT = externalMemory.allEdges.begin();
+        while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->start < nodesIT->id){
                 edgeIT++;
                 continue;
@@ -229,20 +317,20 @@ int main (int argc, char *argv[]) {
                 edgeIT++;
             }
         }
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
         // Sort Edges by target
-        std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
-        stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByTargetID(), memory_to_use);
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        cout << "[extractor] Sorting edges by target   ... " << flush;
+        stxxl::sort(externalMemory.allEdges.begin(), externalMemory.allEdges.end(), CmpEdgeByTargetID(), memory_to_use);
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
-        std::cout << "[extractor] Setting target coords     ... " << std::flush;
+        cout << "[extractor] Setting target coords     ... " << flush;
         // Traverse list of edges and nodes in parallel and set target coord
-        nodesIT = allNodes.begin();
-        edgeIT = allEdges.begin();
-        while(edgeIT != allEdges.end() && nodesIT != allNodes.end()) {
+        nodesIT = externalMemory.allNodes.begin();
+        edgeIT = externalMemory.allEdges.begin();
+        while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->target < nodesIT->id){
                 edgeIT++;
                 continue;
@@ -285,7 +373,7 @@ int main (int argc, char *argv[]) {
                         fout.write((char*)&one, sizeof(short));
                         break;
                     default:
-                        std::cerr << "[error] edge with no direction: " << edgeIT->direction << std::endl;
+                        cerr << "[error] edge with no direction: " << edgeIT->direction << endl;
                         assert(false);
                         break;
                     }
@@ -298,25 +386,25 @@ int main (int argc, char *argv[]) {
                 edgeIT++;
             }
         }
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
         time = get_timestamp();
 
-        std::cout << "[extractor] setting number of edges   ... " << std::flush;
+        cout << "[extractor] setting number of edges   ... " << flush;
         fout.seekp(positionInFile);
         fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
         fout.close();
-        std::cout << "ok" << std::endl;
+        cout << "ok" << endl;
         time = get_timestamp();
 
 
-        std::cout << "[extractor] writing street name index ... " << std::flush;
-        std::vector<unsigned> * nameIndex = new std::vector<unsigned>(nameVector.size()+1, 0);
+        cout << "[extractor] writing street name index ... " << flush;
+        vector<unsigned> * nameIndex = new vector<unsigned>(externalMemory.nameVector.size()+1, 0);
         outputFileName.append(".names");
-        std::ofstream nameOutFile(outputFileName.c_str(), std::ios::binary);
+        ofstream nameOutFile(outputFileName.c_str(), ios::binary);
         unsigned sizeOfNameIndex = nameIndex->size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
-        for(STXXLStringVector::iterator it = nameVector.begin(); it != nameVector.end(); it++) {
+        for(STXXLStringVector::iterator it = externalMemory.nameVector.begin(); it != externalMemory.nameVector.end(); it++) {
             unsigned lengthOfRawString = strlen(it->c_str());
             nameOutFile.write((char *)&(lengthOfRawString), sizeof(unsigned));
             nameOutFile.write(it->c_str(), lengthOfRawString);
@@ -324,26 +412,26 @@ int main (int argc, char *argv[]) {
 
         nameOutFile.close();
         delete nameIndex;
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         //        time = get_timestamp();
-        //        std::cout << "[extractor] writing address list      ... " << std::flush;
+        //        cout << "[extractor] writing address list      ... " << flush;
         //
         //        adressFileName.append(".address");
-        //        std::ofstream addressOutFile(adressFileName.c_str());
+        //        ofstream addressOutFile(adressFileName.c_str());
         //        for(STXXLAddressVector::iterator it = adressVector.begin(); it != adressVector.end(); it++) {
         //            addressOutFile << it->node.id << "|" << it->node.lat << "|" << it->node.lon << "|" << it->city << "|" << it->street << "|" << it->housenumber << "|" << it->state << "|" << it->country << "\n";
         //        }
         //        addressOutFile.close();
-        //        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        //        cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
-    } catch ( const std::exception& e ) {
-        std::cerr <<  "Caught Execption:" << e.what() << std::endl;
+    } catch ( const exception& e ) {
+        cerr <<  "Caught Execption:" << e.what() << endl;
         return false;
     }
 
     delete extractCallBacks;
-    std::cout << "[extractor] finished." << std::endl;
+    cout << "[extractor] finished." << endl;
     return 0;
 }
 
@@ -352,13 +440,14 @@ bool nodeFunction(_Node n) {
     return true;
 }
 
-bool adressFunction(_Node n, HashTable<std::string, std::string> keyVals){
+bool adressFunction(_Node n, HashTable<string, string> keyVals){
     extractCallBacks->adressFunction(n, keyVals);
     return true;
 }
 
-bool relationFunction(_Relation r) {
-    globalRelationCounter++;
+bool restrictionFunction(_RawRestrictionContainer r) {
+    extractCallBacks->restrictionFunction(r);
+    globalRestrictionCounter++;
     return true;
 }
 bool wayFunction(_Way w) {

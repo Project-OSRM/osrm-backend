@@ -82,7 +82,8 @@ ostream & operator<<(ostream & out, const _Coordinate & c){
 }
 
 struct _Way {
-    _Way() {
+    _Way() : id(UINT_MAX) {
+
         direction = _Way::notSure;
         maximumSpeed = -1;
         type = -1;
@@ -125,9 +126,11 @@ struct _Address {
 };
 
 struct _Relation {
+    _Relation() : type(unknown){}
     enum {
-        unknown = 0, ferry
+        unknown = 0, ferry, turnRestriction
     } type;
+    HashTable<std::string, std::string> keyVals;
 };
 
 struct _Edge {
@@ -153,13 +156,107 @@ struct _Edge {
 
 };
 
+struct _Restriction {
+    NodeID viaNode;
+    NodeID fromNode;
+    NodeID toNode;
+    struct bits { //mostly unused
+        char isOnly:1;
+        char unused1:1;
+        char unused2:1;
+        char unused3:1;
+        char unused4:1;
+        char unused5:1;
+        char unused6:1;
+        char unused7:1;
+    } flags;
+
+
+    _Restriction(NodeID vn) : viaNode(vn), fromNode(UINT_MAX), toNode(UINT_MAX) { }
+    _Restriction(bool isOnly = false) : viaNode(UINT_MAX), fromNode(UINT_MAX), toNode(UINT_MAX) {
+        flags.isOnly = isOnly;
+    }
+};
+
+struct _RawRestrictionContainer {
+    _Restriction restriction;
+    EdgeID fromWay;
+    EdgeID toWay;
+    unsigned viaWay;
+
+    _RawRestrictionContainer(EdgeID f, EdgeID t, NodeID vn, unsigned vw) : fromWay(f), toWay(t), viaWay(vw) { restriction.viaNode = vn;}
+    _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaWay(UINT_MAX) { restriction.flags.isOnly = isOnly;}
+
+    static _RawRestrictionContainer min_value() {
+        return _RawRestrictionContainer(numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min());
+    }
+    static _RawRestrictionContainer max_value() {
+        return _RawRestrictionContainer(numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max());
+    }
+};
+
+
+struct CmpRestrictionByFrom: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
+    typedef _RawRestrictionContainer value_type;
+    bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
+        return a.fromWay < b.fromWay;
+    }
+    value_type max_value()  {
+        return _RawRestrictionContainer::max_value();
+    }
+    value_type min_value() {
+        return _RawRestrictionContainer::min_value();
+    }
+};
+
+struct CmpRestrictionByTo: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
+    typedef _RawRestrictionContainer value_type;
+    bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
+        return a.toWay < b.toWay;
+    }
+    value_type max_value()  {
+        return _RawRestrictionContainer::max_value();
+    }
+    value_type min_value() {
+        return _RawRestrictionContainer::min_value();
+    }
+};
+
+struct _WayIDStartAndEndEdge {
+    unsigned wayID;
+    NodeID firstStart;
+    NodeID firstTarget;
+    NodeID lastStart;
+    NodeID lastTarget;
+    _WayIDStartAndEndEdge() : wayID(UINT_MAX), firstStart(UINT_MAX), firstTarget(UINT_MAX), lastStart(UINT_MAX), lastTarget(UINT_MAX) {}
+    _WayIDStartAndEndEdge(unsigned w, NodeID fs, NodeID ft, NodeID ls, NodeID lt) :  wayID(w), firstStart(fs), firstTarget(ft), lastStart(ls), lastTarget(lt) {}
+
+    static _WayIDStartAndEndEdge min_value() {
+        return _WayIDStartAndEndEdge(numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min());
+    }
+    static _WayIDStartAndEndEdge max_value() {
+        return _WayIDStartAndEndEdge(numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max());
+    }
+};
+
+struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _WayIDStartAndEndEdge, bool> {
+    typedef _WayIDStartAndEndEdge value_type;
+    bool operator ()  (const _WayIDStartAndEndEdge & a, const _WayIDStartAndEndEdge & b) const {
+        return a.wayID < b.wayID;
+    }
+    value_type max_value() {
+        return _WayIDStartAndEndEdge::max_value();
+    }
+    value_type min_value() {
+        return _WayIDStartAndEndEdge::min_value();
+    }
+};
+
 struct Settings {
     struct SpeedProfile {
         vector< double > speed;
         vector< string > names;
     } speedProfile;
-    //    vector<string> accessList;
-    //    int trafficLightPenalty;
     int indexInAccessListOf( const string & key) {
         for(unsigned i = 0; i< speedProfile.names.size(); i++) {
             if(speedProfile.names[i] == key)

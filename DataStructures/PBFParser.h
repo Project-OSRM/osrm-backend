@@ -32,7 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "ExtractorStructs.h"
 
 
-class PBFParser : public BaseParser<_Node, _Relation, _Way> {
+class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
 
     enum EntityType {
         TypeNode = 1,
@@ -74,10 +74,10 @@ public:
         groupCount = 0;
     }
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*relationCallbackPointer)(_Relation), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
-        relationCallback = *relationCallbackPointer;
+        restrictionCallback = *restrictionCallbackPointer;
         addressCallback = *addressCallbackPointer;
         return true;
     }
@@ -226,12 +226,76 @@ private:
     void parseRelation(_ThreadData * threadData) {
         const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
         for(int i = 0; i < group.relations_size(); i++ ) {
-            _Relation r;
-            r.type = _Relation::unknown;
+            const OSMPBF::Relation& inputRelation = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).relations(i);
+            bool isRestriction = false;
+            bool isOnlyRestriction = false;
+            for(int k = 0; k < inputRelation.keys_size(); k++) {
+                const std::string key = threadData->PBFprimitiveBlock.stringtable().s(inputRelation.keys(k));
+                const std::string val = threadData->PBFprimitiveBlock.stringtable().s(inputRelation.vals(k));
+                if ("type" == key && "restriction" == val) {
+                    isRestriction = true;
+                }
+                if ("restriction" == key) {
+                    if(val.find("only_") == 0)
+                        isOnlyRestriction = true;
+                }
+
+            }
+            if(isRestriction) {
+                long long lastRef = 0;
+                _RawRestrictionContainer currentRestrictionContainer(isOnlyRestriction);
+                for(int rolesIndex = 0; rolesIndex < inputRelation.roles_sid_size(); rolesIndex++) {
+                    string role(threadData->PBFprimitiveBlock.stringtable().s( inputRelation.roles_sid( rolesIndex ) ).data());
+                    lastRef += inputRelation.memids(rolesIndex);
+
+                    if(false == ("from" == role || "to" == role || "via" == role)) {
+                        continue;
+                    }
+
+                    switch(inputRelation.types(rolesIndex)) {
+                    case 0: //node
+                        if("from" == role || "to" == role) //Only via should be a node
+                            continue;
+                        assert("via" == role);
+                        if(UINT_MAX != currentRestrictionContainer.viaWay)
+                            currentRestrictionContainer.viaWay = UINT_MAX;
+                        assert(UINT_MAX == currentRestrictionContainer.viaWay);
+                        currentRestrictionContainer.restriction.viaNode = lastRef;
+                        break;
+                    case 1: //way
+                        assert("from" == role || "to" == role || "via" == role);
+                        if("from" == role) {
+                            currentRestrictionContainer.fromWay = lastRef;
+                        }
+                        if ("to" == role) {
+                            currentRestrictionContainer.toWay = lastRef;
+                        }
+                        if ("via" == role) {
+                            assert(currentRestrictionContainer.restriction.toNode == UINT_MAX);
+                            currentRestrictionContainer.viaWay = lastRef;
+                        }
+                        break;
+                    case 2: //relation, not used. relations relating to relations are evil.
+                        continue;
+                        assert(false);
+                        break;
+
+                    default: //should not happen
+                        cout << "unknown";
+                        assert(false);
+                        break;
+                    }
+                }
+//                if(UINT_MAX != currentRestriction.viaNode) {
+//                    cout << "restr from " << currentRestriction.from << " via ";
+//                    cout << "node " << currentRestriction.viaNode;
+//                    cout << " to " << currentRestriction.to << endl;
+//                }
 #pragma omp critical
-            {
-                if(!(*relationCallback)(r))
-                    std::cerr << "[PBFParser] relation not parsed" << std::endl;
+                {
+                    if(!(*restrictionCallback)(currentRestrictionContainer))
+                        std::cerr << "[PBFParser] relation not parsed" << std::endl;
+                }
             }
         }
     }
@@ -442,7 +506,7 @@ private:
     /* Function pointer for nodes */
     bool (*nodeCallback)(_Node);
     bool (*wayCallback)(_Way);
-    bool (*relationCallback)(_Relation);
+    bool (*restrictionCallback)(_RawRestrictionContainer);
     bool (*addressCallback)(_Node, HashTable<std::string, std::string>);
     /* the input stream to parse */
     std::fstream input;

@@ -21,12 +21,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASEPARSER_H_
 #define BASEPARSER_H_
 
-template<typename NodeT, typename RelationT, typename WayT>
+template<typename NodeT, typename RestrictionT, typename WayT>
 class BaseParser {
 public:
     virtual ~BaseParser() {}
     virtual bool Init() = 0;
-    virtual bool RegisterCallbacks(bool (*nodeCallbackPointer)(NodeT), bool (*relationCallbackPointer)(RelationT), bool (*wayCallbackPointer)(WayT), bool (*addressCallbackPointer)(NodeT, HashTable<std::string, std::string>)) = 0;
+    virtual bool RegisterCallbacks(bool (*nodeCallbackPointer)(NodeT), bool (*restrictionCallbackPointer)(RestrictionT), bool (*wayCallbackPointer)(WayT), bool (*addressCallbackPointer)(NodeT, HashTable<std::string, std::string>)) = 0;
     virtual bool Parse() = 0;
 private:
 };

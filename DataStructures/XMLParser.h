@@ -29,17 +29,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "ExtractorStructs.h"
 #include "InputReaderFactory.h"
 
-class XMLParser : public BaseParser<_Node, _Relation, _Way> {
+class XMLParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
 public:
     XMLParser(const char * filename) {
+        WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
         inputReader = inputReaderFactory(filename);
     }
     ~XMLParser() {}
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*relationCallbackPointer)(_Relation), bool (*wayCallbackPointer)(_Way), bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way), bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
-        relationCallback = *relationCallbackPointer;
+        restrictionCallback = *restrictionCallbackPointer;
         return true;
     }
     bool Init() {
@@ -73,8 +74,7 @@ public:
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
                 _Relation r;
                 r.type = _Relation::unknown;
-                if(!(*relationCallback)(r))
-                    std::cerr << "[XMLParser] relation not parsed" << std::endl;
+                //todo: parse relation
             }
             xmlFree( currentName );
         }
@@ -210,7 +210,7 @@ private:
     /* Function pointer for nodes */
     bool (*nodeCallback)(_Node);
     bool (*wayCallback)(_Way);
-    bool (*relationCallback)(_Relation);
+    bool (*restrictionCallback)(_RawRestrictionContainer);
 
 };
 

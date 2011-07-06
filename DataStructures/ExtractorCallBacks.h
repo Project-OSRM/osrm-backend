@@ -30,28 +30,31 @@ typedef stxxl::vector<_Node> STXXLNodeVector;
 typedef stxxl::vector<_Edge> STXXLEdgeVector;
 typedef stxxl::vector<_Address> STXXLAddressVector;
 typedef stxxl::vector<string> STXXLStringVector;
+typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
+typedef stxxl::vector<_WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
 
+struct STXXLContainers {
+    STXXLNodeIDVector           usedNodeIDs;
+    STXXLNodeVector             allNodes;
+    STXXLEdgeVector             allEdges;
+    STXXLAddressVector          adressVector;
+    STXXLStringVector           nameVector;
+    STXXLRestrictionsVector     restrictionsVector;
+    STXXLWayIDStartEndVector    wayStartEndVector;
+};
 
 class ExtractorCallbacks{
 private:
     static const unsigned MAX_LOCAL_VECTOR_SIZE = 100;
 
-    STXXLNodeVector * allNodes;
-    STXXLNodeIDVector * usedNodeIDs;
-    STXXLEdgeVector * allEdges;
-    STXXLStringVector * nameVector;
-    STXXLAddressVector * addressVector;
     Settings settings;
     StringMap * stringMap;
+    STXXLContainers * externalMemory;
 
 public:
-    ExtractorCallbacks(STXXLNodeVector * aNodes, STXXLNodeIDVector * uNodes, STXXLEdgeVector * aEdges,  STXXLStringVector * nVector, STXXLAddressVector * adrVector, Settings s, StringMap * strMap){
-        allNodes = aNodes;
-        usedNodeIDs = uNodes;
-        allEdges = aEdges;
-        nameVector = nVector;
-        addressVector = adrVector;
-        settings = s;
+    ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap){
+        externalMemory = ext;
+        settings = set;
         stringMap = strMap;
     }
 
@@ -80,12 +83,12 @@ public:
 
     /** warning: caller needs to take care of synchronization! */
     bool nodeFunction(_Node &n) {
-        allNodes->push_back(n);
+        externalMemory->allNodes.push_back(n);
         return true;
     }
 
-    bool relationFunction(_Relation &r) {
-        //do nothing;
+    bool restrictionFunction(_RawRestrictionContainer &r) {
+        externalMemory->restrictionsVector.push_back(r);
         return true;
     }
 
@@ -178,18 +181,17 @@ public:
             w.access = false;
         }
 
-        if ( w.useful && w.access && w.path.size() ) {
+        if ( w.useful && w.access && w.path.size() > 1 ) {
             StringMap::iterator strit = stringMap->find(w.name);
-            if(strit == stringMap->end())
-            {
-                w.nameID = nameVector->size();
-                nameVector->push_back(w.name);
+            if(strit == stringMap->end()) {
+                w.nameID = externalMemory->nameVector.size();
+                externalMemory->nameVector.push_back(w.name);
                 stringMap->insert(std::make_pair(w.name, w.nameID) );
             } else {
                 w.nameID = strit->second;
             }
             for ( unsigned i = 0; i < w.path.size(); ++i ) {
-                usedNodeIDs->push_back(w.path[i]);
+                externalMemory->usedNodeIDs.push_back(w.path[i]);
             }
 
             if ( w.direction == _Way::opposite ){
@@ -197,7 +199,7 @@ public:
             }
             vector< NodeID > & path = w.path;
             assert(w.type > -1 || w.maximumSpeed != -1);
-            assert(path.size()>0);
+            assert(path.size()>1);
 
             if(w.maximumSpeed == -1)
                 w.maximumSpeed = settings.speedProfile.speed[w.type];
@@ -209,8 +211,10 @@ public:
                 e.direction = w.direction;
                 e.speed = w.maximumSpeed;
                 e.nameID = w.nameID;
-                allEdges->push_back(e);
+                externalMemory->allEdges.push_back(e);
             }
+            assert(w.id != UINT_MAX);
+            externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(w.id, path[0], path[1], path[path.size()-2], path[path.size()-1]));
         }
         return true;
     }
