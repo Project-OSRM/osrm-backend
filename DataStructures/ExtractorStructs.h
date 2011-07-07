@@ -22,7 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define EXTRACTORSTRUCTS_H_
 
 #include <climits>
-#include <cmath>
 #include <string>
 #include "HashTable.h"
 #include "Util.h"
@@ -74,6 +73,11 @@ struct _Coordinate {
     int lon;
     _Coordinate () : lat(INT_MIN), lon(INT_MIN) {}
     _Coordinate (int t, int n) : lat(t) , lon(n) {}
+    void Reset() {
+        lat = INT_MIN;
+        lon = INT_MIN;
+    }
+
 };
 
 ostream & operator<<(ostream & out, const _Coordinate & c){
@@ -91,7 +95,6 @@ struct _Way {
         access = true;
     }
 
-    std::vector< NodeID > path;
     enum {
         notSure = 0, oneway, bidirectional, opposite
     } direction;
@@ -99,9 +102,10 @@ struct _Way {
     unsigned nameID;
     std::string name;
     double maximumSpeed;
+    short type;
     bool useful:1;
     bool access:1;
-    short type;
+    std::vector< NodeID > path;
     HashTable<std::string, std::string> keyVals;
 };
 
@@ -134,9 +138,9 @@ struct _Relation {
 };
 
 struct _Edge {
-    _Edge() {};
-    _Edge(NodeID s, NodeID t) : start(s), target(t) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp) { }
+    _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0) {};
+    _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0) { }
     NodeID start;
     NodeID target;
     short type;
@@ -323,7 +327,7 @@ struct CmpEdgeByTargetID : public std::binary_function<_Edge, _Edge, bool>
     }
 };
 
-double ApproximateDistance( const int lat1, const int lon1, const int lat2, const int lon2 ) {
+inline double ApproximateDistance( const int lat1, const int lon1, const int lat2, const int lon2 ) {
     assert(lat1 != INT_MIN);
     assert(lon1 != INT_MIN);
     assert(lat2 != INT_MIN);
@@ -344,15 +348,6 @@ double ApproximateDistance( const int lat1, const int lon1, const int lat2, cons
 
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
 double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const _Coordinate& B) {
-    //    double a = ApproximateDistance(A.lat, A.lon, C.lat, C.lon); //first edge segment
-    //    double b = ApproximateDistance(B.lat, B.lon, C.lat, C.lon); //second edge segment
-    //    double c = ApproximateDistance(A.lat, A.lon, B.lat, B.lon); //third edgefrom triangle
-    //
-    //    double cosAlpha = (a*a + b*b - c*c)/ (2*a*b);
-    //
-    //    double alpha = ( (acos(cosAlpha) * 180.0 / M_PI) * (cosAlpha > 0 ? -1 : 1) ) + 180;
-    //    return alpha;
-    //    V = <x2 - x1, y2 - y1>
     int v1x = A.lon - C.lon;
     int v1y = A.lat - C.lat;
     int v2x = B.lon - C.lon;
@@ -363,6 +358,11 @@ double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const
         angle += 360;
 
     return angle;
+}
+
+
+inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
+    return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
 }
 
 string GetRandomString() {

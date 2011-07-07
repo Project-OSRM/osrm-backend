@@ -40,6 +40,8 @@ struct PhantomNodes {
         targetNode2 = UINT_MAX;
         startRatio = 1.;
         targetRatio = 1.;
+        startCoord.Reset();
+        targetCoord.Reset();
     }
 };
 
