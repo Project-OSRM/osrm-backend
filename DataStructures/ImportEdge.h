@@ -42,7 +42,8 @@ public:
     }
 
     /** Default constructor. target and weight are set to 0.*/
-    Edge() { assert(false); } //shall not be used.
+    Edge() :
+        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _type(0), forwardTurn(false), backwardTurn(false) { assert(false); } //shall not be used.
 
     explicit Edge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty) :
             _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), forwardTurn(false), backwardTurn(false) { assert(ty >= 0); }
