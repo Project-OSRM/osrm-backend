@@ -31,7 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <google/sparse_hash_map>
 #include <google/sparsetable>
 
-template< typename NodeID, typename Key, bool initialize = false >
+template< typename NodeID, typename Key, bool initialize = true >
 class ArrayStorage {
 public:
 
