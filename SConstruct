@@ -58,8 +58,8 @@ if GetOption('cxx') is None:
     #default Compiler
     print 'Using default C++ Compiler: ', env['CXX']
 else:
-    print 'Using user supplied C++ Compiler: ', env['CXX']
     env.Replace(CXX = GetOption('cxx'))
+    print 'Using user supplied C++ Compiler: ', env['CXX']
 if GetOption('stxxlroot') is not None:
    env.Append(CPPPATH = GetOption('stxxlroot')+'/include')
    env.Append(LIBPATH = GetOption('stxxlroot')+'/lib')
@@ -162,8 +162,6 @@ env.StaticObject("DataStructures/pbf-proto/fileformat.pb.cc")
 env.StaticObject("DataStructures/pbf-proto/osmformat.pb.cc")
 env.Program("extractor.cpp")
 env.Program("createHierarchy.cpp")
-if os.path.exists("many-to-many.cpp"):
-	env.Program("many-to-many.cpp")
 env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lbz2 -lz -lprotobuf')
 env.Append(LINKFLAGS = '-lboost_system DataStructures/pbf-proto/fileformat.pb.o DataStructures/pbf-proto/osmformat.pb.o')
 env.Program("routed.cpp")
