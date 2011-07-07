@@ -71,7 +71,13 @@ public:
 				        std::string o = item.substr(found+1);
 				        if("jsonp" != p)
 				            std::transform(o.begin(), o.end(), o.begin(), (int(*)(int)) std::tolower);
-				        routeParameters.options.Set(p, o);
+				        if("via" == p ) {
+				            if(25 >= routeParameters.viaPoints.size()) {
+				                routeParameters.viaPoints.push_back(o);
+				            }
+				        } else {
+				            routeParameters.options.Set(p, o);
+				        }
 				    }
 				}
 
