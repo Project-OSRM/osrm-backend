@@ -52,8 +52,7 @@ inline char* printInt( char* buffer, int value )
     return buffer;
 }
 
-inline void intToString(const int value, std::string & output)
-{
+inline void intToString(const int value, std::string & output) {
     // The largest 32-bit integer is 4294967295, that is 10 chars
     // On the safe side, add 1 for sign, and 1 for trailing zero
     char buffer[12] ;
@@ -61,7 +60,7 @@ inline void intToString(const int value, std::string & output)
     output = buffer ;
 }
 
-inline void convertLatLon(const int value, std::string & output)
+inline void convertInternalLatLonToString(const int value, std::string & output)
 {
     char buffer[100];
     buffer[10] = 0; // Nullterminierung
@@ -69,9 +68,26 @@ inline void convertLatLon(const int value, std::string & output)
     output = string;
 }
 
-/* used to be boosts lexical cast, but this was too slow */
-inline void doubleToString(const double value, std::string & output)
-{
+inline void convertInternalCoordinateToString(const _Coordinate & coord, std::string & output) {
+    std::string tmp;
+    convertInternalLatLonToString(coord.lon, tmp);
+    output = tmp;
+    output += ",";
+    convertInternalLatLonToString(coord.lat, tmp);
+    output += tmp;
+    output += " ";
+}
+inline void convertInternalReversedCoordinateToString(const _Coordinate & coord, std::string & output) {
+    std::string tmp;
+    convertInternalLatLonToString(coord.lat, tmp);
+    output = tmp;
+    output += ",";
+    convertInternalLatLonToString(coord.lon, tmp);
+    output += tmp;
+    output += " ";
+}
+
+inline void doubleToString(const double value, std::string & output){
     // The largest 32-bit integer is 4294967295, that is 10 chars
     // On the safe side, add 1 for sign, and 1 for trailing zero
     char buffer[12] ;
@@ -90,6 +106,22 @@ inline std::string & replaceAll(std::string &s, const std::string &sub, const st
     }
     return s;
 }
+
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while(std::getline(ss, item, delim)) {
+        if(item.size() > 0)
+            elems.push_back(item);
+    }
+    return elems;
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    return split(s, delim, elems);
+}
+
 
 std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]"};
 std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;" };

@@ -77,12 +77,8 @@ public:
             reply.content += ("]]></name>\n");
 
             //put start coord to linestring;
-            convertLatLon(phantomNodes->startCoord.lon, tmp);
+            convertInternalCoordinateToString(phantomNodes->startCoord, tmp);
             lineString += tmp;
-            lineString += ",";
-            convertLatLon(phantomNodes->startCoord.lat, tmp);
-            lineString += tmp;
-            lineString += " ";
 
             reply.content += ("\t</Placemark>\n");
             _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
@@ -114,13 +110,8 @@ public:
 
                 double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
                 if(178 > angle || 182 < angle) {
-                    convertLatLon(current.lon, tmp);
+                    convertInternalCoordinateToString(current, tmp);
                     lineString += tmp;
-                    lineString += ",";
-                    convertLatLon(current.lat, tmp);
-                    lineString += tmp;
-                    lineString += " ";
-                    startOfSegment = current;
                 }
 
                 if(nextID == nameID) {
@@ -153,9 +144,6 @@ public:
                     reply.content += numberString.str();
                     numberString.str("");
                     reply.content += "m</description>";
-                    string lat; string lon;
-                    convertLatLon(lastPlace.lon, lon);
-                    convertLatLon(lastPlace.lat, lat);
                     lastPlace = current;
                     //                reply.content += "\n <Point>";
                     //                reply.content += "<Coordinates>";
@@ -217,10 +205,7 @@ public:
             reply.content += "\t</Placemark>\n";
 
             //put targetCoord to linestring
-            convertLatLon(phantomNodes->targetCoord.lon, tmp);
-            lineString += tmp;
-            lineString += ",";
-            convertLatLon(phantomNodes->targetCoord.lat, tmp);
+            convertInternalCoordinateToString(phantomNodes->targetCoord, tmp);
             lineString += tmp;
 	    if(!config.geometry){
 

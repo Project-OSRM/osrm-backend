@@ -49,9 +49,9 @@ public:
             startName = sEngine->GetEscapedNameForNameID(streetID);
             streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
             targetName = sEngine->GetEscapedNameForNameID(streetID);
-            convertLatLon(phantomNodes->startCoord.lat, tmp);
+            convertInternalLatLonToString(phantomNodes->startCoord.lat, tmp);
             bodyString += ("\t\t<rtept lat=\""+tmp+"\"");
-            convertLatLon(phantomNodes->startCoord.lon, tmp);
+            convertInternalLatLonToString(phantomNodes->startCoord.lon, tmp);
             bodyString += (" lon=\""+tmp+"\">");
             bodyString += ("\n\t\t\t<desc>Start from ");
             bodyString += startName;
@@ -118,20 +118,15 @@ public:
                     nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(it->node, (it+1)->node);
                 }
 
-                convertLatLon(current.lat, tmp);
+                convertInternalLatLonToString(current.lat, tmp);
                 bodyString += "\n\t\t<rtept lat=\"" + tmp + "\" ";
-                convertLatLon(current.lon, tmp);
+                convertInternalLatLonToString(current.lon, tmp);
                 bodyString += "lon=\"" + tmp + "\">\n";
 
                 double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
                 if(178 > angle || 182 < angle) {
-                    convertLatLon(current.lon, tmp);
+                    convertInternalCoordinateToString(current, tmp);
                     lineString += tmp;
-                    lineString += ",";
-                    convertLatLon(current.lat, tmp);
-                    lineString += tmp;
-                    lineString += " ";
-                    startOfSegment = current;
                 }
 
                 if(nextID == nameID) {
@@ -150,9 +145,6 @@ public:
                     bodyString += "follow road ";
                     if(nameID != 0)
                         bodyString += sEngine->GetEscapedNameForNameID(nameID);
-                    string lat; string lon;
-                    convertLatLon(lastPlace.lon, lon);
-                    convertLatLon(lastPlace.lat, lat);
                     lastPlace = current;
                     if(angle > 160 && angle < 200) {
                         bodyString += /* " (" << angle << ")*/"drive ahead, ";
@@ -185,9 +177,9 @@ public:
                 previous = current;
                 type = nextType;
             }
-            convertLatLon(phantomNodes->targetCoord.lat, tmp);
+            convertInternalLatLonToString(phantomNodes->targetCoord.lat, tmp);
             bodyString += "\n\t\t<rtept lat=\"" + tmp + "\" ";
-            convertLatLon(phantomNodes->targetCoord.lon, tmp);
+            convertInternalLatLonToString(phantomNodes->targetCoord.lon, tmp);
             bodyString += "lon=\"" + tmp + "\">\n";
             bodyString += "\t\t\t<desc>";
 
@@ -210,10 +202,7 @@ public:
 
 
             //put targetCoord to linestring
-            convertLatLon(phantomNodes->targetCoord.lon, tmp);
-            lineString += tmp;
-            lineString += ",";
-            convertLatLon(phantomNodes->targetCoord.lat, tmp);
+            convertInternalCoordinateToString(phantomNodes->targetCoord, tmp);
             lineString += tmp;
             ostringstream s;
             s << 10*(round(entireDistance/10.));

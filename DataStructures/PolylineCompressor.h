@@ -78,10 +78,10 @@ public:
         output += "[";
         string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
-            convertLatLon(polyline[i].lat, tmp);
+            convertInternalLatLonToString(polyline[i].lat, tmp);
             output += "[";
             output += tmp;
-            convertLatLon(polyline[i].lon, tmp);
+            convertInternalLatLonToString(polyline[i].lon, tmp);
             output += ", ";
             output += tmp;
             output += "]";
