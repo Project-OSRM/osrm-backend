@@ -67,6 +67,7 @@ class DynamicGraph {
                 for ( EdgeIterator i = m_nodes[node].firstEdge, e = m_nodes[node].firstEdge + m_nodes[node].edges; i != e; ++i ) {
                     m_edges[i].target = graph[edge].target;
                     m_edges[i].data = graph[edge].data;
+                    assert(graph[edge].data.distance > 0);
                     edge++;
                 }
             }
