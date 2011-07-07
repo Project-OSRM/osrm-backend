@@ -55,7 +55,7 @@ struct Request {
 };
 
 struct Reply {
-    Reply() { content.reserve(1000000); }
+    Reply() : status(ok) { content.reserve(1000000); }
 	enum status_type {
 		ok 					= 200,
 		badRequest 		    = 400,
