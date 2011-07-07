@@ -289,9 +289,9 @@ NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     cout << "ok" << endl;
     return n;
 }
-template<typename EdgeT>
 
-NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
+template<typename EdgeT>
+NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeID> & int2ExtNodeMap) {
     ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
     NodeID n, source, target;
     unsigned numberOfNodes = 0;
@@ -301,8 +301,9 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     in >> d;
     in >> n;
     in >> m;
+#ifndef DEBUG
     std::cout << "expecting " << n << " nodes and " << m << " edges ..." << flush;
-
+#endif
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; i++) {
         EdgeWeight weight;
@@ -327,26 +328,29 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 
         if( nodeMap.find(source) == nodeMap.end()) {
             nodeMap.insert(std::make_pair(source, numberOfNodes ));
+            int2ExtNodeMap.push_back(source);
             numberOfNodes++;
         }
         if( nodeMap.find(target) == nodeMap.end()) {
             nodeMap.insert(std::make_pair(target, numberOfNodes));
+            int2ExtNodeMap.push_back(target);
             numberOfNodes++;
         }
         EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
         edgeList.push_back(inputEdge);
    }
     vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
-    cout << "ok" << endl;
-    std::cout << "imported " << numberOfNodes << " nodes and " << edgeList.size() << " edges" << std::endl;
+
+//    cout << "ok" << endl;
+//    std::cout << "imported " << numberOfNodes << " nodes and " << edgeList.size() << " edges" << std::endl;
     nodeMap.clear();
     return numberOfNodes;
 }
 
 template<typename EdgeT>
 unsigned readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
-	unsigned numberOfNodes = 0;
-	ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
+    unsigned numberOfNodes = 0;
+    ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
     while(!in.eof()) {
         EdgeT g;
         EdgeData e;
@@ -370,17 +374,63 @@ unsigned readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         in.read((char *)&(source), sizeof(NodeID));
         in.read((char *)&(target), sizeof(NodeID));
         e.backward = backward; e.distance = distance; e.forward = forward; e.middleName.middle = middle; e.shortcut = shortcut; e.type = type;
-        g.data = e; g.source = source; g.target = target;
+        g.data = e;
+        g.source = source; g.target = target;
 
         if(source > numberOfNodes)
-        	numberOfNodes = source;
+            numberOfNodes = source;
         if(target > numberOfNodes)
-        	numberOfNodes = target;
+            numberOfNodes = target;
         if(middle > numberOfNodes)
-        	numberOfNodes = middle;
+            numberOfNodes = middle;
 
         edgeList->push_back(g);
     }
     return numberOfNodes+1;
+}
+
+template<typename EdgeT>
+unsigned readHSGRFromStreamWithOutEdgeData(const char * hsgrName, vector<EdgeT> * edgeList) {
+    std::ifstream hsgrInStream(hsgrName, std::ios::binary);
+    unsigned numberOfNodes = 0;
+    ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
+    while(!hsgrInStream.eof()) {
+        EdgeT g;
+//        EdgeData e;
+
+        int distance;
+        bool shortcut;
+        bool forward;
+        bool backward;
+        short type;
+        NodeID middle;
+        NodeID source;
+        NodeID target;
+
+        hsgrInStream.read((char *)&(distance), sizeof(int));
+        assert(distance > 0);
+        hsgrInStream.read((char *)&(shortcut), sizeof(bool));
+        hsgrInStream.read((char *)&(forward), sizeof(bool));
+        hsgrInStream.read((char *)&(backward), sizeof(bool));
+        hsgrInStream.read((char *)&(middle), sizeof(NodeID));
+        hsgrInStream.read((char *)&(type), sizeof(short));
+        hsgrInStream.read((char *)&(source), sizeof(NodeID));
+        hsgrInStream.read((char *)&(target), sizeof(NodeID));
+        g.data.backward = backward; g.data.distance = distance; g.data.forward = forward; g.data.shortcut = shortcut;
+        g.source = source; g.target = target;
+
+        if( nodeMap.find(source) == nodeMap.end()) {
+            nodeMap[numberOfNodes] = source;
+            numberOfNodes++;
+        }
+        if( nodeMap.find(target) == nodeMap.end()) {
+            nodeMap[numberOfNodes] = target;
+            numberOfNodes++;
+        }
+
+        edgeList->push_back(g);
+    }
+    hsgrInStream.close();
+    return numberOfNodes;
 }
 #endif // GRAPHLOADER_H
