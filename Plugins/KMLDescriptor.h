@@ -26,233 +26,224 @@ or see http://www.gnu.org/licenses/agpl.txt.
 template<class SearchEngineT>
 class KMLDescriptor : public BaseDescriptor<SearchEngineT>{
 private:
-    DescriptorConfig config;
+    _DescriptorConfig config;
+    RouteSummary summary;
+    DirectionOfInstruction directionOfInstruction;
+    DescriptorState descriptorState;
+    std::string tmp;
+
 public:
-    void SetConfig(const DescriptorConfig c) { config = c; }
-    void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
-        string tmp;
-        string lineString;
-        string startName;
-        string targetName;
-        double entireDistance = 0;
-        string direction = "East";
-        reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        reply.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
-        reply.content += ("<Document>\n");
+    KMLDescriptor() {}
+    void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-        if(distance != UINT_MAX) {
-            unsigned streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            startName = sEngine->GetEscapedNameForNameID(streetID);
-            streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            targetName = sEngine->GetEscapedNameForNameID(streetID);
+    void Run(http::Reply & reply, RawRouteData *rawRoute, PhantomNodes *phantomNodes, SearchEngineT *sEngine, unsigned  distance) {
+        WriteHeaderToOutput(reply.content);
 
-            reply.content += ("\t<Placemark>\n");
-            reply.content += ("\t\t<name><![CDATA[Start from ");
-            reply.content += startName;
-            reply.content += (" direction ");
-            _Coordinate tmpCoord;
-            if(path->size() > 0)
-                sEngine->getNodeInfo(path->begin()->node, tmpCoord);
+        //We do not need to do much, if there is no route ;-)
+        if(distance != UINT_MAX && rawRoute->routeSegments.size() > 0) {
+
+            //Put first segment of route into geometry
+            appendCoordinateToString(phantomNodes->startCoord, descriptorState.routeGeometryString);
+            descriptorState.startOfSegmentCoordinate = phantomNodes->startCoord;
+            //Generate initial instruction for start of route (order of NodeIDs does not matter, its the same name anyway)
+            summary.startName = sEngine->GetEscapedNameForOriginDestinationNodeID(phantomNodes->startNode2, phantomNodes->startNode1);
+            descriptorState.lastNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode2, phantomNodes->startNode1);
+
+            //If we have a route, i.e. start and dest not on same edge, than get it
+            if(rawRoute->routeSegments[0].size() > 0)
+                sEngine->getCoordinatesForNodeID(rawRoute->routeSegments[0].begin()->node, descriptorState.tmpCoord);
             else
-                tmpCoord = phantomNodes->targetCoord;
+                descriptorState.tmpCoord = phantomNodes->targetCoord;
 
-            int angle = round(GetAngleBetweenTwoEdges(_Coordinate(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon), tmpCoord, _Coordinate(tmpCoord.lat, tmpCoord.lon-1000)));
-            if(angle >= 23 && angle < 67)
-                direction = "South-East";
-            if(angle >= 67 && angle < 113)
-                direction = "South";
-            if(angle >= 113 && angle < 158)
-                direction = "South-West";
-            if(angle >= 158 && angle < 202)
-                direction = "West";
-            if(angle >= 202 && angle < 248)
-                direction = "North-West";
-            if(angle >= 248 && angle < 292)
-                direction = "North";
-            if(angle >= 292 && angle < 336)
-                direction = "North-East";
+            descriptorState.previousCoordinate = phantomNodes->startCoord;
+            descriptorState.currentCoordinate = descriptorState.tmpCoord;
+            descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.previousCoordinate, descriptorState.currentCoordinate);
 
-            reply.content += direction;
+            if(config.instructions) {
+                //Get Heading
+                double angle = GetAngleBetweenTwoEdges(_Coordinate(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon), descriptorState.tmpCoord, _Coordinate(descriptorState.tmpCoord.lat, descriptorState.tmpCoord.lon-1000));
+                getDirectionOfInstruction(angle, directionOfInstruction);
+                appendInstructionNameToString(summary.startName, directionOfInstruction.direction, descriptorState.routeInstructionString, true);
+            }
+            NodeID lastNodeID = UINT_MAX;
+            for(unsigned segmentIdx = 0; segmentIdx < rawRoute->routeSegments.size(); segmentIdx++) {
+                const std::vector< _PathData > & path = rawRoute->routeSegments[segmentIdx];
+                if( ! path.size() )
+                    continue;
 
-            reply.content += ("]]></name>\n");
-
-            //put start coord to linestring;
-            convertInternalCoordinateToString(phantomNodes->startCoord, tmp);
-            lineString += tmp;
-
-            reply.content += ("\t</Placemark>\n");
-            _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
-            _Coordinate next, current, lastPlace, startOfSegment;
-            stringstream numberString;
-
-            double tempDist = 0;
-            double lengthOfInstruction = 0;
-            NodeID nextID = UINT_MAX;
-            NodeID nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            short type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            lastPlace.lat = phantomNodes->startCoord.lat;
-            lastPlace.lon = phantomNodes->startCoord.lon;
-            short nextType = SHRT_MAX;
-            short prevType = SHRT_MAX;
-            reply.content += "\t<Placemark>\n\t\t<name><![CDATA[";
-            for(vector< _PathData >::iterator it = path->begin(); it != path->end(); it++) {
-                sEngine->getNodeInfo(it->node, current);
-                startOfSegment = previous;
-                if(it==path->end()-1){
-                    next = _Coordinate(phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
-                    nextID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-                    nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-                } else {
-                    sEngine->getNodeInfo((it+1)->node, next);
-                    nextID = sEngine->GetNameIDForOriginDestinationNodeID(it->node, (it+1)->node);
-                    nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(it->node, (it+1)->node);
+                if ( UINT_MAX == lastNodeID) {
+                    lastNodeID = (phantomNodes->startNode1 == (*path.begin()).node ? phantomNodes->startNode2 : phantomNodes->startNode1);
                 }
+                //Check, if there is overlap between current and previous route segment
+                //if not, than we are fine and can route over this edge without paying any special attention.
+                if(lastNodeID == (*path.begin()).node) {
+                    appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
+                    lastNodeID = (lastNodeID == rawRoute->segmentEndCoordinates[segmentIdx].startNode1 ? rawRoute->segmentEndCoordinates[segmentIdx].startNode2 : rawRoute->segmentEndCoordinates[segmentIdx].startNode1);
 
-                double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
-                if(178 > angle || 182 < angle) {
-                    convertInternalCoordinateToString(current, tmp);
-                    lineString += tmp;
-                }
+                    //output of the via nodes coordinates
+                    appendCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startCoord, descriptorState.routeGeometryString);
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startNode1, rawRoute->segmentEndCoordinates[segmentIdx].startNode2);
+                    //Make a special announement to do a U-Turn.
+                    appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
 
-                if(nextID == nameID) {
-                    tempDist += ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
-                } else {
-                    if(type == 0 && prevType != 0)
-                        reply.content += "enter motorway and ";
-                    if(type != 0 && prevType == 0 )
-                        reply.content += "leave motorway and ";
+                    descriptorState.distanceOfInstruction = ApproximateDistance(descriptorState.currentCoordinate, rawRoute->segmentEndCoordinates[segmentIdx].startCoord);
+                    getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
+                    appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                    appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                    tmp = "U-turn at via point";
+                    appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                    double tmpDistance = descriptorState.distanceOfInstruction;
+                    descriptorState.SetStartOfSegment(); //Set start of segment but save distance information.
+                    descriptorState.distanceOfInstruction = tmpDistance;
+                } else if(segmentIdx > 0) { //We are going straight through an edge which is carrying the via point.
+                    assert(segmentIdx != 0);
+                    //routeInstructionString += "\nreaching via node: \n";
+                    descriptorState.nextCoordinate = rawRoute->segmentEndCoordinates[segmentIdx].startCoord;
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startNode1, rawRoute->segmentEndCoordinates[segmentIdx].startNode2);
+                    appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
+                    appendCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startCoord, descriptorState.routeGeometryString);
+                    if(config.instructions) {
+                        double turnAngle = descriptorState.GetAngleBetweenCoordinates();
+                        appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
 
-                    //double angle = GetAngleBetweenTwoEdges(previous, current, next);
-                    reply.content += "follow road ";
-                    if(nameID != 0)
-                        reply.content += sEngine->GetEscapedNameForNameID(nameID);
-                    /*
-                reply.content += " (type: ";
-                numberString << type;
-                reply.content += numberString.str();
-                numberString.str("");
-                reply.content += ", id: ";
-                numberString << nameID;
-                reply.content += numberString.str();
-                numberString.str("");
-                reply.content += ")";
-                     */
-                    reply.content += "]]></name>\n\t\t<description>drive for ";
-                    lengthOfInstruction = ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon)+tempDist;
-                    entireDistance += lengthOfInstruction;
-                    numberString << 10*(round(lengthOfInstruction/10.));;
-                    reply.content += numberString.str();
-                    numberString.str("");
-                    reply.content += "m</description>";
-                    lastPlace = current;
-                    //                reply.content += "\n <Point>";
-                    //                reply.content += "<Coordinates>";
-                    //                reply.content += lon;
-                    //                reply.content += ",";
-                    //                reply.content += lat;
-                    //                reply.content += "</Coordinates></Point>";
-                    reply.content += "\n\t</Placemark>\n";
-                    reply.content += "\t<Placemark>\n\t\t<name><![CDATA[";
-                    if(angle > 160 && angle < 200) {
-                        reply.content += /* " (" << angle << ")*/"drive ahead, ";
-                    } else if (angle > 290 && angle <= 360) {
-                        reply.content += /*" (" << angle << ")*/ "turn sharp left, ";
-                    } else if (angle > 230 && angle <= 290) {
-                        reply.content += /*" (" << angle << ")*/ "turn left, ";
-                    } else if (angle > 200 && angle <= 230) {
-                        reply.content += /*" (" << angle << ") */"bear left, ";
-                    } else if (angle > 130 && angle <= 160) {
-                        reply.content += /*" (" << angle << ") */"bear right, ";
-                    } else if (angle > 70 && angle <= 130) {
-                        reply.content += /*" (" << angle << ") */"turn right, ";
+                        getTurnDirectionOfInstruction(turnAngle, tmp);
+                        tmp += " and reach via point";
+                        appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+
+                        //instruction to continue on the segment
+                        appendInstructionLengthToString(ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate), descriptorState.routeInstructionString);
+                        appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), "Continue on", descriptorState.routeInstructionString);
+
+                        //note the new segment starting coordinates
+                        descriptorState.SetStartOfSegment();
+                        descriptorState.previousCoordinate = descriptorState.currentCoordinate;
+                        descriptorState.currentCoordinate = descriptorState.nextCoordinate;
                     } else {
-                        reply.content += /*" (" << angle << ") */"turn sharp right, ";
+                        assert(false);
                     }
-                    tempDist = 0;
-                    prevType = type;
                 }
-                nameID = nextID;
-                previous = current;
-                type = nextType;
+
+                for(vector< _PathData >::const_iterator it = path.begin(); it != path.end(); it++) {
+                    sEngine->getCoordinatesForNodeID(it->node, descriptorState.nextCoordinate);
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(lastNodeID, it->node);
+
+                    double area = fabs(0.5*( descriptorState.startOfSegmentCoordinate.lon*(descriptorState.nextCoordinate.lat - descriptorState.currentCoordinate.lat) + descriptorState.nextCoordinate.lon*(descriptorState.currentCoordinate.lat - descriptorState.startOfSegmentCoordinate.lat) + descriptorState.currentCoordinate.lon*(descriptorState.startOfSegmentCoordinate.lat - descriptorState.nextCoordinate.lat)  ) );
+                    //if route is generalization does not skip this point, add it to description
+                    if( it==path.end()-1 || config.z == 19 || area >= areaThresholds[config.z] || (false == descriptorState.CurrentAndPreviousNameIDsEqual()) ) {
+                        //mark the beginning of the segment thats announced
+                        appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
+                        if( ( false == descriptorState.CurrentAndPreviousNameIDsEqual() ) && config.instructions) {
+                            appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                            getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
+                            appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+
+                            //note the new segment starting coordinates
+                            descriptorState.SetStartOfSegment();
+                        }
+                    }
+                    descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
+                    lastNodeID = it->node;
+                    if(it != path.begin()) {
+                        descriptorState.previousCoordinate = descriptorState.currentCoordinate;
+                        descriptorState.currentCoordinate = descriptorState.nextCoordinate;
+                    }
+                }
             }
-            nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            reply.content += "follow road ";
-            reply.content += sEngine->GetEscapedNameForNameID(nameID);
-//            reply.content += " (type: ";
-//            numberString << type;
-//            reply.content += numberString.str();
-//            numberString.str("");
-//            reply.content += ", id: ";
-//            numberString << nameID;
-//            reply.content += numberString.str();
-//            numberString.str(")");
-            reply.content += "]]></name>\n\t\t<description>drive for ";
-            lengthOfInstruction = ApproximateDistance(previous.lat, previous.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon) + tempDist;
-            entireDistance += lengthOfInstruction;
-            numberString << 10*(round(lengthOfInstruction/10.));
-            reply.content += numberString.str();
-            numberString.str("");
-            reply.content += "m</description>\n ";
-            string lat; string lon;
-            //        convertLatLon(lastPlace.lon, lon);
-            //        convertLatLon(lastPlace.lat, lat);
-            //        reply.content += "<Point><Coordinates>";
-            //        reply.content += lon;
-            //        reply.content += ",";
-            //        reply.content += lat;
-            //        reply.content += "</Coordinates></Point>";
-            reply.content += "\t</Placemark>\n";
+            descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+            descriptorState.nextCoordinate = phantomNodes->targetCoord;
+            appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
 
-            //put targetCoord to linestring
-            convertInternalCoordinateToString(phantomNodes->targetCoord, tmp);
-            lineString += tmp;
-	    if(!config.geometry){
-
-               reply.content = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-               reply.content += ("<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n");
-               reply.content += ("<Document>\n");
+            if((false == descriptorState.CurrentAndPreviousNameIDsEqual()) && config.instructions) {
+                appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
+                appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                descriptorState.distanceOfInstruction = 0;
             }
-
-
-            reply.content += "\t<Placemark>\n"
-                    "\t\t<name><![CDATA[Route from ";
-            reply.content += startName;
-            reply.content += " to ";
-            reply.content += targetName;
-            reply.content += "]]></name>\n"
-                    "\t\t<description>"
-                    "<![CDATA[Distance: ";
-
-            //give complete distance in meters;
+            summary.destName = sEngine->GetEscapedNameForNameID(descriptorState.currentNameID);
+            descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
+            appendCoordinateToString(phantomNodes->targetCoord, descriptorState.routeGeometryString);
+            appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+            descriptorState.SetStartOfSegment();
+            //compute distance/duration for route summary
             ostringstream s;
-            s << 10*(round(entireDistance/10.));
-            reply.content += s.str();
-            reply.content += "&#160;m (ca. ";
-
-            //give travel time in minutes
+            s << 10*(round(descriptorState.entireDistance/10.));
+            summary.lengthString = s.str();
             int travelTime = (distance/60) + 1;
             s.str("");
             s << travelTime;
-            reply.content += s.str();
+            summary.durationString = s.str();
 
-            reply.content += " minutes)]]>"
-                    "</description>\n";
+            //writing summary of route to reply
+            reply.content += "<Placemark><name><![CDATA[Route from ";
+            reply.content += summary.startName;
+            reply.content += " to ";
+            reply.content += summary.destName;
+            reply.content += "]]></name><description><![CDATA[Distance: ";
+            reply.content += summary.lengthString;
+            reply.content += "&#160;m (approx. ";
+            reply.content += summary.durationString;
+            reply.content += " minutes)]]></description>\n";
 
-	    if(config.geometry) {
+            reply.content += "<GeometryCollection><LineString><coordinates>";
+            if(config.geometry)
+                reply.content += descriptorState.routeGeometryString;
+            reply.content += "</coordinates></LineString></GeometryCollection>";
+            reply.content += "</Placemark>";
 
-       	    reply.content += "\t\t<GeometryCollection>\n"
-                    "\t\t\t<LineString>\n"
-                    "\t\t\t\t<coordinates>";
-            reply.content += lineString;
-            reply.content += "</coordinates>\n"
-                    "\t\t\t</LineString>\n"
-                    "\t\t</GeometryCollection>\n";
-	    }
-            reply.content += "\t</Placemark>\n";
+            //list all viapoints so that the client may display it
+            std::cout << "number of segment endpoints in route: " << rawRoute->segmentEndCoordinates.size() << std::endl;
+            for(unsigned segmentIdx = 1; (true == config.geometry) && (segmentIdx < rawRoute->segmentEndCoordinates.size()); segmentIdx++) {
+                reply.content += "<Placemark>";
+                reply.content += "<name>Via Point 1</name>";
+                reply.content += "<Point>";
+                reply.content += "<coordinates>";
+                appendCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startCoord, reply.content);
+                reply.content += "</coordinates>";
+                reply.content += "</Point>";
+                reply.content += "</Placemark>";
+            }
         }
+        reply.content += descriptorState.routeInstructionString;
         reply.content += "</Document>\n</kml>";
+        std::cout << descriptorState.routeInstructionString << std::endl;
     }
 private:
+    void appendCoordinateToString(const _Coordinate coordinate, std::string & output) {
+        if(config.geometry) {
+            convertInternalCoordinateToString(coordinate, tmp);
+            output += tmp;
+        }
+    }
+
+    void appendInstructionNameToString(const std::string & nameOfStreet, const std::string & instructionOrDirection, std::string &output, bool firstAdvice = false) {
+        if(config.instructions) {
+            output += "<placemark><name><![CDATA[";
+            if(firstAdvice) {
+                output += "Head on ";
+                output += nameOfStreet;
+                output += " direction ";
+                output += instructionOrDirection;
+            } else {
+                output += instructionOrDirection;
+                output += " on ";
+                output += nameOfStreet;
+            }
+            output += "]]></name>";
+        }
+    }
+
+    void appendInstructionLengthToString(unsigned length, std::string &output) {
+        if(config.instructions){
+            output += "\n\t<description>drive for ";
+            intToString(10*(round(length/10.)), tmp);
+            output += tmp;
+            output += "m</description></placemark>";
+            output += "\n";
+        }
+    }
+
+    void WriteHeaderToOutput(std::string & output) {
+        output = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n<Document>\n");
+    }
 };
 #endif /* KML_DESCRIPTOR_H_ */

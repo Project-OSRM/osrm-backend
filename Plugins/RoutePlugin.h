@@ -75,10 +75,10 @@ public:
         int lat2 = static_cast<int>(100000.*atof(routeParameters.parameters[2].c_str()));
         int lon2 = static_cast<int>(100000.*atof(routeParameters.parameters[3].c_str()));
 
-        bool geometry(true);
+        _DescriptorConfig descriptorConfig;
 
         if("false" == routeParameters.options["geometry"]) {
-            geometry = false;
+            descriptorConfig.geometry = false;
         }
 
         if(lat1>90*100000 || lat1 <-90*100000 || lon1>180*100000 || lon1 <-180*100000) {
@@ -95,9 +95,11 @@ public:
         _Coordinate targetCoord(lat2, lon2);
 
         vector< _PathData > * path = new vector< _PathData >();
+        RawRouteData * rawRoute = new RawRouteData(0);
         PhantomNodes * phantomNodes = new PhantomNodes();
         sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
-        unsigned int distance = sEngine->ComputeRoute(phantomNodes, path, startCoord, targetCoord);
+        unsigned int distance = sEngine->ComputeRoute(phantomNodes, path);
+        rawRoute->routeSegments.push_back(*path);
         reply.status = http::Reply::ok;
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
         std::string JSONParameter = routeParameters.options.Find("jsonp");
@@ -105,7 +107,6 @@ public:
             reply.content += JSONParameter;
             reply.content += "(\n";
         }
-        DescriptorConfig descriptorConfig;
         unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
         unsigned short zoom = 18;
         if(routeParameters.options.Find("z") != ""){
@@ -144,7 +145,7 @@ public:
             break;
         }
         desc->SetConfig(descriptorConfig);
-        desc->Run(reply, path, phantomNodes, sEngine, distance);
+        desc->Run(reply, rawRoute, phantomNodes, sEngine, distance);
         if("" != JSONParameter) {
             reply.content += ")\n";
         }
@@ -194,6 +195,7 @@ public:
 
         delete desc;
         delete path;
+        delete rawRoute;
         delete phantomNodes;
         return;
     }

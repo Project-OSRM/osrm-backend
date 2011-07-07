@@ -85,7 +85,7 @@ struct _InsertedNodes {
 };
 
 
-typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage< NodeID, unsigned > > _Heap;
+typedef BinaryHeap< NodeID, int, int, _HeapData/*, ArrayS< NodeID, unsigned >*/ > _Heap;
 
 template<typename EdgeData, typename GraphT, typename NodeHelperT = NodeInformationHelpDesk>
 class SearchEngine {
@@ -98,8 +98,7 @@ public:
     SearchEngine(GraphT * g, NodeHelperT * nh, vector<string> * n = new vector<string>()) : _graph(g), nodeHelpDesk(nh), _names(n) {}
     ~SearchEngine() {}
 
-    inline const void getNodeInfo(NodeID id, _Coordinate& result) const
-    {
+    inline const void getCoordinatesForNodeID(NodeID id, _Coordinate& result) const {
         result.lat = nodeHelpDesk->getLatitudeOfNode(id);
         result.lon = nodeHelpDesk->getLongitudeOfNode(id);
     }
@@ -108,7 +107,7 @@ public:
         return nodeHelpDesk->getNumberOfNodes();
     }
 
-    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<_PathData > * path, _Coordinate& startCoord, _Coordinate& targetCoord) {
+    unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<_PathData > * path) {
 
         bool onSameEdge = false;
         bool onSameEdgeReversed = false;
@@ -122,7 +121,7 @@ public:
         NodeID middle = ( NodeID ) 0;
         unsigned int _upperbound = std::numeric_limits<unsigned int>::max();
 
-        if(phantomNodes->startNode1 == UINT_MAX || phantomNodes->startNode2 == UINT_MAX)
+        if(phantomNodes->startNode1 == UINT_MAX || phantomNodes->targetNode1 == UINT_MAX || phantomNodes->startNode2 == UINT_MAX || phantomNodes->targetNode2 == UINT_MAX)
             return _upperbound;
 
         if( (phantomNodes->startNode1 == phantomNodes->targetNode1 && phantomNodes->startNode2 == phantomNodes->targetNode2 ) ||
@@ -210,12 +209,13 @@ public:
 
         while(_forwardHeap.Size() + _backwardHeap.Size() > 0) {
             if ( _forwardHeap.Size() > 0 ) {
-                _RoutingStep( &_forwardHeap, &_backwardHeap, true, &middle, &_upperbound );
+                _RoutingStep( _forwardHeap, _backwardHeap, true, &middle, &_upperbound );
             }
             if ( _backwardHeap.Size() > 0 ) {
-                _RoutingStep( &_backwardHeap, &_forwardHeap, false, &middle, &_upperbound );
+                _RoutingStep( _backwardHeap, _forwardHeap, false, &middle, &_upperbound );
             }
         }
+
         //        std::cout << "[debug] computing distance took " << get_timestamp() - time << std::endl;
         //        time = get_timestamp();
 
@@ -245,7 +245,6 @@ public:
         }
 
         packedPath.clear();
-        //        std::cout << "[debug] unpacking path took " << get_timestamp() - time << std::endl;
 
         return _upperbound/10;
     }
@@ -304,8 +303,7 @@ public:
 
     }
 
-    inline bool FindRoutingStarts(const _Coordinate start, const _Coordinate target, PhantomNodes * routingStarts)
-    {
+    inline bool FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes * routingStarts)  {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
         return true;
     }
@@ -334,6 +332,12 @@ public:
         return (nameID >= _names->size() ? _names->at(0) : _names->at(nameID) );
     }
 
+    inline std::string GetEscapedNameForOriginDestinationNodeID(NodeID s, NodeID t) const {
+        NodeID nameID = GetNameIDForOriginDestinationNodeID(s, t);
+        return ( GetEscapedNameForNameID(nameID) );
+    }
+
+
     inline std::string GetEscapedNameForNameID(const NodeID nameID) const {
         return ( (nameID >= _names->size() || nameID == 0) ? std::string("") : HTMLEntitize(_names->at(nameID)) );
     }
@@ -353,63 +357,84 @@ public:
     }
 private:
 
-    inline void _RoutingStep(_Heap * _forwardHeap, _Heap *_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound) {
-        const NodeID node = _forwardHeap->DeleteMin();
-        const unsigned int distance = _forwardHeap->GetKey( node );
-        if ( _backwardHeap->WasInserted( node ) ) {
-            const unsigned int newDistance = _backwardHeap->GetKey( node ) + distance;
+    inline void _RoutingStep(_Heap& _forwardHeap, _Heap &_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound) {
+        const NodeID node = _forwardHeap.DeleteMin();
+        const unsigned int distance = _forwardHeap.GetKey( node );
+        if ( _backwardHeap.WasInserted( node ) ) {
+            const unsigned int newDistance = _backwardHeap.GetKey( node ) + distance;
             if ( newDistance < *_upperbound ) {
                 *middle = node;
                 *_upperbound = newDistance;
             }
         }
         if ( distance > *_upperbound ) {
-            _forwardHeap->DeleteAll();
+            _forwardHeap.DeleteAll();
             return;
         }
 
 
         for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
-            const EdgeData& ed = _graph->GetEdgeData(edge);
+            //const EdgeData& ed = _graph->GetEdgeData(edge);
             //            if(!ed.shortcut)
             //                continue;
             const NodeID to = _graph->GetTarget(edge);
-            const EdgeWeight edgeWeight = ed.distance;
+            const EdgeWeight edgeWeight = _graph->GetEdgeData(edge).distance;
 
             assert( edgeWeight > 0 );
-            const int toDistance = distance + edgeWeight;
+            //const int toDistance = distance + edgeWeight;
 
             //Stalling
-            if(_forwardHeap->WasInserted( to )) {
-                if(!forwardDirection ? ed.forward : ed.backward) {
-                    if(_forwardHeap->GetKey( to ) + edgeWeight < distance) {
-                        //                        std::cout << "[stalled] node " << node << std::endl;
+            bool backwardDirectionFlag = (!forwardDirection) ? _graph->GetEdgeData(edge).forward : _graph->GetEdgeData(edge).backward;
+            if(_forwardHeap.WasInserted( to )) {
+                if(backwardDirectionFlag) {
+                    if(_forwardHeap.GetKey( to ) + edgeWeight < distance) {
                         return;
                     }
                 }
             }
+        }
+        for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
+            const NodeID to = _graph->GetTarget(edge);
+            const EdgeWeight edgeWeight = _graph->GetEdgeData(edge).distance;
 
-            if(forwardDirection ? ed.forward : ed.backward ) {
+            assert( edgeWeight > 0 );
+            const int toDistance = distance + edgeWeight;
+
+
+            bool forwardDirectionFlag = (forwardDirection ? _graph->GetEdgeData(edge).forward : _graph->GetEdgeData(edge).backward );
+            if(forwardDirectionFlag) {
                 //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !_forwardHeap->WasInserted( to ) ) {
-                    _forwardHeap->Insert( to, toDistance, node );
+                if ( !_forwardHeap.WasInserted( to ) ) {
+                    _forwardHeap.Insert( to, toDistance, node );
                 }
                 //Found a shorter Path -> Update distance
-                else if ( toDistance < _forwardHeap->GetKey( to ) ) {
-                    _forwardHeap->GetData( to ).parent = node;
-                    _forwardHeap->DecreaseKey( to, toDistance );
+                else if ( toDistance < _forwardHeap.GetKey( to ) ) {
+                    _forwardHeap.GetData( to ).parent = node;
+                    _forwardHeap.DecreaseKey( to, toDistance );
                     //new parent
                 }
             }
+            //            if(forwardDirection ? ed.forward : ed.backward ) {
+            //                //New Node discovered -> Add to Heap + Node Info Storage
+            //                if ( !_forwardHeap->WasInserted( to ) ) {
+            //                    _forwardHeap->Insert( to, toDistance, node );
+            //                }
+            //                //Found a shorter Path -> Update distance
+            //                else if ( toDistance < _forwardHeap->GetKey( to ) ) {
+            //                    _forwardHeap->GetData( to ).parent = node;
+            //                    _forwardHeap->DecreaseKey( to, toDistance );
+            //                    //new parent
+            //                }
+            //            }
         }
     }
 
-    inline void _RoutingStepWithStats( _Heap * _forwardHeap, _Heap *_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound, _Statistics& stats) {
-        const NodeID node = _forwardHeap->DeleteMin();
+    inline void _RoutingStepWithStats( _Heap& _forwardHeap, _Heap &_backwardHeap, const bool& forwardDirection, NodeID * middle, unsigned int * _upperbound, _Statistics& stats) {
+        const NodeID node = _forwardHeap.DeleteMin();
         stats.deleteMins++;
-        const unsigned int distance = _forwardHeap->GetKey( node );
-        if ( _backwardHeap->WasInserted( node ) ) {
-            const unsigned int newDistance = _backwardHeap->GetKey( node ) + distance;
+        const unsigned int distance = _forwardHeap.GetKey( node );
+        if ( _backwardHeap.WasInserted( node ) ) {
+            const unsigned int newDistance = _backwardHeap.GetKey( node ) + distance;
             if ( newDistance < *_upperbound ) {
                 *middle = node;
                 *_upperbound = newDistance;
@@ -417,7 +442,7 @@ private:
         }
         if ( distance > *_upperbound ) {
             stats.meetingNodes++;
-            _forwardHeap->DeleteAll();
+            _forwardHeap.DeleteAll();
             return;
         }
 
@@ -431,9 +456,9 @@ private:
             const int toDistance = distance + edgeWeight;
 
             //Stalling
-            if(_forwardHeap->WasInserted( to )) {
+            if(_forwardHeap.WasInserted( to )) {
                 if(!forwardDirection ? ed.forward : ed.backward) {
-                    if(_forwardHeap->GetKey( to ) + edgeWeight < distance) {
+                    if(_forwardHeap.GetKey( to ) + edgeWeight < distance) {
                         stats.stalledNodes++;
                         return;
                     }
@@ -442,14 +467,14 @@ private:
 
             if(forwardDirection ? ed.forward : ed.backward ) {
                 //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !_forwardHeap->WasInserted( to ) ) {
-                    _forwardHeap->Insert( to, toDistance, node );
+                if ( !_forwardHeap.WasInserted( to ) ) {
+                    _forwardHeap.Insert( to, toDistance, node );
                     stats.insertedNodes++;
                 }
                 //Found a shorter Path -> Update distance
-                else if ( toDistance < _forwardHeap->GetKey( to ) ) {
-                    _forwardHeap->GetData( to ).parent = node;
-                    _forwardHeap->DecreaseKey( to, toDistance );
+                else if ( toDistance < _forwardHeap.GetKey( to ) ) {
+                    _forwardHeap.GetData( to ).parent = node;
+                    _forwardHeap.DecreaseKey( to, toDistance );
                     stats.decreasedNodes++;
                     //new parent
                 }

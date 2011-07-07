@@ -346,21 +346,6 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     return EARTH_RADIUS_IN_METERS * distanceArc;
 }
 
-/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
-double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const _Coordinate& B) {
-    int v1x = A.lon - C.lon;
-    int v1y = A.lat - C.lat;
-    int v2x = B.lon - C.lon;
-    int v2y = B.lat - C.lat;
-
-    double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
-    while(angle < 0)
-        angle += 360;
-
-    return angle;
-}
-
-
 inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
     return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
 }

@@ -18,294 +18,268 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
+#ifndef JSON_DESCRIPTOR_H_
+#define JSON_DESCRIPTOR_H_
+
 #include "BaseDescriptor.h"
 #include "../DataStructures/PolylineCompressor.h"
 
-#ifndef JSONDESCRIPTOR_H_
-#define JSONDESCRIPTOR_H_
-
-static double areaThresholds[19] = { 5000, 5000, 5000, 5000, 5000, 2500, 2000, 1500, 800, 400, 250, 150, 100, 75, 25, 20, 10, 5, 0 };
-
 template<class SearchEngineT>
-class JSONDescriptor : public BaseDescriptor<SearchEngineT> {
+class JSONDescriptor : public BaseDescriptor<SearchEngineT>{
 private:
-    DescriptorConfig config;
+    _DescriptorConfig config;
+    RouteSummary summary;
+    DirectionOfInstruction directionOfInstruction;
+    DescriptorState descriptorState;
+    std::string tmp;
     vector<_Coordinate> polyline;
+
 public:
     JSONDescriptor() {}
-    void SetConfig(const DescriptorConfig c) {
-        config = c;
-    }
+    void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-    void Run(http::Reply& reply, std::vector< _PathData > * path, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
-        string tmp;
-        string routeGeometryString;
-        string routeSummaryString;
-        string routeInstructionString;
-        string startPointName;
-        string endPointName;
-        string direction = "East";
-        string shortDirection = "E";
-        int lastPosition = 0;
-        int position = 0;
-        unsigned durationOfInstruction = 0;
-        double lastAngle = 0.;
+    void Run(http::Reply & reply, RawRouteData *rawRoute, PhantomNodes *phantomNodes, SearchEngineT *sEngine, unsigned distance) {
+        WriteHeaderToOutput(reply.content);
 
-        unsigned painted = 0;
-        unsigned omitted = 0;
+        //We do not need to do much, if there is no route ;-)
+        if(distance != UINT_MAX && rawRoute->routeSegments.size() > 0) {
+            reply.content += "0,"
+                    "\"status_message\": \"Found route between points\",";
 
-        reply.content += ("{");
-        reply.content += ("\"version\":0.3,");
-
-        if(distance != UINT_MAX) {
-            reply.content += ("\"status\":0,");
-            reply.content += ("\"status_message\":");
-            reply.content += "\"Found route between points\",";
-            unsigned streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            startPointName = (0 == streetID ? "Unnamed origin street" : sEngine->GetEscapedNameForNameID(streetID) );
-            streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            endPointName = (0 == streetID ? "Unnamed destination street" : sEngine->GetEscapedNameForNameID(streetID) );
-
-            routeInstructionString += "[\"Head ";
-            _Coordinate tmpCoord;
-            if(path->size() > 0)
-                sEngine->getNodeInfo(path->begin()->node, tmpCoord);
-            else
-                tmpCoord = phantomNodes->targetCoord;
-
-            double angle = GetAngleBetweenTwoEdges(_Coordinate(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon), tmpCoord, _Coordinate(tmpCoord.lat, tmpCoord.lon-1000));
-            if(angle >= 23 && angle < 67) {
-                direction = "southeast";
-                shortDirection = "SE";
-            }
-            if(angle >= 67 && angle < 113) {
-                direction = "south";
-                shortDirection = "S";
-            }
-            if(angle >= 113 && angle < 158) {
-                direction = "southwest";
-                shortDirection = "SW";
-            }
-            if(angle >= 158 && angle < 202) {
-                direction = "west";
-                shortDirection = "W";
-            }
-            if(angle >= 202 && angle < 248) {
-                direction = "northwest";
-                shortDirection = "NW";
-            }
-            if(angle >= 248 && angle < 292) {
-                direction = "north";
-                shortDirection = "N";
-            }
-            if(angle >= 292 && angle < 336) {
-                direction = "northeast";
-                shortDirection = "NE";
-            }
-
-            routeInstructionString += direction;
-
-            //put start coord to linestring;
+            //Put first segment of route into geometry
             polyline.push_back(phantomNodes->startCoord);
+            descriptorState.geometryCounter++;
+            descriptorState.startOfSegmentCoordinate = phantomNodes->startCoord;
+            //Generate initial instruction for start of route (order of NodeIDs does not matter, its the same name anyway)
+            summary.startName = sEngine->GetEscapedNameForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
+            descriptorState.lastNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode2, phantomNodes->startNode1);
 
-            _Coordinate previous(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon);
-            _Coordinate next, current, lastPlace, startOfSegment;
-            stringstream numberString;
-            stringstream intNumberString;
+            //If we have a route, i.e. start and dest not on same edge, than get it
+            if(rawRoute->routeSegments[0].size() > 0)
+                sEngine->getCoordinatesForNodeID(rawRoute->routeSegments[0].begin()->node, descriptorState.tmpCoord);
+            else
+                descriptorState.tmpCoord = phantomNodes->targetCoord;
 
-            double tempDist = 0;
-            double entireDistance = 0;
-            double distanceOfInstruction = 0;
-            NodeID nextID = UINT_MAX;
-            NodeID nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            short type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            lastPlace.lat = phantomNodes->startCoord.lat;
-            lastPlace.lon = phantomNodes->startCoord.lon;
-            short nextType = SHRT_MAX;
-            short prevType = SHRT_MAX;
-            for(vector< _PathData >::iterator it = path->begin(); it != path->end(); it++) {
-                sEngine->getNodeInfo(it->node, current);
-                startOfSegment = previous;
+            descriptorState.previousCoordinate = phantomNodes->startCoord;
+            descriptorState.currentCoordinate = descriptorState.tmpCoord;
+            descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.previousCoordinate, descriptorState.currentCoordinate);
 
-                if(it==path->end()-1){
-                    next = _Coordinate(phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
-                    nextID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-                    nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-                    durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-                } else {
-                    sEngine->getNodeInfo((it+1)->node, next);
-                    nextID = sEngine->GetNameIDForOriginDestinationNodeID(it->node, (it+1)->node);
-                    nextType = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(it->node, (it+1)->node);
-                    durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(it->node, (it+1)->node);
-                }
-                double angle = GetAngleBetweenTwoEdges(startOfSegment, current, next);
-                double area = fabs(0.5*( startOfSegment.lon*(current.lat - next.lat) + current.lon*(next.lat - startOfSegment.lat) + next.lon*(startOfSegment.lat - current.lat)  ) );
-                //                std::cout << "Area for: " << area << std::endl;
-                if(area > areaThresholds[config.z] || 19 == config.z) {
-                    painted++;
-                	polyline.push_back(current);
-
-                    position++;
-                    startOfSegment = current;
-                } else {
-                    omitted++;
-                }
-                if(nextID == nameID) {
-                    double _dist = ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
-                    tempDist += _dist;
-                    entireDistance += _dist;
-                } else {
-                    if(type == 0 && prevType != 0)
-                        routeInstructionString += ",enter motorway, ";
-                    if(type != 0 && prevType == 0 )
-                        routeInstructionString += ",leave motorway, ";
-                    routeInstructionString += "\", \"";
-                    if(nameID != 0)
-                        routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
-                    routeInstructionString += "\",";
-                    double _dist = ApproximateDistance(previous.lat, previous.lon, current.lat, current.lon);
-                    distanceOfInstruction += _dist + tempDist;
-                    entireDistance += _dist;
-                    intNumberString.str("");
-                    intNumberString << 10*(round(distanceOfInstruction/10.));;
-                    routeInstructionString += intNumberString.str();
-                    routeInstructionString += ",";
-                    intNumberString.str("");
-                    intNumberString << lastPosition;
-                    lastPosition = position;
-                    routeInstructionString += intNumberString.str();
-                    routeInstructionString += ",";
-                    intNumberString.str("");
-                    intNumberString << durationOfInstruction/10;
-                    routeInstructionString += intNumberString.str();
-                    routeInstructionString += ",\"";
-                    intNumberString.str("");
-                    intNumberString << 10*(round(distanceOfInstruction/10.));
-                    routeInstructionString += intNumberString.str();
-                    routeInstructionString += "m\",\"";
-                    routeInstructionString += shortDirection;
-                    routeInstructionString += "\",";
-                    numberString.str("");
-                    numberString << fixed << setprecision(2) << lastAngle;
-                    routeInstructionString += numberString.str();
-                    routeInstructionString += "],";
-
-                    string lat; string lon;
-                    lastPlace = current;
-                    routeInstructionString += "[\"";
-
-                    if(angle > 160 && angle < 200) {
-                        routeInstructionString += /* " (" << angle << ")*/"Continue";
-                    } else if (angle > 290 && angle <= 360) {
-                        routeInstructionString += /*" (" << angle << ")*/ "Turn sharp left";
-                    } else if (angle > 230 && angle <= 290) {
-                        routeInstructionString += /*" (" << angle << ")*/ "Turn left";
-                    } else if (angle > 200 && angle <= 230) {
-                        routeInstructionString += /*" (" << angle << ") */"Bear left";
-                    } else if (angle > 130 && angle <= 160) {
-                        routeInstructionString += /*" (" << angle << ") */"Bear right";
-                    } else if (angle > 70 && angle <= 130) {
-                        routeInstructionString += /*" (" << angle << ") */"Turn right";
-                    } else {
-                        routeInstructionString += /*" (" << angle << ") */"Turn sharp right";
-                    }
-                    lastAngle = angle;
-                    tempDist = 0;
-                    prevType = type;
-                    distanceOfInstruction = 0;
-                    durationOfInstruction = 0;
-                }
-                nameID = nextID;
-                previous = current;
-                type = nextType;
+            if(config.instructions) {
+                //Get Heading
+                double angle = GetAngleBetweenTwoEdges(_Coordinate(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon), descriptorState.tmpCoord, _Coordinate(descriptorState.tmpCoord.lat, descriptorState.tmpCoord.lon-1000));
+                getDirectionOfInstruction(angle, directionOfInstruction);
+                appendInstructionNameToString(summary.startName, directionOfInstruction.direction, descriptorState.routeInstructionString, true);
             }
-            nameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            type = sEngine->GetTypeOfEdgeForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            durationOfInstruction += sEngine->GetWeightForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            routeInstructionString += "\", \"";
-            routeInstructionString += sEngine->GetEscapedNameForNameID(nameID);
-            routeInstructionString += "\",";
-            distanceOfInstruction = ApproximateDistance(previous.lat, previous.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon) + tempDist;
-            entireDistance += distanceOfInstruction;
-            intNumberString.str("");
-            intNumberString << 10*(round(distanceOfInstruction/10.));;
-            routeInstructionString += intNumberString.str();
-            routeInstructionString += ",";
-            numberString.str("");
-            numberString << lastPosition;
-            routeInstructionString += numberString.str();
-            routeInstructionString += ",";
-            intNumberString.str("");
-            intNumberString << durationOfInstruction/10;
-            routeInstructionString += intNumberString.str();
-            routeInstructionString += ",\"";
-            intNumberString.str("");
-            intNumberString << 10*(round(distanceOfInstruction/10.));;
-            routeInstructionString += intNumberString.str();
-            routeInstructionString += "m\",\"";
-            routeInstructionString += shortDirection;
-            routeInstructionString += "\",";
-            numberString.str("");
-            numberString << fixed << setprecision(2) << lastAngle;
-            routeInstructionString += numberString.str();
-            routeInstructionString += "]";
+            NodeID lastNodeID = UINT_MAX;
+            for(unsigned segmentIdx = 0; segmentIdx < rawRoute->routeSegments.size(); segmentIdx++) {
+                const std::vector< _PathData > & path = rawRoute->routeSegments[segmentIdx];
 
-            string lat; string lon;
+                if ( UINT_MAX == lastNodeID) {
+                    lastNodeID = (phantomNodes->startNode1 == (*path.begin()).node ? phantomNodes->startNode2 : phantomNodes->startNode1);
+                }
+                //Check, if there is overlap between current and previous route segment
+                //if not, than we are fine and can route over this edge without paying any special attention.
+                if(lastNodeID == (*path.begin()).node) {
+                    //                    appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
+                    polyline.push_back(descriptorState.currentCoordinate);
+                    descriptorState.geometryCounter++;
+                    lastNodeID = (lastNodeID == rawRoute->segmentEndCoordinates[segmentIdx].startNode1 ? rawRoute->segmentEndCoordinates[segmentIdx].startNode2 : rawRoute->segmentEndCoordinates[segmentIdx].startNode1);
 
-            //put targetCoord to linestring
+                    //output of the via nodes coordinates
+                    polyline.push_back(rawRoute->segmentEndCoordinates[segmentIdx].startCoord);
+                    descriptorState.geometryCounter++;
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startNode1, rawRoute->segmentEndCoordinates[segmentIdx].startNode2);
+                    //Make a special announement to do a U-Turn.
+                    appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                    descriptorState.routeInstructionString += ",";
+                    descriptorState.distanceOfInstruction = ApproximateDistance(descriptorState.currentCoordinate, rawRoute->segmentEndCoordinates[segmentIdx].startCoord);
+                    getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
+                    appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                    appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                    descriptorState.routeInstructionString += ",";
+                    tmp = "U-turn at via point";
+                    appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                    double tmpDistance = descriptorState.distanceOfInstruction;
+                    descriptorState.SetStartOfSegment(); //Set start of segment but save distance information.
+                    descriptorState.distanceOfInstruction = tmpDistance;
+                } else if(segmentIdx > 0) { //We are going straight through an edge which is carrying the via point.
+                    assert(segmentIdx != 0);
+                    //routeInstructionString += "reaching via node: ";
+                    descriptorState.nextCoordinate = rawRoute->segmentEndCoordinates[segmentIdx].startCoord;
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startNode1, rawRoute->segmentEndCoordinates[segmentIdx].startNode2);
+
+                    polyline.push_back(descriptorState.currentCoordinate);
+                    descriptorState.geometryCounter++;
+                    polyline.push_back(rawRoute->segmentEndCoordinates[segmentIdx].startCoord);
+                    descriptorState.geometryCounter++;
+                    if(config.instructions) {
+                        double turnAngle = descriptorState.GetAngleBetweenCoordinates();
+                        appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                        descriptorState.SetStartOfSegment();
+                        descriptorState.routeInstructionString += ",";
+                        getTurnDirectionOfInstruction(turnAngle, tmp);
+                        tmp += " and reach via point";
+                        appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+
+                        //instruction to continue on the segment
+                        appendInstructionLengthToString(ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate), descriptorState.routeInstructionString);
+                        descriptorState.routeInstructionString += ",";
+                        appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), "Continue on", descriptorState.routeInstructionString);
+
+                        //note the new segment starting coordinates
+                        descriptorState.SetStartOfSegment();
+                        descriptorState.previousCoordinate = descriptorState.currentCoordinate;
+                        descriptorState.currentCoordinate = descriptorState.nextCoordinate;
+                    }
+                }
+                for(vector< _PathData >::const_iterator it = path.begin(); it != path.end(); it++) {
+                    sEngine->getCoordinatesForNodeID(it->node, descriptorState.nextCoordinate);
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(lastNodeID, it->node);
+
+                    double area = fabs(0.5*( descriptorState.startOfSegmentCoordinate.lon*(descriptorState.nextCoordinate.lat - descriptorState.currentCoordinate.lat) + descriptorState.nextCoordinate.lon*(descriptorState.currentCoordinate.lat - descriptorState.startOfSegmentCoordinate.lat) + descriptorState.currentCoordinate.lon*(descriptorState.startOfSegmentCoordinate.lat - descriptorState.nextCoordinate.lat)  ) );
+                    //if route is generalization does not skip this point, add it to description
+                    if( it==path.end()-1 || config.z == 19 || area >= areaThresholds[config.z] || (false == descriptorState.CurrentAndPreviousNameIDsEqual()) ) {
+                        //mark the beginning of the segment thats announced
+                        //                        appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
+                        polyline.push_back(descriptorState.currentCoordinate);
+                        descriptorState.geometryCounter++;
+                        if( ( false == descriptorState.CurrentAndPreviousNameIDsEqual() ) && config.instructions) {
+                            appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                            descriptorState.routeInstructionString += ",";
+                            getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
+                            appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+
+                            //note the new segment starting coordinates
+                            descriptorState.SetStartOfSegment();
+                        }
+                    }
+                    descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
+                    lastNodeID = it->node;
+                    if(it != path.begin()) {
+                        descriptorState.previousCoordinate = descriptorState.currentCoordinate;
+                        descriptorState.currentCoordinate = descriptorState.nextCoordinate;
+                    }
+                }
+            }
+            descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
+            descriptorState.nextCoordinate = phantomNodes->targetCoord;
+
+            if((false == descriptorState.CurrentAndPreviousNameIDsEqual()) && config.instructions) {
+                polyline.push_back(descriptorState.currentCoordinate);
+                descriptorState.geometryCounter++;
+                appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+                descriptorState.routeInstructionString += ",";
+                getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
+                appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                descriptorState.distanceOfInstruction = 0;
+                descriptorState.SetStartOfSegment();
+            }
+            summary.destName = sEngine->GetEscapedNameForNameID(descriptorState.currentNameID);
+            descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
             polyline.push_back(phantomNodes->targetCoord);
-            position++;
+            descriptorState.geometryCounter++;
+            appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
+            summary.BuildDurationAndLengthStrings(descriptorState.entireDistance, distance);
 
-            //give complete distance in meters;
-            ostringstream s;
-            s << 10*(round(entireDistance/10.));
-            routeSummaryString += "\"total_distance\":";
-            routeSummaryString += s.str();
-
-            routeSummaryString += ",\"total_time\":";
-            //give travel time in minutes
-            int travelTime = distance;
-            s.str("");
-            s << travelTime;
-            routeSummaryString += s.str();
-            routeSummaryString += ",\"start_point\":\"";
-            routeSummaryString += startPointName;
-            routeSummaryString += "\",\"end_point\":\"";
-            routeSummaryString += endPointName;
-            routeSummaryString += "\"";
         } else {
-            reply.content += ("\"status\":207,");
-            reply.content += ("\"status_message\":");
-            reply.content += "\"Cannot find route between points\",";
-            routeSummaryString += "\"total_distance\":0";
-            routeSummaryString += ",\"total_time\":0";
-            routeSummaryString += ",\"start_point\":\"";
-            routeSummaryString += "\",\"end_point\":\"";
-            routeSummaryString += "\"";
+            //no route found
+            reply.content += "207,"
+                    "\"status_message\": \"Cannot find route between points\",";
         }
-        reply.content += "\"route_summary\": {";
-        reply.content += routeSummaryString;
+
+        reply.content += "\"route_summary\": {"
+                "\"total_distance\":";
+        reply.content += summary.lengthString;
+        reply.content += ","
+                "\"total_time\":";
+        reply.content += summary.durationString;
+        reply.content += ","
+                "\"start_point\":\"";
+        reply.content += summary.startName;
+        reply.content += "\","
+                "\"end_point\":\"";
+        reply.content += summary.destName;
+        reply.content += "\"";
         reply.content += "},";
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
-        	if(config.encodeGeometry)
-        		config.pc.printEncodedString(polyline, routeGeometryString);
-        	else
-        		config.pc.printUnencodedString(polyline, routeGeometryString);
+            if(config.encodeGeometry)
+                config.pc.printEncodedString(polyline, descriptorState.routeGeometryString);
+            else
+                config.pc.printUnencodedString(polyline, descriptorState.routeGeometryString);
 
-            reply.content += routeGeometryString;
+            reply.content += descriptorState.routeGeometryString;
         } else {
             reply.content += "[]";
         }
-        reply.content += ",";
-        reply.content += "\"route_instructions\": [";
-        if(config.instructions) {
-            reply.content += routeInstructionString;
-        }
+
+        reply.content += ","
+                "\"route_instructions\": [";
+        if(config.instructions)
+            reply.content += descriptorState.routeInstructionString;
         reply.content += "],";
-        reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (beta)\"";
+        //list all viapoints so that the client may display it
+        reply.content += "\"via_points\":[";
+        for(unsigned segmentIdx = 1; (true == config.geometry) && (segmentIdx < rawRoute->segmentEndCoordinates.size()); segmentIdx++) {
+            if(segmentIdx > 1)
+                reply.content += ",";
+            reply.content += "[";
+            convertInternalReversedCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startCoord, tmp);
+            reply.content += tmp;
+            reply.content += "]";
+        }
+        reply.content += "],"
+                "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.2)\"";
         reply.content += "}";
-        //std::cout << "zoom: " << config.z << ", threshold: " << areaThresholds[config.z] << ", painted: " << painted << ", omitted: " << omitted << std::endl;
+        //        std::cout << reply.content << std::endl;
+    }
+private:
+    void appendInstructionNameToString(const std::string & nameOfStreet, const std::string & instructionOrDirection, std::string &output, bool firstAdvice = false) {
+        output += "[";
+        if(config.instructions) {
+            output += "\"";
+            if(firstAdvice) {
+                output += "Head ";
+            }
+            output += instructionOrDirection;
+            output += "\",\"";
+            output += nameOfStreet;
+            output += "\",";
+        }
+    }
+
+    void appendInstructionLengthToString(unsigned length, std::string &output) {
+        if(config.instructions){
+            std::string tmpDistance;
+            intToString(10*(round(length/10.)), tmpDistance);
+            output += tmpDistance;
+            output += ",";
+            intToString(descriptorState.startIndexOfGeometry, tmp);
+            output += tmp;
+            output += ",";
+            intToString(descriptorState.durationOfInstruction, tmp);
+            output += tmp;
+            output += ",";
+            output += "\"";
+            output += tmpDistance;
+            output += "\",";
+            double angle = descriptorState.GetAngleBetweenCoordinates();
+            DirectionOfInstruction direction;
+            getDirectionOfInstruction(angle, direction);
+            output += "\"";
+            output += direction.shortDirection;
+            output += "\",";
+            std::stringstream numberString;
+            numberString << fixed << setprecision(2) << angle;
+            output += numberString.str();
+        }
+        output += "]";
+    }
+
+    void WriteHeaderToOutput(std::string & output) {
+        output += "{"
+                "\"version\": 0.3,"
+                "\"status\":";
     }
 };
-#endif /* JSONDESCRIPTOR_H_ */
+#endif /* JSON_DESCRIPTOR_H_ */
