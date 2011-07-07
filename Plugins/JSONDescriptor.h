@@ -62,9 +62,9 @@ public:
             reply.content += ("\"status_message\":");
             reply.content += "\"Found route between points\",";
             unsigned streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            startPointName = sEngine->GetEscapedNameForNameID(streetID);
+            startPointName = (0 == streetID ? "Unnamed origin street" : sEngine->GetEscapedNameForNameID(streetID) );
             streetID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            endPointName = sEngine->GetEscapedNameForNameID(streetID);
+            endPointName = (0 == streetID ? "Unnamed destination street" : sEngine->GetEscapedNameForNameID(streetID) );
 
             routeInstructionString += "[\"Head ";
             _Coordinate tmpCoord;

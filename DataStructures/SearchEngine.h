@@ -335,7 +335,7 @@ public:
     }
 
     inline std::string GetEscapedNameForNameID(const NodeID nameID) const {
-        return ( nameID >= _names->size() ? std::string("") : HTMLEntitize(_names->at(nameID)) );
+        return ( (nameID >= _names->size() || nameID == 0) ? std::string("") : HTMLEntitize(_names->at(nameID)) );
     }
 
     inline short GetTypeOfEdgeForOriginDestinationNodeID(NodeID s, NodeID t) const {
