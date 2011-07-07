@@ -30,7 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../DataStructures/NodeInformationHelpDesk.h"
 #include "../DataStructures/HashTable.h"
-#include "../Util/StrIngUtil.h"
+#include "../Util/StringUtil.h"
 
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.

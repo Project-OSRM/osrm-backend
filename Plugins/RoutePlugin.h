@@ -40,7 +40,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/SearchEngine.h"
 
-#include "../Util/StrIngUtil.h"
+#include "../Util/StringUtil.h"
 
 class RoutePlugin : public BasePlugin {
 public:

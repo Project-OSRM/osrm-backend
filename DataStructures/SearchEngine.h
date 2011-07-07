@@ -26,7 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "BinaryHeap.h"
 #include "PhantomNodes.h"
-#include "../Util/StrIngUtil.h"
+#include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
 struct _HeapData {

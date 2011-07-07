@@ -30,7 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/PolylineCompressor.h"
-#include "../Util/StrIngUtil.h"
+#include "../Util/StringUtil.h"
 
 struct DescriptorConfig {
     DescriptorConfig() : instructions(true), geometry(true), encodeGeometry(false), z(18) {}
