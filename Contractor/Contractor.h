@@ -462,7 +462,6 @@ private:
 
     template< bool Simulate > bool _Contract( _ThreadData* data, NodeID node, _ContractionInformation* stats = NULL ) {
         _Heap& heap = data->heap;
-
         for ( _DynamicGraph::EdgeIterator inEdge = _graph->BeginEdges( node ), endInEdges = _graph->EndEdges( node ); inEdge != endInEdges; ++inEdge ) {
             const _EdgeData& inData = _graph->GetEdgeData( inEdge );
             const NodeID source = _graph->GetTarget( inEdge );
