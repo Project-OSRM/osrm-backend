@@ -25,7 +25,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
 
-typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef StaticGraph<EdgeData>::InputEdge InputEdge;
 
 struct ObjectsForQueryStruct {
