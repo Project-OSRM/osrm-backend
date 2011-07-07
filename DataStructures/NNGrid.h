@@ -39,6 +39,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util.h"
 #include "StaticGraph.h"
 
+static const unsigned MAX_CACHE_ELEMENTS = 1000;
+
 namespace NNGrid{
 static unsigned GetFileIndexForLatLon(const int lt, const int ln) {
     double lat = lt/100000.;
@@ -240,8 +242,42 @@ public:
         ramFile.close();
     }
 
-    bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes * routingStarts) {
+    bool GetStartAndDestNodesOfEdge(const _Coordinate& coord, NodesOfEdge& nodesOfEdge) {
+        _Coordinate startCoord(100000*(lat2y(static_cast<double>(coord.lat)/100000.)), coord.lon);
+        /** search for point on edge next to source */
+        unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
+        std::vector<_Edge> candidates;
+        double timestamp = get_timestamp();
 
+        for(int j = -32768; j < (32768+1); j+=32768) {
+            for(int i = -1; i < 2; i++){
+                GetContentsOfFileBucket(fileIndex+i+j, candidates);
+            }
+        }
+        _Coordinate tmp;
+        double dist = numeric_limits<double>::max();
+        timestamp = get_timestamp();
+        for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+            double r = 0.;
+            double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
+            if(tmpDist < dist) {
+                //              std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
+                nodesOfEdge.startID = it->start;
+                nodesOfEdge.destID = it->target;
+                nodesOfEdge.ratio = r;
+                dist = tmpDist;
+                nodesOfEdge.projectedPoint.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
+                nodesOfEdge.projectedPoint.lon = tmp.lon;
+            }
+        }
+        if(dist != numeric_limits<double>::max()) {
+            return true;
+        }
+        return false;
+    }
+
+    bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes * routingStarts) {
+        routingStarts->Reset();
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(start.lat)/100000.)), start.lon);
         _Coordinate targetCoord(100000*(lat2y(static_cast<double>(target.lat)/100000.)), target.lon);
 
@@ -352,6 +388,7 @@ public:
 
 
 private:
+
     unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset )
     {
         vector<char> * tmpBuffer = new vector<char>();
@@ -505,74 +542,94 @@ private:
     }
 
     void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_Edge>& result) {
-        //		unsigned threadID = threadLookup.Find(boost_thread_id_hash(boost::this_thread::get_id()));
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
         unsigned startIndexInFile = ramIndexTable[ramIndex];
-        //		ifstream indexInFile( indexFileStreams[threadID]->stream );
-        if(startIndexInFile == UINT_MAX){
+        if(startIndexInFile == UINT_MAX) {
             return;
         }
-        std::ifstream localStream(iif, std::ios::in | std::ios::binary);
+
         std::vector<unsigned> cellIndex;
         cellIndex.resize(32*32);
         google::dense_hash_map< unsigned, unsigned > * cellMap = new google::dense_hash_map< unsigned, unsigned >(1024);
         cellMap->set_empty_key(UINT_MAX);
-
-
-        localStream.seekg(startIndexInFile);
 
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
         unsigned columnBase = ramIndex%1024;
         columnBase=columnBase*32;
 
-        for(int i = 0; i < 32; i++)
-        {
-            for(int j = 0; j < 32; j++)
-            {
+        for(int i = 0; i < 32; i++) {
+            for(int j = 0; j < 32; j++) {
                 assert(cellMap->size() >= 0);
                 unsigned fileIndex = lineBase + i*32768 + columnBase+j;
                 unsigned cellIndex = i*32+j;
                 cellMap->insert(std::make_pair(fileIndex, cellIndex));
             }
         }
-
-        unsigned numOfElementsInCell = 0;
-        for(int i = 0; i < 32*32; i++)
         {
-            localStream.read((char *)&cellIndex[i], sizeof(unsigned));
-            numOfElementsInCell += cellIndex[i];
-        }
-        assert(cellMap->find(fileIndex) != cellMap->end());
-        if(cellIndex[cellMap->find(fileIndex)->second] == UINT_MAX)
-        {
-            delete cellMap;
-            return;
+//        if(cellCache.Holds(startIndexInFile)) {
+//            cellIndex = cellCache.Find(startIndexInFile);
+//        } else {
+            std::ifstream localStream(iif, std::ios::in | std::ios::binary);
+            localStream.seekg(startIndexInFile);
+            unsigned numOfElementsInCell = 0;
+            for(int i = 0; i < 32*32; i++) {
+                localStream.read((char *)&cellIndex[i], sizeof(unsigned));
+                numOfElementsInCell += cellIndex[i];
+            }
+            localStream.close();
+            assert(cellMap->find(fileIndex) != cellMap->end());
+            if(cellIndex[cellMap->find(fileIndex)->second] == UINT_MAX) {
+                delete cellMap;
+                return;
+//            }
+//            if(cellCache.Size() > MAX_CACHE_ELEMENTS) {
+//                std::cout << "fixme: cell cache full" << std::endl;
+//            }
+//            std::cout << "Adding cache entry for cell position: " << startIndexInFile << std::endl;
+//#pragma omp critical
+//            {
+//                cellCache.Add(startIndexInFile, cellIndex);
+            }
         }
         unsigned position = cellIndex[cellMap->find(fileIndex)->second] + 32*32*sizeof(unsigned) ;
-        localStream.seekg(position);
-        unsigned numberOfEdgesInFileBucket = 0;
-        NodeID start, target; int slat, slon, tlat, tlon;
-        do{
-            localStream.read((char *)&(start), sizeof(NodeID));
-            if(localStream.eof() || start == UINT_MAX)
-                break;
-            localStream.read((char *)&(target), sizeof(NodeID));
-            localStream.read((char *)&(slat), sizeof(int));
-            localStream.read((char *)&(slon), sizeof(int));
-            localStream.read((char *)&(tlat), sizeof(int));
-            localStream.read((char *)&(tlon), sizeof(int));
+//        if(fileCache.Find(position).size() > 0) {
+//            result = fileCache.Find(position);
+//        } else {
+            std::ifstream localStream(iif, std::ios::in | std::ios::binary);
+            localStream.seekg(position);
+            unsigned numberOfEdgesInFileBucket = 0;
+            NodeID start, target; int slat, slon, tlat, tlon;
+            do {
+                localStream.read((char *)&(start), sizeof(NodeID));
+                if(localStream.eof() || start == UINT_MAX)
+                    break;
+                localStream.read((char *)&(target), sizeof(NodeID));
+                localStream.read((char *)&(slat), sizeof(int));
+                localStream.read((char *)&(slon), sizeof(int));
+                localStream.read((char *)&(tlat), sizeof(int));
+                localStream.read((char *)&(tlon), sizeof(int));
 
-            _Edge e(start, target);
-            e.startCoord.lat = slat;
-            e.startCoord.lon = slon;
-            e.targetCoord.lat = tlat;
-            e.targetCoord.lon = tlon;
+                _Edge e(start, target);
+                e.startCoord.lat = slat;
+                e.startCoord.lon = slon;
+                e.targetCoord.lat = tlat;
+                e.targetCoord.lon = tlon;
 
-            result.push_back(e);
-            numberOfEdgesInFileBucket++;
-        } while(true);
-        localStream.close();
+                result.push_back(e);
+                numberOfEdgesInFileBucket++;
+            } while(true);
+            localStream.close();
+
+//            if(fileCache.Size() > MAX_CACHE_ELEMENTS) {
+//                std::cout << "fixme: file cache full" << std::endl;
+//            }
+//            std::cout << "Adding cache entry for file position: " << position << std::endl;
+//#pragma omp critical
+//            {
+//                fileCache.Add(position, result);
+//            }
+//        }
         delete cellMap;
     }
 
@@ -586,41 +643,41 @@ private:
 
     double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
 
-	    const double x = (double)inputPoint.lat;
-	    const double y = (double)inputPoint.lon;
-	    const double a = (double)source.lat;
-	    const double b = (double)source.lon;
-	    const double c = (double)target.lat;
-	    const double d = (double)target.lon;
-	    double p,q,mX,nY;
-	    if(c != a){
-		    const double m = (d-b)/(c-a); // slope
-		    // Projection of (x,y) on line joining (a,b) and (c,d)
-		    p = ((x + (m*y)) + (m*m*a - m*b))/(1 + m*m);
-		    q = b + m*(p - a);
-	    }
-	    else{
-		    p = c;
-		    q = y;
-	    }
-	    nY = (d*p - c*q)/(a*d - b*c);
-	    mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
-	    *r = mX;
-	    if(*r<=0){
-		    nearest.lat = source.lat;
-		    nearest.lon = source.lon;
-		    return ((b - y)*(b - y) + (a - x)*(a - x));
-	    }
-	    else if(*r >= 1){
-		    nearest.lat = target.lat;
-		    nearest.lon = target.lon;
-		    return ((d - y)*(d - y) + (c - x)*(c - x));
+        const double x = (double)inputPoint.lat;
+        const double y = (double)inputPoint.lon;
+        const double a = (double)source.lat;
+        const double b = (double)source.lon;
+        const double c = (double)target.lat;
+        const double d = (double)target.lon;
+        double p,q,mX,nY;
+        if(c != a){
+            const double m = (d-b)/(c-a); // slope
+            // Projection of (x,y) on line joining (a,b) and (c,d)
+            p = ((x + (m*y)) + (m*m*a - m*b))/(1 + m*m);
+            q = b + m*(p - a);
+        }
+        else{
+            p = c;
+            q = y;
+        }
+        nY = (d*p - c*q)/(a*d - b*c);
+        mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
+        *r = mX;
+        if(*r<=0){
+            nearest.lat = source.lat;
+            nearest.lon = source.lon;
+            return ((b - y)*(b - y) + (a - x)*(a - x));
+        }
+        else if(*r >= 1){
+            nearest.lat = target.lat;
+            nearest.lon = target.lon;
+            return ((d - y)*(d - y) + (c - x)*(c - x));
 
-	    }
-	    // point lies in between
-	    nearest.lat = p;
-	    nearest.lon = q;
-	    return (p-x)*(p-x) + (q-y)*(q-y);
+        }
+        // point lies in between
+        nearest.lat = p;
+        nearest.lon = q;
+        return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
     ofstream indexOutFile;
@@ -628,6 +685,8 @@ private:
     stxxl::vector<GridEntry> * entries;
     std::vector<unsigned> ramIndexTable; //4 MB for first level index in RAM
     const char * iif;
+//    HashTable<unsigned, std::vector<_Edge> > fileCache;
+//    HashTable<unsigned, std::vector<unsigned> > cellCache;
 };
 }
 
