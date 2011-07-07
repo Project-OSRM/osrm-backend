@@ -31,12 +31,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <google/sparse_hash_map>
 #include <google/sparsetable>
 
-template< typename NodeID, typename Key >
+template< typename NodeID, typename Key, bool initialize = false >
 class ArrayStorage {
 public:
 
     ArrayStorage( size_t size )
-    : positions( new Key[size] ) {}
+    : positions( new Key[size] ) { if(initialize) { memset(positions, 0, size*sizeof(Key));} }
 
     ~ArrayStorage() {
         delete[] positions;
@@ -118,6 +118,10 @@ public:
 struct _SimpleHeapData {
     NodeID parent;
     _SimpleHeapData( NodeID p ) : parent(p) { }
+};
+
+struct _NullHeapData {
+    _NullHeapData(NodeID p) {}
 };
 
 template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = ArrayStorage<NodeID, NodeID> >
@@ -244,8 +248,7 @@ private:
         Key nextKey = key << 1;
         while ( nextKey < ( Key ) heap.size() ) {
             const Key nextKeyOther = nextKey + 1;
-            if ( ( nextKeyOther < ( Key ) heap.size() ) )
-                if ( heap[nextKey].weight > heap[nextKeyOther].weight )
+            if ( ( nextKeyOther < ( Key ) heap.size() )&& ( heap[nextKey].weight > heap[nextKeyOther].weight) )
                     nextKey = nextKeyOther;
 
             if ( weight <= heap[nextKey].weight )
