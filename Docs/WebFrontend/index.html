@@ -32,7 +32,7 @@
 		<table width="100%"> 
               <tr id="StartPoint">
                 <td><div class="textLabel"><img src="img/arrow-start.png" class="radioIcons" width="12" height="16" alt=""><span class="text"></span></div></td>
-                <td><input name="tfStartSearch" style="width:220px" type="text" id="tfStartSearch" class="tfPoints" value="Wallbach" title="Search your start point!" onKeyPress="checkReturn('start',event);" >
+                <td><input name="tfStartSearch" style="width:220px" type="text" id="tfStartSearch" class="tfPoints" value="Berlin, Unter den Eichen" title="Search your start point!" onKeyPress="checkReturn('start',event);" >
                 	<button name="enterStart" onclick="setStatus('start'); geocodeAddress('start');">Search</button></td>
                 <td rowspan="2" valign="middle">
                 	<!-- <button name="switchStartEnd" disabled="true" id="switchStartEnd" type="button"
@@ -43,7 +43,7 @@
 					<div class="textLabel"><img src="img/arrow-finish.png" class="radioIcons" width="12" height="16" alt=""><span class="text"></span></div>                
 				</td>
                 <td id="tdEnd">
-                	<input name="tfEndSearch" style="width:220px" type="text" id="tfEndSearch" class="tfPoints" value="Beuerbach" title="Search your end point!" onKeyPress="checkReturn('end',event);">
+                	<input name="tfEndSearch" style="width:220px" type="text" id="tfEndSearch" class="tfPoints" value="München, Altstadt" title="Search your end point!" onKeyPress="checkReturn('end',event);">
                 	<button name="enterEnd" onclick="setStatus('end'); geocodeAddress('end');">Search</button>
                 </td>
               </tr>

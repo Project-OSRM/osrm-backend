@@ -121,10 +121,12 @@ function showResultsRoute(response) {
 		var from = new OpenLayers.LonLat(startFeat.geometry.x,startFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
 		var to = new OpenLayers.LonLat(endFeat.geometry.x,endFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
 		var routelink = '<div id="routelink"><input name="routelink" type="submit" title="Get Link" onClick="createShortLink(\''+HOST_WEBSITE+'?fr='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&to='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'\');" value="Get Link"></div>';
-		    	
+		//Link for the GPX Download
+		var gpxLink = '(<a href="'+HOST_ROUTING_URL+'&'+from.lat.toFixed(6)+'&'+from.lon.toFixed(6)+'&'+to.lat.toFixed(6)+'&'+to.lon.toFixed(6)+'&z='+this.map.getZoom()+'&output=gpx">Get GPX File</a>)';
+		
         //Show Route Summary
         var output = '<p class="routeSummaryHL">Some information about your Way <br> from \'<span class="routeSummaryHLlight">'+response.route_summary.start_point+'</span>\' to \'<span class="routeSummaryHLlight">'+response.route_summary.end_point+'</span>\'</p>';
-        output += '<p class="routeSummary">Distance: <span class="routeSummarybold">'+response.route_summary.total_distance/1000+' km</span> - Duration: <span class="routeSummarybold">'+secondsToTime(response.route_summary.total_time)+'</span></p><p>'+routelink+'</p><pclass="routeInstructionsHL"> The Route-Instructions:</p>';
+        output += '<p class="routeSummary">Distance: <span class="routeSummarybold">'+response.route_summary.total_distance/1000+' km</span> - Duration: <span class="routeSummarybold">'+secondsToTime(response.route_summary.total_time)+'</span></p><p>'+routelink+'</p><p><span class="routeInstructionsHL">The Route-Instructions:</span> '+gpxLink+'</p>';
         //Show Route Instructions
         output += '<table>';
         var lengthOfArray = response.route_instructions.length;
