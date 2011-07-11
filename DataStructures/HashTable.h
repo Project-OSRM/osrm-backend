@@ -31,6 +31,7 @@ class HashTable {
     typedef google::sparse_hash_map<keyT, valueT> MyHashTable;
 public:
     typedef typename google::sparse_hash_map<keyT, valueT>::const_iterator MyIterator;
+    typedef MyIterator iterator;
     HashTable() { }
     HashTable(const unsigned size) {
         table.resize(size);
