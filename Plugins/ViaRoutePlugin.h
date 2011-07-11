@@ -123,7 +123,7 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(startCoord);
 
-        std::cout << "[debug] number of vianodes: " << routeParameters.viaPoints.size() << std::endl;
+//        std::cout << "[debug] number of vianodes: " << routeParameters.viaPoints.size() << std::endl;
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); i++) {
             textCoord = split (routeParameters.viaPoints[i], ',');
             if(textCoord.size() != 2) {
@@ -177,7 +177,7 @@ public:
         }
 
         double time2 = get_timestamp();
-        std::cout << "Finished routing after " << (time2-time) << "s" << std::endl;
+//        std::cout << "Finished routing after " << (time2-time) << "s" << std::endl;
         time = get_timestamp();
         reply.status = http::Reply::ok;
 
@@ -277,8 +277,7 @@ public:
         }
 
         time2 = get_timestamp();
-        std::cout << "Finished everything after " << (time2-time) << "s" << std::endl;
-
+//        std::cout << "Finished everything after " << (time2-time) << "s" << std::endl;
 
         delete desc;
         return;
