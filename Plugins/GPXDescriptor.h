@@ -33,13 +33,16 @@ public:
     void SetConfig(const _DescriptorConfig& c) { config = c; }
     void Run(http::Reply& reply, RawRouteData * route, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        reply.content += "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd\">";
+        reply.content += "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" "
+                              "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                              "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
+                              "\">";
         reply.content += "<rte>";
         if(distance != UINT_MAX && route->routeSegments.size()) {
 
-            convertInternalLatLonToString(phantomNodes->startCoord.lat, tmp);
+            convertInternalLatLonToString(phantomNodes->startPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
-            convertInternalLatLonToString(phantomNodes->startCoord.lon, tmp);
+            convertInternalLatLonToString(phantomNodes->startPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
             for(unsigned segmentIdx = 0; segmentIdx < route->routeSegments.size(); segmentIdx++) {
@@ -57,9 +60,9 @@ public:
                     reply.content +="</rtept>";
                 }
             }
-            convertInternalLatLonToString(phantomNodes->targetCoord.lat, tmp);
+            convertInternalLatLonToString(phantomNodes->targetPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
-            convertInternalLatLonToString(phantomNodes->targetCoord.lon, tmp);
+            convertInternalLatLonToString(phantomNodes->targetPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
         }
         reply.content += "</rte></gpx>";

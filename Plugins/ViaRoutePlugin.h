@@ -32,6 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BaseDescriptor.h"
 #include "BasePlugin.h"
 #include "RouteParameters.h"
+#include "GPXDescriptor.h"
 #include "KMLDescriptor.h"
 #include "JSONDescriptor.h"
 
@@ -80,6 +81,7 @@ public:
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("kml", 0);
         descriptorTable.Set("json", 1);
+        descriptorTable.Set("gpx", 2);
     }
 
     ~ViaRoutePlugin() {
@@ -113,13 +115,13 @@ public:
 
         _Coordinate startCoord(lat1, lon1);
         _Coordinate targetCoord(lat2, lon2);
-        std::vector<_Coordinate> viaPointVector;
+        RawRouteData rawRoute;
 
         if(false == checkCoord(startCoord) || false == checkCoord(targetCoord)) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
-        viaPointVector.push_back(startCoord);
+        rawRoute.rawViaNodeCoordinates.push_back(startCoord);
 
         std::cout << "[debug] number of vianodes: " << routeParameters.viaPoints.size() << std::endl;
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); i++) {
@@ -130,53 +132,53 @@ public:
             }
             int vialat = static_cast<int>(100000.*atof(textCoord[0].c_str()));
             int vialon = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-            std::cout << "[debug] via" << i << ": " << vialat << "," << vialon << std::endl;
+//            std::cout << "[debug] via" << i << ": " << vialat << "," << vialon << std::endl;
             _Coordinate viaCoord(vialat, vialon);
             if(false == checkCoord(viaCoord)) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
                 return;
             }
-            viaPointVector.push_back(viaCoord);
+            rawRoute.rawViaNodeCoordinates.push_back(viaCoord);
         }
-        viaPointVector.push_back(targetCoord);
+        rawRoute.rawViaNodeCoordinates.push_back(targetCoord);
+        vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
+#pragma omp parallel for
+        for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); i++) {
+            threadData[omp_get_thread_num()]->sEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
+        }
 
-
-        RawRouteData * rawRoute = new RawRouteData(viaPointVector.size()-1);
+        rawRoute.Resize();
 
         unsigned distance = 0;
         bool errorOccurredFlag = false;
         double time = get_timestamp();
 
-//#pragma omp parallel for reduction(+:distance)
-        for(unsigned i = 0; i < viaPointVector.size()-1; i++) {
+
+        //#pragma omp parallel for reduction(+:distance)
+        for(unsigned i = 0; i < phantomNodeVector.size()-1 && !errorOccurredFlag; i++) {
             PhantomNodes & segmentPhantomNodes = threadData[omp_get_thread_num()]->phantomNodesOfSegment;
+            segmentPhantomNodes.startPhantom = phantomNodeVector[i];
+            segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             std::vector< _PathData > path;
-            threadData[omp_get_thread_num()]->sEngine->FindRoutingStarts(viaPointVector[i], viaPointVector[i+1], &segmentPhantomNodes);
             threadData[omp_get_thread_num()]->distanceOfSegment = threadData[omp_get_thread_num()]->sEngine->ComputeRoute(&segmentPhantomNodes, &path);
 
             if(UINT_MAX == threadData[omp_get_thread_num()]->distanceOfSegment) {
                 errorOccurredFlag = true;
+                cout << "Error occurred, path not found" << endl;
+                distance = UINT_MAX;
+                break;
             } else {
                 distance += threadData[omp_get_thread_num()]->distanceOfSegment;
             }
 
-            std::cout << "Computing route segment " << i << std::endl;
-
             //put segments at correct position of routes raw data
-            rawRoute->segmentEndCoordinates[i] = (segmentPhantomNodes);
-            rawRoute->routeSegments[i] = path;
+            rawRoute.segmentEndCoordinates[i] = (segmentPhantomNodes);
+            rawRoute.routeSegments[i] = path;
         }
 
         double time2 = get_timestamp();
         std::cout << "Finished routing after " << (time2-time) << "s" << std::endl;
         time = get_timestamp();
-
-        if(errorOccurredFlag) {
-            distance = UINT_MAX;
-        } else {
-
-
-        }
         reply.status = http::Reply::ok;
 
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
@@ -214,6 +216,10 @@ public:
             desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
+        case 2:
+            desc = new GPXDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+
+            break;
         default:
             desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
@@ -222,7 +228,7 @@ public:
         PhantomNodes phantomNodes;
         threadData[0]->sEngine->FindRoutingStarts(startCoord, targetCoord, &phantomNodes);
         desc->SetConfig(descriptorConfig);
-        desc->Run(reply, rawRoute, &phantomNodes, threadData[0]->sEngine, distance);
+        desc->Run(reply, &rawRoute, &phantomNodes, threadData[0]->sEngine, distance);
         if("" != JSONParameter) {
             reply.content += ")\n";
         }
@@ -254,6 +260,13 @@ public:
             }
 
             break;
+        case 2:
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "application/gpx+xml; charset=UTF-8";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"route.gpx\"";
+
+            break;
         default:
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "application/vnd.google-earth.kml+xml; charset=UTF-8";
@@ -268,7 +281,6 @@ public:
 
 
         delete desc;
-        delete rawRoute;
         return;
     }
 private:

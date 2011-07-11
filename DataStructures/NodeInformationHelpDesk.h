@@ -61,6 +61,9 @@ public:
 	inline void FindNearestNodeCoordForLatLon(const _Coordinate& coord, _Coordinate& result) {
 		readOnlyGrid->FindNearestNodeInGraph(coord, result);
 	}
+	bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
+	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode);
+	}
 
 	inline bool FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes * phantomNodes) {
 		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes);

@@ -276,11 +276,9 @@ public:
         return false;
     }
 
-    bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes * routingStarts) {
-        routingStarts->Reset();
-        _Coordinate startCoord(100000*(lat2y(static_cast<double>(start.lat)/100000.)), start.lon);
-        _Coordinate targetCoord(100000*(lat2y(static_cast<double>(target.lat)/100000.)), target.lon);
-
+    bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
+        bool foundNode = false;
+        _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_Edge> candidates;
@@ -292,7 +290,6 @@ public:
             }
         }
 
-        //		std::cout << "[debug] " << candidates.size() << " start candidates" << std::endl;
         _Coordinate tmp;
         double dist = numeric_limits<double>::max();
         timestamp = get_timestamp();
@@ -300,44 +297,23 @@ public:
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
             if(tmpDist < dist) {
-                //			    std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
-                routingStarts->startNode1 = it->start;
-                routingStarts->startNode2 = it->target;
-                routingStarts->startRatio = r;
+                //              std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
+                resultNode.startNode = it->start;
+                resultNode.targetNode = it->target;
+                resultNode.ratio = r;
                 dist = tmpDist;
-                routingStarts->startCoord.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
-                routingStarts->startCoord.lon = tmp.lon;
+                resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
+                resultNode.location.lon = tmp.lon;
+                foundNode = true;
             }
         }
-        candidates.clear();
+        return foundNode;
+    }
 
-        /** search for point on edge close to target */
-        fileIndex = GetFileIndexForLatLon(targetCoord.lat, targetCoord.lon);
-        timestamp = get_timestamp();
-        for(int j = -32768; j < (32768+1); j+=32768) {
-            for(int i = -1; i < 2; i++){
-                GetContentsOfFileBucket(fileIndex+i+j, candidates);
-            }
-        }
-        //        std::cout << "[debug] " << candidates.size() << " target candidates" << std::endl;
-        dist = numeric_limits<double>::max();
-        timestamp = get_timestamp();
-        for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++)
-        {
-            double r = 0.;
-            double tmpDist = ComputeDistance(targetCoord, it->startCoord, it->targetCoord, tmp, &r);
-            if(tmpDist < dist)
-            {
-                //			    std::cout << "[debug] target distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
-                routingStarts->targetNode1 = it->start;
-                routingStarts->targetNode2 = it->target;
-                routingStarts->targetRatio = r;
-                dist = tmpDist;
-                routingStarts->targetCoord.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
-                routingStarts->targetCoord.lon = tmp.lon;
-            }
-        }
-        return true;
+    bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes * routingStarts) {
+        routingStarts->Reset();
+        return (FindPhantomNodeForCoordinate( start, routingStarts->startPhantom) &&
+                FindPhantomNodeForCoordinate( target, routingStarts->targetPhantom) );
     }
 
     void FindNearestNodeInGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {

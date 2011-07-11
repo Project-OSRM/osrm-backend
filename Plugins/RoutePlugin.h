@@ -95,7 +95,7 @@ public:
         _Coordinate targetCoord(lat2, lon2);
 
         vector< _PathData > * path = new vector< _PathData >();
-        RawRouteData * rawRoute = new RawRouteData(0);
+        RawRouteData * rawRoute = new RawRouteData();
         PhantomNodes * phantomNodes = new PhantomNodes();
         sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
         unsigned int distance = sEngine->ComputeRoute(phantomNodes, path);

@@ -77,7 +77,9 @@ struct _Coordinate {
         lat = INT_MIN;
         lon = INT_MIN;
     }
-
+    bool isSet() const {
+        return (INT_MIN != lat) && (INT_MIN != lon);
+    }
 };
 
 ostream & operator<<(ostream & out, const _Coordinate & c){

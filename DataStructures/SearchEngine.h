@@ -108,7 +108,6 @@ public:
     }
 
     unsigned int ComputeRoute(PhantomNodes * phantomNodes, vector<_PathData > * path) {
-
         bool onSameEdge = false;
         bool onSameEdgeReversed = false;
         bool startReverse = false;
@@ -121,16 +120,16 @@ public:
         NodeID middle = ( NodeID ) 0;
         unsigned int _upperbound = std::numeric_limits<unsigned int>::max();
 
-        if(phantomNodes->startNode1 == UINT_MAX || phantomNodes->targetNode1 == UINT_MAX || phantomNodes->startNode2 == UINT_MAX || phantomNodes->targetNode2 == UINT_MAX)
+        if(phantomNodes->startPhantom.startNode == UINT_MAX || phantomNodes->startPhantom.targetNode == UINT_MAX || phantomNodes->targetPhantom.startNode == UINT_MAX || phantomNodes->targetPhantom.targetNode == UINT_MAX)
             return _upperbound;
 
-        if( (phantomNodes->startNode1 == phantomNodes->targetNode1 && phantomNodes->startNode2 == phantomNodes->targetNode2 ) ||
-                (phantomNodes->startNode1 == phantomNodes->targetNode2 && phantomNodes->startNode2 == phantomNodes->targetNode1 ) )
+        if( (phantomNodes->startPhantom.startNode == phantomNodes->startPhantom.targetNode && phantomNodes->targetPhantom.startNode == phantomNodes->targetPhantom.targetNode ) ||
+                (phantomNodes->startPhantom.startNode == phantomNodes->targetPhantom.targetNode && phantomNodes->targetPhantom.startNode == phantomNodes->startPhantom.targetNode) )
         {
             bool reverse = false;
-            EdgeID currentEdge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2 );
+            EdgeID currentEdge = _graph->FindEdge( phantomNodes->startPhantom.startNode, phantomNodes->startPhantom.targetNode );
             if(currentEdge == UINT_MAX){
-                currentEdge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
+                currentEdge = _graph->FindEdge( phantomNodes->startPhantom.targetNode, phantomNodes->startPhantom.startNode );
                 reverse = true;
             }
 
@@ -138,34 +137,34 @@ public:
                 return _upperbound;
             }
 
-            if(phantomNodes->startRatio < phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).forward) {
+            if(phantomNodes->startPhantom.ratio < phantomNodes->targetPhantom.ratio && _graph->GetEdgeData(currentEdge).forward) {
                 onSameEdge = true;
-                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
-            } else if(phantomNodes->startRatio > phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).backward && !reverse)
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startPhantom.location.lat, phantomNodes->startPhantom.location.lon, phantomNodes->targetPhantom.location.lat, phantomNodes->targetPhantom.location.lon);
+            } else if(phantomNodes->startPhantom.ratio > phantomNodes->targetPhantom.ratio && _graph->GetEdgeData(currentEdge).backward && !reverse)
             {
                 onSameEdge = true;
-                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
-            } else if(phantomNodes->startRatio < phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).backward) {
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startPhantom.location.lat, phantomNodes->startPhantom.location.lon, phantomNodes->targetPhantom.location.lat, phantomNodes->targetPhantom.location.lon);
+            } else if(phantomNodes->startPhantom.ratio < phantomNodes->targetPhantom.ratio && _graph->GetEdgeData(currentEdge).backward) {
                 onSameEdge = true;
-                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
-            } else if(phantomNodes->startRatio > phantomNodes->targetRatio && _graph->GetEdgeData(currentEdge).forward && _graph->GetEdgeData(currentEdge).backward) {
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startPhantom.location.lat, phantomNodes->startPhantom.location.lon, phantomNodes->targetPhantom.location.lat, phantomNodes->targetPhantom.location.lon);
+            } else if(phantomNodes->startPhantom.ratio > phantomNodes->targetPhantom.ratio && _graph->GetEdgeData(currentEdge).forward && _graph->GetEdgeData(currentEdge).backward) {
                 onSameEdge = true;
-                _upperbound = 10 * ApproximateDistance(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon, phantomNodes->targetCoord.lat, phantomNodes->targetCoord.lon);
-            } else if(phantomNodes->startRatio > phantomNodes->targetRatio) {
+                _upperbound = 10 * ApproximateDistance(phantomNodes->startPhantom.location.lat, phantomNodes->startPhantom.location.lon, phantomNodes->targetPhantom.location.lat, phantomNodes->targetPhantom.location.lon);
+            } else if(phantomNodes->startPhantom.ratio > phantomNodes->targetPhantom.ratio) {
                 onSameEdgeReversed = true;
 
                 EdgeWeight w = _graph->GetEdgeData( currentEdge ).distance;
-                _forwardHeap.Insert(phantomNodes->startNode2, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode2);
-                _insertedNodes.ForwInsert(phantomNodes->startNode2);
-                _backwardHeap.Insert(phantomNodes->startNode1, absDouble(  w-w*phantomNodes->targetRatio), phantomNodes->startNode1);
-                _insertedNodes.BackInsert(phantomNodes->startNode1);
+                _forwardHeap.Insert(phantomNodes->targetPhantom.startNode, absDouble(  w*phantomNodes->startPhantom.ratio), phantomNodes->targetPhantom.startNode);
+                _insertedNodes.ForwInsert(phantomNodes->targetPhantom.startNode);
+                _backwardHeap.Insert(phantomNodes->startPhantom.startNode, absDouble(  w-w*phantomNodes->targetPhantom.ratio), phantomNodes->startPhantom.startNode);
+                _insertedNodes.BackInsert(phantomNodes->startPhantom.startNode);
             }
         }
 
-        if(phantomNodes->startNode1 != UINT_MAX) {
-            EdgeID edge = _graph->FindEdge( phantomNodes->startNode1, phantomNodes->startNode2);
+        if(phantomNodes->startPhantom.startNode != UINT_MAX) {
+            EdgeID edge = _graph->FindEdge( phantomNodes->startPhantom.startNode, phantomNodes->startPhantom.targetNode);
             if(edge == UINT_MAX){
-                edge = _graph->FindEdge( phantomNodes->startNode2, phantomNodes->startNode1 );
+                edge = _graph->FindEdge( phantomNodes->startPhantom.targetNode, phantomNodes->startPhantom.startNode );
                 if(edge == UINT_MAX){
                     return _upperbound;
                 }
@@ -175,18 +174,18 @@ public:
             EdgeWeight w = ed.distance;
 
             if( (ed.backward && !startReverse) || (ed.forward && startReverse) ){
-                _forwardHeap.Insert(phantomNodes->startNode1, absDouble(  w*phantomNodes->startRatio), phantomNodes->startNode1);
-                _insertedNodes.ForwInsert(phantomNodes->startNode1);
+                _forwardHeap.Insert(phantomNodes->startPhantom.startNode, absDouble(  w*phantomNodes->startPhantom.ratio), phantomNodes->startPhantom.startNode);
+                _insertedNodes.ForwInsert(phantomNodes->startPhantom.startNode);
             }
             if( (ed.backward && startReverse) || (ed.forward && !startReverse) ) {
-                _forwardHeap.Insert(phantomNodes->startNode2, absDouble(w-w*phantomNodes->startRatio), phantomNodes->startNode2);
-                _insertedNodes.ForwInsert(phantomNodes->startNode2);
+                _forwardHeap.Insert(phantomNodes->startPhantom.targetNode, absDouble(w-w*phantomNodes->startPhantom.ratio), phantomNodes->startPhantom.targetNode);
+                _insertedNodes.ForwInsert(phantomNodes->startPhantom.targetNode);
             }
         }
-        if(phantomNodes->targetNode1 != UINT_MAX && !onSameEdgeReversed) {
-            EdgeID edge = _graph->FindEdge( phantomNodes->targetNode1, phantomNodes->targetNode2);
+        if(phantomNodes->startPhantom.targetNode!= UINT_MAX && !onSameEdgeReversed) {
+            EdgeID edge = _graph->FindEdge( phantomNodes->targetPhantom.startNode, phantomNodes->targetPhantom.targetNode);
             if(edge == UINT_MAX){
-                edge = _graph->FindEdge( phantomNodes->targetNode2, phantomNodes->targetNode1 );
+                edge = _graph->FindEdge( phantomNodes->targetPhantom.targetNode, phantomNodes->targetPhantom.startNode);
                 targetReverse = true;
             }
             if(edge == UINT_MAX){
@@ -197,12 +196,12 @@ public:
             EdgeWeight w = ed.distance;
 
             if( (ed.backward && !targetReverse) || (ed.forward && targetReverse) ) {
-                _backwardHeap.Insert(phantomNodes->targetNode2, absDouble(  w*phantomNodes->targetRatio), phantomNodes->targetNode2);
-                _insertedNodes.BackInsert(phantomNodes->targetNode2);
+                _backwardHeap.Insert(phantomNodes->targetPhantom.targetNode, absDouble(  w*phantomNodes->targetPhantom.ratio), phantomNodes->targetPhantom.targetNode);
+                _insertedNodes.BackInsert(phantomNodes->targetPhantom.targetNode);
             }
             if( (ed.backward && targetReverse) || (ed.forward && !targetReverse) ) {
-                _backwardHeap.Insert(phantomNodes->targetNode1, absDouble(w-w*phantomNodes->targetRatio), phantomNodes->targetNode1);
-                _insertedNodes.BackInsert(phantomNodes->targetNode1);
+                _backwardHeap.Insert(phantomNodes->targetPhantom.startNode, absDouble(w-w*phantomNodes->targetPhantom.ratio), phantomNodes->targetPhantom.startNode);
+                _insertedNodes.BackInsert(phantomNodes->targetPhantom.startNode);
             }
         }
         //        double time = get_timestamp();
@@ -308,11 +307,20 @@ public:
         return true;
     }
 
+    inline bool FindPhantomNodeForCoordinate(const _Coordinate &location, PhantomNode & result)  {
+        return nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
+    }
+
     inline NodeID GetNameIDForOriginDestinationNodeID(NodeID s, NodeID t) const {
-        assert(s!=t);
+        if(s==t)
+            return 0;
         EdgeID e = _graph->FindEdge( s, t );
         if(e == UINT_MAX)
             e = _graph->FindEdge( t, s );
+        if(UINT_MAX == e) {
+            INFO("edge not found for start " << s << ", target " << t)
+            return 0;
+        }
         assert(e != UINT_MAX);
         const EdgeData ed = _graph->GetEdgeData(e);
         return ed.middleName.nameID;

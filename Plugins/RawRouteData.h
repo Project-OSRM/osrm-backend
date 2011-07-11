@@ -22,12 +22,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define RAWROUTEDATA_H_
 
 struct RawRouteData {
-    RawRouteData(unsigned size) {
+    void Resize() {
+        unsigned size = rawViaNodeCoordinates.size()-1;
         routeSegments.resize(size);
         segmentEndCoordinates.resize(size);
     }
     std::vector< std::vector< _PathData > > routeSegments;
     std::vector< PhantomNodes > segmentEndCoordinates;
+    std::vector< _Coordinate > rawViaNodeCoordinates;
 };
 
 #endif /* RAWROUTEDATA_H_ */

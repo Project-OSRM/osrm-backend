@@ -51,6 +51,7 @@ public:
 	void handle_request(const Request& req, Reply& rep){
 		//parse command
 	    std::string request(req.uri);
+	    std::cout << "[r] " << request << std::endl;
 		std::string command;
 		std::size_t firstAmpPosition = request.find_first_of("&");
 		command = request.substr(1,firstAmpPosition-1);

@@ -47,26 +47,26 @@ public:
                     "\"status_message\": \"Found route between points\",";
 
             //Put first segment of route into geometry
-            polyline.push_back(phantomNodes->startCoord);
+            polyline.push_back(phantomNodes->startPhantom.location);
             descriptorState.geometryCounter++;
-            descriptorState.startOfSegmentCoordinate = phantomNodes->startCoord;
+            descriptorState.startOfSegmentCoordinate = phantomNodes->startPhantom.location;
             //Generate initial instruction for start of route (order of NodeIDs does not matter, its the same name anyway)
-            summary.startName = sEngine->GetEscapedNameForOriginDestinationNodeID(phantomNodes->startNode1, phantomNodes->startNode2);
-            descriptorState.lastNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startNode2, phantomNodes->startNode1);
+            summary.startName = sEngine->GetEscapedNameForOriginDestinationNodeID(phantomNodes->startPhantom.startNode, phantomNodes->startPhantom.targetNode);
+            descriptorState.lastNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startPhantom.startNode, phantomNodes->startPhantom.targetNode);
 
             //If we have a route, i.e. start and dest not on same edge, than get it
             if(rawRoute->routeSegments[0].size() > 0)
                 sEngine->getCoordinatesForNodeID(rawRoute->routeSegments[0].begin()->node, descriptorState.tmpCoord);
             else
-                descriptorState.tmpCoord = phantomNodes->targetCoord;
+                descriptorState.tmpCoord = phantomNodes->targetPhantom.location;
 
-            descriptorState.previousCoordinate = phantomNodes->startCoord;
+            descriptorState.previousCoordinate = phantomNodes->startPhantom.location;
             descriptorState.currentCoordinate = descriptorState.tmpCoord;
             descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.previousCoordinate, descriptorState.currentCoordinate);
 
             if(config.instructions) {
                 //Get Heading
-                double angle = GetAngleBetweenTwoEdges(_Coordinate(phantomNodes->startCoord.lat, phantomNodes->startCoord.lon), descriptorState.tmpCoord, _Coordinate(descriptorState.tmpCoord.lat, descriptorState.tmpCoord.lon-1000));
+                double angle = GetAngleBetweenTwoEdges(_Coordinate(phantomNodes->startPhantom.location.lat, phantomNodes->startPhantom.location.lon), descriptorState.tmpCoord, _Coordinate(descriptorState.tmpCoord.lat, descriptorState.tmpCoord.lon-1000));
                 getDirectionOfInstruction(angle, directionOfInstruction);
                 appendInstructionNameToString(summary.startName, directionOfInstruction.direction, descriptorState.routeInstructionString, true);
             }
@@ -75,7 +75,7 @@ public:
                 const std::vector< _PathData > & path = rawRoute->routeSegments[segmentIdx];
 
                 if ( UINT_MAX == lastNodeID) {
-                    lastNodeID = (phantomNodes->startNode1 == (*path.begin()).node ? phantomNodes->startNode2 : phantomNodes->startNode1);
+                    lastNodeID = (phantomNodes->startPhantom.startNode == (*path.begin()).node ? phantomNodes->startPhantom.targetNode : phantomNodes->startPhantom.startNode);
                 }
                 //Check, if there is overlap between current and previous route segment
                 //if not, than we are fine and can route over this edge without paying any special attention.
@@ -83,16 +83,16 @@ public:
                     //                    appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
                     polyline.push_back(descriptorState.currentCoordinate);
                     descriptorState.geometryCounter++;
-                    lastNodeID = (lastNodeID == rawRoute->segmentEndCoordinates[segmentIdx].startNode1 ? rawRoute->segmentEndCoordinates[segmentIdx].startNode2 : rawRoute->segmentEndCoordinates[segmentIdx].startNode1);
+                    lastNodeID = (lastNodeID == rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode ? rawRoute->segmentEndCoordinates[segmentIdx].targetPhantom.startNode : rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode);
 
                     //output of the via nodes coordinates
-                    polyline.push_back(rawRoute->segmentEndCoordinates[segmentIdx].startCoord);
+                    polyline.push_back(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location);
                     descriptorState.geometryCounter++;
-                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startNode1, rawRoute->segmentEndCoordinates[segmentIdx].startNode2);
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode, rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.targetNode);
                     //Make a special announement to do a U-Turn.
                     appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
                     descriptorState.routeInstructionString += ",";
-                    descriptorState.distanceOfInstruction = ApproximateDistance(descriptorState.currentCoordinate, rawRoute->segmentEndCoordinates[segmentIdx].startCoord);
+                    descriptorState.distanceOfInstruction = ApproximateDistance(descriptorState.currentCoordinate, rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location);
                     getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
                     appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
                     appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
@@ -105,12 +105,12 @@ public:
                 } else if(segmentIdx > 0) { //We are going straight through an edge which is carrying the via point.
                     assert(segmentIdx != 0);
                     //routeInstructionString += "reaching via node: ";
-                    descriptorState.nextCoordinate = rawRoute->segmentEndCoordinates[segmentIdx].startCoord;
-                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startNode1, rawRoute->segmentEndCoordinates[segmentIdx].startNode2);
+                    descriptorState.nextCoordinate = rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location;
+                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode, rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.targetNode);
 
                     polyline.push_back(descriptorState.currentCoordinate);
                     descriptorState.geometryCounter++;
-                    polyline.push_back(rawRoute->segmentEndCoordinates[segmentIdx].startCoord);
+                    polyline.push_back(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location);
                     descriptorState.geometryCounter++;
                     if(config.instructions) {
                         double turnAngle = descriptorState.GetAngleBetweenCoordinates();
@@ -155,18 +155,19 @@ public:
                     }
                     descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
                     lastNodeID = it->node;
-                    if(it != path.begin()) {
+                    if(it != path.begin()-1) {
                         descriptorState.previousCoordinate = descriptorState.currentCoordinate;
                         descriptorState.currentCoordinate = descriptorState.nextCoordinate;
                     }
                 }
             }
-            descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetNode1, phantomNodes->targetNode2);
-            descriptorState.nextCoordinate = phantomNodes->targetCoord;
+            descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetPhantom.startNode, phantomNodes->targetPhantom.targetNode);
+            descriptorState.nextCoordinate = phantomNodes->targetPhantom.location;
+
+            polyline.push_back(descriptorState.currentCoordinate);
+            descriptorState.geometryCounter++;
 
             if((false == descriptorState.CurrentAndPreviousNameIDsEqual()) && config.instructions) {
-                polyline.push_back(descriptorState.currentCoordinate);
-                descriptorState.geometryCounter++;
                 appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
                 descriptorState.routeInstructionString += ",";
                 getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
@@ -176,7 +177,7 @@ public:
             }
             summary.destName = sEngine->GetEscapedNameForNameID(descriptorState.currentNameID);
             descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
-            polyline.push_back(phantomNodes->targetCoord);
+            polyline.push_back(phantomNodes->targetPhantom.location);
             descriptorState.geometryCounter++;
             appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
             summary.BuildDurationAndLengthStrings(descriptorState.entireDistance, distance);
@@ -224,7 +225,12 @@ public:
             if(segmentIdx > 1)
                 reply.content += ",";
             reply.content += "[";
-            convertInternalReversedCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startCoord, tmp);
+            if(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location.isSet())
+                convertInternalReversedCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location, tmp);
+            else
+                convertInternalReversedCoordinateToString(rawRoute->rawViaNodeCoordinates[segmentIdx], tmp);
+//            INFO(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location);
+//            INFO(rawRoute->rawViaNodeCoordinates[segmentIdx]);
             reply.content += tmp;
             reply.content += "]";
         }

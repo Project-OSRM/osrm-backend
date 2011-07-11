@@ -23,35 +23,38 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "ExtractorStructs.h"
 
-struct PhantomNodes {
-    PhantomNodes() : startNode1(UINT_MAX), startNode2(UINT_MAX), targetNode1(UINT_MAX), targetNode2(UINT_MAX), startRatio(1.), targetRatio(1.) {}
-    NodeID startNode1;
-    NodeID startNode2;
-    NodeID targetNode1;
-    NodeID targetNode2;
-    double startRatio;
-    double targetRatio;
-    _Coordinate startCoord;
-    _Coordinate targetCoord;
+struct PhantomNode {
+    PhantomNode() : startNode(UINT_MAX), targetNode(UINT_MAX), ratio(1.) {}
+
+    NodeID startNode;
+    NodeID targetNode;
+    double ratio;
+    _Coordinate location;
     void Reset() {
-        startNode1 = UINT_MAX;
-        startNode2 = UINT_MAX;
-        targetNode1 = UINT_MAX;
-        targetNode2 = UINT_MAX;
-        startRatio = 1.;
-        targetRatio = 1.;
-        startCoord.Reset();
-        targetCoord.Reset();
+        startNode = UINT_MAX;
+        targetNode = UINT_MAX;
+        ratio = 1.;
+        location.Reset();
+    }
+
+};
+
+struct PhantomNodes {
+    PhantomNode startPhantom;
+    PhantomNode targetPhantom;
+    void Reset() {
+        startPhantom.Reset();
+        targetPhantom.Reset();
     }
 };
 
 std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
-    out << "startNode1: " << pn.startNode1 << std::endl;
-    out << "startNode2: " << pn.startNode2 << std::endl;
-    out << "targetNode1: " << pn.targetNode1 << std::endl;
-    out << "targetNode2: " << pn.targetNode2 << std::endl;
-    out << "startCoord: " << pn.startCoord << std::endl;
-    out << "targetCoord: " << pn.targetCoord << std::endl;
+    out << "startNode1: " << pn.startPhantom.startNode << std::endl;
+    out << "startNode2: " << pn.startPhantom.targetNode << std::endl;
+    out << "targetNode1: " << pn.targetPhantom.startNode << std::endl;
+    out << "targetNode2: " << pn.targetPhantom.targetNode << std::endl;
+    out << "startCoord: " << pn.startPhantom.location << std::endl;
+    out << "targetCoord: " << pn.targetPhantom.location << std::endl;
     return out;
 }
 
