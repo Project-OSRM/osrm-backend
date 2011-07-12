@@ -32,6 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/HashTable.h"
 #include "../Plugins/BasePlugin.h"
 #include "../Plugins/RouteParameters.h"
+#include "../typedefs.h"
 
 namespace http {
 
@@ -43,7 +44,7 @@ public:
 
 	    for(unsigned i = 0; i < _pluginVector.size(); i++) {
 	        BasePlugin * tempPointer = _pluginVector[i];
-	        delete tempPointer;
+	        DELETE( tempPointer );
 	    }
 
 	}

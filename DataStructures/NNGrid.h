@@ -557,10 +557,10 @@ private:
                 cellMap.insert(std::make_pair(fileIndex, cellIndex));
             }
         }
-
-        if(cellCache.exists(startIndexInFile)) {
-                cellCache.fetch(startIndexInFile, cellIndex);
-            } else {
+        {
+//        if(cellCache.exists(startIndexInFile)) {
+//                cellCache.fetch(startIndexInFile, cellIndex);
+//            } else {
                 std::ifstream localStream(iif, std::ios::in | std::ios::binary);
                 localStream.seekg(startIndexInFile);
                 localStream.read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
@@ -569,10 +569,10 @@ private:
                 if(cellIndex[cellMap.find(fileIndex)->second] == UINT_MAX) {
                     return;
                 }
-#pragma omp critical
-                {
-                    cellCache.insert(startIndexInFile, cellIndex);
-                }
+//#pragma omp critical
+//                {
+//                    cellCache.insert(startIndexInFile, cellIndex);
+//                }
             }
         const unsigned position = cellIndex[cellMap.find(fileIndex)->second] + 32*32*sizeof(unsigned) ;
 

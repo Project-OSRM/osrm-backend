@@ -58,7 +58,7 @@ public:
     }
 
     ~RoutePlugin() {
-        delete sEngine;
+        DELETE(sEngine);
     }
 
     std::string GetDescriptor() { return pluginDescriptorString; }
