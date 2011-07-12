@@ -88,7 +88,7 @@ ostream & operator<<(ostream & out, const _Coordinate & c){
 }
 
 struct _Way {
-    _Way() : id(UINT_MAX) {
+    _Way() : id(UINT_MAX), nameID(UINT_MAX) {
 
         direction = _Way::notSure;
         maximumSpeed = -1;

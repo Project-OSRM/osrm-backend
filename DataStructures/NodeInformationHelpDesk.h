@@ -65,7 +65,7 @@ public:
 	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode);
 	}
 
-	inline bool FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes * phantomNodes) {
+	inline bool FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes & phantomNodes) {
 		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes);
 		return true;
 	}

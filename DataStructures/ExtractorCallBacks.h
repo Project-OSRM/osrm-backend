@@ -103,6 +103,7 @@ public:
         std::string maxspeed( w.keyVals.Find("maxspeed") );
         std::string access( w.keyVals.Find("access") );
         std::string motorcar( w.keyVals.Find("motorcar") );
+        std::string man_made( w.keyVals.Find("man_made") );
 
         if ( ref != "" ) {
             w.name = ref;
@@ -130,9 +131,9 @@ public:
             if(w.type == -1)
                 w.type = 9;
         }
-        if ( route == "ferry") {
+        if ( route == "ferry" || man_made == "pier" ) {
             for ( unsigned i = 0; i < settings.speedProfile.names.size(); i++ ) {
-                if ( route == settings.speedProfile.names[i] ) {
+                if ( "ferry" == settings.speedProfile.names[i] ) {
                     w.type = i;
                     w.maximumSpeed = settings.speedProfile.speed[i];
                     w.useful = true;

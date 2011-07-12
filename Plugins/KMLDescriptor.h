@@ -36,83 +36,83 @@ public:
     KMLDescriptor() {}
     void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-    void Run(http::Reply & reply, RawRouteData *rawRoute, PhantomNodes *phantomNodes, SearchEngineT *sEngine, unsigned  distance) {
+    void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned distance) {
         WriteHeaderToOutput(reply.content);
 
         //We do not need to do much, if there is no route ;-)
-        if(distance != UINT_MAX && rawRoute->routeSegments.size() > 0) {
+        if(distance != UINT_MAX && rawRoute.routeSegments.size() > 0) {
 
             //Put first segment of route into geometry
-            appendCoordinateToString(phantomNodes->startPhantom.location, descriptorState.routeGeometryString);
-            descriptorState.startOfSegmentCoordinate = phantomNodes->startPhantom.location;
+            appendCoordinateToString(phantomNodes.startPhantom.location, descriptorState.routeGeometryString);
+            descriptorState.startOfSegmentCoordinate = phantomNodes.startPhantom.location;
             //Generate initial instruction for start of route (order of NodeIDs does not matter, its the same name anyway)
-            summary.startName = sEngine->GetEscapedNameForOriginDestinationNodeID(phantomNodes->targetPhantom.startNode, phantomNodes->startPhantom.startNode);
-            descriptorState.lastNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->targetPhantom.startNode, phantomNodes->startPhantom.startNode);
+            summary.startName = sEngine.GetEscapedNameForOriginDestinationNodeID(phantomNodes.targetPhantom.startNode, phantomNodes.startPhantom.startNode);
+            descriptorState.lastNameID = sEngine.GetNameIDForOriginDestinationNodeID(phantomNodes.targetPhantom.startNode, phantomNodes.startPhantom.startNode);
 
             //If we have a route, i.e. start and dest not on same edge, than get it
-            if(rawRoute->routeSegments[0].size() > 0)
-                sEngine->getCoordinatesForNodeID(rawRoute->routeSegments[0].begin()->node, descriptorState.tmpCoord);
+            if(rawRoute.routeSegments[0].size() > 0)
+                sEngine.getCoordinatesForNodeID(rawRoute.routeSegments[0].begin()->node, descriptorState.tmpCoord);
             else
-                descriptorState.tmpCoord = phantomNodes->targetPhantom.location;
+                descriptorState.tmpCoord = phantomNodes.targetPhantom.location;
 
-            descriptorState.previousCoordinate = phantomNodes->startPhantom.location;
+            descriptorState.previousCoordinate = phantomNodes.startPhantom.location;
             descriptorState.currentCoordinate = descriptorState.tmpCoord;
             descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.previousCoordinate, descriptorState.currentCoordinate);
 
             if(config.instructions) {
                 //Get Heading
-                double angle = GetAngleBetweenTwoEdges(_Coordinate(phantomNodes->startPhantom.location.lat, phantomNodes->startPhantom.location.lon), descriptorState.tmpCoord, _Coordinate(descriptorState.tmpCoord.lat, descriptorState.tmpCoord.lon-1000));
+                double angle = GetAngleBetweenTwoEdges(_Coordinate(phantomNodes.startPhantom.location.lat, phantomNodes.startPhantom.location.lon), descriptorState.tmpCoord, _Coordinate(descriptorState.tmpCoord.lat, descriptorState.tmpCoord.lon-1000));
                 getDirectionOfInstruction(angle, directionOfInstruction);
                 appendInstructionNameToString(summary.startName, directionOfInstruction.direction, descriptorState.routeInstructionString, true);
             }
             NodeID lastNodeID = UINT_MAX;
-            for(unsigned segmentIdx = 0; segmentIdx < rawRoute->routeSegments.size(); segmentIdx++) {
-                const std::vector< _PathData > & path = rawRoute->routeSegments[segmentIdx];
+            for(unsigned segmentIdx = 0; segmentIdx < rawRoute.routeSegments.size(); segmentIdx++) {
+                const std::vector< _PathData > & path = rawRoute.routeSegments[segmentIdx];
                 if( ! path.size() )
                     continue;
 
                 if ( UINT_MAX == lastNodeID) {
-                    lastNodeID = (phantomNodes->startPhantom.startNode == (*path.begin()).node ? phantomNodes->targetPhantom.startNode : phantomNodes->startPhantom.startNode);
+                    lastNodeID = (phantomNodes.startPhantom.startNode == (*path.begin()).node ? phantomNodes.targetPhantom.startNode : phantomNodes.startPhantom.startNode);
                 }
                 //Check, if there is overlap between current and previous route segment
                 //if not, than we are fine and can route over this edge without paying any special attention.
                 if(lastNodeID == (*path.begin()).node) {
                     appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
-                    lastNodeID = (lastNodeID == rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode ? rawRoute->segmentEndCoordinates[segmentIdx].targetPhantom.startNode : rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode);
+                    lastNodeID = (lastNodeID == rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode ? rawRoute.segmentEndCoordinates[segmentIdx].targetPhantom.startNode : rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode);
 
                     //output of the via nodes coordinates
-                    appendCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location, descriptorState.routeGeometryString);
-                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode, rawRoute->segmentEndCoordinates[segmentIdx].targetPhantom.startNode);
+                    appendCoordinateToString(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location, descriptorState.routeGeometryString);
+                    descriptorState.currentNameID = sEngine.GetNameIDForOriginDestinationNodeID(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode, rawRoute.segmentEndCoordinates[segmentIdx].targetPhantom.startNode);
                     //Make a special announement to do a U-Turn.
                     appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
 
-                    descriptorState.distanceOfInstruction = ApproximateDistance(descriptorState.currentCoordinate, rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location);
+                    descriptorState.distanceOfInstruction = ApproximateDistance(descriptorState.currentCoordinate, rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location);
                     getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
-                    appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                    appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
                     appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
                     tmp = "U-turn at via point";
-                    appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                    appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
                     double tmpDistance = descriptorState.distanceOfInstruction;
                     descriptorState.SetStartOfSegment(); //Set start of segment but save distance information.
                     descriptorState.distanceOfInstruction = tmpDistance;
                 } else if(segmentIdx > 0) { //We are going straight through an edge which is carrying the via point.
                     assert(segmentIdx != 0);
                     //routeInstructionString += "\nreaching via node: \n";
-                    descriptorState.nextCoordinate = rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location;
-                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.startNode, rawRoute->segmentEndCoordinates[segmentIdx].targetPhantom.startNode);
+                    descriptorState.nextCoordinate = rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location;
+                    descriptorState.currentNameID = sEngine.GetNameIDForOriginDestinationNodeID(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode, rawRoute.segmentEndCoordinates[segmentIdx].targetPhantom.startNode);
                     appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
-                    appendCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location, descriptorState.routeGeometryString);
+                    appendCoordinateToString(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location, descriptorState.routeGeometryString);
                     if(config.instructions) {
                         double turnAngle = descriptorState.GetAngleBetweenCoordinates();
                         appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
 
                         getTurnDirectionOfInstruction(turnAngle, tmp);
                         tmp += " and reach via point";
-                        appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                        appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
 
                         //instruction to continue on the segment
                         appendInstructionLengthToString(ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate), descriptorState.routeInstructionString);
-                        appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), "Continue on", descriptorState.routeInstructionString);
+                        appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), "Continue on", descriptorState.routeInstructionString);
 
                         //note the new segment starting coordinates
                         descriptorState.SetStartOfSegment();
@@ -124,8 +124,8 @@ public:
                 }
 
                 for(vector< _PathData >::const_iterator it = path.begin(); it != path.end(); it++) {
-                    sEngine->getCoordinatesForNodeID(it->node, descriptorState.nextCoordinate);
-                    descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(lastNodeID, it->node);
+                    sEngine.getCoordinatesForNodeID(it->node, descriptorState.nextCoordinate);
+                    descriptorState.currentNameID = sEngine.GetNameIDForOriginDestinationNodeID(lastNodeID, it->node);
 
                     double area = fabs(0.5*( descriptorState.startOfSegmentCoordinate.lon*(descriptorState.nextCoordinate.lat - descriptorState.currentCoordinate.lat) + descriptorState.nextCoordinate.lon*(descriptorState.currentCoordinate.lat - descriptorState.startOfSegmentCoordinate.lat) + descriptorState.currentCoordinate.lon*(descriptorState.startOfSegmentCoordinate.lat - descriptorState.nextCoordinate.lat)  ) );
                     //if route is generalization does not skip this point, add it to description
@@ -135,7 +135,7 @@ public:
                         if( ( false == descriptorState.CurrentAndPreviousNameIDsEqual() ) && config.instructions) {
                             appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
                             getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
-                            appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                            appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
 
                             //note the new segment starting coordinates
                             descriptorState.SetStartOfSegment();
@@ -149,19 +149,19 @@ public:
                     }
                 }
             }
-            descriptorState.currentNameID = sEngine->GetNameIDForOriginDestinationNodeID(phantomNodes->startPhantom.targetNode, phantomNodes->targetPhantom.targetNode);
-            descriptorState.nextCoordinate = phantomNodes->targetPhantom.location;
+            descriptorState.currentNameID = sEngine.GetNameIDForOriginDestinationNodeID(phantomNodes.startPhantom.targetNode, phantomNodes.targetPhantom.targetNode);
+            descriptorState.nextCoordinate = phantomNodes.targetPhantom.location;
             appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
 
             if((false == descriptorState.CurrentAndPreviousNameIDsEqual()) && config.instructions) {
                 appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
                 getTurnDirectionOfInstruction(descriptorState.GetAngleBetweenCoordinates(), tmp);
-                appendInstructionNameToString(sEngine->GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
+                appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), tmp, descriptorState.routeInstructionString);
                 descriptorState.distanceOfInstruction = 0;
             }
-            summary.destName = sEngine->GetEscapedNameForNameID(descriptorState.currentNameID);
+            summary.destName = sEngine.GetEscapedNameForNameID(descriptorState.currentNameID);
             descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
-            appendCoordinateToString(phantomNodes->targetPhantom.location, descriptorState.routeGeometryString);
+            appendCoordinateToString(phantomNodes.targetPhantom.location, descriptorState.routeGeometryString);
             appendInstructionLengthToString(descriptorState.distanceOfInstruction, descriptorState.routeInstructionString);
             descriptorState.SetStartOfSegment();
             //compute distance/duration for route summary
@@ -191,13 +191,13 @@ public:
             reply.content += "</Placemark>";
 
             //list all viapoints so that the client may display it
-            std::cout << "number of segment endpoints in route: " << rawRoute->segmentEndCoordinates.size() << std::endl;
-            for(unsigned segmentIdx = 1; (true == config.geometry) && (segmentIdx < rawRoute->segmentEndCoordinates.size()); segmentIdx++) {
+            std::cout << "number of segment endpoints in route: " << rawRoute.segmentEndCoordinates.size() << std::endl;
+            for(unsigned segmentIdx = 1; (true == config.geometry) && (segmentIdx < rawRoute.segmentEndCoordinates.size()); segmentIdx++) {
                 reply.content += "<Placemark>";
                 reply.content += "<name>Via Point 1</name>";
                 reply.content += "<Point>";
                 reply.content += "<coordinates>";
-                appendCoordinateToString(rawRoute->segmentEndCoordinates[segmentIdx].startPhantom.location, reply.content);
+                appendCoordinateToString(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location, reply.content);
                 reply.content += "</coordinates>";
                 reply.content += "</Point>";
                 reply.content += "</Placemark>";

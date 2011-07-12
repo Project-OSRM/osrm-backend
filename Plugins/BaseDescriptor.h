@@ -118,7 +118,7 @@ public:
     BaseDescriptor() { }
     //Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() { }
-    virtual void Run(http::Reply& reply, RawRouteData * route, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) = 0;
+    virtual void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned distance) = 0;
     virtual void SetConfig(const _DescriptorConfig & config) = 0;
 };
 

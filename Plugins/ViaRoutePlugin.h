@@ -151,8 +151,6 @@ public:
 
         unsigned distance = 0;
         bool errorOccurredFlag = false;
-        double time = get_timestamp();
-
 
         //#pragma omp parallel for reduction(+:distance)
         for(unsigned i = 0; i < phantomNodeVector.size()-1 && !errorOccurredFlag; i++) {
@@ -160,15 +158,15 @@ public:
             segmentPhantomNodes.startPhantom = phantomNodeVector[i];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             std::vector< _PathData > path;
-            threadData[omp_get_thread_num()]->distanceOfSegment = threadData[omp_get_thread_num()]->sEngine->ComputeRoute(&segmentPhantomNodes, &path);
+            int distanceOfSegment = threadData[omp_get_thread_num()]->sEngine->ComputeRoute(segmentPhantomNodes, path);
 
-            if(UINT_MAX == threadData[omp_get_thread_num()]->distanceOfSegment) {
+            if(UINT_MAX == threadData[omp_get_thread_num()]->distanceOfSegment || path.empty()) {
                 errorOccurredFlag = true;
                 cout << "Error occurred, path not found" << endl;
                 distance = UINT_MAX;
                 break;
             } else {
-                distance += threadData[omp_get_thread_num()]->distanceOfSegment;
+                distance += distanceOfSegment;
             }
 
             //put segments at correct position of routes raw data
@@ -176,9 +174,6 @@ public:
             rawRoute.routeSegments[i] = path;
         }
 
-        double time2 = get_timestamp();
-//        std::cout << "Finished routing after " << (time2-time) << "s" << std::endl;
-        time = get_timestamp();
         reply.status = http::Reply::ok;
 
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
@@ -225,14 +220,15 @@ public:
 
             break;
         }
+
         PhantomNodes phantomNodes;
-        threadData[0]->sEngine->FindRoutingStarts(startCoord, targetCoord, &phantomNodes);
+        phantomNodes.startPhantom = rawRoute.segmentEndCoordinates[0].startPhantom;
+        phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
         desc->SetConfig(descriptorConfig);
-        desc->Run(reply, &rawRoute, &phantomNodes, threadData[0]->sEngine, distance);
+        desc->Run(reply, rawRoute, phantomNodes, *threadData[0]->sEngine, distance);
         if("" != JSONParameter) {
             reply.content += ")\n";
         }
-
         reply.headers.resize(3);
         reply.headers[0].name = "Content-Length";
         std::string tmp;
@@ -275,9 +271,6 @@ public:
 
             break;
         }
-
-        time2 = get_timestamp();
-//        std::cout << "Finished everything after " << (time2-time) << "s" << std::endl;
 
         delete desc;
         return;

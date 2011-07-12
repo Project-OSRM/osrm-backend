@@ -94,12 +94,12 @@ public:
         _Coordinate startCoord(lat1, lon1);
         _Coordinate targetCoord(lat2, lon2);
 
-        vector< _PathData > * path = new vector< _PathData >();
-        RawRouteData * rawRoute = new RawRouteData();
-        PhantomNodes * phantomNodes = new PhantomNodes();
+        vector< _PathData > path;
+        RawRouteData rawRoute;
+        PhantomNodes phantomNodes;
         sEngine->FindRoutingStarts(startCoord, targetCoord, phantomNodes);
         unsigned int distance = sEngine->ComputeRoute(phantomNodes, path);
-        rawRoute->routeSegments.push_back(*path);
+        rawRoute.routeSegments.push_back(path);
         reply.status = http::Reply::ok;
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
         std::string JSONParameter = routeParameters.options.Find("jsonp");
@@ -145,7 +145,7 @@ public:
             break;
         }
         desc->SetConfig(descriptorConfig);
-        desc->Run(reply, rawRoute, phantomNodes, sEngine, distance);
+        desc->Run(reply, rawRoute, phantomNodes, *sEngine, distance);
         if("" != JSONParameter) {
             reply.content += ")\n";
         }
@@ -193,15 +193,12 @@ public:
             break;
         }
 
-        delete desc;
-        delete path;
-        delete rawRoute;
-        delete phantomNodes;
+        DELETE( desc );
         return;
     }
 private:
     NodeInformationHelpDesk * nodeHelpDesk;
-    SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine;
+    SearchEngine<EdgeData, StaticGraph<EdgeData> > *sEngine;
     std::vector<std::string> * names;
     StaticGraph<EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;

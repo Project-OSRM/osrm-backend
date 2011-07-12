@@ -31,26 +31,26 @@ private:
     _Coordinate current;
 public:
     void SetConfig(const _DescriptorConfig& c) { config = c; }
-    void Run(http::Reply& reply, RawRouteData * route, PhantomNodes * phantomNodes, SearchEngineT * sEngine, unsigned distance) {
+    void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned distance) {
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         reply.content += "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" "
                               "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                               "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                               "\">";
         reply.content += "<rte>";
-        if(distance != UINT_MAX && route->routeSegments.size()) {
+        if(distance != UINT_MAX && rawRoute.routeSegments.size()) {
 
-            convertInternalLatLonToString(phantomNodes->startPhantom.location.lat, tmp);
+            convertInternalLatLonToString(phantomNodes.startPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
-            convertInternalLatLonToString(phantomNodes->startPhantom.location.lon, tmp);
+            convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
-            for(unsigned segmentIdx = 0; segmentIdx < route->routeSegments.size(); segmentIdx++) {
-                const std::vector< _PathData > & path = route->routeSegments[segmentIdx];
+            for(unsigned segmentIdx = 0; segmentIdx < rawRoute.routeSegments.size(); segmentIdx++) {
+                const std::vector< _PathData > & path = rawRoute.routeSegments[segmentIdx];
                 if( ! path.size() )
                     continue;
                 for(vector< _PathData >::const_iterator it = path.begin(); it != path.end(); it++) {
-                    sEngine->getCoordinatesForNodeID(it->node, current);
+                    sEngine.getCoordinatesForNodeID(it->node, current);
 
                     convertInternalLatLonToString(current.lat, tmp);
                     reply.content += "<rtept lat=\"" + tmp + "\" ";
@@ -60,9 +60,9 @@ public:
                     reply.content +="</rtept>";
                 }
             }
-            convertInternalLatLonToString(phantomNodes->targetPhantom.location.lat, tmp);
+            convertInternalLatLonToString(phantomNodes.targetPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
-            convertInternalLatLonToString(phantomNodes->targetPhantom.location.lon, tmp);
+            convertInternalLatLonToString(phantomNodes.targetPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
         }
         reply.content += "</rte></gpx>";

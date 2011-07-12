@@ -62,7 +62,7 @@ private:
 public:
     inline void printEncodedString(vector<_Coordinate>& polyline, string &output) {
         output += "\"";
-        if(polyline.size() > 0) {
+        if(!polyline.empty()) {
             output += encodeSignedNumber(polyline[0].lat);
             output += encodeSignedNumber(polyline[0].lon);
         }
