@@ -59,8 +59,8 @@ private:
             path = new std::vector< _PathData >();
         }
         ~_ThreadData() {
-            delete path;
-            delete sEngine;
+            DELETE( path );
+            DELETE( sEngine );
         }
     };
 
@@ -86,7 +86,7 @@ public:
 
     ~ViaRoutePlugin() {
         for ( unsigned threadNum = 0; threadNum < threadData.size(); threadNum++ ) {
-            delete threadData[threadNum];
+            DELETE( threadData[threadNum] );
         }
     }
 
@@ -272,7 +272,7 @@ public:
             break;
         }
 
-        delete desc;
+        DELETE( desc );
         return;
     }
 private:
