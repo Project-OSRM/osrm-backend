@@ -36,21 +36,21 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/LocatePlugin.h"
 #include "Plugins/NearestPlugin.h"
 #include "Plugins/RoutePlugin.h"
+#include "Plugins/ViaRoutePlugin.h"
 #include "Util/InputFileUtil.h"
 
 using namespace std;
 
 typedef http::RequestHandler RequestHandler;
 
-int main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
     if(testDataFiles(argc, argv)==false) {
         std::cerr << "[error] at least one data file name seems to be bogus!" << std::endl;
         exit(-1);
     }
 
     try {
-        std::cout << "[server] starting up engines, compiled at " << __TIMESTAMP__ << std::endl;
+        std::cout << "[server] starting up engines, saved at " << __TIMESTAMP__ << std::endl;
         int sig = 0;
         sigset_t new_mask;
         sigset_t old_mask;
@@ -67,17 +67,15 @@ int main (int argc, char *argv[])
                 serverConfig.GetParameter("nodesData"),
                 serverConfig.GetParameter("namesData"));
 
-        BasePlugin * helloWorld = new HelloWorldPlugin();
-        h.RegisterPlugin(helloWorld);
+        h.RegisterPlugin(new HelloWorldPlugin());
 
-        BasePlugin * locate = new LocatePlugin(objects);
-        h.RegisterPlugin(locate);
+        h.RegisterPlugin(new LocatePlugin(objects));
 
-        BasePlugin * nearest = new NearestPlugin(objects);
-        h.RegisterPlugin(nearest);
+        h.RegisterPlugin(new NearestPlugin(objects));
 
-        BasePlugin * route = new RoutePlugin(objects);
-        h.RegisterPlugin(route);
+        h.RegisterPlugin(new RoutePlugin(objects));
+
+        h.RegisterPlugin(new ViaRoutePlugin(objects));
 
         boost::thread t(boost::bind(&Server::Run, s));
 
@@ -93,8 +91,8 @@ int main (int argc, char *argv[])
         std::cout << std::endl << "[server] shutting down" << std::endl;
         s->Stop();
         t.join();
-        delete s;
-        delete objects;
+        DELETE(s);
+        DELETE(objects);
     } catch (std::exception& e) {
         std::cerr << "[fatal error] exception: " << e.what() << std::endl;
     }
