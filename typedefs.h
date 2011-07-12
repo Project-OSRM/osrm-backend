@@ -42,6 +42,8 @@ using namespace std;
 #define ERR(x) std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; exit(-1);
 #define WARN(x) std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
 
+#define DELETE(x) { if(NULL != x) { delete x; x = NULL; } }
+
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
 typedef unsigned int EdgeWeight;
