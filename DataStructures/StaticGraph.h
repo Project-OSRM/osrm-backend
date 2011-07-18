@@ -116,18 +116,24 @@ public:
     EdgeIterator FindEdge( const NodeIterator &from, const NodeIterator &to ) const {
         EdgeIterator smallestEdge = SPECIAL_EDGEID;
         EdgeWeight smallestWeight = UINT_MAX;
-        for ( EdgeIterator edge = BeginEdges( from ); edge < EndEdges(from); edge++ )
-        {
+        for ( EdgeIterator edge = BeginEdges( from ); edge < EndEdges(from); edge++ ) {
             const NodeID target = GetTarget(edge);
             const EdgeWeight weight = GetEdgeData(edge).distance;
-            {
-                if(target == to && weight < smallestWeight)
-                {
-                    smallestEdge = edge; smallestWeight = weight;
-                }
+            if(target == to && weight < smallestWeight) {
+                smallestEdge = edge; smallestWeight = weight;
             }
         }
         return smallestEdge;
+    }
+
+    EdgeIterator FindEdgeIndicateIfReverse( const NodeIterator &from, const NodeIterator &to, bool & result ) const {
+        EdgeIterator tmp =  FindEdge( from, to );
+        if(UINT_MAX == tmp) {
+            tmp =  FindEdge( to, from );
+            if(UINT_MAX != tmp)
+                result = true;
+        }
+        return tmp;
     }
 
 private:
