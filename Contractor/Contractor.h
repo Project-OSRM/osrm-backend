@@ -127,8 +127,6 @@ public:
             std::swap( edge.source, edge.target );
             edge.data.forward = i->isBackward();
             edge.data.backward = i->isForward();
-            edge.data.forwardTurn = i->isForwardTurn();
-            edge.data.backwardTurn = i->isBackwardTurn();
             edges.push_back( edge );
         }
 //        std::vector< InputEdge >().swap( inputEdges ); //free memory

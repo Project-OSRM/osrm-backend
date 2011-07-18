@@ -43,10 +43,10 @@ public:
 
     /** Default constructor. target and weight are set to 0.*/
     Edge() :
-        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _type(0), forwardTurn(false), backwardTurn(false) { assert(false); } //shall not be used.
+        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _type(0) { assert(false); } //shall not be used.
 
     explicit Edge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty) :
-            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), forwardTurn(false), backwardTurn(false) { assert(ty >= 0); }
+            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty) { assert(ty >= 0); }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
@@ -58,21 +58,13 @@ public:
     bool isForward() const { return forward; }
     bool isLocatable() const { return _type != 14; }
 
-    bool isForwardTurn() const { return forwardTurn; }
-    bool isBackwardTurn() const { return backwardTurn; }
-
-    void setForwardTurn(bool f) { forwardTurn = f; }
-    void setBackwardTurn(bool b) { backwardTurn = b; }
-
-    NodeID _source:31;
-    NodeID _target:31;
+    NodeID _source;
+    NodeID _target;
     NodeID _name:31;
     EdgeWeight _weight:31;
     bool forward:1;
     bool backward:1;
     short _type;
-    bool forwardTurn:1;
-    bool backwardTurn:1;
 };
 
 struct MinimalEdgeData
