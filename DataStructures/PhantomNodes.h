@@ -46,6 +46,14 @@ struct PhantomNodes {
         startPhantom.Reset();
         targetPhantom.Reset();
     }
+
+    bool PhantomsAreOnSameEdge() const {
+        return ((startPhantom.startNode == startPhantom.targetNode && targetPhantom.startNode == targetPhantom.targetNode ) || (startPhantom.startNode == targetPhantom.targetNode && targetPhantom.startNode == startPhantom.targetNode));
+    }
+
+    bool AtLeastOnePhantomNodeIsUINTMAX() const {
+        return !(startPhantom.startNode == UINT_MAX || startPhantom.targetNode == UINT_MAX || targetPhantom.startNode == UINT_MAX || targetPhantom.targetNode == UINT_MAX);
+    }
 };
 
 std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
