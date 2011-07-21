@@ -209,6 +209,7 @@ public:
     }
 
     void DecreaseKey( NodeID node, Weight weight ) {
+        assert( UINT_MAX != node );
         const Key index = nodeIndex[node];
         Key key = insertedNodes[index].key;
         assert ( key != 0 );

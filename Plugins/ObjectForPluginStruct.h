@@ -25,9 +25,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
 
-typedef StaticGraph<EdgeData>::InputEdge InputEdge;
+typedef StaticGraph<EdgeData> QueryGraph;
+typedef QueryGraph::InputEdge InputEdge;
 
 struct ObjectsForQueryStruct {
+    NodeInformationHelpDesk * nodeHelpDesk;
+    std::vector<std::string> * names;
+    QueryGraph * graph;
+
     ObjectsForQueryStruct(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route") {
         std::cout << "[objects] loading query data structures ..." << std::flush;
         //Init nearest neighbor data structure
@@ -37,14 +42,14 @@ struct ObjectsForQueryStruct {
 
         ifstream hsgrInStream(hsgrPath.c_str(), ios::binary);
         //Deserialize road network graph
-        std::vector< InputEdge> * edgeList = new std::vector< InputEdge>();
+        std::vector< InputEdge> edgeList;
         readHSGRFromStream(hsgrInStream, edgeList);
-        graph = new StaticGraph<EdgeData>(nodeHelpDesk->getNumberOfNodes()-1, *edgeList);
-        delete edgeList;
+        graph = new QueryGraph(nodeHelpDesk->getNumberOfNodes()-1, edgeList);
+        std::vector< InputEdge >().swap( edgeList ); //free memory
 
         //deserialize street name list
         ifstream namesInStream(namesPath.c_str(), ios::binary);
-        unsigned size = 0;
+        unsigned size(0);
         namesInStream.read((char *)&size, sizeof(unsigned));
         names = new std::vector<std::string>();
 
@@ -67,10 +72,6 @@ struct ObjectsForQueryStruct {
         delete graph;
         delete nodeHelpDesk;
     }
-
-    NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<std::string> * names;
-    StaticGraph<EdgeData> * graph;
 };
 
 #endif /* OBJECTFORPLUGINSTRUCT_H_ */

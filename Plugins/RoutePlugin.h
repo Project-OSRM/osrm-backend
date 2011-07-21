@@ -57,7 +57,7 @@ public:
         descriptorTable.Set("gpx", 2);
     }
 
-    ~RoutePlugin() {
+    virtual ~RoutePlugin() {
         DELETE(sEngine);
     }
 

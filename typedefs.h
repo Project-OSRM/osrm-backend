@@ -67,4 +67,9 @@ typedef NodeCoords<NodeID> NodeInfo;
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
 #include "DataStructures/DynamicGraph.h"
 
+//Fix to make Eclipse 3.7 happy
+#ifndef __TIMESTAMP__
+#define __TIMESTAMP__ "unknown date"
+#endif
+
 #endif /* TYPEDEFS_H_ */

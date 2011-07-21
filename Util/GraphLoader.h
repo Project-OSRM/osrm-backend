@@ -247,6 +247,7 @@ NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
             break;
         default:
             weight = 0;
+            break;
         }
 
         weight = length*weight/3.6;
@@ -348,7 +349,7 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 }
 
 template<typename EdgeT>
-unsigned readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
+unsigned readHSGRFromStream(istream &in, vector<EdgeT> & edgeList) {
     unsigned numberOfNodes = 0;
     ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
     while(!in.eof()) {
@@ -384,7 +385,7 @@ unsigned readHSGRFromStream(istream &in, vector<EdgeT> * edgeList) {
         if(middle > numberOfNodes)
             numberOfNodes = middle;
 
-        edgeList->push_back(g);
+        edgeList.push_back(g);
     }
     return numberOfNodes+1;
 }

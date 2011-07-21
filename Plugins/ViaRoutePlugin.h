@@ -84,7 +84,7 @@ public:
         descriptorTable.Set("gpx", 2);
     }
 
-    ~ViaRoutePlugin() {
+    virtual ~ViaRoutePlugin() {
         for ( unsigned threadNum = 0; threadNum < threadData.size(); threadNum++ ) {
             DELETE( threadData[threadNum] );
         }
@@ -160,7 +160,7 @@ public:
             std::vector< _PathData > path;
             int distanceOfSegment = threadData[omp_get_thread_num()]->sEngine->ComputeRoute(segmentPhantomNodes, path);
 
-            if(UINT_MAX == threadData[omp_get_thread_num()]->distanceOfSegment || path.empty()) {
+            if(UINT_MAX == threadData[omp_get_thread_num()]->distanceOfSegment ) {
                 errorOccurredFlag = true;
                 cout << "Error occurred, path not found" << endl;
                 distance = UINT_MAX;

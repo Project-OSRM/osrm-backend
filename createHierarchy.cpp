@@ -52,7 +52,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 using namespace std;
 
-typedef ContractionCleanup::Edge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef BaseConfiguration ContractorConfiguration;
@@ -195,4 +194,5 @@ int main (int argc, char *argv[]) {
     delete int2ExtNodeMap;
 
     cout << "finished" << endl;
+    return 0;
 }

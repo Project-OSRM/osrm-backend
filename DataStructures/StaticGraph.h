@@ -126,6 +126,11 @@ public:
         return smallestEdge;
     }
 
+    EdgeIterator FindEdgeInEitherDirection( const NodeIterator &from, const NodeIterator &to ) const {
+        EdgeIterator tmp =  FindEdge( from, to );
+        return (UINT_MAX != tmp ? tmp : FindEdge( to, from ));
+    }
+
     EdgeIterator FindEdgeIndicateIfReverse( const NodeIterator &from, const NodeIterator &to, bool & result ) const {
         EdgeIterator tmp =  FindEdge( from, to );
         if(UINT_MAX == tmp) {

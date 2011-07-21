@@ -35,7 +35,7 @@ public:
         WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
         inputReader = inputReaderFactory(filename);
     }
-    ~XMLParser() {}
+    virtual ~XMLParser() {}
 
     bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way), bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
         nodeCallback = *nodeCallbackPointer;

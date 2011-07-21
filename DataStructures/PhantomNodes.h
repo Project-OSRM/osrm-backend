@@ -48,7 +48,7 @@ struct PhantomNodes {
     }
 
     bool PhantomsAreOnSameEdge() const {
-        return ((startPhantom.startNode == startPhantom.targetNode && targetPhantom.startNode == targetPhantom.targetNode ) || (startPhantom.startNode == targetPhantom.targetNode && targetPhantom.startNode == startPhantom.targetNode));
+        return ((startPhantom.startNode == targetPhantom.startNode && startPhantom.targetNode == targetPhantom.targetNode ) || (startPhantom.startNode == targetPhantom.targetNode && targetPhantom.startNode == startPhantom.targetNode));
     }
 
     bool AtLeastOnePhantomNodeIsUINTMAX() const {
