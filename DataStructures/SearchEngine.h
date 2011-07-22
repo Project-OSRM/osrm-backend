@@ -126,7 +126,6 @@ public:
             return _upperbound;
         }
 
-
         _InsertedNodes _insertedNodes;
         _Heap _forwardHeap(nodeHelpDesk->getNumberOfNodes());
         _Heap _backwardHeap(nodeHelpDesk->getNumberOfNodes());
