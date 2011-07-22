@@ -19,8 +19,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 
 
-#ifndef OBJECTFORPLUGINSTRUCT_H_
-#define OBJECTFORPLUGINSTRUCT_H_
+#ifndef OBJECTSFORQUERYSTRUCT_H_
+#define OBJECTSFORQUERYSTRUCT_H_
 
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
@@ -74,4 +74,4 @@ struct ObjectsForQueryStruct {
     }
 };
 
-#endif /* OBJECTFORPLUGINSTRUCT_H_ */
+#endif /* OBJECTSFORQUERYSTRUCT_H_ */
