@@ -123,7 +123,7 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(startCoord);
 
-//        std::cout << "[debug] number of vianodes: " << routeParameters.viaPoints.size() << std::endl;
+        //        std::cout << "[debug] number of vianodes: " << routeParameters.viaPoints.size() << std::endl;
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); i++) {
             textCoord = split (routeParameters.viaPoints[i], ',');
             if(textCoord.size() != 2) {
@@ -132,7 +132,7 @@ public:
             }
             int vialat = static_cast<int>(100000.*atof(textCoord[0].c_str()));
             int vialon = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-//            std::cout << "[debug] via" << i << ": " << vialat << "," << vialon << std::endl;
+            //            std::cout << "[debug] via" << i << ": " << vialat << "," << vialon << std::endl;
             _Coordinate viaCoord(vialat, vialon);
             if(false == checkCoord(viaCoord)) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
@@ -142,27 +142,31 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(targetCoord);
         vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
+        bool errorOccurredFlag = false;
+
 #pragma omp parallel for
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); i++) {
             threadData[omp_get_thread_num()]->sEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
+            if(!rawRoute.rawViaNodeCoordinates[i].isSet()) {
+                errorOccurredFlag = true;
+            }
         }
 
         rawRoute.Resize();
 
         unsigned distance = 0;
-        bool errorOccurredFlag = false;
 
-        //#pragma omp parallel for reduction(+:distance)
+//#pragma omp parallel for reduction(+:distance)
         for(unsigned i = 0; i < phantomNodeVector.size()-1 && !errorOccurredFlag; i++) {
             PhantomNodes & segmentPhantomNodes = threadData[omp_get_thread_num()]->phantomNodesOfSegment;
             segmentPhantomNodes.startPhantom = phantomNodeVector[i];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             std::vector< _PathData > path;
-            int distanceOfSegment = threadData[omp_get_thread_num()]->sEngine->ComputeRoute(segmentPhantomNodes, path);
+            unsigned distanceOfSegment = threadData[omp_get_thread_num()]->sEngine->ComputeRoute(segmentPhantomNodes, path);
 
-            if(UINT_MAX == threadData[omp_get_thread_num()]->distanceOfSegment ) {
+            if(UINT_MAX == distanceOfSegment ) {
                 errorOccurredFlag = true;
-                cout << "Error occurred, path not found" << endl;
+//                cout << "Error occurred, path not found" << endl;
                 distance = UINT_MAX;
                 break;
             } else {

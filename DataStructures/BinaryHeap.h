@@ -288,7 +288,6 @@ private:
 #ifndef NDEBUG
         for ( Key i = 2; i < (Key) heap.size(); ++i ) {
             assert( heap[i].weight >= heap[i >> 1].weight );
-            std::cout << "checked" << std::endl;
         }
 #endif
     }
