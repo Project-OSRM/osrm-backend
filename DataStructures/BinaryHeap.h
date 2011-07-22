@@ -24,6 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 //Not compatible with non contiguous node ids
 
 #include <cassert>
+#include <limits>
 #include <vector>
 #include <algorithm>
 #include <map>
@@ -107,6 +108,7 @@ private:
     google::sparse_hash_map< NodeID, Key > nodes;
 };
 
+template< typename NodeID, typename Key >
 class SparseTableStorage : public google::sparsetable<NodeID> {
 public:
     SparseTableStorage(size_t n) : google::sparsetable<NodeID>(n){ }
@@ -115,14 +117,15 @@ public:
     }
 };
 
+template<typename NodeID = unsigned>
 struct _SimpleHeapData {
     NodeID parent;
     _SimpleHeapData( NodeID p ) : parent(p) { }
 };
 
-struct _NullHeapData {
-    _NullHeapData(NodeID p) {}
-};
+//struct _NullHeapData {
+//    _NullHeapData(NodeID p) {}
+//};
 
 template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = ArrayStorage<NodeID, NodeID> >
 class BinaryHeap {
@@ -141,7 +144,7 @@ public:
     void Clear() {
         heap.resize( 1 );
         insertedNodes.clear();
-        heap[0].weight = 0;
+        heap[0].weight = std::numeric_limits< Weight >::min();
         nodeIndex.Clear();
     }
 
@@ -205,7 +208,7 @@ public:
         for ( typename std::vector< HeapElement >::iterator i = heap.begin() + 1, iend = heap.end(); i != iend; ++i )
             insertedNodes[i->index].key = 0;
         heap.resize( 1 );
-        heap[0].weight = 0;
+        heap[0].weight = std::numeric_limits< Weight >::min();
     }
 
     void DecreaseKey( NodeID node, Weight weight ) {
@@ -250,7 +253,7 @@ private:
         while ( nextKey < ( Key ) heap.size() ) {
             const Key nextKeyOther = nextKey + 1;
             if ( ( nextKeyOther < ( Key ) heap.size() )&& ( heap[nextKey].weight > heap[nextKeyOther].weight) )
-                    nextKey = nextKeyOther;
+                nextKey = nextKeyOther;
 
             if ( weight <= heap[nextKey].weight )
                 break;
@@ -282,9 +285,12 @@ private:
     }
 
     void CheckHeap() {
-        /*for ( Key i = 2; i < heap.size(); ++i ) {
-				assert( heap[i].weight >= heap[i >> 1].weight );
-			}*/
+#ifndef NDEBUG
+        for ( Key i = 2; i < (Key) heap.size(); ++i ) {
+            assert( heap[i].weight >= heap[i >> 1].weight );
+            std::cout << "checked" << std::endl;
+        }
+#endif
     }
 };
 
