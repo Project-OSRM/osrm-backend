@@ -36,11 +36,16 @@ var status = ''; //possible values [start,end]
 function getStatus(){ return status; }
 function setStatus(stat){ status = stat; }
 
+//Indicator
+var ISDRAGGING = false;
+
 //Layer
 var dragLayer;
 var vectorLayerRoute;
+var vectorLayerViaRoute;
 var markersLayer;
 
+var selectFeature;
 //======================
 // FUNCTIONS
 /*
@@ -94,10 +99,15 @@ function init(){
 	map.addLayer(new OpenLayers.Layer.OSM.Mapnik("Mapnik"));
 	map.addLayer(new OpenLayers.Layer.OSM.MapQuest("MapQuest"));
 	map.addLayer(new OpenLayers.Layer.OSM.Osmarender("Osmarender"));
+
 	//Add layer for the route
 	vectorLayerRoute = new OpenLayers.Layer.Vector("Route",{maxResolution: 156543.0339});
 	map.addLayer(vectorLayerRoute);
 	
+	//Add layer for temporary via route
+	vectorLayerViaRoute = new OpenLayers.Layer.Vector("ViaRoute",{maxResolution: 156543.0339});
+	map.addLayer(vectorLayerViaRoute);
+    
 	//Add Layerswitcher
 	map.addControl(new OpenLayers.Control.LayerSwitcher());
 
@@ -131,17 +141,51 @@ function init(){
                         graphicWidth: 22,
                         graphicHeight: 40
                     }),
-                    rendererOptions: {yOrdering: true}
+                    rendererOptions: {zIndexing: true}
                 }
            );
     // Add a drag feature control to move features around.
     var dragFeatures = new OpenLayers.Control.DragFeature(dragLayer,
 		{ onDrag: function(feature, pixel){
-			feature.move(map.getLonLatFromPixel(pixel));
-			if(!ISCALCULATING){ routing(true); }},
+			ISDRAGGING = true;
+	    	if(feature.name == "start" || feature.name == "end") {
+	    		feature.move(map.getLonLatFromPixel(pixel));
+				if(!ISCALCULATING){ routing(true); }
+			}
+			if(feature.name == "via") {
+				computeViaRoute(pixel, true);
+			} 
+			if(feature.name == "viapoint" && feature.popup) {
+				map.removePopup(feature.popup);
+				computeViaRoute(pixel, true, feature.viaIndex);
+			} 
+			},
 		  onComplete: function(feature, pixel){
-			feature.move(map.getLonLatFromPixel(pixel));
-			routing(false); },
+			  ISDRAGGING = false;
+				if(feature.name == "start" || feature.name == "end") {
+					feature.move(map.getLonLatFromPixel(pixel));
+					routing(false);
+				} else if(feature.name == "via") {
+					console.log('finished via');
+					//Erase temporary point from draglayer
+					dragLayer.renderer.eraseFeatures([feature]);
+					//delete temporary route from via route Layer
+					vectorLayerViaRoute.removeFeatures(vectorLayerViaRoute.features);
+					//compute via route
+					computeViaRoute(pixel, false);
+					feature.destroy();
+				} else if(feature.name == "viapoint") {
+					//Erase temporary point from draglayer
+					dragLayer.renderer.eraseFeatures([feature]);
+					//delete via point from vector
+					viaPointsVector.splice(feature.viaIndex,1);
+					//delete temporary route from via route Layer
+					vectorLayerViaRoute.removeFeatures(vectorLayerViaRoute.features);
+					//compute via route
+					computeViaRoute(pixel, false);
+					feature.destroy();
+				}
+				},
 		  onLeave: function(f){
 			if(!ISCALCULATING){ routing(false); }}
 		});
@@ -152,17 +196,99 @@ function init(){
 	//Add a marker layer
 	markersLayer = new OpenLayers.Layer.Markers("Markers");
     map.addLayer(markersLayer);
-    
+
 	//Add zoom event for rerouting
-	map.events.on({zoomend: function(e) {reroute();}});
+	map.events.on({zoomend: function(e) {reroute();distanceToRoute(null);}});
+	
+	// Register Callback to evaluate distance to from mouse location to route on Mousemove
+	map.events.on({mousemove: function(e) {distanceToRoute(e.xy);}});
 	
 	// Set center of the map
 	if (!map.getCenter()){
 		map.setCenter(new OpenLayers.LonLat(600000, 6600000),6);
 	}
+         
+ 	//Check if the URL contains some GET parameter, e.g. for the route 
+ 	checkURL(); 	
 	
-	//Check if the URL contains some GET parameter, e.g. for the route
-	checkURL();
+	for(var i = 0; i < map.layers.length; i++) {
+		map.layers[i].transitionEffect = 'resize';
+	}
+	
+	document.getElementById('map').oncontextmenu = function(e){
+		 e = e?e:window.event;
+		 if (e.preventDefault) e.preventDefault(); // For non-IE browsers.
+		 else return false; // For IE browsers.
+	};
+
+	// A control class for capturing click events...
+	OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {                
+
+	defaultHandlerOptions: {
+	'single': true,
+	'double': true,
+	'pixelTolerance': 0,
+	'stopSingle': false,
+	'stopDouble': false
+	},
+	handleRightClicks:true,
+	initialize: function(options) {
+	this.handlerOptions = OpenLayers.Util.extend(
+	{}, this.defaultHandlerOptions
+	);
+	OpenLayers.Control.prototype.initialize.apply(
+	this, arguments
+	); 
+	this.handler = new OpenLayers.Handler.Click(
+	this, this.eventMethods, this.handlerOptions
+	);
+	},
+	CLASS_NAME: "OpenLayers.Control.Click"
+
+	});
+
+	// Add an instance of the Click control that listens to various click events:
+	var oClick = new OpenLayers.Control.Click({eventMethods:{
+	'rightclick': function(e) {
+	rightClick(e);
+	},
+	'click': function(e) {
+	leftClick(e);
+	},
+	'dblclick': function(e) {
+	dblClick(e);
+	},
+	'dblrightclick': function(e) {
+	dblRightClick(e);
+	}
+	}});
+	map.addControl(oClick);
+	oClick.activate();
+	
+	
+	selectFeature = new OpenLayers.Control.SelectFeature(
+    [dragLayer],
+    {
+        clickout: true, toggle: false,
+        multiple: false, hover: true,
+        toggleKey: "ctrlKey", // ctrl key removes from selection
+        multipleKey: "shiftKey", // shift key adds to selection
+        onSelect: createPopup,
+		onUnselect: destroyPopup
+
+    }
+	);
+	map.addControl(selectFeature);
+	dragLayer.events.on({
+		"featureselected": function(e) {
+			featureSelected(e);
+		},
+		"featureunselected": function(e) {
+			featureUnselected(e);
+		}
+	});
+	
+	selectFeature.activate(); 
 }
 
 //Helper Functions
@@ -182,40 +308,47 @@ function closeOpenDiv(name){
 	else{ document.getElementById(name).style.display = 'none'; }
 }
 
-//URL Functions
-function checkURL(){
-	var getObjs = new Array();
-	var getString = document.location.search.substr(1,document.location.search.length);
-	if(getString != ''){
-		var getArray=getString.split('&');
-		for(i=0 ; i<getArray.length ; ++i){
-			var v='';
-			var vArr = getArray[i].split('=');
-			if(vArr.length>1){ v = vArr[1]; }
-			getObjs[unescape(vArr[0])]=unescape(v);
-		}
-	}
-	
-	var fr = getObjectOfArray(getObjs, "fr");
-	var to = getObjectOfArray(getObjs, "to");
-	
-	if(fr != 'undefined' && to != 'undefined'){
-		//From
-		var fr_pos = fr.split(',');
-		var fr_lonlat = new OpenLayers.LonLat(fr_pos[1],fr_pos[0]);
-		setMarkerAndZoom('start', fr_lonlat);
-		isStartPointSet = true;
-		//To
-		var to_pos = to.split(',');
-		var to_lonlat = new OpenLayers.LonLat(to_pos[1],to_pos[0]);
-		setMarker('end', to_lonlat);
-		isEndPointSet = true;
-		//Calculate the route
-		routing(false);
-	}
-}
-
-function getObjectOfArray(objects, elementName){
-	if(!objects[elementName]){ return 'undefined'; }
-	return objects[elementName];
-}
+//URL Functions 
+function checkURL(){ 
+	var getObjs = new Array(); 
+	var getString = document.location.search.substr(1,document.location.search.length); 
+	if(getString != ''){ 
+		var getArray=getString.split('&'); 
+		console.log(getArray);
+		for(i=0 ; i<getArray.length ; ++i){ 
+			var v=''; 
+			var vArr = getArray[i].split('='); 
+			if(vArr.length>1){ v = vArr[1]; } 
+			if("via" == vArr[0]) {
+				var via_loc = unescape(v).split(','); 
+				for(var j=0; j<via_loc.length; j++) { via_loc[j] = parseFloat(via_loc[j]); }
+				viaPointsVector.push(via_loc);
+			} else {
+				getObjs[unescape(vArr[0])]=unescape(v); 
+			}
+		} 
+	} 
+	 
+	var fr = getObjectOfArray(getObjs, "fr"); 
+	var to = getObjectOfArray(getObjs, "to"); 
+	 
+	if(fr != 'undefined' && to != 'undefined'){ 
+		//From 
+		var fr_pos = fr.split(','); 
+		var fr_lonlat = new OpenLayers.LonLat(fr_pos[1],fr_pos[0]); 
+		setMarkerAndZoom('start', fr_lonlat); 
+		isStartPointSet = true; 
+		//To 
+		var to_pos = to.split(','); 
+		var to_lonlat = new OpenLayers.LonLat(to_pos[1],to_pos[0]); 
+		setMarker('end', to_lonlat); 
+		isEndPointSet = true; 
+		//Calculate the route 
+		routing(false); 
+	} 
+} 
+ 		 
+function getObjectOfArray(objects, elementName){ 
+	if(!objects[elementName]){ return 'undefined'; } 
+	return objects[elementName]; 
+} 

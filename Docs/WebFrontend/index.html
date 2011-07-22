@@ -14,7 +14,9 @@
 	<script src="Slides.js"></script>
 	<script src="Map.js"></script>
 	<script src="Route.js"></script>
+	<script src="ViaRoute.js"></script>
 	<script src="Geocode.js"></script>
+	<script src="MouseClick.js"></script>
 	<!-- <script src="osrm.js"></script> -->
 
    	<link rel="stylesheet" href="style.css" type="text/css" media="all" />
@@ -32,7 +34,7 @@
 		<table width="100%"> 
               <tr id="StartPoint">
                 <td><div class="textLabel"><img src="img/arrow-start.png" class="radioIcons" width="12" height="16" alt=""><span class="text"></span></div></td>
-                <td><input name="tfStartSearch" style="width:220px" type="text" id="tfStartSearch" class="tfPoints" value="Berlin, Unter den Eichen" title="Search your start point!" onKeyPress="checkReturn('start',event);" >
+                <td><input name="tfStartSearch" style="width:220px" type="text" id="tfStartSearch" class="tfPoints" value="Berlin Alexanderplatz" title="Search your start point!" onKeyPress="checkReturn('start',event);" >
                 	<button name="enterStart" onclick="setStatus('start'); geocodeAddress('start');">Search</button></td>
                 <td rowspan="2" valign="middle">
                 	<!-- <button name="switchStartEnd" disabled="true" id="switchStartEnd" type="button"
@@ -43,7 +45,7 @@
 					<div class="textLabel"><img src="img/arrow-finish.png" class="radioIcons" width="12" height="16" alt=""><span class="text"></span></div>                
 				</td>
                 <td id="tdEnd">
-                	<input name="tfEndSearch" style="width:220px" type="text" id="tfEndSearch" class="tfPoints" value="München, Altstadt" title="Search your end point!" onKeyPress="checkReturn('end',event);">
+                	<input name="tfEndSearch" style="width:220px" type="text" id="tfEndSearch" class="tfPoints" value="Hamburg" title="Search your end point!" onKeyPress="checkReturn('end',event);">
                 	<button name="enterEnd" onclick="setStatus('end'); geocodeAddress('end');">Search</button>
                 </td>
               </tr>
@@ -56,7 +58,7 @@
 		
 		<div id="options" class="options_div" style="display:none"><input class="checkbox" type="checkbox" name="cbNoNames" id="cbNoNames" value="checkbox">Highlight No Name Streets in my Route</div>
 		<div id="information" class="information"> <p class="infoHL">Demo Website for the <br><a target="_blank" href="http://project-osrm.org/">Open Source Routing Machine Project</a></p> </div>
-		<div id="thx" class="thx">GUIv0.2-110701 - OSRM hosting by <a target="_blank" href="http://www.geofabrik.de/">Geofabrik</a> - Geocoder by <a target="_blank" href="http://developer.mapquest.com/web/products/open/nominatim/">MapQuest</a></div>
+		<div id="thx" class="thx">GUI v0.3beta-11/July/11 - OSRM hosting by <a target="_blank" href="http://www.geofabrik.de/">Geofabrik</a> - Geocoder by <a target="_blank" href="http://developer.mapquest.com/web/products/open/nominatim/">MapQuest</a></div>
 		</div>
 	</div>
 

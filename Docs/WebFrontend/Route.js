@@ -29,12 +29,14 @@
 //======================
 // OBJECTS
 //Map
+var HOST_ROUTING_URL = 'http://localhost:5000/viaroute';
+//var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-via/';
 var HOST_WEBSITE = 'http://map.project-osrm.org/';//location.host
-var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-de/';
+
 var ISCALCULATING = false;
 var EPSG_4326 = new OpenLayers.Projection("EPSG:4326");
 var EPSG_900913 = new OpenLayers.Projection("EPSG:900913");
-
+var allRoutePoints = [];
 //======================
 // FUNCTIONS
 /*
@@ -70,18 +72,18 @@ function routing(isDragRoute){
     script.type = 'text/javascript';
     
     var callBackFunction = 'showResultsRoute';
-    var instructions = '&instructions=true';
+    var instructions = '&geomformat=cmp&instructions=true';
     if(isDragRoute){
        callBackFunction = 'showResultsDragRoute';
-       instructions = '&instructions=false';
+       instructions = '&geomformat=cmp&instructions=false';
        document.getElementById('information').innerHTML =  '<p class="infoHL">Release mouse button to get Route Information!</p>(If no Route Summary is diplayed, press the Route!-button)';
     }
-    else{
-   		document.getElementById('information').innerHTML =  '<p class="infoHL">One moment please ...</p>';
-    }
     
-    script.src = HOST_ROUTING_URL + "&"+from.lat + '&' + from.lon + '&' + to.lat + '&' + to.lon +
-    	'&z='+this.map.getZoom()+'&output=json&jsonp='+callBackFunction+instructions+'&geomformat=cmp';//+'&simplified=yes';    	
+    script.src = HOST_ROUTING_URL + "&start="+from.lat + ',' + from.lon + '&dest=' + to.lat + ',' + to.lon;
+    for(var i = 0; i < viaPointsVector.length; i++) {
+		script.src += ('&via=' + viaPointsVector[i][0] + ',' + viaPointsVector[i][1]);
+	}
+    script.src +='&z='+this.map.getZoom()+'&output=json&jsonp='+callBackFunction+instructions;
     document.body.appendChild(script);
 }
 
@@ -107,7 +109,8 @@ function showResultsDragRoute(response) {
  * showResultsRoute()-Function to show route result
  */
 function showResultsRoute(response) {
-    if (response) {    	//Display Route
+    if (response) {
+		//Display Route
 		if(document.getElementById("cbNoNames").checked == true){
 			showNoNameStreets(response);
 		}
@@ -115,61 +118,109 @@ function showResultsRoute(response) {
 			showRouteGeometry(response);
 		}
 		
-		//Create Link of the route
+		//Save Via Points that come with route
+		var lengthOfArray = response.via_points.length;
+		var i = 0;
+		viaPointsVector.length = 0;
+		viaPointsVector = response.via_points.slice(0);
+		paintViaPoints();
+ 
+  		//Create Link of the route
 		var startFeat = getMarkerByName('start');
 		var endFeat = getMarkerByName('end');
 		var from = new OpenLayers.LonLat(startFeat.geometry.x,startFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
 		var to = new OpenLayers.LonLat(endFeat.geometry.x,endFeat.geometry.y).transform(EPSG_900913,EPSG_4326);
-		var routelink = '<div id="routelink"><input name="routelink" type="submit" title="Get Link" onClick="createShortLink(\''+HOST_WEBSITE+'?fr='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&to='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'\');" value="Get Link"></div>';
-		//Link for the GPX Download
-		var gpxLink = '(<a href="'+HOST_ROUTING_URL+'&'+from.lat.toFixed(6)+'&'+from.lon.toFixed(6)+'&'+to.lat.toFixed(6)+'&'+to.lon.toFixed(6)+'&z='+this.map.getZoom()+'&output=gpx">Get GPX File</a>)';
-		
+		var routelink = '<div id="routelink"><input name="routelink" type="submit" title="Get Link" onClick="createShortLink(\''+HOST_WEBSITE+'?fr='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&to='+to.lat.toFixed(6)+','+to.lon.toFixed(6);
+		for(i = 0; i < viaPointsVector.length; i++) {
+				routelink += "&via=" + viaPointsVector[i][0] + "," + viaPointsVector[i][1];
+		}
+		routelink += '\');" value="Get Link"></div>';
+
+		//Link for the GPX Download 
+		var gpxLink = '(<a href="'+HOST_ROUTING_URL+'&start='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&dest='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'&z='+this.map.getZoom();
+		for(i = 0; i < viaPointsVector.length; i++) {
+				gpxLink += "&via=" + viaPointsVector[i][0] + "," + viaPointsVector[i][1];
+		}
+		gpxLink += '&output=gpx">Get GPX File</a>)';;
+
         //Show Route Summary
         var output = '<p class="routeSummaryHL">Some information about your Way <br> from \'<span class="routeSummaryHLlight">'+response.route_summary.start_point+'</span>\' to \'<span class="routeSummaryHLlight">'+response.route_summary.end_point+'</span>\'</p>';
         output += '<p class="routeSummary">Distance: <span class="routeSummarybold">'+response.route_summary.total_distance/1000+' km</span> - Duration: <span class="routeSummarybold">'+secondsToTime(response.route_summary.total_time)+'</span></p><p>'+routelink+'</p><p><span class="routeInstructionsHL">The Route-Instructions:</span> '+gpxLink+'</p>';
         //Show Route Instructions
-        output += '<table>';
-        var lengthOfArray = response.route_instructions.length;
-        var geometry = decodeRouteGeometry(response.route_geometry, 5);
-        for (var i = 0; i < lengthOfArray; i++) {
+        output += '<table>';
+        lengthOfArray = response.route_instructions.length;
+		for (i = 0; i < lengthOfArray; i++) {
+			//console.log(response.route_instructions[i]);
         	//odd or even ?
         	var rowstyle='routeInstructionsOdd';
         	if(i%2==0){ rowstyle='routeInstructionsEven'; }
-
+			
             var indexPos = response.route_instructions[i][3];
-            var point = new OpenLayers.Geometry.Point(geometry[indexPos][1], geometry[indexPos][0]);
+			//console.log('setting : ' + response.route_instructions[i] + ' at ' + allRoutePoints[indexPos]);
+			var point = allRoutePoints[indexPos];
         	            output += '<tr class="'+rowstyle+'"><td align="right" valign="top"><span class="routeSummarybold">'+(i+1)+'.</span></td><td class="'+rowstyle+'"><a href="#" class="nolinkStyle" onclick="setMapCenter(new OpenLayers.LonLat('+point.x+','+point.y+'));">'+response.route_instructions[i][0]+' on '+response.route_instructions[i][1]+' for '+getDistanceWithUnit(response.route_instructions[i][2])+'</a></td></tr>';        }
-        output += '</table>';
+		var rowstyle='routeInstructionsOdd';
+       	if(i%2==0){ rowstyle='routeInstructionsEven'; }
+		if( lengthOfArray > 0) {
+	        var point = allRoutePoints[allRoutePoints.length-1];
+	        output += '<tr class="'+rowstyle+'"><td align="right" valign="top"><span class="routeSummarybold">'+(i+1)+'.</span></td><td class="'+rowstyle+'"><a href="#" class="nolinkStyle" onclick="setMapCenter(new OpenLayers.LonLat('+point.x+','+point.y+'));">You have reached your destination</a></td></tr>';
+        }
+		output += '</table>';
         //alert(vectorLayerRoute.features[0].geometry.getVertices());
         
-        document.getElementById('information').innerHTML = output;    }
-    ISCALCULATING = false;
+        document.getElementById('information').innerHTML = output;	    ISCALCULATING = false;
+		ISCALCULATINGVIA = false;
+    }
 }
 
 /*
- * showResultsRoute()-Function to show route result
+ * showRouteGeometry()-Function to show route result
  */
 function showRouteGeometry(response) {
-    if (response) {    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);
-
+	if (response) {
+	 	allRoutePoints.length = 0;
     	// now with compression of the route geometry
         var geometry = decodeRouteGeometry(response.route_geometry, 5);
        	var lengthOfArray = geometry.length;
         var points = [];
         points.length = lengthOfArray;
-        
-        //Create Route Layer for Display        for (var i = 0; i < lengthOfArray; i++) {            var point = new OpenLayers.Geometry.Point(geometry[i][1], geometry[i][0]).transform(EPSG_4326, EPSG_900913);            points.push(point);
+        var points = [];
+ 		//delete any previously displayed via route
+		vectorLayerViaRoute.removeFeatures(vectorLayerViaRoute.features);
+		vectorLayerRoute.removeAllFeatures();
+ 
+        //Create Route Layer for Display
+        for (var i = 0; i < lengthOfArray; i++) {
+            var point = new OpenLayers.Geometry.Point(geometry[i][1], geometry[i][0]).transform(EPSG_4326, EPSG_900913);
+            allRoutePoints.push(point);
+			points.push(point);
             	
 			if(i % 1024 == 0 && i>0 || i==lengthOfArray-1){
-				var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points), null, {
+/*	 			var feature2 = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points), null, {
+					strokeColor: "#000066",
+					strokeOpacity: 1,
+					strokeWidth: 9
+				});
+
+	 			var feature1 = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points), null, {
+					strokeColor: "#ffffff",
+					strokeOpacity: 0.75,
+					strokeWidth: 7
+				});
+*/
+
+	 			var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(points), null, {
 					strokeColor: "#0033ff",
 					strokeOpacity: 0.7,
 					strokeWidth: 5
 				});
+			//	vectorLayerRoute.addFeatures([feature2]);
+			//	vectorLayerRoute.addFeatures([feature1]);
 				vectorLayerRoute.addFeatures([feature]);
 				points = [];
 				points.push(point);
-			}        }
+			}
+        }
    }
 }
 
@@ -177,12 +228,12 @@ function showRouteGeometry(response) {
  * showNoNameStreets()-Function to show route result
  */
 function showNoNameStreets(response) {
-    if (response) {    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);
-    	
-    	// now with compression of the route geometry
+    if (response) {    	allRoutePoints.length = 0;
+    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);      	// now with compression of the route geometry
         var geometry = decodeRouteGeometry(response.route_geometry, 5);
        	var lengthOfArray = geometry.length;
-        var points = [];        points.length = lengthOfArray;
+        var points = [];
+        points.length = lengthOfArray;
         
         //Check if a instruction has no name !
         var colors = [];
@@ -194,11 +245,16 @@ function showNoNameStreets(response) {
 				if(streetName == ''){ colors[indexPos] = "#FF00FF"; }
 				else{ colors[indexPos] = "#0033ff"; }        	}
         }
+
+ 		//delete any previously displayed via route
+		vectorLayerViaRoute.removeFeatures(vectorLayerViaRoute.features);
+		vectorLayerRoute.removeAllFeatures();
         
         //Create Route Layer for Display
         var color = "#0033ff";
         var changeColor = false;        for (var i = 0; i < lengthOfArray; i++) {            var point = new OpenLayers.Geometry.Point(geometry[i][1], geometry[i][0]).transform(EPSG_4326, EPSG_900913);            points.push(point);
-            
+            allRoutePoints.push(point);
+				
             if(colors[i] != undefined){ changeColor=true;}
             	
 			if(i % 1024 == 0 && i>0 || i==lengthOfArray-1 || changeColor){
@@ -248,8 +304,9 @@ function getDistanceWithUnit(distance){
  * setMapCenter()-Function to add a marker and center the map
  */
 function setMapCenter(lonlat){
-	lonlat.transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
-
+	//lonlat.transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
+	//console.log('zooming to :' + lonlat);
+	
 	//Add Marker
 	markersLayer.clearMarkers();
 	var size = new OpenLayers.Size(21,25);
