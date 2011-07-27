@@ -123,8 +123,8 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 
-std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]"};
-std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;" };
+std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]", "\\"};
+std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;" };
 
 std::string HTMLEntitize( std::string result) {
     for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); i++) {
