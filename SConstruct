@@ -76,7 +76,7 @@ else:  #Mac OS X
     else:
         env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 if GetOption('buildconfiguration') == 'debug':
-	env.Append(CCFLAGS = ' -Wall -g3')
+	env.Append(CCFLAGS = ' -Wall -g3 -rdynamic')
 else:
 	env.Append(CCFLAGS = ' -O3 -DNDEBUG -march=native')
 #print "Compiling with: ", env['CXX']
