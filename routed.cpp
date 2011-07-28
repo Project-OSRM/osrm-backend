@@ -38,12 +38,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/RoutePlugin.h"
 #include "Plugins/ViaRoutePlugin.h"
 #include "Util/InputFileUtil.h"
-
+#include "Util/LinuxStackTrace.h"
 using namespace std;
 
 typedef http::RequestHandler RequestHandler;
 
 int main (int argc, char *argv[]) {
+    installCrashHandler(argv[0]);
+
     if(testDataFiles(argc, argv)==false) {
         std::cerr << "[error] at least one data file name seems to be bogus!" << std::endl;
         exit(-1);
