@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef POLYLINECOMPRESSOR_H_
 #define POLYLINECOMPRESSOR_H_
 
+#include <string>
+
 #include "ExtractorStructs.h"
 
 class PolylineCompressor {
@@ -34,18 +36,18 @@ private:
     }
 
     inline string encodeNumber(int numberToEncode) const {
-        ostringstream encodeString;
+        string encodeString;
 
         while (numberToEncode >= 0x20) {
             int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
-            encodeString << (static_cast<char> (nextValue));
+            encodeString += (static_cast<char> (nextValue));
             numberToEncode >>= 5;
         }
 
         numberToEncode += 63;
-        encodeString << (static_cast<char> (numberToEncode));
+        encodeString += (static_cast<char> (numberToEncode));
 
-        return encodeString.str();
+        return encodeString;
     }
 
     inline void replaceBackslash(string & str) {
