@@ -168,7 +168,7 @@ public:
             ostringstream s;
             s << 10*(round(descriptorState.entireDistance/10.));
             summary.lengthString = s.str();
-            int travelTime = (distance/60) + 1;
+            int travelTime = 60*(distance/60.) + 1;
             s.str("");
             s << travelTime;
             summary.durationString = s.str();
