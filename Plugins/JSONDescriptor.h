@@ -125,9 +125,9 @@ public:
 
                         //instruction to continue on the segment
                         appendInstructionLengthToString(ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate), descriptorState.routeInstructionString);
+                        descriptorState.entireDistance += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
                         descriptorState.routeInstructionString += ",";
-                        appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), "Continue on", descriptorState.routeInstructionString);
-
+                        appendInstructionNameToString(sEngine.GetEscapedNameForNameID(descriptorState.currentNameID), "Continue ", descriptorState.routeInstructionString);
                         //note the new segment starting coordinates
                         descriptorState.SetStartOfSegment();
                         descriptorState.previousCoordinate = descriptorState.currentCoordinate;
