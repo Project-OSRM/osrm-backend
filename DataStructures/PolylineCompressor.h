@@ -27,7 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class PolylineCompressor {
 private:
-    inline string encodeSignedNumber(int number) const {
+    inline string encodeSignedNumber(const int number) const {
         int signedNumber = number << 1;
         if (number < 0) {
             signedNumber = ~(signedNumber);
