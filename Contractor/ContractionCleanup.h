@@ -36,16 +36,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 class ContractionCleanup {
 private:
 
-    struct _HeapData {
+    struct _CleanupHeapData {
         NodeID parent;
-        _HeapData( NodeID p ) {
+        _CleanupHeapData( NodeID p ) {
             parent = p;
         }
     };
 #ifdef _MANYCORES
     typedef BinaryHeap< NodeID, NodeID, int, _HeapData, DenseStorage<NodeID, NodeID> > _Heap;
 #else
-    typedef BinaryHeap< NodeID, NodeID, int, _HeapData > _Heap;
+    typedef BinaryHeap< NodeID, NodeID, int, _CleanupHeapData > _Heap;
 #endif
     struct _ThreadData {
         _Heap* _heapForward;
@@ -71,11 +71,11 @@ public:
         NodeID source;
         NodeID target;
         struct EdgeData {
-            int distance : 29;
+            int distance : 30;
             bool shortcut : 1;
             bool forward : 1;
             bool backward : 1;
-            short type;
+            short type:7;
             _MiddleName middleName;
         } data;
 
@@ -113,17 +113,13 @@ public:
     template< class EdgeT >
     void GetData( std::vector< EdgeT >& edges ) {
         for ( int edge = 0, endEdges = ( int ) _graph.size(); edge != endEdges; ++edge ) {
-            EdgeT newEdge;
-            newEdge.source = _graph[edge].source;
-            newEdge.target = _graph[edge].target;
-
-            newEdge.data.distance = _graph[edge].data.distance;
-            newEdge.data.shortcut = _graph[edge].data.shortcut;
-            newEdge.data.middleName = _graph[edge].data.middleName;
-            newEdge.data.forward = _graph[edge].data.forward;
-            newEdge.data.backward = _graph[edge].data.backward;
-            newEdge.data.type = _graph[edge].data.type;
-            edges.push_back( newEdge );
+            if(_graph[edge].data.forward || _graph[edge].data.backward) {
+                EdgeT newEdge;
+                newEdge.source = _graph[edge].source;
+                newEdge.target = _graph[edge].target;
+                newEdge.data = _graph[edge].data;
+                edges.push_back( newEdge );
+            }
         }
 #ifdef _GLIBCXX_PARALLEL
         __gnu_parallel::sort( edges.begin(), edges.end() );
@@ -133,20 +129,6 @@ public:
     }
 
 private:
-
-    class AllowForwardEdge {
-    public:
-        bool operator()( const Edge& data ) const {
-            return data.data.forward;
-        }
-    };
-
-    class AllowBackwardEdge {
-    public:
-        bool operator()( const Edge& data ) const {
-            return data.data.backward;
-        }
-    };
 
     double _Timestamp() {
         struct timeval tp;
@@ -165,6 +147,7 @@ private:
             _firstEdge.resize( _numNodes + 1 );
         } catch(...) {
             cerr << "Not enough RAM on machine" << endl;
+            return;
         }
         _firstEdge[0] = 0;
         for ( NodeID i = 0, node = 0; i < ( NodeID ) _graph.size(); i++ ) {
@@ -222,21 +205,22 @@ private:
         }
 
         cout << "Removing edges" << endl;
-        int usefull = 0;
+        int useful = 0;
         for ( int i = 0; i < ( int ) _graph.size(); i++ ) {
             if ( !_graph[i].data.forward && !_graph[i].data.backward && _graph[i].data.shortcut )
                 continue;
-            _graph[usefull] = _graph[i];
-            usefull++;
+            _graph[useful] = _graph[i];
+            useful++;
         }
-        cout << "Removed " << _graph.size() - usefull << " useless shortcuts" << endl;
-        _graph.resize( usefull );
+        cout << "Removed " << _graph.size() - useful << " useless shortcuts" << endl;
+        _graph.resize( useful );
+
         for ( int threadNum = 0; threadNum < maxThreads; ++threadNum ) {
             delete threadData[threadNum];
         }
     }
 
-    template< class EdgeAllowed, class StallEdgeAllowed > void _ComputeStep( _Heap* heapForward, _Heap* heapBackward, const EdgeAllowed& edgeAllowed, const StallEdgeAllowed& stallEdgeAllowed, NodeID* middle, int* targetDistance ) {
+    void _ComputeStep( _Heap* heapForward, _Heap* heapBackward, bool forwardDirection, NodeID* middle, int* targetDistance ) {
 
         const NodeID node = heapForward->DeleteMin();
         const int distance = heapForward->GetKey( node );
@@ -259,7 +243,7 @@ private:
             assert( edgeWeight > 0 );
             const int toDistance = distance + edgeWeight;
 
-            if ( edgeAllowed( _graph[edge] ) ) {
+            if ( (forwardDirection ? _graph[edge].data.forward : _graph[edge].data.backward ) ) {
                 //New Node discovered -> Add to Heap + Node Info Storage
                 if ( !heapForward->WasInserted( to ) )
                     heapForward->Insert( to, toDistance, node );
@@ -282,24 +266,17 @@ private:
         data->_heapBackward->Insert( target, 0, target );
 
         int targetDistance = std::numeric_limits< int >::max();
-        NodeID middle = 0;
-        AllowForwardEdge forward;
-        AllowBackwardEdge backward;
+        NodeID middle = std::numeric_limits<NodeID>::max();
 
         while ( data->_heapForward->Size() + data->_heapBackward->Size() > 0 ) {
-
             if ( data->_heapForward->Size() > 0 ) {
-                _ComputeStep( data->_heapForward, data->_heapBackward, forward, backward, &middle, &targetDistance );
+                _ComputeStep( data->_heapForward, data->_heapBackward, true, &middle, &targetDistance );
             }
 
             if ( data->_heapBackward->Size() > 0 ) {
-                _ComputeStep( data->_heapBackward, data->_heapForward, backward, forward, &middle, &targetDistance );
+                _ComputeStep( data->_heapBackward, data->_heapForward, false, &middle, &targetDistance );
             }
         }
-
-        if ( targetDistance == std::numeric_limits< int >::max() )
-            return std::numeric_limits< unsigned >::max();
-
         return targetDistance;
     }
     NodeID _numNodes;
