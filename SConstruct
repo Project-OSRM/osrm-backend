@@ -54,6 +54,8 @@ AddOption('--stxxlroot', dest='stxxlroot', type='string', nargs=1, action='store
 AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
 AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
 env = Environment(ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cxx'))
+if sys.platform.startswith("freebsd"):
+	env.ParseConfig('pkg-config --cflags --libs protobuf')
 if GetOption('cxx') is None:
     #default Compiler
     print 'Using default C++ Compiler: ', env['CXX']
@@ -73,12 +75,15 @@ else:  #Mac OS X
         print "Compiling is experimental on Mac"
         env.Append(CPPPATH = ['/opt/local/include/', '/opt/local/include/libxml2'])
 	env.Append(LIBPATH = ['/opt/local/lib'])
+    elif sys.platform.startswith('freebsd'):
+        env.Append(CPPPATH = ['/usr/local/include', '/usr/local/include/libxml2'])
+        env.Append(LIBPATH = ['/usr/local/lib'])
     else:
         env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 if GetOption('buildconfiguration') == 'debug':
-	env.Append(CCFLAGS = ' -Wall -g3 -rdynamic')
+	env.Append(CCFLAGS = ['-Wall', '-g3', '-rdynamic'])
 else:
-	env.Append(CCFLAGS = ' -O3 -DNDEBUG -march=native')
+	env.Append(CCFLAGS = ['-O3', '-DNDEBUG', '-march=native'])
 #print "Compiling with: ", env['CXX']
 conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf' : CheckProtobuf })
 if not conf.CheckHeader('omp.h'):
@@ -154,16 +159,16 @@ protobld = Builder(action = 'protoc -I=DataStructures/pbf-proto --cpp_out=DataSt
 env.Append(BUILDERS = {'Protobuf' : protobld})
 env.Protobuf('DataStructures/pbf-proto/fileformat.proto')
 env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
-env.Append(CCFLAGS = ' -fopenmp')
-env.Append(LINKFLAGS = ' -fopenmp')
+env.Append(CCFLAGS = ['-fopenmp'])
+env.Append(LINKFLAGS = ['-fopenmp'])
 
 
 env.StaticObject("DataStructures/pbf-proto/fileformat.pb.cc")
 env.StaticObject("DataStructures/pbf-proto/osmformat.pb.cc")
 env.Program("extractor.cpp")
 env.Program("createHierarchy.cpp")
-env.Append(CCFLAGS = ' -lboost_regex -lboost_iostreams -lbz2 -lz -lprotobuf')
-env.Append(LINKFLAGS = '-lboost_system DataStructures/pbf-proto/fileformat.pb.o DataStructures/pbf-proto/osmformat.pb.o')
+env.Append(CCFLAGS = ['-lboost_regex', '-lboost_iostreams', '-lbz2', '-lz', '-lprotobuf'])
+env.Append(LINKFLAGS = ['-lboost_system', 'DataStructures/pbf-proto/fileformat.pb.o', 'DataStructures/pbf-proto/osmformat.pb.o'])
 env.Program("routed.cpp")
 env = conf.Finish()
 
