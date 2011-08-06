@@ -46,8 +46,8 @@ public:
             appendCoordinateToString(phantomNodes.startPhantom.location, descriptorState.routeGeometryString);
             descriptorState.startOfSegmentCoordinate = phantomNodes.startPhantom.location;
             //Generate initial instruction for start of route (order of NodeIDs does not matter, its the same name anyway)
-            summary.startName = sEngine.GetEscapedNameForOriginDestinationNodeID(phantomNodes.targetPhantom.startNode, phantomNodes.startPhantom.startNode);
-            descriptorState.lastNameID = sEngine.GetNameIDForOriginDestinationNodeID(phantomNodes.targetPhantom.startNode, phantomNodes.startPhantom.startNode);
+            summary.startName = sEngine.GetEscapedNameForOriginDestinationNodeID(phantomNodes.startPhantom.startNode, phantomNodes.startPhantom.targetNode);
+            descriptorState.lastNameID = sEngine.GetNameIDForOriginDestinationNodeID(phantomNodes.startPhantom.startNode, phantomNodes.startPhantom.targetNode);
 
             //If we have a route, i.e. start and dest not on same edge, than get it
             if(rawRoute.routeSegments[0].size() > 0)
@@ -72,13 +72,13 @@ public:
                     continue;
 
                 if ( UINT_MAX == lastNodeID) {
-                    lastNodeID = (phantomNodes.startPhantom.startNode == (*path.begin()).node ? phantomNodes.targetPhantom.startNode : phantomNodes.startPhantom.startNode);
+                    lastNodeID = (phantomNodes.startPhantom.startNode == (*path.begin()).node ? phantomNodes.startPhantom.targetNode : phantomNodes.startPhantom.startNode);
                 }
                 //Check, if there is overlap between current and previous route segment
                 //if not, than we are fine and can route over this edge without paying any special attention.
                 if(lastNodeID == (*path.begin()).node) {
                     appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
-                    lastNodeID = (lastNodeID == rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode ? rawRoute.segmentEndCoordinates[segmentIdx].targetPhantom.startNode : rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode);
+                    lastNodeID = (lastNodeID == rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode ? rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.targetNode : rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.startNode);
 
                     //output of the via nodes coordinates
                     appendCoordinateToString(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location, descriptorState.routeGeometryString);
@@ -149,7 +149,7 @@ public:
                     }
                 }
             }
-            descriptorState.currentNameID = sEngine.GetNameIDForOriginDestinationNodeID(phantomNodes.startPhantom.targetNode, phantomNodes.targetPhantom.targetNode);
+            descriptorState.currentNameID = sEngine.GetNameIDForOriginDestinationNodeID(phantomNodes.targetPhantom.startNode, phantomNodes.startPhantom.targetNode);
             descriptorState.nextCoordinate = phantomNodes.targetPhantom.location;
             appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
 
