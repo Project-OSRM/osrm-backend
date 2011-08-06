@@ -27,54 +27,48 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class PolylineCompressor {
 private:
-    inline string encodeSignedNumber(const int number) const {
-        int signedNumber = number << 1;
-        if (number < 0) {
-            signedNumber = ~(signedNumber);
-        }
-        return (encodeNumber(signedNumber));
-    }
+	inline void encodeVectorSignedNumber(vector<int> & numbers, string & output) {
+		for(unsigned i = 0; i < numbers.size(); ++i) {
+			numbers[i] <<= 1;
+			if (numbers[i] < 0) {
+				numbers[i] = ~(numbers[i]);
+			}
+		}
+		for(unsigned i = 0; i < numbers.size(); ++i) {
+			encodeNumber(numbers[i], output);
+		}
+	}
 
-    inline string encodeNumber(int numberToEncode) const {
-        string encodeString;
+	inline void encodeNumber(int numberToEncode, string & output) {
+		while (numberToEncode >= 0x20) {
+			int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
+			output += (static_cast<char> (nextValue));
+			if(92 == nextValue)
+				output += (static_cast<char> (nextValue));
+			numberToEncode >>= 5;
+		}
 
-        while (numberToEncode >= 0x20) {
-            int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
-            encodeString += (static_cast<char> (nextValue));
-            numberToEncode >>= 5;
-        }
-
-        numberToEncode += 63;
-        encodeString += (static_cast<char> (numberToEncode));
-
-        return encodeString;
-    }
-
-    inline void replaceBackslash(string & str) {
-        size_t found = 0;
-        do {
-            found = str.find("\\", found);
-            if(found ==string::npos)
-                break;
-            str.insert(found, "\\");
-            found+=2;
-        } while(true);
-    }
+		numberToEncode += 63;
+		output += (static_cast<char> (numberToEncode));
+		if(92 == numberToEncode)
+			output += (static_cast<char> (numberToEncode));
+	}
 
 public:
-    inline void printEncodedString(vector<_Coordinate>& polyline, string &output) {
-        output += "\"";
-        if(!polyline.empty()) {
-            output += encodeSignedNumber(polyline[0].lat);
-            output += encodeSignedNumber(polyline[0].lon);
-        }
-        for(unsigned i = 1; i < polyline.size(); i++) {
-            output += encodeSignedNumber(polyline[i].lat - polyline[i-1].lat);
-            output += encodeSignedNumber(polyline[i].lon - polyline[i-1].lon);
-        }
-        output += "\"";
-        replaceBackslash(output);
-    }
+	inline void printEncodedString(const vector<_Coordinate>& polyline, string &output) {
+		vector<int> deltaNumbers(2*polyline.size());
+		output += "\"";
+		if(!polyline.empty()) {
+			deltaNumbers[0] = polyline[0].lat;
+			deltaNumbers[1] = polyline[0].lon;
+			for(unsigned i = 1; i < polyline.size(); ++i) {
+				deltaNumbers[(2*i)]   = (polyline[i].lat - polyline[i-1].lat);
+				deltaNumbers[(2*i)+1] = (polyline[i].lon - polyline[i-1].lon);
+			}
+			encodeVectorSignedNumber(deltaNumbers, output);
+		}
+		output += "\"";
+	}
 
     inline void printUnencodedString(vector<_Coordinate> & polyline, string & output) {
         output += "[";
