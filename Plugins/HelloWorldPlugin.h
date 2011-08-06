@@ -16,7 +16,7 @@
 class HelloWorldPlugin : public BasePlugin {
 public:
 	HelloWorldPlugin() {}
-	~HelloWorldPlugin() { /*std::cout << GetDescriptor() << " destructor" << std::endl;*/ }
+	virtual ~HelloWorldPlugin() { /*std::cout << GetDescriptor() << " destructor" << std::endl;*/ }
 	std::string GetDescriptor() { return std::string("hello"); }
 	void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
 		std::cout << "[hello world]: runnning handler" << std::endl;
