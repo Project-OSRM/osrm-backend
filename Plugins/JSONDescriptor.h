@@ -140,7 +140,7 @@ public:
 
                     double area = fabs(0.5*( descriptorState.startOfSegmentCoordinate.lon*(descriptorState.nextCoordinate.lat - descriptorState.currentCoordinate.lat) + descriptorState.nextCoordinate.lon*(descriptorState.currentCoordinate.lat - descriptorState.startOfSegmentCoordinate.lat) + descriptorState.currentCoordinate.lon*(descriptorState.startOfSegmentCoordinate.lat - descriptorState.nextCoordinate.lat)  ) );
                     //if route is generalization does not skip this point, add it to description
-                    if( it==path.end()-1 || config.z == 19 || area >= areaThresholds[config.z] || (false == descriptorState.CurrentAndPreviousNameIDsEqual()) ) {
+                    if( config.z == 19 || area >= areaThresholds[config.z] || (false == descriptorState.CurrentAndPreviousNameIDsEqual()) ) {
                         //mark the beginning of the segment thats announced
                         //                        appendCoordinateToString(descriptorState.currentCoordinate, descriptorState.routeGeometryString);
                         polyline.push_back(descriptorState.currentCoordinate);

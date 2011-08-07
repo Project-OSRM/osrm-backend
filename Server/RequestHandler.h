@@ -46,7 +46,6 @@ public:
 	        BasePlugin * tempPointer = _pluginVector[i];
 	        DELETE( tempPointer );
 	    }
-
 	}
 
 	void handle_request(const Request& req, Reply& rep){

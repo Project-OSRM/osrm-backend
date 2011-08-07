@@ -50,22 +50,7 @@ private:
     HashTable<std::string, unsigned> descriptorTable;
     std::string pluginDescriptorString;
 
-    struct _ThreadData {
-        SearchEngine<EdgeData, StaticGraph<EdgeData> > * sEngine;
-        std::vector< _PathData > * path;
-        unsigned distanceOfSegment;
-        PhantomNodes phantomNodesOfSegment;
-        _ThreadData(SearchEngine<EdgeData, StaticGraph<EdgeData> > * s) : sEngine(s), distanceOfSegment(0) {
-            path = new std::vector< _PathData >();
-        }
-        ~_ThreadData() {
-            DELETE( path );
-            DELETE( sEngine );
-        }
-    };
-
-    std::vector<_ThreadData *> threadData;
-
+    SearchEngine<EdgeData, StaticGraph<EdgeData> > * searchEngine;
 public:
 
     ViaRoutePlugin(ObjectsForQueryStruct * objects, std::string psd = "viaroute") : pluginDescriptorString(psd) {
@@ -73,10 +58,7 @@ public:
         graph = objects->graph;
         names = objects->names;
 
-        unsigned maxThreads = omp_get_max_threads();
-        for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
-            threadData.push_back( new _ThreadData( new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names)) );
-        }
+        searchEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names);
 
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("kml", 0);
@@ -85,9 +67,7 @@ public:
     }
 
     virtual ~ViaRoutePlugin() {
-        for ( unsigned threadNum = 0; threadNum < threadData.size(); threadNum++ ) {
-            DELETE( threadData[threadNum] );
-        }
+    	DELETE( searchEngine );
     }
 
     std::string GetDescriptor() { return pluginDescriptorString; }
@@ -144,25 +124,22 @@ public:
         vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         bool errorOccurredFlag = false;
 
-#pragma omp parallel for
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); i++) {
-            threadData[omp_get_thread_num()]->sEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
+        	searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
             if(!rawRoute.rawViaNodeCoordinates[i].isSet()) {
                 errorOccurredFlag = true;
             }
         }
 
         rawRoute.Resize();
-
         unsigned distance = 0;
 
-//#pragma omp parallel for reduction(+:distance)
         for(unsigned i = 0; i < phantomNodeVector.size()-1 && !errorOccurredFlag; i++) {
-            PhantomNodes & segmentPhantomNodes = threadData[omp_get_thread_num()]->phantomNodesOfSegment;
+            PhantomNodes segmentPhantomNodes;
             segmentPhantomNodes.startPhantom = phantomNodeVector[i];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             std::vector< _PathData > path;
-            unsigned distanceOfSegment = threadData[omp_get_thread_num()]->sEngine->ComputeRoute(segmentPhantomNodes, path);
+            unsigned distanceOfSegment = searchEngine->ComputeRoute(segmentPhantomNodes, path);
 
             if(UINT_MAX == distanceOfSegment ) {
                 errorOccurredFlag = true;
@@ -229,7 +206,9 @@ public:
         phantomNodes.startPhantom = rawRoute.segmentEndCoordinates[0].startPhantom;
         phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
         desc->SetConfig(descriptorConfig);
-        desc->Run(reply, rawRoute, phantomNodes, *threadData[0]->sEngine, distance);
+
+        desc->Run(reply, rawRoute, phantomNodes, *searchEngine, distance);
+
         if("" != JSONParameter) {
             reply.content += ")\n";
         }
