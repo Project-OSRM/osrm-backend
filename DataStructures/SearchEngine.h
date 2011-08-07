@@ -85,7 +85,7 @@ struct _InsertedNodes {
 };
 
 
-typedef BinaryHeap< NodeID, int, int, _HeapData, DenseStorage<NodeID, NodeID>  > _Heap;
+typedef BinaryHeap< NodeID, int, int, _HeapData, ArrayStorage<NodeID, NodeID>  > _Heap;
 
 template<typename EdgeData, typename GraphT, typename NodeHelperT = NodeInformationHelpDesk>
 class SearchEngine {
