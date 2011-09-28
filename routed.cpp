@@ -19,6 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 
 #include <iostream>
+#include <signal.h>
 
 #ifdef _OPENMP
 #include <omp.h>
