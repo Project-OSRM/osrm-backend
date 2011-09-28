@@ -24,6 +24,48 @@ Once the dependencies are properly installed running 'scons' should build the
 binaries. The Sconstruct has been built for Ubuntu 10.04, but it should work 
 under any recent Linux. 
 
+Compiling Under Windows
+---
+
+Visual Studio 2008 solution and projects are included for Windows compilation, and
+can be found in the vsproject directory.  All required dependencies need to be
+present, and the osrm.vsprops file will need to be edited to point to the various
+dependency directories.  The suggested directory structure for dependencies is:
+
+lib\
+  boost\
+    boost  (contains includes)
+	lib
+  bzip2\
+    bin  (contains libbz2.dll)
+	include
+	lib
+  iconv\
+    bin
+	include
+	lib
+  libxml2\
+    bin
+	include
+	lib
+  protobuf
+    bin  (contains protoc.exe)
+	include
+	lib  (contains libprotobuf.lib and libprotobuf-debug.lib)
+  sparsehash
+    src
+  stxxl
+    include
+	lib  (contains libstxxl.lib and libstxxl-debug.lib)
+  zlib
+    bin
+	include
+	lib  (zlib.lib and zlibd.lib)
+	
+Using the above structure, the only changes necessary for compilations are setting
+the base paths in osrm.vsprops.  
+
+
 Running the Server
 ---
 Running the server requires preprocessing data from Openstreetmap. To do so you

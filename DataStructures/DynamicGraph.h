@@ -200,12 +200,12 @@ class DynamicGraph {
 
         bool isDummy( EdgeIterator edge ) const
         {
-            return m_edges[edge].target == std::numeric_limits< NodeIterator >::max();
+            return m_edges[edge].target == (std::numeric_limits< NodeIterator >::max)();
         }
 
         void makeDummy( EdgeIterator edge )
         {
-            m_edges[edge].target = std::numeric_limits< NodeIterator >::max();
+            m_edges[edge].target = (std::numeric_limits< NodeIterator >::max)();
         }
 
         struct Node {

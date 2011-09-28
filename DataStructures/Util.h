@@ -24,8 +24,30 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 #include <cmath>
 #include <cstdlib>
-#include <sys/time.h>
-#include <tr1/functional_hash.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#ifdef _WIN32
+ #include <sys/timeb.h>
+ #include <sys/types.h>
+ #include <winsock.h>
+ void gettimeofday(struct timeval* t,void* timezone)
+ {       struct _timeb timebuffer;
+        _ftime( &timebuffer );
+        t->tv_sec=timebuffer.time;
+        t->tv_usec=1000*timebuffer.millitm;
+ }
+#else
+ #include <sys/time.h>
+#endif
+
+#ifdef _WIN32
+ #include <boost/functional/hash.hpp>
+#else
+ #include <tr1/functional_hash.h>
+#endif
 #include <boost/thread.hpp>
 
 /** Returns a timestamp (now) in seconds (incl. a fractional part). */

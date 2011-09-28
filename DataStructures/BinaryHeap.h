@@ -32,7 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <google/sparse_hash_map>
 #include <google/sparsetable>
 
-template< typename NodeID, typename Key, bool initialize = false >
+template< typename NodeID, typename Key, bool initialize = true >
 class ArrayStorage {
 public:
 
@@ -144,7 +144,7 @@ public:
     void Clear() {
         heap.resize( 1 );
         insertedNodes.clear();
-        heap[0].weight = std::numeric_limits< Weight >::min();
+        heap[0].weight = (std::numeric_limits< Weight >::min)();
         nodeIndex.Clear();
     }
 
@@ -208,7 +208,7 @@ public:
         for ( typename std::vector< HeapElement >::iterator i = heap.begin() + 1, iend = heap.end(); i != iend; ++i )
             insertedNodes[i->index].key = 0;
         heap.resize( 1 );
-        heap[0].weight = std::numeric_limits< Weight >::min();
+        heap[0].weight = (std::numeric_limits< Weight >::min)();
     }
 
     void DecreaseKey( NodeID node, Weight weight ) {

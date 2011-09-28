@@ -26,7 +26,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #else
 #include <algorithm>
 #endif
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 #include "Contractor.h"
 
 #ifdef _OPENMP
@@ -169,7 +171,7 @@ private:
         cout << "Scanning for useless shortcuts" << endl;
         BuildOutgoingGraph();
 #pragma omp parallel for
-        for ( unsigned i = 0; i < ( unsigned ) _graph.size(); i++ ) {
+        for ( int i = 0; i < ( unsigned ) _graph.size(); i++ ) {
             for ( unsigned edge = _firstEdge[_graph[i].source]; edge < _firstEdge[_graph[i].source + 1]; ++edge ) {
                 if ( edge == i )
                     continue;
@@ -265,8 +267,8 @@ private:
         data->_heapForward->Insert( source, 0, source );
         data->_heapBackward->Insert( target, 0, target );
 
-        int targetDistance = std::numeric_limits< int >::max();
-        NodeID middle = std::numeric_limits<NodeID>::max();
+        int targetDistance = (std::numeric_limits< int >::max)();
+        NodeID middle = (std::numeric_limits<NodeID>::max)();
 
         while ( data->_heapForward->Size() + data->_heapBackward->Size() > 0 ) {
             if ( data->_heapForward->Size() > 0 ) {

@@ -28,6 +28,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <limits>
 #include <vector>
 #include <stxxl.h>
+#include <omp.h>
+
+#ifdef _WIN32
+#include <math.h>
+#endif
 
 #include <boost/thread.hpp>
 #include <google/dense_hash_map>
@@ -160,7 +165,7 @@ public:
     }
 
     NNGrid(const char* rif, const char* _i, unsigned numberOfThreads = omp_get_num_procs()): cellCache(500), fileCache(500) {
-        iif = _i;
+        iif = std::string(_i);
         ramIndexTable.resize((1024*1024), UINT_MAX);
         ramInFile.open(rif, std::ios::in | std::ios::binary);
     }
@@ -271,7 +276,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = numeric_limits<double>::max();
+        double dist = (numeric_limits<double>::max)();
         timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
             double r = 0.;
@@ -286,7 +291,7 @@ public:
                 nodesOfEdge.projectedPoint.lon = tmp.lon;
             }
         }
-        if(dist != numeric_limits<double>::max()) {
+        if(dist != (numeric_limits<double>::max)()) {
             return true;
         }
         return false;
@@ -307,7 +312,7 @@ public:
         }
 
         _Coordinate tmp;
-        double dist = numeric_limits<double>::max();
+        double dist = (numeric_limits<double>::max)();
 //        timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
             double r = 0.;
@@ -342,7 +347,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = numeric_limits<double>::max();
+        double dist = (numeric_limits<double>::max)();
         timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
             double r = 0.;
@@ -366,7 +371,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = numeric_limits<double>::max();
+        double dist = (numeric_limits<double>::max)();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
@@ -561,7 +566,7 @@ private:
 //        if(cellCache.exists(startIndexInFile)) {
 //                cellCache.fetch(startIndexInFile, cellIndex);
 //            } else {
-                std::ifstream localStream(iif, std::ios::in | std::ios::binary);
+                std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
                 localStream.seekg(startIndexInFile);
                 localStream.read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
                 localStream.close();
@@ -579,7 +584,7 @@ private:
 //        if(fileCache.exists(position)) {
 //            fileCache.fetch(position, result);
 //        } else {
-            std::ifstream localStream(iif, std::ios::in | std::ios::binary);
+            std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
             localStream.seekg(position);
             DiskEdge diskEdge;
             do {
@@ -655,7 +660,7 @@ private:
     ifstream ramInFile;
     stxxl::vector<GridEntry> * entries;
     std::vector<unsigned> ramIndexTable; //4 MB for first level index in RAM
-    const char * iif;
+    std::string iif;
     LRUCache<int,std::vector<unsigned> > cellCache;
     LRUCache<int,std::vector<_Edge> > fileCache;
 };

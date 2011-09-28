@@ -80,7 +80,7 @@ int main (int argc, char *argv[]) {
 #endif
 
     ifstream in;
-    in.open (argv[1]);
+    in.open (argv[1], ifstream::in | ifstream::binary);
     if (!in.is_open()) {
         cerr << "Cannot open " << argv[1] << endl; exit(-1);
     }

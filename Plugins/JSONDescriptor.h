@@ -157,7 +157,7 @@ public:
                     }
                     descriptorState.distanceOfInstruction += ApproximateDistance(descriptorState.currentCoordinate, descriptorState.nextCoordinate);
                     lastNodeID = it->node;
-                    if(it != path.begin()-1) {
+                    if(it != path.begin()) {
                         descriptorState.previousCoordinate = descriptorState.currentCoordinate;
                         descriptorState.currentCoordinate = descriptorState.nextCoordinate;
                     }

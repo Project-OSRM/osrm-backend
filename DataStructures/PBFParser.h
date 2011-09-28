@@ -373,18 +373,20 @@ private:
         if ( size > MAX_BLOB_HEADER_SIZE || size < 0 ) {
             return false;
         }
-        char data[size];
+        char *data = (char*)malloc(size);
         stream.read(data, size*sizeof(data[0]));
 
         if ( !(threadData->PBFBlobHeader).ParseFromArray( data, size ) ){
+            free(data);
             return false;
         }
+        free(data);
         return true;
     }
 
     bool unpackZLIB(std::fstream & stream, _ThreadData * threadData) {
         unsigned rawSize = threadData->PBFBlob.raw_size();
-        char unpackedDataArray[rawSize];
+        char* unpackedDataArray = (char*)malloc(rawSize);
         z_stream compressedDataStream;
         compressedDataStream.next_in = ( unsigned char* ) threadData->PBFBlob.zlib_data().data();
         compressedDataStream.avail_in = threadData->PBFBlob.zlib_data().size();
@@ -396,6 +398,7 @@ private:
         int ret = inflateInit( &compressedDataStream );
         if ( ret != Z_OK ) {
             std::cerr << "[error] failed to init zlib stream" << std::endl;
+            free(unpackedDataArray);
             return false;
         }
 
@@ -403,12 +406,14 @@ private:
         if ( ret != Z_STREAM_END ) {
             std::cerr << "[error] failed to inflate zlib stream" << std::endl;
             std::cerr << "[error] Error type: " << ret << std::endl;
+            free(unpackedDataArray);
             return false;
         }
 
         ret = inflateEnd( &compressedDataStream );
         if ( ret != Z_OK ) {
             std::cerr << "[error] failed to deinit zlib stream" << std::endl;
+            free(unpackedDataArray);
             return false;
         }
 
@@ -416,6 +421,7 @@ private:
         for(unsigned i = 0; i < rawSize; i++) {
             threadData->charBuffer[i] = unpackedDataArray[i];
         }
+        free(unpackedDataArray);
         return true;
     }
 
@@ -433,11 +439,12 @@ private:
             return false;
         }
 
-        char data[size];
+        char* data = (char*)malloc(size);
         stream.read(data, sizeof(data[0])*size);
 
         if ( !threadData->PBFBlob.ParseFromArray( data, size ) ) {
             std::cerr << "[error] failed to parse blob" << std::endl;
+            free(data);
             return false;
         }
 
@@ -451,16 +458,20 @@ private:
         } else if ( threadData->PBFBlob.has_zlib_data() ) {
             if ( !unpackZLIB(stream, threadData) ) {
                 std::cerr << "[error] zlib data encountered that could not be unpacked" << std::endl;
+                free(data);
                 return false;
             }
         } else if ( threadData->PBFBlob.has_lzma_data() ) {
             if ( !unpackLZMA(stream, threadData) )
                 std::cerr << "[error] lzma data encountered that could not be unpacked" << std::endl;
+            free(data);
             return false;
         } else {
             std::cerr << "[error] Blob contains no data" << std::endl;
+            free(data);
             return false;
         }
+        free(data);
         return true;
     }
 

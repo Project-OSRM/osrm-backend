@@ -39,26 +39,56 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/RoutePlugin.h"
 #include "Plugins/ViaRoutePlugin.h"
 #include "Util/InputFileUtil.h"
+
+#ifndef _WIN32
 #include "Util/LinuxStackTrace.h"
+#endif
+
 using namespace std;
 
 typedef http::RequestHandler RequestHandler;
 
-int main (int argc, char *argv[]) {
-    installCrashHandler(argv[0]);
+#ifdef _WIN32
+boost::function0<void> console_ctrl_function;
 
-    if(testDataFiles(argc, argv)==false) {
-        std::cerr << "[error] at least one data file name seems to be bogus!" << std::endl;
-        exit(-1);
-    }
+BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
+{
+  switch (ctrl_type)
+  {
+  case CTRL_C_EVENT:
+  case CTRL_BREAK_EVENT:
+  case CTRL_CLOSE_EVENT:
+  case CTRL_SHUTDOWN_EVENT:
+    console_ctrl_function();
+    return TRUE;
+  default:
+    return FALSE;
+  }
+}
+#endif
+
+int main (int argc, char *argv[]) {
+#ifndef _WIN32
+    installCrashHandler(argv[0]);
+#endif
+
+	// Bug - testing not necessary.  testDataFiles also tries to open the first
+	// argv, which is the name of exec file
+    //if(testDataFiles(argc, argv)==false) {
+        //std::cerr << "[error] at least one data file name seems to be bogus!" << std::endl;
+        //exit(-1);
+    //}
 
     try {
         std::cout << "[server] starting up engines, saved at " << __TIMESTAMP__ << std::endl;
+
+#ifndef _WIN32
         int sig = 0;
         sigset_t new_mask;
         sigset_t old_mask;
         sigfillset(&new_mask);
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
+#endif
 
         ServerConfiguration serverConfig("server.ini");
         Server * s = ServerFactory::CreateServer(serverConfig);
@@ -82,6 +112,7 @@ int main (int argc, char *argv[]) {
 
         boost::thread t(boost::bind(&Server::Run, s));
 
+#ifndef _WIN32
         sigset_t wait_mask;
         pthread_sigmask(SIG_SETMASK, &old_mask, 0);
         sigemptyset(&wait_mask);
@@ -89,8 +120,18 @@ int main (int argc, char *argv[]) {
         sigaddset(&wait_mask, SIGQUIT);
         sigaddset(&wait_mask, SIGTERM);
         pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
-        std::cout << "[server] running and waiting for requests" << std::endl;
+
         sigwait(&wait_mask, &sig);
+#else
+        // Set console control handler to allow server to be stopped.
+        console_ctrl_function = boost::bind(&Server::Stop, s);
+        SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
+
+        s->Run();
+#endif
+
+        std::cout << "[server] running and waiting for requests" << std::endl;
+
         std::cout << std::endl << "[server] shutting down" << std::endl;
         s->Stop();
         t.join();

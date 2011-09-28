@@ -44,7 +44,7 @@ static double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C
     int v2x = B.lon - C.lon;
     int v2y = B.lat - C.lat;
 
-    double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
+    double angle = (atan2((double)v2y,v2x) - atan2((double)v1y,v1x) )*180/M_PI;
     while(angle < 0)
         angle += 360;
 

@@ -61,7 +61,7 @@ struct _Node : NodeInfo{
         return _Node(0,0,0);
     }
     static _Node max_value() {
-        return _Node(numeric_limits<int>::max(), numeric_limits<int>::max(), numeric_limits<unsigned int>::max());
+        return _Node((numeric_limits<int>::max)(), (numeric_limits<int>::max)(), (numeric_limits<unsigned int>::max)());
     }
     NodeID key() const {
         return id;
@@ -157,7 +157,7 @@ struct _Edge {
         return _Edge(0,0);
     }
     static _Edge max_value() {
-        return _Edge(numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max());
+        return _Edge((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
     }
 
 };
@@ -194,10 +194,10 @@ struct _RawRestrictionContainer {
     _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaWay(UINT_MAX) { restriction.flags.isOnly = isOnly;}
 
     static _RawRestrictionContainer min_value() {
-        return _RawRestrictionContainer(numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min());
+        return _RawRestrictionContainer((numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)());
     }
     static _RawRestrictionContainer max_value() {
-        return _RawRestrictionContainer(numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max());
+        return _RawRestrictionContainer((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
     }
 };
 
@@ -238,10 +238,10 @@ struct _WayIDStartAndEndEdge {
     _WayIDStartAndEndEdge(unsigned w, NodeID fs, NodeID ft, NodeID ls, NodeID lt) :  wayID(w), firstStart(fs), firstTarget(ft), lastStart(ls), lastTarget(lt) {}
 
     static _WayIDStartAndEndEdge min_value() {
-        return _WayIDStartAndEndEdge(numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min(), numeric_limits<unsigned>::min());
+        return _WayIDStartAndEndEdge((numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)());
     }
     static _WayIDStartAndEndEdge max_value() {
-        return _WayIDStartAndEndEdge(numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max(), numeric_limits<unsigned>::max());
+        return _WayIDStartAndEndEdge((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
     }
 };
 

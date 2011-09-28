@@ -109,7 +109,7 @@ public:
             edge.source = i->source();
             edge.target = i->target();
 
-            edge.data.distance = std::max((int)i->weight(), 1 );
+            edge.data.distance = (std::max)((int)i->weight(), 1 );
             assert( edge.data.distance > 0 );
 #ifdef DEBUG
             if ( edge.data.distance > 24 * 60 * 60 * 10 ) {
@@ -157,26 +157,26 @@ public:
             forwardEdge.data.middleName.nameID = backwardEdge.data.middleName.nameID = middle;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
-            forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
+            forwardEdge.data.distance = backwardEdge.data.distance = (std::numeric_limits< int >::max)();
             //remove parallel edges
             while ( i < edges.size() && edges[i].source == source && edges[i].target == target ) {
                 if ( edges[i].data.forward )
-                    forwardEdge.data.distance = std::min( edges[i].data.distance, forwardEdge.data.distance );
+                    forwardEdge.data.distance = (std::min)( edges[i].data.distance, forwardEdge.data.distance );
                 if ( edges[i].data.backward )
-                    backwardEdge.data.distance = std::min( edges[i].data.distance, backwardEdge.data.distance );
+                    backwardEdge.data.distance = (std::min)( edges[i].data.distance, backwardEdge.data.distance );
                 i++;
             }
             //merge edges (s,t) and (t,s) into bidirectional edge
             if ( forwardEdge.data.distance == backwardEdge.data.distance ) {
-                if ( (int)forwardEdge.data.distance != std::numeric_limits< int >::max() ) {
+                if ( (int)forwardEdge.data.distance != (std::numeric_limits< int >::max)() ) {
                     forwardEdge.data.backward = true;
                     edges[edge++] = forwardEdge;
                 }
             } else { //insert seperate edges
-                if ( (int)forwardEdge.data.distance != std::numeric_limits< int >::max() ) {
+                if ( (int)forwardEdge.data.distance != (std::numeric_limits< int >::max)() ) {
                     edges[edge++] = forwardEdge;
                 }
-                if ( (int)backwardEdge.data.distance != std::numeric_limits< int >::max() ) {
+                if ( (int)backwardEdge.data.distance != (std::numeric_limits< int >::max)() ) {
                     edges[edge++] = backwardEdge;
                 }
             }
@@ -485,7 +485,7 @@ private:
                     continue;
                 const NodeID target = _graph->GetTarget( outEdge );
                 const int pathDistance = inData.distance + outData.distance;
-                maxDistance = std::max( maxDistance, pathDistance );
+                maxDistance = (std::max)( maxDistance, pathDistance );
                 if ( !heap.WasInserted( target ) )
                     heap.Insert( target, pathDistance, _HeapData(true) );
                 else if ( pathDistance < heap.GetKey( target ) )
@@ -563,7 +563,7 @@ private:
             if ( u == node )
                 continue;
             neighbours.push_back( u );
-            ( *nodeData )[u].depth = std::max(( *nodeData )[node].depth + 1, ( *nodeData )[u].depth );
+            ( *nodeData )[u].depth = (std::max)(( *nodeData )[node].depth + 1, ( *nodeData )[u].depth );
         }
         //eliminate duplicate entries ( forward + backward edges )
         std::sort( neighbours.begin(), neighbours.end() );

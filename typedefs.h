@@ -44,6 +44,15 @@ using namespace std;
 
 #define DELETE(x) { if(NULL != x) { delete x; x = NULL; } }
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#ifndef HAVE_ROUNDF
+#include <boost/math/tr1.hpp>
+using namespace boost::math;
+#endif
+
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
 typedef unsigned int EdgeWeight;
