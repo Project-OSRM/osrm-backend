@@ -26,6 +26,8 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/sysctl.h>
 }	
+#elif defined _WIN32
+#include <windows.h>
 #endif
 
 /* Returns the physical memory size in kilobytes */
@@ -47,6 +49,11 @@ unsigned GetPhysicalmemory(void){
 	sysctl(mib, 2, &memsize, &len, NULL, 0);
 	return memsize/1024;
 	
+#elif defined(_WIN32)
+	MEMORYSTATUSEX status;
+	status.dwLength = sizeof(status);
+	GlobalMemoryStatusEx(&status);
+	return status.ullTotalPhys/1024;
 #else
 	std::cout << "[Warning] Compiling on unknown architecture." << std::endl 
 		<< "Please file a ticket at http://project-osrm.org" << std::endl;
