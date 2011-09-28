@@ -26,6 +26,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <google/sparse_hash_map>
 
+#include <string>
+#include <ext/hash_map>
+
+namespace __gnu_cxx
+{
+    template<> struct hash<std::string> {
+        size_t operator()(const std::string& x) const {
+            return hash<const char*>()(x.c_str());
+        }
+    };
+}
+
 template<typename keyT, typename valueT>
 class HashTable {
     typedef google::sparse_hash_map<keyT, valueT> MyHashTable;
