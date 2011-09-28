@@ -148,7 +148,7 @@ int main (int argc, char *argv[]) {
 
         cout << "[extractor] parsing finished after " << get_timestamp() - time << "seconds" << endl;
         time = get_timestamp();
-        unsigned memory_to_use = amountOfRAM * 1024 * 1024 * 1024;
+        uint64_t memory_to_use = static_cast<uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
         cout << "[extractor] Sorting used nodes        ... " << flush;
         stxxl::sort(externalMemory.usedNodeIDs.begin(), externalMemory.usedNodeIDs.end(), Cmp(), memory_to_use);
