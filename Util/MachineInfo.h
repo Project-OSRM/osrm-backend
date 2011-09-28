@@ -21,8 +21,9 @@
 #ifndef MACHINE_INFO_H
 #define MACHINE_INFO_H
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
 extern "C" {
+#include <sys/types.h>
 #include <sys/sysctl.h>
 }	
 #endif
@@ -34,6 +35,13 @@ unsigned GetPhysicalmemory(void){
 	
 #elif defined(__APPLE__)
 	int mib[2] = {CTL_HW, HW_MEMSIZE};
+	long long memsize;
+	size_t len = sizeof(memsize);
+	sysctl(mib, 2, &memsize, &len, NULL, 0);
+	return memsize/1024;
+	
+#elif defined(__FreeBSD__)
+	int mib[2] = {CTL_HW, HW_PHYSMEM};
 	long long memsize;
 	size_t len = sizeof(memsize);
 	sysctl(mib, 2, &memsize, &len, NULL, 0);
