@@ -151,6 +151,6 @@ void installCrashHandler(std::string b) {
 #endif
 }
 #else
-inline void installCrashHandler(std::string b) const {}
+inline void installCrashHandler(std::string b) {}
 #endif
 #endif /* LINUXSTACKTRACE_H_ */
