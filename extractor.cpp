@@ -27,6 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -34,6 +35,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 #include <libxml/xmlreader.h>
+#include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include <google/sparse_hash_map>
 #include <unistd.h>
 #include <stxxl.h>
@@ -48,6 +52,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
 
+using namespace std;
+
 typedef BaseConfiguration ExtractorConfiguration;
 
 unsigned globalRestrictionCounter = 0;
@@ -60,6 +66,7 @@ bool wayFunction(_Way w);
 
 template<class ClassT>
 bool removeIfUnused(ClassT n) { return (false == n.used); }
+
 
 int main (int argc, char *argv[]) {
     if(argc <= 1) {
@@ -92,6 +99,31 @@ int main (int argc, char *argv[]) {
         }
     }
     string adressFileName(outputFileName);
+    Settings settings;
+
+    boost::property_tree::ptree pt;
+    try {
+        INFO("Loading speed profiles")
+        boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
+        INFO("Found the following speed profiles: ");
+        int profileCounter(0);
+        BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child("")) {
+            string name = v.first;
+            cout << " [" << profileCounter << "]" << name << endl;
+            ++profileCounter;
+        }
+        string usedSpeedProfile(pt.get_child("").begin()->first);
+        INFO("Using profile \"" << usedSpeedProfile << "\"")
+        BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(usedSpeedProfile)) {
+            string name = v.first;
+            int value = v.second.get<int>("");
+            DEBUG("inserting " << name << "=" << value);
+            settings.speedProfile.names.push_back(name);
+            settings.speedProfile.speed.push_back(value);
+        }
+    } catch(std::exception& e) {
+        ERR("caught: " << e.what() );
+    }
 
     unsigned amountOfRAM = 1;
     unsigned installedRAM = GetPhysicalmemory(); 
@@ -111,17 +143,13 @@ int main (int argc, char *argv[]) {
     unsigned usedNodeCounter = 0;
     unsigned usedEdgeCounter = 0;
 
-    StringMap * stringMap = new StringMap();
-    Settings settings;
-    settings.speedProfile.names.insert(settings.speedProfile.names.begin(), names, names+14);
-    settings.speedProfile.speed.insert(settings.speedProfile.speed.begin(), speeds, speeds+14);
+    StringMap stringMap;
 
     double time = get_timestamp();
 
-    stringMap->set_empty_key(GetRandomString());
-    stringMap->insert(make_pair("", 0));
-    extractCallBacks = new ExtractorCallbacks(&externalMemory, settings, stringMap);
-
+    stringMap.set_empty_key(GetRandomString());
+    stringMap.insert(make_pair("", 0));
+    extractCallBacks = new ExtractorCallbacks(&externalMemory, settings, &stringMap);
     BaseParser<_Node, _RawRestrictionContainer, _Way> * parser;
     if(isPBF) {
         parser = new PBFParser(argv[1]);
@@ -136,6 +164,7 @@ int main (int argc, char *argv[]) {
         exit(-1);
     }
     delete parser;
+    stringMap.clear();
 
     try {
 //        INFO("raw no. of names:        " << externalMemory.nameVector.size());
@@ -146,7 +175,7 @@ int main (int argc, char *argv[]) {
 //        INFO("raw no. of addresses:    " << externalMemory.adressVector.size());
 //        INFO("raw no. of restrictions: " << externalMemory.restrictionsVector.size());
 
-        cout << "[extractor] parsing finished after " << get_timestamp() - time << "seconds" << endl;
+        cout << "[extractor] parsing finished after " << get_timestamp() - time << " seconds" << endl;
         time = get_timestamp();
         uint64_t memory_to_use = static_cast<uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
@@ -404,10 +433,10 @@ int main (int argc, char *argv[]) {
         unsigned sizeOfNameIndex = nameIndex->size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
-        for(STXXLStringVector::iterator it = externalMemory.nameVector.begin(); it != externalMemory.nameVector.end(); it++) {
-            unsigned lengthOfRawString = strlen(it->c_str());
+        BOOST_FOREACH(string str, externalMemory.nameVector) {
+            unsigned lengthOfRawString = strlen(str.c_str());
             nameOutFile.write((char *)&(lengthOfRawString), sizeof(unsigned));
-            nameOutFile.write(it->c_str(), lengthOfRawString);
+            nameOutFile.write(str.c_str(), lengthOfRawString);
         }
 
         nameOutFile.close();
