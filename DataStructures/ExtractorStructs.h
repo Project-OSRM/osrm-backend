@@ -31,23 +31,6 @@ struct _PathData {
     NodeID node;
 };
 
-/*     Default Speed Profile:
-        motorway        110
-        motorway_link   90
-        trunk           90
-        trunk_link      70
-        primary         70
-        primary_link    60
-        secondary       60
-        secondary_link  50
-        tertiary        55
-        unclassified    25
-        residential     40
-        living_street   10
-        service         30
-        ferry           5
- */
-
 typedef google::dense_hash_map<std::string, NodeID> StringMap;
 
 struct _Node : NodeInfo{
@@ -174,7 +157,6 @@ struct _Restriction {
         char unused7:1;
     } flags;
 
-
     _Restriction(NodeID vn) : viaNode(vn), fromNode(UINT_MAX), toNode(UINT_MAX) { }
     _Restriction(bool isOnly = false) : viaNode(UINT_MAX), fromNode(UINT_MAX), toNode(UINT_MAX) {
         flags.isOnly = isOnly;
@@ -197,7 +179,6 @@ struct _RawRestrictionContainer {
         return _RawRestrictionContainer((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
     }
 };
-
 
 struct CmpRestrictionByFrom: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
     typedef _RawRestrictionContainer value_type;
