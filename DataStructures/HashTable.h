@@ -24,25 +24,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef HASHTABLE_H_
 #define HASHTABLE_H_
 
-#include <google/sparse_hash_map>
-
-#include <string>
-#include <ext/hash_map>
-
-namespace __gnu_cxx
-{
-    template<> struct hash<std::string> {
-        size_t operator()(const std::string& x) const {
-            return hash<const char*>()(x.c_str());
-        }
-    };
-}
+#include <boost/unordered_map.hpp>
 
 template<typename keyT, typename valueT>
 class HashTable {
-    typedef google::sparse_hash_map<keyT, valueT> MyHashTable;
+    typedef boost::unordered_map<keyT, valueT> MyHashTable;
 public:
-    typedef typename google::sparse_hash_map<keyT, valueT>::const_iterator MyIterator;
+    typedef typename boost::unordered_map<keyT, valueT>::const_iterator MyIterator;
     typedef MyIterator iterator;
     HashTable() { }
     HashTable(const unsigned size) {
