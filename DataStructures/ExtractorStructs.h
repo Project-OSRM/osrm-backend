@@ -71,7 +71,7 @@ struct _Way {
     _Way() : id(UINT_MAX), nameID(UINT_MAX) {
 
         direction = _Way::notSure;
-        maximumSpeed = -1;
+        speed = -1;
         type = -1;
         useful = false;
         access = true;
@@ -83,7 +83,7 @@ struct _Way {
     unsigned id;
     unsigned nameID;
     std::string name;
-    double maximumSpeed;
+    double speed;
     short type;
     bool useful:1;
     bool access:1;
@@ -123,6 +123,7 @@ struct _Edge {
     _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0) {};
     _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0) { }
     _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid) { }
     NodeID start;
     NodeID target;
     short type;
@@ -237,6 +238,7 @@ struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _W
 };
 
 struct Settings {
+    Settings() : obeyPollards(false), obeyOneways(false), useRestrictions(false), accessTag("motorcar") {}
     StringMap speedProfile;
     int operator[](const string & param) const {
         if(speedProfile.find(param) == speedProfile.end())
@@ -244,6 +246,11 @@ struct Settings {
         else
             return speedProfile.at(param);
     }
+    bool obeyPollards;
+    bool obeyOneways;
+    bool useRestrictions;
+    string accessTag;
+
 };
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {
