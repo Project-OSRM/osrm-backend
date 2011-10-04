@@ -162,7 +162,7 @@ public:
             }
         }
         if ( maxspeed != "" ) {
-            double maxspeedNumber = atof( maxspeed.c_str() );
+            double maxspeedNumber = atoi( maxspeed.c_str() );
             if(maxspeedNumber != 0) {
                 w.maximumSpeed = maxspeedNumber;
             }
