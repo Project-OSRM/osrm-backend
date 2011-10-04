@@ -41,7 +41,11 @@ using namespace std;
 #define INFO(x) std::cout << "[info " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
 #define ERR(x) std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; exit(-1);
 #define WARN(x) std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
-
+#ifdef NDEBUG
+#define DEBUG(x)
+#else
+#define DEBUG(x) std::cout << "[debug " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
+#endif
 #define DELETE(x) { if(NULL != x) { delete x; x = NULL; } }
 
 #ifndef M_PI
