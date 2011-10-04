@@ -50,9 +50,6 @@ struct _PathData {
 
 typedef google::dense_hash_map<std::string, NodeID> StringMap;
 
-std::string names[14] = { "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "unclassified", "residential", "living_street", "service", "ferry" };
-double speeds[14] = { 110, 90, 90, 70, 70, 60, 60, 50, 55, 25, 40 , 10, 30, 5};
-
 struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
     _Node() {}
