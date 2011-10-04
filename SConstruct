@@ -107,6 +107,15 @@ if not conf.CheckCXXHeader('google/sparse_hash_map'):
 if not conf.CheckCXXHeader('boost/asio.hpp'):
 	print "boost/asio.hpp not found. Exiting"
 	Exit(-1)
+if not conf.CheckCXXHeader('boost/foreach.hpp'):
+	print "boost/foreach.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/property_tree/ptree.hpp'):
+	print "boost/property_tree/ptree.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/property_tree/ini_parser.hpp'):
+	print "boost/property_tree/ini_parser.hpp not found. Exiting"
+	Exit(-1)
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
