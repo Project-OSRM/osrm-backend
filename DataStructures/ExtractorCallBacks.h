@@ -183,7 +183,7 @@ public:
         }
 
         if ( w.useful && w.access && w.path.size() > 1 ) {
-            StringMap::iterator strit = stringMap->find(w.name);
+            StringMap::const_iterator strit = stringMap->find(w.name);
             if(strit == stringMap->end()) {
                 w.nameID = externalMemory->nameVector.size();
                 externalMemory->nameVector.push_back(w.name);
