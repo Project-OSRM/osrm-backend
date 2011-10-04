@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <climits>
 #include <string>
-#include "HashTable.h"
+#include <boost/unordered_map.hpp>
 #include "Util.h"
 
 struct _PathData {
@@ -31,7 +31,7 @@ struct _PathData {
     NodeID node;
 };
 
-typedef google::dense_hash_map<std::string, NodeID> StringMap;
+typedef boost::unordered_map<std::string, NodeID> StringMap;
 
 struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
@@ -237,16 +237,12 @@ struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _W
 };
 
 struct Settings {
-    struct SpeedProfile {
-        vector< double > speed;
-        vector< string > names;
-    } speedProfile;
-    int indexInAccessListOf( const string & key) {
-        for(unsigned i = 0; i< speedProfile.names.size(); i++) {
-            if(speedProfile.names[i] == key)
-                return i;
-        }
-        return -1;
+    StringMap speedProfile;
+    int operator[](const string & param) const {
+        if(speedProfile.find(param) == speedProfile.end())
+            return 0;
+        else
+            return speedProfile.at(param);
     }
 };
 
