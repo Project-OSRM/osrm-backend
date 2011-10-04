@@ -36,3 +36,4 @@ Thumbs.db
 # SCons related files #
 #######################
 SconsBuilder*
+.sconf*
