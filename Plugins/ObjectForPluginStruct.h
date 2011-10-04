@@ -22,6 +22,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef OBJECTSFORQUERYSTRUCT_H_
 #define OBJECTSFORQUERYSTRUCT_H_
 
+#include<vector>
+#include<string>
+
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
 
