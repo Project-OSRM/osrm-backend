@@ -38,15 +38,15 @@ using namespace std;
 #endif
 #define STXXL_VERBOSE_LEVEL -100
 
-#define INFO(x) std::cout << "[info " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
-#define ERR(x) std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; exit(-1);
-#define WARN(x) std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
+#define INFO(x) do {std::cout << "[info " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
+#define ERR(x) do {std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; exit(-1);} while(0);
+#define WARN(x) do {std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 #ifdef NDEBUG
 #define DEBUG(x)
 #else
-#define DEBUG(x) std::cout << "[debug " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;
+#define DEBUG(x) do {std::cout << "[debug " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 #endif
-#define DELETE(x) { if(NULL != x) { delete x; x = NULL; } }
+#define DELETE(x) do { if(NULL != x) { delete x; x = NULL; } }while(0);
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
