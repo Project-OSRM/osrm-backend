@@ -43,8 +43,10 @@ using namespace std;
 #define WARN(x) do {std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 #ifdef NDEBUG
 #define DEBUG(x)
+#define GUARANTEE(x,y)
 #else
 #define DEBUG(x) do {std::cout << "[debug " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
+#define GUARANTEE(x,y) do { {do{ if(false == (x)) { ERR(y) } } while(0);} } while(0);
 #endif
 #define DELETE(x) do { if(NULL != x) { delete x; x = NULL; } }while(0);
 
