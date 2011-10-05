@@ -45,8 +45,6 @@ struct STXXLContainers {
 
 class ExtractorCallbacks{
 private:
-    static const unsigned MAX_LOCAL_VECTOR_SIZE = 100;
-
     Settings settings;
     StringMap * stringMap;
     STXXLContainers * externalMemory;
@@ -62,7 +60,7 @@ public:
     }
 
     /** warning: caller needs to take care of synchronization! */
-    bool adressFunction(_Node n, HashTable<std::string, std::string> &keyVals) {
+    inline bool adressFunction(_Node n, HashTable<std::string, std::string> &keyVals) {
         /*
         std::string housenumber(keyVals.Find("addr:housenumber"));
         std::string housename(keyVals.Find("addr:housename"));
@@ -82,140 +80,108 @@ public:
     }
 
     /** warning: caller needs to take care of synchronization! */
-    bool nodeFunction(_Node &n) {
+    inline bool nodeFunction(_Node &n) {
         externalMemory->allNodes.push_back(n);
         return true;
     }
 
-    bool restrictionFunction(_RawRestrictionContainer &r) {
+    inline bool restrictionFunction(_RawRestrictionContainer &r) {
         externalMemory->restrictionsVector.push_back(r);
         return true;
     }
 
     /** warning: caller needs to take care of synchronization! */
-    bool wayFunction(_Way &w) {
+    inline bool wayFunction(_Way &w) {
+
+        //Get the properties of the way.
         std::string highway( w.keyVals.Find("highway") );
         std::string name( w.keyVals.Find("name") );
         std::string ref( w.keyVals.Find("ref"));
         std::string oneway( w.keyVals.Find("oneway"));
         std::string junction( w.keyVals.Find("junction") );
         std::string route( w.keyVals.Find("route") );
-        std::string maxspeed( w.keyVals.Find("maxspeed") );
+        double maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
         std::string access( w.keyVals.Find("access") );
-        std::string motorcar( w.keyVals.Find("motorcar") );
+        std::string accessClass( w.keyVals.Find(settings.accessTag) );
         std::string man_made( w.keyVals.Find("man_made") );
 
-        if ( ref != "" ) {
+        //Save the name of the way if it has one, ref has precedence over name tag.
+        if ( 0 < ref.length() )
             w.name = ref;
-        } else if ( name != "" ) {
-            w.name = name;
-        }
+        else
+            if ( 0 < name.length() )
+                w.name = name;
 
-        if ( oneway != "" ) {
-            if ( oneway == "no" || oneway == "false" || oneway == "0" ) {
-                w.direction = _Way::bidirectional;
-            } else {
-                if ( oneway == "yes" || oneway == "true" || oneway == "1" ) {
+        //Is the highway tag listed as usable way?
+        if(0 < settings[highway]) {
+
+            if(0 != maxspeed)
+                w.speed = maxspeed;
+            else
+                w.speed = settings[highway];
+            w.useful = true;
+
+            //Okay, do we have access to that way?
+            if(0 < access.size()) { //fastest way to check for non-empty string
+                //If access is forbidden, we don't want to route there.
+                if(access == "private" || access == "no" || access == "agricultural" || access == "forestry" || access == "delivery") { //Todo: this is still hard coded
+                    w.access = false;
+                }
+            }
+
+            if("yes" == accessClass)
+                w.access = true;
+            else if("no" == accessClass)
+                w.access = false;
+
+            //Let's process oneway property, if speed profile obeys to it
+            if(oneway != "no" && oneway != "false" && oneway != "0" && settings.obeyOneways) {
+                //if oneway tag is in forward direction or if actually roundabout
+                if(junction == "roundabout" || oneway == "yes" || oneway == "true" || oneway == "1") {
                     w.direction = _Way::oneway;
                 } else {
-                    if (oneway == "-1" )
-                        w.direction = _Way::opposite;
+                    if( oneway == "-1")
+                        w.direction  = _Way::opposite;
                 }
             }
-        }
-        if ( junction == "roundabout" ) {
-            if ( w.direction == _Way::notSure ) {
+        } else {
+            //Is the route tag listed as usable way in the profile?
+            if(settings[route] > 0 || settings[man_made] > 0) {
+                w.useful = true;
                 w.direction = _Way::oneway;
-            }
-            w.useful = true;
-            if(w.type == -1)
-                w.type = 9;
-        }
-        if ( route == "ferry" || man_made == "pier" ) {
-            for ( unsigned i = 0; i < settings.speedProfile.names.size(); i++ ) {
-                if ( "ferry" == settings.speedProfile.names[i] ) {
-                    w.type = i;
-                    w.maximumSpeed = settings.speedProfile.speed[i];
-                    w.useful = true;
-                    w.direction = _Way::bidirectional;
-                    break;
-                }
+                w.speed = settings[route];
+                w.direction = _Way::bidirectional;
             }
         }
-        if ( highway != "" ) {
-            for ( unsigned i = 0; i < settings.speedProfile.names.size(); i++ ) {
-                if ( highway == settings.speedProfile.names[i] ) {
-                    w.maximumSpeed = settings.speedProfile.speed[i];
-                    w.type = i;
-                    w.useful = true;
-                    break;
-                }
-            }
-            if ( highway == "motorway"  ) {
-                if ( w.direction == _Way::notSure ) {
-                    w.direction = _Way::oneway;
-                }
-            } else if ( highway == "motorway_link" ) {
-                if ( w.direction == _Way::notSure ) {
-                    w.direction = _Way::oneway;
-                }
-            }
-        }
-        if ( maxspeed != "" ) {
-            double maxspeedNumber = atoi( maxspeed.c_str() );
-            if(maxspeedNumber != 0) {
-                w.maximumSpeed = maxspeedNumber;
-            }
-        }
+        if ( w.useful && w.access && (1 < w.path.size()) ) { //Only true if the way is specified by the speed profile
+            //Hack: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
+            w.type = 1;
 
-        if ( access != "" ) {
-            if ( access == "private"  || access == "no" || access == "agricultural" || access == "forestry" || access == "delivery") {
-                w.access = false;
-            }
-            if ( access == "yes"  || access == "designated" || access == "official" || access == "permissive") {
-                w.access = true;
-            }
-        }
-        if ( motorcar == "yes" ) {
-            w.access = true;
-        } else if ( motorcar == "no" ) {
-            w.access = false;
-        }
-
-        if ( w.useful && w.access && w.path.size() > 1 ) {
+            //Get the unique identifier for the street name
             StringMap::const_iterator strit = stringMap->find(w.name);
             if(strit == stringMap->end()) {
                 w.nameID = externalMemory->nameVector.size();
                 externalMemory->nameVector.push_back(w.name);
-                stringMap->insert(std::make_pair(w.name, w.nameID) );
+                stringMap->insert(StringMap::value_type(w.name, w.nameID));
             } else {
                 w.nameID = strit->second;
-            }
-            for ( unsigned i = 0; i < w.path.size(); ++i ) {
-                externalMemory->usedNodeIDs.push_back(w.path[i]);
             }
 
             if ( w.direction == _Way::opposite ){
                 std::reverse( w.path.begin(), w.path.end() );
             }
-            vector< NodeID > & path = w.path;
-            assert(w.type > -1 || w.maximumSpeed != -1);
-            assert(path.size()>1);
 
-            if(w.maximumSpeed == -1)
-                w.maximumSpeed = settings.speedProfile.speed[w.type];
-            for(vector< NodeID >::size_type n = 0; n < path.size()-1; n++) {
-                _Edge e;
-                e.start = w.path[n];
-                e.target = w.path[n+1];
-                e.type = w.type;
-                e.direction = w.direction;
-                e.speed = w.maximumSpeed;
-                e.nameID = w.nameID;
-                externalMemory->allEdges.push_back(e);
+            GUARANTEE(w.id != UINT_MAX, "found way with unknown type");
+            GUARANTEE(-1 != w.speed, "found way with unknown speed");
+
+            for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
+                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID));
+                externalMemory->usedNodeIDs.push_back(w.path[n]);
             }
-            assert(w.id != UINT_MAX);
-            externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(w.id, path[0], path[1], path[path.size()-2], path[path.size()-1]));
+            externalMemory->usedNodeIDs.push_back(w.path[w.path.size()-1]);
+
+            //The following information is needed to identify start and end segments of restrictions
+            externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(w.id, w.path[0], w.path[1], w.path[w.path.size()-2], w.path[w.path.size()-1]));
         }
         return true;
     }

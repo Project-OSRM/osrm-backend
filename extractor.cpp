@@ -104,7 +104,7 @@ int main (int argc, char *argv[]) {
     boost::property_tree::ptree pt;
     try {
         INFO("Loading speed profiles")
-        boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
+                boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
         INFO("Found the following speed profiles: ");
         int profileCounter(0);
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child("")) {
@@ -116,10 +116,31 @@ int main (int argc, char *argv[]) {
         INFO("Using profile \"" << usedSpeedProfile << "\"")
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(usedSpeedProfile)) {
             string name = v.first;
-            int value = v.second.get<int>("");
+            string value = v.second.get<string>("");
             DEBUG("inserting " << name << "=" << value);
-            settings.speedProfile.names.push_back(name);
-            settings.speedProfile.speed.push_back(value);
+            if(name == "obeyOneways") {
+                if(value == "no")
+                    settings.obeyOneways = false;
+                continue;
+            } else {
+                if(name == "obeyPollards") {
+                    if(value == "no")
+                        settings.obeyPollards = false;
+                    continue;
+                } else {
+                    if(name == "useRestrictions") {
+                        if(value == "no")
+                            settings.useRestrictions = false;
+                        continue;
+                    } else {
+                        if(name == "accessTag") {
+                            settings.accessTag = value;
+                            continue;
+                        }
+                    }
+                }
+            }
+            settings.speedProfile[name] = atoi(value.c_str());
         }
     } catch(std::exception& e) {
         ERR("caught: " << e.what() );
@@ -147,8 +168,7 @@ int main (int argc, char *argv[]) {
 
     double time = get_timestamp();
 
-    stringMap.set_empty_key(GetRandomString());
-    stringMap.insert(make_pair("", 0));
+    stringMap[""] = 0;
     extractCallBacks = new ExtractorCallbacks(&externalMemory, settings, &stringMap);
     BaseParser<_Node, _RawRestrictionContainer, _Way> * parser;
     if(isPBF) {
@@ -167,13 +187,13 @@ int main (int argc, char *argv[]) {
     stringMap.clear();
 
     try {
-//        INFO("raw no. of names:        " << externalMemory.nameVector.size());
-//        INFO("raw no. of nodes:        " << externalMemory.allNodes.size());
-//        INFO("no. of used nodes:       " << externalMemory.usedNodeIDs.size());
-//        INFO("raw no. of edges:        " << externalMemory.allEdges.size());
-//        INFO("raw no. of ways:         " << externalMemory.wayStartEndVector.size());
-//        INFO("raw no. of addresses:    " << externalMemory.adressVector.size());
-//        INFO("raw no. of restrictions: " << externalMemory.restrictionsVector.size());
+        //        INFO("raw no. of names:        " << externalMemory.nameVector.size());
+        //        INFO("raw no. of nodes:        " << externalMemory.allNodes.size());
+        //        INFO("no. of used nodes:       " << externalMemory.usedNodeIDs.size());
+        //        INFO("raw no. of edges:        " << externalMemory.allEdges.size());
+        //        INFO("raw no. of ways:         " << externalMemory.wayStartEndVector.size());
+        //        INFO("raw no. of addresses:    " << externalMemory.adressVector.size());
+        //        INFO("raw no. of restrictions: " << externalMemory.restrictionsVector.size());
 
         cout << "[extractor] parsing finished after " << get_timestamp() - time << " seconds" << endl;
         time = get_timestamp();
@@ -374,12 +394,11 @@ int main (int argc, char *argv[]) {
                     edgeIT->targetCoord.lon = nodesIT->lon;
 
                     double distance = ApproximateDistance(edgeIT->startCoord.lat, edgeIT->startCoord.lon, nodesIT->lat, nodesIT->lon);
-                    if(edgeIT->speed == -1)
-                        edgeIT->speed = settings.speedProfile.speed[edgeIT->type];
+                    assert(edgeIT->speed != -1);
                     double weight = ( distance * 10. ) / (edgeIT->speed / 3.6);
                     int intWeight = max(1, (int) weight);
                     int intDist = max(1, (int)distance);
-                    int ferryIndex = settings.indexInAccessListOf("ferry");
+                    int ferryIndex = settings["ferry"];
                     assert(ferryIndex != -1);
                     short zero = 0;
                     short one = 1;
@@ -424,7 +443,6 @@ int main (int argc, char *argv[]) {
         fout.close();
         cout << "ok" << endl;
         time = get_timestamp();
-
 
         cout << "[extractor] writing street name index ... " << flush;
         vector<unsigned> * nameIndex = new vector<unsigned>(externalMemory.nameVector.size()+1, 0);

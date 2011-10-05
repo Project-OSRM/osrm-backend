@@ -238,7 +238,7 @@ struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _W
 };
 
 struct Settings {
-    Settings() : obeyPollards(false), obeyOneways(false), useRestrictions(false), accessTag("motorcar") {}
+    Settings() : obeyPollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar") {}
     StringMap speedProfile;
     int operator[](const string & param) const {
         if(speedProfile.find(param) == speedProfile.end())
