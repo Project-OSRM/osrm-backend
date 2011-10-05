@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <climits>
 #include <string>
-#include "HashTable.h"
+#include <boost/unordered_map.hpp>
 #include "Util.h"
 
 struct _PathData {
@@ -31,24 +31,7 @@ struct _PathData {
     NodeID node;
 };
 
-/*     Default Speed Profile:
-        motorway        110
-        motorway_link   90
-        trunk           90
-        trunk_link      70
-        primary         70
-        primary_link    60
-        secondary       60
-        secondary_link  50
-        tertiary        55
-        unclassified    25
-        residential     40
-        living_street   10
-        service         30
-        ferry           5
- */
-
-typedef google::dense_hash_map<std::string, NodeID> StringMap;
+typedef boost::unordered_map<std::string, NodeID> StringMap;
 
 struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
@@ -88,7 +71,7 @@ struct _Way {
     _Way() : id(UINT_MAX), nameID(UINT_MAX) {
 
         direction = _Way::notSure;
-        maximumSpeed = -1;
+        speed = -1;
         type = -1;
         useful = false;
         access = true;
@@ -100,7 +83,7 @@ struct _Way {
     unsigned id;
     unsigned nameID;
     std::string name;
-    double maximumSpeed;
+    double speed;
     short type;
     bool useful:1;
     bool access:1;
@@ -140,6 +123,7 @@ struct _Edge {
     _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0) {};
     _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0) { }
     _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid) { }
     NodeID start;
     NodeID target;
     short type;
@@ -174,7 +158,6 @@ struct _Restriction {
         char unused7:1;
     } flags;
 
-
     _Restriction(NodeID vn) : viaNode(vn), fromNode(UINT_MAX), toNode(UINT_MAX) { }
     _Restriction(bool isOnly = false) : viaNode(UINT_MAX), fromNode(UINT_MAX), toNode(UINT_MAX) {
         flags.isOnly = isOnly;
@@ -197,7 +180,6 @@ struct _RawRestrictionContainer {
         return _RawRestrictionContainer((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
     }
 };
-
 
 struct CmpRestrictionByFrom: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
     typedef _RawRestrictionContainer value_type;
@@ -256,17 +238,19 @@ struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _W
 };
 
 struct Settings {
-    struct SpeedProfile {
-        vector< double > speed;
-        vector< string > names;
-    } speedProfile;
-    int indexInAccessListOf( const string & key) {
-        for(unsigned i = 0; i< speedProfile.names.size(); i++) {
-            if(speedProfile.names[i] == key)
-                return i;
-        }
-        return -1;
+    Settings() : obeyPollards(false), obeyOneways(false), useRestrictions(false), accessTag("motorcar") {}
+    StringMap speedProfile;
+    int operator[](const string & param) const {
+        if(speedProfile.find(param) == speedProfile.end())
+            return 0;
+        else
+            return speedProfile.at(param);
     }
+    bool obeyPollards;
+    bool obeyOneways;
+    bool useRestrictions;
+    string accessTag;
+
 };
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {

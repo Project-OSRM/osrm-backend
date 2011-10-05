@@ -92,7 +92,7 @@ private:
     _Way _ReadXMLWay( ) {
         _Way way;
         way.direction = _Way::notSure;
-        way.maximumSpeed = -1;
+        way.speed = -1;
         way.type = -1;
         way.useful = false;
         way.access = true;
