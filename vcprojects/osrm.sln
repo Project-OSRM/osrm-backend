@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractor", "extractor.vcproj", "{F630F025-637A-43DF-9258-2860AE9E6740}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "createHierarchy", "createHierarchy.vcproj", "{38C3EEAC-032B-4BEA-BECB-C694A47AA7E2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "routed", "routed.vcproj", "{675D419D-E442-4A21-9030-B54B4C09439A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F630F025-637A-43DF-9258-2860AE9E6740}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F630F025-637A-43DF-9258-2860AE9E6740}.Debug|Win32.Build.0 = Debug|Win32
+		{F630F025-637A-43DF-9258-2860AE9E6740}.Release|Win32.ActiveCfg = Release|Win32
+		{F630F025-637A-43DF-9258-2860AE9E6740}.Release|Win32.Build.0 = Release|Win32
+		{38C3EEAC-032B-4BEA-BECB-C694A47AA7E2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{38C3EEAC-032B-4BEA-BECB-C694A47AA7E2}.Release|Win32.ActiveCfg = Release|Win32
+		{38C3EEAC-032B-4BEA-BECB-C694A47AA7E2}.Release|Win32.Build.0 = Release|Win32
+		{675D419D-E442-4A21-9030-B54B4C09439A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{675D419D-E442-4A21-9030-B54B4C09439A}.Release|Win32.ActiveCfg = Release|Win32
+		{675D419D-E442-4A21-9030-B54B4C09439A}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
