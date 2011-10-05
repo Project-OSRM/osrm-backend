@@ -48,6 +48,7 @@ SconsBuilder*
 
 # stxxl related files #
 #######################
+.stxxl
 stxxl.log
 stxxl.errlog
 
@@ -55,3 +56,17 @@ stxxl.errlog
 #########################
 DataStructures/pbf-proto/*.pb.h
 DataStructures/pbf-proto/*.pb.cc
+
+# External Libs #
+#################
+lib/
+
+# Visual Studio Temp + build Files #
+####################################
+vcprojects/*.user
+vcprojects/*.ncb
+vcprojects/*.suo
+vcprojects/Debug/
+vcprojects/Release/
+bin/
+bin-debug/
