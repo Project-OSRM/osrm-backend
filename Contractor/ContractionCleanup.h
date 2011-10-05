@@ -171,7 +171,7 @@ private:
         cout << "Scanning for useless shortcuts" << endl;
         BuildOutgoingGraph();
 #pragma omp parallel for
-        for ( unsigned i = 0; i < ( unsigned ) _graph.size(); i++ ) {
+        for ( int i = 0; i < ( int ) _graph.size(); i++ ) {
             for ( unsigned edge = _firstEdge[_graph[i].source]; edge < _firstEdge[_graph[i].source + 1]; ++edge ) {
                 if ( edge == i )
                     continue;
