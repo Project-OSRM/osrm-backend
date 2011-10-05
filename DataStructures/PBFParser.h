@@ -93,7 +93,7 @@ public:
 
         google::protobuf::ShutdownProtobufLibrary();
 
-#ifdef DEBUG
+#ifndef NDEBUG
         std::cout << "[info] blocks: " << blockCount << std::endl;
         std::cout << "[info] groups: " << groupCount << std::endl;
 #endif
