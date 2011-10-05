@@ -154,7 +154,7 @@ int main (int argc, char *argv[]) {
     if(testDataFile("extractor.ini")) {
         ExtractorConfiguration extractorConfig("extractor.ini");
         unsigned memoryAmountFromFile = atoi(extractorConfig.GetParameter("Memory").c_str());
-        if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024*1024))
+        if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024))
             amountOfRAM = memoryAmountFromFile;
         cout << "[extractor] using " << amountOfRAM << " GB of RAM for buffers" << endl;
     }
@@ -197,7 +197,7 @@ int main (int argc, char *argv[]) {
 
         cout << "[extractor] parsing finished after " << get_timestamp() - time << " seconds" << endl;
         time = get_timestamp();
-        uint64_t memory_to_use = static_cast<uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
+		boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
         cout << "[extractor] Sorting used nodes        ... " << flush;
         stxxl::sort(externalMemory.usedNodeIDs.begin(), externalMemory.usedNodeIDs.end(), Cmp(), memory_to_use);
