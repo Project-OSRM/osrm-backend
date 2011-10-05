@@ -99,7 +99,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)..\bin"
-			IntermediateDirectory="(SolutionDir)..\bin"
+			IntermediateDirectory="$(SolutionDir)..\bin"
 			ConfigurationType="1"
 			InheritedPropertySheets=".\osrm.vsprops"
 			CharacterSet="1"
