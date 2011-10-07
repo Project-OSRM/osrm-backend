@@ -32,8 +32,7 @@ struct BZ2Context {
     char unused[BZ_MAX_UNUSED];
 };
 
-int readFromBz2Stream( void* pointer, char* buffer, int len )
-{
+int readFromBz2Stream( void* pointer, char* buffer, int len ) {
     void *unusedTmpVoid=NULL;
     char *unusedTmp=NULL;
     BZ2Context* context = (BZ2Context*) pointer;
