@@ -167,12 +167,12 @@ public:
                 w.nameID = strit->second;
             }
 
+            GUARANTEE(w.id != UINT_MAX, "found way with unknown type");
+            GUARANTEE(-1 != w.speed, "found way with unknown speed");
+
             if ( w.direction == _Way::opposite ){
                 std::reverse( w.path.begin(), w.path.end() );
             }
-
-            GUARANTEE(w.id != UINT_MAX, "found way with unknown type");
-            GUARANTEE(-1 != w.speed, "found way with unknown speed");
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
                 externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID));
