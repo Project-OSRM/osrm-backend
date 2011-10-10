@@ -43,6 +43,14 @@ class DynamicGraph {
                 }
         };
 
+        //Constructs an empty graph with a given number of nodes.
+        DynamicGraph( int nodes ) : m_numNodes(nodes) {
+            m_nodes.reserve( m_numNodes );
+            m_nodes.resize( m_numNodes );
+
+            m_edges.reserve( m_numNodes * 1.2 );
+            m_edges.resize( m_numNodes );
+        }
         DynamicGraph( int nodes, const std::vector< InputEdge > &graph )
         {
             m_numNodes = nodes;
