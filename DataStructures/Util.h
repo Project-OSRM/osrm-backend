@@ -58,8 +58,8 @@ inline double get_timestamp()
     return double(tp.tv_sec) + tp.tv_usec / 1000000.;
 }
 
-double y2lat(double a) { return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2); }
-double lat2y(double a) { return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2)); }
+inline double y2lat(double a) { return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2); }
+inline double lat2y(double a) { return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2)); }
 
 inline unsigned boost_thread_id_hash(boost::thread::id const& id)
 {
