@@ -173,7 +173,7 @@ private:
 #pragma omp parallel for
         for ( int i = 0; i < ( int ) _graph.size(); i++ ) {
             for ( unsigned edge = _firstEdge[_graph[i].source]; edge < _firstEdge[_graph[i].source + 1]; ++edge ) {
-                if ( edge == i )
+                if ( edge == (unsigned)i )
                     continue;
                 if ( _graph[edge].target != _graph[i].target )
                     continue;
