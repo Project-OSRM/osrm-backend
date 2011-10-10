@@ -56,7 +56,7 @@ struct PhantomNodes {
     }
 };
 
-std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
+inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
     out << "startNode1: " << pn.startPhantom.startNode << std::endl;
     out << "startNode2: " << pn.startPhantom.targetNode << std::endl;
     out << "targetNode1: " << pn.targetPhantom.startNode << std::endl;
