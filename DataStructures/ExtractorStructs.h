@@ -62,7 +62,7 @@ struct _Coordinate {
     }
 };
 
-ostream & operator<<(ostream & out, const _Coordinate & c){
+inline ostream & operator<<(ostream & out, const _Coordinate & c){
     out << "(" << c.lat << "," << c.lon << ")";
     return out;
 }
@@ -333,7 +333,7 @@ inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) 
     return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
 }
 
-string GetRandomString() {
+inline string GetRandomString() {
     char s[128];
     static const char alphanum[] =
             "0123456789"
