@@ -28,7 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iomanip>
 #include <vector>
 
-#include <google/dense_hash_map>
+#include <boost/unordered_map.hpp>
 
 #ifdef _GLIBCXX_PARALLEL
 #include <parallel/algorithm>
@@ -39,7 +39,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/ImportEdge.h"
 #include "../typedefs.h"
 
-typedef google::dense_hash_map<NodeID, NodeID> ExternalNodeMap;
+typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;
 
 template<typename EdgeT>
 NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
@@ -47,7 +47,6 @@ NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     EdgeID m;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
-    ext2IntNodeMap.set_empty_key(UINT_MAX);
     in >> n;
     VERBOSE(cout << "Importing n = " << n << " nodes ..." << flush;)
     for (NodeID i=0; i<n;i++) {
@@ -101,13 +100,12 @@ NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     return n;
 }
 template<typename EdgeT>
-NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
+NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap, vector<_Restriction> & inputRestrictions) {
     NodeID n, source, target, id;
     EdgeID m;
     short dir;
     int xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
-    ext2IntNodeMap.set_empty_key(UINT_MAX);
     in.read((char*)&n, sizeof(NodeID));
     VERBOSE(cout << "Importing n = " << n << " nodes ..." << flush;)
     for (NodeID i=0; i<n;i++) {
@@ -119,6 +117,29 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
     }
     in.read((char*)&m, sizeof(unsigned));
     VERBOSE(cout << " and " << m << " edges ..." << flush;)
+
+    for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
+        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(inputRestrictions[i].fromNode);
+        if( intNodeID == ext2IntNodeMap.end()) {
+            DEBUG("Unmapped restriction")
+            continue;
+        }
+        inputRestrictions[i].fromNode = intNodeID->second;
+
+        intNodeID = ext2IntNodeMap.find(inputRestrictions[i].viaNode);
+        if( intNodeID == ext2IntNodeMap.end()) {
+            DEBUG("Unmapped restriction")
+            continue;
+        }
+        inputRestrictions[i].viaNode = intNodeID->second;
+
+        intNodeID = ext2IntNodeMap.find(inputRestrictions[i].toNode);
+        if( intNodeID == ext2IntNodeMap.end()) {
+            DEBUG("Unmapped restriction")
+            continue;
+        }
+        inputRestrictions[i].toNode = intNodeID->second;
+    }
 
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; i++) {
@@ -179,7 +200,6 @@ NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     EdgeID m;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
-    ext2IntNodeMap.set_empty_key(UINT_MAX);
     in >> n;
     VERBOSE(cout << "Importing n = " << n << " nodes ..." << flush;)
     for (NodeID i=0; i<n;i++) {
@@ -293,7 +313,7 @@ NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 
 template<typename EdgeT>
 NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeID> & int2ExtNodeMap) {
-    ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
+    ExternalNodeMap nodeMap;
     NodeID n, source, target;
     unsigned numberOfNodes = 0;
     char d;
@@ -351,7 +371,7 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 template<typename EdgeT>
 unsigned readHSGRFromStream(istream &in, vector<EdgeT> & edgeList) {
     unsigned numberOfNodes = 0;
-    ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
+    ExternalNodeMap nodeMap;
     while(!in.eof()) {
         EdgeT g;
         EdgeData e;
@@ -394,7 +414,7 @@ template<typename EdgeT>
 unsigned readHSGRFromStreamWithOutEdgeData(const char * hsgrName, vector<EdgeT> * edgeList) {
     std::ifstream hsgrInStream(hsgrName, std::ios::binary);
     unsigned numberOfNodes = 0;
-    ExternalNodeMap nodeMap; nodeMap.set_empty_key(UINT_MAX);
+    ExternalNodeMap nodeMap;
     while(!hsgrInStream.eof()) {
         EdgeT g;
 //        EdgeData e;
