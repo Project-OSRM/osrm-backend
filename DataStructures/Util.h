@@ -51,18 +51,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/thread.hpp>
 
 /** Returns a timestamp (now) in seconds (incl. a fractional part). */
-inline double get_timestamp()
-{
+static inline double get_timestamp() {
     struct timeval tp;
     gettimeofday(&tp, NULL);
     return double(tp.tv_sec) + tp.tv_usec / 1000000.;
 }
 
-inline double y2lat(double a) { return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2); }
-inline double lat2y(double a) { return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2)); }
+static inline double y2lat(double a) { return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2); }
+static inline double lat2y(double a) { return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2)); }
 
-inline unsigned boost_thread_id_hash(boost::thread::id const& id)
-{
+static inline unsigned boost_thread_id_hash(boost::thread::id const& id) {
 	std::stringstream ostr;
 	ostr << id;
 	std::tr1::hash<std::string> h;
