@@ -268,7 +268,6 @@ public:
         /** search for point on edge next to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_Edge> candidates;
-        double timestamp = get_timestamp();
 
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++){
@@ -277,12 +276,10 @@ public:
         }
         _Coordinate tmp;
         double dist = (numeric_limits<double>::max)();
-        timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
             if(tmpDist < dist) {
-                //              std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
                 nodesOfEdge.startID = it->start;
                 nodesOfEdge.destID = it->target;
                 nodesOfEdge.ratio = r;
@@ -303,7 +300,6 @@ public:
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_Edge> candidates;
-//        double timestamp = get_timestamp();
 
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++){
@@ -313,7 +309,6 @@ public:
 
         _Coordinate tmp;
         double dist = (numeric_limits<double>::max)();
-//        timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
@@ -340,7 +335,6 @@ public:
     void FindNearestNodeInGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
         unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
         std::vector<_Edge> candidates;
-        double timestamp = get_timestamp();
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++) {
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
@@ -348,7 +342,6 @@ public:
         }
         _Coordinate tmp;
         double dist = (numeric_limits<double>::max)();
-        timestamp = get_timestamp();
         for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
             double r = 0.;
             double tmpDist = ComputeDistance(inputCoordinate, it->startCoord, it->targetCoord, tmp, &r);
@@ -405,10 +398,8 @@ private:
         unsigned columnBase = ramIndex%1024;
         columnBase=columnBase*32;
 
-        for(int i = 0; i < 32; i++)
-        {
-            for(int j = 0; j < 32; j++)
-            {
+        for(int i = 0; i < 32; i++) {
+            for(int j = 0; j < 32; j++) {
                 unsigned fileIndex = lineBase + i*32768 + columnBase+j;
                 unsigned cellIndex = i*32+j;
                 cellMap->insert(std::make_pair(fileIndex, cellIndex));
@@ -563,50 +554,35 @@ private:
             }
         }
         {
-//        if(cellCache.exists(startIndexInFile)) {
-//                cellCache.fetch(startIndexInFile, cellIndex);
-//            } else {
-                std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
-                localStream.seekg(startIndexInFile);
-                localStream.read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
-                localStream.close();
-                assert(cellMap.find(fileIndex) != cellMap.end());
-                if(cellIndex[cellMap.find(fileIndex)->second] == UINT_MAX) {
-                    return;
-                }
-//#pragma omp critical
-//                {
-//                    cellCache.insert(startIndexInFile, cellIndex);
-//                }
+            std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
+            localStream.seekg(startIndexInFile);
+            localStream.read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
+            localStream.close();
+            assert(cellMap.find(fileIndex) != cellMap.end());
+            if(cellIndex[cellMap.find(fileIndex)->second] == UINT_MAX) {
+                return;
             }
+        }
         const unsigned position = cellIndex[cellMap.find(fileIndex)->second] + 32*32*sizeof(unsigned) ;
 
-//        if(fileCache.exists(position)) {
-//            fileCache.fetch(position, result);
-//        } else {
-            std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
-            localStream.seekg(position);
-            DiskEdge diskEdge;
-            do {
-                localStream.read((char *)&(diskEdge), sizeof(DiskEdge));
-                if(localStream.eof() || diskEdge.start == UINT_MAX)
-                    break;
+        std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
+        localStream.seekg(position);
+        DiskEdge diskEdge;
+        do {
+            localStream.read((char *)&(diskEdge), sizeof(DiskEdge));
+            if(localStream.eof() || diskEdge.start == UINT_MAX)
+                break;
 
-                _Edge e(diskEdge.start, diskEdge.target);
-                e.startCoord.lat = diskEdge.slat;
-                e.startCoord.lon = diskEdge.slon;
-                e.targetCoord.lat = diskEdge.tlat;
-                e.targetCoord.lon = diskEdge.tlon;
+            _Edge e(diskEdge.start, diskEdge.target);
+            e.startCoord.lat = diskEdge.slat;
+            e.startCoord.lon = diskEdge.slon;
+            e.targetCoord.lat = diskEdge.tlat;
+            e.targetCoord.lon = diskEdge.tlon;
 
-                result.push_back(e);
-            } while(true);
-            localStream.close();
+            result.push_back(e);
+        } while(true);
+        localStream.close();
 
-//#pragma omp critical
-//            {
-//                fileCache.insert(position, result);
-//            }
-//        }
     }
 
     void AddEdge(_GridEdge edge) {
