@@ -28,7 +28,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <limits>
 #include <vector>
 #include <stxxl.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #ifdef _WIN32
 #include <math.h>

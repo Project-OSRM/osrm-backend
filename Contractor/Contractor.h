@@ -35,7 +35,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <set>
 #include <stack>
 #include <limits>
+#ifdef _OPEMP
 #include <omp.h>
+#endif
 
 class Contractor {
 
