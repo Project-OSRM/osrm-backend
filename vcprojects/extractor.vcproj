@@ -251,6 +251,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\DataStructures\ConcurrentQueue.h"
+					>
+				</File>
+				<File
 					RelativePath="..\DataStructures\DynamicGraph.h"
 					>
 				</File>
