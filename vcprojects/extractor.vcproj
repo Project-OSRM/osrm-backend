@@ -177,7 +177,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy &quot;$(SolutionDir)..\.stxxl&quot; &quot;$(OutDir)\&quot; /f /y&#x0D;&#x0A;xcopy &quot;$(SolutionDir)..\extractor.ini&quot; &quot;$(OutDir)\&quot; /f /y&#x0D;&#x0A;xcopy &quot;$(Bzip2Path)\bin\libbz2.dll&quot; &quot;$(OutDir)\&quot; /f /y&#x0D;&#x0A;"
+				CommandLine="xcopy &quot;$(SolutionDir)..\.stxxl&quot; &quot;$(OutDir)\&quot; /f /y&#x0D;&#x0A;xcopy &quot;$(SolutionDir)..\extractor.ini&quot; &quot;$(OutDir)\&quot; /f /y&#x0D;&#x0A;xcopy &quot;$(SolutionDir)..\speedprofile.ini&quot; &quot;$(OutDir)\&quot; /f /y&#x0D;&#x0A;xcopy &quot;$(Bzip2Path)\bin\libbz2.dll&quot; &quot;$(OutDir)\&quot; /f /y&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -248,6 +248,10 @@
 				</File>
 				<File
 					RelativePath="..\DataStructures\BinaryHeap.h"
+					>
+				</File>
+				<File
+					RelativePath="..\DataStructures\ConcurrentQueue.h"
 					>
 				</File>
 				<File

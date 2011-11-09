@@ -229,11 +229,11 @@ int main (int argc, char *argv[]) {
 
         while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
             if(wayStartAndEndEdgeIT->wayID < restrictionsIT->fromWay){
-                wayStartAndEndEdgeIT++;
+            	++wayStartAndEndEdgeIT;
                 continue;
             }
             if(wayStartAndEndEdgeIT->wayID > restrictionsIT->fromWay) {
-                restrictionsIT++;
+            	++restrictionsIT;
                 continue;
             }
             assert(wayStartAndEndEdgeIT->wayID == restrictionsIT->fromWay);
@@ -248,7 +248,7 @@ int main (int argc, char *argv[]) {
             } else if(wayStartAndEndEdgeIT->lastTarget == viaNode) {
                 restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->lastStart;
             }
-            restrictionsIT++;
+            ++restrictionsIT;
         }
 
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
@@ -266,11 +266,11 @@ int main (int argc, char *argv[]) {
         while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() &&
                 restrictionsIT != externalMemory.restrictionsVector.end()) {
             if(wayStartAndEndEdgeIT->wayID < restrictionsIT->toWay){
-                wayStartAndEndEdgeIT++;
+            	++wayStartAndEndEdgeIT;
                 continue;
             }
             if(wayStartAndEndEdgeIT->wayID > restrictionsIT->toWay) {
-                restrictionsIT++;
+            	++restrictionsIT;
                 continue;
             }
             NodeID viaNode = restrictionsIT->restriction.viaNode;
@@ -285,9 +285,9 @@ int main (int argc, char *argv[]) {
             }
 
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
-                usableRestrictionsCounter++;
+            	++usableRestrictionsCounter;
             }
-            restrictionsIT++;
+            ++restrictionsIT;
         }
 
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
@@ -295,7 +295,7 @@ int main (int argc, char *argv[]) {
         ofstream restrictionsOutstream;
         restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);
         restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
-        for(restrictionsIT = externalMemory.restrictionsVector.begin(); restrictionsIT != externalMemory.restrictionsVector.end(); restrictionsIT++) {
+        for(restrictionsIT = externalMemory.restrictionsVector.begin(); restrictionsIT != externalMemory.restrictionsVector.end(); ++restrictionsIT) {
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
                 restrictionsOutstream.write((char *)&(restrictionsIT->restriction), sizeof(_Restriction));
             }
@@ -311,20 +311,20 @@ int main (int argc, char *argv[]) {
         STXXLNodeIDVector::iterator usedNodeIDsIT = externalMemory.usedNodeIDs.begin();
         while(usedNodeIDsIT != externalMemory.usedNodeIDs.end() && nodesIT != externalMemory.allNodes.end()) {
             if(*usedNodeIDsIT < nodesIT->id){
-                usedNodeIDsIT++;
+                ++usedNodeIDsIT;
                 continue;
             }
             if(*usedNodeIDsIT > nodesIT->id) {
-                nodesIT++;
+                ++nodesIT;
                 continue;
             }
             if(*usedNodeIDsIT == nodesIT->id) {
                 fout.write((char*)&(nodesIT->id), sizeof(unsigned));
                 fout.write((char*)&(nodesIT->lon), sizeof(int));
                 fout.write((char*)&(nodesIT->lat), sizeof(int));
-                usedNodeCounter++;
-                usedNodeIDsIT++;
-                nodesIT++;
+                ++usedNodeCounter;
+                ++usedNodeIDsIT;
+                ++nodesIT;
             }
         }
 
@@ -353,7 +353,7 @@ int main (int argc, char *argv[]) {
         STXXLEdgeVector::iterator edgeIT = externalMemory.allEdges.begin();
         while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->start < nodesIT->id){
-                edgeIT++;
+            	++edgeIT;
                 continue;
             }
             if(edgeIT->start > nodesIT->id) {
@@ -363,7 +363,7 @@ int main (int argc, char *argv[]) {
             if(edgeIT->start == nodesIT->id) {
                 edgeIT->startCoord.lat = nodesIT->lat;
                 edgeIT->startCoord.lon = nodesIT->lon;
-                edgeIT++;
+                ++edgeIT;
             }
         }
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
@@ -381,11 +381,11 @@ int main (int argc, char *argv[]) {
         edgeIT = externalMemory.allEdges.begin();
         while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->target < nodesIT->id){
-                edgeIT++;
+            	++edgeIT;
                 continue;
             }
             if(edgeIT->target > nodesIT->id) {
-                nodesIT++;
+            	++nodesIT;
                 continue;
             }
             if(edgeIT->target == nodesIT->id) {
@@ -430,8 +430,8 @@ int main (int argc, char *argv[]) {
                     fout.write((char*)&edgeType, sizeof(short));
                     fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
                 }
-                usedEdgeCounter++;
-                edgeIT++;
+                ++usedEdgeCounter;
+                ++edgeIT;
             }
         }
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
@@ -494,7 +494,7 @@ bool adressFunction(_Node n, HashTable<string, string> keyVals){
 
 bool restrictionFunction(_RawRestrictionContainer r) {
     extractCallBacks->restrictionFunction(r);
-    globalRestrictionCounter++;
+    ++globalRestrictionCounter;
     return true;
 }
 bool wayFunction(_Way w) {

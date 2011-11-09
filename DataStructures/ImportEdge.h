@@ -23,8 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <cassert>
 
-class Edge
-{
+class Edge {
 public:
 
     bool operator< (const Edge& e) const {

@@ -5,7 +5,7 @@ Compiling the source code is easy. If you are running a decent linux
 installing dependencies and running make should suffice. Make sure the following
 dependencies are installed:
 
- - Boost		1.37+
+ - Boost		1.41+
  - sparsehash   1.4+
  - g++			4.2+ (with warnings and unsupported), 4.4+
  - libxml2		2.7+
