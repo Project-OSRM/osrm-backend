@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef CONCURRENTQUEUE_H_INCLUDED
 #define CONCURRENTQUEUE_H_INCLUDED
 
-#include "typedefs.h"
+#include "../typedefs.h"
 
 /* 
    Concurrent Queue written by Anthony Williams: 
