@@ -220,7 +220,7 @@ int main (int argc, char *argv[]) {
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         cout << "[extractor] Sorting restrctns. by from... " << flush;
-        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionByFrom(), memory_to_use);
+        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionContainerByFrom(), memory_to_use);
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         cout << "[extractor] Fixing restriction starts ... " << flush;
@@ -255,7 +255,7 @@ int main (int argc, char *argv[]) {
         time = get_timestamp();
 
         cout << "[extractor] Sorting restrctns. by to  ... " << flush;
-        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionByTo(), memory_to_use);
+        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionContainerByTo(), memory_to_use);
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         time = get_timestamp();

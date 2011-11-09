@@ -155,31 +155,32 @@ public:
             forwardEdge.data.middleName.nameID = backwardEdge.data.middleName.nameID = middle;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
-            forwardEdge.data.distance = backwardEdge.data.distance = (std::numeric_limits< int >::max)();
+            forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
             //remove parallel edges
             while ( i < edges.size() && edges[i].source == source && edges[i].target == target ) {
                 if ( edges[i].data.forward )
-                    forwardEdge.data.distance = (std::min)( edges[i].data.distance, forwardEdge.data.distance );
+                    forwardEdge.data.distance = std::min( edges[i].data.distance, forwardEdge.data.distance );
                 if ( edges[i].data.backward )
-                    backwardEdge.data.distance = (std::min)( edges[i].data.distance, backwardEdge.data.distance );
+                    backwardEdge.data.distance = std::min( edges[i].data.distance, backwardEdge.data.distance );
                 i++;
             }
             //merge edges (s,t) and (t,s) into bidirectional edge
             if ( forwardEdge.data.distance == backwardEdge.data.distance ) {
-                if ( (int)forwardEdge.data.distance != (std::numeric_limits< int >::max)() ) {
+                if ( (int)forwardEdge.data.distance != std::numeric_limits< int >::max() ) {
                     forwardEdge.data.backward = true;
                     edges[edge++] = forwardEdge;
                 }
             } else { //insert seperate edges
-                if ( (int)forwardEdge.data.distance != (std::numeric_limits< int >::max)() ) {
+                if ( ((int)forwardEdge.data.distance) != std::numeric_limits< int >::max() ) {
                     edges[edge++] = forwardEdge;
                 }
-                if ( (int)backwardEdge.data.distance != (std::numeric_limits< int >::max)() ) {
+                if ( (int)backwardEdge.data.distance != std::numeric_limits< int >::max() ) {
                     edges[edge++] = backwardEdge;
                 }
             }
         }
-        cout << "ok" << endl << "removed " << edges.size() - edge << " edges of " << edges.size() << endl;
+        cout << "ok" << endl << "merged " << edges.size() - edge << " edges out of " << edges.size() << endl;
+        INFO("Contractor holds " << edge << " edges");
         edges.resize( edge );
         _graph = new _DynamicGraph( nodes, edges );
         std::vector< _ImportEdge >().swap( edges );
@@ -375,8 +376,6 @@ public:
     }
 
 private:
-    bool _ConstructCH( _DynamicGraph* _graph );
-
     void _Dijkstra( NodeID source, const int maxDistance, const unsigned numTargets, _ThreadData* data ){
 
         _Heap& heap = data->heap;
@@ -427,6 +426,12 @@ private:
         return edgeQuotionFactor * ((( double ) stats.edgesAdded ) / stats.edgesDeleted ) + originalQuotientFactor * ((( double ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + depthFactor * nodeData->depth;
     }
 
+    /*
+     8 * numAdded / numDeleted + 4 * numOriginalAdded / numOriginalDeleted + 2 * Tiefe
+    Kante einfüge = numAdded += 2 && numOriginalAdded += 2 * numOriginal
+    Kante löschen = numDeleted += 1 && numOriginalAdded += numOriginal
+     */
+
     template< class Edge >
     bool _CheckCH()
     {
@@ -475,7 +480,6 @@ private:
             if ( node != source )
                 heap.Insert( node, inData.distance, _HeapData() );
             int maxDistance = 0;
-            //unsigned numTargets = 0;
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _EdgeData& outData = _graph->GetEdgeData( outEdge );

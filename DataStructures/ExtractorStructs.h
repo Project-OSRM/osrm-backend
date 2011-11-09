@@ -164,6 +164,8 @@ struct _Restriction {
     }
 };
 
+inline bool CmpRestrictionByFrom ( _Restriction a, _Restriction b) { return (a.fromNode < b.fromNode);  }
+
 struct _RawRestrictionContainer {
     _Restriction restriction;
     EdgeID fromWay;
@@ -181,7 +183,7 @@ struct _RawRestrictionContainer {
     }
 };
 
-struct CmpRestrictionByFrom: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
+struct CmpRestrictionContainerByFrom: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
     typedef _RawRestrictionContainer value_type;
     bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
         return a.fromWay < b.fromWay;
@@ -194,7 +196,7 @@ struct CmpRestrictionByFrom: public std::binary_function<_RawRestrictionContaine
     }
 };
 
-struct CmpRestrictionByTo: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
+struct CmpRestrictionContainerByTo: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
     typedef _RawRestrictionContainer value_type;
     bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
         return a.toWay < b.toWay;

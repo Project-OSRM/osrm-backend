@@ -18,7 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-//g++ createHierarchy.cpp -fopenmp -Wno-deprecated -o createHierarchy -O3 -march=native -DNDEBUG
+//g++ createHierarchy.cpp -fopenmp -Wno-deprecated -o createHierarchy -O3 -march=native -DNDEBUG -I/usr/include/libxml2 -lstxxl
 
 #define VERBOSE(x) x
 #define VERBOSE2(x)
@@ -43,7 +43,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "typedefs.h"
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
+#include "Contractor/EdgeBasedGraphFactory.h"
 #include "DataStructures/BinaryHeap.h"
+#include "DataStructures/ExtractorStructs.h"
 #include "DataStructures/LevelInformation.h"
 #include "DataStructures/NNGrid.h"
 #include "Util/BaseConfiguration.h"
@@ -56,12 +58,26 @@ typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef BaseConfiguration ContractorConfiguration;
 
-vector<NodeInfo> * int2ExtNodeMap = new vector<NodeInfo>();
+vector<NodeInfo> int2ExtNodeMap;
+vector<_Restriction> inputRestrictions;
 
 int main (int argc, char *argv[]) {
     if(argc <= 1) {
         cerr << "usage: " << endl << argv[0] << " <osrm-data>" << endl;
         exit(-1);
+    }
+    if(argc == 3) {
+        INFO("Using restrictions from file: " << argv[2]);
+        ifstream restrictionsInstream(argv[2], ios::binary);
+        _Restriction restriction;
+        unsigned usableRestrictionsCounter(0);
+        restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
+        for(unsigned i = 0; i < usableRestrictionsCounter; ++i) {
+            restrictionsInstream.read((char *)&(restriction), sizeof(_Restriction));
+            inputRestrictions.push_back(restriction);
+        }
+        restrictionsInstream.close();
+        INFO("Loaded " << inputRestrictions.size() << " restrictions from file");
     }
 
     unsigned numberOfThreads = omp_get_num_procs();
@@ -84,9 +100,17 @@ int main (int argc, char *argv[]) {
     if (!in.is_open()) {
         cerr << "Cannot open " << argv[1] << endl; exit(-1);
     }
+
     vector<ImportEdge> edgeList;
-    const NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, int2ExtNodeMap);
+    NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, &int2ExtNodeMap, inputRestrictions);
     in.close();
+
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, inputRestrictions);
+    edgeBasedGraphFactory->Run();
+    n = edgeBasedGraphFactory->GetNumberOfNodes();
+    std::vector<ImportEdge> edgeBasedEdgeList;
+    edgeBasedGraphFactory->GetEdges(edgeBasedEdgeList);
+    DELETE(edgeBasedGraphFactory);
 
     char nodeOut[1024];
     char edgeOut[1024];
@@ -106,8 +130,10 @@ int main (int argc, char *argv[]) {
     strcat(levelInfoOut, ".levels");
 
     cout << "initializing contractor ..." << flush;
-    Contractor* contractor = new Contractor( n, edgeList );
+    Contractor* contractor = new Contractor( n, edgeBasedEdgeList );
+    double contractionStartedTimestamp(get_timestamp());
     contractor->Run();
+    INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");
 
     LevelInformation * levelInfo = contractor->GetLevelInformation();
     std::cout << "sorting level info" << std::endl;
@@ -179,19 +205,18 @@ int main (int argc, char *argv[]) {
     std::cout << "writing node map ..." << std::flush;
     ofstream mapOutFile(nodeOut, ios::binary);
 
-    for(NodeID i = 0; i < int2ExtNodeMap->size(); i++) {
-        mapOutFile.write((char *)&(int2ExtNodeMap->at(i)), sizeof(NodeInfo));
+    for(NodeID i = 0; i < int2ExtNodeMap.size(); i++) {
+        mapOutFile.write((char *)&(int2ExtNodeMap.at(i)), sizeof(NodeInfo));
     }
     mapOutFile.close();
     std::cout << "ok" << std::endl;
 
     WritableGrid * writeableGrid = new WritableGrid();
     cout << "building grid ..." << flush;
-    writeableGrid->ConstructGrid(edgeList, int2ExtNodeMap, ramIndexOut, fileIndexOut);
+    writeableGrid->ConstructGrid(edgeList, &int2ExtNodeMap, ramIndexOut, fileIndexOut);
     delete writeableGrid;
 
-    int2ExtNodeMap->clear();
-    delete int2ExtNodeMap;
+    int2ExtNodeMap.clear();
 
     cout << "finished" << endl;
     return 0;

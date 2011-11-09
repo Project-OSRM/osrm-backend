@@ -25,7 +25,14 @@
 #ifndef EDGEBASEDGRAPHFACTORY_H_
 #define EDGEBASEDGRAPHFACTORY_H_
 
+#include <boost/shared_ptr.hpp>
 #include <vector>
+
+#include "../typedefs.h"
+#include "../DataStructures/DynamicGraph.h"
+#include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/Percent.h"
 
 class EdgeBasedGraphFactory {
 private:
@@ -36,27 +43,49 @@ private:
 
     struct _NodeBasedEdgeData {
         unsigned distance;
+        unsigned newNodeID;
         unsigned originalEdges : 29;
         bool shortcut : 1;
         bool forward : 1;
         bool backward : 1;
         short type:6;
-        bool forwardTurn:1;
-        bool backwardTurn:1;
         _MiddleName middleName;
     } data;
 
-    typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
-    typedef typename _NodeBasedDynamicGraph::InputEdge _ImportEdge;
+    struct _EdgeBasedEdgeData {
+        unsigned distance;
+        unsigned instruction;
+        bool forward;
+        bool backward;
+        short type;
+    };
 
-    _NodeBasedDynamicGraph * _graph;
+    typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
+    typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
+
+public:
+    typedef DynamicGraph< _EdgeBasedEdgeData> _EdgeBasedDynamicGraph;
+    typedef _EdgeBasedDynamicGraph::InputEdge _EdgeBasedEdge;
+private:
+    boost::shared_ptr<_NodeBasedDynamicGraph> _nodeBasedGraph;
+    boost::shared_ptr<_EdgeBasedDynamicGraph> _edgeBasedGraph;
+
+    std::vector<_Restriction> & inputRestrictions;
+
+    std::vector<_EdgeBasedEdge> edgeBasedEdges;
 
 public:
     template< class InputEdgeT >
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges);
+    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<_Restriction> & inputRestrictions);
     virtual ~EdgeBasedGraphFactory();
 
+    void Run();
+    template< class ImportEdgeT >
+    void GetEdges( std::vector< ImportEdgeT >& edges );
+    template< class NodeT >
+    void GetNodes( std::vector< NodeT >& edges );
 
+    unsigned GetNumberOfNodes() const;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */
