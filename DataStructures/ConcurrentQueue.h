@@ -21,6 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef CONCURRENTQUEUE_H_INCLUDED
 #define CONCURRENTQUEUE_H_INCLUDED
 
+#include <queue>
+#include <boost/signals2/mutex.hpp>
+
 #include "../typedefs.h"
 
 /* 
@@ -28,28 +31,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
    http://www.justsoftwaresolutions.co.uk/threading/implementing-a-thread-safe-queue-using-condition-variables.html  
 */
 template<typename Data>
-class concurrent_queue
-{
-private:
-    std::queue<Data> internal_queue;
-    mutable boost::mutex queue_mutex;
-    mutable boost::mutex queue_full_mutex;
-    boost::condition_variable queue_cv;
-    boost::condition_variable queue_full_cv;
-    const size_t max_queue_size;
-
-    bool size_exceeded() const {
-        boost::mutex::scoped_lock lock(queue_mutex);
-        return internal_queue.size() >= max_queue_size;
-    }
+class ConcurrentQueue {
 
 public:
-    concurrent_queue(const size_t max_size) 
+    ConcurrentQueue(const size_t max_size) 
         : max_queue_size(max_size) {
     }
 
-    void push(Data const& data)
-    {
+    void push(Data const& data) {
         if (size_exceeded()) {
             boost::mutex::scoped_lock qf_lock(queue_full_mutex);
             queue_full_cv.wait(qf_lock);
@@ -61,17 +50,13 @@ public:
         queue_cv.notify_one();
     }
 
-    bool empty() const
-    {
-        boost::mutex::scoped_lock lock(queue_mutex);
+    bool empty() const {
         return internal_queue.empty();
     }
 
-    bool try_pop(Data& popped_value)
-    {
+    bool try_pop(Data& popped_value) {
         boost::mutex::scoped_lock lock(queue_mutex);
-        if(internal_queue.empty())
-        {
+        if(internal_queue.empty()) {
             return false;
         }
         
@@ -81,11 +66,9 @@ public:
         return true;
     }
 
-    void wait_and_pop(Data& popped_value)
-    {
+    void wait_and_pop(Data& popped_value) {
         boost::mutex::scoped_lock lock(queue_mutex);
-        while(internal_queue.empty())
-        {
+        while(internal_queue.empty()) {
             queue_cv.wait(lock);
         }
         
@@ -95,9 +78,21 @@ public:
     }
 
     int size() const {
-        boost::mutex::scoped_lock lock(queue_mutex);
         return static_cast<int>(internal_queue.size());
     }
+
+private:
+    std::queue<Data> internal_queue;
+    mutable boost::mutex queue_mutex;
+    mutable boost::mutex queue_full_mutex;
+    boost::condition_variable queue_cv;
+    boost::condition_variable queue_full_cv;
+    const size_t max_queue_size;
+
+    bool size_exceeded() const {
+        return internal_queue.size() >= max_queue_size;
+    }
+
 };
 
 #endif //#ifndef CONCURRENTQUEUE_H_INCLUDED
