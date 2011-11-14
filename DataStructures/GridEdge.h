@@ -22,10 +22,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define GRIDEDGE_H_
 
 struct _GridEdge {
-    _GridEdge(NodeID s, NodeID t, _Coordinate sc, _Coordinate tc) : start(s), target(t), startCoord(sc), targetCoord(tc) {}
-    _GridEdge() : start(UINT_MAX), target(UINT_MAX) {}
-    NodeID start;
-    NodeID target;
+    _GridEdge(NodeID n, _Coordinate sc, _Coordinate tc) : edgeBasedNode(n), startCoord(sc), targetCoord(tc) {}
+    _GridEdge() : edgeBasedNode(UINT_MAX) {}
+    NodeID edgeBasedNode;
     _Coordinate startCoord;
     _Coordinate targetCoord;
 };
@@ -37,14 +36,10 @@ struct GridEntry {
     unsigned fileIndex;
     unsigned ramIndex;
     bool operator< ( const GridEntry& right ) const {
-        if(right.edge.start != edge.start)
-            return right.edge.start < edge.start;
-        if(right.edge.target != edge.target)
-            return right.edge.target < edge.target;
-        return false;
+        return (edge.edgeBasedNode < right.edge.edgeBasedNode);
     }
     bool operator==( const GridEntry& right ) const {
-        return right.edge.start == edge.start && right.edge.target == edge.target;
+        return right.edge.edgeBasedNode == edge.edgeBasedNode;
     }
 };
 

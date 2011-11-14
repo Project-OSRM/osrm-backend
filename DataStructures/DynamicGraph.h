@@ -81,9 +81,7 @@ class DynamicGraph {
             }
         }
 
-        ~DynamicGraph()
-        {
-        }
+        ~DynamicGraph(){ }
 
         unsigned GetNumberOfNodes() const
         {

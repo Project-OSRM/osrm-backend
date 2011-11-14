@@ -31,27 +31,30 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class NodeInformationHelpDesk{
 public:
-	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput) {
+	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, unsigned _numberOfNodes) : numberOfNodes(_numberOfNodes) {
 		readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
 		int2ExtNodeMap = new vector<_Coordinate>();
-		numberOfNodes = 0;
+		int2ExtNodeMap->reserve(numberOfNodes);
+	    assert(0 == int2ExtNodeMap->size());
 	}
+
 	~NodeInformationHelpDesk() {
 		delete int2ExtNodeMap;
 		delete readOnlyGrid;
 	}
 	void initNNGrid(ifstream& in) {
-		while(!in.eof()) {
+	    while(!in.eof()) {
 			NodeInfo b;
 			in.read((char *)&b, sizeof(b));
 			int2ExtNodeMap->push_back(_Coordinate(b.lat, b.lon));
-			numberOfNodes++;
 		}
 		in.close();
 		readOnlyGrid->OpenIndexFiles();
 	}
 
-	inline int getLatitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lat; }
+	inline int getLatitudeOfNode(const NodeID node) const {
+	    return int2ExtNodeMap->at(node).lat;
+	}
 
 	inline int getLongitudeOfNode(const NodeID node) const { return int2ExtNodeMap->at(node).lon; }
 
@@ -59,7 +62,7 @@ public:
 	NodeID getNumberOfNodes2() const { return int2ExtNodeMap->size(); }
 
 	inline void FindNearestNodeCoordForLatLon(const _Coordinate& coord, _Coordinate& result) {
-		readOnlyGrid->FindNearestNodeInGraph(coord, result);
+		readOnlyGrid->FindNearestCoordinateOnEdgeInNodeBasedGraph(coord, result);
 	}
 	bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
 	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode);
@@ -71,7 +74,7 @@ public:
 	}
 
 	inline bool GetStartAndDestNodesOfEdge(const _Coordinate& coord, NodesOfEdge& nodesOfEdge) {
-	    return readOnlyGrid->GetStartAndDestNodesOfEdge(coord, nodesOfEdge);
+	    return readOnlyGrid->GetEdgeBasedStartNode(coord, nodesOfEdge);
 	}
 
 	inline void FindNearestPointOnEdge(const _Coordinate & input, _Coordinate& output){

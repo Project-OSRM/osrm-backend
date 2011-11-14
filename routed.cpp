@@ -40,7 +40,6 @@ int omp_get_thread_num() { return 0; }
 #include "Plugins/HelloWorldPlugin.h"
 #include "Plugins/LocatePlugin.h"
 #include "Plugins/NearestPlugin.h"
-#include "Plugins/RoutePlugin.h"
 #include "Plugins/ViaRoutePlugin.h"
 #include "Util/InputFileUtil.h"
 
@@ -109,8 +108,6 @@ int main (int argc, char *argv[]) {
         h.RegisterPlugin(new LocatePlugin(objects));
 
         h.RegisterPlugin(new NearestPlugin(objects));
-
-        h.RegisterPlugin(new RoutePlugin(objects));
 
         h.RegisterPlugin(new ViaRoutePlugin(objects));
 

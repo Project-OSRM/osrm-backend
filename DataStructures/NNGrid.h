@@ -37,6 +37,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 #include <boost/thread.hpp>
+#include <boost/foreach.hpp>
 #include <google/dense_hash_map>
 
 #include "ExtractorStructs.h"
@@ -148,16 +149,6 @@ static void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& 
 
 template<bool WriteAccess = false>
 class NNGrid {
-private:
-    struct DiskEdge {
-        NodeID start;
-        NodeID target;
-        int slat;
-        int slon;
-        int tlat;
-        int tlon;
-    };
-
 public:
     NNGrid() : cellCache(500), fileCache(500) {
         ramIndexTable.resize((1024*1024), UINT_MAX);
@@ -167,6 +158,9 @@ public:
     }
 
     NNGrid(const char* rif, const char* _i, unsigned numberOfThreads = omp_get_num_procs()): cellCache(500), fileCache(500) {
+        if(WriteAccess) {
+            ERR("Not available in Write mode");
+        }
         iif = std::string(_i);
         ramIndexTable.resize((1024*1024), UINT_MAX);
         ramInFile.open(rif, std::ios::in | std::ios::binary);
@@ -183,7 +177,7 @@ public:
     void OpenIndexFiles() {
         assert(ramInFile.is_open());
 
-        for(int i = 0; i < 1024*1024; i++) {
+        for(int i = 0; i < 1024*1024; ++i) {
             unsigned temp;
             ramInFile.read((char*)&temp, sizeof(unsigned));
             ramIndexTable[i] = temp;
@@ -194,19 +188,16 @@ public:
     template<typename EdgeT, typename NodeInfoT>
     void ConstructGrid(std::vector<EdgeT> & edgeList, vector<NodeInfoT> * int2ExtNodeMap, char * ramIndexOut, char * fileIndexOut) {
         Percent p(edgeList.size());
-        for(NodeID i = 0; i < edgeList.size(); i++) {
+        for(NodeID i = 0; i < edgeList.size(); ++i) {
             p.printIncrement();
-            if( edgeList[i].isLocatable() == false )
-                continue;
-            EdgeT edge = edgeList[i];
+            EdgeT & edge = edgeList[i];
 
-            int slat = 100000*lat2y(static_cast<double>(int2ExtNodeMap->at(edge.source()).lat)/100000.);
-            int slon = int2ExtNodeMap->at(edge.source()).lon;
-            int tlat = 100000*lat2y(static_cast<double>(int2ExtNodeMap->at(edge.target()).lat)/100000.);
-            int tlon = int2ExtNodeMap->at(edge.target()).lon;
+            int slat = 100000*lat2y(edge.lat1/100000.);
+            int slon = edge.lon1;
+            int tlat = 100000*lat2y(edge.lat2/100000.);
+            int tlon = edge.lon2;
             AddEdge( _GridEdge(
-                    edgeList[i].source(),
-                    edgeList[i].target(),
+                    edge.id,
                     _Coordinate(slat, slon),
                     _Coordinate(tlat, tlon) )
             );
@@ -225,7 +216,7 @@ public:
         unsigned maxNumberOfRAMCellElements = 0;
         cout << "writing data ..." << flush;
         p.reinit(entries->size());
-        for(stxxl::vector<GridEntry>::iterator vt = entries->begin(); vt != entries->end(); vt++) {
+        for(stxxl::vector<GridEntry>::iterator vt = entries->begin(); vt != entries->end(); ++vt) {
             p.printIncrement();
             if(vt->ramIndex != indexInRamTable) {
                 unsigned numberOfBytesInCell = FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
@@ -247,7 +238,7 @@ public:
 
         assert(entriesInFileWithRAMSameIndex.size() == 0);
 
-        for(int i = 0; i < 1024*1024; i++) {
+        for(int i = 0; i < 1024*1024; ++i) {
             if(ramIndexTable[i] != UINT_MAX) {
                 numberOfUsedCells--;
             }
@@ -259,17 +250,17 @@ public:
         //Serialize RAM Index
         ofstream ramFile(ramIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
         //write 4 MB of index Table in RAM
-        for(int i = 0; i < 1024*1024; i++)
+        for(int i = 0; i < 1024*1024; ++i)
             ramFile.write((char *)&ramIndexTable[i], sizeof(unsigned) );
         //close ram index file
         ramFile.close();
     }
 
-    bool GetStartAndDestNodesOfEdge(const _Coordinate& coord, NodesOfEdge& nodesOfEdge) {
+    bool GetEdgeBasedStartNode(const _Coordinate& coord, NodesOfEdge& nodesOfEdge) {
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(coord.lat)/100000.)), coord.lon);
         /** search for point on edge next to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
-        std::vector<_Edge> candidates;
+        std::vector<_GridEdge> candidates;
 
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++){
@@ -277,13 +268,12 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = (numeric_limits<double>::max)();
-        for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+        double dist = numeric_limits<double>::max();
+        BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
-            double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
+            double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(tmpDist < dist) {
-                nodesOfEdge.startID = it->start;
-                nodesOfEdge.destID = it->target;
+                nodesOfEdge.edgeBasedNode = candidate.edgeBasedNode;
                 nodesOfEdge.ratio = r;
                 dist = tmpDist;
                 nodesOfEdge.projectedPoint.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
@@ -297,11 +287,12 @@ public:
     }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
+        INFO("FindPhantomNodeForCoordinate");
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
-        std::vector<_Edge> candidates;
+        std::vector<_GridEdge> candidates;
 
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++){
@@ -311,13 +302,16 @@ public:
 
         _Coordinate tmp;
         double dist = (numeric_limits<double>::max)();
-        for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+        BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
-            double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
+            double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
+            if((tmpDist == dist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
+                resultNode.isBidirected = true;
+                resultNode.edgeBasedNode = std::min(candidate.edgeBasedNode, resultNode.edgeBasedNode);
+            }
             if(tmpDist < dist) {
-                //              std::cout << "[debug] start distance " << (it - candidates.begin()) << " " << tmpDist << std::endl;
-                resultNode.startNode = it->start;
-                resultNode.targetNode = it->target;
+                resultNode.isBidirected = false;
+                resultNode.edgeBasedNode = candidate.edgeBasedNode;
                 resultNode.ratio = r;
                 dist = tmpDist;
                 resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
@@ -334,9 +328,9 @@ public:
                 FindPhantomNodeForCoordinate( target, routingStarts.targetPhantom) );
     }
 
-    void FindNearestNodeInGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
+    void FindNearestCoordinateOnEdgeInNodeBasedGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
         unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
-        std::vector<_Edge> candidates;
+        std::vector<_GridEdge> candidates;
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++) {
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
@@ -344,9 +338,9 @@ public:
         }
         _Coordinate tmp;
         double dist = (numeric_limits<double>::max)();
-        for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+        BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
-            double tmpDist = ComputeDistance(inputCoordinate, it->startCoord, it->targetCoord, tmp, &r);
+            double tmpDist = ComputeDistance(inputCoordinate, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(tmpDist < dist) {
                 dist = tmpDist;
                 outputCoordinate = tmp;
@@ -359,7 +353,7 @@ public:
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
 
-        std::vector<_Edge> candidates;
+        std::vector<_GridEdge> candidates;
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++) {
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
@@ -367,9 +361,9 @@ public:
         }
         _Coordinate tmp;
         double dist = (numeric_limits<double>::max)();
-        for(std::vector<_Edge>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+        BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
-            double tmpDist = ComputeDistance(startCoord, it->startCoord, it->targetCoord, tmp, &r);
+            double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(tmpDist < dist) {
                 dist = tmpDist;
                 outputCoordinate.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
@@ -381,8 +375,7 @@ public:
 
 private:
 
-    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset )
-    {
+    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset ) {
         vector<char> * tmpBuffer = new vector<char>();
         tmpBuffer->resize(32*32*4096,0);
         unsigned indexIntoTmpBuffer = 0;
@@ -408,8 +401,7 @@ private:
             }
         }
 
-        for(unsigned i = 0; i < entriesWithSameRAMIndex.size() -1; i++)
-        {
+        for(unsigned i = 0; i < entriesWithSameRAMIndex.size() -1; ++i) {
             assert(entriesWithSameRAMIndex[i].ramIndex== entriesWithSameRAMIndex[i+1].ramIndex);
         }
 
@@ -471,7 +463,7 @@ private:
 
     unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> * tmpBuffer, const unsigned index)
     {
-        tmpBuffer->resize(tmpBuffer->size()+(sizeof(NodeID)+sizeof(NodeID)+4*sizeof(int)+sizeof(unsigned))*vectorWithSameFileIndex.size() );
+        tmpBuffer->resize(tmpBuffer->size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) );
         unsigned counter = 0;
         unsigned max = UINT_MAX;
 
@@ -482,44 +474,12 @@ private:
         }
 
         sort( vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end() );
-        std::vector<GridEntry>::const_iterator newEnd = unique(vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end());
-        for(std::vector<GridEntry>::const_iterator et = vectorWithSameFileIndex.begin(); et != newEnd; et++)
-        {
-            char * start = (char *)&et->edge.start;
-            for(unsigned i = 0; i < sizeof(NodeID); i++)
-            {
-                tmpBuffer->at(index+counter) = start[i];
-                counter++;
-            }
-            char * target = (char *)&et->edge.target;
-            for(unsigned i = 0; i < sizeof(NodeID); i++)
-            {
-                tmpBuffer->at(index+counter) = target[i];
-                counter++;
-            }
-            char * slat = (char *) &(et->edge.startCoord.lat);
-            for(unsigned i = 0; i < sizeof(int); i++)
-            {
-                tmpBuffer->at(index+counter) = slat[i];
-                counter++;
-            }
-            char * slon = (char *) &(et->edge.startCoord.lon);
-            for(unsigned i = 0; i < sizeof(int); i++)
-            {
-                tmpBuffer->at(index+counter) = slon[i];
-                counter++;
-            }
-            char * tlat = (char *) &(et->edge.targetCoord.lat);
-            for(unsigned i = 0; i < sizeof(int); i++)
-            {
-                tmpBuffer->at(index+counter) = tlat[i];
-                counter++;
-            }
-            char * tlon = (char *) &(et->edge.targetCoord.lon);
-            for(unsigned i = 0; i < sizeof(int); i++)
-            {
-                tmpBuffer->at(index+counter) = tlon[i];
-                counter++;
+        vectorWithSameFileIndex.erase(unique(vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end()), vectorWithSameFileIndex.end());
+        BOOST_FOREACH(GridEntry entry, vectorWithSameFileIndex) {
+            char * data = (char *)&(entry.edge);
+            for(unsigned i = 0; i < sizeof(_GridEdge); ++i) {
+                tmpBuffer->at(index+counter) = data[i];
+                ++counter;
             }
         }
         char * umax = (char *) &max;
@@ -531,7 +491,7 @@ private:
         return counter;
     }
 
-    void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_Edge>& result) {
+    void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_GridEdge>& result) {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
         unsigned startIndexInFile = ramIndexTable[ramIndex];
         if(startIndexInFile == UINT_MAX) {
@@ -569,19 +529,12 @@ private:
 
         std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
         localStream.seekg(position);
-        DiskEdge diskEdge;
+        _GridEdge gridEdge;
         do {
-            localStream.read((char *)&(diskEdge), sizeof(DiskEdge));
-            if(localStream.eof() || diskEdge.start == UINT_MAX)
+            localStream.read((char *)&(gridEdge), sizeof(_GridEdge));
+            if(localStream.eof() || gridEdge.edgeBasedNode == UINT_MAX)
                 break;
-
-            _Edge e(diskEdge.start, diskEdge.target);
-            e.startCoord.lat = diskEdge.slat;
-            e.startCoord.lon = diskEdge.slon;
-            e.targetCoord.lat = diskEdge.tlat;
-            e.targetCoord.lon = diskEdge.tlon;
-
-            result.push_back(e);
+            result.push_back(gridEdge);
         } while(true);
         localStream.close();
 
@@ -590,7 +543,7 @@ private:
     void AddEdge(_GridEdge edge) {
         std::vector<std::pair<unsigned, unsigned> > indexList;
         GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
-        for(unsigned i = 0; i < indexList.size(); i++) {
+        for(unsigned i = 0; i < indexList.size(); ++i) {
             entries->push_back(GridEntry(edge, indexList[i].first, indexList[i].second));
         }
     }

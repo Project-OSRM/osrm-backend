@@ -50,7 +50,7 @@ public:
                 if( ! path.size() )
                     continue;
                 for(vector< _PathData >::const_iterator it = path.begin(); it != path.end(); it++) {
-                    sEngine.getCoordinatesForNodeID(it->node, current);
+                    sEngine.GetCoordinatesForNodeID(it->node, current);
 
                     convertInternalLatLonToString(current.lat, tmp);
                     reply.content += "<rtept lat=\"" + tmp + "\" ";

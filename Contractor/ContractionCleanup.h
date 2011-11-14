@@ -62,10 +62,6 @@ private:
             delete _heapForward;
         }
     };
-    union _MiddleName {
-        NodeID nameID;
-        NodeID middle;
-    };
 
 public:
 
@@ -73,12 +69,13 @@ public:
         NodeID source;
         NodeID target;
         struct EdgeData {
-            int distance : 30;
-            bool shortcut : 1;
-            bool forward : 1;
-            bool backward : 1;
-            short type:7;
-            _MiddleName middleName;
+            NodeID via;
+            unsigned nameID1;
+            unsigned nameID2;
+            int distance;
+            bool shortcut;
+            bool forward;
+            bool backward;
         } data;
 
         //sorts by source and other attributes
@@ -95,7 +92,10 @@ public:
         }
 
         bool operator== ( const Edge& right ) const {
-            return ( source == right.source && target == right.target && data.distance == right.data.distance && data.shortcut == right.data.shortcut && data.forward == right.data.forward && data.backward == right.data.backward && data.middleName.middle == right.data.middleName.middle );
+            return ( source == right.source && target == right.target && data.distance == right.data.distance &&
+                    data.shortcut == right.data.shortcut && data.forward == right.data.forward && data.backward == right.data.backward
+                    && data.via == right.data.via && data.nameID1 == right.data.nameID1 && data.nameID2 == right.data.nameID2
+                    );
         }
     };
 

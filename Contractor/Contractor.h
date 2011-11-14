@@ -117,6 +117,7 @@ public:
             edge.data.shortcut = false;
             edge.data.nameID1 = i->nameID1();
             edge.data.nameID2 = i->nameID2();
+            edge.data.via = i->via();
             edge.data.turnType = i->turnType();
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
@@ -429,12 +430,6 @@ private:
             return depthFactor * nodeData->depth;
         return edgeQuotionFactor * ((( double ) stats.edgesAdded ) / stats.edgesDeleted ) + originalQuotientFactor * ((( double ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + depthFactor * nodeData->depth;
     }
-
-    /*
-     8 * numAdded / numDeleted + 4 * numOriginalAdded / numOriginalDeleted + 2 * Tiefe
-    Kante einfüge = numAdded += 2 && numOriginalAdded += 2 * numOriginal
-    Kante löschen = numDeleted += 1 && numOriginalAdded += numOriginal
-     */
 
     template< class Edge >
     bool _CheckCH()

@@ -42,7 +42,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 int omp_get_num_procs() { return 1; }
 int omp_get_max_threads() { return 1; }
 int omp_get_thread_num() { return 0; }
-int omp_set_num_threads(int i) {}
+void omp_set_num_threads(int i) {}
 #endif
 
 #include "typedefs.h"
@@ -67,23 +67,21 @@ vector<NodeInfo> int2ExtNodeMap;
 vector<_Restriction> inputRestrictions;
 
 int main (int argc, char *argv[]) {
-    if(argc <= 1) {
-        cerr << "usage: " << endl << argv[0] << " <osrm-data>" << endl;
+    if(argc < 3) {
+        cerr << "usage: " << endl << argv[0] << " <osrm-data> <osrm-restrictions>" << endl;
         exit(-1);
     }
-    if(argc == 3) {
-        INFO("Using restrictions from file: " << argv[2]);
-        ifstream restrictionsInstream(argv[2], ios::binary);
-        _Restriction restriction;
-        unsigned usableRestrictionsCounter(0);
-        restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
-        for(unsigned i = 0; i < usableRestrictionsCounter; ++i) {
-            restrictionsInstream.read((char *)&(restriction), sizeof(_Restriction));
-            inputRestrictions.push_back(restriction);
-        }
-        restrictionsInstream.close();
-        INFO("Loaded " << inputRestrictions.size() << " restrictions from file");
+    INFO("Using restrictions from file: " << argv[2]);
+    ifstream restrictionsInstream(argv[2], ios::binary);
+    _Restriction restriction;
+    unsigned usableRestrictionsCounter(0);
+    restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
+    for(unsigned i = 0; i < usableRestrictionsCounter; ++i) {
+        restrictionsInstream.read((char *)&(restriction), sizeof(_Restriction));
+        inputRestrictions.push_back(restriction);
     }
+    restrictionsInstream.close();
+    INFO("Loaded " << inputRestrictions.size() << " restrictions from file");
 
     unsigned numberOfThreads = omp_get_num_procs();
     if(testDataFile("contractor.ini")) {
@@ -106,22 +104,12 @@ int main (int argc, char *argv[]) {
         cerr << "Cannot open " << argv[1] << endl; exit(-1);
     }
 
-    vector<ImportEdge> edgeList;
-    NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, &int2ExtNodeMap, inputRestrictions);
-    in.close();
-
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, inputRestrictions);
-    edgeBasedGraphFactory->Run();
-    n = edgeBasedGraphFactory->GetNumberOfNodes();
-    std::vector<ImportEdge> edgeBasedEdgeList;
-    edgeBasedGraphFactory->GetEdges(edgeBasedEdgeList);
-    DELETE(edgeBasedGraphFactory);
-
     char nodeOut[1024];
     char edgeOut[1024];
     char ramIndexOut[1024];
     char fileIndexOut[1024];
     char levelInfoOut[1024];
+
     strcpy(nodeOut, argv[1]);
     strcpy(edgeOut, argv[1]);
     strcpy(ramIndexOut, argv[1]);
@@ -133,6 +121,36 @@ int main (int argc, char *argv[]) {
     strcat(ramIndexOut, ".ramIndex");
     strcat(fileIndexOut, ".fileIndex");
     strcat(levelInfoOut, ".levels");
+
+    vector<ImportEdge> edgeList;
+    NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, &int2ExtNodeMap, inputRestrictions);
+    in.close();
+
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, inputRestrictions, int2ExtNodeMap);
+    edgeBasedGraphFactory->Run();
+    n = edgeBasedGraphFactory->GetNumberOfNodes();
+    std::vector<EdgeBasedEdge> edgeBasedEdgeList;
+    edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
+
+    std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
+    edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
+    INFO("size of nodeBasedEdgeList: " << nodeBasedEdgeList.size());
+    DELETE(edgeBasedGraphFactory);
+
+    WritableGrid * writeableGrid = new WritableGrid();
+    cout << "building grid ..." << flush;
+    writeableGrid->ConstructGrid(nodeBasedEdgeList, &int2ExtNodeMap, ramIndexOut, fileIndexOut);
+    delete writeableGrid;
+    std::cout << "writing node map ..." << std::flush;
+    ofstream mapOutFile(nodeOut, ios::binary);
+
+    for(NodeID i = 0; i < int2ExtNodeMap.size(); i++) {
+        mapOutFile.write((char *)&(int2ExtNodeMap.at(i)), sizeof(NodeInfo));
+    }
+    mapOutFile.close();
+    std::cout << "ok" << std::endl;
+
+    int2ExtNodeMap.clear();
 
     cout << "initializing contractor ..." << flush;
     Contractor* contractor = new Contractor( n, edgeBasedEdgeList );
@@ -164,7 +182,6 @@ int main (int argc, char *argv[]) {
     levelOutFile.close();
     std::vector< ContractionCleanup::Edge > contractedEdges;
     contractor->GetEdges( contractedEdges );
-    delete contractor;
 
     ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
     contractedEdges.clear();
@@ -179,49 +196,12 @@ int main (int argc, char *argv[]) {
     Percent p(cleanedEdgeList.size());
     for(std::vector< InputEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++) {
         p.printIncrement();
-        int distance= it->data.distance;
-        assert(distance > 0);
-        bool shortcut= it->data.shortcut;
-        bool forward= it->data.forward;
-        bool backward= it->data.backward;
-        NodeID middle;
-        if(shortcut)
-            middle = it->data.middleName.middle;
-        else {
-            middle = it->data.middleName.nameID;
-        }
-
-        NodeID source = it->source;
-        NodeID target = it->target;
-        short type = it->data.type;
-
-        edgeOutFile.write((char *)&(distance), sizeof(int));
-        edgeOutFile.write((char *)&(shortcut), sizeof(bool));
-        edgeOutFile.write((char *)&(forward), sizeof(bool));
-        edgeOutFile.write((char *)&(backward), sizeof(bool));
-        edgeOutFile.write((char *)&(middle), sizeof(NodeID));
-        edgeOutFile.write((char *)&(type), sizeof(short));
-        edgeOutFile.write((char *)&(source), sizeof(NodeID));
-        edgeOutFile.write((char *)&(target), sizeof(NodeID));
+        edgeOutFile.write((char *)&(it->data), sizeof(EdgeData));
+        edgeOutFile.write((char *)&(it->source), sizeof(NodeID));
+        edgeOutFile.write((char *)&(it->target), sizeof(NodeID));
     }
     edgeOutFile.close();
     cleanedEdgeList.clear();
-
-    std::cout << "writing node map ..." << std::flush;
-    ofstream mapOutFile(nodeOut, ios::binary);
-
-    for(NodeID i = 0; i < int2ExtNodeMap.size(); i++) {
-        mapOutFile.write((char *)&(int2ExtNodeMap.at(i)), sizeof(NodeInfo));
-    }
-    mapOutFile.close();
-    std::cout << "ok" << std::endl;
-
-    WritableGrid * writeableGrid = new WritableGrid();
-    cout << "building grid ..." << flush;
-    writeableGrid->ConstructGrid(edgeList, &int2ExtNodeMap, ramIndexOut, fileIndexOut);
-    delete writeableGrid;
-
-    int2ExtNodeMap.clear();
 
     cout << "finished" << endl;
     return 0;

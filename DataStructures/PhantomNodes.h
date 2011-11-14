@@ -24,15 +24,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "ExtractorStructs.h"
 
 struct PhantomNode {
-    PhantomNode() : startNode(UINT_MAX), targetNode(UINT_MAX), ratio(1.) {}
-
-    NodeID startNode;
-    NodeID targetNode;
+    PhantomNode() : isBidirected(false), edgeBasedNode(UINT_MAX), ratio(1.) {}
+    bool isBidirected;
+    NodeID edgeBasedNode;
     double ratio;
     _Coordinate location;
     void Reset() {
-        startNode = UINT_MAX;
-        targetNode = UINT_MAX;
+        edgeBasedNode = UINT_MAX;
         ratio = 1.;
         location.Reset();
     }
@@ -47,28 +45,25 @@ struct PhantomNodes {
         targetPhantom.Reset();
     }
 
-    bool PhantomsAreOnSameEdge() const {
-        return ((startPhantom.startNode == targetPhantom.startNode && startPhantom.targetNode == targetPhantom.targetNode ) || (startPhantom.startNode == targetPhantom.targetNode && targetPhantom.startNode == startPhantom.targetNode));
+    bool PhantomsAreOnSameNodeBasedEdge() const {
+        return (startPhantom.edgeBasedNode == targetPhantom.edgeBasedNode);
     }
 
     bool AtLeastOnePhantomNodeIsUINTMAX() const {
-        return !(startPhantom.startNode == UINT_MAX || startPhantom.targetNode == UINT_MAX || targetPhantom.startNode == UINT_MAX || targetPhantom.targetNode == UINT_MAX);
+        return !(startPhantom.edgeBasedNode == UINT_MAX || targetPhantom.edgeBasedNode == UINT_MAX);
     }
 };
 
 inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
-    out << "startNode1: " << pn.startPhantom.startNode << std::endl;
-    out << "startNode2: " << pn.startPhantom.targetNode << std::endl;
-    out << "targetNode1: " << pn.targetPhantom.startNode << std::endl;
-    out << "targetNode2: " << pn.targetPhantom.targetNode << std::endl;
+    out << "Node1: " << pn.startPhantom.edgeBasedNode << std::endl;
+    out << "Node2: " << pn.targetPhantom.edgeBasedNode << std::endl;
     out << "startCoord: " << pn.startPhantom.location << std::endl;
     out << "targetCoord: " << pn.targetPhantom.location << std::endl;
     return out;
 }
 
 struct NodesOfEdge {
-    NodeID startID;
-    NodeID destID;
+    NodeID edgeBasedNode;
     double ratio;
     _Coordinate projectedPoint;
 };

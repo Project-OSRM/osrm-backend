@@ -32,12 +32,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <google/sparse_hash_map>
 #include <google/sparsetable>
 
-template< typename NodeID, typename Key, bool initialize = true >
+template< typename NodeID, typename Key >
 class ArrayStorage {
 public:
 
-    ArrayStorage( size_t size )
-    : positions( new Key[size] ) { if(initialize) { memset(positions, 0, size*sizeof(Key));} }
+    ArrayStorage( size_t size ) : positions( new Key[size] ) {
+        memset(positions, 0, size*sizeof(Key));
+        INFO("initializing q for " << size << " elements");
+    }
 
     ~ArrayStorage() {
         delete[] positions;
@@ -123,10 +125,6 @@ struct _SimpleHeapData {
     _SimpleHeapData( NodeID p ) : parent(p) { }
 };
 
-//struct _NullHeapData {
-//    _NullHeapData(NodeID p) {}
-//};
-
 template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = ArrayStorage<NodeID, NodeID> >
 class BinaryHeap {
 private:
@@ -144,7 +142,7 @@ public:
     void Clear() {
         heap.resize( 1 );
         insertedNodes.clear();
-        heap[0].weight = (std::numeric_limits< Weight >::min)();
+        heap[0].weight = std::numeric_limits< Weight >::min();
         nodeIndex.Clear();
     }
 
@@ -215,7 +213,7 @@ public:
         assert( UINT_MAX != node );
         const Key index = nodeIndex[node];
         Key key = insertedNodes[index].key;
-        assert ( key != 0 );
+        assert ( key >= 0 );
 
         insertedNodes[index].weight = weight;
         heap[key].weight = weight;

@@ -28,27 +28,29 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
 
-typedef StaticGraph<EdgeData> QueryGraph;
-typedef QueryGraph::InputEdge InputEdge;
 
 struct ObjectsForQueryStruct {
+    typedef StaticGraph<EdgeData> QueryGraph;
+    typedef QueryGraph::InputEdge InputEdge;
+
     NodeInformationHelpDesk * nodeHelpDesk;
     std::vector<std::string> * names;
     QueryGraph * graph;
 
     ObjectsForQueryStruct(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route") {
         std::cout << "[objects] loading query data structures ..." << std::flush;
-        //Init nearest neighbor data structure
-        ifstream nodesInStream(nodesPath.c_str(), ios::binary);
-        nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str());
-        nodeHelpDesk->initNNGrid(nodesInStream);
-
         ifstream hsgrInStream(hsgrPath.c_str(), ios::binary);
         //Deserialize road network graph
         std::vector< InputEdge> edgeList;
-        readHSGRFromStream(hsgrInStream, edgeList);
-        graph = new QueryGraph(nodeHelpDesk->getNumberOfNodes()-1, edgeList);
+        const int n = readHSGRFromStream(hsgrInStream, edgeList);
+        INFO("Graph has " << n << " nodes");
+        graph = new QueryGraph(n, edgeList);
         std::vector< InputEdge >().swap( edgeList ); //free memory
+
+        //Init nearest neighbor data structure
+        ifstream nodesInStream(nodesPath.c_str(), ios::binary);
+        nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str(), n);
+        nodeHelpDesk->initNNGrid(nodesInStream);
 
         //deserialize street name list
         ifstream namesInStream(namesPath.c_str(), ios::binary);

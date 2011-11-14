@@ -49,7 +49,7 @@ public:
         }
     };
 
-    StaticGraph( int nodes, std::vector< InputEdge > &graph ) {
+    StaticGraph( const int nodes, std::vector< InputEdge > &graph ) {
 #ifdef _GLIBCXX_PARALLEL
         __gnu_parallel::sort( graph.begin(), graph.end() );
 #else
@@ -62,9 +62,8 @@ public:
         EdgeIterator position = 0;
         for ( NodeIterator node = 0; node <= _numNodes; ++node ) {
             EdgeIterator lastEdge = edge;
-            while ( edge < _numEdges && graph[edge].source == node ) {
+            while ( edge < _numEdges && graph[edge].source == node )
                 ++edge;
-            }
             _nodes[node].firstEdge = position; //=edge
             position += edge - lastEdge; //remove
         }

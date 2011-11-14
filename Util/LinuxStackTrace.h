@@ -72,10 +72,10 @@ std::string getFileAndLine (char * offset_end) {
 
 void crashHandler(int sig_num, siginfo_t * info, void * ucontext) {
     const size_t maxDepth = 100;
-    size_t stackDepth;
+    //size_t stackDepth;
 
     void *stackAddrs[maxDepth];
-    stackDepth = backtrace(stackAddrs, maxDepth);
+    backtrace(stackAddrs, maxDepth);
 
     std::cerr << "signal " << sig_num << " (" << strsignal(sig_num) << "), address is " << info->si_addr << " from " << stackAddrs[0] << std::endl;
 

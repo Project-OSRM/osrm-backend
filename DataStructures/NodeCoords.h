@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <cassert>
 #include <cstddef>
-#include <limits>
+#include <climits>
 
 #include "../typedefs.h"
 
@@ -33,7 +33,7 @@ struct NodeCoords {
     typedef int value_type;		//type of lat,lons
 
     NodeCoords(int _lat, int _lon, NodeT _id) : lat(_lat), lon(_lon), id(_id) {}
-    NodeCoords() : lat(UINT_MAX), lon(UINT_MAX), id(UINT_MAX) {}
+    NodeCoords() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
     int lat;
     int lon;
     NodeT id;

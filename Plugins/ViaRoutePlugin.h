@@ -33,7 +33,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BasePlugin.h"
 #include "RouteParameters.h"
 #include "GPXDescriptor.h"
-#include "KMLDescriptor.h"
 #include "JSONDescriptor.h"
 
 #include "../DataStructures/HashTable.h"
@@ -103,7 +102,7 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(startCoord);
 
-        //        std::cout << "[debug] number of vianodes: " << routeParameters.viaPoints.size() << std::endl;
+        INFO("[debug] number of vianodes: " << routeParameters.viaPoints.size());
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); i++) {
             textCoord = split (routeParameters.viaPoints[i], ',');
             if(textCoord.size() != 2) {
@@ -112,7 +111,7 @@ public:
             }
             int vialat = static_cast<int>(100000.*atof(textCoord[0].c_str()));
             int vialon = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-            //            std::cout << "[debug] via" << i << ": " << vialat << "," << vialon << std::endl;
+            INFO("[debug] via" << i << ": " << vialat << "," << vialon);
             _Coordinate viaCoord(vialat, vialon);
             if(false == checkCoord(viaCoord)) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
@@ -138,12 +137,13 @@ public:
             PhantomNodes segmentPhantomNodes;
             segmentPhantomNodes.startPhantom = phantomNodeVector[i];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
+            INFO(segmentPhantomNodes);
             std::vector< _PathData > path;
             unsigned distanceOfSegment = searchEngine->ComputeRoute(segmentPhantomNodes, path);
 
             if(UINT_MAX == distanceOfSegment ) {
                 errorOccurredFlag = true;
-//                cout << "Error occurred, path not found" << endl;
+                INFO( "Error occurred, path not found" );
                 distance = UINT_MAX;
                 break;
             } else {
@@ -154,6 +154,8 @@ public:
             rawRoute.segmentEndCoordinates[i] = (segmentPhantomNodes);
             rawRoute.routeSegments[i] = path;
         }
+
+        INFO("Found path of length: " << distance);
 
         reply.status = http::Reply::ok;
 
@@ -185,19 +187,15 @@ public:
 
         switch(descriptorType){
         case 0:
-            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
-
-            break;
-        case 1:
             desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
-        case 2:
+        case 1:
             desc = new GPXDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
         default:
-            desc = new KMLDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
 
             break;
         }
