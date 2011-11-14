@@ -43,19 +43,16 @@ class Contractor {
 
 private:
 
-    union _MiddleName {
-        NodeID middle;
-        NodeID nameID;
-    };
-
-    struct _EdgeData {
+    struct _EdgeBasedContractorEdgeData {
         unsigned distance;
-        unsigned originalEdges : 29;
-        bool shortcut : 1;
-        bool forward : 1;
-        bool backward : 1;
-        short type:6;
-        _MiddleName middleName;
+        unsigned originalEdges;
+        unsigned via;
+        unsigned nameID1;
+        unsigned nameID2;
+        bool shortcut;
+        bool forward;
+        bool backward;
+        short turnType;
     } data;
 
     struct _HeapData {
@@ -64,7 +61,7 @@ private:
         _HeapData( bool t ) : target(t) {}
     };
 
-    typedef DynamicGraph< _EdgeData > _DynamicGraph;
+    typedef DynamicGraph< _EdgeBasedContractorEdgeData > _DynamicGraph;
     typedef BinaryHeap< NodeID, NodeID, int, _HeapData> _Heap;
     typedef _DynamicGraph::InputEdge _ImportEdge;
 
@@ -118,8 +115,9 @@ public:
             }
 #endif
             edge.data.shortcut = false;
-            edge.data.middleName.nameID = i->name();
-            edge.data.type = i->type();
+            edge.data.nameID1 = i->nameID1();
+            edge.data.nameID2 = i->nameID2();
+            edge.data.turnType = i->turnType();
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
             edge.data.originalEdges = 1;
@@ -129,7 +127,7 @@ public:
             edge.data.backward = i->isForward();
             edges.push_back( edge );
         }
-//        std::vector< InputEdge >().swap( inputEdges ); //free memory
+        //        std::vector< InputEdge >().swap( inputEdges ); //free memory
 #ifdef _GLIBCXX_PARALLEL
         __gnu_parallel::sort( edges.begin(), edges.end() );
 #else
@@ -139,9 +137,9 @@ public:
         for ( NodeID i = 0; i < edges.size(); ) {
             const NodeID source = edges[i].source;
             const NodeID target = edges[i].target;
-            const NodeID middle = edges[i].data.middleName.nameID;
-            const short type = edges[i].data.type;
-            assert(type >= 0);
+            const NodeID via = edges[i].data.via;
+            const short turnType = edges[i].data.turnType;
+            assert(turnType >= 0);
             //remove eigenloops
             if ( source == target ) {
                 i++;
@@ -153,9 +151,11 @@ public:
             forwardEdge.target = backwardEdge.target = target;
             forwardEdge.data.forward = backwardEdge.data.backward = true;
             forwardEdge.data.backward = backwardEdge.data.forward = false;
-            forwardEdge.data.type = backwardEdge.data.type = type;
-            forwardEdge.data.middleName.nameID = backwardEdge.data.middleName.nameID = middle;
+            forwardEdge.data.turnType = backwardEdge.data.turnType = turnType;
+            forwardEdge.data.nameID1 = backwardEdge.data.nameID2 = edges[i].data.nameID1;
+            forwardEdge.data.nameID2 = backwardEdge.data.nameID1 = edges[i].data.nameID2;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
+            forwardEdge.data.via = backwardEdge.data.via = via;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
             forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
             //remove parallel edges
@@ -295,12 +295,12 @@ public:
                         const NodeID target = _graph->GetTarget( e );
                         if ( target != edge.target )
                             continue;
-                        _EdgeData& data = _graph->GetEdgeData( e );
+                        _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( e );
                         if ( data.distance != edge.data.distance )
                             continue;
                         if ( data.shortcut != edge.data.shortcut )
                             continue;
-                        if ( data.middleName.middle != edge.data.middleName.middle )
+                        if ( data.via != edge.data.via )
                             continue;
                         data.forward |= edge.data.forward;
                         data.backward |= edge.data.backward;
@@ -340,7 +340,7 @@ public:
         }
 
         cout << "[contractor] checking sanity of generated data ..." << flush;
-        _CheckCH<_EdgeData>();
+        _CheckCH<_EdgeBasedContractorEdgeData>();
         cout << "ok" << endl;
         std::cout << "[contractor] max level: " << maxDepth << std::endl;
     }
@@ -351,20 +351,15 @@ public:
         for ( NodeID node = 0; node < numberOfNodes; ++node ) {
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; edge++ ) {
                 const NodeID target = _graph->GetTarget( edge );
-                const _EdgeData& data = _graph->GetEdgeData( edge );
+                const _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( edge );
                 Edge newEdge;
                 newEdge.source = node;
                 newEdge.target = target;
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
-                if(data.shortcut) {
-                    newEdge.data.middleName.middle = data.middleName.middle;
-                    newEdge.data.type = -1;
-                } else {
-                    newEdge.data.middleName.nameID = data.middleName.nameID;
-                    newEdge.data.type = data.type;
-                    assert(newEdge.data.type >= 0);
-                }
+                newEdge.data.via = data.via;
+                newEdge.data.nameID1 = data.nameID1;
+                newEdge.data.nameID2 = data.nameID2;
 
                 newEdge.data.forward = data.forward;
                 newEdge.data.backward = data.backward;
@@ -383,6 +378,7 @@ private:
         _Heap& heap = data->heap;
 
         unsigned nodes = 0;
+        unsigned targetsFound = 0;
         while ( heap.Size() > 0 ) {
             const NodeID node = heap.DeleteMin();
             const int distance = heap.GetKey( node );
@@ -392,9 +388,15 @@ private:
             if ( distance > maxDistance )
                 return;
 
+            if ( heap.GetData( node ).target ) {
+                targetsFound++;
+                if ( targetsFound >= numTargets )
+                    return;
+            }
+
             //iterate over all edges of node
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
-                const _EdgeData& data = _graph->GetEdgeData( edge );
+                const _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( edge );
                 if ( !data.forward )
                     continue;
                 const NodeID to = _graph->GetTarget( edge );
@@ -442,8 +444,8 @@ private:
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
                 const NodeID start = node;
                 const NodeID target = _graph->GetTarget( edge );
-                const _EdgeData& data = _graph->GetEdgeData( edge );
-                const NodeID middle = data.middleName.middle;
+                const _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( edge );
+                const NodeID middle = data.via;
                 assert(start != target);
                 if(data.shortcut)
                 {
@@ -466,7 +468,7 @@ private:
     template< bool Simulate > bool _Contract( _ThreadData* data, NodeID node, _ContractionInformation* stats = NULL ) {
         _Heap& heap = data->heap;
         for ( _DynamicGraph::EdgeIterator inEdge = _graph->BeginEdges( node ), endInEdges = _graph->EndEdges( node ); inEdge != endInEdges; ++inEdge ) {
-            const _EdgeData& inData = _graph->GetEdgeData( inEdge );
+            const _EdgeBasedContractorEdgeData& inData = _graph->GetEdgeData( inEdge );
             const NodeID source = _graph->GetTarget( inEdge );
             if ( Simulate ) {
                 assert( stats != NULL );
@@ -482,18 +484,22 @@ private:
             if ( node != source )
                 heap.Insert( node, inData.distance, _HeapData() );
             int maxDistance = 0;
+            unsigned numTargets = 0;
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
-                const _EdgeData& outData = _graph->GetEdgeData( outEdge );
+                const _EdgeBasedContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
                 if ( !outData.forward )
                     continue;
                 const NodeID target = _graph->GetTarget( outEdge );
                 const int pathDistance = inData.distance + outData.distance;
                 maxDistance = (std::max)( maxDistance, pathDistance );
-                if ( !heap.WasInserted( target ) )
-                    heap.Insert( target, pathDistance, _HeapData(true) );
-                else if ( pathDistance < heap.GetKey( target ) )
+                if ( !heap.WasInserted( target ) ) {
+                    heap.Insert( target, pathDistance, _HeapData( true ) );
+                    numTargets++;
+                } else if ( pathDistance < heap.GetKey( target ) ) {
                     heap.DecreaseKey( target, pathDistance );
+                }
+
             }
 
             if( Simulate )
@@ -502,7 +508,7 @@ private:
                 _Dijkstra( source, maxDistance, 1000, data );
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
-                const _EdgeData& outData = _graph->GetEdgeData( outEdge );
+                const _EdgeBasedContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
                 if ( !outData.forward )
                     continue;
                 const NodeID target = _graph->GetTarget( outEdge );
@@ -521,9 +527,10 @@ private:
                         newEdge.data.distance = pathDistance;
                         newEdge.data.forward = true;
                         newEdge.data.backward = false;
-                        newEdge.data.middleName.middle = node;
+                        newEdge.data.via = node;
                         newEdge.data.shortcut = true;
                         newEdge.data.originalEdges = outData.originalEdges + inData.originalEdges;
+
                         data->insertedEdges.push_back( newEdge );
                         std::swap( newEdge.source, newEdge.target );
                         newEdge.data.forward = false;
