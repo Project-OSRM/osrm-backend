@@ -29,7 +29,8 @@
 #include "../DataStructures/ExtractorStructs.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<Edge> & inputEdges, std::vector<_Restriction> & irs) : inputRestrictions(irs) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI)
+: inputRestrictions(irs), inputNodeInfoList(nI) {
 
 #ifdef _GLIBCXX_PARALLEL
     __gnu_parallel::sort(inputRestrictions.begin(), inputRestrictions.end(), CmpRestrictionByFrom);
@@ -39,7 +40,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<Edge> & inpu
 
     std::vector< _NodeBasedEdge > edges;
     edges.reserve( 2 * inputEdges.size() );
-    for ( typename std::vector< Edge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
+    for ( typename std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
         _NodeBasedEdge edge;
         edge.source = i->source();
         edge.target = i->target();
@@ -54,13 +55,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<Edge> & inpu
         edge.data.type = i->type();
         edge.data.forward = i->isForward();
         edge.data.backward = i->isBackward();
-        edge.data.newNodeID = edges.size();
+        edge.data.edgeBasedNodeID = edges.size();
         edges.push_back( edge );
         std::swap( edge.source, edge.target );
         if( edge.data.backward ) {
             edge.data.forward = i->isBackward();
             edge.data.backward = i->isForward();
-            edge.data.newNodeID = edges.size();
+            edge.data.edgeBasedNodeID = edges.size();
             edges.push_back( edge );
         }
     }
@@ -78,39 +79,30 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<Edge> & inpu
 }
 
 template<>
-void EdgeBasedGraphFactory::GetEdges( std::vector< ImportEdge >& edges ) {
+void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& edges ) {
 
     GUARANTEE(0 == edges.size(), "Vector passed to " << __FUNCTION__ << " is not empty");
     GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
 
-    for ( unsigned edge = 0; edge < edgeBasedEdges.size(); ++edge ) {
-        ImportEdge importEdge(edgeBasedEdges[edge].source, edgeBasedEdges[edge].target, edgeBasedEdges[edge].data.distance, edgeBasedEdges[edge].data.distance, true, false, edgeBasedEdges[edge].data.type);
-        edges.push_back(importEdge);
+    BOOST_FOREACH ( EdgeBasedEdge currentEdge, edgeBasedEdges) {
+        edges.push_back(currentEdge);
     }
-
-#ifdef _GLIBCXX_PARALLEL
-    __gnu_parallel::sort( edges.begin(), edges.end() );
-#else
-    sort( edges.begin(), edges.end() );
-#endif
-
 }
 
-
-template< class NodeT>
-void EdgeBasedGraphFactory::GetNodes( std::vector< NodeT> & nodes) {
-
+void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes) {
+    for(unsigned i = 0; i < edgeBasedNodes.size(); ++i)
+        nodes.push_back(edgeBasedNodes[i]);
 }
 
 void EdgeBasedGraphFactory::Run() {
     INFO("Generating Edge based representation of input data");
 
     _edgeBasedGraph.reset(new _EdgeBasedDynamicGraph(_nodeBasedGraph->GetNumberOfEdges() ) );
+
     std::vector<_Restriction>::iterator restrictionIterator = inputRestrictions.begin();
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfResolvedRestrictions(0);
     int nodeBasedEdgeCounter(0);
-
     //Loop over all nodes u. Three nested loop look super-linear, but we are dealing with a number linear in the turns only.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
         //loop over all adjacent edge (u,v)
@@ -137,8 +129,17 @@ void EdgeBasedGraphFactory::Run() {
                     }
                     if( !isTurnProhibited ) { //only add an edge if turn is not prohibited
                         //new costs for edge based edge (e1, e2) = cost (e1) + tc(e1,e2)
-                        _NodeBasedDynamicGraph::NodeIterator edgeBasedSource = _nodeBasedGraph->GetEdgeData(e1).newNodeID;
-                        _NodeBasedDynamicGraph::NodeIterator edgeBasedTarget = _nodeBasedGraph->GetEdgeData(e2).newNodeID;
+                        const _NodeBasedDynamicGraph::NodeIterator edgeBasedSource = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
+//                        INFO("edgeBasedSource: " << edgeBasedSource);
+                        if(edgeBasedSource > _nodeBasedGraph->GetNumberOfEdges()) {
+                            ERR("edgeBasedTarget" << edgeBasedSource << ">" << _nodeBasedGraph->GetNumberOfEdges());
+                        }
+                        const _NodeBasedDynamicGraph::NodeIterator edgeBasedTarget = _nodeBasedGraph->GetEdgeData(e2).edgeBasedNodeID;
+//                        INFO("edgeBasedTarget: " << edgeBasedTarget);
+                        if(edgeBasedTarget > _nodeBasedGraph->GetNumberOfEdges()) {
+                            ERR("edgeBasedTarget" << edgeBasedTarget << ">" << _nodeBasedGraph->GetNumberOfEdges());
+                        }
+
                         _EdgeBasedEdge newEdge;
                         newEdge.source = edgeBasedSource;
                         newEdge.target = edgeBasedTarget;
@@ -146,9 +147,31 @@ void EdgeBasedGraphFactory::Run() {
                         newEdge.data.distance = _nodeBasedGraph->GetEdgeData(e1).distance;
                         newEdge.data.forward = true;
                         newEdge.data.backward = false;
-                        newEdge.data.type = 3;
+                        newEdge.data.via = v;
+                        newEdge.data.nameID1 = _nodeBasedGraph->GetEdgeData(e1).middleName.nameID;
+                        newEdge.data.nameID2 = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
+                        //Todo: turn type angeben
+                        newEdge.data.turnInstruction = 0;
 
+                        //create Edge for NearestNeighborlookup
                         edgeBasedEdges.push_back(newEdge);
+                        EdgeBasedNode currentNode;
+                        if(_nodeBasedGraph->GetEdgeData(e1).type != 14) {
+                            currentNode.lat1 = inputNodeInfoList[u].lat;
+                            currentNode.lon1 = inputNodeInfoList[u].lon;
+                            currentNode.lat2 = inputNodeInfoList[v].lat;
+                            currentNode.lon2 = inputNodeInfoList[v].lon;
+                            currentNode.id = edgeBasedSource;
+                            edgeBasedNodes.push_back(currentNode);
+                        }
+                        if(_nodeBasedGraph->GetEdgeData(e2).type != 14) {
+                            currentNode.lat1 = inputNodeInfoList[v].lat;
+                            currentNode.lon1 = inputNodeInfoList[v].lon;
+                            currentNode.lat2 = inputNodeInfoList[w].lat;
+                            currentNode.lon2 = inputNodeInfoList[w].lon;
+                            currentNode.id = edgeBasedTarget;
+                            edgeBasedNodes.push_back(currentNode);
+                        }
                     } else {
                         ++numberOfResolvedRestrictions;
                     }
@@ -157,9 +180,12 @@ void EdgeBasedGraphFactory::Run() {
         }
         p.printIncrement();
     }
-    INFO("Node-based graph contains " << nodeBasedEdgeCounter           << " edges");
+    std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
+    edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
+    INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
     INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << (double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter);
     INFO("Edge-based graph obeys "    << numberOfResolvedRestrictions   << " turn restrictions, " << (inputRestrictions.size() - numberOfResolvedRestrictions )<< " skipped.");
+    INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
 
 unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {

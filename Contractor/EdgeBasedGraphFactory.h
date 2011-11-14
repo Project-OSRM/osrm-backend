@@ -43,27 +43,43 @@ private:
 
     struct _NodeBasedEdgeData {
         unsigned distance;
-        unsigned newNodeID;
-        unsigned originalEdges : 29;
-        bool shortcut : 1;
-        bool forward : 1;
-        bool backward : 1;
-        short type:6;
+        unsigned edgeBasedNodeID;
+        unsigned originalEdges;
+        bool shortcut;
+        bool forward;
+        bool backward;
+        short type;
         _MiddleName middleName;
     } data;
 
     struct _EdgeBasedEdgeData {
         unsigned distance;
-        unsigned instruction;
+        unsigned via;
+        unsigned nameID1;
+        unsigned nameID2;
         bool forward;
         bool backward;
-        short type;
+        short turnInstruction;
     };
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
     typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
 
 public:
+    struct EdgeBasedNode {
+        bool operator<(const EdgeBasedNode & other) const {
+            return other.id < id;
+        }
+        bool operator==(const EdgeBasedNode & other) const {
+            return id == other.id;
+        }
+        int lat1;
+        int lat2;
+        int lon1;
+        int lon2;
+        NodeID id;
+    };
+
     typedef DynamicGraph< _EdgeBasedEdgeData> _EdgeBasedDynamicGraph;
     typedef _EdgeBasedDynamicGraph::InputEdge _EdgeBasedEdge;
 private:
@@ -71,19 +87,20 @@ private:
     boost::shared_ptr<_EdgeBasedDynamicGraph> _edgeBasedGraph;
 
     std::vector<_Restriction> & inputRestrictions;
+    std::vector<NodeInfo> & inputNodeInfoList;
 
     std::vector<_EdgeBasedEdge> edgeBasedEdges;
+    std::vector<EdgeBasedNode> edgeBasedNodes;
 
 public:
     template< class InputEdgeT >
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<_Restriction> & inputRestrictions);
+    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI);
     virtual ~EdgeBasedGraphFactory();
 
     void Run();
     template< class ImportEdgeT >
-    void GetEdges( std::vector< ImportEdgeT >& edges );
-    template< class NodeT >
-    void GetNodes( std::vector< NodeT >& edges );
+    void GetEdgeBasedEdges( std::vector< ImportEdgeT >& edges );
+    void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
 
     unsigned GetNumberOfNodes() const;
 };
