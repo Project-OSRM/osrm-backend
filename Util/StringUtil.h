@@ -60,8 +60,7 @@ inline void intToString(const int value, std::string & output) {
     output = buffer ;
 }
 
-inline void convertInternalLatLonToString(const int value, std::string & output)
-{
+inline void convertInternalLatLonToString(const int value, std::string & output) {
     char buffer[100];
     buffer[10] = 0; // Nullterminierung
     char* string = printInt< 10, 5 >( buffer, value );
