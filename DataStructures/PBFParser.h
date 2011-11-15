@@ -72,6 +72,10 @@ public:
 
         blockCount = 0;
         groupCount = 0;
+
+        //Dummy initialization
+        wayCallback = NULL;         nodeCallback = NULL;
+        addressCallback = NULL;     restrictionCallback = NULL;
     }
 
     bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
