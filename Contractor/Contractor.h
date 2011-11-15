@@ -628,7 +628,6 @@ private:
 
     LevelInformation * _levelInformation;
     _DynamicGraph* _graph;
-    std::vector<NodeID> * _components;
     unsigned edgeQuotionFactor;
     unsigned originalQuotientFactor;
     unsigned depthFactor;
