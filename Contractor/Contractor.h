@@ -118,7 +118,7 @@ public:
             edge.data.nameID1 = i->nameID1();
             edge.data.nameID2 = i->nameID2();
             edge.data.via = i->via();
-            edge.data.turnType = i->turnType();
+            edge.data.turnType = i->turnInstruction();
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
             edge.data.originalEdges = 1;

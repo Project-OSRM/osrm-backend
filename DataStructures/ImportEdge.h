@@ -106,7 +106,7 @@ public:
     NodeID source() const {return _source; }
     EdgeWeight weight() const {return _weight; }
     NodeID via() const { return _via; }
-    short turnType() const { assert(_turnInstruction >= 0); return _turnInstruction; }
+    short turnInstruction() const { assert(_turnInstruction >= 0); return _turnInstruction; }
     bool isBackward() const { return backward; }
     bool isForward() const { return forward; }
 
