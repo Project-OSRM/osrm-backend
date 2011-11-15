@@ -78,6 +78,7 @@ public:
         int lon1;
         int lon2;
         NodeID id;
+        NodeID nameID;
     };
 
     typedef DynamicGraph< _EdgeBasedEdgeData> _EdgeBasedDynamicGraph;
