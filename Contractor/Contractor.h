@@ -52,7 +52,7 @@ private:
         bool shortcut;
         bool forward;
         bool backward;
-        short turnType;
+        short turnInstruction;
     } data;
 
     struct _HeapData {
@@ -118,7 +118,7 @@ public:
             edge.data.nameID1 = i->nameID1();
             edge.data.nameID2 = i->nameID2();
             edge.data.via = i->via();
-            edge.data.turnType = i->turnInstruction();
+            edge.data.turnInstruction = i->turnInstruction();
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
             edge.data.originalEdges = 1;
@@ -139,7 +139,7 @@ public:
             const NodeID source = edges[i].source;
             const NodeID target = edges[i].target;
             const NodeID via = edges[i].data.via;
-            const short turnType = edges[i].data.turnType;
+            const short turnType = edges[i].data.turnInstruction;
             assert(turnType >= 0);
             //remove eigenloops
             if ( source == target ) {
@@ -152,7 +152,7 @@ public:
             forwardEdge.target = backwardEdge.target = target;
             forwardEdge.data.forward = backwardEdge.data.backward = true;
             forwardEdge.data.backward = backwardEdge.data.forward = false;
-            forwardEdge.data.turnType = backwardEdge.data.turnType = turnType;
+            forwardEdge.data.turnInstruction = backwardEdge.data.turnInstruction = turnType;
             forwardEdge.data.nameID1 = backwardEdge.data.nameID2 = edges[i].data.nameID1;
             forwardEdge.data.nameID2 = backwardEdge.data.nameID1 = edges[i].data.nameID2;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
@@ -524,6 +524,7 @@ private:
                         newEdge.data.backward = false;
                         newEdge.data.via = node;
                         newEdge.data.shortcut = true;
+                        newEdge.data.turnInstruction = outData.turnInstruction;
                         newEdge.data.originalEdges = outData.originalEdges + inData.originalEdges;
 
                         data->insertedEdges.push_back( newEdge );

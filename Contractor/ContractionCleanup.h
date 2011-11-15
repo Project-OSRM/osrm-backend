@@ -76,6 +76,7 @@ public:
             bool shortcut;
             bool forward;
             bool backward;
+            short turnInstruction;
         } data;
 
         //sorts by source and other attributes
