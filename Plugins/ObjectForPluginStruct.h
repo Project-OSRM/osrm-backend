@@ -43,7 +43,6 @@ struct ObjectsForQueryStruct {
         //Deserialize road network graph
         std::vector< InputEdge> edgeList;
         const int n = readHSGRFromStream(hsgrInStream, edgeList);
-        INFO("Graph has " << n << " nodes");
         graph = new QueryGraph(n, edgeList);
         std::vector< InputEdge >().swap( edgeList ); //free memory
 
