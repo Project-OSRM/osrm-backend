@@ -60,9 +60,8 @@ public:
         searchEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names);
 
         descriptorTable.Set("", 0); //default descriptor
-        descriptorTable.Set("kml", 0);
-        descriptorTable.Set("json", 1);
-        descriptorTable.Set("gpx", 2);
+        descriptorTable.Set("json", 0);
+        descriptorTable.Set("gpx", 1);
     }
 
     virtual ~ViaRoutePlugin() {
@@ -184,7 +183,6 @@ public:
         if("cmp" == routeParameters.options.Find("geomformat") || "cmp6" == routeParameters.options.Find("geomformat")  ) {
             descriptorConfig.encodeGeometry = true;
         }
-
         switch(descriptorType){
         case 0:
             desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
