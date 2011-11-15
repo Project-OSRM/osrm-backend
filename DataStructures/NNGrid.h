@@ -198,7 +198,7 @@ public:
             int tlat = 100000*lat2y(edge.lat2/100000.);
             int tlon = edge.lon2;
             AddEdge( _GridEdge(
-                    edge.id,
+                    edge.id, edge.nameID,
                     _Coordinate(slat, slon),
                     _Coordinate(tlat, tlon) )
             );
@@ -312,6 +312,7 @@ public:
             if(tmpDist < dist) {
                 resultNode.isBidirected = false;
                 resultNode.edgeBasedNode = candidate.edgeBasedNode;
+                resultNode.nodeBasedEdgeNameID = candidate.nameID;
                 resultNode.ratio = r;
                 dist = tmpDist;
                 resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));

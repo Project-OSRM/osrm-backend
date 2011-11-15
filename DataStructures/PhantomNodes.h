@@ -24,9 +24,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "ExtractorStructs.h"
 
 struct PhantomNode {
-    PhantomNode() : isBidirected(false), edgeBasedNode(UINT_MAX), ratio(1.) {}
+    PhantomNode() : isBidirected(false), edgeBasedNode(UINT_MAX), nodeBasedEdgeNameID(UINT_MAX), ratio(1.) {}
     bool isBidirected;
     NodeID edgeBasedNode;
+    unsigned nodeBasedEdgeNameID;
     double ratio;
     _Coordinate location;
     void Reset() {

@@ -156,8 +156,9 @@ void EdgeBasedGraphFactory::Run() {
                         //create Edge for NearestNeighborlookup
                         edgeBasedEdges.push_back(newEdge);
                         EdgeBasedNode currentNode;
-                        currentNode.nameID = newEdge.data.nameID1;
+
                         if(_nodeBasedGraph->GetEdgeData(e1).type != 14) {
+                            currentNode.nameID = newEdge.data.nameID1;
                             currentNode.lat1 = inputNodeInfoList[u].lat;
                             currentNode.lon1 = inputNodeInfoList[u].lon;
                             currentNode.lat2 = inputNodeInfoList[v].lat;
@@ -166,6 +167,7 @@ void EdgeBasedGraphFactory::Run() {
                             edgeBasedNodes.push_back(currentNode);
                         }
                         if(_nodeBasedGraph->GetEdgeData(e2).type != 14) {
+                            currentNode.nameID = newEdge.data.nameID2;
                             currentNode.lat1 = inputNodeInfoList[v].lat;
                             currentNode.lon1 = inputNodeInfoList[v].lon;
                             currentNode.lat2 = inputNodeInfoList[w].lat;
