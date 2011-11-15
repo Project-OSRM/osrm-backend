@@ -388,7 +388,6 @@ unsigned readHSGRFromStream(istream &in, vector<EdgeT> & edgeList) {
 
         if(source > numberOfNodes) {
             numberOfNodes = source;
-            INFO("looked at source " << source);
         }
         if(target > numberOfNodes) {
             numberOfNodes = target;
