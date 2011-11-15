@@ -38,7 +38,6 @@ public:
 
     ArrayStorage( size_t size ) : positions( new Key[size] ) {
         memset(positions, 0, size*sizeof(Key));
-        INFO("initializing q for " << size << " elements");
     }
 
     ~ArrayStorage() {
