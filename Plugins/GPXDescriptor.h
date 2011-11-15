@@ -21,43 +21,39 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GPX_DESCRIPTOR_H_
 #define GPX_DESCRIPTOR_H_
 
+#include <boost/foreach.hpp>
 #include "BaseDescriptor.h"
 
 template<class SearchEngineT>
 class GPXDescriptor : public BaseDescriptor<SearchEngineT>{
 private:
     _DescriptorConfig config;
-    string tmp;
     _Coordinate current;
+
+    std::string tmp;
 public:
     void SetConfig(const _DescriptorConfig& c) { config = c; }
     void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned distance) {
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         reply.content += "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" "
-                              "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                              "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
-                              "\">";
+                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
+                "\">";
         reply.content += "<rte>";
         if(distance != UINT_MAX && rawRoute.routeSegments.size()) {
-
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
             for(unsigned segmentIdx = 0; segmentIdx < rawRoute.routeSegments.size(); segmentIdx++) {
-                const std::vector< _PathData > & path = rawRoute.routeSegments[segmentIdx];
-                if( ! path.size() )
-                    continue;
-                for(vector< _PathData >::const_iterator it = path.begin(); it != path.end(); it++) {
-                    sEngine.GetCoordinatesForNodeID(it->node, current);
+                BOOST_FOREACH(_PathData pathData, rawRoute.routeSegments[segmentIdx]) {
+                    sEngine.GetCoordinatesForNodeID(pathData.node, current);
 
                     convertInternalLatLonToString(current.lat, tmp);
                     reply.content += "<rtept lat=\"" + tmp + "\" ";
                     convertInternalLatLonToString(current.lon, tmp);
-                    reply.content += "lon=\"" + tmp + "\">";
-
-                    reply.content +="</rtept>";
+                    reply.content += "lon=\"" + tmp + "\"></rtept>";
                 }
             }
             convertInternalLatLonToString(phantomNodes.targetPhantom.location.lat, tmp);
