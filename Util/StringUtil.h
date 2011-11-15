@@ -24,8 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
 template< int length, int precision >
-inline char* printInt( char* buffer, int value )
-{
+static inline char* printInt( char* buffer, int value ) {
     bool minus = false;
     if ( value < 0 ) {
         minus = true;
@@ -52,7 +51,7 @@ inline char* printInt( char* buffer, int value )
     return buffer;
 }
 
-inline void intToString(const int value, std::string & output) {
+static inline void intToString(const int value, std::string & output) {
     // The largest 32-bit integer is 4294967295, that is 10 chars
     // On the safe side, add 1 for sign, and 1 for trailing zero
     char buffer[12] ;
@@ -60,14 +59,14 @@ inline void intToString(const int value, std::string & output) {
     output = buffer ;
 }
 
-inline void convertInternalLatLonToString(const int value, std::string & output) {
+static inline void convertInternalLatLonToString(const int value, std::string & output) {
     char buffer[100];
     buffer[10] = 0; // Nullterminierung
     char* string = printInt< 10, 5 >( buffer, value );
     output = string;
 }
 
-inline void convertInternalCoordinateToString(const _Coordinate & coord, std::string & output) {
+static inline void convertInternalCoordinateToString(const _Coordinate & coord, std::string & output) {
     std::string tmp;
     convertInternalLatLonToString(coord.lon, tmp);
     output = tmp;
@@ -76,7 +75,7 @@ inline void convertInternalCoordinateToString(const _Coordinate & coord, std::st
     output += tmp;
     output += " ";
 }
-inline void convertInternalReversedCoordinateToString(const _Coordinate & coord, std::string & output) {
+static inline void convertInternalReversedCoordinateToString(const _Coordinate & coord, std::string & output) {
     std::string tmp;
     convertInternalLatLonToString(coord.lat, tmp);
     output = tmp;
@@ -86,7 +85,7 @@ inline void convertInternalReversedCoordinateToString(const _Coordinate & coord,
     output += " ";
 }
 
-inline void doubleToString(const double value, std::string & output){
+static inline void doubleToString(const double value, std::string & output){
     // The largest 32-bit integer is 4294967295, that is 10 chars
     // On the safe side, add 1 for sign, and 1 for trailing zero
     char buffer[12] ;
@@ -106,7 +105,7 @@ inline std::string & replaceAll(std::string &s, const std::string &sub, const st
     return s;
 }
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+inline std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;
     while(std::getline(ss, item, delim)) {
@@ -116,30 +115,30 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
     return elems;
 }
 
-std::vector<std::string> split(const std::string &s, char delim) {
+inline std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
     return split(s, delim, elems);
 }
 
 
-std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]", "\\"};
-std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;" };
+static std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]", "\\"};
+static std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;" };
 
-std::string HTMLEntitize( std::string result) {
+inline std::string HTMLEntitize( std::string result) {
     for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); i++) {
         result = replaceAll(result, originals[i], entities[i]);
     }
     return result;
 }
 
-std::string HTMLDeEntitize( std::string result) {
+inline std::string HTMLDeEntitize( std::string result) {
     for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); i++) {
         result = replaceAll(result, entities[i], originals[i]);
     }
     return result;
 }
 
-bool StringStartsWith(string & input, string & prefix) {
+inline bool StringStartsWith(std::string & input, std::string & prefix) {
     return (input.find(prefix) == 0);
 }
 #endif /* STRINGUTIL_H_ */
