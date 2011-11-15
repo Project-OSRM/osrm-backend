@@ -164,6 +164,7 @@ public:
         iif = std::string(_i);
         ramIndexTable.resize((1024*1024), UINT_MAX);
         ramInFile.open(rif, std::ios::in | std::ios::binary);
+        entries = NULL;
     }
 
     ~NNGrid() {
@@ -287,7 +288,6 @@ public:
     }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
-        INFO("FindPhantomNodeForCoordinate");
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
@@ -413,11 +413,9 @@ private:
         std::vector<GridEntry> entriesWithSameFileIndex;
         unsigned fileIndex = entriesWithSameRAMIndex.begin()->fileIndex;
 
-        for(std::vector<GridEntry>::iterator it = entriesWithSameRAMIndex.begin(); it != uniqueEnd; it++)
-        {
+        for(std::vector<GridEntry>::iterator it = entriesWithSameRAMIndex.begin(); it != uniqueEnd; it++) {
             assert(cellMap->find(it->fileIndex) != cellMap->end() ); //asserting that file index belongs to cell index
-            if(it->fileIndex != fileIndex)
-            {
+            if(it->fileIndex != fileIndex) {
                 // start in cellIndex vermerken
                 int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
                 int localCellIndex = cellMap->find(localFileIndex)->second;
@@ -426,7 +424,6 @@ private:
 
                 cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
                 indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
-                entriesWithSameFileIndex.clear(); //todo: in flushEntries erledigen.
             }
             GridEntry data = *it;
             entriesWithSameFileIndex.push_back(data);
@@ -439,19 +436,16 @@ private:
 
         cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
         indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
-        entriesWithSameFileIndex.clear(); //todo: in flushEntries erledigen.
 
         assert(entriesWithSameFileIndex.size() == 0);
 
-        for(int i = 0; i < 32*32; i++)
-        {
+        for(int i = 0; i < 32*32; i++) {
             indexOutFile.write((char *)&cellIndex[i], sizeof(unsigned));
             numberOfWrittenBytes += sizeof(unsigned);
         }
 
         //write contents of tmpbuffer to disk
-        for(unsigned i = 0; i < indexIntoTmpBuffer; i++)
-        {
+        for(unsigned i = 0; i < indexIntoTmpBuffer; i++) {
             indexOutFile.write(&(tmpBuffer->at(i)), sizeof(char));
             numberOfWrittenBytes += sizeof(char);
         }
@@ -461,14 +455,12 @@ private:
         return numberOfWrittenBytes;
     }
 
-    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> * tmpBuffer, const unsigned index)
-    {
+    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> * tmpBuffer, const unsigned index) {
         tmpBuffer->resize(tmpBuffer->size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) );
         unsigned counter = 0;
         unsigned max = UINT_MAX;
 
-        for(unsigned i = 0; i < vectorWithSameFileIndex.size()-1; i++)
-        {
+        for(unsigned i = 0; i < vectorWithSameFileIndex.size()-1; i++) {
             assert( vectorWithSameFileIndex[i].fileIndex == vectorWithSameFileIndex[i+1].fileIndex );
             assert( vectorWithSameFileIndex[i].ramIndex == vectorWithSameFileIndex[i+1].ramIndex );
         }
@@ -483,11 +475,11 @@ private:
             }
         }
         char * umax = (char *) &max;
-        for(unsigned i = 0; i < sizeof(unsigned); i++)
-        {
+        for(unsigned i = 0; i < sizeof(unsigned); i++) {
             tmpBuffer->at(index+counter) = umax[i];
             counter++;
         }
+        vectorWithSameFileIndex.clear();
         return counter;
     }
 
