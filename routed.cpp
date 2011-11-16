@@ -121,17 +121,15 @@ int main (int argc, char *argv[]) {
         sigaddset(&wait_mask, SIGQUIT);
         sigaddset(&wait_mask, SIGTERM);
         pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
-
+        std::cout << "[server] running and waiting for requests" << std::endl;
         sigwait(&wait_mask, &sig);
 #else
         // Set console control handler to allow server to be stopped.
         console_ctrl_function = boost::bind(&Server::Stop, s);
         SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
-
+        std::cout << "[server] running and waiting for requests" << std::endl;
         s->Run();
 #endif
-
-        std::cout << "[server] running and waiting for requests" << std::endl;
 
         std::cout << std::endl << "[server] shutting down" << std::endl;
         s->Stop();

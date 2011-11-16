@@ -47,8 +47,7 @@ private:
         unsigned distance;
         unsigned originalEdges;
         unsigned via;
-        unsigned nameID1;
-        unsigned nameID2;
+        unsigned nameID;
         bool shortcut;
         bool forward;
         bool backward;
@@ -115,8 +114,7 @@ public:
             }
 #endif
             edge.data.shortcut = false;
-            edge.data.nameID1 = i->nameID1();
-            edge.data.nameID2 = i->nameID2();
+            edge.data.nameID = i->getNameIDOfTurnTarget();
             edge.data.via = i->via();
             edge.data.turnInstruction = i->turnInstruction();
             edge.data.forward = i->isForward();
@@ -140,7 +138,7 @@ public:
             const NodeID target = edges[i].target;
             const NodeID via = edges[i].data.via;
             const short turnType = edges[i].data.turnInstruction;
-            assert(turnType >= 0);
+            assert(turnType == 0 || turnType == 1);
             //remove eigenloops
             if ( source == target ) {
                 i++;
@@ -153,8 +151,7 @@ public:
             forwardEdge.data.forward = backwardEdge.data.backward = true;
             forwardEdge.data.backward = backwardEdge.data.forward = false;
             forwardEdge.data.turnInstruction = backwardEdge.data.turnInstruction = turnType;
-            forwardEdge.data.nameID1 = backwardEdge.data.nameID2 = edges[i].data.nameID1;
-            forwardEdge.data.nameID2 = backwardEdge.data.nameID1 = edges[i].data.nameID2;
+            forwardEdge.data.nameID = backwardEdge.data.nameID = edges[i].data.nameID;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
             forwardEdge.data.via = backwardEdge.data.via = via;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
@@ -359,9 +356,8 @@ public:
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
                 newEdge.data.via = data.via;
-                newEdge.data.nameID1 = data.nameID1;
-                newEdge.data.nameID2 = data.nameID2;
-
+                newEdge.data.nameID1 = data.nameID;
+                newEdge.data.turnInstruction = data.turnInstruction;
                 newEdge.data.forward = data.forward;
                 newEdge.data.backward = data.backward;
                 edges.push_back( newEdge );
@@ -524,7 +520,7 @@ private:
                         newEdge.data.backward = false;
                         newEdge.data.via = node;
                         newEdge.data.shortcut = true;
-                        newEdge.data.turnInstruction = outData.turnInstruction;
+                        newEdge.data.turnInstruction = inData.turnInstruction;
                         newEdge.data.originalEdges = outData.originalEdges + inData.originalEdges;
 
                         data->insertedEdges.push_back( newEdge );

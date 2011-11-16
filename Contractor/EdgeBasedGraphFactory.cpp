@@ -148,11 +148,11 @@ void EdgeBasedGraphFactory::Run() {
                         newEdge.data.forward = true;
                         newEdge.data.backward = false;
                         newEdge.data.via = v;
-                        newEdge.data.nameID1 = _nodeBasedGraph->GetEdgeData(e1).middleName.nameID;
-                        newEdge.data.nameID2 = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
+                        newEdge.data.nameID = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
+                        //newEdge.data.nameID2 = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
                         //Todo: turn instruction angeben
 
-                        if(newEdge.data.nameID1 == newEdge.data.nameID2)
+                        if(newEdge.data.nameID == _nodeBasedGraph->GetEdgeData(e1).middleName.nameID)
                             newEdge.data.turnInstruction = 0;
                         else {
                             //TODO: Winkel berechnen und angepasste Anweisung geben.
@@ -163,7 +163,7 @@ void EdgeBasedGraphFactory::Run() {
                         EdgeBasedNode currentNode;
 
                         if(_nodeBasedGraph->GetEdgeData(e1).type != 14) {
-                            currentNode.nameID = newEdge.data.nameID1;
+                            currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).middleName.nameID;
                             currentNode.lat1 = inputNodeInfoList[u].lat;
                             currentNode.lon1 = inputNodeInfoList[u].lon;
                             currentNode.lat2 = inputNodeInfoList[v].lat;

@@ -88,8 +88,7 @@ public:
         _source(myEdge.source),
         _target(myEdge.target),
         _via(myEdge.data.via),
-        _nameID1(myEdge.data.nameID1),
-        _nameID2(myEdge.data.nameID2),
+        _nameID1(myEdge.data.nameID),
         _weight(myEdge.data.distance),
         forward(myEdge.data.forward),
         backward(myEdge.data.backward),
@@ -97,10 +96,10 @@ public:
 
     /** Default constructor. target and weight are set to 0.*/
     EdgeBasedEdge() :
-        _source(0), _target(0), _via(0), _nameID1(0), _nameID2(0), _weight(0), forward(0), backward(0), _turnInstruction(0) { assert(false); } //shall not be used.
+        _source(0), _target(0), _via(0), _nameID1(0), _weight(0), forward(0), backward(0), _turnInstruction(0) { assert(false); } //shall not be used.
 
     explicit EdgeBasedEdge(NodeID s, NodeID t, NodeID v, unsigned n1, unsigned n2, EdgeWeight w, bool f, bool b, short ty) :
-            _source(s), _target(t), _via(v), _nameID1(n1), _nameID2(n2), _weight(w), forward(f), backward(b), _turnInstruction(ty) { assert(ty >= 0); }
+            _source(s), _target(t), _via(v), _nameID1(n1), _weight(w), forward(f), backward(b), _turnInstruction(ty) { assert(ty >= 0); }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
@@ -110,14 +109,13 @@ public:
     bool isBackward() const { return backward; }
     bool isForward() const { return forward; }
 
-    unsigned nameID1() const { return _nameID1; }
-    unsigned nameID2() const { return _nameID2; }
+    unsigned getNameIDOfTurnTarget() const { return _nameID1; }
 
     NodeID _source;
     NodeID _target;
     NodeID _via;
     unsigned _nameID1;
-    unsigned _nameID2;
+//    unsigned _nameID2;
     EdgeWeight _weight;
     bool forward;
     bool backward;

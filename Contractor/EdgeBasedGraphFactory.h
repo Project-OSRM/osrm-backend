@@ -55,8 +55,8 @@ private:
     struct _EdgeBasedEdgeData {
         int distance;
         unsigned via;
-        unsigned nameID1;
-        unsigned nameID2;
+        unsigned nameID;
+//        unsigned nameID2;
         bool forward;
         bool backward;
         short turnInstruction;
