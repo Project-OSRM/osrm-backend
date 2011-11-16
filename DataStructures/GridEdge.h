@@ -22,9 +22,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define GRIDEDGE_H_
 
 struct _GridEdge {
-    _GridEdge(NodeID n, _Coordinate sc, _Coordinate tc) : edgeBasedNode(n), startCoord(sc), targetCoord(tc) {}
-    _GridEdge() : edgeBasedNode(UINT_MAX) {}
+    _GridEdge(NodeID n, NodeID na, int w, _Coordinate sc, _Coordinate tc) : edgeBasedNode(n), nameID(na), weight(w), startCoord(sc), targetCoord(tc) {}
+    _GridEdge() : edgeBasedNode(UINT_MAX), nameID(UINT_MAX), weight(INT_MAX) {}
     NodeID edgeBasedNode;
+    NodeID nameID;
+    int weight;
     _Coordinate startCoord;
     _Coordinate targetCoord;
 };

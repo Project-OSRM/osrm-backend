@@ -27,11 +27,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util.h"
 
 struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned le) : node(no), nameID(na), turnInstruction(tu), lengthOfSegment(le) { }
+    _PathData(NodeID no, unsigned na, unsigned tu, unsigned le) : node(no), nameID(na), lengthOfSegment(le), turnInstruction(tu) { }
     NodeID node;
     unsigned nameID;
-    unsigned turnInstruction;
     unsigned lengthOfSegment;
+    short turnInstruction;
 };
 
 typedef boost::unordered_map<std::string, NodeID> StringMap;

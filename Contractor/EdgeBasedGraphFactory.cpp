@@ -130,12 +130,12 @@ void EdgeBasedGraphFactory::Run() {
                     if( !isTurnProhibited ) { //only add an edge if turn is not prohibited
                         //new costs for edge based edge (e1, e2) = cost (e1) + tc(e1,e2)
                         const _NodeBasedDynamicGraph::NodeIterator edgeBasedSource = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
-//                        INFO("edgeBasedSource: " << edgeBasedSource);
+                        //                        INFO("edgeBasedSource: " << edgeBasedSource);
                         if(edgeBasedSource > _nodeBasedGraph->GetNumberOfEdges()) {
                             ERR("edgeBasedTarget" << edgeBasedSource << ">" << _nodeBasedGraph->GetNumberOfEdges());
                         }
                         const _NodeBasedDynamicGraph::NodeIterator edgeBasedTarget = _nodeBasedGraph->GetEdgeData(e2).edgeBasedNodeID;
-//                        INFO("edgeBasedTarget: " << edgeBasedTarget);
+                        //                        INFO("edgeBasedTarget: " << edgeBasedTarget);
                         if(edgeBasedTarget > _nodeBasedGraph->GetNumberOfEdges()) {
                             ERR("edgeBasedTarget" << edgeBasedTarget << ">" << _nodeBasedGraph->GetNumberOfEdges());
                         }
@@ -150,9 +150,14 @@ void EdgeBasedGraphFactory::Run() {
                         newEdge.data.via = v;
                         newEdge.data.nameID1 = _nodeBasedGraph->GetEdgeData(e1).middleName.nameID;
                         newEdge.data.nameID2 = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
-                        //Todo: turn type angeben
-                        newEdge.data.turnInstruction = 0;
+                        //Todo: turn instruction angeben
 
+                        if(newEdge.data.nameID1 == newEdge.data.nameID2)
+                            newEdge.data.turnInstruction = 0;
+                        else {
+                            //TODO: Winkel berechnen und angepasste Anweisung geben.
+                            newEdge.data.turnInstruction = 1;
+                        }
                         //create Edge for NearestNeighborlookup
                         edgeBasedEdges.push_back(newEdge);
                         EdgeBasedNode currentNode;
@@ -164,15 +169,7 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.lat2 = inputNodeInfoList[v].lat;
                             currentNode.lon2 = inputNodeInfoList[v].lon;
                             currentNode.id = edgeBasedSource;
-                            edgeBasedNodes.push_back(currentNode);
-                        }
-                        if(_nodeBasedGraph->GetEdgeData(e2).type != 14) {
-                            currentNode.nameID = newEdge.data.nameID2;
-                            currentNode.lat1 = inputNodeInfoList[v].lat;
-                            currentNode.lon1 = inputNodeInfoList[v].lon;
-                            currentNode.lat2 = inputNodeInfoList[w].lat;
-                            currentNode.lon2 = inputNodeInfoList[w].lon;
-                            currentNode.id = edgeBasedTarget;
+                            currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
                             edgeBasedNodes.push_back(currentNode);
                         }
                     } else {

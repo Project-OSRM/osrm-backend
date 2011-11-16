@@ -24,44 +24,47 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/foreach.hpp>
 
 #include "BaseDescriptor.h"
-#include "../DataStructures/PolylineCompressor.h"
+#include "../DataStructures/JSONDescriptionFactory.h"
+#include "../Util/StringUtil.h"
 
 template<class SearchEngineT>
 class JSONDescriptor : public BaseDescriptor<SearchEngineT>{
 private:
     _DescriptorConfig config;
-    RouteSummary summary;
-    DirectionOfInstruction directionOfInstruction;
-    DescriptorState descriptorState;
+    _RouteSummary summary;
+    JSONDescriptionFactory descriptionFactory;
     std::string tmp;
-    vector<_Coordinate> polyline;
+    _Coordinate current;
 
 public:
     JSONDescriptor() {}
     void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-    void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned distance) {
+    void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned durationOfTrip) {
         WriteHeaderToOutput(reply.content);
         //We do not need to do much, if there is no route ;-)
 
-        if(distance != UINT_MAX && rawRoute.routeSegments.size() > 0) {
+        //INFO("Starting at " << sEngine.GetEscapedNameForNameID(phantomNodes.startPhantom.nodeBasedEdgeNameID) << ", id: " << phantomNodes.startPhantom.nodeBasedEdgeNameID);
+        //INFO("Arriving at " << sEngine.GetEscapedNameForNameID(phantomNodes.targetPhantom.nodeBasedEdgeNameID) << ", id: " << phantomNodes.startPhantom.nodeBasedEdgeNameID);
+
+        if(durationOfTrip != INT_MAX && rawRoute.routeSegments.size() > 0) {
+            summary.startName = sEngine.GetEscapedNameForNameID(phantomNodes.startPhantom.nodeBasedEdgeNameID);
+            summary.destName = sEngine.GetEscapedNameForNameID(phantomNodes.targetPhantom.nodeBasedEdgeNameID);
+            summary.BuildDurationAndLengthStrings(0, durationOfTrip);
             reply.content += "0,"
                     "\"status_message\": \"Found route between points\",";
-
-            //Put first segment of route into geometry
-            polyline.push_back(phantomNodes.startPhantom.location);
-
+            descriptionFactory.AddToPolyline(phantomNodes.startPhantom.location);
             for(unsigned segmentIdx = 0; segmentIdx < rawRoute.routeSegments.size(); segmentIdx++) {
                 const std::vector< _PathData > & path = rawRoute.routeSegments[segmentIdx];
                 BOOST_FOREACH(_PathData pathData, path) {
-                    _Coordinate current;
                     sEngine.GetCoordinatesForNodeID(pathData.node, current);
-                    polyline.push_back(current);
-//                    INFO(pathData.node << " at " << current.lat << "," << current.lon);
-                    //INFO("routed over node: " << pathData.node);
+                    descriptionFactory.AppendSegment(pathData, current);
+                    if(pathData.turnInstruction != 0) {
+                        INFO("Turn on " << sEngine.GetEscapedNameForNameID(pathData.nameID) << ", turnID: " << pathData.turnInstruction );
+                    }
                 }
             }
-            polyline.push_back(phantomNodes.targetPhantom.location);
+            descriptionFactory.AddToPolyline(phantomNodes.targetPhantom.location);
         } else {
             //no route found
             reply.content += "207,"
@@ -85,11 +88,9 @@ public:
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
             if(config.encodeGeometry)
-                config.pc.printEncodedString(polyline, descriptorState.routeGeometryString);
+                descriptionFactory.AppendEncodedPolylineString(reply.content);
             else
-                config.pc.printUnencodedString(polyline, descriptorState.routeGeometryString);
-
-            reply.content += descriptorState.routeGeometryString;
+                descriptionFactory.AppendUnencodedPolylineString(reply.content);
         } else {
             reply.content += "[]";
         }
@@ -97,7 +98,7 @@ public:
         reply.content += ","
                 "\"route_instructions\": [";
         if(config.instructions)
-            reply.content += descriptorState.routeInstructionString;
+            descriptionFactory.AppendRouteInstructionString(reply.content);
         reply.content += "],";
         //list all viapoints so that the client may display it
         reply.content += "\"via_points\":[";
@@ -115,48 +116,6 @@ public:
         reply.content += "],"
                 "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.2)\"";
         reply.content += "}";
-    }
-private:
-    void appendInstructionNameToString(const std::string & nameOfStreet, const std::string & instructionOrDirection, std::string &output, bool firstAdvice = false) {
-        output += "[";
-        if(config.instructions) {
-            output += "\"";
-            if(firstAdvice) {
-                output += "Head ";
-            }
-            output += instructionOrDirection;
-            output += "\",\"";
-            output += nameOfStreet;
-            output += "\",";
-        }
-    }
-
-    void appendInstructionLengthToString(unsigned length, std::string &output) {
-        if(config.instructions){
-            std::string tmpDistance;
-            intToString(10*(round(length/10.)), tmpDistance);
-            output += tmpDistance;
-            output += ",";
-            intToString(descriptorState.startIndexOfGeometry, tmp);
-            output += tmp;
-            output += ",";
-            intToString(descriptorState.durationOfInstruction, tmp);
-            output += tmp;
-            output += ",";
-            output += "\"";
-            output += tmpDistance;
-            output += "\",";
-            double angle = descriptorState.GetAngleBetweenCoordinates();
-            DirectionOfInstruction direction;
-            getDirectionOfInstruction(angle, direction);
-            output += "\"";
-            output += direction.shortDirection;
-            output += "\",";
-            std::stringstream numberString;
-            numberString << fixed << setprecision(2) << angle;
-            output += numberString.str();
-        }
-        output += "]";
     }
 
     void WriteHeaderToOutput(std::string & output) {

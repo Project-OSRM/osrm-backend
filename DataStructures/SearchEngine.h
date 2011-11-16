@@ -76,10 +76,6 @@ public:
 		result.lon = nodeHelpDesk->getLongitudeOfNode(id);
 	}
 
-	unsigned int numberOfNodes() const {
-		return nodeHelpDesk->getNumberOfNodes();
-	}
-
     inline void InitializeThreadLocalStorageIfNecessary() {
         if(!_forwardHeap.get())
             _forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData >(nodeHelpDesk->getNumberOfNodes()));
@@ -92,8 +88,8 @@ public:
             _backwardHeap->Clear();
     }
 
-    unsigned int ComputeRoute(PhantomNodes & phantomNodes, vector<_PathData> & path) {
-        unsigned int _upperbound = UINT_MAX;
+    int ComputeRoute(PhantomNodes & phantomNodes, vector<_PathData> & path) {
+        int _upperbound = INT_MAX;
         if(!phantomNodes.AtLeastOnePhantomNodeIsUINTMAX())
             return _upperbound;
 
@@ -105,19 +101,19 @@ public:
             return _upperbound;
         }
         //insert start and/or target node of start edge
-        _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, 0, phantomNodes.startPhantom.edgeBasedNode);
-//        INFO("Inserting start1: " << phantomNodes.startPhantom.edgeBasedNode);
+        _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, -phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.edgeBasedNode);
+//        INFO("[FORW] Inserting node " << phantomNodes.startPhantom.edgeBasedNode << " at distance " << -phantomNodes.startPhantom.weight1);
         if(phantomNodes.startPhantom.isBidirected) {
-            _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, 0, phantomNodes.startPhantom.edgeBasedNode+1);
-//            INFO("Inserting start2: " << phantomNodes.startPhantom.edgeBasedNode+1);
+            _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
+//            INFO("[FORW] Inserting node " << phantomNodes.startPhantom.edgeBasedNode+1 << " at distance " << -phantomNodes.startPhantom.weight2);
         }
 
         //insert start and/or target node of target edge id
-        _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, 0, phantomNodes.targetPhantom.edgeBasedNode);
-//        INFO("Inserting target1: " << phantomNodes.targetPhantom.edgeBasedNode);
+        _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, -phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode);
+//        INFO("[BACK] Inserting node " << phantomNodes.targetPhantom.edgeBasedNode << " at distance " << -phantomNodes.targetPhantom.weight1);
         if(phantomNodes.targetPhantom.isBidirected) {
-            _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, 0, phantomNodes.targetPhantom.edgeBasedNode+1);
-//            INFO("Inserting target2: " << phantomNodes.targetPhantom.edgeBasedNode+1);
+            _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, -phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode+1);
+//            INFO("[BACK] Inserting node " << phantomNodes.targetPhantom.edgeBasedNode+1 << " at distance " << -phantomNodes.targetPhantom.weight2);
         }
 
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
@@ -130,7 +126,7 @@ public:
         }
 //        INFO("bidirectional search iteration ended: " << _forwardHeap->Size() << "," << _backwardHeap->Size() << ", dist: " << _upperbound);
 
-        if ( _upperbound == UINT_MAX ) {
+        if ( _upperbound == INT_MAX ) {
 			return _upperbound;
 		}
         NodeID pathNode = middle;
@@ -156,7 +152,7 @@ public:
     unsigned int ComputeDistanceBetweenNodes(NodeID start, NodeID target) {
         InitializeThreadLocalStorageIfNecessary();
         NodeID middle(UINT_MAX);
-        unsigned int _upperbound = UINT_MAX;
+        int _upperbound = INT_MAX;
         _forwardHeap->Insert(start, 0, start);
         _backwardHeap->Insert(target, 0, target);
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
@@ -167,14 +163,13 @@ public:
                 _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound);
             }
         }
-
         return _upperbound;
     }
 
     unsigned int ComputeDistanceBetweenNodesWithStats(NodeID start, NodeID target, _Statistics & stats) {
         InitializeThreadLocalStorageIfNecessary();
         NodeID middle(UINT_MAX);
-        unsigned int _upperbound = UINT_MAX;
+        int _upperbound = INT_MAX;
         _forwardHeap->Insert(start, 0, start);
         _backwardHeap->Insert(target, 0, target);
         stats.insertedNodes += 2;
@@ -190,11 +185,6 @@ public:
         return _upperbound;
     }
 
-    inline unsigned int findNearestNodeForLatLon(const _Coordinate & coord, _Coordinate & result) const {
-        nodeHelpDesk->FindNearestNodeCoordForLatLon(coord, result);
-        return 0;
-    }
-
     inline bool FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
         return true;
@@ -205,7 +195,6 @@ public:
     }
 
     inline NodeID GetNameIDForOriginDestinationNodeID(NodeID s, NodeID t) const {
-        //INFO("Getting nameID for s=" << s << " and t=" << t);
         if(s == t)
             return 0;
 
@@ -213,7 +202,6 @@ public:
         if(e == UINT_MAX)
 			e = _graph->FindEdge( t, s );
         if(UINT_MAX == e) {
-			// INFO("edge not found for start " << s << ", target " << t)
 			return 0;
 		}
         assert(e != UINT_MAX);
@@ -221,45 +209,22 @@ public:
         return ed.via;
     }
 
-    inline NodeID GetWeightForOriginDestinationNodeID(NodeID s, NodeID t) const {
-        assert(s!=t);
-        EdgeID e = _graph->FindEdge(s, t);
-        if(e == UINT_MAX)
-			e = _graph->FindEdge( t, s );
-        assert(e != UINT_MAX);
-        const EdgeData ed = _graph->GetEdgeData(e);
-        return ed.distance;
-    }
-
-    inline std::string & GetUnescapedNameForNameID(const NodeID nameID) const {
-        return (nameID >= _names->size() ? _names->at(0) : _names->at(nameID));
-    }
-
-    inline std::string GetEscapedNameForOriginDestinationNodeID(NodeID s, NodeID t) const {
-        NodeID nameID = GetNameIDForOriginDestinationNodeID(s, t);
-        return (GetEscapedNameForNameID(nameID));
-    }
-
     inline std::string GetEscapedNameForNameID(const NodeID nameID) const {
         return ((nameID >= _names->size() || nameID == 0) ? std::string("") : HTMLEntitize(_names->at(nameID)));
     }
 
-    inline short GetTypeOfEdgeForOriginDestinationNodeID(NodeID s, NodeID t) const {
-        assert(s!=t);
-        EdgeID e = _graph->FindEdge(s, t);
-        if(e == UINT_MAX)
-			e = _graph->FindEdge( t, s );
-        assert(e != UINT_MAX);
-        const EdgeData ed = _graph->GetEdgeData(e);
-        return ed.type;
-    }
+    inline std::string GetEscapedNameForEdgeBasedEdgeID(const unsigned edgeID) const {
 
+        const unsigned nameID = _graph->GetEdgeData(edgeID).nameID1;
+        return GetEscapedNameForNameID(nameID);
+    }
 private:
-    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, unsigned int *_upperbound) {
+    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound) {
         const NodeID node = _forwardHeap->DeleteMin();
-        const unsigned int distance = _forwardHeap->GetKey(node);
+        const int distance = _forwardHeap->GetKey(node);
+//        INFO((forwardDirection ? "[FORW]" : "[BACK]") << " settling " << node << " with distance " << distance);
         if(_backwardHeap->WasInserted(node)){
-            const unsigned int newDistance = _backwardHeap->GetKey(node) + distance;
+            const int newDistance = _backwardHeap->GetKey(node) + distance;
             if(newDistance < *_upperbound){
                 *middle = node;
                 *_upperbound = newDistance;
@@ -270,9 +235,9 @@ private:
             _forwardHeap->DeleteAll();
             return;
         }
-/*        for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
+        for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
 			const NodeID to = _graph->GetTarget(edge);
-			const EdgeWeight edgeWeight = _graph->GetEdgeData(edge).distance;
+			const int edgeWeight = _graph->GetEdgeData(edge).distance;
 
 			assert( edgeWeight > 0 );
 
@@ -286,19 +251,20 @@ private:
 				}
 			}
 		}
-*/
+
         for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
 			const NodeID to = _graph->GetTarget(edge);
-			const EdgeWeight edgeWeight = _graph->GetEdgeData(edge).distance;
+			const int edgeWeight = _graph->GetEdgeData(edge).distance;
 
 			assert( edgeWeight > 0 );
-			const int toDistance = distance + edgeWeight;
-			assert(toDistance > 0);
-
 			bool forwardDirectionFlag = (forwardDirection ? _graph->GetEdgeData(edge).forward : _graph->GetEdgeData(edge).backward );
 			if(forwardDirectionFlag) {
+	            const int toDistance = distance + edgeWeight;
+//	            INFO((forwardDirection ? "[FORW]" : "[BACK]") << " relaxing edge (" << node << "," << to << ") with distance " << toDistance << "=" << distance << "+" << edgeWeight);
+
 				//New Node discovered -> Add to Heap + Node Info Storage
 				if ( !_forwardHeap->WasInserted( to ) ) {
+//				    INFO((forwardDirection ? "[FORW]" : "[BACK]") << " inserting node " << to << " at distance " << toDistance);
 					_forwardHeap->Insert( to, toDistance, node );
 				}
 				//Found a shorter Path -> Update distance
@@ -311,7 +277,7 @@ private:
 		}
     }
 
-    inline void _RoutingStepWithStats(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, unsigned int *_upperbound, _Statistics & stats) {
+    inline void _RoutingStepWithStats(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, _Statistics & stats) {
         const NodeID node = _forwardHeap->DeleteMin();
         stats.deleteMins++;
         const unsigned int distance = _forwardHeap->GetKey(node);
@@ -367,9 +333,9 @@ private:
         assert(source != target);
         //find edge first.
         typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
-        EdgeWeight smallestWeight = UINT_MAX;
+        int smallestWeight = INT_MAX;
         for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(source);eit < _graph->EndEdges(source);eit++){
-            const EdgeWeight weight = _graph->GetEdgeData(eit).distance;
+            const int weight = _graph->GetEdgeData(eit).distance;
             if(_graph->GetTarget(eit) == target && weight < smallestWeight && _graph->GetEdgeData(eit).forward){
                 smallestEdge = eit;
                 smallestWeight = weight;
@@ -378,7 +344,7 @@ private:
 
         if(smallestEdge == SPECIAL_EDGEID){
             for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(target);eit < _graph->EndEdges(target);eit++){
-                const EdgeWeight weight = _graph->GetEdgeData(eit).distance;
+                const int weight = _graph->GetEdgeData(eit).distance;
                 if(_graph->GetTarget(eit) == source && weight < smallestWeight && _graph->GetEdgeData(eit).backward){
                     smallestEdge = eit;
                     smallestWeight = weight;
@@ -387,7 +353,7 @@ private:
 
         }
 
-        assert(smallestWeight != SPECIAL_EDGEID);
+        assert(smallestWeight != INT_MAX);
 
 		const EdgeData& ed = _graph->GetEdgeData(smallestEdge);
 //		INFO( (ed.shortcut ? "SHRT: " : "ORIG: ") << ed.distance << "," << ed.via);
@@ -398,7 +364,7 @@ private:
 			return false;
 		} else {
 			assert(!ed.shortcut);
-			path.push_back(_PathData(ed.via) );
+			path.push_back(_PathData(ed.via, ed.nameID1, ed.turnInstruction, ed.distance) );
 			return true;
 		}
 	}

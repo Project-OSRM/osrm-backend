@@ -42,7 +42,7 @@ private:
     };
 
     struct _NodeBasedEdgeData {
-        unsigned distance;
+        int distance;
         unsigned edgeBasedNodeID;
         unsigned originalEdges;
         bool shortcut;
@@ -53,7 +53,7 @@ private:
     } data;
 
     struct _EdgeBasedEdgeData {
-        unsigned distance;
+        int distance;
         unsigned via;
         unsigned nameID1;
         unsigned nameID2;
@@ -79,6 +79,7 @@ public:
         int lon2;
         NodeID id;
         NodeID nameID;
+        unsigned weight;
     };
 
     typedef DynamicGraph< _EdgeBasedEdgeData> _EdgeBasedDynamicGraph;

@@ -65,7 +65,7 @@ public:
     }
 
     virtual ~ViaRoutePlugin() {
-    	DELETE( searchEngine );
+        DELETE( searchEngine );
     }
 
     std::string GetDescriptor() { return pluginDescriptorString; }
@@ -101,7 +101,6 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(startCoord);
 
-        INFO("[debug] number of vianodes: " << routeParameters.viaPoints.size());
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); i++) {
             textCoord = split (routeParameters.viaPoints[i], ',');
             if(textCoord.size() != 2) {
@@ -123,7 +122,7 @@ public:
         bool errorOccurredFlag = false;
 
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); i++) {
-        	searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
+            searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
             if(!rawRoute.rawViaNodeCoordinates[i].isSet()) {
                 errorOccurredFlag = true;
             }
@@ -132,29 +131,47 @@ public:
         rawRoute.Resize();
         unsigned distance = 0;
 
-        for(unsigned i = 0; i < phantomNodeVector.size()-1 && !errorOccurredFlag; i++) {
-            PhantomNodes segmentPhantomNodes;
-            segmentPhantomNodes.startPhantom = phantomNodeVector[i];
-            segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
-            INFO(segmentPhantomNodes);
-            std::vector< _PathData > path;
-            unsigned distanceOfSegment = searchEngine->ComputeRoute(segmentPhantomNodes, path);
 
-            if(UINT_MAX == distanceOfSegment ) {
-                errorOccurredFlag = true;
-                INFO( "Error occurred, path not found" );
-                distance = UINT_MAX;
-                break;
-            } else {
-                distance += distanceOfSegment;
+        //single route or via point routing
+        if(0 == routeParameters.viaPoints.size()) {
+            PhantomNodes segmentPhantomNodes;
+            segmentPhantomNodes.startPhantom = phantomNodeVector[0];
+            segmentPhantomNodes.targetPhantom = phantomNodeVector[1];
+            std::vector< _PathData > path;
+            distance = searchEngine->ComputeRoute(segmentPhantomNodes, path);
+
+            if(UINT_MAX == distance ) {
+                INFO( "Error occurred, single path not found" );
             }
 
             //put segments at correct position of routes raw data
-            rawRoute.segmentEndCoordinates[i] = (segmentPhantomNodes);
-            rawRoute.routeSegments[i] = path;
-        }
+            rawRoute.segmentEndCoordinates[0] = (segmentPhantomNodes);
+            rawRoute.routeSegments[0] = path;
+        } else {
+            //Getting the shortest via path is a dynamic programming problem and is solved as such.
+            for(unsigned i = 0; i < phantomNodeVector.size()-1 && !errorOccurredFlag; i++) {
+                PhantomNodes segmentPhantomNodes;
+                segmentPhantomNodes.startPhantom = phantomNodeVector[i];
+                segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
+                INFO(segmentPhantomNodes);
+                std::vector< _PathData > path;
+                unsigned distanceOfSegment = searchEngine->ComputeRoute(segmentPhantomNodes, path);
 
-        INFO("Found path of length: " << distance);
+                if(UINT_MAX == distanceOfSegment ) {
+                    errorOccurredFlag = true;
+                    INFO( "Error occurred, via path not found" );
+                    distance = UINT_MAX;
+                    break;
+                } else {
+                    distance += distanceOfSegment;
+                }
+
+                //put segments at correct position of routes raw data
+                rawRoute.segmentEndCoordinates[i] = (segmentPhantomNodes);
+                rawRoute.routeSegments[i] = path;
+            }
+        }
+        INFO("Found path of length " << distance);
 
         reply.status = http::Reply::ok;
 
@@ -215,13 +232,6 @@ public:
         reply.headers[0].value = tmp;
         switch(descriptorType){
         case 0:
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/vnd.google-earth.kml+xml; charset=UTF-8";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"route.kml\"";
-
-            break;
-        case 1:
             if("" != JSONParameter){
                 reply.headers[1].name = "Content-Type";
                 reply.headers[1].value = "text/javascript";
@@ -235,7 +245,7 @@ public:
             }
 
             break;
-        case 2:
+        case 1:
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "application/gpx+xml; charset=UTF-8";
             reply.headers[2].name = "Content-Disposition";
@@ -243,10 +253,17 @@ public:
 
             break;
         default:
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/vnd.google-earth.kml+xml; charset=UTF-8";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"route.kml\"";
+            if("" != JSONParameter){
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "text/javascript";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "attachment; filename=\"route.js\"";
+            } else {
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "application/x-javascript";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "attachment; filename=\"route.json\"";
+            }
 
             break;
         }

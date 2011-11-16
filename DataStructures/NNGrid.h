@@ -198,7 +198,7 @@ public:
             int tlat = 100000*lat2y(edge.lat2/100000.);
             int tlon = edge.lon2;
             AddEdge( _GridEdge(
-                    edge.id, edge.nameID,
+                    edge.id, edge.nameID, edge.weight,
                     _Coordinate(slat, slon),
                     _Coordinate(tlat, tlon) )
             );
@@ -300,25 +300,54 @@ public:
             }
         }
 
-        _Coordinate tmp;
+        _GridEdge smallestEdge;
+        _Coordinate tmp, newEndpoint;
         double dist = (numeric_limits<double>::max)();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
-            if((tmpDist == dist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
+            if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
                 resultNode.isBidirected = true;
-                resultNode.edgeBasedNode = std::min(candidate.edgeBasedNode, resultNode.edgeBasedNode);
+                resultNode.weight2 = candidate.weight;
+                /* if(resultNode.weight1 != resultNode.weight2) {
+                    ERR("w1: " << resultNode.weight1 << ", w2: " << resultNode.weight2);
+                    assert(false);
+                }*/
+                if(candidate.edgeBasedNode < resultNode.edgeBasedNode) {
+                    resultNode.edgeBasedNode = candidate.edgeBasedNode;
+                    std::swap(resultNode.weight1, resultNode.weight2);
+                }
             }
             if(tmpDist < dist) {
-                resultNode.isBidirected = false;
+                resultNode.Reset();
                 resultNode.edgeBasedNode = candidate.edgeBasedNode;
                 resultNode.nodeBasedEdgeNameID = candidate.nameID;
-                resultNode.ratio = r;
+                resultNode.weight1 = candidate.weight;
                 dist = tmpDist;
                 resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
                 resultNode.location.lon = tmp.lon;
                 foundNode = true;
+                smallestEdge = candidate;
+                newEndpoint = tmp;
             }
+        }
+
+//        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
+//        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
+//        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
+//        assert(!resultNode.isBidirected || (resultNode.weight1 == resultNode.weight2));
+//        if(resultNode.weight1 != resultNode.weight2) {
+//            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
+//            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected ? "yes" : "no"));
+//        }
+
+        double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
+        assert(ratio >= 0 && ratio <=1);
+//        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
+        resultNode.weight1 *= ratio;
+        if(resultNode.isBidirected) {
+            resultNode.weight2 *= (1-ratio);
+//            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }
         return foundNode;
     }
@@ -375,6 +404,15 @@ public:
 
 
 private:
+    inline double LengthOfVector(const _Coordinate & c1, const _Coordinate & c2) {
+        double length1 = std::sqrt(c1.lat/100000.*c1.lat/100000. + c1.lon/100000.*c1.lon/100000.);
+        double length2 = std::sqrt(c2.lat/100000.*c2.lat/100000. + c2.lon/100000.*c2.lon/100000.);
+        return std::fabs(length1-length2);
+    }
+
+    inline bool DoubleEpsilonCompare(const double d1, const double d2) {
+        return (std::fabs(d1 - d2) < 0.000000001);
+    }
 
     unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset ) {
         vector<char> * tmpBuffer = new vector<char>();

@@ -25,6 +25,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "ExtractorStructs.h"
 
+#include "../Util/StringUtil.h"
+
 class PolylineCompressor {
 private:
 	inline void encodeVectorSignedNumber(vector<int> & numbers, string & output) {
