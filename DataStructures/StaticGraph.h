@@ -31,15 +31,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 #include "ImportEdge.h"
 
-template< typename EdgeData>
+template< typename EdgeDataT>
 class StaticGraph {
 public:
     typedef NodeID NodeIterator;
     typedef NodeID EdgeIterator;
-
+    typedef EdgeDataT EdgeData;
     class InputEdge {
     public:
-        EdgeData data;
+        EdgeDataT data;
         NodeIterator source;
         NodeIterator target;
         bool operator<( const InputEdge& right ) const {
@@ -95,11 +95,11 @@ public:
         return NodeIterator( _edges[e].target );
     }
 
-    inline EdgeData &GetEdgeData( const EdgeIterator &e ) {
+    inline EdgeDataT &GetEdgeData( const EdgeIterator &e ) {
         return _edges[e].data;
     }
 
-    const EdgeData &GetEdgeData( const EdgeIterator &e ) const {
+    const EdgeDataT &GetEdgeData( const EdgeIterator &e ) const {
         return _edges[e].data;
     }
 
@@ -149,7 +149,7 @@ private:
 
     struct _StrEdge {
         NodeID target;
-        EdgeData data;
+        EdgeDataT data;
     };
 
     NodeIterator _numNodes;
