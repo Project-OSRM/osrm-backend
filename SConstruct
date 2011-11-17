@@ -153,8 +153,8 @@ if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'
 	Exit(-1)
 #if os.sysconf('SC_NPROCESSORS_ONLN') > 1:
 #	env.Append(CCFLAGS = ' -D_GLIBCXX_PARALLEL');
-if not (conf.CheckBoost('1.37')):
-	print 'Boost version >= 1.37 needed'
+if not (conf.CheckBoost('1.41')):
+	print 'Boost version >= 1.41 needed'
 	Exit(-1);
 #check for protobuf 2.3.0, else rebuild proto files
 if not (conf.CheckProtobuf('2.3.0')):
