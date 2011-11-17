@@ -26,7 +26,6 @@
 #include <boost/foreach.hpp>
 
 #include "EdgeBasedGraphFactory.h"
-#include "../DataStructures/ExtractorStructs.h"
 
 template<>
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI)
@@ -149,15 +148,7 @@ void EdgeBasedGraphFactory::Run() {
                         newEdge.data.backward = false;
                         newEdge.data.via = v;
                         newEdge.data.nameID = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
-                        //newEdge.data.nameID2 = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
-                        //Todo: turn instruction angeben
-
-                        if(newEdge.data.nameID == _nodeBasedGraph->GetEdgeData(e1).middleName.nameID)
-                            newEdge.data.turnInstruction = 0;
-                        else {
-                            //TODO: Winkel berechnen und angepasste Anweisung geben.
-                            newEdge.data.turnInstruction = 1;
-                        }
+                        newEdge.data.turnInstruction = AnalyzeTurn(u, v, w);
                         //create Edge for NearestNeighborlookup
                         edgeBasedEdges.push_back(newEdge);
                         EdgeBasedNode currentNode;
@@ -186,6 +177,19 @@ void EdgeBasedGraphFactory::Run() {
     INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << (double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter);
     INFO("Edge-based graph obeys "    << numberOfResolvedRestrictions   << " turn restrictions, " << (inputRestrictions.size() - numberOfResolvedRestrictions )<< " skipped.");
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
+}
+
+short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
+    _NodeBasedDynamicGraph::EdgeIterator edge1 = _nodeBasedGraph->FindEdge(u, v);
+    _NodeBasedDynamicGraph::EdgeIterator edge2 = _nodeBasedGraph->FindEdge(v, w);
+
+    _NodeBasedDynamicGraph::EdgeData data1 = _nodeBasedGraph->GetEdgeData(edge1);
+    _NodeBasedDynamicGraph::EdgeData data2 = _nodeBasedGraph->GetEdgeData(edge2);
+
+    if(data1.middleName.nameID == data2.middleName.nameID) {
+        return TurnInstructions.NoTurn;
+    }
+    return TurnInstructions.GoStraight;
 }
 
 unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {

@@ -24,7 +24,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/foreach.hpp>
 
 #include "BaseDescriptor.h"
-#include "../DataStructures/JSONDescriptionFactory.h"
+#include "../DataStructures/DescriptionFactory.h"
+#include "../DataStructures/SegmentInformation.h"
+#include "../DataStructures/TurnInstructions.h"
 #include "../Util/StringUtil.h"
 
 template<class SearchEngineT>
@@ -32,7 +34,7 @@ class JSONDescriptor : public BaseDescriptor<SearchEngineT>{
 private:
     _DescriptorConfig config;
     _RouteSummary summary;
-    JSONDescriptionFactory descriptionFactory;
+    DescriptionFactory descriptionFactory;
     std::string tmp;
     _Coordinate current;
 
@@ -44,32 +46,28 @@ public:
         WriteHeaderToOutput(reply.content);
         //We do not need to do much, if there is no route ;-)
 
-        //INFO("Starting at " << sEngine.GetEscapedNameForNameID(phantomNodes.startPhantom.nodeBasedEdgeNameID) << ", id: " << phantomNodes.startPhantom.nodeBasedEdgeNameID);
-        //INFO("Arriving at " << sEngine.GetEscapedNameForNameID(phantomNodes.targetPhantom.nodeBasedEdgeNameID) << ", id: " << phantomNodes.startPhantom.nodeBasedEdgeNameID);
-
         if(durationOfTrip != INT_MAX && rawRoute.routeSegments.size() > 0) {
             summary.startName = sEngine.GetEscapedNameForNameID(phantomNodes.startPhantom.nodeBasedEdgeNameID);
+            descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
             summary.destName = sEngine.GetEscapedNameForNameID(phantomNodes.targetPhantom.nodeBasedEdgeNameID);
-            summary.BuildDurationAndLengthStrings(0, durationOfTrip);
             reply.content += "0,"
                     "\"status_message\": \"Found route between points\",";
-            descriptionFactory.AddToPolyline(phantomNodes.startPhantom.location);
             for(unsigned segmentIdx = 0; segmentIdx < rawRoute.routeSegments.size(); segmentIdx++) {
                 const std::vector< _PathData > & path = rawRoute.routeSegments[segmentIdx];
                 BOOST_FOREACH(_PathData pathData, path) {
                     sEngine.GetCoordinatesForNodeID(pathData.node, current);
-                    descriptionFactory.AppendSegment(pathData, current);
-                    if(pathData.turnInstruction != 0) {
-                        INFO("Turn on " << sEngine.GetEscapedNameForNameID(pathData.nameID) << ", turnID: " << pathData.turnInstruction );
-                    }
+                    descriptionFactory.AppendSegment(current, pathData );
                 }
+                //TODO: Add via points
             }
-            descriptionFactory.AddToPolyline(phantomNodes.targetPhantom.location);
+            descriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
         } else {
             //no route found
             reply.content += "207,"
                     "\"status_message\": \"Cannot find route between points\",";
         }
+
+        summary.BuildDurationAndLengthStrings(descriptionFactory.Run(), durationOfTrip);
 
         reply.content += "\"route_summary\": {"
                 "\"total_distance\":";
@@ -88,17 +86,46 @@ public:
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
             if(config.encodeGeometry)
-                descriptionFactory.AppendEncodedPolylineString(reply.content);
-            else
-                descriptionFactory.AppendUnencodedPolylineString(reply.content);
+                descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
         } else {
             reply.content += "[]";
         }
 
         reply.content += ","
                 "\"route_instructions\": [";
-        if(config.instructions)
-            descriptionFactory.AppendRouteInstructionString(reply.content);
+        if(config.instructions) {
+            unsigned prefixSumOfNecessarySegments = 0;
+            std::string tmpDist, tmpLength, tmp;
+            //Fetch data from Factory and generate a string from it.
+            BOOST_FOREACH(SegmentInformation segment, descriptionFactory.pathDescription) {
+                //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
+                if(0 != segment.turnInstruction) {
+                    if(0 != prefixSumOfNecessarySegments)
+                        reply.content += ",";
+                    reply.content += "[\"";
+                    reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
+                    reply.content += "\",\"";
+                    reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
+                    reply.content += "\",";
+                    intToString(segment.length, tmpDist);
+                    reply.content += tmpDist;
+                    reply.content += ",";
+                    intToString(prefixSumOfNecessarySegments, tmpLength);
+                    reply.content += tmpLength;
+                    reply.content += ",";
+                    intToString(segment.duration, tmp);
+                    reply.content += ",\"";
+                    reply.content += tmpLength;
+                    //TODO: fix heading
+                    reply.content += "\",\"NE\",22.5";
+                    reply.content += "]";
+                }
+                if(segment.necessary)
+                    ++prefixSumOfNecessarySegments;
+            }
+            //            descriptionFactory.AppendRouteInstructionString(reply.content);
+
+        }
         reply.content += "],";
         //list all viapoints so that the client may display it
         reply.content += "\"via_points\":[";

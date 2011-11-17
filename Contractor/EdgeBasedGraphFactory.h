@@ -33,6 +33,7 @@
 #include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/Percent.h"
+#include "../DataStructures/TurnInstructions.h"
 
 class EdgeBasedGraphFactory {
 private:
@@ -56,7 +57,6 @@ private:
         int distance;
         unsigned via;
         unsigned nameID;
-//        unsigned nameID2;
         bool forward;
         bool backward;
         short turnInstruction;
@@ -103,7 +103,7 @@ public:
     template< class ImportEdgeT >
     void GetEdgeBasedEdges( std::vector< ImportEdgeT >& edges );
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
-
+    short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
     unsigned GetNumberOfNodes() const;
 };
 

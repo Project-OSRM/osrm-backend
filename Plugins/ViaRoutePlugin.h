@@ -171,8 +171,6 @@ public:
                 rawRoute.routeSegments[i] = path;
             }
         }
-        INFO("Found path of length " << distance);
-
         reply.status = http::Reply::ok;
 
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
