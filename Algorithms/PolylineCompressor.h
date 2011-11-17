@@ -24,7 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 
 #include "../DataStructures/ExtractorStructs.h"
-
+#include "../DataStructures/SegmentInformation.h"
 #include "../Util/StringUtil.h"
 
 class PolylineCompressor {
@@ -57,6 +57,21 @@ private:
 	}
 
 public:
+    inline void printEncodedString(const vector<SegmentInformation>& polyline, string &output) {
+        vector<int> deltaNumbers(2*polyline.size());
+        output += "\"";
+        if(!polyline.empty()) {
+            deltaNumbers[0] = polyline[0].location.lat;
+            deltaNumbers[1] = polyline[0].location.lon;
+            for(unsigned i = 1; i < polyline.size(); ++i) {
+                deltaNumbers[(2*i)]   = (polyline[i].location.lat - polyline[i-1].location.lat);
+                deltaNumbers[(2*i)+1] = (polyline[i].location.lon - polyline[i-1].location.lon);
+            }
+            encodeVectorSignedNumber(deltaNumbers, output);
+        }
+        output += "\"";
+    }
+
 	inline void printEncodedString(const vector<_Coordinate>& polyline, string &output) {
 		vector<int> deltaNumbers(2*polyline.size());
 		output += "\"";
@@ -80,6 +95,24 @@ public:
             output += "[";
             output += tmp;
             convertInternalLatLonToString(polyline[i].lon, tmp);
+            output += ", ";
+            output += tmp;
+            output += "]";
+            if( i < polyline.size()-1 ) {
+                output += ",";
+            }
+        }
+        output += "]";
+    }
+
+    inline void printUnencodedString(vector<SegmentInformation> & polyline, string & output) {
+        output += "[";
+        string tmp;
+        for(unsigned i = 0; i < polyline.size(); i++) {
+            convertInternalLatLonToString(polyline[i].location.lat, tmp);
+            output += "[";
+            output += tmp;
+            convertInternalLatLonToString(polyline[i].location.lon, tmp);
             output += ", ";
             output += tmp;
             output += "]";
