@@ -175,6 +175,6 @@ env.Program(["extractor.cpp", 'DataStructures/pbf-proto/fileformat.pb.cc', 'Data
 env.Program(["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp'])
 env.Append(CCFLAGS = ['-lboost_regex', '-lboost_iostreams', '-lbz2', '-lz', '-lprotobuf'])
 env.Append(LINKFLAGS = ['-lboost_system'])
-env.Program(["routed.cpp", 'DataStructures/DescriptionFactory.cpp'])
+env.Program(["routed.cpp", 'Descriptors/DescriptionFactory.cpp'])
 env = conf.Finish()
 
