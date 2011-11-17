@@ -25,9 +25,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <algorithm>
 #include <limits>
 
-template< typename EdgeData>
+template< typename EdgeDataT>
 class DynamicGraph {
     public:
+        typedef EdgeDataT EdgeData;
         typedef unsigned NodeIterator;
         typedef unsigned EdgeIterator;
 
@@ -35,7 +36,7 @@ class DynamicGraph {
             public:
                 NodeIterator source;
                 NodeIterator target;
-                EdgeData data;
+                EdgeDataT data;
                 bool operator<( const InputEdge& right ) const {
                     if ( source != right.source )
                         return source < right.source;
@@ -44,7 +45,7 @@ class DynamicGraph {
         };
 
         //Constructs an empty graph with a given number of nodes.
-        DynamicGraph( int nodes ) : m_numNodes(nodes) {
+        DynamicGraph( int nodes ) : m_numNodes(nodes), m_numEdges(0) {
             m_nodes.reserve( m_numNodes );
             m_nodes.resize( m_numNodes );
 
@@ -103,12 +104,12 @@ class DynamicGraph {
             return NodeIterator( m_edges[e].target );
         }
 
-        EdgeData &GetEdgeData( const EdgeIterator &e )
+        EdgeDataT &GetEdgeData( const EdgeIterator &e )
         {
             return m_edges[e].data;
         }
 
-        const EdgeData &GetEdgeData( const EdgeIterator &e ) const
+        const EdgeDataT &GetEdgeData( const EdgeIterator &e ) const
         {
             return m_edges[e].data;
         }
@@ -125,7 +126,7 @@ class DynamicGraph {
         }
 
         //adds an edge. Invalidates edge iterators for the source node
-        EdgeIterator InsertEdge( const NodeIterator &from, const NodeIterator &to, const EdgeData &data )
+        EdgeIterator InsertEdge( const NodeIterator &from, const NodeIterator &to, const EdgeDataT &data )
         {
             Node &node = m_nodes[from];
             EdgeIterator newFirstEdge = node.edges + node.firstEdge;
@@ -223,7 +224,7 @@ class DynamicGraph {
 
         struct Edge {
             NodeIterator target;
-            EdgeData data;
+            EdgeDataT data;
         };
 
         NodeIterator m_numNodes;
