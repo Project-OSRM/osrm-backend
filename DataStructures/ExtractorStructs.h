@@ -24,13 +24,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 #include <string>
 #include <boost/unordered_map.hpp>
+#include "../typedefs.h"
 #include "Util.h"
 
 struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned le) : node(no), nameID(na), lengthOfSegment(le), turnInstruction(tu) { }
+    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu) { }
     NodeID node;
     unsigned nameID;
-    unsigned lengthOfSegment;
+    unsigned durationOfSegment;
     short turnInstruction;
 };
 

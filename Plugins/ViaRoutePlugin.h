@@ -29,11 +29,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "ObjectForPluginStruct.h"
 
-#include "BaseDescriptor.h"
 #include "BasePlugin.h"
 #include "RouteParameters.h"
-#include "GPXDescriptor.h"
-#include "JSONDescriptor.h"
+#include "../Descriptors/BaseDescriptor.h"
+#include "../Descriptors/GPXDescriptor.h"
+#include "../Descriptors/JSONDescriptor.h"
 
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/StaticGraph.h"
@@ -130,7 +130,6 @@ public:
 
         rawRoute.Resize();
         unsigned distance = 0;
-
 
         //single route or via point routing
         if(0 == routeParameters.viaPoints.size()) {
