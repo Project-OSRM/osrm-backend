@@ -18,9 +18,6 @@
  or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#include <boost/foreach.hpp>
-
-#include "../typedefs.h"
 #include "DescriptionFactory.h"
 
 DescriptionFactory::DescriptionFactory() { }
@@ -38,25 +35,11 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & _startPhantom) {
 
 void DescriptionFactory::SetEndSegment(const PhantomNode & _targetPhantom) {
     targetPhantom = _targetPhantom;
-    AppendSegment(_targetPhantom.location, _PathData(0, _targetPhantom.nodeBasedEdgeNameID, 0, _targetPhantom.weight1));
+    pathDescription.push_back(SegmentInformation(_targetPhantom.location, _targetPhantom.nodeBasedEdgeNameID, 0, _targetPhantom.weight1, 0, true) );
 }
 
-void DescriptionFactory::AppendSegment(const _Coordinate & coordinate, const _PathData & data ) {
-    //Segment information has following format:
-    //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
-    //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
-    //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
-//    (_Coordinate & loc, NodeID nam, unsigned len, unsigned dur, short tInstr)
-
-    //Is a new instruction necessary?
-    //yes: data.turnInstruction != 0;
-    //no: data.turnInstruction == 0;
+inline void DescriptionFactory::AppendSegment(const _Coordinate & coordinate, const _PathData & data ) {
     pathDescription.push_back(SegmentInformation(coordinate, data.nameID, 0, data.durationOfSegment, data.turnInstruction) );
-
-}
-
-void DescriptionFactory::AppendRouteInstructionString(std::string & output) {
-    output += "[\"Turn left\",\"High Street\",200,0,10,\"200m\",\"NE\",22.5]";
 }
 
 void DescriptionFactory::AppendEncodedPolylineString(std::string & output, bool isEncoded) {
@@ -74,7 +57,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
     pc.printUnencodedString(pathDescription, output);
 }
 
-unsigned DescriptionFactory::Run() {
+unsigned DescriptionFactory::Run(const unsigned zoomLevel) {
     if(0 == pathDescription.size())
         return 0;
 
@@ -105,10 +88,7 @@ unsigned DescriptionFactory::Run() {
     }
 
     //Generalize poly line
-    BOOST_FOREACH(SegmentInformation & segment, pathDescription) {
-        //TODO: Replace me by real generalization
-        segment.necessary = true;
-    }
+    dp.Run(pathDescription, zoomLevel);
 
     //fix what needs to be fixed else
     return entireLength;

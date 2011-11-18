@@ -23,6 +23,8 @@
 
 #include <vector>
 
+#include "../typedefs.h"
+#include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/SegmentInformation.h"
@@ -31,6 +33,7 @@
  *  and produces the description plus the encoded polyline */
 
 class DescriptionFactory {
+    DouglasPeucker<SegmentInformation> dp;
     PolylineCompressor pc;
     PhantomNode startPhantom, targetPhantom;
 public:
@@ -42,11 +45,10 @@ public:
     void AppendEncodedPolylineString(std::string &output);
     void AppendUnencodedPolylineString(std::string &output);
     void AppendSegment(const _Coordinate & coordinate, const _PathData & data);
-    void AppendRouteInstructionString(std::string & output);
     void SetStartSegment(const PhantomNode & startPhantom);
     void SetEndSegment(const PhantomNode & startPhantom);
     void AppendEncodedPolylineString(std::string & output, bool isEncoded);
-    unsigned Run();
+    unsigned Run(const unsigned zoomLevel);
 
 //    static inline void getDirectionOfInstruction(double angle, DirectionOfInstruction & dirInst) {
 //        if(angle >= 23 && angle < 67) {

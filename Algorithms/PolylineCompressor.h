@@ -58,18 +58,23 @@ private:
 
 public:
     inline void printEncodedString(const vector<SegmentInformation>& polyline, string &output) {
-        vector<int> deltaNumbers(2*polyline.size());
+        vector<int> deltaNumbers;
         output += "\"";
         if(!polyline.empty()) {
-            deltaNumbers[0] = polyline[0].location.lat;
-            deltaNumbers[1] = polyline[0].location.lon;
+            _Coordinate lastCoordinate = polyline[0].location;
+            deltaNumbers.push_back( lastCoordinate.lat );
+            deltaNumbers.push_back( lastCoordinate.lon );
             for(unsigned i = 1; i < polyline.size(); ++i) {
-                deltaNumbers[(2*i)]   = (polyline[i].location.lat - polyline[i-1].location.lat);
-                deltaNumbers[(2*i)+1] = (polyline[i].location.lon - polyline[i-1].location.lon);
+                if(!polyline[i].necessary)
+                    continue;
+                deltaNumbers.push_back(polyline[i].location.lat - lastCoordinate.lat);
+                deltaNumbers.push_back(polyline[i].location.lon - lastCoordinate.lon);
+                lastCoordinate = polyline[i].location;
             }
             encodeVectorSignedNumber(deltaNumbers, output);
         }
         output += "\"";
+
     }
 
 	inline void printEncodedString(const vector<_Coordinate>& polyline, string &output) {
@@ -109,6 +114,8 @@ public:
         output += "[";
         string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
+            if(!polyline[i].necessary)
+                continue;
             convertInternalLatLonToString(polyline[i].location.lat, tmp);
             output += "[";
             output += tmp;

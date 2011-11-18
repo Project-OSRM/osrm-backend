@@ -44,8 +44,6 @@ public:
 
     void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned durationOfTrip) {
         WriteHeaderToOutput(reply.content);
-        //We do not need to do much, if there is no route ;-)
-
         if(durationOfTrip != INT_MAX && rawRoute.routeSegments.size() > 0) {
             summary.startName = sEngine.GetEscapedNameForNameID(phantomNodes.startPhantom.nodeBasedEdgeNameID);
             descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
@@ -62,12 +60,12 @@ public:
             }
             descriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
         } else {
-            //no route found
+            //We do not need to do much, if there is no route ;-)
             reply.content += "207,"
                     "\"status_message\": \"Cannot find route between points\",";
         }
 
-        summary.BuildDurationAndLengthStrings(descriptionFactory.Run(), durationOfTrip);
+        summary.BuildDurationAndLengthStrings(descriptionFactory.Run(config.z), durationOfTrip);
 
         reply.content += "\"route_summary\": {"
                 "\"total_distance\":";
@@ -94,11 +92,14 @@ public:
         reply.content += ","
                 "\"route_instructions\": [";
         if(config.instructions) {
+            //Segment information has following format:
+            //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
+            //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
+            //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
             unsigned prefixSumOfNecessarySegments = 0;
             std::string tmpDist, tmpLength, tmp;
             //Fetch data from Factory and generate a string from it.
             BOOST_FOREACH(SegmentInformation segment, descriptionFactory.pathDescription) {
-                //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
                 if(0 != segment.turnInstruction) {
                     if(0 != prefixSumOfNecessarySegments)
                         reply.content += ",";
@@ -123,8 +124,6 @@ public:
                 if(segment.necessary)
                     ++prefixSumOfNecessarySegments;
             }
-            //            descriptionFactory.AppendRouteInstructionString(reply.content);
-
         }
         reply.content += "],";
         //list all viapoints so that the client may display it
