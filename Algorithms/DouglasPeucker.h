@@ -102,7 +102,6 @@ public:
             assert(pair.first < pair.second);
             double maxDistance = -DBL_MAX;
             std::size_t indexOfFarthestElement = pair.second;
-            INFO("[" << recursionStack.size() << "] left: " << pair.first << ", right: " << pair.second);
             //find index idx of element with maxDistance
             for(std::size_t i = pair.first+1; i < pair.second; ++i){
                 double distance = std::fabs(ComputeDistance(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
@@ -111,11 +110,9 @@ public:
                     maxDistance = distance;
                 }
             }
-            INFO("distance: " << maxDistance << ", recurse: " << (maxDistance > DouglasPeuckerThresholds[zoomLevel] ? "yes" : "no") << ", index: " << indexOfFarthestElement << ", threshold: " << DouglasPeuckerThresholds[zoomLevel] << ", z: " << zoomLevel);
             if (maxDistance > DouglasPeuckerThresholds[zoomLevel]) {
                 //  mark idx as necessary
                 inputVector[indexOfFarthestElement].necessary = true;
-                INFO("1 < " << indexOfFarthestElement << " - " << pair.first << "=" << (1 > indexOfFarthestElement - pair.first ? "yes" : "no"));
                 if (1 < indexOfFarthestElement - pair.first) {
                     recursionStack.push(std::make_pair(pair.first, indexOfFarthestElement) );
                 }
@@ -123,12 +120,6 @@ public:
                     recursionStack.push(std::make_pair(indexOfFarthestElement, pair.second) );
             }
         }
-        unsigned necessaryCount = 0;
-        BOOST_FOREACH(PointT & segment, inputVector) {
-            if(segment.necessary)
-                ++necessaryCount;
-        }
-        INFO("[" << necessaryCount << "|" << inputVector.size() << "] points are necessary");
     }
 };
 
