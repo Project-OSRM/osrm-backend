@@ -37,8 +37,11 @@ struct TurnInstructionsClass {
     const static short TurnSlightLeft = 8;
     const static short ReachViaPoint = 9;
     const static short HeadOn = 10;
+    const static short EnterRoundAbout = 11;
+    const static short LeaveRoundAbout = 12;
+    const static short StayOnRoundAbout = 13;
 
-    std::string TurnStrings[11];
+    std::string TurnStrings[14];
 
     //This is a hack until c++0x is available enough to use initializer lists.
     TurnInstructionsClass(){
@@ -53,7 +56,84 @@ struct TurnInstructionsClass {
         TurnStrings [8] = "Turn slight left";
         TurnStrings [9] = "Reach via point";
         TurnStrings[10] = "Head";
+        TurnStrings[11] = "Enter round-about";
+        TurnStrings[12] = "Leave round-about";
+        TurnStrings[13] = "Stay on round-about";
     };
+
+    static inline double GetTurnDirectionOfInstruction( const double angle ) {
+        if(angle >= 23 && angle < 67) {
+            return TurnSharpRight;
+        }
+        if (angle >= 67 && angle < 113) {
+            return TurnRight;
+        }
+        if (angle >= 113 && angle < 158) {
+            return TurnSlightRight;
+        }
+        if (angle >= 158 && angle < 202) {
+            return GoStraight;
+        }
+        if (angle >= 202 && angle < 248) {
+            return TurnSlightLeft;
+        }
+        if (angle >= 248 && angle < 292) {
+            return TurnLeft;
+        }
+        if (angle >= 292 && angle < 336) {
+            return TurnSharpLeft;
+        }
+        return 5;
+    }
+
+    static inline bool TurnIsNecessary ( const short turnInstruction ) {
+        if(NoTurn == turnInstruction || StayOnRoundAbout == turnInstruction)
+            return false;
+        return true;
+    }
+
+    //    static inline void getDirectionOfInstruction(double angle, DirectionOfInstruction & dirInst) {
+    //        if(angle >= 23 && angle < 67) {
+    //            dirInst.direction = "southeast";
+    //            dirInst.shortDirection = "SE";
+    //            return;
+    //        }
+    //        if(angle >= 67 && angle < 113) {
+    //            dirInst.direction = "south";
+    //            dirInst.shortDirection = "S";
+    //            return;
+    //        }
+    //        if(angle >= 113 && angle < 158) {
+    //            dirInst.direction = "southwest";
+    //            dirInst.shortDirection = "SW";
+    //            return;
+    //        }
+    //        if(angle >= 158 && angle < 202) {
+    //            dirInst.direction = "west";
+    //            dirInst.shortDirection = "W";
+    //            return;
+    //        }
+    //        if(angle >= 202 && angle < 248) {
+    //            dirInst.direction = "northwest";
+    //            dirInst.shortDirection = "NW";
+    //            return;
+    //        }
+    //        if(angle >= 248 && angle < 292) {
+    //            dirInst.direction = "north";
+    //            dirInst.shortDirection = "N";
+    //            return;
+    //        }
+    //        if(angle >= 292 && angle < 336) {
+    //            dirInst.direction = "northeast";
+    //            dirInst.shortDirection = "NE";
+    //            return;
+    //        }
+    //        dirInst.direction = "East";
+    //        dirInst.shortDirection = "E";
+    //        return;
+    //    }
+    //
+
 };
 
 static TurnInstructionsClass TurnInstructions;

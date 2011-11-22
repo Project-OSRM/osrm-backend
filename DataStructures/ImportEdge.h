@@ -42,10 +42,10 @@ public:
 
     /** Default constructor. target and weight are set to 0.*/
     NodeBasedEdge() :
-        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _type(0) { assert(false); } //shall not be used.
+        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _type(0), _roundabout(false) { assert(false); } //shall not be used.
 
-    explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty) :
-            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty) { assert(ty >= 0); }
+    explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty, bool ra) :
+            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), _roundabout(ra) { assert(ty >= 0); }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
@@ -56,6 +56,7 @@ public:
     bool isBackward() const { return backward; }
     bool isForward() const { return forward; }
     bool isLocatable() const { return _type != 14; }
+    bool isRoundabout() const { return _roundabout; }
 
     NodeID _source;
     NodeID _target;
@@ -64,6 +65,7 @@ public:
     bool forward;
     bool backward;
     short _type;
+    bool _roundabout;
 };
 
 class EdgeBasedEdge {

@@ -49,6 +49,7 @@ private:
         bool shortcut;
         bool forward;
         bool backward;
+        bool roundabout;
         short type;
         _MiddleName middleName;
     } data;
@@ -94,6 +95,8 @@ private:
     std::vector<_EdgeBasedEdge> edgeBasedEdges;
     std::vector<EdgeBasedNode> edgeBasedNodes;
 
+    template<class CoordinateT>
+    double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 public:
     template< class InputEdgeT >
     explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI);

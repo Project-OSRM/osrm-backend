@@ -50,87 +50,10 @@ public:
     void AppendEncodedPolylineString(std::string & output, bool isEncoded);
     unsigned Run(const unsigned zoomLevel);
 
-//    static inline void getDirectionOfInstruction(double angle, DirectionOfInstruction & dirInst) {
-//        if(angle >= 23 && angle < 67) {
-//            dirInst.direction = "southeast";
-//            dirInst.shortDirection = "SE";
-//            return;
-//        }
-//        if(angle >= 67 && angle < 113) {
-//            dirInst.direction = "south";
-//            dirInst.shortDirection = "S";
-//            return;
-//        }
-//        if(angle >= 113 && angle < 158) {
-//            dirInst.direction = "southwest";
-//            dirInst.shortDirection = "SW";
-//            return;
-//        }
-//        if(angle >= 158 && angle < 202) {
-//            dirInst.direction = "west";
-//            dirInst.shortDirection = "W";
-//            return;
-//        }
-//        if(angle >= 202 && angle < 248) {
-//            dirInst.direction = "northwest";
-//            dirInst.shortDirection = "NW";
-//            return;
-//        }
-//        if(angle >= 248 && angle < 292) {
-//            dirInst.direction = "north";
-//            dirInst.shortDirection = "N";
-//            return;
-//        }
-//        if(angle >= 292 && angle < 336) {
-//            dirInst.direction = "northeast";
-//            dirInst.shortDirection = "NE";
-//            return;
-//        }
-//        dirInst.direction = "East";
-//        dirInst.shortDirection = "E";
-//        return;
-//    }
-//
-//    static inline void getTurnDirectionOfInstruction(double angle, std::string & output) {
-//        if(angle >= 23 && angle < 67) {
-//            output = "Turn sharp right";
-//    //        cout << "angle " << angle << "-> " << output << endl;
-//            return;
-//        }
-//        if (angle >= 67 && angle < 113) {
-//            output = "Turn right";
-//    //        cout << "angle " << angle << "-> " << output << endl;
-//            return;
-//        }
-//        if (angle >= 113 && angle < 158) {
-//            output = "Bear right";
-//    //        cout << "angle " << angle << "-> " << output << endl;
-//            return;
-//        }
-//
-//        if (angle >= 158 && angle < 202) {
-//            output = "Continue";
-//    //        cout << "angle " << angle << "-> " << output << endl;
-//            return;
-//        }
-//        if (angle >= 202 && angle < 248) {
-//            output = "Bear left";
-//    //        cout << "angle " << angle << "-> " << output << endl;
-//            return;
-//        }
-//        if (angle >= 248 && angle < 292) {
-//            output = "Turn left";
-//    //        cout << "angle " << angle << "-> " << output << endl;
-//            return;
-//        }
-//        if (angle >= 292 && angle < 336) {
-//            output = "Turn sharp left";
-//    //        cout << "angle " << angle << "-> " << output << endl;
-//            return;
-//        }
-//        output = "U-Turn";
-//    //    cout << "angle " << angle << "-> " << output << endl;
-//    }
+};
+
+#endif /* DESCRIPTIONFACTORY_H_ */
+
 //private:
 //    void appendInstructionNameToString(const std::string & nameOfStreet, const std::string & instructionOrDirection, std::string &output, bool firstAdvice = false) {
 //        output += "[";
@@ -173,6 +96,3 @@ public:
 //        }
 //        output += "]";
 //    }
-};
-
-#endif /* DESCRIPTIONFACTORY_H_ */

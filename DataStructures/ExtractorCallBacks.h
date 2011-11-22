@@ -134,6 +134,9 @@ public:
             else if("no" == accessClass)
                 w.access = false;
 
+            if(junction == "roundabout") {
+                w.roundabout = true;
+            }
             //Let's process oneway property, if speed profile obeys to it
             if(oneway != "no" && oneway != "false" && oneway != "0" && settings.obeyOneways) {
                 //if oneway tag is in forward direction or if actually roundabout
@@ -175,7 +178,7 @@ public:
             }
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
-                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID));
+                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout));
                 externalMemory->usedNodeIDs.push_back(w.path[n]);
             }
             externalMemory->usedNodeIDs.push_back(w.path[w.path.size()-1]);

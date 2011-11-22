@@ -138,7 +138,6 @@ public:
             const NodeID target = edges[i].target;
             const NodeID via = edges[i].data.via;
             const short turnType = edges[i].data.turnInstruction;
-            assert(turnType == 0 || turnType == 1);
             //remove eigenloops
             if ( source == target ) {
                 i++;

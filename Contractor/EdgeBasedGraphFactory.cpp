@@ -50,6 +50,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         edge.data.distance = (std::max)((int)i->weight(), 1 );
         assert( edge.data.distance > 0 );
         edge.data.shortcut = false;
+        edge.data.roundabout = i->isRoundabout();
         edge.data.middleName.nameID = i->name();
         edge.data.type = i->type();
         edge.data.forward = i->isForward();
@@ -186,10 +187,28 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     _NodeBasedDynamicGraph::EdgeData data1 = _nodeBasedGraph->GetEdgeData(edge1);
     _NodeBasedDynamicGraph::EdgeData data2 = _nodeBasedGraph->GetEdgeData(edge2);
 
-    if(data1.middleName.nameID == data2.middleName.nameID) {
+    double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+
+    if(data1.middleName.nameID == data2.middleName.nameID)
+        return TurnInstructions.NoTurn;
+
+    //Is turn on roundabout?
+    if(data1.roundabout || data2.roundabout) {
+        //We are entering the roundabout
+        if(!data1.roundabout && data2.roundabout)
+            return TurnInstructions.EnterRoundAbout;
+        //We are leaving the roundabout
+        if(data1.roundabout && !data2.roundabout)
+            return TurnInstructions.LeaveRoundAbout;
+        //Is a turn possible? If yes, we stay on the roundabout!
+        if(_nodeBasedGraph->EndEdges(v) - _nodeBasedGraph->BeginEdges(v) > 1)
+            return TurnInstructions.StayOnRoundAbout;
+        //No turn possible.
         return TurnInstructions.NoTurn;
     }
-    return TurnInstructions.GoStraight;
+
+
+    return TurnInstructions.GetTurnDirectionOfInstruction(angle);
 }
 
 unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
@@ -199,3 +218,17 @@ unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
 EdgeBasedGraphFactory::~EdgeBasedGraphFactory() {
 }
 
+/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
+template<class CoordinateT>
+double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const {
+    const int v1x = A.lon - C.lon;
+    const int v1y = A.lat - C.lat;
+    const int v2x = B.lon - C.lon;
+    const int v2y = B.lat - C.lat;
+
+    double angle = (atan2((double)v2y,v2x) - atan2((double)v1y,v1x) )*180/M_PI;
+    while(angle < 0)
+        angle += 360;
+
+    return angle;
+}

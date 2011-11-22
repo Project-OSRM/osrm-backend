@@ -79,6 +79,7 @@ struct _Way {
         type = -1;
         useful = false;
         access = true;
+        roundabout = false;
     }
 
     enum {
@@ -89,8 +90,9 @@ struct _Way {
     std::string name;
     double speed;
     short type;
-    bool useful:1;
-    bool access:1;
+    bool useful;
+    bool access;
+    bool roundabout;
     std::vector< NodeID > path;
     HashTable<std::string, std::string> keyVals;
 };
@@ -124,16 +126,17 @@ struct _Relation {
 };
 
 struct _Edge {
-    _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0) {};
-    _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid) { }
+    _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false) {};
+    _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0), isRoundabout(false)  { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0), isRoundabout(false)  { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra) { }
     NodeID start;
     NodeID target;
     short type;
     short direction;
     double speed;
     unsigned nameID;
+    bool isRoundabout;
 
     _Coordinate startCoord;
     _Coordinate targetCoord;

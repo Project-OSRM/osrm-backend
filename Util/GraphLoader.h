@@ -142,18 +142,21 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
     }
 
     edgeList.reserve(m);
+    EdgeWeight weight;
+    short type;
+    NodeID nameID;
+    int length;
+    bool isRoundabout;
+
     for (EdgeID i=0; i<m; i++) {
-        EdgeWeight weight;
-        short type;
-        NodeID nameID;
-        int length;
-        in.read((char*)&source, sizeof(unsigned));
-        in.read((char*)&target, sizeof(unsigned));
-        in.read((char*)&length, sizeof(int));
-        in.read((char*)&dir,    sizeof(short));
-        in.read((char*)&weight, sizeof(int));
-        in.read((char*)&type,   sizeof(short));
-        in.read((char*)&nameID ,sizeof(unsigned));
+        in.read((char*)&source,         sizeof(unsigned));
+        in.read((char*)&target,         sizeof(unsigned));
+        in.read((char*)&length,         sizeof(int));
+        in.read((char*)&dir,            sizeof(short));
+        in.read((char*)&weight,         sizeof(int));
+        in.read((char*)&type,           sizeof(short));
+        in.read((char*)&nameID,         sizeof(unsigned));
+        in.read((char*)&isRoundabout,   sizeof(bool));
 
         assert(length > 0);
         assert(weight > 0);
@@ -186,7 +189,7 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
 
         if(source == UINT_MAX || target == UINT_MAX) { cerr << "nonexisting source or target" << endl; exit(0); }
 
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type );
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout );
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();

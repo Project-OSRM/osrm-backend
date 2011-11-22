@@ -38,7 +38,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & _targetPhantom) {
     pathDescription.push_back(SegmentInformation(_targetPhantom.location, _targetPhantom.nodeBasedEdgeNameID, 0, _targetPhantom.weight1, 0, true) );
 }
 
-inline void DescriptionFactory::AppendSegment(const _Coordinate & coordinate, const _PathData & data ) {
+void DescriptionFactory::AppendSegment(const _Coordinate & coordinate, const _PathData & data ) {
     pathDescription.push_back(SegmentInformation(coordinate, data.nameID, 0, data.durationOfSegment, data.turnInstruction) );
 }
 

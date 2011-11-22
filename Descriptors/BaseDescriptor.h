@@ -34,22 +34,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../Plugins/RawRouteData.h"
 
-static double areaThresholds[19] = { 5000, 5000, 5000, 5000, 5000, 2500, 2000, 1500, 800, 400, 250, 150, 100, 75, 25, 20, 10, 5, 0 };
-
-/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
-static double GetAngleBetweenTwoEdges(const _Coordinate& A, const _Coordinate& C, const _Coordinate& B) {
-    int v1x = A.lon - C.lon;
-    int v1y = A.lat - C.lat;
-    int v2x = B.lon - C.lon;
-    int v2y = B.lat - C.lat;
-
-    double angle = (atan2((double)v2y,v2x) - atan2((double)v1y,v1x) )*180/M_PI;
-    while(angle < 0)
-        angle += 360;
-
-    return angle;
-}
-
 struct _RouteSummary {
     std::string lengthString;
     std::string durationString;

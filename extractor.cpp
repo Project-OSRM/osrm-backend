@@ -429,6 +429,7 @@ int main (int argc, char *argv[]) {
                     short edgeType = edgeIT->type;
                     fout.write((char*)&edgeType, sizeof(short));
                     fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
+                    fout.write((char *)&edgeIT->isRoundabout, sizeof(bool));
                 }
                 ++usedEdgeCounter;
                 ++edgeIT;
@@ -443,7 +444,6 @@ int main (int argc, char *argv[]) {
         fout.close();
         cout << "ok" << endl;
         time = get_timestamp();
-        INFO("Written edges: " << usedEdgeCounter << " at " << positionInFile);
         cout << "[extractor] writing street name index ... " << flush;
         vector<unsigned> * nameIndex = new vector<unsigned>(externalMemory.nameVector.size()+1, 0);
         outputFileName.append(".names");

@@ -100,10 +100,11 @@ public:
             std::string tmpDist, tmpLength, tmp;
             //Fetch data from Factory and generate a string from it.
             BOOST_FOREACH(SegmentInformation segment, descriptionFactory.pathDescription) {
-                if(0 != segment.turnInstruction) {
+                if(TurnInstructions.TurnIsNecessary( segment.turnInstruction) ) {
                     if(0 != prefixSumOfNecessarySegments)
                         reply.content += ",";
                     reply.content += "[\"";
+                    INFO("INstruction: " << segment.turnInstruction);
                     reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
                     reply.content += "\",\"";
                     reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
