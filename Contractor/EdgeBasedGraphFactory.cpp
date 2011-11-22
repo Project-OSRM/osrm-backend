@@ -207,7 +207,6 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
         return TurnInstructions.NoTurn;
     }
 
-
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);
 }
 

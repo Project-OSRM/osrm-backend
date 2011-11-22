@@ -97,6 +97,7 @@ public:
             //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
             //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
             unsigned prefixSumOfNecessarySegments = 0;
+            unsigned leaveAtExit = 0;
             std::string tmpDist, tmpLength, tmp;
             //Fetch data from Factory and generate a string from it.
             BOOST_FOREACH(SegmentInformation segment, descriptionFactory.pathDescription) {
@@ -105,6 +106,14 @@ public:
                         reply.content += ",";
                     reply.content += "[\"";
                     INFO("INstruction: " << segment.turnInstruction);
+                    if(TurnInstructions.StayOnRoundAbout == segment.turnInstruction){
+                        INFO("Staying on roundabout");
+                        ++leaveAtExit;
+                    }
+                    if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
+                        INFO("Exiting at exit " << leaveAtExit);
+                        leaveAtExit = 0;
+                    }
                     reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
                     reply.content += "\",\"";
                     reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
