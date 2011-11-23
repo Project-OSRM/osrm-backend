@@ -112,6 +112,10 @@ public:
             if ( 0 < name.length() )
                 w.name = name;
 
+        if(junction == "roundabout") {
+            w.roundabout = true;
+        }
+
         //Is the highway tag listed as usable way?
         if(0 < settings[highway]) {
 
@@ -134,9 +138,6 @@ public:
             else if("no" == accessClass)
                 w.access = false;
 
-            if(junction == "roundabout") {
-                w.roundabout = true;
-            }
             //Let's process oneway property, if speed profile obeys to it
             if(oneway != "no" && oneway != "false" && oneway != "0" && settings.obeyOneways) {
                 //if oneway tag is in forward direction or if actually roundabout
@@ -157,7 +158,7 @@ public:
             }
         }
         if ( w.useful && w.access && (1 < w.path.size()) ) { //Only true if the way is specified by the speed profile
-            //Hack: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
+            //TODO: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
             w.type = 1;
 
             //Get the unique identifier for the street name

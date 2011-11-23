@@ -103,6 +103,7 @@ void EdgeBasedGraphFactory::Run() {
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfResolvedRestrictions(0);
     int nodeBasedEdgeCounter(0);
+
     //Loop over all nodes u. Three nested loop look super-linear, but we are dealing with a number linear in the turns only.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
         //loop over all adjacent edge (u,v)
@@ -189,23 +190,29 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
 
     double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 
-    if(data1.middleName.nameID == data2.middleName.nameID)
-        return TurnInstructions.NoTurn;
-
-    //Is turn on roundabout?
+    //roundabouts need to be handled explicitely
+    if(data1.roundabout && data2.roundabout) {
+        //Is a turn possible? If yes, we stay on the roundabout!
+        if( 1 == (_nodeBasedGraph->EndEdges(v) - _nodeBasedGraph->BeginEdges(v)) ) {
+            //No turn possible.
+            return TurnInstructions.NoTurn;
+        } else {
+            return TurnInstructions.StayOnRoundAbout;
+        }
+    }
+    //Does turn start or end on roundabout?
     if(data1.roundabout || data2.roundabout) {
         //We are entering the roundabout
-        if(!data1.roundabout && data2.roundabout)
+        if( (!data1.roundabout) && data2.roundabout)
             return TurnInstructions.EnterRoundAbout;
         //We are leaving the roundabout
-        if(data1.roundabout && !data2.roundabout)
+        if(data1.roundabout && (!data2.roundabout) )
             return TurnInstructions.LeaveRoundAbout;
-        //Is a turn possible? If yes, we stay on the roundabout!
-        if(_nodeBasedGraph->EndEdges(v) - _nodeBasedGraph->BeginEdges(v) > 1)
-            return TurnInstructions.StayOnRoundAbout;
-        //No turn possible.
-        return TurnInstructions.NoTurn;
     }
+
+    //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
+    if(data1.middleName.nameID == data2.middleName.nameID)
+        return TurnInstructions.NoTurn;
 
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);
 }

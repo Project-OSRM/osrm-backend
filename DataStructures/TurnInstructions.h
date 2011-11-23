@@ -42,6 +42,7 @@ struct TurnInstructionsClass {
     const static short StayOnRoundAbout = 13;
 
     std::string TurnStrings[14];
+    std::string Ordinals[11];
 
     //This is a hack until c++0x is available enough to use initializer lists.
     TurnInstructionsClass(){
@@ -59,6 +60,18 @@ struct TurnInstructionsClass {
         TurnStrings[11] = "Enter round-about";
         TurnStrings[12] = "Leave round-about";
         TurnStrings[13] = "Stay on round-about";
+
+        Ordinals[0]     = "zeroth";
+        Ordinals[1]     = "first";
+        Ordinals[2]     = "second";
+        Ordinals[3]     = "third";
+        Ordinals[4]     = "fourth";
+        Ordinals[5]     = "fifth";
+        Ordinals[6]     = "sixth";
+        Ordinals[7]     = "seventh";
+        Ordinals[8]     = "eighth";
+        Ordinals[9]     = "nineth";
+        Ordinals[10]     = "tenth";
     };
 
     static inline double GetTurnDirectionOfInstruction( const double angle ) {

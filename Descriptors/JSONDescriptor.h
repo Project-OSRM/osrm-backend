@@ -105,16 +105,14 @@ public:
                     if(0 != prefixSumOfNecessarySegments)
                         reply.content += ",";
                     reply.content += "[\"";
-                    INFO("INstruction: " << segment.turnInstruction);
-                    if(TurnInstructions.StayOnRoundAbout == segment.turnInstruction){
-                        INFO("Staying on roundabout");
-                        ++leaveAtExit;
-                    }
+                    INFO("Instruction: " << segment.turnInstruction);
+                    reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
                     if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
-                        INFO("Exiting at exit " << leaveAtExit);
+                        reply.content += " at ";
+                        reply.content += TurnInstructions.Ordinals[leaveAtExit+1];
+                        reply.content += " exit";
                         leaveAtExit = 0;
                     }
-                    reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
                     reply.content += "\",\"";
                     reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
                     reply.content += "\",";
@@ -130,6 +128,8 @@ public:
                     //TODO: fix heading
                     reply.content += "\",\"NE\",22.5";
                     reply.content += "]";
+                } else if(TurnInstructions.StayOnRoundAbout == segment.turnInstruction) {
+                    ++leaveAtExit;
                 }
                 if(segment.necessary)
                     ++prefixSumOfNecessarySegments;
