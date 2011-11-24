@@ -145,13 +145,10 @@ void EdgeBasedGraphFactory::Run() {
                         newEdge.source = edgeBasedSource;
                         newEdge.target = edgeBasedTarget;
 
-                        //Todo: incorporate turn costs
-                        /* double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
-                        double delta = std::min(_nodeBasedGraph->GetEdgeData(e1).distance, _nodeBasedGraph->GetEdgeData(e2).distance);
-                        double radius = std::tan(angle/2.) * delta/2.;
-                        double max_v = std::sqrt(0.31*radius);
-                        */
-                        newEdge.data.distance = _nodeBasedGraph->GetEdgeData(e1).distance /*+ (int)max_v*/;
+                        //incorporate turn costs, this is just a simple model and can (read: must) be extended
+                        double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+
+                        newEdge.data.distance = (int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
                         newEdge.data.forward = true;
                         newEdge.data.backward = false;
                         newEdge.data.via = v;
