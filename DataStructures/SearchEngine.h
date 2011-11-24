@@ -95,7 +95,7 @@ public:
 
         InitializeThreadLocalStorageIfNecessary();
         NodeID middle = ( NodeID ) UINT_MAX;
-
+        bool stOnSameEdge = false;
         //Handling the special case that origin and destination are on same edge and that the order is correct.
         if(phantomNodes.PhantomsAreOnSameNodeBasedEdge()){
             INFO("TODO: Start and target are on same edge, bidirected: " << (phantomNodes.startPhantom.isBidirected() && phantomNodes.targetPhantom.isBidirected() ? "yes": "no"));
@@ -109,6 +109,8 @@ public:
                 int weight = std::abs(phantomNodes.startPhantom.weight1 - phantomNodes.targetPhantom.weight1);
                 INFO("Weight is : " << weight);
                 return weight;
+            } else {
+                stOnSameEdge = true;
             }
         }
 
@@ -130,10 +132,10 @@ public:
 
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
             if(_forwardHeap->Size() > 0){
-                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound);
+                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, stOnSameEdge);
             }
             if(_backwardHeap->Size() > 0){
-                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound);
+                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, stOnSameEdge);
             }
         }
         //        INFO("bidirectional search iteration ended: " << _forwardHeap->Size() << "," << _backwardHeap->Size() << ", dist: " << _upperbound);
@@ -234,10 +236,10 @@ public:
         return GetEscapedNameForNameID(nameID);
     }
 private:
-    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound) {
+    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const bool stOnSameEdge) {
         const NodeID node = _forwardHeap->DeleteMin();
         const int distance = _forwardHeap->GetKey(node);
-        if(_backwardHeap->WasInserted(node) && (distance > 0) ){
+        if(_backwardHeap->WasInserted(node) && (!stOnSameEdge || distance > 0) ){
             const int newDistance = _backwardHeap->GetKey(node) + distance;
             if(newDistance < *_upperbound){
                 *middle = node;
