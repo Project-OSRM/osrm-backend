@@ -48,7 +48,7 @@ private:
     static HeapPtr _backwardHeap;
     inline double absDouble(double input) { if(input < 0) return input*(-1); else return input;}
 public:
-    SearchEngine(GraphT * g, NodeInformationHelpDesk * nh, vector<string> * n = new vector<string>()) : _graph(g), nodeHelpDesk(nh), _names(n) {}
+    SearchEngine(GraphT * g, NodeInformationHelpDesk * nh, std::vector<string> * n = new std::vector<string>()) : _graph(g), nodeHelpDesk(nh), _names(n) {}
     ~SearchEngine() {}
 
     inline const void GetCoordinatesForNodeID(NodeID id, _Coordinate& result) const {
@@ -68,7 +68,7 @@ public:
             _backwardHeap->Clear();
     }
 
-    int ComputeRoute(PhantomNodes & phantomNodes, vector<_PathData> & path) {
+    int ComputeRoute(PhantomNodes & phantomNodes, std::vector<_PathData> & path) {
         int _upperbound = INT_MAX;
         if(!phantomNodes.AtLeastOnePhantomNodeIsUINTMAX())
             return _upperbound;
@@ -78,36 +78,26 @@ public:
         bool stOnSameEdge = false;
         //Handling the special case that origin and destination are on same edge and that the order is correct.
         if(phantomNodes.PhantomsAreOnSameNodeBasedEdge()){
-            INFO("TODO: Start and target are on same edge, bidirected: " << (phantomNodes.startPhantom.isBidirected() && phantomNodes.targetPhantom.isBidirected() ? "yes": "no"));
-
             if(phantomNodes.startPhantom.isBidirected() && phantomNodes.targetPhantom.isBidirected()) {
-                //TODO: Hier behandeln, dass Start und Ziel auf der gleichen Originalkante liegen
                 int weight = std::abs(phantomNodes.startPhantom.weight1 - phantomNodes.targetPhantom.weight1);
-                INFO("Weight is : " << weight);
                 return weight;
             } else if(phantomNodes.startPhantom.weight1 <= phantomNodes.targetPhantom.weight1){
                 int weight = std::abs(phantomNodes.startPhantom.weight1 - phantomNodes.targetPhantom.weight1);
-                INFO("Weight is : " << weight);
                 return weight;
             } else {
                 stOnSameEdge = true;
             }
         }
 
-        double time1 = get_timestamp();
         //insert start and/or target node of start edge
         _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, -phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.edgeBasedNode);
-        //        INFO("[FORW] Inserting node " << phantomNodes.startPhantom.edgeBasedNode << " at distance " << -phantomNodes.startPhantom.weight1);
         if(phantomNodes.startPhantom.isBidirected() ) {
             _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
-            //        INFO("[FORW] Inserting node " << phantomNodes.startPhantom.edgeBasedNode+1 << " at distance " << -phantomNodes.startPhantom.weight2);
         }
         //insert start and/or target node of target edge id
         _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, -phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode);
-        //        INFO("[BACK] Inserting node " << phantomNodes.targetPhantom.edgeBasedNode << " at distance " << -phantomNodes.targetPhantom.weight1);
         if(phantomNodes.targetPhantom.isBidirected() ) {
             _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, -phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode+1);
-            //            INFO("[BACK] Inserting node " << phantomNodes.targetPhantom.edgeBasedNode+1 << " at distance " << -phantomNodes.targetPhantom.weight2);
         }
 
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
@@ -118,8 +108,6 @@ public:
                 _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, stOnSameEdge);
             }
         }
-        //        INFO("bidirectional search iteration ended: " << _forwardHeap->Size() << "," << _backwardHeap->Size() << ", dist: " << _upperbound);
-        double time2 = get_timestamp();
         if ( _upperbound == INT_MAX ) {
             return _upperbound;
         }
@@ -129,29 +117,25 @@ public:
             pathNode = _forwardHeap->GetData(pathNode).parent;
             packedPath.push_front(pathNode);
         }
-        //        INFO("Finished getting packed forward path: " << packedPath.size());
         packedPath.push_back(middle);
         pathNode = middle;
         while(phantomNodes.targetPhantom.edgeBasedNode != pathNode && (!phantomNodes.targetPhantom.isBidirected() || phantomNodes.targetPhantom.edgeBasedNode+1 != pathNode)) {
             pathNode = _backwardHeap->GetData(pathNode).parent;
             packedPath.push_back(pathNode);
         }
-        //        INFO("Finished getting packed path: " << packedPath.size());
         for(deque<NodeID>::size_type i = 0;i < packedPath.size() - 1;i++){
             _UnpackEdge(packedPath[i], packedPath[i + 1], path);
         }
-        double time3 = get_timestamp();
-        INFO("Path computed in " << (time2-time1)*1000 << "msec, unpacked in " << (time3-time2)*1000 << "msec");
 
         return _upperbound;
     }
 
-    inline bool FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) {
+    inline bool FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) const {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
         return true;
     }
 
-    inline bool FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result) {
+    inline bool FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result) const {
         return nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
     }
 
@@ -180,7 +164,7 @@ public:
         return GetEscapedNameForNameID(nameID);
     }
 private:
-    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const bool stOnSameEdge) {
+    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const bool stOnSameEdge) const {
         const NodeID node = _forwardHeap->DeleteMin();
         const int distance = _forwardHeap->GetKey(node);
         if(_backwardHeap->WasInserted(node) && (!stOnSameEdge || distance > 0) ){
@@ -239,7 +223,7 @@ private:
         }
     }
 
-    inline bool _UnpackEdge(const NodeID source, const NodeID target, std::vector<_PathData> & path) {
+    inline bool _UnpackEdge(const NodeID source, const NodeID target, std::vector<_PathData> & path) const {
         assert(source != target);
         //find edge first.
         typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
@@ -260,13 +244,11 @@ private:
                     smallestWeight = weight;
                 }
             }
-
         }
 
         assert(smallestWeight != INT_MAX);
 
         const EdgeData& ed = _graph->GetEdgeData(smallestEdge);
-        //		INFO( (ed.shortcut ? "SHRT: " : "ORIG: ") << ed.distance << "," << ed.via);
         if(ed.shortcut) {//unpack
             const NodeID middle = ed.via;
             _UnpackEdge(source, middle, path);
