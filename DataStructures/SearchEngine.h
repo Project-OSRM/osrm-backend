@@ -36,26 +36,6 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p) { }
 };
 
-struct _Statistics {
-    _Statistics () : insertedNodes(0), stalledNodes(0), meetingNodes(0), deleteMins(0), decreasedNodes(0), oqf(0), eqf(0), df(0), preprocTime(0) {};
-    void Reset() {
-        insertedNodes = 0;
-        stalledNodes = 0;
-        meetingNodes = 0;
-        deleteMins = 0;
-        decreasedNodes = 0;
-    }
-    unsigned insertedNodes;
-    unsigned stalledNodes;
-    unsigned meetingNodes;
-    unsigned deleteMins;
-    unsigned decreasedNodes;
-    unsigned oqf;
-    unsigned eqf;
-    unsigned df;
-    double preprocTime;
-};
-
 typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _HeapData > > HeapPtr;
 
 template<class EdgeData, class GraphT>
@@ -166,42 +146,6 @@ public:
         return _upperbound;
     }
 
-    unsigned int ComputeDistanceBetweenNodes(NodeID start, NodeID target) {
-        InitializeThreadLocalStorageIfNecessary();
-        NodeID middle(UINT_MAX);
-        int _upperbound = INT_MAX;
-        _forwardHeap->Insert(start, 0, start);
-        _backwardHeap->Insert(target, 0, target);
-        while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
-            if(_forwardHeap->Size() > 0){
-                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound);
-            }
-            if(_backwardHeap->Size() > 0){
-                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound);
-            }
-        }
-        return _upperbound;
-    }
-
-    unsigned int ComputeDistanceBetweenNodesWithStats(NodeID start, NodeID target, _Statistics & stats) {
-        InitializeThreadLocalStorageIfNecessary();
-        NodeID middle(UINT_MAX);
-        int _upperbound = INT_MAX;
-        _forwardHeap->Insert(start, 0, start);
-        _backwardHeap->Insert(target, 0, target);
-        stats.insertedNodes += 2;
-        while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
-            if(_forwardHeap->Size() > 0){
-                _RoutingStepWithStats(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, stats);
-            }
-            if(_backwardHeap->Size() > 0){
-                _RoutingStepWithStats(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, stats);
-            }
-        }
-
-        return _upperbound;
-    }
-
     inline bool FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
         return true;
@@ -289,58 +233,6 @@ private:
                 else if ( toDistance < _forwardHeap->GetKey( to ) ) {
                     _forwardHeap->GetData( to ).parent = node;
                     _forwardHeap->DecreaseKey( to, toDistance );
-                    //new parent
-                }
-            }
-        }
-    }
-
-    inline void _RoutingStepWithStats(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, _Statistics & stats) {
-        const NodeID node = _forwardHeap->DeleteMin();
-        stats.deleteMins++;
-        const unsigned int distance = _forwardHeap->GetKey(node);
-        if(_backwardHeap->WasInserted(node) && (distance > 0)){
-            const unsigned int newDistance = _backwardHeap->GetKey(node) + distance;
-            if(newDistance < *_upperbound){
-                *middle = node;
-                *_upperbound = newDistance;
-            }
-        }
-
-        if(distance > *_upperbound) {
-            stats.meetingNodes++;
-            _forwardHeap->DeleteAll();
-            return;
-        }
-        for ( typename GraphT::EdgeIterator edge = _graph->BeginEdges( node ); edge < _graph->EndEdges(node); edge++ ) {
-            const EdgeData& ed = _graph->GetEdgeData(edge);
-            const NodeID to = _graph->GetTarget(edge);
-            const EdgeWeight edgeWeight = ed.distance;
-
-            assert( edgeWeight > 0 );
-            const int toDistance = distance + edgeWeight;
-
-            //Stalling
-            if(_forwardHeap->WasInserted( to )) {
-                if(!forwardDirection ? ed.forward : ed.backward) {
-                    if(_forwardHeap->GetKey( to ) + edgeWeight < distance) {
-                        stats.stalledNodes++;
-                        return;
-                    }
-                }
-            }
-
-            if(forwardDirection ? ed.forward : ed.backward ) {
-                //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !_forwardHeap->WasInserted( to ) ) {
-                    _forwardHeap->Insert( to, toDistance, node );
-                    stats.insertedNodes++;
-                }
-                //Found a shorter Path -> Update distance
-                else if ( toDistance < _forwardHeap->GetKey( to ) ) {
-                    _forwardHeap->GetData( to ).parent = node;
-                    _forwardHeap->DecreaseKey( to, toDistance );
-                    stats.decreasedNodes++;
                     //new parent
                 }
             }
