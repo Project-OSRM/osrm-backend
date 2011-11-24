@@ -95,24 +95,35 @@ public:
 
         InitializeThreadLocalStorageIfNecessary();
         NodeID middle = ( NodeID ) UINT_MAX;
+
+        //Handling the special case that origin and destination are on same edge and that the order is correct.
         if(phantomNodes.PhantomsAreOnSameNodeBasedEdge()){
-            //TODO: Hier behandeln, dass Start und Ziel auf der gleichen Originalkante liegen
-            INFO("TODO: Start and target are on same edge")
-                                    return _upperbound;
+            INFO("TODO: Start and target are on same edge, bidirected: " << (phantomNodes.startPhantom.isBidirected() && phantomNodes.targetPhantom.isBidirected() ? "yes": "no"));
+
+            if(phantomNodes.startPhantom.isBidirected() && phantomNodes.targetPhantom.isBidirected()) {
+                //TODO: Hier behandeln, dass Start und Ziel auf der gleichen Originalkante liegen
+                int weight = std::abs(phantomNodes.startPhantom.weight1 - phantomNodes.targetPhantom.weight1);
+                INFO("Weight is : " << weight);
+                return weight;
+            } else if(phantomNodes.startPhantom.weight1 <= phantomNodes.targetPhantom.weight1){
+                int weight = std::abs(phantomNodes.startPhantom.weight1 - phantomNodes.targetPhantom.weight1);
+                INFO("Weight is : " << weight);
+                return weight;
+            }
         }
+
         double time1 = get_timestamp();
         //insert start and/or target node of start edge
         _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, -phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.edgeBasedNode);
         //        INFO("[FORW] Inserting node " << phantomNodes.startPhantom.edgeBasedNode << " at distance " << -phantomNodes.startPhantom.weight1);
-        if(phantomNodes.startPhantom.isBidirected) {
+        if(phantomNodes.startPhantom.isBidirected() ) {
             _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
-            //            INFO("[FORW] Inserting node " << phantomNodes.startPhantom.edgeBasedNode+1 << " at distance " << -phantomNodes.startPhantom.weight2);
+            //        INFO("[FORW] Inserting node " << phantomNodes.startPhantom.edgeBasedNode+1 << " at distance " << -phantomNodes.startPhantom.weight2);
         }
-
         //insert start and/or target node of target edge id
         _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, -phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode);
         //        INFO("[BACK] Inserting node " << phantomNodes.targetPhantom.edgeBasedNode << " at distance " << -phantomNodes.targetPhantom.weight1);
-        if(phantomNodes.targetPhantom.isBidirected) {
+        if(phantomNodes.targetPhantom.isBidirected() ) {
             _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, -phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode+1);
             //            INFO("[BACK] Inserting node " << phantomNodes.targetPhantom.edgeBasedNode+1 << " at distance " << -phantomNodes.targetPhantom.weight2);
         }
@@ -132,14 +143,14 @@ public:
         }
         NodeID pathNode = middle;
         deque<NodeID> packedPath;
-        while(phantomNodes.startPhantom.edgeBasedNode != pathNode && (!phantomNodes.startPhantom.isBidirected || phantomNodes.startPhantom.edgeBasedNode+1 != pathNode) ) {
+        while(phantomNodes.startPhantom.edgeBasedNode != pathNode && (!phantomNodes.startPhantom.isBidirected() || phantomNodes.startPhantom.edgeBasedNode+1 != pathNode) ) {
             pathNode = _forwardHeap->GetData(pathNode).parent;
             packedPath.push_front(pathNode);
         }
         //        INFO("Finished getting packed forward path: " << packedPath.size());
         packedPath.push_back(middle);
         pathNode = middle;
-        while(phantomNodes.targetPhantom.edgeBasedNode != pathNode && (!phantomNodes.targetPhantom.isBidirected || phantomNodes.targetPhantom.edgeBasedNode+1 != pathNode)) {
+        while(phantomNodes.targetPhantom.edgeBasedNode != pathNode && (!phantomNodes.targetPhantom.isBidirected() || phantomNodes.targetPhantom.edgeBasedNode+1 != pathNode)) {
             pathNode = _backwardHeap->GetData(pathNode).parent;
             packedPath.push_back(pathNode);
         }
@@ -226,8 +237,7 @@ private:
     inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound) {
         const NodeID node = _forwardHeap->DeleteMin();
         const int distance = _forwardHeap->GetKey(node);
-        //        INFO((forwardDirection ? "[FORW]" : "[BACK]") << " settling " << node << " with distance " << distance);
-        if(_backwardHeap->WasInserted(node)){
+        if(_backwardHeap->WasInserted(node) && (distance > 0) ){
             const int newDistance = _backwardHeap->GetKey(node) + distance;
             if(newDistance < *_upperbound){
                 *middle = node;
@@ -287,7 +297,7 @@ private:
         const NodeID node = _forwardHeap->DeleteMin();
         stats.deleteMins++;
         const unsigned int distance = _forwardHeap->GetKey(node);
-        if(_backwardHeap->WasInserted(node)){
+        if(_backwardHeap->WasInserted(node) && (distance > 0)){
             const unsigned int newDistance = _backwardHeap->GetKey(node) + distance;
             if(newDistance < *_upperbound){
                 *middle = node;

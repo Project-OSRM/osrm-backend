@@ -307,7 +307,6 @@ public:
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
-                resultNode.isBidirected = true;
                 resultNode.weight2 = candidate.weight;
                 /* if(resultNode.weight1 != resultNode.weight2) {
                     ERR("w1: " << resultNode.weight1 << ", w2: " << resultNode.weight2);
@@ -345,7 +344,7 @@ public:
         assert(ratio >= 0 && ratio <=1);
 //        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
-        if(resultNode.isBidirected) {
+        if(INT_MAX != resultNode.weight2) {
             resultNode.weight2 *= (1-ratio);
 //            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }

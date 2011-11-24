@@ -33,6 +33,7 @@ typedef stxxl::vector<string> STXXLStringVector;
 typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
 typedef stxxl::vector<_WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
 
+
 struct STXXLContainers {
     STXXLNodeIDVector           usedNodeIDs;
     STXXLNodeVector             allNodes;
@@ -104,6 +105,7 @@ public:
         std::string access( w.keyVals.Find("access") );
         std::string accessClass( w.keyVals.Find(settings.accessTag) );
         std::string man_made( w.keyVals.Find("man_made") );
+        std::string barrier( w.keyVals.Find("barrier") );
 
         //Save the name of the way if it has one, ref has precedence over name tag.
         if ( 0 < ref.length() )

@@ -116,7 +116,6 @@ public:
                             reply.content += ",";
 
                         reply.content += "[\"";
-                        INFO("Instruction: " << segment.turnInstruction);
                         if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
                             reply.content += TurnInstructions.TurnStrings[TurnInstructions.EnterRoundAbout];
                             reply.content += " and leave at ";

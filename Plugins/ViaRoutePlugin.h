@@ -139,7 +139,7 @@ public:
             std::vector< _PathData > path;
             distance = searchEngine->ComputeRoute(segmentPhantomNodes, path);
 
-            if(UINT_MAX == distance ) {
+            if(INT_MAX == distance ) {
                 INFO( "Error occurred, single path not found" );
             }
 
