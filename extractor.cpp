@@ -17,6 +17,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
+
+#ifdef _OPENMP
+#include <omp.h>
+#else
+int omp_get_num_procs() { return 1; }
+int omp_get_max_threads() { return 1; }
+int omp_get_thread_num() { return 0; }
+int omp_set_num_threads(int i) {}
+#endif
+
 #ifdef STXXL_VERBOSE_LEVEL
 #undef STXXL_VERBOSE_LEVEL
 #endif
