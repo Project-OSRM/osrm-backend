@@ -37,6 +37,11 @@ private:
     DescriptionFactory descriptionFactory;
     std::string tmp;
     _Coordinate current;
+    struct {
+        int startIndex;
+        int nameID;
+        int leaveAtExit;
+    } roundAbout;
 
 public:
     JSONDescriptor() {}
@@ -97,39 +102,48 @@ public:
             //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
             //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
             unsigned prefixSumOfNecessarySegments = 0;
-            unsigned leaveAtExit = 0;
+            roundAbout.leaveAtExit = 0;
+            roundAbout.nameID = 0;
             std::string tmpDist, tmpLength, tmp;
             //Fetch data from Factory and generate a string from it.
             BOOST_FOREACH(SegmentInformation segment, descriptionFactory.pathDescription) {
                 if(TurnInstructions.TurnIsNecessary( segment.turnInstruction) ) {
-                    if(0 != prefixSumOfNecessarySegments)
+                    if(TurnInstructions.EnterRoundAbout == segment.turnInstruction) {
+                        roundAbout.nameID = segment.nameID;
+                        roundAbout.startIndex = prefixSumOfNecessarySegments;
+                    } else {
+                        if(0 != prefixSumOfNecessarySegments)
+                            reply.content += ",";
+
+                        reply.content += "[\"";
+                        INFO("Instruction: " << segment.turnInstruction);
+                        if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
+                            reply.content += TurnInstructions.TurnStrings[TurnInstructions.EnterRoundAbout];
+                            reply.content += " and leave at ";
+                            reply.content += TurnInstructions.Ordinals[roundAbout.leaveAtExit+1];
+                            reply.content += " exit";
+                            roundAbout.leaveAtExit = 0;
+                        } else {
+                            reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
+                        }
+                        reply.content += "\",\"";
+                        reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
+                        reply.content += "\",";
+                        intToString(segment.length, tmpDist);
+                        reply.content += tmpDist;
                         reply.content += ",";
-                    reply.content += "[\"";
-                    INFO("Instruction: " << segment.turnInstruction);
-                    reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
-                    if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
-                        reply.content += " at ";
-                        reply.content += TurnInstructions.Ordinals[leaveAtExit+1];
-                        reply.content += " exit";
-                        leaveAtExit = 0;
+                        intToString(prefixSumOfNecessarySegments, tmpLength);
+                        reply.content += tmpLength;
+                        reply.content += ",";
+                        intToString(segment.duration, tmp);
+                        reply.content += ",\"";
+                        reply.content += tmpLength;
+                        //TODO: fix heading
+                        reply.content += "\",\"NE\",22.5";
+                        reply.content += "]";
                     }
-                    reply.content += "\",\"";
-                    reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
-                    reply.content += "\",";
-                    intToString(segment.length, tmpDist);
-                    reply.content += tmpDist;
-                    reply.content += ",";
-                    intToString(prefixSumOfNecessarySegments, tmpLength);
-                    reply.content += tmpLength;
-                    reply.content += ",";
-                    intToString(segment.duration, tmp);
-                    reply.content += ",\"";
-                    reply.content += tmpLength;
-                    //TODO: fix heading
-                    reply.content += "\",\"NE\",22.5";
-                    reply.content += "]";
                 } else if(TurnInstructions.StayOnRoundAbout == segment.turnInstruction) {
-                    ++leaveAtExit;
+                    ++roundAbout.leaveAtExit;
                 }
                 if(segment.necessary)
                     ++prefixSumOfNecessarySegments;
