@@ -19,11 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 */
 
-#ifdef _OPENMP
-#include <omp.h>
-#else
 const int omp_get_num_procs() { return 1; }
 const int omp_get_max_threads() { return 1; }
 const int omp_get_thread_num() { return 0; }
 const int omp_set_num_threads(int i) {}
-#endif

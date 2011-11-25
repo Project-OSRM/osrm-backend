@@ -24,7 +24,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#include "openmp.h"
+#ifdef _OPENMP
+#include <omp.h>  	
+#else
+#include "Util/OpenMPReplacement.h"
+#endif
 
 #include "Server/ServerConfiguration.h"
 #include "Server/ServerFactory.h"
