@@ -241,7 +241,6 @@ public:
             _NodePartitionor functor;
             const std::vector < std::pair < NodeID, bool > >::const_iterator first = stable_partition( remainingNodes.begin(), remainingNodes.end(), functor );
             const int firstIndependent = first - remainingNodes.begin();
-
             //contract independent nodes
 #pragma omp parallel
             {
@@ -254,7 +253,6 @@ public:
                 }
                 std::sort( data->insertedEdges.begin(), data->insertedEdges.end() );
             }
-
 #pragma omp parallel
             {
                 _ThreadData* data = threadData[omp_get_thread_num()];
@@ -264,7 +262,6 @@ public:
                     _DeleteIncomingEdges( data, x );
                 }
             }
-
             //insert new edges
             for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
                 _ThreadData& data = *threadData[threadNum];
@@ -274,7 +271,6 @@ public:
                 }
                 std::vector< _ImportEdge >().swap( data.insertedEdges );
             }
-
             //update priorities
 #pragma omp parallel
             {
@@ -285,7 +281,6 @@ public:
                     _UpdateNeighbours( &nodePriority, &nodeData, data, x );
                 }
             }
-
             //remove contracted nodes from the pool
             levelID += last - firstIndependent;
             remainingNodes.resize( firstIndependent );
@@ -363,7 +358,7 @@ private:
         }
     }
 
-    double _Evaluate( _ThreadData* data, _PriorityData* nodeData, NodeID node ){
+    double _Evaluate( _ThreadData* const data, _PriorityData* const nodeData, NodeID node ){
         _ContractionInformation stats;
 
         //perform simulated contraction
@@ -377,14 +372,16 @@ private:
 
     template< bool Simulate > bool _Contract( _ThreadData* data, NodeID node, _ContractionInformation* stats = NULL ) {
         _Heap& heap = data->heap;
+        int insertedEdgesSize = data->insertedEdges.size();
+        std::vector< _ImportEdge >& insertedEdges = data->insertedEdges;
+
         for ( _DynamicGraph::EdgeIterator inEdge = _graph->BeginEdges( node ), endInEdges = _graph->EndEdges( node ); inEdge != endInEdges; ++inEdge ) {
             const _EdgeBasedContractorEdgeData& inData = _graph->GetEdgeData( inEdge );
             const NodeID source = _graph->GetTarget( inEdge );
             if ( Simulate ) {
                 assert( stats != NULL );
-                unsigned factor = (inData.forward && inData.backward ? 2 : 1 );
-                stats->edgesDeleted+=factor;
-                stats->originalEdgesDeleted += factor*inData.originalEdges;
+                stats->edgesDeleted++;
+                stats->originalEdgesDeleted += inData.originalEdges;
             }
             if ( !inData.backward )
                 continue;
@@ -402,7 +399,7 @@ private:
                     continue;
                 const NodeID target = _graph->GetTarget( outEdge );
                 const int pathDistance = inData.distance + outData.distance;
-                maxDistance = (std::max)( maxDistance, pathDistance );
+                maxDistance = std::max( maxDistance, pathDistance );
                 if ( !heap.WasInserted( target ) ) {
                     heap.Insert( target, pathDistance, _HeapData( true ) );
                     numTargets++;
@@ -427,8 +424,8 @@ private:
                 if ( pathDistance <= distance ) {
                     if ( Simulate ) {
                         assert( stats != NULL );
-                        stats->edgesAdded++;
-                        stats->originalEdgesAdded += ( outData.originalEdges + inData.originalEdges );
+                        stats->edgesAdded+=2;
+                        stats->originalEdgesAdded += 2* ( outData.originalEdges + inData.originalEdges );
                     } else {
                         _ImportEdge newEdge;
                         newEdge.source = source;
@@ -440,21 +437,43 @@ private:
                         newEdge.data.shortcut = true;
                         newEdge.data.turnInstruction = inData.turnInstruction;
                         newEdge.data.originalEdges = outData.originalEdges + inData.originalEdges;
-
-                        data->insertedEdges.push_back( newEdge );
+                        insertedEdges.push_back( newEdge );
                         std::swap( newEdge.source, newEdge.target );
                         newEdge.data.forward = false;
                         newEdge.data.backward = true;
-                        data->insertedEdges.push_back( newEdge );
+                        insertedEdges.push_back( newEdge );
                     }
                 }
             }
+        }
+        if ( !Simulate ) {
+            for ( int i = insertedEdgesSize, iend = insertedEdges.size(); i < iend; i++ ) {
+                bool found = false;
+                for ( int other = i + 1 ; other < iend ; ++other ) {
+                    if ( insertedEdges[other].source != insertedEdges[i].source )
+                        continue;
+                    if ( insertedEdges[other].target != insertedEdges[i].target )
+                        continue;
+                    if ( insertedEdges[other].data.distance != insertedEdges[i].data.distance )
+                        continue;
+                    if ( insertedEdges[other].data.shortcut != insertedEdges[i].data.shortcut )
+                        continue;
+                    insertedEdges[other].data.forward |= insertedEdges[i].data.forward;
+                    insertedEdges[other].data.backward |= insertedEdges[i].data.backward;
+                    found = true;
+                    break;
+                }
+                if ( !found )
+                    insertedEdges[insertedEdgesSize++] = insertedEdges[i];
+            }
+            insertedEdges.resize( insertedEdgesSize );
         }
         return true;
     }
 
     bool _DeleteIncomingEdges( _ThreadData* data, NodeID node ) {
-        std::vector < NodeID > neighbours;
+        std::vector< NodeID >& neighbours = data->neighbours;
+        neighbours.clear();
 
         //find all neighbours
         for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( node ) ; e < _graph->EndEdges( node ) ; ++e ) {
@@ -475,8 +494,9 @@ private:
         return true;
     }
 
-    bool _UpdateNeighbours( std::vector< double >* priorities, std::vector< _PriorityData >* nodeData, _ThreadData* data, NodeID node ) {
-        std::vector < NodeID > neighbours;
+    bool _UpdateNeighbours( std::vector< double >* priorities, std::vector< _PriorityData >* const nodeData, _ThreadData* const data, NodeID node ) {
+        std::vector< NodeID >& neighbours = data->neighbours;
+        neighbours.clear();
 
         //find all neighbours
         for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( node ) ; e < _graph->EndEdges( node ) ; ++e ) {
