@@ -25,8 +25,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #else
 #include <algorithm>
 #endif
+#include <boost/shared_ptr.hpp>
+
 #include "../DataStructures/DynamicGraph.h"
-#include "../DataStructures/LevelInformation.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/BinaryHeap.h"
 #include <ctime>
@@ -107,7 +108,7 @@ public:
 
             edge.data.distance = (std::max)((int)i->weight(), 1 );
             assert( edge.data.distance > 0 );
-#ifdef DEBUG
+#ifndef NDEBUG
             if ( edge.data.distance > 24 * 60 * 60 * 10 ) {
                 cout << "Edge Weight too large -> May lead to invalid CH" << endl;
                 continue;
@@ -126,7 +127,7 @@ public:
             edge.data.backward = i->isForward();
             edges.push_back( edge );
         }
-        //        std::vector< InputEdge >().swap( inputEdges ); //free memory
+        std::vector< InputEdge >().swap( inputEdges ); //free memory
 #ifdef _GLIBCXX_PARALLEL
         __gnu_parallel::sort( edges.begin(), edges.end() );
 #else
@@ -179,17 +180,12 @@ public:
             }
         }
         cout << "ok" << endl << "merged " << edges.size() - edge << " edges out of " << edges.size() << endl;
-        INFO("Contractor holds " << edge << " edges");
         edges.resize( edge );
-        _graph = new _DynamicGraph( nodes, edges );
+        _graph.reset( new _DynamicGraph( nodes, edges ) );
         std::vector< _ImportEdge >().swap( edges );
-        _levelInformation = new LevelInformation();
     }
 
-    ~Contractor() {
-        delete _graph;
-        delete _levelInformation;
-    }
+    ~Contractor() { }
 
     int GetNumberOfLevels() const { return maxDepth; }
 
@@ -253,7 +249,7 @@ public:
 #pragma omp parallel for schedule ( guided )
             for ( int i = 0; i < last; ++i ) {
                 const NodeID node = remainingNodes[i].first;
-                remainingNodes[i].second = _IsIndependent( _graph, nodePriority, nodeData, node );
+                remainingNodes[i].second = _IsIndependent( nodePriority, nodeData, node );
             }
             _NodePartitionor functor;
             const std::vector < std::pair < NodeID, bool > >::const_iterator first = stable_partition( remainingNodes.begin(), remainingNodes.end(), functor );
@@ -328,10 +324,6 @@ public:
             p.printStatus(levelID);
         }
 
-        for ( _DynamicGraph::NodeIterator n = 0; n < _graph->GetNumberOfNodes(); n++ ) {
-            _levelInformation->Add(nodeData[n].depth, n);
-        }
-
         for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
             delete threadData[threadNum];
         }
@@ -362,10 +354,6 @@ public:
                 edges.push_back( newEdge );
             }
         }
-    }
-
-    LevelInformation * GetLevelInformation() {
-        return _levelInformation;
     }
 
 private:
@@ -579,7 +567,7 @@ private:
         return true;
     }
 
-    bool _IsIndependent( const _DynamicGraph* _graph, const std::vector< double >& priorities, const std::vector< _PriorityData >& nodeData, NodeID node ) {
+    bool _IsIndependent( const std::vector< double >& priorities, const std::vector< _PriorityData >& nodeData, NodeID node ) {
         const double priority = priorities[node];
 
         std::vector< NodeID > neighbours;
@@ -621,8 +609,7 @@ private:
         return true;
     }
 
-    LevelInformation * _levelInformation;
-    _DynamicGraph* _graph;
+    boost::shared_ptr<_DynamicGraph> _graph;
     unsigned edgeQuotionFactor;
     unsigned originalQuotientFactor;
     unsigned depthFactor;
