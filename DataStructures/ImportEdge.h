@@ -92,24 +92,24 @@ public:
         _via(myEdge.data.via),
         _nameID1(myEdge.data.nameID),
         _weight(myEdge.data.distance),
-        forward(myEdge.data.forward),
-        backward(myEdge.data.backward),
+        _forward(myEdge.data.forward),
+        _backward(myEdge.data.backward),
         _turnInstruction(myEdge.data.turnInstruction) { }
 
     /** Default constructor. target and weight are set to 0.*/
     EdgeBasedEdge() :
-        _source(0), _target(0), _via(0), _nameID1(0), _weight(0), forward(0), backward(0), _turnInstruction(0) { assert(false); } //shall not be used.
+        _source(0), _target(0), _via(0), _nameID1(0), _weight(0), _forward(0), _backward(0), _turnInstruction(0) { assert(false); } //shall not be used.
 
-    explicit EdgeBasedEdge(NodeID s, NodeID t, NodeID v, unsigned n1, unsigned n2, EdgeWeight w, bool f, bool b, short ty) :
-            _source(s), _target(t), _via(v), _nameID1(n1), _weight(w), forward(f), backward(b), _turnInstruction(ty) { assert(ty >= 0); }
+    explicit EdgeBasedEdge(NodeID s, NodeID t, NodeID v, unsigned n1, EdgeWeight w, bool f, bool b, short ty) :
+            _source(s), _target(t), _via(v), _nameID1(n1), _weight(w), _forward(f), _backward(b), _turnInstruction(ty) { assert(ty >= 0); }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
     EdgeWeight weight() const {return _weight; }
     NodeID via() const { return _via; }
     short turnInstruction() const { assert(_turnInstruction >= 0); return _turnInstruction; }
-    bool isBackward() const { return backward; }
-    bool isForward() const { return forward; }
+    bool isBackward() const { return _backward; }
+    bool isForward() const { return _forward; }
 
     unsigned getNameIDOfTurnTarget() const { return _nameID1; }
 
@@ -117,10 +117,9 @@ public:
     NodeID _target;
     NodeID _via;
     unsigned _nameID1;
-//    unsigned _nameID2;
     EdgeWeight _weight;
-    bool forward;
-    bool backward;
+    bool _forward;
+    bool _backward;
     short _turnInstruction;
 
 };

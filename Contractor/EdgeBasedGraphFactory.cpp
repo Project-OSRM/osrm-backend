@@ -51,7 +51,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         assert( edge.data.distance > 0 );
         edge.data.shortcut = false;
         edge.data.roundabout = i->isRoundabout();
-        edge.data.middleName.nameID = i->name();
+        edge.data.nameID = i->name();
         edge.data.type = i->type();
         edge.data.forward = i->isForward();
         edge.data.backward = i->isBackward();
@@ -66,7 +66,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         }
     }
 
-    INFO("edges.size()=" << edges.size());
 
 #ifdef _GLIBCXX_PARALLEL
     __gnu_parallel::sort( edges.begin(), edges.end() );
@@ -79,14 +78,12 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
 }
 
 template<>
-void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& edges ) {
+void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& outputEdgeList ) {
 
-    GUARANTEE(0 == edges.size(), "Vector passed to " << __FUNCTION__ << " is not empty");
+    GUARANTEE(0 == outputEdgeList.size(), "Vector passed to EdgeBasedGraphFactory::GetEdgeBasedEdges(..) is not empty");
     GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
 
-    BOOST_FOREACH ( EdgeBasedEdge currentEdge, edgeBasedEdges) {
-        edges.push_back(currentEdge);
-    }
+    edgeBasedEdges.swap(outputEdgeList);
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes) {
@@ -96,8 +93,6 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nod
 
 void EdgeBasedGraphFactory::Run() {
     INFO("Generating Edge based representation of input data");
-
-    _edgeBasedGraph.reset(new _EdgeBasedDynamicGraph(_nodeBasedGraph->GetNumberOfEdges() ) );
 
     std::vector<_Restriction>::iterator restrictionIterator = inputRestrictions.begin();
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
@@ -141,25 +136,21 @@ void EdgeBasedGraphFactory::Run() {
                             ERR("edgeBasedTarget" << edgeBasedTarget << ">" << _nodeBasedGraph->GetNumberOfEdges());
                         }
 
-                        _EdgeBasedEdge newEdge;
-                        newEdge.source = edgeBasedSource;
-                        newEdge.target = edgeBasedTarget;
-
                         //incorporate turn costs, this is just a simple model and can (read: must) be extended
                         double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 
-                        newEdge.data.distance = (int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
-                        newEdge.data.forward = true;
-                        newEdge.data.backward = false;
-                        newEdge.data.via = v;
-                        newEdge.data.nameID = _nodeBasedGraph->GetEdgeData(e2).middleName.nameID;
-                        newEdge.data.turnInstruction = AnalyzeTurn(u, v, w);
-                        //create Edge for NearestNeighborlookup
+                        unsigned distance = (int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
+                        unsigned nameID = _nodeBasedGraph->GetEdgeData(e2).nameID;
+                        short turnInstruction = AnalyzeTurn(u, v, w);
+
+                        //create edge-based graph edge
+                        //EdgeBasedEdge(NodeID s, NodeID t, NodeID v, unsigned n1, EdgeWeight w, bool f, bool b, short ty)
+                        EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
                         EdgeBasedNode currentNode;
 
                         if(_nodeBasedGraph->GetEdgeData(e1).type != 14) {
-                            currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).middleName.nameID;
+                            currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                             currentNode.lat1 = inputNodeInfoList[u].lat;
                             currentNode.lon1 = inputNodeInfoList[u].lon;
                             currentNode.lat2 = inputNodeInfoList[v].lat;
@@ -188,8 +179,8 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     _NodeBasedDynamicGraph::EdgeIterator edge1 = _nodeBasedGraph->FindEdge(u, v);
     _NodeBasedDynamicGraph::EdgeIterator edge2 = _nodeBasedGraph->FindEdge(v, w);
 
-    _NodeBasedDynamicGraph::EdgeData data1 = _nodeBasedGraph->GetEdgeData(edge1);
-    _NodeBasedDynamicGraph::EdgeData data2 = _nodeBasedGraph->GetEdgeData(edge2);
+    _NodeBasedDynamicGraph::EdgeData & data1 = _nodeBasedGraph->GetEdgeData(edge1);
+    _NodeBasedDynamicGraph::EdgeData & data2 = _nodeBasedGraph->GetEdgeData(edge2);
 
     double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 
@@ -214,7 +205,7 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     }
 
     //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
-    if(data1.middleName.nameID == data2.middleName.nameID)
+    if(data1.nameID == data2.nameID)
         return TurnInstructions.NoTurn;
 
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);

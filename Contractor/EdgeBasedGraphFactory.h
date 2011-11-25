@@ -37,21 +37,15 @@
 
 class EdgeBasedGraphFactory {
 private:
-    union _MiddleName {
-        unsigned middle;
-        unsigned nameID;
-    };
-
     struct _NodeBasedEdgeData {
         int distance;
         unsigned edgeBasedNodeID;
-        unsigned originalEdges;
-        bool shortcut;
-        bool forward;
-        bool backward;
-        bool roundabout;
+        unsigned nameID;
+        bool shortcut:1;
+        bool forward:1;
+        bool backward:1;
+        bool roundabout:1;
         short type;
-        _MiddleName middleName;
     } data;
 
     struct _EdgeBasedEdgeData {
@@ -83,16 +77,13 @@ public:
         unsigned weight;
     };
 
-    typedef DynamicGraph< _EdgeBasedEdgeData> _EdgeBasedDynamicGraph;
-    typedef _EdgeBasedDynamicGraph::InputEdge _EdgeBasedEdge;
 private:
     boost::shared_ptr<_NodeBasedDynamicGraph> _nodeBasedGraph;
-    boost::shared_ptr<_EdgeBasedDynamicGraph> _edgeBasedGraph;
 
     std::vector<_Restriction> & inputRestrictions;
     std::vector<NodeInfo> & inputNodeInfoList;
 
-    std::vector<_EdgeBasedEdge> edgeBasedEdges;
+    std::vector<EdgeBasedEdge> edgeBasedEdges;
     std::vector<EdgeBasedNode> edgeBasedNodes;
 
     template<class CoordinateT>
