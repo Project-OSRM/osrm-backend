@@ -147,17 +147,19 @@ static void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& 
     GetIndicesByBresenhamsAlgorithm(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
 }
 
+static boost::thread_specific_ptr<std::ifstream> localStream;
+
 template<bool WriteAccess = false>
 class NNGrid {
 public:
-    NNGrid() : cellCache(500), fileCache(500) {
+    NNGrid() /*: cellCache(500), fileCache(500)*/ {
         ramIndexTable.resize((1024*1024), UINT_MAX);
         if( WriteAccess) {
             entries = new stxxl::vector<GridEntry>();
         }
     }
 
-    NNGrid(const char* rif, const char* _i, unsigned numberOfThreads = omp_get_num_procs()): cellCache(500), fileCache(500) {
+    NNGrid(const char* rif, const char* _i, unsigned numberOfThreads = omp_get_num_procs()) /*: cellCache(500), fileCache(500) */{
         if(WriteAccess) {
             ERR("Not available in Write mode");
         }
@@ -172,6 +174,9 @@ public:
 
         if (WriteAccess) {
             delete entries;
+        }
+        if(localStream.get() && localStream->is_open()) {
+            localStream->close();
         }
     }
 
@@ -331,22 +336,22 @@ public:
             }
         }
 
-//        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
-//        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
-//        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
-//        assert(!resultNode.isBidirected || (resultNode.weight1 == resultNode.weight2));
-//        if(resultNode.weight1 != resultNode.weight2) {
-//            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
-//            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected ? "yes" : "no"));
-//        }
+        //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
+        //        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
+        //        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
+        //        assert(!resultNode.isBidirected || (resultNode.weight1 == resultNode.weight2));
+        //        if(resultNode.weight1 != resultNode.weight2) {
+        //            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
+        //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected ? "yes" : "no"));
+        //        }
 
         double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
-//        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
+        //        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
             resultNode.weight2 *= (1-ratio);
-//            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
+            //            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }
         return foundNode;
     }
@@ -518,6 +523,7 @@ private:
             counter++;
         }
         vectorWithSameFileIndex.clear();
+        std::vector<GridEntry>().swap(vectorWithSameFileIndex);
         return counter;
     }
 
@@ -545,29 +551,25 @@ private:
                 cellMap.insert(std::make_pair(fileIndex, cellIndex));
             }
         }
-        {
-            std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
-            localStream.seekg(startIndexInFile);
-            localStream.read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
-            localStream.close();
-            assert(cellMap.find(fileIndex) != cellMap.end());
-            if(cellIndex[cellMap.find(fileIndex)->second] == UINT_MAX) {
-                return;
-            }
+        if(!localStream.get() || !localStream->is_open()) {
+            localStream.reset(new std::ifstream(iif.c_str(), std::ios::in | std::ios::binary));
+        }
+        localStream->seekg(startIndexInFile);
+        localStream->read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
+        assert(cellMap.find(fileIndex) != cellMap.end());
+        if(cellIndex[cellMap.find(fileIndex)->second] == UINT_MAX) {
+            return;
         }
         const unsigned position = cellIndex[cellMap.find(fileIndex)->second] + 32*32*sizeof(unsigned) ;
 
-        std::ifstream localStream(iif.c_str(), std::ios::in | std::ios::binary);
-        localStream.seekg(position);
+        localStream->seekg(position);
         _GridEdge gridEdge;
         do {
-            localStream.read((char *)&(gridEdge), sizeof(_GridEdge));
-            if(localStream.eof() || gridEdge.edgeBasedNode == UINT_MAX)
+            localStream->read((char *)&(gridEdge), sizeof(_GridEdge));
+            if(localStream->eof() || gridEdge.edgeBasedNode == UINT_MAX)
                 break;
             result.push_back(gridEdge);
         } while(true);
-        localStream.close();
-
     }
 
     void AddEdge(_GridEdge edge) {
@@ -622,8 +624,8 @@ private:
     stxxl::vector<GridEntry> * entries;
     std::vector<unsigned> ramIndexTable; //4 MB for first level index in RAM
     std::string iif;
-    LRUCache<int,std::vector<unsigned> > cellCache;
-    LRUCache<int,std::vector<_Edge> > fileCache;
+//    LRUCache<int,std::vector<unsigned> > cellCache;
+//    LRUCache<int,std::vector<_Edge> > fileCache;
 };
 }
 
