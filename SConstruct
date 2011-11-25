@@ -171,10 +171,10 @@ env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
 env.Append(CCFLAGS = ['-fopenmp'])
 env.Append(LINKFLAGS = ['-fopenmp'])
 
-env.Program(["extractor.cpp", 'DataStructures/pbf-proto/fileformat.pb.cc', 'DataStructures/pbf-proto/osmformat.pb.cc'])
-env.Program(["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp'])
+env.Program(target = 'osrm-extract', source = ["extractor.cpp", 'DataStructures/pbf-proto/fileformat.pb.cc', 'DataStructures/pbf-proto/osmformat.pb.cc'])
+env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp'])
 env.Append(CCFLAGS = ['-lboost_regex', '-lboost_iostreams', '-lbz2', '-lz', '-lprotobuf'])
 env.Append(LINKFLAGS = ['-lboost_system'])
-env.Program(["routed.cpp", 'Descriptors/DescriptionFactory.cpp'])
+env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp'])
 env = conf.Finish()
 
