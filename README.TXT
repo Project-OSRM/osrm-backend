@@ -6,11 +6,11 @@ installing dependencies and running make should suffice. Make sure the following
 dependencies are installed:
 
  - Boost		1.41+
- - sparsehash   1.4+
- - g++			4.2+ (with warnings and unsupported), 4.4+
+ - sparsehash   	1.4+
+ - g++			4.2+
  - libxml2		2.7+
- - scons 		1.20+
- - stxxl		1.2.1+
+ - scons 		2.10+
+ - stxxl		1.3.1+
 
 Building the binaries is done by using scons. It should check for required
 libraries and header files and report missing ones.The Scons script accepts
@@ -73,17 +73,17 @@ you need to acquire an .osm file. Beware of the world file, because you need
 serious computing power to preprocess it. Start with a smaller country. The
 preprocessing runs in three steps, all done by seperate programs.
 
-'extractNetwork file.osm' extracts the road network of an osm file. This is
+'osrm-extract file.osm' extracts the road network of an osm file. This is
 necessary, because the osm data is not made to support fast routing out of the
 box. The output of the step is a file called 'file.osrm'
 
-'createHierarchy file.osrm' preprocesses the road network and computes additional
+'osrm-prepare file.osrm' preprocesses the road network and computes additional
 information that is exploited later to speed up the path computation. The output
 of this step consists of two file 'file.osrm.hsgr' and 'file.osrm.nodes'. The first
 file is the so-called hierarchy that speeds up the path computation while the
 latter one carries (among other things) geographical information.
 
-'routed' starts the server on TCP Port 5000. The
+'osrm-routed' starts the server on TCP Port 5000. The
 server communicates over http and can be queried by any browser or http-capable
 command line tool. The server responds with KML-formatted output.Assume the 
 server is installed on machine localhost and a map containing the Netherlands 
