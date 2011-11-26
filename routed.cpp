@@ -37,7 +37,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/LocatePlugin.h"
 #include "Plugins/NearestPlugin.h"
 #include "Plugins/ObjectForPluginStruct.h"
-#include "Plugins/RoutePlugin.h"
 #include "Plugins/ViaRoutePlugin.h"
 #include "Util/InputFileUtil.h"
 
