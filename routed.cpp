@@ -24,12 +24,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
-#ifdef _OPENMP
-#include <omp.h>  	
-#else
-#include "Util/OpenMPReplacement.h"
-#endif
-
 #include "Server/ServerConfiguration.h"
 #include "Server/ServerFactory.h"
 
@@ -39,6 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/ObjectForPluginStruct.h"
 #include "Plugins/ViaRoutePlugin.h"
 #include "Util/InputFileUtil.h"
+#include "Util/OpenMPReplacement.h"
 
 #ifndef _WIN32
 #include "Util/LinuxStackTrace.h"

@@ -25,6 +25,7 @@
 #endif
 #include <boost/foreach.hpp>
 
+#include "../Util/OpenMPReplacement.h"
 #include "EdgeBasedGraphFactory.h"
 
 template<>
@@ -39,7 +40,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
 
     std::vector< _NodeBasedEdge > edges;
     edges.reserve( 2 * inputEdges.size() );
-    for ( typename std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
+    for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
         _NodeBasedEdge edge;
         edge.source = i->source();
         edge.target = i->target();

@@ -31,10 +31,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 #include "Contractor.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 class ContractionCleanup {
 private:
 

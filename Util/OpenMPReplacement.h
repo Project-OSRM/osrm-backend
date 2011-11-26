@@ -19,7 +19,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 */
 
-const int omp_get_num_procs() { return 1; }
-const int omp_get_max_threads() { return 1; }
-const int omp_get_thread_num() { return 0; }
-const int omp_set_num_threads(int i) {}
+#ifndef _OPENMPREPLACEMENTY_H
+#define _OPENMPREPLACEMENTY_H
+
+#ifdef _OPENMP
+#include <omp.h>  	
+#else
+inline const int omp_get_num_procs() { return 1; }
+inline const int omp_get_max_threads() { return 1; }
+inline const int omp_get_thread_num() { return 0; }
+inline const int omp_set_num_threads(int i) {}
+#endif
+
+#endif

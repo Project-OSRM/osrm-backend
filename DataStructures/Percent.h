@@ -22,9 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define PERCENT_H
 
 #include <iostream>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+
 
 class Percent
 {

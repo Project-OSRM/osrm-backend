@@ -43,12 +43,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <unistd.h>
 #include <stxxl.h>
 
-#ifdef _OPENMP
-#include <omp.h>  	
-#else
-#include "Util/OpenMPReplacement.h"
-#endif
-
 #include "typedefs.h"
 #include "DataStructures/InputReaderFactory.h"
 #include "DataStructures/ExtractorCallBacks.h"
