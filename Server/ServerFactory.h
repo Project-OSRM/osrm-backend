@@ -27,10 +27,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <cstdlib>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include "Server.h"
 #include "ServerConfiguration.h"
 
