@@ -30,15 +30,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/BinaryHeap.h"
+#include "../Util/OpenMPReplacement.h"
 #include <ctime>
 #include <vector>
 #include <queue>
 #include <set>
 #include <stack>
 #include <limits>
-#ifdef _OPEMP
-#include <omp.h>
-#endif
 
 class Contractor {
 
@@ -190,7 +188,7 @@ public:
     }
 
     ~Contractor() { }
-
+	
     void Run() {
         const NodeID numberOfNodes = _graph->GetNumberOfNodes();
         Percent p (numberOfNodes);

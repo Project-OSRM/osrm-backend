@@ -36,12 +36,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
-#ifdef _OPENMP
-#include <omp.h>  	
-#else
 #include "Util/OpenMPReplacement.h"
-#endif
-
 #include "typedefs.h"
 #include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
@@ -52,6 +47,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
+#include "Util/OpenMPReplacement.h"
 
 using namespace std;
 
