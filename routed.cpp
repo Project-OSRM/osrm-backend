@@ -21,25 +21,23 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iostream>
 #include <signal.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#else 
-int omp_get_num_procs() { return 1; }
-int omp_get_max_threads() { return 1; }
-int omp_get_thread_num() { return 0; }
-#endif
-
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+
+#ifdef _OPENMP
+#include <omp.h>  	
+#else
+#include "Util/OpenMPReplacement.h"
+#endif
 
 #include "Server/ServerConfiguration.h"
 #include "Server/ServerFactory.h"
 
-#include "Plugins/ObjectForPluginStruct.h"
-
 #include "Plugins/HelloWorldPlugin.h"
 #include "Plugins/LocatePlugin.h"
 #include "Plugins/NearestPlugin.h"
+#include "Plugins/ObjectForPluginStruct.h"
+#include "Plugins/RoutePlugin.h"
 #include "Plugins/ViaRoutePlugin.h"
 #include "Util/InputFileUtil.h"
 

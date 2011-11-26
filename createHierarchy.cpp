@@ -37,12 +37,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 #ifdef _OPENMP
-#include <omp.h>
+#include <omp.h>  	
 #else
+<<<<<<< HEAD
 int omp_get_num_procs() { return 1; }
 int omp_get_max_threads() { return 1; }
 int omp_get_thread_num() { return 0; }
 void omp_set_num_threads(int i) {}
+=======
+#include "Util/OpenMPReplacement.h"
+>>>>>>> b5a1bf6a848b68bace62814497de44ce6c3fab5d
 #endif
 
 #include "typedefs.h"

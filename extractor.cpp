@@ -17,6 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
+
 #ifdef STXXL_VERBOSE_LEVEL
 #undef STXXL_VERBOSE_LEVEL
 #endif
@@ -41,6 +42,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <google/sparse_hash_map>
 #include <unistd.h>
 #include <stxxl.h>
+
+#ifdef _OPENMP
+#include <omp.h>  	
+#else
+#include "Util/OpenMPReplacement.h"
+#endif
 
 #include "typedefs.h"
 #include "DataStructures/InputReaderFactory.h"
