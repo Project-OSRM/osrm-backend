@@ -28,9 +28,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <limits>
 #include <vector>
 #include <stxxl.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 #ifdef _WIN32
 #include <math.h>
@@ -152,14 +149,14 @@ static boost::thread_specific_ptr<std::ifstream> localStream;
 template<bool WriteAccess = false>
 class NNGrid {
 public:
-    NNGrid() /*: cellCache(500), fileCache(500)*/ {
+    NNGrid() {
         ramIndexTable.resize((1024*1024), UINT_MAX);
         if( WriteAccess) {
             entries = new stxxl::vector<GridEntry>();
         }
     }
 
-    NNGrid(const char* rif, const char* _i, unsigned numberOfThreads = omp_get_num_procs()) /*: cellCache(500), fileCache(500) */{
+    NNGrid(const char* rif, const char* _i) {
         if(WriteAccess) {
             ERR("Not available in Write mode");
         }
