@@ -149,7 +149,7 @@ static boost::thread_specific_ptr<std::ifstream> localStream;
 template<bool WriteAccess = false>
 class NNGrid {
 public:
-    NNGrid() {
+    NNGrid() /*: cellCache(500), fileCache(500)*/ {
         ramIndexTable.resize((1024*1024), UINT_MAX);
         if( WriteAccess) {
             entries = new stxxl::vector<GridEntry>();
