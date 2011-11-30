@@ -103,7 +103,7 @@ void EdgeBasedGraphFactory::Run() {
     //Loop over all nodes u. Three nested loop look super-linear, but we are dealing with a number linear in the turns only.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
         //loop over all adjacent edge (u,v)
-        while(restrictionIterator->fromNode < u && inputRestrictions.end() != restrictionIterator) {
+        while(inputRestrictions.end() != restrictionIterator && restrictionIterator->fromNode < u) {
             ++restrictionIterator;
         }
         for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
@@ -115,7 +115,7 @@ void EdgeBasedGraphFactory::Run() {
                 //if (u,v,w) is a forbidden turn, continue
                 bool isTurnProhibited = false;
                 if( u != w ) { //only add an edge if turn is not a U-turn
-                    if(u == restrictionIterator->fromNode) {
+                    if(restrictionIterator != inputRestrictions.end() && u == restrictionIterator->fromNode) {
                         std::vector<_Restriction>::iterator secondRestrictionIterator = restrictionIterator;
                         do {
                             if( v == secondRestrictionIterator->viaNode && w == secondRestrictionIterator->toNode) {
