@@ -31,8 +31,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 using namespace std;
 
-#define VERBOSE(x) x
-#define VERBOSE2(x)
 #ifdef STXXL_VERBOSE_LEVEL
 #undef STXXL_VERBOSE_LEVEL
 #endif
