@@ -64,7 +64,7 @@ int main (int argc, char *argv[]) {
         ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions>");
     }
     INFO("Using restrictions from file: " << argv[2]);
-    ifstream restrictionsInstream(argv[2], ios::binary);
+    std::ifstream restrictionsInstream(argv[2], ios::binary);
     _Restriction restriction;
     unsigned usableRestrictionsCounter(0);
     restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
@@ -96,23 +96,11 @@ int main (int argc, char *argv[]) {
         ERR("Cannot open " << argv[1]);
     }
 
-    char nodeOut[1024];
-    char edgeOut[1024];
-    char ramIndexOut[1024];
-    char fileIndexOut[1024];
-    char levelInfoOut[1024];
-
-    strcpy(nodeOut, argv[1]);
-    strcpy(edgeOut, argv[1]);
-    strcpy(ramIndexOut, argv[1]);
-    strcpy(fileIndexOut, argv[1]);
-    strcpy(levelInfoOut, argv[1]);
-
-    strcat(nodeOut, ".nodes");
-    strcat(edgeOut, ".hsgr");
-    strcat(ramIndexOut, ".ramIndex");
-    strcat(fileIndexOut, ".fileIndex");
-    strcat(levelInfoOut, ".levels");
+    char nodeOut[1024];    		strcpy(nodeOut, argv[1]);    		strcat(nodeOut, ".nodes");
+    char edgeOut[1024];    		strcpy(edgeOut, argv[1]);    		strcat(edgeOut, ".hsgr");
+    char ramIndexOut[1024];    	strcpy(ramIndexOut, argv[1]);    	strcat(ramIndexOut, ".ramIndex");
+    char fileIndexOut[1024];    strcpy(fileIndexOut, argv[1]);    	strcat(fileIndexOut, ".fileIndex");
+    char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
 
     std::vector<ImportEdge> edgeList;
     NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, &internalToExternaleNodeMapping, inputRestrictions);
@@ -135,6 +123,8 @@ int main (int argc, char *argv[]) {
     INFO("building grid ...");
     writeableGrid->ConstructGrid(nodeBasedEdgeList, &internalToExternaleNodeMapping, ramIndexOut, fileIndexOut);
     DELETE( writeableGrid );
+    nodeBasedEdgeList.clear();
+    std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);
 
     INFO("writing node map ...");
     std::ofstream mapOutFile(nodeOut, ios::binary);
@@ -142,7 +132,6 @@ int main (int argc, char *argv[]) {
         mapOutFile.write((char *)&(info), sizeof(NodeInfo));
     }
     mapOutFile.close();
-
     internalToExternaleNodeMapping.clear();
     std::vector<NodeInfo>().swap(internalToExternaleNodeMapping);
     inputRestrictions.clear();
