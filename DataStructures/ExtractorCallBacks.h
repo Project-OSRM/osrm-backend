@@ -135,7 +135,7 @@ public:
                 }
             }
 
-            if("yes" == accessClass)
+            if("yes" == accessClass || "designated" == accessClass)
                 w.access = true;
             else if("no" == accessClass)
                 w.access = false;
