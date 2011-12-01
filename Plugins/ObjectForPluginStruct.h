@@ -58,7 +58,7 @@ struct ObjectsForQueryStruct {
         names = new std::vector<std::string>();
 
         char buf[1024];
-        for(unsigned i = 0; i < size; i++) {
+        for(unsigned i = 0; i < size; ++i) {
             unsigned sizeOfString = 0;
             namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
             memset(buf, 0, 1024*sizeof(char));

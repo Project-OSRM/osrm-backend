@@ -70,19 +70,16 @@ bool removeIfUnused(ClassT n) { return (false == n.used); }
 
 
 int main (int argc, char *argv[]) {
-    if(argc <= 1) {
-        cerr << "usage: " << endl << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>" << endl;
-        exit(-1);
-    }
+    GUARANTEE((argc > 1) ,"usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>");
 
-    cout << "[extractor] extracting data from input file " << argv[1] << endl;
-    bool isPBF = false;
-    string outputFileName(argv[1]);
-    string restrictionsFileName(argv[1]);
-    string::size_type pos = outputFileName.find(".osm.bz2");
-    if(pos==string::npos) {
+    INFO("extracting data from input file " << argv[1]);
+    bool isPBF(false);
+    std::string outputFileName(argv[1]);
+    std::string restrictionsFileName(argv[1]);
+    std::string::size_type pos = outputFileName.find(".osm.bz2");
+    if(pos==std::string::npos) {
         pos = outputFileName.find(".osm.pbf");
-        if(pos!=string::npos) {
+        if(pos!=std::string::npos) {
             isPBF = true;
         }
     }
@@ -99,7 +96,7 @@ int main (int argc, char *argv[]) {
             restrictionsFileName.append(".osrm.restrictions");
         }
     }
-    string adressFileName(outputFileName);
+    std::string adressFileName(outputFileName);
     Settings settings;
 
     boost::property_tree::ptree pt;
@@ -109,15 +106,15 @@ int main (int argc, char *argv[]) {
         INFO("Found the following speed profiles: ");
         int profileCounter(0);
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child("")) {
-            string name = v.first;
+            std::string name = v.first;
             cout << " [" << profileCounter << "]" << name << endl;
             ++profileCounter;
         }
-        string usedSpeedProfile(pt.get_child("").begin()->first);
+        std::string usedSpeedProfile(pt.get_child("").begin()->first);
         INFO("Using profile \"" << usedSpeedProfile << "\"")
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(usedSpeedProfile)) {
-            string name = v.first;
-            string value = v.second.get<string>("");
+            std::string name = v.first;
+            std::string value = v.second.get<std::string>("");
             DEBUG("inserting " << name << "=" << value);
             if(name == "obeyOneways") {
                 if(value == "no")
@@ -150,23 +147,21 @@ int main (int argc, char *argv[]) {
     unsigned amountOfRAM = 1;
     unsigned installedRAM = GetPhysicalmemory(); 
     if(installedRAM < 2048264) {
-        cout << "[Warning] Machine has less than 2GB RAM." << endl;
+        WARN("Machine has less than 2GB RAM.");
     }
     if(testDataFile("extractor.ini")) {
         ExtractorConfiguration extractorConfig("extractor.ini");
         unsigned memoryAmountFromFile = atoi(extractorConfig.GetParameter("Memory").c_str());
         if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024))
             amountOfRAM = memoryAmountFromFile;
-        cout << "[extractor] using " << amountOfRAM << " GB of RAM for buffers" << endl;
+        INFO("Using " << amountOfRAM << " GB of RAM for buffers");
     }
 
+    StringMap stringMap;
     STXXLContainers externalMemory;
 
     unsigned usedNodeCounter = 0;
     unsigned usedEdgeCounter = 0;
-
-    StringMap stringMap;
-
     double time = get_timestamp();
 
     stringMap[""] = 0;
@@ -178,13 +173,9 @@ int main (int argc, char *argv[]) {
         parser = new XMLParser(argv[1]);
     }
     parser->RegisterCallbacks(&nodeFunction, &restrictionFunction, &wayFunction, &adressFunction);
-    if(parser->Init()) {
-        parser->Parse();
-    } else {
-        cerr << "[error] parser not initialized!" << endl;
-        exit(-1);
-    }
-    delete parser;
+    GUARANTEE(parser->Init(), "Parser not initialized!");
+    parser->Parse();
+    DELETE(parser);
     stringMap.clear();
 
     try {
