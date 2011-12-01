@@ -83,7 +83,7 @@ int main (int argc, char *argv[]) {
     }
     omp_set_num_threads(numberOfThreads);
 
-    INFO("preprocessing data from input file " << argv[1] << " using STL"
+    INFO("preprocessing data from input file " << argv[1] << " using STL "
 #ifdef _GLIBCXX_PARALLEL
     "parallel (GCC)"
 #else
