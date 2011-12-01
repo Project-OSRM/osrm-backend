@@ -304,7 +304,7 @@ public:
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
                 newEdge.data.via = data.via;
-                newEdge.data.nameID1 = data.nameID;
+                newEdge.data.nameID = data.nameID;
                 newEdge.data.turnInstruction = data.turnInstruction;
                 newEdge.data.forward = data.forward;
                 newEdge.data.backward = data.backward;

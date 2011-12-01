@@ -164,7 +164,7 @@ public:
             w.type = 1;
 
             //Get the unique identifier for the street name
-            StringMap::const_iterator strit = stringMap->find(w.name);
+            const StringMap::const_iterator strit = stringMap->find(w.name);
             if(strit == stringMap->end()) {
                 w.nameID = externalMemory->nameVector.size();
                 externalMemory->nameVector.push_back(w.name);

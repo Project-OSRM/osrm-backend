@@ -256,7 +256,7 @@ private:
             return false;
         } else {
             assert(!ed.shortcut);
-            path.push_back(_PathData(ed.via, ed.nameID1, ed.turnInstruction, ed.distance) );
+            path.push_back(_PathData(ed.via, ed.nameID, ed.turnInstruction, ed.distance) );
             return true;
         }
     }
