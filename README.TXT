@@ -6,7 +6,7 @@ installing dependencies and running make should suffice. Make sure the following
 dependencies are installed:
 
  - Boost		1.41+
- - sparsehash   	1.4+
+ - sparsehash   1.4+
  - g++			4.2+
  - libxml2		2.7+
  - scons 		2.10+
@@ -77,11 +77,12 @@ preprocessing runs in three steps, all done by seperate programs.
 necessary, because the osm data is not made to support fast routing out of the
 box. The output of the step is a file called 'file.osrm'
 
-'osrm-prepare file.osrm' preprocesses the road network and computes additional
-information that is exploited later to speed up the path computation. The output
-of this step consists of two file 'file.osrm.hsgr' and 'file.osrm.nodes'. The first
-file is the so-called hierarchy that speeds up the path computation while the
-latter one carries (among other things) geographical information.
+'osrm-prepare file.osrm file.restrictions' preprocesses the road network and 
+computes additional information that is exploited later to speed up the path 
+computation. The output of this step consists of two file 'file.osrm.hsgr' and 
+'file.osrm.nodes'. The first file is the so-called hierarchy that speeds up the 
+path computation while the latter one carries (among other things) geographical
+information.
 
 'osrm-routed' starts the server on TCP Port 5000. The
 server communicates over http and can be queried by any browser or http-capable

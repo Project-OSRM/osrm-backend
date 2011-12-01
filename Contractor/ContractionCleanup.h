@@ -66,8 +66,7 @@ public:
         NodeID target;
         struct EdgeData {
             NodeID via;
-            unsigned nameID1;
-            unsigned nameID2;
+            unsigned nameID;
             int distance;
             bool shortcut;
             bool forward;
@@ -91,7 +90,7 @@ public:
         bool operator== ( const Edge& right ) const {
             return ( source == right.source && target == right.target && data.distance == right.data.distance &&
                     data.shortcut == right.data.shortcut && data.forward == right.data.forward && data.backward == right.data.backward
-                    && data.via == right.data.via && data.nameID1 == right.data.nameID1 && data.nameID2 == right.data.nameID2
+                    && data.via == right.data.via && data.nameID == right.data.nameID
                     );
         }
     };

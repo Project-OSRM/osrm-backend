@@ -304,7 +304,7 @@ public:
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
                 newEdge.data.via = data.via;
-                newEdge.data.nameID1 = data.nameID;
+                newEdge.data.nameID = data.nameID;
                 newEdge.data.turnInstruction = data.turnInstruction;
                 newEdge.data.forward = data.forward;
                 newEdge.data.backward = data.backward;
@@ -495,6 +495,7 @@ private:
     bool _UpdateNeighbours( std::vector< double >* priorities, std::vector< _PriorityData >* const nodeData, _ThreadData* const data, NodeID node ) {
         std::vector< NodeID >& neighbours = data->neighbours;
         neighbours.clear();
+        std::vector< NodeID>().swap(neighbours);
 
         //find all neighbours
         for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( node ) ; e < _graph->EndEdges( node ) ; ++e ) {
@@ -521,6 +522,7 @@ private:
 
         std::vector< NodeID >& neighbours = data->neighbours;
         neighbours.clear();
+        std::vector< NodeID>().swap(neighbours);
 
         for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( node ) ; e < _graph->EndEdges( node ) ; ++e ) {
             const NodeID target = _graph->GetTarget( e );
