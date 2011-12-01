@@ -173,8 +173,14 @@ public:
                 w.nameID = strit->second;
             }
 
-            GUARANTEE(w.id != UINT_MAX, "found way with unknown type");
-            GUARANTEE(-1 != w.speed, "found way with unknown speed");
+            if(-1 == w.speed){
+                WARN("found way with bogus speed, id: " << w.id);
+                return true;
+            }
+            if(w.id == UINT_MAX) {
+                WARN("found way with unknown type" << w.id);
+                return true;
+            }
 
             if ( w.direction == _Way::opposite ){
                 std::reverse( w.path.begin(), w.path.end() );
