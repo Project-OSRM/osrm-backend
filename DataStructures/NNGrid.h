@@ -310,10 +310,6 @@ public:
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
                 resultNode.weight2 = candidate.weight;
-                /* if(resultNode.weight1 != resultNode.weight2) {
-                    ERR("w1: " << resultNode.weight1 << ", w2: " << resultNode.weight2);
-                    assert(false);
-                }*/
                 if(candidate.edgeBasedNode < resultNode.edgeBasedNode) {
                     resultNode.edgeBasedNode = candidate.edgeBasedNode;
                     std::swap(resultNode.weight1, resultNode.weight2);
@@ -412,7 +408,7 @@ private:
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) {
-        return (std::fabs(d1 - d2) < 0.000000001);
+        return (std::fabs(d1 - d2) < 0.0001);
     }
 
     unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset ) {
