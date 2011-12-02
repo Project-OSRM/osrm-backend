@@ -270,9 +270,9 @@ private:
                         if("from" == role || "to" == role) //Only via should be a node
                             continue;
                         assert("via" == role);
-                        if(UINT_MAX != currentRestrictionContainer.viaWay)
-                            currentRestrictionContainer.viaWay = UINT_MAX;
-                        assert(UINT_MAX == currentRestrictionContainer.viaWay);
+                        if(UINT_MAX != currentRestrictionContainer.viaNode)
+                            currentRestrictionContainer.viaNode = UINT_MAX;
+                        assert(UINT_MAX == currentRestrictionContainer.viaNode);
                         currentRestrictionContainer.restriction.viaNode = lastRef;
                         break;
                     case 1: //way
@@ -285,7 +285,7 @@ private:
                         }
                         if ("via" == role) {
                             assert(currentRestrictionContainer.restriction.toNode == UINT_MAX);
-                            currentRestrictionContainer.viaWay = lastRef;
+                            currentRestrictionContainer.viaNode = lastRef;
                         }
                         break;
                     case 2: //relation, not used. relations relating to relations are evil.

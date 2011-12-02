@@ -208,7 +208,7 @@ int main (int argc, char *argv[]) {
         time = get_timestamp();
 
         cout << "[extractor] Sorting used ways         ... " << flush;
-        stxxl::sort(externalMemory.wayStartEndVector.begin(), externalMemory.wayStartEndVector.end(), CmpWayStartAndEnd(), memory_to_use);
+        stxxl::sort(externalMemory.wayStartEndVector.begin(), externalMemory.wayStartEndVector.end(), CmpWayByID(), memory_to_use);
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         cout << "[extractor] Sorting restrctns. by from... " << flush;
@@ -255,8 +255,7 @@ int main (int argc, char *argv[]) {
         cout << "[extractor] Fixing restriction ends   ... " << flush;
         restrictionsIT = externalMemory.restrictionsVector.begin();
         wayStartAndEndEdgeIT = externalMemory.wayStartEndVector.begin();
-        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() &&
-                restrictionsIT != externalMemory.restrictionsVector.end()) {
+        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
             if(wayStartAndEndEdgeIT->wayID < restrictionsIT->toWay){
             	++wayStartAndEndEdgeIT;
                 continue;
@@ -278,11 +277,13 @@ int main (int argc, char *argv[]) {
 
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
             	++usableRestrictionsCounter;
+            } else {
+                INFO("Restriction from: " << restrictionsIT->restriction.fromNode << ", to: " << restrictionsIT->restriction.toNode);
             }
             ++restrictionsIT;
         }
-
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        INFO("usable restrictions: " << usableRestrictionsCounter);
         //serialize restrictions
         ofstream restrictionsOutstream;
         restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);

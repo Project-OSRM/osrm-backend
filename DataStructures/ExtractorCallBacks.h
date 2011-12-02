@@ -121,7 +121,7 @@ public:
         //Is the highway tag listed as usable way?
         if(0 < settings[highway]) {
 
-            if(0 != maxspeed)
+            if(0 < maxspeed)
                 w.speed = maxspeed;
             else
                 w.speed = settings[highway];
@@ -154,7 +154,6 @@ public:
             //Is the route tag listed as usable way in the profile?
             if(settings[route] > 0 || settings[man_made] > 0) {
                 w.useful = true;
-                w.direction = _Way::oneway;
                 w.speed = settings[route];
                 w.direction = _Way::bidirectional;
             }
@@ -178,7 +177,7 @@ public:
                 return true;
             }
             if(w.id == UINT_MAX) {
-                WARN("found way with unknown type" << w.id);
+                WARN("found way with unknown type: " << w.id);
                 return true;
             }
 
