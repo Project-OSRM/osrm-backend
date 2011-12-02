@@ -315,6 +315,7 @@ private:
             for(int i = 0; i < threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size(); i++) {
                 const OSMPBF::Way& inputWay = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways( i );
                 _Way w;
+                w.id = inputWay.id();
                 unsigned pathNode(0);
                 for(int i = 0; i < inputWay.refs_size(); i++) {
                     pathNode += inputWay.refs(i);
