@@ -99,6 +99,7 @@ void EdgeBasedGraphFactory::Run() {
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfResolvedRestrictions(0);
     int nodeBasedEdgeCounter(0);
+    NodeID onlyToNode(0);
 
     //Loop over all nodes u. Three nested loop look super-linear, but we are dealing with a number linear in the turns only.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
@@ -110,29 +111,56 @@ void EdgeBasedGraphFactory::Run() {
             ++nodeBasedEdgeCounter;
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
             //loop over all reachable edges (v,w)
+            bool isOnlyAllowed(false);
+
+            //Check every turn restriction originating from this edge if it is an 'only_*'-turn.
+            if(restrictionIterator != inputRestrictions.end() && u == restrictionIterator->fromNode) {
+                std::vector<_Restriction>::iterator secondRestrictionIterator = restrictionIterator;
+                do {
+                    if(v == secondRestrictionIterator->viaNode) {
+                        if(secondRestrictionIterator->flags.isOnly) {
+                            isOnlyAllowed = true;
+                            onlyToNode = secondRestrictionIterator->toNode;
+                        }
+                    }
+                    ++secondRestrictionIterator;
+                } while(u == secondRestrictionIterator->fromNode);
+            }
+
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
                 _NodeBasedDynamicGraph::NodeIterator w = _nodeBasedGraph->GetTarget(e2);
                 //if (u,v,w) is a forbidden turn, continue
-                bool isTurnProhibited = false;
+                bool isTurnRestricted(false);
+                if(isOnlyAllowed && w != onlyToNode) {
+//                     INFO("skipped turn <" << u << "," << v << "," << w << ">, only allowing <" << u << "," << v << "," << onlyToNode << ">");
+                     continue;
+                 }
+
                 if( u != w ) { //only add an edge if turn is not a U-turn
                     if(restrictionIterator != inputRestrictions.end() && u == restrictionIterator->fromNode) {
                         std::vector<_Restriction>::iterator secondRestrictionIterator = restrictionIterator;
                         do {
-                            if( v == secondRestrictionIterator->viaNode && w == secondRestrictionIterator->toNode) {
-                                isTurnProhibited = true;
+                            if(v == secondRestrictionIterator->viaNode) {
+                                if(w == secondRestrictionIterator->toNode) {
+                                    isTurnRestricted = true;
+                                }
                             }
                             ++secondRestrictionIterator;
                         } while(u == secondRestrictionIterator->fromNode);
                     }
-                    if( !isTurnProhibited ) { //only add an edge if turn is not prohibited
+
+                    if( !isTurnRestricted || (isOnlyAllowed && w == onlyToNode) ) { //only add an edge if turn is not prohibited
+                        if(isOnlyAllowed && w == onlyToNode) {
+//                            INFO("Adding 'only_*'-turn <" << u << "," << v << "," << w << ">");
+                        } else if(isOnlyAllowed && w != onlyToNode) {
+                            assert(false);
+                        }
                         //new costs for edge based edge (e1, e2) = cost (e1) + tc(e1,e2)
                         const _NodeBasedDynamicGraph::NodeIterator edgeBasedSource = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
-                        //                        INFO("edgeBasedSource: " << edgeBasedSource);
                         if(edgeBasedSource > _nodeBasedGraph->GetNumberOfEdges()) {
                             ERR("edgeBasedTarget" << edgeBasedSource << ">" << _nodeBasedGraph->GetNumberOfEdges());
                         }
                         const _NodeBasedDynamicGraph::NodeIterator edgeBasedTarget = _nodeBasedGraph->GetEdgeData(e2).edgeBasedNodeID;
-                        //                        INFO("edgeBasedTarget: " << edgeBasedTarget);
                         if(edgeBasedTarget > _nodeBasedGraph->GetNumberOfEdges()) {
                             ERR("edgeBasedTarget" << edgeBasedTarget << ">" << _nodeBasedGraph->GetNumberOfEdges());
                         }
@@ -145,7 +173,6 @@ void EdgeBasedGraphFactory::Run() {
                         short turnInstruction = AnalyzeTurn(u, v, w);
 
                         //create edge-based graph edge
-                        //EdgeBasedEdge(NodeID s, NodeID t, NodeID v, unsigned n1, EdgeWeight w, bool f, bool b, short ty)
                         EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
                         EdgeBasedNode currentNode;

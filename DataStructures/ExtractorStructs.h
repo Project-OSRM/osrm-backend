@@ -177,10 +177,10 @@ struct _RawRestrictionContainer {
     _Restriction restriction;
     EdgeID fromWay;
     EdgeID toWay;
-    unsigned viaWay;
+    unsigned viaNode;
 
-    _RawRestrictionContainer(EdgeID f, EdgeID t, NodeID vn, unsigned vw) : fromWay(f), toWay(t), viaWay(vw) { restriction.viaNode = vn;}
-    _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaWay(UINT_MAX) { restriction.flags.isOnly = isOnly;}
+    _RawRestrictionContainer(EdgeID f, EdgeID t, NodeID vn, unsigned vw) : fromWay(f), toWay(t), viaNode(vw) { restriction.viaNode = vn;}
+    _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaNode(UINT_MAX) { restriction.flags.isOnly = isOnly;}
 
     static _RawRestrictionContainer min_value() {
         return _RawRestrictionContainer((numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)());
@@ -233,7 +233,7 @@ struct _WayIDStartAndEndEdge {
     }
 };
 
-struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _WayIDStartAndEndEdge, bool> {
+struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDStartAndEndEdge, bool> {
     typedef _WayIDStartAndEndEdge value_type;
     bool operator ()  (const _WayIDStartAndEndEdge & a, const _WayIDStartAndEndEdge & b) const {
         return a.wayID < b.wayID;
