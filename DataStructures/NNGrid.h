@@ -329,14 +329,14 @@ public:
             }
         }
 
-        //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
-        //        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
-        //        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
-        //        assert(!resultNode.isBidirected || (resultNode.weight1 == resultNode.weight2));
-        //        if(resultNode.weight1 != resultNode.weight2) {
-        //            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
-        //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected ? "yes" : "no"));
-        //        }
+//        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
+//        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
+//        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
+//        assert(!resultNode.isBidirected() || (resultNode.weight1 == resultNode.weight2));
+//        if(resultNode.weight1 != resultNode.weight2) {
+//            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
+//            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
+//        }
 
         double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
@@ -547,6 +547,11 @@ private:
         if(!localStream.get() || !localStream->is_open()) {
             localStream.reset(new std::ifstream(iif.c_str(), std::ios::in | std::ios::binary));
         }
+        if(!localStream->good()) {
+            localStream->clear(std::ios::goodbit);
+            DEBUG("Resetting stale filestream");
+        }
+
         localStream->seekg(startIndexInFile);
         localStream->read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
         assert(cellMap.find(fileIndex) != cellMap.end());
