@@ -31,7 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class XMLParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
 public:
-    XMLParser(const char * filename) {
+    XMLParser(const char * filename) : nodeCallback(NULL), wayCallback(NULL), restrictionCallback(NULL){
         WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
         inputReader = inputReaderFactory(filename);
     }
@@ -72,9 +72,12 @@ public:
                 }
             }
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
-                _Relation r;
-                r.type = _Relation::unknown;
-                //todo: parse relation
+                _RawRestrictionContainer r = _ReadXMLRestriction();
+                if(r.fromWay != UINT_MAX) {
+                    if(!(*restrictionCallback)(r)) {
+                        std::cerr << "[XMLParser] restriction not parsed" << std::endl;
+                    }
+                }
             }
             xmlFree( currentName );
         }
@@ -82,11 +85,69 @@ public:
     }
 
 private:
-    _Relation _ReadXMLRelation ( ) {
-        _Relation relation;
-        relation.type = _Relation::unknown;
+    _RawRestrictionContainer _ReadXMLRestriction ( ) {
+        _RawRestrictionContainer restriction;
 
-        return relation;
+        if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
+            const int depth = xmlTextReaderDepth( inputReader );while ( xmlTextReaderRead( inputReader ) == 1 ) {
+                const int childType = xmlTextReaderNodeType( inputReader );
+                if ( childType != 1 && childType != 15 )
+                    continue;
+                const int childDepth = xmlTextReaderDepth( inputReader );
+                xmlChar* childName = xmlTextReaderName( inputReader );
+                if ( childName == NULL )
+                    continue;
+
+                if ( depth == childDepth && childType == 15 && xmlStrEqual( childName, ( const xmlChar* ) "relation" ) == 1 ) {
+                    xmlFree( childName );
+                    break;
+                }
+                if ( childType != 1 ) {
+                    xmlFree( childName );
+                    continue;
+                }
+
+                if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
+                    xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
+                    xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
+                    if ( k != NULL && value != NULL ) {
+                        if(xmlStrEqual(k, ( const xmlChar* ) "restriction" )){
+                            if(0 == std::string((const char *) value).find("only_"))
+                                restriction.restriction.flags.isOnly = true;
+                        }
+
+                    }
+                    if ( k != NULL )
+                        xmlFree( k );
+                    if ( value != NULL )
+                        xmlFree( value );
+                } else if ( xmlStrEqual( childName, ( const xmlChar* ) "member" ) == 1 ) {
+                    xmlChar* ref = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "ref" );
+                    if ( ref != NULL ) {
+                        xmlChar * role = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "role" );
+                        xmlChar * type = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "type" );
+                        if(xmlStrEqual(role, (const xmlChar *) "to") && xmlStrEqual(type, (const xmlChar *) "way")) {
+                            restriction.toWay = atoi((const char*) ref);
+                        }
+                        if(xmlStrEqual(role, (const xmlChar *) "from") && xmlStrEqual(type, (const xmlChar *) "way")) {
+                            restriction.fromWay = atoi((const char*) ref);
+                        }
+                        if(xmlStrEqual(role, (const xmlChar *) "via") && xmlStrEqual(type, (const xmlChar *) "node")) {
+                            restriction.restriction.viaNode = atoi((const char*) ref);
+                        }
+
+                        if(NULL != type)
+                            xmlFree( type );
+                        if(NULL != role)
+                            xmlFree( role );
+                        if(NULL != ref)
+                            xmlFree( ref );
+                    }
+                }
+                xmlFree( childName );
+            }
+        }
+        return restriction;
     }
 
     _Way _ReadXMLWay( ) {
@@ -109,6 +170,9 @@ private:
                     continue;
 
                 if ( depth == childDepth && childType == 15 && xmlStrEqual( childName, ( const xmlChar* ) "way" ) == 1 ) {
+                    xmlChar* id = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "id" );
+                    way.id = atoi((char*)id);
+                    xmlFree(id);
                     xmlFree( childName );
                     break;
                 }
