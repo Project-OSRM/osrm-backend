@@ -1,3 +1,18 @@
+# Test folder #
+###################
+test/speedprofile.ini
+test/cache
+test/data
+test/server.ini
+test/stxxl
+
+# Sandbox folder #
+###################
+sandbox/speedprofile.ini
+sandbox/data
+sandbox/server.ini
+sandbox/stxxl
+
 # Compiled source #
 ###################
 *.com
@@ -6,6 +21,9 @@
 *.exe
 *.o
 *.so
+osrm-extract
+osrm-prepare
+osrm-routed
 
 # Packages #
 ############

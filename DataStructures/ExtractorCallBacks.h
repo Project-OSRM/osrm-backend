@@ -173,12 +173,18 @@ public:
             }
 
             if( settings.obeyOneways ) {
-                if( oneway == "no" || oneway == "0" || oneway == "false" || onewayClass == "no" || onewayClass == "0" || onewayClass == "false" || ((settings.accessTag == "bicycle") && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane")) ) {
+                if( oneway == "no" || oneway == "0" || oneway == "false" || 
+					onewayClass == "no" || onewayClass == "0" || onewayClass == "false" || 
+					((settings.accessTag == "bicycle") && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane")) ) {
                     w.direction = _Way::bidirectional;
                 } else if( oneway == "-1") {
                     w.direction  = _Way::opposite;
                 }
-                else if( oneway == "yes" || oneway == "1" || oneway == "true" || onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || junction == "roundabout" || highway == "motorway_link" || highway == "motorway" ) {
+                else if( oneway == "yes" || oneway == "1" || oneway == "true" ||
+						onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || 
+						junction == "roundabout" ||
+						highway == "motorway" ||
+						highway == "motorway_link" ) {
                     w.direction = _Way::oneway;
                 } else {
                     w.direction = _Way::bidirectional;
@@ -212,10 +218,6 @@ public:
             if(w.id == UINT_MAX) {
                 WARN("found way with unknown type: " << w.id);
                 return true;
-            }
-
-            if ( w.direction == _Way::opposite ){
-                std::reverse( w.path.begin(), w.path.end() );
             }
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
