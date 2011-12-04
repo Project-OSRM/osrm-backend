@@ -93,75 +93,78 @@ public:
 
     /** warning: caller needs to take care of synchronization! */
     inline bool wayFunction(_Way &w) {
-
-        //Get the properties of the way.
-        std::string highway( w.keyVals.Find("highway") );
-        std::string name( w.keyVals.Find("name") );
-        std::string ref( w.keyVals.Find("ref"));
-        std::string oneway( w.keyVals.Find("oneway"));
-        std::string junction( w.keyVals.Find("junction") );
-        std::string route( w.keyVals.Find("route") );
-        double maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
-        std::string access( w.keyVals.Find("access") );
+				
         std::string accessClass( w.keyVals.Find(settings.accessTag) );
-        std::string man_made( w.keyVals.Find("man_made") );
-        std::string barrier( w.keyVals.Find("barrier") );
-
-        //Save the name of the way if it has one, ref has precedence over name tag.
-        if ( 0 < ref.length() )
-            w.name = ref;
-        else
-            if ( 0 < name.length() )
-                w.name = name;
-
-        if(junction == "roundabout") {
-            w.roundabout = true;
-        }
-
-        //Is the highway tag listed as usable way?
-        if(0 < settings[highway]) {
-
-            if(0 < maxspeed)
-                w.speed = maxspeed;
-            else
-                w.speed = settings[highway];
-            w.useful = true;
-
-            //Okay, do we have access to that way?
-            if(0 < access.size()) { //fastest way to check for non-empty string
-                //If access is forbidden, we don't want to route there.
-                if(access == "private" || access == "no" || access == "agricultural" || access == "forestry" || access == "delivery") { //Todo: this is still hard coded
-                    w.access = false;
-                }
-            }
-
-            if("yes" == accessClass || "designated" == accessClass)
-                w.access = true;
-            else if("no" == accessClass)
-                w.access = false;
-
-            //Let's process oneway property, if speed profile obeys to it
-            if(oneway != "no" && oneway != "false" && oneway != "0" && settings.obeyOneways) {
-                //if oneway tag is in forward direction or if actually roundabout
-                if(junction == "roundabout" || oneway == "yes" || oneway == "true" || oneway == "1") {
-                    w.direction = _Way::oneway;
-                } else {
-                    if( oneway == "-1")
-                        w.direction  = _Way::opposite;
-                }
-            }
-        } else {
-            //Is the route tag listed as usable way in the profile?
-            if(settings[route] > 0 || settings[man_made] > 0) {
-                w.useful = true;
-                w.speed = settings[route];
-                w.direction = _Way::bidirectional;
-            }
-        }
-        if ( w.useful && w.access && (1 < w.path.size()) ) { //Only true if the way is specified by the speed profile
-            //TODO: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
+        std::string access( w.keyVals.Find("access") );
+        std::string highway( w.keyVals.Find("highway") );
+		
+		//class tag like bicycle=yes/no overrides everything else
+        if("yes" == accessClass || "permissive" == accessClass || "designated" == accessClass || "official" == accessClass)
+            w.access = true;
+		else if("no" == accessClass)
+            w.access = false;
+		else {
+	        std::string route( w.keyVals.Find("route") );
+	        std::string man_made( w.keyVals.Find("man_made") );
+			//speedprofile allows routing on this type of way/route/man_made?
+	        if(settings[highway] > 0 || settings[route] > 0 || settings[man_made] > 0) {
+           	 	if(0 < access.size()) { //fastest way to check for non-empty string
+	                if( access == "yes" || access == "permissive" || access == "designated" || access == "public" )
+	                    w.access = true;
+	                else
+						w.access = false;
+	            }
+			}
+			else
+				w.access = false;
+		}
+		
+        if ( w.access == true && (1 < w.path.size()) ) {
+	        std::string name( w.keyVals.Find("name") );
+	        std::string ref( w.keyVals.Find("ref"));
+	        std::string oneway( w.keyVals.Find("oneway"));
+	        std::string onewayClass( w.keyVals.Find("oneway:"+accessClass));
+	        std::string junction( w.keyVals.Find("junction") );
+	        double maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
+	        std::string barrier( w.keyVals.Find("barrier") );
+	        
+			//name
+	        if ( 0 < ref.length() )
+	            w.name = ref;
+	        else if ( 0 < name.length() )
+	        	w.name = name;
+			
+			//roundabout
+	        if(junction == "roundabout")
+	            w.roundabout = true;
+			
+			//speed
+			if(0 < maxspeed && (maxspeed < settings[highway]) )
+            	w.speed = maxspeed;
+	        else
+	            w.speed = settings[highway];
+            
+			//TODO: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
             w.type = 1;
 
+	        //oneway
+			if( settings.obeyOneways ) {
+				//TODO: handle cycleway=opposite_*
+				if( oneway == "no" || oneway == "0" || oneway == "false" ||
+					onewayClass == "no" || onewayClass == "0" || onewayClass == "false")
+					w.direction = _Way::bidirectional;
+				else if( oneway == "yes" || oneway == "1" || oneway == "true" ||
+						 onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || 
+						 junction == "roundabout" || highway == "motorway_link" || highway == "motorway" )
+	            	w.direction = _Way::oneway;
+                else if( oneway == "-1") {
+                	w.direction  = _Way::opposite;
+		            std::reverse( w.path.begin(), w.path.end() );
+				}
+				else
+					w.direction = _Way::bidirectional;
+			}
+			
             //Get the unique identifier for the street name
             const StringMap::const_iterator strit = stringMap->find(w.name);
             if(strit == stringMap->end()) {
@@ -172,17 +175,13 @@ public:
                 w.nameID = strit->second;
             }
 
-            if(-1 == w.speed){
+            if(-1 == w.speed) {
                 WARN("found way with bogus speed, id: " << w.id);
                 return true;
             }
             if(w.id == UINT_MAX) {
                 WARN("found way with unknown type: " << w.id);
                 return true;
-            }
-
-            if ( w.direction == _Way::opposite ){
-                std::reverse( w.path.begin(), w.path.end() );
             }
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
@@ -194,6 +193,7 @@ public:
             //The following information is needed to identify start and end segments of restrictions
             externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(w.id, w.path[0], w.path[1], w.path[w.path.size()-2], w.path[w.path.size()-1]));
         }
+		
         return true;
     }
 };
