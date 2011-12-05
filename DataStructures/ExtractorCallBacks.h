@@ -103,7 +103,7 @@ public:
         std::string route( w.keyVals.Find("route") );
         double maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
         std::string access( w.keyVals.Find("access") );
-        std::string accessClass( w.keyVals.Find(settings.accessTag) );
+        std::string accessTag( w.keyVals.Find(settings.accessTag) );
         std::string man_made( w.keyVals.Find("man_made") );
         std::string barrier( w.keyVals.Find("barrier") );
 
@@ -135,10 +135,11 @@ public:
                 }
             }
 
-            if("yes" == accessClass || "designated" == accessClass)
+            if("yes" == accessTag || "designated" == accessTag)
                 w.access = true;
-            else if("no" == accessClass)
-                w.access = false;
+            else if("no" == accessTag) {
+                return true;
+            }
 
             //Let's process oneway property, if speed profile obeys to it
             if(oneway != "no" && oneway != "false" && oneway != "0" && settings.obeyOneways) {
