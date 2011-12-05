@@ -315,7 +315,7 @@ public:
                     std::swap(resultNode.weight1, resultNode.weight2);
                 }
             }
-            if(tmpDist < dist) {
+            if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
                 resultNode.Reset();
                 resultNode.edgeBasedNode = candidate.edgeBasedNode;
                 resultNode.nodeBasedEdgeNameID = candidate.nameID;
@@ -346,6 +346,7 @@ public:
             resultNode.weight2 *= (1-ratio);
             //            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }
+//        INFO("bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
         return foundNode;
     }
 
