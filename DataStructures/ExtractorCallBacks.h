@@ -135,9 +135,10 @@ public:
                 }
             }
 
-            if("yes" == accessTag || "designated" == accessTag)
+            if("yes" == accessTag || "designated" == accessTag) {
                 w.access = true;
-            else if("no" == accessTag) {
+            }
+            if("no" == accessTag) {
                 return true;
             }
 
