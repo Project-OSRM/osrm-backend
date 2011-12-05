@@ -58,8 +58,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         edge.data.backward = i->isBackward();
         edge.data.edgeBasedNodeID = edges.size();
         edges.push_back( edge );
-        std::swap( edge.source, edge.target );
         if( edge.data.backward ) {
+            std::swap( edge.source, edge.target );
             edge.data.forward = i->isBackward();
             edge.data.backward = i->isForward();
             edge.data.edgeBasedNodeID = edges.size();
@@ -126,15 +126,25 @@ void EdgeBasedGraphFactory::Run() {
                     ++secondRestrictionIterator;
                 } while(u == secondRestrictionIterator->fromNode);
             }
-
+            if(_nodeBasedGraph->EndEdges(v) == _nodeBasedGraph->BeginEdges(v) + 1 && _nodeBasedGraph->GetEdgeData(e1).type != 14 ) {
+                EdgeBasedNode currentNode;
+                currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
+                currentNode.lat1 = inputNodeInfoList[u].lat;
+                currentNode.lon1 = inputNodeInfoList[u].lon;
+                currentNode.lat2 = inputNodeInfoList[v].lat;
+                currentNode.lon2 = inputNodeInfoList[v].lon;
+                currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;;
+                currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
+                edgeBasedNodes.push_back(currentNode);
+            }
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
                 _NodeBasedDynamicGraph::NodeIterator w = _nodeBasedGraph->GetTarget(e2);
                 //if (u,v,w) is a forbidden turn, continue
                 bool isTurnRestricted(false);
                 if(isOnlyAllowed && w != onlyToNode) {
-//                     INFO("skipped turn <" << u << "," << v << "," << w << ">, only allowing <" << u << "," << v << "," << onlyToNode << ">");
-                     continue;
-                 }
+                    //                     INFO("skipped turn <" << u << "," << v << "," << w << ">, only allowing <" << u << "," << v << "," << onlyToNode << ">");
+                    continue;
+                }
 
                 if( u != w ) { //only add an edge if turn is not a U-turn
                     if(restrictionIterator != inputRestrictions.end() && u == restrictionIterator->fromNode) {
@@ -151,7 +161,7 @@ void EdgeBasedGraphFactory::Run() {
 
                     if( !isTurnRestricted || (isOnlyAllowed && w == onlyToNode) ) { //only add an edge if turn is not prohibited
                         if(isOnlyAllowed && w == onlyToNode) {
-//                            INFO("Adding 'only_*'-turn <" << u << "," << v << "," << w << ">");
+                            //                            INFO("Adding 'only_*'-turn <" << u << "," << v << "," << w << ">");
                         } else if(isOnlyAllowed && w != onlyToNode) {
                             assert(false);
                         }
@@ -175,9 +185,10 @@ void EdgeBasedGraphFactory::Run() {
                         //create edge-based graph edge
                         EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
-                        EdgeBasedNode currentNode;
 
-                        if(_nodeBasedGraph->GetEdgeData(e1).type != 14) {
+                        if(_nodeBasedGraph->GetEdgeData(e1).type != 14 ) {
+                            EdgeBasedNode currentNode;
+
                             currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                             currentNode.lat1 = inputNodeInfoList[u].lat;
                             currentNode.lon1 = inputNodeInfoList[u].lon;

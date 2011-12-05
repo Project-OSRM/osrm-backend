@@ -64,6 +64,13 @@ struct _Coordinate {
     bool isSet() const {
         return (INT_MIN != lat) && (INT_MIN != lon);
     }
+    inline bool isValid() const {
+        if(lat > 90*100000 || lat < -90*100000 || lon > 180*100000 || lon <-180*100000) {
+            return false;
+        }
+        return true;
+    }
+
 };
 
 inline ostream & operator<<(ostream & out, const _Coordinate & c){

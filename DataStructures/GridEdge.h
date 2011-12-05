@@ -29,6 +29,12 @@ struct _GridEdge {
     int weight;
     _Coordinate startCoord;
     _Coordinate targetCoord;
+    bool operator< ( const _GridEdge& right) const {
+        return edgeBasedNode < right.edgeBasedNode;
+    }
+    bool operator== ( const _GridEdge& right) const {
+        return edgeBasedNode == right.edgeBasedNode;
+    }
 };
 
 struct GridEntry {
