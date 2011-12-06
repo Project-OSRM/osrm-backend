@@ -39,6 +39,10 @@ SconsBuilder*
 .scon*
 .build
 
+# sandbox directory #
+#######################
+sandbox
+
 # Eclipse related files #
 #########################
 .setting*
