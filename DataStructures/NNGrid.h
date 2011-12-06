@@ -352,7 +352,7 @@ public:
             resultNode.weight2 *= (1-ratio);
 //            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }
-//        INFO("bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
+		  INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
         return foundNode;
     }
 
