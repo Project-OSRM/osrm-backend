@@ -39,9 +39,9 @@ SconsBuilder*
 .scon*
 .build
 
-# Rake build directory #
+# sandbox directory #
 #######################
-build
+sandbox
 
 # Eclipse related files #
 #########################

@@ -74,15 +74,20 @@ else:
 
 if sys.platform == 'darwin':	#Mac OS X
 	env.Append(CPPPATH = ['/usr/include/libxml2'] )		#comes with os x
-	#assume stxxl and boost are installed via homebrew.
-	#call out to brew to get the folder locations
+	#assume dependencies are installed with homebrew, and call out get folder locations
 	import subprocess
 	stxxl_prefix = subprocess.check_output(["brew", "--prefix", "libstxxl"]).strip()
-	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [stxxl_prefix+"/include"] )
 	env.Append(LIBPATH = [stxxl_prefix+"/lib"] )
+	
+	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [boost_prefix+"/include"] )
 	env.Append(LIBPATH = [boost_prefix+"/lib"] )	
+	
+	#libxml2_prefix = subprocess.check_output(["brew", "--prefix", "libxml2"]).strip()
+	#env.Append(CPPPATH = [libxml2_prefix+"/include"] )
+	#env.Append(LIBPATH = [libxml2_prefix+"/lib"] )	
+
 elif sys.platform.startswith("freebsd"):
 	env.ParseConfig('pkg-config --cflags --libs protobuf')
 	env.Append(CPPPATH = ['/usr/local/include', '/usr/local/include/libxml2'])
@@ -105,9 +110,11 @@ else:
 	env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 
 
-if not conf.CheckHeader('omp.h'):
-	print "Compiler does not support OpenMP. Exiting"
-	Exit(-1)
+if sys.platform != 'darwin':
+	if not conf.CheckHeader('omp.h'):
+		print "Compiler does not support OpenMP. Exiting"
+		Exit(-1)
+
 if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
 	Exit(-1)
@@ -193,8 +200,8 @@ env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
 env.Append(CCFLAGS = ['-lboost_regex', '-lboost_iostreams', '-lbz2', '-lz', '-lprotobuf'])
 #env.Append(LINKFLAGS = ['-lboost_system'])
 
-env.Program(target = 'osrm-extract', source = ["extractor.cpp", 'DataStructures/pbf-proto/fileformat.pb.cc', 'DataStructures/pbf-proto/osmformat.pb.cc'])
-env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp'])
-env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp'])
+env.Program(target = 'sandbox/osrm-extract', source = ["extractor.cpp", 'DataStructures/pbf-proto/fileformat.pb.cc', 'DataStructures/pbf-proto/osmformat.pb.cc'])
+env.Program(target = 'sandbox/osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp'])
+env.Program(target = 'sandbox/osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp'])
 env = conf.Finish()
 
