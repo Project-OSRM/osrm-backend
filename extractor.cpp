@@ -102,7 +102,7 @@ int main (int argc, char *argv[]) {
     boost::property_tree::ptree pt;
     try {
         INFO("Loading speed profiles")
-                boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
+                                                                        boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
         INFO("Found the following speed profiles: ");
         int profileCounter(0);
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child("")) {
@@ -134,11 +134,20 @@ int main (int argc, char *argv[]) {
                         if(name == "accessTag") {
                             settings.accessTag = value;
                             continue;
+                        } else {
+                            if(name == "excludeFromGrid") {
+                                settings.excludeFromGrid = value;
+                            } else {
+                                if(name == "defaultSpeed") {
+                                    settings.defaultSpeed = atoi(value.c_str());
+                                    settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
+                                }
+                            }
                         }
                     }
                 }
+                settings.speedProfile[name] = std::make_pair(std::atoi(value.c_str()), settings.speedProfile.size() );
             }
-            settings.speedProfile[name] = atoi(value.c_str());
         }
     } catch(std::exception& e) {
         ERR("caught: " << e.what() );
@@ -189,7 +198,7 @@ int main (int argc, char *argv[]) {
 
         cout << "[extractor] parsing finished after " << get_timestamp() - time << " seconds" << endl;
         time = get_timestamp();
-		boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
+        boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
         cout << "[extractor] Sorting used nodes        ... " << flush;
         stxxl::sort(externalMemory.usedNodeIDs.begin(), externalMemory.usedNodeIDs.end(), Cmp(), memory_to_use);
@@ -221,11 +230,11 @@ int main (int argc, char *argv[]) {
 
         while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
             if(wayStartAndEndEdgeIT->wayID < restrictionsIT->fromWay){
-            	++wayStartAndEndEdgeIT;
+                ++wayStartAndEndEdgeIT;
                 continue;
             }
             if(wayStartAndEndEdgeIT->wayID > restrictionsIT->fromWay) {
-            	++restrictionsIT;
+                ++restrictionsIT;
                 continue;
             }
             assert(wayStartAndEndEdgeIT->wayID == restrictionsIT->fromWay);
@@ -257,11 +266,11 @@ int main (int argc, char *argv[]) {
         wayStartAndEndEdgeIT = externalMemory.wayStartEndVector.begin();
         while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
             if(wayStartAndEndEdgeIT->wayID < restrictionsIT->toWay){
-            	++wayStartAndEndEdgeIT;
+                ++wayStartAndEndEdgeIT;
                 continue;
             }
             if(wayStartAndEndEdgeIT->wayID > restrictionsIT->toWay) {
-            	++restrictionsIT;
+                ++restrictionsIT;
                 continue;
             }
             NodeID viaNode = restrictionsIT->restriction.viaNode;
@@ -276,9 +285,7 @@ int main (int argc, char *argv[]) {
             }
 
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
-            	++usableRestrictionsCounter;
-            } else {
-                INFO("Restriction from: " << restrictionsIT->restriction.fromNode << ", to: " << restrictionsIT->restriction.toNode);
+                ++usableRestrictionsCounter;
             }
             ++restrictionsIT;
         }
@@ -346,7 +353,7 @@ int main (int argc, char *argv[]) {
         STXXLEdgeVector::iterator edgeIT = externalMemory.allEdges.begin();
         while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->start < nodesIT->id){
-            	++edgeIT;
+                ++edgeIT;
                 continue;
             }
             if(edgeIT->start > nodesIT->id) {
@@ -374,11 +381,11 @@ int main (int argc, char *argv[]) {
         edgeIT = externalMemory.allEdges.begin();
         while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->target < nodesIT->id){
-            	++edgeIT;
+                ++edgeIT;
                 continue;
             }
             if(edgeIT->target > nodesIT->id) {
-            	++nodesIT;
+                ++nodesIT;
                 continue;
             }
             if(edgeIT->target == nodesIT->id) {
