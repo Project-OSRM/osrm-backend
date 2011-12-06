@@ -35,7 +35,8 @@ struct _PathData {
     short turnInstruction;
 };
 
-typedef boost::unordered_map<std::string, NodeID> StringMap;
+typedef boost::unordered_map<std::string, NodeID > StringMap;
+typedef boost::unordered_map<std::string, std::pair<int, int> > StringToIntPairMap;
 
 struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
@@ -254,19 +255,28 @@ struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDSta
 };
 
 struct Settings {
-    Settings() : obeyPollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar") {}
-    StringMap speedProfile;
-    int operator[](const string & param) const {
+    Settings() : obeyPollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar"), defaultSpeed(30), excludeFromGrid("ferry") {}
+    StringToIntPairMap speedProfile;
+    int operator[](const std::string & param) const {
         if(speedProfile.find(param) == speedProfile.end())
             return 0;
         else
-            return speedProfile.at(param);
+            return speedProfile.at(param).first;
+    }
+    int GetHighwayTypeID(const std::string & param) const {
+        if(speedProfile.find(param) == speedProfile.end()) {
+            DEBUG("There is a bug with highway \"" << param << "\"");
+            return -1;
+        } else {
+            return speedProfile.at(param).second;
+        }
     }
     bool obeyPollards;
     bool obeyOneways;
     bool useRestrictions;
-    string accessTag;
-
+    std::string accessTag;
+    int defaultSpeed;
+    std::string excludeFromGrid;
 };
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {

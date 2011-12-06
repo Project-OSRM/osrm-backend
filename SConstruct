@@ -74,15 +74,20 @@ else:
 
 if sys.platform == 'darwin':	#Mac OS X
 	env.Append(CPPPATH = ['/usr/include/libxml2'] )		#comes with os x
-	#assume stxxl and boost are installed via homebrew.
-	#call out to brew to get the folder locations
+	#assume dependencies are installed with homebrew, and call out get folder locations
 	import subprocess
 	stxxl_prefix = subprocess.check_output(["brew", "--prefix", "libstxxl"]).strip()
-	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [stxxl_prefix+"/include"] )
 	env.Append(LIBPATH = [stxxl_prefix+"/lib"] )
+	
+	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [boost_prefix+"/include"] )
 	env.Append(LIBPATH = [boost_prefix+"/lib"] )	
+	
+	#libxml2_prefix = subprocess.check_output(["brew", "--prefix", "libxml2"]).strip()
+	#env.Append(CPPPATH = [libxml2_prefix+"/include"] )
+	#env.Append(LIBPATH = [libxml2_prefix+"/lib"] )	
+
 elif sys.platform.startswith("freebsd"):
 	env.ParseConfig('pkg-config --cflags --libs protobuf')
 	env.Append(CPPPATH = ['/usr/local/include', '/usr/local/include/libxml2'])
@@ -105,9 +110,11 @@ else:
 	env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 
 
-if not conf.CheckHeader('omp.h'):
-	print "Compiler does not support OpenMP. Exiting"
-	Exit(-1)
+if sys.platform != 'darwin':
+	if not conf.CheckHeader('omp.h'):
+		print "Compiler does not support OpenMP. Exiting"
+		Exit(-1)
+
 if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
 	Exit(-1)

@@ -304,18 +304,22 @@ public:
 
         _GridEdge smallestEdge;
         _Coordinate tmp, newEndpoint;
-        double dist = (numeric_limits<double>::max)();
+        double dist = numeric_limits<double>::max();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
                 resultNode.weight2 = candidate.weight;
+//                INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
                 if(candidate.edgeBasedNode < resultNode.edgeBasedNode) {
                     resultNode.edgeBasedNode = candidate.edgeBasedNode;
                     std::swap(resultNode.weight1, resultNode.weight2);
                 }
+//            } else if(std::fabs(dist - tmpDist) < 1) {
+//                INFO("b) ignored " << candidate.edgeBasedNode << " at distance " << tmpDist);
             }
             if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
+//                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
                 resultNode.Reset();
                 resultNode.edgeBasedNode = candidate.edgeBasedNode;
                 resultNode.nodeBasedEdgeNameID = candidate.nameID;
@@ -326,6 +330,8 @@ public:
                 foundNode = true;
                 smallestEdge = candidate;
                 newEndpoint = tmp;
+//            }  else if(tmpDist < dist) {
+//                INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
             }
         }
 
@@ -340,11 +346,11 @@ public:
 
         double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
-        //        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
+//        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
             resultNode.weight2 *= (1-ratio);
-            //            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
+//            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }
 //        INFO("bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
         return foundNode;
