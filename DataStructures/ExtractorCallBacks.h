@@ -98,7 +98,6 @@ public:
         std::string highway( w.keyVals.Find("highway") );
         std::string name( w.keyVals.Find("name") );
         std::string ref( w.keyVals.Find("ref"));
-        std::string oneway( w.keyVals.Find("oneway"));
         std::string junction( w.keyVals.Find("junction") );
         std::string route( w.keyVals.Find("route") );
         int maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
@@ -106,6 +105,9 @@ public:
         std::string accessTag( w.keyVals.Find(settings.accessTag) );
         std::string man_made( w.keyVals.Find("man_made") );
         std::string barrier( w.keyVals.Find("barrier") );
+        std::string oneway( w.keyVals.Find("oneway"));
+        std::string onewayClass( w.keyVals.Find("oneway:"+settings.accessTag));
+        std::string cycleway( w.keyVals.Find("cycleway"));
 
         //Save the name of the way if it has one, ref has precedence over name tag.
         if ( 0 < ref.length() )
@@ -144,16 +146,25 @@ public:
                 return true;
             }
 
-            //Let's process oneway property, if speed profile obeys to it
-            if(oneway != "no" && oneway != "false" && oneway != "0" && settings.obeyOneways) {
-                //if oneway tag is in forward direction or if actually roundabout
-                if(junction == "roundabout" || oneway == "yes" || oneway == "true" || oneway == "1") {
-                    w.direction = _Way::oneway;
-                } else {
-                    if( oneway == "-1")
-                        w.direction  = _Way::opposite;
-                }
-            }
+			//oneway
+			if( settings.obeyOneways ) {
+				if( oneway == "no" || oneway == "0" || oneway == "false" ||
+					onewayClass == "no" || onewayClass == "0" || onewayClass == "false" ||
+					((settings.accessTag == "bicycle") && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane")) )
+					w.direction = _Way::bidirectional;
+		        else if( oneway == "-1") {
+					w.direction  = _Way::opposite;
+		            std::reverse( w.path.begin(), w.path.end() );
+				}
+				else if( oneway == "yes" || oneway == "1" || oneway == "true" ||
+						 onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" ||
+						 junction == "roundabout" || highway == "motorway_link" || highway == "motorway" )
+						w.direction = _Way::oneway;
+				else
+					w.direction = _Way::bidirectional;
+			}
+			else
+				w.direction = _Way::bidirectional;
         } else {
             //Is the route tag listed as usable way in the profile?
             if(settings[route] > 0 || settings[man_made] > 0) {
