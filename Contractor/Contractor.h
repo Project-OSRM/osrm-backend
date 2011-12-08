@@ -157,7 +157,7 @@ public:
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
             forwardEdge.data.via = backwardEdge.data.via = via;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
-            forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
+            forwardEdge.data.distance = backwardEdge.data.distance = (std::numeric_limits< int >::max)();
             //remove parallel edges
             while ( i < edges.size() && edges[i].source == source && edges[i].target == target ) {
                 if ( edges[i].data.forward )
@@ -397,7 +397,7 @@ private:
                     continue;
                 const NodeID target = _graph->GetTarget( outEdge );
                 const int pathDistance = inData.distance + outData.distance;
-                maxDistance = std::max( maxDistance, pathDistance );
+                maxDistance = (std::max)( maxDistance, pathDistance );
                 if ( !heap.WasInserted( target ) ) {
                     heap.Insert( target, pathDistance, _HeapData( true ) );
                     numTargets++;

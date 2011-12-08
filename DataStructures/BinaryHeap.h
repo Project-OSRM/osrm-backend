@@ -141,7 +141,7 @@ public:
     void Clear() {
         heap.resize( 1 );
         insertedNodes.clear();
-        heap[0].weight = std::numeric_limits< Weight >::min();
+        heap[0].weight = (std::numeric_limits< Weight >::min)();
         nodeIndex.Clear();
     }
 

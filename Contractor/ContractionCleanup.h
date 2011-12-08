@@ -264,8 +264,8 @@ private:
         data->_heapForward->Insert( source, 0, source );
         data->_heapBackward->Insert( target, 0, target );
 
-        int targetDistance = std::numeric_limits< int >::max();
-        NodeID middle = std::numeric_limits<NodeID>::max();
+        int targetDistance = (std::numeric_limits< int >::max)();
+        NodeID middle = (std::numeric_limits<NodeID>::max)();
 
         while ( data->_heapForward->Size() + data->_heapBackward->Size() > 0 ) {
             if ( data->_heapForward->Size() > 0 ) {
