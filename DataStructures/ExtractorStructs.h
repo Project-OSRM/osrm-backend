@@ -35,7 +35,8 @@ struct _PathData {
     short turnInstruction;
 };
 
-typedef boost::unordered_map<std::string, NodeID> StringMap;
+typedef boost::unordered_map<std::string, NodeID > StringMap;
+typedef boost::unordered_map<std::string, std::pair<int, int> > StringToIntPairMap;
 
 struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
@@ -64,6 +65,13 @@ struct _Coordinate {
     bool isSet() const {
         return (INT_MIN != lat) && (INT_MIN != lon);
     }
+    inline bool isValid() const {
+        if(lat > 90*100000 || lat < -90*100000 || lon > 180*100000 || lon <-180*100000) {
+            return false;
+        }
+        return true;
+    }
+
 };
 
 inline ostream & operator<<(ostream & out, const _Coordinate & c){
@@ -177,10 +185,10 @@ struct _RawRestrictionContainer {
     _Restriction restriction;
     EdgeID fromWay;
     EdgeID toWay;
-    unsigned viaWay;
+    unsigned viaNode;
 
-    _RawRestrictionContainer(EdgeID f, EdgeID t, NodeID vn, unsigned vw) : fromWay(f), toWay(t), viaWay(vw) { restriction.viaNode = vn;}
-    _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaWay(UINT_MAX) { restriction.flags.isOnly = isOnly;}
+    _RawRestrictionContainer(EdgeID f, EdgeID t, NodeID vn, unsigned vw) : fromWay(f), toWay(t), viaNode(vw) { restriction.viaNode = vn;}
+    _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaNode(UINT_MAX) { restriction.flags.isOnly = isOnly;}
 
     static _RawRestrictionContainer min_value() {
         return _RawRestrictionContainer((numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)());
@@ -233,7 +241,7 @@ struct _WayIDStartAndEndEdge {
     }
 };
 
-struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _WayIDStartAndEndEdge, bool> {
+struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDStartAndEndEdge, bool> {
     typedef _WayIDStartAndEndEdge value_type;
     bool operator ()  (const _WayIDStartAndEndEdge & a, const _WayIDStartAndEndEdge & b) const {
         return a.wayID < b.wayID;
@@ -247,19 +255,28 @@ struct CmpWayStartAndEnd : public std::binary_function<_WayIDStartAndEndEdge, _W
 };
 
 struct Settings {
-    Settings() : obeyPollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar") {}
-    StringMap speedProfile;
-    int operator[](const string & param) const {
+    Settings() : obeyPollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar"), defaultSpeed(30), excludeFromGrid("ferry") {}
+    StringToIntPairMap speedProfile;
+    int operator[](const std::string & param) const {
         if(speedProfile.find(param) == speedProfile.end())
             return 0;
         else
-            return speedProfile.at(param);
+            return speedProfile.at(param).first;
+    }
+    int GetHighwayTypeID(const std::string & param) const {
+        if(speedProfile.find(param) == speedProfile.end()) {
+            DEBUG("There is a bug with highway \"" << param << "\"");
+            return -1;
+        } else {
+            return speedProfile.at(param).second;
+        }
     }
     bool obeyPollards;
     bool obeyOneways;
     bool useRestrictions;
-    string accessTag;
-
+    std::string accessTag;
+    int defaultSpeed;
+    std::string excludeFromGrid;
 };
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {

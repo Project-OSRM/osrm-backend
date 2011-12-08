@@ -101,9 +101,9 @@ public:
         std::string oneway( w.keyVals.Find("oneway"));
         std::string junction( w.keyVals.Find("junction") );
         std::string route( w.keyVals.Find("route") );
-        double maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
+        int maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
         std::string access( w.keyVals.Find("access") );
-        std::string accessClass( w.keyVals.Find(settings.accessTag) );
+        std::string accessTag( w.keyVals.Find(settings.accessTag) );
         std::string man_made( w.keyVals.Find("man_made") );
         std::string barrier( w.keyVals.Find("barrier") );
 
@@ -119,12 +119,17 @@ public:
         }
 
         //Is the highway tag listed as usable way?
-        if(0 < settings[highway]) {
+        if(0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) {
 
-            if(0 != maxspeed)
-                w.speed = maxspeed;
-            else
-                w.speed = settings[highway];
+            if(0 < settings[highway]) {
+                if(0 < maxspeed)
+                    w.speed = std::min(maxspeed, settings[highway]);
+                else
+                    w.speed = settings[highway];
+            } else {
+                w.speed = settings.defaultSpeed;
+                highway = "default";
+            }
             w.useful = true;
 
             //Okay, do we have access to that way?
@@ -135,10 +140,9 @@ public:
                 }
             }
 
-            if("yes" == accessClass)
-                w.access = true;
-            else if("no" == accessClass)
-                w.access = false;
+            if("no" == accessTag) {
+                return true;
+            }
 
             //Let's process oneway property, if speed profile obeys to it
             if(oneway != "no" && oneway != "false" && oneway != "0" && settings.obeyOneways) {
@@ -154,17 +158,21 @@ public:
             //Is the route tag listed as usable way in the profile?
             if(settings[route] > 0 || settings[man_made] > 0) {
                 w.useful = true;
-                w.direction = _Way::oneway;
                 w.speed = settings[route];
                 w.direction = _Way::bidirectional;
+                if(0 < settings[route])
+                    highway = route;
+                else if (0 < settings[man_made]) {
+                    highway = man_made;
+                }
             }
         }
         if ( w.useful && w.access && (1 < w.path.size()) ) { //Only true if the way is specified by the speed profile
             //TODO: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
-            w.type = 1;
+            w.type = settings.GetHighwayTypeID(highway);
 
             //Get the unique identifier for the street name
-            StringMap::const_iterator strit = stringMap->find(w.name);
+            const StringMap::const_iterator strit = stringMap->find(w.name);
             if(strit == stringMap->end()) {
                 w.nameID = externalMemory->nameVector.size();
                 externalMemory->nameVector.push_back(w.name);
@@ -173,8 +181,14 @@ public:
                 w.nameID = strit->second;
             }
 
-            GUARANTEE(w.id != UINT_MAX, "found way with unknown type");
-            GUARANTEE(-1 != w.speed, "found way with unknown speed");
+            if(-1 == w.speed){
+                WARN("found way with bogus speed, id: " << w.id);
+                return true;
+            }
+            if(w.id == UINT_MAX) {
+                WARN("found way with unknown type: " << w.id);
+                return true;
+            }
 
             if ( w.direction == _Way::opposite ){
                 std::reverse( w.path.begin(), w.path.end() );

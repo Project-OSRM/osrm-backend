@@ -66,8 +66,7 @@ public:
         NodeID target;
         struct EdgeData {
             NodeID via;
-            unsigned nameID1;
-            unsigned nameID2;
+            unsigned nameID;
             int distance;
             bool shortcut;
             bool forward;
@@ -91,7 +90,7 @@ public:
         bool operator== ( const Edge& right ) const {
             return ( source == right.source && target == right.target && data.distance == right.data.distance &&
                     data.shortcut == right.data.shortcut && data.forward == right.data.forward && data.backward == right.data.backward
-                    && data.via == right.data.via && data.nameID1 == right.data.nameID1 && data.nameID2 == right.data.nameID2
+                    && data.via == right.data.via && data.nameID == right.data.nameID
                     );
         }
     };
@@ -145,7 +144,7 @@ private:
         try {
             _firstEdge.resize( _numNodes + 1 );
         } catch(...) {
-            cerr << "Not enough RAM on machine" << endl;
+            ERR("Not enough RAM on machine");
             return;
         }
         _firstEdge[0] = 0;
@@ -165,7 +164,7 @@ private:
             threadData.push_back( new _ThreadData( _numNodes ) );
         }
 
-        cout << "Scanning for useless shortcuts" << endl;
+        INFO("Scanning for useless shortcuts");
         BuildOutgoingGraph();
 #pragma omp parallel for
         for ( int i = 0; i < ( int ) _graph.size(); i++ ) {
@@ -203,7 +202,7 @@ private:
             }
         }
 
-        cout << "Removing edges" << endl;
+        INFO("Removing edges");
         int useful = 0;
         for ( int i = 0; i < ( int ) _graph.size(); i++ ) {
             if ( !_graph[i].data.forward && !_graph[i].data.backward && _graph[i].data.shortcut )
@@ -211,7 +210,7 @@ private:
             _graph[useful] = _graph[i];
             useful++;
         }
-        cout << "Removed " << _graph.size() - useful << " useless shortcuts" << endl;
+        INFO("Removed " << _graph.size() - useful << " useless shortcuts");
         _graph.resize( useful );
 
         for ( int threadNum = 0; threadNum < maxThreads; ++threadNum ) {
@@ -224,6 +223,11 @@ private:
         const NodeID node = heapForward->DeleteMin();
         const int distance = heapForward->GetKey( node );
 
+        if ( distance > *targetDistance ) {
+            heapForward->DeleteAll();
+            return;
+        }
+
         if ( heapBackward->WasInserted( node ) ) {
             const int newDistance = heapBackward->GetKey( node ) + distance;
             if ( newDistance < *targetDistance ) {
@@ -232,11 +236,7 @@ private:
             }
         }
 
-        if ( distance > *targetDistance ) {
-            heapForward->DeleteAll();
-            return;
-        }
-        for ( int edge = _firstEdge[node], endEdges = _firstEdge[node + 1]; edge != endEdges; ++edge ) {
+       for ( int edge = _firstEdge[node], endEdges = _firstEdge[node + 1]; edge != endEdges; ++edge ) {
             const NodeID to = _graph[edge].target;
             const int edgeWeight = _graph[edge].data.distance;
             assert( edgeWeight > 0 );
@@ -257,15 +257,15 @@ private:
         }
     }
 
-    int _ComputeDistance( NodeID source, NodeID target, _ThreadData * data, std::vector< NodeID >* path = NULL ) {
+    int _ComputeDistance( NodeID source, NodeID target, _ThreadData * data ) {
         data->_heapForward->Clear();
         data->_heapBackward->Clear();
         //insert source into heap
         data->_heapForward->Insert( source, 0, source );
         data->_heapBackward->Insert( target, 0, target );
 
-        int targetDistance = (std::numeric_limits< int >::max)();
-        NodeID middle = (std::numeric_limits<NodeID>::max)();
+        int targetDistance = std::numeric_limits< int >::max();
+        NodeID middle = std::numeric_limits<NodeID>::max();
 
         while ( data->_heapForward->Size() + data->_heapBackward->Size() > 0 ) {
             if ( data->_heapForward->Size() > 0 ) {

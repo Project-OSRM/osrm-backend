@@ -140,7 +140,7 @@ public:
             distance = searchEngine->ComputeRoute(segmentPhantomNodes, path);
 
             if(INT_MAX == distance ) {
-                INFO( "Error occurred, single path not found" );
+                DEBUG( "Error occurred, single path not found" );
             }
 
             //put segments at correct position of routes raw data

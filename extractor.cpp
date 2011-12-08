@@ -70,19 +70,16 @@ bool removeIfUnused(ClassT n) { return (false == n.used); }
 
 
 int main (int argc, char *argv[]) {
-    if(argc <= 1) {
-        cerr << "usage: " << endl << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>" << endl;
-        exit(-1);
-    }
+    GUARANTEE((argc > 1) ,"usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>");
 
-    cout << "[extractor] extracting data from input file " << argv[1] << endl;
-    bool isPBF = false;
-    string outputFileName(argv[1]);
-    string restrictionsFileName(argv[1]);
-    string::size_type pos = outputFileName.find(".osm.bz2");
-    if(pos==string::npos) {
+    INFO("extracting data from input file " << argv[1]);
+    bool isPBF(false);
+    std::string outputFileName(argv[1]);
+    std::string restrictionsFileName(argv[1]);
+    std::string::size_type pos = outputFileName.find(".osm.bz2");
+    if(pos==std::string::npos) {
         pos = outputFileName.find(".osm.pbf");
-        if(pos!=string::npos) {
+        if(pos!=std::string::npos) {
             isPBF = true;
         }
     }
@@ -99,25 +96,25 @@ int main (int argc, char *argv[]) {
             restrictionsFileName.append(".osrm.restrictions");
         }
     }
-    string adressFileName(outputFileName);
+    std::string adressFileName(outputFileName);
     Settings settings;
 
     boost::property_tree::ptree pt;
     try {
         INFO("Loading speed profiles")
-                boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
+                                                                        boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
         INFO("Found the following speed profiles: ");
         int profileCounter(0);
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child("")) {
-            string name = v.first;
+            std::string name = v.first;
             cout << " [" << profileCounter << "]" << name << endl;
             ++profileCounter;
         }
-        string usedSpeedProfile(pt.get_child("").begin()->first);
+        std::string usedSpeedProfile(pt.get_child("").begin()->first);
         INFO("Using profile \"" << usedSpeedProfile << "\"")
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(usedSpeedProfile)) {
-            string name = v.first;
-            string value = v.second.get<string>("");
+            std::string name = v.first;
+            std::string value = v.second.get<std::string>("");
             DEBUG("inserting " << name << "=" << value);
             if(name == "obeyOneways") {
                 if(value == "no")
@@ -137,11 +134,20 @@ int main (int argc, char *argv[]) {
                         if(name == "accessTag") {
                             settings.accessTag = value;
                             continue;
+                        } else {
+                            if(name == "excludeFromGrid") {
+                                settings.excludeFromGrid = value;
+                            } else {
+                                if(name == "defaultSpeed") {
+                                    settings.defaultSpeed = atoi(value.c_str());
+                                    settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
+                                }
+                            }
                         }
                     }
                 }
+                settings.speedProfile[name] = std::make_pair(std::atoi(value.c_str()), settings.speedProfile.size() );
             }
-            settings.speedProfile[name] = atoi(value.c_str());
         }
     } catch(std::exception& e) {
         ERR("caught: " << e.what() );
@@ -150,23 +156,21 @@ int main (int argc, char *argv[]) {
     unsigned amountOfRAM = 1;
     unsigned installedRAM = GetPhysicalmemory(); 
     if(installedRAM < 2048264) {
-        cout << "[Warning] Machine has less than 2GB RAM." << endl;
+        WARN("Machine has less than 2GB RAM.");
     }
     if(testDataFile("extractor.ini")) {
         ExtractorConfiguration extractorConfig("extractor.ini");
         unsigned memoryAmountFromFile = atoi(extractorConfig.GetParameter("Memory").c_str());
         if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024))
             amountOfRAM = memoryAmountFromFile;
-        cout << "[extractor] using " << amountOfRAM << " GB of RAM for buffers" << endl;
+        INFO("Using " << amountOfRAM << " GB of RAM for buffers");
     }
 
+    StringMap stringMap;
     STXXLContainers externalMemory;
 
     unsigned usedNodeCounter = 0;
     unsigned usedEdgeCounter = 0;
-
-    StringMap stringMap;
-
     double time = get_timestamp();
 
     stringMap[""] = 0;
@@ -178,13 +182,9 @@ int main (int argc, char *argv[]) {
         parser = new XMLParser(argv[1]);
     }
     parser->RegisterCallbacks(&nodeFunction, &restrictionFunction, &wayFunction, &adressFunction);
-    if(parser->Init()) {
-        parser->Parse();
-    } else {
-        cerr << "[error] parser not initialized!" << endl;
-        exit(-1);
-    }
-    delete parser;
+    GUARANTEE(parser->Init(), "Parser not initialized!");
+    parser->Parse();
+    DELETE(parser);
     stringMap.clear();
 
     try {
@@ -198,7 +198,7 @@ int main (int argc, char *argv[]) {
 
         cout << "[extractor] parsing finished after " << get_timestamp() - time << " seconds" << endl;
         time = get_timestamp();
-		boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
+        boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
         cout << "[extractor] Sorting used nodes        ... " << flush;
         stxxl::sort(externalMemory.usedNodeIDs.begin(), externalMemory.usedNodeIDs.end(), Cmp(), memory_to_use);
@@ -217,7 +217,7 @@ int main (int argc, char *argv[]) {
         time = get_timestamp();
 
         cout << "[extractor] Sorting used ways         ... " << flush;
-        stxxl::sort(externalMemory.wayStartEndVector.begin(), externalMemory.wayStartEndVector.end(), CmpWayStartAndEnd(), memory_to_use);
+        stxxl::sort(externalMemory.wayStartEndVector.begin(), externalMemory.wayStartEndVector.end(), CmpWayByID(), memory_to_use);
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         cout << "[extractor] Sorting restrctns. by from... " << flush;
@@ -230,11 +230,11 @@ int main (int argc, char *argv[]) {
 
         while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
             if(wayStartAndEndEdgeIT->wayID < restrictionsIT->fromWay){
-            	++wayStartAndEndEdgeIT;
+                ++wayStartAndEndEdgeIT;
                 continue;
             }
             if(wayStartAndEndEdgeIT->wayID > restrictionsIT->fromWay) {
-            	++restrictionsIT;
+                ++restrictionsIT;
                 continue;
             }
             assert(wayStartAndEndEdgeIT->wayID == restrictionsIT->fromWay);
@@ -264,14 +264,13 @@ int main (int argc, char *argv[]) {
         cout << "[extractor] Fixing restriction ends   ... " << flush;
         restrictionsIT = externalMemory.restrictionsVector.begin();
         wayStartAndEndEdgeIT = externalMemory.wayStartEndVector.begin();
-        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() &&
-                restrictionsIT != externalMemory.restrictionsVector.end()) {
+        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
             if(wayStartAndEndEdgeIT->wayID < restrictionsIT->toWay){
-            	++wayStartAndEndEdgeIT;
+                ++wayStartAndEndEdgeIT;
                 continue;
             }
             if(wayStartAndEndEdgeIT->wayID > restrictionsIT->toWay) {
-            	++restrictionsIT;
+                ++restrictionsIT;
                 continue;
             }
             NodeID viaNode = restrictionsIT->restriction.viaNode;
@@ -286,12 +285,12 @@ int main (int argc, char *argv[]) {
             }
 
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
-            	++usableRestrictionsCounter;
+                ++usableRestrictionsCounter;
             }
             ++restrictionsIT;
         }
-
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        INFO("usable restrictions: " << usableRestrictionsCounter);
         //serialize restrictions
         ofstream restrictionsOutstream;
         restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);
@@ -354,7 +353,7 @@ int main (int argc, char *argv[]) {
         STXXLEdgeVector::iterator edgeIT = externalMemory.allEdges.begin();
         while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->start < nodesIT->id){
-            	++edgeIT;
+                ++edgeIT;
                 continue;
             }
             if(edgeIT->start > nodesIT->id) {
@@ -382,11 +381,11 @@ int main (int argc, char *argv[]) {
         edgeIT = externalMemory.allEdges.begin();
         while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->target < nodesIT->id){
-            	++edgeIT;
+                ++edgeIT;
                 continue;
             }
             if(edgeIT->target > nodesIT->id) {
-            	++nodesIT;
+                ++nodesIT;
                 continue;
             }
             if(edgeIT->target == nodesIT->id) {

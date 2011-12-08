@@ -91,14 +91,18 @@ public:
 
         //insert start and/or target node of start edge
         _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, -phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.edgeBasedNode);
+//        INFO("a) forw insert " << phantomNodes.startPhantom.edgeBasedNode << ", weight: " << -phantomNodes.startPhantom.weight1);
         if(phantomNodes.startPhantom.isBidirected() ) {
-            _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
+//            INFO("b) forw insert " << phantomNodes.startPhantom.edgeBasedNode+1 << ", weight: " << -phantomNodes.startPhantom.weight2);
+           _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
         }
         //insert start and/or target node of target edge id
-        _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, -phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode);
+        _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, -phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode);
+//        INFO("c) back insert " << phantomNodes.targetPhantom.edgeBasedNode << ", weight: " << -phantomNodes.targetPhantom.weight2);
         if(phantomNodes.targetPhantom.isBidirected() ) {
-            _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, -phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode+1);
-        }
+            _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, -phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode+1);
+//            INFO("d) back insert " << phantomNodes.targetPhantom.edgeBasedNode+1 << ", weight: " << -phantomNodes.targetPhantom.weight1);
+       }
 
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
             if(_forwardHeap->Size() > 0){
@@ -256,7 +260,7 @@ private:
             return false;
         } else {
             assert(!ed.shortcut);
-            path.push_back(_PathData(ed.via, ed.nameID1, ed.turnInstruction, ed.distance) );
+            path.push_back(_PathData(ed.via, ed.nameID, ed.turnInstruction, ed.distance) );
             return true;
         }
     }

@@ -304,22 +304,22 @@ public:
 
         _GridEdge smallestEdge;
         _Coordinate tmp, newEndpoint;
-        double dist = (numeric_limits<double>::max)();
+        double dist = numeric_limits<double>::max();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
                 resultNode.weight2 = candidate.weight;
-                /* if(resultNode.weight1 != resultNode.weight2) {
-                    ERR("w1: " << resultNode.weight1 << ", w2: " << resultNode.weight2);
-                    assert(false);
-                }*/
+//                INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
                 if(candidate.edgeBasedNode < resultNode.edgeBasedNode) {
                     resultNode.edgeBasedNode = candidate.edgeBasedNode;
                     std::swap(resultNode.weight1, resultNode.weight2);
                 }
+//            } else if(std::fabs(dist - tmpDist) < 1) {
+//                INFO("b) ignored " << candidate.edgeBasedNode << " at distance " << tmpDist);
             }
-            if(tmpDist < dist) {
+            if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
+//                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
                 resultNode.Reset();
                 resultNode.edgeBasedNode = candidate.edgeBasedNode;
                 resultNode.nodeBasedEdgeNameID = candidate.nameID;
@@ -330,26 +330,29 @@ public:
                 foundNode = true;
                 smallestEdge = candidate;
                 newEndpoint = tmp;
+//            }  else if(tmpDist < dist) {
+//                INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
             }
         }
 
-        //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
-        //        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
-        //        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
-        //        assert(!resultNode.isBidirected || (resultNode.weight1 == resultNode.weight2));
-        //        if(resultNode.weight1 != resultNode.weight2) {
-        //            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
-        //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected ? "yes" : "no"));
-        //        }
+//        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
+//        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
+//        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
+//        assert(!resultNode.isBidirected() || (resultNode.weight1 == resultNode.weight2));
+//        if(resultNode.weight1 != resultNode.weight2) {
+//            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
+//            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
+//        }
 
         double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
-        //        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
+//        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
             resultNode.weight2 *= (1-ratio);
-            //            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
+//            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }
+//        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
         return foundNode;
     }
 
@@ -412,7 +415,7 @@ private:
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) {
-        return (std::fabs(d1 - d2) < 0.000000001);
+        return (std::fabs(d1 - d2) < 0.0001);
     }
 
     unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset ) {
@@ -551,6 +554,11 @@ private:
         if(!localStream.get() || !localStream->is_open()) {
             localStream.reset(new std::ifstream(iif.c_str(), std::ios::in | std::ios::binary));
         }
+        if(!localStream->good()) {
+            localStream->clear(std::ios::goodbit);
+            DEBUG("Resetting stale filestream");
+        }
+
         localStream->seekg(startIndexInFile);
         localStream->read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
         assert(cellMap.find(fileIndex) != cellMap.end());

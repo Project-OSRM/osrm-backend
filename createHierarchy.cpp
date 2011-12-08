@@ -28,7 +28,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #undef VERBOSE2
 #endif
 
-#include <climits>
+#include <boost/foreach.hpp>
+
 #include <fstream>
 #include <istream>
 #include <iostream>
@@ -60,11 +61,10 @@ std::vector<_Restriction> inputRestrictions;
 
 int main (int argc, char *argv[]) {
     if(argc < 3) {
-        cerr << "usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions>" << std::endl;
-        exit(-1);
+        ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions>");
     }
     INFO("Using restrictions from file: " << argv[2]);
-    ifstream restrictionsInstream(argv[2], ios::binary);
+    std::ifstream restrictionsInstream(argv[2], ios::binary);
     _Restriction restriction;
     unsigned usableRestrictionsCounter(0);
     restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
@@ -83,36 +83,24 @@ int main (int argc, char *argv[]) {
     }
     omp_set_num_threads(numberOfThreads);
 
-    std::cout << "preprocessing data from input file " << argv[1];
+    INFO("preprocessing data from input file " << argv[1] << " using STL "
 #ifdef _GLIBCXX_PARALLEL
-    std::cout << " using STL parallel mode" << std::endl;
+    "parallel (GCC)"
 #else
-    std::cout << " using STL serial mode" << std::endl;
+    "serial"
 #endif
-
+    " mode");
     ifstream in;
     in.open (argv[1], ifstream::in | ifstream::binary);
     if (!in.is_open()) {
-        cerr << "Cannot open " << argv[1] << std::endl; exit(-1);
+        ERR("Cannot open " << argv[1]);
     }
 
-    char nodeOut[1024];
-    char edgeOut[1024];
-    char ramIndexOut[1024];
-    char fileIndexOut[1024];
-    char levelInfoOut[1024];
-
-    strcpy(nodeOut, argv[1]);
-    strcpy(edgeOut, argv[1]);
-    strcpy(ramIndexOut, argv[1]);
-    strcpy(fileIndexOut, argv[1]);
-    strcpy(levelInfoOut, argv[1]);
-
-    strcat(nodeOut, ".nodes");
-    strcat(edgeOut, ".hsgr");
-    strcat(ramIndexOut, ".ramIndex");
-    strcat(fileIndexOut, ".fileIndex");
-    strcat(levelInfoOut, ".levels");
+    char nodeOut[1024];    		strcpy(nodeOut, argv[1]);    		strcat(nodeOut, ".nodes");
+    char edgeOut[1024];    		strcpy(edgeOut, argv[1]);    		strcat(edgeOut, ".hsgr");
+    char ramIndexOut[1024];    	strcpy(ramIndexOut, argv[1]);    	strcat(ramIndexOut, ".ramIndex");
+    char fileIndexOut[1024];    strcpy(fileIndexOut, argv[1]);    	strcat(fileIndexOut, ".fileIndex");
+    char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
 
     std::vector<ImportEdge> edgeList;
     NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, &internalToExternaleNodeMapping, inputRestrictions);
@@ -132,24 +120,24 @@ int main (int argc, char *argv[]) {
     DELETE(edgeBasedGraphFactory);
 
     WritableGrid * writeableGrid = new WritableGrid();
-    std::cout << "building grid ..." << std::flush;
+    INFO("building grid ...");
     writeableGrid->ConstructGrid(nodeBasedEdgeList, &internalToExternaleNodeMapping, ramIndexOut, fileIndexOut);
     DELETE( writeableGrid );
-    std::cout << "writing node map ..." << std::flush;
-    ofstream mapOutFile(nodeOut, ios::binary);
+    nodeBasedEdgeList.clear();
+    std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);
 
-    for(NodeID i = 0; i < internalToExternaleNodeMapping.size(); i++) {
-        mapOutFile.write((char *)&(internalToExternaleNodeMapping.at(i)), sizeof(NodeInfo));
+    INFO("writing node map ...");
+    std::ofstream mapOutFile(nodeOut, ios::binary);
+    BOOST_FOREACH(NodeInfo & info, internalToExternaleNodeMapping) {
+        mapOutFile.write((char *)&(info), sizeof(NodeInfo));
     }
     mapOutFile.close();
-    std::cout << "ok" << std::endl;
-
     internalToExternaleNodeMapping.clear();
     std::vector<NodeInfo>().swap(internalToExternaleNodeMapping);
     inputRestrictions.clear();
     std::vector<_Restriction>().swap(inputRestrictions);
 
-    std::cout << "initializing contractor ..." << std::flush;
+    INFO("initializing contractor");
     Contractor* contractor = new Contractor( n, edgeBasedEdgeList );
     double contractionStartedTimestamp(get_timestamp());
     contractor->Run();
@@ -160,24 +148,25 @@ int main (int argc, char *argv[]) {
 
     ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
     contractedEdges.clear();
+    std::vector<ContractionCleanup::Edge>().swap(contractedEdges);
     cleanup->Run();
 
     std::vector< InputEdge> cleanedEdgeList;
     cleanup->GetData(cleanedEdgeList);
     DELETE( cleanup );
 
-    std::cout << "Serializing edges " << std::flush;
+    INFO("Serializing edges ");
     ofstream edgeOutFile(edgeOut, ios::binary);
     Percent p(cleanedEdgeList.size());
-    for(std::vector< InputEdge>::iterator it = cleanedEdgeList.begin(); it != cleanedEdgeList.end(); it++) {
+    BOOST_FOREACH(InputEdge & edge, cleanedEdgeList) {
         p.printIncrement();
-        edgeOutFile.write((char *)&(it->data), sizeof(EdgeData));
-        edgeOutFile.write((char *)&(it->source), sizeof(NodeID));
-        edgeOutFile.write((char *)&(it->target), sizeof(NodeID));
+        edgeOutFile.write((char *)&(edge.data), sizeof(EdgeData));
+        edgeOutFile.write((char *)&(edge.source), sizeof(NodeID));
+        edgeOutFile.write((char *)&(edge.target), sizeof(NodeID));
     }
     edgeOutFile.close();
     cleanedEdgeList.clear();
 
-    std::cout << "finished" << std::endl;
+    INFO("finished preprocessing");
     return 0;
 }
