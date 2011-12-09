@@ -426,10 +426,10 @@ int main (int argc, char *argv[]) {
                         break;
                     }
                     fout.write((char*)&intWeight, sizeof(int));
-                    short edgeType = edgeIT->type;
-                    fout.write((char*)&edgeType, sizeof(short));
+                    assert(edgeIT->type >= 0);
+                    fout.write((char*)&edgeIT->type, sizeof(short));
                     fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
-                    fout.write((char *)&edgeIT->isRoundabout, sizeof(bool));
+                    fout.write((char*)&edgeIT->isRoundabout, sizeof(bool));
                 }
                 ++usedEdgeCounter;
                 ++edgeIT;
@@ -501,4 +501,3 @@ bool wayFunction(_Way w) {
     extractCallBacks->wayFunction(w);
     return true;
 }
-
