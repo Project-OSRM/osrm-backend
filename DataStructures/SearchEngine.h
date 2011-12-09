@@ -75,7 +75,7 @@ public:
 
         InitializeThreadLocalStorageIfNecessary();
         NodeID middle = ( NodeID ) UINT_MAX;
-        bool stOnSameEdge = false;
+/*        bool stOnSameEdge = false;
         //Handling the special case that origin and destination are on same edge and that the order is correct.
         if(phantomNodes.PhantomsAreOnSameNodeBasedEdge()){
             if(phantomNodes.startPhantom.isBidirected() && phantomNodes.targetPhantom.isBidirected()) {
@@ -88,30 +88,34 @@ public:
                 stOnSameEdge = true;
             }
         }
-
+*/
         //insert start and/or target node of start edge
         _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, -phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.edgeBasedNode);
 //        INFO("a) forw insert " << phantomNodes.startPhantom.edgeBasedNode << ", weight: " << -phantomNodes.startPhantom.weight1);
         if(phantomNodes.startPhantom.isBidirected() ) {
 //            INFO("b) forw insert " << phantomNodes.startPhantom.edgeBasedNode+1 << ", weight: " << -phantomNodes.startPhantom.weight2);
-           _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
+            _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
         }
         //insert start and/or target node of target edge id
-        _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, -phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode);
-//        INFO("c) back insert " << phantomNodes.targetPhantom.edgeBasedNode << ", weight: " << -phantomNodes.targetPhantom.weight2);
+        _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode);
+//        INFO("c) back insert " << phantomNodes.targetPhantom.edgeBasedNode << ", weight: " << phantomNodes.targetPhantom.weight1);
         if(phantomNodes.targetPhantom.isBidirected() ) {
-            _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, -phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode+1);
-//            INFO("d) back insert " << phantomNodes.targetPhantom.edgeBasedNode+1 << ", weight: " << -phantomNodes.targetPhantom.weight1);
-       }
+            _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode+1);
+//            INFO("d) back insert " << phantomNodes.targetPhantom.edgeBasedNode+1 << ", weight: " << phantomNodes.targetPhantom.weight2);
+        }
+        int startOffset = (phantomNodes.startPhantom.isBidirected() ? std::max(phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.weight2) : phantomNodes.startPhantom.weight1) ;
+        int targetOffset = 0;//(phantomNodes.targetPhantom.isBidirected() ? std::max(phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.weight2) : phantomNodes.targetPhantom.weight1) ;
 
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
             if(_forwardHeap->Size() > 0){
-                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, stOnSameEdge);
+                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, startOffset);
             }
             if(_backwardHeap->Size() > 0){
-                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, stOnSameEdge);
+                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, targetOffset);
             }
         }
+
+//        INFO("-> dist " << _upperbound);
         if ( _upperbound == INT_MAX ) {
             return _upperbound;
         }
@@ -168,18 +172,25 @@ public:
         return GetEscapedNameForNameID(nameID);
     }
 private:
-    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const bool stOnSameEdge) const {
+    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const int negativeOffset) const {
         const NodeID node = _forwardHeap->DeleteMin();
         const int distance = _forwardHeap->GetKey(node);
-        if(_backwardHeap->WasInserted(node) && (!stOnSameEdge || distance > 0) ){
+//        INFO((forwardDirection ? "[forw]" : "[back]") << " settled node " << node << " at distance " << distance);
+        if(_backwardHeap->WasInserted(node) ){
+//            INFO((forwardDirection ? "[forw]" : "[back]") << " scanned node " << node << " in both directions");
             const int newDistance = _backwardHeap->GetKey(node) + distance;
-            if(newDistance < *_upperbound){
+            if(newDistance < *_upperbound ){
+                if(newDistance>=0 ) {
+//                INFO((forwardDirection ? "[forw]" : "[back]") << " settled node " << node << " is new middle at total distance " << newDistance);
                 *middle = node;
                 *_upperbound = newDistance;
+//                } else {
+//                    INFO((forwardDirection ? "[forw]" : "[back]") << " ignored " << node << " as new middle at total distance " << newDistance);
+                }
             }
         }
 
-        if(distance > *_upperbound){
+        if(distance-negativeOffset > *_upperbound){
             _forwardHeap->DeleteAll();
             return;
         }
@@ -215,10 +226,12 @@ private:
 
                 //New Node discovered -> Add to Heap + Node Info Storage
                 if ( !_forwardHeap->WasInserted( to ) ) {
+//                    INFO((forwardDirection ? "[forw]" : "[back]") << " scanning edge (" << node << "," << to << ") with distance " << toDistance << ", edge length: " << data.distance);
                     _forwardHeap->Insert( to, toDistance, node );
                 }
                 //Found a shorter Path -> Update distance
                 else if ( toDistance < _forwardHeap->GetKey( to ) ) {
+//                    INFO((forwardDirection ? "[forw]" : "[back]") << " decrease and scanning edge (" << node << "," << to << ") with distance " << toDistance << ", edge length: " << data.distance);
                     _forwardHeap->GetData( to ).parent = node;
                     _forwardHeap->DecreaseKey( to, toDistance );
                     //new parent
