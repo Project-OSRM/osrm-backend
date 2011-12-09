@@ -311,12 +311,6 @@ public:
             if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
                 resultNode.weight2 = candidate.weight;
 //                INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
-                if(candidate.edgeBasedNode < resultNode.edgeBasedNode) {
-                    resultNode.edgeBasedNode = candidate.edgeBasedNode;
-                    std::swap(resultNode.weight1, resultNode.weight2);
-                }
-//            } else if(std::fabs(dist - tmpDist) < 1) {
-//                INFO("b) ignored " << candidate.edgeBasedNode << " at distance " << tmpDist);
             }
             if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
 //                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
@@ -349,7 +343,7 @@ public:
 //        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
-            resultNode.weight2 *= (1-ratio);
+            resultNode.weight2 *= (1.-ratio);
 //            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         }
 //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
