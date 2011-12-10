@@ -1,8 +1,9 @@
 #include <climits>
-#include <google/sparse_hash_map>
 #include <iostream>
 #include <list>
 #include <vector>
+
+#include <boost/unordered_map.hpp>
 
 template < class T >
 struct Countfn {
@@ -17,7 +18,7 @@ public:
     typedef std::vector< Key > Key_List;                      ///< List of keys
     typedef typename Key_List::iterator Key_List_Iter;        ///< Main cache iterator
     typedef typename Key_List::const_iterator Key_List_cIter; ///< Main cache iterator (const)
-    typedef google::sparse_hash_map< Key, List_Iter > Map;    ///< Index typedef
+    typedef boost::unordered_map< Key, List_Iter > Map;    ///< Index typedef
     typedef std::pair< Key, List_Iter > Pair;                 ///< Pair of Map elements
     typedef typename Map::iterator Map_Iter;			      ///< Index iterator
     typedef typename Map::const_iterator Map_cIter;           ///< Index iterator (const)
@@ -29,9 +30,7 @@ private:
     unsigned long _curr_size; ///< Current abstract size of the cache
 
 public:
-    LRUCache( const unsigned long Size ) : _max_size( Size ), _curr_size( 0 ) {
-        _index.set_deleted_key(UINT_MAX);
-    }
+    LRUCache( const unsigned long Size ) : _max_size( Size ), _curr_size( 0 ) { }
 
     ~LRUCache() { clear(); }
 

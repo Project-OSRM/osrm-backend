@@ -28,9 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 #include <algorithm>
 #include <map>
-#include <google/dense_hash_map>
-#include <google/sparse_hash_map>
-#include <google/sparsetable>
+#include <boost/unordered_map.hpp>
 
 template< typename NodeID, typename Key >
 class ArrayStorage {
@@ -74,10 +72,10 @@ private:
 };
 
 template< typename NodeID, typename Key >
-class DenseStorage {
+class UnorderedMapStorage {
 public:
 
-    DenseStorage( size_t size = 0 ) { nodes.set_empty_key(UINT_MAX); }
+	UnorderedMapStorage( size_t size = 0 ) {  }
 
     Key &operator[]( NodeID node ) {
         return nodes[node];
@@ -88,34 +86,7 @@ public:
     }
 
 private:
-    google::dense_hash_map< NodeID, Key > nodes;
-};
-
-template< typename NodeID, typename Key >
-class SparseStorage {
-public:
-
-    SparseStorage( size_t size = 0 ) {  }
-
-    Key &operator[]( NodeID node ) {
-        return nodes[node];
-    }
-
-    void Clear() {
-        nodes.clear();
-    }
-
-private:
-    google::sparse_hash_map< NodeID, Key > nodes;
-};
-
-template< typename NodeID, typename Key >
-class SparseTableStorage : public google::sparsetable<NodeID> {
-public:
-    SparseTableStorage(size_t n) : google::sparsetable<NodeID>(n){ }
-    void Clear() {
-        google::sparsetable<NodeID>::clear();
-    }
+    boost::unordered_map< NodeID, Key > nodes;
 };
 
 template<typename NodeID = unsigned>
