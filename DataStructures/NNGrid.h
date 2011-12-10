@@ -271,7 +271,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = numeric_limits<double>::max();
+        double dist = (numeric_limits<double>::max)();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
@@ -304,7 +304,7 @@ public:
 
         _GridEdge smallestEdge;
         _Coordinate tmp, newEndpoint;
-        double dist = numeric_limits<double>::max();
+        double dist = (numeric_limits<double>::max)();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
@@ -338,7 +338,7 @@ public:
 //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
 //        }
 
-        double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
+        double ratio = (std::min)(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
 //        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
