@@ -176,9 +176,9 @@ void EdgeBasedGraphFactory::Run() {
                         }
 
                         //incorporate turn costs, this is just a simple model and can (read: must) be extended
-                        double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+//                        double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 
-                        unsigned distance = (int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
+                        unsigned distance =  _nodeBasedGraph->GetEdgeData(e1).distance;//(int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
                         unsigned nameID = _nodeBasedGraph->GetEdgeData(e2).nameID;
                         short turnInstruction = AnalyzeTurn(u, v, w);
 
@@ -195,7 +195,7 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.lat2 = inputNodeInfoList[v].lat;
                             currentNode.lon2 = inputNodeInfoList[v].lon;
                             currentNode.id = edgeBasedSource;
-                            currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
+                            currentNode.weight = distance;
                             edgeBasedNodes.push_back(currentNode);
                         }
                     } else {
