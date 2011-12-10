@@ -90,18 +90,18 @@ public:
 //            INFO("d) back insert " << phantomNodes.targetPhantom.edgeBasedNode+1 << ", weight: " << phantomNodes.targetPhantom.weight2);
         }
         int startOffset = (phantomNodes.startPhantom.isBidirected() ? std::max(phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.weight2) : phantomNodes.startPhantom.weight1) ;
-        int targetOffset = 0;//(phantomNodes.targetPhantom.isBidirected() ? std::max(phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.weight2) : phantomNodes.targetPhantom.weight1) ;
+        int targetOffset = (phantomNodes.targetPhantom.isBidirected() ? std::max(phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.weight2) : phantomNodes.targetPhantom.weight1) ;
 
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
             if(_forwardHeap->Size() > 0){
-                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, startOffset);
+                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, startOffset+targetOffset);
             }
             if(_backwardHeap->Size() > 0){
-                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, targetOffset);
+                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, startOffset+targetOffset);
             }
         }
 
-//        INFO("-> dist " << _upperbound);
+        INFO("-> dist " << _upperbound);
         if ( _upperbound == INT_MAX ) {
             return _upperbound;
         }
@@ -163,16 +163,16 @@ private:
         const int distance = _forwardHeap->GetKey(node);
 //        INFO((forwardDirection ? "[forw]" : "[back]") << " settled node " << node << " at distance " << distance);
         if(_backwardHeap->WasInserted(node) ){
-//            INFO((forwardDirection ? "[forw]" : "[back]") << " scanned node " << node << " in both directions");
-            const int newDistance = _backwardHeap->GetKey(node) + distance;
-            if(newDistance < *_upperbound ){
-                if(newDistance>=0 ) {
-//                INFO((forwardDirection ? "[forw]" : "[back]") << " settled node " << node << " is new middle at total distance " << newDistance);
-                *middle = node;
-                *_upperbound = newDistance;
-//                } else {
-//                    INFO((forwardDirection ? "[forw]" : "[back]") << " ignored " << node << " as new middle at total distance " << newDistance);
-                }
+//        	INFO((forwardDirection ? "[forw]" : "[back]") << " scanned node " << node << " in both directions");
+        	const int newDistance = _backwardHeap->GetKey(node) + distance;
+        	if(newDistance < *_upperbound ){
+        		if(newDistance>=0 ) {
+//        			INFO((forwardDirection ? "[forw]" : "[back]") << " -> node " << node << " is new middle at total distance " << newDistance);
+        			*middle = node;
+        			*_upperbound = newDistance;
+        		} else {
+//        			INFO((forwardDirection ? "[forw]" : "[back]") << " -> ignored " << node << " as new middle at total distance " << newDistance);
+        		}
             }
         }
 
