@@ -310,12 +310,12 @@ public:
 
         double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
-//        INFO("Old weight1: " << resultNode.weight1 << ", old weight2: " << resultNode.weight2);
+//        INFO("node: " << resultNode.edgeBasedNode << ", orig weight1: " << resultNode.weight1 << ", orig weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
-            resultNode.weight2 *= (1.-ratio);
-//            INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
+            resultNode.weight2 -= resultNode.weight1;
         }
+//        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
 //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
         return foundNode;
     }
