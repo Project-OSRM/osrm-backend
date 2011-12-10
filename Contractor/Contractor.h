@@ -41,16 +41,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 class Contractor {
 
 private:
-
     struct _EdgeBasedContractorEdgeData {
-        unsigned distance;
-        unsigned originalEdges;
-        unsigned via;
-        unsigned nameID;
-        bool shortcut;
-        bool forward;
-        bool backward;
-        short turnInstruction;
+    	unsigned distance;
+    	unsigned originalEdges;
+    	unsigned via;
+    	unsigned nameID;
+    	short turnInstruction;
+    	bool shortcut:1;
+    	bool forward:1;
+    	bool backward:1;
     } data;
 
     struct _HeapData {
@@ -107,7 +106,7 @@ public:
 
             edge.data.distance = (std::max)((int)i->weight(), 1 );
             assert( edge.data.distance > 0 );
-#ifndef NDEBUG
+#ifdef NDEBUG
             if ( edge.data.distance > 24 * 60 * 60 * 10 ) {
                 std::cout << "Edge Weight too large -> May lead to invalid CH" << std::endl;
                 continue;
