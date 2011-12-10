@@ -51,8 +51,6 @@ lib\
     bin  (contains protoc.exe)
 	include
 	lib  (contains libprotobuf.lib and libprotobuf-debug.lib)
-  sparsehash
-    src
   stxxl
     include
 	lib  (contains libstxxl.lib and libstxxl-debug.lib)
