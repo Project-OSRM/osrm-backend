@@ -264,6 +264,9 @@ struct Settings {
             return speedProfile.at(param).first;
     }
     int GetHighwayTypeID(const std::string & param) const {
+    	if(param == excludeFromGrid) {
+    		return INT_MAX;
+    	}
         if(speedProfile.find(param) == speedProfile.end()) {
             DEBUG("There is a bug with highway \"" << param << "\"");
             return -1;

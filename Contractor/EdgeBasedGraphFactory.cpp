@@ -126,7 +126,7 @@ void EdgeBasedGraphFactory::Run() {
                     ++secondRestrictionIterator;
                 } while(u == secondRestrictionIterator->fromNode);
             }
-            if(_nodeBasedGraph->EndEdges(v) == _nodeBasedGraph->BeginEdges(v) + 1 && _nodeBasedGraph->GetEdgeData(e1).type != 14 ) {
+            if(_nodeBasedGraph->EndEdges(v) == _nodeBasedGraph->BeginEdges(v) + 1 && _nodeBasedGraph->GetEdgeData(e1).type != INT_MAX) {
                 EdgeBasedNode currentNode;
                 currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                 currentNode.lat1 = inputNodeInfoList[u].lat;
@@ -186,7 +186,7 @@ void EdgeBasedGraphFactory::Run() {
                         EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
 
-                        if(_nodeBasedGraph->GetEdgeData(e1).type != 14 ) {
+                        if(_nodeBasedGraph->GetEdgeData(e1).type != INT_MAX ) {
                             EdgeBasedNode currentNode;
 
                             currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
