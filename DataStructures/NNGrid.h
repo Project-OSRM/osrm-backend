@@ -35,7 +35,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/thread.hpp>
 #include <boost/foreach.hpp>
-#include <google/dense_hash_map>
+#include <boost/unordered_map.hpp>
 
 #include "ExtractorStructs.h"
 #include "GridEdge.h"
@@ -179,21 +179,15 @@ public:
 
     void OpenIndexFiles() {
         assert(ramInFile.is_open());
-
-        for(int i = 0; i < 1024*1024; ++i) {
-            unsigned temp;
-            ramInFile.read((char*)&temp, sizeof(unsigned));
-            ramIndexTable[i] = temp;
-        }
+        ramInFile.read((char*)&ramIndexTable[0], sizeof(unsigned)*1024*1024);
         ramInFile.close();
     }
 
     template<typename EdgeT, typename NodeInfoT>
     void ConstructGrid(std::vector<EdgeT> & edgeList, vector<NodeInfoT> * int2ExtNodeMap, char * ramIndexOut, char * fileIndexOut) {
         Percent p(edgeList.size());
-        for(NodeID i = 0; i < edgeList.size(); ++i) {
+        BOOST_FOREACH(EdgeT & edge, edgeList) {
             p.printIncrement();
-            EdgeT & edge = edgeList[i];
 
             int slat = 100000*lat2y(edge.lat1/100000.);
             int slon = edge.lon1;
@@ -215,7 +209,9 @@ public:
         std::vector<GridEntry> entriesInFileWithRAMSameIndex;
         unsigned indexInRamTable = entries->begin()->ramIndex;
         unsigned lastPositionInIndexFile = 0;
+#ifndef NDEBUG
         unsigned numberOfUsedCells = 0;
+#endif
         unsigned maxNumberOfRAMCellElements = 0;
         cout << "writing data ..." << flush;
         p.reinit(entries->size());
@@ -230,63 +226,38 @@ public:
                 lastPositionInIndexFile += numberOfBytesInCell;
                 entriesInFileWithRAMSameIndex.clear();
                 indexInRamTable = vt->ramIndex;
+#ifndef NDEBUG
                 numberOfUsedCells++;
+#endif
             }
             entriesInFileWithRAMSameIndex.push_back(*vt);
         }
         /*unsigned numberOfBytesInCell = */FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
         ramIndexTable[indexInRamTable] = lastPositionInIndexFile;
+#ifndef NDEBUG
         numberOfUsedCells++;
+#endif
         entriesInFileWithRAMSameIndex.clear();
-
+        std::vector<GridEntry>().swap(entriesInFileWithRAMSameIndex);
         assert(entriesInFileWithRAMSameIndex.size() == 0);
+        //close index file
+        indexOutFile.close();
 
+
+#ifndef NDEBUG
         for(int i = 0; i < 1024*1024; ++i) {
             if(ramIndexTable[i] != UINT_MAX) {
                 numberOfUsedCells--;
             }
         }
         assert(numberOfUsedCells == 0);
-
-        //close index file
-        indexOutFile.close();
+#endif
         //Serialize RAM Index
         ofstream ramFile(ramIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
         //write 4 MB of index Table in RAM
-        for(int i = 0; i < 1024*1024; ++i)
-            ramFile.write((char *)&ramIndexTable[i], sizeof(unsigned) );
+        ramFile.write((char *)&ramIndexTable[0], sizeof(unsigned)*1024*1024 );
         //close ram index file
         ramFile.close();
-    }
-
-    bool GetEdgeBasedStartNode(const _Coordinate& coord, NodesOfEdge& nodesOfEdge) {
-        _Coordinate startCoord(100000*(lat2y(static_cast<double>(coord.lat)/100000.)), coord.lon);
-        /** search for point on edge next to source */
-        unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
-        std::vector<_GridEdge> candidates;
-
-        for(int j = -32768; j < (32768+1); j+=32768) {
-            for(int i = -1; i < 2; i++){
-                GetContentsOfFileBucket(fileIndex+i+j, candidates);
-            }
-        }
-        _Coordinate tmp;
-        double dist = numeric_limits<double>::max();
-        BOOST_FOREACH(_GridEdge candidate, candidates) {
-            double r = 0.;
-            double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
-            if(tmpDist < dist) {
-                nodesOfEdge.edgeBasedNode = candidate.edgeBasedNode;
-                nodesOfEdge.ratio = r;
-                dist = tmpDist;
-                nodesOfEdge.projectedPoint.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
-                nodesOfEdge.projectedPoint.lon = tmp.lon;
-            }
-        }
-        if(dist != (numeric_limits<double>::max)()) {
-            return true;
-        }
-        return false;
     }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
@@ -308,24 +279,23 @@ public:
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
-            if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
-                resultNode.weight2 = candidate.weight;
-//                INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
-            }
             if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
-//                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
-                resultNode.Reset();
-                resultNode.edgeBasedNode = candidate.edgeBasedNode;
-                resultNode.nodeBasedEdgeNameID = candidate.nameID;
-                resultNode.weight1 = candidate.weight;
-                dist = tmpDist;
-                resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
-                resultNode.location.lon = tmp.lon;
-                foundNode = true;
-                smallestEdge = candidate;
-                newEndpoint = tmp;
-//            }  else if(tmpDist < dist) {
-//                INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
+            	//INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
+            	resultNode.Reset();
+            	resultNode.edgeBasedNode = candidate.edgeBasedNode;
+            	resultNode.nodeBasedEdgeNameID = candidate.nameID;
+            	resultNode.weight1 = candidate.weight;
+            	dist = tmpDist;
+            	resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
+            	resultNode.location.lon = tmp.lon;
+            	foundNode = true;
+            	smallestEdge = candidate;
+            	newEndpoint = tmp;
+            //}  else if(tmpDist < dist) {
+            //INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
+            } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
+                resultNode.weight2 = candidate.weight;
+                //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
             }
         }
 
@@ -421,8 +391,7 @@ private:
 
         vector<unsigned> cellIndex;
         cellIndex.resize(32*32,UINT_MAX);
-        google::dense_hash_map< unsigned, unsigned > * cellMap = new google::dense_hash_map< unsigned, unsigned >(1024);
-        cellMap->set_empty_key(UINT_MAX);
+        boost::unordered_map< unsigned, unsigned > cellMap(1024);
 
         unsigned ramIndex = entriesWithSameRAMIndex.begin()->ramIndex;
         unsigned lineBase = ramIndex/1024;
@@ -434,7 +403,7 @@ private:
             for(int j = 0; j < 32; j++) {
                 unsigned fileIndex = lineBase + i*32768 + columnBase+j;
                 unsigned cellIndex = i*32+j;
-                cellMap->insert(std::make_pair(fileIndex, cellIndex));
+                cellMap.insert(std::make_pair(fileIndex, cellIndex));
             }
         }
 
@@ -451,13 +420,13 @@ private:
         unsigned fileIndex = entriesWithSameRAMIndex.begin()->fileIndex;
 
         for(std::vector<GridEntry>::iterator it = entriesWithSameRAMIndex.begin(); it != uniqueEnd; it++) {
-            assert(cellMap->find(it->fileIndex) != cellMap->end() ); //asserting that file index belongs to cell index
+            assert(cellMap.find(it->fileIndex) != cellMap.end() ); //asserting that file index belongs to cell index
             if(it->fileIndex != fileIndex) {
                 // start in cellIndex vermerken
                 int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
-                int localCellIndex = cellMap->find(localFileIndex)->second;
+                int localCellIndex = cellMap.find(localFileIndex)->second;
                 /*int localRamIndex = */GetRAMIndexFromFileIndex(localFileIndex);
-                assert(cellMap->find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap->end());
+                assert(cellMap.find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap.end());
 
                 cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
                 indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
@@ -466,9 +435,9 @@ private:
             entriesWithSameFileIndex.push_back(data);
             fileIndex = it->fileIndex;
         }
-        assert(cellMap->find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap->end());
+        assert(cellMap.find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap.end());
         int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
-        int localCellIndex = cellMap->find(localFileIndex)->second;
+        int localCellIndex = cellMap.find(localFileIndex)->second;
         /*int localRamIndex = */GetRAMIndexFromFileIndex(localFileIndex);
 
         cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
@@ -488,7 +457,6 @@ private:
         }
 
         delete tmpBuffer;
-        delete cellMap;
         return numberOfWrittenBytes;
     }
 
@@ -530,8 +498,7 @@ private:
 
         std::vector<unsigned> cellIndex;
         cellIndex.resize(32*32);
-        google::dense_hash_map< unsigned, unsigned > cellMap(1024);
-        cellMap.set_empty_key(UINT_MAX);
+        boost::unordered_map< unsigned, unsigned > cellMap(1024);
 
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
