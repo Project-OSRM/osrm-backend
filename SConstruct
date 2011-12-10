@@ -101,9 +101,6 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
 if not conf.CheckCXXHeader('stxxl.h'):
 	print "Could not locate stxxl header. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('google/sparse_hash_map'):
-	print "Could not find Google Sparsehash library. Exiting"
-	Exit(-1)
 if not conf.CheckCXXHeader('boost/asio.hpp'):
 	print "boost/asio.hpp not found. Exiting"
 	Exit(-1)
