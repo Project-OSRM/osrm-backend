@@ -209,7 +209,7 @@ public:
         std::vector<GridEntry> entriesInFileWithRAMSameIndex;
         unsigned indexInRamTable = entries->begin()->ramIndex;
         unsigned lastPositionInIndexFile = 0;
-#ifndef NDEBUG
+#ifdef NDEBUG
         unsigned numberOfUsedCells = 0;
 #endif
         unsigned maxNumberOfRAMCellElements = 0;
@@ -226,7 +226,7 @@ public:
                 lastPositionInIndexFile += numberOfBytesInCell;
                 entriesInFileWithRAMSameIndex.clear();
                 indexInRamTable = vt->ramIndex;
-#ifndef NDEBUG
+#ifdef NDEBUG
                 numberOfUsedCells++;
 #endif
             }
@@ -234,7 +234,7 @@ public:
         }
         /*unsigned numberOfBytesInCell = */FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
         ramIndexTable[indexInRamTable] = lastPositionInIndexFile;
-#ifndef NDEBUG
+#ifdef NDEBUG
         numberOfUsedCells++;
 #endif
         entriesInFileWithRAMSameIndex.clear();
@@ -244,7 +244,7 @@ public:
         indexOutFile.close();
 
 
-#ifndef NDEBUG
+#ifdef NDEBUG
         for(int i = 0; i < 1024*1024; ++i) {
             if(ramIndexTable[i] != UINT_MAX) {
                 numberOfUsedCells--;
