@@ -18,8 +18,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)..\bin-debug"
-			IntermediateDirectory="$(SolutionDir)..\bin-debug"
+			OutputDirectory="$(SolutionDir)bin-debug"
+			IntermediateDirectory="$(SolutionDir)bin-debug"
 			ConfigurationType="1"
 			InheritedPropertySheets=".\osrm.vsprops"
 			CharacterSet="1"
@@ -44,7 +44,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_RTLDLL -DBOOST_LIB_DIAGNOSTIC -DSTXXL_BOOST_TIMESTAMP -DSTXXL_BOOST_CONFIG -DSTXXL_BOOST_FILESYSTEM -DSTXXL_BOOST_THREADS -DSTXXL_BOOST_RANDOM /EHsc /EHs /wd4820 /wd4217 /wd4668 /wd4619 /wd4625 /wd4626 /wd4355 /wd4996 -D_SCL_SECURE_NO_DEPRECATE /F 16777216 /nologo "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(BoostPath)&quot;;&quot;$(StxxlPath)\include&quot;;&quot;$(LibXml2Path)\include&quot;;&quot;$(IconvPath)\include&quot;;&quot;$(SparsehashPath)\src\&quot;;&quot;$(SparsehashPath)\src\windows&quot;;&quot;$(Bzip2Path)\include&quot;;&quot;$(ZlibPath)\include&quot;;..\;&quot;$(ProtobufPath)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(BoostPath)&quot;;&quot;$(StxxlPath)\include&quot;;&quot;$(LibXml2Path)\include&quot;;&quot;$(IconvPath)\include&quot;;&quot;$(SparsehashPath)\src\&quot;;&quot;$(SparsehashPath)\src\windows&quot;;&quot;$(Bzip2Path)\include&quot;;&quot;$(ZlibPath)\include&quot;;..\;&quot;$(ProtobufPath)\include&quot;;&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -99,8 +99,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)..\bin"
-			IntermediateDirectory="$(SolutionDir)..\bin"
+			OutputDirectory="$(SolutionDir)bin"
+			IntermediateDirectory="$(SolutionDir)bin"
 			ConfigurationType="1"
 			InheritedPropertySheets=".\osrm.vsprops"
 			CharacterSet="1"
@@ -216,7 +216,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\getopt.h"
+				RelativePath="getopt.h"
 				>
 			</File>
 			<File
@@ -224,7 +224,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\unistd.h"
+				RelativePath="unistd.h"
 				>
 			</File>
 			<Filter

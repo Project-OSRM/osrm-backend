@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="createHierarchy"
-	ProjectGUID="{38C3EEAC-032B-4BEA-BECB-C694A47AA7E2}"
-	RootNamespace="createHierarchy"
+	Name="routed"
+	ProjectGUID="{675D419D-E442-4A21-9030-B54B4C09439A}"
+	RootNamespace="routed"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -18,8 +18,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)..\bin-debug"
-			IntermediateDirectory="$(SolutionDir)..\bin-debug"
+			OutputDirectory="$(SolutionDir)bin-debug"
+			IntermediateDirectory="$(SolutionDir)bin-debug"
 			ConfigurationType="1"
 			InheritedPropertySheets=".\osrm.vsprops"
 			CharacterSet="1"
@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_RTLDLL -DBOOST_LIB_DIAGNOSTIC -DSTXXL_BOOST_TIMESTAMP -DSTXXL_BOOST_CONFIG -DSTXXL_BOOST_FILESYSTEM -DSTXXL_BOOST_THREADS -DSTXXL_BOOST_RANDOM /EHsc /EHs /wd4820 /wd4217 /wd4668 /wd4619 /wd4625 /wd4626 /wd4355 /wd4996 -D_SCL_SECURE_NO_DEPRECATE /F 16777216 /nologo "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(BoostPath)&quot;;&quot;$(StxxlPath)\include&quot;;&quot;$(LibXml2Path)\include&quot;;&quot;$(IconvPath)\include&quot;;&quot;$(SparsehashPath)\src\&quot;;&quot;$(SparsehashPath)\src\windows&quot;;&quot;$(Bzip2Path)\include&quot;;&quot;$(ZlibPath)\include&quot;;..\;&quot;$(ProtobufPath)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(BoostPath)&quot;;&quot;$(StxxlPath)\include&quot;;&quot;$(LibXml2Path)\include&quot;;&quot;$(IconvPath)\include&quot;;&quot;$(SparsehashPath)\src\&quot;;&quot;$(SparsehashPath)\src\windows&quot;;&quot;$(Bzip2Path)\include&quot;;&quot;$(ZlibPath)\include&quot;;..\;&quot;$(ProtobufPath)\include&quot;;&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -93,13 +93,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy &quot;$(SolutionDir)..\contractor.ini&quot; &quot;$(OutDir)\&quot; /f /y"
+				CommandLine="xcopy &quot;$(SolutionDir)..\server.ini&quot; &quot;$(OutDir)\&quot; /f /y"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)..\bin"
-			IntermediateDirectory="$(SolutionDir)..\bin"
+			OutputDirectory="$(SolutionDir)bin"
+			IntermediateDirectory="$(SolutionDir)bin"
 			ConfigurationType="1"
 			InheritedPropertySheets=".\osrm.vsprops"
 			CharacterSet="1"
@@ -176,7 +176,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="xcopy &quot;$(SolutionDir)..\contractor.ini&quot; &quot;$(OutDir)\&quot; /f /y"
+				CommandLine="xcopy &quot;$(SolutionDir)..\server.ini&quot; &quot;$(OutDir)\&quot; /f /y"
 			/>
 		</Configuration>
 	</Configurations>
@@ -189,7 +189,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\createHierarchy.cpp"
+				RelativePath="..\routed.cpp"
 				>
 			</File>
 		</Filter>
@@ -199,7 +199,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\getopt.h"
+				RelativePath="getopt.h"
 				>
 			</File>
 			<File
@@ -207,7 +207,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\unistd.h"
+				RelativePath="unistd.h"
 				>
 			</File>
 			<Filter
