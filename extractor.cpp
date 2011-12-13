@@ -39,7 +39,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
-#include <google/sparse_hash_map>
 #include <unistd.h>
 #include <stxxl.h>
 

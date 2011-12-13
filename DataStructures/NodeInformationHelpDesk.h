@@ -73,10 +73,6 @@ public:
 		return true;
 	}
 
-	inline bool GetStartAndDestNodesOfEdge(const _Coordinate& coord, NodesOfEdge& nodesOfEdge) {
-	    return readOnlyGrid->GetEdgeBasedStartNode(coord, nodesOfEdge);
-	}
-
 	inline void FindNearestPointOnEdge(const _Coordinate & input, _Coordinate& output){
 	    readOnlyGrid->FindNearestPointOnEdge(input, output);
 	}

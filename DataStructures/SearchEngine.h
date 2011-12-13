@@ -36,7 +36,7 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p) { }
 };
 
-typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _HeapData > > HeapPtr;
+typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _HeapData> > HeapPtr;
 
 template<class EdgeData, class GraphT>
 class SearchEngine {
@@ -58,12 +58,12 @@ public:
 
     inline void InitializeThreadLocalStorageIfNecessary() {
         if(!_forwardHeap.get())
-            _forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData >(nodeHelpDesk->getNumberOfNodes()));
+            _forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData>(nodeHelpDesk->getNumberOfNodes()));
         else
             _forwardHeap->Clear();
 
         if(!_backwardHeap.get())
-            _backwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData >(nodeHelpDesk->getNumberOfNodes()));
+            _backwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData>(nodeHelpDesk->getNumberOfNodes()));
         else
             _backwardHeap->Clear();
     }
@@ -89,15 +89,15 @@ public:
             _backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode+1);
 //            INFO("d) back insert " << phantomNodes.targetPhantom.edgeBasedNode+1 << ", weight: " << phantomNodes.targetPhantom.weight2);
         }
-        int startOffset = (phantomNodes.startPhantom.isBidirected() ? std::max(phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.weight2) : phantomNodes.startPhantom.weight1) ;
-        int targetOffset = 0;//(phantomNodes.targetPhantom.isBidirected() ? std::max(phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.weight2) : phantomNodes.targetPhantom.weight1) ;
+        int offset = (phantomNodes.startPhantom.isBidirected() ? std::max(phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.weight2) : phantomNodes.startPhantom.weight1) ;
+        offset += (phantomNodes.targetPhantom.isBidirected() ? std::max(phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.weight2) : phantomNodes.targetPhantom.weight1) ;
 
         while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
             if(_forwardHeap->Size() > 0){
-                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, startOffset);
+                _RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, 2*offset);
             }
             if(_backwardHeap->Size() > 0){
-                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, targetOffset);
+                _RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, 2*offset);
             }
         }
 
@@ -158,25 +158,25 @@ public:
         return GetEscapedNameForNameID(nameID);
     }
 private:
-    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const int negativeOffset) const {
+    inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const int edgeBasedOffset) const {
         const NodeID node = _forwardHeap->DeleteMin();
         const int distance = _forwardHeap->GetKey(node);
 //        INFO((forwardDirection ? "[forw]" : "[back]") << " settled node " << node << " at distance " << distance);
         if(_backwardHeap->WasInserted(node) ){
-//            INFO((forwardDirection ? "[forw]" : "[back]") << " scanned node " << node << " in both directions");
-            const int newDistance = _backwardHeap->GetKey(node) + distance;
-            if(newDistance < *_upperbound ){
-                if(newDistance>=0 ) {
-//                INFO((forwardDirection ? "[forw]" : "[back]") << " settled node " << node << " is new middle at total distance " << newDistance);
-                *middle = node;
-                *_upperbound = newDistance;
-//                } else {
-//                    INFO((forwardDirection ? "[forw]" : "[back]") << " ignored " << node << " as new middle at total distance " << newDistance);
-                }
+//        	INFO((forwardDirection ? "[forw]" : "[back]") << " scanned node " << node << " in both directions");
+        	const int newDistance = _backwardHeap->GetKey(node) + distance;
+        	if(newDistance < *_upperbound ){
+        		if(newDistance>=0 ) {
+//        			INFO((forwardDirection ? "[forw]" : "[back]") << " -> node " << node << " is new middle at total distance " << newDistance);
+        			*middle = node;
+        			*_upperbound = newDistance;
+        		} else {
+//        			INFO((forwardDirection ? "[forw]" : "[back]") << " -> ignored " << node << " as new middle at total distance " << newDistance);
+        		}
             }
         }
 
-        if(distance-negativeOffset > *_upperbound){
+        if(distance-edgeBasedOffset > *_upperbound){
             _forwardHeap->DeleteAll();
             return;
         }
@@ -217,7 +217,7 @@ private:
                 }
                 //Found a shorter Path -> Update distance
                 else if ( toDistance < _forwardHeap->GetKey( to ) ) {
-//                    INFO((forwardDirection ? "[forw]" : "[back]") << " decrease and scanning edge (" << node << "," << to << ") with distance " << toDistance << ", edge length: " << data.distance);
+//                    INFO((forwardDirection ? "[forw]" : "[back]") << " decrease and scanning edge (" << node << "," << to << ") from " << _forwardHeap->GetKey(to) << "to " << toDistance << ", edge length: " << data.distance);
                     _forwardHeap->GetData( to ).parent = node;
                     _forwardHeap->DecreaseKey( to, toDistance );
                     //new parent

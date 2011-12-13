@@ -40,11 +40,8 @@ private:
             parent = p;
         }
     };
-#ifdef _MANYCORES
-    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, DenseStorage<NodeID, NodeID> > _Heap;
-#else
     typedef BinaryHeap< NodeID, NodeID, int, _CleanupHeapData > _Heap;
-#endif
+
     struct _ThreadData {
         _Heap* _heapForward;
         _Heap* _heapBackward;
@@ -52,8 +49,7 @@ private:
             _heapBackward = new _Heap(nodes);
             _heapForward = new _Heap(nodes);
         }
-        ~_ThreadData()
-        {
+        ~_ThreadData() {
             delete _heapBackward;
             delete _heapForward;
         }
@@ -65,13 +61,13 @@ public:
         NodeID source;
         NodeID target;
         struct EdgeData {
-            NodeID via;
-            unsigned nameID;
-            int distance;
-            bool shortcut;
-            bool forward;
-            bool backward;
-            short turnInstruction;
+        	NodeID via;
+        	unsigned nameID;
+        	int distance;
+        	short turnInstruction;
+        	bool shortcut:1;
+        	bool forward:1;
+        	bool backward:1;
         } data;
 
         //sorts by source and other attributes

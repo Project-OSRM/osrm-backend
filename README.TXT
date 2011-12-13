@@ -6,7 +6,6 @@ installing dependencies and running make should suffice. Make sure the following
 dependencies are installed:
 
  - Boost		1.41+
- - sparsehash   1.4+
  - g++			4.2+
  - libxml2		2.7+
  - scons 		2.10+
@@ -52,8 +51,6 @@ lib\
     bin  (contains protoc.exe)
 	include
 	lib  (contains libprotobuf.lib and libprotobuf-debug.lib)
-  sparsehash
-    src
   stxxl
     include
 	lib  (contains libstxxl.lib and libstxxl-debug.lib)

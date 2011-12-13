@@ -132,7 +132,7 @@ void EdgeBasedGraphFactory::Run() {
                     ++secondRestrictionIterator;
                 } while(u == secondRestrictionIterator->fromNode);
             }
-            if(_nodeBasedGraph->EndEdges(v) == _nodeBasedGraph->BeginEdges(v) + 1 && _nodeBasedGraph->GetEdgeData(e1).type != 14 ) {
+            if(_nodeBasedGraph->EndEdges(v) == _nodeBasedGraph->BeginEdges(v) + 1 && _nodeBasedGraph->GetEdgeData(e1).type != INT_MAX) {
                 EdgeBasedNode currentNode;
                 currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                 currentNode.lat1 = inputNodeInfoList[u].lat;
@@ -205,7 +205,7 @@ void EdgeBasedGraphFactory::Run() {
                         EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
 
-                        if(_nodeBasedGraph->GetEdgeData(e1).type != 14 ) {
+                        if(_nodeBasedGraph->GetEdgeData(e1).type != INT_MAX ) {
                             EdgeBasedNode currentNode;
                             currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                             currentNode.lat1 = inputNodeInfoList[u].lat;
@@ -213,12 +213,12 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.lat2 = inputNodeInfoList[v].lat;
                             currentNode.lon2 = inputNodeInfoList[v].lon;
                             currentNode.id = edgeBasedSource;
-                            short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
-                            short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
-                            short heightDiff = startHeight - targetHeight;
-                            double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
-                            if(heightDiff != 0)
-                                INFO("Increase at turn: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );                            //incorporate height diff;
+//                            short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
+//                            short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
+//                            short heightDiff = startHeight - targetHeight;
+//                            double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
+//                            if(heightDiff != 0)
+//                                INFO("Increase at turn: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );                            //incorporate height diff;
                             currentNode.weight = distance;
                             edgeBasedNodes.push_back(currentNode);
                         }
