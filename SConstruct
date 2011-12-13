@@ -101,9 +101,6 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
 if not conf.CheckCXXHeader('stxxl.h'):
 	print "Could not locate stxxl header. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('boost/asio.hpp'):
-	print "boost/asio.hpp not found. Exiting"
-	Exit(-1)
 if not conf.CheckCXXHeader('boost/foreach.hpp'):
 	print "boost/foreach.hpp not found. Exiting"
 	Exit(-1)
@@ -148,6 +145,9 @@ if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
 if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'):
 	print "Google Protobuffer library not found. Exiting"
 	Exit(-1)
+if not conf.CheckLibWithHeader('libzip', 'zip.h', 'CXX'):
+	print "Zip library not found. Exiting"
+	Exit(-1)
 #if os.sysconf('SC_NPROCESSORS_ONLN') > 1:
 #	env.Append(CCFLAGS = ' -D_GLIBCXX_PARALLEL');
 if not (conf.CheckBoost('1.41')):
@@ -169,7 +169,7 @@ env.Append(CCFLAGS = ['-fopenmp'])
 env.Append(LINKFLAGS = ['-fopenmp'])
 
 env.Program(target = 'osrm-extract', source = ["extractor.cpp", 'DataStructures/pbf-proto/fileformat.pb.cc', 'DataStructures/pbf-proto/osmformat.pb.cc'])
-env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp'])
+env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp')])
 env.Append(CCFLAGS = ['-lboost_regex', '-lboost_iostreams', '-lbz2', '-lz', '-lprotobuf'])
 env.Append(LINKFLAGS = ['-lboost_system'])
 env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp'])
