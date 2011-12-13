@@ -88,8 +88,14 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& out
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes) {
-    for(unsigned i = 0; i < edgeBasedNodes.size(); ++i)
-        nodes.push_back(edgeBasedNodes[i]);
+    BOOST_FOREACH(EdgeBasedNode & node, edgeBasedNodes){
+        assert(node.lat1 != INT_MAX);
+        assert(node.lat2 != INT_MAX);
+        assert(node.lon1 != INT_MAX);
+        assert(node.lon2 != INT_MAX);
+
+        nodes.push_back(node);
+    }
 }
 
 void EdgeBasedGraphFactory::Run() {
@@ -133,8 +139,21 @@ void EdgeBasedGraphFactory::Run() {
                 currentNode.lon1 = inputNodeInfoList[u].lon;
                 currentNode.lat2 = inputNodeInfoList[v].lat;
                 currentNode.lon2 = inputNodeInfoList[v].lon;
-                currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;;
+                currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
+
+                short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
+                short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
+                short heightDiff = startHeight - targetHeight;
+                double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
+                if(heightDiff != 0)
+                    INFO("Increase at dead-end street: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );
+                //incorporate height diff;
+
+                //todo: get some exponential function to converge to one for n->\infty
                 currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
+//                if(increase > 0)
+//                    currentNode.weight *= (1.+increase);
+
                 edgeBasedNodes.push_back(currentNode);
             }
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
@@ -176,9 +195,9 @@ void EdgeBasedGraphFactory::Run() {
                         }
 
                         //incorporate turn costs, this is just a simple model and can (read: must) be extended
-                        double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+//                        double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 
-                        unsigned distance = (int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
+                        unsigned distance = _nodeBasedGraph->GetEdgeData(e1).distance;//(int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
                         unsigned nameID = _nodeBasedGraph->GetEdgeData(e2).nameID;
                         short turnInstruction = AnalyzeTurn(u, v, w);
 
@@ -188,14 +207,19 @@ void EdgeBasedGraphFactory::Run() {
 
                         if(_nodeBasedGraph->GetEdgeData(e1).type != 14 ) {
                             EdgeBasedNode currentNode;
-
                             currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                             currentNode.lat1 = inputNodeInfoList[u].lat;
                             currentNode.lon1 = inputNodeInfoList[u].lon;
                             currentNode.lat2 = inputNodeInfoList[v].lat;
                             currentNode.lon2 = inputNodeInfoList[v].lon;
                             currentNode.id = edgeBasedSource;
-                            currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
+                            short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
+                            short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
+                            short heightDiff = startHeight - targetHeight;
+                            double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
+                            if(heightDiff != 0)
+                                INFO("Increase at turn: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );                            //incorporate height diff;
+                            currentNode.weight = distance;
                             edgeBasedNodes.push_back(currentNode);
                         }
                     } else {
@@ -251,7 +275,7 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
 }
 
 unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
-    return edgeBasedEdges.size();
+    return _nodeBasedGraph->GetNumberOfEdges();
 }
 
 EdgeBasedGraphFactory::~EdgeBasedGraphFactory() {

@@ -75,20 +75,6 @@ public:
 
         InitializeThreadLocalStorageIfNecessary();
         NodeID middle = ( NodeID ) UINT_MAX;
-/*        bool stOnSameEdge = false;
-        //Handling the special case that origin and destination are on same edge and that the order is correct.
-        if(phantomNodes.PhantomsAreOnSameNodeBasedEdge()){
-            if(phantomNodes.startPhantom.isBidirected() && phantomNodes.targetPhantom.isBidirected()) {
-                int weight = std::abs(phantomNodes.startPhantom.weight1 - phantomNodes.targetPhantom.weight1);
-                return weight;
-            } else if(phantomNodes.startPhantom.weight1 <= phantomNodes.targetPhantom.weight1){
-                int weight = std::abs(phantomNodes.startPhantom.weight1 - phantomNodes.targetPhantom.weight1);
-                return weight;
-            } else {
-                stOnSameEdge = true;
-            }
-        }
-*/
         //insert start and/or target node of start edge
         _forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, -phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.edgeBasedNode);
 //        INFO("a) forw insert " << phantomNodes.startPhantom.edgeBasedNode << ", weight: " << -phantomNodes.startPhantom.weight1);
