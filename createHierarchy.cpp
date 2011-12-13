@@ -76,11 +76,16 @@ int main (int argc, char *argv[]) {
     INFO("Loaded " << inputRestrictions.size() << " restrictions from file");
 
     unsigned numberOfThreads = omp_get_num_procs();
+    std::string SRTM_ROOT;
     if(testDataFile("contractor.ini")) {
         ContractorConfiguration contractorConfig("contractor.ini");
         if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
             numberOfThreads = (unsigned)atoi( contractorConfig.GetParameter("Threads").c_str() );
+        if(0 < contractorConfig.GetParameter("SRTM").size() )
+            SRTM_ROOT = contractorConfig.GetParameter("SRTM");
     }
+    if(0 != SRTM_ROOT.size())
+        INFO("Loading SRTM from/to " << SRTM_ROOT);
     omp_set_num_threads(numberOfThreads);
 
     INFO("preprocessing data from input file " << argv[1] << " using STL "
@@ -106,7 +111,7 @@ int main (int argc, char *argv[]) {
     NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, &internalToExternaleNodeMapping, inputRestrictions);
     in.close();
 
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, inputRestrictions, internalToExternaleNodeMapping);
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, inputRestrictions, internalToExternaleNodeMapping, SRTM_ROOT);
     edgeList.clear();
     std::vector<ImportEdge>().swap(edgeList);
 
