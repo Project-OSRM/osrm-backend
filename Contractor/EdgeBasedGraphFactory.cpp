@@ -29,8 +29,8 @@
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI)
-: inputRestrictions(irs), inputNodeInfoList(nI) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, std::string & srtm)
+: inputRestrictions(irs), inputNodeInfoList(nI)/*, srtmLookup(srtm) */{
 
 #ifdef _GLIBCXX_PARALLEL
     __gnu_parallel::sort(inputRestrictions.begin(), inputRestrictions.end(), CmpRestrictionByFrom);
@@ -141,12 +141,12 @@ void EdgeBasedGraphFactory::Run() {
                 currentNode.lon2 = inputNodeInfoList[v].lon;
                 currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
 
-                short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
-                short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
-                short heightDiff = startHeight - targetHeight;
-                double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
-                if(heightDiff != 0)
-                    INFO("Increase at dead-end street: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );
+//                short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
+//                short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
+//                short heightDiff = startHeight - targetHeight;
+//                double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
+//                if(heightDiff != 0)
+//                    INFO("Increase at dead-end street: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );
                 //incorporate height diff;
 
                 //todo: get some exponential function to converge to one for n->\infty

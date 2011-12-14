@@ -34,6 +34,7 @@
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
+//#include "../Util/SRTMLookup.h"
 
 class EdgeBasedGraphFactory {
 private:
@@ -88,9 +89,11 @@ private:
 
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
+//    SRTMLookup srtmLookup;
+
 public:
     template< class InputEdgeT >
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI);
+    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, std::string & srtm);
     virtual ~EdgeBasedGraphFactory();
 
     void Run();
