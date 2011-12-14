@@ -49,60 +49,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 static const unsigned MAX_CACHE_ELEMENTS = 1000;
 
 namespace NNGrid{
-static unsigned GetFileIndexForLatLon(const int lt, const int ln) {
-    double lat = lt/100000.;
-    double lon = ln/100000.;
-
-    double x = ( lon + 180.0 ) / 360.0;
-    double y = ( lat + 180.0 ) / 360.0;
-
-    assert( x<=1.0 && x >= 0);
-    assert( y<=1.0 && y >= 0);
-
-    unsigned line = 1073741824.0*y;
-    line = line - (line % 32768);
-    assert(line % 32768 == 0);
-    unsigned column = 32768.*x;
-    unsigned fileIndex = line+column;
-    return fileIndex;
-}
-
-static unsigned GetRAMIndexFromFileIndex(const int fileIndex) {
-    unsigned fileLine = fileIndex / 32768;
-    fileLine = fileLine / 32;
-    fileLine = fileLine * 1024;
-    unsigned fileColumn = (fileIndex % 32768);
-    fileColumn = fileColumn / 32;
-    unsigned ramIndex = fileLine + fileColumn;
-    assert(ramIndex < 1024*1024);
-    return ramIndex;
-}
-
-static inline int signum(int x){
-    return (x > 0) ? 1 : (x < 0) ? -1 : 0;
-}
-
-static inline void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
-    double lat1 = start.lat/100000.;
-    double lon1 = start.lon/100000.;
-
-    double x1 = ( lon1 + 180.0 ) / 360.0;
-    double y1 = ( lat1 + 180.0 ) / 360.0;
-
-    double lat2 = target.lat/100000.;
-    double lon2 = target.lon/100000.;
-
-    double x2 = ( lon2 + 180.0 ) / 360.0;
-    double y2 = ( lat2 + 180.0 ) / 360.0;
-
-    Bresenham(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
-    BOOST_FOREACH(BresenhamPixel & pixel, indexList) {
-        int fileIndex = (pixel.second-1)*32768 + pixel.first;
-        int ramIndex = GetRAMIndexFromFileIndex(fileIndex);
-        pixel.first = fileIndex;
-        pixel.second = ramIndex;
-    }
-}
 
 static boost::thread_specific_ptr<std::ifstream> localStream;
 
@@ -320,7 +266,6 @@ private:
         }
     }
 
-
     inline double LengthOfVector(const _Coordinate & c1, const _Coordinate & c2) {
         double length1 = std::sqrt(c1.lat/100000.*c1.lat/100000. + c1.lon/100000.*c1.lon/100000.);
         double length2 = std::sqrt(c2.lat/100000.*c2.lat/100000. + c2.lon/100000.*c2.lon/100000.);
@@ -461,7 +406,7 @@ private:
         }
     }
 
-    double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
+    inline double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
 
         const double x = (double)inputPoint.lat;
         const double y = (double)inputPoint.lon;
@@ -498,6 +443,61 @@ private:
         nearest.lat = p;
         nearest.lon = q;
         return (p-x)*(p-x) + (q-y)*(q-y);
+    }
+
+    void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
+        double lat1 = start.lat/100000.;
+        double lon1 = start.lon/100000.;
+
+        double x1 = ( lon1 + 180.0 ) / 360.0;
+        double y1 = ( lat1 + 180.0 ) / 360.0;
+
+        double lat2 = target.lat/100000.;
+        double lon2 = target.lon/100000.;
+
+        double x2 = ( lon2 + 180.0 ) / 360.0;
+        double y2 = ( lat2 + 180.0 ) / 360.0;
+
+        Bresenham(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
+        BOOST_FOREACH(BresenhamPixel & pixel, indexList) {
+            int fileIndex = (pixel.second-1)*32768 + pixel.first;
+            int ramIndex = GetRAMIndexFromFileIndex(fileIndex);
+            pixel.first = fileIndex;
+            pixel.second = ramIndex;
+        }
+    }
+
+    inline unsigned GetFileIndexForLatLon(const int lt, const int ln) {
+        double lat = lt/100000.;
+        double lon = ln/100000.;
+
+        double x = ( lon + 180.0 ) / 360.0;
+        double y = ( lat + 180.0 ) / 360.0;
+
+        assert( x<=1.0 && x >= 0);
+        assert( y<=1.0 && y >= 0);
+
+        unsigned line = 1073741824.0*y;
+        line = line - (line % 32768);
+        assert(line % 32768 == 0);
+        unsigned column = 32768.*x;
+        unsigned fileIndex = line+column;
+        return fileIndex;
+    }
+
+    inline unsigned GetRAMIndexFromFileIndex(const int fileIndex) {
+        unsigned fileLine = fileIndex / 32768;
+        fileLine = fileLine / 32;
+        fileLine = fileLine * 1024;
+        unsigned fileColumn = (fileIndex % 32768);
+        fileColumn = fileColumn / 32;
+        unsigned ramIndex = fileLine + fileColumn;
+        assert(ramIndex < 1024*1024);
+        return ramIndex;
+    }
+
+    inline int signum(int x){
+        return (x > 0) ? 1 : (x < 0) ? -1 : 0;
     }
 
     const static unsigned long END_OF_BUCKET_DELIMITER = UINT_MAX;
