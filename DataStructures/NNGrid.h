@@ -150,10 +150,7 @@ template<bool WriteAccess = false>
 class NNGrid {
 public:
     NNGrid() /*: cellCache(500), fileCache(500)*/ {
-        ramIndexTable.resize((1024*1024), UINT_MAX);
-        if( WriteAccess) {
-            entries = new stxxl::vector<GridEntry>();
-        }
+        ramIndexTable.resize((1024*1024), ULONG_MAX);
     }
 
     NNGrid(const char* rif, const char* _i) {
@@ -161,16 +158,15 @@ public:
             ERR("Not available in Write mode");
         }
         iif = std::string(_i);
-        ramIndexTable.resize((1024*1024), UINT_MAX);
+        ramIndexTable.resize((1024*1024), ULONG_MAX);
         ramInFile.open(rif, std::ios::in | std::ios::binary);
-        entries = NULL;
     }
 
     ~NNGrid() {
         if(ramInFile.is_open()) ramInFile.close();
 
         if (WriteAccess) {
-            delete entries;
+            entries.clear();
         }
         if(localStream.get() && localStream->is_open()) {
             localStream->close();
@@ -179,12 +175,12 @@ public:
 
     void OpenIndexFiles() {
         assert(ramInFile.is_open());
-        ramInFile.read((char*)&ramIndexTable[0], sizeof(unsigned)*1024*1024);
+        ramInFile.read((char*)&ramIndexTable[0], sizeof(unsigned long)*1024*1024);
         ramInFile.close();
     }
 
     template<typename EdgeT, typename NodeInfoT>
-    void ConstructGrid(std::vector<EdgeT> & edgeList, vector<NodeInfoT> * int2ExtNodeMap, char * ramIndexOut, char * fileIndexOut) {
+    void ConstructGrid(std::vector<EdgeT> & edgeList, std::vector<NodeInfoT> * int2ExtNodeMap, char * ramIndexOut, char * fileIndexOut) {
         Percent p(edgeList.size());
         BOOST_FOREACH(EdgeT & edge, edgeList) {
             p.printIncrement();
@@ -193,31 +189,24 @@ public:
             int slon = edge.lon1;
             int tlat = 100000*lat2y(edge.lat2/100000.);
             int tlon = edge.lon2;
-            AddEdge( _GridEdge(
-                    edge.id, edge.nameID, edge.weight,
-                    _Coordinate(slat, slon),
-                    _Coordinate(tlat, tlon) )
-            );
+            AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon) ) );
         }
         double timestamp = get_timestamp();
         //create index file on disk, old one is over written
         indexOutFile.open(fileIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
-        cout << "sorting grid data consisting of " << entries->size() << " edges..." << flush;
+        INFO("sorting grid data consisting of " << entries.size() << " edges...");
         //sort entries
-        stxxl::sort(entries->begin(), entries->end(), CompareGridEdgeDataByRamIndex(), 1024*1024*1024);
-        cout << "ok in " << (get_timestamp() - timestamp) << "s" << endl;
+        stxxl::sort(entries.begin(), entries.end(), CompareGridEdgeDataByRamIndex(), 1024*1024*1024);
+        INFO("finished sorting after " << (get_timestamp() - timestamp) << "s");
         std::vector<GridEntry> entriesInFileWithRAMSameIndex;
-        unsigned indexInRamTable = entries->begin()->ramIndex;
-        unsigned lastPositionInIndexFile = 0;
-#ifdef NDEBUG
-        unsigned numberOfUsedCells = 0;
-#endif
+        unsigned indexInRamTable = entries.begin()->ramIndex;
+        unsigned long lastPositionInIndexFile = 0;
         unsigned maxNumberOfRAMCellElements = 0;
         cout << "writing data ..." << flush;
-        p.reinit(entries->size());
-        for(stxxl::vector<GridEntry>::iterator vt = entries->begin(); vt != entries->end(); ++vt) {
+        p.reinit(entries.size());
+        BOOST_FOREACH(GridEntry & gridEntry, entries) {
             p.printIncrement();
-            if(vt->ramIndex != indexInRamTable) {
+            if(gridEntry.ramIndex != indexInRamTable) {
                 unsigned numberOfBytesInCell = FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
                 if(entriesInFileWithRAMSameIndex.size() > maxNumberOfRAMCellElements)
                     maxNumberOfRAMCellElements = entriesInFileWithRAMSameIndex.size();
@@ -225,37 +214,22 @@ public:
                 ramIndexTable[indexInRamTable] = lastPositionInIndexFile;
                 lastPositionInIndexFile += numberOfBytesInCell;
                 entriesInFileWithRAMSameIndex.clear();
-                indexInRamTable = vt->ramIndex;
-#ifdef NDEBUG
-                numberOfUsedCells++;
-#endif
+                indexInRamTable = gridEntry.ramIndex;
             }
-            entriesInFileWithRAMSameIndex.push_back(*vt);
+            entriesInFileWithRAMSameIndex.push_back(gridEntry);
         }
         /*unsigned numberOfBytesInCell = */FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
         ramIndexTable[indexInRamTable] = lastPositionInIndexFile;
-#ifdef NDEBUG
-        numberOfUsedCells++;
-#endif
         entriesInFileWithRAMSameIndex.clear();
         std::vector<GridEntry>().swap(entriesInFileWithRAMSameIndex);
         assert(entriesInFileWithRAMSameIndex.size() == 0);
         //close index file
         indexOutFile.close();
 
-
-#ifdef NDEBUG
-        for(int i = 0; i < 1024*1024; ++i) {
-            if(ramIndexTable[i] != UINT_MAX) {
-                numberOfUsedCells--;
-            }
-        }
-        assert(numberOfUsedCells == 0);
-#endif
         //Serialize RAM Index
         ofstream ramFile(ramIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
         //write 4 MB of index Table in RAM
-        ramFile.write((char *)&ramIndexTable[0], sizeof(unsigned)*1024*1024 );
+        ramFile.write((char *)&ramIndexTable[0], sizeof(unsigned long)*1024*1024 );
         //close ram index file
         ramFile.close();
     }
@@ -280,43 +254,43 @@ public:
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
-            	//INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
-            	resultNode.Reset();
-            	resultNode.edgeBasedNode = candidate.edgeBasedNode;
-            	resultNode.nodeBasedEdgeNameID = candidate.nameID;
-            	resultNode.weight1 = candidate.weight;
-            	dist = tmpDist;
-            	resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
-            	resultNode.location.lon = tmp.lon;
-            	foundNode = true;
-            	smallestEdge = candidate;
-            	newEndpoint = tmp;
-            //}  else if(tmpDist < dist) {
-            //INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
+                //INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
+                resultNode.Reset();
+                resultNode.edgeBasedNode = candidate.edgeBasedNode;
+                resultNode.nodeBasedEdgeNameID = candidate.nameID;
+                resultNode.weight1 = candidate.weight;
+                dist = tmpDist;
+                resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
+                resultNode.location.lon = tmp.lon;
+                foundNode = true;
+                smallestEdge = candidate;
+                newEndpoint = tmp;
+                //}  else if(tmpDist < dist) {
+                //INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
             } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
                 resultNode.weight2 = candidate.weight;
                 //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
             }
         }
 
-//        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
-//        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
-//        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
-//        assert(!resultNode.isBidirected() || (resultNode.weight1 == resultNode.weight2));
-//        if(resultNode.weight1 != resultNode.weight2) {
-//            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
-//            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
-//        }
+        //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
+        //        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
+        //        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
+        //        assert(!resultNode.isBidirected() || (resultNode.weight1 == resultNode.weight2));
+        //        if(resultNode.weight1 != resultNode.weight2) {
+        //            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
+        //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
+        //        }
 
         double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
-//        INFO("node: " << resultNode.edgeBasedNode << ", orig weight1: " << resultNode.weight1 << ", orig weight2: " << resultNode.weight2);
+        //        INFO("node: " << resultNode.edgeBasedNode << ", orig weight1: " << resultNode.weight1 << ", orig weight2: " << resultNode.weight2);
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
             resultNode.weight2 -= resultNode.weight1;
         }
-//        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
-//        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
+        //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
+        //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
         return foundNode;
     }
 
@@ -372,6 +346,20 @@ public:
 
 
 private:
+    void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned ,unsigned >& cellMap){
+        unsigned lineBase = ramIndex/1024;
+        lineBase = lineBase*32*32768;
+        unsigned columnBase = ramIndex%1024;
+        columnBase=columnBase*32;       for (int i = 0;i < 32;i++) {
+            for (int j = 0;j < 32;j++) {
+                unsigned fileIndex = lineBase + i * 32768 + columnBase + j;
+                unsigned cellIndex = i * 32 + j;
+                cellMap.insert(std::make_pair(fileIndex, cellIndex));
+            }
+        }
+    }
+
+
     inline double LengthOfVector(const _Coordinate & c1, const _Coordinate & c2) {
         double length1 = std::sqrt(c1.lat/100000.*c1.lat/100000. + c1.lon/100000.*c1.lon/100000.);
         double length2 = std::sqrt(c2.lat/100000.*c2.lat/100000. + c2.lon/100000.*c2.lon/100000.);
@@ -382,30 +370,17 @@ private:
         return (std::fabs(d1 - d2) < 0.0001);
     }
 
-    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned fileOffset ) {
-        vector<char> * tmpBuffer = new vector<char>();
-        tmpBuffer->resize(32*32*4096,0);
-        unsigned indexIntoTmpBuffer = 0;
+    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned long fileOffset ) {
+        vector<char> tmpBuffer(32*32*4096,0);
+        unsigned long indexIntoTmpBuffer = 0;
         unsigned numberOfWrittenBytes = 0;
         assert(indexOutFile.is_open());
 
-        vector<unsigned> cellIndex;
-        cellIndex.resize(32*32,UINT_MAX);
+        vector<unsigned long> cellIndex(32*32,ULONG_MAX);
         boost::unordered_map< unsigned, unsigned > cellMap(1024);
 
         unsigned ramIndex = entriesWithSameRAMIndex.begin()->ramIndex;
-        unsigned lineBase = ramIndex/1024;
-        lineBase = lineBase*32*32768;
-        unsigned columnBase = ramIndex%1024;
-        columnBase=columnBase*32;
-
-        for(int i = 0; i < 32; i++) {
-            for(int j = 0; j < 32; j++) {
-                unsigned fileIndex = lineBase + i*32768 + columnBase+j;
-                unsigned cellIndex = i*32+j;
-                cellMap.insert(std::make_pair(fileIndex, cellIndex));
-            }
-        }
+        BuildCellIndexToFileIndexMap(ramIndex, cellMap);
 
         for(unsigned i = 0; i < entriesWithSameRAMIndex.size() -1; ++i) {
             assert(entriesWithSameRAMIndex[i].ramIndex== entriesWithSameRAMIndex[i+1].ramIndex);
@@ -413,57 +388,47 @@ private:
 
         //sort & unique
         std::sort(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end(), CompareGridEdgeDataByFileIndex());
-        std::vector<GridEntry>::iterator uniqueEnd = std::unique(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end());
+        entriesWithSameRAMIndex.erase(std::unique(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end()), entriesWithSameRAMIndex.end());
 
         //traverse each file bucket and write its contents to disk
         std::vector<GridEntry> entriesWithSameFileIndex;
         unsigned fileIndex = entriesWithSameRAMIndex.begin()->fileIndex;
 
-        for(std::vector<GridEntry>::iterator it = entriesWithSameRAMIndex.begin(); it != uniqueEnd; it++) {
-            assert(cellMap.find(it->fileIndex) != cellMap.end() ); //asserting that file index belongs to cell index
-            if(it->fileIndex != fileIndex) {
+        BOOST_FOREACH(GridEntry & gridEntry, entriesWithSameRAMIndex) {
+            assert(cellMap.find(gridEntry.fileIndex) != cellMap.end() ); //asserting that file index belongs to cell index
+            if(gridEntry.fileIndex != fileIndex) {
                 // start in cellIndex vermerken
                 int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
                 int localCellIndex = cellMap.find(localFileIndex)->second;
-                /*int localRamIndex = */GetRAMIndexFromFileIndex(localFileIndex);
                 assert(cellMap.find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap.end());
 
                 cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
                 indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
+                fileIndex = gridEntry.fileIndex;
             }
-            GridEntry data = *it;
-            entriesWithSameFileIndex.push_back(data);
-            fileIndex = it->fileIndex;
+            entriesWithSameFileIndex.push_back(gridEntry);
         }
         assert(cellMap.find(entriesWithSameFileIndex.begin()->fileIndex) != cellMap.end());
         int localFileIndex = entriesWithSameFileIndex.begin()->fileIndex;
         int localCellIndex = cellMap.find(localFileIndex)->second;
-        /*int localRamIndex = */GetRAMIndexFromFileIndex(localFileIndex);
 
         cellIndex[localCellIndex] = indexIntoTmpBuffer + fileOffset;
         indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
 
         assert(entriesWithSameFileIndex.size() == 0);
-
-        for(int i = 0; i < 32*32; i++) {
-            indexOutFile.write((char *)&cellIndex[i], sizeof(unsigned));
-            numberOfWrittenBytes += sizeof(unsigned);
-        }
+        indexOutFile.write((char *)&cellIndex[0],32*32*sizeof(unsigned long));
+        numberOfWrittenBytes += 32*32*sizeof(unsigned long);
 
         //write contents of tmpbuffer to disk
-        for(unsigned i = 0; i < indexIntoTmpBuffer; i++) {
-            indexOutFile.write(&(tmpBuffer->at(i)), sizeof(char));
-            numberOfWrittenBytes += sizeof(char);
-        }
+        indexOutFile.write(&tmpBuffer[0], indexIntoTmpBuffer*sizeof(char));
+        numberOfWrittenBytes += indexIntoTmpBuffer*sizeof(char);
 
-        delete tmpBuffer;
         return numberOfWrittenBytes;
     }
 
-    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> * tmpBuffer, const unsigned index) {
-        tmpBuffer->resize(tmpBuffer->size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) );
+    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> & tmpBuffer, const unsigned long index) {
+        tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) );
         unsigned counter = 0;
-        unsigned max = UINT_MAX;
 
         for(unsigned i = 0; i < vectorWithSameFileIndex.size()-1; i++) {
             assert( vectorWithSameFileIndex[i].fileIndex == vectorWithSameFileIndex[i+1].fileIndex );
@@ -475,15 +440,16 @@ private:
         BOOST_FOREACH(GridEntry entry, vectorWithSameFileIndex) {
             char * data = (char *)&(entry.edge);
             for(unsigned i = 0; i < sizeof(_GridEdge); ++i) {
-                tmpBuffer->at(index+counter) = data[i];
+                tmpBuffer[index+counter] = data[i];
                 ++counter;
             }
         }
-        char * umax = (char *) &max;
-        for(unsigned i = 0; i < sizeof(unsigned); i++) {
-            tmpBuffer->at(index+counter) = umax[i];
+        //Write end-of-bucket marker
+        for(unsigned i = 0; i < sizeof(END_OF_BUCKET_DELIMITER); i++) {
+            tmpBuffer[index+counter] = UCHAR_MAX;
             counter++;
         }
+        //Freeing data
         vectorWithSameFileIndex.clear();
         std::vector<GridEntry>().swap(vectorWithSameFileIndex);
         return counter;
@@ -491,27 +457,15 @@ private:
 
     void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_GridEdge>& result) {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
-        unsigned startIndexInFile = ramIndexTable[ramIndex];
-        if(startIndexInFile == UINT_MAX) {
+        unsigned long startIndexInFile = ramIndexTable[ramIndex];
+        if(startIndexInFile == ULONG_MAX) {
             return;
         }
 
-        std::vector<unsigned> cellIndex;
-        cellIndex.resize(32*32);
+        std::vector<unsigned long> cellIndex(32*32);
+
         boost::unordered_map< unsigned, unsigned > cellMap(1024);
-
-        unsigned lineBase = ramIndex/1024;
-        lineBase = lineBase*32*32768;
-        unsigned columnBase = ramIndex%1024;
-        columnBase=columnBase*32;
-
-        for(int i = 0; i < 32; i++) {
-            for(int j = 0; j < 32; j++) {
-                unsigned fileIndex = lineBase + i*32768 + columnBase+j;
-                unsigned cellIndex = i*32+j;
-                cellMap.insert(std::make_pair(fileIndex, cellIndex));
-            }
-        }
+        BuildCellIndexToFileIndexMap(ramIndex,  cellMap);
         if(!localStream.get() || !localStream->is_open()) {
             localStream.reset(new std::ifstream(iif.c_str(), std::ios::in | std::ios::binary));
         }
@@ -521,18 +475,18 @@ private:
         }
 
         localStream->seekg(startIndexInFile);
-        localStream->read((char*) &cellIndex[0], 32*32*sizeof(unsigned));
+        localStream->read((char*) &cellIndex[0], 32*32*sizeof(unsigned long));
         assert(cellMap.find(fileIndex) != cellMap.end());
-        if(cellIndex[cellMap.find(fileIndex)->second] == UINT_MAX) {
+        if(cellIndex[cellMap.find(fileIndex)->second] == ULONG_MAX) {
             return;
         }
-        const unsigned position = cellIndex[cellMap.find(fileIndex)->second] + 32*32*sizeof(unsigned) ;
+        const unsigned long position = cellIndex[cellMap.find(fileIndex)->second] + 32*32*sizeof(unsigned long) ;
 
         localStream->seekg(position);
         _GridEdge gridEdge;
         do {
             localStream->read((char *)&(gridEdge), sizeof(_GridEdge));
-            if(localStream->eof() || gridEdge.edgeBasedNode == UINT_MAX)
+            if(localStream->eof() || gridEdge.edgeBasedNode == END_OF_BUCKET_DELIMITER)
                 break;
             result.push_back(gridEdge);
         } while(true);
@@ -542,7 +496,7 @@ private:
         std::vector<std::pair<unsigned, unsigned> > indexList;
         GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
         for(unsigned i = 0; i < indexList.size(); ++i) {
-            entries->push_back(GridEntry(edge, indexList[i].first, indexList[i].second));
+            entries.push_back(GridEntry(edge, indexList[i].first, indexList[i].second));
         }
     }
 
@@ -585,13 +539,15 @@ private:
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
+    const static unsigned long END_OF_BUCKET_DELIMITER = UINT_MAX;
+
     ofstream indexOutFile;
     ifstream ramInFile;
-    stxxl::vector<GridEntry> * entries;
-    std::vector<unsigned> ramIndexTable; //4 MB for first level index in RAM
+    stxxl::vector<GridEntry> entries;
+    std::vector<unsigned long> ramIndexTable; //8 MB for first level index in RAM
     std::string iif;
-//    LRUCache<int,std::vector<unsigned> > cellCache;
-//    LRUCache<int,std::vector<_Edge> > fileCache;
+    //    LRUCache<int,std::vector<unsigned> > cellCache;
+    //    LRUCache<int,std::vector<_Edge> > fileCache;
 };
 }
 
