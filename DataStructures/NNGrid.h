@@ -44,6 +44,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "PhantomNodes.h"
 #include "Util.h"
 #include "StaticGraph.h"
+#include "../Algorithms/Bresenham.h"
 
 static const unsigned MAX_CACHE_ELEMENTS = 1000;
 
@@ -81,54 +82,7 @@ static inline int signum(int x){
     return (x > 0) ? 1 : (x < 0) ? -1 : 0;
 }
 
-static void GetIndicesByBresenhamsAlgorithm(int xstart,int ystart,int xend,int yend, std::vector<std::pair<unsigned, unsigned> > &indexList) {
-    int x, y, t, dx, dy, incx, incy, pdx, pdy, ddx, ddy, es, el, err;
-
-    dx = xend - xstart;
-    dy = yend - ystart;
-
-    incx = signum(dx);
-    incy = signum(dy);
-    if(dx<0) dx = -dx;
-    if(dy<0) dy = -dy;
-
-    if (dx>dy) {
-        pdx=incx; pdy=0;
-        ddx=incx; ddy=incy;
-        es =dy;   el =dx;
-    } else {
-        pdx=0;    pdy=incy;
-        ddx=incx; ddy=incy;
-        es =dx;   el =dy;
-    }
-    x = xstart;
-    y = ystart;
-    err = el/2;
-    {
-        int fileIndex = (y-1)*32768 + x;
-        int ramIndex = GetRAMIndexFromFileIndex(fileIndex);
-        indexList.push_back(std::make_pair(fileIndex, ramIndex));
-    }
-
-    for(t=0; t<el; ++t) {
-        err -= es;
-        if(err<0) {
-            err += el;
-            x += ddx;
-            y += ddy;
-        } else {
-            x += pdx;
-            y += pdy;
-        }
-        {
-            int fileIndex = (y-1)*32768 + x;
-            int ramIndex = GetRAMIndexFromFileIndex(fileIndex);
-            indexList.push_back(std::make_pair(fileIndex, ramIndex));
-        }
-    }
-}
-
-static void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<std::pair<unsigned, unsigned> > &indexList) {
+static inline void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
     double lat1 = start.lat/100000.;
     double lon1 = start.lon/100000.;
 
@@ -141,7 +95,13 @@ static void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& 
     double x2 = ( lon2 + 180.0 ) / 360.0;
     double y2 = ( lat2 + 180.0 ) / 360.0;
 
-    GetIndicesByBresenhamsAlgorithm(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
+    Bresenham(x1*32768, y1*32768, x2*32768, y2*32768, indexList);
+    BOOST_FOREACH(BresenhamPixel & pixel, indexList) {
+        int fileIndex = (pixel.second-1)*32768 + pixel.first;
+        int ramIndex = GetRAMIndexFromFileIndex(fileIndex);
+        pixel.first = fileIndex;
+        pixel.second = ramIndex;
+    }
 }
 
 static boost::thread_specific_ptr<std::ifstream> localStream;
@@ -350,7 +310,8 @@ private:
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
         unsigned columnBase = ramIndex%1024;
-        columnBase=columnBase*32;       for (int i = 0;i < 32;i++) {
+        columnBase=columnBase*32;
+        for (int i = 0;i < 32;i++) {
             for (int j = 0;j < 32;j++) {
                 unsigned fileIndex = lineBase + i * 32768 + columnBase + j;
                 unsigned cellIndex = i * 32 + j;
@@ -493,7 +454,7 @@ private:
     }
 
     void AddEdge(_GridEdge edge) {
-        std::vector<std::pair<unsigned, unsigned> > indexList;
+        std::vector<BresenhamPixel> indexList;
         GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
         for(unsigned i = 0; i < indexList.size(); ++i) {
             entries.push_back(GridEntry(edge, indexList[i].first, indexList[i].second));
