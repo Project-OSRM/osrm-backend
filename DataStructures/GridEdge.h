@@ -51,30 +51,24 @@ struct GridEntry {
     }
 };
 
-struct CompareGridEdgeDataByFileIndex
-{
-    bool operator ()  (const GridEntry & a, const GridEntry & b) const
-    {
+struct CompareGridEdgeDataByFileIndex {
+    bool operator ()  (const GridEntry & a, const GridEntry & b) const {
         return a.fileIndex < b.fileIndex;
     }
 };
 
-struct CompareGridEdgeDataByRamIndex
-{
+struct CompareGridEdgeDataByRamIndex {
     typedef GridEntry value_type;
 
-    bool operator ()  (const GridEntry & a, const GridEntry & b) const
-    {
+    bool operator ()  (const GridEntry & a, const GridEntry & b) const {
         return a.ramIndex < b.ramIndex;
     }
-    value_type max_value()
-    {
+    value_type max_value() {
         GridEntry e;
         e.ramIndex = (1024*1024) - 1;
         return e;
     }
-    value_type min_value()
-    {
+    value_type min_value() {
         GridEntry e;
         e.ramIndex = 0;
         return e;
