@@ -41,10 +41,14 @@ struct ObjectsForQueryStruct {
         std::cout << "[objects] loading query data structures ..." << std::flush;
         ifstream hsgrInStream(hsgrPath.c_str(), ios::binary);
         //Deserialize road network graph
-        std::vector< InputEdge> edgeList;
-        const int n = readHSGRFromStream(hsgrInStream, edgeList);
-        graph = new QueryGraph(n, edgeList);
-        std::vector< InputEdge >().swap( edgeList ); //free memory
+        std::vector< QueryGraph::_StrNode> nodeList;
+        std::vector< QueryGraph::_StrEdge> edgeList;
+        const int n = readHSGRFromStream(hsgrInStream, nodeList, edgeList);
+        graph = new QueryGraph(nodeList, edgeList);
+        INFO("Graph has " << graph->GetNumberOfNodes() << " nodes");
+        INFO("Graph has " << graph->GetNumberOfEdges() << " edges");
+
+
 
         //Init nearest neighbor data structure
         ifstream nodesInStream(nodesPath.c_str(), ios::binary);

@@ -354,6 +354,31 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     return numberOfNodes;
 }
 
+template<typename NodeT, typename EdgeT>
+unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> & edgeList) {
+    unsigned numberOfNodes = 0;
+    in.read((char*) & numberOfNodes, sizeof(unsigned));
+    INFO("Loading " <<  numberOfNodes << " nodes");
+    nodeList.resize(numberOfNodes);
+    NodeT currentNode;
+    for(unsigned nodeCounter = 0; nodeCounter < numberOfNodes; ++nodeCounter ) {
+        in.read((char*) &currentNode, sizeof(NodeT));
+        nodeList[nodeCounter] = currentNode;
+    }
+
+    unsigned numberOfEdges = 0;
+    in.read((char*) &numberOfEdges, sizeof(unsigned));
+    INFO("Loading " << numberOfEdges << " edges");
+    edgeList.resize(numberOfEdges);
+    EdgeT currentEdge;
+    for(unsigned edgeCounter = 0; edgeCounter < numberOfEdges; ++edgeCounter) {
+        in.read((char*) &currentEdge, sizeof(EdgeT));
+        edgeList[edgeCounter] = currentEdge;
+    }
+
+    return numberOfNodes;
+}
+
 template<typename EdgeT>
 unsigned readHSGRFromStream(istream &in, vector<EdgeT> & edgeList) {
     NodeID numberOfNodes = 0;

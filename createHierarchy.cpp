@@ -90,11 +90,11 @@ int main (int argc, char *argv[]) {
 
     INFO("preprocessing data from input file " << argv[1] << " using STL "
 #ifdef _GLIBCXX_PARALLEL
-    "parallel (GCC)"
+            "parallel (GCC)"
 #else
-    "serial"
+            "serial"
 #endif
-    " mode");
+            " mode");
     ifstream in;
     in.open (argv[1], ifstream::in | ifstream::binary);
     if (!in.is_open()) {
@@ -160,18 +160,69 @@ int main (int argc, char *argv[]) {
     cleanup->GetData(cleanedEdgeList);
     DELETE( cleanup );
 
-    INFO("Serializing edges ");
+    INFO("Building Node Array");
+    //    std::sort( graph.begin(), graph.end() );
+    sort(cleanedEdgeList.begin(), cleanedEdgeList.end());
+    unsigned numberOfNodes = 0;
+    unsigned numberOfEdges = cleanedEdgeList.size();
+    INFO("Serializing compacted graph");
     ofstream edgeOutFile(edgeOut, ios::binary);
-    Percent p(cleanedEdgeList.size());
+
     BOOST_FOREACH(InputEdge & edge, cleanedEdgeList) {
-        p.printIncrement();
-        edgeOutFile.write((char *)&(edge.data), sizeof(EdgeData));
-        edgeOutFile.write((char *)&(edge.source), sizeof(NodeID));
-        edgeOutFile.write((char *)&(edge.target), sizeof(NodeID));
+        if(edge.source > numberOfNodes) {
+            numberOfNodes = edge.source;
+        }
+        if(edge.target > numberOfNodes) {
+            numberOfNodes = edge.target;
+        }
     }
+    //    _numNodes = nodes;
+    //    _numEdges = ( EdgeIterator ) graph.size();
+    numberOfNodes+=1;
+
+    std::vector< StaticGraph<EdgeData>::_StrNode > _nodes;
+//    std::vector< StaticGraph<EdgeData>::_StrEdge > _edges;
+    _nodes.resize( numberOfNodes);
+
+    StaticGraph<EdgeData>::EdgeIterator edge = 0;
+    StaticGraph<EdgeData>::EdgeIterator position = 0;
+    for ( StaticGraph<EdgeData>::NodeIterator node = 0; node <= numberOfNodes; ++node ) {
+        StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
+        while ( edge < numberOfEdges && cleanedEdgeList[edge].source == node )
+            ++edge;
+        _nodes[node].firstEdge = position; //=edge
+        position += edge - lastEdge; //remove
+    }
+    //Serialize numberOfNodes, nodes
+    edgeOutFile.write((char*) &numberOfNodes, sizeof(unsigned));
+    edgeOutFile.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
+
+
+    //Serialize number of Edges
+    edgeOutFile.write((char*) &position, sizeof(unsigned));
+
+    edge = 0;
+    int counter = 0;
+    StaticGraph<EdgeData>::_StrEdge currentEdge;
+    for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
+        for ( StaticGraph<EdgeData>::EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
+
+            currentEdge.target = cleanedEdgeList[edge].target;
+            currentEdge.data = cleanedEdgeList[edge].data;
+            if(currentEdge.data.distance <= 0) {
+                INFO("Edge: " << i << ",source: " << cleanedEdgeList[edge].source << ", target: " << cleanedEdgeList[edge].target << ", dist: " << currentEdge.data.distance);
+                ERR("Failed at edges of node " << node << " of " << numberOfNodes);
+            }
+            //Serialize edges
+            edgeOutFile.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
+            ++edge;
+            ++counter;
+        }
+    }
+    INFO("Written " << counter << " edges, expected " << position);
     edgeOutFile.close();
     cleanedEdgeList.clear();
-
+    _nodes.clear();
     INFO("finished preprocessing");
     return 0;
 }

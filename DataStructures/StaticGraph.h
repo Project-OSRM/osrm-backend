@@ -49,12 +49,18 @@ public:
         }
     };
 
+    struct _StrNode {
+        //index of the first edge
+        EdgeIterator firstEdge;
+    };
+
+    struct _StrEdge {
+        NodeID target;
+        EdgeDataT data;
+    };
+
     StaticGraph( const int nodes, std::vector< InputEdge > &graph ) {
-#ifdef _GLIBCXX_PARALLEL
-        __gnu_parallel::sort( graph.begin(), graph.end() );
-#else
         std::sort( graph.begin(), graph.end() );
-#endif
         _numNodes = nodes;
         _numEdges = ( EdgeIterator ) graph.size();
         _nodes.resize( _numNodes + 1);
@@ -77,6 +83,14 @@ public:
                 edge++;
             }
         }
+    }
+
+    StaticGraph( std::vector<_StrNode> & nodes, std::vector<_StrEdge> & edges) {
+        _numNodes = nodes.size();
+        _numEdges = edges.size();
+
+        _nodes.swap(nodes);
+        _edges.swap(edges);
     }
 
     unsigned GetNumberOfNodes() const {
@@ -141,16 +155,6 @@ public:
     }
 
 private:
-
-    struct _StrNode {
-        //index of the first edge
-        EdgeIterator firstEdge;
-    };
-
-    struct _StrEdge {
-        NodeID target;
-        EdgeDataT data;
-    };
 
     NodeIterator _numNodes;
     EdgeIterator _numEdges;
