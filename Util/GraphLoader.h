@@ -142,7 +142,7 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
     short type;
     NodeID nameID;
     int length;
-    bool isRoundabout;
+    bool isRoundabout, ignoreInGrid;
 
     for (EdgeID i=0; i<m; ++i) {
         in.read((char*)&source,         sizeof(unsigned));
@@ -153,6 +153,7 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
         in.read((char*)&type,           sizeof(short));
         in.read((char*)&nameID,         sizeof(unsigned));
         in.read((char*)&isRoundabout,   sizeof(bool));
+        in.read((char*)&ignoreInGrid,   sizeof(bool));
 
         GUARANTEE(length > 0, "loaded null length edge" );
         GUARANTEE(weight > 0, "loaded null weight");
@@ -162,6 +163,8 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
         bool backward = true;
         if (1 == dir) { backward = false; }
         if (2 == dir) { forward = false; }
+
+        assert(type >= 0);
 
         //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
@@ -182,7 +185,7 @@ NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vecto
         target = intNodeID->second;
         GUARANTEE(source != UINT_MAX && target != UINT_MAX, "nonexisting source or target");
 
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout );
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid );
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();
@@ -358,7 +361,6 @@ template<typename NodeT, typename EdgeT>
 unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> & edgeList) {
     unsigned numberOfNodes = 0;
     in.read((char*) & numberOfNodes, sizeof(unsigned));
-    INFO("Loading " <<  numberOfNodes << " nodes");
     nodeList.resize(numberOfNodes);
     NodeT currentNode;
     for(unsigned nodeCounter = 0; nodeCounter < numberOfNodes; ++nodeCounter ) {
@@ -368,7 +370,6 @@ unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> 
 
     unsigned numberOfEdges = 0;
     in.read((char*) &numberOfEdges, sizeof(unsigned));
-    INFO("Loading " << numberOfEdges << " edges");
     edgeList.resize(numberOfEdges);
     EdgeT currentEdge;
     for(unsigned edgeCounter = 0; edgeCounter < numberOfEdges; ++edgeCounter) {

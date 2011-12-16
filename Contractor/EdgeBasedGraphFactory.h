@@ -41,11 +41,12 @@ private:
     struct _NodeBasedEdgeData {
         int distance;
         unsigned edgeBasedNodeID;
-        unsigned nameID;
+        unsigned nameID:31;
         bool shortcut:1;
         bool forward:1;
         bool backward:1;
         bool roundabout:1;
+        bool ignoreInGrid:1;
         short type;
     } data;
 
@@ -76,6 +77,7 @@ public:
         NodeID id;
         NodeID nameID;
         unsigned weight;
+        bool ignoreInGrid;
     };
 
 private:

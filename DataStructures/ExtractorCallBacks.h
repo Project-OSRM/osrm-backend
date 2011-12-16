@@ -118,6 +118,18 @@ public:
             w.roundabout = true;
         }
 
+        //Is the route tag listed as usable way in the profile?
+        if(settings[route] > 0 || settings[man_made] > 0) {
+            w.useful = true;
+            w.speed = settings[route];
+            w.direction = _Way::bidirectional;
+            if(0 < settings[route])
+                highway = route;
+            else if (0 < settings[man_made]) {
+                highway = man_made;
+            }
+        }
+
         //Is the highway tag listed as usable way?
         if(0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) {
 
@@ -154,22 +166,14 @@ public:
                         w.direction  = _Way::opposite;
                 }
             }
-        } else {
-            //Is the route tag listed as usable way in the profile?
-            if(settings[route] > 0 || settings[man_made] > 0) {
-                w.useful = true;
-                w.speed = settings[route];
-                w.direction = _Way::bidirectional;
-                if(0 < settings[route])
-                    highway = route;
-                else if (0 < settings[man_made]) {
-                    highway = man_made;
-                }
-            }
         }
+
         if ( w.useful && w.access && (1 < w.path.size()) ) { //Only true if the way is specified by the speed profile
             //TODO: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
             w.type = settings.GetHighwayTypeID(highway);
+           if(0 > w.type) {
+               ERR("Resolved highway " << highway << " to " << w.type);
+           }
 
             //Get the unique identifier for the street name
             const StringMap::const_iterator strit = stringMap->find(w.name);
@@ -195,7 +199,7 @@ public:
             }
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
-                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout));
+                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid));
                 externalMemory->usedNodeIDs.push_back(w.path[n]);
             }
             externalMemory->usedNodeIDs.push_back(w.path[w.path.size()-1]);

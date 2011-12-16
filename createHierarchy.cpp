@@ -126,7 +126,7 @@ int main (int argc, char *argv[]) {
 
     WritableGrid * writeableGrid = new WritableGrid();
     INFO("building grid ...");
-    writeableGrid->ConstructGrid(nodeBasedEdgeList, &internalToExternaleNodeMapping, ramIndexOut, fileIndexOut);
+    writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut, fileIndexOut);
     DELETE( writeableGrid );
     nodeBasedEdgeList.clear();
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);

@@ -38,25 +38,24 @@ struct ObjectsForQueryStruct {
     QueryGraph * graph;
 
     ObjectsForQueryStruct(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route") {
-        std::cout << "[objects] loading query data structures ..." << std::flush;
-        ifstream hsgrInStream(hsgrPath.c_str(), ios::binary);
+        INFO("loading graph data");
+        std::ifstream hsgrInStream(hsgrPath.c_str(), ios::binary);
         //Deserialize road network graph
         std::vector< QueryGraph::_StrNode> nodeList;
         std::vector< QueryGraph::_StrEdge> edgeList;
         const int n = readHSGRFromStream(hsgrInStream, nodeList, edgeList);
         graph = new QueryGraph(nodeList, edgeList);
-        INFO("Graph has " << graph->GetNumberOfNodes() << " nodes");
-        INFO("Graph has " << graph->GetNumberOfEdges() << " edges");
-
-
-
+        assert(0 == nodeList.size());
+        assert(0 == edgeList.size());
+        INFO("Loading nearest neighbor indices");
         //Init nearest neighbor data structure
-        ifstream nodesInStream(nodesPath.c_str(), ios::binary);
+        std::ifstream nodesInStream(nodesPath.c_str(), ios::binary);
         nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str(), n);
         nodeHelpDesk->initNNGrid(nodesInStream);
 
         //deserialize street name list
-        ifstream namesInStream(namesPath.c_str(), ios::binary);
+        INFO("Loading names index");
+        std::ifstream namesInStream(namesPath.c_str(), ios::binary);
         unsigned size(0);
         namesInStream.read((char *)&size, sizeof(unsigned));
         names = new std::vector<std::string>();
@@ -72,7 +71,7 @@ struct ObjectsForQueryStruct {
         }
         hsgrInStream.close();
         namesInStream.close();
-        std::cout << "ok" << std::endl;
+        INFO("All query data structures loaded");
     }
 
     ~ObjectsForQueryStruct() {

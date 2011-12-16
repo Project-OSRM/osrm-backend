@@ -85,12 +85,13 @@ public:
         ramInFile.close();
     }
 
-    template<typename EdgeT, typename NodeInfoT>
-    void ConstructGrid(std::vector<EdgeT> & edgeList, std::vector<NodeInfoT> * int2ExtNodeMap, char * ramIndexOut, char * fileIndexOut) {
+    template<typename EdgeT>
+    void ConstructGrid(std::vector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
         Percent p(edgeList.size());
         BOOST_FOREACH(EdgeT & edge, edgeList) {
             p.printIncrement();
-
+            if(edge.ignoreInGrid)
+                continue;
             int slat = 100000*lat2y(edge.lat1/100000.);
             int slon = edge.lon1;
             int tlat = 100000*lat2y(edge.lat2/100000.);

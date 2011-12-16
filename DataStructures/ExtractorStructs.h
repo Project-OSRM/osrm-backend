@@ -36,7 +36,7 @@ struct _PathData {
 };
 
 typedef boost::unordered_map<std::string, NodeID > StringMap;
-typedef boost::unordered_map<std::string, std::pair<int, int> > StringToIntPairMap;
+typedef boost::unordered_map<std::string, std::pair<int, short> > StringToIntPairMap;
 
 struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
@@ -134,10 +134,12 @@ struct _Relation {
 };
 
 struct _Edge {
-    _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false) {};
-    _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0), isRoundabout(false)  { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0), isRoundabout(false)  { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra) { }
+    _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false) {};
+    _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0), isRoundabout(false), ignoreInGrid(false) { }
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing) {
+        assert(0 <= type);
+    }
     NodeID start;
     NodeID target;
     short type;
@@ -145,6 +147,7 @@ struct _Edge {
     double speed;
     unsigned nameID;
     bool isRoundabout;
+    bool ignoreInGrid;
 
     _Coordinate startCoord;
     _Coordinate targetCoord;
@@ -265,10 +268,11 @@ struct Settings {
     }
     int GetHighwayTypeID(const std::string & param) const {
     	if(param == excludeFromGrid) {
-    		return INT_MAX;
+    		return SHRT_MAX;
     	}
+    	assert(param != "ferry");
         if(speedProfile.find(param) == speedProfile.end()) {
-            DEBUG("There is a bug with highway \"" << param << "\"");
+            ERR("There is a bug with highway \"" << param << "\"");
             return -1;
         } else {
             return speedProfile.at(param).second;

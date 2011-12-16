@@ -52,6 +52,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         assert( edge.data.distance > 0 );
         edge.data.shortcut = false;
         edge.data.roundabout = i->isRoundabout();
+        edge.data.ignoreInGrid = i->ignoreInGrid();
         edge.data.nameID = i->name();
         edge.data.type = i->type();
         edge.data.forward = i->isForward();
@@ -140,6 +141,7 @@ void EdgeBasedGraphFactory::Run() {
                 currentNode.lat2 = inputNodeInfoList[v].lat;
                 currentNode.lon2 = inputNodeInfoList[v].lon;
                 currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
+                currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
 
 //                short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
 //                short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
@@ -205,7 +207,7 @@ void EdgeBasedGraphFactory::Run() {
                         EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
 
-                        if(_nodeBasedGraph->GetEdgeData(e1).type != INT_MAX ) {
+                        if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX ) {
                             EdgeBasedNode currentNode;
                             currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                             currentNode.lat1 = inputNodeInfoList[u].lat;
@@ -213,6 +215,8 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.lat2 = inputNodeInfoList[v].lat;
                             currentNode.lon2 = inputNodeInfoList[v].lon;
                             currentNode.id = edgeBasedSource;
+                            currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
+
 //                            short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
 //                            short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
 //                            short heightDiff = startHeight - targetHeight;

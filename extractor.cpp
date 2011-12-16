@@ -397,8 +397,6 @@ int main (int argc, char *argv[]) {
                     double weight = ( distance * 10. ) / (edgeIT->speed / 3.6);
                     int intWeight = max(1, (int) weight);
                     int intDist = max(1, (int)distance);
-                    int ferryIndex = settings["ferry"];
-                    assert(ferryIndex != -1);
                     short zero = 0;
                     short one = 1;
 
@@ -429,6 +427,7 @@ int main (int argc, char *argv[]) {
                     fout.write((char*)&edgeIT->type, sizeof(short));
                     fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
                     fout.write((char*)&edgeIT->isRoundabout, sizeof(bool));
+                    fout.write((char*)&edgeIT->ignoreInGrid, sizeof(bool));
                 }
                 ++usedEdgeCounter;
                 ++edgeIT;
