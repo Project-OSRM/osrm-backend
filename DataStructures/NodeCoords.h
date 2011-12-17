@@ -29,40 +29,38 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 template<typename NodeT>
 struct NodeCoords {
-    typedef unsigned key_type; 	//type of NodeID
-    typedef int value_type;		//type of lat,lons
+	typedef unsigned key_type; 	//type of NodeID
+	typedef int value_type;		//type of lat,lons
 
-    NodeCoords(int _lat, int _lon, NodeT _id) : lat(_lat), lon(_lon), id(_id) {}
-    NodeCoords() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
-    int lat;
-    int lon;
-    NodeT id;
+	NodeCoords(int _lat, int _lon, NodeT _id) : lat(_lat), lon(_lon), id(_id) {}
+	NodeCoords() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
+	int lat;
+	int lon;
+	NodeT id;
 
-    static NodeCoords<NodeT> min_value()
-                    {
-        return NodeCoords<NodeT>(-90*100000,-180*100000,numeric_limits<NodeT>::min());
-                    }
-    static NodeCoords<NodeT> max_value()
-                    {
-        return NodeCoords<NodeT>(90*100000, 180*100000, numeric_limits<NodeT>::max());
-                    }
+	static NodeCoords<NodeT> min_value() {
+		return NodeCoords<NodeT>(-90*100000,-180*100000,numeric_limits<NodeT>::min());
+	}
+	static NodeCoords<NodeT> max_value() {
+		return NodeCoords<NodeT>(90*100000, 180*100000, numeric_limits<NodeT>::max());
+	}
 
-    value_type operator[](size_t n) const {
-        switch(n) {
-        case 1:
-            return lat;
-            break;
-        case 0:
-            return lon;
-            break;
-        default:
-            assert(false);
-            return UINT_MAX;
-            break;
-        }
-        assert(false);
-        return UINT_MAX;
-    }
+	value_type operator[](size_t n) const {
+		switch(n) {
+		case 1:
+			return lat;
+			break;
+		case 0:
+			return lon;
+			break;
+		default:
+			assert(false);
+			return UINT_MAX;
+			break;
+		}
+		assert(false);
+		return UINT_MAX;
+	}
 };
 
 #endif //_NODE_COORDS_H
