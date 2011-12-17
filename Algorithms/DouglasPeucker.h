@@ -22,7 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define DOUGLASPEUCKER_H_
 
 #include <cfloat>
-#include <stack>
+#include "../DataStructures/SimpleStack.h"
 
 /*This class object computes the bitvector of indicating generalized input points
  * according to the (Ramer-)Douglas-Peucker algorithm.
@@ -39,7 +39,7 @@ class DouglasPeucker {
 private:
     typedef std::pair<std::size_t, std::size_t> PairOfPoints;
     //Stack to simulate the recursion
-    std::stack<PairOfPoints > recursionStack;
+    SimpleStack<PairOfPoints > recursionStack;
 
     double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) {
         double r;
@@ -81,6 +81,7 @@ public:
             std::size_t leftBorderOfRange = 0;
             std::size_t rightBorderOfRange = 1;
             //Sweep linerarily over array and identify those ranges that need to be checked
+            recursionStack.hint(inputVector.size());
             do {
                 assert(inputVector[leftBorderOfRange].necessary);
                 assert(inputVector[inputVector.size()-1].necessary);
