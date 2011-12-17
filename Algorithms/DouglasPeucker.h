@@ -41,7 +41,7 @@ private:
     //Stack to simulate the recursion
     std::stack<PairOfPoints > recursionStack;
 
-    double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) {
+    double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) {
         double r;
         const double x = (double)inputPoint.lat;
         const double y = (double)inputPoint.lon;
@@ -104,7 +104,7 @@ public:
             std::size_t indexOfFarthestElement = pair.second;
             //find index idx of element with maxDistance
             for(std::size_t i = pair.first+1; i < pair.second; ++i){
-                double distance = std::fabs(ComputeDistance(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
+                double distance = std::fabs(ComputeDistanceOfPointToLine(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
                 if(distance > DouglasPeuckerThresholds[zoomLevel] && distance > maxDistance) {
                     indexOfFarthestElement = i;
                     maxDistance = distance;
