@@ -24,28 +24,28 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <list>
 #include <boost/unordered_map.hpp>
 
-template<typename ValueT>
+template<typename KeyT, typename ValueT>
 class LRUCache {
 private:
     struct CacheEntry {
-        CacheEntry(unsigned k, ValueT v) : key(k), value(v) {}
-        unsigned key;
+        CacheEntry(KeyT k, ValueT v) : key(k), value(v) {}
+        KeyT key;
         ValueT value;
     };
     unsigned capacity;
     std::list<CacheEntry> itemsInCache;
-    boost::unordered_map<unsigned, typename std::list<CacheEntry>::iterator > positionMap;
+    boost::unordered_map<KeyT, typename std::list<CacheEntry>::iterator > positionMap;
 public:
     LRUCache(unsigned c) : capacity(c) {}
 
-    bool Holds(unsigned key) {
+    bool Holds(KeyT key) {
         if(positionMap.find(key) != positionMap.end()) {
             return true;
         }
         return false;
     }
 
-    void Insert(const unsigned key, ValueT value) {
+    void Insert(const KeyT key, ValueT &value) {
         itemsInCache.push_front(CacheEntry(key, value));
         positionMap.insert(std::make_pair(key, itemsInCache.begin()));
         if(itemsInCache.size() > capacity) {
@@ -53,7 +53,7 @@ public:
             itemsInCache.pop_back();
         }
     }
-    bool Fetch(const unsigned key, ValueT& result) {
+    bool Fetch(const KeyT key, ValueT& result) {
         if(Holds(key)) {
             CacheEntry e = *(positionMap.find(key)->second);
             result = e.value;
