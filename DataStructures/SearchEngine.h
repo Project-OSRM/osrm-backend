@@ -124,13 +124,12 @@ public:
         return _upperbound;
     }
 
-    inline bool FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) const {
+    inline void FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) const {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
-        return true;
     }
 
-    inline bool FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result) const {
-        return nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
+    inline void FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result) const {
+        nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
     }
 
     inline NodeID GetNameIDForOriginDestinationNodeID(NodeID s, NodeID t) const {
