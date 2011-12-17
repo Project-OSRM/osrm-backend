@@ -147,7 +147,6 @@ public:
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
-        double time1 = get_timestamp();
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++){
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
