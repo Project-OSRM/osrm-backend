@@ -358,7 +358,7 @@ private:
         }
     }
 
-    inline void _UnpackPath(std::deque<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
+    inline void _UnpackPath(const std::deque<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
     	const unsigned sizeOfPackedPath = packedPath.size();
     	SimpleStack<std::pair<NodeID, NodeID> > recursionStack(sizeOfPackedPath);
 
