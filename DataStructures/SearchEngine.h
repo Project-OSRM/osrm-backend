@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <climits>
 #include <deque>
+#include "SimpleStack.h"
 
 #include <boost/thread.hpp>
 
@@ -36,7 +37,7 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p) { }
 };
 
-typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _HeapData> > HeapPtr;
+typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > > HeapPtr;
 
 template<class EdgeData, class GraphT>
 class SearchEngine {
@@ -57,13 +58,15 @@ public:
     }
 
     inline void InitializeThreadLocalStorageIfNecessary() {
-        if(!_forwardHeap.get())
-            _forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData>(nodeHelpDesk->getNumberOfNodes()));
+        if(!_forwardHeap.get()) {
+        	_forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+        }
         else
             _forwardHeap->Clear();
 
-        if(!_backwardHeap.get())
-            _backwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData>(nodeHelpDesk->getNumberOfNodes()));
+        if(!_backwardHeap.get()) {
+        	_backwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+        }
         else
             _backwardHeap->Clear();
     }
@@ -117,20 +120,16 @@ public:
             pathNode = _backwardHeap->GetData(pathNode).parent;
             packedPath.push_back(pathNode);
         }
-        for(deque<NodeID>::size_type i = 0;i < packedPath.size() - 1;i++){
-            _UnpackEdge(packedPath[i], packedPath[i + 1], path);
-        }
-
+        _UnpackPath(packedPath, path);
         return _upperbound;
     }
 
-    inline bool FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) const {
+    inline void FindRoutingStarts(const _Coordinate & start, const _Coordinate & target, PhantomNodes & routingStarts) const {
         nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
-        return true;
     }
 
-    inline bool FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result) const {
-        return nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
+    inline void FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result) const {
+        nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
     }
 
     inline NodeID GetNameIDForOriginDestinationNodeID(NodeID s, NodeID t) const {
@@ -226,41 +225,52 @@ private:
         }
     }
 
-    inline bool _UnpackEdge(const NodeID source, const NodeID target, std::vector<_PathData> & path) const {
-        assert(source != target);
-        //find edge first.
-        typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
-        int smallestWeight = INT_MAX;
-        for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(source);eit < _graph->EndEdges(source);eit++){
-            const int weight = _graph->GetEdgeData(eit).distance;
-            if(_graph->GetTarget(eit) == target && weight < smallestWeight && _graph->GetEdgeData(eit).forward){
-                smallestEdge = eit;
-                smallestWeight = weight;
-            }
+    inline void _UnpackPath(const std::deque<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
+    	const std::deque<NodeID>::size_type sizeOfPackedPath = packedPath.size();
+    	SimpleStack<std::pair<NodeID, NodeID> > recursionStack(sizeOfPackedPath);
+
+    	//We have to push the path in reverse order onto the stack because it's LIFO.
+        for(std::deque<NodeID>::size_type i = sizeOfPackedPath-1; i > 0; --i){
+        	recursionStack.push(std::make_pair(packedPath[i-1], packedPath[i]));
         }
 
-        if(smallestEdge == SPECIAL_EDGEID){
-            for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(target);eit < _graph->EndEdges(target);eit++){
+        std::pair<NodeID, NodeID> edge;
+        while(!recursionStack.empty()) {
+        	edge = recursionStack.top();
+        	recursionStack.pop();
+
+            typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
+            int smallestWeight = INT_MAX;
+            for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(edge.first);eit < _graph->EndEdges(edge.first);++eit){
                 const int weight = _graph->GetEdgeData(eit).distance;
-                if(_graph->GetTarget(eit) == source && weight < smallestWeight && _graph->GetEdgeData(eit).backward){
+                if(_graph->GetTarget(eit) == edge.second && weight < smallestWeight && _graph->GetEdgeData(eit).forward){
                     smallestEdge = eit;
                     smallestWeight = weight;
                 }
             }
-        }
 
-        assert(smallestWeight != INT_MAX);
+            if(smallestEdge == SPECIAL_EDGEID){
+                for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(edge.second);eit < _graph->EndEdges(edge.second);++eit){
+                    const int weight = _graph->GetEdgeData(eit).distance;
+                    if(_graph->GetTarget(eit) == edge.first && weight < smallestWeight && _graph->GetEdgeData(eit).backward){
+                        smallestEdge = eit;
+                        smallestWeight = weight;
+                    }
+                }
+            }
 
-        const EdgeData& ed = _graph->GetEdgeData(smallestEdge);
-        if(ed.shortcut) {//unpack
-            const NodeID middle = ed.via;
-            _UnpackEdge(source, middle, path);
-            _UnpackEdge(middle, target, path);
-            return false;
-        } else {
-            assert(!ed.shortcut);
-            path.push_back(_PathData(ed.via, ed.nameID, ed.turnInstruction, ed.distance) );
-            return true;
+            assert(smallestWeight != INT_MAX);
+
+            const EdgeData& ed = _graph->GetEdgeData(smallestEdge);
+            if(ed.shortcut) {//unpack
+                const NodeID middle = ed.via;
+                //again, we need to this in reversed order
+                recursionStack.push(std::make_pair(middle, edge.second));
+                recursionStack.push(std::make_pair(edge.first, middle));
+            } else {
+                assert(!ed.shortcut);
+                unpackedPath.push_back(_PathData(ed.via, ed.nameID, ed.turnInstruction, ed.distance) );
+            }
         }
     }
 };

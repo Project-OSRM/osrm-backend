@@ -147,13 +147,11 @@ public:
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
-
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; i++){
                 GetContentsOfFileBucket(fileIndex+i+j, candidates);
             }
         }
-
         _GridEdge smallestEdge;
         _Coordinate tmp, newEndpoint;
         double dist = numeric_limits<double>::max();
@@ -179,7 +177,6 @@ public:
                 //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
             }
         }
-
         //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
         //        INFO("length of old edge: " << LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord));
         //        INFO("Length of new edge: " << LengthOfVector(smallestEdge.startCoord, newEndpoint));
@@ -253,16 +250,16 @@ public:
 
 
 private:
-    void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned ,unsigned >& cellMap){
+    inline void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned ,unsigned >& cellMap){
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
         unsigned columnBase = ramIndex%1024;
         columnBase=columnBase*32;
-        for (int i = 0;i < 32;i++) {
-            for (int j = 0;j < 32;j++) {
+        for (int i = 0;i < 32;++i) {
+            for (int j = 0;j < 32;++j) {
                 unsigned fileIndex = lineBase + i * 32768 + columnBase + j;
                 unsigned cellIndex = i * 32 + j;
-                cellMap.insert(std::make_pair(fileIndex, cellIndex));
+                cellMap[fileIndex] = cellIndex;
             }
         }
     }
@@ -369,7 +366,7 @@ private:
             return;
         }
 
-        std::vector<unsigned long> cellIndex(32*32);
+        unsigned long cellIndex[32*32];
 
         boost::unordered_map< unsigned, unsigned > cellMap(1024);
         BuildCellIndexToFileIndexMap(ramIndex,  cellMap);
@@ -382,8 +379,8 @@ private:
         }
 
         localStream->seekg(startIndexInFile);
-        localStream->read((char*) &cellIndex[0], 32*32*sizeof(unsigned long));
-        assert(cellMap.find(fileIndex) != cellMap.end());
+        localStream->read((char*) cellIndex, 32*32*sizeof(unsigned long));
+         assert(cellMap.find(fileIndex) != cellMap.end());
         if(cellIndex[cellMap.find(fileIndex)->second] == ULONG_MAX) {
             return;
         }
@@ -397,7 +394,7 @@ private:
                 break;
             result.push_back(gridEdge);
         } while(true);
-    }
+   }
 
     void AddEdge(_GridEdge edge) {
         std::vector<BresenhamPixel> indexList;
