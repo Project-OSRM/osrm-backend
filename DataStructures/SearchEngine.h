@@ -94,7 +94,7 @@ public:
             _backwardViaHeap->Clear();
     }
 
-    int ComputeViaRoute(std::vector<PhantomNodes> & phantomNodesVector, std::vector<_PathData> & unpackedPath) {
+    inline int ComputeViaRoute(std::vector<PhantomNodes> & phantomNodesVector, std::vector<_PathData> & unpackedPath) {
         BOOST_FOREACH(PhantomNodes & phantomNodePair, phantomNodesVector) {
             if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX())
                 return INT_MAX;
@@ -204,7 +204,7 @@ public:
         return std::min(distance1, distance2);
     }
 
-    int ComputeRoute(PhantomNodes & phantomNodes, std::vector<_PathData> & path) {
+    inline int ComputeRoute(PhantomNodes & phantomNodes, std::vector<_PathData> & path) {
         int _upperbound = INT_MAX;
         if(!phantomNodes.AtLeastOnePhantomNodeIsUINTMAX())
             return _upperbound;
