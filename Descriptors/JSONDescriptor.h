@@ -48,17 +48,17 @@ public:
 
 	void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, const unsigned durationOfTrip) {
 		WriteHeaderToOutput(reply.content);
-		if(durationOfTrip != INT_MAX && rawRoute.routeSegments.size() > 0) {
+		if(durationOfTrip != INT_MAX) {
 			summary.startName = sEngine.GetEscapedNameForNameID(phantomNodes.startPhantom.nodeBasedEdgeNameID);
 			descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
 			summary.destName = sEngine.GetEscapedNameForNameID(phantomNodes.targetPhantom.nodeBasedEdgeNameID);
 			reply.content += "0,"
-					"\"status_message\": \"Found route between points\",";
-			for(unsigned segmentIdx = 0; segmentIdx < rawRoute.routeSegments.size(); ++segmentIdx) {
-				BOOST_FOREACH(_PathData & pathData, rawRoute.routeSegments[segmentIdx]) {
-					sEngine.GetCoordinatesForNodeID(pathData.node, current);
-					descriptionFactory.AppendSegment(current, pathData );
-				}
+			        "\"status_message\": \"Found route between points\",";
+
+			//Get all the coordinates for the computed route
+			BOOST_FOREACH(_PathData & pathData, rawRoute.computedRouted) {
+			    sEngine.GetCoordinatesForNodeID(pathData.node, current);
+			    descriptionFactory.AppendSegment(current, pathData );
 			}
 			descriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
 		} else {

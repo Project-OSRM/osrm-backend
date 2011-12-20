@@ -101,7 +101,7 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(startCoord);
 
-        for(unsigned i = 0; i < routeParameters.viaPoints.size(); i++) {
+        for(unsigned i = 0; i < routeParameters.viaPoints.size(); ++i) {
             textCoord = split (routeParameters.viaPoints[i], ',');
             if(textCoord.size() != 2) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
@@ -119,57 +119,42 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(targetCoord);
         vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
-        bool errorOccurredFlag = false;
 
-        for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); i++) {
+        for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
-            if(!rawRoute.rawViaNodeCoordinates[i].isSet()) {
-                errorOccurredFlag = true;
-            }
         }
 
         rawRoute.Resize();
-        unsigned distance = 0;
 
+        unsigned distance = 0;
         //single route or via point routing
         if(0 == routeParameters.viaPoints.size()) {
             PhantomNodes segmentPhantomNodes;
             segmentPhantomNodes.startPhantom = phantomNodeVector[0];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[1];
-            std::vector< _PathData > path;
-            distance = searchEngine->ComputeRoute(segmentPhantomNodes, path);
-
-            if(INT_MAX == distance ) {
-                DEBUG( "Error occurred, single path not found" );
-            }
+            distance = searchEngine->ComputeRoute(segmentPhantomNodes, rawRoute.computedRouted);
 
             //put segments at correct position of routes raw data
             rawRoute.segmentEndCoordinates[0] = (segmentPhantomNodes);
-            rawRoute.routeSegments[0] = path;
         } else {
             //Getting the shortest via path is a dynamic programming problem and is solved as such.
-            for(unsigned i = 0; i < phantomNodeVector.size()-1 && !errorOccurredFlag; i++) {
-                PhantomNodes segmentPhantomNodes;
-                segmentPhantomNodes.startPhantom = phantomNodeVector[i];
-                segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
-                INFO(segmentPhantomNodes);
-                std::vector< _PathData > path;
-                unsigned distanceOfSegment = searchEngine->ComputeRoute(segmentPhantomNodes, path);
-
-                if(UINT_MAX == distanceOfSegment ) {
-                    errorOccurredFlag = true;
-                    INFO( "Error occurred, via path not found" );
-                    distance = UINT_MAX;
-                    break;
-                } else {
-                    distance += distanceOfSegment;
-                }
-
-                //put segments at correct position of routes raw data
-                rawRoute.segmentEndCoordinates[i] = (segmentPhantomNodes);
-                rawRoute.routeSegments[i] = path;
+            std::vector<PhantomNodes> phantomNodes;
+            for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
+                 PhantomNodes segmentPhantomNodes;
+                 segmentPhantomNodes.startPhantom = phantomNodeVector[i];
+                 segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
+                 phantomNodes.push_back(segmentPhantomNodes);
             }
+            distance = searchEngine->ComputeViaRoute(phantomNodes, rawRoute.computedRouted);
+
+            //put segments at correct position of routes raw data
+//            rawRoute.segmentEndCoordinates[i] = (segmentPhantomNodes);
+//            rawRoute.routeSegments[i] = path;
         }
+        if(INT_MAX == distance ) {
+            DEBUG( "Error occurred, single path not found" );
+        }
+
         reply.status = http::Reply::ok;
 
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;

@@ -37,7 +37,14 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p) { }
 };
 
+struct _ViaHeapData {
+    NodeID parent;
+    NodeID sourceNode;
+    _ViaHeapData(NodeID id) :parent(id), sourceNode(id) { }
+};
+
 typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > > HeapPtr;
+typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _ViaHeapData, UnorderedMapStorage<NodeID, int> > > ViaHeapPtr;
 
 template<class EdgeData, class GraphT>
 class SearchEngine {
@@ -47,6 +54,8 @@ private:
     std::vector<string> * _names;
     static HeapPtr _forwardHeap;
     static HeapPtr _backwardHeap;
+    static ViaHeapPtr _forwardViaHeap;
+    static ViaHeapPtr _backwardViaHeap;
     inline double absDouble(double input) { if(input < 0) return input*(-1); else return input;}
 public:
     SearchEngine(GraphT * g, NodeInformationHelpDesk * nh, std::vector<string> * n = new std::vector<string>()) : _graph(g), nodeHelpDesk(nh), _names(n) {}
@@ -59,16 +68,140 @@ public:
 
     inline void InitializeThreadLocalStorageIfNecessary() {
         if(!_forwardHeap.get()) {
-        	_forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            _forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             _forwardHeap->Clear();
 
         if(!_backwardHeap.get()) {
-        	_backwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            _backwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             _backwardHeap->Clear();
+    }
+
+    inline void InitializeThreadLocalViaStorageIfNecessary() {
+        if(!_forwardViaHeap.get()) {
+            _forwardViaHeap.reset(new BinaryHeap< NodeID, NodeID, int, _ViaHeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+        }
+        else
+            _forwardViaHeap->Clear();
+
+        if(!_backwardViaHeap.get()) {
+            _backwardViaHeap.reset(new BinaryHeap< NodeID, NodeID, int, _ViaHeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+        }
+        else
+            _backwardViaHeap->Clear();
+    }
+
+    int ComputeViaRoute(std::vector<PhantomNodes> & phantomNodesVector, std::vector<_PathData> & unpackedPath) {
+        BOOST_FOREACH(PhantomNodes & phantomNodePair, phantomNodesVector) {
+            if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX())
+                return INT_MAX;
+        }
+
+        int distance1 = 0;
+        int distance2 = 0;
+
+        std::deque<NodeID> packedPath1;
+        std::deque<NodeID> packedPath2;
+
+        //Get distance to next pair of target nodes.
+        BOOST_FOREACH(PhantomNodes & phantomNodePair, phantomNodesVector) {
+            InitializeThreadLocalViaStorageIfNecessary();
+            NodeID middle1 = ( NodeID ) UINT_MAX;
+            NodeID middle2 = ( NodeID ) UINT_MAX;
+
+            int _upperbound1 = INT_MAX;
+            int _upperbound2 = INT_MAX;
+
+            assert(INT_MAX != distance1);
+
+            _forwardViaHeap->Clear();
+            //insert new starting nodes into forward heap, adjusted by previous distances.
+            _forwardViaHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+            if(phantomNodePair.startPhantom.isBidirected() ) {
+                _forwardViaHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance1-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+            }
+
+            _backwardViaHeap->Clear();
+            //insert new backward nodes into backward heap, unadjusted.
+            _backwardViaHeap->Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
+            if(phantomNodePair.targetPhantom.isBidirected() ) {
+                _backwardViaHeap->Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
+            }
+            int offset = (phantomNodePair.startPhantom.isBidirected() ? std::max(phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.weight2) : phantomNodePair.startPhantom.weight1) ;
+            offset += (phantomNodePair.targetPhantom.isBidirected() ? std::max(phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.weight2) : phantomNodePair.targetPhantom.weight1) ;
+
+            //run two-Target Dijkstra routing step.
+            //TODO
+
+            //No path found for both target nodes?
+            if(INT_MAX == _upperbound1 && INT_MAX == _upperbound2) {
+                return INT_MAX;
+            }
+            
+            //Add distance of segments to current sums
+            if(INT_MAX == distance1 || INT_MAX == _upperbound1)
+                distance1 = 0;
+            distance1 += _upperbound1;
+            if(INT_MAX == distance2 || INT_MAX == _upperbound2)
+                distance2 = 0;
+            distance2 += _upperbound2;
+
+            if(INT_MAX == distance1)
+                packedPath1.clear();
+            if(INT_MAX == distance2)
+                packedPath2.clear();
+
+            //Was one of the previous segments empty?
+            bool empty1 = (INT_MAX != distance1 && 0 == packedPath1.size() && 0 != packedPath2.size());
+            bool empty2 = (INT_MAX != distance2 && 0 == packedPath2.size() && 0 != packedPath1.size());
+            assert(!(empty1 && empty2));
+            if(empty1)
+                packedPath1.insert(packedPath1.begin(), packedPath2.begin(), packedPath2.end());
+            if(empty2)
+                packedPath2.insert(packedPath2.begin(), packedPath1.begin(), packedPath2.end());
+            
+            //set packed paths to current paths.
+            NodeID pathNode = middle1;
+            std::deque<NodeID> temporaryPackedPath;
+            while(phantomNodePair.startPhantom.edgeBasedNode != pathNode && (!phantomNodePair.startPhantom.isBidirected() || phantomNodePair.startPhantom.edgeBasedNode+1 != pathNode) ) {
+                pathNode = _forwardHeap->GetData(pathNode).parent;
+                temporaryPackedPath.push_front(pathNode);
+            }
+            temporaryPackedPath.push_back(middle1);
+            pathNode = middle1;
+            while(phantomNodePair.targetPhantom.edgeBasedNode != pathNode && (!phantomNodePair.targetPhantom.isBidirected() || phantomNodePair.targetPhantom.edgeBasedNode+1 != pathNode)) {
+                pathNode = _backwardHeap->GetData(pathNode).parent;
+                temporaryPackedPath.push_back(pathNode);
+            }
+            packedPath1.insert(packedPath1.end(), temporaryPackedPath.begin(), temporaryPackedPath.end());
+            //TODO: add via node turn instruction
+
+            pathNode = middle2;
+            temporaryPackedPath.clear();
+            while(phantomNodePair.startPhantom.edgeBasedNode != pathNode && (!phantomNodePair.startPhantom.isBidirected() || phantomNodePair.startPhantom.edgeBasedNode+1 != pathNode) ) {
+                pathNode = _forwardHeap->GetData(pathNode).parent;
+                temporaryPackedPath.push_front(pathNode);
+            }
+            temporaryPackedPath.push_back(middle2);
+            pathNode = middle2;
+            while(phantomNodePair.targetPhantom.edgeBasedNode != pathNode && (!phantomNodePair.targetPhantom.isBidirected() || phantomNodePair.targetPhantom.edgeBasedNode+1 != pathNode)) {
+                pathNode = _backwardHeap->GetData(pathNode).parent;
+                temporaryPackedPath.push_back(pathNode);
+            }
+            //TODO: add via node turn instruction
+            packedPath2.insert(packedPath2.end(), temporaryPackedPath.begin(), temporaryPackedPath.end());
+        }
+        
+        if(distance1 < distance2) {
+            _UnpackPath(packedPath1, unpackedPath);
+        } else {
+            _UnpackPath(packedPath2, unpackedPath);
+        }
+
+        return std::min(distance1, distance2);
     }
 
     int ComputeRoute(PhantomNodes & phantomNodes, std::vector<_PathData> & path) {
@@ -225,12 +358,12 @@ private:
         }
     }
 
-    inline void _UnpackPath(const std::deque<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
-    	const std::deque<NodeID>::size_type sizeOfPackedPath = packedPath.size();
+    inline void _UnpackPath(std::deque<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
+    	const unsigned sizeOfPackedPath = packedPath.size();
     	SimpleStack<std::pair<NodeID, NodeID> > recursionStack(sizeOfPackedPath);
 
     	//We have to push the path in reverse order onto the stack because it's LIFO.
-        for(std::deque<NodeID>::size_type i = sizeOfPackedPath-1; i > 0; --i){
+        for(unsigned i = sizeOfPackedPath-1; i > 0; --i){
         	recursionStack.push(std::make_pair(packedPath[i-1], packedPath[i]));
         }
 
@@ -276,5 +409,8 @@ private:
 };
 template<class EdgeData, class GraphT> HeapPtr SearchEngine<EdgeData, GraphT>::_forwardHeap;
 template<class EdgeData, class GraphT> HeapPtr SearchEngine<EdgeData, GraphT>::_backwardHeap;
+
+template<class EdgeData, class GraphT> ViaHeapPtr SearchEngine<EdgeData, GraphT>::_forwardViaHeap;
+template<class EdgeData, class GraphT> ViaHeapPtr SearchEngine<EdgeData, GraphT>::_backwardViaHeap;
 
 #endif /* SEARCHENGINE_H_ */

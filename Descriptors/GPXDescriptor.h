@@ -40,21 +40,19 @@ public:
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                 "\">";
         reply.content += "<rte>";
-        if(distance != UINT_MAX && rawRoute.routeSegments.size()) {
+        if(distance != UINT_MAX && rawRoute.computedRouted.size()) {
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
-            for(unsigned segmentIdx = 0; segmentIdx < rawRoute.routeSegments.size(); segmentIdx++) {
-                BOOST_FOREACH(_PathData pathData, rawRoute.routeSegments[segmentIdx]) {
-                    sEngine.GetCoordinatesForNodeID(pathData.node, current);
+            BOOST_FOREACH(_PathData pathData, rawRoute.computedRouted) {
+                sEngine.GetCoordinatesForNodeID(pathData.node, current);
 
-                    convertInternalLatLonToString(current.lat, tmp);
-                    reply.content += "<rtept lat=\"" + tmp + "\" ";
-                    convertInternalLatLonToString(current.lon, tmp);
-                    reply.content += "lon=\"" + tmp + "\"></rtept>";
-                }
+                convertInternalLatLonToString(current.lat, tmp);
+                reply.content += "<rtept lat=\"" + tmp + "\" ";
+                convertInternalLatLonToString(current.lon, tmp);
+                reply.content += "lon=\"" + tmp + "\"></rtept>";
             }
             convertInternalLatLonToString(phantomNodes.targetPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
