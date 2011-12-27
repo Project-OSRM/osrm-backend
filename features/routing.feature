@@ -15,27 +15,11 @@ Feature: Routing from A to B
 	    And the route should stay on "Islands Brygge"
 	 	And the distance should be close to 200m
 
-	Scenario: Crossing round-about at Amalienborg
+	Scenario: Crossing roundabout at Amalienborg
 	    When I request a route from 55.683797649183,12.593940686704 to 55.6842149924,12.592476200581
 	    Then I should get a route
 	 	And the distance should be close to 150m
 		
-	@bicycle
-	Scenario: Handle cycleway=opposite_lane
-	    When I request a route from 55.689236488,12.55317804955 to 55.688510764046,12.552909828648
-	    Then I should get a route
-	 	And the route should follow "Kapelvej"
-	 	And there should not be any turns
-	 	And the distance should be close to 80m
-
-	@bicycle
-	Scenario: Handle oneway:bicycle
-	    When I request a route from 55.673168935147,12.563557740441 to 55.67380116846,12.563107129324&
-	    Then I should get a route
-	 	And the route should follow "Banegårdspladsen"
-	 	And there should not be any turns
-	 	And the distance should be close to 70m
-
 	Scenario: Requesting invalid routes
 	    When I request a route from 0,0 to 0,0
 	    Then I should not get a route

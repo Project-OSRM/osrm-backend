@@ -67,11 +67,11 @@ Then /^I should not get a route$/ do
   step "no route should be found"
 end
 
-Then /^starting point should be "([^']*)"$/ do |name|
+Then /^the route should start at "([^']*)"$/ do |name|
   @json['route_summary']['start_point'].should == name
 end
 
-Then /^end point should be "([^']*)"$/ do |name|
+Then /^the route should end at "([^']*)"$/ do |name|
   @json['route_summary']['end_point'].should == name
 end
 
@@ -89,19 +89,50 @@ Then /^number of instructions should be (\d+)$/ do |n|
   @json['route_instructions'].size.should == n
 end
 
+Then /^there should be 1 turn$/ do
+  step 'there should be 1 turns'
+end
+
+Then /^there should be (\d+) turns$/ do |n|
+  @json['route_instructions'].map {|t| t.first}.select {|t| t =~ /^Turn/ }.size.should == n.to_i
+end
+
+Then /^there should be more than (\d+) turn$/ do |n|
+  @json['route_instructions'].map {|t| t.first}.select {|t| t =~ /^Turn/ }.size.should > n.to_i
+end
+
 Then /^there should not be any turns$/ do
   (@json['route_instructions'].size-1).should == 0
 end
 
+def sanitize_route route
+  route.split(',').map{|w| w.strip}.reject(&:empty?).join(', ')
+end
+ 
+def computed_route
+  @json['route_instructions'].map { |r| r[1] }.reject(&:empty?).join(', ')
+end
+   
 Then /^the route should follow "([^"]*)"$/ do |route|
-  route = route.split(',').map{|w| w.strip}.reject(&:empty?).join(', ')
-  @json['route_instructions'].map { |r| r[1].strip }.reject(&:empty?).join(', ').should == route
+  sanitize_route(route).should == computed_route
 end
 
-Then /^the route should stay on "([^"]*)"$/ do |route|
-  step 'starting point should be "Islands Brygge"'
-  step 'end point should be "Islands Brygge"'
-  step 'the route should follow "Islands Brygge"'
-  step 'there should not be any turns'
+Then /^the route should not follow "([^"]*)"$/ do |route|
+  sanitize_route(route).should_not == computed_route
+end
+
+Then /^the route should include "([^"]*)"$/ do |route|
+  sanitize_route(route).should =~ /#{computed_route}/
+end
+
+Then /^the route should not include "([^"]*)"$/ do |route|
+  sanitize_route(route).should_not =~ /#{computed_route}/
+end
+
+Then /^the route should stay on "([^"]*)"$/ do |way|
+  step "the route should start at \"#{way}\""
+  step "the route should end at \"#{way}\""
+  step "the route should follow \"#{way}\""
+  step "there should not be any turns"
 end
 
