@@ -114,11 +114,11 @@ def computed_route
 end
    
 Then /^the route should follow "([^"]*)"$/ do |route|
-  sanitize_route(route).should == computed_route
+  computed_route.should == sanitize_route(route)
 end
 
 Then /^the route should not follow "([^"]*)"$/ do |route|
-  sanitize_route(route).should_not == computed_route
+  computed_route.should_not == sanitize_route(route)
 end
 
 Then /^the route should include "([^"]*)"$/ do |route|
