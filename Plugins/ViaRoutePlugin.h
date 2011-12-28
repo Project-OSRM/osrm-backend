@@ -70,7 +70,7 @@ public:
 
     std::string GetDescriptor() { return pluginDescriptorString; }
     std::string GetVersionString() { return std::string("0.3 (DL)"); }
-    void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
+    void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(0 == routeParameters.options["start"].size() || 0 == routeParameters.options["dest"].size() ) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
