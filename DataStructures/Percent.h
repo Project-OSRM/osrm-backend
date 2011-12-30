@@ -59,7 +59,7 @@ public:
     void printIncrement()
     {
 #pragma omp atomic
-        _current_value++;
+        ++_current_value;
         printStatus(_current_value);
     }
 private:
