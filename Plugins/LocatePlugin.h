@@ -39,7 +39,7 @@ public:
     }
 	std::string GetDescriptor() { return std::string("locate"); }
 	std::string GetVersionString() { return std::string("0.3 (DL)"); }
-	void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
+	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
 		//check number of parameters
 		if(routeParameters.parameters.size() != 2) {
 			reply = http::Reply::stockReply(http::Reply::badRequest);

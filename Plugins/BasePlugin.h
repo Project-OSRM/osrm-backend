@@ -35,7 +35,7 @@ public:
 	virtual ~BasePlugin() { }
 	virtual std::string GetDescriptor() = 0;
 	virtual std::string GetVersionString() = 0;
-	virtual void HandleRequest(RouteParameters routeParameters, http::Reply& reply) = 0;
+	virtual void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) = 0;
 };
 
 #endif /* BASEPLUGIN_H_ */

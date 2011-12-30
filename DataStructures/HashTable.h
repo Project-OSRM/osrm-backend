@@ -42,7 +42,7 @@ public:
     void Set(const keyT& key, const valueT& value){
         table[key] = value;
     }
-    valueT Find(const keyT& key) {
+    valueT Find(const keyT& key) const {
         if(table.find(key) == table.end())
             return valueT();
         return table.find(key)->second;
@@ -58,9 +58,10 @@ public:
             table.clear();
     }
 
-    inline
-    valueT & operator[] (keyT key) {
-        return table[key];
+    inline valueT operator[] (keyT key) const {
+    	if(table.find(key) == table.end())
+    		return valueT();
+    	return table.find(key)->second;
     }
     unsigned Size() const {
         return table.size();

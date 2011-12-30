@@ -18,7 +18,7 @@ public:
 	HelloWorldPlugin() {}
 	virtual ~HelloWorldPlugin() { /*std::cout << GetDescriptor() << " destructor" << std::endl;*/ }
 	std::string GetDescriptor() { return std::string("hello"); }
-	void HandleRequest(RouteParameters routeParameters, http::Reply& reply) {
+	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
 		std::cout << "[hello world]: runnning handler" << std::endl;
 		reply.status = http::Reply::ok;
 		reply.content.append("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
