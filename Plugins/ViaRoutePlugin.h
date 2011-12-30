@@ -68,8 +68,8 @@ public:
         DELETE( searchEngine );
     }
 
-    std::string GetDescriptor() { return pluginDescriptorString; }
-    std::string GetVersionString() { return std::string("0.3 (DL)"); }
+    std::string GetDescriptor() const { return pluginDescriptorString; }
+    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(0 == routeParameters.options["start"].size() || 0 == routeParameters.options["dest"].size() ) {

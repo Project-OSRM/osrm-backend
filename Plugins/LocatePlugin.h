@@ -37,8 +37,8 @@ public:
     LocatePlugin(ObjectsForQueryStruct * objects) {
         nodeHelpDesk = objects->nodeHelpDesk;
     }
-	std::string GetDescriptor() { return std::string("locate"); }
-	std::string GetVersionString() { return std::string("0.3 (DL)"); }
+	std::string GetDescriptor() const { return std::string("locate"); }
+	std::string GetVersionString() const { return std::string("0.3 (DL)"); }
 	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
 		//check number of parameters
 		if(routeParameters.parameters.size() != 2) {

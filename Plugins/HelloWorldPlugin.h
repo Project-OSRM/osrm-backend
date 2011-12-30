@@ -17,7 +17,9 @@ class HelloWorldPlugin : public BasePlugin {
 public:
 	HelloWorldPlugin() {}
 	virtual ~HelloWorldPlugin() { /*std::cout << GetDescriptor() << " destructor" << std::endl;*/ }
-	std::string GetDescriptor() { return std::string("hello"); }
+	std::string GetDescriptor() const { return std::string("hello"); }
+	std::string GetVersionString() const { return std::string("0.1a"); }
+
 	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
 		std::cout << "[hello world]: runnning handler" << std::endl;
 		reply.status = http::Reply::ok;
@@ -36,7 +38,6 @@ public:
 		reply.content.append(content.str());
 		reply.content.append("</body></html>");
 	}
-	std::string GetVersionString() { return std::string("0.1a"); }
 };
 
 #endif /* HELLOWORLDPLUGIN_H_ */

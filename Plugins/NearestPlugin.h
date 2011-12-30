@@ -43,8 +43,8 @@ public:
         descriptorTable.Set("kml", 0);
         descriptorTable.Set("json", 1);
     }
-    std::string GetDescriptor() { return std::string("nearest"); }
-    std::string GetVersionString() { return std::string("0.3 (DL)"); }
+    std::string GetDescriptor() const { return std::string("nearest"); }
+    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(routeParameters.parameters.size() != 2) {
