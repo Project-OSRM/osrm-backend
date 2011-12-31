@@ -68,8 +68,8 @@ public:
         DELETE( searchEngine );
     }
 
-    std::string GetDescriptor() { return pluginDescriptorString; }
-    std::string GetVersionString() { return std::string("0.3 (DL)"); }
+    std::string GetDescriptor() const { return pluginDescriptorString; }
+    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(0 == routeParameters.options["start"].size() || 0 == routeParameters.options["dest"].size() ) {
@@ -109,7 +109,7 @@ public:
             }
             int vialat = static_cast<int>(100000.*atof(textCoord[0].c_str()));
             int vialon = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-            INFO("[debug] via" << i << ": " << vialat << "," << vialon);
+//            INFO("[debug] via" << i << ": " << vialat << "," << vialon);
             _Coordinate viaCoord(vialat, vialon);
             if(false == checkCoord(viaCoord)) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
@@ -124,8 +124,6 @@ public:
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
         }
 
-        rawRoute.Resize();
-
         unsigned distance = 0;
         //single route or via point routing
         if(0 == routeParameters.viaPoints.size()) {
@@ -133,23 +131,16 @@ public:
             segmentPhantomNodes.startPhantom = phantomNodeVector[0];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[1];
             distance = searchEngine->ComputeRoute(segmentPhantomNodes, rawRoute.computedRouted);
-
-            //put segments at correct position of routes raw data
-            rawRoute.segmentEndCoordinates[0] = (segmentPhantomNodes);
+            rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         } else {
             //Getting the shortest via path is a dynamic programming problem and is solved as such.
-            std::vector<PhantomNodes> phantomNodes;
             for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
                  PhantomNodes segmentPhantomNodes;
                  segmentPhantomNodes.startPhantom = phantomNodeVector[i];
                  segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
-                 phantomNodes.push_back(segmentPhantomNodes);
+                 rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
             }
-            distance = searchEngine->ComputeViaRoute(phantomNodes, rawRoute.computedRouted);
-
-            //put segments at correct position of routes raw data
-//            rawRoute.segmentEndCoordinates[i] = (segmentPhantomNodes);
-//            rawRoute.routeSegments[i] = path;
+            distance = searchEngine->ComputeViaRoute(rawRoute.segmentEndCoordinates, rawRoute.computedRouted);
         }
         if(INT_MAX == distance ) {
             DEBUG( "Error occurred, single path not found" );
@@ -199,7 +190,10 @@ public:
 
         PhantomNodes phantomNodes;
         phantomNodes.startPhantom = rawRoute.segmentEndCoordinates[0].startPhantom;
+//        INFO("Start location: " << phantomNodes.startPhantom.location)
         phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
+//        INFO("TargetLocation: " << phantomNodes.targetPhantom.location);
+//        INFO("Number of segments: " << rawRoute.segmentEndCoordinates.size());
         desc->SetConfig(descriptorConfig);
 
         desc->Run(reply, rawRoute, phantomNodes, *searchEngine, distance);

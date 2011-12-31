@@ -104,7 +104,7 @@ void EdgeBasedGraphFactory::Run() {
 
     std::vector<_Restriction>::iterator restrictionIterator = inputRestrictions.begin();
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
-    int numberOfResolvedRestrictions(0);
+    int numberOfSkippedTurns(0);
     int nodeBasedEdgeCounter(0);
     NodeID onlyToNode(0);
 
@@ -122,6 +122,7 @@ void EdgeBasedGraphFactory::Run() {
 
             //Check every turn restriction originating from this edge if it is an 'only_*'-turn.
             if(restrictionIterator != inputRestrictions.end() && u == restrictionIterator->fromNode) {
+            	//copying iterator, so we can loop over restrictions without forgetting currect position.
                 std::vector<_Restriction>::iterator secondRestrictionIterator = restrictionIterator;
                 do {
                     if(v == secondRestrictionIterator->viaNode) {
@@ -161,12 +162,13 @@ void EdgeBasedGraphFactory::Run() {
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
                 _NodeBasedDynamicGraph::NodeIterator w = _nodeBasedGraph->GetTarget(e2);
                 //if (u,v,w) is a forbidden turn, continue
-                bool isTurnRestricted(false);
                 if(isOnlyAllowed && w != onlyToNode) {
-                    //                     INFO("skipped turn <" << u << "," << v << "," << w << ">, only allowing <" << u << "," << v << "," << onlyToNode << ">");
+                	//We are at an only_-restriction but not at the right turn.
+                	 ++numberOfSkippedTurns;
                     continue;
                 }
 
+                bool isTurnRestricted(false);
                 if( u != w ) { //only add an edge if turn is not a U-turn
                     if(restrictionIterator != inputRestrictions.end() && u == restrictionIterator->fromNode) {
                         std::vector<_Restriction>::iterator secondRestrictionIterator = restrictionIterator;
@@ -227,7 +229,7 @@ void EdgeBasedGraphFactory::Run() {
                             edgeBasedNodes.push_back(currentNode);
                         }
                     } else {
-                        ++numberOfResolvedRestrictions;
+                        ++numberOfSkippedTurns;
                     }
                 }
             }
@@ -238,7 +240,7 @@ void EdgeBasedGraphFactory::Run() {
     edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
     INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
     INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << (double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter);
-    INFO("Edge-based graph obeys "    << numberOfResolvedRestrictions   << " turn restrictions, " << (inputRestrictions.size() - numberOfResolvedRestrictions )<< " skipped.");
+    INFO("Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << inputRestrictions.size() << " restrictions.");
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
 

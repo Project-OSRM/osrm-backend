@@ -33,8 +33,8 @@ public:
 	BasePlugin() { }
 	//Maybe someone can explain the pure virtual destructor thing to me (dennis)
 	virtual ~BasePlugin() { }
-	virtual std::string GetDescriptor() = 0;
-	virtual std::string GetVersionString() = 0;
+	virtual std::string GetDescriptor() const = 0;
+	virtual std::string GetVersionString() const = 0 ;
 	virtual void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) = 0;
 };
 
