@@ -136,10 +136,28 @@ if not conf.CheckLibWithHeader('boost_thread', 'boost/thread.hpp', 'CXX'):
 if not conf.CheckLibWithHeader('boost_regex', 'boost/regex.hpp', 'CXX'):
 	print "boost/regex.hpp not found. Exiting"
 	Exit(-1)
+if not conf.CheckCXXHeader('boost/array.hpp'):
+	print "boost/thread.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/asio.hpp'):
+	print "boost/thread.hpp not found. Exiting"
+	Exit(-1)
 if not conf.CheckCXXHeader('boost/bind.hpp'):
 	print "boost/bind.hpp not found. Exiting"
 	Exit(-1)
+if not conf.CheckCXXHeader('boost/enable_shared_from_this.hpp'):
+	print "boost/bind.hpp not found. Exiting"
+	Exit(-1)
 if not conf.CheckCXXHeader('boost/foreach.hpp'):
+	print "boost/foreach.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/lexical_cast.hpp'):
+	print "boost/foreach.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/logic/tribool.hpp'):
+	print "boost/foreach.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/math/tr1.hpp'):
 	print "boost/foreach.hpp not found. Exiting"
 	Exit(-1)
 if not conf.CheckCXXHeader('boost/noncopyable.hpp'):
@@ -148,17 +166,23 @@ if not conf.CheckCXXHeader('boost/noncopyable.hpp'):
 if not conf.CheckCXXHeader('boost/property_tree/ptree.hpp'):
 	print "boost/property_tree/ptree.hpp not found. Exiting"
 	Exit(-1)
+if not conf.CheckCXXHeader('boost/property_tree/ini_parser.hpp'):
+	print "boost/property_tree/ini_parser.hpp not found. Exiting"
+	Exit(-1)
 if not conf.CheckCXXHeader('boost/shared_ptr.hpp'):
 	print "boost/shared_ptr.hpp not found. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('boost/property_tree/ini_parser.hpp'):
-	print "boost/property_tree/ini_parser.hpp not found. Exiting"
+if not conf.CheckCXXHeader('boost/signals2/mutex.hpp'):
+	print "boost/shared_ptr.hpp not found. Exiting"
 	Exit(-1)
 if not conf.CheckCXXHeader('boost/thread.hpp'):
 	print "boost thread header not found. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('boost/thread.hpp'):
-	print "boost/thread.hpp not found. Exiting"
+if not conf.CheckCXXHeader('boost/tuple/tuple.hpp'):
+	print "boost thread header not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/unordered_map.hpp'):
+	print "boost thread header not found. Exiting"
 	Exit(-1)
 
 protobld = Builder(action = 'protoc -I=DataStructures/pbf-proto --cpp_out=DataStructures/pbf-proto $SOURCE')
