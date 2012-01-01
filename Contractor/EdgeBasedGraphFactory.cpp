@@ -159,6 +159,7 @@ void EdgeBasedGraphFactory::Run() {
 
                 edgeBasedNodes.push_back(currentNode);
             }
+
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
                 _NodeBasedDynamicGraph::NodeIterator w = _nodeBasedGraph->GetTarget(e2);
                 //if (u,v,w) is a forbidden turn, continue
@@ -169,7 +170,7 @@ void EdgeBasedGraphFactory::Run() {
                 }
 
                 bool isTurnRestricted(false);
-                if( u != w ) { //only add an edge if turn is not a U-turn
+                if( u != w || 1 == _nodeBasedGraph->GetOutDegree(v)) { //only add an edge if turn is not a U-turn except it is the end of dead-end street.
                     if(restrictionIterator != inputRestrictions.end() && u == restrictionIterator->fromNode) {
                         std::vector<_Restriction>::iterator secondRestrictionIterator = restrictionIterator;
                         do {
@@ -245,6 +246,10 @@ void EdgeBasedGraphFactory::Run() {
 }
 
 short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
+	if(u == w) {
+		return TurnInstructions.UTurn;
+	}
+
     _NodeBasedDynamicGraph::EdgeIterator edge1 = _nodeBasedGraph->FindEdge(u, v);
     _NodeBasedDynamicGraph::EdgeIterator edge2 = _nodeBasedGraph->FindEdge(v, w);
 

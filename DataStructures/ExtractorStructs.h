@@ -349,7 +349,7 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     assert(lat2 != INT_MIN);
     assert(lon2 != INT_MIN);
     static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
-    ///Earth's quatratic mean radius for WGS-84
+    //Earth's quatratic mean radius for WGS-84
     static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
     double latitudeArc  = ( lat1/100000. - lat2/100000. ) * DEG_TO_RAD;
     double longitudeArc = ( lon1/100000. - lon2/100000. ) * DEG_TO_RAD;
