@@ -27,7 +27,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <fstream>
 #include <limits>
 #include <vector>
+
+#ifndef ROUTED
 #include <stxxl.h>
+#endif
 
 #ifdef _WIN32
 #include <math.h>
@@ -71,9 +74,11 @@ public:
     ~NNGrid() {
         if(ramInFile.is_open()) ramInFile.close();
 
+#ifndef ROUTED
         if (WriteAccess) {
             entries.clear();
         }
+#endif
         if(localStream.get() && localStream->is_open()) {
             localStream->close();
         }
@@ -87,6 +92,7 @@ public:
 
     template<typename EdgeT>
     void ConstructGrid(std::vector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
+#ifndef ROUTED
         Percent p(edgeList.size());
         BOOST_FOREACH(EdgeT & edge, edgeList) {
             p.printIncrement();
@@ -139,9 +145,10 @@ public:
         ramFile.write((char *)&ramIndexTable[0], sizeof(unsigned long)*1024*1024 );
         //close ram index file
         ramFile.close();
+#endif
     }
 
-    bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
+        bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
@@ -397,11 +404,13 @@ private:
    }
 
     void AddEdge(_GridEdge edge) {
+#ifndef ROUTED
         std::vector<BresenhamPixel> indexList;
         GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
         for(unsigned i = 0; i < indexList.size(); ++i) {
             entries.push_back(GridEntry(edge, indexList[i].first, indexList[i].second));
         }
+#endif
     }
 
     inline double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
@@ -502,7 +511,9 @@ private:
 
     ofstream indexOutFile;
     ifstream ramInFile;
+#ifndef ROUTED
     stxxl::vector<GridEntry> entries;
+#endif
     std::vector<unsigned long> ramIndexTable; //8 MB for first level index in RAM
     std::string iif;
     //    LRUCache<int,std::vector<unsigned> > cellCache;

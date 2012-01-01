@@ -172,6 +172,6 @@ env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStruct
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp')])
 env.Append(CCFLAGS = ['-lboost_regex', '-lboost_iostreams', '-lbz2', '-lz', '-lprotobuf'])
 env.Append(LINKFLAGS = ['-lboost_system'])
-env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp'])
+env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp'], CCFLAGS = ['-DROUTED'])
 env = conf.Finish()
 
