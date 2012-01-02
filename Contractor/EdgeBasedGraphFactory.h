@@ -31,6 +31,7 @@
 #include "../typedefs.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
@@ -82,6 +83,8 @@ public:
 
 private:
     boost::shared_ptr<_NodeBasedDynamicGraph> _nodeBasedGraph;
+    HashTable<NodeID, bool> _bollardNodes;
+    HashTable<NodeID, bool> _trafficLights;
 
     std::vector<_Restriction> & inputRestrictions;
     std::vector<NodeInfo> & inputNodeInfoList;
@@ -95,7 +98,7 @@ private:
 
 public:
     template< class InputEdgeT >
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, std::string & srtm);
+    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, std::string & srtm);
     virtual ~EdgeBasedGraphFactory();
 
     void Run();

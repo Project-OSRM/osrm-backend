@@ -100,8 +100,8 @@ int main (int argc, char *argv[]) {
 
     boost::property_tree::ptree pt;
     try {
-        INFO("Loading speed profiles")
-                                                                        boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
+        INFO("Loading speed profiles");
+        boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
         INFO("Found the following speed profiles: ");
         int profileCounter(0);
         BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child("")) {
@@ -118,21 +118,18 @@ int main (int argc, char *argv[]) {
             if(name == "obeyOneways") {
                 if(value == "no")
                     settings.obeyOneways = false;
-                continue;
             } else {
-                if(name == "obeyPollards") {
-                    if(value == "no")
-                        settings.obeyPollards = false;
-                    continue;
+                if(name == "obeyBollards") {
+                    if(value == "no") {
+                        settings.obeyBollards = false;
+                    }
                 } else {
                     if(name == "useRestrictions") {
                         if(value == "no")
                             settings.useRestrictions = false;
-                        continue;
                     } else {
                         if(name == "accessTag") {
                             settings.accessTag = value;
-                            continue;
                         } else {
                             if(name == "excludeFromGrid") {
                                 settings.excludeFromGrid = value;
@@ -140,6 +137,10 @@ int main (int argc, char *argv[]) {
                                 if(name == "defaultSpeed") {
                                     settings.defaultSpeed = atoi(value.c_str());
                                     settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
+                                } else {
+                                	if( name == "trafficLightPenalty") {
+                                		settings.trafficLightPenalty = atoi(value.c_str());
+                                	}
                                 }
                             }
                         }
@@ -289,7 +290,7 @@ int main (int argc, char *argv[]) {
             ++restrictionsIT;
         }
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        INFO("usable restrictions: " << usableRestrictionsCounter);
+        INFO("usable restrictions: " << usableRestrictionsCounter );
         //serialize restrictions
         ofstream restrictionsOutstream;
         restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);
@@ -305,7 +306,8 @@ int main (int argc, char *argv[]) {
         fout.open(outputFileName.c_str(), ios::binary);
         fout.write((char*)&usedNodeCounter, sizeof(unsigned));
         time = get_timestamp();
-        cout << "[extractor] Confirming used nodes     ... " << flush;
+        cout << "[extractor] Confirming/Writing used nodes     ... " << flush;
+
         STXXLNodeVector::iterator nodesIT = externalMemory.allNodes.begin();
         STXXLNodeIDVector::iterator usedNodeIDsIT = externalMemory.usedNodeIDs.begin();
         while(usedNodeIDsIT != externalMemory.usedNodeIDs.end() && nodesIT != externalMemory.allNodes.end()) {
@@ -318,9 +320,9 @@ int main (int argc, char *argv[]) {
                 continue;
             }
             if(*usedNodeIDsIT == nodesIT->id) {
-                fout.write((char*)&(nodesIT->id), sizeof(unsigned));
-                fout.write((char*)&(nodesIT->lon), sizeof(int));
-                fout.write((char*)&(nodesIT->lat), sizeof(int));
+            	if(!settings.obeyBollards && nodesIT->bollard)
+            		nodesIT->bollard = false;
+                fout.write((char*)&(*nodesIT), sizeof(_Node));
                 ++usedNodeCounter;
                 ++usedNodeIDsIT;
                 ++nodesIT;
@@ -378,6 +380,7 @@ int main (int argc, char *argv[]) {
         // Traverse list of edges and nodes in parallel and set target coord
         nodesIT = externalMemory.allNodes.begin();
         edgeIT = externalMemory.allEdges.begin();
+
         while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
             if(edgeIT->target < nodesIT->id){
                 ++edgeIT;

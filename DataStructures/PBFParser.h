@@ -219,6 +219,13 @@ private:
                 int keyValue = dense.keys_vals ( denseTagIndex+1 );
                 std::string key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
                 std::string value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
+
+                if("barrier" == key && "bollard" == value) {
+                	n.bollard = true;
+                }
+                if("highway" == key && "traffic_signals" == value) {
+                	n.trafficLight = true;
+                }
                 keyVals.Add(key, value);
                 denseTagIndex += 2;
             }

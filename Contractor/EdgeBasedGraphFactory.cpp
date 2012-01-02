@@ -29,13 +29,25 @@
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, std::string & srtm)
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, std::string & srtm)
 : inputRestrictions(irs), inputNodeInfoList(nI)/*, srtmLookup(srtm) */{
 
 #ifdef _GLIBCXX_PARALLEL
     __gnu_parallel::sort(inputRestrictions.begin(), inputRestrictions.end(), CmpRestrictionByFrom);
 #else
     std::sort(inputRestrictions.begin(), inputRestrictions.end(), CmpRestrictionByFrom);
+
+    BOOST_FOREACH(NodeID id, bn) {
+    	_bollardNodes.Add(id, true);
+    }
+
+    BOOST_FOREACH(NodeID id, tl) {
+    	_trafficLights.Add(id, true);
+    }
+
+    INFO("bollards: " << _bollardNodes.Size());
+    INFO("signals: " << _trafficLights.Size());
+
 #endif
 
     std::vector< _NodeBasedEdge > edges;
@@ -117,6 +129,8 @@ void EdgeBasedGraphFactory::Run() {
         for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
             ++nodeBasedEdgeCounter;
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
+            if(_bollardNodes.Find(v) == true)
+            	continue;
             //loop over all reachable edges (v,w)
             bool isOnlyAllowed(false);
 

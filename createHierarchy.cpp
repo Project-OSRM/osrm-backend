@@ -58,22 +58,13 @@ typedef BaseConfiguration ContractorConfiguration;
 
 std::vector<NodeInfo> internalToExternaleNodeMapping;
 std::vector<_Restriction> inputRestrictions;
+std::vector<NodeID> bollardNodes;
+std::vector<NodeID> trafficLightNodes;
 
 int main (int argc, char *argv[]) {
     if(argc < 3) {
         ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions>");
     }
-    INFO("Using restrictions from file: " << argv[2]);
-    std::ifstream restrictionsInstream(argv[2], ios::binary);
-    _Restriction restriction;
-    unsigned usableRestrictionsCounter(0);
-    restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
-    for(unsigned i = 0; i < usableRestrictionsCounter; ++i) {
-        restrictionsInstream.read((char *)&(restriction), sizeof(_Restriction));
-        inputRestrictions.push_back(restriction);
-    }
-    restrictionsInstream.close();
-    INFO("Loaded " << inputRestrictions.size() << " restrictions from file");
 
     unsigned numberOfThreads = omp_get_num_procs();
     std::string SRTM_ROOT;
@@ -88,13 +79,26 @@ int main (int argc, char *argv[]) {
         INFO("Loading SRTM from/to " << SRTM_ROOT);
     omp_set_num_threads(numberOfThreads);
 
-    INFO("preprocessing data from input file " << argv[1] << " using STL "
+    INFO("preprocessing data from input file " << argv[2] << " using STL "
 #ifdef _GLIBCXX_PARALLEL
             "parallel (GCC)"
 #else
             "serial"
 #endif
             " mode");
+
+    INFO("Using restrictions from file: " << argv[2]);
+    std::ifstream restrictionsInstream(argv[2], ios::binary);
+    _Restriction restriction;
+    unsigned usableRestrictionsCounter(0);
+    restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
+    for(unsigned i = 0; i < usableRestrictionsCounter; ++i) {
+        restrictionsInstream.read((char *)&(restriction), sizeof(_Restriction));
+        inputRestrictions.push_back(restriction);
+    }
+    restrictionsInstream.close();
+
+
     ifstream in;
     in.open (argv[1], ifstream::in | ifstream::binary);
     if (!in.is_open()) {
@@ -108,10 +112,11 @@ int main (int argc, char *argv[]) {
     char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
 
     std::vector<ImportEdge> edgeList;
-    NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, &internalToExternaleNodeMapping, inputRestrictions);
+    NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternaleNodeMapping, inputRestrictions);
     in.close();
+    INFO("Loaded " << inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, inputRestrictions, internalToExternaleNodeMapping, SRTM_ROOT);
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternaleNodeMapping, SRTM_ROOT);
     edgeList.clear();
     std::vector<ImportEdge>().swap(edgeList);
 

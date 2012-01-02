@@ -96,21 +96,24 @@ NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     return n;
 }
 template<typename EdgeT>
-NodeID readBinaryOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap, vector<_Restriction> & inputRestrictions) {
-    NodeID n, source, target, id;
+NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> &bollardNodes, std::vector<NodeID> &trafficLightNodes, std::vector<NodeInfo> * int2ExtNodeMap, std::vector<_Restriction> & inputRestrictions) {
+    NodeID n, source, target;
     EdgeID m;
-    short dir;
-    int xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
+    short dir;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     in.read((char*)&n, sizeof(NodeID));
     DEBUG("Importing n = " << n << " nodes ");
+    _Node node;
     for (NodeID i=0; i<n; ++i) {
-        in.read((char*)&id, sizeof(unsigned));
-        in.read((char*)&ycoord, sizeof(int));
-        in.read((char*)&xcoord, sizeof(int));
-        int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
-        ext2IntNodeMap.insert(make_pair(id, i));
+        in.read((char*)&node, sizeof(_Node));
+        int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
+        ext2IntNodeMap.insert(make_pair(node.id, i));
+        if(node.bollard)
+        	bollardNodes.push_back(i);
+        if(node.trafficLight)
+        	trafficLightNodes.push_back(i);
     }
+
     in.read((char*)&m, sizeof(unsigned));
     DEBUG(" and " << m << " edges ");
     for(unsigned i = 0; i < inputRestrictions.size(); ++i) {

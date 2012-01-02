@@ -253,7 +253,12 @@ private:
                     if ( k != NULL && value != NULL ) {
                         if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
                             if ( xmlStrEqual( value, ( const xmlChar* ) "traffic_signals" ) == 1 ){
-                                //node.trafficSignal = true;
+                                node.trafficLight = true;
+                            }
+                        }
+                        if ( xmlStrEqual( k, ( const xmlChar* ) "barrier" ) == 1 ) {
+                            if ( xmlStrEqual( value, ( const xmlChar* ) "bollard" ) == 1 ){
+                                node.bollard = true;
                             }
                         }
                     }

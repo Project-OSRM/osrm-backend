@@ -39,18 +39,21 @@ typedef boost::unordered_map<std::string, NodeID > StringMap;
 typedef boost::unordered_map<std::string, std::pair<int, short> > StringToIntPairMap;
 
 struct _Node : NodeInfo{
-    _Node(int _lat, int _lon, unsigned int _id) : NodeInfo(_lat, _lon,  _id) {}
-    _Node() {}
+    _Node(int _lat, int _lon, unsigned int _id, bool _bollard, bool _trafficLight) : NodeInfo(_lat, _lon,  _id), bollard(_bollard), trafficLight(_trafficLight) {}
+    _Node() : bollard(false), trafficLight(false) {}
 
     static _Node min_value() {
-        return _Node(0,0,0);
+        return _Node(0,0,0, false, false);
     }
     static _Node max_value() {
-        return _Node((numeric_limits<int>::max)(), (numeric_limits<int>::max)(), (numeric_limits<unsigned int>::max)());
+        return _Node((numeric_limits<int>::max)(), (numeric_limits<int>::max)(), (numeric_limits<unsigned int>::max)(), false, false);
     }
     NodeID key() const {
         return id;
     }
+    bool bollard;
+    bool trafficLight;
+
 };
 
 struct _Coordinate {
@@ -258,7 +261,7 @@ struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDSta
 };
 
 struct Settings {
-    Settings() : obeyPollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar"), defaultSpeed(30), excludeFromGrid("ferry") {}
+    Settings() : obeyBollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar"), defaultSpeed(30), trafficLightPenalty(0), excludeFromGrid("ferry") {}
     StringToIntPairMap speedProfile;
     int operator[](const std::string & param) const {
         if(speedProfile.find(param) == speedProfile.end())
@@ -278,11 +281,12 @@ struct Settings {
             return speedProfile.at(param).second;
         }
     }
-    bool obeyPollards;
+    bool obeyBollards;
     bool obeyOneways;
     bool useRestrictions;
     std::string accessTag;
     int defaultSpeed;
+    int trafficLightPenalty;
     std::string excludeFromGrid;
 };
 
