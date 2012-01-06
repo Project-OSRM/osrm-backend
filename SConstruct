@@ -117,11 +117,18 @@ if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
 	print "zlib library or header not found. Exiting"
 	Exit(-1)
+if not (env.Detect('Magick++-config')):
+	print 'Magick++-config compiler not found'
+	Exit(-1);
+else:
+	env.ParseConfig('Magick++-config --cppflags --cxxflags --ldflags --libs')
+if not conf.CheckLibWithHeader('Magick++', 'ImageMagick/Magick++.h', 'CXX'):
+	print "Magick++ library or header not found. Exiting"
+	Exit(-1)
 #Check BOOST installation
 if not (conf.CheckBoost('1.41')):
 	print 'Boost version >= 1.41 needed'
 	Exit(-1);
-
 if not conf.CheckLib('boost_system', language="C++"):
 	print "boost_system library not found. Exiting"
 	Exit(-1)
