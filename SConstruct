@@ -121,7 +121,7 @@ if not (env.Detect('Magick++-config')):
 	print 'Magick++-config compiler not found'
 	Exit(-1);
 else:
-	env.ParseConfig('Magick++-config --cppflags --cxxflags --ldflags --libs')
+	env.ParseConfig('Magick++-config --cppflags --ldflags')
 if not conf.CheckLibWithHeader('Magick++', 'ImageMagick/Magick++.h', 'CXX'):
 	print "Magick++ library or header not found. Exiting"
 	Exit(-1)
