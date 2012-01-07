@@ -166,7 +166,6 @@ int main (int argc, char *argv[]) {
     DELETE( cleanup );
 
     INFO("Building Node Array");
-    //    std::sort( graph.begin(), graph.end() );
     sort(cleanedEdgeList.begin(), cleanedEdgeList.end());
     unsigned numberOfNodes = 0;
     unsigned numberOfEdges = cleanedEdgeList.size();
@@ -181,12 +180,9 @@ int main (int argc, char *argv[]) {
             numberOfNodes = edge.target;
         }
     }
-    //    _numNodes = nodes;
-    //    _numEdges = ( EdgeIterator ) graph.size();
     numberOfNodes+=1;
 
     std::vector< StaticGraph<EdgeData>::_StrNode > _nodes;
-//    std::vector< StaticGraph<EdgeData>::_StrEdge > _edges;
     _nodes.resize( numberOfNodes);
 
     StaticGraph<EdgeData>::EdgeIterator edge = 0;
