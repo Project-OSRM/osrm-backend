@@ -42,6 +42,9 @@ class Contractor {
 
 private:
 	struct _EdgeBasedContractorEdgeData {
+		_EdgeBasedContractorEdgeData() {}
+		_EdgeBasedContractorEdgeData( unsigned _distance, unsigned _originalEdges, unsigned _via, unsigned _nameID, short _turnInstruction, bool _shortcut, bool _forward, bool _backward) :
+			distance(_distance), originalEdges(_originalEdges), via(_via), nameID(_nameID), turnInstruction(_turnInstruction), shortcut(_shortcut), forward(_forward), backward(_backward) {}
 		unsigned distance;
 		unsigned originalEdges;
 		unsigned via;
@@ -59,7 +62,7 @@ private:
 	};
 
 	typedef DynamicGraph< _EdgeBasedContractorEdgeData > _DynamicGraph;
-	typedef BinaryHeap< NodeID, NodeID, int, _HeapData> _Heap;
+	typedef BinaryHeap< NodeID, NodeID, int, _HeapData > _Heap;
 	typedef _DynamicGraph::InputEdge _ImportEdge;
 
 	struct _ThreadData {
@@ -85,7 +88,7 @@ private:
 	};
 
 	struct _NodePartitionor {
-		bool operator()( std::pair< NodeID, bool > nodeData ) {
+		bool operator()( std::pair< NodeID, bool > & nodeData ) const {
 			return !nodeData.second;
 		}
 	};
@@ -93,38 +96,30 @@ private:
 public:
 
 	template< class InputEdge >
-	Contractor( int nodes, std::vector< InputEdge >& inputEdges, unsigned eqf = 2, unsigned oqf = 1, unsigned df = 1) : edgeQuotionFactor(eqf), originalQuotientFactor(oqf), depthFactor(df) {
-
+	Contractor( int nodes, std::vector< InputEdge >& inputEdges, const double eqf = 8.4, const double oqf = 4.1, const double df = 3.)
+	: edgeQuotionFactor(eqf), originalQuotientFactor(oqf), depthFactor(df) {
 		std::vector< _ImportEdge > edges;
 		edges.reserve( 2 * inputEdges.size() );
-		for ( typename std::vector< InputEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
+		BOOST_FOREACH(InputEdge & currentEdge, inputEdges) {
 			_ImportEdge edge;
-			edge.source = i->source();
-			edge.target = i->target();
+			edge.source = currentEdge.source();
+			edge.target = currentEdge.target();
+			edge.data = _EdgeBasedContractorEdgeData( (std::max)((int)currentEdge.weight(), 1 ),  1,  currentEdge.via(),  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction(),  false,  currentEdge.isForward(),  currentEdge.isBackward());
 
-			edge.data.distance = (std::max)((int)i->weight(), 1 );
 			assert( edge.data.distance > 0 );
 #ifdef NDEBUG
-if ( edge.data.distance > 24 * 60 * 60 * 10 ) {
-	std::cout << "Edge Weight too large -> May lead to invalid CH" << std::endl;
-	continue;
-}
+			if ( edge.data.distance > 24 * 60 * 60 * 10 ) {
+				std::cout << "Edge Weight too large -> May lead to invalid CH" << std::endl;
+				continue;
+			}
 #endif
-edge.data.shortcut = false;
-edge.data.nameID = i->getNameIDOfTurnTarget();
-edge.data.via = i->via();
-edge.data.turnInstruction = i->turnInstruction();
-edge.data.forward = i->isForward();
-edge.data.backward = i->isBackward();
-edge.data.originalEdges = 1;
-edges.push_back( edge );
-std::swap( edge.source, edge.target );
-edge.data.forward = i->isBackward();
-edge.data.backward = i->isForward();
-edges.push_back( edge );
+			edges.push_back( edge );
+			std::swap( edge.source, edge.target );
+			edge.data.forward = currentEdge.isBackward();
+			edge.data.backward = currentEdge.isForward();
+			edges.push_back( edge );
 		}
 		//remove data from memory
-		inputEdges.clear();
 		std::vector< InputEdge >().swap( inputEdges );
 
 #ifdef _GLIBCXX_PARALLEL
@@ -320,36 +315,36 @@ private:
 		while ( heap.Size() > 0 ) {
 			const NodeID node = heap.DeleteMin();
 			const int distance = heap.GetKey( node );
-			if ( nodes++ > maxNodes )
+			if ( ++nodes > maxNodes )
 				return;
 			//Destination settled?
-					if ( distance > maxDistance )
-						return;
+			if ( distance > maxDistance )
+				return;
 
-					if ( heap.GetData( node ).target ) {
-						targetsFound++;
-						if ( targetsFound >= numTargets )
-							return;
-					}
+			if ( heap.GetData( node ).target ) {
+				++targetsFound;
+				if ( targetsFound >= numTargets )
+					return;
+			}
 
-					//iterate over all edges of node
-					for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
-						const _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( edge );
-						if ( !data.forward )
-							continue;
-						const NodeID to = _graph->GetTarget( edge );
-						const int toDistance = distance + data.distance;
+			//iterate over all edges of node
+			for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
+				const _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( edge );
+				if ( !data.forward )
+					continue;
+				const NodeID to = _graph->GetTarget( edge );
+				const int toDistance = distance + data.distance;
 
-						//New Node discovered -> Add to Heap + Node Info Storage
-						if ( !heap.WasInserted( to ) )
-							heap.Insert( to, toDistance, _HeapData() );
+				//New Node discovered -> Add to Heap + Node Info Storage
+				if ( !heap.WasInserted( to ) )
+					heap.Insert( to, toDistance, _HeapData() );
 
-						//Found a shorter Path -> Update distance
-						else if ( toDistance < heap.GetKey( to ) ) {
-							heap.DecreaseKey( to, toDistance );
-							//heap.GetData( to ).hops = hops + 1;
-						}
-					}
+				//Found a shorter Path -> Update distance
+				else if ( toDistance < heap.GetKey( to ) ) {
+					heap.DecreaseKey( to, toDistance );
+					//heap.GetData( to ).hops = hops + 1;
+				}
+			}
 		}
 	}
 
@@ -376,7 +371,7 @@ private:
 			const NodeID source = _graph->GetTarget( inEdge );
 			if ( Simulate ) {
 				assert( stats != NULL );
-				stats->edgesDeleted++;
+				++stats->edgesDeleted;
 				stats->originalEdgesDeleted += inData.originalEdges;
 			}
 			if ( !inData.backward )
@@ -398,16 +393,16 @@ private:
 				maxDistance = std::max( maxDistance, pathDistance );
 				if ( !heap.WasInserted( target ) ) {
 					heap.Insert( target, pathDistance, _HeapData( true ) );
-					numTargets++;
+					++numTargets;
 				} else if ( pathDistance < heap.GetKey( target ) ) {
 					heap.DecreaseKey( target, pathDistance );
 				}
 			}
 
 			if( Simulate )
-				_Dijkstra( maxDistance, numTargets, 500, data );
-			else
 				_Dijkstra( maxDistance, numTargets, 1000, data );
+			else
+				_Dijkstra( maxDistance, numTargets, 2000, data );
 
 			for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
 				const _EdgeBasedContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
@@ -426,13 +421,7 @@ private:
 						_ImportEdge newEdge;
 						newEdge.source = source;
 						newEdge.target = target;
-						newEdge.data.distance = pathDistance;
-						newEdge.data.forward = true;
-						newEdge.data.backward = false;
-						newEdge.data.via = node;
-						newEdge.data.shortcut = true;
-						newEdge.data.turnInstruction = inData.turnInstruction;
-						newEdge.data.originalEdges = outData.originalEdges + inData.originalEdges;
+						newEdge.data = _EdgeBasedContractorEdgeData( pathDistance, outData.originalEdges + inData.originalEdges, node, 0, inData.turnInstruction, true, true, false);;
 						insertedEdges.push_back( newEdge );
 						std::swap( newEdge.source, newEdge.target );
 						newEdge.data.forward = false;
@@ -443,7 +432,7 @@ private:
 			}
 		}
 		if ( !Simulate ) {
-			for ( int i = insertedEdgesSize, iend = insertedEdges.size(); i < iend; i++ ) {
+			for ( int i = insertedEdgesSize, iend = insertedEdges.size(); i < iend; ++i ) {
 				bool found = false;
 				for ( int other = i + 1 ; other < iend ; ++other ) {
 					if ( insertedEdges[other].source != insertedEdges[i].source )
@@ -467,27 +456,24 @@ private:
 		return true;
 	}
 
-	bool _DeleteIncomingEdges( _ThreadData* data, NodeID node ) {
+	void _DeleteIncomingEdges( _ThreadData* data, NodeID node ) {
 		std::vector< NodeID >& neighbours = data->neighbours;
 		neighbours.clear();
 
 		//find all neighbours
 		for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( node ) ; e < _graph->EndEdges( node ) ; ++e ) {
 			const NodeID u = _graph->GetTarget( e );
-			if ( u == node )
-				continue;
-			neighbours.push_back( u );
+			if ( u != node )
+				neighbours.push_back( u );
 		}
 		//eliminate duplicate entries ( forward + backward edges )
 		std::sort( neighbours.begin(), neighbours.end() );
 		neighbours.resize( std::unique( neighbours.begin(), neighbours.end() ) - neighbours.begin() );
 
 		for ( int i = 0, e = ( int ) neighbours.size(); i < e; ++i ) {
-			const NodeID u = neighbours[i];
-			_graph->DeleteEdgesTo( u, node );
+//			const NodeID u = neighbours[i];
+			_graph->DeleteEdgesTo( neighbours[i], node );
 		}
-
-		return true;
 	}
 
 	bool _UpdateNeighbours( std::vector< double > & priorities, std::vector< _PriorityData > & nodeData, _ThreadData* const data, NodeID node ) {
@@ -506,7 +492,8 @@ private:
 		std::sort( neighbours.begin(), neighbours.end() );
 		neighbours.resize( std::unique( neighbours.begin(), neighbours.end() ) - neighbours.begin() );
 
-		for ( int i = 0, e = ( int ) neighbours.size(); i < e; ++i ) {
+		int neighbourSize = ( int ) neighbours.size();
+		for ( int i = 0, e = neighbourSize; i < e; ++i ) {
 			const NodeID u = neighbours[i];
 			priorities[u] = _Evaluate( data, &( nodeData )[u], u );
 		}
@@ -558,9 +545,9 @@ private:
 	}
 
 	boost::shared_ptr<_DynamicGraph> _graph;
-	unsigned edgeQuotionFactor;
-	unsigned originalQuotientFactor;
-	unsigned depthFactor;
+	double edgeQuotionFactor;
+	double originalQuotientFactor;
+	double depthFactor;
 };
 
 #endif // CONTRACTOR_H_INCLUDED

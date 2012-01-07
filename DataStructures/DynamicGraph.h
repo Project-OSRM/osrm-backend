@@ -147,7 +147,7 @@ class DynamicGraph {
                         m_edges[newFirstEdge + i ] = m_edges[node.firstEdge + i];
                         makeDummy( node.firstEdge + i );
                     }
-                    for ( EdgeIterator i = node.edges + 1; i < newSize; i++ )
+                    for ( EdgeIterator i = node.edges + 1; i < newSize; ++i )
                         makeDummy( newFirstEdge + i );
                     node.firstEdge = newFirstEdge;
                 }
@@ -155,8 +155,8 @@ class DynamicGraph {
             Edge &edge = m_edges[node.firstEdge + node.edges];
             edge.target = to;
             edge.data = data;
-            m_numEdges++;
-            node.edges++;
+            ++m_numEdges;
+            ++node.edges;
             return EdgeIterator( node.firstEdge + node.edges );
         }
 
