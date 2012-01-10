@@ -115,6 +115,25 @@ if sys.platform != 'darwin':
 		print "Compiler does not support OpenMP. Exiting"
 		Exit(-1)
 
+if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
+	print "bz2 library not found. Exiting"
+	Exit(-1)
+if not conf.CheckLibWithHeader('libzip', 'zip.h', 'CXX'):
+	print "Zip library not found. Exiting"
+	Exit(-1)
+if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'):
+	print "Google Protobuffer library not found. Exiting"
+	Exit(-1)
+#check for protobuf 2.3.0
+if not (conf.CheckProtobuf('2.3.0')):
+	print 'libprotobuf version >= 2.3.0 needed'
+	Exit(-1);
+if not (env.Detect('protoc')):
+	print 'protobuffer compiler not found'
+	Exit(-1);
+if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
+	print "stxxl library not found. Exiting"
+	Exit(-1)
 if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
 	Exit(-1)
@@ -133,9 +152,6 @@ if not conf.CheckLibWithHeader('Magick++', 'ImageMagick/Magick++.h', 'CXX'):
 if not (conf.CheckBoost('1.41')):
 	print 'Boost version >= 1.41 needed'
 	Exit(-1);
-if not conf.CheckLib('boost_system', language="C++"):
-	print "boost_system library not found. Exiting"
-	Exit(-1)
 if not conf.CheckLibWithHeader('boost_thread', 'boost/thread.hpp', 'CXX'):
 	if not conf.CheckLibWithHeader('boost_thread-mt', 'boost/thread.hpp', 'CXX'):
 		print "boost thread library not found. Exiting"
@@ -145,8 +161,13 @@ if not conf.CheckLibWithHeader('boost_thread', 'boost/thread.hpp', 'CXX'):
 		env.Append(CCFLAGS = ' -lboost_thread-mt')
 		env.Append(LINKFLAGS = ' -lboost_thread-mt')
 if not conf.CheckLibWithHeader('boost_regex', 'boost/regex.hpp', 'CXX'):
-	print "boost/regex.hpp not found. Exiting"
-	Exit(-1)
+	if not conf.CheckLibWithHeader('boost_regex-mt', 'boost/regex.hpp', 'CXX'):
+		print "boost/regex.hpp not found. Exiting"
+		Exit(-1)
+	else:
+		print "using boost_regex -mt"
+		env.Append(CCFLAGS = ' -lboost_regex-mt')
+		env.Append(LINKFLAGS = ' -lboost_regex-mt')
 if not conf.CheckLib('boost_system', language="C++"):
 	if not conf.CheckLib('boost_system-mt', language="C++"):
 		print "boost_system library not found. Exiting"
