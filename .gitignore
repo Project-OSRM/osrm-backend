@@ -1,3 +1,11 @@
+# Test folder #
+###################
+test/speedprofile.ini
+test/data/*.osrm
+test/data/*.osrm.*
+test/data/denmark.osm.pbf
+
+
 # Compiled source #
 ###################
 *.com
@@ -6,6 +14,9 @@
 *.exe
 *.o
 *.so
+osrm-extract
+osrm-prepare
+osrm-routed
 
 # Packages #
 ############
