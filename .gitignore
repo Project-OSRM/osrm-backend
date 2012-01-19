@@ -4,7 +4,7 @@ test/speedprofile.ini
 test/data/*.osrm
 test/data/*.osrm.*
 test/data/denmark.osm.pbf
-
+test/data/regh.osm.pbf
 
 # Compiled source #
 ###################
