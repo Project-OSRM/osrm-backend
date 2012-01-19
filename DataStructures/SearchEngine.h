@@ -122,15 +122,15 @@ public:
 			_forwardHeap2->Clear();
 			//insert new starting nodes into forward heap, adjusted by previous distances.
 			if(searchFrom1stStartNode) {
-				_forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-				_forwardHeap2->Insert(phantomNodePair.startPhantom.edgeBasedNode, distance2-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+				_forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+				_forwardHeap2->Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
 //				INFO("1,2)forw insert " << phantomNodePair.startPhantom.edgeBasedNode << " with weight " << phantomNodePair.startPhantom.weight1);
 //			} else {
 //				INFO("Skipping first start node");
 			}
 			if(phantomNodePair.startPhantom.isBidirected() && searchFrom2ndStartNode) {
-				_forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance1-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-				_forwardHeap2->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance2-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+				_forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+				_forwardHeap2->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
 //				INFO("1)forw insert " << phantomNodePair.startPhantom.edgeBasedNode+1 << " with weight " << distance1-phantomNodePair.startPhantom.weight1);
 //				INFO("2)forw insert " << phantomNodePair.startPhantom.edgeBasedNode+1 << " with weight " << distance2-phantomNodePair.startPhantom.weight1);
 //			} else if(!searchFrom2ndStartNode) {
