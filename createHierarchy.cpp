@@ -155,6 +155,7 @@ int main (int argc, char *argv[]) {
 
     std::vector< ContractionCleanup::Edge > contractedEdges;
     contractor->GetEdges( contractedEdges );
+    delete contractor;
 
     ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
     contractedEdges.clear();
