@@ -184,7 +184,7 @@ int main (int argc, char *argv[]) {
     numberOfNodes+=1;
 
     std::vector< StaticGraph<EdgeData>::_StrNode > _nodes;
-    _nodes.resize( numberOfNodes);
+    _nodes.resize( numberOfNodes + 1 );
 
     StaticGraph<EdgeData>::EdgeIterator edge = 0;
     StaticGraph<EdgeData>::EdgeIterator position = 0;
