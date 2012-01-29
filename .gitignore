@@ -5,6 +5,8 @@ test/data/*.osrm
 test/data/*.osrm.*
 test/data/denmark.osm.pbf
 test/data/regh.osm.pbf
+test/data/test.osm
+test/data/test.osm.pbf
 
 # Compiled source #
 ###################

@@ -1,23 +1,28 @@
 
 def request_route a,b
   uri = URI.parse "http://localhost:5000/viaroute&start=#{a}&dest=#{b}&output=json&geomformat=cmp"
+  #puts "routing: #{uri}"
   Net::HTTP.get_response uri
 rescue Errno::ECONNREFUSED => e
-  raise "NOTE: The OSRM server is not running. Start it manully, or include tests that start it."
+  raise "*** osrm-routed is not running."
+rescue Timeout::Error
+  raise "*** osrm-routed didn't respond."
 end
 
-When /^I request a route from (.+) to (.+)$/ do |a,b|
+When /^I request a route from ([^"]+) to ([^"]+)$/ do |a,b|
   @response = request_route a,b
+  #puts @response.body
+  #@response
 end
 
 When /^I request a route from "([^"]*)" to "([^"]*)"$/ do |a,b|
-  pending
-  #store hash og adress => coordinate points in a file under version control
-  #if the adress is not found, then use nominatim to get one and store it in the file
-  
-  #TODO convert a/b from adress to coordinate  
-  #@response = request_route a,b
+  locations = OSMTestParserCallbacks.locations
+  raise "Locations hash is empty. To reference nodes by name, please preprocess the test file earlier in the test." unless locations
+  raise "Unknown node: #{a}" unless locations[a]
+  raise "Unknown node: #{b}" unless locations[b]
+  @response = request_route "#{locations[a][0]},#{locations[a][1]}", "#{locations[b][0]},#{locations[b][1]}"
 end
+
 
 Then /^I should get a response/ do
   @response.code.should == "200"
@@ -54,12 +59,13 @@ Then /^I should get a valid response$/ do
   step "I should get a response"
   step "response should be valid JSON"
   step "response should be well-formed"
- 	step "no error should be reported in terminal"
+ 	#step "no error should be reported in terminal"
 end
 
 Then /^I should get a route$/ do
   step "I should get a valid response"
   step "a route should be found"
+  puts @response.body
 end
 
 Then /^I should not get a route$/ do
@@ -136,3 +142,62 @@ Then /^the route should stay on "([^"]*)"$/ do |way|
   step "there should not be any turns"
 end
 
+def parse_response response
+  if response.code == "200" && response.body.empty? == false
+    json = JSON.parse response.body
+    puts response.body
+    if json['status'] == 0
+      route = json['route_instructions'].map { |r| r[1] }.reject(&:empty?).join(', ')
+      if route.empty?
+        "Empty route: #{json['route_instructions']}"
+      else
+        route
+      end
+    elsif json['status'] == 207
+      nil #no route found
+    else
+      "Status: #{json['status']}"
+    end
+  else
+    "HTTP: #{response.code}"
+  end
+end
+
+
+When /^I route I should get$/ do |table|
+  actual = []
+  reprocess_if_needed
+  Dir.chdir 'test' do
+    launch
+    table.hashes.each do |row|
+      from_node = @name_node_hash[ row['from'] ]
+      to_node = @name_node_hash[ row['to'] ]
+      route = parse_response( request_route("#{from_node.lon},#{from_node.lat}", "#{to_node.lat},#{to_node.lat}") )
+      actual << { 'from' => row['from'].dup, 'to' => row['to'].dup, 'route' => route }
+    end
+    kill
+  end
+  table.diff! actual
+ end
+
+When /^I route on tagged ways I should get $/ do |table|
+  pending
+end
+
+
+When /^I speak I should get$/ do |table|
+  actual = [['one','two','three']]
+  table.hashes.each do |row|
+    actual << [ row['one'].dup, row['two'].dup, 'xx' ]
+  end
+  table.diff! actual
+end
+  
+When /^I route I between "([^"]*)" and "([^"]*)"$/ do |from, to|
+end
+
+Then /^I should get the route "([^"]*)"$/ do |route|
+  route.should == "xx"
+end
+
+  

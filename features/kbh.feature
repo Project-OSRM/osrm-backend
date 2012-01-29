@@ -1,8 +1,5 @@
 @routing
-Feature: Routing from A to B
-	In order to make it easier to navigate
-	As someone using the public road network
-	I want to be able to use OSRM to compute routes based on OpenStreetMap data
+Feature: Real-world routing test in the Copenhagen area
 			
 	Scenario: Phantom shortcut
 	    When I request a route from 55.662740149207,12.576105114488& to 55.665753800212,12.575547215013
@@ -19,7 +16,7 @@ Feature: Routing from A to B
 	    When I request a route from 55.683797649183,12.593940686704 to 55.6842149924,12.592476200581
 	    Then I should get a route
 	 	And the distance should be close to 150m
-		
+	
 	Scenario: Requesting invalid routes
 	    When I request a route from 0,0 to 0,0
 	    Then I should not get a route
@@ -38,4 +35,3 @@ Feature: Routing from A to B
 	    Then I should get a route
 	 	And the route should follow "Kaj Munks Vej, Tom Kristensens Vej, Ørestads Boulevard, Njalsgade, Artillerivej"
 		And no error should be reported in terminal
-		

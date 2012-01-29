@@ -12,12 +12,26 @@ def read_terminal
   return $server_pipe.read_nonblock 10000 rescue nil
 end
 
-def launch cmd
+def running?
+  `ps -eo command | grep #{@test_folder}/osrm-running$`.size != 0
+end
+
+def launch cmd = "./osrm-routed"
   $server_pipe = IO.popen(cmd)
   sleep 2 # so the daemon has a chance to boot
   
   at_exit do
-    Process.kill("KILL", $server_pipe.pid)   # clean up the daemon when the tests finish
+    if $server_pipe
+      Process.kill("KILL", $server_pipe.pid)   # clean up the daemon when the tests finish
+    end
+  end
+end
+
+def kill
+  if $server_pipe
+    Process.kill("KILL", $server_pipe.pid)
+    $server_pipe = nil
+    sleep 2 # so the daemon has a chance to quit
   end
 end
 
@@ -55,18 +69,22 @@ When /^I start the server with "([^']*)"$/ do |cmd|
 end
 
 When /^I stop the server$/ do
-  Process.kill("KILL", $server_pipe.pid)
-  $server_pipe = nil
+  kill
 end
 
 Then /^a process called "([^']*)" should be running$/ do |daemon|
+  #puts `ps -eo command | grep #{@test_folder}/#{daemon}`
   `ps -eo command | grep #{@test_folder}/#{daemon}`.size.should > 0
 end
 
 Then /^a process called "([^']*)" should not be running$/ do |daemon|
-  puts `ps -eo command | grep #{@test_folder}/#{daemon}$`
   `ps -eo command | grep #{@test_folder}/#{daemon}$`.size.should == 0
 end
+
+Then /^a process called "([^']*)" is not running$/ do |daemon|
+  step "a process called \"#{daemon}\" should not be running"
+end
+
 
 Then /^I should see "([^']*)" on the terminal$/ do |string|
   out = read_terminal

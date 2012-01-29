@@ -1,3 +1,48 @@
+require 'OSM/StreamParser'
+
+class OSMTestParserCallbacks < OSM::Callbacks
+  @@locations = nil
+  
+  def self.locations
+    if @@locations
+      @@locations
+    else
+      #parse the test file, so we can later reference nodes and ways by name in tests 
+      @@locations = {}
+      file = 'test/data/test.osm'
+      callbacks = OSMTestParserCallbacks.new
+      parser = OSM::StreamParser.new(:filename => file, :callbacks => callbacks)
+      parser.parse
+      puts @@locations
+    end
+  end
+
+  def node(node)
+    @@locations[node.name] = [node.lat,node.lon]
+  end
+
+  def way(way)
+  end
+
+  def relation(relation)
+  end
+end
+
+
+Given /^the OSM file contains$/ do |string|
+  file = 'data/test.osm'
+  File.open( file, 'w') {|f| f.write(string) }
+
+  #convert from .osm to .osm.pbf, which is the format osrm reads
+  system "osmosis --read-xml data/test.osm --write-pbf data/test.osm.pbf omitmetadata=true"
+end
+
+Given /^the speedprofile contains$/ do |string|
+  File.open( 'speedprofile.ini', 'w') {|f| f.write(string) }
+end
+
+
+
 Given /^the data file "([^"]*)" is present$/ do |file|
   File.exists?(file).should == true
 end
@@ -25,4 +70,15 @@ end
 
 Then /^I should see the file "([^"]*)"$/ do |file|
   File.exists?(file).should == true
+end
+
+When /^preprocessed files for "([^"]*)" has been removed$/ do |file|
+  FileUtils.rm_r  Dir["#{file}.*"], :secure => true
+end
+
+
+Given /^the speed profile$/ do |table|
+  table.hashes.each do |hash|
+    #Whatever you need to do
+  end
 end
