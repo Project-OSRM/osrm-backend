@@ -12,7 +12,7 @@ Feature: Outlines
 		 | ab    |
 		 | bc    |
 
-	    When I route I between "<from>" and "<to>"
+	    When I route from "<from>" to "<to>"
 		Then I should get the route "<route>"
 	
 		Examples:

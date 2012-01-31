@@ -75,10 +75,3 @@ end
 When /^preprocessed files for "([^"]*)" has been removed$/ do |file|
   FileUtils.rm_r  Dir["#{file}.*"], :secure => true
 end
-
-
-Given /^the speed profile$/ do |table|
-  table.hashes.each do |hash|
-    #Whatever you need to do
-  end
-end

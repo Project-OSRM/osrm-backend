@@ -1,4 +1,5 @@
 
+
 def request_route a,b
   uri = URI.parse "http://localhost:5000/viaroute&start=#{a}&dest=#{b}&output=json&geomformat=cmp"
   #puts "routing: #{uri}"
@@ -65,7 +66,7 @@ end
 Then /^I should get a route$/ do
   step "I should get a valid response"
   step "a route should be found"
-  puts @response.body
+  #puts @response.body
 end
 
 Then /^I should not get a route$/ do
@@ -145,7 +146,7 @@ end
 def parse_response response
   if response.code == "200" && response.body.empty? == false
     json = JSON.parse response.body
-    puts response.body
+    #puts response.body
     if json['status'] == 0
       route = json['route_instructions'].map { |r| r[1] }.reject(&:empty?).join(', ')
       if route.empty?
@@ -184,20 +185,50 @@ When /^I route on tagged ways I should get $/ do |table|
   pending
 end
 
+When /^I route between "([^"]*)" and "([^"]*)"$/ do |from,to|
+end
 
-When /^I speak I should get$/ do |table|
-  actual = [['one','two','three']]
-  table.hashes.each do |row|
-    actual << [ row['one'].dup, row['two'].dup, 'xx' ]
+Then /^"([^"]*)" should be returned$/ do |route|
+end
+
+def build_ways_from_table table
+  #add one unconnected way for each row
+  table.hashes.each_with_index do |row,ri|
+    #two nodes...
+    node1 = OSM::Node.new nil, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+0*ZOOM, ORIGIN[1]-ri*ZOOM 
+    node2 = OSM::Node.new nil, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+1*ZOOM, ORIGIN[1]-ri*ZOOM 
+    node1.uid = OSM_UID
+    node2.uid = OSM_UID
+    osm_db << node1
+    osm_db << node2
+    
+    #...with a way between them
+    way = OSM::Way.new -ri-1, OSM_USER, OSM_TIMESTAMP
+    way.uid = OSM_UID
+    tags = row.dup
+    tags.delete 'forw'
+    tags.delete 'backw'
+    tags.reject! { |k,v| v=='' }
+    way << tags
+    way << node1
+    way << node2
+    osm_db << way
+  end
+  Dir.chdir TEST_FOLDER do
+    write_osm
+  end
+  must_reprocess
+end
+
+Then /^routability should be$/ do |table|
+  build_ways_from_table table
+  reprocess_if_needed
+  actual = [ table.column_names ]
+  Dir.chdir 'test' do
+    launch
+    p "#{ORIGIN[0]+0*ZOOM},#{ORIGIN[1]-0*ZOOM}", "#{ORIGIN[0]+1*ZOOM},#{ORIGIN[1]-0*ZOOM}"
+    p request_route("#{ORIGIN[0]+0*ZOOM},#{ORIGIN[1]-0*ZOOM}", "#{ORIGIN[0]+1*ZOOM},#{ORIGIN[1]-0*ZOOM}").body
+    kill
   end
   table.diff! actual
 end
-  
-When /^I route I between "([^"]*)" and "([^"]*)"$/ do |from, to|
-end
-
-Then /^I should get the route "([^"]*)"$/ do |route|
-  route.should == "xx"
-end
-
-  

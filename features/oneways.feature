@@ -1,8 +1,9 @@
 @routing @oneways
 Feature: Oneway streets
 	Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
-	
+
 	Scenario: Implied oneways
+	 	Given the speedprofile "car"
 	 	Then routability should be
 		 | highway       | junction   | forw | backw |
 		 | motorway      |            | x    | x     |
@@ -12,6 +13,7 @@ Feature: Oneway streets
 		 | primary       | roundabout | x    |       |
 
 	Scenario: Overriding implied oneways
+ 		Given the defaults
 	 	Then routability should be
 		 | highway       | junction   | oneway | forw | backw |
 		 | motorway_link |            | no     | x    | x     |
@@ -22,6 +24,7 @@ Feature: Oneway streets
 		 | primary       | roundabout | -1     |      | x     |
 
 	Scenario: Handle various oneway tag values
+ 		Given the defaults
 	 	Then routability should be
 		 | highway       | oneway   | forw | backw |
 		 | primary       |          | x    | x     |
@@ -35,10 +38,9 @@ Feature: Oneway streets
 		 | primary       | -1       |      | x     |
 
 	Scenario: Disabling oneways in speedprofile
-	 	Given the speedprofile
+ 		Given the speedprofile settings
 		 | obeyOneways | no |
-	 	
-	Then routability should be
+		Then routability should be
 		 | highway       | junction   | oneway | forw | backw |
 		 | primary       |            | yes    | x    | x     |
 		 | primary       |            | true   | x    | x     |
@@ -49,9 +51,7 @@ Feature: Oneway streets
 		 | primary       | roundabout |        | x    | x     |
 
 	Scenario: Oneways and bicycles 
-	 	Given the speedprofile
-		 | accessTag   | bicycle |
-		
+	 	Given the defaults
 	 	Then routability should be
 		 | highway       | junction   | oneway | oneway:bicycle | forw | backw |
 		 | primary       |            |        | yes            | x    |       |
@@ -77,9 +77,9 @@ Feature: Oneway streets
 		 | primary       | roundabout |        | -1             |      | x     |
 
 	Scenario: Cars should not be affected by bicycle tags
-	 	Given the speedprofile
+	 	Given the speedprofile settings
 		 | accessTag   | motorcar |
-
+		
 	 	Then routability should be
 		 | highway | junction   | oneway | oneway:bicycle | forw | backw |
 		 | primary |            | yes    | yes            | x    |       |

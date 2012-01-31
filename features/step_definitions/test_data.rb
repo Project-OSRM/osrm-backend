@@ -11,6 +11,8 @@ DATA_FOLDER = 'data'
 OSM_FILE = 'test'
 LOG_FILE = 'test.log'
 
+DEFAULT_SPEEDPROFILE = 'bicycle'
+
 ORIGIN = [1,1]
 ZOOM = 0.001
 
@@ -51,16 +53,15 @@ def find_way_by_name s
 end
 
 def reset_data
+  Dir.chdir "#{TEST_FOLDER}" do
+    clear_log
+    clear_data_files
+  end
   osm_db.clear
   name_node_hash.clear
   name_way_hash.clear
   must_reprocess
   reset_speedprofile
-  $stdout.flush
-  Dir.chdir "#{TEST_FOLDER}" do
-    clear_log
-    clear_data_files
-  end
 end
 
 def clear_data_files
@@ -77,7 +78,12 @@ end
 
 def reset_speedprofile
   @speedprofile = {}
-  s = File.read 'test/speedprofiles/default.ini'
+  read_speedprofile DEFAULT_SPEEDPROFILE
+end
+
+def read_speedprofile profile
+  @speedprofile = {}
+  s = File.read "test/speedprofiles/#{profile}.ini"
   s.scan /(.*)=(.*)/ do |option|
     @speedprofile[option[0].strip] = option[1].strip
   end
@@ -121,8 +127,18 @@ def write_osm
 end
 
 
+Given /^the speedprofile "([^"]*)"$/ do |profile|
+  read_speedprofile profile
+end
+
+
+Given /^the speedprofile settings$/ do |table|
+  table.raw.each do |row|
+    speedprofile[ row[0] ] = row[1]
+  end
+end
+
 Given /^the nodes$/ do |table|
-  reset_data
   table.raw.each_with_index do |row,ri|
     row.each_with_index do |name,ci|
       unless name.empty?
@@ -163,3 +179,5 @@ Given /^the relations$/ do |table|
   end
 end
 
+Given /^the defaults$/ do
+end
