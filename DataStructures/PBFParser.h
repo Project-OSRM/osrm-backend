@@ -358,7 +358,7 @@ private:
     }
 
     void loadBlock(_ThreadData * threadData) {
-        blockCount++;
+        ++blockCount;
         threadData->currentGroupID = 0;
         threadData->currentEntityID = 0;
     }
@@ -380,14 +380,14 @@ private:
         if ( size > MAX_BLOB_HEADER_SIZE || size < 0 ) {
             return false;
         }
-        char *data = (char*)malloc(size);
+        char *data = new char[size];
         stream.read(data, size*sizeof(data[0]));
 
         if ( !(threadData->PBFBlobHeader).ParseFromArray( data, size ) ){
-            free(data);
+            delete[] data;
             return false;
         }
-        free(data);
+        delete[] data;
         return true;
     }
 
@@ -487,25 +487,26 @@ private:
             return false;
         }
 
-        if ( !readPBFBlobHeader(stream, threadData) )
-            return false;
-
-        if ( threadData->PBFBlobHeader.type() != "OSMData" ) {
-            std::cerr << "[error] invalid block type, found" << threadData->PBFBlobHeader.type().data() << "instead of OSMData" << std::endl;
+        if ( !readPBFBlobHeader(stream, threadData) ){
             return false;
         }
 
-        if ( !readBlob(stream, threadData) )
+        if ( threadData->PBFBlobHeader.type() != "OSMData" ) {
             return false;
+        }
+
+        if ( !readBlob(stream, threadData) ) {
+            return false;
+        }
 
         if ( !threadData->PBFprimitiveBlock.ParseFromArray( &(threadData->charBuffer[0]), threadData-> charBuffer.size() ) ) {
-            std::cerr << "[error] failed to parse PrimitiveBlock" << std::endl;
+            ERR("failed to parse PrimitiveBlock");
             return false;
         }
         return true;
     }
 
-    static Endianness getMachineEndianness() {
+    Endianness getMachineEndianness() const {
         int i(1);
         char *p = (char *) &i;
         if (p[0] == 1)

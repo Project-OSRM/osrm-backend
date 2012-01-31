@@ -60,7 +60,7 @@ unsigned globalRestrictionCounter = 0;
 ExtractorCallbacks * extractCallBacks;
 
 bool nodeFunction(_Node n);
-bool adressFunction(_Node n, HashTable<string, string> keyVals);
+bool adressFunction(_Node n, HashTable<string, string> & keyVals);
 bool restrictionFunction(_RawRestrictionContainer r);
 bool wayFunction(_Way w);
 
@@ -190,10 +190,9 @@ int main (int argc, char *argv[]) {
         parser = new XMLParser(argv[1]);
     }
     parser->RegisterCallbacks(&nodeFunction, &restrictionFunction, &wayFunction, &adressFunction);
-    GUARANTEE(parser->Init(), "Parser not initialized!");
+    if(!parser->Init())
+        INFO("Parser not initialized!");
     parser->Parse();
-    DELETE(parser);
-    stringMap.clear();
 
     try {
         //        INFO("raw no. of names:        " << externalMemory.nameVector.size());
@@ -485,7 +484,9 @@ int main (int argc, char *argv[]) {
         cerr <<  "Caught Execption:" << e.what() << endl;
         return false;
     }
+    DELETE(parser);
 
+    stringMap.clear();
     delete extractCallBacks;
     cout << "[extractor] finished." << endl;
     return 0;
@@ -496,7 +497,7 @@ bool nodeFunction(_Node n) {
     return true;
 }
 
-bool adressFunction(_Node n, HashTable<string, string> keyVals){
+bool adressFunction(_Node n, HashTable<string, string> & keyVals){
     extractCallBacks->adressFunction(n, keyVals);
     return true;
 }
