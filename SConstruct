@@ -98,6 +98,9 @@ if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 if not conf.CheckLibWithHeader('libzip', 'zip.h', 'CXX'):
 	print "Zip library not found. Exiting"
 	Exit(-1)
+if not conf.CheckLibWithHeader('pthread', 'pthread.h', 'CXX'):
+        print "pthread not found. Exiting"
+        Exit(-1)
 if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'):
 	print "Google Protobuffer library not found. Exiting"
 	Exit(-1)
