@@ -37,7 +37,7 @@ public:
     }
     virtual ~XMLParser() {}
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way), bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way), bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>&) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
         restrictionCallback = *restrictionCallbackPointer;

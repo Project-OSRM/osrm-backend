@@ -26,7 +26,7 @@ class BaseParser {
 public:
     virtual ~BaseParser() {}
     virtual bool Init() = 0;
-    virtual bool RegisterCallbacks(bool (*nodeCallbackPointer)(NodeT), bool (*restrictionCallbackPointer)(RestrictionT), bool (*wayCallbackPointer)(WayT), bool (*addressCallbackPointer)(NodeT, HashTable<std::string, std::string>)) = 0;
+    virtual bool RegisterCallbacks(bool (*nodeCallbackPointer)(NodeT), bool (*restrictionCallbackPointer)(RestrictionT), bool (*wayCallbackPointer)(WayT), bool (*addressCallbackPointer)(NodeT, HashTable<std::string, std::string>&)) = 0;
     virtual bool Parse() = 0;
 };
 

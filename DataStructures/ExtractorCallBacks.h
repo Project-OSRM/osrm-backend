@@ -29,7 +29,7 @@ typedef stxxl::vector<NodeID> STXXLNodeIDVector;
 typedef stxxl::vector<_Node> STXXLNodeVector;
 typedef stxxl::vector<_Edge> STXXLEdgeVector;
 typedef stxxl::vector<_Address> STXXLAddressVector;
-typedef stxxl::vector<string> STXXLStringVector;
+typedef stxxl::vector<std::string> STXXLStringVector;
 typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
 typedef stxxl::vector<_WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
 
@@ -42,6 +42,16 @@ struct STXXLContainers {
     STXXLStringVector           nameVector;
     STXXLRestrictionsVector     restrictionsVector;
     STXXLWayIDStartEndVector    wayStartEndVector;
+
+    ~STXXLContainers() {
+        usedNodeIDs.clear();
+        allNodes.clear();
+        allEdges.clear();
+        adressVector.clear();
+        nameVector.clear();
+        restrictionsVector.clear();
+        wayStartEndVector.clear();
+    }
 };
 
 class ExtractorCallbacks{
@@ -51,7 +61,7 @@ private:
     STXXLContainers * externalMemory;
 
 public:
-    ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap){
+    ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap) {
         externalMemory = ext;
         settings = set;
         stringMap = strMap;

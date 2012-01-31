@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define PBFPARSER_H_
 
 #include <zlib.h>
+#include <boost/shared_ptr.hpp>
 
 #include "BaseParser.h"
 
@@ -61,9 +62,9 @@ class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
     };
 
 public:
-    PBFParser(const char * fileName) 
-        : threadDataQueue( new ConcurrentQueue<_ThreadData*>(25) ) { /* Max 25 items in queue */
+    PBFParser(const char * fileName) { /* Max 25 items in queue */
         GOOGLE_PROTOBUF_VERIFY_VERSION;
+        threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(25) );
         input.open(fileName, std::ios::in | std::ios::binary);
 
         if (!input) {
@@ -78,7 +79,7 @@ public:
         addressCallback = NULL;     restrictionCallback = NULL;
     }
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>&) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
         restrictionCallback = *restrictionCallbackPointer;
@@ -95,8 +96,6 @@ public:
         while (threadDataQueue->try_pop(td)) {
             delete td;
         }
-        delete threadDataQueue;
-
         google::protobuf::ShutdownProtobufLibrary();
 
 #ifndef NDEBUG
@@ -145,8 +144,10 @@ public:
 
             if (keepRunning)
                 threadDataQueue->push(threadData);
-            else
+            else {
                 threadDataQueue->push(NULL); // No more data to read, parse stops when NULL encountered
+                delete threadData;
+            }
         } while(keepRunning);
     }
 
@@ -219,13 +220,6 @@ private:
                 int keyValue = dense.keys_vals ( denseTagIndex+1 );
                 std::string key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
                 std::string value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
-
-                if("barrier" == key && "bollard" == value) {
-                	n.bollard = true;
-                }
-                if("highway" == key && "traffic_signals" == value) {
-                	n.trafficLight = true;
-                }
                 keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
@@ -531,12 +525,12 @@ private:
     bool (*nodeCallback)(_Node);
     bool (*wayCallback)(_Way);
     bool (*restrictionCallback)(_RawRestrictionContainer);
-    bool (*addressCallback)(_Node, HashTable<std::string, std::string>);
+    bool (*addressCallback)(_Node, HashTable<std::string, std::string>&);
     /* the input stream to parse */
     std::fstream input;
 
     /* ThreadData Queue */
-    ConcurrentQueue < _ThreadData* >* threadDataQueue;
+    boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;
 };
 
 #endif /* PBFPARSER_H_ */
