@@ -484,7 +484,7 @@ private:
         assert( x<=1.0 && x >= 0);
         assert( y<=1.0 && y >= 0);
 
-        unsigned line = 1073741824.0*y;
+        unsigned line = (32768 * (32768-1))*y;
         line = line - (line % 32768);
         assert(line % 32768 == 0);
         unsigned column = 32768.*x;
