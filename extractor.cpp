@@ -69,7 +69,15 @@ bool removeIfUnused(ClassT n) { return (false == n.used); }
 
 
 int main (int argc, char *argv[]) {
+
     GUARANTEE((argc > 1) ,"usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>");
+
+    //Check if another instance of stxxl is already running or if there is a general problem
+    try {
+        stxxl::vector<unsigned> testForRunningInstance;
+    } catch(std::exception & e) {
+        ERR("Could not instantiate STXXL layer." << std::endl << e.what());
+    }
 
     INFO("extracting data from input file " << argv[1]);
     bool isPBF(false);
