@@ -173,7 +173,6 @@ public:
                     w.direction = _Way::bidirectional;
                 } else if( oneway == "-1") {
                     w.direction  = _Way::opposite;
-                    std::reverse( w.path.begin(), w.path.end() );
                 }
                 else if( oneway == "yes" || oneway == "1" || oneway == "true" || onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || junction == "roundabout" || highway == "motorway_link" || highway == "motorway" ) {
                     w.direction = _Way::oneway;
