@@ -79,7 +79,7 @@ int main (int argc, char *argv[]) {
         INFO("Loading SRTM from/to " << SRTM_ROOT);
     omp_set_num_threads(numberOfThreads);
 
-    INFO("preprocessing data from input file " << argv[2] << " using STL "
+    INFO("preprocessing data from input file " << argv[1] << " using STL "
 #ifdef _GLIBCXX_PARALLEL
             "parallel (GCC)"
 #else

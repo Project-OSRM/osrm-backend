@@ -210,10 +210,6 @@ public:
                 return true;
             }
 
-            if ( w.direction == _Way::opposite ){
-                std::reverse( w.path.begin(), w.path.end() );
-            }
-
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
                 externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid));
                 externalMemory->usedNodeIDs.push_back(w.path[n]);
