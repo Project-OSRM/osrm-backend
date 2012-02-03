@@ -3,13 +3,18 @@ Compilation
 
 Compiling the source code is easy. If you are running a decent linux 
 installing dependencies and running make should suffice. Make sure the following
-dependencies are installed:
+dependencies are installed (for libraries choose the -dev packages):
 
  - Boost		1.41+
  - g++			4.2+
  - libxml2		2.7+
  - scons 		2.10+
  - stxxl		1.3.1+
+ - libprotobuf  2.3.0+ (also protobuf-compiler)
+ - libbz2       any
+ - libzip       any
+ - libmagic++   (from ImageMagick)
+  
 
 Building the binaries is done by using scons. It should check for required
 libraries and header files and report missing ones.The Scons script accepts
@@ -72,7 +77,12 @@ preprocessing runs in three steps, all done by seperate programs.
 
 'osrm-extract file.osm' extracts the road network of an osm file. This is
 necessary, because the osm data is not made to support fast routing out of the
-box. The output of the step is a file called 'file.osrm'
+box. The output of the step is a file called 'file.osrm'.
+
+'osrm-extract' makes heavy use of STXXL memory management; STXXL will create
+a temporary file in /var/tmp. If you would prefer space allocated elsewhere,
+create a file named '.stxxl' in the current directory and specify the location
+and size of the virtual disk there, e.g. 'disk=./stxxl,20480,syscall'.
 
 'osrm-prepare file.osrm file.restrictions' preprocesses the road network and 
 computes additional information that is exploited later to speed up the path 
@@ -83,9 +93,9 @@ information.
 
 'osrm-routed' starts the server on TCP Port 5000. The
 server communicates over http and can be queried by any browser or http-capable
-command line tool. The server responds with KML-formatted output.Assume the 
+command line tool. The server responds with KML-formatted output. Assume the 
 server is installed on machine localhost and a map containing the Netherlands 
-has been installed. Computing a route from Amsterdam to Den Haag can be done by
+has been installed. Computing a route from Amsterdam to The Hague can be done by
 calling 
         http://localhost:5000/route&52.370197&4.890444&52.048167&4.3175
 which gives a shortest (fastest) route between the two points. To locate a
