@@ -43,6 +43,10 @@ struct STXXLContainers {
     STXXLRestrictionsVector     restrictionsVector;
     STXXLWayIDStartEndVector    wayStartEndVector;
 
+    STXXLContainers() {
+        nameVector.push_back("");
+    }
+
     ~STXXLContainers() {
         usedNodeIDs.clear();
         allNodes.clear();
