@@ -453,10 +453,9 @@ int main (int argc, char *argv[]) {
         cout << "ok" << endl;
         time = get_timestamp();
         cout << "[extractor] writing street name index ... " << flush;
-        vector<unsigned> * nameIndex = new vector<unsigned>(externalMemory.nameVector.size()+1, 0);
         outputFileName.append(".names");
         ofstream nameOutFile(outputFileName.c_str(), ios::binary);
-        unsigned sizeOfNameIndex = nameIndex->size();
+        unsigned sizeOfNameIndex = externalMemory.nameVector.size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
         BOOST_FOREACH(string str, externalMemory.nameVector) {
@@ -466,7 +465,6 @@ int main (int argc, char *argv[]) {
         }
 
         nameOutFile.close();
-        delete nameIndex;
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
         //        time = get_timestamp();
