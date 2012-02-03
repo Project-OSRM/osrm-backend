@@ -29,7 +29,7 @@ typedef stxxl::vector<NodeID> STXXLNodeIDVector;
 typedef stxxl::vector<_Node> STXXLNodeVector;
 typedef stxxl::vector<_Edge> STXXLEdgeVector;
 typedef stxxl::vector<_Address> STXXLAddressVector;
-typedef stxxl::vector<string> STXXLStringVector;
+typedef stxxl::vector<std::string> STXXLStringVector;
 typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
 typedef stxxl::vector<_WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
 
@@ -42,6 +42,20 @@ struct STXXLContainers {
     STXXLStringVector           nameVector;
     STXXLRestrictionsVector     restrictionsVector;
     STXXLWayIDStartEndVector    wayStartEndVector;
+
+    STXXLContainers() {
+        nameVector.push_back("");
+    }
+
+    ~STXXLContainers() {
+        usedNodeIDs.clear();
+        allNodes.clear();
+        allEdges.clear();
+        adressVector.clear();
+        nameVector.clear();
+        restrictionsVector.clear();
+        wayStartEndVector.clear();
+    }
 };
 
 class ExtractorCallbacks{
@@ -51,7 +65,7 @@ private:
     STXXLContainers * externalMemory;
 
 public:
-    ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap){
+    ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap) {
         externalMemory = ext;
         settings = set;
         stringMap = strMap;
@@ -163,7 +177,6 @@ public:
                     w.direction = _Way::bidirectional;
                 } else if( oneway == "-1") {
                     w.direction  = _Way::opposite;
-                    std::reverse( w.path.begin(), w.path.end() );
                 }
                 else if( oneway == "yes" || oneway == "1" || oneway == "true" || onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || junction == "roundabout" || highway == "motorway_link" || highway == "motorway" ) {
                     w.direction = _Way::oneway;

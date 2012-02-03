@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define PBFPARSER_H_
 
 #include <zlib.h>
+#include <boost/shared_ptr.hpp>
 
 #include "BaseParser.h"
 
@@ -61,9 +62,9 @@ class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
     };
 
 public:
-    PBFParser(const char * fileName) 
-        : threadDataQueue( new ConcurrentQueue<_ThreadData*>(25) ) { /* Max 25 items in queue */
+    PBFParser(const char * fileName) { /* Max 25 items in queue */
         GOOGLE_PROTOBUF_VERIFY_VERSION;
+        threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(25) );
         input.open(fileName, std::ios::in | std::ios::binary);
 
         if (!input) {
@@ -78,7 +79,7 @@ public:
         addressCallback = NULL;     restrictionCallback = NULL;
     }
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>&) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
         restrictionCallback = *restrictionCallbackPointer;
@@ -95,8 +96,6 @@ public:
         while (threadDataQueue->try_pop(td)) {
             delete td;
         }
-        delete threadDataQueue;
-
         google::protobuf::ShutdownProtobufLibrary();
 
 #ifndef NDEBUG
@@ -145,8 +144,10 @@ public:
 
             if (keepRunning)
                 threadDataQueue->push(threadData);
-            else
+            else {
                 threadDataQueue->push(NULL); // No more data to read, parse stops when NULL encountered
+                delete threadData;
+            }
         } while(keepRunning);
     }
 
@@ -219,13 +220,6 @@ private:
                 int keyValue = dense.keys_vals ( denseTagIndex+1 );
                 std::string key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
                 std::string value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
-
-                if("barrier" == key && "bollard" == value) {
-                	n.bollard = true;
-                }
-                if("highway" == key && "traffic_signals" == value) {
-                	n.trafficLight = true;
-                }
                 keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
@@ -364,7 +358,7 @@ private:
     }
 
     void loadBlock(_ThreadData * threadData) {
-        blockCount++;
+        ++blockCount;
         threadData->currentGroupID = 0;
         threadData->currentEntityID = 0;
     }
@@ -386,14 +380,14 @@ private:
         if ( size > MAX_BLOB_HEADER_SIZE || size < 0 ) {
             return false;
         }
-        char *data = (char*)malloc(size);
+        char *data = new char[size];
         stream.read(data, size*sizeof(data[0]));
 
         if ( !(threadData->PBFBlobHeader).ParseFromArray( data, size ) ){
-            free(data);
+            delete[] data;
             return false;
         }
-        free(data);
+        delete[] data;
         return true;
     }
 
@@ -493,25 +487,26 @@ private:
             return false;
         }
 
-        if ( !readPBFBlobHeader(stream, threadData) )
-            return false;
-
-        if ( threadData->PBFBlobHeader.type() != "OSMData" ) {
-            std::cerr << "[error] invalid block type, found" << threadData->PBFBlobHeader.type().data() << "instead of OSMData" << std::endl;
+        if ( !readPBFBlobHeader(stream, threadData) ){
             return false;
         }
 
-        if ( !readBlob(stream, threadData) )
+        if ( threadData->PBFBlobHeader.type() != "OSMData" ) {
             return false;
+        }
+
+        if ( !readBlob(stream, threadData) ) {
+            return false;
+        }
 
         if ( !threadData->PBFprimitiveBlock.ParseFromArray( &(threadData->charBuffer[0]), threadData-> charBuffer.size() ) ) {
-            std::cerr << "[error] failed to parse PrimitiveBlock" << std::endl;
+            ERR("failed to parse PrimitiveBlock");
             return false;
         }
         return true;
     }
 
-    static Endianness getMachineEndianness() {
+    Endianness getMachineEndianness() const {
         int i(1);
         char *p = (char *) &i;
         if (p[0] == 1)
@@ -531,12 +526,12 @@ private:
     bool (*nodeCallback)(_Node);
     bool (*wayCallback)(_Way);
     bool (*restrictionCallback)(_RawRestrictionContainer);
-    bool (*addressCallback)(_Node, HashTable<std::string, std::string>);
+    bool (*addressCallback)(_Node, HashTable<std::string, std::string>&);
     /* the input stream to parse */
     std::fstream input;
 
     /* ThreadData Queue */
-    ConcurrentQueue < _ThreadData* >* threadDataQueue;
+    boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;
 };
 
 #endif /* PBFPARSER_H_ */

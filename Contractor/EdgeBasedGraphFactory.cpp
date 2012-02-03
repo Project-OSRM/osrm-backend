@@ -146,9 +146,9 @@ void EdgeBasedGraphFactory::Run() {
                         }
                     }
                     ++secondRestrictionIterator;
-                } while(u == secondRestrictionIterator->fromNode);
+                } while(secondRestrictionIterator != inputRestrictions.end() && u == secondRestrictionIterator->fromNode);
             }
-            if(_nodeBasedGraph->EndEdges(v) == _nodeBasedGraph->BeginEdges(v) + 1 && _nodeBasedGraph->GetEdgeData(e1).type != INT_MAX) {
+            if(_nodeBasedGraph->EndEdges(v) == _nodeBasedGraph->BeginEdges(v) + 1 && _nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX) {
                 EdgeBasedNode currentNode;
                 currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                 currentNode.lat1 = inputNodeInfoList[u].lat;
@@ -194,7 +194,7 @@ void EdgeBasedGraphFactory::Run() {
                                 }
                             }
                             ++secondRestrictionIterator;
-                        } while(u == secondRestrictionIterator->fromNode);
+                        } while(secondRestrictionIterator != inputRestrictions.end() && u == secondRestrictionIterator->fromNode);
                     }
 
                     if( !isTurnRestricted || (isOnlyAllowed && w == onlyToNode) ) { //only add an edge if turn is not prohibited
