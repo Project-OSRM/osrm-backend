@@ -172,7 +172,7 @@ public:
                 resultNode.nodeBasedEdgeNameID = candidate.nameID;
                 resultNode.weight1 = candidate.weight;
                 dist = tmpDist;
-                resultNode.location.lat = round(100000*(y2lat(static_cast<double>(tmp.lat)/100000.)));
+                resultNode.location.lat = round(100000.*(y2lat(static_cast<double>(tmp.lat)/100000.)));
                 resultNode.location.lon = tmp.lon;
                 foundNode = true;
                 smallestEdge = candidate;
@@ -195,7 +195,13 @@ public:
 
         double ratio = std::min(1., LengthOfVector(smallestEdge.startCoord, newEndpoint)/LengthOfVector(smallestEdge.startCoord, smallestEdge.targetCoord) );
         assert(ratio >= 0 && ratio <=1);
-        //        INFO("node: " << resultNode.edgeBasedNode << ", orig weight1: " << resultNode.weight1 << ", orig weight2: " << resultNode.weight2);
+
+        //Hack to fix rounding errors and wandering via nodes.
+        if(std::abs(location.lon - resultNode.location.lon) == 1)
+            resultNode.location.lon = location.lon;
+        if(std::abs(location.lat - resultNode.location.lat) == 1)
+             resultNode.location.lat = location.lat;
+
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
             resultNode.weight2 -= resultNode.weight1;
@@ -425,7 +431,7 @@ private:
         if(c != a){
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
-            p = ((x + (m*y)) + (m*m*a - m*b))/(1 + m*m);
+            p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
             q = b + m*(p - a);
         }
         else{

@@ -159,6 +159,7 @@ public:
 					convertInternalReversedCoordinateToString(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location, tmp);
 				else
 					convertInternalReversedCoordinateToString(rawRoute.rawViaNodeCoordinates[segmentIdx], tmp);
+
 				reply.content += tmp;
 				reply.content += "]";
 			}
