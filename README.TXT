@@ -93,7 +93,7 @@ information.
 
 'osrm-routed' starts the server on TCP Port 5000. The
 server communicates over http and can be queried by any browser or http-capable
-command line tool. The server responds with KML-formatted output.i Assume the 
+command line tool. The server responds with KML-formatted output. Assume the 
 server is installed on machine localhost and a map containing the Netherlands 
 has been installed. Computing a route from Amsterdam to The Hague can be done by
 calling 
