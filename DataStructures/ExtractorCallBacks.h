@@ -178,7 +178,15 @@ public:
                 } else if( oneway == "-1") {
                     w.direction  = _Way::opposite;
                 }
-                else if( oneway == "yes" || oneway == "1" || oneway == "true" || onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || junction == "roundabout" || highway == "motorway_link" || highway == "motorway" ) {
+                else if( oneway == "yes" || oneway == "1" || oneway == "true" ||
+						onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || 
+						junction == "roundabout" ||
+						highway == "motorway" ||
+						highway == "motorway_link" ||
+						highway == "trunk_link" ||
+						highway == "primary_link" ||
+						highway == "secondary_link" ||
+						highway == "tertiary_link" ) {
                     w.direction = _Way::oneway;
                 } else {
                     w.direction = _Way::bidirectional;
