@@ -85,8 +85,7 @@ public:
 		reply.content += "},";
 		reply.content += "\"route_geometry\": ";
 		if(config.geometry) {
-			if(config.encodeGeometry)
-				descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
+		    descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
 		} else {
 			reply.content += "[]";
 		}
