@@ -42,7 +42,8 @@ class Contractor {
 
 private:
 	struct _EdgeBasedContractorEdgeData {
-		_EdgeBasedContractorEdgeData() {}
+		_EdgeBasedContractorEdgeData() :
+		    distance(0), originalEdges(0), via(0), nameID(0), turnInstruction(0), shortcut(0), forward(0), backward(0) {}
 		_EdgeBasedContractorEdgeData( unsigned _distance, unsigned _originalEdges, unsigned _via, unsigned _nameID, short _turnInstruction, bool _shortcut, bool _forward, bool _backward) :
 			distance(_distance), originalEdges(_originalEdges), via(_via), nameID(_nameID), turnInstruction(_turnInstruction), shortcut(_shortcut), forward(_forward), backward(_backward) {}
 		unsigned distance;
@@ -56,9 +57,10 @@ private:
 	} data;
 
 	struct _HeapData {
+	    short hop;
 		bool target;
-		_HeapData() : target(false) {}
-		_HeapData( bool t ) : target(t) {}
+		_HeapData() : hop(0), target(false) {}
+		_HeapData( short h, bool t ) : hop(h), target(t) {}
 	};
 
 	typedef DynamicGraph< _EdgeBasedContractorEdgeData > _DynamicGraph;
@@ -306,7 +308,7 @@ public:
 	}
 
 private:
-	inline void _Dijkstra( const int maxDistance, const unsigned numTargets, const int maxNodes, _ThreadData* const data ){
+	inline void _Dijkstra( const int maxDistance, const unsigned numTargets, const int maxNodes, const short hopLimit, _ThreadData* const data ){
 
 		_Heap& heap = data->heap;
 
@@ -315,6 +317,8 @@ private:
 		while ( heap.Size() > 0 ) {
 			const NodeID node = heap.DeleteMin();
 			const int distance = heap.GetKey( node );
+			const short currentHop = heap.GetData( node ).hop+1;
+
 			if ( ++nodes > maxNodes )
 				return;
 			//Destination settled?
@@ -327,6 +331,9 @@ private:
 					return;
 			}
 
+			if(currentHop >= hopLimit)
+                continue;
+
 			//iterate over all edges of node
 			for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
 				const _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( edge );
@@ -337,12 +344,12 @@ private:
 
 				//New Node discovered -> Add to Heap + Node Info Storage
 				if ( !heap.WasInserted( to ) )
-					heap.Insert( to, toDistance, _HeapData() );
+					heap.Insert( to, toDistance, _HeapData(currentHop, false) );
 
 				//Found a shorter Path -> Update distance
 				else if ( toDistance < heap.GetKey( to ) ) {
 					heap.DecreaseKey( to, toDistance );
-					//heap.GetData( to ).hops = hops + 1;
+					heap.GetData( to ).hop = currentHop;
 				}
 			}
 		}
@@ -392,7 +399,7 @@ private:
 				const int pathDistance = inData.distance + outData.distance;
 				maxDistance = std::max( maxDistance, pathDistance );
 				if ( !heap.WasInserted( target ) ) {
-					heap.Insert( target, pathDistance, _HeapData( true ) );
+					heap.Insert( target, pathDistance, _HeapData( 0, true ) );
 					++numTargets;
 				} else if ( pathDistance < heap.GetKey( target ) ) {
 					heap.DecreaseKey( target, pathDistance );
@@ -400,9 +407,9 @@ private:
 			}
 
 			if( Simulate )
-				_Dijkstra( maxDistance, numTargets, 1000, data );
+				_Dijkstra( maxDistance, numTargets, 1000, 5, data );
 			else
-				_Dijkstra( maxDistance, numTargets, 2000, data );
+				_Dijkstra( maxDistance, numTargets, 2000, 7, data );
 
 			for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
 				const _EdgeBasedContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
@@ -411,7 +418,6 @@ private:
 				const NodeID target = _graph->GetTarget( outEdge );
 				const int pathDistance = inData.distance + outData.distance;
 				const int distance = heap.GetKey( target );
-
 				if ( pathDistance <= distance ) {
 					if ( Simulate ) {
 						assert( stats != NULL );
