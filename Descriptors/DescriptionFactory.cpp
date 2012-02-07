@@ -24,9 +24,17 @@ DescriptionFactory::DescriptionFactory() { }
 
 DescriptionFactory::~DescriptionFactory() { }
 
-double DescriptionFactory::GetAngleBetweenCoordinates() const {
-    return 0.;//GetAngleBetweenTwoEdges(previousCoordinate, currentCoordinate, nextCoordinate);
+double DescriptionFactory::GetAzimuth(const _Coordinate& A, const _Coordinate& B) const {
+    double lonDiff = (A.lon-B.lon)/100000.;
+    double angle = atan2(sin(lonDiff)*cos(B.lat/100000.),
+            cos(A.lat/100000.)*sin(B.lat/100000.)-sin(A.lat/100000.)*cos(B.lat/100000.)*cos(lonDiff));
+    angle*=180/M_PI;
+    while(angle < 0)
+        angle += 360;
+
+    return angle;
 }
+
 
 void DescriptionFactory::SetStartSegment(const PhantomNode & _startPhantom) {
     startPhantom = _startPhantom;
@@ -91,5 +99,12 @@ unsigned DescriptionFactory::Run(const unsigned zoomLevel) {
     dp.Run(pathDescription, zoomLevel);
 
     //fix what needs to be fixed else
+    for(unsigned i = 0; i < pathDescription.size()-1 && pathDescription.size() >= 2; ++i){
+        if(pathDescription[i].necessary) {
+            int angle = 100*GetAzimuth(pathDescription[i].location, pathDescription[i+1].location);
+            pathDescription[i].bearing = angle/100.;
+        }
+    }
+
     return entireLength;
 }

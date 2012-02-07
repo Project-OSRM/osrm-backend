@@ -27,6 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DescriptionFactory.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
+#include "../Util/Azimuth.h"
 #include "../Util/StringUtil.h"
 
 template<class SearchEngineT>
@@ -36,6 +37,7 @@ private:
 	_RouteSummary summary;
 	DescriptionFactory descriptionFactory;
 	_Coordinate current;
+
 	struct {
 		int startIndex;
 		int nameID;
@@ -100,7 +102,7 @@ public:
 			unsigned prefixSumOfNecessarySegments = 0;
 			roundAbout.leaveAtExit = 0;
 			roundAbout.nameID = 0;
-			std::string tmpDist, tmpLength, tmpDuration;
+			std::string tmpDist, tmpLength, tmpDuration, tmpBearing;
 			//Fetch data from Factory and generate a string from it.
 			BOOST_FOREACH(SegmentInformation & segment, descriptionFactory.pathDescription) {
 				if(TurnInstructions.TurnIsNecessary( segment.turnInstruction) ) {
@@ -134,9 +136,12 @@ public:
 						reply.content += tmpDuration;
 						reply.content += ",\"";
 						reply.content += tmpLength;
-						//TODO: fix heading
-						reply.content += "\",\"NE\",22.5";
-						reply.content += "]";
+						reply.content += "\",\"";
+						reply.content += Azimuth::Get(segment.bearing);
+						reply.content += "\",";
+						doubleToStringWithTwoDigitsBehindComma(segment.bearing, tmpBearing);
+						reply.content += tmpBearing;
+			            reply.content += "]";
 					}
 				} else if(TurnInstructions.StayOnRoundAbout == segment.turnInstruction) {
 					++roundAbout.leaveAtExit;

@@ -93,6 +93,14 @@ static inline void doubleToString(const double value, std::string & output){
     output = buffer ;
 }
 
+static inline void doubleToStringWithTwoDigitsBehindComma(const double value, std::string & output){
+    // The largest 32-bit integer is 4294967295, that is 10 chars
+    // On the safe side, add 1 for sign, and 1 for trailing zero
+    char buffer[12] ;
+    sprintf(buffer, "%g", value) ;
+    output = buffer ;
+}
+
 inline std::string & replaceAll(std::string &s, const std::string &sub, const std::string &other) {
     assert(!sub.empty());
     size_t b = 0;

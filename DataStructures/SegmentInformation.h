@@ -28,12 +28,13 @@ struct SegmentInformation {
     NodeID nameID;
     unsigned length;
     unsigned duration;
+    double bearing;
     short turnInstruction;
     bool necessary;
     SegmentInformation(const _Coordinate & loc, const NodeID nam, const unsigned len, const unsigned dur, const short tInstr, const bool nec) :
-            location(loc), nameID(nam), length(len), duration(dur), turnInstruction(tInstr), necessary(nec) {}
+            location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(nec) {}
     SegmentInformation(const _Coordinate & loc, const NodeID nam, const unsigned len, const unsigned dur, const short tInstr) :
-        location(loc), nameID(nam), length(len), duration(dur), turnInstruction(tInstr), necessary(tInstr != 0) {}
+        location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(tInstr != 0) {}
 };
 
 #endif /* SEGMENTINFORMATION_H_ */

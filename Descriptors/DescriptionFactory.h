@@ -41,7 +41,7 @@ public:
     std::vector <SegmentInformation> pathDescription;
     DescriptionFactory();
     virtual ~DescriptionFactory();
-    double GetAngleBetweenCoordinates() const;
+    double GetAzimuth(const _Coordinate& C, const _Coordinate& B) const;
     void AppendEncodedPolylineString(std::string &output);
     void AppendUnencodedPolylineString(std::string &output);
     void AppendSegment(const _Coordinate & coordinate, const _PathData & data);
