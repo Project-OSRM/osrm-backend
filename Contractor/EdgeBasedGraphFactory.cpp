@@ -314,7 +314,7 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     }
 
     //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
-    if(data1.nameID == data2.nameID)
+    if( (_nodeBasedGraph->GetOutDegree(v) == 2 ) && (0 != data1.nameID && data1.nameID == data2.nameID) )
         return TurnInstructions.NoTurn;
 
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);
