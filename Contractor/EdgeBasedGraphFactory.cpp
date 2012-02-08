@@ -291,8 +291,6 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     _NodeBasedDynamicGraph::EdgeData & data1 = _nodeBasedGraph->GetEdgeData(edge1);
     _NodeBasedDynamicGraph::EdgeData & data2 = _nodeBasedGraph->GetEdgeData(edge2);
 
-    double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
-
     //roundabouts need to be handled explicitely
     if(data1.roundabout && data2.roundabout) {
         //Is a turn possible? If yes, we stay on the roundabout!
@@ -314,9 +312,12 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     }
 
     //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
-    if( (_nodeBasedGraph->GetOutDegree(v) == 2 ) && (0 != data1.nameID && data1.nameID == data2.nameID) )
+    if( (data1.nameID == data2.nameID) && (0 != data1.nameID))
+        return TurnInstructions.NoTurn;
+    if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) == 1) )
         return TurnInstructions.NoTurn;
 
+    double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);
 }
 
