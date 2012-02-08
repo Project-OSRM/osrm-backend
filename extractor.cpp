@@ -70,7 +70,9 @@ bool removeIfUnused(ClassT n) { return (false == n.used); }
 
 int main (int argc, char *argv[]) {
 
-    GUARANTEE((argc > 1) ,"usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>");
+    if(argc < 2) {
+        ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>");
+    }
 
     //Check if another instance of stxxl is already running or if there is a general problem
     try {
