@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define INPUTFILEUTIL_H_
 
 #include <fstream>
+#include <iostream>
 
 // Check if file exists and if it can be opened for reading with ifstream an object
 bool testDataFile(const char *filename){
