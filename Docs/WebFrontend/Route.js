@@ -29,7 +29,6 @@
 //======================
 // OBJECTS
 //Map
-//var HOST_ROUTING_URL = 'http://localhost:5000/viaroute';
 var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-via/';
 var HOST_WEBSITE = 'http://map.project-osrm.org/';//location.host
 
@@ -100,7 +99,9 @@ function reroute() {
  */
 function showResultsDragRoute(response) {
     if (response) {
-    	//Display Route    	showRouteGeometry(response);    }
+    	//Display Route
+    	showRouteGeometry(response);
+    }
   	markersLayer.clearMarkers();
     ISCALCULATING = false;
 }
@@ -149,16 +150,32 @@ function showResultsRoute(response) {
         //Show Route Instructions
         output += '<table>';
         lengthOfArray = response.route_instructions.length;
-		for (i = 0; i < lengthOfArray; i++) {
+
+        var rowstyle='routeInstructionsEven';
+        var indexPos = response.route_instructions[0][3];
+		var point = allRoutePoints[indexPos];
+		
+		//Hack to suppress output of initial "0m" instruction		
+		output += '<tr class="'+rowstyle+'"><td align="right" valign="top"><span class="routeSummarybold">1.</span></td><td class="'+rowstyle+'"><a href="#" class="nolinkStyle" onclick="setMapCenter(new OpenLayers.LonLat('+point.x+','+point.y+'));">'+response.route_instructions[0][0]+' on '+response.route_instructions[0][1];
+		if(response.route_instructions[0][2] != 0)
+			output += ' for '+getDistanceWithUnit(response.route_instructions[0][2]);
+	   	output += '</a></td></tr>';
+ 
+		for (i = 1; i < lengthOfArray; i++) {
 			//console.log(response.route_instructions[i]);
         	//odd or even ?
-        	var rowstyle='routeInstructionsOdd';
-        	if(i%2==0){ rowstyle='routeInstructionsEven'; }
+        	if(i%2==0){ 
+ 				rowstyle='routeInstructionsEven'; 
+ 			} else {
+ 				rowstyle='routeInstructionsOdd';
+ 			}	
 			
-            var indexPos = response.route_instructions[i][3];
+            indexPos = response.route_instructions[i][3];
 			//console.log('setting : ' + response.route_instructions[i] + ' at ' + allRoutePoints[indexPos]);
-			var point = allRoutePoints[indexPos];
-        	            output += '<tr class="'+rowstyle+'"><td align="right" valign="top"><span class="routeSummarybold">'+(i+1)+'.</span></td><td class="'+rowstyle+'"><a href="#" class="nolinkStyle" onclick="setMapCenter(new OpenLayers.LonLat('+point.x+','+point.y+'));">'+response.route_instructions[i][0]+' on '+response.route_instructions[i][1]+' for '+getDistanceWithUnit(response.route_instructions[i][2])+'</a></td></tr>';        }
+			point = allRoutePoints[indexPos];
+ 			       	
+            output += '<tr class="'+rowstyle+'"><td align="right" valign="top"><span class="routeSummarybold">'+(i+1)+'.</span></td><td class="'+rowstyle+'"><a href="#" class="nolinkStyle" onclick="setMapCenter(new OpenLayers.LonLat('+point.x+','+point.y+'));">'+response.route_instructions[i][0]+' on '+response.route_instructions[i][1]+' for '+getDistanceWithUnit(response.route_instructions[i][2])+'</a></td></tr>';
+        }
 		var rowstyle='routeInstructionsOdd';
        	if(i%2==0){ rowstyle='routeInstructionsEven'; }
 		if( lengthOfArray > 0) {
@@ -168,7 +185,8 @@ function showResultsRoute(response) {
 		output += '</table>';
         //alert(vectorLayerRoute.features[0].geometry.getVertices());
         
-        document.getElementById('information').innerHTML = output;	    ISCALCULATING = false;
+        document.getElementById('information').innerHTML = output;
+	    ISCALCULATING = false;
 		ISCALCULATINGVIA = false;
     }
 }
@@ -228,8 +246,10 @@ function showRouteGeometry(response) {
  * showNoNameStreets()-Function to show route result
  */
 function showNoNameStreets(response) {
-    if (response) {    	allRoutePoints.length = 0;
-    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);      	// now with compression of the route geometry
+    if (response) {
+    	allRoutePoints.length = 0;
+    	vectorLayerRoute.removeFeatures(vectorLayerRoute.features);
+      	// now with compression of the route geometry
         var geometry = decodeRouteGeometry(response.route_geometry, 5);
        	var lengthOfArray = geometry.length;
         var points = [];
@@ -243,7 +263,8 @@ function showNoNameStreets(response) {
         		var indexPos = response.route_instructions[i][3];
         		var streetName = response.route_instructions[i][1];
 				if(streetName == ''){ colors[indexPos] = "#FF00FF"; }
-				else{ colors[indexPos] = "#0033ff"; }        	}
+				else{ colors[indexPos] = "#0033ff"; }
+        	}
         }
 
  		//delete any previously displayed via route
@@ -252,7 +273,10 @@ function showNoNameStreets(response) {
         
         //Create Route Layer for Display
         var color = "#0033ff";
-        var changeColor = false;        for (var i = 0; i < lengthOfArray; i++) {            var point = new OpenLayers.Geometry.Point(geometry[i][1], geometry[i][0]).transform(EPSG_4326, EPSG_900913);            points.push(point);
+        var changeColor = false;
+        for (var i = 0; i < lengthOfArray; i++) {
+            var point = new OpenLayers.Geometry.Point(geometry[i][1], geometry[i][0]).transform(EPSG_4326, EPSG_900913);
+            points.push(point);
             allRoutePoints.push(point);
 				
             if(colors[i] != undefined){ changeColor=true;}
@@ -269,7 +293,8 @@ function showNoNameStreets(response) {
 				
 				if(colors[i] != undefined){ color = colors[i]; }
 				changeColor=false;
-			}        }
+			}
+        }
    }
 }
 

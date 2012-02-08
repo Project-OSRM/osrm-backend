@@ -94,6 +94,10 @@ unsigned DescriptionFactory::Run(const unsigned zoomLevel) {
             indexOfSegmentBegin = i;
         }
     }
+    if(pathDescription[0].length == 0){
+        INFO("Start at End of street");
+        pathDescription[0].turnInstruction = 14;
+    }
 
     //Generalize poly line
     dp.Run(pathDescription, zoomLevel);

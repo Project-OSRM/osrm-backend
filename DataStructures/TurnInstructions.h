@@ -40,8 +40,9 @@ struct TurnInstructionsClass {
     const static short EnterRoundAbout = 11;
     const static short LeaveRoundAbout = 12;
     const static short StayOnRoundAbout = 13;
+    const static short StartAtEndOfStreet = 14;
 
-    std::string TurnStrings[14];
+    std::string TurnStrings[15];
     std::string Ordinals[11];
 
     //This is a hack until c++0x is available enough to use initializer lists.
@@ -60,6 +61,7 @@ struct TurnInstructionsClass {
         TurnStrings[11] = "Enter round-about";
         TurnStrings[12] = "Leave round-about";
         TurnStrings[13] = "Stay on round-about";
+        TurnStrings[14] = "Start";
 
         Ordinals[0]     = "zeroth";
         Ordinals[1]     = "first";
@@ -104,48 +106,6 @@ struct TurnInstructionsClass {
             return false;
         return true;
     }
-
-    //    static inline void getDirectionOfInstruction(double angle, DirectionOfInstruction & dirInst) {
-    //        if(angle >= 23 && angle < 67) {
-    //            dirInst.direction = "southeast";
-    //            dirInst.shortDirection = "SE";
-    //            return;
-    //        }
-    //        if(angle >= 67 && angle < 113) {
-    //            dirInst.direction = "south";
-    //            dirInst.shortDirection = "S";
-    //            return;
-    //        }
-    //        if(angle >= 113 && angle < 158) {
-    //            dirInst.direction = "southwest";
-    //            dirInst.shortDirection = "SW";
-    //            return;
-    //        }
-    //        if(angle >= 158 && angle < 202) {
-    //            dirInst.direction = "west";
-    //            dirInst.shortDirection = "W";
-    //            return;
-    //        }
-    //        if(angle >= 202 && angle < 248) {
-    //            dirInst.direction = "northwest";
-    //            dirInst.shortDirection = "NW";
-    //            return;
-    //        }
-    //        if(angle >= 248 && angle < 292) {
-    //            dirInst.direction = "north";
-    //            dirInst.shortDirection = "N";
-    //            return;
-    //        }
-    //        if(angle >= 292 && angle < 336) {
-    //            dirInst.direction = "northeast";
-    //            dirInst.shortDirection = "NE";
-    //            return;
-    //        }
-    //        dirInst.direction = "East";
-    //        dirInst.shortDirection = "E";
-    //        return;
-    //    }
-    //
 
 };
 
