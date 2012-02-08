@@ -95,7 +95,6 @@ unsigned DescriptionFactory::Run(const unsigned zoomLevel) {
         }
     }
     if(pathDescription[0].length == 0){
-        INFO("Start at End of street");
         pathDescription[0].turnInstruction = 14;
     }
 
