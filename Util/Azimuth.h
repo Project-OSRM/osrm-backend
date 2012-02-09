@@ -28,7 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 struct Azimuth {
     static std::string Get(const double heading) {
         if(heading <= 202.5) {
-            if(heading > 0 && heading <= 22.5)
+            if(heading >= 0 && heading <= 22.5)
                 return "N";
             if(heading > 22.5 && heading <= 67.5)
                 return "NE";
