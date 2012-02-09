@@ -5,11 +5,11 @@ Compiling the source code is easy. If you are running a decent linux
 installing dependencies and running make should suffice. Make sure the following
 dependencies are installed (for libraries choose the -dev packages):
 
- - Boost		1.41+
- - g++			4.2+
- - libxml2		2.7+
- - scons 		2.10+
- - stxxl		1.3.1+
+ - Boost	1.41+
+ - g++		4.2+
+ - libxml2	2.7+
+ - scons 	2.10+
+ - stxxl	1.3.1+
  - libprotobuf  2.3.0+ (also protobuf-compiler)
  - libbz2       any
  - libzip       any
