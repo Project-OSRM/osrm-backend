@@ -89,7 +89,7 @@ public:
 
 	template<class ContainerT>
 	void _RemoveConsecutiveDuplicatesFromContainer(ContainerT & packedPath) {
-		//remove consecutive duplicates
+	    //remove consecutive duplicates
 		typename ContainerT::iterator it;
 		// using default comparison:
 		it = std::unique(packedPath.begin(), packedPath.end());
@@ -124,15 +124,14 @@ public:
 			if(searchFrom1stStartNode) {
 				_forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
 				_forwardHeap2->Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-//				INFO("1,2)forw insert " << phantomNodePair.startPhantom.edgeBasedNode << " with weight " << phantomNodePair.startPhantom.weight1);
+//				INFO("a 1,2)forw insert " << phantomNodePair.startPhantom.edgeBasedNode << " with weight " << phantomNodePair.startPhantom.weight1);
 //			} else {
 //				INFO("Skipping first start node");
 			}
 			if(phantomNodePair.startPhantom.isBidirected() && searchFrom2ndStartNode) {
 				_forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
 				_forwardHeap2->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-//				INFO("1)forw insert " << phantomNodePair.startPhantom.edgeBasedNode+1 << " with weight " << distance1-phantomNodePair.startPhantom.weight1);
-//				INFO("2)forw insert " << phantomNodePair.startPhantom.edgeBasedNode+1 << " with weight " << distance2-phantomNodePair.startPhantom.weight1);
+//				INFO("b 1,2)forw insert " << phantomNodePair.startPhantom.edgeBasedNode+1 << " with weight " << -phantomNodePair.startPhantom.weight1);
 //			} else if(!searchFrom2ndStartNode) {
 //				INFO("Skipping second start node");
 			}
@@ -141,9 +140,9 @@ public:
 			_backwardHeap2->Clear();
 			//insert new backward nodes into backward heap, unadjusted.
 			_backwardHeap->Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
-//			INFO("1)back insert " << phantomNodePair.targetPhantom.edgeBasedNode << " with weight " << phantomNodePair.targetPhantom.weight1);
+//			INFO("1) back insert " << phantomNodePair.targetPhantom.edgeBasedNode << " with weight " << phantomNodePair.targetPhantom.weight1);
 			if(phantomNodePair.targetPhantom.isBidirected() ) {
-//				INFO("2)back insert " << phantomNodePair.targetPhantom.edgeBasedNode+1 << " with weight " << phantomNodePair.targetPhantom.weight2);
+//				INFO("2) back insert " << phantomNodePair.targetPhantom.edgeBasedNode+1 << " with weight " << phantomNodePair.targetPhantom.weight2);
 				_backwardHeap2->Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
 			}
 			int offset = (phantomNodePair.startPhantom.isBidirected() ? std::max(phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.weight2) : phantomNodePair.startPhantom.weight1) ;
@@ -212,20 +211,24 @@ public:
 			std::deque<NodeID> temporaryPackedPath1;
 			std::deque<NodeID> temporaryPackedPath2;
 			if(INT_MAX != _localUpperbound1) {
-				_RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap,  phantomNodePair, middle1, temporaryPackedPath1);
+				_RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, middle1, temporaryPackedPath1);
+//				INFO("temporaryPackedPath1 ends with " << *(temporaryPackedPath1.end()-1) );
 			}
 //			INFO("middle2: " << middle2);
 
 			if(INT_MAX != _localUpperbound2) {
-				_RetrievePackedPathFromHeap(_forwardHeap2, _backwardHeap2, phantomNodePair, middle2, temporaryPackedPath2);
+				_RetrievePackedPathFromHeap(_forwardHeap2, _backwardHeap2, middle2, temporaryPackedPath2);
+//                INFO("temporaryPackedPath2 ends with " << *(temporaryPackedPath2.end()-1) );
 			}
 
 			//if one of the paths was not found, replace it with the other one.
 			if(0 == temporaryPackedPath1.size()) {
+//			    INFO("Deleting path 1");
 				temporaryPackedPath1.insert(temporaryPackedPath1.end(), temporaryPackedPath2.begin(), temporaryPackedPath2.end());
 				_localUpperbound1 = _localUpperbound2;
 			}
-			if(0 ==temporaryPackedPath2.size()) {
+			if(0 == temporaryPackedPath2.size()) {
+//			    INFO("Deleting path 2");
 				temporaryPackedPath2.insert(temporaryPackedPath2.end(), temporaryPackedPath1.begin(), temporaryPackedPath1.end());
 				_localUpperbound2 = _localUpperbound1;
 			}
@@ -234,21 +237,28 @@ public:
 
 			//Plug paths together, s.t. end of packed path is begin of temporary packed path
 			if(0 < packedPath1.size() && 0 < packedPath2.size() ) {
+//			    INFO("Both paths are non-empty");
 				if( *(temporaryPackedPath1.begin()) == *(temporaryPackedPath2.begin())) {
+//				    INFO("both paths start with the same node:" << *(temporaryPackedPath1.begin()));
 					//both new route segments start with the same node, thus one of the packedPath must go.
 					assert( (packedPath1.size() == packedPath2.size() ) || (*(packedPath1.end()-1) != *(packedPath2.end()-1)) );
 					if( *(packedPath1.end()-1) == *(temporaryPackedPath1.begin())) {
+//					    INFO("Deleting packedPath2 that ends with " << *(packedPath2.end()-1) << ", other ends with " << *(packedPath1.end()-1));
 						packedPath2.clear();
 						packedPath2.insert(packedPath2.end(), packedPath1.begin(), packedPath1.end());
 						distance2 = distance1;
+//						INFO("packedPath2 now ends with " <<  *(packedPath2.end()-1));
 					} else {
-						packedPath1.clear();
+//					    INFO("Deleting path1 that ends with " << *(packedPath1.end()-1) << ", other ends with " << *(packedPath2.end()-1));
+					    packedPath1.clear();
 						packedPath1.insert(packedPath1.end(), packedPath2.begin(), packedPath2.end());
 						distance1 = distance2;
+//					    INFO("Path1 now ends with " <<  *(packedPath1.end()-1));
 					}
 				} else  {
 					//packed paths 1 and 2 may need to switch.
 					if(*(packedPath1.end()-1) != *(temporaryPackedPath1.begin())) {
+//					    INFO("Switching");
 						packedPath1.swap(packedPath2);
 						std::swap(distance1, distance2);
 					}
@@ -328,7 +338,7 @@ public:
 			return _upperbound;
 		}
 		std::deque<NodeID> packedPath;
-		_RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, phantomNodes, middle, packedPath);
+		_RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, middle, packedPath);
 //		std::cout << "0: ";
 //		for(unsigned i = 0; i < packedPath.size(); ++i)
 //			std::cout << packedPath[i] << " ";
@@ -369,17 +379,22 @@ public:
 		return GetEscapedNameForNameID(nameID);
 	}
 private:
-	inline void _RetrievePackedPathFromHeap(HeapPtr & _fHeap, HeapPtr & _bHeap, PhantomNodes & phantomNodePair, const NodeID middle, std::deque<NodeID>& packedPath) {
+	inline void _RetrievePackedPathFromHeap(HeapPtr & _fHeap, HeapPtr & _bHeap, const NodeID middle, std::deque<NodeID>& packedPath) {
 		NodeID pathNode = middle;
-		while(phantomNodePair.startPhantom.edgeBasedNode != pathNode && (!phantomNodePair.startPhantom.isBidirected() || phantomNodePair.startPhantom.edgeBasedNode+1 != pathNode) ) {
-			pathNode = _fHeap->GetData(pathNode).parent;
-			packedPath.push_front(pathNode);
+		if(_fHeap->GetData(pathNode).parent != middle) {
+		    do {
+		        pathNode = _fHeap->GetData(pathNode).parent;
+
+		        packedPath.push_front(pathNode);
+		    }while(pathNode != _fHeap->GetData(pathNode).parent);
 		}
 		packedPath.push_back(middle);
 		pathNode = middle;
-		while(phantomNodePair.targetPhantom.edgeBasedNode != pathNode && (!phantomNodePair.targetPhantom.isBidirected() || phantomNodePair.targetPhantom.edgeBasedNode+1 != pathNode)) {
-			pathNode = _bHeap->GetData(pathNode).parent;
-			packedPath.push_back(pathNode);
+		if(_bHeap->GetData(pathNode).parent != middle) {
+		    do{
+		        pathNode = _bHeap->GetData(pathNode).parent;
+		        packedPath.push_back(pathNode);
+		    } while (pathNode != _bHeap->GetData(pathNode).parent);
 		}
 //		std::cout << "unpacking: ";
 //		for(std::deque<NodeID>::iterator it = packedPath.begin(); it != packedPath.end(); ++it)
@@ -469,13 +484,14 @@ private:
 		while(!recursionStack.empty()) {
 			edge = recursionStack.top();
 			recursionStack.pop();
-			//        	INFO("Unpacking edge (" << edge.first << "," << edge.second << ")");
+//			INFO("Unpacking edge (" << edge.first << "," << edge.second << ")");
 
 			typename GraphT::EdgeIterator smallestEdge = SPECIAL_EDGEID;
 			int smallestWeight = INT_MAX;
 			for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(edge.first);eit < _graph->EndEdges(edge.first);++eit){
 				const int weight = _graph->GetEdgeData(eit).distance;
 				if(_graph->GetTarget(eit) == edge.second && weight < smallestWeight && _graph->GetEdgeData(eit).forward){
+//				    INFO("1smallest " << eit << ", " << weight);
 					smallestEdge = eit;
 					smallestWeight = weight;
 				}
@@ -485,6 +501,7 @@ private:
 				for(typename GraphT::EdgeIterator eit = _graph->BeginEdges(edge.second);eit < _graph->EndEdges(edge.second);++eit){
 					const int weight = _graph->GetEdgeData(eit).distance;
 					if(_graph->GetTarget(eit) == edge.first && weight < smallestWeight && _graph->GetEdgeData(eit).backward){
+//	                    INFO("2smallest " << eit << ", " << weight);
 						smallestEdge = eit;
 						smallestWeight = weight;
 					}
