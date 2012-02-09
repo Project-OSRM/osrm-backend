@@ -96,9 +96,9 @@ function init(){
 	    map.addLayer(coverageLayer);
 	}
 	
-	map.addLayer(new OpenLayers.Layer.OSM.Mapnik("Mapnik"));
-	map.addLayer(new OpenLayers.Layer.OSM.MapQuest("MapQuest"));
-	map.addLayer(new OpenLayers.Layer.OSM.Osmarender("Osmarender"));
+	map.addLayer(new OpenLayers.Layer.OSM.Mapnik("Mapnik OSM"));
+	map.addLayer(new OpenLayers.Layer.OSM.MapQuest("MapQuest Open"));
+	map.addLayer(new OpenLayers.Layer.OSM.Transport("Transport Map"));
 
 	//Add layer for the route
 	vectorLayerRoute = new OpenLayers.Layer.Vector("Route",{maxResolution: 156543.0339});

@@ -57,14 +57,14 @@ OpenLayers.Layer.OSM.Mapnik = OpenLayers.Class(OpenLayers.Layer.OSM, {
 });
 
 /**
- * Class: OpenLayers.Layer.OSM.Osmarender
+ * Class: OpenLayers.Layer.OSM.Transport
  *
  * Inherits from:
  *  - <OpenLayers.Layer.OSM>
  */
-OpenLayers.Layer.OSM.Osmarender = OpenLayers.Class(OpenLayers.Layer.OSM, {
+OpenLayers.Layer.OSM.Transport = OpenLayers.Class(OpenLayers.Layer.OSM, {
     /**
-     * Constructor: OpenLayers.Layer.OSM.Osmarender
+     * Constructor: OpenLayers.Layer.OSM.Transport
      *
      * Parameters:
      * name - {String}
@@ -72,16 +72,16 @@ OpenLayers.Layer.OSM.Osmarender = OpenLayers.Class(OpenLayers.Layer.OSM, {
      */
     initialize: function(name, options) {
         var url = [
-            "http://a.tah.openstreetmap.org/Tiles/tile/${z}/${x}/${y}.png",
-            "http://b.tah.openstreetmap.org/Tiles/tile/${z}/${x}/${y}.png",
-            "http://c.tah.openstreetmap.org/Tiles/tile/${z}/${x}/${y}.png"
+            "http://a.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png",
+            "http://b.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png",
+            "http://c.tile2.opencyclemap.org/transport/${z}/${x}/${y}.png"
         ];
         options = OpenLayers.Util.extend({ numZoomLevels: 18, buffer: 0 }, options);
         var newArguments = [name, url, options];
         OpenLayers.Layer.OSM.prototype.initialize.apply(this, newArguments);
     },
 
-    CLASS_NAME: "OpenLayers.Layer.OSM.Osmarender"
+    CLASS_NAME: "OpenLayers.Layer.OSM.Transport"
 });
 
 /**
