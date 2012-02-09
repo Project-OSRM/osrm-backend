@@ -97,7 +97,7 @@ command line tool. The server responds with KML-formatted output. Assume the
 server is installed on machine localhost and a map containing the Netherlands 
 has been installed. Computing a route from Amsterdam to The Hague can be done by
 calling 
-        http://localhost:5000/route&52.370197&4.890444&52.048167&4.3175
+        http://localhost:5000/viaroute&52.370197&4.890444&52.048167&4.3175
 which gives a shortest (fastest) route between the two points. To locate a
 point in the map that is nearest to a given coordinate use the following call
         http://localhost:5000/nearest&52.048167&4.3175	
