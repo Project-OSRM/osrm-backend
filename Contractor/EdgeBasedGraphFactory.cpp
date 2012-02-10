@@ -241,7 +241,6 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.lon2 = inputNodeInfoList[w].lon;
                             currentNode.id = edgeBasedTarget;
                             currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e2).ignoreInGrid;
-                            INFO("created node #" << edgeBasedNodes.size() << " (" << v << "," << w << ")");
                             edgeBasedNodes.push_back(currentNode);
 
                         }
