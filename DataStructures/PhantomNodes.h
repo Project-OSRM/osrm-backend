@@ -24,17 +24,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "ExtractorStructs.h"
 
 struct PhantomNode {
-    PhantomNode() : edgeBasedNode(UINT_MAX), nodeBasedEdgeNameID(UINT_MAX), weight1(INT_MAX), weight2(INT_MAX) {}
+    PhantomNode() : edgeBasedNode(UINT_MAX), nodeBasedEdgeNameID(UINT_MAX), weight1(INT_MAX), weight2(INT_MAX), ratio(0.) {}
     NodeID edgeBasedNode;
     unsigned nodeBasedEdgeNameID;
     int weight1;
     int weight2;
+    double ratio;
     _Coordinate location;
     void Reset() {
         edgeBasedNode = UINT_MAX;
         nodeBasedEdgeNameID = UINT_MAX;
         weight1 = INT_MAX;
         weight2 = INT_MAX;
+        ratio = 0.;
         location.Reset();
     }
     bool isBidirected() const {

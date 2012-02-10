@@ -156,7 +156,6 @@ void EdgeBasedGraphFactory::Run() {
                 currentNode.lon2 = inputNodeInfoList[v].lon;
                 currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
                 currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
-
 //                short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
 //                short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
 //                short heightDiff = startHeight - targetHeight;
@@ -242,6 +241,7 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.lon2 = inputNodeInfoList[w].lon;
                             currentNode.id = edgeBasedTarget;
                             currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e2).ignoreInGrid;
+                            INFO("created node #" << edgeBasedNodes.size() << " (" << v << "," << w << ")");
                             edgeBasedNodes.push_back(currentNode);
 
                         }
@@ -254,7 +254,6 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.lon2 = inputNodeInfoList[v].lon;
                             currentNode.id = edgeBasedSource;
                             currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
-
 //                            short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
 //                            short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
 //                            short heightDiff = startHeight - targetHeight;

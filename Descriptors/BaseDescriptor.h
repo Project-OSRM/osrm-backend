@@ -34,24 +34,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../Plugins/RawRouteData.h"
 
-struct _RouteSummary {
-    std::string lengthString;
-    std::string durationString;
-    std::string startName;
-    std::string destName;
-    _RouteSummary() : lengthString("0"), durationString("0"), startName("unknown street"), destName("unknown street") {}
-    void BuildDurationAndLengthStrings(unsigned distance, unsigned time) {
-        //compute distance/duration for route summary
-        std::ostringstream s;
-        s << 10*(round(distance/10.));
-        lengthString = s.str();
-        int travelTime = time/10 + 1;
-        s.str("");
-        s << travelTime;
-        durationString = s.str();
-    }
-};
-
 struct _DescriptorConfig {
     _DescriptorConfig() : instructions(true), geometry(true), encodeGeometry(false), z(18) {}
     bool instructions;

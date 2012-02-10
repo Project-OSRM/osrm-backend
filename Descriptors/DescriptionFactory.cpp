@@ -65,9 +65,10 @@ void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
     pc.printUnencodedString(pathDescription, output);
 }
 
-unsigned DescriptionFactory::Run(const unsigned zoomLevel) {
+void DescriptionFactory::Run(const unsigned zoomLevel, const unsigned duration) {
+
     if(0 == pathDescription.size())
-        return 0;
+        return;
 
     unsigned entireLength = 0;
     /** starts at index 1 */
@@ -94,8 +95,24 @@ unsigned DescriptionFactory::Run(const unsigned zoomLevel) {
             indexOfSegmentBegin = i;
         }
     }
-    if(pathDescription[0].length == 0){
-        pathDescription[0].turnInstruction = 14;
+
+    //Post-processing to remove empty or nearly empty path segments
+    if(0. == startPhantom.ratio || 0 == pathDescription[0].length) {
+        pathDescription.erase(pathDescription.begin());
+        pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
+        pathDescription[0].necessary = true;
+        startPhantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
+    } else {
+        pathDescription[0].duration *= startPhantom.ratio;
+    }
+    if(1. == targetPhantom.ratio || 0 == pathDescription.back().length) {
+        pathDescription.pop_back();
+        pathDescription.back().necessary = true;
+        pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
+        targetPhantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
+//        INFO("Deleting last turn instruction");
+    } else {
+        pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
     }
 
     //Generalize poly line
@@ -109,5 +126,12 @@ unsigned DescriptionFactory::Run(const unsigned zoomLevel) {
         }
     }
 
-    return entireLength;
+    BuildRouteSummary(entireLength, duration);
+    return;
+}
+
+void DescriptionFactory::BuildRouteSummary(const unsigned distance, const unsigned time) {
+    summary.startName = startPhantom.nodeBasedEdgeNameID;
+    summary.destName = targetPhantom.nodeBasedEdgeNameID;
+    summary.BuildDurationAndLengthStrings(distance, time);
 }

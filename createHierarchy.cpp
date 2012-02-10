@@ -197,8 +197,7 @@ int main (int argc, char *argv[]) {
     }
     //Serialize numberOfNodes, nodes
     edgeOutFile.write((char*) &numberOfNodes, sizeof(unsigned));
-    edgeOutFile.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
-
+    edgeOutFile.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes+1));
 
     //Serialize number of Edges
     edgeOutFile.write((char*) &position, sizeof(unsigned));

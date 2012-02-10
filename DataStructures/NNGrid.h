@@ -148,7 +148,7 @@ public:
 #endif
     }
 
-        bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
+    bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
@@ -206,6 +206,7 @@ public:
         if(INT_MAX != resultNode.weight2) {
             resultNode.weight2 -= resultNode.weight1;
         }
+        resultNode.ratio = ratio;
         //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2);
         //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--")
         return foundNode;

@@ -28,6 +28,7 @@
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/SegmentInformation.h"
+#include "../DataStructures/TurnInstructions.h"
 
 /* This class is fed with all way segments in consecutive order
  *  and produces the description plus the encoded polyline */
@@ -36,7 +37,28 @@ class DescriptionFactory {
     DouglasPeucker<SegmentInformation> dp;
     PolylineCompressor pc;
     PhantomNode startPhantom, targetPhantom;
+
+    void BuildRouteSummary(const unsigned distance, const unsigned time);
+
 public:
+    struct _RouteSummary {
+        std::string lengthString;
+        std::string durationString;
+        unsigned startName;
+        unsigned destName;
+        _RouteSummary() : lengthString("0"), durationString("0"), startName(0), destName(0) {}
+        void BuildDurationAndLengthStrings(unsigned distance, unsigned time) {
+            //compute distance/duration for route summary
+            std::ostringstream s;
+            s << 10*(round(distance/10.));
+            lengthString = s.str();
+            int travelTime = time/10 + 1;
+            s.str("");
+            s << travelTime;
+            durationString = s.str();
+        }
+    } summary;
+
     //I know, declaring this public is considered bad. I'm lazy
     std::vector <SegmentInformation> pathDescription;
     DescriptionFactory();
@@ -48,51 +70,7 @@ public:
     void SetStartSegment(const PhantomNode & startPhantom);
     void SetEndSegment(const PhantomNode & startPhantom);
     void AppendEncodedPolylineString(std::string & output, bool isEncoded);
-    unsigned Run(const unsigned zoomLevel);
-
+    void Run(const unsigned zoomLevel, const unsigned duration);
 };
 
 #endif /* DESCRIPTIONFACTORY_H_ */
-
-//private:
-//    void appendInstructionNameToString(const std::string & nameOfStreet, const std::string & instructionOrDirection, std::string &output, bool firstAdvice = false) {
-//        output += "[";
-//        if(config.instructions) {
-//            output += "\"";
-//            if(firstAdvice) {
-//                output += "Head ";
-//            }
-//            output += instructionOrDirection;
-//            output += "\",\"";
-//            output += nameOfStreet;
-//            output += "\",";
-//        }
-//    }
-//
-//    void appendInstructionLengthToString(unsigned length, std::string &output) {
-//        if(config.instructions){
-//            std::string tmpDistance;
-//            intToString(10*(round(length/10.)), tmpDistance);
-//            output += tmpDistance;
-//            output += ",";
-//            intToString(descriptionFactory.startIndexOfGeometry, tmp);
-//            output += tmp;
-//            output += ",";
-//            intToString(descriptionFactory.durationOfInstruction, tmp);
-//            output += tmp;
-//            output += ",";
-//            output += "\"";
-//            output += tmpDistance;
-//            output += "\",";
-//            double angle = descriptionFactory.GetAngleBetweenCoordinates();
-//            DirectionOfInstruction direction;
-//            getDirectionOfInstruction(angle, direction);
-//            output += "\"";
-//            output += direction.shortDirection;
-//            output += "\",";
-//            std::stringstream numberString;
-//            numberString << fixed << setprecision(2) << angle;
-//            output += numberString.str();
-//        }
-//        output += "]";
-//    }

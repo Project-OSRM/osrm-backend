@@ -34,7 +34,6 @@ template<class SearchEngineT>
 class JSONDescriptor : public BaseDescriptor<SearchEngineT>{
 private:
 	_DescriptorConfig config;
-	_RouteSummary summary;
 	DescriptionFactory descriptionFactory;
 	_Coordinate current;
 
@@ -51,9 +50,7 @@ public:
 	void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, const unsigned durationOfTrip) {
 		WriteHeaderToOutput(reply.content);
 		if(durationOfTrip != INT_MAX) {
-			summary.startName = sEngine.GetEscapedNameForNameID(phantomNodes.startPhantom.nodeBasedEdgeNameID);
 			descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
-			summary.destName = sEngine.GetEscapedNameForNameID(phantomNodes.targetPhantom.nodeBasedEdgeNameID);
 			reply.content += "0,"
 			        "\"status_message\": \"Found route between points\",";
 
@@ -69,20 +66,20 @@ public:
 					"\"status_message\": \"Cannot find route between points\",";
 		}
 
-		summary.BuildDurationAndLengthStrings(descriptionFactory.Run(config.z), durationOfTrip);
+		descriptionFactory.Run(config.z, durationOfTrip);
 
 		reply.content += "\"route_summary\": {"
 				"\"total_distance\":";
-		reply.content += summary.lengthString;
+		reply.content += descriptionFactory.summary.lengthString;
 		reply.content += ","
 				"\"total_time\":";
-		reply.content += summary.durationString;
+		reply.content += descriptionFactory.summary.durationString;
 		reply.content += ","
 				"\"start_point\":\"";
-		reply.content += summary.startName;
+		reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.startName);
 		reply.content += "\","
 				"\"end_point\":\"";
-		reply.content += summary.destName;
+		reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
 		reply.content += "\"";
 		reply.content += "},";
 		reply.content += "\"route_geometry\": ";
@@ -135,8 +132,9 @@ public:
 						intToString(segment.duration, tmpDuration);
 						reply.content += tmpDuration;
 						reply.content += ",\"";
+						intToString(segment.length, tmpLength);
 						reply.content += tmpLength;
-						reply.content += "\",\"";
+						reply.content += "m\",\"";
 						reply.content += Azimuth::Get(segment.bearing);
 						reply.content += "\",";
 						doubleToStringWithTwoDigitsBehindComma(segment.bearing, tmpBearing);
