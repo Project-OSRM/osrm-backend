@@ -80,6 +80,7 @@ int main (int argc, char *argv[]) {
     } catch(std::exception & e) {
         ERR("Could not instantiate STXXL layer." << std::endl << e.what());
     }
+    double startupTime = get_timestamp();
 
     INFO("extracting data from input file " << argv[1]);
     bool isPBF(false);
@@ -484,9 +485,11 @@ int main (int argc, char *argv[]) {
         cerr <<  "Caught Execption:" << e.what() << endl;
         return false;
     }
-    DELETE(parser);
 
+    double endTime = (get_timestamp() - startupTime);
+    INFO("Processed " << (usedNodeCounter)/(endTime) << " nodes/sec and " << usedEdgeCounter/endTime << " edges/sec");
     stringMap.clear();
+    delete parser;
     delete extractCallBacks;
     cout << "[extractor] finished." << endl;
     return 0;

@@ -66,6 +66,7 @@ int main (int argc, char *argv[]) {
         ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions>");
     }
 
+    double startupTime = get_timestamp();
     unsigned numberOfThreads = omp_get_num_procs();
     std::string SRTM_ROOT;
     if(testDataFile("contractor.ini")) {
@@ -112,22 +113,24 @@ int main (int argc, char *argv[]) {
     char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
 
     std::vector<ImportEdge> edgeList;
-    NodeID n = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternaleNodeMapping, inputRestrictions);
+    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternaleNodeMapping, inputRestrictions);
     in.close();
     INFO("Loaded " << inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (n, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternaleNodeMapping, SRTM_ROOT);
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternaleNodeMapping, SRTM_ROOT);
     edgeList.clear();
     std::vector<ImportEdge>().swap(edgeList);
 
     edgeBasedGraphFactory->Run();
-    n = edgeBasedGraphFactory->GetNumberOfNodes();
+    NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     std::vector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
 
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
     DELETE(edgeBasedGraphFactory);
+
+    double expansionHasFinishedTime = get_timestamp() - startupTime;
 
     WritableGrid * writeableGrid = new WritableGrid();
     INFO("building grid ...");
@@ -148,7 +151,7 @@ int main (int argc, char *argv[]) {
     std::vector<_Restriction>().swap(inputRestrictions);
 
     INFO("initializing contractor");
-    Contractor* contractor = new Contractor( n, edgeBasedEdgeList );
+    Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
     double contractionStartedTimestamp(get_timestamp());
     contractor->Run();
     INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");
@@ -157,7 +160,7 @@ int main (int argc, char *argv[]) {
     contractor->GetEdges( contractedEdges );
     delete contractor;
 
-    ContractionCleanup * cleanup = new ContractionCleanup(n, contractedEdges);
+    ContractionCleanup * cleanup = new ContractionCleanup(edgeBasedNodeNumber, contractedEdges);
     contractedEdges.clear();
     std::vector<ContractionCleanup::Edge>().swap(contractedEdges);
     cleanup->Run();
@@ -203,7 +206,7 @@ int main (int argc, char *argv[]) {
     edgeOutFile.write((char*) &position, sizeof(unsigned));
 
     edge = 0;
-    int counter = 0;
+    int usedEdgeCounter = 0;
     StaticGraph<EdgeData>::_StrEdge currentEdge;
     for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
         for ( StaticGraph<EdgeData>::EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
@@ -217,10 +220,13 @@ int main (int argc, char *argv[]) {
             //Serialize edges
             edgeOutFile.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
             ++edge;
-            ++counter;
+            ++usedEdgeCounter;
         }
     }
-    INFO("Written " << counter << " edges, expected " << position);
+    double endTime = (get_timestamp() - startupTime);
+    INFO("Expansion  : " << (nodeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and "<< (edgeBasedNodeNumber/expansionHasFinishedTime) << " edges/sec");
+    INFO("Contraction: " << (edgeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and "<< usedEdgeCounter/endTime << " edges/sec");
+
     edgeOutFile.close();
     cleanedEdgeList.clear();
     _nodes.clear();
