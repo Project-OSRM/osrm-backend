@@ -129,6 +129,7 @@ end
 
 def write_osm  
   #write .oms file if needed
+  Dir.mkdir DATA_FOLDER unless File.exist? DATA_FOLDER
   @osm_file = "#{DATA_FOLDER}/#{fingerprint}"
   unless File.exist?("#{@osm_file}.osm")
     File.open( "#{@osm_file}.osm", 'w') {|f| f.write(osm_str) }

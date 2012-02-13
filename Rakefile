@@ -3,6 +3,9 @@ require 'socket'
 require 'digest/sha1'
 require 'cucumber/rake/task'
 
+SANDBOX = 'sandbox'
+DATA_FOLDER = 'osm_data'
+
 Cucumber::Rake::Task.new do |t|
   t.cucumber_opts = %w{--format pretty}
 end
@@ -53,78 +56,89 @@ end
 
 def write_server_ini osm_file
   s=<<-EOF
-Threads = 1
-IP = 0.0.0.0
-Port = 5000
+  Threads = 1
+  IP = 0.0.0.0
+  Port = 5000
 
-hsgrData=data/#{osm_file}.osrm.hsgr
-nodesData=data/#{osm_file}.osrm.nodes
-ramIndex=data/#{osm_file}.osrm.ramIndex
-fileIndex=data/#{osm_file}.osrm.fileIndex
-namesData=data/#{osm_file}.osrm.names
-EOF
+  hsgrData=#{DATA_FOLDER}/#{osm_file}.osrm.hsgr
+  nodesData=#{DATA_FOLDER}/#{osm_file}.osrm.nodes
+  ramIndex=#{DATA_FOLDER}/#{osm_file}.osrm.ramIndex
+  fileIndex=#{DATA_FOLDER}/#{osm_file}.osrm.fileIndex
+  namesData=#{DATA_FOLDER}/#{osm_file}.osrm.names
+  EOF
   File.open( 'server.ini', 'w') {|f| f.write( s ) }
 end
 
 
-desc "Rebuild and run tests"
+desc "Rebuild and run tests."
 task :default => [:build, :cucumber]
 
-desc "Build using Scons"
+desc "Build using SConsstruct."
 task :build do
   system "scons"
 end
 
-desc "Download OSM data"
-task :download do
+desc "Setup config files."
+task :setup do
+  Dir.mkdir "#{SANDBOX}/#{DATA_FOLDER}" unless File.exist? "#{SANDBOX}/#{DATA_FOLDER}"
+  ['server.ini','speedprofile.ini','extractor.ini','contractor.ini'].each do |file|
+    unless File.exist? "#{SANDBOX}/#{file}"
+      puts "Copying #{file} template to sandbox/#{file}" 
+      FileUtils.cp file, "#{SANDBOX}/#{file}"
+    end
+  end
+end
+
+desc "Download OSM data."
+task :download => :setup do
   puts "Downloading..."
-  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/osm/europe/#{osm_data_country}.osm.pbf -o sandbox/data/#{osm_data_country}.osm.pbf"
+  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/osm/europe/#{osm_data_country}.osm.pbf -o #{SANDBOX}/#{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
   if osm_data_area_bbox
     puts "Cropping and converting to protobuffer..."
-    raise "Error while cropping data." unless system "osmosis --read-pbf file=sandbox/data/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=sandbox/data/#{osm_data_area_name}.osm.pbf omitmetadata=true"
+    raise "Error while cropping data." unless system "osmosis --read-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
   end
 end
 
 desc "Crop OSM data"
 task :crop do
   if osm_data_area_bbox
-    raise "Error while cropping data." unless system "osmosis --read-pbf file=sandbox/data/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=sandbox/data/#{osm_data_area_name}.osm.pbf omitmetadata=true"
+    raise "Error while cropping data." unless system "osmosis --read-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
   end
 end
 
-desc "Reprocess OSM data"
-task :process do
-  Dir.chdir "sandbox" do
-    raise "Error while extracting data." unless system "../osrm-extract data/#{osm_data_area_name}.osm.pbf"
+desc "Reprocess OSM data."
+task :process => :setup do
+  Dir.chdir SANDBOX do
+    raise "Error while extracting data." unless system "../osrm-extract #{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf"
     puts
-    raise "Error while preparing data." unless system "../osrm-prepare data/#{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions"
+    raise "Error while preparing data." unless system "../osrm-prepare #{DATA_FOLDER}/#{osm_data_area_name}.osrm #{DATA_FOLDER}/#{osm_data_area_name}.osrm.restrictions"
     puts
   end
 end
 
-desc "Delete preprocessing files"
+desc "Delete preprocessing files."
 task :clean do
-  File.delete *Dir.glob('sandbox/data/*.osrm')
-  File.delete *Dir.glob('sandbox/data/*.osrm.*')
+  File.delete *Dir.glob("#{SANDBOX}/#{DATA_FOLDER}/*.osrm")
+  File.delete *Dir.glob("#{SANDBOX}/#{DATA_FOLDER}/*.osrm.*")
 end
 
-desc "Run all test"
+desc "Run all cucumber test"
 task :test do
   system "cucumber"
   puts
 end
 
 desc "Run the routing server in the terminal. Press Ctrl-C to stop."
-task :run do
-  Dir.chdir "sandbox" do
+task :run => :setup do
+  Dir.chdir SANDBOX do
     write_server_ini osm_data_area_name
     system "../osrm-routed"
   end
 end
 
 desc "Launch the routing server in the background. Use rake:down to stop it."
-task :up do
-  Dir.chdir "sandbox" do
+task :up => :setup do
+  Dir.chdir SANDBOX do
     abort("Already up.") if up?
     write_server_ini osm_data_area_name
     pipe = IO.popen('../osrm-routed 1>>osrm-routed.log 2>>osrm-routed.log')
@@ -147,7 +161,7 @@ task :down do
   Process.kill 'TERM', pid
 end
 
-desc "Kill the routing server(s)."
+desc "Kill all osrm-extract, osrm-prepare and osrm-routed processes."
 task :kill do
   each_process('osrm-routed') { |pid,state| Process.kill 'KILL', pid }
   each_process('osrm-prepare') { |pid,state| Process.kill 'KILL', pid }
@@ -157,7 +171,7 @@ task :kill do
   wait_for_shutdown 'osrm-extract'  
 end
 
-desc "Get PID of routing server(s)."
+desc "Get PIDs of all osrm-extract, osrm-prepare and osrm-routed processes."
 task :pid do
   each_process 'osrm-routed' do |pid,state|
     puts "#{pid}\t#{state}"

@@ -1,4 +1,4 @@
-# Test folder #
+# Test folders #
 ###################
 test/speedprofile.ini
 test/cache
@@ -8,10 +8,7 @@ test/stxxl
 
 # Sandbox folder #
 ###################
-sandbox/speedprofile.ini
-sandbox/data
-sandbox/server.ini
-sandbox/stxxl
+sandbox
 
 # Compiled source #
 ###################

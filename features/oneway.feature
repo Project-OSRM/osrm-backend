@@ -2,29 +2,12 @@
 Feature: Oneway streets
 	Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 	
-	Scenario: hmm Handle various oneway tag values
- 		Given the speedprofile "bicycle"
-	 	Then routability should be
-		 | highway       | oneway   | forw | backw |
-		 | primary       |          | x    | x     |
-		 | primary       |          | x    | x     |
-		 | primary       |          | x    | x     |
-		 | primary       |          | x    | x     |
-		 | primary       |          | x    | x     |
-		 | primary       | true     | x    |       |
-
-	Scenario: Oneway street
-		Given the nodes
-		 |  a | b | c |
-	
-		And the ways
-		 | nodes | oneway |
-		 | abc   | -1    |
-    
-		When I route I should get
-		 | from | to | route |
-		 | a    | c  |    |
-		 | c    | a  | abc      |
+	@ba
+	Scenario: Simple oneway
+	        Given the defaults
+	        Then routability should be
+	         | highway | oneway | forw | backw |
+	         | primary | yes    | x    |       |
 
 	Scenario: Around the Block
 		Given the nodes
