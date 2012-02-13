@@ -4,7 +4,6 @@ test/speedprofile.ini
 test/cache
 test/data
 test/server.ini
-test/stxxl
 
 # Sandbox folder #
 ###################
@@ -63,7 +62,7 @@ SconsBuilder*
 
 # stxxl related files #
 #######################
-.stxxl
+./.stxxl
 stxxl.log
 stxxl.errlog
 
