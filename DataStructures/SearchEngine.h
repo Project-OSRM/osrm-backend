@@ -312,15 +312,15 @@ public:
 		_forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode, -phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.edgeBasedNode);
 		//        INFO("a) forw insert " << phantomNodes.startPhantom.edgeBasedNode << ", weight: " << -phantomNodes.startPhantom.weight1);
 		if(phantomNodes.startPhantom.isBidirected() ) {
-			//            INFO("b) forw insert " << phantomNodes.startPhantom.edgeBasedNode+1 << ", weight: " << -phantomNodes.startPhantom.weight2);
+		    //		    INFO("b) forw insert " << phantomNodes.startPhantom.edgeBasedNode+1 << ", weight: " << -phantomNodes.startPhantom.weight2);
 			_forwardHeap->Insert(phantomNodes.startPhantom.edgeBasedNode+1, -phantomNodes.startPhantom.weight2, phantomNodes.startPhantom.edgeBasedNode+1);
 		}
 		//insert start and/or target node of target edge id
 		_backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode, phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.edgeBasedNode);
-		//        INFO("c) back insert " << phantomNodes.targetPhantom.edgeBasedNode << ", weight: " << phantomNodes.targetPhantom.weight1);
+		//		INFO("c) back insert " << phantomNodes.targetPhantom.edgeBasedNode << ", weight: " << phantomNodes.targetPhantom.weight1);
 		if(phantomNodes.targetPhantom.isBidirected() ) {
 			_backwardHeap->Insert(phantomNodes.targetPhantom.edgeBasedNode+1, phantomNodes.targetPhantom.weight2, phantomNodes.targetPhantom.edgeBasedNode+1);
-			//            INFO("d) back insert " << phantomNodes.targetPhantom.edgeBasedNode+1 << ", weight: " << phantomNodes.targetPhantom.weight2);
+			//			INFO("d) back insert " << phantomNodes.targetPhantom.edgeBasedNode+1 << ", weight: " << phantomNodes.targetPhantom.weight2);
 		}
 		int offset = (phantomNodes.startPhantom.isBidirected() ? std::max(phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.weight2) : phantomNodes.startPhantom.weight1) ;
 		offset += (phantomNodes.targetPhantom.isBidirected() ? std::max(phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.weight2) : phantomNodes.targetPhantom.weight1) ;
@@ -354,6 +354,7 @@ public:
 //		for(unsigned i = 0; i < packedPath.size(); ++i)
 //			std::cout << packedPath[i] << " ";
 //		std::cout << std::endl;
+
 		_UnpackPath(packedPath, path);
 		return _upperbound;
 	}
