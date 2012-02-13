@@ -7,7 +7,7 @@ Before do |scenario|
 end
 
 Around('@routing') do |scenario, block|
-  Timeout.timeout(5) do
+  Timeout.timeout(10) do
     block.call
   end
 end

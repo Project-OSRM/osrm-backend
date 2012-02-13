@@ -2,12 +2,17 @@
 Feature: Oneway streets
 	Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 	
-	@ba
 	Scenario: Simple oneway
-	        Given the defaults
-	        Then routability should be
-	         | highway | oneway | forw | backw |
-	         | primary | yes    | x    |       |
+		Given the speedprofile "car"
+		Then routability should be
+		 | highway | oneway | forw | backw |
+		 | primary | yes    | x    |       |
+
+	Scenario: Simple reverse oneway
+		Given the speedprofile "car"
+		Then routability should be
+		 | highway | oneway | forw | backw |
+		 | primary | -1     |      | x     |
 
 	Scenario: Around the Block
 		Given the nodes
@@ -43,12 +48,6 @@ Feature: Oneway streets
 		 | b    | x  |       |
 		 | b    | y  |       |
 	
-	Scenario: Simplest possible oneway
- 		Given the speedprofile "bicycle"
-	 	Then routability should be
-		 | highway | oneway | forw | backw |
-		 | primary | yes    | x    |       |
-		
 	Scenario: Handle various oneway tag values
  		Given the speedprofile "bicycle"
 	 	Then routability should be
