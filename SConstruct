@@ -95,8 +95,8 @@ if not conf.CheckHeader('omp.h'):
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
-if not conf.CheckLibWithHeader('libzip', 'zip.h', 'CXX'):
-	print "Zip library not found. Exiting"
+if not conf.CheckLibWithHeader('png', 'png.h', 'CXX'):
+	print "png library or header not found. Exiting"
 	Exit(-1)
 if not conf.CheckLibWithHeader('pthread', 'pthread.h', 'CXX'):
         print "pthread not found. Exiting"
@@ -120,8 +120,8 @@ if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
 	print "zlib library or header not found. Exiting"
 	Exit(-1)
-if not conf.CheckLibWithHeader('png', 'png.h', 'CXX'):
-	print "png library or header not found. Exiting"
+if not conf.CheckLibWithHeader('zip', 'zip.h', 'CXX'):
+	print "Zip library not found. Exiting"
 	Exit(-1)
 #Check BOOST installation
 if not (conf.CheckBoost('1.41')):
@@ -201,6 +201,6 @@ env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStruct
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp')])
 env.Append(CCFLAGS = ['-lboost_regex', '-lboost_iostreams', '-lbz2', '-lz', '-lprotobuf'])
 env.Append(LINKFLAGS = ['-lboost_system'])
-env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp'], CCFLAGS = ['-DROUTED'])
+env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc')], CCFLAGS = ['-DROUTED'])
 env = conf.Finish()
 
