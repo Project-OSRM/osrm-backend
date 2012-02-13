@@ -1,3 +1,14 @@
+# Test folders #
+###################
+test/speedprofile.ini
+test/cache
+test/data
+test/server.ini
+
+# Sandbox folder #
+###################
+sandbox
+
 # Compiled source #
 ###################
 *.com
@@ -6,6 +17,9 @@
 *.exe
 *.o
 *.so
+osrm-extract
+osrm-prepare
+osrm-routed
 
 # Packages #
 ############
@@ -48,7 +62,7 @@ SconsBuilder*
 
 # stxxl related files #
 #######################
-.stxxl
+./.stxxl
 stxxl.log
 stxxl.errlog
 
