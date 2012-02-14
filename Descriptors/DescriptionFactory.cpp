@@ -95,26 +95,31 @@ void DescriptionFactory::Run(const unsigned zoomLevel, const unsigned duration) 
             indexOfSegmentBegin = i;
         }
     }
+//    INFO("#segs: " << pathDescription.size());
 
     //Post-processing to remove empty or nearly empty path segments
-    if(0. == startPhantom.ratio || 0 == pathDescription[0].length) {
-        if(pathDescription.size() > 2)
-            pathDescription.erase(pathDescription.begin());
-        pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
-        pathDescription[0].necessary = true;
-        startPhantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
-    } else {
-        pathDescription[0].duration *= startPhantom.ratio;
-    }
-    if(1. == targetPhantom.ratio || 0 == pathDescription.back().length) {
-        if(pathDescription.size() > 2)
+    if(0 == pathDescription.back().length) {
+//        INFO("#segs: " << pathDescription.size() << ", last ratio: " << targetPhantom.ratio << ", length: " << pathDescription.back().length);
+        if(pathDescription.size() > 2){
             pathDescription.pop_back();
-        pathDescription.back().necessary = true;
-        pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
-        targetPhantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
-//        INFO("Deleting last turn instruction");
+            pathDescription.back().necessary = true;
+            pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
+            targetPhantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
+//            INFO("Deleting last turn instruction");
+        }
     } else {
         pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
+    }
+    if(0 == pathDescription[0].length) {
+        if(pathDescription.size() > 2) {
+            pathDescription.erase(pathDescription.begin());
+            pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
+            pathDescription[0].necessary = true;
+            startPhantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
+//            INFO("Deleting first turn instruction, ratio: " << startPhantom.ratio << ", length: " << pathDescription[0].length);
+        }
+    } else {
+        pathDescription[0].duration *= startPhantom.ratio;
     }
 
     //Generalize poly line
