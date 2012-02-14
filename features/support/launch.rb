@@ -1,4 +1,5 @@
 require 'socket'
+require 'sys/proctable'
 
 class OSRMLauncher
   def initialize &block
@@ -11,10 +12,11 @@ class OSRMLauncher
 end
 
 def each_process name, &block
-  process_list = `ps -o pid -o state -o ucomm`
-  process_list.scan /(\d+)\s+([^\s]*)\s+(#{name})/ do |pid,state|
-  yield pid.to_i, state.strip if ['I','R','S','T'].include? state[0]
-end
+  Sys::ProcTable.ps do |process|
+    if process.comm.strip == name.strip
+      yield process.pid.to_i, process.state.strip
+    end
+  end
 end
 
 def osrm_up?

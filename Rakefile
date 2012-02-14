@@ -2,6 +2,7 @@ require 'OSM/StreamParser'
 require 'socket'
 require 'digest/sha1'
 require 'cucumber/rake/task'
+require 'sys/proctable'
 
 SANDBOX = 'sandbox'
 DATA_FOLDER = 'osm_data'
@@ -30,10 +31,11 @@ task osm_data_area_name.to_sym {}   #define empty task to prevent rake from whin
 
 
 def each_process name, &block
-  process_list = `ps -o pid -o state -o ucomm`
-  process_list.scan /(\d+)\s+([^\s]*)\s+(#{name})/ do |pid,state|
-  yield pid.to_i, state.strip if ['I','R','S','T'].include? state[0]
-end
+  Sys::ProcTable.ps do |process|
+    if process.comm.strip == name.strip
+      yield process.pid.to_i, process.state.strip
+    end
+  end
 end
 
 def up?
