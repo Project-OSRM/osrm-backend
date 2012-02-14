@@ -71,3 +71,7 @@ win/Debug/
 win/Release/
 win/bin/
 win/bin-debug/
+/osrm-extract
+/osrm-routed
+/osrm-prepare
+/nohup.out
