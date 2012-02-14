@@ -193,9 +193,9 @@ public:
         //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
         //        }
 
-        double ratio = std::min(1., ApproximateDistance(smallestEdge.startCoord, newEndpoint)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
-
 //        INFO("startCoord: " << smallestEdge.startCoord << "; targetCoord: " << smallestEdge.targetCoord << ", newEndpoint: " << newEndpoint);
+        double ratio = (foundNode ? std::min(1., ApproximateDistance(smallestEdge.startCoord, newEndpoint)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord)) : 0);
+
 //        INFO("Length of vector: " << ApproximateDistance(smallestEdge.startCoord, newEndpoint)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
         //Hack to fix rounding errors and wandering via nodes.
         if(std::abs(location.lon - resultNode.location.lon) == 1)
