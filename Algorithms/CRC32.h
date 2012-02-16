@@ -22,6 +22,7 @@
 #define CRC32_H_
 
 #include <boost/crc.hpp>  // for boost::crc_32_type
+#include <iostream>
 
 class CRC32 {
 private:
