@@ -31,7 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class NodeInformationHelpDesk{
 public:
-	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes) : numberOfNodes(_numberOfNodes) {
+	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes, const unsigned crc) : numberOfNodes(_numberOfNodes), checkSum(crc) {
 		readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
 		coordinateVector.reserve(numberOfNodes);
 	    assert(0 == coordinateVector.size());
@@ -72,10 +72,15 @@ public:
 	    readOnlyGrid->FindNearestPointOnEdge(input, output);
 	}
 
+	inline unsigned GetCheckSum() const {
+	    return checkSum;
+	}
+
 private:
 	std::vector<_Coordinate> coordinateVector;
 	ReadOnlyGrid * readOnlyGrid;
 	unsigned numberOfNodes;
+	unsigned checkSum;
 };
 
 #endif /*NODEINFORMATIONHELPDESK_H_*/

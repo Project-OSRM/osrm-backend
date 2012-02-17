@@ -37,6 +37,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
+#include "Algorithms/CRC32.h"
 #include "Util/OpenMPReplacement.h"
 #include "typedefs.h"
 #include "Contractor/Contractor.h"
@@ -129,26 +130,31 @@ int main (int argc, char *argv[]) {
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
     DELETE(edgeBasedGraphFactory);
-
     double expansionHasFinishedTime = get_timestamp() - startupTime;
 
     WritableGrid * writeableGrid = new WritableGrid();
     INFO("building grid ...");
     writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut, fileIndexOut);
     DELETE( writeableGrid );
+    CRC32 crc32;
+    unsigned crc32OfNodeBasedEdgeList = crc32((char *)&(nodeBasedEdgeList[0]), nodeBasedEdgeList.size()*sizeof(EdgeBasedGraphFactory::EdgeBasedNode));
+//    INFO("CRC32 of data is " << crc32OfNodeBasedEdgeList);
+
     nodeBasedEdgeList.clear();
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);
 
     INFO("writing node map ...");
     std::ofstream mapOutFile(nodeOut, ios::binary);
-    BOOST_FOREACH(NodeInfo & info, internalToExternaleNodeMapping) {
-        mapOutFile.write((char *)&(info), sizeof(NodeInfo));
-    }
+    mapOutFile.write((char *)&(internalToExternaleNodeMapping[0]), internalToExternaleNodeMapping.size()*sizeof(NodeInfo));
     mapOutFile.close();
-    internalToExternaleNodeMapping.clear();
+
+
     std::vector<NodeInfo>().swap(internalToExternaleNodeMapping);
     inputRestrictions.clear();
     std::vector<_Restriction>().swap(inputRestrictions);
+
+//    unsigned crc32OfNodeBasedEdgeList = crc32((char*)&edgeBasedEdgeList[0], edgeBasedEdgeList.size());
+//    INFO("CRC32 of data is " << crc32OfNodeBasedEdgeList);
 
     INFO("initializing contractor");
     Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
@@ -199,6 +205,7 @@ int main (int argc, char *argv[]) {
         position += edge - lastEdge; //remove
     }
     //Serialize numberOfNodes, nodes
+    edgeOutFile.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
     edgeOutFile.write((char*) &numberOfNodes, sizeof(unsigned));
     edgeOutFile.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes+1));
 

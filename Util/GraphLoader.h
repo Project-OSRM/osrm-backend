@@ -361,8 +361,9 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
 }
 
 template<typename NodeT, typename EdgeT>
-unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> & edgeList) {
+unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> & edgeList, unsigned * checkSum) {
     unsigned numberOfNodes = 0;
+    in.read((char*) checkSum, sizeof(unsigned));
     in.read((char*) & numberOfNodes, sizeof(unsigned));
     nodeList.resize(numberOfNodes + 1);
     NodeT currentNode;

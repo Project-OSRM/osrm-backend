@@ -36,6 +36,7 @@ struct ObjectsForQueryStruct {
     NodeInformationHelpDesk * nodeHelpDesk;
     std::vector<std::string> * names;
     QueryGraph * graph;
+    unsigned checkSum;
 
     ObjectsForQueryStruct(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route") {
         INFO("loading graph data");
@@ -43,14 +44,15 @@ struct ObjectsForQueryStruct {
         //Deserialize road network graph
         std::vector< QueryGraph::_StrNode> nodeList;
         std::vector< QueryGraph::_StrEdge> edgeList;
-        const int n = readHSGRFromStream(hsgrInStream, nodeList, edgeList);
+        const int n = readHSGRFromStream(hsgrInStream, nodeList, edgeList, &checkSum);
+        INFO("Data checksum is " << checkSum);
         graph = new QueryGraph(nodeList, edgeList);
         assert(0 == nodeList.size());
         assert(0 == edgeList.size());
         INFO("Loading nearest neighbor indices");
         //Init nearest neighbor data structure
         std::ifstream nodesInStream(nodesPath.c_str(), ios::binary);
-        nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str(), n);
+        nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str(), n, checkSum);
         nodeHelpDesk->initNNGrid(nodesInStream);
 
         //deserialize street name list
