@@ -171,6 +171,17 @@ public:
         reply.content += "\"checksum\":";
         intToString(rawRoute.checkSum, tmp);
         reply.content += tmp;
+        reply.content += ", \"hint_array\": [";
+
+        for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
+            unsigned hint = ((rawRoute.segmentEndCoordinates[i].startPhantom.edgeBasedNode << 1) + rawRoute.segmentEndCoordinates[i].startPhantom.isBidirected());
+            intToString(hint, tmp);
+            reply.content += tmp;
+            reply.content += ", ";
+        }
+        intToString(((rawRoute.segmentEndCoordinates.back().targetPhantom.edgeBasedNode << 1)+ rawRoute.segmentEndCoordinates.back().targetPhantom.isBidirected()), tmp);
+        reply.content += tmp;
+        reply.content += "]";
         reply.content += "},";
 		reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"";
 		reply.content += "}";
