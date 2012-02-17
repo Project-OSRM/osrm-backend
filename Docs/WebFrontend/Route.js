@@ -29,7 +29,8 @@
 //======================
 // OBJECTS
 //Map
-var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-via/';
+var HOST_ROUTING_URL = 'http://141.3.24.68:5000/viaroute';
+//var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-via/';
 var HOST_WEBSITE = 'http://map.project-osrm.org/';//location.host
 
 var ISCALCULATING = false;
@@ -78,7 +79,7 @@ function routing(isDragRoute){
        document.getElementById('information').innerHTML =  '<p class="infoHL">Release mouse button to get Route Information!</p>(If no Route Summary is diplayed, press the Route!-button)';
     }
     
-    script.src = HOST_ROUTING_URL + "&start="+from.lat + ',' + from.lon + '&dest=' + to.lat + ',' + to.lon;
+    script.src = HOST_ROUTING_URL + "?start="+from.lat + ',' + from.lon + '&dest=' + to.lat + ',' + to.lon;
     for(var i = 0; i < viaPointsVector.length; i++) {
 		script.src += ('&via=' + viaPointsVector[i][0] + ',' + viaPointsVector[i][1]);
 	}
