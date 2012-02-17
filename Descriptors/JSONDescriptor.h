@@ -151,8 +151,8 @@ public:
 		reply.content += "],";
 		//list all viapoints so that the client may display it
 		reply.content += "\"via_points\":[";
+        std::string tmp;
 		if(true == config.geometry) {
-			std::string tmp;
 			for(unsigned segmentIdx = 1; segmentIdx < rawRoute.segmentEndCoordinates.size(); ++segmentIdx) {
 				if(segmentIdx > 1)
 					reply.content += ",";
@@ -166,8 +166,13 @@ public:
 				reply.content += "]";
 			}
 		}
-		reply.content += "],"
-				"\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"";
+		reply.content += "],";
+        reply.content += "\"route_data\": {";
+        reply.content += "\"checksum\":";
+        intToString(rawRoute.checkSum, tmp);
+        reply.content += tmp;
+        reply.content += "},";
+		reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"";
 		reply.content += "}";
 	}
 

@@ -94,7 +94,7 @@ public:
         _Coordinate startCoord(lat1, lon1);
         _Coordinate targetCoord(lat2, lon2);
         RawRouteData rawRoute;
-
+        rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
         if(false == checkCoord(startCoord) || false == checkCoord(targetCoord)) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
@@ -152,7 +152,7 @@ public:
         std::string JSONParameter = routeParameters.options.Find("jsonp");
         if("" != JSONParameter) {
             reply.content += JSONParameter;
-            reply.content += "(\n";
+            reply.content += "(";
         }
 
         _DescriptorConfig descriptorConfig;
