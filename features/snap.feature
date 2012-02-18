@@ -84,3 +84,25 @@ Feature: Snap start/end point to the nearest way
 		 | b    | j  | jkla  |
 		 | b    | k  | jkla  |
 		 | b    | l  | jkla  |
+
+	Scenario: Snap to correct way at large scales 
+		Given a grid size of 1000 meters
+		Given the nodes
+		 |   |   |   | a |
+		 | x |   |   | b |
+		 |   |   |   | c |
+
+		And the ways
+		 | nodes |
+		 | xa    |
+		 | xb    |
+		 | xc    |
+
+		When I route I should get
+		 | from | to | route |
+		 | x    | a  | xa    |
+		 | x    | b  | xb    |
+		 | x    | c  | xc    |
+		 | a    | x  | xa    |
+		 | b    | x  | xb    |
+		 | c    | x  | xc    |
