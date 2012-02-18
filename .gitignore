@@ -75,3 +75,7 @@ win/bin-debug/
 /osrm-routed
 /osrm-prepare
 /nohup.out
+
+# Sandbox folder #
+###################
+sandbox/
