@@ -1,7 +1,7 @@
 require 'net/http'
 
 def request_route a,b
-  @query = "http://localhost:5000/viaroute&start=#{a}&dest=#{b}&output=json&geomformat=cmp"
+  @query = "http://localhost:5000/viaroute?start=#{a}&dest=#{b}&output=json&geomformat=cmp"
   #log @query
   uri = URI.parse @query
   Net::HTTP.get_response uri
