@@ -97,22 +97,22 @@ Feature: Oneway streets
 	Scenario: Oneway:bicycle should override normal oneways tags
  		Given the speedprofile "bicycle"
 	 	Then routability should be
-		 | highway       | junction   | oneway | oneway:bicycle | forw | backw |
-		 | primary       |            |        | yes            | x    |       |
-		 | primary       |            | yes    | yes            | x    |       |
-		 | primary       |            | no     | yes            | x    |       |
-		 | primary       |            | -1     | yes            | x    |       |
-		 | primary       | roundabout |        | yes            | x    |       |
-		 | primary       |            |        | no             | x    | x     |
-		 | primary       |            | yes    | no             | x    | x     |
-		 | primary       |            | no     | no             | x    | x     |
-		 | primary       |            | -1     | no             | x    | x     |
-		 | primary       | roundabout |        | no             | x    | x     |
-		 | primary       |            |        | -1             |      | x     |
-		 | primary       |            | yes    | -1             |      | x     |
-		 | primary       |            | no     | -1             |      | x     |
-		 | primary       |            | -1     | -1             |      | x     |
-		 | primary       | roundabout |        | -1             |      | x     |
+		 | highway | oneway:bicycle | oneway | junction   | forw | backw |
+		 | primary | yes            |        |            | x    |       |
+		 | primary | yes            | yes    |            | x    |       |
+		 | primary | yes            | no     |            | x    |       |
+		 | primary | yes            | -1     |            | x    |       |
+		 | primary | yes            |        | roundabout | x    |       |
+		 | primary | no             |        |            | x    | x     |
+		 | primary | no             | yes    |            | x    | x     |
+		 | primary | no             | no     |            | x    | x     |
+		 | primary | no             | -1     |            | x    | x     |
+		 | primary | no             |        | roundabout | x    | x     |
+		 | primary | -1             |        |            |      | x     |
+		 | primary | -1             | yes    |            |      | x     |
+		 | primary | -1             | no     |            |      | x     |
+		 | primary | -1             | -1     |            |      | x     |
+		 | primary | -1             |        | roundabout |      | x     |
 	
 	@bicycle
 	Scenario: Bicycles and contra flow
