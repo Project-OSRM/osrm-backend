@@ -157,24 +157,29 @@ Then /^routability should be$/ do |table|
     table.hashes.each_with_index do |row,i|
       got = row.dup
       attempts = []
-      if table.headers.include? 'forw'
-        response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*ZOOM}","#{ORIGIN[1]},#{ORIGIN[0]+(2+WAY_SPACING*i)*ZOOM}")
-        got['forw'] = route_status response
-        if got['forw'] != row['forw']
+      row['way'] = "w#{i}"
+      got['way'] = "w#{i}"
+      ['forw','backw'].each do |direction|
+        if table.headers.include? direction
+          if direction == 'forw'
+            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(2+WAY_SPACING*i)*@zoom}")
+          elsif direction == 'backw'
+            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(2+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}")
+          end
+          got[direction] = route_status response
           json = JSON.parse(response.body)
-          attempts << { :attempt => 'Forward', :query => @query, :response => response }
+          if got[direction] == 'x'
+            route = way_list json['route_instructions']
+            if route != "w#{i}"
+              got[direction] = "#{route}?"
+            end
+          end
+          if got[direction] != row[direction]
+            attempts << { :attempt => direction, :query => @query, :response => response }
+          end
         end
       end
-      if table.headers.include? 'backw'
-        response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(2+WAY_SPACING*i)*ZOOM}","#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*ZOOM}")
-        got['backw'] = route_status response
-        if got['backw'] != row['backw']
-          attempts << { :attempt => 'Backward', :query => @query, :response => response }
-        end
-      end
-      if got != row
-        log_fail row,got,attempts
-      end
+      log_fail row,got,attempts if got != row
       actual << got
     end
   end
