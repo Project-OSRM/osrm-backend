@@ -209,9 +209,12 @@ When /^I route I should get$/ do |table|
       if table.headers.include? 'route'
         got['route'] = (instructions || '').strip
       end
-
-      if got['route'] != row['route'] || got['start'] != row['start'] || got['end'] != row['end']
-        failed = { :attempt => 'Backward', :query => @query, :response => response }
+      if table.headers.include? 'distance'
+        got['distance'] = instructions ? json['route_summary']['total_distance'].to_s : nil
+      end
+      
+      if row != got
+        failed = { :attempt => 'route', :query => @query, :response => response }
         log_fail row,got,[failed]
       end
       actual << got
