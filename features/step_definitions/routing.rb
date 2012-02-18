@@ -183,7 +183,7 @@ Then /^routability should be$/ do |table|
       actual << got
     end
   end
-  table.diff! actual
+  table.routing_diff! actual
 end
 
 When /^I route I should get$/ do |table|
@@ -225,5 +225,5 @@ When /^I route I should get$/ do |table|
       actual << got
     end
   end
-  table.diff! actual
+  table.routing_diff! actual
 end
