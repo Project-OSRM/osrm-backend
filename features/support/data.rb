@@ -56,7 +56,7 @@ def build_ways_from_table table
     tags = row.dup
     tags.delete 'forw'
     tags.delete 'backw'
-    tags['name'] = "abcd#{ri}"
+    tags['name'] = "w#{ri}"
     tags.reject! { |k,v| v=='' }
     way << tags
     osm_db << way
