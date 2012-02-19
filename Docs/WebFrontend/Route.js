@@ -139,7 +139,7 @@ function showResultsRoute(response) {
 		routelink += '\');" value="Get Link"></div>';
 
 		//Link for the GPX Download 
-		var gpxLink = '(<a href="'+HOST_ROUTING_URL+'&start='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&dest='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'&z='+this.map.getZoom();
+		var gpxLink = '(<a href="'+HOST_ROUTING_URL+'?start='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&dest='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'&z='+this.map.getZoom();
 		for(i = 0; i < viaPointsVector.length; i++) {
 				gpxLink += "&via=" + viaPointsVector[i][0] + "," + viaPointsVector[i][1];
 		}
