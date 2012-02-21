@@ -96,7 +96,8 @@ function init(){
 	    map.addLayer(coverageLayer);
 	}
 	
-	map.addLayer(new OpenLayers.Layer.OSM.Mapnik("Mapnik OSM"));
+	map.addLayer(new OpenLayers.Layer.OSM.Mapnik("OSM.org"));
+	map.addLayer(new OpenLayers.Layer.OSM.De("OSM.de"));
 	map.addLayer(new OpenLayers.Layer.OSM.MapQuest("MapQuest Open"));
 	map.addLayer(new OpenLayers.Layer.OSM.Transport("Transport Map"));
 

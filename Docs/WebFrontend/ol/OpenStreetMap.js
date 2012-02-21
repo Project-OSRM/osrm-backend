@@ -139,3 +139,31 @@ OpenLayers.Layer.OSM.MapQuest = OpenLayers.Class(OpenLayers.Layer.OSM, {
 
     CLASS_NAME: "OpenLayers.Layer.OSM.MapQuest"
 });
+
+/**
+ * Class: OpenLayers.Layer.OSM.De
+ *
+ * Inherits from:
+ *  - <OpenLayers.Layer.OSM>
+ */
+OpenLayers.Layer.OSM.De = OpenLayers.Class(OpenLayers.Layer.OSM, {
+    /**
+     * Constructor: OpenLayers.Layer.OSM.De
+     *
+     * Parameters:
+     * name - {String}
+     * options - {Object} Hashtable of extra options to tag onto the layer
+     */
+    initialize: function(name, options) {
+        var url = [
+            "http://a.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+            "http://b.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+            "http://c.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png"
+        ];
+        options = OpenLayers.Util.extend({ numZoomLevels: 19, buffer: 0 }, options);
+        var newArguments = [name, url, options];
+        OpenLayers.Layer.OSM.prototype.initialize.apply(this, newArguments);
+    },
+
+    CLASS_NAME: "OpenLayers.Layer.OSM.De"
+});
