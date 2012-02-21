@@ -31,21 +31,35 @@ end
 
 Given /^the ways$/ do |table|
   table.hashes.each do |row|
-    name = row.delete 'nodes'
-    raise "*** duplicate way '#{name}'" if name_way_hash[name]
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
-    defaults = { 'highway' => 'primary' }
-    way << defaults.merge( 'name' => name ).merge(row)
     way.uid = OSM_UID
-    name.each_char do |c|
+    
+    nodes = row.delete 'nodes'
+    raise "*** duplicate way '#{nodes}'" if name_way_hash[nodes]
+    nodes.each_char do |c|
       raise "*** node invalid name '#{c}', must be single characters" unless c.size == 1
       raise "*** ways cannot use numbered nodes, '#{name}'" unless c.match /[a-z]/
       node = find_node_by_name(c)
       raise "*** unknown node '#{c}'" unless node
       way << node
     end
+    
+    defaults = { 'highway' => 'primary' }
+    tags = defaults.merge(row)
+    
+    if row['name'] == nil
+      tags['name'] = nodes
+    elsif (row['name'] == '""') || (row['name'] == "''")
+      tags['name'] = ''
+    elsif row['name'] == ''
+      tags.delete 'name'
+    else
+      tags['name'] = row['name']
+    end
+    
+    way << tags
     osm_db << way
-    name_way_hash[name] = way
+    name_way_hash[nodes] = way
   end
 end
 
