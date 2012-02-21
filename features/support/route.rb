@@ -62,7 +62,7 @@ end
 
 def way_list instructions
   instructions.
-  #reject { |i| i[2]<=1 }.      #FIXME temporary hack to ignore instructions with length==0
   map { |r| r[1] }.
-  reject(&:empty?).join(',')
+  map { |r| r=="" ? '""' : r }.
+  join(',')
 end
