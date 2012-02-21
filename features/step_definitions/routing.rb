@@ -157,8 +157,6 @@ Then /^routability should be$/ do |table|
     table.hashes.each_with_index do |row,i|
       got = row.dup
       attempts = []
-      row['way'] = "w#{i}"
-      got['way'] = "w#{i}"
       ['forw','backw'].each do |direction|
         if table.headers.include? direction
           if direction == 'forw'
@@ -168,10 +166,13 @@ Then /^routability should be$/ do |table|
           end
           got[direction] = route_status response
           json = JSON.parse(response.body)
-          if got[direction] == 'x'
+          if got[direction].empty? == false
             route = way_list json['route_instructions']
             if route != "w#{i}"
-              got[direction] = "#{route}?"
+              got[direction] = "testing w#{i}, but got #{route}!?"
+            elsif row[direction] =~ /\d+s/
+              time = json['route_summary']['total_time']
+              got[direction] = "#{time}s"
             end
           end
           if got[direction] != row[direction]
@@ -203,7 +204,7 @@ When /^I route I should get$/ do |table|
           instructions = way_list json['route_instructions']
         end
       end
-
+      
       got = {'from' => row['from'], 'to' => row['to'] }
       if table.headers.include? 'start'
         got['start'] = instructions ? json['route_summary']['start_point'] : nil
@@ -213,15 +214,20 @@ When /^I route I should get$/ do |table|
       end
       if table.headers.include? 'route'
         got['route'] = (instructions || '').strip
-      end
-      if table.headers.include? 'distance'
-        got['distance'] = instructions ? json['route_summary']['total_distance'].to_s : nil
+        if table.headers.include? 'distance'
+          got['distance'] = instructions ? json['route_summary']['total_distance'].to_s : nil
+        end
+        if table.headers.include? 'time'
+          raise "*** time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
+          got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : nil
+        end
       end
       
       if row != got
         failed = { :attempt => 'route', :query => @query, :response => response }
         log_fail row,got,[failed]
       end
+      
       actual << got
     end
   end
