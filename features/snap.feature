@@ -61,29 +61,17 @@ Feature: Snap start/end point to the nearest way
 		 | jkla  |
 
 		When I route I should get
-		 | from | to | route |
-		 | a    | b  | abcd  |
-		 | a    | c  | abcd  |
-		 | a    | d  | abcd  |
-		 | a    | e  | abcd  |
-		 | a    | f  | abcd  |
-		 | a    | g  | abcd  |
-		 | a    | h  | jkla  |
-		 | a    | i  | jkla  |
-		 | a    | j  | jkla  |
-		 | a    | k  | jkla  |
-		 | a    | l  | jkla  |
-		 | b    | a  | abcd  |
-		 | b    | c  | abcd  |
-		 | b    | d  | abcd  |
-		 | b    | e  | abcd  |
-		 | b    | f  | abcd  |
-		 | b    | g  | abcd  |
-		 | b    | h  | jkla  |
-		 | b    | i  | jkla  |
-		 | b    | j  | jkla  |
-		 | b    | k  | jkla  |
-		 | b    | l  | jkla  |
+		 | from | to | route     |
+		 | a    | b  | abcd      |
+		 | a    | c  | abcd      |
+		 | a    | d  | abcd      |
+		 | a    | e  | abcd,defg |
+		 | a    | f  | abcd,defg |
+		 | a    | h  | jkla,ghij |
+		 | a    | i  | jkla,ghij |
+		 | a    | j  | jkla      |
+		 | a    | k  | jkla      |
+		 | a    | l  | jkla      |
 
 	Scenario: Snap to correct way at large scales 
 		Given a grid size of 1000 meters
