@@ -53,3 +53,77 @@ Feature: Handle bad data in a graceful manner
 		 | 3    | 1  |       |
 		 | 3    | 2  |       |
 
+	@bad_oneway
+	Scenario: Invalid oneway dead-ends
+		Given the nodes
+		 | a | x | b |
+
+		And the ways
+		 | nodes | oneway |
+		 | ax    | -1     |
+		 | xb    | yes    |
+
+		When I route I should get
+		 | from | to | route |
+		 | x    | a  | ax    |
+		 | x    | b  | xb    |
+
+	@bad_oneway
+	Scenario: Impossible-to-leave oneway dead-ends
+		Given the nodes
+		 |   | t |   |
+		 | a | x | b |
+		 |   | s |   |
+
+		And the ways
+		 | nodes | oneway |
+		 | ax    | -1     |
+		 | xb    | yes    |
+		 | sxt   |        |
+
+		When I route I should get
+		 | from | to | route |
+		 | x    | a  | ax    |
+		 | x    | b  | xb    |
+		 | a    | x  |       |
+		 | b    | x  |       |
+	
+	@bad_oneway
+	Scenario: Impossible-to-reach oneway dead-ends
+		Given the nodes
+		 |   | t |   |
+		 | a | x | b |
+		 |   | s |   |
+
+		And the ways
+		 | nodes | oneway |
+		 | ax    | yes    |
+		 | xb    | -1     |
+		 | sxt   |        |
+
+		When I route I should get
+		 | from | to | route |
+		 | a    | x  | ax    |
+		 | b    | b  | xb    |
+		 | x    | a  |       |
+		 | x    | b  |       |
+
+	@bad_oneway
+	Scenario: Impossible-to-leave oneway junctions
+		Given the nodes
+		 | t |   |   |
+		 | a | x | b |
+		 | s |   |   |
+
+		And the ways
+		 | nodes | oneway |
+		 | ax    | yes    |
+		 | bx    | yes    |
+		 | sat   |        |
+
+		When I route I should get
+		 | from | to | route |
+		 | a    | x  | ax    |
+		 | b    | x  | xb    |
+		 | x    | a  |       |
+		 | x    | b  |       |
