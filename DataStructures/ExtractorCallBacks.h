@@ -189,7 +189,6 @@ public:
         }
 
         if ( w.useful && w.access && (1 < w.path.size()) ) { //Only true if the way is specified by the speed profile
-            //TODO: type is not set, perhaps use a bimap'ed speed profile to do set the type correctly?
             w.type = settings.GetHighwayTypeID(highway);
             if(0 > w.type) {
                 ERR("Resolved highway " << highway << " to " << w.type);
