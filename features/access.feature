@@ -1,6 +1,6 @@
 @routing @access
-Feature: Oneway streets
-	Basic accessability of various way types.
+Feature: Default speedprofiles
+	Basic accessability of various way types depending on speedprofile.
 
 	Scenario: Basic access for cars
 	 	Given the speedprofile "car"
@@ -36,6 +36,31 @@ Feature: Oneway streets
 		 | motorway_link |      |
 		 | trunk         |      |
 		 | trunk_link    |      |
+		 | primary       | x    |
+		 | secondary     | x    |
+		 | tertiary      | x    |
+		 | residential   | x    |
+		 | service       | x    |
+		 | unclassified  | x    |
+		 | living_street | x    |
+		 | road		     | x    |
+		 | track         | x    |
+		 | path          | x    |
+		 | footway       | x    |
+		 | pedestrian    | x    |
+		 | steps         | x    |
+		 | pier          | x    |
+		 | cycleway      | x    |
+		 | bridleway     |      |
+
+	Scenario: Basic access for walking
+	 	Given the speedprofile "foot"
+	 	Then routability should be
+		 | highway       | forw |
+		 | motorway      |      |
+		 | motorway_link |      |
+		 | trunk         |      |
+		 | trunk_link    | x    |
 		 | primary       | x    |
 		 | secondary     | x    |
 		 | tertiary      | x    |
