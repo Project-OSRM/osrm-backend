@@ -4,6 +4,7 @@ Before do |scenario|
   reset_data
   @has_logged_preprocess_info = false
   @has_logged_scenario_info = false
+  set_grid_size DEFAULT_GRID_SIZE
 end
 
 Around('@routing') do |scenario, block|

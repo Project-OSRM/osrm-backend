@@ -8,6 +8,10 @@ Given /^the speedprofile settings$/ do |table|
   end
 end
 
+Given /^a grid size of (\d+) meters$/ do |meters|
+  set_grid_size meters
+end
+
 Given /^the nodes$/ do |table|
   table.raw.each_with_index do |row,ri|
     row.each_with_index do |name,ci|
@@ -15,7 +19,7 @@ Given /^the nodes$/ do |table|
         raise "*** node invalid name '#{name}', must be single characters" unless name.size == 1
         raise "*** invalid node name '#{name}', must me alphanumeric" unless name.match /[a-z0-9]/
         raise "*** duplicate node '#{name}'" if name_node_hash[name]
-        node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+ci*ZOOM, ORIGIN[1]-ri*ZOOM 
+        node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+ci*@zoom, ORIGIN[1]-ri*@zoom 
         node << { :name => name }
         node.uid = OSM_UID
         osm_db << node
