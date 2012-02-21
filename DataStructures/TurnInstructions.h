@@ -22,6 +22,9 @@
 #define TURNINSTRUCTIONS_H_
 
 #include <string>
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 //This is a hack until c++0x is available enough to use scoped enums
 struct TurnInstructionsClass {
@@ -47,21 +50,33 @@ struct TurnInstructionsClass {
 
     //This is a hack until c++0x is available enough to use initializer lists.
     TurnInstructionsClass(){
-        TurnStrings [0] = "";
-        TurnStrings [1] = "Continue";
-        TurnStrings [2] = "Turn slight right";
-        TurnStrings [3] = "Turn right";
-        TurnStrings [4] = "Turn sharp right";
-        TurnStrings [5] = "U-Turn";
-        TurnStrings [6] = "Turn sharp left";
-        TurnStrings [7] = "Turn left";
-        TurnStrings [8] = "Turn slight left";
-        TurnStrings [9] = "Reach via point";
-        TurnStrings[10] = "Head";
-        TurnStrings[11] = "Enter round-about";
-        TurnStrings[12] = "Leave round-about";
-        TurnStrings[13] = "Stay on round-about";
-        TurnStrings[14] = "Start";
+	cout << "########## Entra en TurnInstructionsClass\n";
+	// Ahora mismo la ruta estñá puesta de manera manual
+	char nameFile[] = "/home/usuario/workspace/Project-OSRM/DataStructures/languages/ES_ES.txt";
+        // Declare an input file stream
+	ifstream fread;
+	// Open a file for only read
+	fread.open(nameFile, ifstream::in);
+	// Check if there have been any error
+	if (!fread){
+		cout << "fault" << endl;
+	}
+	// Create a buffer to use for read
+	char buffer[128];
+	// Read from file to buffer
+	fread.getline(buffer, 128);
+	int i = 0;
+	while (!fread.eof()){
+		/* Write the result in an array */
+		if(i<15){
+			std::string str(buffer);
+			TurnStrings[i] = str;
+			i++;
+		}
+		/* Read the next line */
+		fread.getline(buffer, 128);
+	}
+	fread.close();
 
         Ordinals[0]     = "zeroth";
         Ordinals[1]     = "first";
