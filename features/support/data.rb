@@ -12,10 +12,13 @@ LOG_FILE = 'fail.log'
 OSM_TIMESTAMP = '2000-00-00T00:00:00Z'
 DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 10
+DEFAULT_GRID_SIZE = 100   #meters
 
 ORIGIN = [1,1]
-NODE_SPACING = 100    #meters
-ZOOM = 0.001*(NODE_SPACING.to_f/111.0)
+
+def set_grid_size meters    
+  @zoom = 0.001*(meters.to_f/111.21)
+end
 
 def build_ways_from_table table
   #add one unconnected way for each row
@@ -28,10 +31,10 @@ def build_ways_from_table table
     #instead we place all lines as a string on the same y coordinate. this prevents using neightboring ways.
     
     #a few nodes...
-    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(0+WAY_SPACING*ri)*ZOOM, ORIGIN[1] 
-    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(1+WAY_SPACING*ri)*ZOOM, ORIGIN[1] 
-    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(2+WAY_SPACING*ri)*ZOOM, ORIGIN[1] 
-    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(3+WAY_SPACING*ri)*ZOOM, ORIGIN[1] 
+    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(0+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
+    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(1+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
+    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(2+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
+    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(3+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
     node1.uid = OSM_UID
     node2.uid = OSM_UID
     node3.uid = OSM_UID
