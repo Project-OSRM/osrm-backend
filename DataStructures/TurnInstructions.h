@@ -48,18 +48,20 @@ struct TurnInstructionsClass {
     std::string TurnStrings[15];
     std::string Ordinals[11];
 
+	TurnInstructionsClass(){
+	};
+
     //This is a hack until c++0x is available enough to use initializer lists.
-    TurnInstructionsClass(){
-	cout << "########## Entra en TurnInstructionsClass\n";
+    TurnInstructionsClass(string nameFile){
 	// Ahora mismo la ruta estñá puesta de manera manual
-	char nameFile[] = "/home/usuario/workspace/Project-OSRM/DataStructures/languages/ES_ES.txt";
+	//char nameFile[] = "/home/usuario/workspace/Project-OSRM/DataStructures/languages/ES_ES.txt";
         // Declare an input file stream
 	ifstream fread;
 	// Open a file for only read
-	fread.open(nameFile, ifstream::in);
+	fread.open(nameFile.c_str(), ifstream::in);
 	// Check if there have been any error
 	if (!fread){
-		cout << "fault" << endl;
+		cout << "Fault to read: " << nameFile.c_str() << endl;
 	}
 	// Create a buffer to use for read
 	char buffer[128];

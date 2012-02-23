@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include<string>
 
 #include "../DataStructures/StaticGraph.h"
+#include "../DataStructures/TurnInstructionsList.h"
 #include "../Util/GraphLoader.h"
 
 
@@ -37,8 +38,9 @@ struct ObjectsForQueryStruct {
     std::vector<std::string> * names;
     QueryGraph * graph;
     unsigned checkSum;
+    TurnInstructionsListClass turnInstructionsList;
 
-    ObjectsForQueryStruct(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route") {
+    ObjectsForQueryStruct(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string translationsPath, std::string psd = "route") {
         INFO("loading graph data");
         std::ifstream hsgrInStream(hsgrPath.c_str(), ios::binary);
         //Deserialize road network graph
@@ -74,6 +76,8 @@ struct ObjectsForQueryStruct {
         hsgrInStream.close();
         namesInStream.close();
         INFO("All query data structures loaded");
+	INFO("Loading translations");
+	turnInstructionsList = TurnInstructionsListClass(translationsPath);
     }
 
     ~ObjectsForQueryStruct() {

@@ -38,6 +38,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/SearchEngine.h"
+#include "../DataStructures/TurnInstructions.h"
+#include "../DataStructures/TurnInstructionsList.h"
 
 #include "../Util/StringUtil.h"
 
@@ -48,6 +50,7 @@ private:
     StaticGraph<EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
     std::string pluginDescriptorString;
+    TurnInstructionsListClass til;
 
     SearchEngine<EdgeData, StaticGraph<EdgeData> > * searchEngine;
 public:
@@ -56,6 +59,8 @@ public:
         nodeHelpDesk = objects->nodeHelpDesk;
         graph = objects->graph;
         names = objects->names;
+	// Add translations
+	til = objects->turnInstructionsList;
 
         searchEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names);
 
@@ -80,6 +85,9 @@ public:
         //Get start and end Coordinate
         std::string start = routeParameters.options["start"];
         std::string dest = routeParameters.options["dest"];
+	// Add translations
+	std::string lang = routeParameters.options["lang"];
+	TurnInstructionsClass ti = til.getTurnInstructions(lang);
 
         std::vector<std::string> textCoord = split (start, ',');
 
@@ -196,7 +204,7 @@ public:
 //        INFO("Number of segments: " << rawRoute.segmentEndCoordinates.size());
         desc->SetConfig(descriptorConfig);
 
-        desc->Run(reply, rawRoute, phantomNodes, *searchEngine, distance);
+        desc->Run(reply, rawRoute, phantomNodes, *searchEngine, distance, ti);
 
         if("" != JSONParameter) {
             reply.content += ")\n";

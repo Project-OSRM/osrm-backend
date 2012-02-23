@@ -93,7 +93,9 @@ int main (int argc, char *argv[]) {
                 serverConfig.GetParameter("ramIndex"),
                 serverConfig.GetParameter("fileIndex"),
                 serverConfig.GetParameter("nodesData"),
-                serverConfig.GetParameter("namesData"));
+                serverConfig.GetParameter("namesData"),
+		// Add to translate
+		serverConfig.GetParameter("translations"));
 
         h.RegisterPlugin(new HelloWorldPlugin());
 

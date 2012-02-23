@@ -47,7 +47,7 @@ public:
 	JSONDescriptor() {}
 	void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-	void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, const unsigned durationOfTrip) {
+	void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, const unsigned durationOfTrip, TurnInstructionsClass ti) {
 		WriteHeaderToOutput(reply.content);
 		if(durationOfTrip != INT_MAX) {
 			descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
@@ -102,8 +102,8 @@ public:
 			std::string tmpDist, tmpLength, tmpDuration, tmpBearing;
 			//Fetch data from Factory and generate a string from it.
 			BOOST_FOREACH(SegmentInformation & segment, descriptionFactory.pathDescription) {
-				if(TurnInstructions.TurnIsNecessary( segment.turnInstruction) ) {
-					if(TurnInstructions.EnterRoundAbout == segment.turnInstruction) {
+				if(ti.TurnIsNecessary( segment.turnInstruction) ) {
+					if(ti.EnterRoundAbout == segment.turnInstruction) {
 						roundAbout.nameID = segment.nameID;
 						roundAbout.startIndex = prefixSumOfNecessarySegments;
 					} else {
@@ -111,14 +111,14 @@ public:
 							reply.content += ",";
 
 						reply.content += "[\"";
-						if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
-							reply.content += TurnInstructions.TurnStrings[TurnInstructions.EnterRoundAbout];
+						if(ti.LeaveRoundAbout == segment.turnInstruction) {
+							reply.content += ti.TurnStrings[ti.EnterRoundAbout];
 							reply.content += " and leave at ";
-							reply.content += TurnInstructions.Ordinals[roundAbout.leaveAtExit+1];
+							reply.content += ti.Ordinals[roundAbout.leaveAtExit+1];
 							reply.content += " exit";
 							roundAbout.leaveAtExit = 0;
 						} else {
-							reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
+							reply.content += ti.TurnStrings[segment.turnInstruction];
 						}
 						reply.content += "\",\"";
 						reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
@@ -141,7 +141,7 @@ public:
 						reply.content += tmpBearing;
 			            reply.content += "]";
 					}
-				} else if(TurnInstructions.StayOnRoundAbout == segment.turnInstruction) {
+				} else if(ti.StayOnRoundAbout == segment.turnInstruction) {
 					++roundAbout.leaveAtExit;
 				}
 				if(segment.necessary)
