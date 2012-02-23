@@ -50,8 +50,15 @@ public:
 
 	void handle_request(const Request& req, Reply& rep){
 		//parse command
-	    std::string request(req.uri);
-	    INFO( req.endpoint.to_string() << " " << request );
+        std::string request(req.uri);
+//	    time_t ltime;
+//	    struct tm *Tm;
+//
+//	    ltime=time(NULL);
+//	    Tm=localtime(&ltime);
+//
+//	    INFO( Tm->tm_mday << "-" << (Tm->tm_mon < 10 ? "0" : "" )  << Tm->tm_mon << "-" << 1900+Tm->tm_year << " " << Tm->tm_hour << ":" << Tm->tm_min << ":" << Tm->tm_sec << " " <<
+//	            req.endpoint.to_string() << " " << request );
 		std::string command;
 		std::size_t firstAmpPosition = request.find_first_of("?");
 		command = request.substr(1,firstAmpPosition-1);
