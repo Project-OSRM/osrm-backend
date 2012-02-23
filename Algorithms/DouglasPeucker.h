@@ -39,7 +39,7 @@ class DouglasPeucker {
 private:
     typedef std::pair<std::size_t, std::size_t> PairOfPoints;
     //Stack to simulate the recursion
-    SimpleStack<PairOfPoints > recursionStack;
+    std::stack<PairOfPoints > recursionStack;
 
     double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) {
         double r;
@@ -81,7 +81,7 @@ public:
             std::size_t leftBorderOfRange = 0;
             std::size_t rightBorderOfRange = 1;
             //Sweep linerarily over array and identify those ranges that need to be checked
-            recursionStack.hint(inputVector.size());
+//            recursionStack.hint(inputVector.size());
             do {
                 assert(inputVector[leftBorderOfRange].necessary);
                 assert(inputVector[inputVector.size()-1].necessary);

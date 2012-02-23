@@ -119,14 +119,12 @@ public:
         }
         rawRoute.rawViaNodeCoordinates.push_back(targetCoord);
         vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
-
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
         }
-
         unsigned distance = 0;
         //single route or via point routing
-        if(0 == routeParameters.viaPoints.size()) {
+        if(2 == rawRoute.rawViaNodeCoordinates.size()) {
             PhantomNodes segmentPhantomNodes;
             segmentPhantomNodes.startPhantom = phantomNodeVector[0];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[1];
@@ -145,7 +143,6 @@ public:
         if(INT_MAX == distance ) {
             DEBUG( "Error occurred, single path not found" );
         }
-
         reply.status = http::Reply::ok;
 
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
@@ -197,7 +194,6 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(reply, rawRoute, phantomNodes, *searchEngine, distance);
-
         if("" != JSONParameter) {
             reply.content += ")\n";
         }

@@ -62,82 +62,47 @@ public:
         //query to helpdesk
         _Coordinate result;
         nodeHelpDesk->FindNearestPointOnEdge(_Coordinate(lat, lon), result);
-        unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
-        std::stringstream out1;
-        std::stringstream out2;
+
         std::string tmp;
         std::string JSONParameter;
-        switch(descriptorType){
-        case 1:
-            //json
+        //json
 
-            JSONParameter = routeParameters.options.Find("jsonp");
-            if("" != JSONParameter) {
-                reply.content += JSONParameter;
-                reply.content += "(\n";
-            }
-
-            reply.status = http::Reply::ok;
-            reply.content += ("{");
-            reply.content += ("\"version\":0.3,");
-            reply.content += ("\"status\":0,");
-            reply.content += ("\"status_message\":");
-            out1 << setprecision(10);
-            out1 << "\"Nearest Place in map to " << lat/100000. << "," << lon/100000. << "\",";
-            reply.content.append(out1.str());
-            reply.content += ("\"coordinate\": ");
-            out2 << setprecision(10);
-            out2 << "[" << result.lat / 100000. << "," << result.lon / 100000.  << "]";
-            reply.content.append(out2.str());
-
-            reply.content += ("}");
-            reply.headers.resize(3);
-            reply.headers[0].name = "Content-Length";
-            intToString(reply.content.size(), tmp);
-            reply.headers[0].value = tmp;if("" != JSONParameter) {
-                reply.content += ")\n";
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"location.js\"";
-            } else {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"location.json\"";
-            }
-
-            break;
-        default:
-            reply.status = http::Reply::ok;
-
-            //Write to stream
-            reply.content.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            reply.content.append("<kml xmlns=\"http://www.opengis.net/kml/2.2\">");
-            reply.content.append("<Placemark>");
-
-
-            out1 << setprecision(10);
-            out1 << "<name>Nearest Place in map to " << lat/100000. << "," << lon/100000. << "</name>";
-            reply.content.append(out1.str());
-            reply.content.append("<Point>");
-
-            out2 << setprecision(10);
-            out2 << "<coordinates>" << result.lon / 100000. << "," << result.lat / 100000.  << "</coordinates>";
-            reply.content.append(out2.str());
-            reply.content.append("</Point>");
-            reply.content.append("</Placemark>");
-            reply.content.append("</kml>");
-
-            reply.headers.resize(3);
-            reply.headers[0].name = "Content-Length";
-            reply.headers[0].value = boost::lexical_cast<std::string>(reply.content.size());
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/vnd.google-earth.kml+xml";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"placemark.kml\"";
-            break;
+        JSONParameter = routeParameters.options.Find("jsonp");
+        if("" != JSONParameter) {
+            reply.content += JSONParameter;
+            reply.content += "(";
         }
+
+        reply.status = http::Reply::ok;
+        reply.content += ("{");
+        reply.content += ("\"version\":0.3,");
+        reply.content += ("\"status\":0,");
+        reply.content += ("\"result\":");
+        convertInternalLatLonToString(result.lat, tmp);
+        reply.content += "[";
+        reply.content += tmp;
+        convertInternalLatLonToString(result.lon, tmp);
+        reply.content += ", ";
+        reply.content += tmp;
+        reply.content += "]";
+        reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Nearest (v0.3)\"";
+        reply.content += ("}");
+        reply.headers.resize(3);
+        if("" != JSONParameter) {
+            reply.content += ")";
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "text/javascript";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"location.js\"";
+        } else {
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "application/x-javascript";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"location.json\"";
+        }
+        reply.headers[0].name = "Content-Length";
+        intToString(reply.content.size(), tmp);
+        reply.headers[0].value = tmp;
     }
 private:
     NodeInformationHelpDesk * nodeHelpDesk;

@@ -66,12 +66,11 @@ public:
 					"\"status_message\": \"Cannot find route between points\",";
 		}
 
-		descriptionFactory.Run(config.z, durationOfTrip);
-
+        descriptionFactory.Run(config.z, durationOfTrip);
 		reply.content += "\"route_summary\": {"
 				"\"total_distance\":";
 		reply.content += descriptionFactory.summary.lengthString;
-		reply.content += ","
+		        reply.content += ","
 				"\"total_time\":";
 		reply.content += descriptionFactory.summary.durationString;
 		reply.content += ","
@@ -107,9 +106,9 @@ public:
 						roundAbout.nameID = segment.nameID;
 						roundAbout.startIndex = prefixSumOfNecessarySegments;
 					} else {
-						if(0 != prefixSumOfNecessarySegments)
+						if(0 != prefixSumOfNecessarySegments){
 							reply.content += ",";
-
+						}
 						reply.content += "[\"";
 						if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
 							reply.content += TurnInstructions.TurnStrings[TurnInstructions.EnterRoundAbout];

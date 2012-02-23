@@ -50,7 +50,7 @@ public:
 
 	/// Start the first asynchronous operation for the connection.
 	void start() {
-		TCPsocket.async_read_some(boost::asio::buffer(incomingDataBuffer), strand.wrap( boost::bind(&Connection::handleRead, this->shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)));
+	    TCPsocket.async_read_some(boost::asio::buffer(incomingDataBuffer), strand.wrap( boost::bind(&Connection::handleRead, this->shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred)));
 	}
 
 private:
@@ -68,7 +68,7 @@ private:
 				//					std::cout << "[debug] using deflate" << std::endl;
 				//				if(compressionType == noCompression)
 				//					std::cout << "[debug] no compression" << std::endl;
-
+			    request.endpoint = TCPsocket.remote_endpoint().address();
 				requestHandler.handle_request(request, reply);
 
 				Header compressionHeader;

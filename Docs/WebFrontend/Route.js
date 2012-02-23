@@ -29,7 +29,7 @@
 //======================
 // OBJECTS
 //Map
-var HOST_ROUTING_URL = 'http://141.3.24.68:5000/viaroute';
+var HOST_ROUTING_URL = 'http://141.3.24.240:5000/viaroute';
 //var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-via/';
 var HOST_WEBSITE = 'http://map.project-osrm.org/';//location.host
 

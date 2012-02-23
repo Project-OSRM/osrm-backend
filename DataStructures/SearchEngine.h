@@ -151,19 +151,19 @@ public:
 			//run two-Target Dijkstra routing step.
 			while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
 				if(_forwardHeap->Size() > 0){
-					_RoutingStep(_forwardHeap, _backwardHeap, true, &middle1, &_localUpperbound1, 2*offset);
+					_RoutingStep<true>(_forwardHeap, _backwardHeap, &middle1, &_localUpperbound1, 2*offset);
 				}
 				if(_backwardHeap->Size() > 0){
-					_RoutingStep(_backwardHeap, _forwardHeap, false, &middle1, &_localUpperbound1, 2*offset);
+					_RoutingStep<false>(_backwardHeap, _forwardHeap, &middle1, &_localUpperbound1, 2*offset);
 				}
 			}
 			if(_backwardHeap2->Size() > 0) {
 				while(_forwardHeap2->Size() + _backwardHeap2->Size() > 0){
 					if(_forwardHeap2->Size() > 0){
-						_RoutingStep(_forwardHeap2, _backwardHeap2, true, &middle2, &_localUpperbound2, 2*offset);
+						_RoutingStep<true>(_forwardHeap2, _backwardHeap2, &middle2, &_localUpperbound2, 2*offset);
 					}
 					if(_backwardHeap2->Size() > 0){
-						_RoutingStep(_backwardHeap2, _forwardHeap2, false, &middle2, &_localUpperbound2, 2*offset);
+						_RoutingStep<false>(_backwardHeap2, _forwardHeap2, &middle2, &_localUpperbound2, 2*offset);
 					}
 				}
 			}
@@ -324,23 +324,20 @@ public:
 		}
 		int offset = (phantomNodes.startPhantom.isBidirected() ? std::max(phantomNodes.startPhantom.weight1, phantomNodes.startPhantom.weight2) : phantomNodes.startPhantom.weight1) ;
 		offset += (phantomNodes.targetPhantom.isBidirected() ? std::max(phantomNodes.targetPhantom.weight1, phantomNodes.targetPhantom.weight2) : phantomNodes.targetPhantom.weight1) ;
-
 		while(_forwardHeap->Size() + _backwardHeap->Size() > 0){
 			if(_forwardHeap->Size() > 0){
-				_RoutingStep(_forwardHeap, _backwardHeap, true, &middle, &_upperbound, 2*offset);
+				_RoutingStep<true>(_forwardHeap, _backwardHeap, &middle, &_upperbound, 2*offset);
 			}
 			if(_backwardHeap->Size() > 0){
-				_RoutingStep(_backwardHeap, _forwardHeap, false, &middle, &_upperbound, 2*offset);
+				_RoutingStep<false>(_backwardHeap, _forwardHeap, &middle, &_upperbound, 2*offset);
 			}
 		}
-
 //		INFO("dist: " << _upperbound);
 		if ( _upperbound == INT_MAX ) {
 			return _upperbound;
 		}
 		std::deque<NodeID> packedPath;
 		_RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, middle, packedPath);
-
 
 		//Setting weights to correspond with that of the actual chosen path
 		if(packedPath[0] == phantomNodes.startPhantom.edgeBasedNode && phantomNodes.startPhantom.isBidirected()) {
@@ -414,8 +411,8 @@ private:
 //		std::cout << std::endl;
 	}
 
-
-	inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const bool & forwardDirection, NodeID *middle, int *_upperbound, const int edgeBasedOffset) const {
+	template<bool forwardDirection>
+	inline void _RoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, NodeID *middle, int *_upperbound, const int edgeBasedOffset) const {
 		const NodeID node = _forwardHeap->DeleteMin();
 		const int distance = _forwardHeap->GetKey(node);
 		//        INFO((forwardDirection ? "[forw]" : "[back]") << " settled node " << node << " at distance " << distance);
@@ -485,7 +482,7 @@ private:
 
 	inline void _UnpackPath(std::deque<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
 		const unsigned sizeOfPackedPath = packedPath.size();
-		SimpleStack<std::pair<NodeID, NodeID> > recursionStack(sizeOfPackedPath);
+		std::stack<std::pair<NodeID, NodeID> > recursionStack;
 
 		//We have to push the path in reverse order onto the stack because it's LIFO.
 		for(unsigned i = sizeOfPackedPath-1; i > 0; --i){

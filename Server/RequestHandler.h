@@ -51,7 +51,7 @@ public:
 	void handle_request(const Request& req, Reply& rep){
 		//parse command
 	    std::string request(req.uri);
-//	    INFO( "[r] " << request );
+	    INFO( req.endpoint.to_string() << " " << request );
 		std::string command;
 		std::size_t firstAmpPosition = request.find_first_of("?");
 		command = request.substr(1,firstAmpPosition-1);

@@ -52,10 +52,11 @@ enum CompressionType {
 
 struct Request {
 	std::string uri;
+	boost::asio::ip::address endpoint;
 };
 
 struct Reply {
-    Reply() : status(ok) { content.reserve(1000000); }
+    Reply() : status(ok) { content.reserve(2 << 20); }
 	enum status_type {
 		ok 					= 200,
 		badRequest 		    = 400,
@@ -63,9 +64,9 @@ struct Reply {
 	} status;
 
 	std::vector<Header> headers;
-	std::string content;
     std::vector<boost::asio::const_buffer> toBuffers();
     std::vector<boost::asio::const_buffer> HeaderstoBuffers();
+	std::string content;
 	static Reply stockReply(status_type status);
 	void setSize(unsigned size) {
 	    for (std::size_t i = 0; i < headers.size(); ++i) {

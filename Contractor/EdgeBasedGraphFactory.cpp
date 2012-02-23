@@ -312,7 +312,7 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
     if( (data1.nameID == data2.nameID) && (0 != data1.nameID))
         return TurnInstructions.NoTurn;
-    if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) == 1) )
+    if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) <= 2) )
         return TurnInstructions.NoTurn;
 
     double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
