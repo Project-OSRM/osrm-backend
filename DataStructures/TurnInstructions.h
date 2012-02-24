@@ -53,8 +53,6 @@ struct TurnInstructionsClass {
 
     //This is a hack until c++0x is available enough to use initializer lists.
     TurnInstructionsClass(string nameFile){
-	// Ahora mismo la ruta estñá puesta de manera manual
-	//char nameFile[] = "/home/usuario/workspace/Project-OSRM/DataStructures/languages/ES_ES.txt";
         // Declare an input file stream
 	ifstream fread;
 	// Open a file for only read
@@ -70,27 +68,17 @@ struct TurnInstructionsClass {
 	int i = 0;
 	while (!fread.eof()){
 		/* Write the result in an array */
+		std::string str(buffer);
 		if(i<15){
-			std::string str(buffer);
-			TurnStrings[i] = str;
-			i++;
+			TurnStrings[i] = str;	
+		}else if(i>=15 && i<26){
+			Ordinals[i-15] = str;	
 		}
 		/* Read the next line */
+		i++;
 		fread.getline(buffer, 128);
 	}
 	fread.close();
-
-        Ordinals[0]     = "zeroth";
-        Ordinals[1]     = "first";
-        Ordinals[2]     = "second";
-        Ordinals[3]     = "third";
-        Ordinals[4]     = "fourth";
-        Ordinals[5]     = "fifth";
-        Ordinals[6]     = "sixth";
-        Ordinals[7]     = "seventh";
-        Ordinals[8]     = "eighth";
-        Ordinals[9]     = "nineth";
-        Ordinals[10]     = "tenth";
     };
 
     static inline double GetTurnDirectionOfInstruction( const double angle ) {
