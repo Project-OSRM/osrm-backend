@@ -157,26 +157,20 @@ public:
     }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
-        double time1 = get_timestamp();
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
-        double time2 = get_timestamp();
         boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
         for(int j = -32768; j < (32768+1); j+=32768) {
-            for(int i = -1; i < 2; i++){
+            for(int i = -1; i < 2; ++i){
                 GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
             }
         }
-        double time3 = get_timestamp();
         _GridEdge smallestEdge;
         _Coordinate tmp;
         double dist = numeric_limits<double>::max();
-        double time4 = get_timestamp();
-        INFO("candidates.size(): " << candidates.size() );
-
         double r, tmpDist;
 
         BOOST_FOREACH(_GridEdge candidate, candidates) {
@@ -201,7 +195,6 @@ public:
             }
         }
         resultNode.location.lat = round(100000.*(y2lat(static_cast<double>(resultNode.location.lat)/100000.)));
-        double time5 = get_timestamp();
 
         //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
         //        INFO("length of old edge: " << ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
@@ -229,13 +222,6 @@ public:
         resultNode.ratio = ratio;
         //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
         //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
-        double time6 = get_timestamp();
-        INFO("init1: " << (time2-time1)*1000);
-        INFO("i/os: " << (time3-time2)*1000);
-        INFO("init2: " << (time4-time3)*1000);
-        INFO("mins: " << (time5-time4)*1000);
-        INFO("rest: " << (time6-time5)*1000);
-        INFO("compl: " << (time6-time1)*1000);
         return foundNode;
     }
 
@@ -250,7 +236,7 @@ public:
         std::vector<_GridEdge> candidates;
         boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
         for(int j = -32768; j < (32768+1); j+=32768) {
-            for(int i = -1; i < 2; i++) {
+            for(int i = -1; i < 2; ++i) {
                 GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
             }
         }
@@ -274,7 +260,7 @@ public:
         std::vector<_GridEdge> candidates;
         boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
         for(int j = -32768; j < (32768+1); j+=32768) {
-            for(int i = -1; i < 2; i++) {
+            for(int i = -1; i < 2; ++i) {
                 GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
             }
         }
@@ -294,28 +280,19 @@ public:
 
 private:
     inline void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned, unsigned, IdenticalHashFunction >& cellMap){
-//        double time1 = get_timestamp();
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
         unsigned columnBase = ramIndex%1024;
         columnBase=columnBase*32;
         std::vector<std::pair<unsigned, unsigned> >insertionVector(1024);
-//        double time2 = get_timestamp();
         for (int i = 0;i < 32;++i) {
             for (int j = 0;j < 32;++j) {
                 unsigned fileIndex = lineBase + i * 32768 + columnBase + j;
                 unsigned cellIndex = i * 32 + j;
-                //                cellMap[fileIndex] = cellIndex;
                 insertionVector[i * 32 + j] = std::make_pair(fileIndex, cellIndex);
             }
         }
-//        double time3 = get_timestamp();
         cellMap.insert(insertionVector.begin(), insertionVector.end());
-//        double time4 = get_timestamp();
-
-//        INFO(" init: " << (time2-time1)*1000);
-//        INFO(" vect: " << (time3-time2)*1000);
-//        INFO(" inse: " << (time4-time3)*1000);
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) {
@@ -379,16 +356,24 @@ private:
     }
 
     unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> & tmpBuffer, const unsigned long index) {
-        tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) );
+        tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) + sizeof(unsigned) );
         unsigned counter = 0;
 
-        for(unsigned i = 0; i < vectorWithSameFileIndex.size()-1; i++) {
+        for(unsigned i = 0; i < vectorWithSameFileIndex.size()-1; ++i) {
             assert( vectorWithSameFileIndex[i].fileIndex == vectorWithSameFileIndex[i+1].fileIndex );
             assert( vectorWithSameFileIndex[i].ramIndex == vectorWithSameFileIndex[i+1].ramIndex );
         }
 
         sort( vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end() );
         vectorWithSameFileIndex.erase(unique(vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end()), vectorWithSameFileIndex.end());
+
+        //write length of bucket
+        unsigned lengthOfBucket = vectorWithSameFileIndex.size();
+        for(unsigned i = 0; i < sizeof(unsigned); ++i) {
+            tmpBuffer[index+counter] = ((char *)&lengthOfBucket)[i];
+            ++counter;
+        }
+
         BOOST_FOREACH(GridEntry entry, vectorWithSameFileIndex) {
             char * data = (char *)&(entry.edge);
             for(unsigned i = 0; i < sizeof(_GridEdge); ++i) {
@@ -396,13 +381,7 @@ private:
                 ++counter;
             }
         }
-        //Write end-of-bucket marker
-        for(unsigned i = 0; i < sizeof(END_OF_BUCKET_DELIMITER); i++) {
-            tmpBuffer[index+counter] = UCHAR_MAX;
-            counter++;
-        }
         //Freeing data
-        vectorWithSameFileIndex.clear();
         std::vector<GridEntry>().swap(vectorWithSameFileIndex);
         return counter;
     }
@@ -433,15 +412,12 @@ private:
             return;
         }
         const unsigned long position = cellIndex[cellMap[fileIndex]] + 32*32*sizeof(unsigned long) ;
-
+        unsigned lengthOfBucket;
+        unsigned currentSizeOfResult = result.size();
         localStream->seekg(position);
-        _GridEdge gridEdge;
-        do {
-            localStream->read((char *)&(gridEdge), sizeof(_GridEdge));
-            if(localStream->eof() || gridEdge.edgeBasedNode == END_OF_BUCKET_DELIMITER)
-                break;
-            result.push_back(gridEdge);
-        } while(true);
+        localStream->read((char *)&(lengthOfBucket), sizeof(unsigned));
+        result.resize(currentSizeOfResult+lengthOfBucket);
+        localStream->read((char *)&result[currentSizeOfResult], lengthOfBucket*sizeof(_GridEdge));
     }
 
     void AddEdge(_GridEdge edge) {
