@@ -216,8 +216,10 @@ protobld = Builder(action = 'protoc -I=DataStructures/pbf-proto --cpp_out=DataSt
 env.Append(BUILDERS = {'Protobuf' : protobld})
 osm1 = env.Protobuf('DataStructures/pbf-proto/fileformat.proto')
 osm2 = env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
-env.Append(CCFLAGS = ['-fopenmp'])
-env.Append(LINKFLAGS = ['-fopenmp'])
+
+if sys.platform != 'darwin':
+	env.Append(CCFLAGS = ['-fopenmp'])
+	env.Append(LINKFLAGS = ['-fopenmp'])
 
 env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStructures/pbf-proto/*.pb.cc'), Glob('Util/*.cpp')], depends=['osm1', 'osm2'])
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
