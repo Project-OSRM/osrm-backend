@@ -2,6 +2,7 @@
 
 import os
 import os.path
+import string
 import sys
 from subprocess import call
 
@@ -61,7 +62,7 @@ conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf
 
 if GetOption('cxx') is None:
     #default Compiler
-    print 'Using default C++ Compiler: ', env['CXX']
+    print 'Using default C++ Compiler: ', env['CXX'].strip() 
 else:
     env.Replace(CXX = GetOption('cxx'))
     print 'Using user supplied C++ Compiler: ', env['CXX']
@@ -74,7 +75,8 @@ else:
 if sys.platform == 'darwin':	#Mac OS X
 	#os x default installations
 	env.Append(CPPPATH = ['/usr/include/libxml2'] )		
-	env.Append(CPPPATH = ["/usr/X11/include"])			#comes with os x
+	env.Append(CPPPATH = ['/usr/X11/include'])		#comes with os x
+	env.Append(LIBPATH = ['/usr/X11/lib'])			#needed for libpng
 	
 	#assume stxxl and boost are installed via homebrew. call brew binary to get folder locations
 	import subprocess
@@ -104,7 +106,7 @@ else:
 		Exit(-1)
 
 #Check if architecture optimizations shall be turned off
-if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None:
+if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None and sys.platform != 'darwin':
 	env.Append(CCFLAGS = ['-march=native'])
 
 if not conf.CheckHeader('omp.h'):
