@@ -22,107 +22,321 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 =============================================================================*/
 
-#ifndef PNG_IMAGE_HH
-#define PNG_IMAGE_HH
+#include "PngImage.hh"
 
-#include <string>
-#include <cassert>
+#include <png.h>
 
-class PngImage
+#include <cstdio>
+#include <csetjmp>
+#include <cstring>
+
+PngImage::PngImage():
+    mImageData(0), mImageWidth(0), mImageHeight(0)
+{}
+
+PngImage::PngImage(int width, int height,
+                   unsigned char red, unsigned char green,
+                   unsigned char blue, unsigned char alpha):
+    mImageData(0), mImageWidth(0), mImageHeight(0)
 {
- public:
-    // Constructor, destructor and copying
-    // -----------------------------------
-    PngImage();
-    PngImage(int width, int height,
-             unsigned char red = 0, unsigned char green = 0,
-             unsigned char blue = 0, unsigned char alpha = 255);
-    ~PngImage();
-
-    // If there is image data, these will perform deep copying.
-    PngImage(const PngImage&);
-    PngImage& operator=(const PngImage&);
-
-    // Delete the image data, freeing the memory
-    void deleteImageData();
-
-
-    // Load image
-    // ----------
-    bool loadImage(const char* filename, bool printErrorMsg = true);
-    bool loadImage(const std::string& filename, bool printErrorMsg = true);
-
-    bool loadImageFromMemory(const unsigned char* data, unsigned dataSize);
-
-
-    // Create image (rather than loading one)
-    // --------------------------------------
-    void createImage(int width, int height,
-                     unsigned char red = 0, unsigned char green = 0,
-                     unsigned char blue = 0, unsigned char alpha = 255);
-
-
-    // Save image
-    // ----------
-    bool saveImage(const char* filename, bool printErrorMsg = true) const;
-    bool saveImage(const std::string& filename,
-                   bool printErrorMsg = true) const;
-
-
-    // Image data access
-    // -----------------
-    int width() const;
-    int height() const;
-
-    unsigned char* rawImagePtr();
-    const unsigned char* rawImagePtr() const;
-
-    void setPixel(int x, int y,
-                  unsigned char red, unsigned char green, unsigned char blue,
-                  unsigned char alpha = 255);
-
-    unsigned char getColorComponent(int x, int y, int component) const;
-
-
-    void drawImageAt(const PngImage&, int x, int y);
-
-
-
-//--------------------------------------------------------------------------
- private:
-    unsigned char* mImageData;
-    int mImageWidth, mImageHeight;
-};
-
-inline int PngImage::width() const { return mImageWidth; }
-inline int PngImage::height() const { return mImageHeight; }
-
-inline unsigned char* PngImage::rawImagePtr()
-{ return mImageData; }
-
-inline const unsigned char* PngImage::rawImagePtr() const
-{ return mImageData; }
-
-inline void PngImage::setPixel(int x, int y,
-                               unsigned char red, unsigned char green,
-                               unsigned char blue, unsigned char alpha)
-{
-    assert(x >= 0 && mImageWidth > x && y >= 0 && mImageHeight > y);
-
-    unsigned char* ptr = mImageData + 4 * (x + y*mImageWidth);
-    ptr[0] = red;
-    ptr[1] = green;
-    ptr[2] = blue;
-    ptr[3] = alpha;
+    createImage(width, height, red, green, blue, alpha);
 }
 
-inline unsigned char
-PngImage::getColorComponent(int x, int y, int component) const
+PngImage::~PngImage()
 {
-    assert(x >= 0 && mImageWidth > x && y >= 0 && mImageHeight > y);
-    assert(component >= 0 && component < 4);
-
-    return mImageData[4 * (x + y*mImageWidth) + component];
+    delete[] mImageData;
 }
 
-#endif
+PngImage::PngImage(const PngImage& rhs):
+    mImageData(0),
+    mImageWidth(rhs.mImageWidth), mImageHeight(rhs.mImageHeight)
+{
+    if(rhs.mImageData)
+    {
+        const int size = mImageWidth*mImageHeight*4;
+        mImageData = new unsigned char[size];
+        std::memcpy(mImageData, rhs.mImageData, size);
+    }
+}
+
+PngImage& PngImage::operator=(const PngImage& rhs)
+{
+    if(mImageData != rhs.mImageData)
+    {
+        delete[] mImageData;
+        mImageWidth = rhs.mImageWidth;
+        mImageHeight = rhs.mImageHeight;
+        if(rhs.mImageData)
+        {
+            const int size = mImageWidth*mImageHeight*4;
+            mImageData = new unsigned char[size];
+            std::memcpy(mImageData, rhs.mImageData, size);
+        }
+        else
+            mImageData = 0;
+    }
+    return *this;
+}
+
+void PngImage::deleteImageData()
+{
+    delete[] mImageData;
+    mImageData = 0;
+    mImageWidth = mImageHeight = 0;
+}
+
+void PngImage::createImage(int width, int height,
+                           unsigned char red, unsigned char green,
+                           unsigned char blue, unsigned char alpha)
+{
+    assert(width > 0 && height > 0);
+
+    delete[] mImageData;
+    const int size = width*height*4;
+    mImageData = new unsigned char[size];
+    mImageWidth = width;
+    mImageHeight = height;
+
+    for(int i = 0; i < size; i += 4)
+    {
+        mImageData[i] = red;
+        mImageData[i+1] = green;
+        mImageData[i+2] = blue;
+        mImageData[i+3] = alpha;
+    }
+}
+
+namespace
+{
+    struct FilePtr
+    {
+        std::FILE* fp;
+
+        FilePtr(): fp(0) {}
+        ~FilePtr() { if(fp) std::fclose(fp); }
+    };
+
+    struct PNGStructPtrs
+    {
+        png_structp read;
+        png_structp write;
+        png_infop info;
+
+        PNGStructPtrs(): read(0), write(0), info(0) {}
+
+        ~PNGStructPtrs()
+        {
+            if(read)
+            {
+                if(info) png_destroy_read_struct(&read, &info, 0);
+                else png_destroy_read_struct(&read, 0, 0);
+            }
+            else if(write)
+            {
+                if(info) png_destroy_write_struct(&write, &info);
+                else png_destroy_write_struct(&write, 0);
+            }
+        }
+    };
+
+    void readPngData(PNGStructPtrs& ptrs,
+                     unsigned char* & imageData,
+                     int& imageWidth, int& imageHeight)
+    {
+        png_read_info(ptrs.read, ptrs.info);
+		
+		imageWidth = png_get_image_width(ptrs.read, ptrs.info);
+		imageHeight = png_get_image_height(ptrs.read, ptrs.info);
+        imageData = new unsigned char[4 * imageWidth * imageHeight];
+
+        png_set_expand(ptrs.read);
+        png_set_filler(ptrs.read, 0xff, PNG_FILLER_AFTER);
+        png_set_palette_to_rgb(ptrs.read);
+        png_set_gray_to_rgb(ptrs.read);
+        png_set_strip_16(ptrs.read);
+
+        unsigned char* addr = imageData;
+        for(int i = 0; i < imageHeight; ++i)
+        {
+            png_read_rows(ptrs.read, (png_bytepp) &addr, 0, 1);
+            addr += imageWidth * 4;
+        }
+
+        png_read_end(ptrs.read, ptrs.info);
+    }
+}
+
+bool PngImage::loadImage(const char* filename, bool printErrorMsg)
+{
+    deleteImageData();
+
+    FilePtr iFile;
+    iFile.fp = std::fopen(filename, "rb");
+    if(!iFile.fp)
+    {
+        if(printErrorMsg)
+        {
+            std::fprintf(stderr, "Can't open ");
+            std::perror(filename);
+        }
+        return false;
+    }
+
+    png_byte header[8];
+    std::fread(header, 1, 8, iFile.fp);
+    if(png_sig_cmp(header, 0, 8))
+    {
+        if(printErrorMsg)
+            std::fprintf(stderr, "%s is not a PNG file.\n", filename);
+        return false;
+    }
+    std::fseek(iFile.fp, 0, SEEK_SET);
+
+    PNGStructPtrs ptrs;
+    ptrs.read = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    if(!ptrs.read)
+    {
+        if(printErrorMsg)
+            std::fprintf(stderr, "Initializing libpng failed.\n");
+        return false;
+    }
+
+    ptrs.info = png_create_info_struct(ptrs.read);
+    if(!ptrs.info)
+    {
+        if(printErrorMsg)
+            std::fprintf(stderr, "Initializing libpng failed.\n");
+        return false;
+    }
+
+    if(setjmp(png_jmpbuf(ptrs.read))) return false;
+
+    png_init_io(ptrs.read, iFile.fp);
+    readPngData(ptrs, mImageData, mImageWidth, mImageHeight);
+    return true;
+}
+
+bool PngImage::loadImage(const std::string& filename, bool printErrorMsg)
+{
+    return loadImage(filename.c_str(), printErrorMsg);
+}
+
+namespace
+{
+    const unsigned char* gPngData;
+    size_t gPngDataSize, gCurrentPngDataIndex;
+
+    void pngDataReader(png_structp png_ptr, png_bytep data,
+                       png_size_t length)
+    {
+        if(gCurrentPngDataIndex + length > gPngDataSize)
+            png_error(png_ptr, "Read error");
+        else
+        {
+            std::memcpy(data, gPngData+gCurrentPngDataIndex, length);
+            gCurrentPngDataIndex += length;
+        }
+    }
+}
+
+bool PngImage::loadImageFromMemory(const unsigned char* data, unsigned dataSize)
+{
+    deleteImageData();
+
+    gPngData = data;
+    gPngDataSize = dataSize;
+    gCurrentPngDataIndex = 0;
+
+    PNGStructPtrs ptrs;
+    ptrs.read = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    if(!ptrs.read) return false;
+
+    png_set_read_fn(ptrs.read, 0, pngDataReader);
+
+    ptrs.info = png_create_info_struct(ptrs.read);
+    if(!ptrs.info) return false;
+
+    if(setjmp(png_jmpbuf(ptrs.read))) return false;
+    readPngData(ptrs, mImageData, mImageWidth, mImageHeight);
+    return true;
+}
+
+bool PngImage::saveImage(const char* filename, bool printErrorMsg) const
+{
+    if(!mImageData) return true;
+
+    FilePtr oFile;
+    oFile.fp = std::fopen(filename, "wb");
+    if(!oFile.fp)
+    {
+        if(printErrorMsg)
+        {
+            std::fprintf(stderr, "Can't write to ");
+            std::perror(filename);
+        }
+        return false;
+    }
+
+    PNGStructPtrs ptrs;
+    ptrs.write = png_create_write_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+    if(!ptrs.write)
+    {
+        if(printErrorMsg)
+            std::fprintf(stderr, "Initializing libpng failed.\n");
+        return false;
+    }
+
+    ptrs.info = png_create_info_struct(ptrs.write);
+    if(!ptrs.info)
+    {
+        if(printErrorMsg)
+            std::fprintf(stderr, "Initializing libpng failed.\n");
+        return false;
+    }
+
+    if(setjmp(png_jmpbuf(ptrs.write))) return false;
+
+    png_init_io(ptrs.write, oFile.fp);
+
+    png_set_IHDR(ptrs.write, ptrs.info, mImageWidth, mImageHeight, 8,
+                 PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_write_info(ptrs.write, ptrs.info);
+
+    for(int i = 0; i < mImageHeight; ++i)
+        png_write_row(ptrs.write, mImageData + i*mImageWidth*4);
+
+    png_write_end(ptrs.write, 0);
+    return true;
+}
+
+bool PngImage::saveImage(const std::string& filename, bool printErrorMsg) const
+{
+    return saveImage(filename.c_str(), printErrorMsg);
+}
+
+void PngImage::drawImageAt(const PngImage& src, int x, int y)
+{
+    if(!mImageData || !src.mImageData) return;
+
+    for(int yInd = 0; yInd < src.mImageHeight; ++yInd)
+    {
+        const int destY = y + yInd;
+        if(destY >= 0 && destY < mImageHeight)
+        {
+            unsigned char* srcPtr = src.mImageData + 4*yInd*src.mImageWidth;
+            for(int xInd = 0; xInd < src.mImageWidth; ++xInd)
+            {
+                const int destX = x + xInd;
+                if(destX >= 0 && destX < mImageWidth)
+                {
+                    unsigned char* destPtr =
+                        mImageData + 4*(destX + destY*mImageWidth);
+                    for(int i = 0; i < 4; ++i)
+                        destPtr[i] = srcPtr[i];
+                }
+                srcPtr += 4;
+            }
+        }
+    }
+}
