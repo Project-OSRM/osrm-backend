@@ -99,6 +99,9 @@ elif sys.platform == 'win32':
 else:
 	print "Default platform"
 	env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
+	if not conf.CheckLibWithHeader('pthread', 'pthread.h', 'CXX'):
+		print "pthread not found. Exiting"
+		Exit(-1)
 
 #Check if architecture optimizations shall be turned off
 if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None:
