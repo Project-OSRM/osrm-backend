@@ -31,8 +31,12 @@ def bin_prepare_hash
   @bin_hash ||= hash_of_file '../osrm-prepare'
 end
 
+def bin_routed_hash
+  @bin_hash ||= hash_of_file '../osrm-routed'
+end
+
 #combine state of data, speedprofile and binaries into a hash that identifies the exact test scenario
 def fingerprint
-  @fingerprint ||= Digest::SHA1.hexdigest "#{bin_extract_hash}-#{bin_prepare_hash}-#{speedprofile_hash}-#{osm_hash}"
+  @fingerprint ||= Digest::SHA1.hexdigest "#{bin_extract_hash}-#{bin_prepare_hash}-#{bin_routed_hash}-#{speedprofile_hash}-#{osm_hash}"
 end
 
