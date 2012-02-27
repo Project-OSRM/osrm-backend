@@ -10,18 +10,18 @@ Feature: Distance calculation
 		 | h | g |
 
 		And the ways
-		 | nodes   |
-		 | abcdefg |
+		 | nodes    |
+		 | abcdefgh |
 
 		When I route I should get
-		 | from | to | route   | distance |
-		 | a    | b  | abcdefg | 10       |
-		 | a    | c  | abcdefg | 20       |
-		 | a    | d  | abcdefg | 30       |
-		 | a    | e  | abcdefg | 40       |
-		 | a    | f  | abcdefg | 50       |
-		 | a    | g  | abcdefg | 60       |
-		 | a    | h  | abcdefg | 70       |
+		 | from | to | route    | distance |
+		 | a    | b  | abcdefgh | 10       |
+		 | a    | c  | abcdefgh | 20       |
+		 | a    | d  | abcdefgh | 30       |
+		 | a    | e  | abcdefgh | 40       |
+		 | a    | f  | abcdefgh | 50       |
+		 | a    | g  | abcdefgh | 60       |
+		 | a    | h  | abcdefgh | 70       |
 		
 	Scenario: Distance of a winding east-west path
 		Given a grid size of 10 meters
@@ -30,18 +30,18 @@ Feature: Distance calculation
 		 | b | c | f | g |
 
 		And the ways
-		 | nodes   |
-		 | abcdefg |
+		 | nodes    |
+		 | abcdefgh |
 
 		When I route I should get
-		 | from | to | route   | distance |
-		 | a    | b  | abcdefg | 10       |
-		 | a    | c  | abcdefg | 20       |
-		 | a    | d  | abcdefg | 30       |
-		 | a    | e  | abcdefg | 40       |
-		 | a    | f  | abcdefg | 50       |
-		 | a    | g  | abcdefg | 60       |
-		 | a    | h  | abcdefg | 70       |
+		 | from | to | route    | distance |
+		 | a    | b  | abcdefgh | 10       |
+		 | a    | c  | abcdefgh | 20       |
+		 | a    | d  | abcdefgh | 30       |
+		 | a    | e  | abcdefgh | 40       |
+		 | a    | f  | abcdefgh | 50       |
+		 | a    | g  | abcdefgh | 60       |
+		 | a    | h  | abcdefgh | 70       |
 
 	Scenario: Distances when traversing part of a way
 		Given a grid size of 100 meters
@@ -122,27 +122,27 @@ Feature: Distance calculation
 		 | from | to | route | distance |
 		 | x    | a  | xa    | 3000     |
 		 | x    | b  | xb    | 3160     |
-		 | x    | c  | xc    | 3600     |
+		 | x    | c  | xc    | 3610     |
 		 | x    | d  | xd    | 4240     |
-		 | x    | e  | xe    | 3600     |
+		 | x    | e  | xe    | 3610     |
 		 | x    | f  | xf    | 3160     |
 		 | x    | g  | xg    | 3000     |
 		 | x    | h  | xh    | 3160     |
-		 | x    | i  | xi    | 3600     |
+		 | x    | i  | xi    | 3610     |
 		 | x    | j  | xj    | 4240     |
-		 | x    | k  | xk    | 3600     |
+		 | x    | k  | xk    | 3610     |
 		 | x    | l  | xl    | 3160     |
 		 | x    | m  | xm    | 3000     |
 		 | x    | n  | xn    | 3160     |
-		 | x    | o  | xo    | 3600     |
+		 | x    | o  | xo    | 3610     |
 		 | x    | p  | xp    | 4240     |
-		 | x    | q  | xq    | 3600     |
+		 | x    | q  | xq    | 3610     |
 		 | x    | r  | xr    | 3160     |
 		 | x    | s  | xs    | 3000     |
 		 | x    | t  | xt    | 3160     |
-		 | x    | u  | xu    | 3600     |
+		 | x    | u  | xu    | 3610     |
 		 | x    | v  | xv    | 4240     |
-		 | x    | w  | xw    | 3600     |
+		 | x    | w  | xw    | 3610     |
 		 | x    | y  | xy    | 3160     |
 
 	Scenario: 1m distances
@@ -277,3 +277,26 @@ Feature: Distance calculation
 		 | c    | b  | abc   | 1000000  |
 		 | a    | c  | abc   | 2000000  |
 		 | c    | a  | abc   | 2000000  |
+		
+	@a
+	Scenario: Angles at 1000km scale
+		Given a grid size of 1000 meters
+		Given the nodes
+		 |   |   |   | b |   |   |   |
+		 |   |   |   |   |   |   | c |
+		 | a |   |   |   |   |   |   |
+		 |   |   |   | e |   |   |   |
+		 |   |   |   |   |   |   | f |
+		 | d |   |   |   |   |   |   |
+
+		And the ways
+		 | nodes |
+		 | ba    |
+		 | bc    |
+		 | ed    |
+		 | ef    |
+
+		When I route I should get
+		 | from | to | route | distance |
+		 | b    | c  | bc    | 3160     |
+		 | e    | f  | ef    | 3160     |
