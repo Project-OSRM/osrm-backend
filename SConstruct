@@ -49,15 +49,15 @@ def CheckProtobuf(context, version):
     context.Result(ret)
     return ret
 
-
+# Adding various options to the SConstruct
 AddOption('--cxx', dest='cxx', type='string', nargs=1, action='store', metavar='STRING', help='C++ Compiler')
 AddOption('--stxxlroot', dest='stxxlroot', type='string', nargs=1, action='store', metavar='STRING', help='root directory of STXXL')
 AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
 AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
+AddOption('--no-march', dest='nomarch', type='string', nargs=0, action='store', metavar='STRING', help='turn off -march optimization in release mode')
 
 env = Environment( ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cxx'))
 conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf' : CheckProtobuf })
-
 
 if GetOption('cxx') is None:
     #default Compiler
@@ -70,7 +70,6 @@ if GetOption('buildconfiguration') == 'debug':
 	env.Append(CCFLAGS = ['-Wall', '-g3', '-rdynamic'])
 else:
 	env.Append(CCFLAGS = ['-O3', '-DNDEBUG'])
-
 
 if sys.platform == 'darwin':	#Mac OS X
 	#os x default installations
@@ -93,27 +92,29 @@ elif sys.platform.startswith("freebsd"):
 	   env.Append(CPPPATH = GetOption('stxxlroot')+'/include')
 	   env.Append(LIBPATH = GetOption('stxxlroot')+'/lib')
 	   print 'STXXLROOT = ', GetOption('stxxlroot')
-	if GetOption('buildconfiguration') != 'debug':
-		env.Append(CCFLAGS = ['-march=native'])
-	#print "Compiling with: ", env['CXX']
-	if not conf.CheckHeader('omp.h'):
-		print "Compiler does not support OpenMP. Exiting"
-		Exit(-1)
-	env.Append(CCFLAGS = ['-fopenmp'])
-	env.Append(LINKFLAGS = ['-fopenmp'])
 elif sys.platform == 'win32':
 	#SCons really wants to use Microsoft compiler
 	print "Compiling is not yet supported on Windows"
 	Exit(-1)
 else:
-	print "Unknown platform.."
+	print "Default platform"
 	env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 
+#Check if architecture optimizations shall be turned off
+if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None:
+	env.Append(CCFLAGS = ['-march=native'])
+
+if not conf.CheckHeader('omp.h'):
+	print "Compiler does not support OpenMP. Exiting"
+	Exit(-1)
 
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
-if not conf.CheckLibWithHeader('libzip', 'zip.h', 'CXX'):
+if not conf.CheckLibWithHeader('png', 'png.h', 'CXX'):
+	print "png library not found. Exiting"
+	Exit(-1)
+if not conf.CheckLibWithHeader('zip', 'zip.h', 'CXX'):
 	print "Zip library not found. Exiting"
 	Exit(-1)
 if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'):
@@ -205,25 +206,15 @@ if not conf.CheckCXXHeader('boost/tuple/tuple.hpp'):
 if not conf.CheckCXXHeader('boost/unordered_map.hpp'):
 	print "boost thread header not found. Exiting"
 	Exit(-1)
-#if os.sysconf('SC_NPROCESSORS_ONLN') > 1:
-#	env.Append(CCFLAGS = ' -D_GLIBCXX_PARALLEL');
-if not (conf.CheckBoost('1.41')):
-	print 'Boost version >= 1.41 needed'
-	Exit(-1);
-#check for protobuf 2.3.0, else rebuild proto files
-if not (conf.CheckProtobuf('2.3.0')):
-	print 'libprotobuf version >= 2.3.0 needed'
-	Exit(-1);
-if not (env.Detect('protoc')):
-	print 'protobuffer compiler not found'
-	
 
 protobld = Builder(action = 'protoc -I=DataStructures/pbf-proto --cpp_out=DataStructures/pbf-proto $SOURCE')
 env.Append(BUILDERS = {'Protobuf' : protobld})
-env.Protobuf('DataStructures/pbf-proto/fileformat.proto')
-env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
+osm1 = env.Protobuf('DataStructures/pbf-proto/fileformat.proto')
+osm2 = env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
+env.Append(CCFLAGS = ['-fopenmp'])
+env.Append(LINKFLAGS = ['-fopenmp'])
 
-env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStructures/pbf-proto/*.pb.cc'), Glob('Util/*.cpp')])
+env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStructures/pbf-proto/*.pb.cc'), Glob('Util/*.cpp')], depends=['osm1', 'osm2'])
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
 env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
 env = conf.Finish()
