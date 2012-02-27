@@ -217,6 +217,7 @@ env.Append(BUILDERS = {'Protobuf' : protobld})
 osm1 = env.Protobuf('DataStructures/pbf-proto/fileformat.proto')
 osm2 = env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
 
+#Hack to make OSRM compile on the default OS X Compiler.
 if sys.platform != 'darwin':
 	env.Append(CCFLAGS = ['-fopenmp'])
 	env.Append(LINKFLAGS = ['-fopenmp'])
