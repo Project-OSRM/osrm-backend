@@ -223,7 +223,7 @@ private:
                 keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
-            if("bollard" == keyVals.Find("barrier"))
+            if("" != keyVals.Find("barrier"))
                 n.bollard = true;
 
             if(!(*addressCallback)(n, keyVals))
