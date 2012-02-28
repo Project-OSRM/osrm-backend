@@ -226,6 +226,9 @@ private:
             if("" != keyVals.Find("barrier"))
                 n.bollard = true;
 
+            if("traffic_signals" == keyVals.Find("highway"))
+                n.trafficLight = true;
+
             if(!(*addressCallback)(n, keyVals))
                 std::cerr << "[PBFParser] adress not parsed" << std::endl;
             

@@ -261,6 +261,11 @@ private:
                                 node.bollard = true;
                             }
                         }
+                        if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
+                            if ( xmlStrEqual( value, ( const xmlChar* ) "traffic_lights" ) == 1 ){
+                                node.trafficLight = true;
+                            }
+                        }
                     }
                     if ( k != NULL )
                         xmlFree( k );
