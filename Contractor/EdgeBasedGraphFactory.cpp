@@ -24,13 +24,29 @@
 #include <algorithm>
 #endif
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 
 #include "../Util/OpenMPReplacement.h"
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, std::string & srtm)
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm)
 : inputRestrictions(irs), inputNodeInfoList(nI)/*, srtmLookup(srtm) */{
+
+    std::string usedSpeedProfile(speedProfile.get_child("").begin()->first);
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, speedProfile.get_child(usedSpeedProfile)) {
+        if("trafficSignalPenalty" ==  v.first) {
+            std::string value = v.second.get<std::string>("");
+            try {
+                trafficSignalPenalty = 10*boost::lexical_cast<int>(v.second.get<std::string>(""));
+            } catch(boost::bad_lexical_cast &) {
+                trafficSignalPenalty = 0;
+            }
+        }
+    }
+    INFO("Using traffic signal penalty: " << trafficSignalPenalty );
 
 #ifdef _GLIBCXX_PARALLEL
     __gnu_parallel::sort(inputRestrictions.begin(), inputRestrictions.end(), CmpRestrictionByFrom);
@@ -224,6 +240,10 @@ void EdgeBasedGraphFactory::Run() {
                         unsigned distance = _nodeBasedGraph->GetEdgeData(e1).distance;//(int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
                         unsigned nameID = _nodeBasedGraph->GetEdgeData(e2).nameID;
                         short turnInstruction = AnalyzeTurn(u, v, w);
+
+                        if(_trafficLights.find(v) != _trafficLights.end()) {
+                            distance += trafficSignalPenalty;
+                        }
 
                         //create edge-based graph edge
                         EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);

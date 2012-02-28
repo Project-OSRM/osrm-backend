@@ -29,6 +29,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 #include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 
 #include <fstream>
 #include <istream>
@@ -81,14 +83,6 @@ int main (int argc, char *argv[]) {
         INFO("Loading SRTM from/to " << SRTM_ROOT);
     omp_set_num_threads(numberOfThreads);
 
-    INFO("preprocessing data from input file " << argv[2] << " using STL "
-#ifdef _GLIBCXX_PARALLEL
-            "parallel (GCC)"
-#else
-            "serial"
-#endif
-            " mode");
-
     INFO("Using restrictions from file: " << argv[2]);
     std::ifstream restrictionsInstream(argv[2], ios::binary);
     _Restriction restriction;
@@ -118,7 +112,12 @@ int main (int argc, char *argv[]) {
     in.close();
     INFO("Loaded " << inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternaleNodeMapping, SRTM_ROOT);
+    if(!testDataFile("speedprofile.ini")) {
+        ERR("Need speedprofile.ini to apply traffic signal penalty");
+    }
+    boost::property_tree::ptree speedProfile;
+    boost::property_tree::ini_parser::read_ini("speedprofile.ini", speedProfile);
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternaleNodeMapping, speedProfile, SRTM_ROOT);
     edgeList.clear();
     std::vector<ImportEdge>().swap(edgeList);
 
