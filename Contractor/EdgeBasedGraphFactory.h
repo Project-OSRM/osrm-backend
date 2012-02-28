@@ -83,8 +83,8 @@ public:
 
 private:
     boost::shared_ptr<_NodeBasedDynamicGraph> _nodeBasedGraph;
-    HashTable<NodeID, bool> _bollardNodes;
-    HashTable<NodeID, bool> _trafficLights;
+    boost::unordered_map<NodeID, bool> _barrierNodes;
+    boost::unordered_map<NodeID, bool> _trafficLights;
 
     std::vector<_Restriction> & inputRestrictions;
     std::vector<NodeInfo> & inputNodeInfoList;

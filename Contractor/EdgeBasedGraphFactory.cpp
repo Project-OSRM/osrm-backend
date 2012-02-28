@@ -38,15 +38,15 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     std::sort(inputRestrictions.begin(), inputRestrictions.end(), CmpRestrictionByFrom);
 
     BOOST_FOREACH(NodeID id, bn) {
-    	_bollardNodes.Add(id, true);
+    	_barrierNodes[id] = true;
     }
 
     BOOST_FOREACH(NodeID id, tl) {
-    	_trafficLights.Add(id, true);
+    	_trafficLights[id] = true;
     }
 
-    INFO("bollards: " << _bollardNodes.Size());
-    INFO("signals: " << _trafficLights.Size());
+    INFO("bollards: " << _barrierNodes.size());
+    INFO("signals: " << _trafficLights.size());
 
 #endif
 
@@ -172,7 +172,7 @@ void EdgeBasedGraphFactory::Run() {
                 edgeBasedNodes.push_back(currentNode);
             }
 
-            if(_bollardNodes.Find(v) == true) {
+            if(_barrierNodes.find(v) != _barrierNodes.end() ) {
                 numberOfSkippedTurns += _nodeBasedGraph->EndEdges(v) - _nodeBasedGraph->BeginEdges(v);
                 continue;
             }
@@ -229,10 +229,10 @@ void EdgeBasedGraphFactory::Run() {
                         EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
 
-                        if(_bollardNodes.Find(w) == true){
-//                            INFO("[" << w << "] loc: " << inputNodeInfoList[w].lat << "," << inputNodeInfoList[w].lon << ", tgt: " << edgeBasedTarget);
+                        //Ways Ending at bollard get dead-end street treatment;
+                        if(_barrierNodes.find(w) != _barrierNodes.end()){
                             //if node v is a bollard, then we need to add e2 as target node to the new set of edgebased nodes.
-                            //Otherwise it will not be possible to route to route to this node
+                            //Otherwise it will not be possible to properly route to this node
                             EdgeBasedNode currentNode;
                             currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                             currentNode.lat1 = inputNodeInfoList[v].lat;
@@ -242,8 +242,8 @@ void EdgeBasedGraphFactory::Run() {
                             currentNode.id = edgeBasedTarget;
                             currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e2).ignoreInGrid;
                             edgeBasedNodes.push_back(currentNode);
-
                         }
+
                         if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX ) {
                             EdgeBasedNode currentNode;
                             currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
