@@ -66,7 +66,7 @@ public:
 					"\"status_message\": \"Cannot find route between points\",";
 		}
 
-        descriptionFactory.Run(config.z, durationOfTrip);
+        descriptionFactory.Run(sEngine, config.z, durationOfTrip);
 		reply.content += "\"route_summary\": {"
 				"\"total_distance\":";
 		reply.content += descriptionFactory.summary.lengthString;
