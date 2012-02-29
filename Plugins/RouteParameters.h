@@ -26,9 +26,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/HashTable.h"
 
 struct RouteParameters {
+    std::vector<unsigned> hints;
     std::vector<std::string> parameters;
-    HashTable<std::string, std::string> options;
     std::vector<std::string> viaPoints;
+    HashTable<std::string, std::string> options;
     typedef HashTable<std::string, std::string>::MyIterator OptionsIterator;
 };
 

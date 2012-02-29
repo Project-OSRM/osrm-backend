@@ -121,6 +121,7 @@ public:
         vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
+            INFO("found coord [" << i << "|" << rawRoute.rawViaNodeCoordinates.size());
         }
         unsigned distance = 0;
         //single route or via point routing

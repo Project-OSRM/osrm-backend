@@ -69,6 +69,11 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
     return out;
 }
 
+inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn){
+
+    return out;
+}
+
 struct NodesOfEdge {
     NodeID edgeBasedNode;
     double ratio;

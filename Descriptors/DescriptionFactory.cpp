@@ -100,14 +100,16 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
         if(TurnInstructionsClass::GoStraight == pathDescription[i].turnInstruction) {
             if(std::string::npos != string0.find(string1+";") ||
                     std::string::npos != string0.find(";"+string1) ||
-                    std::string::npos != string0.find(string1+" ;")) {
+                    std::string::npos != string0.find(string1+" ;") ||
+                    std::string::npos != string0.find("; "+string1)){
 //                INFO("->next correct: " << string0 << " contains " << string1);
                 for(; lastTurn != i; ++lastTurn)
                     pathDescription[lastTurn].nameID = pathDescription[i].nameID;
                 pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
             } else if(std::string::npos != string1.find(string0+";") ||
                     std::string::npos != string1.find(";"+string0) ||
-                    std::string::npos != string1.find(string0+" ;")) {
+                    std::string::npos != string1.find(string0+" ;")||
+                    std::string::npos != string1.find("; "+string0)) {
 //                INFO("->prev correct: " << string1 << " contains " << string0);
                 pathDescription[i].nameID = pathDescription[i-1].nameID;
                 pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;

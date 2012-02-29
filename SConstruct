@@ -212,6 +212,15 @@ if not conf.CheckCXXHeader('boost/unordered_map.hpp'):
 	print "boost thread header not found. Exiting"
 	Exit(-1)
 
+#checks for intels thread building blocks library
+if not conf.CheckLibWithHeader('tbb', 'tbb/tbb.h', 'CXX'):
+	print "Intel TBB library not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('tbb/task_scheduler_init.h'):
+	print "tbb/task_scheduler_init.h not found. Exiting"
+	Exit(-1)
+
+
 protobld = Builder(action = 'protoc -I=DataStructures/pbf-proto --cpp_out=DataStructures/pbf-proto $SOURCE')
 env.Append(BUILDERS = {'Protobuf' : protobld})
 osm1 = env.Protobuf('DataStructures/pbf-proto/fileformat.proto')

@@ -83,6 +83,15 @@ public:
 				            if(25 >= routeParameters.viaPoints.size()) {
 				                routeParameters.viaPoints.push_back(o);
 				            }
+				        } else if("hint" == p) {
+				            routeParameters.hints.resize(routeParameters.viaPoints.size(), 0);
+				            if(routeParameters.hints.size()) {
+				                unsigned hint = 0;
+				                try {
+				                    hint = 10*boost::lexical_cast<int>(o);
+				                } catch(boost::bad_lexical_cast &) { /* do nothing since hint is initialized to 0 */}
+				                routeParameters.hints.back() = hint;
+				            }
 				        } else {
 				            routeParameters.options.Set(p, o);
 				        }
