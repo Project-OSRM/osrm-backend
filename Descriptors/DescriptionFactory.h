@@ -27,6 +27,7 @@
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/SearchEngine.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 
@@ -39,7 +40,7 @@ class DescriptionFactory {
     PhantomNode startPhantom, targetPhantom;
 
     void BuildRouteSummary(const unsigned distance, const unsigned time);
-
+    typedef SearchEngine<ContractionCleanup::Edge::EdgeData, StaticGraph<ContractionCleanup::Edge::EdgeData> > SearchEngineT;
 public:
     struct _RouteSummary {
         std::string lengthString;
@@ -70,7 +71,7 @@ public:
     void SetStartSegment(const PhantomNode & startPhantom);
     void SetEndSegment(const PhantomNode & startPhantom);
     void AppendEncodedPolylineString(std::string & output, bool isEncoded);
-    void Run(const unsigned zoomLevel, const unsigned duration);
+    void Run(const SearchEngineT &sEngine, const unsigned zoomLevel, const unsigned duration);
 };
 
 #endif /* DESCRIPTIONFACTORY_H_ */
