@@ -93,16 +93,25 @@ private:
     boost::unordered_map<NodeID, bool>          _barrierNodes;
     boost::unordered_map<NodeID, bool>          _trafficLights;
 
-    std::vector<_Restriction> & inputRestrictions;
-    std::vector<NodeInfo> &     inputNodeInfoList;
+    typedef std::pair<NodeID, NodeID> RestrictionSource;
+    typedef std::pair<NodeID, bool>   RestrictionTarget;
+    typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
+    typedef boost::unordered_map<RestrictionSource, unsigned > RestrictionMap;
+    std::vector<EmanatingRestrictionsVector> _restrictionBucketVector;
+    RestrictionMap _restrictionMap;
+
+    std::vector<NodeInfo>       inputNodeInfoList;
     int trafficSignalPenalty;
 
     std::vector<EdgeBasedEdge> edgeBasedEdges;
     std::vector<EdgeBasedNode> edgeBasedNodes;
 
+    NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
+    bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 //    SRTMLookup srtmLookup;
+    unsigned numberOfTurnRestrictions;
 
 public:
     template< class InputEdgeT >
