@@ -168,7 +168,8 @@ struct _Restriction {
     NodeID viaNode;
     NodeID fromNode;
     NodeID toNode;
-    struct bits { //mostly unused
+    struct Bits { //mostly unused
+        Bits() : isOnly(false), unused1(false), unused2(false), unused3(false), unused4(false), unused5(false), unused6(false), unused7(false) {}
         char isOnly:1;
         char unused1:1;
         char unused2:1;
