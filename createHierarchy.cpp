@@ -85,6 +85,9 @@ int main (int argc, char *argv[]) {
 
     INFO("Using restrictions from file: " << argv[2]);
     std::ifstream restrictionsInstream(argv[2], ios::binary);
+    if(!restrictionsInstream.good()) {
+        ERR("Could not access <osrm-restrictions> files");
+    }
     _Restriction restriction;
     unsigned usableRestrictionsCounter(0);
     restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
