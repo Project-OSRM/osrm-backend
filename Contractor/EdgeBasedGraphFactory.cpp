@@ -69,7 +69,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     BOOST_FOREACH(NodeID id, tl)
         _trafficLights[id] = true;
 
-    std::vector< _NodeBasedEdge > edges( 2 * inputEdges.size() );
+    std::vector< _NodeBasedEdge > edges;
+    edges.reserve( 2 * inputEdges.size() );
     for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
         _NodeBasedEdge edge;
         edge.source = i->source();
