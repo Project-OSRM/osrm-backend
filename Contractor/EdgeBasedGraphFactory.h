@@ -56,7 +56,7 @@ private:
         bool roundabout:1;
         bool ignoreInGrid:1;
         short type;
-    } data;
+    };
 
     struct _EdgeBasedEdgeData {
         int distance;
@@ -84,8 +84,8 @@ public:
         int lon2;
         NodeID id;
         NodeID nameID;
-        unsigned weight;
-        bool ignoreInGrid;
+        unsigned weight:31;
+        bool ignoreInGrid:1;
     };
 
 private:
@@ -100,11 +100,11 @@ private:
     std::vector<EmanatingRestrictionsVector> _restrictionBucketVector;
     RestrictionMap _restrictionMap;
 
-    std::vector<NodeInfo>       inputNodeInfoList;
     int trafficSignalPenalty;
 
     std::vector<EdgeBasedEdge> edgeBasedEdges;
     std::vector<EdgeBasedNode> edgeBasedNodes;
+    std::vector<NodeInfo>       inputNodeInfoList;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
@@ -116,7 +116,6 @@ private:
 public:
     template< class InputEdgeT >
     explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm);
-    virtual ~EdgeBasedGraphFactory();
 
     void Run();
     template< class ImportEdgeT >

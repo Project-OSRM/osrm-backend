@@ -64,22 +64,12 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         }
     }
 
-    //    std::sort(inputRestrictions.begin(), inputRestrictions.end(), CmpRestrictionByFrom);
-
-    BOOST_FOREACH(NodeID id, bn) {
+    BOOST_FOREACH(NodeID id, bn)
         _barrierNodes[id] = true;
-    }
-
-    BOOST_FOREACH(NodeID id, tl) {
+    BOOST_FOREACH(NodeID id, tl)
         _trafficLights[id] = true;
-    }
 
-    //    INFO("bollards: " << _barrierNodes.size());
-    //    INFO("signals: " << _trafficLights.size());
-    //    INFO("Using traffic signal penalty: " << trafficSignalPenalty );
-
-    std::vector< _NodeBasedEdge > edges;
-    edges.reserve( 2 * inputEdges.size() );
+    std::vector< _NodeBasedEdge > edges( 2 * inputEdges.size() );
     for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
         _NodeBasedEdge edge;
         edge.source = i->source();
@@ -125,13 +115,10 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& out
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes) {
     BOOST_FOREACH(EdgeBasedNode & node, edgeBasedNodes){
-        assert(node.lat1 != INT_MAX);
-        assert(node.lat2 != INT_MAX);
-        assert(node.lon1 != INT_MAX);
-        assert(node.lon2 != INT_MAX);
-
-        nodes.push_back(node);
+        assert(node.lat1 != INT_MAX); assert(node.lon1 != INT_MAX);
+        assert(node.lat2 != INT_MAX); assert(node.lon2 != INT_MAX);
     }
+    nodes.swap(edgeBasedNodes);
 }
 
 NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const {
@@ -139,10 +126,9 @@ NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const 
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);
     if (restrIter != _restrictionMap.end()) {
         unsigned index = restrIter->second;
-        BOOST_FOREACH    (RestrictionSource restrictionTarget, _restrictionBucketVector.at(index)) {
+        BOOST_FOREACH(RestrictionSource restrictionTarget, _restrictionBucketVector.at(index)) {
             if(restrictionTarget.second) {
                 return restrictionTarget.first;
-                break;
             }
         }
     }
@@ -156,32 +142,26 @@ bool EdgeBasedGraphFactory::CheckIfTurnIsRestricted(const NodeID u, const NodeID
     if (restrIter != _restrictionMap.end()) {
         unsigned index = restrIter->second;
         BOOST_FOREACH(RestrictionTarget restrictionTarget, _restrictionBucketVector.at(index)) {
-            if(w == restrictionTarget.first) {
+            if(w == restrictionTarget.first)
                 return true;
-            }
         }
     }
     return false;
 }
 
 void EdgeBasedGraphFactory::Run() {
-    INFO("Generating Edge based representation of input data");
-
-    //    std::vector<_Restriction>::iterator restrictionIterator = inputRestrictions.begin();
+    INFO("Generating edge based representation of input data");
+    edgeBasedNodes.reserve(_nodeBasedGraph->GetNumberOfEdges());
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfSkippedTurns(0);
     int nodeBasedEdgeCounter(0);
 
-    //Loop over all nodes u. Three nested loop look super-linear, but we are dealing with a linear number of turns only.
+    //loop over all edges and generate new set of nodes.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
         for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
-            ++nodeBasedEdgeCounter;
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
 
-            NodeID onlyToNode = CheckForEmanatingIsOnlyTurn(u, v);
-            if (_nodeBasedGraph->EndEdges(v)
-                    == _nodeBasedGraph->BeginEdges(v) + 1
-                    && _nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX) {
+            if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX) {
                 EdgeBasedNode currentNode;
                 currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
                 currentNode.lat1 = inputNodeInfoList[u].lat;
@@ -190,102 +170,45 @@ void EdgeBasedGraphFactory::Run() {
                 currentNode.lon2 = inputNodeInfoList[v].lon;
                 currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
                 currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
-                //                short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
-                //                short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
-                //                short heightDiff = startHeight - targetHeight;
-                //                double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
-                //                if(heightDiff != 0)
-                //                    INFO("Increase at dead-end street: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );
-                //incorporate height diff;
-
-                //todo: get some exponential function to converge to one for n->\infty
                 currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
-                //                if(increase > 0)
-                //                    currentNode.weight *= (1.+increase);
-
+                //currentNode.weight += ComputeHeightPenalty(u, v);
                 edgeBasedNodes.push_back(currentNode);
             }
+        }
+    }
 
-            if(_barrierNodes.find(v) != _barrierNodes.end() ) {
-                numberOfSkippedTurns += _nodeBasedGraph->EndEdges(v) - _nodeBasedGraph->BeginEdges(v);
-                continue;
-            }
-
+    //Loop over all turns and generate new set of edges.
+    //Three nested loop look super-linear, but we are dealing with a linear number of turns only.
+    for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
+        for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
+            _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
+            //EdgeWeight heightPenalty = ComputeHeightPenalty(u, v);
+            NodeID onlyToNode = CheckForEmanatingIsOnlyTurn(u, v);
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
                 _NodeBasedDynamicGraph::NodeIterator w = _nodeBasedGraph->GetTarget(e2);
 
-                //if (u,v,w) is a forbidden turn, continue
-                if(onlyToNode != UINT_MAX && w != onlyToNode) {
-                    //We are at an only_-restriction but not at the right turn.
+                if(onlyToNode != UINT_MAX && w != onlyToNode) { //We are at an only_-restriction but not at the right turn.
                     ++numberOfSkippedTurns;
                     continue;
                 }
-
-                if( u != w || 1 == _nodeBasedGraph->GetOutDegree(v)) { //only add an edge if turn is not a U-turn except it is the end of dead-end street.
+                bool isBollardNode = (_barrierNodes.find(v) != _barrierNodes.end());
+                if( (!isBollardNode && (u != w || 1 == _nodeBasedGraph->GetOutDegree(v))) || (u == w && isBollardNode)) { //only add an edge if turn is not a U-turn except it is the end of dead-end street.
                     if (!CheckIfTurnIsRestricted(u, v, w) || (onlyToNode != UINT_MAX && w == onlyToNode)) { //only add an edge if turn is not prohibited
-                        if(onlyToNode != UINT_MAX && w == onlyToNode) {
-                            //                            INFO("Adding 'only_*'-turn <" << u << "," << v << "," << w << ">");
-                        } else if(onlyToNode != UINT_MAX && w != onlyToNode) {
-                            assert(false);
-                        }
-                        //new costs for edge based edge (e1, e2) = cost (e1) + tc(e1,e2)
-                        const _NodeBasedDynamicGraph::NodeIterator edgeBasedSource = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
-                        if(edgeBasedSource > _nodeBasedGraph->GetNumberOfEdges()) {
-                            ERR("edgeBasedTarget" << edgeBasedSource << ">" << _nodeBasedGraph->GetNumberOfEdges());
-                        }
-                        const _NodeBasedDynamicGraph::NodeIterator edgeBasedTarget = _nodeBasedGraph->GetEdgeData(e2).edgeBasedNodeID;
-                        if(edgeBasedTarget > _nodeBasedGraph->GetNumberOfEdges()) {
-                            ERR("edgeBasedTarget" << edgeBasedTarget << ">" << _nodeBasedGraph->GetNumberOfEdges());
-                        }
+                        const _NodeBasedDynamicGraph::EdgeData edgeData1 = _nodeBasedGraph->GetEdgeData(e1);
+                        const _NodeBasedDynamicGraph::EdgeData edgeData2 = _nodeBasedGraph->GetEdgeData(e2);
+                        assert(edgeData1.edgeBasedNodeID < _nodeBasedGraph->GetNumberOfEdges());
+                        assert(edgeData2.edgeBasedNodeID < _nodeBasedGraph->GetNumberOfEdges());
 
-                        //incorporate turn costs, this is just a simple model and can (read: must) be extended
-                        //                        double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
-
-                        unsigned distance = _nodeBasedGraph->GetEdgeData(e1).distance;//(int)( _nodeBasedGraph->GetEdgeData(e1).distance *(1+std::abs((angle-180.)/180.)));
-                        unsigned nameID = _nodeBasedGraph->GetEdgeData(e2).nameID;
-                        short turnInstruction = AnalyzeTurn(u, v, w);
-
+                        unsigned distance = edgeData1.distance;
+                        //distance += heightPenalty;
+                        //distance += ComputeTurnPenalty(u, v, w);
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += trafficSignalPenalty;
                         }
-
-                        //create edge-based graph edge
-                        EdgeBasedEdge newEdge(edgeBasedSource, edgeBasedTarget, v,  nameID, distance, true, false, turnInstruction);
+                        short turnInstruction = AnalyzeTurn(u, v, w);
+                        EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, v,  edgeData2.nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
-
-                        //Ways Ending at bollard get dead-end street treatment;
-                        if(_barrierNodes.find(w) != _barrierNodes.end()){
-                            //if node v is a bollard, then we need to add e2 as target node to the new set of edgebased nodes.
-                            //Otherwise it will not be possible to properly route to this node
-                            EdgeBasedNode currentNode;
-                            currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
-                            currentNode.lat1 = inputNodeInfoList[v].lat;
-                            currentNode.lon1 = inputNodeInfoList[v].lon;
-                            currentNode.lat2 = inputNodeInfoList[w].lat;
-                            currentNode.lon2 = inputNodeInfoList[w].lon;
-                            currentNode.id = edgeBasedTarget;
-                            currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e2).ignoreInGrid;
-                            edgeBasedNodes.push_back(currentNode);
-                        }
-
-                        if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX ) {
-                            EdgeBasedNode currentNode;
-                            currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
-                            currentNode.lat1 = inputNodeInfoList[u].lat;
-                            currentNode.lon1 = inputNodeInfoList[u].lon;
-                            currentNode.lat2 = inputNodeInfoList[v].lat;
-                            currentNode.lon2 = inputNodeInfoList[v].lon;
-                            currentNode.id = edgeBasedSource;
-                            currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
-                            //                            short startHeight = srtmLookup.height(currentNode.lon1/100000.,currentNode.lat1/100000. );
-                            //                            short targetHeight = srtmLookup.height(currentNode.lon2/100000.,currentNode.lat2/100000. );
-                            //                            short heightDiff = startHeight - targetHeight;
-                            //                            double increase = (heightDiff/ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2));
-                            //                            if(heightDiff != 0)
-                            //                                INFO("Increase at turn: " << heightDiff << ", edge length: " << ApproximateDistance(currentNode.lat1, currentNode.lon1, currentNode.lat2, currentNode.lon2) << ", percentage: " << increase );                            //incorporate height diff;
-                            currentNode.weight = distance;
-                            edgeBasedNodes.push_back(currentNode);
-                        }
+                        ++nodeBasedEdgeCounter;
                     } else {
                         ++numberOfSkippedTurns;
                     }
@@ -347,9 +270,6 @@ unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
     return _nodeBasedGraph->GetNumberOfEdges();
 }
 
-EdgeBasedGraphFactory::~EdgeBasedGraphFactory() {
-}
-
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
 template<class CoordinateT>
 double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const {
@@ -361,6 +281,5 @@ double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, cons
     double angle = (atan2((double)v2y,v2x) - atan2((double)v1y,v1x) )*180/M_PI;
     while(angle < 0)
         angle += 360;
-
     return angle;
 }
