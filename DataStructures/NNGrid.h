@@ -194,7 +194,6 @@ public:
                 //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
             }
         }
-        resultNode.location.lat = round(100000.*(y2lat(static_cast<double>(resultNode.location.lat)/100000.)));
 
         //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
         //        INFO("length of old edge: " << ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
@@ -205,10 +204,10 @@ public:
         //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
         //        }
 
-        //        INFO("startCoord: " << smallestEdge.startCoord << "; targetCoord: " << smallestEdge.targetCoord << ", newEndpoint: " << newEndpoint);
+//        INFO("startCoord: " << smallestEdge.startCoord << "; targetCoord: " << smallestEdge.targetCoord << "; newEndpoint: " << resultNode.location);
         double ratio = (foundNode ? std::min(1., ApproximateDistance(smallestEdge.startCoord, resultNode.location)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord)) : 0);
-
-        //        INFO("Length of vector: " << ApproximateDistance(smallestEdge.startCoord, newEndpoint)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
+        resultNode.location.lat = round(100000.*(y2lat(static_cast<double>(resultNode.location.lat)/100000.)));
+//        INFO("Length of vector: " << ApproximateDistance(smallestEdge.startCoord, resultNode.location)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
         //Hack to fix rounding errors and wandering via nodes.
         if(std::abs(location.lon - resultNode.location.lon) == 1)
             resultNode.location.lon = location.lon;
