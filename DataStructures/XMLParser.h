@@ -257,7 +257,7 @@ private:
                             }
                         }
                         if ( xmlStrEqual( k, ( const xmlChar* ) "barrier" ) == 1 ) {
-                            if ( xmlStrEqual( value, ( const xmlChar* ) "" ) != 1 ){
+                            if ( xmlStrEqual( value, ( const xmlChar* ) "" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "border_control" ) != 1){
                                 node.bollard = true;
                             }
                         }

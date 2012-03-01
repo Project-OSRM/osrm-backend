@@ -223,7 +223,8 @@ private:
                 keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
-            if("" != keyVals.Find("barrier"))
+            std::string barrierValue = keyVals.Find("barrier");
+            if(0 < barrierValue.length() && "border_control" != barrierValue)
                 n.bollard = true;
 
             if("traffic_signals" == keyVals.Find("highway"))
