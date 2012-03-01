@@ -108,6 +108,10 @@ private:
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
+    void InsertEdgeBasedNode(
+            _NodeBasedDynamicGraph::EdgeIterator e1,
+            _NodeBasedDynamicGraph::NodeIterator u,
+            _NodeBasedDynamicGraph::NodeIterator v);
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 //    SRTMLookup srtmLookup;

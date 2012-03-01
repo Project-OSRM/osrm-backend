@@ -150,6 +150,23 @@ bool EdgeBasedGraphFactory::CheckIfTurnIsRestricted(const NodeID u, const NodeID
     return false;
 }
 
+void EdgeBasedGraphFactory::InsertEdgeBasedNode(
+        _NodeBasedDynamicGraph::EdgeIterator e1,
+        _NodeBasedDynamicGraph::NodeIterator u,
+        _NodeBasedDynamicGraph::NodeIterator v) {
+    EdgeBasedNode currentNode;
+    currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
+    currentNode.lat1 = inputNodeInfoList[u].lat;
+    currentNode.lon1 = inputNodeInfoList[u].lon;
+    currentNode.lat2 = inputNodeInfoList[v].lat;
+    currentNode.lon2 = inputNodeInfoList[v].lon;
+    currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
+    currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
+    currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
+    //currentNode.weight += ComputeHeightPenalty(u, v);
+    edgeBasedNodes.push_back(currentNode);
+}
+
 void EdgeBasedGraphFactory::Run() {
     INFO("Generating edge based representation of input data");
     edgeBasedNodes.reserve(_nodeBasedGraph->GetNumberOfEdges());
@@ -163,17 +180,7 @@ void EdgeBasedGraphFactory::Run() {
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
 
             if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX) {
-                EdgeBasedNode currentNode;
-                currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
-                currentNode.lat1 = inputNodeInfoList[u].lat;
-                currentNode.lon1 = inputNodeInfoList[u].lon;
-                currentNode.lat2 = inputNodeInfoList[v].lat;
-                currentNode.lon2 = inputNodeInfoList[v].lon;
-                currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
-                currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
-                currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
-                //currentNode.weight += ComputeHeightPenalty(u, v);
-                edgeBasedNodes.push_back(currentNode);
+                InsertEdgeBasedNode(e1, u, v);
             }
         }
     }
@@ -193,7 +200,7 @@ void EdgeBasedGraphFactory::Run() {
                     continue;
                 }
                 bool isBollardNode = (_barrierNodes.find(v) != _barrierNodes.end());
-                if( (!isBollardNode && (u != w || 1 == _nodeBasedGraph->GetOutDegree(v))) || (u == w && isBollardNode)) { //only add an edge if turn is not a U-turn except it is the end of dead-end street.
+                if( (!isBollardNode && (u != w || 1 == _nodeBasedGraph->GetOutDegree(v))) || ((u == w) && isBollardNode)) { //only add an edge if turn is not a U-turn except it is the end of dead-end street.
                     if (!CheckIfTurnIsRestricted(u, v, w) || (onlyToNode != UINT_MAX && w == onlyToNode)) { //only add an edge if turn is not prohibited
                         const _NodeBasedDynamicGraph::EdgeData edgeData1 = _nodeBasedGraph->GetEdgeData(e1);
                         const _NodeBasedDynamicGraph::EdgeData edgeData2 = _nodeBasedGraph->GetEdgeData(e2);
