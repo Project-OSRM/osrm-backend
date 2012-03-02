@@ -50,7 +50,7 @@ function geocodeAddress(tf){
 		freeform = document.getElementById('tfEndSearch').value;
 	}
 
-	if(freeform.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*,\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
+	if(freeform.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
 		
 		var marker;
 		if(tf == 'start'){
@@ -61,7 +61,7 @@ function geocodeAddress(tf){
 			isEndPointSet = true;
 			marker = 'end';
 		}
-		var coord = freeform.split(",");
+		var coord = freeform.split(/[,;]/);
                 lonlat = new OpenLayers.LonLat(coord[1],coord[0]);
                 setMarkerAndZoom(marker, lonlat);
                 return;
