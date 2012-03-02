@@ -50,6 +50,23 @@ function geocodeAddress(tf){
 		freeform = document.getElementById('tfEndSearch').value;
 	}
 
+	if(freeform.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
+		
+		var marker;
+		if(tf == 'start'){
+			isStartPointSet = true;
+			marker = 'start';
+		}
+		if(tf == 'end'){
+			isEndPointSet = true;
+			marker = 'end';
+		}
+		var coord = freeform.split(/[,;]/);
+                lonlat = new OpenLayers.LonLat(coord[1],coord[0]);
+                setMarkerAndZoom(marker, lonlat);
+                return;
+	}
+
 	document.getElementById('information').style.visibility = 'visible';
 	document.getElementById('information').innerHTML =  '<p class="infoHL">One moment please ...</p>';
 
