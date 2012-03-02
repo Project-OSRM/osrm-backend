@@ -66,7 +66,7 @@ end
 Given /^the relations$/ do |table|
   table.hashes.each do |row|
     relation = OSM::Relation.new make_osm_id, OSM_USER, OSM_TIMESTAMP
-    relation << { :type => :restriction, :restriction => 'no_left_turn' }
+    relation << { :type => :restriction, :restriction => row['restriction'] }
     from_way = find_way_by_name(row['from'])
     raise "*** unknown way '#{row['from']}'" unless from_way
     to_way = find_way_by_name(row['to'])
