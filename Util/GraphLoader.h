@@ -367,7 +367,7 @@ unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> 
     in.read((char*) & numberOfNodes, sizeof(unsigned));
     nodeList.resize(numberOfNodes + 1);
     NodeT currentNode;
-    for(unsigned nodeCounter = 0; nodeCounter <= numberOfNodes; ++nodeCounter ) {
+    for(unsigned nodeCounter = 0; nodeCounter < numberOfNodes; ++nodeCounter ) {
         in.read((char*) &currentNode, sizeof(NodeT));
         nodeList[nodeCounter] = currentNode;
     }
@@ -382,36 +382,6 @@ unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> 
     }
 
     return numberOfNodes;
-}
-
-template<typename EdgeT>
-unsigned readHSGRFromStream(istream &in, vector<EdgeT> & edgeList) {
-    NodeID numberOfNodes = 0;
-    do {
-        EdgeT g;
-        EdgeData e;
-        NodeID source;
-        NodeID target;
-
-        in.read((char *)&(e), sizeof(EdgeData));
-        if(!in.good())
-            break;
-        assert(e.distance > 0);
-        in.read((char *)&(source), sizeof(NodeID));
-        in.read((char *)&(target), sizeof(NodeID));
-        g.data = e;
-        g.source = source; g.target = target;
-
-        if(source > numberOfNodes) {
-            numberOfNodes = source;
-        }
-        if(target > numberOfNodes) {
-            numberOfNodes = target;
-        }
-        edgeList.push_back(g);
-    }  while(true);
-
-    return numberOfNodes+1;
 }
 
 #endif // GRAPHLOADER_H
