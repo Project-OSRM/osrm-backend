@@ -28,7 +28,7 @@
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), trafficSignalPenalty(0) {
     INFO("Nodes size: " << inputNodeInfoList.size());
     BOOST_FOREACH(_Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
@@ -63,6 +63,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
             }
         }
     }
+
+    INFO("traffic signal penalty: " << trafficSignalPenalty);
 
     BOOST_FOREACH(NodeID id, bn)
         _barrierNodes[id] = true;

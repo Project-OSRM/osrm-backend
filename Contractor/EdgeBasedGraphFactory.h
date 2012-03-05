@@ -100,7 +100,6 @@ private:
     std::vector<EmanatingRestrictionsVector> _restrictionBucketVector;
     RestrictionMap _restrictionMap;
 
-    int trafficSignalPenalty;
 
     std::vector<EdgeBasedEdge> edgeBasedEdges;
     std::vector<EdgeBasedNode> edgeBasedNodes;
@@ -116,6 +115,7 @@ private:
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 //    SRTMLookup srtmLookup;
     unsigned numberOfTurnRestrictions;
+    unsigned trafficSignalPenalty;
 
 public:
     template< class InputEdgeT >
