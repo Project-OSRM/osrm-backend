@@ -62,6 +62,12 @@ public:
         ++_current_value;
         printStatus(_current_value);
     }
+
+    void printAddition(const unsigned addition) {
+#pragma omp atomic
+        _current_value += addition;
+        printStatus(_current_value);
+    }
 private:
     unsigned _current_value;
     unsigned _maxValue;
