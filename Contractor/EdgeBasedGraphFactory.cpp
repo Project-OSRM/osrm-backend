@@ -156,15 +156,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         _NodeBasedDynamicGraph::EdgeIterator e1,
         _NodeBasedDynamicGraph::NodeIterator u,
         _NodeBasedDynamicGraph::NodeIterator v) {
+    _NodeBasedDynamicGraph::EdgeData & data = _nodeBasedGraph->GetEdgeData(e1);
     EdgeBasedNode currentNode;
-    currentNode.nameID = _nodeBasedGraph->GetEdgeData(e1).nameID;
+    currentNode.nameID = data.nameID;
     currentNode.lat1 = inputNodeInfoList[u].lat;
     currentNode.lon1 = inputNodeInfoList[u].lon;
     currentNode.lat2 = inputNodeInfoList[v].lat;
     currentNode.lon2 = inputNodeInfoList[v].lon;
-    currentNode.id = _nodeBasedGraph->GetEdgeData(e1).edgeBasedNodeID;
-    currentNode.ignoreInGrid = _nodeBasedGraph->GetEdgeData(e1).ignoreInGrid;
-    currentNode.weight = _nodeBasedGraph->GetEdgeData(e1).distance;
+    currentNode.id = data.edgeBasedNodeID;
+    currentNode.ignoreInGrid = data.ignoreInGrid;
+    currentNode.weight = data.distance;
     //currentNode.weight += ComputeHeightPenalty(u, v);
     edgeBasedNodes.push_back(currentNode);
 }
@@ -182,6 +183,9 @@ void EdgeBasedGraphFactory::Run() {
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
 
             if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX) {
+                assert(e1 != UINT_MAX);
+                assert(u != UINT_MAX);
+                assert(v != UINT_MAX);
                 InsertEdgeBasedNode(e1, u, v);
             }
         }
@@ -216,6 +220,7 @@ void EdgeBasedGraphFactory::Run() {
                             distance += trafficSignalPenalty;
                         }
                         short turnInstruction = AnalyzeTurn(u, v, w);
+                        assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, v,  edgeData2.nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
                         ++nodeBasedEdgeCounter;
