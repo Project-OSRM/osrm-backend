@@ -206,20 +206,20 @@ int main (int argc, char *argv[]) {
         _nodes[node].firstEdge = position; //=edge
         position += edge - lastEdge; //remove
     }
+    ++numberOfNodes;
     //Serialize numberOfNodes, nodes
     edgeOutFile.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
     edgeOutFile.write((char*) &numberOfNodes, sizeof(unsigned));
-    edgeOutFile.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes+1));
-
+    edgeOutFile.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
     //Serialize number of Edges
     edgeOutFile.write((char*) &position, sizeof(unsigned));
-
+    --numberOfNodes;
     edge = 0;
     int usedEdgeCounter = 0;
     StaticGraph<EdgeData>::_StrEdge currentEdge;
     for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
         for ( StaticGraph<EdgeData>::EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
-
+            assert(node != cleanedEdgeList[edge].target);
             currentEdge.target = cleanedEdgeList[edge].target;
             currentEdge.data = cleanedEdgeList[edge].data;
             if(currentEdge.data.distance <= 0) {
