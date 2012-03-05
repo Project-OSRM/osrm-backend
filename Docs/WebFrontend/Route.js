@@ -29,7 +29,7 @@
 //======================
 // OBJECTS
 //Map
-var HOST_ROUTING_URL = 'http://141.3.24.68:5000/viaroute';
+var HOST_ROUTING_URL = 'http://localhost:5000/viaroute';
 //var HOST_ROUTING_URL = 'http://routingdemo.geofabrik.de/route-via/';
 var HOST_WEBSITE = 'http://map.project-osrm.org/';//location.host
 
@@ -79,10 +79,11 @@ function routing(isDragRoute){
        document.getElementById('information').innerHTML =  '<p class="infoHL">Release mouse button to get Route Information!</p>(If no Route Summary is diplayed, press the Route!-button)';
     }
     
-    script.src = HOST_ROUTING_URL + "?start="+from.lat + ',' + from.lon + '&dest=' + to.lat + ',' + to.lon;
+    script.src = HOST_ROUTING_URL + "?loc="+from.lat + ',' + from.lon;
     for(var i = 0; i < viaPointsVector.length; i++) {
-		script.src += ('&via=' + viaPointsVector[i][0] + ',' + viaPointsVector[i][1]);
+		script.src += ('&loc=' + viaPointsVector[i][0] + ',' + viaPointsVector[i][1]);
 	}
+	script.src += '&loc=' + to.lat + ',' + to.lon;
     script.src +='&z='+this.map.getZoom()+'&output=json&jsonp='+callBackFunction+instructions;
     document.body.appendChild(script);
 }
@@ -139,10 +140,11 @@ function showResultsRoute(response) {
 		routelink += '\');" value="Get Link"></div>';
 
 		//Link for the GPX Download 
-		var gpxLink = '(<a href="'+HOST_ROUTING_URL+'?start='+from.lat.toFixed(6)+','+from.lon.toFixed(6)+'&dest='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'&z='+this.map.getZoom();
+		var gpxLink = '(<a href="'+HOST_ROUTING_URL+'?loc='+from.lat.toFixed(6)+','+from.lon.toFixed(6);
 		for(i = 0; i < viaPointsVector.length; i++) {
-				gpxLink += "&via=" + viaPointsVector[i][0] + "," + viaPointsVector[i][1];
+				gpxLink += "&loc=" + viaPointsVector[i][0] + "," + viaPointsVector[i][1];
 		}
+		gpxLink += '&loc='+to.lat.toFixed(6)+','+to.lon.toFixed(6)+'&z='+this.map.getZoom()
 		gpxLink += '&output=gpx">Get GPX File</a>)';;
 
         //Show Route Summary

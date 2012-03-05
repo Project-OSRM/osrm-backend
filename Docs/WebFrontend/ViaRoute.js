@@ -240,20 +240,21 @@ function computeViaRoute(pixel, isTemporary, skipViaPointsIndex) {
 	var coordinate = map.getLonLatFromPixel(pixel);
 	var via = coordinate.transform(EPSG_900913, EPSG_4326);
 	var viaNodeInserted = false;
-	var newURL = HOST_ROUTING_URL + "?start="+from.lat + ',' + from.lon + '&dest=' + to.lat + ',' + to.lon;
+	var newURL = HOST_ROUTING_URL + "?loc="+from.lat + ',' + from.lon;
 	newURL += '&geomformat=cmp';
 	for(var i = 0; i < viaPointsVector.length; i++) {
 		if(i == nearestSegmentIndex) { //insert new via node here
-			newURL += '&via=' + via.lat + ',' + via.lon;
+			newURL += '&loc=' + via.lat + ',' + via.lon;
 			viaNodeInserted = true;
 		}
 		if(skipViaPointsIndex == i)
 			continue;
-		newURL += '&via=' + viaPointsVector[i][0] + ',' + viaPointsVector[i][1];
+		newURL += '&loc=' + viaPointsVector[i][0] + ',' + viaPointsVector[i][1];
 	}
 	if(false == viaNodeInserted) {
-		newURL += '&via=' + via.lat + ',' + via.lon;
+		newURL += '&loc=' + via.lat + ',' + via.lon;
 	}
+	newURL += '&loc=' + to.lat + ',' + to.lon;
 	newURL += '&output=json' + '&z=' + this.map.getZoom();
 	if(!isTemporary) {
 		newURL += '&instructions=true&jsonp=showResultsRoute';

@@ -21,10 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef JSON_DESCRIPTOR_H_
 #define JSON_DESCRIPTOR_H_
 
-#include <boost/foreach.hpp>
+#include <algorithm>
 
 #include "BaseDescriptor.h"
 #include "DescriptionFactory.h"
+#include "../Algorithms/ObjectToBase64.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/Azimuth.h"
@@ -173,14 +174,17 @@ public:
         reply.content += ", \"hint_array\": [";
 
         for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
-            unsigned hint = ((rawRoute.segmentEndCoordinates[i].startPhantom.edgeBasedNode << 1) + rawRoute.segmentEndCoordinates[i].startPhantom.isBidirected());
-            intToString(hint, tmp);
-            reply.content += tmp;
-            reply.content += ", ";
+            std::string hint;
+            reply.content += "\"";
+            EncodeObjectToBase64(rawRoute.segmentEndCoordinates[i].startPhantom, hint);
+            reply.content += hint;
+            reply.content += "\", ";
         }
-        intToString(((rawRoute.segmentEndCoordinates.back().targetPhantom.edgeBasedNode << 1)+ rawRoute.segmentEndCoordinates.back().targetPhantom.isBidirected()), tmp);
-        reply.content += tmp;
-        reply.content += "]";
+        std::string hint;
+        EncodeObjectToBase64(rawRoute.segmentEndCoordinates.back().targetPhantom, hint);
+        reply.content += "\"";
+        reply.content += hint;
+        reply.content += "\"]";
         reply.content += "},";
 		reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"";
 		reply.content += "}";
