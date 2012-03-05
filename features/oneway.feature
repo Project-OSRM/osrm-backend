@@ -31,23 +31,6 @@ Feature: Oneway streets
 		 | a    | b  | ab       |
 		 | b    | a  | bc,cd,da |
 	
-	Scenario: Avoid oneway traps
-		Given the nodes
-		 |   | x |   |		
-		 | a | b | c |
-		 |   | y |   |		
-
-		And the ways
-		 | nodes | oneway |
-		 | abc   |        |
-		 | bx    | yes    |
-		 | yb    | -1     |
-
-		When I route I should get
-		 | from | to | route |
-		 | b    | x  |       |
-		 | b    | y  |       |
-	
 	Scenario: Handle various oneway tag values
  		Given the speedprofile "bicycle"
 	 	Then routability should be

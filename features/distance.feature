@@ -278,7 +278,6 @@ Feature: Distance calculation
 		 | a    | c  | abc   | 2000000  |
 		 | c    | a  | abc   | 2000000  |
 		
-	@a
 	Scenario: Angles at 1000km scale
 		Given a grid size of 1000 meters
 		Given the nodes
