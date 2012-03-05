@@ -42,6 +42,9 @@ struct PhantomNode {
     bool isBidirected() const {
         return weight2 != INT_MAX;
     }
+    bool isValid(const unsigned numberOfNodes) const {
+        return location.isValid() && (edgeBasedNode < numberOfNodes) && (weight1 != INT_MAX) && (ratio >= 0.) && (ratio <= 1.) && (nodeBasedEdgeNameID != UINT_MAX);
+    }
 };
 
 struct PhantomNodes {

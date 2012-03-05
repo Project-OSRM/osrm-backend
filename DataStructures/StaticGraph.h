@@ -91,6 +91,23 @@ public:
 
         _nodes.swap(nodes);
         _edges.swap(edges);
+
+#ifndef NDEBUG
+        Percent p(GetNumberOfNodes());
+        for(unsigned u = 0; u < GetNumberOfNodes(); ++u) {
+            for(unsigned eid = BeginEdges(u); eid < EndEdges(u); ++eid) {
+                unsigned v = GetTarget(eid);
+                EdgeData & data = GetEdgeData(eid);
+                if(data.shortcut) {
+                    unsigned eid2 = FindEdgeInEitherDirection(u, data.via);
+                    assert(eid2 != UINT_MAX);
+                    eid2 = FindEdgeInEitherDirection(data.via, v);
+                    assert(eid2 != UINT_MAX);
+                }
+            }
+            p.printIncrement();
+        }
+#endif
     }
 
     unsigned GetNumberOfNodes() const {

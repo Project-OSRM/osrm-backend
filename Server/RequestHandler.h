@@ -38,88 +38,88 @@ namespace http {
 
 class RequestHandler : private boost::noncopyable {
 public:
-	explicit RequestHandler() : _pluginCount(0) { }
+    explicit RequestHandler() : _pluginCount(0) { }
 
-	~RequestHandler() {
+    ~RequestHandler() {
 
-	    for(unsigned i = 0; i < _pluginVector.size(); i++) {
-	        BasePlugin * tempPointer = _pluginVector[i];
-	        DELETE( tempPointer );
-	    }
-	}
+        for(unsigned i = 0; i < _pluginVector.size(); i++) {
+            BasePlugin * tempPointer = _pluginVector[i];
+            DELETE( tempPointer );
+        }
+    }
 
-	void handle_request(const Request& req, Reply& rep){
-		//parse command
+    void handle_request(const Request& req, Reply& rep){
+        //parse command
         std::string request(req.uri);
-//	    time_t ltime;
-//	    struct tm *Tm;
-//
-//	    ltime=time(NULL);
-//	    Tm=localtime(&ltime);
-//
-//	    INFO( Tm->tm_mday << "-" << (Tm->tm_mon < 10 ? "0" : "" )  << Tm->tm_mon << "-" << 1900+Tm->tm_year << " " << Tm->tm_hour << ":" << Tm->tm_min << ":" << Tm->tm_sec << " " <<
-//	            req.endpoint.to_string() << " " << request );
-		std::string command;
-		std::size_t firstAmpPosition = request.find_first_of("?");
-		command = request.substr(1,firstAmpPosition-1);
-//		DEBUG("[debug] looking for handler for command: " << command);
-		try {
-			if(pluginMap.Holds(command)) {
+        time_t ltime;
+        struct tm *Tm;
 
-				RouteParameters routeParameters;
-				std::stringstream ss(( firstAmpPosition == std::string::npos ? "" : request.substr(firstAmpPosition+1) ));
-				std::string item;
-				while(std::getline(ss, item, '&')) {
-				    size_t found = item.find('=');
-				    if(found == std::string::npos) {
-				        routeParameters.parameters.push_back(item);
-				    } else {
-				        std::string p = item.substr(0, found);
-				        std::transform(p.begin(), p.end(), p.begin(), (int(*)(int)) std::tolower);
-				        std::string o = item.substr(found+1);
-				        if("jsonp" != p)
-				            std::transform(o.begin(), o.end(), o.begin(), (int(*)(int)) std::tolower);
-				        if("via" == p ) {
-				            if(25 >= routeParameters.viaPoints.size()) {
-				                routeParameters.viaPoints.push_back(o);
-				            }
-				        } else if("hint" == p) {
-				            routeParameters.hints.resize(routeParameters.viaPoints.size(), 0);
-				            routeParameters.hints.back() = o;
-				        } else {
-				            routeParameters.options.Set(p, o);
-				        }
-				    }
-				}
+        ltime=time(NULL);
+        Tm=localtime(&ltime);
 
-//				std::cout << "[debug] found handler for '" << command << "' at version: " << pluginMap.Find(command)->GetVersionString() << std::endl;
-//				std::cout << "[debug] remaining parameters: " << parameters.size() << std::endl;
-				rep.status = Reply::ok;
-				_pluginVector[pluginMap.Find(command)]->HandleRequest(routeParameters, rep );
+        INFO((Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday << "-" << (Tm->tm_mon < 10 ? "0" : "" )  << Tm->tm_mon << "-" << 1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) << Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) << Tm->tm_sec << " " <<
+                req.endpoint.to_string() << " " << request );
+        std::string command;
+        std::size_t firstAmpPosition = request.find_first_of("?");
+        command = request.substr(1,firstAmpPosition-1);
+        //DEBUG("[debug] looking for handler for command: " << command);
+        try {
+            if(pluginMap.Holds(command)) {
 
-//				std::cout << rep.content << std::endl;
-			} else {
-				rep = Reply::stockReply(Reply::badRequest);
-			}
-			return;
-		} catch(std::exception& e) {
-			rep = Reply::stockReply(Reply::internalServerError);
-			std::cerr << "[server error] code: " << e.what() << ", uri: " << req.uri << std::endl;
-			return;
-		}
-	};
+                RouteParameters routeParameters;
+                std::stringstream ss(( firstAmpPosition == std::string::npos ? "" : request.substr(firstAmpPosition+1) ));
+                std::string item;
+                while(std::getline(ss, item, '&')) {
+                    size_t found = item.find('=');
+                    if(found == std::string::npos) {
+                        routeParameters.parameters.push_back(item);
+                    } else {
+                        std::string p = item.substr(0, found);
+                        std::transform(p.begin(), p.end(), p.begin(), (int(*)(int)) std::tolower);
+                        std::string o = item.substr(found+1);
+                        if("jsonp" != p && "hint" != p)
+                            std::transform(o.begin(), o.end(), o.begin(), (int(*)(int)) std::tolower);
+                        if("loc" == p) {
+                            if(25 >= routeParameters.viaPoints.size()) {
+                                routeParameters.viaPoints.push_back(o);
+                            }
+                        } else if("hint" == p) {
+                            routeParameters.hints.resize(routeParameters.viaPoints.size());
+                            if(routeParameters.viaPoints.size())
+                                routeParameters.hints.back() = o;
+                        } else {
+                            routeParameters.options.Set(p, o);
+                        }
+                    }
+                }
+                //				std::cout << "[debug] found handler for '" << command << "' at version: " << pluginMap.Find(command)->GetVersionString() << std::endl;
+                //				std::cout << "[debug] remaining parameters: " << parameters.size() << std::endl;
+                rep.status = Reply::ok;
+                _pluginVector[pluginMap.Find(command)]->HandleRequest(routeParameters, rep );
 
-	void RegisterPlugin(BasePlugin * plugin) {
-		std::cout << "[handler] registering plugin " << plugin->GetDescriptor() << std::endl;
-		pluginMap.Add(plugin->GetDescriptor(), _pluginCount);
-		_pluginVector.push_back(plugin);
-		_pluginCount++;
-	}
+                //				std::cout << rep.content << std::endl;
+            } else {
+                rep = Reply::stockReply(Reply::badRequest);
+            }
+            return;
+        } catch(std::exception& e) {
+            rep = Reply::stockReply(Reply::internalServerError);
+            std::cerr << "[server error] code: " << e.what() << ", uri: " << req.uri << std::endl;
+            return;
+        }
+    };
+
+    void RegisterPlugin(BasePlugin * plugin) {
+        std::cout << "[handler] registering plugin " << plugin->GetDescriptor() << std::endl;
+        pluginMap.Add(plugin->GetDescriptor(), _pluginCount);
+        _pluginVector.push_back(plugin);
+        _pluginCount++;
+    }
 
 private:
-	HashTable<std::string, unsigned> pluginMap;
-	std::vector<BasePlugin *> _pluginVector;
-	unsigned _pluginCount;
+    HashTable<std::string, unsigned> pluginMap;
+    std::vector<BasePlugin *> _pluginVector;
+    unsigned _pluginCount;
 };
 } // namespace http
 

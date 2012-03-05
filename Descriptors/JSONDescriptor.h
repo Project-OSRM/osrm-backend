@@ -167,11 +167,11 @@ public:
 			}
 		}
 		reply.content += "],";
-        reply.content += "\"route_data\": {";
+        reply.content += "\"hint_data\": {";
         reply.content += "\"checksum\":";
         intToString(rawRoute.checkSum, tmp);
         reply.content += tmp;
-        reply.content += ", \"hint_array\": [";
+        reply.content += ", \"locations\": [";
 
         for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
             std::string hint;

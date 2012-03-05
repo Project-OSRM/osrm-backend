@@ -32,27 +32,36 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/StringUtil.h"
 
 typedef
-    boost::archive::iterators::base64_from_binary<
+        boost::archive::iterators::base64_from_binary<
         boost::archive::iterators::transform_width<string::const_iterator, 6, 8>
 > base64_t;
 
 typedef
-    boost::archive::iterators::transform_width<
+        boost::archive::iterators::transform_width<
         boost::archive::iterators::binary_from_base64<string::const_iterator>, 8, 6
-> binary_t;
+        > binary_t;
 
 template<class ToEncodeT>
 static void EncodeObjectToBase64(const ToEncodeT & object, std::string& encoded) {
     assert(0 == encoded.length());
     char * pointerToOriginalObject = (char *)&object;
     encoded = std::string(base64_t(pointerToOriginalObject), base64_t(pointerToOriginalObject+sizeof(ToEncodeT)));
+    //replace "+" with "-" and "/" with "_"
+    replaceAll(encoded, "+", "-");
+    replaceAll(encoded, "/", "_");
 }
 
 template<class ToEncodeT>
-static void DecodeObjectFraBase64(ToEncodeT & object, const std::string& encoded) {
-    char * pointerToDecodedObject = (char *)&object;
-    std::string dec(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length() - 1));
-    std::copy ( dec.begin(), dec.end(), pointerToDecodedObject );
+static void DecodeObjectFromBase64(ToEncodeT & object, const std::string& _encoded) {
+    try {
+        string encoded(_encoded);
+        //replace "-" with "+" and "_" with "/"
+        replaceAll(encoded, "-", "+");
+        replaceAll(encoded, "_", "/");
+        char * pointerToDecodedObject = (char *)&object;
+        std::string dec(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length() - 1));
+        std::copy ( dec.begin(), dec.end(), pointerToDecodedObject );
+    } catch(...) {}
 }
 
 #endif /* OBJECTTOBASE64_H_ */

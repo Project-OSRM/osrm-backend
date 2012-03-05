@@ -31,6 +31,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "BasePlugin.h"
 #include "RouteParameters.h"
+
+#include "../Algorithms/ObjectToBase64.h"
+
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
@@ -48,7 +51,7 @@ private:
     StaticGraph<EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
     std::string pluginDescriptorString;
-
+    bool checksumOK;
     SearchEngine<EdgeData, StaticGraph<EdgeData> > * searchEngine;
 public:
 
@@ -62,6 +65,7 @@ public:
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("json", 0);
         descriptorTable.Set("gpx", 1);
+        checksumOK = false;
     }
 
     virtual ~ViaRoutePlugin() {
@@ -72,35 +76,19 @@ public:
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
-        if(0 == routeParameters.options["start"].size() || 0 == routeParameters.options["dest"].size() ) {
+        if( 2 > routeParameters.viaPoints.size() ) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
 
-        //Get start and end Coordinate
-        std::string start = routeParameters.options["start"];
-        std::string dest = routeParameters.options["dest"];
-
-        std::vector<std::string> textCoord = split (start, ',');
-
-        int lat1 = static_cast<int>(100000.*atof(textCoord[0].c_str()));
-        int lon1 = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-
-        textCoord = split (dest, ',');
-
-        int lat2 = static_cast<int>(100000.*atof(textCoord[0].c_str()));
-        int lon2 = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-
-        _Coordinate startCoord(lat1, lon1);
-        _Coordinate targetCoord(lat2, lon2);
         RawRouteData rawRoute;
         rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
-        if(false == checkCoord(startCoord) || false == checkCoord(targetCoord)) {
-            reply = http::Reply::stockReply(http::Reply::badRequest);
-            return;
+        checksumOK = (atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
+        if(!checksumOK) {
+            INFO(atoi(routeParameters.options.Find("checksum").c_str()) << "!=" << rawRoute.checkSum);
+            INFO("mismatching checksum");
         }
-        rawRoute.rawViaNodeCoordinates.push_back(startCoord);
-
+        std::vector<std::string> textCoord;
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); ++i) {
             textCoord = split (routeParameters.viaPoints[i], ',');
             if(textCoord.size() != 2) {
@@ -109,7 +97,6 @@ public:
             }
             int vialat = static_cast<int>(100000.*atof(textCoord[0].c_str()));
             int vialon = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-//            INFO("[debug] via" << i << ": " << vialat << "," << vialon);
             _Coordinate viaCoord(vialat, vialon);
             if(false == checkCoord(viaCoord)) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
@@ -117,11 +104,18 @@ public:
             }
             rawRoute.rawViaNodeCoordinates.push_back(viaCoord);
         }
-        rawRoute.rawViaNodeCoordinates.push_back(targetCoord);
-        vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
+        std::vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
+            if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
+                INFO("Decoding hint: " << routeParameters.hints[i] << " for location index " << i);
+                DecodeObjectFromBase64(phantomNodeVector[i], routeParameters.hints[i]);
+                if(phantomNodeVector[i].isValid(nodeHelpDesk->getNumberOfNodes())) {
+                    INFO("Decoded hint " << i << " successfully");
+                    continue;
+                }
+            }
+            INFO("Brute force lookup of coordinate " << i);
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
-//            INFO("found coord [" << i << "|" << rawRoute.rawViaNodeCoordinates.size());
         }
         unsigned distance = 0;
         //single route or via point routing
