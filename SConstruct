@@ -169,6 +169,15 @@ if not conf.CheckLib('boost_system', language="C++"):
 		print "using boost -mt"
 		env.Append(CCFLAGS = ' -lboost_system-mt')
 		env.Append(LINKFLAGS = ' -lboost_system-mt')
+if not conf.CheckCXXHeader('boost/archive/iterators/base64_from_binary.hpp'):
+	print "boost/archive/iterators/base64_from_binary.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/archive/iterators/binary_from_base64.hpp'):
+	print "boost/archive/iterators/binary_from_base64.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/archive/iterators/transform_width.hpp'):
+	print "boost/archive/iterators/transform_width.hpp not found. Exiting"
+	Exit(-1)
 if not conf.CheckCXXHeader('boost/bind.hpp'):
 	print "boost/bind.hpp not found. Exiting"
 	Exit(-1)
