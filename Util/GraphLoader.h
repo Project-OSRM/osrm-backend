@@ -41,60 +41,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;
 
-template<typename EdgeT>
-NodeID readOSRMGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
-    NodeID n, source, target, id;
-    EdgeID m;
-    int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext2IntNodeMap;
-    in >> n;
-    DEBUG("Importing n = " << n << " nodes ");
-    for (NodeID i=0; i < n; ++i) {
-        in >> id >> ycoord >> xcoord;
-        int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
-        ext2IntNodeMap.insert(make_pair(id, i));
+template<class EdgeT>
+struct _ExcessRemover {
+    bool operator()( EdgeT & edge ) const {
+        return edge.source() == UINT_MAX;
     }
-    in >> m;
-    DEBUG(" and " << m << " edges ...");
+};
 
-    edgeList.reserve(m);
-    for (EdgeID i=0; i<m; ++i) {
-        EdgeWeight weight;
-        short type;
-        NodeID nameID;
-        int length;
-        in >> source >> target >> length >> dir >> weight >> type >> nameID;
-        assert(length > 0);
-        assert(weight > 0);
-        assert(0<=dir && dir<=2);
-
-        bool forward = true;
-        bool backward = true;
-        if (1 == dir) backward = false;
-        if (2 == dir) forward = false;
-
-        if(length == 0) { ERR("loaded null length edge"); }
-
-        //         translate the external NodeIDs to internal IDs
-        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
-        if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
-            ERR("after " << edgeList.size() << " edges" << "\n->" << source << "," << target << "," << length << "," << dir << "," << weight << "\n->unresolved source NodeID: " << source );
-        }
-        source = intNodeID->second;
-        intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) { ERR("unresolved target NodeID : " << target); }
-        target = intNodeID->second;
-
-        if(source == UINT_MAX || target == UINT_MAX) { ERR( "nonexisting source or target" ); }
-
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type );
-        edgeList.push_back(inputEdge);
-    }
-    ext2IntNodeMap.clear();
-    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
-    cout << "ok" << endl;
-    return n;
-}
 template<typename EdgeT>
 NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> &bollardNodes, std::vector<NodeID> &trafficLightNodes, std::vector<NodeInfo> * int2ExtNodeMap, std::vector<_Restriction> & inputRestrictions) {
     NodeID n, source, target;
@@ -188,11 +141,26 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         target = intNodeID->second;
         GUARANTEE(source != UINT_MAX && target != UINT_MAX, "nonexisting source or target");
 
+        if(source > target) {
+            std::swap(source, target);
+            std::swap(forward, backward);
+        }
+
         EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid );
         edgeList.push_back(inputEdge);
     }
+    std::sort(edgeList.begin(), edgeList.end());
+    for(unsigned i = 1; i < edgeList.size(); ++i) {
+        if( (edgeList[i-1].target() == edgeList[i].target()) && (edgeList[i-1].source() == edgeList[i].source()) ) {
+            if( (edgeList[i-1].isForward() == edgeList[i].isForward()) && (edgeList[i-1].isBackward() == edgeList[i].isBackward()) ) {
+                edgeList[i]._weight = std::min(edgeList[i-1].weight(), edgeList[i].weight());
+                edgeList[i-1]._source = UINT_MAX;
+            }
+        }
+    }
+    std::vector<ImportEdge>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
     ext2IntNodeMap.clear();
-    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    std::vector<ImportEdge>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
     INFO("Graph loaded ok");
     return n;
 }
