@@ -98,8 +98,7 @@ private:
 public:
 
     template< class InputEdge >
-    Contractor( int nodes, std::vector< InputEdge >& inputEdges, const double eqf = 2, const double oqf = 2, const double df = 1)
-    : edgeQuotionFactor(eqf), originalQuotientFactor(oqf), depthFactor(df) {
+    Contractor( int nodes, std::vector< InputEdge >& inputEdges) {
         std::vector< _ImportEdge > edges;
         edges.reserve( 2 * inputEdges.size() );
         BOOST_FOREACH(InputEdge & currentEdge, inputEdges) {
@@ -179,6 +178,22 @@ public:
         edges.resize( edge );
         _graph.reset( new _DynamicGraph( nodes, edges ) );
         std::vector< _ImportEdge >().swap( edges );
+//        unsigned maxdegree = 0;
+//        NodeID highestNode = 0;
+//
+//        for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
+//            unsigned degree = _graph->EndEdges(i) - _graph->BeginEdges(i);
+//            if(degree > maxdegree) {
+//                maxdegree = degree;
+//                highestNode = i;
+//            }
+//        }
+//
+//        INFO("edges at node with id " << highestNode << " has degree " << maxdegree);
+//        for(unsigned i = _graph->BeginEdges(highestNode); i < _graph->EndEdges(highestNode); ++i) {
+//            INFO(" ->(" << highestNode << "," << _graph->GetTarget(i) << "); via: " << _graph->GetEdgeData(i).via);
+//        }
+
     }
 
     ~Contractor() { }
@@ -213,13 +228,12 @@ public:
             _ThreadData* data = threadData[omp_get_thread_num()];
 #pragma omp parallel for schedule ( guided )
             for ( int x = 0; x < ( int ) numberOfNodes; ++x ) {
-                nodePriority[x] = _Evaluate( data, &nodeData[x], x, false );
+                nodePriority[x] = _Evaluate( data, &nodeData[x], x );
             }
         }
         std::cout << "ok" << std::endl << "preprocessing ..." << std::flush;
 
         while ( numberOfContractedNodes < numberOfNodes ) {
-            bool topOnePercent = (numberOfNodes - numberOfContractedNodes) > 0.01*numberOfNodes;
             const int last = ( int ) remainingNodes.size();
 #pragma omp parallel
             {
@@ -241,10 +255,7 @@ public:
 #pragma omp for schedule ( guided ) nowait
                 for ( int position = firstIndependent ; position < last; ++position ) {
                     NodeID x = remainingNodes[position].first;
-                    if(topOnePercent)
-                        _Contract< false, true > ( data, x );
-                    else
-                        _Contract< false, false > ( data, x );
+                    _Contract< false > ( data, x );
                     nodePriority[x] = -1;
                 }
                 std::sort( data->insertedEdges.begin(), data->insertedEdges.end() );
@@ -287,13 +298,34 @@ public:
 #pragma omp for schedule ( guided ) nowait
                 for ( int position = firstIndependent ; position < last; ++position ) {
                     NodeID x = remainingNodes[position].first;
-                    _UpdateNeighbours( nodePriority, nodeData, data, x, topOnePercent );
+                    _UpdateNeighbours( nodePriority, nodeData, data, x );
                 }
             }
             //remove contracted nodes from the pool
             numberOfContractedNodes += last - firstIndependent;
             remainingNodes.resize( firstIndependent );
             std::vector< std::pair< NodeID, bool > >( remainingNodes ).swap( remainingNodes );
+//            unsigned maxdegree = 0;
+//            unsigned avgdegree = 0;
+//            unsigned mindegree = UINT_MAX;
+//            unsigned quaddegree = 0;
+//
+//            for(unsigned i = 0; i < remainingNodes.size(); ++i) {
+//                unsigned degree = _graph->EndEdges(remainingNodes[i].first) - _graph->BeginEdges(remainingNodes[i].first);
+//                if(degree > maxdegree)
+//                    maxdegree = degree;
+//                if(degree < mindegree)
+//                    mindegree = degree;
+//
+//                avgdegree += degree;
+//                quaddegree += (degree*degree);
+//            }
+//
+//            avgdegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
+//            quaddegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
+
+           // INFO("rest: " << remainingNodes.size() << ", max: " << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ", quad: " << quaddegree);
+
             p.printStatus(numberOfContractedNodes);
         }
 
@@ -372,22 +404,23 @@ private:
         }
     }
 
-    double _Evaluate( _ThreadData* const data, _PriorityData* const nodeData, NodeID node, bool topOnePercent ){
+    double _Evaluate( _ThreadData* const data, _PriorityData* const nodeData, NodeID node){
         _ContractionInformation stats;
 
         //perform simulated contraction
-        if(topOnePercent)
-            _Contract< true, true > ( data, node, &stats );
-        else
-            _Contract< true, false > ( data, node, &stats );
+        _Contract< true> ( data, node, &stats );
 
         // Result will contain the priority
+        double result;
         if ( stats.edgesDeleted == 0 || stats.originalEdgesDeleted == 0 )
-            return depthFactor * nodeData->depth;
-        return edgeQuotionFactor * ((( double ) stats.edgesAdded ) / stats.edgesDeleted ) + originalQuotientFactor * ((( double ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + depthFactor * nodeData->depth;
+                result = 1 * nodeData->depth;
+        else
+                result =  2 * ((( double ) stats.edgesAdded ) / stats.edgesDeleted ) + 4 * ((( double ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + 1 * nodeData->depth;
+        assert( result >= 0 );
+        return result;
     }
 
-    template< bool Simulate, bool topOnePercent >
+    template< bool Simulate >
     bool _Contract( _ThreadData* data, NodeID node, _ContractionInformation* stats = NULL ) {
         _Heap& heap = data->heap;
         int insertedEdgesSize = data->insertedEdges.size();
@@ -502,7 +535,7 @@ private:
         }
     }
 
-    bool _UpdateNeighbours( std::vector< double > & priorities, std::vector< _PriorityData > & nodeData, _ThreadData* const data, NodeID node, bool topOnePercent ) {
+    bool _UpdateNeighbours( std::vector< double > & priorities, std::vector< _PriorityData > & nodeData, _ThreadData* const data, NodeID node) {
         std::vector< NodeID >& neighbours = data->neighbours;
         neighbours.clear();
 
@@ -521,7 +554,7 @@ private:
         int neighbourSize = ( int ) neighbours.size();
         for ( int i = 0, e = neighbourSize; i < e; ++i ) {
             const NodeID u = neighbours[i];
-            priorities[u] = _Evaluate( data, &( nodeData )[u], u, topOnePercent );
+            priorities[u] = _Evaluate( data, &( nodeData )[u], u );
         }
 
         return true;
@@ -571,9 +604,6 @@ private:
     }
 
     boost::shared_ptr<_DynamicGraph> _graph;
-    double edgeQuotionFactor;
-    double originalQuotientFactor;
-    double depthFactor;
 };
 
 #endif // CONTRACTOR_H_INCLUDED

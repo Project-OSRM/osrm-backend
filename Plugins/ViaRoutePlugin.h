@@ -84,10 +84,10 @@ public:
         RawRouteData rawRoute;
         rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
         checksumOK = ((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
-        if(!checksumOK) {
-            INFO((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) << "!=" << rawRoute.checkSum);
-            INFO("mismatching checksum");
-        }
+//        if(!checksumOK) {
+//            INFO((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) << "!=" << rawRoute.checkSum);
+//            INFO("mismatching checksum");
+//        }
         std::vector<std::string> textCoord;
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); ++i) {
             textCoord = split (routeParameters.viaPoints[i], ',');
@@ -107,14 +107,14 @@ public:
         std::vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
-                INFO("Decoding hint: " << routeParameters.hints[i] << " for location index " << i);
+//                INFO("Decoding hint: " << routeParameters.hints[i] << " for location index " << i);
                 DecodeObjectFromBase64(phantomNodeVector[i], routeParameters.hints[i]);
                 if(phantomNodeVector[i].isValid(nodeHelpDesk->getNumberOfNodes())) {
-                    INFO("Decoded hint " << i << " successfully");
+//                    INFO("Decoded hint " << i << " successfully");
                     continue;
                 }
             }
-            INFO("Brute force lookup of coordinate " << i);
+//            INFO("Brute force lookup of coordinate " << i);
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
         }
         unsigned distance = 0;
