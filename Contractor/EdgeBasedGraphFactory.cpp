@@ -195,6 +195,7 @@ void EdgeBasedGraphFactory::Run() {
     //Three nested loop look super-linear, but we are dealing with a linear number of turns only.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
         for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
+            ++nodeBasedEdgeCounter;
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
             //EdgeWeight heightPenalty = ComputeHeightPenalty(u, v);
             NodeID onlyToNode = CheckForEmanatingIsOnlyTurn(u, v);
@@ -223,7 +224,6 @@ void EdgeBasedGraphFactory::Run() {
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, v,  edgeData2.nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
-                        ++nodeBasedEdgeCounter;
                     } else {
                         ++numberOfSkippedTurns;
                     }
