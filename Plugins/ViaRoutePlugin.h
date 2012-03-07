@@ -51,7 +51,6 @@ private:
     StaticGraph<EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
     std::string pluginDescriptorString;
-    bool checksumOK;
     SearchEngine<EdgeData, StaticGraph<EdgeData> > * searchEngine;
 public:
 
@@ -65,7 +64,6 @@ public:
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("json", 0);
         descriptorTable.Set("gpx", 1);
-        checksumOK = false;
     }
 
     virtual ~ViaRoutePlugin() {
@@ -83,7 +81,7 @@ public:
 
         RawRouteData rawRoute;
         rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
-        checksumOK = ((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
+        bool checksumOK = ((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
 //        if(!checksumOK) {
 //            INFO((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) << "!=" << rawRoute.checkSum);
 //            INFO("mismatching checksum");
