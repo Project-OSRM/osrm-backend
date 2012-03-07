@@ -83,9 +83,9 @@ public:
 
         RawRouteData rawRoute;
         rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
-        checksumOK = (atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
+        checksumOK = ((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
         if(!checksumOK) {
-            INFO(atoi(routeParameters.options.Find("checksum").c_str()) << "!=" << rawRoute.checkSum);
+            INFO((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) << "!=" << rawRoute.checkSum);
             INFO("mismatching checksum");
         }
         std::vector<std::string> textCoord;
