@@ -206,7 +206,6 @@ private:
         return way;
     }
 
-
     _Node _ReadXMLNode( ) {
         _Node node;
 
