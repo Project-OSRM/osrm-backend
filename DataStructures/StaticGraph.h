@@ -100,9 +100,15 @@ public:
                 EdgeData & data = GetEdgeData(eid);
                 if(data.shortcut) {
                     unsigned eid2 = FindEdgeInEitherDirection(u, data.via);
-                    assert(eid2 != UINT_MAX);
+                    if(eid2 == UINT_MAX) {
+                        DEBUG("cannot find first segment of edge (" << u << "," << data.via << "," << v << ")");
+                        data.shortcut = false;
+                    }
                     eid2 = FindEdgeInEitherDirection(data.via, v);
-                    assert(eid2 != UINT_MAX);
+                    if(eid2 == UINT_MAX) {
+                        DEBUG("cannot find second segment of edge (" << u << "," << data.via << "," << v << ")");
+                        data.shortcut = false;
+                    }
                 }
             }
             p.printIncrement();
