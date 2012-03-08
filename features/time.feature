@@ -12,7 +12,7 @@ Feature: Estimation of travel time
 
 	Scenario: Basic travel time, 1m scale
 		Given a grid size of 1 meters
-		Given the nodes
+		Given the node map
 		 | h | a | b |
 		 | g | x | c |
 		 | f | e | d |
@@ -41,7 +41,7 @@ Feature: Estimation of travel time
 	
 	Scenario: Basic travel time, 100m scale
 		Given a grid size of 100 meters
-		Given the nodes
+		Given the node map
 		 | h | a | b |
 		 | g | x | c |
 		 | f | e | d |
@@ -70,7 +70,7 @@ Feature: Estimation of travel time
 	
 	Scenario: Basic travel time, 10km scale
 		Given a grid size of 10000 meters
-		Given the nodes
+		Given the node map
 		 | h | a | b |
 		 | g | x | c |
 		 | f | e | d |
@@ -98,7 +98,7 @@ Feature: Estimation of travel time
 		 | x    | h  | xh    | 3400s  |
 
 	Scenario: Time of travel depending on way type
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 | c | d |
 
@@ -113,7 +113,7 @@ Feature: Estimation of travel time
 		 | c    | d  | cd    | 72s  |
 
 	Scenario: Time of travel on a series of ways
-		Given the nodes
+		Given the node map
 		 | a | b | c | d |
 
 		And the ways
@@ -129,7 +129,7 @@ Feature: Estimation of travel time
 		 | a    | d  | ab,bc,cd | 72s  |
 
 	Scenario: Time of travel on a winding way
-		Given the nodes
+		Given the node map
 		 | a | b |   |   |   |   |
 		 |   | c | d | e |   | i |
 		 |   |   |   | f | g | h |
@@ -145,7 +145,7 @@ Feature: Estimation of travel time
 		 | a    | i  | abcdefghi | 192s |
 
 	Scenario: Time of travel on combination of road types
-		Given the nodes
+		Given the node map
 		 | a | b | c | d | e |
 
 		And the ways
@@ -161,7 +161,7 @@ Feature: Estimation of travel time
 		 | a    | e  | abc,cde | 192s |
 
 	Scenario: Time of travel on part of a way
-		Given the nodes
+		Given the node map
 		 | a | 1 |
 		 |   | 2 |
 		 |   | 3 |

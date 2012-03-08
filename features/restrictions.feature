@@ -8,7 +8,7 @@ Feature: Turn restrictions
 	
 	@no_turning
 	Scenario: No left turn
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |
@@ -32,7 +32,7 @@ Feature: Turn restrictions
 
 	@no_turning
 	Scenario: No right turn
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |
@@ -56,7 +56,7 @@ Feature: Turn restrictions
 
 	@no_turning
 	Scenario: No u-turn
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |
@@ -80,7 +80,7 @@ Feature: Turn restrictions
 
 	@no_turning
 	Scenario: Handle any no_* relation
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |
@@ -104,7 +104,7 @@ Feature: Turn restrictions
 
 	@only_turning
 	Scenario: Only left turn
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |
@@ -128,7 +128,7 @@ Feature: Turn restrictions
 
 	@only_turning
 	Scenario: Only right turn
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |
@@ -152,7 +152,7 @@ Feature: Turn restrictions
 	
 	@only_turning
 	Scenario: Only straight on
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |
@@ -176,7 +176,7 @@ Feature: Turn restrictions
 
 	@no_turning
 	Scenario: Handle any only_* restriction
-		Given the nodes
+		Given the node map
 		 |   | n |   |
 		 | w | j | e |
 		 |   | s |   |

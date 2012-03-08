@@ -2,7 +2,7 @@
 Feature: Choosing route based on length, speed, etc
 	
 	Scenario: Pick the geometrically shortest route, way types being equal
-		Given the nodes
+		Given the node map
 		 |   | s |   |
 		 |   | t |   |
 		 | a |   | b |
@@ -18,7 +18,7 @@ Feature: Choosing route based on length, speed, etc
 		 | a    | b  | atb   |
 
 	Scenario: Pick the fastest way type, lengths being equal
-		Given the nodes
+		Given the node map
 		 | a | s |
 		 | p | b |
 	

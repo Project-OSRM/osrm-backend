@@ -3,7 +3,7 @@ Feature: Basic Routing
 	
 	@smallest
 	Scenario: A single way with two nodes
-		Given the nodes
+		Given the node map
 		 | a | b |
 	
 		And the ways
@@ -16,7 +16,7 @@ Feature: Basic Routing
 		 | b    | a  | ab    |
 		
 	Scenario: Routing in between two nodes of way
-		Given the nodes
+		Given the node map
 		 | a | b | 1 | 2 | c | d |
 		
 		And the ways
@@ -29,7 +29,7 @@ Feature: Basic Routing
 		 | 2    | 1  | abcd  |
 
 	Scenario: Routing between the middle nodes of way
-		Given the nodes
+		Given the node map
 		 | a | b | c | d | e | f |
 
 		And the ways
@@ -52,7 +52,7 @@ Feature: Basic Routing
 		 | e    | d  | abcdef |
 
 	Scenario: Two ways connected in a straight line
-		Given the nodes
+		Given the node map
 		 | a | b | c |
 	
 		And the ways
@@ -70,7 +70,7 @@ Feature: Basic Routing
 		 | c    | b  | bc    |
 		
 	Scenario: 2 unconnected parallel ways
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 | c | d |
 		
@@ -93,7 +93,7 @@ Feature: Basic Routing
 		 | d    | a  |       |
 
 	Scenario: 3 ways connected in a triangle
-		Given the nodes
+		Given the node map
 		 | a |   | b |
 		 |   |   |   |
 		 |   | c |   |
@@ -114,7 +114,7 @@ Feature: Basic Routing
 		 | c    | b  | bc    |
 
 	Scenario: To ways connected at a 45 degree angle
-		Given the nodes
+		Given the node map
 		 | a |   |   |
 		 | b |   |   |
 		 | c | d | e |

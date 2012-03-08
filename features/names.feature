@@ -2,7 +2,7 @@
 Feature: Street names in instructions
 	
 	Scenario: A named street
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 	
@@ -16,7 +16,7 @@ Feature: Street names in instructions
 		 | a    | c  | My Way,Your Way |
 		
 	Scenario: Use way type to describe unnamed ways
-		Given the nodes
+		Given the node map
 		 | a | b | c |
 
 		And the ways
@@ -29,7 +29,7 @@ Feature: Street names in instructions
 		 | a    | c  | cycleway,trac |
 	
 	Scenario: Don't create instructions for every node of unnamed ways
-		Given the nodes
+		Given the node map
 		 | a | b | c | d |
 
 		And the ways

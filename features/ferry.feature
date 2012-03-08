@@ -2,7 +2,7 @@
 Feature: Handle ferry routes
 	
 	Scenario: Use a ferry route
-		Given the nodes
+		Given the node map
 		 | a | b | c |   |   |
 		 |   |   | d |   |   |
 		 |   |   | e | f | g |
