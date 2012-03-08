@@ -12,7 +12,7 @@ Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
 
-Given /^the nodes$/ do |table|
+Given /^the node map$/ do |table|
   table.raw.each_with_index do |row,ri|
     row.each_with_index do |name,ci|
       unless name.empty?
@@ -29,6 +29,16 @@ Given /^the nodes$/ do |table|
   end
 end
 
+Given /^the nodes$/ do |table|
+  table.hashes.each do |row|
+    name = row.delete 'node'
+    raise "***invalid node name '#{c}', must be single characters" unless name.size == 1
+    node = find_node_by_name(name)
+    raise "*** unknown node '#{c}'" unless node
+    node << row
+  end
+end
+
 Given /^the ways$/ do |table|
   table.hashes.each do |row|
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
@@ -37,7 +47,7 @@ Given /^the ways$/ do |table|
     nodes = row.delete 'nodes'
     raise "*** duplicate way '#{nodes}'" if name_way_hash[nodes]
     nodes.each_char do |c|
-      raise "*** node invalid name '#{c}', must be single characters" unless c.size == 1
+      raise "***invalid node name '#{c}', must be single characters" unless c.size == 1
       raise "*** ways cannot use numbered nodes, '#{name}'" unless c.match /[a-z]/
       node = find_node_by_name(c)
       raise "*** unknown node '#{c}'" unless node

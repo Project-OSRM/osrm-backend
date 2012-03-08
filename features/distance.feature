@@ -3,7 +3,7 @@ Feature: Distance calculation
 
 	Scenario: Distance of a winding south-north path
 		Given a grid size of 10 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 | d | c |
 		 | e | f |
@@ -25,7 +25,7 @@ Feature: Distance calculation
 		
 	Scenario: Distance of a winding east-west path
 		Given a grid size of 10 meters
-		Given the nodes
+		Given the node map
 		 | a | d | e | h |
 		 | b | c | f | g |
 
@@ -45,7 +45,7 @@ Feature: Distance calculation
 
 	Scenario: Distances when traversing part of a way
 		Given a grid size of 100 meters
-		Given the nodes
+		Given the node map
 		 | a | 0 | 1 | 2 |
 		 | 9 |   |   | 3 |
 		 | 8 |   |   | 4 |
@@ -82,7 +82,7 @@ Feature: Distance calculation
 
 	Scenario: Geometric distances
 		Given a grid size of 1000 meters
-		Given the nodes
+		Given the node map
 		 | v | w | y | a | b | c | d |
 		 | u |   |   |   |   |   | e |
 		 | t |   |   |   |   |   | f |
@@ -147,7 +147,7 @@ Feature: Distance calculation
 
 	Scenario: 1m distances
 		Given a grid size of 1 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 
@@ -166,7 +166,7 @@ Feature: Distance calculation
 
 	Scenario: 10m distances
 		Given a grid size of 10 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 
@@ -185,7 +185,7 @@ Feature: Distance calculation
 
 	Scenario: 100m distances
 		Given a grid size of 100 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 
@@ -204,7 +204,7 @@ Feature: Distance calculation
 
 	Scenario: 1km distance
 		Given a grid size of 1000 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 
@@ -223,7 +223,7 @@ Feature: Distance calculation
 
 	Scenario: 10km distances
 		Given a grid size of 10000 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 
@@ -242,7 +242,7 @@ Feature: Distance calculation
 
 	Scenario: 100km distances
 		Given a grid size of 100000 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 
@@ -261,7 +261,7 @@ Feature: Distance calculation
 
 	Scenario: 1000km distances
 		Given a grid size of 1000000 meters
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 |   | c |
 
@@ -280,7 +280,7 @@ Feature: Distance calculation
 		
 	Scenario: Angles at 1000km scale
 		Given a grid size of 1000 meters
-		Given the nodes
+		Given the node map
 		 |   |   |   | b |   |   |   |
 		 |   |   |   |   |   |   | c |
 		 | a |   |   |   |   |   |   |

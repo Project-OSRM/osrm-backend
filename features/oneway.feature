@@ -15,7 +15,7 @@ Feature: Oneway streets
 		 | primary | -1     |      | x     |
 
 	Scenario: Around the Block
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 | d | c |		
 	

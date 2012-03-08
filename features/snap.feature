@@ -2,7 +2,7 @@
 Feature: Snap start/end point to the nearest way 
 	
 	Scenario: Snap to nearest protruding oneway
-		Given the nodes
+		Given the node map
 		 |   | 1 |   | 2 |   |
 		 | 8 |   | n |   | 3 |
 		 |   | w | c | e |   |
@@ -28,7 +28,7 @@ Feature: Snap start/end point to the nearest way
 		 | 8    | c  | wc    |
 	
 	Scenario: Snap to nearest edge of a square
-		Given the nodes
+		Given the node map
 		 | 4 | 5 | 6 | 7 |
 		 | 3 | a |   | u |
 		 | 2 |   |   |   |
@@ -47,7 +47,7 @@ Feature: Snap start/end point to the nearest way
 		 | 7    | b  | aub   |
 
 	Scenario: Snap to edge right under start/end point
-		Given the nodes
+		Given the node map
 		 | d | e | f | g |
 		 | c |   |   | h |
 		 | b |   |   | i |
@@ -75,7 +75,7 @@ Feature: Snap start/end point to the nearest way
 
 	Scenario: Snap to correct way at large scales 
 		Given a grid size of 1000 meters
-		Given the nodes
+		Given the node map
 		 |   |   |   | a |
 		 | x |   |   | b |
 		 |   |   |   | c |
