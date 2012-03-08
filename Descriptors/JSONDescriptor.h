@@ -114,7 +114,7 @@ public:
 						if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
 							reply.content += TurnInstructions.TurnStrings[TurnInstructions.EnterRoundAbout];
 							reply.content += " and leave at ";
-							reply.content += TurnInstructions.Ordinals[roundAbout.leaveAtExit+1];
+							reply.content += TurnInstructions.Ordinals[std::min(11,roundAbout.leaveAtExit+1)];
 							reply.content += " exit";
 							roundAbout.leaveAtExit = 0;
 						} else {

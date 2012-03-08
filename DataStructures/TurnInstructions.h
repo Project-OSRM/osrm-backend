@@ -43,7 +43,7 @@ struct TurnInstructionsClass {
     const static short StartAtEndOfStreet = 14;
 
     std::string TurnStrings[15];
-    std::string Ordinals[11];
+    std::string Ordinals[12];
 
     //This is a hack until c++0x is available enough to use initializer lists.
     TurnInstructionsClass(){
@@ -73,7 +73,8 @@ struct TurnInstructionsClass {
         Ordinals[7]     = "seventh";
         Ordinals[8]     = "eighth";
         Ordinals[9]     = "nineth";
-        Ordinals[10]     = "tenth";
+        Ordinals[10]    = "tenth";
+        Ordinals[11]    = "one of the too many";
     };
 
     static inline double GetTurnDirectionOfInstruction( const double angle ) {
