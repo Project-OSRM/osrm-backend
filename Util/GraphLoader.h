@@ -161,7 +161,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
     std::vector<ImportEdge>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
     ext2IntNodeMap.clear();
     std::vector<ImportEdge>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
-    INFO("Graph loaded ok");
+    INFO("Graph loaded ok and has " << edgeList.size() << " edges");
     return n;
 }
 template<typename EdgeT>

@@ -29,7 +29,6 @@
 
 template<>
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), trafficSignalPenalty(0) {
-    INFO("Nodes size: " << inputNodeInfoList.size());
     BOOST_FOREACH(_Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
@@ -67,17 +66,26 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     INFO("traffic signal penalty: " << trafficSignalPenalty);
 
     BOOST_FOREACH(NodeID id, bn)
-        _barrierNodes[id] = true;
+    _barrierNodes[id] = true;
     BOOST_FOREACH(NodeID id, tl)
-        _trafficLights[id] = true;
+    _trafficLights[id] = true;
 
     std::vector< _NodeBasedEdge > edges;
     edges.reserve( 2 * inputEdges.size() );
-    for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(), e = inputEdges.end(); i != e; ++i ) {
-        _NodeBasedEdge edge;
-        edge.source = i->source();
-        edge.target = i->target();
+    for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
 
+        _NodeBasedEdge edge;
+        if(!i->isForward()) {
+            edge.source = i->target();
+            edge.target = i->source();
+            edge.data.backward = i->isForward();
+            edge.data.forward = i->isBackward();
+       } else {
+            edge.source = i->source();
+            edge.target = i->target();
+            edge.data.forward = i->isForward();
+            edge.data.backward = i->isBackward();
+        }
         if(edge.source == edge.target)
             continue;
 
@@ -88,8 +96,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         edge.data.ignoreInGrid = i->ignoreInGrid();
         edge.data.nameID = i->name();
         edge.data.type = i->type();
-        edge.data.forward = i->isForward();
-        edge.data.backward = i->isBackward();
         edge.data.edgeBasedNodeID = edges.size();
         edges.push_back( edge );
         if( edge.data.backward ) {
@@ -267,7 +273,7 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
         if( (!data1.roundabout) && data2.roundabout)
             return TurnInstructions.EnterRoundAbout;
         //We are leaving the roundabout
-        if(data1.roundabout && (!data2.roundabout) )
+        else if(data1.roundabout && (!data2.roundabout) )
             return TurnInstructions.LeaveRoundAbout;
     }
 
