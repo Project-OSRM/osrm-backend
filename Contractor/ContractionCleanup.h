@@ -132,11 +132,7 @@ private:
 
     void BuildOutgoingGraph() {
         //sort edges by source
-#ifdef _GLIBCXX_PARALLEL
-        __gnu_parallel::sort( _graph.begin(), _graph.end(), Edge::CompareBySource );
-#else
         sort( _graph.begin(), _graph.end(), Edge::CompareBySource );
-#endif
         try {
             _firstEdge.resize( _numNodes + 1 );
         } catch(...) {
@@ -162,23 +158,9 @@ private:
 
         INFO("Scanning for useless shortcuts");
         BuildOutgoingGraph();
-#pragma omp parallel for
+/*
+        #pragma omp parallel for
         for ( int i = 0; i < ( int ) _graph.size(); i++ ) {
-            for ( unsigned edge = _firstEdge[_graph[i].source]; edge < _firstEdge[_graph[i].source + 1]; ++edge ) {
-                if ( edge == (unsigned)i )
-                    continue;
-                if ( _graph[edge].target != _graph[i].target )
-                    continue;
-                if ( _graph[edge].data.distance < _graph[i].data.distance )
-                    continue;
-
-                _graph[edge].data.forward &= !_graph[i].data.forward;
-                _graph[edge].data.backward &= !_graph[i].data.backward;
-            }
-
-            if ( !_graph[i].data.forward && !_graph[i].data.backward )
-                continue;
-
             //only remove shortcuts
             if ( !_graph[i].data.shortcut )
                 continue;
@@ -191,18 +173,18 @@ private:
             }
             if ( _graph[i].data.backward ) {
                 int result = _ComputeDistance( _graph[i].target, _graph[i].source, threadData[omp_get_thread_num()] );
-
                 if ( result < _graph[i].data.distance ) {
                     _graph[i].data.backward = false;
                 }
             }
         }
-
+*/
         INFO("Removing edges");
         int useful = 0;
         for ( int i = 0; i < ( int ) _graph.size(); i++ ) {
-            if ( !_graph[i].data.forward && !_graph[i].data.backward && _graph[i].data.shortcut )
+            if ( !_graph[i].data.forward && !_graph[i].data.backward && _graph[i].data.shortcut ) {
                 continue;
+            }
             _graph[useful] = _graph[i];
             useful++;
         }
