@@ -2,7 +2,7 @@
 Feature: Handle bad data in a graceful manner
 	
 	Scenario: Empty dataset
-		Given the nodes
+		Given the node map
 		 | a | b |
 
 		Given the ways
@@ -13,7 +13,7 @@ Feature: Handle bad data in a graceful manner
 		 | a    | b  |       |
 
 	Scenario: Start/end point at the same location
-		Given the nodes
+		Given the node map
 		 | a | b |
 		 | 1 | 2 |
 
@@ -29,7 +29,7 @@ Feature: Handle bad data in a graceful manner
 		 | 2    | 2  |       |
 
 	Scenario: Start/end point far outside data area
-		Given the nodes
+		Given the node map
 		 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    | 1 |
 		 | a | b |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    | 2 |
 		 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    | 3 |

@@ -2,7 +2,7 @@
 Feature: Basic Routing
 	
 	Scenario: Streetnames with UTF characters
-		Given the nodes
+		Given the node map
 		 | a | b | c | d |
 
 		And the ways
