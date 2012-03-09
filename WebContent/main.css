@@ -238,3 +238,36 @@ html, body, #map {
 	padding:5px;
 	font-size:10px;
 }
+
+/* buttons */
+.button
+{
+	cursor:pointer;
+	padding:2px 10px 2px 10px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	background-color:#EEEEEE;
+	border:1px solid #999999;
+	color:#333333;
+	text-decoration:none;
+	font-size:11px;
+	outline-style:none;  
+}
+.button:hover
+{
+	background-color:#F9F9F9;
+	color:#000000;
+}
+.button:active
+{
+	background-color:#F4F4F4;
+	color:#FF0000;
+}
+
+/* generally useful styles */
+.not-selectable
+{
+	-moz-user-select: none;  
+	-webkit-user-select: none;  
+	-ms-user-select: none;
+}

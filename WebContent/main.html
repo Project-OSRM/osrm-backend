@@ -11,6 +11,10 @@
 <meta name="description" content="OSRM Website"/>
 <meta name="author" content="Dennis Schieferdecker" />
 
+<!-- stylesheets -->
+<link rel="stylesheet" href="leaflet/leaflet.css" />
+<link rel="stylesheet" href="main.css" />
+
 <!-- scripts -->
 <script src="leaflet/leaflet-src.js"></script>
 <!--[if lte IE 8]><link rel="stylesheet" href="leaflet/leaflet.ie.css" /><![endif]-->
@@ -34,10 +38,6 @@
 <script src="via.js"></script>
 
 <script src="utils.js"></script>
-
-<!-- stylesheets -->
-<link rel="stylesheet" href="leaflet/leaflet.css" />
-<link rel="stylesheet" href="main.css" />
 </head>
 
 
@@ -67,15 +67,15 @@
     <tr>
     <td id="gui-search-source-label">Start:</td>
     <td><input id="input-source-name" class="input-box" type="text" value="Karlsruhe" title="Startposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_ID, document.getElementById('input-source-name').value);}" /></td>
-    <!--  <td class="right"><button id="gui-here-source" onclick="">i</button></td>  -->
-    <td class="right"><button id="gui-search-source" onclick="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);">Suchen</button></td>
+    <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
+    <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);">Suchen</a></td>
     </tr>
     
     <tr>
     <td id="gui-search-target-label">Ende:</td>
     <td><input id="input-target-name" class="input-box" type="text" value="Aalen" title="Zielposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_ID, document.getElementById('input-target-name').value);}" /></td>
-    <!--  <td class="right"><button id="gui-here-target" onclick="">i</button></td>  -->
-    <td class="right"><button id="gui-search-target" onclick="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);" >Suchen</button></td>
+    <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
+    <td class="right"><a class="button not-selectable" id="gui-search-target" onclick="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);">Suchen</a></td>
     </tr>
     </table>
     
@@ -83,16 +83,16 @@
     <div class="vquad"></div>
     <table style="width:100%">
     <tr>
-    <td><button id="gui-reset" onclick="resetRouting();">Reset</button></td>
-    <td class="center"><button id="gui-reverse" onclick="reverseRouting();">Reverse</button></td>
-    <td class="right"><button id="gui-route" onclick="startRouting();">Route</button></td>
+    <td>				<a class="button not-selectable" id="gui-reset" onclick="resetRouting();">Reset</a></td>
+    <td class="center">	<a class="button not-selectable" id="gui-reverse" onclick="reverseRouting();">Reverse</a></td>
+    <td class="right">	<a class="button not-selectable" id="gui-route" onclick="startRouting();">Route</a></td>
     </tr>
     </table>
-
+    
 	<!-- options -->
     <div class="vquad"></div>
-    <div id="options-toggle" class="main-options" onclick="OSRM.GUI.toggleOptions()">Options</div>
-    <div id="options-box" class="main-options">
+    <div class="main-options not-selectable" id="options-toggle" onclick="OSRM.GUI.toggleOptions()">Options</div>
+    <div class="main-options not-selectable" id="options-box">
     <input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="getRoute(OSRM.FULL_DESCRIPTION)" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
     </div>
 </div>
