@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+
+
+<!--- head --->
+<head>
+
+<!-- metatags -->
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>OSRM Website</title>
+<meta name="description" content="OSRM Website"/>
+<meta name="author" content="Dennis Schieferdecker" />
+
+<!-- scripts -->
+<script src="leaflet/leaflet-src.js"></script>
+<!--[if lte IE 8]><link rel="stylesheet" href="leaflet/leaflet.ie.css" /><![endif]-->
+<script src="L.DashedPolyline.js"></script>
+<script src="L.MouseMarker.js"></script>
+
+<script src="OSRM.base.js"></script>
+<script src="OSRM.config.js"></script>
+
+<script src="OSRM.Browser.js"></script>
+<script src="OSRM.GUI.js"></script>
+<script src="OSRM.JSONP.js"></script>
+<script src="OSRM.Markers.js"></script>
+<script src="OSRM.Route.js"></script>
+<script src="OSRM.Localization.js"></script>
+
+<script src="main.js"></script>
+<script src="routing.js"></script>
+
+<script src="geocoder.js"></script>
+<script src="via.js"></script>
+
+<script src="utils.js"></script>
+
+<!-- stylesheets -->
+<link rel="stylesheet" href="leaflet/leaflet.css" />
+<link rel="stylesheet" href="main.css" />
+</head>
+
+
+<!--- body --->
+<body onload="init();">
+
+<!--map-->
+<div id="map"></div>
+
+<!-- show ui blob -->
+<div id="blob-wrapper" class="gui-wrapper">
+<div id="blob-input" class="gui-box">
+   	<div id="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
+</div>
+</div>
+
+<!-- show main gui -->
+<div id="main-wrapper" class="gui-wrapper">
+
+<!-- input box -->
+<div id="main-input" class="gui-box">
+	<div id="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
+	<img id="osrm-logo" alt="OSRM Logo" src="images/osrm-logo.png" />
+
+	<!-- source/target input -->
+    <table class="full">
+    <tr>
+    <td id="gui-search-source-label">Start:</td>
+    <td><input id="input-source-name" class="input-box" type="text" value="Karlsruhe" title="Startposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_ID, document.getElementById('input-source-name').value);}" /></td>
+    <!--  <td class="right"><button id="gui-here-source" onclick="">i</button></td>  -->
+    <td class="right"><button id="gui-search-source" onclick="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);">Suchen</button></td>
+    </tr>
+    
+    <tr>
+    <td id="gui-search-target-label">Ende:</td>
+    <td><input id="input-target-name" class="input-box" type="text" value="Aalen" title="Zielposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_ID, document.getElementById('input-target-name').value);}" /></td>
+    <!--  <td class="right"><button id="gui-here-target" onclick="">i</button></td>  -->
+    <td class="right"><button id="gui-search-target" onclick="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);" >Suchen</button></td>
+    </tr>
+    </table>
+    
+	<!-- action buttons -->
+    <div class="vquad"></div>
+    <table style="width:100%">
+    <tr>
+    <td><button id="gui-reset" onclick="resetRouting();">Reset</button></td>
+    <td class="center"><button id="gui-reverse" onclick="reverseRouting();">Reverse</button></td>
+    <td class="right"><button id="gui-route" onclick="startRouting();">Route</button></td>
+    </tr>
+    </table>
+
+	<!-- options -->
+    <div class="vquad"></div>
+    <div id="options-toggle" class="main-options" onclick="OSRM.GUI.toggleOptions()">Options</div>
+    <div id="options-box" class="main-options">
+    <input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="getRoute(OSRM.FULL_DESCRIPTION)" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
+    </div>
+</div>
+
+<!-- output box -->
+<div id="main-output" class="gui-box">
+	<div id="information-box-headline"></div>
+	<div id="information-box"></div>
+	<div id="legal-notice">GUI by Dennis Schieferdecker</div>
+</div>
+
+</div>
+
+</body>
+</html>

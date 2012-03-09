@@ -1,0 +1,27 @@
+<html> 
+<head>
+
+<script src="leaflet/leaflet-src.js"></script>
+<script src="OSRM.js"></script>
+<script src="OSRM.Markers.js"></script>
+
+<script type="text/javascript">
+function testSnippet()
+{
+	var marker = new OSRM.RouteMarker("source",undefined,new L.Icon('images/marker-source.png'));
+	marker.yyy();
+	for(a in marker)
+		alert(a);
+	alert(marker);
+}
+</script>
+</head>
+<body>
+
+<h1>Test Javascript Snippets</h1>
+<p id="output">This could be your output.</p>
+
+<button type="button" onclick="testSnippet()">Run Snippet</button>
+
+</body>
+</html> 

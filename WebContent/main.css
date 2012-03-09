@@ -1,0 +1,240 @@
+/* styles for map */
+body {
+    padding: 0;
+    margin: 0;
+}
+html, body, #map {
+    height: 100%;
+}
+#map {
+	z-index: 0;
+}
+
+
+/* styles for gui */
+.vquad
+{
+	height:10px;
+}
+
+.gui-wrapper
+{
+	position:absolute;
+	border-radius:10px;
+	-moz-border-radius:10px;
+	-webkit-border-radius:10px;
+	background-color:#666666;
+	background-color:rgba(0, 0, 0, 0.25);
+	transition:left 1s;
+	-moz-transition:left 1s;
+	-webkit-transition:left 1s;
+	-o-transition:left 1s;
+}
+.gui-box
+{
+	position:absolute;
+	background-color:#ffffff;	
+	background-color:rgba(255,255,255,1);
+	border-radius:10px;
+	-moz-border-radius:10px;
+	-webkit-border-radius:10px;	
+	margin:5px;
+	padding:5px;	
+}
+
+#main-wrapper
+{
+	width:410px;
+	height:95%;
+	top:5px;
+	left:5px;
+}
+#main-input
+{
+	width:390px;
+	height:200px;
+}
+#main-output
+{
+	width:390px;
+	top:220px;
+	bottom:0px;
+}
+
+#blob-wrapper
+{
+	left:-5px;
+	top:5px;
+	width:36px;
+	height:36px;
+	border-top-left-radius:0px;
+	border-bottom-left-radius:0px;
+	-moz-border-radius-topleft:0px;
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-top-left-radius:0px;
+	-webkit-border-bottom-left-radius:0px;
+	visibility:hidden;
+}
+#blob-input
+{
+	width:26px;
+	height:26px;
+	border-top-left-radius:0px;
+	border-bottom-left-radius:0px;
+	-moz-border-radius-topleft:0px;
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-top-left-radius:0px;
+	-webkit-border-bottom-left-radius:0px;	
+	padding:0px;
+}
+
+#main-toggle
+{
+	cursor:pointer;
+	position:absolute;
+	right:5px;
+	top:5px;
+	width:16px;
+	height:16px;
+	background-image:url("images/cancel.png");	
+}
+#main-toggle:hover
+{
+	background-image:url("images/cancel_hover.png");
+}
+#main-toggle:active
+{
+	background-image:url("images/cancel_active.png");
+}
+
+.main-options
+{
+	cursor:pointer;
+	font-size:10px;
+}
+#options-toggle
+{
+	color:#0000ff
+}
+#options-toggle:hover
+{
+	color:#ff0000
+}
+#options-box
+{
+	visibility:hidden;
+}
+
+#osrm-logo
+{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 200px;
+    height: 50px;
+	text-align:center;
+	vertical-align: middle;    
+}
+
+.input-box
+{
+	width: 250px;
+}
+
+
+.full
+{
+	width:100%;
+}
+.right
+{
+	text-align:right;
+}
+.center
+{
+	text-align:center;
+}
+
+#information-box
+{
+	position:absolute;
+	bottom:15px;
+	top:50px;
+	width:380px;
+	font-size:12px;
+	overflow:auto;
+	margin:5px;
+}
+
+.route-summary
+{
+	font-size: 12px;
+}
+#gpx-link
+{
+	color:#0000ff;
+	text-decoration:none;
+}
+#gpx-link:hover
+{
+	color:#ff0000;
+}
+.results-table
+{
+	border-spacing:0px;
+}
+.results-odd
+{
+	background-color: #FAF3E9; //#ffffff;
+}
+.results-even
+{
+	background-color: #F2DE9C; //#ffffe0;
+}
+.result-counter
+{
+	text-align:right;
+	vertical-align: top;
+	width:30px;
+	font-weight:bold;
+	padding-left:5px;
+	padding-right:5px;
+	padding-top:1px;
+	padding-bottom:1px;
+}
+.result-items
+{
+	text-align:left;
+	vertical-align: middle;
+	width:100%;
+	padding-left:1px;
+	padding-right:1px;
+	padding-top:1px;
+	padding-bottom:1px;	
+}
+.result-direction
+{
+	width:30px;
+	padding-left:1px;
+	padding-right:1px;
+	padding-top:1px;
+	padding-bottom:1px;	
+}
+.result-item
+{
+	cursor:pointer;
+	color:#000000
+}
+.result-item:hover
+{
+	color:#ff0000
+}
+
+#legal-notice
+{
+	position:absolute;
+	right:0px;
+	bottom:0px;
+	padding:5px;
+	font-size:10px;
+}
