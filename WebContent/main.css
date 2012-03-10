@@ -159,7 +159,7 @@ html, body, #map {
 {
 	position:absolute;
 	bottom:15px;
-	top:50px;
+	top:60px;
 	width:380px;
 	font-size:12px;
 	overflow:auto;
@@ -267,6 +267,7 @@ html, body, #map {
 /* generally useful styles */
 .not-selectable
 {
+	cursor:default;
 	-moz-user-select: none;  
 	-webkit-user-select: none;  
 	-ms-user-select: none;
