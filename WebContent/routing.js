@@ -378,6 +378,19 @@ function getDirectionIcon(name) {
 		"Continue":"continue.png",
 		"Turn slight left":"slight-left.png",
 		"Turn slight right":"slight-right.png",
+		"Turn sharp left":"sharp-left.png",
+		"Turn sharp right":"sharp-right.png",
+		"Enter round-about and leave at first exit":"round-about-9.png",
+		"Enter round-about and leave at second exit":"round-about-9.png",
+		"Enter round-about and leave at third exit":"round-about-9.png",
+		"Enter round-about and leave at forth exit":"round-about-9.png",
+		"Enter round-about and leave at fifth exit":"round-about-9.png",
+		"Enter round-about and leave at sixth exit":"round-about-9.png",
+		"Enter round-about and leave at seventh exit":"round-about-9.png",
+		"Enter round-about and leave at eighth exit":"round-about-9.png",
+		"Enter round-about and leave at nineth exit":"round-about-9.png",
+		"Enter round-about and leave at tenth exit":"round-about-9.png",
+		"Enter round-about and leave at one of the too many exit":"round-about-9.png",
 	};
 	
 	if( directions[name] )
