@@ -129,7 +129,7 @@ toString: function() {
 //marker array class
 OSRM.Markers = function() {
 	this.route = new Array();
-	this.highlight = new OSRM.HighlightMarker("highlight", {draggable:false,icon:new L.Icon('images/marker-highlight.png')});;
+	this.highlight = new OSRM.HighlightMarker("highlight", {draggable:false,icon:OSRM.icons['marker-highlight']});;
 };
 OSRM.extend( OSRM.Markers,{
 removeAll: function() {
@@ -148,7 +148,7 @@ setSource: function(position) {
 	if( this.route[0] && this.route[0].label == OSRM.SOURCE_MARKER_LABEL )
 		this.route[0].setPosition(position);
 	else
-		this.route.splice(0,0, new OSRM.RouteMarker("source", {draggable:true,icon:new L.Icon('images/marker-source.png')}, position));
+		this.route.splice(0,0, new OSRM.RouteMarker("source", {draggable:true,icon:OSRM.icons['marker-source']}, position));
 	return 0;	
 },
 setTarget: function(position) {
@@ -156,7 +156,7 @@ setTarget: function(position) {
 	if( this.route[this.route.length-1] && this.route[ this.route.length-1 ].label == OSRM.TARGET_MARKER_LABEL )
 		this.route[this.route.length-1].setPosition(position);
 	else
-		this.route.splice( this.route.length,0, new OSRM.RouteMarker("target", {draggable:true,icon:new L.Icon('images/marker-target.png')}, position));
+		this.route.splice( this.route.length,0, new OSRM.RouteMarker("target", {draggable:true,icon:OSRM.icons['marker-target']}, position));
 	return this.route.length-1;
 },
 setVia: function(id, position) {
@@ -164,7 +164,7 @@ setVia: function(id, position) {
 	if( this.route.length<2 || id > this.route.length-2 )
 		return -1;
 	
-	this.route.splice(id+1,0, new OSRM.RouteMarker("via", {draggable:true,icon:new L.Icon('images/marker-via.png')}, position));
+	this.route.splice(id+1,0, new OSRM.RouteMarker("via", {draggable:true,icon:OSRM.icons['marker-via']}, position));
 	return id+1;
 },
 removeMarker: function(id) {

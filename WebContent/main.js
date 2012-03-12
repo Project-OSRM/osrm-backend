@@ -3,6 +3,7 @@ var map;
 
 function init() {
 	prefetchImages();
+	prefetchIcons();
 	
 	initLocale();
 	initMap();
@@ -14,18 +15,32 @@ function init() {
 
 
 // prefetch images
+OSRM.images = Array();
 function prefetchImages() {
-	var images = [	'images/marker-source.png',
-	              	'images/marker-target.png',
-	              	'images/marker-via.png',
-	              	'images/marker-highlight.png'
+	var images = [	'http://map.project-osrm.org/new/images/marker-source.png',
+	              	'http://map.project-osrm.org/new/images/marker-target.png',
+	              	'http://map.project-osrm.org/new/images/marker-via.png',
+	              	'http://map.project-osrm.org/new/images/marker-highlight.png'
 	              ];
-	var tmp = [];
 	
 	for(var i=0; i<images.length; i++) {
-		tmp[i] = new Image();
-		tmp[i].src = images[i];
+		OSRM.images[i] = new Image();
+		OSRM.images[i].src = images[i];
 	}
+}
+
+
+// prefetch icons
+OSRM.icons = Array();
+function prefetchIcons() {
+	var images = [	'marker-source',
+	              	'marker-target',
+	              	'marker-via',
+	              	'marker-highlight',
+	              ];
+
+	for(var i=0; i<images.length; i++)
+		OSRM.icons[images[i]] = new L.Icon('http://map.project-osrm.org/new/images/'+images[i]+'.png');
 }
 
 
