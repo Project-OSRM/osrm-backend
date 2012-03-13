@@ -56,10 +56,8 @@ function showRouteSimple(response) {
  	if(!response)
  		return;
  	
- 	if (OSRM.JSONP.fences.route) {			// is this still needed?
- 		OSRM.debug.log("fenced");
+ 	if (OSRM.JSONP.fences.route)			// prevent simple routing when real routing is done!
  		return;
- 	}
  	
 	if( response.status == 207) {
 		showNoRouteGeometry();
