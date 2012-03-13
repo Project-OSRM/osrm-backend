@@ -35,6 +35,7 @@ else	// IE
 // working functions
 OSRM.debug.log = function(text) {
 	OSRM.debug.content.innerHTML += text + "<hr style='border:none; margin:2px; height:1px; color:#F0F0F0; background:#F0F0F0;'/>";
+	OSRM.debug.content.scrollTop = OSRM.debug.content.scrollHeight; 
 };
 OSRM.debug.clear = function() {
 	OSRM.debug.content.innerHTML = "";
