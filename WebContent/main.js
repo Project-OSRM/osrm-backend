@@ -76,10 +76,6 @@ function centerOnGeolocation() {
 
 // init map
 function initMap() {
-	var mapquestURL = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-		mapquestAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 MapQuest',
-		mapquestOptions = {maxZoom: 18, attribution: mapquestAttribution, subdomains: '1234'};
-	
 	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 		osmorgAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
 		osmorgOptions = {maxZoom: 18, attribution: osmorgAttribution};
@@ -88,13 +84,17 @@ function initMap() {
 		osmdeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
 		osmdeOptions = {maxZoom: 18, attribution: osmdeAttribution};
 	
+	var mapquestURL = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+		mapquestAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 MapQuest',
+		mapquestOptions = {maxZoom: 18, attribution: mapquestAttribution, subdomains: '1234'};	
+	
 	var cloudmadeURL = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png',
     	cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
 	    cloudmadeOptions = {maxZoom: 18, attribution: cloudmadeAttribution};
 
-	var mapquest = new L.TileLayer(mapquestURL, mapquestOptions),
-    	osmorg = new L.TileLayer(osmorgURL, osmorgOptions),
+	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions),
     	osmde = new L.TileLayer(osmdeURL, osmdeOptions),
+    	mapquest = new L.TileLayer(mapquestURL, mapquestOptions),
 	    cloudmade = new L.TileLayer(cloudmadeURL, cloudmadeOptions);
 
 	map = new L.Map('map', {
@@ -102,7 +102,7 @@ function initMap() {
 	    zoom: 13,
 	    zoomAnimation: false,					// uncomment to remove animations and hiding of routes during zoom
 	    fadeAnimation: false,
-	    layers: [mapquest]
+	    layers: [osmorg]
 	});
 
 	var baseMaps = {

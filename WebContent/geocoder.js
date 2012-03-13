@@ -1,5 +1,5 @@
 // some constants
-OSRM.GEOCODE_POST = 'http://open.mapquestapi.com/nominatim/v1/search?format=json';
+OSRM.GEOCODE_POST = 'http://nominatim.openstreetmap.org/search?format=json';
 OSRM.SOURCE_MARKER_LABEL = "source";
 OSRM.TARGET_MARKER_LABEL = "target";
 
