@@ -16,14 +16,21 @@ OSRM.debug.init = function() {
 	box.id = "OSRM.debug-box";
 	box.className = "gui-box";
 	box.style.cssText = "width:390px;top:0px;bottom:0px;";
+	
+	var clear = document.createElement('a');
+	clear.id = "OSRM.debug-clear";
+	clear.className = "button not-selectable";
+	clear.innerHTML = "clear";
+	clear.onclick = OSRM.debug.clear;
 
 	OSRM.debug.content= document.createElement('div');
 	OSRM.debug.content.id = "OSRM.debug-content";
-	OSRM.debug.content.style.cssText = "position:absolute;bottom:0px;top:0px;width:380px;font-size:11px;overflow:auto;margin:5px;";	
-	
+	OSRM.debug.content.style.cssText = "position:absolute;bottom:0px;top:20px;width:380px;font-size:11px;overflow:auto;margin:5px;";
+		
 	// add elements
 	document.body.appendChild(wrapper);
 	wrapper.appendChild(box);
+	box.appendChild(clear);
 	box.appendChild(OSRM.debug.content);
 };
 if(document.addEventListener)	// FF, CH

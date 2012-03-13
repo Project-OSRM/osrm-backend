@@ -89,7 +89,7 @@ html, body, #map {
 	padding:0px;
 }
 
-#main-toggle
+.main-toggle
 {
 	cursor:pointer;
 	position:absolute;
@@ -110,11 +110,11 @@ html, body, #map {
 
 .main-options
 {
-	cursor:pointer;
 	font-size:10px;
 }
 #options-toggle
 {
+	cursor:pointer;
 	color:#0000ff
 }
 #options-toggle:hover
@@ -175,6 +175,7 @@ html, body, #map {
 {
 	color:#0000ff;
 	text-decoration:none;
+	cursor:pointer;
 }
 #gpx-link:hover
 {
@@ -240,6 +241,25 @@ html, body, #map {
 	font-size:10px;
 }
 
+/* generally useful styles (above buttons, so that they get their special cursor!)*/
+.not-selectable
+{
+	cursor:default;
+	-moz-user-select: -moz-none;  
+	-webkit-user-select: none;  
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.text-selectable
+{
+	cursor:default;
+	-moz-user-select: text;  
+	-webkit-user-select: text;  
+	-ms-user-select: text;
+	user-select: text;
+}
+
 /* buttons */
 .button
 {
@@ -263,23 +283,4 @@ html, body, #map {
 {
 	background-color:#F4F4F4;
 	color:#FF0000;
-}
-
-/* generally useful styles */
-.not-selectable
-{
-	cursor:default;
-	-moz-user-select: -moz-none;  
-	-webkit-user-select: none;  
-	-ms-user-select: none;
-	user-select: none;
-}
-
-.text-selectable
-{
-	cursor:default;
-	-moz-user-select: text;  
-	-webkit-user-select: text;  
-	-ms-user-select: text;
-	user-select: text;
 }

@@ -2,7 +2,7 @@
 <html>
 
 
-<!--- head --->
+<!-- head -->
 <head>
 
 <!-- metatags -->
@@ -12,37 +12,37 @@
 <meta name="author" content="Dennis Schieferdecker" />
 
 <!-- stylesheets -->
-<link rel="stylesheet" href="leaflet/leaflet.css" />
-<link rel="stylesheet" href="main.css" />
+<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css"/>
+<link rel="stylesheet" href="main.css" type="text/css"/>
 
 <!-- scripts -->
-<script src="leaflet/leaflet-src.js"></script>
-<!--[if lte IE 8]><link rel="stylesheet" href="leaflet/leaflet.ie.css" /><![endif]-->
-<script src="L.DashedPolyline.js"></script>
-<script src="L.MouseMarker.js"></script>
+<script src="leaflet/leaflet-src.js" type="text/javascript"></script>
+<!--[if lte IE 8]><link rel="stylesheet" href="leaflet/leaflet.ie.css" type="text/css"/><![endif]-->
+<script src="L.DashedPolyline.js" type="text/javascript"></script>
+<script src="L.MouseMarker.js" type="text/javascript"></script>
 
-<script src="OSRM.base.js"></script>
-<script src="OSRM.config.js"></script>
-<script defer="defer" src="OSRM.debug.js"></script>
+<script src="OSRM.base.js" type="text/javascript"></script>
+<script src="OSRM.config.js" type="text/javascript"></script>
+<script defer="defer" src="OSRM.debug.js" type="text/javascript"></script>
 
-<script src="OSRM.Browser.js"></script>
-<script src="OSRM.GUI.js"></script>
-<script src="OSRM.JSONP.js"></script>
-<script src="OSRM.Markers.js"></script>
-<script src="OSRM.Route.js"></script>
-<script src="OSRM.Localization.js"></script>
+<script src="OSRM.Browser.js" type="text/javascript"></script>
+<script src="OSRM.GUI.js" type="text/javascript"></script>
+<script src="OSRM.JSONP.js" type="text/javascript"></script>
+<script src="OSRM.Markers.js" type="text/javascript"></script>
+<script src="OSRM.Route.js" type="text/javascript"></script>
+<script src="OSRM.Localization.js" type="text/javascript"></script>
 
-<script src="main.js"></script>
-<script src="routing.js"></script>
+<script src="main.js" type="text/javascript"></script>
+<script src="routing.js" type="text/javascript"></script>
 
-<script src="geocoder.js"></script>
-<script src="via.js"></script>
+<script src="geocoder.js" type="text/javascript"></script>
+<script src="via.js" type="text/javascript"></script>
 
-<script src="utils.js"></script>
+<script src="utils.js" type="text/javascript"></script>
 </head>
 
 
-<!--- body --->
+<!-- body -->
 <body onload="init();">
 
 <!--map-->
@@ -51,7 +51,7 @@
 <!-- show ui blob -->
 <div id="blob-wrapper" class="gui-wrapper">
 <div id="blob-input" class="gui-box">
-   	<div id="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
+   	<div class="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
 </div>
 </div>
 
@@ -60,7 +60,7 @@
 
 <!-- input box -->
 <div class="gui-box not-selectable" id="main-input">
-	<div id="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
+	<div class="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
 	<img id="osrm-logo" alt="OSRM Logo" src="images/osrm-logo.png" />
 
 	<!-- source/target input -->
