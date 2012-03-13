@@ -56,8 +56,10 @@ function showRouteSimple(response) {
  	if(!response)
  		return;
  	
- 	if (OSRM.JSONP.fences.route)
+ 	if (OSRM.JSONP.fences.route) {			// is this still needed?
+ 		OSRM.debug.log("fenced");
  		return;
+ 	}
  	
 	if( response.status == 207) {
 		showNoRouteGeometry();
@@ -68,6 +70,11 @@ function showRouteSimple(response) {
 		showRouteDescriptionSimple(response);
 	}
 	updateHints(response);
+	
+//	if(OSRM.pending) {
+//		clearTimeout(OSRM.pendingTimer);
+//		OSRM.pendingTimer = setTimeout(timeoutDrag,100);	// dirty dirty!		
+//	}
 }
 function showRoute(response) {
 	if(!response)
@@ -298,11 +305,18 @@ function getRoute(do_description) {
 	else {
 		clearTimeout(OSRM.pendingTimer);
 	}
+//	if(called == false && !do_description) {
+//		OSRM.pending = true;
+//	} else {
+//		clearTimeout(OSRM.pendingTimer);
+//		OSRM.pending = false;
+//	}
 }
 
 function timeoutDrag() {
 	my_markers.route[OSRM.dragid].hint = undefined;
-	getRoute(OSRM.NO_DESCRIPTION);	
+	getRoute(OSRM.NO_DESCRIPTION);
+//	OSRM.debug.log("timer");
 }
 
 function startRouting() {
@@ -334,7 +348,10 @@ function snapRoute() {
  	my_markers.route[0].setPosition( positions[0] );
  	my_markers.route[my_markers.route.length-1].setPosition( positions[positions.length-1] );
  	for(var i=0; i<via_points.length; i++)
-		my_markers.route[i+1].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) ); 	
+		my_markers.route[i+1].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) );
+
+ 	updateLocation( "source" );
+ 	updateLocation( "target" );
 }
 
 function positionsToInput() {

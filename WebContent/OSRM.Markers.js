@@ -90,15 +90,17 @@ onClick: function(e) {
 	my_markers.highlight.hide();
 },
 onDrag: function(e) {
-//	console.log("[event] drag event");
+//	OSRM.debug.log("[event] drag event");
 	this.parent.setPosition( e.target.getLatLng() );
 	if(OSRM.dragging == true)								// TODO: hack to deal with drag events after dragend event
 		getRoute(OSRM.NO_DESCRIPTION);
-	else
-		getRoute(OSRM.FULL_DESCRIPTION);
+//	else
+//		getRoute(OSRM.FULL_DESCRIPTION);
+	
+	updateLocation( this.parent.label );
 },
 onDragStart: function(e) {
-//	console.log("[event] dragstart event");
+//	OSRM.debug.log("[event] dragstart event");
 	OSRM.dragging = true;
 	
 	// hack to store id of dragged marker
@@ -112,16 +114,19 @@ onDragStart: function(e) {
 	if (my_route.isShown()) {
 		my_route.showOldRoute();
 	}
+	
+	updateLocation( this.parent.label );	
 },
 onDragEnd: function(e) {
-//	console.log("[event] dragend event");
+//	OSRM.debug.log("[event] dragend event");
 	getRoute(OSRM.FULL_DESCRIPTION);
 	if (my_route.isShown()) {
 		my_route.hideOldRoute();
 		my_route.hideUnnamedRoute();						// provides better visuals
 	}
 	OSRM.dragging = false;
-	//positionsToInput();
+	
+	updateLocation( this.parent.label );
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";
