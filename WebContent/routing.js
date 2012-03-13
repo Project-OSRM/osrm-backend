@@ -85,6 +85,7 @@ function showRoute(response) {
 		snapRoute();
 	}
 	updateHints(response);
+	updateLocations();
 }
 
 function showNoRouteGeometry() {
@@ -346,6 +347,12 @@ function positionsToInput() {
 }
 
 function reverseRouting() {
+	// invert input boxes
+	var tmp = document.getElementById("input-source-name").value;
+	document.getElementById("input-source-name").value = document.getElementById("input-target-name").value;
+	document.getElementById("input-target-name").value = tmp;
+	
+	// invert route
 	my_markers.route.reverse();
 	if(my_markers.route.length == 1) {
 		if(my_markers.route[0].label == OSRM.TARGET_MARKER_LABEL) {
@@ -362,6 +369,8 @@ function reverseRouting() {
 		my_markers.route[my_markers.route.length-1].label = OSRM.TARGET_MARKER_LABEL;
 		my_markers.route[my_markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
 	}
+	
+	// recompute route
 	getRoute(OSRM.FULL_DESCRIPTION);
 	my_markers.highlight.hide();
 }

@@ -9,8 +9,8 @@ OSRM.JSONP = {
 	
 	TIMEOUT: OSRM.DEFAULTS.JSONP_TIMEOUT,
 	
-	late: function() { console.log("reply too late");},
-	empty: function() { console.log("empty callback");},
+	late: function() { },//console.log("reply too late");},
+	empty: function() { },//console.log("empty callback");},
 		
 	call: function(source, callback_function, timeout_function, timeout, id) {
 		// only one active JSONP call per id
