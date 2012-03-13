@@ -173,12 +173,19 @@ public:
             }
 
             if( settings.obeyOneways ) {
-                if( oneway == "no" || oneway == "0" || oneway == "false" || onewayClass == "no" || onewayClass == "0" || onewayClass == "false" || ((settings.accessTag == "bicycle") && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane")) ) {
+				if( onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" ) {
+                    w.direction = _Way::oneway;
+				} else if( onewayClass == "no" || onewayClass == "0" || onewayClass == "false" ) {
+	            	w.direction = _Way::bidirectional;
+				} else if( onewayClass == "-1" ) {
+	            	w.direction = _Way::opposite;
+				} else if( oneway == "no" || oneway == "0" || oneway == "false" ) {
+                    w.direction = _Way::bidirectional;
+				} else if( settings.accessTag == "bicycle" && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane") ) {
                     w.direction = _Way::bidirectional;
                 } else if( oneway == "-1") {
                     w.direction  = _Way::opposite;
-                }
-                else if( oneway == "yes" || oneway == "1" || oneway == "true" || onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" || junction == "roundabout" || highway == "motorway_link" || highway == "motorway" ) {
+                } else if( oneway == "yes" || oneway == "1" || oneway == "true" || junction == "roundabout" || highway == "motorway_link" || highway == "motorway" ) {
                     w.direction = _Way::oneway;
                 } else {
                     w.direction = _Way::bidirectional;
