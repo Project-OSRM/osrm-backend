@@ -67,6 +67,13 @@ function showReverseGeocoderResults(marker_id, response) {
 
 // prepare request and call geocoder
 function callGeocoder(marker_id, query) {
+	//geo coordinate given?
+	if(query.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
+		var coord = query.split(/[,;]/);
+		onclickGeocoderResult(marker_id, coord[0], coord[1]);
+		return;
+	}
+	
 	//build request
 	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
 		var src= OSRM.GEOCODE_POST + "&q=" + query;
