@@ -13,7 +13,7 @@ toggleMain: function() {
 		
 		document.getElementById('blob-wrapper').style.visibility="hidden";			
 		document.getElementById('main-wrapper').style.left="5px";
-		if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_8!=-1 ) {
+		if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 ) {
 			getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
 		}
 	// hide main-gui
@@ -23,17 +23,18 @@ toggleMain: function() {
 		getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 			
 		document.getElementById('main-wrapper').style.left="-410px";
- 		if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_8!=-1 ) {
+ 		if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 ) {
  			document.getElementById('blob-wrapper').style.visibility="visible";
 			getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";		
  		}
 	}
 
 	// execute after animation
-	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_8==-1 ) {
+	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_9==-1 ) {
 		document.getElementById('main-wrapper').addEventListener("transitionend", OSRM.GUI.onMainTransitionEnd, false);
 		document.getElementById('main-wrapper').addEventListener("webkitTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
 		document.getElementById('main-wrapper').addEventListener("oTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
+		document.getElementById('main-wrapper').addEventListener("MSTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
 	}
 },
 

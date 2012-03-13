@@ -6,7 +6,7 @@
 	
 	OSRM.Browser = {
  		FF3:	useragent.search(/Firefox\/3/),
-		IE6_8:	useragent.search(/MSIE (6|7|8)/),
+		IE6_9:	useragent.search(/MSIE (6|7|8|9)/),
 	};
 }());
 

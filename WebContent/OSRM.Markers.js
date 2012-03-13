@@ -74,8 +74,8 @@ OSRM.RouteMarker = function ( label, style, position ) {
 OSRM.inheritFrom( OSRM.RouteMarker, OSRM.Marker );
 OSRM.extend( OSRM.RouteMarker, {
 onClick: function(e) {
-	if(!e.ctrlKey)
-		return;
+//	if(!e.ctrlKey)
+//		return;
 	for( var i=0; i<my_markers.route.length; i++) {
 		if( my_markers.route[i].marker === this ) {
 			my_markers.removeMarker( i );

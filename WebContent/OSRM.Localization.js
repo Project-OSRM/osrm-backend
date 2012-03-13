@@ -26,7 +26,7 @@ OSRM.Localization["de"] = {
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Unbenannte Stra�en hervorheben",
 "GUI_START_TOOLTIP": "Startposition eingeben",
 "GUI_END_TOOLTIP": "Zielposition eingeben",
-"GUI_LEGAL_NOTICE": "GUI von Dennis Schieferdecker",
+"GUI_LEGAL_NOTICE": "GUI2 v0.1 120313 - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.mapquest.com/'>MapQuest</a>",
 // geocoder
 "SEARCH_RESULTS": "Suchergebnisse",
 "TIMED_OUT": "Zeit�berschreitung",
@@ -55,7 +55,7 @@ OSRM.Localization["en"] = {
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Highlight unnamed streets",
 "GUI_START_TOOLTIP": "Enter start",
 "GUI_END_TOOLTIP": "Enter destination",
-"GUI_LEGAL_NOTICE": "GUI by Dennis Schieferdecker",
+"GUI_LEGAL_NOTICE": "GUI2 v0.1 120313 - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.mapquest.com/'>MapQuest</a>",
 // geocoder
 "SEARCH_RESULTS": "Search Results",
 "TIMED_OUT": "Timed Out",

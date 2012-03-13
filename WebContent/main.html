@@ -67,14 +67,14 @@
     <table class="full">
     <tr>
     <td id="gui-search-source-label">Start:</td>
-    <td><input id="input-source-name" class="input-box" type="text" value="Karlsruhe" title="Startposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);}" /></td>
+    <td><input id="input-source-name" class="input-box" type="text" value="" title="Startposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);}" /></td>
     <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
     <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);">Suchen</a></td>
     </tr>
     
     <tr>
     <td id="gui-search-target-label">Ende:</td>
-    <td><input id="input-target-name" class="input-box" type="text" value="Aalen" title="Zielposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);}" /></td>
+    <td><input id="input-target-name" class="input-box" type="text" value="" title="Zielposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);}" /></td>
     <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
     <td class="right"><a class="button not-selectable" id="gui-search-target" onclick="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);">Suchen</a></td>
     </tr>

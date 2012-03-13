@@ -57,7 +57,10 @@ function initLocale() {
 	document.getElementById("gui-search-target-label").innerHTML = OSRM.loc("GUI_END")+":";
 	document.getElementById("input-source-name").title = OSRM.loc("GUI_START_TOOLTIP");
 	document.getElementById("input-target-name").title = OSRM.loc("GUI_END_TOOLTIP");
-	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");	
+	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
+	
+	document.getElementById('input-source-name').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
+	document.getElementById('input-target-name').value = OSRM.DEFAULTS.ONLOAD_TARGET;
 }
 
 
@@ -116,7 +119,7 @@ function initMap() {
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="420px";
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
-	map.setView( new L.LatLng( OSRM.DEFAULTS.START_LATITUDE, OSRM.DEFAULTS.START_LONGITUDE-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);
+	map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);
 	map.on('zoomend', function(e) { getRoute(OSRM.FULL_DESCRIPTION); });	
 
 	// onmousemove test	
