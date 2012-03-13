@@ -130,6 +130,7 @@ function showRouteDescription(response) {
  						
 	// create link to the route
 	var route_link ='<span class="route-summary" id="route-link">[<a id="gpx-link" href="#" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
+	//var route_link ='<span class="route-summary" id="route-link">[<a id="gpx-link" href="#" onclick="onClickCreateShortcut(\'' + document.URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
 
 	// create GPX link
 	var gpx_link = '<span class="route-summary">[<a id="gpx-link" href="' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx">'+OSRM.loc("GPX_FILE")+'</a>]</span>';
@@ -308,8 +309,8 @@ function startRouting() {
 }
 
 function resetRouting() {
-	//document.getElementById('input-source-name').value = "";
-	//document.getElementById('input-target-name').value = "";
+	document.getElementById('input-source-name').value = "";
+	document.getElementById('input-target-name').value = "";
 	
 	my_route.hideRoute();
 	my_markers.removeAll();

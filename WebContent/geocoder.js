@@ -57,7 +57,7 @@ function showGeocoderResults(marker_id, response) {
 			html += '<td class="result-items">';
 
 			if(result.display_name){
-				html += '<div class="result-item" onclick="onclickGeocoderResult('+marker_id+', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
+				html += '<div class="result-item" onclick="onclickGeocoderResult(\''+marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
 			}
 			html += "</td></tr>";
 		}

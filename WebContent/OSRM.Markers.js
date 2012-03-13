@@ -39,8 +39,11 @@ getLng: function() {
 isShown: function() {
 	return this.shown;
 },
-centerView: function() {
-	map.setView( new L.LatLng( this.position.lat, this.position.lng-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);		// dirty hack
+centerView: function(zooming) {
+	var zoom = OSRM.DEFAULTS.ZOOM_LEVEL;
+	if( zooming == false )
+		zoom = map.getZoom();
+	map.setView( new L.LatLng( this.position.lat, this.position.lng-0.02), zoom);		// dirty hack
 },
 toString: function() {
 	return "OSRM.Marker: \""+this.label+"\", "+this.position+")";

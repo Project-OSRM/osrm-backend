@@ -122,7 +122,21 @@ function initMap() {
 	map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);
 	map.on('zoomend', function(e) { getRoute(OSRM.FULL_DESCRIPTION); });	
 
-	// onmousemove test	
+	map.on('click', function(e) {
+		if( !my_markers.route[0] || my_markers.route[0].label != OSRM.SOURCE_MARKER_LABEL) {
+			index = my_markers.setSource( e.latlng );
+			my_markers.route[index].show();
+			my_markers.route[index].centerView(false);	
+			getRoute(OSRM.FULL_DESCRIPTION);		
+		}
+		else if( !my_markers.route[my_markers.route.length-1] || my_markers.route[ my_markers.route.length-1 ].label != OSRM.TARGET_MARKER_LABEL) {
+			index = my_markers.setTarget( e.latlng );
+			my_markers.route[index].show();
+			my_markers.route[index].centerView(false);	
+			getRoute(OSRM.FULL_DESCRIPTION);		
+		}		
+	} );
+	// onmousemove test
 //	map.on('mousemove', function(e) { console.log("pos: " + e.latlng); });
 //	map.on('mousemove', function(e) {
 //		var objs = new Array;
