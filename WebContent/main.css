@@ -99,11 +99,11 @@ html, body, #map {
 	height:16px;
 	background-image:url("images/cancel.png");	
 }
-#main-toggle:hover
+.main-toggle:hover
 {
 	background-image:url("images/cancel_hover.png");
 }
-#main-toggle:active
+.main-toggle:active
 {
 	background-image:url("images/cancel_active.png");
 }
