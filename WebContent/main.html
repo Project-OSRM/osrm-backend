@@ -68,7 +68,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!-- show ui blob -->
 <div id="blob-wrapper" class="gui-wrapper">
 <div id="blob-input" class="gui-box">
-   	<div class="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
+   	<div class="main-toggle-in" onclick="OSRM.GUI.toggleMain()"></div>
 </div>
 </div>
 
@@ -77,21 +77,21 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 <!-- input box -->
 <div class="gui-box not-selectable" id="main-input">
-	<div class="main-toggle" onclick="OSRM.GUI.toggleMain()"></div>
+	<div class="main-toggle-out" onclick="OSRM.GUI.toggleMain()"></div>
 	<img id="osrm-logo" alt="OSRM Logo" src="images/osrm-logo.png" />
 
 	<!-- source/target input -->
     <table class="full">
     <tr>
     <td id="gui-search-source-label">Start:</td>
-    <td><input id="input-source-name" class="input-box" type="text" value="" title="Startposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);}" /></td>
+    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);}" /></td>
     <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
     <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);">Suchen</a></td>
     </tr>
     
     <tr>
     <td id="gui-search-target-label">Ende:</td>
-    <td><input id="input-target-name" class="input-box" type="text" value="" title="Zielposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);}" /></td>
+    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);}" /></td>
     <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
     <td class="right"><a class="button not-selectable" id="gui-search-target" onclick="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);">Suchen</a></td>
     </tr>

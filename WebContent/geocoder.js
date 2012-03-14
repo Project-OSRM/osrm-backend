@@ -78,7 +78,7 @@ function showGeocoderResults_Target(response) {	showGeocoderResults(OSRM.TARGET_
 function showGeocoderResults(marker_id, response) {
 	if(response){
 		if(response.length == 0) {
-			showGeocoderResults_Empty();
+			showGeocoderResults_Empty(marker_id);
 			return;
 		}
 	
@@ -108,9 +108,14 @@ function showGeocoderResults(marker_id, response) {
 		onclickGeocoderResult(marker_id, response[0].lat, response[0].lon);
 	}
 }
-function showGeocoderResults_Empty() {
+function showGeocoderResults_Empty(marker_id) {
 	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
-	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND")+".<p>";	
+	if(marker_id == OSRM.SOURCE_MARKER_LABEL)
+		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+".<p>";
+	else if(marker_id == OSRM.TARGET_MARKER_LABEL)
+		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_TARGET")+".<p>";
+	else
+		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND")+".<p>";
 }
 function showGeocoderResults_Timeout() {
 	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";

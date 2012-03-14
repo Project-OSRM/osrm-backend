@@ -109,7 +109,7 @@ html, body, #map {
 	padding:0px;
 }
 
-.main-toggle
+.main-toggle-out
 {
 	cursor:pointer;
 	position:absolute;
@@ -119,13 +119,31 @@ html, body, #map {
 	height:16px;
 	background-image:url("images/cancel.png");	
 }
-.main-toggle:hover
+.main-toggle-out:hover
 {
 	background-image:url("images/cancel_hover.png");
 }
-.main-toggle:active
+.main-toggle-out:active
 {
 	background-image:url("images/cancel_active.png");
+}
+.main-toggle-in
+{
+	cursor:pointer;
+	position:absolute;
+	right:5px;
+	top:5px;
+	width:16px;
+	height:16px;
+	background-image:url("images/restore.png");	
+}
+.main-toggle-in:hover
+{
+	background-image:url("images/restore_hover.png");
+}
+.main-toggle-in:active
+{
+	background-image:url("images/restore_active.png");
 }
 
 .main-options

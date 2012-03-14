@@ -40,7 +40,7 @@ OSRM.loc = OSRM.Localization.translate;
 OSRM.Localization["de"] = {
 //gui
 "GUI_START": "Start",
-"GUI_END": "Ende",
+"GUI_END": "Ziel",
 "GUI_RESET": "Reset",
 "GUI_SEARCH": "Suchen",
 "GUI_ROUTE": "Route",
@@ -54,6 +54,8 @@ OSRM.Localization["de"] = {
 "SEARCH_RESULTS": "Suchergebnisse",
 "TIMED_OUT": "Zeitüberschreitung",
 "NO_RESULTS_FOUND": "Keine Ergebnisse gefunden",
+"NO_RESULTS_FOUND_SOURCE": "Keine Ergebnisse gefunden für Start",
+"NO_RESULTS_FOUND_TARGET": "Keine Ergebnisse gefunden für Ziel",
 // routing
 "ROUTE_DESCRIPTION": "Routenbeschreibung",
 "GET_LINK": "Generiere Link",
@@ -85,6 +87,8 @@ OSRM.Localization["en"] = {
 "SEARCH_RESULTS": "Search Results",
 "TIMED_OUT": "Timed Out",
 "NO_RESULTS_FOUND": "No results found",
+"NO_RESULTS_FOUND_SOURCE": "No results found for start",
+"NO_RESULTS_FOUND_TARGET": "No results found for end",
 //routing
 "ROUTE_DESCRIPTION": "Route Description",
 "GET_LINK": "Generate Link",

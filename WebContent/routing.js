@@ -408,7 +408,17 @@ function getDirectionIcon(name) {
 
 // click: button "route"
 function startRouting() {
-	getRoute(OSRM.FULL_DESCRIPTION);
+	my_route.hideRoute();
+	my_markers.removeAll();
+	my_markers.highlight.hide();
+
+	document.getElementById('information-box').innerHTML = "";
+	document.getElementById('information-box-headline').innerHTML = "";	
+	
+	callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);
+	callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);
+	//getRoute(OSRM.FULL_DESCRIPTION);	
+	//TODO: center map on route
 }
 
 // click: button "reset"
