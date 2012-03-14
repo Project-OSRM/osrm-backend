@@ -1,19 +1,42 @@
-// localization
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+// OSRM localization
+// [basic localization options]
+
 
 OSRM.Localization = {
-language: "en",
-
+		
+// if existing, return localized string -> English string -> input string
 translate: function(text) {
-	if( OSRM.Localization[OSRM.Localization.language][text] )
-		return OSRM.Localization[OSRM.Localization.language][text];
-	else if( OSRM.Localization[OSRM.Localization.language][text] )
-		return OSRM.Localization[OSRM.Localization.language][text];
+	if( OSRM.Localization[OSRM.DEFAULTS.LANGUAGE][text] )
+		return OSRM.Localization[OSRM.DEFAULTS.LANGUAGE][text];
+	else if( OSRM.Localization["en"][text] )
+		return OSRM.Localization["en"][text];
 	else
 		return text;
 },
 };
+
+// shorter call to translate function
 OSRM.loc = OSRM.Localization.translate;
 
+
+// German language support
 OSRM.Localization["de"] = {
 //gui
 "GUI_START": "Start",
@@ -23,13 +46,13 @@ OSRM.Localization["de"] = {
 "GUI_ROUTE": "Route",
 "GUI_REVERSE": "Umdrehen",
 "GUI_OPTIONS": "Optionen",
-"GUI_HIGHLIGHT_UNNAMED_ROADS": "Unbenannte Stra�en hervorheben",
+"GUI_HIGHLIGHT_UNNAMED_ROADS": "Unbenannte Straßen hervorheben",
 "GUI_START_TOOLTIP": "Startposition eingeben",
 "GUI_END_TOOLTIP": "Zielposition eingeben",
 "GUI_LEGAL_NOTICE": "GUI2 v0.1 120313 - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
 // geocoder
 "SEARCH_RESULTS": "Suchergebnisse",
-"TIMED_OUT": "Zeit�berschreitung",
+"TIMED_OUT": "Zeitüberschreitung",
 "NO_RESULTS_FOUND": "Keine Ergebnisse gefunden",
 // routing
 "ROUTE_DESCRIPTION": "Routenbeschreibung",
@@ -40,9 +63,11 @@ OSRM.Localization["de"] = {
 "DISTANCE": "Distanz",
 "DURATION": "Dauer",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Ihre Route wird berechnet",
-"NO_ROUTE_FOUND": "Keine Route hierher m�glich",
+"NO_ROUTE_FOUND": "Keine Route hierher möglich",
 };
 
+
+// English language support
 OSRM.Localization["en"] = {
 //gui
 "GUI_START": "Start",

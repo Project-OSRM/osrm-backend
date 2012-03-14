@@ -1,4 +1,24 @@
-/* styles for map */
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+/* OSRM CSS styles */
+
+
+/* map -> fullscreen */
 body {
     padding: 0;
     margin: 0;
@@ -241,7 +261,8 @@ html, body, #map {
 	font-size:10px;
 }
 
-/* generally useful styles (above buttons, so that they get their special cursor!)*/
+
+/* utility styles (defined above buttons, so that buttons retain cursor:pointer)*/
 .not-selectable
 {
 	cursor:default;
@@ -259,6 +280,7 @@ html, body, #map {
 	-ms-user-select: text;
 	user-select: text;
 }
+
 
 /* buttons */
 .button

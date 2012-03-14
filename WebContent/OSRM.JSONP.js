@@ -1,39 +1,54 @@
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
 // OSRM JSONP call wrapper 
-// w/ DOM cleaning, fencing, timout handling
+// [wrapper for JSONP calls with DOM cleaning, fencing, timout handling]
+
 
 OSRM.JSONP = {
+		
+	// storage to keep track of unfinished JSONP calls
 	fences: {},
 	callbacks: {},
 	timeouts: {},
 	timers: {},
 	
-	TIMEOUT: OSRM.DEFAULTS.JSONP_TIMEOUT,
 	
-	late: function() { },//console.log("reply too late");},
-	empty: function() { },//console.log("empty callback");},
-		
+	// default callback routines
+	late: function() { /*OSRM.debug.log("[jsonp] reply too late");*/ },	
+	empty: function() { /*OSRM.debug.log("[jsonp] empty callback");*/ },
+	
+	
+	// init JSONP call
 	call: function(source, callback_function, timeout_function, timeout, id) {
 		// only one active JSONP call per id
 		if (OSRM.JSONP.fences[id] == true)
 			return false;
 		OSRM.JSONP.fences[id] = true;
 		
-//		console.log("[status] jsonp init for "+id);
-//		console.log("[status] jsonp request ",source);		
-				
 		// wrap timeout function
 		OSRM.JSONP.timeouts[id] = function(response) {
 			timeout_function(response);
 			
-//			var jsonp = document.getElementById('jsonp_'+id);		// clean DOM
-//			if(jsonp)
-//				jsonp.parentNode.removeChild(jsonp);
 			OSRM.JSONP.callbacks[id] = OSRM.JSONP.late;				// clean functions
 			OSRM.JSONP.timeouts[id] = OSRM.JSONP.late;
 			OSRM.JSONP.fences[id] = undefined;						// clean fence
 			
-//			console.log("timeout: "+id); 							// at the end - otherwise racing conditions may happen
-//			document.getElementById('information-box').innerHTML += "timeout:" + id + "<br>";			
+//			OSRM.debug.log("[jsonp] timout handling: "+id);
 		};
 		
 		// wrap callback function
@@ -46,18 +61,14 @@ OSRM.JSONP = {
 
 			callback_function(response);							// actual wrapped callback 
 			
-//			var jsonp = document.getElementById('jsonp_'+id);		// clean DOM
-//			if(jsonp)
-//				jsonp.parentNode.removeChild(jsonp);
 			OSRM.JSONP.callbacks[id] = OSRM.JSONP.late;				// clean functions
 			OSRM.JSONP.timeouts[id] = OSRM.JSONP.late;
 			OSRM.JSONP.fences[id] = undefined;						// clean fence
 			
-//			console.log("[status] jsonp response for "+id);			// at the end - otherwise racing conditions may happen
-//			document.getElementById('information-box').innerHTML += "callback:" + id + "<br>";
+//			OSRM.debug.log("[jsonp] response handling: "+id);
 		};
 		
-		// clean DOM (cannot reuse script element with all browsers, unfortunately)
+		// clean DOM (unfortunately, script elements cannot be reused by all browsers)
 		var jsonp = document.getElementById('jsonp_'+id);
 		if(jsonp)
 			jsonp.parentNode.removeChild(jsonp);		
@@ -71,7 +82,8 @@ OSRM.JSONP = {
 		
 		// start timeout timer
 		OSRM.JSONP.timers[id] = setTimeout(OSRM.JSONP.timeouts[id], timeout);
-		
+
+//		OSRM.debug.log("[jsonp] init: "+id);		
 		return true;
 	}
 };

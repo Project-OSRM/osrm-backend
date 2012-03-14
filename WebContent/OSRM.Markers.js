@@ -1,8 +1,25 @@
-// OSRM.Marker class 
-// + sub-classes
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+// OSRM markers 
+// [base marker class, derived highlight marker and route marker classes, marker management]  
 
 
-// base class
+// base marker class (wraps Leaflet markers)
 OSRM.Marker = function( label, style, position ) {
 	this.label = label ? label : "marker";
 	this.position = position ? position : new L.LatLng(0,0);
@@ -52,7 +69,7 @@ toString: function() {
 });
 
 
-// highlight marker
+// highlight marker class (cannot be dragged)
 OSRM.HighlightMarker = function( label, style, position) {
 	OSRM.HighlightMarker.prototype.base.constructor.apply( this, arguments );
 	this.label = label ? label : "highlight_marker";
@@ -65,7 +82,7 @@ toString: function() {
 });
 
 
-// route marker
+// route marker class (draggable, invokes route drawing routines) 
 OSRM.RouteMarker = function ( label, style, position ) {
 	OSRM.RouteMarker.prototype.base.constructor.apply( this, arguments );
 	this.label = label ? label : "route_marker";
@@ -78,8 +95,6 @@ OSRM.RouteMarker = function ( label, style, position ) {
 OSRM.inheritFrom( OSRM.RouteMarker, OSRM.Marker );
 OSRM.extend( OSRM.RouteMarker, {
 onClick: function(e) {
-//	if(!e.ctrlKey)
-//		return;
 	for( var i=0; i<my_markers.route.length; i++) {
 		if( my_markers.route[i].marker === this ) {
 			my_markers.removeMarker( i );
@@ -91,9 +106,8 @@ onClick: function(e) {
 	my_markers.highlight.hide();
 },
 onDrag: function(e) {
-//	OSRM.debug.log("[event] drag event");
 	this.parent.setPosition( e.target.getLatLng() );
-	if(OSRM.dragging == true)								// TODO: hack to deal with drag events after dragend event
+	if(OSRM.dragging == true)								// TODO: hack that deals with drag events after dragend event
 		getRoute(OSRM.NO_DESCRIPTION);
 	else
 		getRoute(OSRM.FULL_DESCRIPTION);
@@ -101,7 +115,6 @@ onDrag: function(e) {
 	updateLocation( this.parent.label );
 },
 onDragStart: function(e) {
-//	OSRM.debug.log("[event] dragstart event");
 	OSRM.dragging = true;
 	
 	// hack to store id of dragged marker
@@ -119,11 +132,10 @@ onDragStart: function(e) {
 	updateLocation( this.parent.label );	
 },
 onDragEnd: function(e) {
-//	OSRM.debug.log("[event] dragend event");
 	getRoute(OSRM.FULL_DESCRIPTION);
 	if (my_route.isShown()) {
 		my_route.hideOldRoute();
-		my_route.hideUnnamedRoute();						// provides better visuals
+		my_route.hideUnnamedRoute();
 	}
 	OSRM.dragging = false;
 	
@@ -135,7 +147,8 @@ toString: function() {
 });
 
 
-//marker array class
+// marker management class (all route markers should only be set and deleted with these routines!)
+// [this holds the vital information of the route]
 OSRM.Markers = function() {
 	this.route = new Array();
 	this.highlight = new OSRM.HighlightMarker("highlight", {draggable:false,icon:OSRM.icons['marker-highlight']});;
