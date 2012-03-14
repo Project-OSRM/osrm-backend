@@ -43,7 +43,8 @@ centerView: function(zooming) {
 	var zoom = OSRM.DEFAULTS.ZOOM_LEVEL;
 	if( zooming == false )
 		zoom = map.getZoom();
-	map.setView( new L.LatLng( this.position.lat, this.position.lng-0.02), zoom);		// dirty hack
+	//map.setView( new L.LatLng( this.position.lat, this.position.lng-0.02), zoom);		// dirty hack
+	map.setView( new L.LatLng( this.position.lat, this.position.lng), zoom);
 },
 toString: function() {
 	return "OSRM.Marker: \""+this.label+"\", "+this.position+")";
@@ -94,8 +95,8 @@ onDrag: function(e) {
 	this.parent.setPosition( e.target.getLatLng() );
 	if(OSRM.dragging == true)								// TODO: hack to deal with drag events after dragend event
 		getRoute(OSRM.NO_DESCRIPTION);
-//	else
-//		getRoute(OSRM.FULL_DESCRIPTION);
+	else
+		getRoute(OSRM.FULL_DESCRIPTION);
 	
 	updateLocation( this.parent.label );
 },

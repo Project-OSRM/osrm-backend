@@ -17,10 +17,10 @@ function init() {
 // prefetch images
 OSRM.images = Array();
 function prefetchImages() {
-	var images = [	'http://map.project-osrm.org/new/images/marker-source.png',
-	              	'http://map.project-osrm.org/new/images/marker-target.png',
-	              	'http://map.project-osrm.org/new/images/marker-via.png',
-	              	'http://map.project-osrm.org/new/images/marker-highlight.png'
+	var images = [	'images/marker-source.png',
+	              	'images/marker-target.png',
+	              	'images/marker-via.png',
+	              	'images/marker-highlight.png'
 	              ];
 	
 	for(var i=0; i<images.length; i++) {
@@ -40,7 +40,7 @@ function prefetchIcons() {
 	              ];
 
 	for(var i=0; i<images.length; i++)
-		OSRM.icons[images[i]] = new L.Icon('http://map.project-osrm.org/new/images/'+images[i]+'.png');
+		OSRM.icons[images[i]] = new L.Icon('images/'+images[i]+'.png');
 }
 
 
@@ -127,13 +127,17 @@ function initMap() {
 			index = my_markers.setSource( e.latlng );
 			my_markers.route[index].show();
 			my_markers.route[index].centerView(false);	
-			getRoute(OSRM.FULL_DESCRIPTION);		
+			getRoute(OSRM.FULL_DESCRIPTION);
+			updateLocation("source");
+//			updateReverseGeocoder("source");
 		}
 		else if( !my_markers.route[my_markers.route.length-1] || my_markers.route[ my_markers.route.length-1 ].label != OSRM.TARGET_MARKER_LABEL) {
 			index = my_markers.setTarget( e.latlng );
 			my_markers.route[index].show();
 			my_markers.route[index].centerView(false);	
-			getRoute(OSRM.FULL_DESCRIPTION);		
+			getRoute(OSRM.FULL_DESCRIPTION);
+			updateLocation("target");
+//			updateReverseGeocoder("target");
 		}		
 	} );
 	// onmousemove test
@@ -203,7 +207,7 @@ function checkURL(){
 		getRoute(OSRM.FULL_DESCRIPTION);
 		
 		var bounds = new L.LatLngBounds( positions );
-		bounds._southWest.lng-=1.02;																// dirty hacks
+		//bounds._southWest.lng-=1.02;																// dirty hacks
 		map.fitBounds( bounds );
 		//my_route.centerView();
 	}

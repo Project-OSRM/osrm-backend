@@ -23,10 +23,6 @@ OSRM.JSONP = {
 				
 		// wrap timeout function
 		OSRM.JSONP.timeouts[id] = function(response) {
-			if( OSRM.JSONP.fences[id] == undefined ){				// fence to prevent execution after timeout function (when precompiled!)
-				//OSRM.debug.log("x");
-				return;			
-			}
 			timeout_function(response);
 			
 //			var jsonp = document.getElementById('jsonp_'+id);		// clean DOM
@@ -45,10 +41,8 @@ OSRM.JSONP = {
 			clearTimeout(OSRM.JSONP.timers[id]);					// clear timeout timer
 			OSRM.JSONP.timers[id] = undefined;
 			
-			if( OSRM.JSONP.fences[id] == undefined ){				// fence to prevent execution after timeout function (when precompiled!)
-				//OSRM.debug.log("y");
-				return;			
-			}
+			if( OSRM.JSONP.fences[id] == undefined )				// fence to prevent execution after timeout function (when precompiled!)
+				return;		
 
 			callback_function(response);							// actual wrapped callback 
 			

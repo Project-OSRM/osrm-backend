@@ -8,9 +8,18 @@ OSRM.TARGET_MARKER_LABEL = "target";
 // update locations in input boxes
 function updateLocation(marker_id) {
 	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
-		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);		
+		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
 	} else if (marker_id == OSRM.TARGET_MARKER_LABEL) {
 		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);		
+	}
+}
+function updateReverseGeocoder(marker_id) {
+	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
+		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
+		callReverseGeocoder("source", my_markers.route[0].getPosition().lat, my_markers.route[0].getPosition().lng);
+	} else if (marker_id == OSRM.TARGET_MARKER_LABEL) {
+		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
+		callReverseGeocoder("target", my_markers.route[my_markers.route.length-1].getPosition().lat, my_markers.route[my_markers.route.length-1].getPosition().lng);
 	}
 }
 function updateLocations() {
@@ -78,6 +87,7 @@ function callGeocoder(marker_id, query) {
 	if(query.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
 		var coord = query.split(/[,;]/);
 		onclickGeocoderResult(marker_id, coord[0], coord[1]);
+//		updateReverseGeocoder(marker_id);
 		return;
 	}
 	

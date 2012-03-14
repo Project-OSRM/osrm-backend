@@ -90,7 +90,6 @@ function showRoute(response) {
 		snapRoute();
 	}
 	updateHints(response);
-	updateLocations();
 }
 
 function showNoRouteGeometry() {
@@ -314,7 +313,6 @@ function getRoute(do_description) {
 function timeoutDrag() {
 	my_markers.route[OSRM.dragid].hint = undefined;
 	getRoute(OSRM.NO_DESCRIPTION);
-//	OSRM.debug.log("timer");
 }
 
 function startRouting() {
