@@ -1,11 +1,31 @@
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+// OSRM geocoding routines
+// [geocoder query, management and display of geocoder results]
+// [TODO: better separation of GUI and geocoding routines, reverse geocoding]
+
 // some constants
 OSRM.GEOCODE_POST = 'http://nominatim.openstreetmap.org/search?format=json';
-OSRM.REVERSE_GEOCODE_POST = 'http://nominatim.openstreetmap.org/reverse?format=json';
 OSRM.SOURCE_MARKER_LABEL = "source";
 OSRM.TARGET_MARKER_LABEL = "target";
 
 
-// update locations in input boxes
+// update geo coordinates in input boxes
 function updateLocation(marker_id) {
 	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
 		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
@@ -13,77 +33,11 @@ function updateLocation(marker_id) {
 		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);		
 	}
 }
-function updateReverseGeocoder(marker_id) {
-	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
-		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
-		callReverseGeocoder("source", my_markers.route[0].getPosition().lat, my_markers.route[0].getPosition().lng);
-	} else if (marker_id == OSRM.TARGET_MARKER_LABEL) {
-		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
-		callReverseGeocoder("target", my_markers.route[my_markers.route.length-1].getPosition().lat, my_markers.route[my_markers.route.length-1].getPosition().lng);
-	}
-}
-function updateLocations() {
-	if( my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) {
-		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
-		callReverseGeocoder("source", my_markers.route[0].getPosition().lat, my_markers.route[0].getPosition().lng);
-		//OSRM.debug.log("[call1] reverse geocoder");
-	}
-	
-	if( my_markers.route[my_markers.route.length-1] && my_markers.route[ my_markers.route.length-1 ].label == OSRM.TARGET_MARKER_LABEL) {
-		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
-		callReverseGeocoder("target", my_markers.route[my_markers.route.length-1].getPosition().lat, my_markers.route[my_markers.route.length-1].getPosition().lng);
-	}
-}
 
 
-function timeout_ReverseGeocoder() {
-	//OSRM.debug.log("[timeout] reverse geocoder");
-}
-
-//prepare request and call reverse geocoder
-function callReverseGeocoder(marker_id, lat, lon) {
-	//build request
-	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
-		var src= OSRM.REVERSE_GEOCODE_POST + "&lat=" + lat + "&lon=" + lon;
-		OSRM.JSONP.call( src, showReverseGeocoderResults_Source, timeout_ReverseGeocoder, OSRM.JSONP.TIMEOUT, "reverse_geocoder_source" );
-		//OSRM.debug.log("[call2] reverse geocoder");
-	} else if (marker_id == OSRM.TARGET_MARKER_LABEL) {
-		var src = OSRM.REVERSE_GEOCODE_POST + "&lat=" + lat + "&lon=" + lon;
-		OSRM.JSONP.call( src, showReverseGeocoderResults_Target, timeout_ReverseGeocoder, OSRM.JSONP.TIMEOUT, "reverse_geocoder_target" );
-	}
-}
-//processing JSONP response of reverse geocoder
-//(with wrapper functions for source/target jsonp)
-function showReverseGeocoderResults_Source(response) {	showReverseGeocoderResults(OSRM.SOURCE_MARKER_LABEL, response); }
-function showReverseGeocoderResults_Target(response) {	showReverseGeocoderResults(OSRM.TARGET_MARKER_LABEL, response); }
-function showReverseGeocoderResults(marker_id, response) {
-	//OSRM.debug.log("[inner] reverse geocoder");
-	if(response){
-		if(response.address == undefined)
-			return;
-
-		var address = "";
-		if( response.address.road)
-			address += response.address.road;	
-		if( response.address.city) {
-			if( response.address.road)
-				address += ", ";
-			address += response.address.city;
-		}
-		if( address == "" )
-			return;
-		
-		if(marker_id == OSRM.SOURCE_MARKER_LABEL)
-			document.getElementById("input-source-name").value = address;
-		else if(marker_id == OSRM.TARGET_MARKER_LABEL)
-			document.getElementById("input-target-name").value = address;
-	}
-}
-
-
-// prepare request and call geocoder
+// process input request and call geocoder if needed
 function callGeocoder(marker_id, query) {
-	//geo coordinate given?
+	//geo coordinates given -> go directly to drawing results
 	if(query.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
 		var coord = query.split(/[,;]/);
 		onclickGeocoderResult(marker_id, coord[0], coord[1]);
@@ -91,13 +45,13 @@ function callGeocoder(marker_id, query) {
 		return;
 	}
 	
-	//build request
+	//build request 
 	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
 		var src= OSRM.GEOCODE_POST + "&q=" + query;
-		OSRM.JSONP.call( src, showGeocoderResults_Source, showGeocoderResults_Timeout, OSRM.JSONP.TIMEOUT, "geocoder_source" );
+		OSRM.JSONP.call( src, showGeocoderResults_Source, showGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_source" );
 	} else if (marker_id == OSRM.TARGET_MARKER_LABEL) {
 		var src = OSRM.GEOCODE_POST + "&q=" + query; 
-		OSRM.JSONP.call( src, showGeocoderResults_Target, showGeocoderResults_Timeout, OSRM.JSONP.TIMEOUT, "geocoder_target" );		
+		OSRM.JSONP.call( src, showGeocoderResults_Target, showGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_target" );		
 	}
 }
 
@@ -117,7 +71,7 @@ function onclickGeocoderResult(marker_id, lat, lon) {
 	getRoute(OSRM.FULL_DESCRIPTION);
 }
 
-// processing JSONP response of geocoder
+// process JSONP response of geocoder
 // (with wrapper functions for source/target jsonp)
 function showGeocoderResults_Source(response) {	showGeocoderResults(OSRM.SOURCE_MARKER_LABEL, response); }
 function showGeocoderResults_Target(response) {	showGeocoderResults(OSRM.TARGET_MARKER_LABEL, response); }
@@ -162,3 +116,74 @@ function showGeocoderResults_Timeout() {
 	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
 	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("TIMED_OUT")+".<p>";	
 }
+
+
+// - [upcoming feature: reverse geocoding] -
+//OSRM.REVERSE_GEOCODE_POST = 'http://nominatim.openstreetmap.org/reverse?format=json';
+//
+//function updateReverseGeocoder(marker_id) {
+//	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
+//		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
+//		callReverseGeocoder("source", my_markers.route[0].getPosition().lat, my_markers.route[0].getPosition().lng);
+//	} else if (marker_id == OSRM.TARGET_MARKER_LABEL) {
+//		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
+//		callReverseGeocoder("target", my_markers.route[my_markers.route.length-1].getPosition().lat, my_markers.route[my_markers.route.length-1].getPosition().lng);
+//	}
+//}
+//function updateLocations() {
+//	if( my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) {
+//		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
+//		callReverseGeocoder("source", my_markers.route[0].getPosition().lat, my_markers.route[0].getPosition().lng);
+//		//OSRM.debug.log("[call1] reverse geocoder");
+//	}
+//	
+//	if( my_markers.route[my_markers.route.length-1] && my_markers.route[ my_markers.route.length-1 ].label == OSRM.TARGET_MARKER_LABEL) {
+//		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
+//		callReverseGeocoder("target", my_markers.route[my_markers.route.length-1].getPosition().lat, my_markers.route[my_markers.route.length-1].getPosition().lng);
+//	}
+//}
+//
+//
+//function timeout_ReverseGeocoder() {
+//	//OSRM.debug.log("[timeout] reverse geocoder");
+//}
+//
+////prepare request and call reverse geocoder
+//function callReverseGeocoder(marker_id, lat, lon) {
+//	//build request
+//	if (marker_id == OSRM.SOURCE_MARKER_LABEL) {
+//		var src= OSRM.REVERSE_GEOCODE_POST + "&lat=" + lat + "&lon=" + lon;
+//		OSRM.JSONP.call( src, showReverseGeocoderResults_Source, timeout_ReverseGeocoder, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_source" );
+//		//OSRM.debug.log("[call2] reverse geocoder");
+//	} else if (marker_id == OSRM.TARGET_MARKER_LABEL) {
+//		var src = OSRM.REVERSE_GEOCODE_POST + "&lat=" + lat + "&lon=" + lon;
+//		OSRM.JSONP.call( src, showReverseGeocoderResults_Target, timeout_ReverseGeocoder, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_target" );
+//	}
+//}
+////processing JSONP response of reverse geocoder
+////(with wrapper functions for source/target jsonp)
+//function showReverseGeocoderResults_Source(response) {	showReverseGeocoderResults(OSRM.SOURCE_MARKER_LABEL, response); }
+//function showReverseGeocoderResults_Target(response) {	showReverseGeocoderResults(OSRM.TARGET_MARKER_LABEL, response); }
+//function showReverseGeocoderResults(marker_id, response) {
+//	//OSRM.debug.log("[inner] reverse geocoder");
+//	if(response){
+//		if(response.address == undefined)
+//			return;
+//
+//		var address = "";
+//		if( response.address.road)
+//			address += response.address.road;	
+//		if( response.address.city) {
+//			if( response.address.road)
+//				address += ", ";
+//			address += response.address.city;
+//		}
+//		if( address == "" )
+//			return;
+//		
+//		if(marker_id == OSRM.SOURCE_MARKER_LABEL)
+//			document.getElementById("input-source-name").value = address;
+//		else if(marker_id == OSRM.TARGET_MARKER_LABEL)
+//			document.getElementById("input-target-name").value = address;
+//	}
+//}

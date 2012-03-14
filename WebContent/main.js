@@ -1,6 +1,27 @@
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+// OSRM initialization
+// [initialization of maps, local strings, image prefetching]
+
 var map;
 
 
+// onload initialization routine
 function init() {
 	prefetchImages();
 	prefetchIcons();
@@ -76,6 +97,7 @@ function centerOnGeolocation() {
 
 // init map
 function initMap() {
+	// setup tile servers
 	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 		osmorgAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
 		osmorgOptions = {maxZoom: 18, attribution: osmorgAttribution};
@@ -97,14 +119,16 @@ function initMap() {
     	mapquest = new L.TileLayer(mapquestURL, mapquestOptions),
 	    cloudmade = new L.TileLayer(cloudmadeURL, cloudmadeOptions);
 
+	// setup map
 	map = new L.Map('map', {
     	center: new L.LatLng(51.505, -0.09),
 	    zoom: 13,
-	    zoomAnimation: false,					// uncomment to remove animations and hiding of routes during zoom
+	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
 	    fadeAnimation: false,
 	    layers: [osmorg]
 	});
 
+	// add tileservers
 	var baseMaps = {
 		"osm.org": osmorg,
 		"osm.de": osmde,
@@ -116,12 +140,15 @@ function initMap() {
 	var layersControl = new L.Control.Layers(baseMaps, overlayMaps);
     map.addControl(layersControl);
 
+    // move zoom markers
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="420px";
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
-	map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);
+	// initial map position and zoom
+	map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE), OSRM.DEFAULTS.ZOOM_LEVEL);
 	map.on('zoomend', function(e) { getRoute(OSRM.FULL_DESCRIPTION); });	
 
+	// click on map to set source and target nodes
 	map.on('click', function(e) {
 		if( !my_markers.route[0] || my_markers.route[0].label != OSRM.SOURCE_MARKER_LABEL) {
 			index = my_markers.setSource( e.latlng );
@@ -140,39 +167,10 @@ function initMap() {
 //			updateReverseGeocoder("target");
 		}		
 	} );
-	// onmousemove test
-//	map.on('mousemove', function(e) { console.log("pos: " + e.latlng); });
-//	map.on('mousemove', function(e) {
-//		var objs = new Array;
-//		var obj = null;
-//		do {
-//			obj = document.elementFromPoint(e.layerPoint.x, e.layerPoint.y);
-//			
-//			if (obj == null)
-//				break;			
-//			if (obj == document.body)
-//				break;
-//			if (obj instanceof SVGPathElement)
-//				break;			
-//		
-//			objs.push(obj);
-//			obj.style.display = 'none';
-//		} while(true);
-//		for(var i=0; i<objs.length; ++i)
-//			objs[i].style.display ='';
-//		
-//		if (obj == null)
-//			return;
-//		
-//		if (obj instanceof SVGPathElement)
-//			xroute.route.fire('mousemove',e);
-//		else
-//			xroute.route.fire('mouseout',e);
-//	});
 }
 
 
-// parse URL GET parameters if existing
+// parse URL GET parameters if any exist
 function checkURL(){
 	var called_url = document.location.search.substr(1,document.location.search.length);
 	if( called_url != '') {
@@ -196,19 +194,18 @@ function checkURL(){
 		// draw via points
 		if( positions.length > 0)
 			my_markers.setSource( positions[0] );
+		if(positions.length > 1)
+			my_markers.setTarget( positions[positions.length-1] );		
 		for(var i=1; i<positions.length-1;i++)
 			my_markers.setVia( i-1, positions[i] );
-		if(positions.length > 1)
-			my_markers.setTarget( positions[positions.length-1] );
 		for(var i=0; i<my_markers.route.length;i++)
 			my_markers.route[i].show();
 		
 		// compute route
 		getRoute(OSRM.FULL_DESCRIPTION);
 		
+		// center on route
 		var bounds = new L.LatLngBounds( positions );
-		//bounds._southWest.lng-=1.02;																// dirty hacks
 		map.fitBounds( bounds );
-		//my_route.centerView();
 	}
 }

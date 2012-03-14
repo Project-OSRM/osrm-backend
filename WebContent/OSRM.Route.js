@@ -1,7 +1,25 @@
-// OSRM route classes
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+// OSRM routes
+// [drawing of all types of route geometry] 
 
 
-// base route class
+// simple route class (wraps Leaflet Polyline)
 OSRM.SimpleRoute = function (label, style) {
 	this.label = (label ? label : "route");
 	this.route = new L.DashedPolyline();
@@ -35,7 +53,6 @@ setStyle: function(style) {
 },
 centerView: function() {
 	var bounds = new L.LatLngBounds( this.getPositions() );
-	bounds._southWest.lng-=1.02;																// dirty hack
 	map.fitBounds( bounds );
 },
 onClick: function(e) {
@@ -48,7 +65,7 @@ toString: function() {
 });
 
 
-// multiroute class (several separate route parts)
+// multiroute class (wraps Leaflet LayerGroup to hold several disjoint routes)
 OSRM.MultiRoute = function (label) {
 	this.label = (label ? label : "multiroute");
 	this.route = new L.LayerGroup();
@@ -84,7 +101,8 @@ toString: function() {
 });
 
 
-// main route class
+// route management (handles drawing of route geometry - current route, old route, unnamed route, highlight unnamed streets) 
+// [this holds the route geometry]
 OSRM.Route = function() {
 	this._current_route	= new OSRM.SimpleRoute("current" , {dashed:false} );
 	this._old_route		= new OSRM.SimpleRoute("old", {dashed:false,color:"#123"} );
@@ -129,7 +147,7 @@ OSRM.extend( OSRM.Route,{
 	hideUnnamedRoute: function() {
 		this._unnamed_route.hide();
 	},
-	// TODO: hack to put unnamed_route above old_route -> easier way in Leaglet 0.4+	
+	// TODO: hack to put unnamed_route above old_route -> easier way in will be available Leaflet 0.4	
 	_raiseUnnamedRoute: function() {
 		if(this._unnamed_route.isShown()) {
 			this._unnamed_route.hide();

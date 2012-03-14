@@ -1,3 +1,25 @@
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+// OSRM routing routines
+// [management of routing/direction requests and processing of responses]
+// [TODO: major refactoring scheduled]
+
+// some variables
 var my_route = undefined;
 var my_markers = undefined;
 
@@ -7,40 +29,17 @@ OSRM.dragging = false;
 OSRM.pending = false;
 OSRM.pendingTimer = undefined;
 
-// init data
+
+// init routing data structures
 function initRouting() {
 	my_route = new OSRM.Route();
 	my_markers = new OSRM.Markers();
 }
 
-// decode compressed route geometry
-function decodeRouteGeometry(encoded, precision) {
-	precision = Math.pow(10, -precision);
-	var len = encoded.length, index=0, lat=0, lng = 0, array = [];
-	while (index < len) {
-		var b, shift = 0, result = 0;
-		do {
-			b = encoded.charCodeAt(index++) - 63;
-			result |= (b & 0x1f) << shift;
-			shift += 5;
-		} while (b >= 0x20);
-		var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-		lat += dlat;
-		shift = 0;
-		result = 0;
-		do {
-			b = encoded.charCodeAt(index++) - 63;
-			result |= (b & 0x1f) << shift;
-			shift += 5;
-		} while (b >= 0x20);
-		var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-		lng += dlng;
-		array.push([lat * precision, lng * precision]);
-	}
-	return array;
-}
 
-// display a transmitted route
+// -- JSONP processing -- 
+
+// process JSONP response of routing server
 function timeoutRouteSimple() {
 	showNoRouteGeometry();
 	showNoRouteDescription();
@@ -68,10 +67,11 @@ function showRouteSimple(response) {
 		showRouteDescriptionSimple(response);
 	}
 	updateHints(response);
-	
+
+//	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)
 //	if(OSRM.pending) {
 //		clearTimeout(OSRM.pendingTimer);
-//		OSRM.pendingTimer = setTimeout(timeoutDrag,100);	// dirty dirty!		
+//		OSRM.pendingTimer = setTimeout(timeoutDrag,100);		
 //	}
 }
 function showRoute(response) {
@@ -92,6 +92,8 @@ function showRoute(response) {
 	updateHints(response);
 }
 
+
+// show route geometry
 function showNoRouteGeometry() {
 	var positions = [];
 	for(var i=0; i<my_markers.route.length;i++)
@@ -111,6 +113,8 @@ function showRouteGeometry(response) {
 	my_route.showRoute(points, OSRM.Route.ROUTE);
 }
 
+
+// route description display (and helper functions)
 function onClickRouteDescription(geometry_index) {
 	var positions = my_route.getPositions();
 
@@ -155,8 +159,6 @@ function showRouteDescription(response) {
 		route_desc += '<img width="18px" src="images/'+getDirectionIcon(response.route_instructions[i][0])+'"/>';
 		route_desc += "</td>";		
 		
-		//route_desc += '<td class="result-counter"><span">'+(i+1)+'.</span></td>';
-				
 		route_desc += '<td class="result-items">';
 		route_desc += '<span class="result-item" onclick="onClickRouteDescription('+response.route_instructions[i][3]+')">'
 						+ response.route_instructions[i][0] + ' on ';
@@ -212,6 +214,8 @@ function showNoRouteDescription() {
 	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED")+".<p>";	
 }
 
+
+// unnamed streets display
 function showRouteNonames(response) {
 	// do not display unnamed streets?
 	if( document.getElementById('option-highlight-nonames').checked == false) {
@@ -252,14 +256,15 @@ function showRouteNonames(response) {
 	my_route.showUnnamedRoute(all_positions);
 }
 
-// function for dragging and drawing routes
+
+//-- main function --
+
+// generate server calls to query routes
 function getRoute(do_description) {
 	
 	// if source or target are not set -> hide route
 	if( my_markers.route.length < 2 ) {
 		my_route.hideRoute();
-		//my_markers.removeVias();			// TODO: do I need this?
-		//my_markers.highlight.hide();
 		return;
 	}
 	
@@ -292,16 +297,17 @@ function getRoute(do_description) {
 	}
 	
 	// do call
-	var called = OSRM.JSONP.call(source, callback, timeout, OSRM.JSONP.TIMEOUT, type);
+	var called = OSRM.JSONP.call(source, callback, timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, type);
 
-	// TODO: guarantee to do last drag
+	// TODO: hack to process final drag event, if it was fenced, but we are still dragging
 	if(called == false && !do_description) {
 		clearTimeout(OSRM.pendingTimer);
-		OSRM.pendingTimer = setTimeout(timeoutDrag,OSRM.JSONP.TIMEOUT);
+		OSRM.pendingTimer = setTimeout(timeoutDrag,OSRM.DEFAULTS.JSONP_TIMEOUT);
 	}
 	else {
 		clearTimeout(OSRM.pendingTimer);
 	}
+//	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)  
 //	if(called == false && !do_description) {
 //		OSRM.pending = true;
 //	} else {
@@ -309,28 +315,42 @@ function getRoute(do_description) {
 //		OSRM.pending = false;
 //	}
 }
-
 function timeoutDrag() {
 	my_markers.route[OSRM.dragid].hint = undefined;
 	getRoute(OSRM.NO_DESCRIPTION);
 }
 
-function startRouting() {
-	getRoute(OSRM.FULL_DESCRIPTION);
+
+//-- helper functions --
+
+//decode compressed route geometry
+function decodeRouteGeometry(encoded, precision) {
+	precision = Math.pow(10, -precision);
+	var len = encoded.length, index=0, lat=0, lng = 0, array = [];
+	while (index < len) {
+		var b, shift = 0, result = 0;
+		do {
+			b = encoded.charCodeAt(index++) - 63;
+			result |= (b & 0x1f) << shift;
+			shift += 5;
+		} while (b >= 0x20);
+		var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+		lat += dlat;
+		shift = 0;
+		result = 0;
+		do {
+			b = encoded.charCodeAt(index++) - 63;
+			result |= (b & 0x1f) << shift;
+			shift += 5;
+		} while (b >= 0x20);
+		var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+		lng += dlng;
+		array.push([lat * precision, lng * precision]);
+	}
+	return array;
 }
 
-function resetRouting() {
-	document.getElementById('input-source-name').value = "";
-	document.getElementById('input-target-name').value = "";
-	
-	my_route.hideRoute();
-	my_markers.removeAll();
-	my_markers.highlight.hide();
-	
-	document.getElementById('information-box').innerHTML = "";
-	document.getElementById('information-box-headline').innerHTML = "";
-}
-
+// update hints of all markers
 function updateHints(response) {
 	var hint_locations = response.hint_data.locations;
 	my_markers.checksum = response.hint_data.checksum;
@@ -338,6 +358,7 @@ function updateHints(response) {
 		my_markers.route[i].hint = hint_locations[i];
 }
 
+// snap all markers to the received route
 function snapRoute() {
 	var positions = my_route.getPositions();
  	
@@ -350,48 +371,8 @@ function snapRoute() {
  	updateLocation( "target" );
 }
 
-function positionsToInput() {
-	if(my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) {
-		document.getElementById('input-source-name').value = my_markers.route[0].getPosition().lat.toFixed(6)+","+my_markers.route[0].getPosition().lng.toFixed(6);		
-	}
-	if(my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL) {
-		document.getElementById('input-target-name').value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6)+","+my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);		
-	}	
-}
-
-function reverseRouting() {
-	// invert input boxes
-	var tmp = document.getElementById("input-source-name").value;
-	document.getElementById("input-source-name").value = document.getElementById("input-target-name").value;
-	document.getElementById("input-target-name").value = tmp;
-	
-	// invert route
-	my_markers.route.reverse();
-	if(my_markers.route.length == 1) {
-		if(my_markers.route[0].label == OSRM.TARGET_MARKER_LABEL) {
-			my_markers.route[0].label = OSRM.SOURCE_MARKER_LABEL;
-			my_markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
-		} else if(my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) {
-			my_markers.route[0].label = OSRM.TARGET_MARKER_LABEL;
-			my_markers.route[0].marker.setIcon( new L.Icon('images/marker-target.png') );
-		}
-	} else if(my_markers.route.length > 1){
-		my_markers.route[0].label = OSRM.SOURCE_MARKER_LABEL;
-		my_markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
-		
-		my_markers.route[my_markers.route.length-1].label = OSRM.TARGET_MARKER_LABEL;
-		my_markers.route[my_markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
-	}
-	
-	// recompute route
-	getRoute(OSRM.FULL_DESCRIPTION);
-	my_markers.highlight.hide();
-}
-
-
-
-
-//--------------------
+// map driving instructions to images
+// [TODO: better implementation, language-safe]
 function getDirectionIcon(name) {
 	var directions = {
 		"Turn left":"turn-left.png",
@@ -420,4 +401,55 @@ function getDirectionIcon(name) {
 		return directions[name];
 	else
 		return "default.png";
+}
+
+
+// -- gui functions --
+
+// click: button "route"
+function startRouting() {
+	getRoute(OSRM.FULL_DESCRIPTION);
+}
+
+// click: button "reset"
+function resetRouting() {
+	document.getElementById('input-source-name').value = "";
+	document.getElementById('input-target-name').value = "";
+	
+	my_route.hideRoute();
+	my_markers.removeAll();
+	my_markers.highlight.hide();
+	
+	document.getElementById('information-box').innerHTML = "";
+	document.getElementById('information-box-headline').innerHTML = "";
+}
+
+// click: button "reverse"
+function reverseRouting() {
+	// invert input boxes
+	var tmp = document.getElementById("input-source-name").value;
+	document.getElementById("input-source-name").value = document.getElementById("input-target-name").value;
+	document.getElementById("input-target-name").value = tmp;
+	
+	// invert route
+	my_markers.route.reverse();
+	if(my_markers.route.length == 1) {
+		if(my_markers.route[0].label == OSRM.TARGET_MARKER_LABEL) {
+			my_markers.route[0].label = OSRM.SOURCE_MARKER_LABEL;
+			my_markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+		} else if(my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) {
+			my_markers.route[0].label = OSRM.TARGET_MARKER_LABEL;
+			my_markers.route[0].marker.setIcon( new L.Icon('images/marker-target.png') );
+		}
+	} else if(my_markers.route.length > 1){
+		my_markers.route[0].label = OSRM.SOURCE_MARKER_LABEL;
+		my_markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+		
+		my_markers.route[my_markers.route.length-1].label = OSRM.TARGET_MARKER_LABEL;
+		my_markers.route[my_markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
+	}
+	
+	// recompute route
+	getRoute(OSRM.FULL_DESCRIPTION);
+	my_markers.highlight.hide();
 }
