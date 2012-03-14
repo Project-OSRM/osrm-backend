@@ -371,7 +371,7 @@ function snapRoute() {
  	updateLocation( "target" );
 }
 
-// map driving instructions to images
+// map driving instructions to icons
 // [TODO: better implementation, language-safe]
 function getDirectionIcon(name) {
 	var directions = {
