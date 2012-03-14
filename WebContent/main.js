@@ -146,7 +146,8 @@ function initMap() {
 
 	// initial map position and zoom
 	map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE), OSRM.DEFAULTS.ZOOM_LEVEL);
-	map.on('zoomend', function(e) { getRoute(OSRM.FULL_DESCRIPTION); });	
+	map.on('zoomend', function(e) { getRoute(OSRM.FULL_DESCRIPTION); });
+	map.on('contextmenu', function(e) {});
 
 	// click on map to set source and target nodes
 	map.on('click', function(e) {
