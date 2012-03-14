@@ -58,9 +58,9 @@ struct TurnInstructionsClass {
         TurnStrings [8] = "Turn slight left";
         TurnStrings [9] = "Reach via point";
         TurnStrings[10] = "Head";
-        TurnStrings[11] = "Enter round-about";
-        TurnStrings[12] = "Leave round-about";
-        TurnStrings[13] = "Stay on round-about";
+        TurnStrings[11] = "Enter roundabout";
+        TurnStrings[12] = "Leave roundabout";
+        TurnStrings[13] = "Stay on roundabout";
         TurnStrings[14] = "Start";
 
         Ordinals[0]     = "zeroth";
