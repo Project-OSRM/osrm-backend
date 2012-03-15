@@ -181,14 +181,14 @@ function showRouteDescription(response) {
 	route_desc += '</table>';		
 	headline = "";
 	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
-	headline += '<div style="float:left;width:50%">';
+	headline += '<div style="float:left;width:40%">';
 	headline += "<span class='route-summary'>"
 		+ OSRM.loc("DISTANCE")+": " + getDistanceWithUnit(response.route_summary.total_distance)
-		+ " - "
+		+ "<br>"
 		+ OSRM.loc("DURATION")+": " + secondsToTime(response.route_summary.total_time)
 		+ "</span>";		
 	headline +=	'</div>';
-	headline += '<div style="float:left;text-align:right;width:50%;">'+route_link+'<br>'+gpx_link+'</div>';
+	headline += '<div style="float:left;text-align:right;width:60%;">'+route_link+'<br>'+gpx_link+'</div>';
 
 	var output = "";
 	output += route_desc;

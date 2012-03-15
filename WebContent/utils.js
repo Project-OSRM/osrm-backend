@@ -39,7 +39,7 @@ function secondsToTime(seconds){
    	return minutes + '&nbsp;' + 'min';
    }
    else{
-   	return hours + '&nbsp' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';
+   	return hours + '&nbsp;' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';
    }
 }
 
