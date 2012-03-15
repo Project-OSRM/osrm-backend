@@ -408,8 +408,8 @@ int main (int argc, char *argv[]) {
                     double distance = ApproximateDistance(edgeIT->startCoord.lat, edgeIT->startCoord.lon, nodesIT->lat, nodesIT->lon);
                     assert(edgeIT->speed != -1);
                     double weight = ( distance * 10. ) / (edgeIT->speed / 3.6);
-                    int intWeight = max(1, (int) weight);
-                    int intDist = max(1, (int)distance);
+                    int intWeight = std::max(1, (int)(edgeIT->isDurationSet ? edgeIT->speed : weight) );
+                    int intDist = std::max(1, (int)distance);
                     short zero = 0;
                     short one = 1;
 

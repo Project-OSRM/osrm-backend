@@ -21,6 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EXTRACTORCALLBACKS_H_
 #define EXTRACTORCALLBACKS_H_
 
+#include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
+
 #include <stxxl.h>
 #include <vector>
 #include "ExtractorStructs.h"
@@ -63,6 +66,24 @@ private:
     Settings settings;
     StringMap * stringMap;
     STXXLContainers * externalMemory;
+
+    struct DurationContainer {
+        int hours;
+        int minutes;
+    };
+
+    bool checkForValidTiming(const std::string &s, DurationContainer & duration) const {
+        boost::regex e ("((\\d|\\d\\d):)*(\\d|\\d\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
+
+        std::vector< std::string > result;
+        boost::algorithm::split_regex( result, s, boost::regex( ":" ) ) ;
+        bool matched = regex_match(s, e);
+        if(matched) {
+            duration.hours = (result.size()== 2) ?  atoi(result[0].c_str()) : 0;
+            duration.minutes = (result.size()== 2) ?  atoi(result[1].c_str()) : atoi(result[0].c_str());
+        }
+        return matched;
+    }
 
 public:
     ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap) {
@@ -122,6 +143,7 @@ public:
         std::string oneway( w.keyVals.Find("oneway"));
         std::string onewayClass( w.keyVals.Find("oneway:"+settings.accessTag));
         std::string cycleway( w.keyVals.Find("cycleway"));
+        std::string duration ( w.keyVals.Find("duration"));
 
         //Save the name of the way if it has one, ref has precedence over name tag.
         if ( 0 < ref.length() )
@@ -137,7 +159,13 @@ public:
         //Is the route tag listed as usable way in the profile?
         if(settings[route] > 0 || settings[man_made] > 0) {
             w.useful = true;
-            w.speed = settings[route];
+            DurationContainer dc;
+            if(checkForValidTiming(duration, dc)){
+                w.speed = (600*(dc.hours*60+dc.minutes))/std::max((unsigned)(w.path.size()-1),1u);
+                w.isDurationSet = true;
+            } else {
+                w.speed = settings[route];
+            }
             w.direction = _Way::bidirectional;
             if(0 < settings[route])
                 highway = route;
@@ -148,15 +176,16 @@ public:
 
         //Is the highway tag listed as usable way?
         if(0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) {
-
-            if(0 < settings[highway]) {
-                if(0 < maxspeed)
-                    w.speed = std::min(maxspeed, settings[highway]);
-                else
-                    w.speed = settings[highway];
-            } else {
-                w.speed = settings.defaultSpeed;
-                highway = "default";
+            if(!w.isDurationSet) {
+                if(0 < settings[highway]) {
+                    if(0 < maxspeed)
+                        w.speed = std::min(maxspeed, settings[highway]);
+                    else
+                        w.speed = settings[highway];
+                } else {
+                    w.speed = settings.defaultSpeed;
+                    highway = "default";
+                }
             }
             w.useful = true;
 
@@ -225,7 +254,7 @@ public:
             }
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
-                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid));
+                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid, w.isDurationSet));
                 externalMemory->usedNodeIDs.push_back(w.path[n]);
             }
             externalMemory->usedNodeIDs.push_back(w.path[w.path.size()-1]);
