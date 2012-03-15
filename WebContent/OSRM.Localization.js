@@ -65,7 +65,16 @@ OSRM.Localization["de"] = {
 "DISTANCE": "Distanz",
 "DURATION": "Dauer",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Ihre Route wird berechnet",
-"NO_ROUTE_FOUND": "Keine Route hierher möglich"
+"NO_ROUTE_FOUND": "Keine Route hierher möglich",
+// directions
+"N": "Norden",
+"O": "Ost",
+"S": "Süden",
+"W": "Westen",
+"NO": "Nordost",
+"SO": "Südost",
+"SW": "Südwest",
+"NW": "Nordwest"
 };
 
 
@@ -98,5 +107,14 @@ OSRM.Localization["en"] = {
 "DISTANCE": "Distance",
 "DURATION": "Duration",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Your route is being computed",
-"NO_ROUTE_FOUND": "No route possible"
+"NO_ROUTE_FOUND": "No route possible",
+// directions
+"N": "north",
+"E": "east",
+"S": "south",
+"W": "west",
+"NE": "northeast",
+"SE": "southeast",
+"SW": "southwest",
+"NW": "northwest"
 };

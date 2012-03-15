@@ -135,6 +135,12 @@ OSRM.extend( OSRM.Route,{
 		this._current_route.hide();
 		this._unnamed_route.hide();
 	},
+	hideAll: function() {
+		this._current_route.hide();
+		this._unnamed_route.hide();
+		this._old_route.hide();
+		this._noroute = OSRM.Route.ROUTE;
+	},	
 	
 	showUnnamedRoute: function(positions) {
 		this._unnamed_route.clearRoutes();

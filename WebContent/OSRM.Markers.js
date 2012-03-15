@@ -26,6 +26,7 @@ OSRM.Marker = function( label, style, position ) {
 
 	this.marker = new L.MouseMarker( this.position, style );
 	this.marker.parent = this;
+	this.dirty = true;
 	
 	this.shown = false;
 	this.hint = undefined;
@@ -106,6 +107,7 @@ onClick: function(e) {
 	my_markers.highlight.hide();
 },
 onDrag: function(e) {
+	this.parent.dirty = true;
 	this.parent.setPosition( e.target.getLatLng() );
 	if(OSRM.dragging == true)								// TODO: hack that deals with drag events after dragend event
 		getRoute(OSRM.NO_DESCRIPTION);

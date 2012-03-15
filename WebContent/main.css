@@ -260,6 +260,16 @@ html, body, #map {
 	padding-top:1px;
 	padding-bottom:1px;	
 }
+.result-distance
+{
+	text-align:right;
+	vertical-align: middle;	
+	width:30px;
+	padding-left:1px;
+	padding-right:1px;
+	padding-top:1px;
+	padding-bottom:1px;	
+}
 .result-item
 {
 	cursor:pointer;

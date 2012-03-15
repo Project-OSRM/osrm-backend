@@ -126,10 +126,11 @@ function onClickCreateShortcut(src){
 	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src+'&jsonp=showRouteLink', showRouteLink, showRouteLink_TimeOut, 2000, 'shortener');
 }
 function showRouteLink(response){
-	document.getElementById('route-link').innerHTML = '[<a id="gpx-link" href="' +response.ShortURL+ '">'+OSRM.loc("LINK_TO_ROUTE")+'</a>]';
+	document.getElementById('route-prelink').innerHTML = '[<a id="gpx-link" class = "text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
+	//document.getElementById('route-prelink').innerHTML = '[<a id="gpx-link" href="' +response.ShortURL+ '">'+OSRM.loc("LINK_TO_ROUTE")+'</a>]';	
 }
 function showRouteLink_TimeOut(){
-	document.getElementById('route-link').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
+	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
 }
 function showRouteDescription(response) {
 	// compute query string
@@ -138,8 +139,8 @@ function showRouteDescription(response) {
 		query_string += '&loc=' + my_markers.route[i].getLat() + ',' + my_markers.route[i].getLng(); 
  						
 	// create link to the route
-	var route_link ='<span class="route-summary" id="route-link">[<a id="gpx-link" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
-	//var route_link ='<span class="route-summary" id="route-link">[<a id="gpx-link" href="#" onclick="onClickCreateShortcut(\'' + document.URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
+	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
+	//var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" href="#" onclick="onClickCreateShortcut(\'' + document.URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
 
 	// create GPX link
 	var gpx_link = '<span class="route-summary">[<a id="gpx-link" onClick="javascript: document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]</span>';
@@ -160,28 +161,36 @@ function showRouteDescription(response) {
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
-		route_desc += '<span class="result-item" onclick="onClickRouteDescription('+response.route_instructions[i][3]+')">'
-						+ response.route_instructions[i][0] + ' on ';
-		if( response.route_instructions[i][2] > 0 )
-			route_desc += response.route_instructions[i][1] + ' for '
-						+ getDistanceWithUnit(response.route_instructions[i][2])
-						+ '</span>';
+		route_desc += '<span class="result-item" onclick="onClickRouteDescription('+response.route_instructions[i][3]+')">';
+		route_desc += response.route_instructions[i][0];
+		if( i == 0 )
+			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		
+		if( response.route_instructions[i][1] != "" ) {
+			route_desc += ' on ';
+			route_desc += '<b>' + response.route_instructions[i][1] + '</b>';
+		}
+		//route_desc += ' for ';
+		route_desc += '</span>';
+		route_desc += "</td>";
+		
+		route_desc += '<td class="result-distance">';
+		route_desc += '<b>'+getDistanceWithUnit(response.route_instructions[i][2])+'</b>';
 		route_desc += "</td>";
 		
 		route_desc += "</tr>";
-	}
+	}	
 		
 	route_desc += '</table>';		
 	headline = "";
 	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
-	headline += '<div style="float:left;width:70%">';
+	headline += '<div style="float:left;width:50%">';
 	headline += "<span class='route-summary'>"
 		+ OSRM.loc("DISTANCE")+": " + getDistanceWithUnit(response.route_summary.total_distance)
 		+ " - "
 		+ OSRM.loc("DURATION")+": " + secondsToTime(response.route_summary.total_time)
 		+ "</span>";		
 	headline +=	'</div>';
-	headline += '<div style="float:left;text-align:right;width:30%;">'+route_link+'<br>'+gpx_link+'</div>';
+	headline += '<div style="float:left;text-align:right;width:50%;">'+route_link+'<br>'+gpx_link+'</div>';
 
 	var output = "";
 	output += route_desc;
@@ -408,7 +417,7 @@ function getDirectionIcon(name) {
 
 // click: button "route"
 function startRouting() {
-	my_route.hideRoute();
+	my_route.hideAll();
 	my_markers.removeAll();
 	my_markers.highlight.hide();
 
@@ -426,7 +435,7 @@ function resetRouting() {
 	document.getElementById('input-source-name').value = "";
 	document.getElementById('input-target-name').value = "";
 	
-	my_route.hideRoute();
+	my_route.hideAll();
 	my_markers.removeAll();
 	my_markers.highlight.hide();
 	

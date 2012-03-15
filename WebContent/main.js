@@ -157,7 +157,7 @@ function initMap() {
 			my_markers.route[index].centerView(false);	
 			getRoute(OSRM.FULL_DESCRIPTION);
 			updateLocation("source");
-//			updateReverseGeocoder("source");
+			updateReverseGeocoder("source");
 		}
 		else if( !my_markers.route[my_markers.route.length-1] || my_markers.route[ my_markers.route.length-1 ].label != OSRM.TARGET_MARKER_LABEL) {
 			index = my_markers.setTarget( e.latlng );
@@ -165,7 +165,7 @@ function initMap() {
 			my_markers.route[index].centerView(false);	
 			getRoute(OSRM.FULL_DESCRIPTION);
 			updateLocation("target");
-//			updateReverseGeocoder("target");
+			updateReverseGeocoder("target");
 		}		
 	} );
 }

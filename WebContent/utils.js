@@ -36,18 +36,18 @@ function secondsToTime(seconds){
    hours = parseInt(minutes/60);
    minutes = minutes%60;
    if(hours==0){
-   	return minutes+' min';
+   	return minutes + '&nbsp;' + 'min';
    }
    else{
-   	return hours+' h '+minutes+' min';
+   	return hours + '&nbsp' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';
    }
 }
 
 // human readable distance
 function getDistanceWithUnit(distance){
 	distance = parseInt(distance);
-	if(distance >= 1000){ return (parseInt(distance/1000))+' km'; }
-	else{ return distance+' m'; }
+	if(distance >= 1000){ return (parseInt(distance/1000))+'&nbsp;' + 'km'; }
+	else{ return distance+'&nbsp;' + 'm'; }
 }
 
 // ------------------------------------------------------
