@@ -75,6 +75,6 @@ toggleOptions: function() {
 	} else {
 		document.getElementById('options-box').style.visibility="visible";
 	}
-},
+}
 
 };

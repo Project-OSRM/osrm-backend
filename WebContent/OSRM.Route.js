@@ -61,7 +61,7 @@ onClick: function(e) {
 },
 toString: function() {
 	return "OSRM.Route("+ this.label + ", " + this.route.getLatLngs().length + " points)";
-},
+}
 });
 
 

@@ -29,7 +29,7 @@ translate: function(text) {
 		return OSRM.Localization["en"][text];
 	else
 		return text;
-},
+}
 };
 
 // shorter call to translate function
@@ -65,7 +65,7 @@ OSRM.Localization["de"] = {
 "DISTANCE": "Distanz",
 "DURATION": "Dauer",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Ihre Route wird berechnet",
-"NO_ROUTE_FOUND": "Keine Route hierher möglich",
+"NO_ROUTE_FOUND": "Keine Route hierher möglich"
 };
 
 
@@ -98,5 +98,5 @@ OSRM.Localization["en"] = {
 "DISTANCE": "Distance",
 "DURATION": "Duration",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Your route is being computed",
-"NO_ROUTE_FOUND": "No route possible",
+"NO_ROUTE_FOUND": "No route possible"
 };

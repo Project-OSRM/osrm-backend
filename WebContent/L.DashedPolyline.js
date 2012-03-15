@@ -27,7 +27,7 @@ L.DashedPolyline = L.Polyline.extend({
 	
 	options: {
 		dashed: true
-	},
+	}
 });
 
 
@@ -41,7 +41,7 @@ L.DashedPolyline = !L.Browser.svg ? L.DashedPolyline : L.DashedPolyline.extend({
 			else
 				this._path.setAttribute('stroke-dasharray', '');
 		}
-	},
+	}
 });
 
 
@@ -55,6 +55,6 @@ L.DashedPolyline = L.Browser.svg || !L.Browser.vml ? L.DashedPolyline : L.Dashed
 			else
 				this._stroke.dashstyle = "solid";
 		}
-	},
+	}
 	
 });

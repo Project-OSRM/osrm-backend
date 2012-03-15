@@ -65,7 +65,7 @@ centerView: function(zooming) {
 },
 toString: function() {
 	return "OSRM.Marker: \""+this.label+"\", "+this.position+")";
-},
+}
 });
 
 
@@ -78,7 +78,7 @@ OSRM.inheritFrom( OSRM.HighlightMarker, OSRM.Marker );
 OSRM.extend( OSRM.HighlightMarker, {
 toString: function() {
 	return "OSRM.HighlightMarker: \""+this.label+"\", "+this.position+")";
-},
+}
 });
 
 
@@ -143,7 +143,7 @@ onDragEnd: function(e) {
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";
-},
+}
 });
 
 

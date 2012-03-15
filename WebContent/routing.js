@@ -394,7 +394,7 @@ function getDirectionIcon(name) {
 		"Enter roundabout and leave at eighth exit":"round-about.png",
 		"Enter roundabout and leave at nineth exit":"round-about.png",
 		"Enter roundabout and leave at tenth exit":"round-about.png",
-		"Enter roundabout and leave at one of the too many exit":"round-about.png",
+		"Enter roundabout and leave at one of the too many exit":"round-about.png"
 	};
 	
 	if( directions[name] )

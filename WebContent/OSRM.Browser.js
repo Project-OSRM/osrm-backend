@@ -24,7 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	
 	OSRM.Browser = {
  		FF3:	useragent.search(/Firefox\/3/),
-		IE6_9:	useragent.search(/MSIE (6|7|8|9)/),
+		IE6_9:	useragent.search(/MSIE (6|7|8|9)/)
 	};
 }());
 

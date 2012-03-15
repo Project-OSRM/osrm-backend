@@ -49,5 +49,5 @@ L.MouseMarker = L.Marker.extend({
 			shiftKey: e.shiftKey,
 			button: e.button
 		});
-	},	
+	}
 });
