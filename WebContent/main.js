@@ -176,6 +176,9 @@ function checkURL(){
 	var called_url = document.location.search.substr(1,document.location.search.length);
 	if( called_url != '') {
 		var positions = [];
+		
+		var destination = undefined;
+		var destination_name = undefined;
 
 		// parse input (currently only parses start, dest, via)
 		var splitted_url = called_url.split('&');
@@ -184,12 +187,26 @@ function checkURL(){
 			if(name_val.length!=2)
 				continue;
 				
-			var coordinates = unescape(name_val[1]).split(',');
-			if(coordinates.length!=2)
-				continue;
-				
-			if(name_val[0] == 'loc')
-				positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
+			if(name_val[0] == 'loc') {
+				var coordinates = unescape(name_val[1]).split(',');
+				if(coordinates.length==2)
+					positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
+			}
+			else if(name_val[0] == 'dest') {
+				var coordinates = unescape(name_val[1]).split(',');
+				if(coordinates.length==2)				
+					destination = new L.LatLng( coordinates[0], coordinates[1]);
+			}
+			else if(name_val[0] == 'destname')
+				destination_name = name_val[1];			
+		}
+		
+		// destination given
+		if( destination != undefined ) {
+			onclickGeocoderResult("target", destination.lat, destination.lng, (destination_name == undefined) );
+			if( destination_name != undefined )
+				document.getElementById("input-target-name").value = decodeURI(destination_name);
+			return;
 		}
 
 		// draw via points

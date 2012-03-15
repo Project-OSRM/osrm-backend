@@ -139,7 +139,6 @@ function showRouteDescription(response) {
  						
 	// create link to the route
 	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" href="#" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
-	alert(OSRM.DEFAULTS.WEBSITE_URL);
 
 	// create GPX link
 	var gpx_link = '<span class="route-summary">[<a id="gpx-link" onClick="javascript: document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]</span>';
