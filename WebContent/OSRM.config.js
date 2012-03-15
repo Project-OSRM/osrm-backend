@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.DEFAULTS = {
 	HOST_ROUTING_URL: 'http://router.project-osrm.org/viaroute',
 	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
-	WEBSITE_URL: 'http://map.project-osrm.org/',
+	WEBSITE_URL: document.URL.replace(/#*\?.*/i,""),
 	JSONP_TIMEOUT: 2000,
 	ZOOM_LEVEL: 14,
 	ONLOAD_LATITUDE: 48.84,
