@@ -67,7 +67,7 @@ function prefetchIcons() {
 
 // init localization
 function initLocale() {
-	document.getElementById("gui-route").innerHTML = OSRM.loc("GUI_ROUTE");
+//	document.getElementById("gui-route").innerHTML = OSRM.loc("GUI_ROUTE");
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");

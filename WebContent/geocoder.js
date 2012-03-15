@@ -37,6 +37,11 @@ function updateLocation(marker_id) {
 
 // process input request and call geocoder if needed
 function callGeocoder(marker_id, query) {
+	if (marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0].dirty == false)
+		return;
+	if (marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1].dirty == false)
+		return;	
+	
 	//geo coordinates given -> go directly to drawing results
 	if(query.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
 		var coord = query.split(/[,;]/);

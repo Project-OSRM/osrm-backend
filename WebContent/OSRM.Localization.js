@@ -82,8 +82,8 @@ OSRM.Localization["en"] = {
 //gui
 "GUI_START": "Start",
 "GUI_END": "End",
-"GUI_RESET": "Reset",
-"GUI_SEARCH": "Search",
+"GUI_RESET": "&nbsp;&nbsp;Reset&nbsp;&nbsp;",
+"GUI_SEARCH": "&nbsp;Search&nbsp;",
 "GUI_ROUTE": "Route",
 "GUI_REVERSE": "Reverse",
 "GUI_OPTIONS": "Options",
