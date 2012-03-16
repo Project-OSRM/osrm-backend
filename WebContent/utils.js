@@ -46,7 +46,10 @@ function secondsToTime(seconds){
 // human readable distance
 function getDistanceWithUnit(distance){
 	distance = parseInt(distance);
-	if(distance >= 1000){ return (parseInt(distance/1000))+'&nbsp;' + 'km'; }
+	
+	if(distance >= 100000){ return (parseInt(distance/1000))+'&nbsp;' + 'km'; }
+	else if(distance >= 10000){ return (parseInt(distance/1000).toFixed(1))+'&nbsp;' + 'km'; }
+	else if(distance >= 1000){ return (parseFloat(distance/1000).toFixed(2))+'&nbsp;' + 'km'; }
 	else{ return distance+'&nbsp;' + 'm'; }
 }
 
