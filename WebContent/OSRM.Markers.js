@@ -75,11 +75,16 @@ toString: function() {
 OSRM.HighlightMarker = function( label, style, position) {
 	OSRM.HighlightMarker.prototype.base.constructor.apply( this, arguments );
 	this.label = label ? label : "highlight_marker";
+	
+ 	this.marker.on( 'click', this.onClick );	
 };
 OSRM.inheritFrom( OSRM.HighlightMarker, OSRM.Marker );
 OSRM.extend( OSRM.HighlightMarker, {
 toString: function() {
 	return "OSRM.HighlightMarker: \""+this.label+"\", "+this.position+")";
+},
+onClick: function(e) {
+	this.parent.hide();
 }
 });
 
@@ -143,6 +148,12 @@ onDragEnd: function(e) {
 	OSRM.dragging = false;
 	
 	updateLocation( this.parent.label );
+	if(my_route.isShown()==false) {
+		if(this.parent.label == "source")
+			updateReverseGeocoder("source");
+		else if(this.parent.label == "target")
+			updateReverseGeocoder("target");
+	}
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";

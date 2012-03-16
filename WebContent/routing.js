@@ -172,6 +172,7 @@ function showRouteDescription(response) {
 		route_desc += "</td>";
 		
 		route_desc += '<td class="result-distance">';
+		if( i != response.route_instructions.length-1 )
 		route_desc += '<b>'+getDistanceWithUnit(response.route_instructions[i][2])+'</b>';
 		route_desc += "</td>";
 		
@@ -200,7 +201,7 @@ function showRouteDescriptionSimple(response) {
 	headline = OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
 	headline += "<span class='route-summary'>"
 			+ OSRM.loc("DISTANCE")+": " + getDistanceWithUnit(response.route_summary.total_distance)
-			+ " - "
+			+ "<br>"
 			+ OSRM.loc("DURATION")+": " + secondsToTime(response.route_summary.total_time)
 			+ "</span>";
 	headline += '<br><br>';
@@ -212,7 +213,7 @@ function showNoRouteDescription() {
 	headline = OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
 	headline += "<span class='route-summary'>"
 			+ OSRM.loc("DISTANCE")+": N/A"
-			+ " - "
+			+ "<br>"
 			+ OSRM.loc("DURATION")+": N/A"
 			+ "</span>";
 	headline += '<br><br>';
@@ -374,8 +375,13 @@ function snapRoute() {
  	for(var i=0; i<via_points.length; i++)
 		my_markers.route[i+1].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) );
 
- 	updateLocation( "source" );
- 	updateLocation( "target" );
+// 	updateLocation( "source" );
+// 	updateLocation( "target" );
+	
+	//if(OSRM.dragid == 0 && my_markers.hasSource()==true)
+		updateReverseGeocoder("source");
+	//else if(OSRM.dragid == my_markers.route.length-1 && my_markers.hasTarget()==true)
+		updateReverseGeocoder("target"); 	
 }
 
 // map driving instructions to icons
@@ -401,7 +407,8 @@ function getDirectionIcon(name) {
 		"Enter roundabout and leave at eighth exit":"round-about.png",
 		"Enter roundabout and leave at nineth exit":"round-about.png",
 		"Enter roundabout and leave at tenth exit":"round-about.png",
-		"Enter roundabout and leave at one of the too many exit":"round-about.png"
+		"Enter roundabout and leave at one of the too many exit":"round-about.png",
+		"You have reached your destination":"target.png"
 	};
 	
 	if( directions[name] )
@@ -412,21 +419,6 @@ function getDirectionIcon(name) {
 
 
 // -- gui functions --
-
-// click: button "route"
-function startRouting() {
-	my_route.hideAll();
-	my_markers.removeAll();
-	my_markers.highlight.hide();
-
-	document.getElementById('information-box').innerHTML = "";
-	document.getElementById('information-box-headline').innerHTML = "";	
-	
-	callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);
-	callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);
-	//getRoute(OSRM.FULL_DESCRIPTION);	
-	//TODO: center map on route
-}
 
 // click: button "reset"
 function resetRouting() {
@@ -467,23 +459,20 @@ function reverseRouting() {
 	}
 	
 	// recompute route
-	getRoute(OSRM.FULL_DESCRIPTION);
-	my_markers.highlight.hide();
+	if( my_route.isShown() ) {
+		getRoute(OSRM.FULL_DESCRIPTION);
+		my_markers.highlight.hide();
+	} else {
+		document.getElementById('information-box').innerHTML = "";
+		document.getElementById('information-box-headline').innerHTML = "";		
+	}
 }
 
-
-// click: button "search"
+// click: button "show"
 function centerMarker(marker_id) {
 	if( marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL && !my_markers.route[0].dirty_type ) {
 		my_markers.route[0].centerView();
 	} else if( marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL && !my_markers.route[my_markers.route.length-1].dirty_type) {
 		my_markers.route[my_markers.route.length-1].centerView();
 	}
-}
-
-
-// click: button "route"
-function centerRoute() {
-	if( my_route.isShown() )
-		my_route.centerView();
 }

@@ -19,7 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [has to loaded before all other OSRM classes]
 
 OSRM = {};
-OSRM.VERSION = '0.1';
+OSRM.VERSION = '0.1.1';
 
 
 // inheritance helper function (convenience function)

@@ -20,7 +20,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [TODO: better separation of GUI and geocoding routines, reverse geocoding]
 
 // some constants
-OSRM.GEOCODE_POST = 'http://nominatim.openstreetmap.org/search?format=json';
+OSRM.GEOCODE_POST = 'http://nominatim.openstreetmap.org/search?format=json&bounded=1&viewbox=-27.0,72.0,46.0,36.0';
 OSRM.SOURCE_MARKER_LABEL = "source";
 OSRM.TARGET_MARKER_LABEL = "target";
 
@@ -40,7 +40,9 @@ function callGeocoder(marker_id, query) {
 	if (marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0].dirty_move == false && my_markers.route[0].dirty_type == false)
 		return;
 	if (marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1].dirty_move == false && my_markers.route[my_markers.route.length-1].dirty_type == false)
-		return;	
+		return;
+	if(query=="")
+		return;
 	
 	//geo coordinates given -> go directly to drawing results
 	if(query.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
@@ -137,15 +139,15 @@ function showGeocoderResults_Timeout() {
 
 
 // - [upcoming feature: reverse geocoding (untested) ] -
-OSRM.REVERSE_GEOCODE_POST = 'http://nominatim.openstreetmap.org/reverse?format=json';
+OSRM.REVERSE_GEOCODE_POST = 'http://nominatim.openstreetmap.org/reverse?format=json&bounded=1&viewbox=-27.0,72.0,46.0,36.0';
 
 //update reverse geocoder informatiopn in input boxes
 function updateReverseGeocoder(marker_id) {
-	if (marker_id == OSRM.SOURCE_MARKER_LABEL ) { //&& my_markers.route[0].dirty == true ) {
-		document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
+	if (marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.hasSource()==true) { //&& my_markers.route[0].dirty == true ) {
+		//document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
 		callReverseGeocoder("source", my_markers.route[0].getPosition().lat, my_markers.route[0].getPosition().lng);
-	} else if (marker_id == OSRM.TARGET_MARKER_LABEL ) { //&& my_markers.route[my_markers.route.length-1].dirty == true) {
-		document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
+	} else if (marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.hasTarget()==true) { //&& my_markers.route[my_markers.route.length-1].dirty == true) {
+		//document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
 		callReverseGeocoder("target", my_markers.route[my_markers.route.length-1].getPosition().lat, my_markers.route[my_markers.route.length-1].getPosition().lng);
 	}
 }
@@ -175,20 +177,28 @@ function showReverseGeocoderResults(marker_id, response) {
 		var address = "";
 		if( response.address.road)
 			address += response.address.road;	
-		if( response.address.city) {
-			if( response.address.road)
+		if( response.address.city ) {
+			if( address != "" )
 				address += ", ";
 			address += response.address.city;
+		} else if( response.address.village ) {
+			if( address != "" )
+				address += ", ";
+			address += response.address.village;
 		}
+		if( address == "" && response.address.country )
+			address += response.address.country;
 		if( address == "" )
 			return;
 		
 		if(marker_id == OSRM.SOURCE_MARKER_LABEL) {
 			document.getElementById("input-source-name").value = address;
-			//my_markers.route[0].dirty = false;
+			my_markers.route[0].dirty_move = false;
+			my_markers.route[0].dirty_type = false;
 		} else if(marker_id == OSRM.TARGET_MARKER_LABEL) {
 			document.getElementById("input-target-name").value = address;
-			//my_markers.route[my_markers.route.length-1].dirty = false;
+			my_markers.route[my_markers.route.length-1].dirty_move = false;
+			my_markers.route[my_markers.route.length-1].dirty_type = false;
 		}
 		
 	}

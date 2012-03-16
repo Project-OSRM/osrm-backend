@@ -41,9 +41,15 @@ function prefetchImages() {
 	var images = [	'images/marker-source.png',
 	              	'images/marker-target.png',
 	              	'images/marker-via.png',
-	              	'images/marker-highlight.png'
+	              	'images/marker-highlight.png',
+	              	'images/cancel.png',
+	              	'images/cancel_active.png',
+	              	'images/cancel_hover.png',
+	              	'images/restore.png',
+	              	'images/restore_active.png',
+	              	'images/restore_hover.png'
 	              ];
-	
+
 	for(var i=0; i<images.length; i++) {
 		OSRM.images[i] = new Image();
 		OSRM.images[i].src = images[i];
@@ -67,7 +73,6 @@ function prefetchIcons() {
 
 // init localization
 function initLocale() {
-//	document.getElementById("gui-route").innerHTML = OSRM.loc("GUI_ROUTE");
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
@@ -152,21 +157,9 @@ function initMap() {
 	// click on map to set source and target nodes
 	map.on('click', function(e) {
 		if( !my_markers.route[0] || my_markers.route[0].label != OSRM.SOURCE_MARKER_LABEL) {
-//			index = my_markers.setSource( e.latlng );
-//			my_markers.route[index].show();
-//			my_markers.route[index].centerView(false);	
-//			getRoute(OSRM.FULL_DESCRIPTION);
-//			updateLocation("source");
-//			updateReverseGeocoder("source");
 			onclickGeocoderResult("source", e.latlng.lat, e.latlng.lng, true, false );
 		}
 		else if( !my_markers.route[my_markers.route.length-1] || my_markers.route[ my_markers.route.length-1 ].label != OSRM.TARGET_MARKER_LABEL) {
-//			index = my_markers.setTarget( e.latlng );
-//			my_markers.route[index].show();
-//			my_markers.route[index].centerView(false);	
-//			getRoute(OSRM.FULL_DESCRIPTION);
-//			updateLocation("target");
-//			updateReverseGeocoder("target");
 			onclickGeocoderResult("target", e.latlng.lat, e.latlng.lng, true, false );
 		}		
 	} );
@@ -221,20 +214,24 @@ function checkURL(){
 	// case 2: locations given
 	if( positions != []) {
 		// draw via points
-		if( positions.length > 0)
-			my_markers.setSource( positions[0] );
-		if(positions.length > 1)
-			my_markers.setTarget( positions[positions.length-1] );		
+		if( positions.length > 0) {
+			onclickGeocoderResult("source", positions[0].lat, positions[0].lng, true, false );
+			//my_markers.setSource( positions[0] );
+		}
+		if(positions.length > 1) {
+			onclickGeocoderResult("target", positions[positions.length-1].lat, positions[positions.length-1].lng, true, false );
+			//my_markers.setTarget( positions[positions.length-1] );			
+		}
 		for(var i=1; i<positions.length-1;i++)
 			my_markers.setVia( i-1, positions[i] );
 		for(var i=0; i<my_markers.route.length;i++)
 			my_markers.route[i].show();
+		
+		// center on route
+		var bounds = new L.LatLngBounds( positions );
+		map.fitBounds( bounds );		
 			
 		// compute route
 		getRoute(OSRM.FULL_DESCRIPTION);
-			
-		// center on route
-		var bounds = new L.LatLngBounds( positions );
-		map.fitBounds( bounds );
 	}
 }
