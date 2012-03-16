@@ -73,7 +73,7 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
 }
 
 inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn){
-
+    out << "node: " << pn.edgeBasedNode << ", name: " << pn.nodeBasedEdgeNameID << ", w1: " << pn.weight1 << ", w2: " << pn.weight2 << ", ratio: " << pn.ratio << ", loc: " << pn.location;
     return out;
 }
 

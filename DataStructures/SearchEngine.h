@@ -340,13 +340,13 @@ public:
 		_RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, middle, packedPath);
 
 		//Setting weights to correspond with that of the actual chosen path
-		if(packedPath[0] == phantomNodes.startPhantom.edgeBasedNode && phantomNodes.startPhantom.isBidirected()) {
+//		if(packedPath[0] == phantomNodes.startPhantom.edgeBasedNode && phantomNodes.startPhantom.isBidirected()) {
 //            INFO("Setting weight1=" << phantomNodes.startPhantom.weight1 << " to that of weight2=" << phantomNodes.startPhantom.weight2);
-            phantomNodes.startPhantom.weight1 = phantomNodes.startPhantom.weight2;
-		} else {
+//            phantomNodes.startPhantom.weight1 = phantomNodes.startPhantom.weight2;
+//		} else {
 //            INFO("Setting weight2=" << phantomNodes.startPhantom.weight2 << " to that of weight1=" << phantomNodes.startPhantom.weight1);
-            phantomNodes.startPhantom.weight2 = phantomNodes.startPhantom.weight1;
-		}
+//            phantomNodes.startPhantom.weight2 = phantomNodes.startPhantom.weight1;
+//		}
 //		std::cout << "0: ";
 //		for(unsigned i = 0; i < packedPath.size(); ++i)
 //			std::cout << packedPath[i] << " ";
