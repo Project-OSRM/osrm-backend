@@ -147,6 +147,22 @@ public:
 				if(segment.necessary)
 					++prefixSumOfNecessarySegments;
 			}
+			reply.content += ",[\"";
+			reply.content += TurnInstructions.TurnStrings[TurnInstructions.ReachedYourDestination];
+			reply.content += "\",\"";
+			reply.content += "\",";
+			reply.content += "0";
+			reply.content += ",";
+			intToString(prefixSumOfNecessarySegments-1, tmpLength);
+			reply.content += tmpLength;
+			reply.content += ",";
+			reply.content += "0";
+			reply.content += ",\"";
+			reply.content += "\",\"";
+			reply.content += Azimuth::Get(0.0);
+			reply.content += "\",";
+			reply.content += "0.0";
+			reply.content += "]";
 		}
 		reply.content += "],";
 		//list all viapoints so that the client may display it

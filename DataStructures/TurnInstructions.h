@@ -41,8 +41,9 @@ struct TurnInstructionsClass {
     const static short LeaveRoundAbout = 12;
     const static short StayOnRoundAbout = 13;
     const static short StartAtEndOfStreet = 14;
+    const static short ReachedYourDestination = 15;
 
-    std::string TurnStrings[15];
+    std::string TurnStrings[16];
     std::string Ordinals[12];
 
     //This is a hack until c++0x is available enough to use initializer lists.
@@ -62,6 +63,7 @@ struct TurnInstructionsClass {
         TurnStrings[12] = "Leave roundabout";
         TurnStrings[13] = "Stay on roundabout";
         TurnStrings[14] = "Start";
+        TurnStrings[15] = "You have reached your destination";
 
         Ordinals[0]     = "zeroth";
         Ordinals[1]     = "first";
