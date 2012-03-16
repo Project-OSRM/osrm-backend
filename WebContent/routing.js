@@ -431,6 +431,8 @@ function resetRouting() {
 	
 	document.getElementById('information-box').innerHTML = "";
 	document.getElementById('information-box-headline').innerHTML = "";
+	
+	OSRM.JSONP.reset();
 }
 
 // click: button "reverse"

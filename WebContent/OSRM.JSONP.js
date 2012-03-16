@@ -56,9 +56,6 @@ OSRM.JSONP = {
 			clearTimeout(OSRM.JSONP.timers[id]);					// clear timeout timer
 			OSRM.JSONP.timers[id] = undefined;
 			
-			if( OSRM.JSONP.fences[id] == undefined )				// fence to prevent execution after timeout function (when precompiled!)
-				return;		
-
 			callback_function(response);							// actual wrapped callback 
 			
 			OSRM.JSONP.callbacks[id] = OSRM.JSONP.late;				// clean functions
@@ -71,7 +68,7 @@ OSRM.JSONP = {
 		// clean DOM (unfortunately, script elements cannot be reused by all browsers)
 		var jsonp = document.getElementById('jsonp_'+id);
 		if(jsonp)
-			jsonp.parentNode.removeChild(jsonp);		
+			jsonp.parentNode.removeChild(jsonp);
 		
 		// add script to DOM
 		var script = document.createElement('script');
@@ -85,5 +82,13 @@ OSRM.JSONP = {
 
 //		OSRM.debug.log("[jsonp] init: "+id);		
 		return true;
+	},
+	
+	// reset all data
+	reset: function() {
+		OSRM.JSONP.fences = {};
+		OSRM.JSONP.callbacks = {};
+		OSRM.JSONP.timeouts = {};
+		OSRM.JSONP.timers = {};
 	}
 };
