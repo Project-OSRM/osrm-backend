@@ -176,41 +176,50 @@ function initMap() {
 // parse URL GET parameters if any exist
 function checkURL(){
 	var called_url = document.location.search.substr(1,document.location.search.length);
-	if( called_url != '') {
-		var positions = [];
-		
-		var destination = undefined;
-		var destination_name = undefined;
+	
+	// reject messages that are clearly too long or too small 
+	if( called_url.length > 1000 || called_url.length == 0)
+		return;
+	
+	// storage for parameter values
+	var positions = [];
+	var destination = undefined;
+	var destination_name = undefined;
 
-		// parse input (currently only parses start, dest, via)
-		var splitted_url = called_url.split('&');
-		for(var i=0; i<splitted_url.length; i++) {
-			var name_val = splitted_url[i].split('=');
-			if(name_val.length!=2)
-				continue;
-				
-			if(name_val[0] == 'loc') {
-				var coordinates = unescape(name_val[1]).split(',');
-				if(coordinates.length==2)
-					positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
-			}
-			else if(name_val[0] == 'dest') {
-				var coordinates = unescape(name_val[1]).split(',');
-				if(coordinates.length==2)				
-					destination = new L.LatLng( coordinates[0], coordinates[1]);
-			}
-			else if(name_val[0] == 'destname')
-				destination_name = name_val[1];			
+	// parse input
+	var splitted_url = called_url.split('&');
+	for(var i=0; i<splitted_url.length; i++) {
+		var name_val = splitted_url[i].split('=');
+		if(name_val.length!=2)
+			continue;
+			
+		if(name_val[0] == 'loc') {
+			var coordinates = unescape(name_val[1]).split(',');
+			if(coordinates.length!=2 || !isLatitude(coordinates[0]) || !isLongitude(coordinates[1]) )
+				return;
+			positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
 		}
+		else if(name_val[0] == 'dest') {
+			var coordinates = unescape(name_val[1]).split(',');
+			if(coordinates.length!=2 || !isLatitude(coordinates[0]) || !isLongitude(coordinates[1]) )
+				return;				
+			destination = new L.LatLng( coordinates[0], coordinates[1]);
+		}
+		else if(name_val[0] == 'destname') {
+			destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
+		}
+	}
 		
-		// destination given
-		if( destination != undefined ) {
-			onclickGeocoderResult("target", destination.lat, destination.lng, (destination_name == undefined) );
-			if( destination_name != undefined )
-				document.getElementById("input-target-name").value = decodeURI(destination_name);
-			return;
-		}
+	// case 1: destination given
+	if( destination != undefined ) {
+		onclickGeocoderResult("target", destination.lat, destination.lng, (destination_name == undefined) );
+		if( destination_name != undefined )
+			document.getElementById("input-target-name").value = destination_name;
+		return;
+	}
 
+	// case 2: locations given
+	if( positions != []) {
 		// draw via points
 		if( positions.length > 0)
 			my_markers.setSource( positions[0] );
@@ -220,10 +229,10 @@ function checkURL(){
 			my_markers.setVia( i-1, positions[i] );
 		for(var i=0; i<my_markers.route.length;i++)
 			my_markers.route[i].show();
-		
+			
 		// compute route
 		getRoute(OSRM.FULL_DESCRIPTION);
-		
+			
 		// center on route
 		var bounds = new L.LatLngBounds( positions );
 		map.fitBounds( bounds );

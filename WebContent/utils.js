@@ -50,6 +50,22 @@ function getDistanceWithUnit(distance){
 	else{ return distance+'&nbsp;' + 'm'; }
 }
 
+//------------------------------------------------------
+
+// verify angles
+function isLatitude(value) {
+	if( value >=-90 && value <=90)
+		return true;
+	else
+		return false;
+}
+function isLongitude(value) {
+	if( value >=-180 && value <=180)
+		return true;
+	else
+		return false;
+}
+
 // ------------------------------------------------------
 
 // distance between two points
