@@ -206,5 +206,15 @@ removeMarker: function(id) {
 	
 	this.route[id].hide();
 	this.route.splice(id, 1);
+},
+hasSource: function() {
+	if( my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL )
+		return true;
+	return false;
+},
+hasTarget: function() {
+	if( my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL )
+		return true;
+	return false;
 }
 });
