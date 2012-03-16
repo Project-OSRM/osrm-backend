@@ -470,3 +470,20 @@ function reverseRouting() {
 	getRoute(OSRM.FULL_DESCRIPTION);
 	my_markers.highlight.hide();
 }
+
+
+// click: button "search"
+function centerMarker(marker_id) {
+	if( marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL && !my_markers.route[0].dirty_type ) {
+		my_markers.route[0].centerView();
+	} else if( marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL && !my_markers.route[my_markers.route.length-1].dirty_type) {
+		my_markers.route[my_markers.route.length-1].centerView();
+	}
+}
+
+
+// click: button "route"
+function centerRoute() {
+	if( my_route.isShown() )
+		my_route.centerView();
+}

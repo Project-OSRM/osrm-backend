@@ -88,18 +88,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <table class="full">
     <tr>
     <td id="gui-search-source-label">Start:</td>
-    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="if( my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) my_markers.route[0].dirty = true;" onblur="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);}" /></td>
+    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="if( my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) my_markers.route[0].dirty_type = true;" onblur="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);}" /></td>
     <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
     <!-- <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);">Suchen</a></td> -->
-    <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="">Suchen</a></td>
+    <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="centerMarker('source')">Suchen</a></td>
     </tr>
     
     <tr>
     <td id="gui-search-target-label">Ende:</td>
-    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="if( my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL) my_markers.route[my_markers.route.length-1].dirty = true;" onblur="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);}" /></td>
+    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="if( my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL) my_markers.route[my_markers.route.length-1].dirty_type = true;" onblur="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);}" /></td>
     <!-- <td class="right"><a class="button not-selectable" id="gui-here-target" onclick="">i</a></td> -->
 	<!-- <td class="right"><a class="button not-selectable" id="gui-search-target" onclick="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);">Suchen</a></td> -->
-	<td class="right"><a class="button not-selectable" id="gui-search-target" onclick="">Suchen</a></td>	
+	<td class="right"><a class="button not-selectable" id="gui-search-target" onclick="centerMarker('target');">Suchen</a></td>	
     </tr>
     </table>
     
@@ -112,7 +112,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <td class="center">	<a class="button not-selectable" id="gui-reverse" onclick="reverseRouting();">Reverse</a></td>
     <td class="right">	<a class="button not-selectable" id="gui-route" onclick="startRouting();">Route</a></td>
     -->
-    <td class="right">	<a class="button not-selectable" id="gui-reverse" onclick="reverseRouting();">Reverse</a></td>
+    <td class="right">	<a class="button not-selectable" id="gui-reverse" onclick="centerRoute();">Reverse</a></td>
     </tr>
     </table>
     

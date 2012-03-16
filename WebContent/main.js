@@ -152,20 +152,22 @@ function initMap() {
 	// click on map to set source and target nodes
 	map.on('click', function(e) {
 		if( !my_markers.route[0] || my_markers.route[0].label != OSRM.SOURCE_MARKER_LABEL) {
-			index = my_markers.setSource( e.latlng );
-			my_markers.route[index].show();
-			my_markers.route[index].centerView(false);	
-			getRoute(OSRM.FULL_DESCRIPTION);
-			updateLocation("source");
-			updateReverseGeocoder("source");
+//			index = my_markers.setSource( e.latlng );
+//			my_markers.route[index].show();
+//			my_markers.route[index].centerView(false);	
+//			getRoute(OSRM.FULL_DESCRIPTION);
+//			updateLocation("source");
+//			updateReverseGeocoder("source");
+			onclickGeocoderResult("source", e.latlng.lat, e.latlng.lng, true, false );
 		}
 		else if( !my_markers.route[my_markers.route.length-1] || my_markers.route[ my_markers.route.length-1 ].label != OSRM.TARGET_MARKER_LABEL) {
-			index = my_markers.setTarget( e.latlng );
-			my_markers.route[index].show();
-			my_markers.route[index].centerView(false);	
-			getRoute(OSRM.FULL_DESCRIPTION);
-			updateLocation("target");
-			updateReverseGeocoder("target");
+//			index = my_markers.setTarget( e.latlng );
+//			my_markers.route[index].show();
+//			my_markers.route[index].centerView(false);	
+//			getRoute(OSRM.FULL_DESCRIPTION);
+//			updateLocation("target");
+//			updateReverseGeocoder("target");
+			onclickGeocoderResult("target", e.latlng.lat, e.latlng.lng, true, false );
 		}		
 	} );
 }
