@@ -152,15 +152,15 @@ function initMap() {
 
 	// initial map position and zoom
 	OSRM.G.map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE), OSRM.DEFAULTS.ZOOM_LEVEL);
-	OSRM.G.map.on('zoomend', function(e) { getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION); });
+	OSRM.G.map.on('zoomend', function(e) { getRoute(OSRM.C.FULL_DESCRIPTION); });
 	OSRM.G.map.on('contextmenu', function(e) {});
 
 	// click on map to set source and target nodes
 	OSRM.G.map.on('click', function(e) {
 		if( !OSRM.G.markers.hasSource() )
-			onclickGeocoderResult(OSRM.CONSTANTS.SOURCE_LABEL, e.latlng.lat, e.latlng.lng, true, false );
+			onclickGeocoderResult(OSRM.C.SOURCE_LABEL, e.latlng.lat, e.latlng.lng, true, false );
 		else if( !OSRM.G.markers.hasTarget() )
-			onclickGeocoderResult(OSRM.CONSTANTS.TARGET_LABEL, e.latlng.lat, e.latlng.lng, true, false );
+			onclickGeocoderResult(OSRM.C.TARGET_LABEL, e.latlng.lat, e.latlng.lng, true, false );
 	} );
 }
 
@@ -217,7 +217,7 @@ function checkURL(){
 		
 	// case 1: destination given
 	if( destination != undefined ) {
-		onclickGeocoderResult(OSRM.CONSTANTS.TARGET_LABEL, destination.lat, destination.lng, (destination_name == undefined) );
+		onclickGeocoderResult(OSRM.C.TARGET_LABEL, destination.lat, destination.lng, (destination_name == undefined) );
 		if( destination_name != undefined )
 			document.getElementById("input-target-name").value = destination_name;
 		return;
@@ -227,11 +227,11 @@ function checkURL(){
 	if( positions != []) {
 		// draw via points
 		if( positions.length > 0) {
-			onclickGeocoderResult(OSRM.CONSTANTS.SOURCE_LABEL, positions[0].lat, positions[0].lng, true, false );
+			onclickGeocoderResult(OSRM.C.SOURCE_LABEL, positions[0].lat, positions[0].lng, true, false );
 			//OSRM.G.markers.setSource( positions[0] );
 		}
 		if(positions.length > 1) {
-			onclickGeocoderResult(OSRM.CONSTANTS.TARGET_LABEL, positions[positions.length-1].lat, positions[positions.length-1].lng, true, false );
+			onclickGeocoderResult(OSRM.C.TARGET_LABEL, positions[positions.length-1].lat, positions[positions.length-1].lng, true, false );
 			//OSRM.G.markers.setTarget( positions[positions.length-1] );			
 		}
 		for(var i=1; i<positions.length-1;i++)
@@ -248,6 +248,6 @@ function checkURL(){
 		}
 			
 		// compute route
-		getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
+		getRoute(OSRM.C.FULL_DESCRIPTION);
 	}
 }

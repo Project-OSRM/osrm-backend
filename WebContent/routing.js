@@ -71,9 +71,9 @@ function showRouteSimple(response) {
 	updateHints(response);
 
 //	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)
-//	if(OSRM.GLOBALS.pending) {
-//		clearTimeout(OSRM.GLOBALS.pendingTimer);
-//		OSRM.GLOBALS.pendingTimer = setTimeout(timeoutDrag,100);		
+//	if(OSRM.G.pending) {
+//		clearTimeout(OSRM.G.pendingTimer);
+//		OSRM.G.pendingTimer = setTimeout(timeoutDrag,100);		
 //	}
 }
 function showRoute(response) {
@@ -312,23 +312,23 @@ function getRoute(do_description) {
 
 	// TODO: hack to process final drag event, if it was fenced, but we are still dragging
 	if(called == false && !do_description) {
-		clearTimeout(OSRM.GLOBALS.pendingTimer);
-		OSRM.GLOBALS.pendingTimer = setTimeout(timeoutDrag,OSRM.DEFAULTS.JSONP_TIMEOUT);
+		clearTimeout(OSRM.G.pendingTimer);
+		OSRM.G.pendingTimer = setTimeout(timeoutDrag,OSRM.DEFAULTS.JSONP_TIMEOUT);
 	}
 	else {
-		clearTimeout(OSRM.GLOBALS.pendingTimer);
+		clearTimeout(OSRM.G.pendingTimer);
 	}
 //	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)  
 //	if(called == false && !do_description) {
-//		OSRM.GLOBALS.pending = true;
+//		OSRM.G.pending = true;
 //	} else {
-//		clearTimeout(OSRM.GLOBALS.pendingTimer);
-//		OSRM.GLOBALS.pending = false;
+//		clearTimeout(OSRM.G.pendingTimer);
+//		OSRM.G.pending = false;
 //	}
 }
 function timeoutDrag() {
 	OSRM.G.markers.route[OSRM.G.dragid].hint = undefined;
-	getRoute(OSRM.CONSTANTS.NO_DESCRIPTION);
+	getRoute(OSRM.C.NO_DESCRIPTION);
 }
 
 
@@ -378,13 +378,13 @@ function snapRoute() {
  	for(var i=0; i<OSRM.G.via_points.length; i++)
 		OSRM.G.markers.route[i+1].setPosition( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
 
-// 	updateLocation( OSRM.CONSTANTS.SOURCE_LABEL );
-// 	updateLocation( OSRM.CONSTANTS.TARGET_LABEL );
+// 	updateLocation( OSRM.C.SOURCE_LABEL );
+// 	updateLocation( OSRM.C.TARGET_LABEL );
 	
 	//if(OSRM.G.dragid == 0 && OSRM.G.markers.hasSource())
-		updateReverseGeocoder(OSRM.CONSTANTS.SOURCE_LABEL);
+		updateReverseGeocoder(OSRM.C.SOURCE_LABEL);
 	//else if(OSRM.G.dragid == OSRM.G.markers.route.length-1 && OSRM.G.markers.hasTarget())
-		updateReverseGeocoder(OSRM.CONSTANTS.TARGET_LABEL);
+		updateReverseGeocoder(OSRM.C.TARGET_LABEL);
 }
 
 // map driving instructions to icons
@@ -448,24 +448,24 @@ function reverseRouting() {
 	// invert route
 	OSRM.G.markers.route.reverse();
 	if(OSRM.G.markers.route.length == 1) {
-		if(OSRM.G.markers.route[0].label == OSRM.CONSTANTS.TARGET_LABEL) {
-			OSRM.G.markers.route[0].label = OSRM.CONSTANTS.SOURCE_LABEL;
+		if(OSRM.G.markers.route[0].label == OSRM.C.TARGET_LABEL) {
+			OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
 			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
-		} else if(OSRM.G.markers.route[0].label == OSRM.CONSTANTS.SOURCE_LABEL) {
-			OSRM.G.markers.route[0].label = OSRM.CONSTANTS.TARGET_LABEL;
+		} else if(OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL) {
+			OSRM.G.markers.route[0].label = OSRM.C.TARGET_LABEL;
 			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-target.png') );
 		}
 	} else if(OSRM.G.markers.route.length > 1){
-		OSRM.G.markers.route[0].label = OSRM.CONSTANTS.SOURCE_LABEL;
+		OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
 		OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
 		
-		OSRM.G.markers.route[OSRM.G.markers.route.length-1].label = OSRM.CONSTANTS.TARGET_LABEL;
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].label = OSRM.C.TARGET_LABEL;
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
 	}
 	
 	// recompute route
 	if( OSRM.G.route.isShown() ) {
-		getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
+		getRoute(OSRM.C.FULL_DESCRIPTION);
 		OSRM.G.markers.highlight.hide();
 	} else {
 		document.getElementById('information-box').innerHTML = "";
@@ -475,9 +475,9 @@ function reverseRouting() {
 
 // click: button "show"
 function centerMarker(marker_id) {
-	if( marker_id == OSRM.CONSTANTS.SOURCE_LABEL && OSRM.G.markers.hasSource() && !OSRM.G.markers.route[0].dirty_type ) {
+	if( marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() && !OSRM.G.markers.route[0].dirty_type ) {
 		OSRM.G.markers.route[0].centerView();
-	} else if( marker_id == OSRM.CONSTANTS.TARGET_LABEL && OSRM.G.markers.hasTarget() && !OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type) {
+	} else if( marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() && !OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type) {
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].centerView();
 	}
 }

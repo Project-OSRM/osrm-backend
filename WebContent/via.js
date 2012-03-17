@@ -57,7 +57,7 @@ function findViaPosition( new_via_position ) {
 	var index = OSRM.G.markers.setVia(new_via_index, new_via_position);
 	OSRM.G.markers.route[index].show();
 	
-	getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
+	getRoute(OSRM.C.FULL_DESCRIPTION);
 
 	return new_via_index;
 }

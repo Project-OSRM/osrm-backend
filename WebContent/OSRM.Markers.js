@@ -109,21 +109,21 @@ onClick: function(e) {
 		}
 	}
 	
-	getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
+	getRoute(OSRM.C.FULL_DESCRIPTION);
 	OSRM.G.markers.highlight.hide();
 },
 onDrag: function(e) {
 	this.parent.dirty_move = true;
 	this.parent.setPosition( e.target.getLatLng() );
-	if(OSRM.GLOBALS.dragging == true)								// TODO: hack that deals with drag events after dragend event
-		getRoute(OSRM.CONSTANTS.NO_DESCRIPTION);
+	if(OSRM.G.dragging == true)								// TODO: hack that deals with drag events after dragend event
+		getRoute(OSRM.C.NO_DESCRIPTION);
 	else
-		getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
+		getRoute(OSRM.C.FULL_DESCRIPTION);
 	
 	updateLocation( this.parent.label );
 },
 onDragStart: function(e) {
-	OSRM.GLOBALS.dragging = true;
+	OSRM.G.dragging = true;
 	
 	// hack to store id of dragged marker
 	for( var i=0; i<OSRM.G.markers.route.length; i++)
@@ -140,19 +140,19 @@ onDragStart: function(e) {
 	updateLocation( this.parent.label );	
 },
 onDragEnd: function(e) {
-	getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
+	getRoute(OSRM.C.FULL_DESCRIPTION);
 	if (OSRM.G.route.isShown()) {
 		OSRM.G.route.hideOldRoute();
 		OSRM.G.route.hideUnnamedRoute();
 	}
-	OSRM.GLOBALS.dragging = false;
+	OSRM.G.dragging = false;
 	
 	updateLocation( this.parent.label );
 	if(OSRM.G.route.isShown()==false) {
-		if(this.parent.label == OSRM.CONSTANTS.SOURCE_LABEL)
-			updateReverseGeocoder(OSRM.CONSTANTS.SOURCE_LABEL);
-		else if(this.parent.label == OSRM.CONSTANTS.TARGET_LABEL)
-			updateReverseGeocoder(OSRM.CONSTANTS.TARGET_LABEL);
+		if(this.parent.label == OSRM.C.SOURCE_LABEL)
+			updateReverseGeocoder(OSRM.C.SOURCE_LABEL);
+		else if(this.parent.label == OSRM.C.TARGET_LABEL)
+			updateReverseGeocoder(OSRM.C.TARGET_LABEL);
 	}
 },
 toString: function() {
@@ -181,18 +181,18 @@ removeVias: function() {
 },
 setSource: function(position) {
 	// source node is always first node
-	if( this.route[0] && this.route[0].label == OSRM.CONSTANTS.SOURCE_LABEL )
+	if( this.route[0] && this.route[0].label == OSRM.C.SOURCE_LABEL )
 		this.route[0].setPosition(position);
 	else
-		this.route.splice(0,0, new OSRM.RouteMarker(OSRM.CONSTANTS.SOURCE_LABEL, {draggable:true,icon:OSRM.icons['marker-source']}, position));
+		this.route.splice(0,0, new OSRM.RouteMarker(OSRM.C.SOURCE_LABEL, {draggable:true,icon:OSRM.icons['marker-source']}, position));
 	return 0;	
 },
 setTarget: function(position) {
 	// target node is always last node
-	if( this.route[this.route.length-1] && this.route[ this.route.length-1 ].label == OSRM.CONSTANTS.TARGET_LABEL )
+	if( this.route[this.route.length-1] && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL )
 		this.route[this.route.length-1].setPosition(position);
 	else
-		this.route.splice( this.route.length,0, new OSRM.RouteMarker(OSRM.CONSTANTS.TARGET_LABEL, {draggable:true,icon:OSRM.icons['marker-target']}, position));
+		this.route.splice( this.route.length,0, new OSRM.RouteMarker(OSRM.C.TARGET_LABEL, {draggable:true,icon:OSRM.icons['marker-target']}, position));
 	return this.route.length-1;
 },
 setVia: function(id, position) {
@@ -200,7 +200,7 @@ setVia: function(id, position) {
 	if( this.route.length<2 || id > this.route.length-2 )
 		return -1;
 	
-	this.route.splice(id+1,0, new OSRM.RouteMarker(OSRM.CONSTANTS.VIA_LABEL, {draggable:true,icon:OSRM.icons['marker-via']}, position));
+	this.route.splice(id+1,0, new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.icons['marker-via']}, position));
 	return id+1;
 },
 removeMarker: function(id) {
@@ -208,9 +208,9 @@ removeMarker: function(id) {
 		return;
 	
 	// also remove vias if source or target are removed
-	if( id==0 && this.route[0].label == OSRM.CONSTANTS.SOURCE_LABEL )
+	if( id==0 && this.route[0].label == OSRM.C.SOURCE_LABEL )
 		this.removeVias();
-	else if( id == this.route.length-1 && this.route[ this.route.length-1 ].label == OSRM.CONSTANTS.TARGET_LABEL ) {
+	else if( id == this.route.length-1 && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL ) {
 		this.removeVias();
 		id = this.route.length-1;
 	}
@@ -219,12 +219,12 @@ removeMarker: function(id) {
 	this.route.splice(id, 1);
 },
 hasSource: function() {
-	if( OSRM.G.markers.route[0] && OSRM.G.markers.route[0].label == OSRM.CONSTANTS.SOURCE_LABEL )
+	if( OSRM.G.markers.route[0] && OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL )
 		return true;
 	return false;
 },
 hasTarget: function() {
-	if( OSRM.G.markers.route[OSRM.G.markers.route.length-1] && OSRM.G.markers.route[OSRM.G.markers.route.length-1].label == OSRM.CONSTANTS.TARGET_LABEL )
+	if( OSRM.G.markers.route[OSRM.G.markers.route.length-1] && OSRM.G.markers.route[OSRM.G.markers.route.length-1].label == OSRM.C.TARGET_LABEL )
 		return true;
 	return false;
 }
