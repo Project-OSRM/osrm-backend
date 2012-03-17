@@ -168,28 +168,38 @@ function showReverseGeocoderResults_Timeout() {}
 function showReverseGeocoderResults_Source(response) {	showReverseGeocoderResults(OSRM.C.SOURCE_LABEL, response); }
 function showReverseGeocoderResults_Target(response) {	showReverseGeocoderResults(OSRM.C.TARGET_LABEL, response); }
 function showReverseGeocoderResults(marker_id, response) {
-	//OSRM.debug.log("[inner] reverse geocoder");
 	if(response){
 		if(response.address == undefined)
 			return;
 
+		// build reverse geocoding address
+		var used_address_data = 0;
 		var address = "";
-		if( response.address.road)
-			address += response.address.road;	
+		if( response.address.road) {
+			address += response.address.road;
+			used_address_data++;
+		}
 		if( response.address.city ) {
-			if( address != "" )
+			if( used_address_data > 0 )
 				address += ", ";
 			address += response.address.city;
+			used_address_data++;
 		} else if( response.address.village ) {
-			if( address != "" )
+			if( used_address_data > 0 )
 				address += ", ";
 			address += response.address.village;
+			used_address_data++;
 		}
-		if( address == "" && response.address.country )
+		if( used_address_data < 2 && response.address.country ) {
+			if( used_address_data > 0 )
+				address += ", ";
 			address += response.address.country;
-		if( address == "" )
+			used_address_data++;
+		}
+		if( used_address_data == 0 )
 			return;
 		
+		// add result to DOM
 		if(marker_id == OSRM.C.SOURCE_LABEL) {
 			document.getElementById("input-source-name").value = address;
 			OSRM.G.markers.route[0].dirty_move = false;
