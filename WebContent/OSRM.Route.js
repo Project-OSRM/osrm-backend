@@ -32,11 +32,11 @@ OSRM.SimpleRoute = function (label, style) {
 };
 OSRM.extend( OSRM.SimpleRoute,{
 show: function() {
-	map.addLayer(this.route);
+	OSRM.G.map.addLayer(this.route);
 	this.shown = true;
 },
 hide: function() {
-	map.removeLayer(this.route);
+	OSRM.G.map.removeLayer(this.route);
 	this.shown = false;
 },
 isShown: function() {
@@ -53,10 +53,10 @@ setStyle: function(style) {
 },
 centerView: function() {
 	var bounds = new L.LatLngBounds( this.getPositions() );
-	map.fitBounds( bounds );
+	OSRM.G.map.fitBounds( bounds );
 },
 onClick: function(e) {
-	if(my_route.isRoute())
+	if(OSRM.G.route.isRoute())
 		findViaPosition( e.latlng );
 },
 toString: function() {
@@ -74,11 +74,11 @@ OSRM.MultiRoute = function (label) {
 };
 OSRM.extend( OSRM.MultiRoute,{
 show: function() {
-	map.addLayer(this.route);
+	OSRM.G.map.addLayer(this.route);
 	this.shown = true;
 },
 hide: function() {
-	map.removeLayer(this.route);
+	OSRM.G.map.removeLayer(this.route);
 	this.shown = false;
 },
 isShown: function() {
@@ -86,7 +86,7 @@ isShown: function() {
 },
 addRoute: function(positions) {
 	var line = new L.DashedPolyline( positions );
-	line.on('click', function(e) { my_route.fire('click',e); });
+	line.on('click', function(e) { OSRM.G.route.fire('click',e); });
 	this.route.addLayer( line );
 },
 clearRoutes: function() {

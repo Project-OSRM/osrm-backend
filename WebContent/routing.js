@@ -20,20 +20,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [TODO: major refactoring scheduled]
 
 // some variables
-var my_route = undefined;
-var my_markers = undefined;
+OSRM.GLOBALS.route = null;
+OSRM.GLOBALS.markers = null;
 
-OSRM.NO_DESCRIPTION = 0;
-OSRM.FULL_DESCRIPTION = 1;
-OSRM.dragging = false;
-OSRM.pending = false;
-OSRM.pendingTimer = undefined;
+OSRM.CONSTANTS.NO_DESCRIPTION = 0;
+OSRM.CONSTANTS.FULL_DESCRIPTION = 1;
+
+OSRM.GLOBALS.dragid = null;
+OSRM.GLOBALS.dragging = false;
+OSRM.GLOBALS.pending = false;
+OSRM.GLOBALS.pendingTimer = undefined;
 
 
 // init routing data structures
 function initRouting() {
-	my_route = new OSRM.Route();
-	my_markers = new OSRM.Markers();
+	OSRM.G.route = new OSRM.Route();
+	OSRM.G.markers = new OSRM.Markers();
 }
 
 
@@ -47,7 +49,7 @@ function timeoutRouteSimple() {
 }
 function timeoutRoute() {
 	showNoRouteGeometry();
-	my_route.hideUnnamedRoute();
+	OSRM.G.route.hideUnnamedRoute();
 	showNoRouteDescription();
 	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("TIMED_OUT")+".<p>";	
 }
@@ -69,9 +71,9 @@ function showRouteSimple(response) {
 	updateHints(response);
 
 //	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)
-//	if(OSRM.pending) {
-//		clearTimeout(OSRM.pendingTimer);
-//		OSRM.pendingTimer = setTimeout(timeoutDrag,100);		
+//	if(OSRM.GLOBALS.pending) {
+//		clearTimeout(OSRM.GLOBALS.pendingTimer);
+//		OSRM.GLOBALS.pendingTimer = setTimeout(timeoutDrag,100);		
 //	}
 }
 function showRoute(response) {
@@ -80,7 +82,7 @@ function showRoute(response) {
 	
 	if(response.status == 207) {
 		showNoRouteGeometry();
-		my_route.hideUnnamedRoute();
+		OSRM.G.route.hideUnnamedRoute();
 		showNoRouteDescription();
 		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_ROUTE_FOUND")+".<p>";
 	} else {
@@ -96,13 +98,13 @@ function showRoute(response) {
 // show route geometry
 function showNoRouteGeometry() {
 	var positions = [];
-	for(var i=0; i<my_markers.route.length;i++)
-			positions.push( my_markers.route[i].getPosition() );
+	for(var i=0; i<OSRM.G.markers.route.length;i++)
+			positions.push( OSRM.G.markers.route[i].getPosition() );
 
-	my_route.showRoute(positions, OSRM.Route.NOROUTE);
+	OSRM.G.route.showRoute(positions, OSRM.Route.NOROUTE);
 }
 function showRouteGeometry(response) {
-	via_points = response.via_points.slice(0);
+	OSRM.G.via_points = response.via_points.slice(0);
 
 	var geometry = decodeRouteGeometry(response.route_geometry, 5);
 
@@ -110,17 +112,17 @@ function showRouteGeometry(response) {
 	for( var i=0; i < geometry.length; i++) {
 		points.push( new L.LatLng(geometry[i][0], geometry[i][1]) );
 	}
-	my_route.showRoute(points, OSRM.Route.ROUTE);
+	OSRM.G.route.showRoute(points, OSRM.Route.ROUTE);
 }
 
 
 // route description display (and helper functions)
 function onClickRouteDescription(geometry_index) {
-	var positions = my_route.getPositions();
+	var positions = OSRM.G.route.getPositions();
 
-	my_markers.highlight.setPosition( positions[geometry_index] );
-	my_markers.highlight.show();
-	my_markers.highlight.centerView();	
+	OSRM.G.markers.highlight.setPosition( positions[geometry_index] );
+	OSRM.G.markers.highlight.show();
+	OSRM.G.markers.highlight.centerView();	
 }
 function onClickCreateShortcut(src){
 	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src+'&jsonp=showRouteLink', showRouteLink, showRouteLink_TimeOut, 2000, 'shortener');
@@ -133,10 +135,10 @@ function showRouteLink_TimeOut(){
 }
 function showRouteDescription(response) {
 	// compute query string
-	var query_string = '?z='+ map.getZoom();
-	query_string += '&center=' + map.getCenter().lat + ',' + map.getCenter().lng;
-	for(var i=0; i<my_markers.route.length; i++)
-		query_string += '&loc=' + my_markers.route[i].getLat() + ',' + my_markers.route[i].getLng(); 
+	var query_string = '?z='+ OSRM.G.map.getZoom();
+	query_string += '&center=' + OSRM.G.map.getCenter().lat + ',' + OSRM.G.map.getCenter().lng;
+	for(var i=0; i<OSRM.G.markers.route.length; i++)
+		query_string += '&loc=' + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng(); 
  						
 	// create link to the route
 	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" href="#" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
@@ -228,7 +230,7 @@ function showNoRouteDescription() {
 function showRouteNonames(response) {
 	// do not display unnamed streets?
 	if( document.getElementById('option-highlight-nonames').checked == false) {
-		my_route.hideUnnamedRoute();
+		OSRM.G.route.hideUnnamedRoute();
 		return;
 	}
 		
@@ -262,7 +264,7 @@ function showRouteNonames(response) {
 	}
 	
 	// display unnamed streets
-	my_route.showUnnamedRoute(all_positions);
+	OSRM.G.route.showUnnamedRoute(all_positions);
 }
 
 
@@ -272,8 +274,8 @@ function showRouteNonames(response) {
 function getRoute(do_description) {
 	
 	// if source or target are not set -> hide route
-	if( my_markers.route.length < 2 ) {
-		my_route.hideRoute();
+	if( OSRM.G.markers.route.length < 2 ) {
+		OSRM.G.route.hideRoute();
 		return;
 	}
 	
@@ -283,13 +285,13 @@ function getRoute(do_description) {
 	var timeout = undefined;
 	
 	var source = OSRM.DEFAULTS.HOST_ROUTING_URL;
-	source += '?z=' + map.getZoom() + '&output=json' + '&geomformat=cmp';	
-	if(my_markers.checksum)
-		source += '&checksum=' + my_markers.checksum;
-	for(var i=0; i<my_markers.route.length; i++) {
-		source += '&loc='  + my_markers.route[i].getLat() + ',' + my_markers.route[i].getLng();
-		if( my_markers.route[i].hint)
-			source += '&hint=' + my_markers.route[i].hint;
+	source += '?z=' + OSRM.G.map.getZoom() + '&output=json' + '&geomformat=cmp';	
+	if(OSRM.G.markers.checksum)
+		source += '&checksum=' + OSRM.G.markers.checksum;
+	for(var i=0; i<OSRM.G.markers.route.length; i++) {
+		source += '&loc='  + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng();
+		if( OSRM.G.markers.route[i].hint)
+			source += '&hint=' + OSRM.G.markers.route[i].hint;
 	}
 	
 	// decide whether it is a dragging call or a normal one
@@ -310,23 +312,23 @@ function getRoute(do_description) {
 
 	// TODO: hack to process final drag event, if it was fenced, but we are still dragging
 	if(called == false && !do_description) {
-		clearTimeout(OSRM.pendingTimer);
-		OSRM.pendingTimer = setTimeout(timeoutDrag,OSRM.DEFAULTS.JSONP_TIMEOUT);
+		clearTimeout(OSRM.GLOBALS.pendingTimer);
+		OSRM.GLOBALS.pendingTimer = setTimeout(timeoutDrag,OSRM.DEFAULTS.JSONP_TIMEOUT);
 	}
 	else {
-		clearTimeout(OSRM.pendingTimer);
+		clearTimeout(OSRM.GLOBALS.pendingTimer);
 	}
 //	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)  
 //	if(called == false && !do_description) {
-//		OSRM.pending = true;
+//		OSRM.GLOBALS.pending = true;
 //	} else {
-//		clearTimeout(OSRM.pendingTimer);
-//		OSRM.pending = false;
+//		clearTimeout(OSRM.GLOBALS.pendingTimer);
+//		OSRM.GLOBALS.pending = false;
 //	}
 }
 function timeoutDrag() {
-	my_markers.route[OSRM.dragid].hint = undefined;
-	getRoute(OSRM.NO_DESCRIPTION);
+	OSRM.G.markers.route[OSRM.G.dragid].hint = undefined;
+	getRoute(OSRM.CONSTANTS.NO_DESCRIPTION);
 }
 
 
@@ -362,27 +364,27 @@ function decodeRouteGeometry(encoded, precision) {
 // update hints of all markers
 function updateHints(response) {
 	var hint_locations = response.hint_data.locations;
-	my_markers.checksum = response.hint_data.checksum;
+	OSRM.G.markers.checksum = response.hint_data.checksum;
 	for(var i=0; i<hint_locations.length; i++)
-		my_markers.route[i].hint = hint_locations[i];
+		OSRM.G.markers.route[i].hint = hint_locations[i];
 }
 
 // snap all markers to the received route
 function snapRoute() {
-	var positions = my_route.getPositions();
+	var positions = OSRM.G.route.getPositions();
  	
- 	my_markers.route[0].setPosition( positions[0] );
- 	my_markers.route[my_markers.route.length-1].setPosition( positions[positions.length-1] );
- 	for(var i=0; i<via_points.length; i++)
-		my_markers.route[i+1].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) );
+ 	OSRM.G.markers.route[0].setPosition( positions[0] );
+ 	OSRM.G.markers.route[OSRM.G.markers.route.length-1].setPosition( positions[positions.length-1] );
+ 	for(var i=0; i<OSRM.G.via_points.length; i++)
+		OSRM.G.markers.route[i+1].setPosition( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
 
-// 	updateLocation( "source" );
-// 	updateLocation( "target" );
+// 	updateLocation( OSRM.CONSTANTS.SOURCE_LABEL );
+// 	updateLocation( OSRM.CONSTANTS.TARGET_LABEL );
 	
-	//if(OSRM.dragid == 0 && my_markers.hasSource())
-		updateReverseGeocoder("source");
-	//else if(OSRM.dragid == my_markers.route.length-1 && my_markers.hasTarget())
-		updateReverseGeocoder("target"); 	
+	//if(OSRM.G.dragid == 0 && OSRM.G.markers.hasSource())
+		updateReverseGeocoder(OSRM.CONSTANTS.SOURCE_LABEL);
+	//else if(OSRM.G.dragid == OSRM.G.markers.route.length-1 && OSRM.G.markers.hasTarget())
+		updateReverseGeocoder(OSRM.CONSTANTS.TARGET_LABEL);
 }
 
 // map driving instructions to icons
@@ -426,9 +428,9 @@ function resetRouting() {
 	document.getElementById('input-source-name').value = "";
 	document.getElementById('input-target-name').value = "";
 	
-	my_route.hideAll();
-	my_markers.removeAll();
-	my_markers.highlight.hide();
+	OSRM.G.route.hideAll();
+	OSRM.G.markers.removeAll();
+	OSRM.G.markers.highlight.hide();
 	
 	document.getElementById('information-box').innerHTML = "";
 	document.getElementById('information-box-headline').innerHTML = "";
@@ -444,27 +446,27 @@ function reverseRouting() {
 	document.getElementById("input-target-name").value = tmp;
 	
 	// invert route
-	my_markers.route.reverse();
-	if(my_markers.route.length == 1) {
-		if(my_markers.route[0].label == OSRM.TARGET_MARKER_LABEL) {
-			my_markers.route[0].label = OSRM.SOURCE_MARKER_LABEL;
-			my_markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
-		} else if(my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL) {
-			my_markers.route[0].label = OSRM.TARGET_MARKER_LABEL;
-			my_markers.route[0].marker.setIcon( new L.Icon('images/marker-target.png') );
+	OSRM.G.markers.route.reverse();
+	if(OSRM.G.markers.route.length == 1) {
+		if(OSRM.G.markers.route[0].label == OSRM.CONSTANTS.TARGET_LABEL) {
+			OSRM.G.markers.route[0].label = OSRM.CONSTANTS.SOURCE_LABEL;
+			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+		} else if(OSRM.G.markers.route[0].label == OSRM.CONSTANTS.SOURCE_LABEL) {
+			OSRM.G.markers.route[0].label = OSRM.CONSTANTS.TARGET_LABEL;
+			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-target.png') );
 		}
-	} else if(my_markers.route.length > 1){
-		my_markers.route[0].label = OSRM.SOURCE_MARKER_LABEL;
-		my_markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+	} else if(OSRM.G.markers.route.length > 1){
+		OSRM.G.markers.route[0].label = OSRM.CONSTANTS.SOURCE_LABEL;
+		OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
 		
-		my_markers.route[my_markers.route.length-1].label = OSRM.TARGET_MARKER_LABEL;
-		my_markers.route[my_markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].label = OSRM.CONSTANTS.TARGET_LABEL;
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
 	}
 	
 	// recompute route
-	if( my_route.isShown() ) {
-		getRoute(OSRM.FULL_DESCRIPTION);
-		my_markers.highlight.hide();
+	if( OSRM.G.route.isShown() ) {
+		getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
+		OSRM.G.markers.highlight.hide();
 	} else {
 		document.getElementById('information-box').innerHTML = "";
 		document.getElementById('information-box-headline').innerHTML = "";		
@@ -473,9 +475,9 @@ function reverseRouting() {
 
 // click: button "show"
 function centerMarker(marker_id) {
-	if( marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.hasSource() && !my_markers.route[0].dirty_type ) {
-		my_markers.route[0].centerView();
-	} else if( marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.hasTarget() && !my_markers.route[my_markers.route.length-1].dirty_type) {
-		my_markers.route[my_markers.route.length-1].centerView();
+	if( marker_id == OSRM.CONSTANTS.SOURCE_LABEL && OSRM.G.markers.hasSource() && !OSRM.G.markers.route[0].dirty_type ) {
+		OSRM.G.markers.route[0].centerView();
+	} else if( marker_id == OSRM.CONSTANTS.TARGET_LABEL && OSRM.G.markers.hasTarget() && !OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type) {
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].centerView();
 	}
 }

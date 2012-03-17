@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.DEFAULTS = {
 	HOST_ROUTING_URL: 'http://router.project-osrm.org/viaroute',
 	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
+	HOST_GEOCODER_URL: 'http://nominatim.openstreetmap.org/search',
+	HOST_REVERSE_GEOCODER_URL: 'http://nominatim.openstreetmap.org/reverse',
 	WEBSITE_URL: document.URL.replace(/#*(\?.*|$)/i,""),					// truncates URL before first ?, and removes tailing #
 	JSONP_TIMEOUT: 5000,
 	ZOOM_LEVEL: 14,
@@ -28,5 +30,6 @@ OSRM.DEFAULTS = {
 	ONLOAD_LONGITUDE: 10.10,
 	ONLOAD_SOURCE: "",
 	ONLOAD_TARGET: "",
-	LANGUAGE: "en"
+	LANGUAGE: "en",
+	GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0'
 };

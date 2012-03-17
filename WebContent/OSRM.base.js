@@ -23,6 +23,8 @@ OSRM.VERSION = '0.1.1';
 OSRM.CONSTANTS = {};
 OSRM.DEFAULTS = {};
 OSRM.GLOBALS = {};
+OSRM.G = OSRM.GLOBALS;		// abbreviations
+OSRM.C = OSRM.CONSTANTS;
 
 
 // [convenience function] declare one class to be a subclass of another class

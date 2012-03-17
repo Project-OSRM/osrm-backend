@@ -18,7 +18,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM initialization
 // [initialization of maps, local strings, image prefetching]
 
-var map;
+// will hold the Leaflet map object
+OSRM.GLOBALS.map = null;
 
 
 // onload initialization routine
@@ -92,7 +93,7 @@ function initLocale() {
 
 // centering on geolocation
 function callbak_centerOnGeolocation( position ) {
-	map.setView( new L.LatLng( position.coords.latitude, position.coords.longitude-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);
+	OSRM.G.map.setView( new L.LatLng( position.coords.latitude, position.coords.longitude-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);
 }
 function centerOnGeolocation() {
 	if (navigator.geolocation)
@@ -125,7 +126,7 @@ function initMap() {
 	    cloudmade = new L.TileLayer(cloudmadeURL, cloudmadeOptions);
 
 	// setup map
-	map = new L.Map('map', {
+	OSRM.G.map = new L.Map('map', {
     	center: new L.LatLng(51.505, -0.09),
 	    zoom: 13,
 	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
@@ -143,23 +144,23 @@ function initMap() {
 
 	var overlayMaps = {};
 	var layersControl = new L.Control.Layers(baseMaps, overlayMaps);
-    map.addControl(layersControl);
+	OSRM.G.map.addControl(layersControl);
 
     // move zoom markers
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="420px";
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
 	// initial map position and zoom
-	map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE), OSRM.DEFAULTS.ZOOM_LEVEL);
-	map.on('zoomend', function(e) { getRoute(OSRM.FULL_DESCRIPTION); });
-	map.on('contextmenu', function(e) {});
+	OSRM.G.map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE), OSRM.DEFAULTS.ZOOM_LEVEL);
+	OSRM.G.map.on('zoomend', function(e) { getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION); });
+	OSRM.G.map.on('contextmenu', function(e) {});
 
 	// click on map to set source and target nodes
-	map.on('click', function(e) {
-		if( !my_markers.hasSource() )
-			onclickGeocoderResult("source", e.latlng.lat, e.latlng.lng, true, false );
-		else if( !my_markers.hasTarget() )
-			onclickGeocoderResult("target", e.latlng.lat, e.latlng.lng, true, false );
+	OSRM.G.map.on('click', function(e) {
+		if( !OSRM.G.markers.hasSource() )
+			onclickGeocoderResult(OSRM.CONSTANTS.SOURCE_LABEL, e.latlng.lat, e.latlng.lng, true, false );
+		else if( !OSRM.G.markers.hasTarget() )
+			onclickGeocoderResult(OSRM.CONSTANTS.TARGET_LABEL, e.latlng.lat, e.latlng.lng, true, false );
 	} );
 }
 
@@ -216,7 +217,7 @@ function checkURL(){
 		
 	// case 1: destination given
 	if( destination != undefined ) {
-		onclickGeocoderResult("target", destination.lat, destination.lng, (destination_name == undefined) );
+		onclickGeocoderResult(OSRM.CONSTANTS.TARGET_LABEL, destination.lat, destination.lng, (destination_name == undefined) );
 		if( destination_name != undefined )
 			document.getElementById("input-target-name").value = destination_name;
 		return;
@@ -226,27 +227,27 @@ function checkURL(){
 	if( positions != []) {
 		// draw via points
 		if( positions.length > 0) {
-			onclickGeocoderResult("source", positions[0].lat, positions[0].lng, true, false );
-			//my_markers.setSource( positions[0] );
+			onclickGeocoderResult(OSRM.CONSTANTS.SOURCE_LABEL, positions[0].lat, positions[0].lng, true, false );
+			//OSRM.G.markers.setSource( positions[0] );
 		}
 		if(positions.length > 1) {
-			onclickGeocoderResult("target", positions[positions.length-1].lat, positions[positions.length-1].lng, true, false );
-			//my_markers.setTarget( positions[positions.length-1] );			
+			onclickGeocoderResult(OSRM.CONSTANTS.TARGET_LABEL, positions[positions.length-1].lat, positions[positions.length-1].lng, true, false );
+			//OSRM.G.markers.setTarget( positions[positions.length-1] );			
 		}
 		for(var i=1; i<positions.length-1;i++)
-			my_markers.setVia( i-1, positions[i] );
-		for(var i=0; i<my_markers.route.length;i++)
-			my_markers.route[i].show();
+			OSRM.G.markers.setVia( i-1, positions[i] );
+		for(var i=0; i<OSRM.G.markers.route.length;i++)
+			OSRM.G.markers.route[i].show();
 		
 		// center on route (support for old links) / move to given view (new behaviour)
 		if(zoom == null || center == null) {
 			var bounds = new L.LatLngBounds( positions );
-			map.fitBounds( bounds );
+			OSRM.G.map.fitBounds( bounds );
 		} else {
-			map.setView(center, zoom);
+			OSRM.G.map.setView(center, zoom);
 		}
 			
 		// compute route
-		getRoute(OSRM.FULL_DESCRIPTION);
+		getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION);
 	}
 }

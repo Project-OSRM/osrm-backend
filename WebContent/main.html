@@ -88,13 +88,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <table class="full">
     <tr>
     <td id="gui-search-source-label">Start:</td>
-    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="if( my_markers.hasSource() ) my_markers.route[0].dirty_type = true;" onblur="callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.SOURCE_MARKER_LABEL, document.getElementById('input-source-name').value);}" /></td>
+    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="if( OSRM.G.markers.hasSource() ) OSRM.G.markers.route[0].dirty_type = true;" onblur="callGeocoder(OSRM.CONSTANTS.SOURCE_LABEL, document.getElementById('input-source-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.CONSTANTS.SOURCE_LABEL, document.getElementById('input-source-name').value);}" /></td>
     <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="centerMarker('source')">Zeigen</a></td>
     </tr>
     
     <tr>
     <td id="gui-search-target-label">Ende:</td>
-    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="if( my_markers.route.hasTarget() ) my_markers.route[my_markers.route.length-1].dirty_type = true;" onblur="callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.TARGET_MARKER_LABEL, document.getElementById('input-target-name').value);}" /></td>
+    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="if( OSRM.G.markers.route.hasTarget() ) OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type = true;" onblur="callGeocoder(OSRM.CONSTANTS.TARGET_LABEL, document.getElementById('input-target-name').value);" onkeypress="if(event.keyCode==13) {callGeocoder(OSRM.CONSTANTS.TARGET_LABEL, document.getElementById('input-target-name').value);}" /></td>
 	<td class="right"><a class="button not-selectable" id="gui-search-target" onclick="centerMarker('target');">Zeigen</a></td>	
     </tr>
     </table>
@@ -112,7 +112,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <div class="vquad"></div>
     <div class="main-options not-selectable" id="options-toggle" onclick="OSRM.GUI.toggleOptions()">Options</div>
     <div class="main-options not-selectable" id="options-box">
-    <input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="getRoute(OSRM.FULL_DESCRIPTION)" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
+    <input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="getRoute(OSRM.CONSTANTS.FULL_DESCRIPTION)" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
     </div>
 </div>
 
