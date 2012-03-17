@@ -176,8 +176,10 @@ function checkURL(){
 	
 	// storage for parameter values
 	var positions = [];
-	var destination = undefined;
-	var destination_name = undefined;
+	var zoom = null;
+	var center = null;
+	var destination = null;
+	var destination_name = null;
 
 	// parse input
 	var splitted_url = called_url.split('&');
@@ -201,6 +203,17 @@ function checkURL(){
 		else if(name_val[0] == 'destname') {
 			destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
 		}
+		else if(name_val[0] == 'zoom') {
+			zoom = name_val[1];
+			if( zoom<0 || zoom > 18)
+				return;
+		}
+		else if(name_val[0] == 'center') {
+			var coordinates = unescape(name_val[1]).split(',');
+			if(coordinates.length!=2 || !isLatitude(coordinates[0]) || !isLongitude(coordinates[1]) )
+				return;				
+			center = new L.LatLng( coordinates[0], coordinates[1]);			
+		}		
 	}
 		
 	// case 1: destination given
@@ -227,9 +240,13 @@ function checkURL(){
 		for(var i=0; i<my_markers.route.length;i++)
 			my_markers.route[i].show();
 		
-		// center on route
-		var bounds = new L.LatLngBounds( positions );
-		map.fitBounds( bounds );		
+		// center on route (support for old links) / move to given view (new behaviour)
+		if(zoom == null || center == null) {
+			var bounds = new L.LatLngBounds( positions );
+			map.fitBounds( bounds );
+		} else {
+			map.setView(center, zoom);
+		}
 			
 		// compute route
 		getRoute(OSRM.FULL_DESCRIPTION);
