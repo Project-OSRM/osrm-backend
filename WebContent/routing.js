@@ -379,9 +379,9 @@ function snapRoute() {
 // 	updateLocation( "source" );
 // 	updateLocation( "target" );
 	
-	//if(OSRM.dragid == 0 && my_markers.hasSource()==true)
+	//if(OSRM.dragid == 0 && my_markers.hasSource())
 		updateReverseGeocoder("source");
-	//else if(OSRM.dragid == my_markers.route.length-1 && my_markers.hasTarget()==true)
+	//else if(OSRM.dragid == my_markers.route.length-1 && my_markers.hasTarget())
 		updateReverseGeocoder("target"); 	
 }
 
@@ -473,9 +473,9 @@ function reverseRouting() {
 
 // click: button "show"
 function centerMarker(marker_id) {
-	if( marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL && !my_markers.route[0].dirty_type ) {
+	if( marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.hasSource() && !my_markers.route[0].dirty_type ) {
 		my_markers.route[0].centerView();
-	} else if( marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL && !my_markers.route[my_markers.route.length-1].dirty_type) {
+	} else if( marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.hasTarget() && !my_markers.route[my_markers.route.length-1].dirty_type) {
 		my_markers.route[my_markers.route.length-1].centerView();
 	}
 }

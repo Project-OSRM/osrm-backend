@@ -37,9 +37,9 @@ function updateLocation(marker_id) {
 
 // process input request and call geocoder if needed
 function callGeocoder(marker_id, query) {
-	if (marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0] && my_markers.route[0].label == OSRM.SOURCE_MARKER_LABEL && my_markers.route[0].dirty_move == false && my_markers.route[0].dirty_type == false)
+	if (marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.hasSource() && my_markers.route[0].dirty_move == false && my_markers.route[0].dirty_type == false)
 		return;
-	if (marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1] && my_markers.route[my_markers.route.length-1].label == OSRM.TARGET_MARKER_LABEL && my_markers.route[my_markers.route.length-1].dirty_move == false && my_markers.route[my_markers.route.length-1].dirty_type == false)
+	if (marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.hasTarget() && my_markers.route[my_markers.route.length-1].dirty_move == false && my_markers.route[my_markers.route.length-1].dirty_type == false)
 		return;
 	if(query=="")
 		return;
@@ -143,10 +143,10 @@ OSRM.REVERSE_GEOCODE_POST = 'http://nominatim.openstreetmap.org/reverse?format=j
 
 //update reverse geocoder informatiopn in input boxes
 function updateReverseGeocoder(marker_id) {
-	if (marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.hasSource()==true) { //&& my_markers.route[0].dirty == true ) {
+	if (marker_id == OSRM.SOURCE_MARKER_LABEL && my_markers.hasSource()) { //&& my_markers.route[0].dirty == true ) {
 		//document.getElementById("input-source-name").value = my_markers.route[0].getPosition().lat.toFixed(6) + ", " + my_markers.route[0].getPosition().lng.toFixed(6);
 		callReverseGeocoder("source", my_markers.route[0].getPosition().lat, my_markers.route[0].getPosition().lng);
-	} else if (marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.hasTarget()==true) { //&& my_markers.route[my_markers.route.length-1].dirty == true) {
+	} else if (marker_id == OSRM.TARGET_MARKER_LABEL && my_markers.hasTarget()) { //&& my_markers.route[my_markers.route.length-1].dirty == true) {
 		//document.getElementById("input-target-name").value = my_markers.route[my_markers.route.length-1].getPosition().lat.toFixed(6) + ", " + my_markers.route[my_markers.route.length-1].getPosition().lng.toFixed(6);
 		callReverseGeocoder("target", my_markers.route[my_markers.route.length-1].getPosition().lat, my_markers.route[my_markers.route.length-1].getPosition().lng);
 	}

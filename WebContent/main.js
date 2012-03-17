@@ -156,12 +156,10 @@ function initMap() {
 
 	// click on map to set source and target nodes
 	map.on('click', function(e) {
-		if( !my_markers.route[0] || my_markers.route[0].label != OSRM.SOURCE_MARKER_LABEL) {
+		if( !my_markers.hasSource() )
 			onclickGeocoderResult("source", e.latlng.lat, e.latlng.lng, true, false );
-		}
-		else if( !my_markers.route[my_markers.route.length-1] || my_markers.route[ my_markers.route.length-1 ].label != OSRM.TARGET_MARKER_LABEL) {
+		else if( !my_markers.hasTarget() )
 			onclickGeocoderResult("target", e.latlng.lat, e.latlng.lng, true, false );
-		}		
 	} );
 }
 
