@@ -16,13 +16,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 */
 
 // OSRM base class
-// [has to loaded before all other OSRM classes]
+// [has to be loaded before all other OSRM classes]
 
-OSRM = {};
+var OSRM = {};
 OSRM.VERSION = '0.1.1';
+OSRM.CONSTANTS = {};
+OSRM.DEFAULTS = {};
+OSRM.GLOBALS = {};
 
 
-// inheritance helper function (convenience function)
+// [convenience function] declare one class to be a subclass of another class
 OSRM._inheritFromHelper = function() {};
 OSRM.inheritFrom = function( sub_class, base_class ) {
 	OSRM._inheritFromHelper.prototype = base_class.prototype;
@@ -32,7 +35,7 @@ OSRM.inheritFrom = function( sub_class, base_class ) {
 };
 
 
-// class prototype extending helper function (convenience function)
+// [convenience function] extend prototypes of a class -> used to add member values and functions
 OSRM.extend = function( target_class, properties ) {
 	for( property in properties ) {
 		target_class.prototype[property] = properties[property];
@@ -40,7 +43,7 @@ OSRM.extend = function( target_class, properties ) {
 };
 
 
-// usage:
+// [usage of convenience functions]
 // SubClass = function() {
 // 	SubClass.prototype.base.constructor.apply(this, arguments);
 // }
