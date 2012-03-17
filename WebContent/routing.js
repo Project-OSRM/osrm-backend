@@ -134,7 +134,7 @@ function showRouteLink_TimeOut(){
 function showRouteDescription(response) {
 	// compute query string
 	var query_string = '?z='+ map.getZoom();
-	query_string += '&center=' + map.center.getLat() + ',' + map.center.getLng();
+	query_string += '&center=' + map.getCenter().lat + ',' + map.getCenter().lng;
 	for(var i=0; i<my_markers.route.length; i++)
 		query_string += '&loc=' + my_markers.route[i].getLat() + ',' + my_markers.route[i].getLng(); 
  						
