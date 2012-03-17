@@ -64,7 +64,7 @@ class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
 public:
     PBFParser(const char * fileName) { /* Max 25 items in queue */
         GOOGLE_PROTOBUF_VERIFY_VERSION;
-        threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(25) );
+        threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(250) );
         input.open(fileName, std::ios::in | std::ios::binary);
 
         if (!input) {

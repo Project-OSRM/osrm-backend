@@ -175,7 +175,7 @@ public:
         }
 
         //Is the highway tag listed as usable way?
-        if(0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) {
+        if(("track" == highway && ("yes" == access || "yes" == accessTag)) || (0 < settings[highway] || "yes" == accessTag || "designated" == accessTag)) {
             if(!w.isDurationSet) {
                 if(0 < settings[highway]) {
                     if(0 < maxspeed)
@@ -254,7 +254,7 @@ public:
             }
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
-                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid, w.isDurationSet));
+                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid || "pier" == highway, w.isDurationSet));
                 externalMemory->usedNodeIDs.push_back(w.path[n]);
             }
             externalMemory->usedNodeIDs.push_back(w.path[w.path.size()-1]);
