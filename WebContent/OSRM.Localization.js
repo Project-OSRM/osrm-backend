@@ -57,7 +57,8 @@ OSRM.Localization["de"] = {
 "NO_RESULTS_FOUND_TARGET": "Keine Ergebnisse gefunden für Ziel",
 // routing
 "ROUTE_DESCRIPTION": "Routenbeschreibung",
-"GET_LINK": "Generiere Link",
+"GET_LINK_TO_ROUTE": "Generiere Link",
+"GENERATE_LINK_TO_ROUTE": "Warte auf Antwort",
 "LINK_TO_ROUTE_TIMEOUT": "nicht möglich",
 "GPX_FILE": "GPX Datei",
 "DISTANCE": "Distanz",
@@ -97,7 +98,8 @@ OSRM.Localization["en"] = {
 "NO_RESULTS_FOUND_TARGET": "No results found for end",
 //routing
 "ROUTE_DESCRIPTION": "Route Description",
-"GET_LINK": "Generate Link",
+"GET_LINK_TO_ROUTE": "Generate Link",
+"GENERATE_LINK_TO_ROUTE": "waiting for link",
 "LINK_TO_ROUTE_TIMEOUT": "not available",
 "GPX_FILE": "GPX File",
 "DISTANCE": "Distance",

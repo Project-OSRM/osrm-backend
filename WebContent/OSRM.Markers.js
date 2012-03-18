@@ -30,7 +30,7 @@ OSRM.Marker = function( label, style, position ) {
 	this.dirty_type = true;
 	
 	this.shown = false;
-	this.hint = undefined;
+	this.hint = null;
 };
 OSRM.extend( OSRM.Marker,{
 show: function() {
@@ -44,7 +44,7 @@ hide: function() {
 setPosition: function( position ) {
 	this.position = position;
 	this.marker.setLatLng( position );
-	this.hint = undefined;	
+	this.hint = null;	
 },
 getPosition: function() {
 	return this.position;
@@ -113,19 +113,15 @@ onClick: function(e) {
 	OSRM.G.markers.highlight.hide();
 },
 onDrag: function(e) {
-	this.parent.dirty_move = true;
 	this.parent.setPosition( e.target.getLatLng() );
-	if(OSRM.G.dragging == true)								// TODO: hack that deals with drag events after dragend event
-		getRoute(OSRM.C.NO_DESCRIPTION);
-	else
-		getRoute(OSRM.C.FULL_DESCRIPTION);
-	
+	getRoute(OSRM.C.NO_DESCRIPTION);
 	updateLocation( this.parent.label );
 },
 onDragStart: function(e) {
 	OSRM.G.dragging = true;
+	this.parent.dirty_move = true;	
 	
-	// hack to store id of dragged marker
+	// store id of dragged marker
 	for( var i=0; i<OSRM.G.markers.route.length; i++)
 		if( OSRM.G.markers.route[i].marker === this ) {
 			OSRM.G.dragid = i;
@@ -133,27 +129,20 @@ onDragStart: function(e) {
 		}			
 	
 	OSRM.G.markers.highlight.hide();	
-	if (OSRM.G.route.isShown()) {
+	if (OSRM.G.route.isShown())
 		OSRM.G.route.showOldRoute();
-	}
-	
-	updateLocation( this.parent.label );	
 },
 onDragEnd: function(e) {
+	OSRM.G.dragging = false;
+	this.parent.setPosition( e.target.getLatLng() );	
 	getRoute(OSRM.C.FULL_DESCRIPTION);
 	if (OSRM.G.route.isShown()) {
 		OSRM.G.route.hideOldRoute();
 		OSRM.G.route.hideUnnamedRoute();
 	}
-	OSRM.G.dragging = false;
 	
-	updateLocation( this.parent.label );
-	if(OSRM.G.route.isShown()==false) {
-		if(this.parent.label == OSRM.C.SOURCE_LABEL)
-			updateReverseGeocoder(OSRM.C.SOURCE_LABEL);
-		else if(this.parent.label == OSRM.C.TARGET_LABEL)
-			updateReverseGeocoder(OSRM.C.TARGET_LABEL);
-	}
+	if(OSRM.G.route.isShown()==false)
+		updateReverseGeocoder(this.parent.label);
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";

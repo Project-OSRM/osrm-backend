@@ -26,10 +26,10 @@ OSRM.GLOBALS.markers = null;
 OSRM.CONSTANTS.NO_DESCRIPTION = 0;
 OSRM.CONSTANTS.FULL_DESCRIPTION = 1;
 
+OSRM.G.dragging = null;
 OSRM.GLOBALS.dragid = null;
-OSRM.GLOBALS.dragging = false;
 OSRM.GLOBALS.pending = false;
-OSRM.GLOBALS.pendingTimer = undefined;
+OSRM.GLOBALS.pendingTimer = null;
 
 
 // init routing data structures
@@ -57,7 +57,7 @@ function showRouteSimple(response) {
  	if(!response)
  		return;
  	
- 	if (OSRM.JSONP.fences.route)			// prevent simple routing when real routing is done!
+ 	if( !OSRM.G.dragging )		// prevent simple routing when no longer dragging
  		return;
  	
 	if( response.status == 207) {
@@ -126,6 +126,7 @@ function onClickRouteDescription(geometry_index) {
 }
 function onClickCreateShortcut(src){
 	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src+'&jsonp=showRouteLink', showRouteLink, showRouteLink_TimeOut, 2000, 'shortener');
+	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
 }
 function showRouteLink(response){
 	document.getElementById('route-prelink').innerHTML = '[<a id="gpx-link" class = "text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
@@ -141,10 +142,10 @@ function showRouteDescription(response) {
 		query_string += '&loc=' + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng(); 
  						
 	// create link to the route
-	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" href="#" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK")+'</a>]</span>';
+	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]</span>';
 
 	// create GPX link
-	var gpx_link = '<span class="route-summary">[<a id="gpx-link" onClick="javascript: document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]</span>';
+	var gpx_link = '<span class="route-summary">[<a id="gpx-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]</span>';
 		
 	// create route description
 	var route_desc = "";
@@ -280,9 +281,9 @@ function getRoute(do_description) {
 	}
 	
 	// prepare JSONP call
-	var type = undefined;
-	var callback = undefined;
-	var timeout = undefined;
+	var type = null;
+	var callback = null;
+	var timeout = null;
 	
 	var source = OSRM.DEFAULTS.HOST_ROUTING_URL;
 	source += '?z=' + OSRM.G.map.getZoom() + '&output=json' + '&geomformat=cmp';	
@@ -327,7 +328,7 @@ function getRoute(do_description) {
 //	}
 }
 function timeoutDrag() {
-	OSRM.G.markers.route[OSRM.G.dragid].hint = undefined;
+	OSRM.G.markers.route[OSRM.G.dragid].hint = null;
 	getRoute(OSRM.C.NO_DESCRIPTION);
 }
 
@@ -378,13 +379,8 @@ function snapRoute() {
  	for(var i=0; i<OSRM.G.via_points.length; i++)
 		OSRM.G.markers.route[i+1].setPosition( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
 
-// 	updateLocation( OSRM.C.SOURCE_LABEL );
-// 	updateLocation( OSRM.C.TARGET_LABEL );
-	
-	//if(OSRM.G.dragid == 0 && OSRM.G.markers.hasSource())
-		updateReverseGeocoder(OSRM.C.SOURCE_LABEL);
-	//else if(OSRM.G.dragid == OSRM.G.markers.route.length-1 && OSRM.G.markers.hasTarget())
-		updateReverseGeocoder(OSRM.C.TARGET_LABEL);
+	updateReverseGeocoder(OSRM.C.SOURCE_LABEL);
+	updateReverseGeocoder(OSRM.C.TARGET_LABEL);
 }
 
 // map driving instructions to icons
@@ -435,7 +431,7 @@ function resetRouting() {
 	document.getElementById('information-box').innerHTML = "";
 	document.getElementById('information-box-headline').innerHTML = "";
 	
-	OSRM.JSONP.reset();
+	OSRM.JSONP.reset();	
 }
 
 // click: button "reverse"

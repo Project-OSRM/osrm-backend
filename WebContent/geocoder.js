@@ -27,9 +27,9 @@ OSRM.CONSTANTS.VIA_LABEL = "via";
 
 // update geo coordinates in input boxes
 function updateLocation(marker_id) {
-	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.route[0].dirty_move == true ) {
+	if (marker_id == OSRM.C.SOURCE_LABEL) {
 		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[0].getPosition().lng.toFixed(6);
-	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_move == true) {
+	} else if (marker_id == OSRM.C.TARGET_LABEL) {
 		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng.toFixed(6);		
 	}
 }

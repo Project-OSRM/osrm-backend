@@ -34,7 +34,7 @@ OSRM.JSONP = {
 	
 	
 	// init JSONP call
-	call: function(source, callback_function, timeout_function, timeout, id) {
+	call: function(source, callback_function, timeout_function, timeout, id, parameters) {
 		// only one active JSONP call per id
 		if (OSRM.JSONP.fences[id] == true)
 			return false;
@@ -43,7 +43,7 @@ OSRM.JSONP = {
 		// wrap timeout function
 		OSRM.JSONP.timeouts[id] = function(response) {
 			try {
-				timeout_function(response);
+				timeout_function(response, parameters);
 			} finally {
 				OSRM.JSONP.callbacks[id] = OSRM.JSONP.late;				// clean functions
 				OSRM.JSONP.timeouts[id] = OSRM.JSONP.empty;
@@ -59,7 +59,7 @@ OSRM.JSONP = {
 			OSRM.JSONP.timers[id] = undefined;
 			
 			try {
-				callback_function(response);							// actual wrapped callback 
+				callback_function(response, parameters);				// actual wrapped callback 
 			} finally {
 				OSRM.JSONP.callbacks[id] = OSRM.JSONP.empty;			// clean functions
 				OSRM.JSONP.timeouts[id] = OSRM.JSONP.late;
