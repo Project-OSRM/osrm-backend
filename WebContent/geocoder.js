@@ -26,15 +26,7 @@ OSRM.CONSTANTS.VIA_LABEL = "via";
 OSRM.C.DO_FALLBACK_TO_LAT_LNG = true;
 
 
-// update geo coordinates in input boxes
-function updateLocation(marker_id) {
-	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
-		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[0].getPosition().lng.toFixed(6);
-	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget()) {
-		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng.toFixed(6);		
-	}
-}
-
+//[normal geocoding]
 
 // process input request and call geocoder if needed
 function callGeocoder(marker_id, query) {
@@ -50,13 +42,8 @@ function callGeocoder(marker_id, query) {
 	}
 	
 	//build request for geocoder
-	if (marker_id == OSRM.C.SOURCE_LABEL) {
-		var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&q=" + query;
-		OSRM.JSONP.call( call, showGeocoderResults_Source, showGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_source" );
-	} else if (marker_id == OSRM.C.TARGET_LABEL) {
-		var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&q=" + query;
-		OSRM.JSONP.call( call, showGeocoderResults_Target, showGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_target" );		
-	}
+	var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&q=" + query;
+	OSRM.JSONP.call( call, showGeocoderResults, showGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_"+marker_id, marker_id );
 }
 
 
@@ -75,11 +62,9 @@ function onclickGeocoderResult(marker_id, lat, lon) {
 	getRoute(OSRM.C.FULL_DESCRIPTION);
 }
 
-// process JSONP response of geocoder
-// (with wrapper functions for source/target jsonp)
-function showGeocoderResults_Source(response) {	showGeocoderResults(OSRM.C.SOURCE_LABEL, response); }
-function showGeocoderResults_Target(response) {	showGeocoderResults(OSRM.C.TARGET_LABEL, response); }
-function showGeocoderResults(marker_id, response) {
+
+// process geocoder response
+function showGeocoderResults(response, marker_id) {
 	if(!response){
 		showGeocoderResults_Empty(marker_id);
 		return;
@@ -89,7 +74,8 @@ function showGeocoderResults(marker_id, response) {
 		showGeocoderResults_Empty(marker_id);
 		return;
 	}
-		
+	
+	// show possible results for input
 	var html = "";
 	html += '<table class="results-table">';	
 	for(var i=0; i < response.length; i++){
@@ -130,7 +116,17 @@ function showGeocoderResults_Timeout() {
 }
 
 
-// - [upcoming feature: reverse geocoding (untested) ] -
+// [reverse geocoding]
+
+//update geo coordinates in input boxes
+function updateLocation(marker_id) {
+	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
+		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[0].getPosition().lng.toFixed(6);
+	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget()) {
+		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng.toFixed(6);		
+	}
+}
+
 
 // update address in input boxes
 function updateAddress(marker_id, do_fallback_to_lat_lng) {
@@ -151,13 +147,8 @@ function updateAddress(marker_id, do_fallback_to_lat_lng) {
 	OSRM.JSONP.call( call, showReverseGeocoderResults, showReverseGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_"+marker_id, {marker_id:marker_id, do_fallback: do_fallback_to_lat_lng} );
 }
 
+
 // processing JSONP response of reverse geocoder
-function showReverseGeocoderResults_Timeout(response, parameters) {
-	if(!parameters.do_fallback)
-		return;
-		
-	updateLocation(parameters.marker_id);
-}
 function showReverseGeocoderResults(response, parameters) {
  	if(!response) {
  		showReverseGeocoderResults_Timeout(response, parameters);
@@ -203,4 +194,10 @@ function showReverseGeocoderResults(response, parameters) {
 		document.getElementById("input-source-name").value = address;
 	else if(parameters.marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() )
 		document.getElementById("input-target-name").value = address;
+}
+function showReverseGeocoderResults_Timeout(response, parameters) {
+	if(!parameters.do_fallback)
+		return;
+		
+	updateLocation(parameters.marker_id);
 }
