@@ -58,11 +58,9 @@ getLng: function() {
 isShown: function() {
 	return this.shown;
 },
-centerView: function(zooming) {
-	var zoom = OSRM.DEFAULTS.ZOOM_LEVEL;
-	if( zooming == false )
-		zoom = OSRM.G.map.getZoom();
-	//OSRM.G.map.setView( new L.LatLng( this.position.lat, this.position.lng-0.02), zoom);		// dirty hack
+centerView: function(zoom) {
+	if( zoom == undefined )
+		zoom = OSRM.DEFAULTS.ZOOM_LEVEL;
 	OSRM.G.map.setView( new L.LatLng( this.position.lat, this.position.lng), zoom);
 },
 toString: function() {

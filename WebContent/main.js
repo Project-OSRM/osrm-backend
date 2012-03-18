@@ -93,7 +93,7 @@ function initLocale() {
 
 // centering on geolocation
 function callbak_centerOnGeolocation( position ) {
-	OSRM.G.map.setView( new L.LatLng( position.coords.latitude, position.coords.longitude-0.02), OSRM.DEFAULTS.ZOOM_LEVEL);
+	OSRM.G.map.setView( new L.LatLng( position.coords.latitude, position.coords.longitude), OSRM.DEFAULTS.ZOOM_LEVEL);
 }
 function centerOnGeolocation() {
 	if (navigator.geolocation)

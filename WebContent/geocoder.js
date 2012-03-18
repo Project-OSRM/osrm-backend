@@ -63,7 +63,7 @@ function callGeocoder(marker_id, query) {
 
 
 // helper function for clicks on geocoder search results
-function onclickGeocoderResult(marker_id, lat, lon, do_reverse_geocode, zoom ) {
+function onclickGeocoderResult(marker_id, lat, lon, do_reverse_geocode, do_zoom ) {
 	var index;
 	if( marker_id == OSRM.C.SOURCE_LABEL )
 		index = OSRM.G.markers.setSource( new L.LatLng(lat, lon) );
@@ -74,8 +74,9 @@ function onclickGeocoderResult(marker_id, lat, lon, do_reverse_geocode, zoom ) {
 	
 	if( do_reverse_geocode == true )
 		updateReverseGeocoder(marker_id);
-	if( zoom == undefined )
-		zoom = true;
+	var zoom = undefined;
+	if( do_zoom == false )
+		zoom = OSRM.G.map.getZoom();
 		
 	OSRM.G.markers.route[index].show();
 	if( !OSRM.G.markers.route[index].dirty_move || OSRM.G.markers.route[index].dirty_type )

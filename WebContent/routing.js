@@ -122,7 +122,7 @@ function onClickRouteDescription(geometry_index) {
 
 	OSRM.G.markers.highlight.setPosition( positions[geometry_index] );
 	OSRM.G.markers.highlight.show();
-	OSRM.G.markers.highlight.centerView();	
+	OSRM.G.markers.highlight.centerView(OSRM.DEFAULTS.HIGHLIGHT_ZOOM_LEVEL);	
 }
 function onClickCreateShortcut(src){
 	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src+'&jsonp=showRouteLink', showRouteLink, showRouteLink_TimeOut, 2000, 'shortener');
