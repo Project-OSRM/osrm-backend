@@ -140,7 +140,7 @@ onDragEnd: function(e) {
 	}
 	
 	if(OSRM.G.route.isShown()==false)
-		updateReverseGeocoder(this.parent.label);
+		updateAddress(this.parent.label);
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";

@@ -379,8 +379,8 @@ function snapRoute() {
  	for(var i=0; i<OSRM.G.via_points.length; i++)
 		OSRM.G.markers.route[i+1].setPosition( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
 
-	updateReverseGeocoder(OSRM.C.SOURCE_LABEL);
-	updateReverseGeocoder(OSRM.C.TARGET_LABEL);
+ 	updateAddress(OSRM.C.SOURCE_LABEL);
+ 	updateAddress(OSRM.C.TARGET_LABEL);
 }
 
 // map driving instructions to icons

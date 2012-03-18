@@ -27,9 +27,9 @@ OSRM.CONSTANTS.VIA_LABEL = "via";
 
 // update geo coordinates in input boxes
 function updateLocation(marker_id) {
-	if (marker_id == OSRM.C.SOURCE_LABEL) {
+	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
 		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[0].getPosition().lng.toFixed(6);
-	} else if (marker_id == OSRM.C.TARGET_LABEL) {
+	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget()) {
 		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng.toFixed(6);		
 	}
 }
@@ -73,7 +73,7 @@ function onclickGeocoderResult(marker_id, lat, lon, do_reverse_geocode, do_zoom 
 		index = -1;													// via nodes not yet implemented
 	
 	if( do_reverse_geocode == true )
-		updateReverseGeocoder(marker_id);
+		updateAddress(marker_id);
 	var zoom = undefined;
 	if( do_zoom == false )
 		zoom = OSRM.G.map.getZoom();
@@ -141,75 +141,77 @@ function showGeocoderResults_Timeout() {
 
 // - [upcoming feature: reverse geocoding (untested) ] -
 
-//update reverse geocoder informatiopn in input boxes
-function updateReverseGeocoder(marker_id) {
-	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) { //&& OSRM.G.markers.route[0].dirty == true ) {
-		//document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[0].getPosition().lng.toFixed(6);
-		callReverseGeocoder(OSRM.C.SOURCE_LABEL, OSRM.G.markers.route[0].getPosition().lat, OSRM.G.markers.route[0].getPosition().lng);
-	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget()) { //&& OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty == true) {
-		//document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng.toFixed(6);
-		callReverseGeocoder(OSRM.C.TARGET_LABEL, OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat, OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng);
-	}
+// update address in input boxes
+function updateAddress(marker_id, do_fallback_to_lat_lng) {
+	var lat = null;
+	var lng = null;
+	
+	if(marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
+		lat = OSRM.G.markers.route[0].getPosition().lat;
+		lng = OSRM.G.markers.route[0].getPosition().lng;		
+	} else if(marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() ) {
+		lat = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat;
+		lng = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng;		
+	} else
+		return;
+	
+	var call = OSRM.DEFAULTS.HOST_REVERSE_GEOCODER_URL + "?format=json" + "&lat=" + lat + "&lon=" + lng;
+	OSRM.JSONP.call( call, processReverseGeocoderResponse, processReverseGeocoderResponse_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_"+marker_id, {marker_id:marker_id, do_fallback: do_fallback_to_lat_lng} );
 }
 
-//prepare request and call reverse geocoder
-function callReverseGeocoder(marker_id, lat, lon) {
-	//build request
-	if (marker_id == OSRM.C.SOURCE_LABEL) {
-		var call = OSRM.DEFAULTS.HOST_REVERSE_GEOCODER_URL + "?format=json" + "&lat=" + lat + "&lon=" + lon;
-		OSRM.JSONP.call( call, showReverseGeocoderResults_Source, showReverseGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_source" );
-	} else if (marker_id == OSRM.C.TARGET_LABEL) {
-		var call = OSRM.DEFAULTS.HOST_REVERSE_GEOCODER_URL + "?format=json" + "&lat=" + lat + "&lon=" + lon;
-		OSRM.JSONP.call( call, showReverseGeocoderResults_Target, showReverseGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_target" );
-	}
+// processing JSONP response of reverse geocoder
+function processReverseGeocoderResponse_Timeout(response, parameters) {
+	if(parameters.do_fallback)
+		updateLocation(parameters.marker_id);
 }
-//processing JSONP response of reverse geocoder
-//(with wrapper functions for source/target jsonp)
-function showReverseGeocoderResults_Timeout() {}
-function showReverseGeocoderResults_Source(response) {	showReverseGeocoderResults(OSRM.C.SOURCE_LABEL, response); }
-function showReverseGeocoderResults_Target(response) {	showReverseGeocoderResults(OSRM.C.TARGET_LABEL, response); }
-function showReverseGeocoderResults(marker_id, response) {
-	if(response){
-		if(response.address == undefined)
-			return;
+function processReverseGeocoderResponse(response, parameters) {
+ 	if(!response) {
+ 		processReverseGeocoderResponse_Timeout(response, parameters);
+		return;
+	}
+ 	
+	if(response.address == undefined) {
+		processReverseGeocoderResponse_Timeout(response, parameters);
+		return;
+	}
 
-		// build reverse geocoding address
-		var used_address_data = 0;
-		var address = "";
-		if( response.address.road) {
-			address += response.address.road;
-			used_address_data++;
-		}
-		if( response.address.city ) {
-			if( used_address_data > 0 )
-				address += ", ";
-			address += response.address.city;
-			used_address_data++;
-		} else if( response.address.village ) {
-			if( used_address_data > 0 )
-				address += ", ";
-			address += response.address.village;
-			used_address_data++;
-		}
-		if( used_address_data < 2 && response.address.country ) {
-			if( used_address_data > 0 )
-				address += ", ";
-			address += response.address.country;
-			used_address_data++;
-		}
-		if( used_address_data == 0 )
-			return;
+	// build reverse geocoding address
+	var used_address_data = 0;
+	var address = "";
+	if( response.address.road) {
+		address += response.address.road;
+		used_address_data++;
+	}
+	if( response.address.city ) {
+		if( used_address_data > 0 )
+			address += ", ";
+		address += response.address.city;
+		used_address_data++;
+	} else if( response.address.village ) {
+		if( used_address_data > 0 )
+			address += ", ";
+		address += response.address.village;
+		used_address_data++;
+	}
+	if( used_address_data < 2 && response.address.country ) {
+		if( used_address_data > 0 )
+			address += ", ";
+		address += response.address.country;
+		used_address_data++;
+	}
+	if( used_address_data == 0 ) {
+		processReverseGeocoderResponse_Timeout(response, parameters);
+		return;
+	}
 		
-		// add result to DOM
-		if(marker_id == OSRM.C.SOURCE_LABEL) {
-			document.getElementById("input-source-name").value = address;
-			OSRM.G.markers.route[0].dirty_move = false;
-			OSRM.G.markers.route[0].dirty_type = false;
-		} else if(marker_id == OSRM.C.TARGET_LABEL) {
-			document.getElementById("input-target-name").value = address;
-			OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_move = false;
-			OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type = false;
-		}
-		
+	// add result to DOM
+	if(parameters.marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() ) {
+		document.getElementById("input-source-name").value = address;
+		OSRM.G.markers.route[0].dirty_move = false;
+		OSRM.G.markers.route[0].dirty_type = false;
+	} else if(parameters.marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() ) {
+		document.getElementById("input-target-name").value = address;
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_move = false;
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type = false;
 	}
 }
