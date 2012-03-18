@@ -26,8 +26,6 @@ OSRM.Marker = function( label, style, position ) {
 
 	this.marker = new L.MouseMarker( this.position, style );
 	this.marker.parent = this;
-	this.dirty_move = true;
-	this.dirty_type = true;
 	
 	this.shown = false;
 	this.hint = null;
@@ -117,7 +115,6 @@ onDrag: function(e) {
 },
 onDragStart: function(e) {
 	OSRM.G.dragging = true;
-	this.parent.dirty_move = true;	
 	
 	// store id of dragged marker
 	for( var i=0; i<OSRM.G.markers.route.length; i++)

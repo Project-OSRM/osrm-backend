@@ -471,21 +471,20 @@ function reverseRouting() {
 
 // click: button "show"
 function showMarker(marker_id) {
-	if( marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() && !OSRM.G.markers.route[0].dirty_type ) {
+	if( OSRM.JSONP.fences["geocoder_source"] || OSRM.JSONP.fences["geocoder_target"] )
+		return;
+	
+	if( marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() )
 		OSRM.G.markers.route[0].centerView();
-	} else if( marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() && !OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type) {
+	else if( marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() )
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].centerView();
-	}
 }
 
 
 // changed: any inputbox (is called when return is pressed [after] or focus is lost [before])
 function inputChanged(marker_id) {
-	if( marker_id == OSRM.C.SOURCE_LABEL){	
-		if( OSRM.G.markers.hasSource() ) OSRM.G.markers.route[0].dirty_type = true;
+	if( marker_id == OSRM.C.SOURCE_LABEL)	
 		callGeocoder(OSRM.C.SOURCE_LABEL, document.getElementById('input-source-name').value);
-	} else if( marker_id == OSRM.C.TARGET_LABEL) {
-		if( OSRM.G.markers.hasTarget() ) OSRM.G.markers.route[OSRM.G.markers.route.length-1].dirty_type = true;
+	else if( marker_id == OSRM.C.TARGET_LABEL)
 		callGeocoder(OSRM.C.TARGET_LABEL, document.getElementById('input-target-name').value);
-	}	
 }
