@@ -399,7 +399,7 @@ function getDirectionIcon(name) {
 		"Enter roundabout and leave at first exit":"round-about.png",
 		"Enter roundabout and leave at second exit":"round-about.png",
 		"Enter roundabout and leave at third exit":"round-about.png",
-		"Enter roundabout and leave at forth exit":"round-about.png",
+		"Enter roundabout and leave at fourth exit":"round-about.png",
 		"Enter roundabout and leave at fifth exit":"round-about.png",
 		"Enter roundabout and leave at sixth exit":"round-about.png",
 		"Enter roundabout and leave at seventh exit":"round-about.png",

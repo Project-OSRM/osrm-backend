@@ -157,10 +157,19 @@ function initMap() {
 
 	// click on map to set source and target nodes
 	OSRM.G.map.on('click', function(e) {
-		if( !OSRM.G.markers.hasSource() )
-			onclickGeocoderResult(OSRM.C.SOURCE_LABEL, e.latlng.lat, e.latlng.lng, true, false );
-		else if( !OSRM.G.markers.hasTarget() )
-			onclickGeocoderResult(OSRM.C.TARGET_LABEL, e.latlng.lat, e.latlng.lng, true, false );
+		if( !OSRM.G.markers.hasSource() ) {
+			var index = OSRM.G.markers.setSource( e.latlng );
+			updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+			OSRM.G.markers.route[index].show();
+			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
+			getRoute( OSRM.C.FULL_DESCRIPTION );
+		} else if( !OSRM.G.markers.hasTarget() ) {
+			var index = OSRM.G.markers.setTarget( e.latlng );
+			updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+			OSRM.G.markers.route[index].show();
+			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
+			getRoute( OSRM.C.FULL_DESCRIPTION );
+		}
 	} );
 }
 
@@ -217,9 +226,13 @@ function checkURL(){
 		
 	// case 1: destination given
 	if( destination != undefined ) {
-		onclickGeocoderResult(OSRM.C.TARGET_LABEL, destination.lat, destination.lng, (destination_name == undefined) );
-		if( destination_name != undefined )
+		var index = OSRM.G.markers.setTarget( e.latlng );
+		if( destination_name == null )
+			updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+		else 
 			document.getElementById("input-target-name").value = destination_name;
+		OSRM.G.markers.route[index].show();
+		OSRM.G.markers.route[index].centerView();
 		return;
 	}
 
@@ -227,12 +240,12 @@ function checkURL(){
 	if( positions != []) {
 		// draw via points
 		if( positions.length > 0) {
-			onclickGeocoderResult(OSRM.C.SOURCE_LABEL, positions[0].lat, positions[0].lng, true, false );
-			//OSRM.G.markers.setSource( positions[0] );
+			OSRM.G.markers.setSource( positions[0] );
+			updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
 		if(positions.length > 1) {
-			onclickGeocoderResult(OSRM.C.TARGET_LABEL, positions[positions.length-1].lat, positions[positions.length-1].lng, true, false );
-			//OSRM.G.markers.setTarget( positions[positions.length-1] );			
+			OSRM.G.markers.setTarget( positions[positions.length-1] );
+			updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
 		for(var i=1; i<positions.length-1;i++)
 			OSRM.G.markers.setVia( i-1, positions[i] );
