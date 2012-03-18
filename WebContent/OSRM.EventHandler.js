@@ -27,14 +27,14 @@ OSRM.extend( OSRM.EventHandler, {
 	
 	// add listener
 	addListener: function(type, listener) {
-		if( typeof this._listeners[type] == "undefined" )
+		if( this._listeners[type] == undefined)
 			this._listeners[type] = [];
 		this._listeners[type].push(listener);
 	},
 	
 	//remove event listener
 	removeListener: function(type, listener) {
-		if( this._listeners[type] instanceof Array) {
+		if( this._listeners[type] != undefined) {
 			for(var i=0; i<this._listeners[type].length; i++)
 				if( this._listeners[type][i] == listener) {
 					this._listeners[type].splice(i,1);
@@ -53,7 +53,7 @@ OSRM.extend( OSRM.EventHandler, {
 		if( !event.type )
 			throw new Error("event object missing type property!");
 		
-		if( this._listeners[event.type] instanceof Array)
+		if( this._listeners[type] != undefined)
 			for(var listener in this._listeners[event.type])
 				listener.call(this, event);
 	}
