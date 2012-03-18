@@ -42,25 +42,29 @@ OSRM.JSONP = {
 		
 		// wrap timeout function
 		OSRM.JSONP.timeouts[id] = function(response) {
-			timeout_function(response);
-			
-			OSRM.JSONP.callbacks[id] = OSRM.JSONP.late;				// clean functions
-			OSRM.JSONP.timeouts[id] = OSRM.JSONP.late;
-			OSRM.JSONP.fences[id] = undefined;						// clean fence
+			try {
+				timeout_function(response);
+			} finally {
+				OSRM.JSONP.callbacks[id] = OSRM.JSONP.late;				// clean functions
+				OSRM.JSONP.timeouts[id] = OSRM.JSONP.empty;
+				OSRM.JSONP.fences[id] = undefined;						// clean fence
+			}
 			
 //			OSRM.debug.log("[jsonp] timout handling: "+id);
 		};
 		
 		// wrap callback function
 		OSRM.JSONP.callbacks[id] = function(response) {
-			clearTimeout(OSRM.JSONP.timers[id]);					// clear timeout timer
+			clearTimeout(OSRM.JSONP.timers[id]);						// clear timeout timer
 			OSRM.JSONP.timers[id] = undefined;
 			
-			callback_function(response);							// actual wrapped callback 
-			
-			OSRM.JSONP.callbacks[id] = OSRM.JSONP.late;				// clean functions
-			OSRM.JSONP.timeouts[id] = OSRM.JSONP.late;
-			OSRM.JSONP.fences[id] = undefined;						// clean fence
+			try {
+				callback_function(response);							// actual wrapped callback 
+			} finally {
+				OSRM.JSONP.callbacks[id] = OSRM.JSONP.empty;			// clean functions
+				OSRM.JSONP.timeouts[id] = OSRM.JSONP.late;
+				OSRM.JSONP.fences[id] = undefined;						// clean fence
+			}
 			
 //			OSRM.debug.log("[jsonp] response handling: "+id);
 		};
