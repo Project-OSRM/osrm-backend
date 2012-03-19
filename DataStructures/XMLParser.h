@@ -262,7 +262,7 @@ private:
                             }
                         }
                         if ( xmlStrEqual( k, ( const xmlChar* ) "barrier" ) == 1 ) {
-                            if (!accessYes && xmlStrEqual( value, ( const xmlChar* ) "" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "border_control" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "toll_booth" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "no" ) != 1){
+                            if (!accessYes && xmlStrEqual( value, ( const xmlChar* ) "" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "border_control" ) != 1  && xmlStrEqual( value, ( const xmlChar* ) "cattle_grid" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "toll_booth" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "no" ) != 1){
                                 node.bollard = true;
                             }
                         }
