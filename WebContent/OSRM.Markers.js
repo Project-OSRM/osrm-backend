@@ -192,11 +192,13 @@ removeMarker: function(id) {
 		return;
 	
 	// also remove vias if source or target are removed
-	if( id==0 && this.route[0].label == OSRM.C.SOURCE_LABEL )
+	if( id==0 && this.route[0].label == OSRM.C.SOURCE_LABEL ) {
 		this.removeVias();
-	else if( id == this.route.length-1 && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL ) {
+		document.getElementById('input-source-name').value = "";
+	} else if( id == this.route.length-1 && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL ) {
 		this.removeVias();
 		id = this.route.length-1;
+		document.getElementById('input-target-name').value = "";
 	}
 	
 	this.route[id].hide();
