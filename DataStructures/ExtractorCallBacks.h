@@ -175,8 +175,8 @@ public:
         }
 
         //Is the highway tag listed as usable way?
-        if(("track" == highway && ("yes" == access || "yes" == accessTag)) || (0 < settings[highway] || "yes" == accessTag || "designated" == accessTag)) {
-            if(!w.isDurationSet) {
+        if(("track" == highway && ("yes" == access || "yes" == accessTag)) || ("track" != highway && (0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) )) {
+          if(!w.isDurationSet) {
                 if(0 < settings[highway]) {
                     if(0 < maxspeed)
                         w.speed = std::min(maxspeed, settings[highway]);
