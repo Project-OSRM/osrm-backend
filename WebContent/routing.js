@@ -125,7 +125,8 @@ function onClickRouteDescription(geometry_index) {
 	OSRM.G.markers.highlight.centerView(OSRM.DEFAULTS.HIGHLIGHT_ZOOM_LEVEL);	
 }
 function onClickCreateShortcut(src){
-	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src+'&jsonp=showRouteLink', showRouteLink, showRouteLink_TimeOut, 2000, 'shortener');
+	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat + ',' + OSRM.G.map.getCenter().lng;
+	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src, showRouteLink, showRouteLink_TimeOut, 2000, 'shortener');
 	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
 }
 function showRouteLink(response){
@@ -136,8 +137,7 @@ function showRouteLink_TimeOut(){
 }
 function showRouteDescription(response) {
 	// compute query string
-	var query_string = '?z='+ OSRM.G.map.getZoom();
-	query_string += '&center=' + OSRM.G.map.getCenter().lat + ',' + OSRM.G.map.getCenter().lng;
+	var query_string = '?rebuild=1';
 	for(var i=0; i<OSRM.G.markers.route.length; i++)
 		query_string += '&loc=' + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng(); 
  						

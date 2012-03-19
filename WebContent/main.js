@@ -211,7 +211,7 @@ function checkURL(){
 		else if(name_val[0] == 'destname') {
 			destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
 		}
-		else if(name_val[0] == 'zoom') {
+		else if(name_val[0] == 'z') {
 			zoom = name_val[1];
 			if( zoom<0 || zoom > 18)
 				return;
