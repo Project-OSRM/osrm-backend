@@ -224,7 +224,7 @@ private:
                 denseTagIndex += 2;
             }
             std::string barrierValue = keyVals.Find("barrier");
-            if(0 < barrierValue.length() && "border_control" != barrierValue && "toll_booth" != barrierValue && "no" != barrierValue)
+            if(0 < barrierValue.length() && "cattle_grid" != barrierValue && "border_control" != barrierValue && "toll_booth" != barrierValue && "no" != barrierValue)
                 n.bollard = true;
 
             if("traffic_signals" == keyVals.Find("highway"))
