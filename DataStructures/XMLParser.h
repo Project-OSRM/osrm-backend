@@ -246,17 +246,23 @@ private:
                     continue;
                 }
 
+                bool accessYes = false;
                 if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
                     xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
                     xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
                     if ( k != NULL && value != NULL ) {
+                        if ( xmlStrEqual( k, ( const xmlChar* ) "access" ) == 1 ) {
+                            if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1 ){
+                                accessYes = true;
+                            }
+                        }
                         if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
                             if ( xmlStrEqual( value, ( const xmlChar* ) "traffic_signals" ) == 1 ){
                                 node.trafficLight = true;
                             }
                         }
                         if ( xmlStrEqual( k, ( const xmlChar* ) "barrier" ) == 1 ) {
-                            if ( xmlStrEqual( value, ( const xmlChar* ) "" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "border_control" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "toll_booth" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "no" ) != 1){
+                            if (!accessYes && xmlStrEqual( value, ( const xmlChar* ) "" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "border_control" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "toll_booth" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "no" ) != 1){
                                 node.bollard = true;
                             }
                         }
@@ -271,6 +277,8 @@ private:
                     if ( value != NULL )
                         xmlFree( value );
                 }
+                if(accessYes)
+                    node.bollard = false;
 
                 xmlFree( childName );
             }
