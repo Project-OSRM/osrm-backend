@@ -188,19 +188,6 @@ public:
 				searchFrom2ndStartNode = true;
 //				INFO("Next Search will start from 2nd");
 			}
-			//Add distance of segments to current sums
-			if(INT_MAX == distance1 || INT_MAX == _localUpperbound1) {
-//				INFO("setting distance1 = 0");
-				distance1 = 0;
-			}
-//			distance1 += _localUpperbound1;
-			if(INT_MAX == distance2 || INT_MAX == _localUpperbound2) {
-//				INFO("Setting distance2 = 0");
-				distance2 = 0;
-			}
-//			distance2 += _localUpperbound2;
-
-//			INFO("distance1: " << distance1 << ", distance2: " << distance2);
 
 			//Was at most one of the two paths not found?
 			assert(!(INT_MAX == distance1 && INT_MAX == distance2));
