@@ -179,7 +179,7 @@ public:
           if(!w.isDurationSet) {
                 if(0 < settings[highway]) {
                     if(0 < maxspeed)
-                        w.speed = std::min(maxspeed, settings[highway]);
+                        w.speed = maxspeed;
                     else
                         w.speed = settings[highway];
                 } else {
