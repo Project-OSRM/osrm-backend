@@ -61,9 +61,21 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
                 trafficSignalPenalty = 0;
             }
         }
+        if("uturnPenalty" ==  v.first) {
+            std::string value = v.second.get<std::string>("");
+            try {
+                uturnPenalty = 10*boost::lexical_cast<int>(v.second.get<std::string>(""));
+            } catch(boost::bad_lexical_cast &) {
+                uturnPenalty = 0;
+            }
+        }
+        if("takeMinimumOfSpeeds" ==  v.first) {
+            std::string value = v.second.get<std::string>("");
+            takeMinimumOfSpeeds = (v.second.get<std::string>("") == "yes");
+        }
     }
 
-    INFO("traffic signal penalty: " << trafficSignalPenalty);
+//    INFO("traffic signal penalty: " << trafficSignalPenalty << ", U-Turn penalty: " << uturnPenalty << ", takeMinimumOfSpeeds=" << (takeMinimumOfSpeeds ? "yes" : "no"));
 
     BOOST_FOREACH(NodeID id, bn)
     _barrierNodes[id] = true;
@@ -221,12 +233,14 @@ void EdgeBasedGraphFactory::Run() {
                         assert(edgeData2.edgeBasedNodeID < _nodeBasedGraph->GetNumberOfEdges());
 
                         unsigned distance = edgeData1.distance;
-                        //distance += heightPenalty;
-                        //distance += ComputeTurnPenalty(u, v, w);
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += trafficSignalPenalty;
                         }
                         short turnInstruction = AnalyzeTurn(u, v, w);
+                        if(turnInstruction == TurnInstructions.UTurn)
+                            distance += uturnPenalty;
+                        //distance += heightPenalty;
+                        //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, v,  edgeData2.nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);

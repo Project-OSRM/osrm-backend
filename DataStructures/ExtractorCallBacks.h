@@ -176,14 +176,22 @@ public:
 
         //Is the highway tag listed as usable way?
         if(("track" == highway && ("yes" == access || "yes" == accessTag)) || ("track" != highway && (0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) )) {
-          if(!w.isDurationSet) {
+            if(!w.isDurationSet) {
                 if(0 < settings[highway]) {
                     if(0 < maxspeed)
-                        w.speed = maxspeed;
+                        if(settings.takeMinimumOfSpeeds)
+                            w.speed = std::min(settings[highway], maxspeed);
+                        else
+                            w.speed = maxspeed;
                     else
                         w.speed = settings[highway];
                 } else {
-                    w.speed = settings.defaultSpeed;
+                    if(0 < maxspeed)
+                        if(settings.takeMinimumOfSpeeds)
+                            w.speed = std::min(settings.defaultSpeed, maxspeed);
+                        else w.speed = maxspeed;
+                    else
+                        w.speed = settings.defaultSpeed;
                     highway = "default";
                 }
             }
@@ -202,15 +210,15 @@ public:
             }
 
             if( settings.obeyOneways ) {
-				if( onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" ) {
+                if( onewayClass == "yes" || onewayClass == "1" || onewayClass == "true" ) {
                     w.direction = _Way::oneway;
-				} else if( onewayClass == "no" || onewayClass == "0" || onewayClass == "false" ) {
-	            	w.direction = _Way::bidirectional;
-				} else if( onewayClass == "-1" ) {
-	            	w.direction = _Way::opposite;
-				} else if( oneway == "no" || oneway == "0" || oneway == "false" ) {
+                } else if( onewayClass == "no" || onewayClass == "0" || onewayClass == "false" ) {
                     w.direction = _Way::bidirectional;
-				} else if( settings.accessTag == "bicycle" && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane") ) {
+                } else if( onewayClass == "-1" ) {
+                    w.direction = _Way::opposite;
+                } else if( oneway == "no" || oneway == "0" || oneway == "false" ) {
+                    w.direction = _Way::bidirectional;
+                } else if( settings.accessTag == "bicycle" && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane") ) {
                     w.direction = _Way::bidirectional;
                 } else if( oneway == "-1") {
                     w.direction  = _Way::opposite;

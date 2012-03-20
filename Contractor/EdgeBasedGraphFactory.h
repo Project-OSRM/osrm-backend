@@ -116,6 +116,8 @@ private:
 //    SRTMLookup srtmLookup;
     unsigned numberOfTurnRestrictions;
     unsigned trafficSignalPenalty;
+    unsigned uturnPenalty;
+    bool takeMinimumOfSpeeds;
 
 public:
     template< class InputEdgeT >

@@ -101,7 +101,7 @@ struct TurnInstructionsClass {
         if (angle >= 292 && angle < 336) {
             return TurnSharpLeft;
         }
-        return 5;
+        return UTurn;
     }
 
     static inline bool TurnIsNecessary ( const short turnInstruction ) {

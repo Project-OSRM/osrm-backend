@@ -265,7 +265,7 @@ struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDSta
 };
 
 struct Settings {
-    Settings() : obeyBollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar"), defaultSpeed(30), trafficLightPenalty(0), excludeFromGrid("ferry") {}
+    Settings() : obeyBollards(true), obeyOneways(true), useRestrictions(true), accessTag("motorcar"), defaultSpeed(30), takeMinimumOfSpeeds(false), excludeFromGrid("ferry") {}
     StringToIntPairMap speedProfile;
     int operator[](const std::string & param) const {
         if(speedProfile.find(param) == speedProfile.end())
@@ -290,7 +290,7 @@ struct Settings {
     bool useRestrictions;
     std::string accessTag;
     int defaultSpeed;
-    int trafficLightPenalty;
+    bool takeMinimumOfSpeeds;
     std::string excludeFromGrid;
 };
 
