@@ -149,8 +149,8 @@ int main (int argc, char *argv[]) {
                                     settings.defaultSpeed = atoi(value.c_str());
                                     settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
                                 } else {
-                                	if( name == "trafficLightPenalty") {
-                                		settings.trafficLightPenalty = atoi(value.c_str());
+                                	if( name == "takeMinimumOfSpeeds") {
+                                		settings.takeMinimumOfSpeeds = ("yes" == value);
                                 	}
                                 }
                             }
