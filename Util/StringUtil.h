@@ -113,19 +113,13 @@ inline std::string & replaceAll(std::string &s, const std::string &sub, const st
     return s;
 }
 
-inline std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+inline void stringSplit(const std::string &s, const char delim, std::vector<std::string>& result) {
     std::stringstream ss(s);
     std::string item;
     while(std::getline(ss, item, delim)) {
         if(item.size() > 0)
-            elems.push_back(item);
+            result.push_back(item);
     }
-    return elems;
-}
-
-inline std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    return split(s, delim, elems);
 }
 
 
