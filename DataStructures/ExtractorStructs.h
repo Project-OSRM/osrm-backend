@@ -92,6 +92,7 @@ struct _Way {
         access = true;
         roundabout = false;
         isDurationSet = false;
+        isAccessRestricted = false;
     }
 
     enum {
@@ -106,6 +107,7 @@ struct _Way {
     bool access;
     bool roundabout;
     bool isDurationSet;
+    bool isAccessRestricted;
     std::vector< NodeID > path;
     HashTable<std::string, std::string> keyVals;
 };
@@ -142,7 +144,7 @@ struct _Edge {
     _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false) {};
     _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false) { }
     _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids) {
+    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar) {
         assert(0 <= type);
     }
     NodeID start;
@@ -154,6 +156,7 @@ struct _Edge {
     bool isRoundabout;
     bool ignoreInGrid;
     bool isDurationSet;
+    bool isAccessRestricted;
 
     _Coordinate startCoord;
     _Coordinate targetCoord;
@@ -292,6 +295,8 @@ struct Settings {
     int defaultSpeed;
     bool takeMinimumOfSpeeds;
     std::string excludeFromGrid;
+    boost::unordered_map<std::string, bool> accessRestrictedService;
+    boost::unordered_map<std::string, bool> accessRestrictionKeys;
 };
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {

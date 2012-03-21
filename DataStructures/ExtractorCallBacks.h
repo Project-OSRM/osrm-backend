@@ -144,6 +144,7 @@ public:
         std::string onewayClass( w.keyVals.Find("oneway:"+settings.accessTag));
         std::string cycleway( w.keyVals.Find("cycleway"));
         std::string duration ( w.keyVals.Find("duration"));
+        std::string service (w.keyVals.Find("service"));
 
         //Save the name of the way if it has one, ref has precedence over name tag.
         if ( 0 < ref.length() )
@@ -200,8 +201,17 @@ public:
             //Okay, do we have access to that way?
             if(0 < access.size()) { //fastest way to check for non-empty string
                 //If access is forbidden, we don't want to route there.
-                if(access == "private" || access == "no" || access == "agricultural" || access == "forestry" || access == "delivery") { //Todo: this is still hard coded
+                if(access == "no" || access == "agricultural" || access == "forestry" || access == "delivery") { //Todo: this is still hard coded
                     w.access = false;
+                }
+                if(settings.accessRestrictionKeys.find(access) != settings.accessRestrictionKeys.end()) {
+                    w.isAccessRestricted = true;
+                }
+            }
+
+            if(0 < service.size()) {
+                if(settings.accessRestrictedService.find(service) != settings.accessRestrictedService.end()) {
+                    w.isAccessRestricted = true;
                 }
             }
 
@@ -262,7 +272,7 @@ public:
             }
 
             for(vector< NodeID >::size_type n = 0; n < w.path.size()-1; ++n) {
-                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid || "pier" == highway, w.isDurationSet));
+                externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid || "pier" == highway, w.isDurationSet, w.isAccessRestricted));
                 externalMemory->usedNodeIDs.push_back(w.path[n]);
             }
             externalMemory->usedNodeIDs.push_back(w.path[w.path.size()-1]);

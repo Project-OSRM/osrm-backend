@@ -88,6 +88,7 @@ public:
 //        }
         std::vector<std::string> textCoord;
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); ++i) {
+            textCoord.resize(0);
             stringSplit (routeParameters.viaPoints[i], ',', textCoord);
             if(textCoord.size() != 2) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
