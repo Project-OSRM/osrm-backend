@@ -163,7 +163,7 @@ public:
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
         boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
-        for(int j = -32768; j < (32768+1); j+=32768) {
+        for(int j = -32768; (j < (32768+1)) && (fileIndex != UINT_MAX); j+=32768) {
             for(int i = -1; i < 2; ++i){
                 GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
             }
@@ -497,8 +497,10 @@ private:
         double x = ( lon + 180.0 ) / 360.0;
         double y = ( lat + 180.0 ) / 360.0;
 
-        assert( x<=1.0 && x >= 0);
-        assert( y<=1.0 && y >= 0);
+        if( x>1.0 || x < 0.)
+            return UINT_MAX;
+        if( y>1.0 || y < 0.)
+            return UINT_MAX;
 
         unsigned line = (32768 * (32768-1))*y;
         line = line - (line % 32768);
