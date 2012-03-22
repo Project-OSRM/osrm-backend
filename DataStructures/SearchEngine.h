@@ -254,6 +254,14 @@ public:
 			packedPath1.insert(packedPath1.end(), temporaryPackedPath1.begin(), temporaryPackedPath1.end());
 			packedPath2.insert(packedPath2.end(), temporaryPackedPath2.begin(), temporaryPackedPath2.end());
 
+			if( (packedPath1.back() == packedPath2.back()) && phantomNodePair.targetPhantom.isBidirected() ) {
+//			    INFO("both paths end in same direction on bidirected edge, make sure start only start with : " << packedPath1.back());
+			    searchFrom1stStartNode ^= (packedPath1.back() != phantomNodePair.targetPhantom.edgeBasedNode);
+			    searchFrom2ndStartNode ^= (packedPath1.back() != phantomNodePair.targetPhantom.edgeBasedNode+1);
+//                INFO("Next search from node " << phantomNodePair.targetPhantom.edgeBasedNode << ": " << (searchFrom1stStartNode ? "yes" : "no") );
+//                INFO("Next search from node " << phantomNodePair.targetPhantom.edgeBasedNode+1 << ": " << (searchFrom2ndStartNode ? "yes" : "no") );
+			}
+
 			distance1 += _localUpperbound1;
 			distance2 += _localUpperbound2;
 		}
