@@ -51,6 +51,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
+#include "Util/StringUtil.h"
 
 using namespace std;
 
@@ -129,36 +130,42 @@ int main (int argc, char *argv[]) {
             if(name == "obeyOneways") {
                 if(value == "no")
                     settings.obeyOneways = false;
-            } else {
-                if(name == "obeyBollards") {
-                    if(value == "no") {
-                        settings.obeyBollards = false;
-                    }
-                } else {
-                    if(name == "useRestrictions") {
-                        if(value == "no")
-                            settings.useRestrictions = false;
-                    } else {
-                        if(name == "accessTag") {
-                            settings.accessTag = value;
-                        } else {
-                            if(name == "excludeFromGrid") {
-                                settings.excludeFromGrid = value;
-                            } else {
-                                if(name == "defaultSpeed") {
-                                    settings.defaultSpeed = atoi(value.c_str());
-                                    settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
-                                } else {
-                                	if( name == "takeMinimumOfSpeeds") {
-                                		settings.takeMinimumOfSpeeds = ("yes" == value);
-                                	}
-                                }
-                            }
-                        }
-                    }
+            } else if(name == "obeyBollards") {
+                if(value == "no") {
+                    settings.obeyBollards = false;
                 }
-                settings.speedProfile[name] = std::make_pair(std::atoi(value.c_str()), settings.speedProfile.size() );
+            } else if(name == "useRestrictions") {
+                if(value == "no")
+                    settings.useRestrictions = false;
+            } else if(name == "accessTag") {
+                settings.accessTag = value;
+            } else if(name == "excludeFromGrid") {
+                settings.excludeFromGrid = value;
+            } else if(name == "defaultSpeed") {
+                settings.defaultSpeed = atoi(value.c_str());
+                settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
+            } else if( name == "takeMinimumOfSpeeds") {
+                settings.takeMinimumOfSpeeds = ("yes" == value);
+            } else if( name == "accessRestrictedService") {
+                //split value at commas
+                std::vector<std::string> tokens;
+                stringSplit(value, ',', tokens);
+                //put each value into map
+                BOOST_FOREACH(std::string & s, tokens) {
+                    INFO("adding " << s << " to accessRestrictedService");
+                    settings.accessRestrictedService.insert(std::make_pair(s, true));
+                }
+            } else if( name == "accessRestrictionKeys") {
+                //split value at commas
+                std::vector<std::string> tokens;
+                stringSplit(value, ',', tokens);
+                //put each value into map
+                BOOST_FOREACH(std::string & s, tokens) {
+                    INFO("adding " << s << " to accessRestrictionKeys");
+                    settings.accessRestrictionKeys.insert(std::make_pair(s, true));
+                }
             }
+            settings.speedProfile[name] = std::make_pair(std::atoi(value.c_str()), settings.speedProfile.size() );
         }
     } catch(std::exception& e) {
         ERR("caught: " << e.what() );
@@ -330,8 +337,8 @@ int main (int argc, char *argv[]) {
                 continue;
             }
             if(*usedNodeIDsIT == nodesIT->id) {
-            	if(!settings.obeyBollards && nodesIT->bollard)
-            		nodesIT->bollard = false;
+                if(!settings.obeyBollards && nodesIT->bollard)
+                    nodesIT->bollard = false;
                 fout.write((char*)&(*nodesIT), sizeof(_Node));
                 ++usedNodeCounter;
                 ++usedNodeIDsIT;
@@ -441,6 +448,7 @@ int main (int argc, char *argv[]) {
                     fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
                     fout.write((char*)&edgeIT->isRoundabout, sizeof(bool));
                     fout.write((char*)&edgeIT->ignoreInGrid, sizeof(bool));
+                    fout.write((char*)&edgeIT->isAccessRestricted, sizeof(bool));
                 }
                 ++usedEdgeCounter;
                 ++edgeIT;

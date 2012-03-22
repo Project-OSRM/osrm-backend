@@ -39,7 +39,6 @@ class DescriptionFactory {
     PolylineCompressor pc;
     PhantomNode startPhantom, targetPhantom;
 
-    void BuildRouteSummary(const unsigned distance, const unsigned time);
     typedef SearchEngine<ContractionCleanup::Edge::EdgeData, StaticGraph<ContractionCleanup::Edge::EdgeData> > SearchEngineT;
 public:
     struct _RouteSummary {
@@ -60,6 +59,8 @@ public:
         }
     } summary;
 
+    unsigned entireLength;
+
     //I know, declaring this public is considered bad. I'm lazy
     std::vector <SegmentInformation> pathDescription;
     DescriptionFactory();
@@ -68,6 +69,7 @@ public:
     void AppendEncodedPolylineString(std::string &output);
     void AppendUnencodedPolylineString(std::string &output);
     void AppendSegment(const _Coordinate & coordinate, const _PathData & data);
+    void BuildRouteSummary(const unsigned distance, const unsigned time);
     void SetStartSegment(const PhantomNode & startPhantom);
     void SetEndSegment(const PhantomNode & startPhantom);
     void AppendEncodedPolylineString(std::string & output, bool isEncoded);

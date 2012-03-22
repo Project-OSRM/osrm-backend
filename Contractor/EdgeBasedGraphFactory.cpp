@@ -108,6 +108,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         edge.data.ignoreInGrid = i->ignoreInGrid();
         edge.data.nameID = i->name();
         edge.data.type = i->type();
+        edge.data.isAccessRestricted = i->isAccessRestricted();
         edge.data.edgeBasedNodeID = edges.size();
         edges.push_back( edge );
         if( edge.data.backward ) {
@@ -119,7 +120,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         }
     }
 
-    sort( edges.begin(), edges.end() );
+    std::sort( edges.begin(), edges.end() );
 
     _nodeBasedGraph.reset(new _NodeBasedDynamicGraph( nodes, edges ));
     INFO("Converted " << inputEdges.size() << " node-based edges into " << _nodeBasedGraph->GetNumberOfEdges() << " edge-based nodes.");
@@ -239,6 +240,11 @@ void EdgeBasedGraphFactory::Run() {
                         short turnInstruction = AnalyzeTurn(u, v, w);
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += uturnPenalty;
+                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
+                            distance += TurnInstructions.AccessRestrictionPenaly;
+                            turnInstruction |= TurnInstructions.AccessRestrictionFlag;
+                        }
+
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);

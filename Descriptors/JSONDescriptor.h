@@ -37,7 +37,7 @@ private:
 	_DescriptorConfig config;
 	DescriptionFactory descriptionFactory;
 	_Coordinate current;
-
+	unsigned numberOfEnteredRestrictedAreas;
 	struct {
 		int startIndex;
 		int nameID;
@@ -45,7 +45,7 @@ private:
 	} roundAbout;
 
 public:
-	JSONDescriptor() {}
+	JSONDescriptor() : numberOfEnteredRestrictedAreas(0) {}
 	void SetConfig(const _DescriptorConfig & c) { config = c; }
 
 	void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, const unsigned durationOfTrip) {
@@ -68,20 +68,6 @@ public:
 		}
 
         descriptionFactory.Run(sEngine, config.z, durationOfTrip);
-		reply.content += "\"route_summary\": {"
-				"\"total_distance\":";
-		reply.content += descriptionFactory.summary.lengthString;
-		        reply.content += ","
-				"\"total_time\":";
-		reply.content += descriptionFactory.summary.durationString;
-		reply.content += ","
-				"\"start_point\":\"";
-		reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.startName);
-		reply.content += "\","
-				"\"end_point\":\"";
-		reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
-		reply.content += "\"";
-		reply.content += "},";
 		reply.content += "\"route_geometry\": ";
 		if(config.geometry) {
 		    descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
@@ -101,9 +87,11 @@ public:
 			roundAbout.nameID = 0;
 			std::string tmpDist, tmpLength, tmpDuration, tmpBearing;
 			//Fetch data from Factory and generate a string from it.
-			BOOST_FOREACH(SegmentInformation & segment, descriptionFactory.pathDescription) {
-				if(TurnInstructions.TurnIsNecessary( segment.turnInstruction) ) {
-					if(TurnInstructions.EnterRoundAbout == segment.turnInstruction) {
+			BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
+			    short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+			    numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
+				if(TurnInstructions.TurnIsNecessary( currentInstruction) ) {
+					if(TurnInstructions.EnterRoundAbout == currentInstruction) {
 						roundAbout.nameID = segment.nameID;
 						roundAbout.startIndex = prefixSumOfNecessarySegments;
 					} else {
@@ -111,14 +99,14 @@ public:
 							reply.content += ",";
 						}
 						reply.content += "[\"";
-						if(TurnInstructions.LeaveRoundAbout == segment.turnInstruction) {
+						if(TurnInstructions.LeaveRoundAbout == currentInstruction) {
 							reply.content += TurnInstructions.TurnStrings[TurnInstructions.EnterRoundAbout];
 							reply.content += " and leave at ";
 							reply.content += TurnInstructions.Ordinals[std::min(11,roundAbout.leaveAtExit+1)];
 							reply.content += " exit";
 							roundAbout.leaveAtExit = 0;
 						} else {
-							reply.content += TurnInstructions.TurnStrings[segment.turnInstruction];
+							reply.content += TurnInstructions.TurnStrings[currentInstruction];
 						}
 						reply.content += "\",\"";
 						reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
@@ -141,12 +129,13 @@ public:
 						reply.content += tmpBearing;
 			            reply.content += "]";
 					}
-				} else if(TurnInstructions.StayOnRoundAbout == segment.turnInstruction) {
+				} else if(TurnInstructions.StayOnRoundAbout == currentInstruction) {
 					++roundAbout.leaveAtExit;
 				}
 				if(segment.necessary)
 					++prefixSumOfNecessarySegments;
 			}
+
 			reply.content += ",[\"";
 			reply.content += TurnInstructions.TurnStrings[TurnInstructions.ReachedYourDestination];
 			reply.content += "\",\"";
@@ -163,8 +152,31 @@ public:
 			reply.content += "\",";
 			reply.content += "0.0";
 			reply.content += "]";
+		} else {
+            BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
+                short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+                numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
+            }
 		}
 		reply.content += "],";
+//		INFO("Entered " << numberOfEnteredRestrictedAreas << " restricted areas");
+		descriptionFactory.BuildRouteSummary(descriptionFactory.entireLength, durationOfTrip - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenaly));
+
+		reply.content += "\"route_summary\": {"
+		        "\"total_distance\":";
+		reply.content += descriptionFactory.summary.lengthString;
+		reply.content += ","
+		        "\"total_time\":";
+		reply.content += descriptionFactory.summary.durationString;
+		reply.content += ","
+		        "\"start_point\":\"";
+		reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.startName);
+		reply.content += "\","
+		        "\"end_point\":\"";
+		reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
+		reply.content += "\"";
+		reply.content += "},";
+
 		//list all viapoints so that the client may display it
 		reply.content += "\"via_points\":[";
         std::string tmp;

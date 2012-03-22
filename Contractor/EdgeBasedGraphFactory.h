@@ -56,6 +56,7 @@ private:
         bool roundabout:1;
         bool ignoreInGrid:1;
         short type;
+        bool isAccessRestricted;
     };
 
     struct _EdgeBasedEdgeData {
