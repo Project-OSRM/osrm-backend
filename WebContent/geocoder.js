@@ -121,9 +121,9 @@ function showGeocoderResults_Timeout() {
 //update geo coordinates in input boxes
 function updateLocation(marker_id) {
 	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
-		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[0].getPosition().lng.toFixed(6);
+		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getLat().toFixed(6) + ", " + OSRM.G.markers.route[0].getLng().toFixed(6);
 	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget()) {
-		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat.toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng.toFixed(6);		
+		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLat().toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng().toFixed(6);		
 	}
 }
 
@@ -135,11 +135,11 @@ function updateAddress(marker_id, do_fallback_to_lat_lng) {
 	var lng = null;
 	
 	if(marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
-		lat = OSRM.G.markers.route[0].getPosition().lat;
-		lng = OSRM.G.markers.route[0].getPosition().lng;		
+		lat = OSRM.G.markers.route[0].getLat();
+		lng = OSRM.G.markers.route[0].getLng();		
 	} else if(marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() ) {
-		lat = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lat;
-		lng = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition().lng;		
+		lat = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLat();
+		lng = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng();		
 	} else
 		return;
 	
