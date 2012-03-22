@@ -59,7 +59,16 @@ isShown: function() {
 centerView: function(zoom) {
 	if( zoom == undefined )
 		zoom = OSRM.DEFAULTS.ZOOM_LEVEL;
-	OSRM.G.map.setView( new L.LatLng( this.position.lat, this.position.lng), zoom);
+	
+	var position;
+	if( document.getElementById('main-wrapper').style.left != "-410px" ) {
+		var point = OSRM.G.map.project( this.position, zoom);
+		point.x-=200;
+		position = OSRM.G.map.unproject(point,zoom);		
+	} else {
+		position = this.position;
+	}
+	OSRM.G.map.setView( position, zoom);
 },
 toString: function() {
 	return "OSRM.Marker: \""+this.label+"\", "+this.position+")";

@@ -43,7 +43,7 @@ function callGeocoder(marker_id, query) {
 	
 	//build request for geocoder
 	var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&q=" + query;
-	OSRM.JSONP.call( call, showGeocoderResults, showGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_"+marker_id, marker_id );
+	OSRM.JSONP.call( call, showGeocoderResults, showGeocoderResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_"+marker_id, {marker_id:marker_id,query:query} );
 }
 
 
@@ -64,14 +64,14 @@ function onclickGeocoderResult(marker_id, lat, lon) {
 
 
 // process geocoder response
-function showGeocoderResults(response, marker_id) {
+function showGeocoderResults(response, parameters) {
 	if(!response){
-		showGeocoderResults_Empty(marker_id);
+		showGeocoderResults_Empty(parameters);
 		return;
 	}
 	
 	if(response.length == 0) {
-		showGeocoderResults_Empty(marker_id);
+		showGeocoderResults_Empty(parameters);
 		return;
 	}
 	
@@ -90,7 +90,7 @@ function showGeocoderResults(response, marker_id) {
 		html += '<td class="result-items">';
 
 		if(result.display_name){
-			html += '<div class="result-item" onclick="onclickGeocoderResult(\''+marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
+			html += '<div class="result-item" onclick="onclickGeocoderResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
 		}
 		html += "</td></tr>";
 	}
@@ -99,16 +99,16 @@ function showGeocoderResults(response, marker_id) {
 	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
 	document.getElementById('information-box').innerHTML = html;
 
-	onclickGeocoderResult(marker_id, response[0].lat, response[0].lon);
+	onclickGeocoderResult(parameters.marker_id, response[0].lat, response[0].lon);
 }
-function showGeocoderResults_Empty(marker_id) {
+function showGeocoderResults_Empty(parameters) {
 	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
-	if(marker_id == OSRM.C.SOURCE_LABEL)
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+".<p>";
-	else if(marker_id == OSRM.C.TARGET_LABEL)
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_TARGET")+".<p>";
+	if(parameters.marker_id == OSRM.C.SOURCE_LABEL)
+		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+": "+parameters.query +".<p>";
+	else if(parameters.marker_id == OSRM.C.TARGET_LABEL)
+		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_TARGET")+": "+parameters.query +".<p>";
 	else
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND")+".<p>";
+		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND")+": "+parameters.query +".<p>";
 }
 function showGeocoderResults_Timeout() {
 	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";

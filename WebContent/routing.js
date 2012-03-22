@@ -159,7 +159,7 @@ function showRouteDescription(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<img width="18px" src="images/'+getDirectionIcon(response.route_instructions[i][0])+'"/>';
+		route_desc += '<img width="18px" src="images/'+getDirectionIcon(response.route_instructions[i][0])+'" alt="" />';
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';

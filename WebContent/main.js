@@ -32,7 +32,7 @@ function init() {
 	initRouting();
 
  	// check if the URL contains some GET parameter, e.g. for the route
- 	checkURL();	
+ 	checkURL();
 }
 
 
@@ -92,12 +92,12 @@ function initLocale() {
 
 
 // centering on geolocation
-function callbak_centerOnGeolocation( position ) {
+function callback_centerOnGeolocation( position ) {
 	OSRM.G.map.setView( new L.LatLng( position.coords.latitude, position.coords.longitude), OSRM.DEFAULTS.ZOOM_LEVEL);
 }
 function centerOnGeolocation() {
 	if (navigator.geolocation)
-		navigator.geolocation.getCurrentPosition( callbak_centerOnGeolocation );
+		navigator.geolocation.getCurrentPosition( callback_centerOnGeolocation );
 }
 
 
