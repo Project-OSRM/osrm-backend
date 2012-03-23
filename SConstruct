@@ -100,6 +100,10 @@ elif sys.platform == 'win32':
 	Exit(-1)
 else:
 	print "Default platform"
+	if GetOption('stxxlroot') is not None:
+	   env.Append(CPPPATH = GetOption('stxxlroot')+'/include')
+	   env.Append(LIBPATH = GetOption('stxxlroot')+'/lib')
+	   print 'STXXLROOT = ', GetOption('stxxlroot')
 	env.Append(CPPPATH = ['/usr/include', '/usr/include/include', '/usr/include/libxml2/'])
 	if not conf.CheckLibWithHeader('pthread', 'pthread.h', 'CXX'):
 		print "pthread not found. Exiting"
