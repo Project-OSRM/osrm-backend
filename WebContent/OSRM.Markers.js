@@ -61,9 +61,9 @@ centerView: function(zoom) {
 		zoom = OSRM.DEFAULTS.ZOOM_LEVEL;
 	
 	var position;
-	if( document.getElementById('main-wrapper').style.left != "-410px" ) {
+	if( OSRM.GUI.visible == true ) {
 		var point = OSRM.G.map.project( this.position, zoom);
-		point.x-=200;
+		point.x-=OSRM.GUI.width/2;
 		position = OSRM.G.map.unproject(point,zoom);		
 	} else {
 		position = this.position;
@@ -204,10 +204,14 @@ removeMarker: function(id) {
 	if( id==0 && this.route[0].label == OSRM.C.SOURCE_LABEL ) {
 		this.removeVias();
 		document.getElementById('input-source-name').value = "";
+		document.getElementById('information-box').innerHTML = "";
+		document.getElementById('information-box-headline').innerHTML = "";		
 	} else if( id == this.route.length-1 && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL ) {
 		this.removeVias();
 		id = this.route.length-1;
 		document.getElementById('input-target-name').value = "";
+		document.getElementById('information-box').innerHTML = "";
+		document.getElementById('information-box-headline').innerHTML = "";		
 	}
 	
 	this.route[id].hide();

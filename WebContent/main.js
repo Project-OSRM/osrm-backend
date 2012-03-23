@@ -28,6 +28,7 @@ function init() {
 	prefetchIcons();
 	
 	initLocale();
+	initGUI();
 	initMap();
 	initRouting();
 
@@ -69,6 +70,13 @@ function prefetchIcons() {
 
 	for(var i=0; i<images.length; i++)
 		OSRM.icons[images[i]] = new L.Icon('images/'+images[i]+'.png');
+}
+
+
+// init GUI
+function initGUI() {
+	OSRM.GUI.visible = true;
+	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
 }
 
 
@@ -147,15 +155,21 @@ function initMap() {
 	OSRM.G.map.addControl(layersControl);
 
     // move zoom markers
-	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="420px";
+	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
 	// initial map position and zoom
-	OSRM.G.map.setView( new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE), OSRM.DEFAULTS.ZOOM_LEVEL);
+	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
+	if( OSRM.GUI.visible == true ) {
+		var point = OSRM.G.map.project( position, OSRM.DEFAULTS.ZOOM_LEVEL);
+		point.x-=OSRM.GUI.width/2;
+		position = OSRM.G.map.unproject(point,OSRM.DEFAULTS.ZOOM_LEVEL);
+	}	
+	OSRM.G.map.setView( position, OSRM.DEFAULTS.ZOOM_LEVEL);
+	
+	// map events
 	OSRM.G.map.on('zoomend', function(e) { getRoute(OSRM.C.FULL_DESCRIPTION); });
 	OSRM.G.map.on('contextmenu', function(e) {});
-
-	// click on map to set source and target nodes
 	OSRM.G.map.on('click', function(e) {
 		if( !OSRM.G.markers.hasSource() ) {
 			var index = OSRM.G.markers.setSource( e.latlng );

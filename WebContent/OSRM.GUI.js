@@ -20,31 +20,26 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.GUI = {
+
+// default state
+visible: true,
+width: 410,
 		
 // show/hide main-gui
 toggleMain: function() {
 	// show main-gui
-	if( document.getElementById('main-wrapper').style.left == "-410px" ) {
+	if( OSRM.GUI.visible == false ) {
 		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="420px";
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
+		getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";;
 		
-		document.getElementById('blob-wrapper').style.visibility="hidden";			
+		document.getElementById('blob-wrapper').style.visibility="hidden";
 		document.getElementById('main-wrapper').style.left="5px";
-		if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 ) {
-			getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
-		}
 	// hide main-gui
 	} else {
 		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
 		getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="30px";
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 			
-		document.getElementById('main-wrapper').style.left="-410px";
- 		if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 ) {
- 			document.getElementById('blob-wrapper').style.visibility="visible";
-			getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";		
- 		}
+		document.getElementById('main-wrapper').style.left=-OSRM.GUI.width+"px";
 	}
 
 	// execute after animation
@@ -53,18 +48,22 @@ toggleMain: function() {
 		document.getElementById('main-wrapper').addEventListener("webkitTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
 		document.getElementById('main-wrapper').addEventListener("oTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
 		document.getElementById('main-wrapper').addEventListener("MSTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
+	} else {
+		OSRM.GUI.onMainTransitionEnd();		
 	}
 },
 
 // do stuff after main-gui animation finished
 onMainTransitionEnd: function() {
 	// after hiding main-gui
-	if( document.getElementById('main-wrapper').style.left == "-410px" ) {
+	if( OSRM.GUI.visible == true ) {
 		document.getElementById('blob-wrapper').style.visibility="visible";
 		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
+		OSRM.GUI.visible = false;		
 	// after showing main-gui
 	} else {
 		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
+ 		OSRM.GUI.visible = true;		
 	}
 },
 

@@ -54,12 +54,12 @@ setStyle: function(style) {
 centerView: function() {
 	var bounds = new L.LatLngBounds( this.getPositions() );
 	
-	if( document.getElementById('main-wrapper').style.left != "-410px" ) {
+	if( OSRM.GUI.visible == true ) {
 		var southwest = bounds.getSouthWest();
 		var northeast = bounds.getNorthEast();
 		var zoom = OSRM.G.map.getBoundsZoom(bounds);
 		var sw_point = OSRM.G.map.project( southwest, zoom);
-		sw_point.x-=410;
+		sw_point.x-=OSRM.GUI.width/2;
 		sw_point.y+=10;
 		var ne_point = OSRM.G.map.project( northeast, zoom);
 		ne_point.y-=10;
