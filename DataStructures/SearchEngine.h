@@ -256,8 +256,10 @@ public:
 
 			if( (packedPath1.back() == packedPath2.back()) && phantomNodePair.targetPhantom.isBidirected() ) {
 //			    INFO("both paths end in same direction on bidirected edge, make sure start only start with : " << packedPath1.back());
-			    searchFrom1stStartNode ^= (packedPath1.back() != phantomNodePair.targetPhantom.edgeBasedNode);
-			    searchFrom2ndStartNode ^= (packedPath1.back() != phantomNodePair.targetPhantom.edgeBasedNode+1);
+
+			    NodeID lastNodeID = packedPath2.back();
+			    searchFrom1stStartNode &= !(lastNodeID == phantomNodePair.targetPhantom.edgeBasedNode+1);
+			    searchFrom2ndStartNode &= !(lastNodeID == phantomNodePair.targetPhantom.edgeBasedNode);
 //                INFO("Next search from node " << phantomNodePair.targetPhantom.edgeBasedNode << ": " << (searchFrom1stStartNode ? "yes" : "no") );
 //                INFO("Next search from node " << phantomNodePair.targetPhantom.edgeBasedNode+1 << ": " << (searchFrom2ndStartNode ? "yes" : "no") );
 			}
