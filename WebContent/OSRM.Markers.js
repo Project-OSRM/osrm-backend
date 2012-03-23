@@ -120,7 +120,7 @@ onClick: function(e) {
 onDrag: function(e) {
 	this.parent.setPosition( e.target.getLatLng() );
 	getRoute(OSRM.C.NO_DESCRIPTION);
-	updateLocation( this.parent.label );
+	OSRM.Geocoder.updateLocation( this.parent.label );
 },
 onDragStart: function(e) {
 	OSRM.G.dragging = true;
@@ -146,7 +146,7 @@ onDragEnd: function(e) {
 	}
 	
 	if(OSRM.G.route.isShown()==false)
-		updateAddress(this.parent.label);
+		OSRM.Geocoder.updateAddress(this.parent.label);
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";

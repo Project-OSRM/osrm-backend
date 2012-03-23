@@ -379,8 +379,8 @@ function snapRoute() {
  	for(var i=0; i<OSRM.G.via_points.length; i++)
 		OSRM.G.markers.route[i+1].setPosition( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
 
- 	updateAddress(OSRM.C.SOURCE_LABEL);
- 	updateAddress(OSRM.C.TARGET_LABEL);
+ 	OSRM.Geocoder.updateAddress(OSRM.C.SOURCE_LABEL);
+ 	OSRM.Geocoder.updateAddress(OSRM.C.TARGET_LABEL);
 }
 
 // map driving instructions to icons
@@ -484,7 +484,7 @@ function showMarker(marker_id) {
 // changed: any inputbox (is called when return is pressed [after] or focus is lost [before])
 function inputChanged(marker_id) {
 	if( marker_id == OSRM.C.SOURCE_LABEL)	
-		callGeocoder(OSRM.C.SOURCE_LABEL, document.getElementById('input-source-name').value);
+		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('input-source-name').value);
 	else if( marker_id == OSRM.C.TARGET_LABEL)
-		callGeocoder(OSRM.C.TARGET_LABEL, document.getElementById('input-target-name').value);
+		OSRM.Geocoder.call(OSRM.C.TARGET_LABEL, document.getElementById('input-target-name').value);
 }

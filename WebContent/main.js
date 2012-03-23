@@ -159,13 +159,13 @@ function initMap() {
 	OSRM.G.map.on('click', function(e) {
 		if( !OSRM.G.markers.hasSource() ) {
 			var index = OSRM.G.markers.setSource( e.latlng );
-			updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+			OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 			OSRM.G.markers.route[index].show();
 			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
 			getRoute( OSRM.C.FULL_DESCRIPTION );
 		} else if( !OSRM.G.markers.hasTarget() ) {
 			var index = OSRM.G.markers.setTarget( e.latlng );
-			updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 			OSRM.G.markers.route[index].show();
 			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
 			getRoute( OSRM.C.FULL_DESCRIPTION );
@@ -228,7 +228,7 @@ function checkURL(){
 	if( destination != undefined ) {
 		var index = OSRM.G.markers.setTarget( e.latlng );
 		if( destination_name == null )
-			updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		else 
 			document.getElementById("input-target-name").value = destination_name;
 		OSRM.G.markers.route[index].show();
@@ -241,11 +241,11 @@ function checkURL(){
 		// draw via points
 		if( positions.length > 0) {
 			OSRM.G.markers.setSource( positions[0] );
-			updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+			OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
 		if(positions.length > 1) {
 			OSRM.G.markers.setTarget( positions[positions.length-1] );
-			updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
 		for(var i=1; i<positions.length-1;i++)
 			OSRM.G.markers.setVia( i-1, positions[i] );
