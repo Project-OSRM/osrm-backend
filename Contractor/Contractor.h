@@ -233,7 +233,66 @@ public:
         }
         std::cout << "ok" << std::endl << "preprocessing ..." << std::flush;
 
+        bool flushedContractor = false;
         while ( numberOfContractedNodes < numberOfNodes ) {
+        	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.75) ) ){
+        		INFO("Flushing memory after " << numberOfContractedNodes << " nodes");
+        		//TODO:
+
+        		//Delete old heap data to free memory that we need for the coming operations
+                for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
+                    delete threadData[threadNum];
+                }
+                threadData.clear();
+
+
+        		//Create new priority array
+        		std::vector<double> newNodePriority(remainingNodes.size());
+        		//this map gives the old IDs from the new ones, necessary to get a consistent graph at the end of contraction
+        		std::vector<NodeID> oldNodeIDMap(remainingNodes.size());
+        		//this map gives the new IDs from the old ones, necessary to remap targets from the remaining graph
+        		std::vector<NodeID> newNodeIDMap(numberOfNodes, UINT_MAX);
+        		
+        		//build forward and backward renumbering map and remap ids in remainingNodes and Priorities.
+        		for(unsigned newNodeID = 0; newNodeID < remainingNodes.size(); ++newNodeID) {
+        			//create renumbering maps in both directions
+        			oldNodeIDMap[newNodeID] = remainingNodes[newNodeID].first;
+        			newNodeIDMap[remainingNodes[newNodeID].first] = newNodeID;
+        			newNodePriority[newNodeID] = nodePriority[remainingNodes[newNodeID].first];
+        			remainingNodes[newNodeID].first = newNodeID;
+        		}
+        		
+        		//create new _DynamicGraph, goes out of scope after the renumbering
+        		boost::shared_ptr<_DynamicGraph> _newGraph ( new _DynamicGraph(remainingNodes.size()) );
+
+        		//walk over all remainingNodes
+        		for(unsigned i = 0; i < remainingNodes.size(); ++i) {
+        		//TODO:Wenn Knoten kontrahiert: speichern seiner Kanten in vector mit
+        		//TODO:Wenn Knoten nicht kontrahiert: Einfügen der Kanten in neuen DynamicGraph und
+        		//								 dabei Source, Target umnummerieren und Priorität in neuem Prioritäten-Array speichern.
+        		}
+        		//
+        		//Delete map from old NodeIDs to new ones.
+        		std::vector<NodeID>().swap(newNodeIDMap);
+
+        		//Replace old priorities array by new one
+        		nodePriority.swap(newNodePriority);
+        		//Delete old nodePriority vector
+        		std::vector<double>().swap(newNodePriority);
+        		//Alten Graphen löschen und neuen Graphen speichern.
+
+        		//ThreadData mit Heaps passender Größe reinitialisieren.
+                for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+                    threadData.push_back( new _ThreadData( remainingNodes.size() ) );
+                }
+
+                //TODO: Check if old Graph is removed
+                _graph.swap(_newGraph);
+
+//        		numberOfContractedNodes = 0;
+        		flushedContractor = true;
+        	}
+
             const int last = ( int ) remainingNodes.size();
 #pragma omp parallel
             {
@@ -604,6 +663,7 @@ private:
     }
 
     boost::shared_ptr<_DynamicGraph> _graph;
+    std::vector<_DynamicGraph::InputEdge> contractedEdges;
 };
 
 #endif // CONTRACTOR_H_INCLUDED
