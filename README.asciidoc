@@ -44,8 +44,9 @@ Note that the frontend can also be checked out independently of the Project-OSRM
 
 References
 ----------
-[[1]][1] Leaflet: http://leaflet.cloudmade.com/
-
-[[2]][2] Project-OSRM: http://project-osrm.org/
-
-[[3]][3] Project-OSRM Frontend: http://map.project-osrm.org/
+[[1]]
+[1] Leaflet: http://leaflet.cloudmade.com/
+[[2]]
+[2] Project-OSRM: http://project-osrm.org/
+[[3]]
+[3] Project-OSRM Frontend: http://map.project-osrm.org/
