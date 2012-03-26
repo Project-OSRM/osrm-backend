@@ -1,10 +1,10 @@
 Overview
 --------
-The repository provides a Leaflet <<1>> based web frontend to the Open Source Routing Machine (Project-OSRM <<2>>).
+The repository provides a Leaflet <<x1,[1]>> based web frontend to the Open Source Routing Machine (Project-OSRM <<x2,[2]>>).
 The frontend is implemented in Javascript.
 Data is fetched from routing and geocoding servers using JSONP queries.
 The website is XHTML 1.0 Strict compliant.
-A deployed version of the the web frontend can be seen at <<3>>.
+A deployed version of the the web frontend can be seen at <<x3,[3]>>.
 
 
 Setup
@@ -44,9 +44,9 @@ Note that the frontend can also be checked out independently of the Project-OSRM
 
 References
 ----------
-[[1]]
+[[x1]]
 [1] Leaflet: http://leaflet.cloudmade.com/
-[[2]]
+[[x2]]
 [2] Project-OSRM: http://project-osrm.org/
-[[3]]
+[[x3]]
 [3] Project-OSRM Frontend: http://map.project-osrm.org/
