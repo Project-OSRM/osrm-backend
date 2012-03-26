@@ -17,8 +17,8 @@ Note that the URL shortener used for generating route links only works with URLs
 
 Branches
 --------
-- The +[master]+ branch will always point to the latest released version of the frontend.
-- The +[develop]+ branch should always point to a working version that incorporates new features and bugfixes (think of it like a nightly-build).
+- The +master+ branch will always point to the latest released version of the frontend.
+- The +develop+ branch should always point to a working version that incorporates new features and bugfixes (think of it like a nightly-build).
 - Other branches contain various work in progress.
 
 
@@ -44,7 +44,6 @@ Note that the frontend can also be checked out independently of the Project-OSRM
 
 References
 ----------
-[bibliography]
 [[[1]]] Leaflet: http://leaflet.cloudmade.com/
 
 [[[2]]] Project-OSRM: http://project-osrm.org/
