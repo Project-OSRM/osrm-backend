@@ -1,0 +1,9 @@
+The files on this folder should be placed (with execute permissions) on your *nix with upstart capabilities to have osrm running as a daemon. You have to be root to do it.
+
+Check the usr/bin/osrm file before proceed, as it will assume you have your code on /opt/Project-OSRM.
+
+To give execute permission to this files, you can do:
+# chmod +x $file
+
+More info on upstart:
+http://upstart.ubuntu.com/cookbook/
