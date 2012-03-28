@@ -158,7 +158,7 @@ toString: function() {
 // [this holds the vital information of the route]
 OSRM.Markers = function() {
 	this.route = new Array();
-	this.highlight = new OSRM.HighlightMarker("highlight", {draggable:false,icon:OSRM.icons['marker-highlight']});;
+	this.highlight = new OSRM.HighlightMarker("highlight", {draggable:false,icon:OSRM.G.icons['marker-highlight']});;
 };
 OSRM.extend( OSRM.Markers,{
 removeAll: function() {
@@ -177,7 +177,7 @@ setSource: function(position) {
 	if( this.route[0] && this.route[0].label == OSRM.C.SOURCE_LABEL )
 		this.route[0].setPosition(position);
 	else
-		this.route.splice(0,0, new OSRM.RouteMarker(OSRM.C.SOURCE_LABEL, {draggable:true,icon:OSRM.icons['marker-source']}, position));
+		this.route.splice(0,0, new OSRM.RouteMarker(OSRM.C.SOURCE_LABEL, {draggable:true,icon:OSRM.G.icons['marker-source']}, position));
 	return 0;	
 },
 setTarget: function(position) {
@@ -185,7 +185,7 @@ setTarget: function(position) {
 	if( this.route[this.route.length-1] && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL )
 		this.route[this.route.length-1].setPosition(position);
 	else
-		this.route.splice( this.route.length,0, new OSRM.RouteMarker(OSRM.C.TARGET_LABEL, {draggable:true,icon:OSRM.icons['marker-target']}, position));
+		this.route.splice( this.route.length,0, new OSRM.RouteMarker(OSRM.C.TARGET_LABEL, {draggable:true,icon:OSRM.G.icons['marker-target']}, position));
 	return this.route.length-1;
 },
 setVia: function(id, position) {
@@ -193,7 +193,7 @@ setVia: function(id, position) {
 	if( this.route.length<2 || id > this.route.length-2 )
 		return -1;
 	
-	this.route.splice(id+1,0, new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.icons['marker-via']}, position));
+	this.route.splice(id+1,0, new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.G.icons['marker-via']}, position));
 	return id+1;
 },
 removeMarker: function(id) {

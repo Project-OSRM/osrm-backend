@@ -16,30 +16,29 @@ or see http://www.gnu.org/licenses/agpl.txt.
 */
 
 // OSRM initialization
-// [initialization of maps, local strings, image prefetching]
+// [initialization of maps, gui, image prefetching]
 
 // will hold the Leaflet map object
 OSRM.GLOBALS.map = null;
 
 
 // onload initialization routine
-function init() {
-	prefetchImages();
-	prefetchIcons();
+OSRM.init = function() {
+	OSRM.prefetchImages();
+	OSRM.prefetchIcons();
 	
-	initLocale();
-	initGUI();
-	initMap();
+	OSRM.GUI.init();
 	OSRM.Routing.init();
+	OSRM.initMap();	
 	
- 	// check if the URL contains some GET parameter, e.g. for the route
- 	checkURL();
-}
+ 	// check if the URL contains some GET parameter, e.g. for showing a route
+ 	OSRM.checkURL();
+};
 
 
 // prefetch images
-OSRM.images = Array();
-function prefetchImages() {
+OSRM.GLOBALS.images = Array();
+OSRM.prefetchImages = function() {
 	var images = [	'images/marker-source.png',
 	              	'images/marker-target.png',
 	              	'images/marker-via.png',
@@ -53,15 +52,15 @@ function prefetchImages() {
 	              ];
 
 	for(var i=0; i<images.length; i++) {
-		OSRM.images[i] = new Image();
-		OSRM.images[i].src = images[i];
+		OSRM.G.images[i] = new Image();
+		OSRM.G.images[i].src = images[i];
 	}
-}
+};
 
 
 // prefetch icons
-OSRM.icons = Array();
-function prefetchIcons() {
+OSRM.GLOBALS.icons = Array();
+OSRM.prefetchIcons = function() {
 	var images = [	'marker-source',
 	              	'marker-target',
 	              	'marker-via',
@@ -69,34 +68,8 @@ function prefetchIcons() {
 	              ];
 
 	for(var i=0; i<images.length; i++)
-		OSRM.icons[images[i]] = new L.Icon('images/'+images[i]+'.png');
-}
-
-
-// init GUI
-function initGUI() {
-	OSRM.GUI.visible = true;
-	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
-}
-
-
-// init localization
-function initLocale() {
-	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
-	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
-	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
-	document.getElementById("options-toggle").innerHTML = OSRM.loc("GUI_OPTIONS");
-	document.getElementById("gui-search-source").innerHTML = OSRM.loc("GUI_SEARCH");
-	document.getElementById("gui-search-target").innerHTML = OSRM.loc("GUI_SEARCH");
-	document.getElementById("gui-search-source-label").innerHTML = OSRM.loc("GUI_START")+":";
-	document.getElementById("gui-search-target-label").innerHTML = OSRM.loc("GUI_END")+":";
-	document.getElementById("input-source-name").title = OSRM.loc("GUI_START_TOOLTIP");
-	document.getElementById("input-target-name").title = OSRM.loc("GUI_END_TOOLTIP");
-	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
-	
-	document.getElementById('input-source-name').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
-	document.getElementById('input-target-name').value = OSRM.DEFAULTS.ONLOAD_TARGET;
-}
+		OSRM.G.icons[images[i]] = new L.Icon('images/'+images[i]+'.png');
+};
 
 
 // centering on geolocation
@@ -110,7 +83,9 @@ function centerOnGeolocation() {
 
 
 // init map
-function initMap() {
+OSRM.initMap = function() {
+	// TODO: check if GUI is initialized!
+	
 	// setup tile servers
 	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 		osmorgAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
@@ -185,11 +160,11 @@ function initMap() {
 			OSRM.Routing.getRoute( OSRM.C.FULL_DESCRIPTION );
 		}
 	} );
-}
+};
 
 
 // parse URL GET parameters if any exist
-function checkURL(){
+OSRM.checkURL = function(){
 	var called_url = document.location.search.substr(1,document.location.search.length);
 	
 	// reject messages that are clearly too long or too small 
@@ -277,4 +252,4 @@ function checkURL(){
 		// compute route
 		OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION);
 	}
-}
+};
