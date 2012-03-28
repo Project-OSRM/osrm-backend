@@ -15,8 +15,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
+// OSRM utility functions
+// [mixed functions]
+
+
+OSRM.Utils = {
+		
+// [human readabilty functions]
+
 // human readable time
-function secondsToTime(seconds){
+secondsToTime: function(seconds){
    seconds = parseInt(seconds);
    minutes = parseInt(seconds/60);
    seconds = seconds%60;
@@ -28,30 +36,32 @@ function secondsToTime(seconds){
    else{
    	return hours + '&nbsp;' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';
    }
-}
-
-// human readable distance
-function getDistanceWithUnit(distance){
+},
+//human readable distance
+metersToDistance: function(distance){
 	distance = parseInt(distance);
 	
 	if(distance >= 100000){ return (parseInt(distance/1000))+'&nbsp;' + 'km'; }
 	else if(distance >= 10000){ return (parseInt(distance/1000).toFixed(1))+'&nbsp;' + 'km'; }
 	else if(distance >= 1000){ return (parseFloat(distance/1000).toFixed(2))+'&nbsp;' + 'km'; }
 	else{ return distance+'&nbsp;' + 'm'; }
-}
+},
 
-//------------------------------------------------------
+
+// [verification routines]
 
 // verify angles
-function isLatitude(value) {
+isLatitude: function(value) {
 	if( value >=-90 && value <=90)
 		return true;
 	else
 		return false;
-}
-function isLongitude(value) {
+},
+isLongitude: function(value) {
 	if( value >=-180 && value <=180)
 		return true;
 	else
 		return false;
 }
+
+};

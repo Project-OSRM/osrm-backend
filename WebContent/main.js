@@ -212,13 +212,13 @@ function checkURL(){
 			
 		if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');
-			if(coordinates.length!=2 || !isLatitude(coordinates[0]) || !isLongitude(coordinates[1]) )
+			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;
 			positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
 		}
 		else if(name_val[0] == 'dest') {
 			var coordinates = unescape(name_val[1]).split(',');
-			if(coordinates.length!=2 || !isLatitude(coordinates[0]) || !isLongitude(coordinates[1]) )
+			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
 			destination = new L.LatLng( coordinates[0], coordinates[1]);
 		}
@@ -232,7 +232,7 @@ function checkURL(){
 		}
 		else if(name_val[0] == 'center') {
 			var coordinates = unescape(name_val[1]).split(',');
-			if(coordinates.length!=2 || !isLatitude(coordinates[0]) || !isLongitude(coordinates[1]) )
+			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
 			center = new L.LatLng( coordinates[0], coordinates[1]);			
 		}		

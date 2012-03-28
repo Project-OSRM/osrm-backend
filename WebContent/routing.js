@@ -177,7 +177,7 @@ function showRouteDescription(response) {
 		
 		route_desc += '<td class="result-distance">';
 		if( i != response.route_instructions.length-1 )
-		route_desc += '<b>'+getDistanceWithUnit(response.route_instructions[i][2])+'</b>';
+		route_desc += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
 		route_desc += "</td>";
 		
 		route_desc += "</tr>";
@@ -188,9 +188,9 @@ function showRouteDescription(response) {
 	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
 	headline += '<div style="float:left;width:40%">';
 	headline += "<span class='route-summary'>"
-		+ OSRM.loc("DISTANCE")+": " + getDistanceWithUnit(response.route_summary.total_distance)
+		+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
 		+ "<br>"
-		+ OSRM.loc("DURATION")+": " + secondsToTime(response.route_summary.total_time)
+		+ OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time)
 		+ "</span>";		
 	headline +=	'</div>';
 	headline += '<div style="float:left;text-align:right;width:60%;">'+route_link+'<br>'+gpx_link+'</div>';
@@ -204,9 +204,9 @@ function showRouteDescription(response) {
 function showRouteDescriptionSimple(response) {
 	headline = OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
 	headline += "<span class='route-summary'>"
-			+ OSRM.loc("DISTANCE")+": " + getDistanceWithUnit(response.route_summary.total_distance)
+			+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
 			+ "<br>"
-			+ OSRM.loc("DURATION")+": " + secondsToTime(response.route_summary.total_time)
+			+ OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time)
 			+ "</span>";
 	headline += '<br><br>';
 
