@@ -60,7 +60,7 @@ _onclickResult: function(marker_id, lat, lon) {
 	
 	OSRM.G.markers.route[index].show();
 	OSRM.G.markers.route[index].centerView();	
-	getRoute(OSRM.C.FULL_DESCRIPTION);
+	OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION);
 },
 
 

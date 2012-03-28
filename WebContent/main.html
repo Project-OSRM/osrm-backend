@@ -44,7 +44,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 <script src="OSRM.base.js" type="text/javascript"></script>
 <script src="OSRM.config.js" type="text/javascript"></script>
-<!-- <script defer="defer" src="OSRM.debug.js" type="text/javascript"></script> -->
+<script defer="defer" src="OSRM.debug.js" type="text/javascript"></script>
 
 <script src="OSRM.Browser.js" type="text/javascript"></script>
 <script src="OSRM.GUI.js" type="text/javascript"></script>
@@ -88,14 +88,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <table class="full">
     <tr>
     <td id="gui-search-source-label">Start:</td>
-    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="inputChanged(OSRM.C.SOURCE_LABEL);" /></td>
-    <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="showMarker('source')">Zeigen</a></td>
+    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="OSRM.Routing.inputChanged(OSRM.C.SOURCE_LABEL);" /></td>
+    <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="OSRM.Routing.showMarker('source')">Zeigen</a></td>
     </tr>
     
     <tr>
     <td id="gui-search-target-label">Ende:</td>
-    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="inputChanged(OSRM.C.TARGET_LABEL);" /></td>
-	<td class="right"><a class="button not-selectable" id="gui-search-target" onclick="showMarker('target');">Zeigen</a></td>	
+    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="OSRM.Routing.inputChanged(OSRM.C.TARGET_LABEL);" /></td>
+	<td class="right"><a class="button not-selectable" id="gui-search-target" onclick="OSRM.Routing.showMarker('target');">Zeigen</a></td>	
     </tr>
     </table>
     
@@ -103,8 +103,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <div class="vquad"></div>
     <table style="width:100%">
     <tr>
-    <td>				<a class="button not-selectable" id="gui-reset" onclick="resetRouting();">Reset</a></td>
-	<td class="right">	<a class="button not-selectable" id="gui-reverse" onclick="reverseRouting();">Umdrehen</a></td>
+    <td>				<a class="button not-selectable" id="gui-reset" onclick="OSRM.Routing.resetRouting();">Reset</a></td>
+	<td class="right">	<a class="button not-selectable" id="gui-reverse" onclick="OSRM.Routing.reverseRouting();">Umdrehen</a></td>
     </tr>
     </table>
     
@@ -112,7 +112,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <div class="vquad"></div>
     <div class="main-options not-selectable" id="options-toggle" onclick="OSRM.GUI.toggleOptions()">Options</div>
     <div class="main-options not-selectable" id="options-box">
-    <input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="getRoute(OSRM.C.FULL_DESCRIPTION)" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
+    <input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION)" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
     </div>
 </div>
 

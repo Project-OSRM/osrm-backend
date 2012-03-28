@@ -30,8 +30,8 @@ function init() {
 	initLocale();
 	initGUI();
 	initMap();
-	initRouting();
-
+	OSRM.Routing.init();
+	
  	// check if the URL contains some GET parameter, e.g. for the route
  	checkURL();
 }
@@ -168,7 +168,7 @@ function initMap() {
 	OSRM.G.map.setView( position, OSRM.DEFAULTS.ZOOM_LEVEL);
 	
 	// map events
-	OSRM.G.map.on('zoomend', function(e) { getRoute(OSRM.C.FULL_DESCRIPTION); });
+	OSRM.G.map.on('zoomend', function(e) { OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION); });
 	OSRM.G.map.on('contextmenu', function(e) {});
 	OSRM.G.map.on('click', function(e) {
 		if( !OSRM.G.markers.hasSource() ) {
@@ -176,13 +176,13 @@ function initMap() {
 			OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 			OSRM.G.markers.route[index].show();
 			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
-			getRoute( OSRM.C.FULL_DESCRIPTION );
+			OSRM.Routing.getRoute( OSRM.C.FULL_DESCRIPTION );
 		} else if( !OSRM.G.markers.hasTarget() ) {
 			var index = OSRM.G.markers.setTarget( e.latlng );
 			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 			OSRM.G.markers.route[index].show();
 			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
-			getRoute( OSRM.C.FULL_DESCRIPTION );
+			OSRM.Routing.getRoute( OSRM.C.FULL_DESCRIPTION );
 		}
 	} );
 }
@@ -275,6 +275,6 @@ function checkURL(){
 		}
 			
 		// compute route
-		getRoute(OSRM.C.FULL_DESCRIPTION);
+		OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION);
 	}
 }

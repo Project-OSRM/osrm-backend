@@ -32,28 +32,30 @@ OSRM.GLOBALS.pending = false;
 OSRM.GLOBALS.pendingTimer = null;
 
 
+OSRM.Routing = {
+		
 // init routing data structures
-function initRouting() {
+init: function() {
 	OSRM.G.route = new OSRM.Route();
 	OSRM.G.markers = new OSRM.Markers();
-}
+},
 
 
 // -- JSONP processing -- 
 
 // process JSONP response of routing server
-function timeoutRouteSimple() {
-	showNoRouteGeometry();
-	showNoRouteDescription();
+timeoutRouteSimple: function() {
+	OSRM.Routing.showNoRouteGeometry();
+	OSRM.Routing.showNoRouteDescription();
 	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("TIMED_OUT")+".<p>";
-}
-function timeoutRoute() {
-	showNoRouteGeometry();
+},
+timeoutRoute: function() {
+	OSRM.Routing.showNoRouteGeometry();
 	OSRM.G.route.hideUnnamedRoute();
-	showNoRouteDescription();
+	OSRM.Routing.showNoRouteDescription();
 	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("TIMED_OUT")+".<p>";	
-}
-function showRouteSimple(response) {
+},
+showRouteSimple: function(response) {
  	if(!response)
  		return;
  	
@@ -61,88 +63,88 @@ function showRouteSimple(response) {
  		return;
  	
 	if( response.status == 207) {
-		showNoRouteGeometry();
-		showNoRouteDescription();
+		OSRM.Routing.showNoRouteGeometry();
+		OSRM.Routing.showNoRouteDescription();
 		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED")+".<p>";
 	} else {
-		showRouteGeometry(response);
-		showRouteDescriptionSimple(response);
+		OSRM.Routing.showRouteGeometry(response);
+		OSRM.Routing.showRouteDescriptionSimple(response);
 	}
-	updateHints(response);
+	OSRM.Routing.updateHints(response);
 
 //	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)
 //	if(OSRM.G.pending) {
 //		clearTimeout(OSRM.G.pendingTimer);
-//		OSRM.G.pendingTimer = setTimeout(timeoutDrag,100);		
+//		OSRM.G.pendingTimer = setTimeout(OSRM.Routing.timeoutDrag,100);		
 //	}
-}
-function showRoute(response) {
+},
+showRoute: function(response) {
 	if(!response)
 		return;
 	
 	if(response.status == 207) {
-		showNoRouteGeometry();
+		OSRM.Routing.showNoRouteGeometry();
 		OSRM.G.route.hideUnnamedRoute();
-		showNoRouteDescription();
+		OSRM.Routing.showNoRouteDescription();
 		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_ROUTE_FOUND")+".<p>";
 	} else {
-		showRouteGeometry(response);
-		showRouteNonames(response);
-		showRouteDescription(response);
-		snapRoute();
+		OSRM.Routing.showRouteGeometry(response);
+		OSRM.Routing.showRouteNonames(response);
+		OSRM.Routing.showRouteDescription(response);
+		OSRM.Routing.snapRoute();
 	}
-	updateHints(response);
-}
+	OSRM.Routing.updateHints(response);
+},
 
 
 // show route geometry
-function showNoRouteGeometry() {
+showNoRouteGeometry: function() {
 	var positions = [];
 	for(var i=0; i<OSRM.G.markers.route.length;i++)
 			positions.push( OSRM.G.markers.route[i].getPosition() );
 
 	OSRM.G.route.showRoute(positions, OSRM.Route.NOROUTE);
-}
-function showRouteGeometry(response) {
+},
+showRouteGeometry: function(response) {
 	OSRM.G.via_points = response.via_points.slice(0);
 
-	var geometry = decodeRouteGeometry(response.route_geometry, 5);
+	var geometry = OSRM.Routing.decodeRouteGeometry(response.route_geometry, 5);
 
 	var points = [];
 	for( var i=0; i < geometry.length; i++) {
 		points.push( new L.LatLng(geometry[i][0], geometry[i][1]) );
 	}
 	OSRM.G.route.showRoute(points, OSRM.Route.ROUTE);
-}
+},
 
 
 // route description display (and helper functions)
-function onClickRouteDescription(geometry_index) {
+onClickRouteDescription: function(geometry_index) {
 	var positions = OSRM.G.route.getPositions();
 
 	OSRM.G.markers.highlight.setPosition( positions[geometry_index] );
 	OSRM.G.markers.highlight.show();
 	OSRM.G.markers.highlight.centerView(OSRM.DEFAULTS.HIGHLIGHT_ZOOM_LEVEL);	
-}
-function onClickCreateShortcut(src){
+},
+onClickCreateShortcut: function(src){
 	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat + ',' + OSRM.G.map.getCenter().lng;
-	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src, showRouteLink, showRouteLink_TimeOut, 2000, 'shortener');
+	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src, OSRM.Routing.showRouteLink, OSRM.Routing.showRouteLink_TimeOut, 2000, 'shortener');
 	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
-}
-function showRouteLink(response){
+},
+showRouteLink: function(response){
 	document.getElementById('route-prelink').innerHTML = '[<a id="gpx-link" class = "text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
-}
-function showRouteLink_TimeOut(){
+},
+showRouteLink_TimeOut: function(){
 	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
-}
-function showRouteDescription(response) {
+},
+showRouteDescription: function(response) {
 	// compute query string
 	var query_string = '?rebuild=1';
 	for(var i=0; i<OSRM.G.markers.route.length; i++)
 		query_string += '&loc=' + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng(); 
  						
 	// create link to the route
-	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" onclick="onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]</span>';
+	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" onclick="OSRM.Routing.onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]</span>';
 
 	// create GPX link
 	var gpx_link = '<span class="route-summary">[<a id="gpx-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]</span>';
@@ -159,11 +161,11 @@ function showRouteDescription(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<img width="18px" src="images/'+getDirectionIcon(response.route_instructions[i][0])+'" alt="" />';
+		route_desc += '<img width="18px" src="images/'+OSRM.Routing.getDirectionIcon(response.route_instructions[i][0])+'" alt="" />';
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
-		route_desc += '<span class="result-item" onclick="onClickRouteDescription('+response.route_instructions[i][3]+')">';
+		route_desc += '<span class="result-item" onclick="OSRM.Routing.onClickRouteDescription('+response.route_instructions[i][3]+')">';
 		route_desc += response.route_instructions[i][0];
 		if( i == 0 )
 			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		
@@ -200,8 +202,8 @@ function showRouteDescription(response) {
 
 	document.getElementById('information-box-headline').innerHTML = headline;
 	document.getElementById('information-box').innerHTML = output;
-}
-function showRouteDescriptionSimple(response) {
+},
+showRouteDescriptionSimple: function(response) {
 	headline = OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
 	headline += "<span class='route-summary'>"
 			+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
@@ -212,8 +214,8 @@ function showRouteDescriptionSimple(response) {
 
 	document.getElementById('information-box-headline').innerHTML = headline;
 	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED")+".<p>";	
-}
-function showNoRouteDescription() {
+},
+showNoRouteDescription: function() {
 	headline = OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
 	headline += "<span class='route-summary'>"
 			+ OSRM.loc("DISTANCE")+": N/A"
@@ -224,11 +226,11 @@ function showNoRouteDescription() {
 
 	document.getElementById('information-box-headline').innerHTML = headline;
 	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED")+".<p>";	
-}
+},
 
 
 // unnamed streets display
-function showRouteNonames(response) {
+showRouteNonames: function(response) {
 	// do not display unnamed streets?
 	if( document.getElementById('option-highlight-nonames').checked == false) {
 		OSRM.G.route.hideUnnamedRoute();
@@ -245,7 +247,7 @@ function showRouteNonames(response) {
 	}
 
 	// aggregate geometry for unnamed streets
-	var geometry = decodeRouteGeometry(response.route_geometry, 5);
+	var geometry = OSRM.Routing.decodeRouteGeometry(response.route_geometry, 5);
 	var is_named = true;
 	var current_positions = [];
 	var all_positions = [];
@@ -266,13 +268,13 @@ function showRouteNonames(response) {
 	
 	// display unnamed streets
 	OSRM.G.route.showUnnamedRoute(all_positions);
-}
+},
 
 
 //-- main function --
 
 // generate server calls to query routes
-function getRoute(do_description) {
+getRoute: function(do_description) {
 	
 	// if source or target are not set -> hide route
 	if( OSRM.G.markers.route.length < 2 ) {
@@ -297,13 +299,13 @@ function getRoute(do_description) {
 	
 	// decide whether it is a dragging call or a normal one
 	if (do_description) {
-		callback = showRoute;
-		timeout = timeoutRoute;
+		callback = OSRM.Routing.showRoute;
+		timeout = OSRM.Routing.timeoutRoute;
 		source +='&instructions=true';
 		type = 'route';
 	} else {
-		callback = showRouteSimple;
-		timeout = timeoutRouteSimple;
+		callback = OSRM.Routing.showRouteSimple;
+		timeout = OSRM.Routing.timeoutRouteSimple;
 		source +='&instructions=false';
 		type = 'dragging';
 	}
@@ -314,7 +316,7 @@ function getRoute(do_description) {
 	// TODO: hack to process final drag event, if it was fenced, but we are still dragging
 	if(called == false && !do_description) {
 		clearTimeout(OSRM.G.pendingTimer);
-		OSRM.G.pendingTimer = setTimeout(timeoutDrag,OSRM.DEFAULTS.JSONP_TIMEOUT);
+		OSRM.G.pendingTimer = setTimeout(OSRM.Routing.timeoutDrag,OSRM.DEFAULTS.JSONP_TIMEOUT);
 	}
 	else {
 		clearTimeout(OSRM.G.pendingTimer);
@@ -326,17 +328,17 @@ function getRoute(do_description) {
 //		clearTimeout(OSRM.G.pendingTimer);
 //		OSRM.G.pending = false;
 //	}
-}
-function timeoutDrag() {
+},
+timeoutDrag: function() {
 	OSRM.G.markers.route[OSRM.G.dragid].hint = null;
-	getRoute(OSRM.C.NO_DESCRIPTION);
-}
+	OSRM.Routing.getRoute(OSRM.C.NO_DESCRIPTION);
+},
 
 
 //-- helper functions --
 
 //decode compressed route geometry
-function decodeRouteGeometry(encoded, precision) {
+decodeRouteGeometry: function(encoded, precision) {
 	precision = Math.pow(10, -precision);
 	var len = encoded.length, index=0, lat=0, lng = 0, array = [];
 	while (index < len) {
@@ -360,18 +362,18 @@ function decodeRouteGeometry(encoded, precision) {
 		array.push([lat * precision, lng * precision]);
 	}
 	return array;
-}
+},
 
 // update hints of all markers
-function updateHints(response) {
+updateHints: function(response) {
 	var hint_locations = response.hint_data.locations;
 	OSRM.G.markers.checksum = response.hint_data.checksum;
 	for(var i=0; i<hint_locations.length; i++)
 		OSRM.G.markers.route[i].hint = hint_locations[i];
-}
+},
 
 // snap all markers to the received route
-function snapRoute() {
+snapRoute: function() {
 	var positions = OSRM.G.route.getPositions();
  	
  	OSRM.G.markers.route[0].setPosition( positions[0] );
@@ -381,11 +383,11 @@ function snapRoute() {
 
  	OSRM.Geocoder.updateAddress(OSRM.C.SOURCE_LABEL);
  	OSRM.Geocoder.updateAddress(OSRM.C.TARGET_LABEL);
-}
+},
 
 // map driving instructions to icons
 // [TODO: better implementation, language-safe]
-function getDirectionIcon(name) {
+getDirectionIcon: function(name) {
 	var directions = {
 		"Turn left":"turn-left.png",
 		"Turn right":"turn-right.png",
@@ -414,13 +416,13 @@ function getDirectionIcon(name) {
 		return directions[name];
 	else
 		return "default.png";
-}
+},
 
 
 // -- gui functions --
 
 // click: button "reset"
-function resetRouting() {
+resetRouting: function() {
 	document.getElementById('input-source-name').value = "";
 	document.getElementById('input-target-name').value = "";
 	
@@ -432,10 +434,10 @@ function resetRouting() {
 	document.getElementById('information-box-headline').innerHTML = "";
 	
 	OSRM.JSONP.reset();	
-}
+},
 
 // click: button "reverse"
-function reverseRouting() {
+reverseRouting: function() {
 	// invert input boxes
 	var tmp = document.getElementById("input-source-name").value;
 	document.getElementById("input-source-name").value = document.getElementById("input-target-name").value;
@@ -461,16 +463,16 @@ function reverseRouting() {
 	
 	// recompute route
 	if( OSRM.G.route.isShown() ) {
-		getRoute(OSRM.C.FULL_DESCRIPTION);
+		OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION);
 		OSRM.G.markers.highlight.hide();
 	} else {
 		document.getElementById('information-box').innerHTML = "";
 		document.getElementById('information-box-headline').innerHTML = "";		
 	}
-}
+},
 
 // click: button "show"
-function showMarker(marker_id) {
+showMarker: function(marker_id) {
 	if( OSRM.JSONP.fences["geocoder_source"] || OSRM.JSONP.fences["geocoder_target"] )
 		return;
 	
@@ -478,13 +480,15 @@ function showMarker(marker_id) {
 		OSRM.G.markers.route[0].centerView();
 	else if( marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() )
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].centerView();
-}
+},
 
 
 // changed: any inputbox (is called when return is pressed [after] or focus is lost [before])
-function inputChanged(marker_id) {
+inputChanged: function(marker_id) {
 	if( marker_id == OSRM.C.SOURCE_LABEL)	
 		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('input-source-name').value);
 	else if( marker_id == OSRM.C.TARGET_LABEL)
 		OSRM.Geocoder.call(OSRM.C.TARGET_LABEL, document.getElementById('input-target-name').value);
 }
+
+};
