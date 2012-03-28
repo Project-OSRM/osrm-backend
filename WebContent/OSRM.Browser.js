@@ -15,10 +15,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// OSRM browser detection
-// [simple detection routines to respect some browser peculiarities] 
+// OSRM old browser support
+// [simple browser detection and routines to support some old browsers] 
 
 
+// browser detection (runs anonymous function to prevent local variables cluttering global namespace)
 (function() {
 	var useragent = navigator.userAgent;
 	
@@ -28,4 +29,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	};
 }());
 
-// (runs anonymous function to prevent local variables cluttering global namespace)
+
+// compatibility tools for old browsers
+function getElementsByClassName(node, classname) {
+    var a = [];
+    var re = new RegExp('(^| )'+classname+'( |$)');
+    var els = node.getElementsByTagName("*");
+    for(var i=0,j=els.length; i<j; i++)
+        if(re.test(els[i].className))a.push(els[i]);
+    return a;
+}
+document.head = document.head || document.getElementsByTagName('head')[0];

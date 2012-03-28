@@ -15,38 +15,44 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
+// OSRM via marker routines
+// [find correct position for a via marker]
+
 // store location of via points returned by server
 OSRM.GLOBALS.via_points = null;
 
 
+OSRM.Via = {
+		
 // find route segment of current route geometry that is closest to the new via node (marked by index of its endpoint)
-function findNearestRouteSegment( new_via ) {
+_findNearestRouteSegment: function( new_via ) {
 	var min_dist = Number.MAX_VALUE;
 	var min_index = undefined;
 
-	var positions = OSRM.G.route.getPositions();
-	for(var i=0; i<positions.length-1; i++) {
-		var dist = dotLineLength( new_via.lng, new_via.lat, positions[i].lng, positions[i].lat, positions[i+1].lng, positions[i+1].lat, true);
-		if( dist < min_dist) {
-			min_dist = dist;
-			min_index = i+1;
+	var p = OSRM.G.map.latLngToLayerPoint( new_via );
+	var positions = OSRM.G.route.getPoints();
+	for(var i=1; i<positions.length; i++) {
+		var _sqDist = L.LineUtil._sqClosestPointOnSegment(p, positions[i-1], positions[i], true);
+		if( _sqDist < min_dist) {
+			min_dist = _sqDist;
+			min_index = i;
 		}
 	}
 
 	return min_index;
-}
+},
 
 
 // find the correct index among all via nodes to insert the new via node, and insert it  
-function findViaPosition( new_via_position ) {
+findViaPosition: function( new_via_position ) {
 	// find route segment that is closest to click position (marked by last index)
-	var nearest_index = findNearestRouteSegment( new_via_position );
+	var nearest_index = OSRM.Via._findNearestRouteSegment( new_via_position );
 
 	// find correct index to insert new via node
 	var new_via_index = OSRM.G.via_points.length;
 	var via_index = Array();
 	for(var i=0; i<OSRM.G.via_points.length; i++) {
-		via_index[i] = findNearestRouteSegment( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
+		via_index[i] = OSRM.Via._findNearestRouteSegment( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
 		if(via_index[i] > nearest_index) {
 			new_via_index = i;
 			break;
@@ -61,3 +67,5 @@ function findViaPosition( new_via_position ) {
 
 	return new_via_index;
 }
+
+};

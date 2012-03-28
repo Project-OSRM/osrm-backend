@@ -17,7 +17,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 // OSRM geocoding routines
 // [geocoder query, management and display of geocoder results]
-// [TODO: better separation of GUI and geocoding routines, reverse geocoding]
 
 // some constants
 OSRM.CONSTANTS.SOURCE_LABEL = "source";

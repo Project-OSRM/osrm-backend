@@ -42,9 +42,12 @@ hide: function() {
 isShown: function() {
 	return this.shown;
 },
+getPoints: function() {
+	return this.route._originalPoints;
+},
 getPositions: function() {
 	return this.route.getLatLngs();
-},	
+},
 setPositions: function(positions) {
 	this.route.setLatLngs( positions );
 },
@@ -54,25 +57,25 @@ setStyle: function(style) {
 centerView: function() {
 	var bounds = new L.LatLngBounds( this.getPositions() );
 	
-	if( OSRM.GUI.visible == true ) {
-		var southwest = bounds.getSouthWest();
-		var northeast = bounds.getNorthEast();
-		var zoom = OSRM.G.map.getBoundsZoom(bounds);
-		var sw_point = OSRM.G.map.project( southwest, zoom);
+	var southwest = bounds.getSouthWest();
+	var northeast = bounds.getNorthEast();
+	var zoom = OSRM.G.map.getBoundsZoom(bounds);
+	var sw_point = OSRM.G.map.project( southwest, zoom);
+	if( OSRM.GUI.visible == true )
 		sw_point.x-=OSRM.GUI.width/2;
-		sw_point.y+=10;
-		var ne_point = OSRM.G.map.project( northeast, zoom);
-		ne_point.y-=10;
-		sw_point.x+=10;
-		bounds.extend( OSRM.G.map.unproject(sw_point,zoom) );
-		bounds.extend( OSRM.G.map.unproject(ne_point,zoom) );
-		
-		OSRM.G.map.fitBounds( bounds );
-	}
+	else
+		sw_point.x-=10;
+	sw_point.y+=10;
+	var ne_point = OSRM.G.map.project( northeast, zoom);
+	ne_point.y-=10;
+	sw_point.x+=10;
+	bounds.extend( OSRM.G.map.unproject(sw_point,zoom) );
+	bounds.extend( OSRM.G.map.unproject(ne_point,zoom) );
+	OSRM.G.map.fitBounds( bounds );
 },
 onClick: function(e) {
 	if(OSRM.G.route.isRoute())
-		findViaPosition( e.latlng );
+		OSRM.Via.findViaPosition( e.latlng );
 },
 toString: function() {
 	return "OSRM.Route("+ this.label + ", " + this.route.getLatLngs().length + " points)";
@@ -199,6 +202,9 @@ OSRM.extend( OSRM.Route,{
 	getPositions: function() {
 		return this._current_route.getPositions();
 	},
+	getPoints: function() {
+		return this._current_route.getPoints();
+	},	
 	fire: function(type,event) {
 		this._current_route.route.fire(type,event);
 	},
