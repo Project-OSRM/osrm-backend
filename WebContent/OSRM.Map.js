@@ -122,7 +122,7 @@ init: function() {
 },
 
 // map event handlers
-zoomed: function(e) { OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION); },
+zoomed: function(e) { OSRM.Routing.getRoute(); },
 contextmenu: function(e) {;},
 mousemove: function(e) {;},
 click: function(e) {
@@ -131,13 +131,13 @@ click: function(e) {
 		OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		OSRM.G.markers.route[index].show();
 		OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
-		OSRM.Routing.getRoute( OSRM.C.FULL_DESCRIPTION );
+		OSRM.Routing.getRoute();
 	} else if( !OSRM.G.markers.hasTarget() ) {
 		var index = OSRM.G.markers.setTarget( e.latlng );
 		OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		OSRM.G.markers.route[index].show();
 		OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
-		OSRM.Routing.getRoute( OSRM.C.FULL_DESCRIPTION );
+		OSRM.Routing.getRoute();
 	}	
 }
 };

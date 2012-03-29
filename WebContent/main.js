@@ -159,6 +159,6 @@ OSRM.checkURL = function(){
 		}
 			
 		// compute route
-		OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION);
+		OSRM.Routing.getRoute();
 	}
 };

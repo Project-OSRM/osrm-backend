@@ -105,12 +105,13 @@ onClick: function(e) {
 		}
 	}
 	
-	OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION);
+	OSRM.Routing.getRoute();
 	OSRM.G.markers.highlight.hide();
 },
 onDrag: function(e) {
 	this.parent.setPosition( e.target.getLatLng() );
-	OSRM.Routing.getRoute(OSRM.C.NO_DESCRIPTION);
+	if(OSRM.G.markers.route.length>1)
+		OSRM.Routing.getDragRoute();
 	OSRM.Geocoder.updateLocation( this.parent.label );
 },
 onDragStart: function(e) {
@@ -130,7 +131,7 @@ onDragStart: function(e) {
 onDragEnd: function(e) {
 	OSRM.G.dragging = false;
 	this.parent.setPosition( e.target.getLatLng() );	
-	OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION);
+	OSRM.Routing.getRoute();
 	if (OSRM.G.route.isShown()) {
 		OSRM.G.route.hideOldRoute();
 		OSRM.G.route.hideUnnamedRoute();

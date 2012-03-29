@@ -70,13 +70,13 @@ showRouteSimple: function(response) {
 		OSRM.Routing.showRouteGeometry(response);
 		OSRM.Routing.showRouteDescriptionSimple(response);
 	}
-	OSRM.Routing.updateHints(response);
+	OSRM.Routing._updateHints(response);
 
-//	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)
-//	if(OSRM.G.pending) {
-//		clearTimeout(OSRM.G.pendingTimer);
-//		OSRM.G.pendingTimer = setTimeout(OSRM.Routing.timeoutDrag,100);		
-//	}
+	// TODO: hack to process final drag event, if it was fenced, but we are still dragging (alternative approach)
+	if(OSRM.G.pending) {
+		//clearTimeout(OSRM.G.pendingTimer);
+		OSRM.G.pendingTimer = setTimeout(OSRM.Routing.draggingTimeout,1);		
+	}
 },
 showRoute: function(response) {
 	if(!response)
@@ -91,16 +91,16 @@ showRoute: function(response) {
 		OSRM.Routing.showRouteGeometry(response);
 		OSRM.Routing.showRouteNonames(response);
 		OSRM.Routing.showRouteDescription(response);
-		OSRM.Routing.snapRoute();
+		OSRM.Routing._snapRoute();
 	}
-	OSRM.Routing.updateHints(response);
+	OSRM.Routing._updateHints(response);
 },
 
 
 // show route geometry
 showNoRouteGeometry: function() {
 	var positions = [];
-	for(var i=0; i<OSRM.G.markers.route.length;i++)
+	for(var i=0, size=OSRM.G.markers.route.length; i<size; i++)
 			positions.push( OSRM.G.markers.route[i].getPosition() );
 
 	OSRM.G.route.showRoute(positions, OSRM.Route.NOROUTE);
@@ -111,9 +111,9 @@ showRouteGeometry: function(response) {
 	var geometry = OSRM.Routing.decodeRouteGeometry(response.route_geometry, 5);
 
 	var points = [];
-	for( var i=0; i < geometry.length; i++) {
+	for( var i=0, size=geometry.length; i < size; i++)
 		points.push( new L.LatLng(geometry[i][0], geometry[i][1]) );
-	}
+	
 	OSRM.G.route.showRoute(points, OSRM.Route.ROUTE);
 },
 
@@ -273,6 +273,25 @@ showRouteNonames: function(response) {
 
 //-- main function --
 
+//generate server calls to query routes
+getDragRoute: function() {
+	// prepare JSONP call
+	var source = OSRM.DEFAULTS.HOST_ROUTING_URL;
+	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&geomformat=cmp&instructions=false';
+	if(OSRM.G.markers.checksum)
+		source += '&checksum=' + OSRM.G.markers.checksum;
+	for(var i=0, size=OSRM.G.markers.route.length; i<size; i++) {
+		source += '&loc='  + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng();
+		if( OSRM.G.markers.route[i].hint)
+			source += '&hint=' + OSRM.G.markers.route[i].hint;
+	}
+	OSRM.G.pending = !OSRM.JSONP.call(source, OSRM.Routing.showRouteSimple, OSRM.Routing.timeoutRouteSimple, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
+},
+draggingTimeout: function() {
+	OSRM.G.markers.route[OSRM.G.dragid].hint = null;
+	OSRM.Routing.getDragRoute();
+},
+
 // generate server calls to query routes
 getRoute: function(do_description) {
 	
@@ -365,7 +384,7 @@ decodeRouteGeometry: function(encoded, precision) {
 },
 
 // update hints of all markers
-updateHints: function(response) {
+_updateHints: function(response) {
 	var hint_locations = response.hint_data.locations;
 	OSRM.G.markers.checksum = response.hint_data.checksum;
 	for(var i=0; i<hint_locations.length; i++)
@@ -373,7 +392,7 @@ updateHints: function(response) {
 },
 
 // snap all markers to the received route
-snapRoute: function() {
+_snapRoute: function() {
 	var positions = OSRM.G.route.getPositions();
  	
  	OSRM.G.markers.route[0].setPosition( positions[0] );
