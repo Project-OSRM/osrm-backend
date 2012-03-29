@@ -16,7 +16,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 */
 
 // OSRM initialization
-// [initialization of maps, gui, image prefetching]
+// [initialization, image prefetching]
 
 // will hold the Leaflet map object
 OSRM.GLOBALS.map = null;
@@ -28,8 +28,8 @@ OSRM.init = function() {
 	OSRM.prefetchIcons();
 	
 	OSRM.GUI.init();
-	OSRM.Routing.init();
-	OSRM.initMap();	
+	OSRM.Map.init();
+	OSRM.Routing.init();	
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
  	OSRM.checkURL();
@@ -69,97 +69,6 @@ OSRM.prefetchIcons = function() {
 
 	for(var i=0; i<images.length; i++)
 		OSRM.G.icons[images[i]] = new L.Icon('images/'+images[i]+'.png');
-};
-
-
-// centering on geolocation
-function callback_centerOnGeolocation( position ) {
-	OSRM.G.map.setView( new L.LatLng( position.coords.latitude, position.coords.longitude), OSRM.DEFAULTS.ZOOM_LEVEL);
-}
-function centerOnGeolocation() {
-	if (navigator.geolocation)
-		navigator.geolocation.getCurrentPosition( callback_centerOnGeolocation );
-}
-
-
-// init map
-OSRM.initMap = function() {
-	// TODO: check if GUI is initialized!
-	
-	// setup tile servers
-	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-		osmorgAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
-		osmorgOptions = {maxZoom: 18, attribution: osmorgAttribution};
-
-	var osmdeURL = 'http://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
-		osmdeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
-		osmdeOptions = {maxZoom: 18, attribution: osmdeAttribution};
-	
-	var mapquestURL = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-		mapquestAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 MapQuest',
-		mapquestOptions = {maxZoom: 18, attribution: mapquestAttribution, subdomains: '1234'};	
-	
-	var cloudmadeURL = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png',
-    	cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
-	    cloudmadeOptions = {maxZoom: 18, attribution: cloudmadeAttribution};
-
-	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions),
-    	osmde = new L.TileLayer(osmdeURL, osmdeOptions),
-    	mapquest = new L.TileLayer(mapquestURL, mapquestOptions),
-	    cloudmade = new L.TileLayer(cloudmadeURL, cloudmadeOptions);
-
-	// setup map
-	OSRM.G.map = new L.Map('map', {
-    	center: new L.LatLng(51.505, -0.09),
-	    zoom: 13,
-	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
-	    fadeAnimation: false,
-	    layers: [osmorg]
-	});
-
-	// add tileservers
-	var baseMaps = {
-		"osm.org": osmorg,
-		"osm.de": osmde,
-		"MapQuest": mapquest,
-		"CloudMade": cloudmade
-	};
-
-	var overlayMaps = {};
-	var layersControl = new L.Control.Layers(baseMaps, overlayMaps);
-	OSRM.G.map.addControl(layersControl);
-
-    // move zoom markers
-	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
-	getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
-
-	// initial map position and zoom
-	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
-	if( OSRM.GUI.visible == true ) {
-		var point = OSRM.G.map.project( position, OSRM.DEFAULTS.ZOOM_LEVEL);
-		point.x-=OSRM.GUI.width/2;
-		position = OSRM.G.map.unproject(point,OSRM.DEFAULTS.ZOOM_LEVEL);
-	}	
-	OSRM.G.map.setView( position, OSRM.DEFAULTS.ZOOM_LEVEL);
-	
-	// map events
-	OSRM.G.map.on('zoomend', function(e) { OSRM.Routing.getRoute(OSRM.C.FULL_DESCRIPTION); });
-	OSRM.G.map.on('contextmenu', function(e) {});
-	OSRM.G.map.on('click', function(e) {
-		if( !OSRM.G.markers.hasSource() ) {
-			var index = OSRM.G.markers.setSource( e.latlng );
-			OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
-			OSRM.G.markers.route[index].show();
-			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
-			OSRM.Routing.getRoute( OSRM.C.FULL_DESCRIPTION );
-		} else if( !OSRM.G.markers.hasTarget() ) {
-			var index = OSRM.G.markers.setTarget( e.latlng );
-			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
-			OSRM.G.markers.route[index].show();
-			OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
-			OSRM.Routing.getRoute( OSRM.C.FULL_DESCRIPTION );
-		}
-	} );
 };
 
 
@@ -244,9 +153,9 @@ OSRM.checkURL = function(){
 		// center on route (support for old links) / move to given view (new behaviour)
 		if(zoom == null || center == null) {
 			var bounds = new L.LatLngBounds( positions );
-			OSRM.G.map.fitBounds( bounds );
+			OSRM.g.map.fitBoundsUI( bounds );
 		} else {
-			OSRM.G.map.setView(center, zoom);
+			OSRM.g.map.setView(center, zoom);
 		}
 			
 		// compute route

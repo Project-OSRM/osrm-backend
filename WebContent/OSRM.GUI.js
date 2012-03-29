@@ -22,8 +22,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.GUI = {
 		
 // defaults
-visible: true,
-width: 410,
+visible: null,
+width: null,
 
 // init GUI
 init: function() {

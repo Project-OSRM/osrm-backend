@@ -59,16 +59,7 @@ isShown: function() {
 centerView: function(zoom) {
 	if( zoom == undefined )
 		zoom = OSRM.DEFAULTS.ZOOM_LEVEL;
-	
-	var position;
-	if( OSRM.GUI.visible == true ) {
-		var point = OSRM.G.map.project( this.position, zoom);
-		point.x-=OSRM.GUI.width/2;
-		position = OSRM.G.map.unproject(point,zoom);		
-	} else {
-		position = this.position;
-	}
-	OSRM.G.map.setView( position, zoom);
+	OSRM.G.map.setViewUI( this.position, zoom );
 },
 toString: function() {
 	return "OSRM.Marker: \""+this.label+"\", "+this.position+")";
