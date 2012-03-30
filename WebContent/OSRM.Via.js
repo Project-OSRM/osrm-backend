@@ -44,7 +44,7 @@ _findNearestRouteSegment: function( new_via ) {
 
 
 // find the correct index among all via nodes to insert the new via node, and insert it  
-findViaPosition: function( new_via_position ) {
+findViaIndex: function( new_via_position ) {
 	// find route segment that is closest to click position (marked by last index)
 	var nearest_index = OSRM.Via._findNearestRouteSegment( new_via_position );
 
@@ -60,12 +60,52 @@ findViaPosition: function( new_via_position ) {
 	}
 
 	// add via node
-	var index = OSRM.G.markers.setVia(new_via_index, new_via_position);
-	OSRM.G.markers.route[index].show();
-	
-	OSRM.Routing.getRoute();
-
 	return new_via_index;
+},
+
+
+//function that draws a drag marker
+dragTimer: new Date(),
+
+drawDragMarker: function(event) {
+	if( OSRM.G.route.isShown() == false )
+		return;
+	if( OSRM.G.dragging == true )
+		return;
+	if( (new Date() - OSRM.Via.dragTimer) < 25 )
+		return;
+	if( OSRM.G.onmouse ) {
+		OSRM.G.markers.dragger.hide();
+		return;	
+	}
+	OSRM.Via.dragTimer = new Date();
+	
+//	var mouse = event.latlng;
+//	for(var i=0, size=OSRM.G.markers.route.length; i<size; i++) {
+//		if(OSRM.G.markers.route[i].label=='drag')
+//			continue;
+//		var position = OSRM.G.markers.route[i].getPosition();
+//		var dist = OSRM.G.map.project(mouse).distanceTo(OSRM.G.map.project(position));
+//		if( dist < 10 )
+//			min_dist = 1000;
+//	}
+	var minpoint = OSRM.G.route._current_route.route.closestLayerPoint( event.layerPoint );
+	var min_dist = minpoint._sqDist;
+	
+	var pos = OSRM.G.map.layerPointToContainerPoint(event.layerPoint);
+	var obj = document.elementFromPoint(pos.x,pos.y);
+	for(var i=0, size=OSRM.G.markers.route.length; i<size; i++) {
+		if(OSRM.G.markers.route[i].label=='drag')
+			continue;
+		if( obj == OSRM.G.markers.route[i].marker._icon)
+			min_dist = 1000;
+	}
+	
+	if( min_dist < 400) {
+		OSRM.G.markers.dragger.setPosition( OSRM.G.map.layerPointToLatLng(minpoint) );
+		OSRM.G.markers.dragger.show();
+	} else
+		OSRM.G.markers.dragger.hide();
 }
 
 };

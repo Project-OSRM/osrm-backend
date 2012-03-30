@@ -36,7 +36,7 @@ onClickCreateShortcut: function(src){
 },
 showRouteLink: function(response){
 	document.getElementById('route-prelink').innerHTML = '[<a id="gpx-link" class = "text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
-//	document.getElementById('route-prelink').innerHTML = '[<input class="text-selectable output-box" value="'+response.ShortURL+'" type="text" onfocus="this.select()" readonly="readonly"/>]';
+// 	document.getElementById('route-prelink').innerHTML = '[<input class="text-selectable output-box" style="border:none" value="'+response.ShortURL+'" type="text" onfocus="this.select()" readonly="readonly"/>]';
 },
 showRouteLink_TimeOut: function(){
 	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';

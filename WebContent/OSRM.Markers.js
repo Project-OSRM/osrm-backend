@@ -94,6 +94,8 @@ OSRM.RouteMarker = function ( label, style, position ) {
  	this.marker.on( 'drag', this.onDrag );
  	this.marker.on( 'dragstart', this.onDragStart );
  	this.marker.on( 'dragend', this.onDragEnd );
+// 	this.marker.on( 'mouseover', this.onMouseOver );
+// 	this.marker.on( 'mouseout', this.onMouseOut );
 };
 OSRM.inheritFrom( OSRM.RouteMarker, OSRM.Marker );
 OSRM.extend( OSRM.RouteMarker, {
@@ -122,9 +124,9 @@ onDragStart: function(e) {
 		if( OSRM.G.markers.route[i].marker === this ) {
 			OSRM.G.dragid = i;
 			break;
-		}			
+		}
 	
-	OSRM.G.markers.highlight.hide();	
+	//OSRM.G.markers.highlight.hide();	
 	if (OSRM.G.route.isShown())
 		OSRM.G.route.showOldRoute();
 },
@@ -140,8 +142,43 @@ onDragEnd: function(e) {
 	if(OSRM.G.route.isShown()==false)
 		OSRM.Geocoder.updateAddress(this.parent.label);
 },
+onMouseOver: function(e) {
+	OSRM.G.onmouse = true;
+},
+onMouseOut: function(e) {
+	OSRM.G.onmouse = false;
+},
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";
+}
+});
+
+
+//drag marker class (draggable, invokes route drawing routines) 
+OSRM.DragMarker = function ( label, style, position ) {
+	OSRM.DragMarker.prototype.base.constructor.apply( this, arguments );
+	this.label = label ? label : "drag_marker";
+};
+OSRM.inheritFrom( OSRM.DragMarker, OSRM.RouteMarker );
+OSRM.extend( OSRM.DragMarker, {
+onClick: function(e) {
+	this.parent.hide();
+},
+onDragStart: function(e) {
+	var new_via_index = OSRM.Via.findViaIndex( e.target.getLatLng() );
+	OSRM.G.markers.route.splice(new_via_index+1,0, this.parent );
+
+	OSRM.RouteMarker.prototype.onDragStart.call(this,e);
+},
+onDragEnd: function(e) {
+	OSRM.G.markers.route[OSRM.G.dragid].hide();
+	OSRM.G.markers.route[OSRM.G.dragid] = new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.G.icons['marker-via']}, e.target.getLatLng() );
+	OSRM.G.markers.route[OSRM.G.dragid].show();
+	
+	OSRM.RouteMarker.prototype.onDragEnd.call(this,e);	
+},
+toString: function() {
+	return "OSRM.DragMarker: \""+this.label+"\", "+this.position+")";
 }
 });
 
@@ -150,7 +187,8 @@ toString: function() {
 // [this holds the vital information of the route]
 OSRM.Markers = function() {
 	this.route = new Array();
-	this.highlight = new OSRM.HighlightMarker("highlight", {draggable:false,icon:OSRM.G.icons['marker-highlight']});;
+	this.highlight = new OSRM.DragMarker("highlight", {draggable:true,icon:OSRM.G.icons['marker-highlight']});;
+	this.dragger = new OSRM.DragMarker("drag", {draggable:true,icon:OSRM.G.icons['marker-drag']});;
 };
 OSRM.extend( OSRM.Markers,{
 removeAll: function() {

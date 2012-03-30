@@ -59,8 +59,12 @@ centerView: function() {
 	OSRM.g.map.fitBoundsUI( bounds );
 },
 onClick: function(e) {
-	if(OSRM.G.route.isRoute())
-		OSRM.Via.findViaPosition( e.latlng );
+	if(OSRM.G.route.isRoute()) {
+		var via_index = OSRM.Via.findViaIndex( e.latlng );
+		var marker_index = OSRM.G.markers.setVia(via_index, e.latlng);
+		OSRM.G.markers.route[marker_index].show();
+		OSRM.Routing.getRoute();
+	}
 },
 toString: function() {
 	return "OSRM.Route("+ this.label + ", " + this.route.getLatLngs().length + " points)";

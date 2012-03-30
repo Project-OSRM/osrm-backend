@@ -126,13 +126,13 @@ init: function() {
 	OSRM.G.map.on('zoomend', OSRM.Map.zoomed );
 	OSRM.G.map.on('click', OSRM.Map.click );
 	OSRM.G.map.on('contextmenu', OSRM.Map.contextmenu );
-	OSRM.G.map.on('click', OSRM.Map.mousemove );
+	OSRM.G.map.on('mousemove', OSRM.Map.mousemove );
 },
 
 // map event handlers
 zoomed: function(e) { OSRM.Routing.getRoute(); },
 contextmenu: function(e) {;},
-mousemove: function(e) {;},
+mousemove: function(e) { OSRM.Via.drawDragMarker(e); },
 click: function(e) {
 	if( !OSRM.G.markers.hasSource() ) {
 		var index = OSRM.G.markers.setSource( e.latlng );

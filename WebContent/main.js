@@ -65,10 +65,17 @@ OSRM.prefetchIcons = function() {
 	              	'marker-target',
 	              	'marker-via',
 	              	'marker-highlight',
+	              	'marker-drag'
 	              ];
 
 	for(var i=0; i<images.length; i++)
 		OSRM.G.icons[images[i]] = new L.Icon('images/'+images[i]+'.png');
+	
+	// changes for dragmarker
+	OSRM.G.icons['marker-drag'].iconSize = new L.Point(16,16);
+	OSRM.G.icons['marker-drag'].shadowSize = new L.Point(0,0);
+	OSRM.G.icons['marker-drag'].iconAnchor = new L.Point(7,7);
+	OSRM.G.icons['marker-drag'].popupAnchor = new L.Point(16,16);
 };
 
 
