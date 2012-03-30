@@ -148,7 +148,20 @@ html, body, #map {
 
 .main-options
 {
+	position:relative;
 	font-size:10px;
+}
+.main-options-left-box
+{
+	position:absolute;
+	left:5px;
+	top:0px;
+}
+.main-options-right-box
+{
+	position:absolute;
+	right:5px;
+	top:5px;
 }
 #options-toggle
 {

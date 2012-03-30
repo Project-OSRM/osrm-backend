@@ -30,6 +30,9 @@ init: function() {
 	OSRM.GUI.visible = true;
 	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
 	
+	// translate
+	document.getElementById("open-josm").innerHTML = OSRM.loc("OPEN_JOSM");
+	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");	
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");

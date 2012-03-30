@@ -39,12 +39,14 @@ OSRM.loc = OSRM.Localization.translate;
 // German language support
 OSRM.Localization["de"] = {
 //gui
+"OPEN_JOSM": "JOSM Öffnen",
+"OPEN_OSMBUGS": "OSM Bugs Öffnen",
 "GUI_START": "Start",
 "GUI_END": "Ziel",
 "GUI_RESET": "Reset",
 "GUI_SEARCH": "Zeigen",
 "GUI_REVERSE": "Umdrehen",
-"GUI_OPTIONS": "Optionen",
+"GUI_OPTIONS": "Kartenwerkzeuge",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Unbenannte Straßen hervorheben",
 "GUI_START_TOOLTIP": "Startposition eingeben",
 "GUI_END_TOOLTIP": "Zielposition eingeben",
@@ -80,12 +82,14 @@ OSRM.Localization["de"] = {
 // English language support
 OSRM.Localization["en"] = {
 //gui
+"OPEN_JOSM": "Open JOSM",
+"OPEN_OSMBUGS": "Open OSM Bugs",
 "GUI_START": "Start",
 "GUI_END": "End",
 "GUI_RESET": "&nbsp;&nbsp;Reset&nbsp;&nbsp;",
 "GUI_SEARCH": "&nbsp;&nbsp;Show&nbsp;&nbsp;",
 "GUI_REVERSE": "Reverse",
-"GUI_OPTIONS": "Options",
+"GUI_OPTIONS": "Mapping Tools",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Highlight unnamed streets",
 "GUI_START_TOOLTIP": "Enter start",
 "GUI_END_TOOLTIP": "Enter destination",

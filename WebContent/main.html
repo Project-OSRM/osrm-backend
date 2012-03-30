@@ -113,11 +113,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
     </table>
     
 	<!-- options -->
-    <div class="vquad"></div>
-    <div class="main-options not-selectable" id="options-toggle" onclick="OSRM.GUI.toggleOptions()">Options</div>
-    <div class="main-options not-selectable" id="options-box">
-    <input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="OSRM.RoutingGUI.getRoute()" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
-    </div>
+	<span class="main-options" id="options-toggle" onclick="OSRM.GUI.toggleOptions()">Kartenwerkzeuge</span>
+	<div class="main-options" id="options-box">
+	<span class="main-options-left-box">
+	<input type="checkbox" id="option-highlight-nonames" name="main-options" value="highlight-nonames" onclick="OSRM.RoutingGUI.getRoute();" /><span id="gui-option-highlight-nonames-label">Unbenannte Straßen hervorheben</span>
+	</span>
+	<span class="main-options-right-box">
+	<a class="button not-selectable" id="open-josm" onclick="OSRM.RoutingGUI.openJOSM();">JOSM Öffnen</a>
+	<a class="button not-selectable" id="open-osmbugs" onclick="OSRM.RoutingGUI.openOSMBugs();">OSM Bugs Öffnen</a>
+	</span>
+	</div>
 </div>
 
 <!-- output box -->

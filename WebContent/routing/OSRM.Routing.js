@@ -143,6 +143,6 @@ _snapRoute: function() {
 
  	OSRM.Geocoder.updateAddress(OSRM.C.SOURCE_LABEL);
  	OSRM.Geocoder.updateAddress(OSRM.C.TARGET_LABEL);
-},
+}
 
 };

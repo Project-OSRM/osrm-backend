@@ -89,6 +89,27 @@ inputChanged: function(marker_id) {
 		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('input-source-name').value);
 	else if( marker_id == OSRM.C.TARGET_LABEL)
 		OSRM.Geocoder.call(OSRM.C.TARGET_LABEL, document.getElementById('input-target-name').value);
+},
+
+// click: button "open JOSM"
+openJOSM: function() {
+	var x = OSRM.G.map.getCenterUI();
+	var ydelta = 0.01;
+	var xdelta = ydelta * 2;
+	var p = [ 'left='  + (x.lng - xdelta), 'bottom=' + (x.lat - ydelta), 'right=' + (x.lng + xdelta), 'top='    + (x.lat + ydelta)];
+	var url = 'http://localhost:8111/load_and_zoom?' + p.join('&');
+	
+	var frame = L.DomUtil.create('iframe', null, document.body);
+	frame.style.width = frame.style.height = "0px";
+	frame.src = url;
+	frame.onload = function(e) { document.body.removeChild(frame); };
+},
+
+//click: button "open OSM Bugs"
+openOSMBugs: function() {
+	var position = OSRM.G.map.getCenterUI();
+	document.location.href = "http://osmbugs.org/?lat="+position.lat.toFixed(6)+"&lon="+position.lng.toFixed(6)+"&zoom="+OSRM.G.map.getZoom();
+	//window.open( "http://osmbugs.org/?lat="+position.lat.toFixed(6)+"&lon="+position.lng.toFixed(6)+"&zoom="+OSRM.G.map.getZoom() );
 }
 
 };
