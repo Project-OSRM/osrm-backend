@@ -68,30 +68,32 @@ findViaIndex: function( new_via_position ) {
 dragTimer: new Date(),
 
 drawDragMarker: function(event) {
-	if( OSRM.G.route.isShown() == false )
+	if( OSRM.G.route.isShown() == false)
 		return;
 	if( OSRM.G.dragging == true )
 		return;
+	
+	// throttle computation
 	if( (new Date() - OSRM.Via.dragTimer) < 25 )
 		return;
-	if( OSRM.G.onmouse ) {
-		OSRM.G.markers.dragger.hide();
-		return;	
-	}
 	OSRM.Via.dragTimer = new Date();
 	
-//	var mouse = event.latlng;
-//	for(var i=0, size=OSRM.G.markers.route.length; i<size; i++) {
-//		if(OSRM.G.markers.route[i].label=='drag')
-//			continue;
-//		var position = OSRM.G.markers.route[i].getPosition();
-//		var dist = OSRM.G.map.project(mouse).distanceTo(OSRM.G.map.project(position));
-//		if( dist < 10 )
-//			min_dist = 1000;
-//	}
+	// get distance to route
 	var minpoint = OSRM.G.route._current_route.route.closestLayerPoint( event.layerPoint );
 	var min_dist = minpoint._sqDist;
 	
+	// get distance to markers
+	var mouse = event.latlng;
+	for(var i=0, size=OSRM.G.markers.route.length; i<size; i++) {
+		if(OSRM.G.markers.route[i].label=='drag')
+			continue;
+		var position = OSRM.G.markers.route[i].getPosition();
+		var dist = OSRM.G.map.project(mouse).distanceTo(OSRM.G.map.project(position));
+		if( dist < 20 )
+			min_dist = 1000;
+	}	
+	
+	// check whether mouse is over another marker
 	var pos = OSRM.G.map.layerPointToContainerPoint(event.layerPoint);
 	var obj = document.elementFromPoint(pos.x,pos.y);
 	for(var i=0, size=OSRM.G.markers.route.length; i<size; i++) {

@@ -108,8 +108,7 @@ openJOSM: function() {
 //click: button "open OSM Bugs"
 openOSMBugs: function() {
 	var position = OSRM.G.map.getCenterUI();
-	document.location.href = "http://osmbugs.org/?lat="+position.lat.toFixed(6)+"&lon="+position.lng.toFixed(6)+"&zoom="+OSRM.G.map.getZoom();
-	//window.open( "http://osmbugs.org/?lat="+position.lat.toFixed(6)+"&lon="+position.lng.toFixed(6)+"&zoom="+OSRM.G.map.getZoom() );
+	window.open( "http://osmbugs.org/?lat="+position.lat.toFixed(6)+"&lon="+position.lng.toFixed(6)+"&zoom="+OSRM.G.map.getZoom() );
 }
 
 };

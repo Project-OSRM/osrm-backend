@@ -39,8 +39,8 @@ OSRM.loc = OSRM.Localization.translate;
 // German language support
 OSRM.Localization["de"] = {
 //gui
-"OPEN_JOSM": "JOSM Öffnen",
-"OPEN_OSMBUGS": "OSM Bugs Öffnen",
+"OPEN_JOSM": "JOSM",
+"OPEN_OSMBUGS": "OSM Bugs",
 "GUI_START": "Start",
 "GUI_END": "Ziel",
 "GUI_RESET": "Reset",
@@ -82,8 +82,8 @@ OSRM.Localization["de"] = {
 // English language support
 OSRM.Localization["en"] = {
 //gui
-"OPEN_JOSM": "Open JOSM",
-"OPEN_OSMBUGS": "Open OSM Bugs",
+"OPEN_JOSM": "JOSM",
+"OPEN_OSMBUGS": "OSM Bugs",
 "GUI_START": "Start",
 "GUI_END": "End",
 "GUI_RESET": "&nbsp;&nbsp;Reset&nbsp;&nbsp;",

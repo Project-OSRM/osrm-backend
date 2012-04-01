@@ -27,8 +27,6 @@ OSRM.SimpleRoute = function (label, style) {
 	if(style) this.route.setStyle( style );
 
 	this.shown = false;
-	
- 	this.route.on('click', this.onClick); 	
 };
 OSRM.extend( OSRM.SimpleRoute,{
 show: function() {
@@ -57,14 +55,6 @@ setStyle: function(style) {
 centerView: function() {
 	var bounds = new L.LatLngBounds( this.getPositions() );
 	OSRM.g.map.fitBoundsUI( bounds );
-},
-onClick: function(e) {
-	if(OSRM.G.route.isRoute()) {
-		var via_index = OSRM.Via.findViaIndex( e.latlng );
-		var marker_index = OSRM.G.markers.setVia(via_index, e.latlng);
-		OSRM.G.markers.route[marker_index].show();
-		OSRM.Routing.getRoute();
-	}
 },
 toString: function() {
 	return "OSRM.Route("+ this.label + ", " + this.route.getLatLngs().length + " points)";

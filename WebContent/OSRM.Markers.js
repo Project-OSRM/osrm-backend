@@ -67,24 +67,6 @@ toString: function() {
 });
 
 
-// highlight marker class (cannot be dragged)
-OSRM.HighlightMarker = function( label, style, position) {
-	OSRM.HighlightMarker.prototype.base.constructor.apply( this, arguments );
-	this.label = label ? label : "highlight_marker";
-	
- 	this.marker.on( 'click', this.onClick );	
-};
-OSRM.inheritFrom( OSRM.HighlightMarker, OSRM.Marker );
-OSRM.extend( OSRM.HighlightMarker, {
-toString: function() {
-	return "OSRM.HighlightMarker: \""+this.label+"\", "+this.position+")";
-},
-onClick: function(e) {
-	this.parent.hide();
-}
-});
-
-
 // route marker class (draggable, invokes route drawing routines) 
 OSRM.RouteMarker = function ( label, style, position ) {
 	OSRM.RouteMarker.prototype.base.constructor.apply( this, arguments );
@@ -94,8 +76,6 @@ OSRM.RouteMarker = function ( label, style, position ) {
  	this.marker.on( 'drag', this.onDrag );
  	this.marker.on( 'dragstart', this.onDragStart );
  	this.marker.on( 'dragend', this.onDragEnd );
-// 	this.marker.on( 'mouseover', this.onMouseOver );
-// 	this.marker.on( 'mouseout', this.onMouseOut );
 };
 OSRM.inheritFrom( OSRM.RouteMarker, OSRM.Marker );
 OSRM.extend( OSRM.RouteMarker, {
@@ -126,7 +106,8 @@ onDragStart: function(e) {
 			break;
 		}
 	
-	//OSRM.G.markers.highlight.hide();	
+	if( this.parent != OSRM.G.markers.highlight)
+		OSRM.G.markers.highlight.hide();	
 	if (OSRM.G.route.isShown())
 		OSRM.G.route.showOldRoute();
 },
@@ -141,12 +122,6 @@ onDragEnd: function(e) {
 	
 	if(OSRM.G.route.isShown()==false)
 		OSRM.Geocoder.updateAddress(this.parent.label);
-},
-onMouseOver: function(e) {
-	OSRM.G.onmouse = true;
-},
-onMouseOut: function(e) {
-	OSRM.G.onmouse = false;
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";
@@ -171,11 +146,11 @@ onDragStart: function(e) {
 	OSRM.RouteMarker.prototype.onDragStart.call(this,e);
 },
 onDragEnd: function(e) {
-	OSRM.G.markers.route[OSRM.G.dragid].hide();
 	OSRM.G.markers.route[OSRM.G.dragid] = new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.G.icons['marker-via']}, e.target.getLatLng() );
 	OSRM.G.markers.route[OSRM.G.dragid].show();
 	
-	OSRM.RouteMarker.prototype.onDragEnd.call(this,e);	
+	OSRM.RouteMarker.prototype.onDragEnd.call(this,e);
+	this.parent.hide();
 },
 toString: function() {
 	return "OSRM.DragMarker: \""+this.label+"\", "+this.position+")";

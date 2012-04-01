@@ -3382,14 +3382,7 @@ L.LineUtil = {
 		dx = p.x - x;
 		dy = p.y - y;
 
-		//return sqDist ? dx * dx + dy * dy : new L.Point(x, y);		// DS_CHANGE
-		if(sqDist)
-			return dx*dx + dy*dy;
-		else {
-			var p = new L.Point(x,y);
-			p._sqDist = dx*dx + dy*dy;
-			return p;
-		}
+		return sqDist ? dx * dx + dy * dy : new L.Point(x, y);
 	}
 };
 
