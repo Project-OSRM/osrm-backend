@@ -94,13 +94,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
     <table class="full">
     <tr>
     <td id="gui-search-source-label">Start:</td>
-    <td><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="OSRM.RoutingGUI.inputChanged(OSRM.C.SOURCE_LABEL);" /></td>
+    <td><div  style="position:relative;">
+    <input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="OSRM.RoutingGUI.inputChanged(OSRM.C.SOURCE_LABEL);" />
+    <div id="delete-source-marker" class="delete-marker" onclick="OSRM.RoutingGUI.deleteMarker('source')"></div></div></td>
     <td class="right"><a class="button not-selectable" id="gui-search-source" onclick="OSRM.RoutingGUI.showMarker('source')">Zeigen</a></td>
     </tr>
     
     <tr>
     <td id="gui-search-target-label">Ende:</td>
-    <td><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="OSRM.RoutingGUI.inputChanged(OSRM.C.TARGET_LABEL);" /></td>
+    <td><div  style="position:relative;">
+    <input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="OSRM.RoutingGUI.inputChanged(OSRM.C.TARGET_LABEL);" />
+    <div id="delete-target-marker" class="delete-marker" onclick="OSRM.RoutingGUI.deleteMarker('target')"></div></div></td>
 	<td class="right"><a class="button not-selectable" id="gui-search-target" onclick="OSRM.RoutingGUI.showMarker('target');">Zeigen</a></td>	
     </tr>
     </table>

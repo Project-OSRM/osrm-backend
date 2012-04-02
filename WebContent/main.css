@@ -347,3 +347,24 @@ html, body, #map {
 	background-color:#F4F4F4;
 	color:#FF0000;
 }
+
+
+.delete-marker
+{
+	cursor:pointer;
+	position:absolute;
+	right:5px;
+	top:3px;
+	width:16px;
+	height:16px;
+	background-image:url("images/cancel.png");
+	visibility:hidden;	
+}
+.delete-marker:hover
+{
+	background-image:url("images/cancel_hover.png");
+}
+.delete-marker:active
+{
+	background-image:url("images/cancel_active.png");
+}

@@ -109,6 +109,21 @@ openJOSM: function() {
 openOSMBugs: function() {
 	var position = OSRM.G.map.getCenterUI();
 	window.open( "http://osmbugs.org/?lat="+position.lat.toFixed(6)+"&lon="+position.lng.toFixed(6)+"&zoom="+OSRM.G.map.getZoom() );
+},
+
+//click: button "delete marker"
+deleteMarker: function(marker_id) {
+	var id = null;
+	if(marker_id == 'source' && OSRM.G.markers.hasSource() )
+		id = 0;
+	else if(marker_id == 'target' && OSRM.G.markers.hasTarget() )
+		id = OSRM.G.markers.route.length-1;
+	if( id == null)
+		return;
+	
+	OSRM.G.markers.removeMarker( id );
+	OSRM.Routing.getRoute();
+	OSRM.G.markers.highlight.hide();	
 }
 
 };
