@@ -31,11 +31,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class NodeInformationHelpDesk{
 public:
-	NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes, const unsigned crc) : numberOfNodes(_numberOfNodes), checkSum(crc) {
-		readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
-		coordinateVector.reserve(numberOfNodes);
-	    assert(0 == coordinateVector.size());
-	}
+    NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes, const unsigned crc) : numberOfNodes(_numberOfNodes), checkSum(crc) {
+        readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
+        coordinateVector.reserve(numberOfNodes);
+        assert(0 == coordinateVector.size());
+    }
+
+    //Todo: Shared memory mechanism
+    NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned crc) : checkSum(crc) {
+        readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
+    }
 
 	~NodeInformationHelpDesk() {
 		delete readOnlyGrid;
@@ -48,6 +53,10 @@ public:
 		}
 		in.close();
 		readOnlyGrid->OpenIndexFiles();
+	}
+
+	void initNNGrid() {
+	    readOnlyGrid->OpenIndexFiles();
 	}
 
 	inline int getLatitudeOfNode(const NodeID node) const { return coordinateVector.at(node).lat; }
