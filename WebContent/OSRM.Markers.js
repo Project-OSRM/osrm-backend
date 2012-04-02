@@ -69,6 +69,7 @@ toString: function() {
 
 // route marker class (draggable, invokes route drawing routines) 
 OSRM.RouteMarker = function ( label, style, position ) {
+	style.baseicon = style.icon;
 	OSRM.RouteMarker.prototype.base.constructor.apply( this, arguments );
 	this.label = label ? label : "route_marker";
 
@@ -98,6 +99,7 @@ onDrag: function(e) {
 },
 onDragStart: function(e) {
 	OSRM.G.dragging = true;
+	this.switchIcon(this.options.dragicon);
 	
 	// store id of dragged marker
 	for( var i=0; i<OSRM.G.markers.route.length; i++)
@@ -113,6 +115,8 @@ onDragStart: function(e) {
 },
 onDragEnd: function(e) {
 	OSRM.G.dragging = false;
+	this.switchIcon(this.options.baseicon);
+	
 	this.parent.setPosition( e.target.getLatLng() );	
 	OSRM.Routing.getRoute();
 	if (OSRM.G.route.isShown()) {
@@ -146,7 +150,7 @@ onDragStart: function(e) {
 	OSRM.RouteMarker.prototype.onDragStart.call(this,e);
 },
 onDragEnd: function(e) {
-	OSRM.G.markers.route[OSRM.G.dragid] = new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.G.icons['marker-via']}, e.target.getLatLng() );
+	OSRM.G.markers.route[OSRM.G.dragid] = new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.G.icons['marker-via'],dragicon:OSRM.G.icons['marker-via-drag']}, e.target.getLatLng() );
 	OSRM.G.markers.route[OSRM.G.dragid].show();
 	
 	OSRM.RouteMarker.prototype.onDragEnd.call(this,e);
@@ -162,8 +166,8 @@ toString: function() {
 // [this holds the vital information of the route]
 OSRM.Markers = function() {
 	this.route = new Array();
-	this.highlight = new OSRM.DragMarker("highlight", {draggable:true,icon:OSRM.G.icons['marker-highlight']});;
-	this.dragger = new OSRM.DragMarker("drag", {draggable:true,icon:OSRM.G.icons['marker-drag']});;
+	this.highlight = new OSRM.DragMarker("highlight", {draggable:true,icon:OSRM.G.icons['marker-highlight'],dragicon:OSRM.G.icons['marker-highlight-drag']});;
+	this.dragger = new OSRM.DragMarker("drag", {draggable:true,icon:OSRM.G.icons['marker-drag'],dragicon:OSRM.G.icons['marker-drag']});;
 };
 OSRM.extend( OSRM.Markers,{
 removeAll: function() {
@@ -182,7 +186,7 @@ setSource: function(position) {
 	if( this.route[0] && this.route[0].label == OSRM.C.SOURCE_LABEL )
 		this.route[0].setPosition(position);
 	else
-		this.route.splice(0,0, new OSRM.RouteMarker(OSRM.C.SOURCE_LABEL, {draggable:true,icon:OSRM.G.icons['marker-source']}, position));
+		this.route.splice(0,0, new OSRM.RouteMarker(OSRM.C.SOURCE_LABEL, {draggable:true,icon:OSRM.G.icons['marker-source'],dragicon:OSRM.G.icons['marker-source-drag']}, position));
 	return 0;	
 },
 setTarget: function(position) {
@@ -190,7 +194,7 @@ setTarget: function(position) {
 	if( this.route[this.route.length-1] && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL )
 		this.route[this.route.length-1].setPosition(position);
 	else
-		this.route.splice( this.route.length,0, new OSRM.RouteMarker(OSRM.C.TARGET_LABEL, {draggable:true,icon:OSRM.G.icons['marker-target']}, position));
+		this.route.splice( this.route.length,0, new OSRM.RouteMarker(OSRM.C.TARGET_LABEL, {draggable:true,icon:OSRM.G.icons['marker-target'],dragicon:OSRM.G.icons['marker-target-drag']}, position));
 	return this.route.length-1;
 },
 setVia: function(id, position) {
@@ -198,7 +202,7 @@ setVia: function(id, position) {
 	if( this.route.length<2 || id > this.route.length-2 )
 		return -1;
 	
-	this.route.splice(id+1,0, new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.G.icons['marker-via']}, position));
+	this.route.splice(id+1,0, new OSRM.RouteMarker(OSRM.C.VIA_LABEL, {draggable:true,icon:OSRM.G.icons['marker-via'],dragicon:OSRM.G.icons['marker-via-drag']}, position));
 	return id+1;
 },
 removeMarker: function(id) {

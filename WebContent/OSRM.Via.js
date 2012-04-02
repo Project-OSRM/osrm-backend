@@ -91,7 +91,7 @@ drawDragMarker: function(event) {
 		var dist = OSRM.G.map.project(mouse).distanceTo(OSRM.G.map.project(position));
 		if( dist < 20 )
 			min_dist = 1000;
-	}	
+	}
 	
 	// check whether mouse is over another marker
 	var pos = OSRM.G.map.layerPointToContainerPoint(event.layerPoint);
@@ -100,6 +100,14 @@ drawDragMarker: function(event) {
 		if(OSRM.G.markers.route[i].label=='drag')
 			continue;
 		if( obj == OSRM.G.markers.route[i].marker._icon)
+			min_dist = 1000;
+	}
+	
+	// special care for highlight marker
+	if( OSRM.G.markers.highlight.isShown() ) {
+		if( OSRM.G.map.project(mouse).distanceTo(OSRM.G.map.project( OSRM.G.markers.highlight.getPosition() ) ) < 20 )
+			min_dist = 1000;
+		else if( obj == OSRM.G.markers.highlight.marker._icon)
 			min_dist = 1000;
 	}
 	

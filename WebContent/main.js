@@ -43,6 +43,11 @@ OSRM.prefetchImages = function() {
 	              	'images/marker-target.png',
 	              	'images/marker-via.png',
 	              	'images/marker-highlight.png',
+	              	'images/marker-source-drag.png',
+	              	'images/marker-target-drag.png',
+	              	'images/marker-via-drag.png',
+	              	'images/marker-highlight-drag.png',
+	              	'images/marker-drag.png',
 	              	'images/cancel.png',
 	              	'images/cancel_active.png',
 	              	'images/cancel_hover.png',
@@ -65,17 +70,24 @@ OSRM.prefetchIcons = function() {
 	              	'marker-target',
 	              	'marker-via',
 	              	'marker-highlight',
+	              	'marker-source-drag',
+	              	'marker-target-drag',
+	              	'marker-via-drag',
+	              	'marker-highlight-drag',
 	              	'marker-drag'
 	              ];
 
-	for(var i=0; i<images.length; i++)
-		OSRM.G.icons[images[i]] = new L.Icon('images/'+images[i]+'.png');
+	for(var i=0; i<images.length; i++) {
+		var icon = {
+				iconUrl: 'images/'+images[i]+'.png', iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
+				shadowUrl: L.ROOT_URL + 'images/marker-shadow.png',	shadowSize: new L.Point(41, 41),
+				popupAnchor: new L.Point(0, -33)
+			};
+		OSRM.G.icons[images[i]] = new L.SwitchableIcon(icon);
+	}
 	
-	// changes for dragmarker
-	OSRM.G.icons['marker-drag'].iconSize = new L.Point(16,16);
-	OSRM.G.icons['marker-drag'].shadowSize = new L.Point(0,0);
-	OSRM.G.icons['marker-drag'].iconAnchor = new L.Point(7,7);
-	OSRM.G.icons['marker-drag'].popupAnchor = new L.Point(16,16);
+	// special values for drag marker
+	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: 'images/marker-drag.png', iconSize: new L.Point(18, 18) } );	
 };
 
 
