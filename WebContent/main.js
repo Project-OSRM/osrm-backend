@@ -172,9 +172,9 @@ OSRM.checkURL = function(){
 		// center on route (support for old links) / move to given view (new behaviour)
 		if(zoom == null || center == null) {
 			var bounds = new L.LatLngBounds( positions );
-			OSRM.g.map.fitBoundsUI( bounds );
+			OSRM.G.map.fitBoundsUI( bounds );
 		} else {
-			OSRM.g.map.setView(center, zoom);
+			OSRM.G.map.setView(center, zoom);
 		}
 			
 		// compute route
