@@ -29,8 +29,10 @@ width: null,
 init: function() {
 	OSRM.GUI.visible = true;
 	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
-	
-	// translate
+},
+
+// set language dependent labels
+setLanguage: function() {
 	document.getElementById("open-josm").innerHTML = OSRM.loc("OPEN_JOSM");
 	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");	
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");

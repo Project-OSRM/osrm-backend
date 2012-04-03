@@ -27,6 +27,7 @@ OSRM.init = function() {
 	OSRM.prefetchImages();
 	OSRM.prefetchIcons();
 	
+	OSRM.Localization.init();
 	OSRM.GUI.init();
 	OSRM.Map.init();
 	OSRM.Routing.init();	
@@ -53,7 +54,11 @@ OSRM.prefetchImages = function() {
 	              	'images/cancel_hover.png',
 	              	'images/restore.png',
 	              	'images/restore_active.png',
-	              	'images/restore_hover.png'
+	              	'images/restore_hover.png',
+	              	'images/printer.png',
+	              	'images/printer_active.png',
+	              	'images/printer_hover.png',
+	              	'images/printer_inactive.png'
 	              ];
 
 	for(var i=0; i<images.length; i++) {

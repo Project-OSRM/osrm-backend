@@ -112,9 +112,9 @@ html, body, #map {
 .main-toggle-out
 {
 	cursor:pointer;
-	position:absolute;
+/*	position:absolute;
 	right:5px;
-	top:5px;
+	top:5px;*/
 	width:16px;
 	height:16px;
 	background-image:url("images/cancel.png");	
@@ -322,7 +322,6 @@ html, body, #map {
 	user-select: text;
 }
 
-
 /* buttons */
 .button
 {
@@ -348,7 +347,7 @@ html, body, #map {
 	color:#FF0000;
 }
 
-
+/* delete marker */
 .delete-marker
 {
 	cursor:pointer;
@@ -367,4 +366,28 @@ html, body, #map {
 .delete-marker:active
 {
 	background-image:url("images/cancel_active.png");
+}
+
+/* printer button */
+.printer-inactive
+{
+	cursor:pointer;
+	width:16px;
+	height:16px;
+	background-image:url("images/printer_inactive.png");
+}
+.printer
+{
+	cursor:pointer;
+	width:16px;
+	height:16px;
+	background-image:url("images/printer.png");
+}
+.printer:hover
+{
+	background-image:url("images/printer_hover.png");
+}
+.printer:active
+{
+	background-image:url("images/printer_active.png");
 }
