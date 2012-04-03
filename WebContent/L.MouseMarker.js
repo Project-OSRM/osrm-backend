@@ -16,8 +16,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 */
 
 // Leaflet extension: MouseMarker
-// [marker class that propagates modifier and button presses]
-// [currently deactivated: propagation mousemove events]
+// [marker class that propagates modifier and button presses in mouse click events and allows for changing icons]
 
 
 // extended marker class
@@ -25,21 +24,33 @@ L.MouseMarker = L.Marker.extend({
 	initialize: function (latlng, options) {
 		L.Marker.prototype.initialize.apply(this, arguments);
 	},
-
-//	_initInteraction: function (){
-//		L.Marker.prototype._initInteraction.apply(this, arguments);
-// 		if (this.options.clickable)
-//			L.DomEvent.addListener(this._icon, 'mousemove', this._fireMouseEvent, this);
-//	},
-
-//	_fireMouseEvent: function (e) {
-//		this.fire(e.type, {
-//			latlng: this._map.mouseEventToLatLng(e),
-//			layerPoint: this._map.mouseEventToLayerPoint(e)
-//		});		
-//		L.DomEvent.stopPropagation(e);
-//	},
 	
+	switchIcon: function( icon ) {
+		this.options.icon = icon;
+
+		if (this._map) {
+			this._changeIcon();
+			this._reset();
+		}
+	},
+	
+	_changeIcon: function () {
+		var options = this.options;
+
+		if (this._icon) {
+			this._icon = options.icon.switchIcon( this._icon );
+			this._icon.title = options.title;
+		}
+		
+		var panes = this._map._panes;
+		
+		if (this._shadow)
+			panes.shadowPane.removeChild(this._shadow);
+		this._shadow = options.icon.createShadow();
+		if (this._shadow)
+			panes.shadowPane.appendChild(this._shadow);
+	},	
+
 	_onMouseClick: function (e) {
 		L.DomEvent.stopPropagation(e);
 		if (this.dragging && this.dragging.moved()) { return; }

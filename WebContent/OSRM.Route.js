@@ -27,8 +27,6 @@ OSRM.SimpleRoute = function (label, style) {
 	if(style) this.route.setStyle( style );
 
 	this.shown = false;
-	
- 	this.route.on('click', this.onClick); 	
 };
 OSRM.extend( OSRM.SimpleRoute,{
 show: function() {
@@ -56,26 +54,7 @@ setStyle: function(style) {
 },
 centerView: function() {
 	var bounds = new L.LatLngBounds( this.getPositions() );
-	
-	var southwest = bounds.getSouthWest();
-	var northeast = bounds.getNorthEast();
-	var zoom = OSRM.G.map.getBoundsZoom(bounds);
-	var sw_point = OSRM.G.map.project( southwest, zoom);
-	if( OSRM.GUI.visible == true )
-		sw_point.x-=OSRM.GUI.width/2;
-	else
-		sw_point.x-=10;
-	sw_point.y+=10;
-	var ne_point = OSRM.G.map.project( northeast, zoom);
-	ne_point.y-=10;
-	sw_point.x+=10;
-	bounds.extend( OSRM.G.map.unproject(sw_point,zoom) );
-	bounds.extend( OSRM.G.map.unproject(ne_point,zoom) );
-	OSRM.G.map.fitBounds( bounds );
-},
-onClick: function(e) {
-	if(OSRM.G.route.isRoute())
-		OSRM.Via.findViaPosition( e.latlng );
+	OSRM.g.map.fitBoundsUI( bounds );
 },
 toString: function() {
 	return "OSRM.Route("+ this.label + ", " + this.route.getLatLngs().length + " points)";

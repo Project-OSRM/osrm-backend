@@ -19,8 +19,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [has to be loaded before all other OSRM classes]
 
 var OSRM = {};
-OSRM.VERSION = '0.1.2';
-OSRM.DATE = '120319';
+OSRM.VERSION = '0.1.3';
+OSRM.DATE = '120402';
 OSRM.CONSTANTS = {};
 OSRM.DEFAULTS = {};
 OSRM.GLOBALS = {};
@@ -28,17 +28,20 @@ OSRM.G = OSRM.GLOBALS;		// abbreviations
 OSRM.C = OSRM.CONSTANTS;
 
 
-// [convenience function] declare one class to be a subclass of another class
-OSRM._inheritFromHelper = function() {};
+// declare one class to be a subclass of another class
+// (runs anonymous function to prevent local functions cluttering global namespace)
+(function() {
+var _inheritFromHelper = function() {};
 OSRM.inheritFrom = function( sub_class, base_class ) {
-	OSRM._inheritFromHelper.prototype = base_class.prototype;
-	sub_class.prototype = new OSRM._inheritFromHelper();
+	_inheritFromHelper.prototype = base_class.prototype;
+	sub_class.prototype = new _inheritFromHelper();
 	sub_class.prototype.constructor = sub_class;
 	sub_class.prototype.base = base_class.prototype;
 };
+}());
 
 
-// [convenience function] extend prototypes of a class -> used to add member values and functions
+// extend prototypes of a class -> used to add member values and functions
 OSRM.extend = function( target_class, properties ) {
 	for( property in properties ) {
 		target_class.prototype[property] = properties[property];

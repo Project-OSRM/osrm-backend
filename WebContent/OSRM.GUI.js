@@ -20,10 +20,34 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.GUI = {
+		
+// defaults
+visible: null,
+width: null,
 
-// default state
-visible: true,
-width: 410,
+// init GUI
+init: function() {
+	OSRM.GUI.visible = true;
+	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
+	
+	// translate
+	document.getElementById("open-josm").innerHTML = OSRM.loc("OPEN_JOSM");
+	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");	
+	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
+	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
+	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
+	document.getElementById("options-toggle").innerHTML = OSRM.loc("GUI_OPTIONS");
+	document.getElementById("gui-search-source").innerHTML = OSRM.loc("GUI_SEARCH");
+	document.getElementById("gui-search-target").innerHTML = OSRM.loc("GUI_SEARCH");
+	document.getElementById("gui-search-source-label").innerHTML = OSRM.loc("GUI_START")+":";
+	document.getElementById("gui-search-target-label").innerHTML = OSRM.loc("GUI_END")+":";
+	document.getElementById("input-source-name").title = OSRM.loc("GUI_START_TOOLTIP");
+	document.getElementById("input-target-name").title = OSRM.loc("GUI_END_TOOLTIP");
+	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
+	
+	document.getElementById('input-source-name').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
+	document.getElementById('input-target-name').value = OSRM.DEFAULTS.ONLOAD_TARGET;	
+},
 		
 // show/hide main-gui
 toggleMain: function() {
