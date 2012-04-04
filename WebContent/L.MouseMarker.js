@@ -39,7 +39,8 @@ L.MouseMarker = L.Marker.extend({
 
 		if (this._icon) {
 			this._icon = options.icon.switchIcon( this._icon );
-			this._icon.title = options.title;
+			if (this.options.clickable)									// TODO: only needed until Leaflet 0.4
+				this._icon.className += ' leaflet-clickable';
 		}
 		
 		var panes = this._map._panes;
