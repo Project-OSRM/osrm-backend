@@ -18,43 +18,73 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM printer
 // [printing support]
 
-
 OSRM.Printing = {
 		
-x: function(){
-	OSRM.printwindow.test();
-//	var pos1 = OSRM.printwindow.document.getElementById('map1');
-//	var pos2 = OSRM.printwindow.document.getElementById('map2');
-//	// setup map
-//	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-//	osmorgOptions = {maxZoom: 18};	
-//	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions);
-//	var temp1 = new OSRM.MapView(pos1, {
-//    	center: new L.LatLng(51.505, -0.09),
-//	    zoom: 13,
-//	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
-//	    fadeAnimation: false,
-//	    layers: [osmorg]
-//	});
-//	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-//	osmorgOptions = {maxZoom: 18};	
-//	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions);	
-//	var temp2 = new OSRM.MapView(pos2, {
-//    	center: new L.LatLng(51.505, -0.09),
-//	    zoom: 13,
-//	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
-//	    fadeAnimation: false,
-//	    layers: [osmorg]
-//	});	
+windowLoaded: function(){
+	OSRM.printwindow.initialize();
+	OSRM.Printing.show( OSRM.G.response );
+	OSRM.printwindow.focus();
+},
+
+show: function(response) {
+	// create route description
+	var route_desc = "";
+	route_desc += '<table class="results-table">';
+
+	for(var i=0; i < response.route_instructions.length; i++){
+		//odd or even ?
+		var rowstyle='results-odd';
+		if(i%2==0) { rowstyle='results-even'; }
+
+		route_desc += '<tr class="'+rowstyle+'">';
+		
+		route_desc += '<td class="result-directions">';
+		route_desc += '<img width="18px" src="../images/'+OSRM.RoutingDescription.getDirectionIcon(response.route_instructions[i][0])+'" alt="" />';
+		route_desc += "</td>";		
+		
+		route_desc += '<td class="result-items">';
+		route_desc += '<span class="result-item">';
+		route_desc += response.route_instructions[i][0];
+		if( i == 0 )
+			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		
+		if( response.route_instructions[i][1] != "" ) {
+			route_desc += ' on ';
+			route_desc += '<b>' + response.route_instructions[i][1] + '</b>';
+		}
+		//route_desc += ' for ';
+		route_desc += '</span>';
+		route_desc += "</td>";
+		
+		route_desc += '<td class="result-distance">';
+		if( i != response.route_instructions.length-1 )
+		route_desc += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
+		route_desc += "</td>";
+		
+		route_desc += "</tr>";
+	}	
+		
+	route_desc += '</table>';		
+	headline = "";
+	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
+	headline += '<div style="float:left;width:40%">';
+	headline += "<span class='route-summary'>"
+		+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
+		+ "<br>"
+		+ OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time)
+		+ "</span>";		
+	headline +=	'</div>';
+
+	var output = "";
+	output += route_desc;
+
+	OSRM.printwindow.document.getElementById('description-headline').innerHTML = headline;
+	OSRM.printwindow.document.getElementById('description').innerHTML = output;
 },
 
 // react to click
 print: function() {
-	OSRM.printwindow = window.open("printing.html", "Popupfenster", "width=400,height=300,resizable=yes");
-//	fenster.document.write("<div id='map1' style='width:100px;height:100px'>a</div><div id='map2' style='width:100px;height:100px'>b</div>");
-	OSRM.printwindow.focus();
-	
-	OSRM.printwindow.addEventListener("DOMContentLoaded", OSRM.Printing.x, false);
+	OSRM.printwindow = window.open("printing/printing.html","","width=400,height=300,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
+	OSRM.printwindow.addEventListener("DOMContentLoaded", OSRM.Printing.windowLoaded, false);
 }
 
 };

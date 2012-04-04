@@ -30,17 +30,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <meta name="author" content="Dennis Schieferdecker" />
 
 <!--  favicon -->
-<link rel="shortcut icon" href="images/osrm-favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="../images/osrm-favicon.ico" type="image/x-icon" />
 
 <!-- stylesheets -->
-<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css"/>
-<!--[if lte IE 8]><link rel="stylesheet" href="leaflet/leaflet.ie.css" type="text/css"/><![endif]-->
+<link rel="stylesheet" href="../leaflet/leaflet.css" type="text/css"/>
+<!--[if lte IE 8]><link rel="stylesheet" href="../leaflet/leaflet.ie.css" type="text/css"/><![endif]-->
+<link rel="stylesheet" href="printing.css" type="text/css"/>
 
 <!-- scripts -->
-<script src="leaflet/leaflet-src.js" type="text/javascript"></script>
+<script src="../leaflet/leaflet-src.js" type="text/javascript"></script>
 <script>
-function test() {
-	// setup map
+function initialize() {
+/* 	// setup map
 	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 	osmorgOptions = {maxZoom: 18};	
 	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions);
@@ -65,7 +66,11 @@ function test() {
 	    layers: [osmorg],
 	    attributionControl: false,
 	    zoomControl: false
-	});
+	}); */
+}
+
+function printsite() {
+	window.print();
 }
 </script>
 
@@ -74,10 +79,13 @@ function test() {
 
 <!-- body -->
 <body>
-
+<div style="position:absolute;right:5px;top:5px;" class="printer" onclick="printsite();"></div>
 <!--maps-->
-<div id="map1" style='width:100px;height:100px'></div>
-<div id="map2" style='width:100px;height:100px'></div>
+<!-- <div id="map1" style='width:100px;height:100px'></div>
+<div id="map2" style='width:100px;height:100px'></div> -->
+<!--description-->
+<div id="description-headline"></div>
+<div id="description"></div>
 
 </body>
 </html>

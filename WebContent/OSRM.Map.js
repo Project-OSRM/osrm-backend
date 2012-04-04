@@ -121,6 +121,8 @@ init: function() {
 	// initial map position and zoom
 	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
 	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ZOOM_LEVEL);
+	if (navigator.geolocation && document.URL.indexOf("file://") == -1)
+		navigator.geolocation.getCurrentPosition(OSRM.Map.geolocationResponse);
 
 	// map events
 	OSRM.G.map.on('zoomend', OSRM.Map.zoomed );
@@ -146,6 +148,10 @@ click: function(e) {
 		OSRM.G.markers.route[index].show();
 		OSRM.G.markers.route[index].centerView( OSRM.G.map.getZoom() );
 		OSRM.Routing.getRoute();
-	}	
+	}
+},
+geolocationResponse: function(response) {
+	var latlng = new L.LatLng(response.coords.latitude, response.coords.longitude);		
+	OSRM.G.map.setViewUI(latlng, OSRM.DEFAULTS.ZOOM_LEVEL );
 }
 };
