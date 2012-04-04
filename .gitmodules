@@ -1,0 +1,3 @@
+[submodule "Docs"]
+	path = Docs
+	url = https://github.com/DennisSchiefer/Project-OSRM-Web.git
