@@ -24,7 +24,7 @@ Branches
 
 Bugtracking
 -----------
-Please use the OSRM-Project bug tracker for submitting any bug reports or feature requests.
+Please use the OSRM-Project bug tracker [(4)] for submitting any bug reports or feature requests.
 
 Integration into Project-OSRM repository
 ----------------------------------------
@@ -46,9 +46,10 @@ References
 [(1)] Cloudmade Leaflet: http://leaflet.cloudmade.com/  
 [(2)] Project OSRM: http://project-osrm.org/  
 [(3)] Project OSRM Frontend: http://map.project-osrm.org/
-
+[(4)] Project OSRM Bugtracker: https://github.com/DennisOSRM/Project-OSRM/issues/
 
 
 [(1)]: http://leaflet.cloudmade.com/ "Cloudmade Leaflet"
 [(2)]: http://project-osrm.org/ "Project OSRM"
 [(3)]: http://map.project-osrm.org/ "Project-OSRM Frontend" 
+[(4)]: https://github.com/DennisOSRM/Project-OSRM/issues/ "Project-OSRM Bugtracker"
