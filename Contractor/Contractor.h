@@ -237,7 +237,7 @@ public:
 
         bool flushedContractor = false;
         while ( numberOfContractedNodes < numberOfNodes ) {
-        	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.5) ) ){
+        	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.75) ) ){
         		INFO("Flushing memory after " << numberOfContractedNodes << " nodes");
         		
         		//Delete old heap data to free memory that we need for the coming operations
@@ -302,7 +302,7 @@ public:
         		temporaryEdgeStorage.seekp(initialFilePosition);
         		temporaryEdgeStorage.write((char*)&numberOfTemporaryEdges, sizeof(unsigned));
         		temporaryEdgeStorage.close();
-        		INFO("Flushed " << numberOfTemporaryEdges << " to disk");
+        		INFO("Flushed " << numberOfTemporaryEdges << " edges to disk");
 
         		//Delete map from old NodeIDs to new ones.
         		std::vector<NodeID>().swap(newNodeIDFromOldNodeIDMap);
