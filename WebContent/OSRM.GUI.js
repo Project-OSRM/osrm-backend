@@ -29,6 +29,9 @@ width: null,
 init: function() {
 	OSRM.GUI.visible = true;
 	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
+	
+	document.getElementById('input-source-name').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
+	document.getElementById('input-target-name').value = OSRM.DEFAULTS.ONLOAD_TARGET;	
 },
 
 // set language dependent labels
@@ -46,9 +49,6 @@ setLanguage: function() {
 	document.getElementById("input-source-name").title = OSRM.loc("GUI_START_TOOLTIP");
 	document.getElementById("input-target-name").title = OSRM.loc("GUI_END_TOOLTIP");
 	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
-	
-	document.getElementById('input-source-name').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
-	document.getElementById('input-target-name').value = OSRM.DEFAULTS.ONLOAD_TARGET;	
 },
 		
 // show/hide main-gui
