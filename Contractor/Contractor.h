@@ -192,12 +192,11 @@ public:
         //Create temporary file
         
         GetTemporaryFileName(temporaryEdgeStorageFilename);
-        INFO("75% Storage at " << temporaryEdgeStorageFilename);
     }
 
     ~Contractor() {
         //Delete temporary file
-//        remove(temporaryEdgeStorageFilename.c_str());
+        remove(temporaryEdgeStorageFilename.c_str());
     }
 
     void Run() {
@@ -290,10 +289,8 @@ public:
                             //node is not yet contracted.
                             //add (renumbered) outgoing edges to new DynamicGraph.
         		            data.originalViaNodeID = true;
-        		            if(newNodeIDFromOldNodeIDMap[start] == UINT_MAX)
-        		                ERR("Could not resolve start");
-        		            if(UINT_MAX == newNodeIDFromOldNodeIDMap[target])
-        		                ERR("Could not resolve target");
+        		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[start] );
+        		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[target]);
         		            _newGraph->InsertEdge(newNodeIDFromOldNodeIDMap[start], newNodeIDFromOldNodeIDMap[target], data );
         		        }
         		    }
@@ -302,7 +299,7 @@ public:
         		temporaryEdgeStorage.seekp(initialFilePosition);
         		temporaryEdgeStorage.write((char*)&numberOfTemporaryEdges, sizeof(unsigned));
         		temporaryEdgeStorage.close();
-        		INFO("Flushed " << numberOfTemporaryEdges << " edges to disk");
+//        		INFO("Flushed " << numberOfTemporaryEdges << " edges to disk");
 
         		//Delete map from old NodeIDs to new ones.
         		std::vector<NodeID>().swap(newNodeIDFromOldNodeIDMap);
@@ -435,13 +432,9 @@ public:
                 newEdge.source = oldNodeIDFromNewNodeIDMap[node];
                 newEdge.target = oldNodeIDFromNewNodeIDMap[target];
 
-                if(UINT_MAX == newEdge.source)
-                    ERR("Could not resolve start");
-                if(UINT_MAX == newEdge.target)
-                    ERR("Could not resolve target");
-
                 assert(UINT_MAX != newEdge.source);
                 assert(UINT_MAX != newEdge.target);
+
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
                 if(!data.originalViaNodeID)
@@ -449,8 +442,7 @@ public:
                 else
                     newEdge.data.via = data.via;
 
-                if(newEdge.data.via == UINT_MAX)
-                    ERR("could not resolve via node");
+                assert(newEdge.data.via != UINT_MAX);
                 newEdge.data.nameID = data.nameID;
                 newEdge.data.turnInstruction = data.turnInstruction;
                 newEdge.data.forward = data.forward;
@@ -462,7 +454,6 @@ public:
         //Also get the edges from temporary storage
         unsigned numberOfTemporaryEdges = 0;
         temporaryEdgeStorage.read((char*)&numberOfTemporaryEdges, sizeof(unsigned));
-        INFO("loading " << numberOfTemporaryEdges << " back from disk");
         //loads edges of graph before renumbering, no need for further numbering action.
         NodeID start;
         NodeID target;
