@@ -200,7 +200,7 @@ _showReverseResults_Timeout: function(response, parameters) {
 	if(!parameters.do_fallback)
 		return;
 		
-	updateLocation(parameters.marker_id);
+	OSRM.Geocoder.updateLocation(parameters.marker_id);
 }
 
 };
