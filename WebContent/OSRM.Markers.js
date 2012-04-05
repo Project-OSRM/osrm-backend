@@ -141,7 +141,8 @@ OSRM.DragMarker = function ( label, style, position ) {
 OSRM.inheritFrom( OSRM.DragMarker, OSRM.RouteMarker );
 OSRM.extend( OSRM.DragMarker, {
 onClick: function(e) {
-	this.parent.hide();
+	if( this.parent != OSRM.G.markers.dragger)
+		this.parent.hide();
 },
 onDragStart: function(e) {
 	var new_via_index = OSRM.Via.findViaIndex( e.target.getLatLng() );
