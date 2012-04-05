@@ -77,13 +77,15 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
 
 //    INFO("traffic signal penalty: " << trafficSignalPenalty << ", U-Turn penalty: " << uturnPenalty << ", takeMinimumOfSpeeds=" << (takeMinimumOfSpeeds ? "yes" : "no"));
 
-    BOOST_FOREACH(NodeID id, bn)
-    _barrierNodes[id] = true;
-    BOOST_FOREACH(NodeID id, tl)
-    _trafficLights[id] = true;
+    BOOST_FOREACH(NodeID id, bn) {
+        _barrierNodes[id] = true;
+    }
+    BOOST_FOREACH(NodeID id, tl) {
+        _trafficLights[id] = true;
+    }
 
     std::vector< _NodeBasedEdge > edges;
-    edges.reserve( 2 * inputEdges.size() );
+//    edges.reserve( 2 * inputEdges.size() );
     for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
 
         _NodeBasedEdge edge;
@@ -191,7 +193,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
 
 void EdgeBasedGraphFactory::Run() {
     INFO("Generating edge based representation of input data");
-    edgeBasedNodes.reserve(_nodeBasedGraph->GetNumberOfEdges());
+//    edgeBasedNodes.reserve(_nodeBasedGraph->GetNumberOfEdges());
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfSkippedTurns(0);
     int nodeBasedEdgeCounter(0);

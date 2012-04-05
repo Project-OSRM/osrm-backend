@@ -21,6 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
+#include <cstdlib>
+#include <string>
+
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
 template< int length, int precision >
@@ -143,4 +146,18 @@ inline std::string HTMLDeEntitize( std::string result) {
 inline bool StringStartsWith(std::string & input, std::string & prefix) {
     return (input.find(prefix) == 0);
 }
+
+
+/*
+ * Function returns a 'random' filename in temporary directors.
+ * May not be platform independent.
+ */
+inline void GetTemporaryFileName(std::string & filename) {
+    char buffer[L_tmpnam];
+    char * retPointer = tmpnam (buffer);
+    if(0 == retPointer)
+        ERR("Could not create temporary file name");
+    filename = buffer;
+}
+
 #endif /* STRINGUTIL_H_ */
