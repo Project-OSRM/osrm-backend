@@ -51,6 +51,8 @@ change: function(language) {
 	OSRM.DEFAULTS.LANGUAGE = language;
 	if( OSRM.Localization[language]) {
 		OSRM.GUI.setLanguage();
+		if( document.getElementById('information-box').innerHTML != "" )
+			OSRM.RoutingDescription.show( OSRM.G.response );
 	} else {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';

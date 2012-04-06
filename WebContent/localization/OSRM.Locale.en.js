@@ -57,8 +57,30 @@ OSRM.Localization["en"] = {
 "NE": "northeast",
 "SE": "southeast",
 "SW": "southwest",
-"NW": "northwest"
+"NW": "northwest",
+// driving directions
+"DIRECTION_1":"Turn left[ on <b>%s</b>]",
+"DIRECTION_2":"Turn right[ on <b>%s</b>]",
+"DIRECTION_3":"U-Turn[ on <b>%s</b>]",
+"DIRECTION_4":"Head %s",
+"DIRECTION_5":"Continue[ on <b>%s</b>]",
+"DIRECTION_6":"Turn slight left[ on <b>%s</b>]",
+"DIRECTION_7":"Turn slight right[ on <b>%s</b>]",
+"DIRECTION_8":"Turn sharp left[ on <b>%s</b>]",
+"DIRECTION_9":"Turn sharp right[ on <b>%s</b>]",
+"DIRECTION_10":"Enter roundabout and leave at first exit[ on <b>%s</b>]",
+"DIRECTION_11":"Enter roundabout and leave at second exit[ on <b>%s</b>]",
+"DIRECTION_12":"Enter roundabout and leave at third exit[ on <b>%s</b>]",
+"DIRECTION_13":"Enter roundabout and leave at fourth exit[ on <b>%s</b>]",
+"DIRECTION_14":"Enter roundabout and leave at fifth exit[ on <b>%s</b>]",
+"DIRECTION_15":"Enter roundabout and leave at sixth exit[ on <b>%s</b>]",
+"DIRECTION_16":"Enter roundabout and leave at seventh exit[ on <b>%s</b>]",
+"DIRECTION_17":"Enter roundabout and leave at eighth exit[ on <b>%s</b>]",
+"DIRECTION_18":"Enter roundabout and leave at nineth exit[ on <b>%s</b>]",
+"DIRECTION_19":"Enter roundabout and leave at tenth exit[ on <b>%s</b>]",
+"DIRECTION_20":"Enter roundabout and leave at one of the too many exits[ on <b>%s</b>]",
+"DIRECTION_21":"You have reached your destination"
 };
 
 //set GUI language on load
-OSRM.GUI.setLanguage();
+OSRM.Localization.change("en");

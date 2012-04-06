@@ -72,6 +72,15 @@ show: function(response) {
 		
 		route_desc += '<td class="result-items">';
 		route_desc += '<span class="result-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
+
+//		// build route description
+//		if( i == 0 )
+//			route_desc += OSRM.loc("DIRECTION_"+response.route_instructions[i][0]).replace(/%s/, response.route_instructions[i][6]); 
+//		else if( response.route_instructions[i][1] != "" )
+//			route_desc += OSRM.loc("DIRECTION_"+response.route_instructions[i][0]).replace(/\[(.*)\]/,"");
+//		else
+//			route_desc += OSRM.loc("DIRECTION_"+response.route_instructions[i][0]).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][6]);
+		
 		route_desc += response.route_instructions[i][0];
 		if( i == 0 )
 			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		

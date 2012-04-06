@@ -57,8 +57,30 @@ OSRM.Localization["de"] = {
 "NO": "Nordost",
 "SO": "Südost",
 "SW": "Südwest",
-"NW": "Nordwest"
+"NW": "Nordwest",
+// driving directions
+"DIRECTION_1":"Links abbiegen[ auf <b>%s</b>]",
+"DIRECTION_2":"Rechts abbiegen[ auf <b>%s</b>]",
+"DIRECTION_3":"Umkehren[ auf <b>%s</b>]",
+"DIRECTION_4":"Fahren Sie Richtung %s",
+"DIRECTION_5":"Weiterfahren[ auf <b>%s</b>]",
+"DIRECTION_6":"Leicht links abbiegen[ auf <b>%s</b>]",
+"DIRECTION_7":"Leicht rechts abbiegen[ auf <b>%s</b>]",
+"DIRECTION_8":"Scharf links abbiegen[ auf <b>%s</b>]",
+"DIRECTION_9":"Scharf rechts abbiegen[ auf <b>%s</b>]",
+"DIRECTION_10":"In den Kreisverkehr einfahren und bei erster Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_11":"In den Kreisverkehr einfahren und bei zweiter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_12":"In den Kreisverkehr einfahren und bei dritter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_13":"In den Kreisverkehr einfahren und bei vierter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_14":"In den Kreisverkehr einfahren und bei f�nfter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_15":"In den Kreisverkehr einfahren und bei sechster Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_16":"In den Kreisverkehr einfahren und bei siebter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_17":"In den Kreisverkehr einfahren und bei achter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_18":"In den Kreisverkehr einfahren und bei neunter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_19":"In den Kreisverkehr einfahren und bei zehnter Möglichkeit verlassen[ auf <b>%s</b>]",
+"DIRECTION_20":"In den Kreisverkehr einfahren und bei einer der vielen Möglichkeiten verlassen[ auf <b>%s</b>]",
+"DIRECTION_21":"Sie haben Ihr Ziel erreicht"
 };
 
 // set GUI language on load
-OSRM.GUI.setLanguage();
+OSRM.Localization.change("de");
