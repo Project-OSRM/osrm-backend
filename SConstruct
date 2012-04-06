@@ -185,6 +185,9 @@ if not conf.CheckCXXHeader('boost/archive/iterators/transform_width.hpp'):
 if not conf.CheckCXXHeader('boost/bind.hpp'):
 	print "boost/bind.hpp not found. Exiting"
 	Exit(-1)
+if not conf.CheckCXXHeader('boost/circular_buffer.hpp'):
+	print "boost/circular_buffer.hpp not found. Exiting"
+	Exit(-1)
 if not conf.CheckCXXHeader('boost/enable_shared_from_this.hpp'):
 	print "boost/bind.hpp not found. Exiting"
 	Exit(-1)
@@ -212,8 +215,17 @@ if not conf.CheckCXXHeader('boost/property_tree/ini_parser.hpp'):
 if not conf.CheckCXXHeader('boost/shared_ptr.hpp'):
 	print "boost/shared_ptr.hpp not found. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('boost/signals2/mutex.hpp'):
+if not conf.CheckCXXHeader('boost/thread/mutex.hpp'):
 	print "boost/shared_ptr.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/thread/thread.hpp'):
+	print "boost/thread/thread.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/thread/condition.hpp'):
+	print "boost/thread/condition.hpp not found. Exiting"
+	Exit(-1)
+if not conf.CheckCXXHeader('boost/thread/thread.hpp'):
+	print "boost/thread/thread.hpp not found. Exiting"
 	Exit(-1)
 if not conf.CheckCXXHeader('boost/thread.hpp'):
 	print "boost thread header not found. Exiting"

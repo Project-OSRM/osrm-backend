@@ -21,13 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef CONCURRENTQUEUE_H_INCLUDED
 #define CONCURRENTQUEUE_H_INCLUDED
 
-#include <boost/circular_buffer.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/call_traits.hpp>
-#include <boost/progress.hpp>
 #include <boost/bind.hpp>
+#include <boost/circular_buffer.hpp>
+#include <boost/thread/condition.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
 
 #include "../typedefs.h"
 
@@ -65,15 +63,12 @@ public:
         if(internal_queue.empty()) {
             return false;
         }
-
         popped_value=internal_queue.front();
         internal_queue.pop_front();
         lock.unlock();
         m_not_full.notify_one();
         return true;
     }
-
-
 
 private:
     boost::circular_buffer<Data> internal_queue;
@@ -83,7 +78,6 @@ private:
 
     inline bool is_not_empty() const { return internal_queue.size() > 0; }
     inline bool is_not_full() const { return internal_queue.size() < internal_queue.capacity(); }
-
 };
 
 #endif //#ifndef CONCURRENTQUEUE_H_INCLUDED
