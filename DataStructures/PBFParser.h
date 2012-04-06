@@ -62,9 +62,10 @@ class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
     };
 
 public:
-    PBFParser(const char * fileName) { /* Max 25 items in queue */
+    PBFParser(const char * fileName) {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
-        threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(250) );
+        //TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
+        threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(2500) ); /* Max 2500 items in queue, hardcoded. */
         input.open(fileName, std::ios::in | std::ios::binary);
 
         if (!input) {
