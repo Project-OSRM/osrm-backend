@@ -71,7 +71,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 <!-- body -->
-<body onload="OSRM.init();" class="base-font">
+<body class="base-font">
 
 <!--map-->
 <div id="map"></div>
@@ -79,7 +79,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!-- show ui blob -->
 <div id="blob-wrapper" class="gui-wrapper">
 <div id="blob-content" class="gui-box">
-   	<div id="gui-toggle-in" class="iconic-button" onclick="OSRM.GUI.toggleMain();"></div>
+   	<div id="gui-toggle-in" class="iconic-button"></div>
 </div>
 </div>
 
@@ -90,9 +90,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <div id="main-input" class="gui-box">
 	<!--  header -->
 	<div id="input-mask-header">
-	<div id="gui-toggle-out" class="iconic-button top-right-button" onclick="OSRM.GUI.toggleMain()"></div>
+	<div id="gui-toggle-out" class="iconic-button top-right-button"></div>
 	<div class="quad top-right-button"></div>
-	<div id="printer" class="iconic-button top-right-button" onclick="OSRM.Printing.print();"></div>
+	<div id="gui-printer" class="iconic-button top-right-button"></div>
 	</div>
 	
 	<!--  input mask -->
@@ -102,15 +102,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div class="full">
 	<div id="input-source" class="input-marker">
 	<div class="left"><span id="gui-search-source-label">Start:</span></div>
-	<div class="center input-box"><input id="input-source-name" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" onchange="OSRM.RoutingGUI.inputChanged(OSRM.C.SOURCE_LABEL);" /></div>
-	<div class="center"><div id="delete-source-marker" class="iconic-button delete-marker" onclick="OSRM.RoutingGUI.deleteMarker('source')"></div></div>
-	<div class="right"><a class="button" id="gui-search-source" onclick="OSRM.RoutingGUI.showMarker('source')">Zeigen</a></div>
+	<div class="center input-box"><input id="gui-input-source" class="input-box" type="text" maxlength="200" value="" title="Startposition eingeben" /></div>
+	<div class="center"><div id="gui-delete-source" class="iconic-button delete-marker"></div></div>
+	<div class="right"><a class="button" id="gui-search-source">Zeigen</a></div>
 	</div>
 	<div id="input-target" class="input-marker">
 	<div class="left"><span id="gui-search-target-label">Ende:</span></div>
-	<div class="center input-box"><input id="input-target-name" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" onchange="OSRM.RoutingGUI.inputChanged(OSRM.C.TARGET_LABEL);" /></div>	
-	<div class="center"><div id="delete-target-marker" class="iconic-button delete-marker" onclick="OSRM.RoutingGUI.deleteMarker('target')"></div></div>
-	<div class="right"><a class="button" id="gui-search-target" onclick="OSRM.RoutingGUI.showMarker('target');">Zeigen</a></div>	
+	<div class="center input-box"><input id="gui-input-target" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" /></div>	
+	<div class="center"><div id="fui-delete-target" class="iconic-button delete-marker"></div></div>
+	<div class="right"><a class="button" id="gui-search-target">Zeigen</a></div>	
 	</div>
 	</div>
 	
@@ -118,8 +118,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	
 	<!-- action buttons -->
     <div class="full">
-    <div class="left"><a class="button" id="gui-reset" onclick="OSRM.RoutingGUI.resetRouting();">Reset</a></div>
-	<div class="right"><a class="button" id="gui-reverse" onclick="OSRM.RoutingGUI.reverseRouting();">Umdrehen</a></div>
+    <div class="left"><a class="button" id="gui-reset">Reset</a></div>
+	<div class="right"><a class="button" id="gui-reverse">Umdrehen</a></div>
     </div>
     </div>
 
@@ -129,7 +129,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div id="input-mask-options">
 	
 	<!-- option toggle -->
-	<span id="options-toggle" class="small-font" onclick="OSRM.GUI.toggleOptions()">Kartenwerkzeuge</span>
+	<span id="options-toggle" class="small-font">Kartenwerkzeuge</span>
 	
 	<!-- actual options -->
 	<div id="options-box" class="full">
@@ -138,8 +138,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Unbenannte Straßen hervorheben</span>
 	</div>
 	<div class="right">
-	<a class="button" id="open-josm" onclick="OSRM.RoutingGUI.openJOSM();">JOSM</a>
-	<a class="button" id="open-osmbugs" onclick="OSRM.RoutingGUI.openOSMBugs();">OSM Bugs</a>
+	<a class="button" id="open-josm">JOSM</a>
+	<a class="button" id="open-osmbugs">OSM Bugs</a>
 	</div>
 	</div>
 	</div>

@@ -91,7 +91,7 @@ _showResults: function(response, parameters) {
 		html += '<td class="result-items">';
 
 		if(result.display_name){
-			html += '<div class="result-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+parseFloat(result.lat).toFixed(6)+', '+parseFloat(result.lon).toFixed(6)+');">'+result.display_name+'</div>';
+			html += '<div class="result-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
 		}
 		html += "</td></tr>";
 	}
@@ -128,9 +128,9 @@ _showResults_Timeout: function() {
 //update geo coordinates in input boxes
 updateLocation: function(marker_id) {
 	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
-		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getLat().toFixed(6) + ", " + OSRM.G.markers.route[0].getLng().toFixed(6);
+		document.getElementById("gui-input-source").value = OSRM.G.markers.route[0].getLat().toFixed(6) + ", " + OSRM.G.markers.route[0].getLng().toFixed(6);
 	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget()) {
-		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLat().toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng().toFixed(6);		
+		document.getElementById("gui-input-target").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLat().toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng().toFixed(6);		
 	}
 },
 
@@ -198,9 +198,9 @@ _showReverseResults: function(response, parameters) {
 		
 	// add result to DOM
 	if(parameters.marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() )
-		document.getElementById("input-source-name").value = address;
+		document.getElementById("gui-input-source").value = address;
 	else if(parameters.marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() )
-		document.getElementById("input-target-name").value = address;
+		document.getElementById("gui-input-target").value = address;
 },
 _showReverseResults_Timeout: function(response, parameters) {
 	if(!parameters.do_fallback)

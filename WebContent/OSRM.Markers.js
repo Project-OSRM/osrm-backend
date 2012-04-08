@@ -174,8 +174,8 @@ removeAll: function() {
 	for(var i=0; i<this.route.length;i++)
 		this.route[i].hide();
 	this.route.splice(0, this.route.length);
-	document.getElementById('delete-source-marker').style.visibility = "hidden";
-	document.getElementById('delete-target-marker').style.visibility = "hidden";
+	document.getElementById('gui-delete-source').style.visibility = "hidden";
+	document.getElementById('gui-delete-target').style.visibility = "hidden";
 },
 removeVias: function() {
 	// assert correct route array s - v - t
@@ -189,7 +189,7 @@ setSource: function(position) {
 		this.route[0].setPosition(position);
 	else
 		this.route.splice(0,0, new OSRM.RouteMarker(OSRM.C.SOURCE_LABEL, {draggable:true,icon:OSRM.G.icons['marker-source'],dragicon:OSRM.G.icons['marker-source-drag']}, position));
-	document.getElementById('delete-source-marker').style.visibility = "visible";
+	document.getElementById('gui-delete-source').style.visibility = "visible";
 	return 0;	
 },
 setTarget: function(position) {
@@ -198,7 +198,7 @@ setTarget: function(position) {
 		this.route[this.route.length-1].setPosition(position);
 	else
 		this.route.splice( this.route.length,0, new OSRM.RouteMarker(OSRM.C.TARGET_LABEL, {draggable:true,icon:OSRM.G.icons['marker-target'],dragicon:OSRM.G.icons['marker-target-drag']}, position));
-	document.getElementById('delete-target-marker').style.visibility = "visible";
+	document.getElementById('gui-delete-target').style.visibility = "visible";
 	return this.route.length-1;
 },
 setVia: function(id, position) {
@@ -216,17 +216,17 @@ removeMarker: function(id) {
 	// also remove vias if source or target are removed
 	if( id==0 && this.route[0].label == OSRM.C.SOURCE_LABEL ) {
 		this.removeVias();
-		document.getElementById('input-source-name').value = "";
+		document.getElementById('gui-input-source').value = "";
 		document.getElementById('information-box').innerHTML = "";
 		document.getElementById('information-box-header').innerHTML = "";
-		document.getElementById('delete-source-marker').style.visibility = "hidden";
+		document.getElementById('gui-delete-source').style.visibility = "hidden";
 	} else if( id == this.route.length-1 && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL ) {
 		this.removeVias();
 		id = this.route.length-1;
-		document.getElementById('input-target-name').value = "";
+		document.getElementById('gui-input-target').value = "";
 		document.getElementById('information-box').innerHTML = "";
 		document.getElementById('information-box-header').innerHTML = "";
-		document.getElementById('delete-target-marker').style.visibility = "hidden";
+		document.getElementById('gui-delete-target').style.visibility = "hidden";
 	}
 	
 	this.route[id].hide();

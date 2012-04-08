@@ -27,7 +27,7 @@ supported_languages: ["en", "de"],
 init: function() {
 	// create dropdown menu
 	var select = document.createElement('select');
-	select.id = "language-toggle";
+	select.id = "gui-language-toggle";
 	select.onchange = function() { OSRM.Localization.change(this.value); };
 	
 	// fill dropdown menu

@@ -18,9 +18,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM initialization
 // [initialization, image prefetching]
 
-// will hold the Leaflet map object
-OSRM.GLOBALS.map = null;
-
 
 // onload initialization routine
 OSRM.init = function() {
@@ -152,7 +149,7 @@ OSRM.checkURL = function(){
 		if( destination_name == null )
 			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		else 
-			document.getElementById("input-target-name").value = destination_name;
+			document.getElementById("gui-input-target").value = destination_name;
 		OSRM.G.markers.route[index].show();
 		OSRM.G.markers.route[index].centerView();
 		return;
@@ -186,3 +183,10 @@ OSRM.checkURL = function(){
 		OSRM.Routing.getRoute();
 	}
 };
+
+
+// onload event
+if(document.addEventListener)		// FF, CH
+	document.addEventListener("DOMContentLoaded", OSRM.init, false);
+else								// old IE
+	document.onreadystatechange = function(){if(document.readyState == "interactive" || document.readyState == "complete") OSRM.init();};

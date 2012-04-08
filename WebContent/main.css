@@ -126,7 +126,7 @@ html, body {
 
 
 /* styles for main-input input-mask-header */
-#language-toggle
+#gui-language-toggle
 {
 	border: 0px;
 	text-decoration:none;
@@ -154,12 +154,12 @@ html, body {
 
 
 /* styles for main-input input-mask-options */
-#options-toggle
+#gui-options-toggle
 {
 	cursor:pointer;
 	color:#0000ff
 }
-#options-toggle:hover
+#gui-options-toggle:hover
 {
 	color:#ff0000
 }
@@ -335,15 +335,15 @@ html, body {
 	background-image:url("images/restore_active.png");
 }
 
-#printer
+#gui-printer
 {
 	background-image:url("images/printer.png");
 }
-#printer:hover
+#gui-printer:hover
 {
 	background-image:url("images/printer_hover.png");
 }
-#printer:active
+#gui-printer:active
 {
 	background-image:url("images/printer_active.png");
 }
