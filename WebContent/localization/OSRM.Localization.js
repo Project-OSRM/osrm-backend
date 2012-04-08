@@ -39,8 +39,8 @@ init: function() {
 	}
 	
 	// add element to DOM
-	var main_input_header = document.getElementById('main-input-header'); 
-	main_input_header.insertBefore(select,main_input_header.firstChild);
+	var input_mask_header = document.getElementById('input-mask-header'); 
+	input_mask_header.insertBefore(select,input_mask_header.firstChild);
 	
 	// initialize default language
 	OSRM.Localization.change( OSRM.DEFAULTS.LANGUAGE );

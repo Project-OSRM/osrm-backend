@@ -78,7 +78,7 @@ _showResults: function(response, parameters) {
 	
 	// show possible results for input
 	var html = "";
-	html += '<table class="results-table">';	
+	html += '<table class="results-table medium-font">';	
 	for(var i=0; i < response.length; i++){
 		var result = response[i];
 
@@ -91,29 +91,35 @@ _showResults: function(response, parameters) {
 		html += '<td class="result-items">';
 
 		if(result.display_name){
-			html += '<div class="result-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
+			html += '<div class="result-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+parseFloat(result.lat).toFixed(6)+', '+parseFloat(result.lon).toFixed(6)+');">'+result.display_name+'</div>';
 		}
 		html += "</td></tr>";
 	}
 	html += '</table>';
 		
-	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
+	document.getElementById('information-box-header').innerHTML = 
+		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
+		"<div class='header-content'>(found "+response.length+" results)"+"</div>";
 	document.getElementById('information-box').innerHTML = html;
 
 	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
 },
 _showResults_Empty: function(parameters) {
-	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
+	document.getElementById('information-box-header').innerHTML =
+		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
+		"<div class='header-content'>(found 0 results)"+"</div>";		
 	if(parameters.marker_id == OSRM.C.SOURCE_LABEL)
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+": "+parameters.query +".<p>";
+		document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+": "+parameters.query +"</div>";
 	else if(parameters.marker_id == OSRM.C.TARGET_LABEL)
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_TARGET")+": "+parameters.query +".<p>";
+		document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("NO_RESULTS_FOUND_TARGET")+": "+parameters.query +"</div>";
 	else
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND")+": "+parameters.query +".<p>";
+		document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("NO_RESULTS_FOUND")+": "+parameters.query +"</div>";
 },
 _showResults_Timeout: function() {
-	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
-	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("TIMED_OUT")+".<p>";	
+	document.getElementById('information-box-header').innerHTML =
+		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
+		"<div class='header-content'>(found 0 results)"+"</div>";		
+	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("TIMED_OUT")+"</div>";	
 },
 
 

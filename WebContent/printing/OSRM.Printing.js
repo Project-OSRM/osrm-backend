@@ -65,11 +65,11 @@ show: function(response) {
 		
 	route_desc += '</table>';		
 	headline = "";
-	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
+	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br/>";
 	headline += '<div style="float:left;width:40%">';
 	headline += "<span class='route-summary'>"
 		+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
-		+ "<br>"
+		+ "<br/>"
 		+ OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time)
 		+ "</span>";		
 	headline +=	'</div>';

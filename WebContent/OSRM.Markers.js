@@ -218,14 +218,14 @@ removeMarker: function(id) {
 		this.removeVias();
 		document.getElementById('input-source-name').value = "";
 		document.getElementById('information-box').innerHTML = "";
-		document.getElementById('information-box-headline').innerHTML = "";
+		document.getElementById('information-box-header').innerHTML = "";
 		document.getElementById('delete-source-marker').style.visibility = "hidden";
 	} else if( id == this.route.length-1 && this.route[ this.route.length-1 ].label == OSRM.C.TARGET_LABEL ) {
 		this.removeVias();
 		id = this.route.length-1;
 		document.getElementById('input-target-name').value = "";
 		document.getElementById('information-box').innerHTML = "";
-		document.getElementById('information-box-headline').innerHTML = "";
+		document.getElementById('information-box-header').innerHTML = "";
 		document.getElementById('delete-target-marker').style.visibility = "hidden";
 	}
 	

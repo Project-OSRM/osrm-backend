@@ -30,16 +30,15 @@ onClickRouteDescription: function(geometry_index) {
 	OSRM.G.markers.highlight.centerView(OSRM.DEFAULTS.HIGHLIGHT_ZOOM_LEVEL);	
 },
 onClickCreateShortcut: function(src){
-	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat + ',' + OSRM.G.map.getCenter().lng;
+	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat.toFixed(6) + ',' + OSRM.G.map.getCenter().lng.toFixed(6);
 	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src, OSRM.RoutingDescription.showRouteLink, OSRM.RoutingDescription.showRouteLink_TimeOut, OSRM.DEFAULTS.JSONP_TIMEOUT, 'shortener');
-	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
+	document.getElementById('route-link').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
 },
 showRouteLink: function(response){
-	document.getElementById('route-prelink').innerHTML = '[<a id="gpx-link" class = "text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
-// 	document.getElementById('route-prelink').innerHTML = '[<input class="text-selectable output-box" style="border:none" value="'+response.ShortURL+'" type="text" onfocus="this.select()" readonly="readonly"/>]';
+	document.getElementById('route-link').innerHTML = '[<a class="result-link text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
 },
 showRouteLink_TimeOut: function(){
-	document.getElementById('route-prelink').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
+	document.getElementById('route-link').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
 },
 
 // handling of routing description
@@ -47,17 +46,17 @@ show: function(response) {
 	// compute query string
 	var query_string = '?rebuild=1';
 	for(var i=0; i<OSRM.G.markers.route.length; i++)
-		query_string += '&loc=' + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng(); 
+		query_string += '&loc=' + OSRM.G.markers.route[i].getLat().toFixed(6) + ',' + OSRM.G.markers.route[i].getLng().toFixed(6); 
  						
 	// create link to the route
-	var route_link ='<span class="route-summary" id="route-prelink">[<a id="gpx-link" onclick="OSRM.RoutingDescription.onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]</span>';
+	var route_link ='[<a class="result-link" onclick="OSRM.RoutingDescription.onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]';
 
 	// create GPX link
-	var gpx_link = '<span class="route-summary">[<a id="gpx-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]</span>';
+	var gpx_link = '[<a class="result-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
 		
 	// create route description
 	var route_desc = "";
-	route_desc += '<table class="results-table">';
+	route_desc += '<table class="results-table medium-font">';
 
 	for(var i=0; i < response.route_instructions.length; i++){
 		//odd or even ?
@@ -71,7 +70,7 @@ show: function(response) {
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
-		route_desc += '<span class="result-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
+		route_desc += '<div class="result-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
 
 //		// build route description
 //		if( i == 0 )
@@ -88,8 +87,7 @@ show: function(response) {
 			route_desc += ' on ';
 			route_desc += '<b>' + response.route_instructions[i][1] + '</b>';
 		}
-		//route_desc += ' for ';
-		route_desc += '</span>';
+		route_desc += '</div>';
 		route_desc += "</td>";
 		
 		route_desc += '<td class="result-distance">';
@@ -99,52 +97,61 @@ show: function(response) {
 		
 		route_desc += "</tr>";
 	}	
-		
-	route_desc += '</table>';		
-	headline = "";
-	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
-	headline += '<div style="float:left;width:40%">';
-	headline += "<span class='route-summary'>"
-		+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
-		+ "<br>"
-		+ OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time)
-		+ "</span>";		
-	headline +=	'</div>';
-	headline += '<div style="float:left;text-align:right;width:60%;">'+route_link+'<br>'+gpx_link+'</div>';
+	route_desc += '</table>';
+	
+	// create header
+	header = 
+		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
+		'<div class="full">' +
+		'<div class="left">' +
+		'<div class="header-content">' + OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="header-content">' + OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'</div>' +
+		'<div class="right">' +
+		'<div id="route-link" class="header-content">' + route_link + '</div>' +
+		'<div class="header-content">' + gpx_link + '</div>' +
+		'</div>' +		
+		'</div>';
 
-	var output = "";
-	output += route_desc;
-
-	document.getElementById('information-box-headline').innerHTML = headline;
-	document.getElementById('information-box').innerHTML = output;
+	// update DOM
+	document.getElementById('information-box-header').innerHTML = header;
+	document.getElementById('information-box').innerHTML = route_desc;
 },
 
 // simple description
 showSimple: function(response) {
-	headline = OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
-	headline += "<span class='route-summary'>"
-			+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
-			+ "<br>"
-			+ OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time)
-			+ "</span>";
-	headline += '<br><br>';
+	header = 
+		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
+		'<div class="full">' +
+		'<div class="left">' +
+		'<div class="header-content">' + OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="header-content">' + OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'</div>' +
+		'<div class="right">' +
+		'</div>' +		
+		'</div>';	
 
-	document.getElementById('information-box-headline').innerHTML = headline;
-	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED")+".<p>";	
+	// update DOM
+	document.getElementById('information-box-header').innerHTML = header;
+	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED")+"</div>";	
 },
 
 // no description
 showNA: function( display_text ) {
-	headline = OSRM.loc("ROUTE_DESCRIPTION")+":<br>";
-	headline += "<span class='route-summary'>"
-			+ OSRM.loc("DISTANCE")+": N/A"
-			+ "<br>"
-			+ OSRM.loc("DURATION")+": N/A"
-			+ "</span>";
-	headline += '<br><br>';
+	header = 
+		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
+		'<div class="full">' +
+		'<div class="left">' +
+		'<div class="header-content">' + OSRM.loc("DISTANCE")+": N/A" + '</div>' +
+		'<div class="header-content">' + OSRM.loc("DURATION")+": N/A" + '</div>' +
+		'</div>' +
+		'<div class="right">' +
+		'</div>' +		
+		'</div>';
 
-	document.getElementById('information-box-headline').innerHTML = headline;
-	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+display_text+".<p>";	
+	// update DOM
+	document.getElementById('information-box-header').innerHTML = header;
+	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+display_text+"</div>";	
 },
 
 // map driving instructions to icons

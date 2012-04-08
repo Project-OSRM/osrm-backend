@@ -66,8 +66,8 @@ OSRM.JSONP = {
 				OSRM.JSONP.fences[id] = undefined;						// clean fence
 			}
 			
-			OSRM.JSONP.sum[id] += new Number( new Date() - OSRM.JSONP.durations[id] );
-			OSRM.debug.log("[jsonp] response handling: "+id+" "+ (OSRM.JSONP.sum[id]/OSRM.JSONP.counter[id]).toFixed(2) );
+//			OSRM.JSONP.sum[id] += new Number( new Date() - OSRM.JSONP.durations[id] );
+//			OSRM.debug.log("[jsonp] response handling: "+id+" "+ (OSRM.JSONP.sum[id]/OSRM.JSONP.counter[id]).toFixed(2) );
 		};
 		
 		// clean DOM (unfortunately, script elements cannot be reused by all browsers)
@@ -85,9 +85,9 @@ OSRM.JSONP = {
 		// start timeout timer
 		OSRM.JSONP.timers[id] = setTimeout(OSRM.JSONP.timeouts[id], timeout);
 		
-		if(!OSRM.JSONP.durations) { OSRM.JSONP.durations = {}; OSRM.JSONP.counter = {}; OSRM.JSONP.sum = {}; }
-		if(OSRM.JSONP.counter[id]) OSRM.JSONP.counter[id]++; else {OSRM.JSONP.counter[id] = 1;OSRM.JSONP.sum[id] = 0;}
-		OSRM.JSONP.durations[id] = new Date();		
+//		if(!OSRM.JSONP.durations) { OSRM.JSONP.durations = {}; OSRM.JSONP.counter = {}; OSRM.JSONP.sum = {}; }
+//		if(OSRM.JSONP.counter[id]) OSRM.JSONP.counter[id]++; else {OSRM.JSONP.counter[id] = 1;OSRM.JSONP.sum[id] = 0;}
+//		OSRM.JSONP.durations[id] = new Date();		
 //		OSRM.debug.log("[jsonp] init: "+id);
 		
 		return true;

@@ -31,7 +31,7 @@ resetRouting: function() {
 	OSRM.G.markers.highlight.hide();
 	
 	document.getElementById('information-box').innerHTML = "";
-	document.getElementById('information-box-headline').innerHTML = "";
+	document.getElementById('information-box-header').innerHTML = "";
 	
 	OSRM.JSONP.reset();	
 },
@@ -67,7 +67,7 @@ reverseRouting: function() {
 		OSRM.G.markers.highlight.hide();
 	} else {
 		document.getElementById('information-box').innerHTML = "";
-		document.getElementById('information-box-headline').innerHTML = "";		
+		document.getElementById('information-box-header').innerHTML = "";		
 	}
 },
 
