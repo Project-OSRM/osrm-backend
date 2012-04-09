@@ -60,7 +60,8 @@ _onclickResult: function(marker_id, lat, lon) {
 	
 	OSRM.G.markers.route[index].show();
 	OSRM.G.markers.route[index].centerView();	
-	OSRM.Routing.getRoute();
+	if( OSRM.G.markers.route.length > 1 )
+		OSRM.Routing.getRoute();
 },
 
 
@@ -75,6 +76,11 @@ _showResults: function(response, parameters) {
 		OSRM.Geocoder._showResults_Empty(parameters);
 		return;
 	}
+	
+	// show first result
+	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
+	if( OSRM.G.markers.route.length > 1 )
+		return;
 	
 	// show possible results for input
 	var html = "";
@@ -101,8 +107,6 @@ _showResults: function(response, parameters) {
 		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
 		"<div class='header-content'>(found "+response.length+" results)"+"</div>";
 	document.getElementById('information-box').innerHTML = html;
-
-	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
 },
 _showResults_Empty: function(parameters) {
 	document.getElementById('information-box-header').innerHTML =

@@ -118,14 +118,15 @@ onDragEnd: function(e) {
 	this.switchIcon(this.options.baseicon);
 	
 	this.parent.setPosition( e.target.getLatLng() );	
-	OSRM.Routing.getRoute();
 	if (OSRM.G.route.isShown()) {
+		OSRM.Routing.getRoute();
 		OSRM.G.route.hideOldRoute();
 		OSRM.G.route.hideUnnamedRoute();
-	}
-	
-	if(OSRM.G.route.isShown()==false)
+	} else {
 		OSRM.Geocoder.updateAddress(this.parent.label);
+		document.getElementById('information-box').innerHTML = "";				// do we want this?
+		document.getElementById('information-box-header').innerHTML = "";
+	}
 },
 toString: function() {
 	return "OSRM.RouteMarker: \""+this.label+"\", "+this.position+")";

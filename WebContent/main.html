@@ -109,7 +109,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div id="input-target" class="input-marker">
 	<div class="left"><span id="gui-search-target-label">Ende:</span></div>
 	<div class="center input-box"><input id="gui-input-target" class="input-box" type="text" maxlength="200" value="" title="Zielposition eingeben" /></div>	
-	<div class="center"><div id="fui-delete-target" class="iconic-button delete-marker"></div></div>
+	<div class="center"><div id="gui-delete-target" class="iconic-button delete-marker"></div></div>
 	<div class="right"><a class="button" id="gui-search-target">Zeigen</a></div>	
 	</div>
 	</div>
@@ -129,12 +129,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div id="input-mask-options">
 	
 	<!-- option toggle -->
-	<span id="options-toggle" class="small-font">Kartenwerkzeuge</span>
+	<span id="gui-options-toggle" class="small-font">Kartenwerkzeuge</span>
 	
 	<!-- actual options -->
 	<div id="options-box" class="full">
 	<div class="left">
-	<input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" onclick="OSRM.Routing.getRoute();" />
+	<input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" />
 	<span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Unbenannte Straßen hervorheben</span>
 	</div>
 	<div class="right">
