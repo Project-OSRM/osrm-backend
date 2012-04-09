@@ -23,15 +23,15 @@ OSRM.RoutingGUI = {
 
 // click: button "reset"
 resetRouting: function() {
-	document.getElementById('input-source-name').value = "";
-	document.getElementById('input-target-name').value = "";
+	document.getElementById('gui-input-source').value = "";
+	document.getElementById('gui-input-target').value = "";
 	
 	OSRM.G.route.hideAll();
 	OSRM.G.markers.removeAll();
 	OSRM.G.markers.highlight.hide();
 	
 	document.getElementById('information-box').innerHTML = "";
-	document.getElementById('information-box-headline').innerHTML = "";
+	document.getElementById('information-box-header').innerHTML = "";
 	
 	OSRM.JSONP.reset();	
 },
@@ -39,9 +39,9 @@ resetRouting: function() {
 // click: button "reverse"
 reverseRouting: function() {
 	// invert input boxes
-	var tmp = document.getElementById("input-source-name").value;
-	document.getElementById("input-source-name").value = document.getElementById("input-target-name").value;
-	document.getElementById("input-target-name").value = tmp;
+	var tmp = document.getElementById("gui-input-source").value;
+	document.getElementById("gui-input-source").value = document.getElementById("gui-input-target").value;
+	document.getElementById("gui-input-target").value = tmp;
 	
 	// invert route
 	OSRM.G.markers.route.reverse();
@@ -67,7 +67,7 @@ reverseRouting: function() {
 		OSRM.G.markers.highlight.hide();
 	} else {
 		document.getElementById('information-box').innerHTML = "";
-		document.getElementById('information-box-headline').innerHTML = "";		
+		document.getElementById('information-box-header').innerHTML = "";		
 	}
 },
 
@@ -83,12 +83,21 @@ showMarker: function(marker_id) {
 },
 
 
-// changed: any inputbox (is called when return is pressed [after] or focus is lost [before])
+// keyup: force geocoder when enter is pressed
+// (change event can be triggered, too; second call to geocoder gets fenced by JSONP)
+// (alternative: track changes manually and only permit keyup event, if there was no change)
+// do we want this?
+keyUp: function(e, marker_id) {
+	if(e.keyCode==13)
+		OSRM.RoutingGUI.inputChanged(marker_id);
+},
+
+// changed: any inputbox (is called when enter is pressed [after] or focus is lost [before])
 inputChanged: function(marker_id) {
 	if( marker_id == OSRM.C.SOURCE_LABEL)	
-		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('input-source-name').value);
+		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('gui-input-source').value);
 	else if( marker_id == OSRM.C.TARGET_LABEL)
-		OSRM.Geocoder.call(OSRM.C.TARGET_LABEL, document.getElementById('input-target-name').value);
+		OSRM.Geocoder.call(OSRM.C.TARGET_LABEL, document.getElementById('gui-input-target').value);
 },
 
 // click: button "open JOSM"

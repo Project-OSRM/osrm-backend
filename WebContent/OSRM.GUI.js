@@ -30,8 +30,36 @@ init: function() {
 	OSRM.GUI.visible = true;
 	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
 	
-	document.getElementById('input-source-name').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
-	document.getElementById('input-target-name').value = OSRM.DEFAULTS.ONLOAD_TARGET;	
+	// init events
+	// [TODO: switch to new event model]
+	document.getElementById("gui-toggle-in").onclick = OSRM.GUI.toggleMain;
+	document.getElementById("gui-toggle-out").onclick = OSRM.GUI.toggleMain;
+	document.getElementById("gui-printer").onclick = OSRM.Printing.print;
+	
+	document.getElementById("gui-input-source").onchange = function() {OSRM.RoutingGUI.inputChanged(OSRM.C.SOURCE_LABEL);};
+	document.getElementById("gui-input-source").onkeyup = function(e) {OSRM.RoutingGUI.keyUp(e,OSRM.C.SOURCE_LABEL);};
+	document.getElementById("gui-delete-source").onclick = function() {OSRM.RoutingGUI.deleteMarker(OSRM.C.SOURCE_LABEL);};
+	document.getElementById("gui-search-source").onclick = function() {OSRM.RoutingGUI.showMarker(OSRM.C.SOURCE_LABEL);};	
+	
+	document.getElementById("gui-input-target").onchange = function() {OSRM.RoutingGUI.inputChanged(OSRM.C.TARGET_LABEL);};
+	document.getElementById("gui-input-target").onkeyup = function(e) {OSRM.RoutingGUI.keyUp(e,OSRM.C.TARGET_LABEL);};
+	document.getElementById("gui-delete-target").onclick = function() {OSRM.RoutingGUI.deleteMarker(OSRM.C.TARGET_LABEL);};
+	document.getElementById("gui-search-target").onclick = function() {OSRM.RoutingGUI.showMarker(OSRM.C.TARGET_LABEL);};
+	
+	document.getElementById("gui-reset").onclick = OSRM.RoutingGUI.resetRouting;
+	document.getElementById("gui-reverse").onclick = OSRM.RoutingGUI.reverseRouting;
+	document.getElementById("gui-options-toggle").onclick = OSRM.GUI.toggleOptions;
+	document.getElementById("open-josm").onclick = OSRM.RoutingGUI.openJOSM;
+	document.getElementById("open-osmbugs").onclick = OSRM.RoutingGUI.openOSMBugs;
+	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getRoute;
+	
+	// gui after transition events
+	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_9==-1 ) {
+		document.getElementById('main-wrapper').addEventListener("transitionend", OSRM.GUI.onMainTransitionEnd, false);
+		document.getElementById('main-wrapper').addEventListener("webkitTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
+		document.getElementById('main-wrapper').addEventListener("oTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
+		document.getElementById('main-wrapper').addEventListener("MSTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
+	}	
 },
 
 // set language dependent labels
@@ -41,14 +69,17 @@ setLanguage: function() {
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
-	document.getElementById("options-toggle").innerHTML = OSRM.loc("GUI_OPTIONS");
+	document.getElementById("gui-options-toggle").innerHTML = OSRM.loc("GUI_OPTIONS");
 	document.getElementById("gui-search-source").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-target").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-source-label").innerHTML = OSRM.loc("GUI_START")+":";
 	document.getElementById("gui-search-target-label").innerHTML = OSRM.loc("GUI_END")+":";
-	document.getElementById("input-source-name").title = OSRM.loc("GUI_START_TOOLTIP");
-	document.getElementById("input-target-name").title = OSRM.loc("GUI_END_TOOLTIP");
+	document.getElementById("gui-input-source").title = OSRM.loc("GUI_START_TOOLTIP");
+	document.getElementById("gui-input-target").title = OSRM.loc("GUI_END_TOOLTIP");
 	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
+	
+	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
+	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;	
 },
 		
 // show/hide main-gui
@@ -68,15 +99,9 @@ toggleMain: function() {
 		document.getElementById('main-wrapper').style.left=-OSRM.GUI.width+"px";
 	}
 
-	// execute after animation
-	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_9==-1 ) {
-		document.getElementById('main-wrapper').addEventListener("transitionend", OSRM.GUI.onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("webkitTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("oTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("MSTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
-	} else {
+	// execute after animation (old browser support)
+	if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 )
 		OSRM.GUI.onMainTransitionEnd();		
-	}
 },
 
 // do stuff after main-gui animation finished

@@ -27,7 +27,7 @@ supported_languages: ["en", "de"],
 init: function() {
 	// create dropdown menu
 	var select = document.createElement('select');
-	select.id = "language-toggle";
+	select.id = "gui-language-toggle";
 	select.onchange = function() { OSRM.Localization.change(this.value); };
 	
 	// fill dropdown menu
@@ -39,8 +39,8 @@ init: function() {
 	}
 	
 	// add element to DOM
-	var main_input_header = document.getElementById('main-input-header'); 
-	main_input_header.insertBefore(select,main_input_header.firstChild);
+	var input_mask_header = document.getElementById('input-mask-header'); 
+	input_mask_header.insertBefore(select,input_mask_header.firstChild);
 	
 	// initialize default language
 	OSRM.Localization.change( OSRM.DEFAULTS.LANGUAGE );
@@ -51,6 +51,8 @@ change: function(language) {
 	OSRM.DEFAULTS.LANGUAGE = language;
 	if( OSRM.Localization[language]) {
 		OSRM.GUI.setLanguage();
+		if( document.getElementById('information-box').innerHTML != "" )
+			OSRM.RoutingDescription.show( OSRM.G.response );
 	} else {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';

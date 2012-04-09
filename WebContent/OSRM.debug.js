@@ -60,7 +60,10 @@ OSRM.debug.init = function() {
 	box.appendChild(clear);
 	box.appendChild(OSRM.debug.content);
 };
+
+
+// onload event
 if(document.addEventListener)	// FF, CH
 	document.addEventListener("DOMContentLoaded", OSRM.debug.init, false);
 else	// IE
-	OSRM.debug.init();
+	document.onreadystatechange = function(){if(document.readyState == "interactive" || document.readyState == "complete") OSRM.debug.init();};
