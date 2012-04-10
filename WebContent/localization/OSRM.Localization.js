@@ -21,7 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Localization = {
 		
-supported_languages: ["en", "de"],		
+supported_languages: [ {display_name:"en", encoding:"en"},
+                       {display_name:"de", encoding:"de"}
+],		
 		
 // initialize localization
 init: function() {
@@ -33,8 +35,8 @@ init: function() {
 	// fill dropdown menu
 	for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
 		var option=document.createElement("option");
-		option.innerHTML = OSRM.Localization.supported_languages[i];
-		option.value = OSRM.Localization.supported_languages[i];
+		option.innerHTML = OSRM.Localization.supported_languages[i].display_name;
+		option.value = OSRM.Localization.supported_languages[i].encoding;
 		select.appendChild(option);
 	}
 	
@@ -51,8 +53,17 @@ change: function(language) {
 	OSRM.DEFAULTS.LANGUAGE = language;
 	if( OSRM.Localization[language]) {
 		OSRM.GUI.setLanguage();
-		if( document.getElementById('information-box').innerHTML != "" )
-			OSRM.RoutingDescription.show( OSRM.G.response );
+		if( OSRM.G.markers.route.length > 1)
+			OSRM.Routing.getRoute();
+		else if(OSRM.G.markers.route.length > 0 && document.getElementById('information-box').innerHTML != "" ) {
+			OSRM.Geocoder.call( OSRM.C.SOURCE_LABEL, document.getElementById("gui-input-source").value );
+			OSRM.Geocoder.call( OSRM.C.TARGET_LABEL, document.getElementById("gui-input-target").value );
+		} else {
+			OSRM.Geocoder.updateAddress(OSRM.C.SOURCE_LABEL, false);
+			OSRM.Geocoder.updateAddress(OSRM.C.TARGET_LABEL, false);
+			document.getElementById('information-box').innerHTML = "";
+			document.getElementById('information-box-header').innerHTML = "";			
+		}
 	} else {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';

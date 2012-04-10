@@ -30,6 +30,10 @@ init: function() {
 	OSRM.GUI.visible = true;
 	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
 	
+	// init starting source/target
+	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
+	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;
+	
 	// init events
 	// [TODO: switch to new event model]
 	document.getElementById("gui-toggle-in").onclick = OSRM.GUI.toggleMain;
@@ -77,9 +81,6 @@ setLanguage: function() {
 	document.getElementById("gui-input-source").title = OSRM.loc("GUI_START_TOOLTIP");
 	document.getElementById("gui-input-target").title = OSRM.loc("GUI_END_TOOLTIP");
 	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
-	
-	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
-	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;	
 },
 		
 // show/hide main-gui
