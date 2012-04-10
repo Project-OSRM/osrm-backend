@@ -66,7 +66,7 @@ show: function(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<img width="18px" src="images/'+OSRM.RoutingDescription.getDirectionIcon(response.route_instructions[i][0])+'" alt="" />';
+		route_desc += '<img width="18px" src="'+OSRM.G.images[OSRM.RoutingDescription.getDirectionIcon(response.route_instructions[i][0])].src+'" alt="" />';
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
@@ -158,33 +158,33 @@ showNA: function( display_text ) {
 // [TODO: language-safe implementation]
 getDirectionIcon: function(name) {
 	var directions = {
-		"Turn left":"turn-left.png",
-		"Turn right":"turn-right.png",
-		"U-Turn":"u-turn.png",
-		"Head":"continue.png",
-		"Continue":"continue.png",
-		"Turn slight left":"slight-left.png",
-		"Turn slight right":"slight-right.png",
-		"Turn sharp left":"sharp-left.png",
-		"Turn sharp right":"sharp-right.png",
-		"Enter roundabout and leave at first exit":"round-about.png",
-		"Enter roundabout and leave at second exit":"round-about.png",
-		"Enter roundabout and leave at third exit":"round-about.png",
-		"Enter roundabout and leave at fourth exit":"round-about.png",
-		"Enter roundabout and leave at fifth exit":"round-about.png",
-		"Enter roundabout and leave at sixth exit":"round-about.png",
-		"Enter roundabout and leave at seventh exit":"round-about.png",
-		"Enter roundabout and leave at eighth exit":"round-about.png",
-		"Enter roundabout and leave at nineth exit":"round-about.png",
-		"Enter roundabout and leave at tenth exit":"round-about.png",
-		"Enter roundabout and leave at one of the too many exit":"round-about.png",
-		"You have reached your destination":"target.png"
+		"Turn left":"turn-left",
+		"Turn right":"turn-right",
+		"U-Turn":"u-turn",
+		"Head":"continue",
+		"Continue":"continue",
+		"Turn slight left":"slight-left",
+		"Turn slight right":"slight-right",
+		"Turn sharp left":"sharp-left",
+		"Turn sharp right":"sharp-right",
+		"Enter roundabout and leave at first exit":"round-about",
+		"Enter roundabout and leave at second exit":"round-about",
+		"Enter roundabout and leave at third exit":"round-about",
+		"Enter roundabout and leave at fourth exit":"round-about",
+		"Enter roundabout and leave at fifth exit":"round-about",
+		"Enter roundabout and leave at sixth exit":"round-about",
+		"Enter roundabout and leave at seventh exit":"round-about",
+		"Enter roundabout and leave at eighth exit":"round-about",
+		"Enter roundabout and leave at nineth exit":"round-about",
+		"Enter roundabout and leave at tenth exit":"round-about",
+		"Enter roundabout and leave at one of the too many exit":"round-about",
+		"You have reached your destination":"target"
 	};
 	
 	if( directions[name] )
 		return directions[name];
 	else
-		return "default.png";
+		return "default";
 }
 
 };

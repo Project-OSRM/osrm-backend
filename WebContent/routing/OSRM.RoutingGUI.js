@@ -48,17 +48,17 @@ reverseRouting: function() {
 	if(OSRM.G.markers.route.length == 1) {
 		if(OSRM.G.markers.route[0].label == OSRM.C.TARGET_LABEL) {
 			OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
-			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+			OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-source'] );
 		} else if(OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL) {
 			OSRM.G.markers.route[0].label = OSRM.C.TARGET_LABEL;
-			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-target.png') );
+			OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-target'] );
 		}
 	} else if(OSRM.G.markers.route.length > 1){
 		OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
-		OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+		OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-source'] );
 		
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].label = OSRM.C.TARGET_LABEL;
-		OSRM.G.markers.route[OSRM.G.markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].marker.setIcon( OSRM.G.icons['marker-target'] );		
 	}
 	
 	// recompute route

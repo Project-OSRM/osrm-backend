@@ -30,6 +30,9 @@ init: function() {
 	OSRM.GUI.visible = true;
 	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
 	
+	// init favicon
+	document.getElementById('favicon').href=OSRM.G.images["favicon"].src;
+	
 	// init starting source/target
 	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
 	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;

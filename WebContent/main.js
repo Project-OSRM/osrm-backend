@@ -27,7 +27,7 @@ OSRM.init = function() {
 	OSRM.Localization.init();
 	OSRM.GUI.init();
 	OSRM.Map.init();
-	OSRM.Routing.init();	
+	OSRM.Routing.init();
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
  	OSRM.checkURL();
@@ -35,40 +35,54 @@ OSRM.init = function() {
 
 
 // prefetch images
-OSRM.GLOBALS.images = Array();
+OSRM.GLOBALS.images = {};
 OSRM.prefetchImages = function() {
-	var images = [	'images/marker-source.png',
-	              	'images/marker-target.png',
-	              	'images/marker-via.png',
-	              	'images/marker-highlight.png',
-	              	'images/marker-source-drag.png',
-	              	'images/marker-target-drag.png',
-	              	'images/marker-via-drag.png',
-	              	'images/marker-highlight-drag.png',
-	              	'images/marker-drag.png',
-	              	'images/cancel.png',
-	              	'images/cancel_active.png',
-	              	'images/cancel_hover.png',
-	              	'images/restore.png',
-	              	'images/restore_active.png',
-	              	'images/restore_hover.png',
-	              	'images/printer.png',
-	              	'images/printer_active.png',
-	              	'images/printer_hover.png',
-	              	'images/printer_inactive.png'
-	              ];
-
-	for(var i=0; i<images.length; i++) {
-		OSRM.G.images[i] = new Image();
-		OSRM.G.images[i].src = images[i];
+	var image_names = [	'marker-source',
+	               	'marker-target',
+	              	'marker-via',
+	              	'marker-highlight',
+	              	'marker-source-drag',
+	              	'marker-target-drag',
+	              	'marker-via-drag',
+	              	'marker-highlight-drag',
+	              	'marker-drag',
+	              	'cancel',
+	              	'cancel_active',
+	              	'cancel_hover',
+	              	'restore',
+	              	'restore_active',
+	              	'restore_hover',
+	              	'printer',
+	              	'printer_active',
+	              	'printer_hover',
+	              	'printer_inactive',
+	        		'turn-left',
+	        		'turn-right',
+	        		'u-turn',
+	        		'continue',
+	        		'slight-left',
+	        		'slight-right',
+	        		'sharp-left',
+	        		'sharp-right',
+	        		'round-about',
+	        		'target',
+	        		'default'	        		
+	               ];
+		
+	for(var i=0; i<image_names.length; i++) {
+		OSRM.G.images[image_names[i]] = new Image();
+		OSRM.G.images[image_names[i]].src = 'images/'+image_names[i]+'.png';
 	}
+
+	OSRM.G.images["favicon"] = new Image();
+	OSRM.G.images["favicon"].src = 'images/osrm-favicon.ico';
 };
 
 
 // prefetch icons
-OSRM.GLOBALS.icons = Array();
+OSRM.GLOBALS.icons = {};
 OSRM.prefetchIcons = function() {
-	var images = [	'marker-source',
+	var image_names = [	'marker-source',
 	              	'marker-target',
 	              	'marker-via',
 	              	'marker-highlight',
@@ -79,13 +93,13 @@ OSRM.prefetchIcons = function() {
 	              	'marker-drag'
 	              ];
 
-	for(var i=0; i<images.length; i++) {
+	for(var i=0; i<image_names.length; i++) {
 		var icon = {
-				iconUrl: 'images/'+images[i]+'.png', iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
+				iconUrl: 'images/'+image_names[i]+'.png', iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
 				shadowUrl: L.ROOT_URL + 'images/marker-shadow.png',	shadowSize: new L.Point(41, 41),
 				popupAnchor: new L.Point(0, -33)
 			};
-		OSRM.G.icons[images[i]] = new L.SwitchableIcon(icon);
+		OSRM.G.icons[image_names[i]] = new L.SwitchableIcon(icon);
 	}
 	
 	// special values for drag marker
