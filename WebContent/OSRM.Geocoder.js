@@ -79,7 +79,7 @@ _showResults: function(response, parameters) {
 	
 	// show first result
 	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
-	if( OSRM.G.markers.route.length > 1 )
+	if( OSRM.G.markers.route.length > 1 )		// if a route is displayed, we don't need to show other possible geocoding results
 		return;
 	
 	// show possible results for input

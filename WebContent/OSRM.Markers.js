@@ -109,7 +109,9 @@ onDragStart: function(e) {
 		}
 	
 	if( this.parent != OSRM.G.markers.highlight)
-		OSRM.G.markers.highlight.hide();	
+		OSRM.G.markers.highlight.hide();
+	if( this.parent != OSRM.G.markers.dragger)
+		OSRM.G.markers.dragger.hide();
 	if (OSRM.G.route.isShown())
 		OSRM.G.route.showOldRoute();
 },
@@ -124,8 +126,7 @@ onDragEnd: function(e) {
 		OSRM.G.route.hideUnnamedRoute();
 	} else {
 		OSRM.Geocoder.updateAddress(this.parent.label);
-		document.getElementById('information-box').innerHTML = "";				// do we want this?
-		document.getElementById('information-box-header').innerHTML = "";
+		OSRM.GUI.clearResults();
 	}
 },
 toString: function() {

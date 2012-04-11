@@ -131,6 +131,10 @@ html, body {
 	border: 0px;
 	text-decoration:none;
 }
+.top-left-button
+{
+	float:left;
+}
 .top-right-button
 {
 	float:right;

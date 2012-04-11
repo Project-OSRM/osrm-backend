@@ -82,16 +82,6 @@ showMarker: function(marker_id) {
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].centerView();
 },
 
-
-// keyup: force geocoder when enter is pressed
-// (change event can be triggered, too; second call to geocoder gets fenced by JSONP)
-// (alternative: track changes manually and only permit keyup event, if there was no change)
-// do we want this?
-keyUp: function(e, marker_id) {
-	if(e.keyCode==13)
-		OSRM.RoutingGUI.inputChanged(marker_id);
-},
-
 // changed: any inputbox (is called when enter is pressed [after] or focus is lost [before])
 inputChanged: function(marker_id) {
 	if( marker_id == OSRM.C.SOURCE_LABEL)	

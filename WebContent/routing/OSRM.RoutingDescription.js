@@ -72,21 +72,22 @@ show: function(response) {
 		route_desc += '<td class="result-items">';
 		route_desc += '<div class="result-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
 
-//		// build route description
-//		if( i == 0 )
-//			route_desc += OSRM.loc("DIRECTION_"+response.route_instructions[i][0]).replace(/%s/, response.route_instructions[i][6]); 
-//		else if( response.route_instructions[i][1] != "" )
-//			route_desc += OSRM.loc("DIRECTION_"+response.route_instructions[i][0]).replace(/\[(.*)\]/,"");
-//		else
-//			route_desc += OSRM.loc("DIRECTION_"+response.route_instructions[i][0]).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][6]);
-		
-		route_desc += response.route_instructions[i][0];
+		// build route description
 		if( i == 0 )
-			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		
-		if( response.route_instructions[i][1] != "" ) {
-			route_desc += ' on ';
-			route_desc += '<b>' + response.route_instructions[i][1] + '</b>';
-		}
+			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/%s/, OSRM.loc(response.route_instructions[i][6]) );
+		else if( response.route_instructions[i][1] != "" )
+			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]);
+		else
+			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"");
+			
+		
+//		route_desc += response.route_instructions[i][0];
+//		if( i == 0 )
+//			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		
+//		if( response.route_instructions[i][1] != "" ) {
+//			route_desc += ' on ';
+//			route_desc += '<b>' + response.route_instructions[i][1] + '</b>';
+//		}
 		route_desc += '</div>';
 		route_desc += "</td>";
 		
@@ -179,6 +180,38 @@ getDirectionIcon: function(name) {
 		"Enter roundabout and leave at tenth exit":"round-about",
 		"Enter roundabout and leave at one of the too many exit":"round-about",
 		"You have reached your destination":"target"
+	};
+	
+	if( directions[name] )
+		return directions[name];
+	else
+		return "default";
+},
+
+//map driving instructions to ids
+getDirectionId: function(name) {
+	var directions = {
+		"Turn left":1,
+		"Turn right":2,
+		"U-Turn":3,
+		"Head":4,
+		"Continue":5,
+		"Turn slight left":6,
+		"Turn slight right":7,
+		"Turn sharp left":8,
+		"Turn sharp right":9,
+		"Enter roundabout and leave at first exit":10,
+		"Enter roundabout and leave at second exit":11,
+		"Enter roundabout and leave at third exit":12,
+		"Enter roundabout and leave at fourth exit":13,
+		"Enter roundabout and leave at fifth exit":14,
+		"Enter roundabout and leave at sixth exit":15,
+		"Enter roundabout and leave at seventh exit":16,
+		"Enter roundabout and leave at eighth exit":17,
+		"Enter roundabout and leave at nineth exit":18,
+		"Enter roundabout and leave at tenth exit":19,
+		"Enter roundabout and leave at one of the too many exit":20,
+		"You have reached your destination":21
 	};
 	
 	if( directions[name] )

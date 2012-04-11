@@ -59,10 +59,11 @@ OSRM.Localization["en"] = {
 "SW": "southwest",
 "NW": "northwest",
 // driving directions
+"DIRECTION_0":"Unknown instruction[ on <b>%s</b>]",
 "DIRECTION_1":"Turn left[ on <b>%s</b>]",
 "DIRECTION_2":"Turn right[ on <b>%s</b>]",
 "DIRECTION_3":"U-Turn[ on <b>%s</b>]",
-"DIRECTION_4":"Head %s",
+"DIRECTION_4":"Head <b>%s</b>",
 "DIRECTION_5":"Continue[ on <b>%s</b>]",
 "DIRECTION_6":"Turn slight left[ on <b>%s</b>]",
 "DIRECTION_7":"Turn slight right[ on <b>%s</b>]",

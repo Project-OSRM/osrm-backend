@@ -44,12 +44,10 @@ init: function() {
 	document.getElementById("gui-printer").onclick = OSRM.Printing.print;
 	
 	document.getElementById("gui-input-source").onchange = function() {OSRM.RoutingGUI.inputChanged(OSRM.C.SOURCE_LABEL);};
-	document.getElementById("gui-input-source").onkeyup = function(e) {OSRM.RoutingGUI.keyUp(e,OSRM.C.SOURCE_LABEL);};
 	document.getElementById("gui-delete-source").onclick = function() {OSRM.RoutingGUI.deleteMarker(OSRM.C.SOURCE_LABEL);};
 	document.getElementById("gui-search-source").onclick = function() {OSRM.RoutingGUI.showMarker(OSRM.C.SOURCE_LABEL);};	
 	
 	document.getElementById("gui-input-target").onchange = function() {OSRM.RoutingGUI.inputChanged(OSRM.C.TARGET_LABEL);};
-	document.getElementById("gui-input-target").onkeyup = function(e) {OSRM.RoutingGUI.keyUp(e,OSRM.C.TARGET_LABEL);};
 	document.getElementById("gui-delete-target").onclick = function() {OSRM.RoutingGUI.deleteMarker(OSRM.C.TARGET_LABEL);};
 	document.getElementById("gui-search-target").onclick = function() {OSRM.RoutingGUI.showMarker(OSRM.C.TARGET_LABEL);};
 	
@@ -129,6 +127,12 @@ toggleOptions: function() {
 	} else {
 		document.getElementById('options-box').style.visibility="visible";
 	}
+},
+
+// clear output area
+clearResults: function() {
+	document.getElementById('information-box').innerHTML = "";
+	document.getElementById('information-box-header').innerHTML = "";	
 }
 
 };

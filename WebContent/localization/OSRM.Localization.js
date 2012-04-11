@@ -30,6 +30,7 @@ init: function() {
 	// create dropdown menu
 	var select = document.createElement('select');
 	select.id = "gui-language-toggle";
+	select.className = "top-left-button";
 	select.onchange = function() { OSRM.Localization.change(this.value); };
 	
 	// fill dropdown menu
@@ -67,7 +68,7 @@ change: function(language) {
 	} else {
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
-		script.src = "Localization/OSRM.Locale."+language+".js";
+		script.src = "localization/OSRM.Locale."+language+".js";
 		document.head.appendChild(script);		
 	}
 },
