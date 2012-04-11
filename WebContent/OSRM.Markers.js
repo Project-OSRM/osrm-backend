@@ -90,6 +90,7 @@ onClick: function(e) {
 	
 	OSRM.Routing.getRoute();
 	OSRM.G.markers.highlight.hide();
+	OSRM.G.markers.dragger.hide();
 },
 onDrag: function(e) {
 	this.parent.setPosition( e.target.getLatLng() );

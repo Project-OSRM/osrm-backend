@@ -52,6 +52,7 @@ init: function() {
 // perform language change
 change: function(language) {
 	OSRM.DEFAULTS.LANGUAGE = language;
+	document.getElementById('gui-language-toggle').value = language;
 	if( OSRM.Localization[language]) {
 		OSRM.GUI.setLanguage();
 		if( OSRM.G.markers.route.length > 1)

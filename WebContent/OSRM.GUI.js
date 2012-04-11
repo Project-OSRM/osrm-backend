@@ -41,7 +41,6 @@ init: function() {
 	// [TODO: switch to new event model]
 	document.getElementById("gui-toggle-in").onclick = OSRM.GUI.toggleMain;
 	document.getElementById("gui-toggle-out").onclick = OSRM.GUI.toggleMain;
-	document.getElementById("gui-printer").onclick = OSRM.Printing.print;
 	
 	document.getElementById("gui-input-source").onchange = function() {OSRM.RoutingGUI.inputChanged(OSRM.C.SOURCE_LABEL);};
 	document.getElementById("gui-delete-source").onclick = function() {OSRM.RoutingGUI.deleteMarker(OSRM.C.SOURCE_LABEL);};

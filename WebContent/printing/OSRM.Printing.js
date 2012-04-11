@@ -20,6 +20,21 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Printing = {
 		
+init: function() {
+	var icon = document.createElement('div');
+	icon.id = "gui-printer";
+	icon.className = "iconic-button top-right-button";
+	
+	var spacer = document.createElement('div');
+	spacer.className = "quad top-right-button";
+	
+	var input_mask_header = document.getElementById('input-mask-header'); 
+	input_mask_header.appendChild(spacer,input_mask_header.lastChild);
+	input_mask_header.appendChild(icon,input_mask_header.lastChild);
+	
+	document.getElementById("gui-printer").onclick = OSRM.Printing.print;	
+},
+		
 windowLoaded: function(){
 	OSRM.printwindow.initialize();
 	OSRM.Printing.show( OSRM.G.response );

@@ -27,6 +27,7 @@ OSRM.init = function() {
 	OSRM.Localization.init();
 	OSRM.GUI.init();
 	OSRM.Map.init();
+	OSRM.Printing.init();
 	OSRM.Routing.init();
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
@@ -128,8 +129,16 @@ OSRM.checkURL = function(){
 		var name_val = splitted_url[i].split('=');
 		if(name_val.length!=2)
 			continue;
-			
-		if(name_val[0] == 'loc') {
+		
+		if(name_val[0] == 'hl') {
+			for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
+				if( OSRM.Localization.supported_languages[i].encoding == name_val[1]) {
+					OSRM.Localization.change(name_val[1]);
+					break;
+				}
+			}
+		}
+		else if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;
@@ -159,7 +168,7 @@ OSRM.checkURL = function(){
 		
 	// case 1: destination given
 	if( destination != undefined ) {
-		var index = OSRM.G.markers.setTarget( e.latlng );
+		var index = OSRM.G.markers.setTarget( destination.latlng );
 		if( destination_name == null )
 			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		else 
@@ -170,7 +179,7 @@ OSRM.checkURL = function(){
 	}
 
 	// case 2: locations given
-	if( positions != []) {
+	if( positions.length > 0) {
 		// draw via points
 		if( positions.length > 0) {
 			OSRM.G.markers.setSource( positions[0] );
@@ -196,6 +205,8 @@ OSRM.checkURL = function(){
 		// compute route
 		OSRM.Routing.getRoute();
 	}
+	
+	// default case: do nothing
 };
 
 

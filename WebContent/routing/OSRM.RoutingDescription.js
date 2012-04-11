@@ -74,20 +74,12 @@ show: function(response) {
 
 		// build route description
 		if( i == 0 )
-			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/%s/, OSRM.loc(response.route_instructions[i][6]) );
+			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.mapDirectionId(response.route_instructions[i][0])).replace(/%s/, OSRM.loc(response.route_instructions[i][6]) );
 		else if( response.route_instructions[i][1] != "" )
-			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]);
+			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.mapDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]);
 		else
-			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"");
-			
-		
-//		route_desc += response.route_instructions[i][0];
-//		if( i == 0 )
-//			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		
-//		if( response.route_instructions[i][1] != "" ) {
-//			route_desc += ' on ';
-//			route_desc += '<b>' + response.route_instructions[i][1] + '</b>';
-//		}
+			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.mapDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"");
+
 		route_desc += '</div>';
 		route_desc += "</td>";
 		
@@ -155,41 +147,8 @@ showNA: function( display_text ) {
 	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+display_text+"</div>";	
 },
 
-// map driving instructions to icons
-// [TODO: language-safe implementation]
-getDirectionIcon: function(name) {
-	var directions = {
-		"Turn left":"turn-left",
-		"Turn right":"turn-right",
-		"U-Turn":"u-turn",
-		"Head":"continue",
-		"Continue":"continue",
-		"Turn slight left":"slight-left",
-		"Turn slight right":"slight-right",
-		"Turn sharp left":"sharp-left",
-		"Turn sharp right":"sharp-right",
-		"Enter roundabout and leave at first exit":"round-about",
-		"Enter roundabout and leave at second exit":"round-about",
-		"Enter roundabout and leave at third exit":"round-about",
-		"Enter roundabout and leave at fourth exit":"round-about",
-		"Enter roundabout and leave at fifth exit":"round-about",
-		"Enter roundabout and leave at sixth exit":"round-about",
-		"Enter roundabout and leave at seventh exit":"round-about",
-		"Enter roundabout and leave at eighth exit":"round-about",
-		"Enter roundabout and leave at nineth exit":"round-about",
-		"Enter roundabout and leave at tenth exit":"round-about",
-		"Enter roundabout and leave at one of the too many exit":"round-about",
-		"You have reached your destination":"target"
-	};
-	
-	if( directions[name] )
-		return directions[name];
-	else
-		return "default";
-},
-
-//map driving instructions to ids
-getDirectionId: function(name) {
+//map driving instruction ids to internal ids
+mapDirectionId: function(name) {
 	var directions = {
 		"Turn left":1,
 		"Turn right":2,
@@ -217,7 +176,7 @@ getDirectionId: function(name) {
 	if( directions[name] )
 		return directions[name];
 	else
-		return "default";
+		return 0;
 }
 
 };
