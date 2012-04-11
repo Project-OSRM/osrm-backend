@@ -18,55 +18,72 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM initialization
 // [initialization, image prefetching]
 
-// will hold the Leaflet map object
-OSRM.GLOBALS.map = null;
-
 
 // onload initialization routine
 OSRM.init = function() {
 	OSRM.prefetchImages();
 	OSRM.prefetchIcons();
 	
+	OSRM.Localization.init();
 	OSRM.GUI.init();
 	OSRM.Map.init();
-	OSRM.Routing.init();	
+	//OSRM.Printing.init();
+	OSRM.Routing.init();
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
- 	OSRM.checkURL();
+ 	OSRM.parseParameters();
 };
 
 
 // prefetch images
-OSRM.GLOBALS.images = Array();
+OSRM.GLOBALS.images = {};
 OSRM.prefetchImages = function() {
-	var images = [	'images/marker-source.png',
-	              	'images/marker-target.png',
-	              	'images/marker-via.png',
-	              	'images/marker-highlight.png',
-	              	'images/marker-source-drag.png',
-	              	'images/marker-target-drag.png',
-	              	'images/marker-via-drag.png',
-	              	'images/marker-highlight-drag.png',
-	              	'images/marker-drag.png',
-	              	'images/cancel.png',
-	              	'images/cancel_active.png',
-	              	'images/cancel_hover.png',
-	              	'images/restore.png',
-	              	'images/restore_active.png',
-	              	'images/restore_hover.png'
-	              ];
-
-	for(var i=0; i<images.length; i++) {
-		OSRM.G.images[i] = new Image();
-		OSRM.G.images[i].src = images[i];
+	var image_names = [	'marker-source',
+	               	'marker-target',
+	              	'marker-via',
+	              	'marker-highlight',
+	              	'marker-source-drag',
+	              	'marker-target-drag',
+	              	'marker-via-drag',
+	              	'marker-highlight-drag',
+	              	'marker-drag',
+	              	'cancel',
+	              	'cancel_active',
+	              	'cancel_hover',
+	              	'restore',
+	              	'restore_active',
+	              	'restore_hover',
+	              	'printer',
+	              	'printer_active',
+	              	'printer_hover',
+	              	'printer_inactive',
+	        		'turn-left',
+	        		'turn-right',
+	        		'u-turn',
+	        		'continue',
+	        		'slight-left',
+	        		'slight-right',
+	        		'sharp-left',
+	        		'sharp-right',
+	        		'round-about',
+	        		'target',
+	        		'default'	        		
+	               ];
+		
+	for(var i=0; i<image_names.length; i++) {
+		OSRM.G.images[image_names[i]] = new Image();
+		OSRM.G.images[image_names[i]].src = 'images/'+image_names[i]+'.png';
 	}
+
+	OSRM.G.images["favicon"] = new Image();
+	OSRM.G.images["favicon"].src = 'images/osrm-favicon.ico';
 };
 
 
 // prefetch icons
-OSRM.GLOBALS.icons = Array();
+OSRM.GLOBALS.icons = {};
 OSRM.prefetchIcons = function() {
-	var images = [	'marker-source',
+	var image_names = [	'marker-source',
 	              	'marker-target',
 	              	'marker-via',
 	              	'marker-highlight',
@@ -77,13 +94,13 @@ OSRM.prefetchIcons = function() {
 	              	'marker-drag'
 	              ];
 
-	for(var i=0; i<images.length; i++) {
+	for(var i=0; i<image_names.length; i++) {
 		var icon = {
-				iconUrl: 'images/'+images[i]+'.png', iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
+				iconUrl: 'images/'+image_names[i]+'.png', iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
 				shadowUrl: L.ROOT_URL + 'images/marker-shadow.png',	shadowSize: new L.Point(41, 41),
 				popupAnchor: new L.Point(0, -33)
 			};
-		OSRM.G.icons[images[i]] = new L.SwitchableIcon(icon);
+		OSRM.G.icons[image_names[i]] = new L.SwitchableIcon(icon);
 	}
 	
 	// special values for drag marker
@@ -91,8 +108,8 @@ OSRM.prefetchIcons = function() {
 };
 
 
-// parse URL GET parameters if any exist
-OSRM.checkURL = function(){
+//parse URL GET parameters
+OSRM.parseParameters = function(){
 	var called_url = document.location.search.substr(1,document.location.search.length);
 	
 	// reject messages that are clearly too long or too small 
@@ -100,11 +117,7 @@ OSRM.checkURL = function(){
 		return;
 	
 	// storage for parameter values
-	var positions = [];
-	var zoom = null;
-	var center = null;
-	var destination = null;
-	var destination_name = null;
+	var params = {};
 
 	// parse input
 	var splitted_url = called_url.split('&');
@@ -112,72 +125,92 @@ OSRM.checkURL = function(){
 		var name_val = splitted_url[i].split('=');
 		if(name_val.length!=2)
 			continue;
-			
-		if(name_val[0] == 'loc') {
+		
+		if(name_val[0] == 'hl') {
+			for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
+				if( OSRM.Localization.supported_languages[i].encoding == name_val[1]) {
+					OSRM.Localization.change(name_val[1]);
+					break;
+				}
+			}
+		}
+		else if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;
-			positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
+			params.positions = params.positions || [];
+			params.positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
 		}
 		else if(name_val[0] == 'dest') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
-			destination = new L.LatLng( coordinates[0], coordinates[1]);
+			params.destination = new L.LatLng( coordinates[0], coordinates[1]);
 		}
 		else if(name_val[0] == 'destname') {
-			destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
+			params.destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
 		}
 		else if(name_val[0] == 'z') {
-			zoom = name_val[1];
-			if( zoom<0 || zoom > 18)
+			var zoom_level = Number(name_val[1]);
+			if( zoom_level<0 || zoom_level > 18)
 				return;
+			params.zoom = zoom;
 		}
 		else if(name_val[0] == 'center') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
-			center = new L.LatLng( coordinates[0], coordinates[1]);			
+			params.center = new L.LatLng( coordinates[0], coordinates[1]);			
 		}		
 	}
 		
 	// case 1: destination given
-	if( destination != undefined ) {
-		var index = OSRM.G.markers.setTarget( e.latlng );
-		if( destination_name == null )
-			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+	if( params.destination ) {
+		var index = OSRM.G.markers.setTarget( params.destination.latlng );
+		if( params.destination_name )
+			document.getElementById("gui-input-target").value = params.destination_name;
 		else 
-			document.getElementById("input-target-name").value = destination_name;
+			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		OSRM.G.markers.route[index].show();
 		OSRM.G.markers.route[index].centerView();
 		return;
 	}
 
 	// case 2: locations given
-	if( positions != []) {
+	if( params.positions ) {
 		// draw via points
-		if( positions.length > 0) {
-			OSRM.G.markers.setSource( positions[0] );
+		if( params.positions.length > 0 ) {
+			OSRM.G.markers.setSource( params.positions[0] );
 			OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
-		if(positions.length > 1) {
-			OSRM.G.markers.setTarget( positions[positions.length-1] );
+		if( params.positions.length > 1 ) {
+			OSRM.G.markers.setTarget( params.positions[params.positions.length-1] );
 			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
-		for(var i=1; i<positions.length-1;i++)
-			OSRM.G.markers.setVia( i-1, positions[i] );
+		for(var i=1; i<params.positions.length-1;i++)
+			OSRM.G.markers.setVia( i-1, params.positions[i] );
 		for(var i=0; i<OSRM.G.markers.route.length;i++)
 			OSRM.G.markers.route[i].show();
 		
 		// center on route (support for old links) / move to given view (new behaviour)
-		if(zoom == null || center == null) {
-			var bounds = new L.LatLngBounds( positions );
+		if( params.zoom == null || params.center == null ) {
+			var bounds = new L.LatLngBounds( params.positions );
 			OSRM.G.map.fitBoundsUI( bounds );
 		} else {
-			OSRM.G.map.setView(center, zoom);
+			OSRM.G.map.setView(params.center, params.zoom);
 		}
 			
 		// compute route
 		OSRM.Routing.getRoute();
+		return;
 	}
+	
+	// default case: do nothing
 };
+
+
+// onload event
+if(document.addEventListener)		// FF, CH
+	document.addEventListener("DOMContentLoaded", OSRM.init, false);
+else								// old IE
+	document.onreadystatechange = function(){if(document.readyState == "interactive" || document.readyState == "complete") OSRM.init();};

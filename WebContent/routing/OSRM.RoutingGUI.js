@@ -23,15 +23,15 @@ OSRM.RoutingGUI = {
 
 // click: button "reset"
 resetRouting: function() {
-	document.getElementById('input-source-name').value = "";
-	document.getElementById('input-target-name').value = "";
+	document.getElementById('gui-input-source').value = "";
+	document.getElementById('gui-input-target').value = "";
 	
 	OSRM.G.route.hideAll();
 	OSRM.G.markers.removeAll();
 	OSRM.G.markers.highlight.hide();
 	
 	document.getElementById('information-box').innerHTML = "";
-	document.getElementById('information-box-headline').innerHTML = "";
+	document.getElementById('information-box-header').innerHTML = "";
 	
 	OSRM.JSONP.reset();	
 },
@@ -39,26 +39,26 @@ resetRouting: function() {
 // click: button "reverse"
 reverseRouting: function() {
 	// invert input boxes
-	var tmp = document.getElementById("input-source-name").value;
-	document.getElementById("input-source-name").value = document.getElementById("input-target-name").value;
-	document.getElementById("input-target-name").value = tmp;
+	var tmp = document.getElementById("gui-input-source").value;
+	document.getElementById("gui-input-source").value = document.getElementById("gui-input-target").value;
+	document.getElementById("gui-input-target").value = tmp;
 	
 	// invert route
 	OSRM.G.markers.route.reverse();
 	if(OSRM.G.markers.route.length == 1) {
 		if(OSRM.G.markers.route[0].label == OSRM.C.TARGET_LABEL) {
 			OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
-			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+			OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-source'] );
 		} else if(OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL) {
 			OSRM.G.markers.route[0].label = OSRM.C.TARGET_LABEL;
-			OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-target.png') );
+			OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-target'] );
 		}
 	} else if(OSRM.G.markers.route.length > 1){
 		OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
-		OSRM.G.markers.route[0].marker.setIcon( new L.Icon('images/marker-source.png') );
+		OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-source'] );
 		
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].label = OSRM.C.TARGET_LABEL;
-		OSRM.G.markers.route[OSRM.G.markers.route.length-1].marker.setIcon( new L.Icon('images/marker-target.png') );		
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].marker.setIcon( OSRM.G.icons['marker-target'] );		
 	}
 	
 	// recompute route
@@ -67,7 +67,7 @@ reverseRouting: function() {
 		OSRM.G.markers.highlight.hide();
 	} else {
 		document.getElementById('information-box').innerHTML = "";
-		document.getElementById('information-box-headline').innerHTML = "";		
+		document.getElementById('information-box-header').innerHTML = "";		
 	}
 },
 
@@ -82,13 +82,12 @@ showMarker: function(marker_id) {
 		OSRM.G.markers.route[OSRM.G.markers.route.length-1].centerView();
 },
 
-
-// changed: any inputbox (is called when return is pressed [after] or focus is lost [before])
+// changed: any inputbox (is called when enter is pressed [after] or focus is lost [before])
 inputChanged: function(marker_id) {
 	if( marker_id == OSRM.C.SOURCE_LABEL)	
-		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('input-source-name').value);
+		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('gui-input-source').value);
 	else if( marker_id == OSRM.C.TARGET_LABEL)
-		OSRM.Geocoder.call(OSRM.C.TARGET_LABEL, document.getElementById('input-target-name').value);
+		OSRM.Geocoder.call(OSRM.C.TARGET_LABEL, document.getElementById('gui-input-target').value);
 },
 
 // click: button "open JOSM"

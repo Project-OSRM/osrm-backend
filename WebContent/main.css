@@ -18,25 +18,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 /* OSRM CSS styles */
 
 
-/* map -> fullscreen */
-body {
+/* fullscreen map */
+html, body {
     padding: 0;
     margin: 0;
-}
-html, body, #map {
     height: 100%;
 }
 #map {
+	height: 100%;
 	z-index: 0;
 }
 
 
-/* styles for gui */
-.vquad
-{
-	height:10px;
-}
-
+/* general styles for gui boxes */
 .gui-wrapper
 {
 	position:absolute;
@@ -63,11 +57,13 @@ html, body, #map {
 	padding:5px;	
 }
 
+
+/* styles for specific gui boxes */
 #main-wrapper
 {
 	width:410px;
-	height:95%;
 	top:5px;
+	bottom:25px;
 	left:5px;
 }
 #main-input
@@ -78,10 +74,9 @@ html, body, #map {
 #main-output
 {
 	width:390px;
-	top:220px;
+	top:220px;			/* main-input.height+2*gui-box.margin+2*gui-box.padding */
 	bottom:0px;
 }
-
 #blob-wrapper
 {
 	left:-5px;
@@ -96,79 +91,79 @@ html, body, #map {
 	-webkit-border-bottom-left-radius:0px;
 	visibility:hidden;
 }
-#blob-input
+#blob-content
 {
-	width:26px;
-	height:26px;
+	width:16px;
+	height:16px;
 	border-top-left-radius:0px;
 	border-bottom-left-radius:0px;
 	-moz-border-radius-topleft:0px;
 	-moz-border-radius-bottomleft:0px;
 	-webkit-border-top-left-radius:0px;
 	-webkit-border-bottom-left-radius:0px;	
-	padding:0px;
 }
 
-.main-toggle-out
-{
-	cursor:pointer;
-	position:absolute;
-	right:5px;
-	top:5px;
-	width:16px;
-	height:16px;
-	background-image:url("images/cancel.png");	
-}
-.main-toggle-out:hover
-{
-	background-image:url("images/cancel_hover.png");
-}
-.main-toggle-out:active
-{
-	background-image:url("images/cancel_active.png");
-}
-.main-toggle-in
-{
-	cursor:pointer;
-	position:absolute;
-	right:5px;
-	top:5px;
-	width:16px;
-	height:16px;
-	background-image:url("images/restore.png");	
-}
-.main-toggle-in:hover
-{
-	background-image:url("images/restore_hover.png");
-}
-.main-toggle-in:active
-{
-	background-image:url("images/restore_active.png");
-}
 
-.main-options
+/* styles for main-input areas */
+#input-mask-header
 {
-	position:relative;
-	font-size:10px;
-}
-.main-options-left-box
-{
-	position:absolute;
-	left:5px;
+	left:0px;
+	right:0px;
 	top:0px;
+	height:50px;
+	background-repeat:no-repeat;
+	background-position:center;
+	background-image:url("images/osrm-logo.png");		
 }
-.main-options-right-box
+#input-mask
 {
-	position:absolute;
-	right:5px;
-	top:5px;
+	margin:3px;
 }
-#options-toggle
+#input-mask-options
+{
+	margin:3px;
+}
+
+
+/* styles for main-input input-mask-header */
+#gui-language-toggle
+{
+	border: 0px;
+	text-decoration:none;
+}
+.top-left-button
+{
+	float:left;
+}
+.top-right-button
+{
+	float:right;
+}
+
+
+/* styles for main-input input-mask */
+.input-marker
+{
+	display:table-row;
+}
+.input-marker > div
+{
+	padding-bottom:4px;
+}
+.input-box
+{
+	width: 250px;
+	padding-right: 2px;
+}
+
+
+/* styles for main-input input-mask-options */
+#gui-options-toggle
 {
 	cursor:pointer;
 	color:#0000ff
 }
-#options-toggle:hover
+#gui-options-toggle:hover
 {
 	color:#ff0000
 }
@@ -177,111 +172,92 @@ html, body, #map {
 	visibility:hidden;
 }
 
-#osrm-logo
-{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 192px;
-    height: 50px;
-	text-align:center;
-	vertical-align: middle;    
-}
 
-.input-box
+/* styles for main-output areas */
+#information-box-header
 {
-	width: 250px;
+	margin:5px;
+	height:60px;
 }
-
-
-.full
-{
-	width:100%;
-}
-.right
-{
-	text-align:right;
-}
-.center
-{
-	text-align:center;
-}
-
 #information-box
 {
 	position:absolute;
-	bottom:15px;
-	top:60px;
+	bottom:20px;
+	top:65px;
 	width:380px;
-	font-size:12px;
 	overflow:auto;
 	margin:5px;
 }
-
-.route-summary
+#legal-notice
 {
-	font-size: 12px;
+	position:absolute;
+	right:0px;
+	bottom:0px;
+	margin:5px;
 }
-#gpx-link
+
+
+/* styles for information-box-header */
+.header-title
+{
+	font-weight:bold;
+	margin-bottom:10px;
+}
+.header-content
+{
+	font-weight:normal;
+}
+.result-link
 {
 	color:#0000ff;
 	text-decoration:none;
 	cursor:pointer;
 }
-#gpx-link:hover
+.result-link:hover
 {
 	color:#ff0000;
 }
+
+
+/* style for information-box table (search results, driving directions) */
 .results-table
 {
 	border-spacing:0px;
+	width:100%;
 }
 .results-odd
 {
-	background-color: #FAF3E9; //#ffffff;
+	background-color: #FFFDE3;
 }
 .results-even
 {
-	background-color: #F2DE9C; //#ffffe0;
+	background-color: #FFF9BB;
 }
 .result-counter
 {
 	text-align:right;
-	vertical-align: top;
-	width:30px;
+	vertical-align:top;
 	font-weight:bold;
-	padding-left:5px;
-	padding-right:5px;
-	padding-top:1px;
-	padding-bottom:1px;
+	padding:1px 5px 1px 5px;
 }
 .result-items
 {
 	text-align:left;
 	vertical-align: middle;
 	width:100%;
-	padding-left:1px;
-	padding-right:1px;
-	padding-top:1px;
-	padding-bottom:1px;	
+	padding:1px;
 }
-.result-direction
+.result-directions
 {
-	width:30px;
-	padding-left:1px;
-	padding-right:1px;
-	padding-top:1px;
-	padding-bottom:1px;	
+	text-align:left;
+	vertical-align: middle;
+	padding:1px 5px 1px 5px;
 }
 .result-distance
 {
 	text-align:right;
-	vertical-align: middle;	
-	width:30px;
-	padding-left:1px;
-	padding-right:1px;
-	padding-top:1px;
-	padding-bottom:1px;	
+	vertical-align: middle;
+	padding:1px 1px 1px 5px;
 }
 .result-item
 {
@@ -292,18 +268,135 @@ html, body, #map {
 {
 	color:#ff0000
 }
-
-#legal-notice
+.no-results
 {
-	position:absolute;
-	right:0px;
-	bottom:0px;
-	padding:5px;
-	font-size:10px;
+	text-align:center;
+	margin:28px;
+}
+
+
+/* buttons */
+.button
+{
+	cursor:pointer;
+	padding:2px 10px 2px 10px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	background-color:#EEEEEE;
+	border:1px solid #999999;
+	color:#333333;
+	text-decoration:none;
+	font-size:9px;
+	outline-style:none;
+	vertical-align:1px;  
+}
+.button:hover
+{
+	background-color:#F9F9F9;
+	color:#000000;
+}
+.button:active
+{
+	background-color:#F4F4F4;
+	color:#FF0000;
+}
+
+
+/* iconic buttons */
+.iconic-button
+{
+	cursor:pointer;
+	width:16px;
+	height:16px;
+	background-repeat:no-repeat;
+	background-position:center;
+}
+
+#gui-toggle-out
+{
+	background-image:url("images/cancel.png");	
+}
+#gui-toggle-out:hover
+{
+	background-image:url("images/cancel_hover.png");
+}
+#gui-toggle-out:active
+{
+	background-image:url("images/cancel_active.png");
+}
+
+#gui-toggle-in
+{
+	background-image:url("images/restore.png");	
+}
+#gui-toggle-in:hover
+{
+	background-image:url("images/restore_hover.png");
+}
+#gui-toggle-in:active
+{
+	background-image:url("images/restore_active.png");
+}
+
+#gui-printer
+{
+	background-image:url("images/printer.png");
+}
+#gui-printer:hover
+{
+	background-image:url("images/printer_hover.png");
+}
+#gui-printer:active
+{
+	background-image:url("images/printer_active.png");
+}
+
+.delete-marker
+{
+	background-image:url("images/cancel.png");
+	visibility:hidden;
+}
+.delete-marker:hover
+{
+	background-image:url("images/cancel_hover.png");
+}
+.delete-marker:active
+{
+	background-image:url("images/cancel_active.png");
+}
+
+
+/* fonts */
+.base-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10.5px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;	
 }
 
 
 /* utility styles (defined above buttons, so that buttons retain cursor:pointer)*/
+.quad
+{
+	min-width:10px;
+	min-height:10px;
+}
+
 .not-selectable
 {
 	cursor:default;
@@ -322,49 +415,31 @@ html, body, #map {
 	user-select: text;
 }
 
-
-/* buttons */
-.button
+.checkbox-label
 {
-	cursor:pointer;
-	padding:2px 10px 2px 10px;
-	border-radius:5px;
-	-moz-border-radius:5px;
-	background-color:#EEEEEE;
-	border:1px solid #999999;
-	color:#333333;
-	text-decoration:none;
-	font-size:11px;
-	outline-style:none;  
-}
-.button:hover
-{
-	background-color:#F9F9F9;
-	color:#000000;
-}
-.button:active
-{
-	background-color:#F4F4F4;
-	color:#FF0000;
+	vertical-align:2px;
 }
 
-
-.delete-marker
+.full
 {
-	cursor:pointer;
-	position:absolute;
-	right:5px;
-	top:3px;
-	width:16px;
-	height:16px;
-	background-image:url("images/cancel.png");
-	visibility:hidden;	
+	display:table;
+	width:100%;
 }
-.delete-marker:hover
+.left
 {
-	background-image:url("images/cancel_hover.png");
+	display:table-cell;
+	text-align:left;
+	vertical-align:middle;
 }
-.delete-marker:active
+.right
 {
-	background-image:url("images/cancel_active.png");
+	display:table-cell;
+	text-align:right;
+	vertical-align:middle;
+}
+.center
+{
+	display:table-cell;
+	text-align:center;
+	vertical-align:middle;
 }

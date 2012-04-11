@@ -71,6 +71,7 @@ showRoute: function(response) {
 	if(!response)
 		return;
 	
+	OSRM.G.response = response; 
 	OSRM.G.via_points = response.via_points.slice(0);
 	console.log(OSRM.G.via_points);
 	if(response.status == 207) {

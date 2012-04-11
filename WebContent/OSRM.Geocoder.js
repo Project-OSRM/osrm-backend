@@ -43,7 +43,7 @@ call: function(marker_id, query) {
 	}
 	
 	//build request for geocoder
-	var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&q=" + query;
+	var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&accept-language="+OSRM.DEFAULTS.LANGUAGE+"&q=" + query;
 	OSRM.JSONP.call( call, OSRM.Geocoder._showResults, OSRM.Geocoder._showResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_"+marker_id, {marker_id:marker_id,query:query} );
 },
 
@@ -60,7 +60,8 @@ _onclickResult: function(marker_id, lat, lon) {
 	
 	OSRM.G.markers.route[index].show();
 	OSRM.G.markers.route[index].centerView();	
-	OSRM.Routing.getRoute();
+	if( OSRM.G.markers.route.length > 1 )
+		OSRM.Routing.getRoute();
 },
 
 
@@ -76,9 +77,14 @@ _showResults: function(response, parameters) {
 		return;
 	}
 	
+	// show first result
+	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
+	if( OSRM.G.markers.route.length > 1 )		// if a route is displayed, we don't need to show other possible geocoding results
+		return;
+	
 	// show possible results for input
 	var html = "";
-	html += '<table class="results-table">';	
+	html += '<table class="results-table medium-font">';	
 	for(var i=0; i < response.length; i++){
 		var result = response[i];
 
@@ -97,23 +103,27 @@ _showResults: function(response, parameters) {
 	}
 	html += '</table>';
 		
-	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
+	document.getElementById('information-box-header').innerHTML = 
+		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
+		"<div class='header-content'>(found "+response.length+" results)"+"</div>";
 	document.getElementById('information-box').innerHTML = html;
-
-	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
 },
 _showResults_Empty: function(parameters) {
-	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
+	document.getElementById('information-box-header').innerHTML =
+		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
+		"<div class='header-content'>(found 0 results)"+"</div>";		
 	if(parameters.marker_id == OSRM.C.SOURCE_LABEL)
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+": "+parameters.query +".<p>";
+		document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+": "+parameters.query +"</div>";
 	else if(parameters.marker_id == OSRM.C.TARGET_LABEL)
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND_TARGET")+": "+parameters.query +".<p>";
+		document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("NO_RESULTS_FOUND_TARGET")+": "+parameters.query +"</div>";
 	else
-		document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("NO_RESULTS_FOUND")+": "+parameters.query +".<p>";
+		document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("NO_RESULTS_FOUND")+": "+parameters.query +"</div>";
 },
 _showResults_Timeout: function() {
-	document.getElementById('information-box-headline').innerHTML = OSRM.loc("SEARCH_RESULTS")+":";
-	document.getElementById('information-box').innerHTML = "<br><p style='font-size:14px;font-weight:bold;text-align:center;'>"+OSRM.loc("TIMED_OUT")+".<p>";	
+	document.getElementById('information-box-header').innerHTML =
+		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
+		"<div class='header-content'>(found 0 results)"+"</div>";		
+	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("TIMED_OUT")+"</div>";	
 },
 
 
@@ -122,9 +132,9 @@ _showResults_Timeout: function() {
 //update geo coordinates in input boxes
 updateLocation: function(marker_id) {
 	if (marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
-		document.getElementById("input-source-name").value = OSRM.G.markers.route[0].getLat().toFixed(6) + ", " + OSRM.G.markers.route[0].getLng().toFixed(6);
+		document.getElementById("gui-input-source").value = OSRM.G.markers.route[0].getLat().toFixed(6) + ", " + OSRM.G.markers.route[0].getLng().toFixed(6);
 	} else if (marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget()) {
-		document.getElementById("input-target-name").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLat().toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng().toFixed(6);		
+		document.getElementById("gui-input-target").value = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLat().toFixed(6) + ", " + OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng().toFixed(6);		
 	}
 },
 
@@ -144,7 +154,7 @@ updateAddress: function(marker_id, do_fallback_to_lat_lng) {
 	} else
 		return;
 	
-	var call = OSRM.DEFAULTS.HOST_REVERSE_GEOCODER_URL + "?format=json" + "&lat=" + lat + "&lon=" + lng;
+	var call = OSRM.DEFAULTS.HOST_REVERSE_GEOCODER_URL + "?format=json" + "&accept-language="+OSRM.DEFAULTS.LANGUAGE + "&lat=" + lat + "&lon=" + lng;
 	OSRM.JSONP.call( call, OSRM.Geocoder._showReverseResults, OSRM.Geocoder._showReverseResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_"+marker_id, {marker_id:marker_id, do_fallback: do_fallback_to_lat_lng} );
 },
 
@@ -192,9 +202,9 @@ _showReverseResults: function(response, parameters) {
 		
 	// add result to DOM
 	if(parameters.marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() )
-		document.getElementById("input-source-name").value = address;
+		document.getElementById("gui-input-source").value = address;
 	else if(parameters.marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() )
-		document.getElementById("input-target-name").value = address;
+		document.getElementById("gui-input-target").value = address;
 },
 _showReverseResults_Timeout: function(response, parameters) {
 	if(!parameters.do_fallback)
