@@ -31,7 +31,7 @@ OSRM.init = function() {
 	OSRM.Routing.init();
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
- 	OSRM.checkURL();
+ 	OSRM.parseParameters();
 };
 
 
@@ -108,8 +108,8 @@ OSRM.prefetchIcons = function() {
 };
 
 
-// parse URL GET parameters if any exist
-OSRM.checkURL = function(){
+//parse URL GET parameters
+OSRM.parseParameters = function(){
 	var called_url = document.location.search.substr(1,document.location.search.length);
 	
 	// reject messages that are clearly too long or too small 
@@ -117,11 +117,7 @@ OSRM.checkURL = function(){
 		return;
 	
 	// storage for parameter values
-	var positions = [];
-	var zoom = null;
-	var center = null;
-	var destination = null;
-	var destination_name = null;
+	var params = {};
 
 	// parse input
 	var splitted_url = called_url.split('&');
@@ -142,68 +138,71 @@ OSRM.checkURL = function(){
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;
-			positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
+			params.positions = params.positions || [];
+			params.positions.push ( new L.LatLng( coordinates[0], coordinates[1]) );
 		}
 		else if(name_val[0] == 'dest') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
-			destination = new L.LatLng( coordinates[0], coordinates[1]);
+			params.destination = new L.LatLng( coordinates[0], coordinates[1]);
 		}
 		else if(name_val[0] == 'destname') {
-			destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
+			params.destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
 		}
 		else if(name_val[0] == 'z') {
-			zoom = name_val[1];
-			if( zoom<0 || zoom > 18)
+			var zoom_level = Number(name_val[1]);
+			if( zoom_level<0 || zoom_level > 18)
 				return;
+			params.zoom = zoom;
 		}
 		else if(name_val[0] == 'center') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
-			center = new L.LatLng( coordinates[0], coordinates[1]);			
+			params.center = new L.LatLng( coordinates[0], coordinates[1]);			
 		}		
 	}
 		
 	// case 1: destination given
-	if( destination != undefined ) {
-		var index = OSRM.G.markers.setTarget( destination.latlng );
-		if( destination_name == null )
-			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
+	if( params.destination ) {
+		var index = OSRM.G.markers.setTarget( params.destination.latlng );
+		if( params.destination_name )
+			document.getElementById("gui-input-target").value = params.destination_name;
 		else 
-			document.getElementById("gui-input-target").value = destination_name;
+			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		OSRM.G.markers.route[index].show();
 		OSRM.G.markers.route[index].centerView();
 		return;
 	}
 
 	// case 2: locations given
-	if( positions.length > 0) {
+	if( params.positions ) {
 		// draw via points
-		if( positions.length > 0) {
-			OSRM.G.markers.setSource( positions[0] );
+		if( params.positions.length > 0 ) {
+			OSRM.G.markers.setSource( params.positions[0] );
 			OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
-		if(positions.length > 1) {
-			OSRM.G.markers.setTarget( positions[positions.length-1] );
+		if( params.positions.length > 1 ) {
+			OSRM.G.markers.setTarget( params.positions[params.positions.length-1] );
 			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		}
-		for(var i=1; i<positions.length-1;i++)
-			OSRM.G.markers.setVia( i-1, positions[i] );
+		for(var i=1; i<params.positions.length-1;i++)
+			OSRM.G.markers.setVia( i-1, params.positions[i] );
 		for(var i=0; i<OSRM.G.markers.route.length;i++)
 			OSRM.G.markers.route[i].show();
 		
 		// center on route (support for old links) / move to given view (new behaviour)
-		if(zoom == null || center == null) {
-			var bounds = new L.LatLngBounds( positions );
+		if( params.zoom == null || params.center == null ) {
+			var bounds = new L.LatLngBounds( params.positions );
 			OSRM.G.map.fitBoundsUI( bounds );
 		} else {
-			OSRM.G.map.setView(center, zoom);
+			OSRM.G.map.setView(params.center, params.zoom);
 		}
 			
 		// compute route
 		OSRM.Routing.getRoute();
+		return;
 	}
 	
 	// default case: do nothing
