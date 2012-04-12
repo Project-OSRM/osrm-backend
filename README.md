@@ -45,7 +45,7 @@ References
 ----------
 [(1)] Cloudmade Leaflet: http://leaflet.cloudmade.com/  
 [(2)] Project OSRM: http://project-osrm.org/  
-[(3)] Project OSRM Frontend: http://map.project-osrm.org/
+[(3)] Project OSRM Frontend: http://map.project-osrm.org/  
 [(4)] Project OSRM Bugtracker: https://github.com/DennisOSRM/Project-OSRM/issues/
 
 
