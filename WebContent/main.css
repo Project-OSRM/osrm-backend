@@ -130,7 +130,22 @@ html, body {
 {
 	border: 0px;
 	text-decoration:none;
+	position: relative;
+ 	opacity: 0;
+	filter: alpha(opacity=0);
+	z-index: 5;
 }
+
+.styled-select
+{
+	position:absolute;
+	background: url("images/selector.png");
+	background-repeat:no-repeat;	
+	background-position: top right;
+	padding: 1px 1px 1px 1px;
+	overflow: hidden;
+}
+
 .top-left-button
 {
 	float:left;

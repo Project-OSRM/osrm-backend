@@ -30,7 +30,7 @@ init: function() {
 	// create dropdown menu
 	var select = document.createElement('select');
 	select.id = "gui-language-toggle";
-	select.className = "top-left-button";
+	//select.className = "top-left-button";
 	select.onchange = function() { OSRM.Localization.change(this.value); };
 	
 	// fill dropdown menu
@@ -45,6 +45,16 @@ init: function() {
 	var input_mask_header = document.getElementById('input-mask-header'); 
 	input_mask_header.insertBefore(select,input_mask_header.firstChild);
 	
+	// create visible dropdown menu
+	var textnode = document.createTextNode(OSRM.DEFAULTS.LANGUAGE);
+	var myspan = document.createElement("span");
+	myspan.className = "styled-select";
+	myspan.id = "styled-select" + select.id;
+	myspan.appendChild(textnode);
+	select.parentNode.insertBefore(myspan, select);
+	myspan.style.width = (select.clientWidth-2)+"px";
+	myspan.style.height = (select.clientHeight)+"px";
+	
 	// initialize default language
 	OSRM.Localization.change( OSRM.DEFAULTS.LANGUAGE );
 },
@@ -52,7 +62,16 @@ init: function() {
 // perform language change
 change: function(language) {
 	OSRM.DEFAULTS.LANGUAGE = language;
-	document.getElementById('gui-language-toggle').value = language;
+	// update selector
+	var select = document.getElementById('gui-language-toggle');
+	var option = select.getElementsByTagName("option");
+	select.value = language;
+	for(var i = 0; i < option.length; i++)
+		if(option[i].selected == true) {
+			document.getElementById("styled-select" + select.id).childNodes[0].nodeValue = option[i].childNodes[0].nodeValue;
+			break;
+		}	
+	// change gui language
 	if( OSRM.Localization[language]) {
 		OSRM.GUI.setLanguage();
 		if( OSRM.G.markers.route.length > 1)
