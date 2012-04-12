@@ -47,7 +47,7 @@ using namespace std;
 #define DEBUG(x) do {std::cout << "[debug " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 #define GUARANTEE(x,y) do { {do{ if(false == (x)) { ERR(y) } } while(0);} } while(0);
 #endif
-#define DELETE(x) do { if(NULL != x) { delete x; x = NULL; } }while(0);
+//#define DELETE(x) do { if(NULL != x) { delete x; x = NULL; } }while(0);
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

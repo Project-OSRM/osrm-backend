@@ -67,7 +67,7 @@ public:
     }
 
     virtual ~ViaRoutePlugin() {
-        DELETE( searchEngine );
+        delete searchEngine;
     }
 
     std::string GetDescriptor() const { return pluginDescriptorString; }
@@ -139,6 +139,7 @@ public:
         }
         reply.status = http::Reply::ok;
 
+        //TODO: Move to member as smart pointer
         BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
         std::string JSONParameter = routeParameters.options.Find("jsonp");
         if("" != JSONParameter) {
@@ -234,7 +235,7 @@ public:
             break;
         }
 
-        DELETE( desc );
+        delete desc;
         return;
     }
 private:
