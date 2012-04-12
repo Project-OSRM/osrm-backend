@@ -61,7 +61,7 @@ def route_status response
 end
 
 def way_list instructions
-  instructions.
+  instructions.reject { |r| r[0]=='You have reached your destination' }.
   map { |r| r[1] }.
   map { |r| r=="" ? '""' : r }.
   join(',')
