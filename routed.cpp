@@ -126,8 +126,8 @@ int main (int argc, char *argv[]) {
         std::cout << std::endl << "[server] shutting down" << std::endl;
         s->Stop();
         t.join();
-        DELETE(s);
-        DELETE(objects);
+        delete s;
+        delete objects;
     } catch (std::exception& e) {
         std::cerr << "[fatal error] exception: " << e.what() << std::endl;
     }

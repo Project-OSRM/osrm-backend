@@ -131,13 +131,13 @@ int main (int argc, char *argv[]) {
 
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
-    DELETE(edgeBasedGraphFactory);
+    delete edgeBasedGraphFactory;
     double expansionHasFinishedTime = get_timestamp() - startupTime;
 
     WritableGrid * writeableGrid = new WritableGrid();
     INFO("building grid ...");
     writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut, fileIndexOut);
-    DELETE( writeableGrid );
+    delete writeableGrid;
     CRC32 crc32;
     unsigned crc32OfNodeBasedEdgeList = crc32((char *)&(nodeBasedEdgeList[0]), nodeBasedEdgeList.size()*sizeof(EdgeBasedGraphFactory::EdgeBasedNode));
 //    INFO("CRC32 of data is " << crc32OfNodeBasedEdgeList);
@@ -164,27 +164,27 @@ int main (int argc, char *argv[]) {
     contractor->Run();
     INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");
 
-    std::vector< ContractionCleanup::Edge > contractedEdges;
-    contractor->GetEdges( contractedEdges );
+    std::vector< ContractionCleanup::Edge > contractedEdgeList;
+    contractor->GetEdges( contractedEdgeList );
     delete contractor;
 
-    ContractionCleanup * cleanup = new ContractionCleanup(edgeBasedNodeNumber, contractedEdges);
-    contractedEdges.clear();
-    std::vector<ContractionCleanup::Edge>().swap(contractedEdges);
-    cleanup->Run();
-
-    std::vector< InputEdge> cleanedEdgeList;
-    cleanup->GetData(cleanedEdgeList);
-    DELETE( cleanup );
+//    ContractionCleanup * cleanup = new ContractionCleanup(edgeBasedNodeNumber, contractedEdges);
+//    contractedEdges.clear();
+//    std::vector<ContractionCleanup::Edge>().swap(contractedEdges);
+//    cleanup->Run();
+//
+//    std::vector< InputEdge> cleanedEdgeList;
+//    cleanup->GetData(cleanedEdgeList);
+//    delete cleanup;
 
     INFO("Building Node Array");
-    sort(cleanedEdgeList.begin(), cleanedEdgeList.end());
+    sort(contractedEdgeList.begin(), contractedEdgeList.end());
     unsigned numberOfNodes = 0;
-    unsigned numberOfEdges = cleanedEdgeList.size();
+    unsigned numberOfEdges = contractedEdgeList.size();
     INFO("Serializing compacted graph");
     ofstream edgeOutFile(edgeOut, ios::binary);
 
-    BOOST_FOREACH(InputEdge & edge, cleanedEdgeList) {
+    BOOST_FOREACH(ContractionCleanup::Edge & edge, contractedEdgeList) {
         if(edge.source > numberOfNodes) {
             numberOfNodes = edge.source;
         }
@@ -201,7 +201,7 @@ int main (int argc, char *argv[]) {
     StaticGraph<EdgeData>::EdgeIterator position = 0;
     for ( StaticGraph<EdgeData>::NodeIterator node = 0; node <= numberOfNodes; ++node ) {
         StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
-        while ( edge < numberOfEdges && cleanedEdgeList[edge].source == node )
+        while ( edge < numberOfEdges && contractedEdgeList[edge].source == node )
             ++edge;
         _nodes[node].firstEdge = position; //=edge
         position += edge - lastEdge; //remove
@@ -219,11 +219,11 @@ int main (int argc, char *argv[]) {
     StaticGraph<EdgeData>::_StrEdge currentEdge;
     for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
         for ( StaticGraph<EdgeData>::EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
-            assert(node != cleanedEdgeList[edge].target);
-            currentEdge.target = cleanedEdgeList[edge].target;
-            currentEdge.data = cleanedEdgeList[edge].data;
+            assert(node != contractedEdgeList[edge].target);
+            currentEdge.target = contractedEdgeList[edge].target;
+            currentEdge.data = contractedEdgeList[edge].data;
             if(currentEdge.data.distance <= 0) {
-                INFO("Edge: " << i << ",source: " << cleanedEdgeList[edge].source << ", target: " << cleanedEdgeList[edge].target << ", dist: " << currentEdge.data.distance);
+                INFO("Edge: " << i << ",source: " << contractedEdgeList[edge].source << ", target: " << contractedEdgeList[edge].target << ", dist: " << currentEdge.data.distance);
                 ERR("Failed at edges of node " << node << " of " << numberOfNodes);
             }
             //Serialize edges
@@ -237,7 +237,7 @@ int main (int argc, char *argv[]) {
     INFO("Contraction: " << (edgeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and "<< usedEdgeCounter/endTime << " edges/sec");
 
     edgeOutFile.close();
-    cleanedEdgeList.clear();
+    //cleanedEdgeList.clear();
     _nodes.clear();
     INFO("finished preprocessing");
     return 0;

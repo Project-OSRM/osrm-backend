@@ -22,7 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "NASAGridSquare.h"
 
 NasaGridSquare::~NasaGridSquare() {
-    DELETE(elevationMap);
+    delete elevationMap;
 }
 
 std::string NasaGridSquare::make_filename(const char* ext) const {
@@ -66,7 +66,7 @@ void NasaGridSquare::load(const char* filename) {
     INFO("uncompressed: " << stat.size);
     INFO("compressed: " << stat.comp_size);
     num_bytes = stat.size;
-    DELETE(elevationMap);
+    delete elevationMap;
     elevationMap = new char[stat.size];
 
     zip_file * file = zip_fopen_index(test, 0, 0 );

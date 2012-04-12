@@ -44,7 +44,7 @@ public:
 
         for(unsigned i = 0; i < _pluginVector.size(); i++) {
             BasePlugin * tempPointer = _pluginVector[i];
-            DELETE( tempPointer );
+            delete tempPointer;
         }
     }
 

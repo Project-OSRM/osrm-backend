@@ -69,6 +69,11 @@ public:
         	bool forward:1;
         	bool backward:1;
         } data;
+        bool operator<( const Edge& right ) const {
+            if ( source != right.source )
+                return source < right.source;
+            return target < right.target;
+        }
 
         //sorts by source and other attributes
         static bool CompareBySource( const Edge& left, const Edge& right ) {
