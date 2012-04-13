@@ -21,11 +21,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EXTRACTORCALLBACKS_H_
 #define EXTRACTORCALLBACKS_H_
 
+#include <string>
+#include <vector>
+
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/regex.hpp>
 
 #include <stxxl.h>
-#include <vector>
 #include "ExtractorStructs.h"
 
 typedef stxxl::vector<NodeID> STXXLNodeIDVector;
@@ -85,9 +88,10 @@ private:
         return matched;
     }
     
-    inline int parseMaxspeed(const std::string& input) const {
+    inline int parseMaxspeed(std::string input) const { //call-by-value on purpose.
+        boost::algorithm::to_lower(input);
         int n = atoi(input.c_str());
-        if (input.find("mph") != std::string::npos || input.find("MPH") != std::string::npos || input.find("mp/h") != std::string::npos) {
+        if (input.find("mph") != std::string::npos || input.find("mp/h") != std::string::npos) {
             n = (n*1609)/1000;
         }
         return n;
