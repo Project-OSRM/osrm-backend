@@ -260,3 +260,4 @@ env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStruct
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
 env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
 env = conf.Finish()
+
