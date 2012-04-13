@@ -30,7 +30,7 @@ init: function() {
 	// create dropdown menu
 	var select = document.createElement('select');
 	select.id = "gui-language-toggle";
-	//select.className = "top-left-button";
+	select.className = "top-left-button";
 	select.onchange = function() { OSRM.Localization.change(this.value); };
 	
 	// fill dropdown menu

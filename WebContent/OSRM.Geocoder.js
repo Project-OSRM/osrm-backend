@@ -105,13 +105,14 @@ _showResults: function(response, parameters) {
 		
 	document.getElementById('information-box-header').innerHTML = 
 		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
+		"<div class='header-content'>("+OSRM.loc("FOUND_X_RESULTS").replace(/%i/,response.length)+")</div>";
 		"<div class='header-content'>(found "+response.length+" results)"+"</div>";
 	document.getElementById('information-box').innerHTML = html;
 },
 _showResults_Empty: function(parameters) {
 	document.getElementById('information-box-header').innerHTML =
 		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
-		"<div class='header-content'>(found 0 results)"+"</div>";		
+		"<div class='header-content'>("+OSRM.loc("FOUND_X_RESULTS").replace(/%i/,0)+")</div>";		
 	if(parameters.marker_id == OSRM.C.SOURCE_LABEL)
 		document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("NO_RESULTS_FOUND_SOURCE")+": "+parameters.query +"</div>";
 	else if(parameters.marker_id == OSRM.C.TARGET_LABEL)
@@ -122,7 +123,7 @@ _showResults_Empty: function(parameters) {
 _showResults_Timeout: function() {
 	document.getElementById('information-box-header').innerHTML =
 		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
-		"<div class='header-content'>(found 0 results)"+"</div>";		
+		"<div class='header-content'>("+OSRM.loc("FOUND_X_RESULTS").replace(/%i/,0)+")</div>";		
 	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("TIMED_OUT")+"</div>";	
 },
 

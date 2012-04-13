@@ -66,7 +66,7 @@ show: function(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<img width="18px" src="'+OSRM.G.images[OSRM.RoutingDescription.getDirectionIcon(response.route_instructions[i][0])].src+'" alt="" />';
+		route_desc += '<img width="18px" src="'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
@@ -74,11 +74,11 @@ show: function(response) {
 
 		// build route description
 		if( i == 0 )
-			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/%s/, OSRM.loc(response.route_instructions[i][6]) );
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/%s/, OSRM.loc(response.route_instructions[i][6]) );
 		else if( response.route_instructions[i][1] != "" )
-			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]);
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]);
 		else
-			route_desc += OSRM.loc("DIRECTION_"+OSRM.RoutingDescription.getDirectionId(response.route_instructions[i][0])).replace(/\[(.*)\]/,"");
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"");
 
 		route_desc += '</div>';
 		route_desc += "</td>";
@@ -147,69 +147,28 @@ showNA: function( display_text ) {
 	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+display_text+"</div>";	
 },
 
-// map driving instructions to icons
-// [TODO: language-safe implementation]
-getDirectionIcon: function(name) {
-	var directions = {
-		"Turn left":"turn-left",
-		"Turn right":"turn-right",
-		"U-Turn":"u-turn",
-		"Head":"continue",
-		"Continue":"continue",
-		"Turn slight left":"slight-left",
-		"Turn slight right":"slight-right",
-		"Turn sharp left":"sharp-left",
-		"Turn sharp right":"sharp-right",
-		"Enter roundabout and leave at first exit":"round-about",
-		"Enter roundabout and leave at second exit":"round-about",
-		"Enter roundabout and leave at third exit":"round-about",
-		"Enter roundabout and leave at fourth exit":"round-about",
-		"Enter roundabout and leave at fifth exit":"round-about",
-		"Enter roundabout and leave at sixth exit":"round-about",
-		"Enter roundabout and leave at seventh exit":"round-about",
-		"Enter roundabout and leave at eighth exit":"round-about",
-		"Enter roundabout and leave at nineth exit":"round-about",
-		"Enter roundabout and leave at tenth exit":"round-about",
-		"Enter roundabout and leave at one of the too many exit":"round-about",
-		"You have reached your destination":"target"
-	};
+// retrieve driving instruction icon from instruction id
+getDrivingInstructionIcon: function(server_instruction_id) {
+	var local_icon_id = "direction_";
+	server_instruction_id = server_instruction_id.replace(/^11-\d{1,}$/,"11");		// dumb check, if there is a roundabout (all have the same icon)
+	local_icon_id += server_instruction_id;
 	
-	if( directions[name] )
-		return directions[name];
+	if( OSRM.G.images[local_icon_id] )
+		return OSRM.G.images[local_icon_id].src;
 	else
-		return "default";
+		return OSRM.G.images["direction_0"].src;
 },
 
-//map driving instructions to ids
-getDirectionId: function(name) {
-	var directions = {
-		"Turn left":1,
-		"Turn right":2,
-		"U-Turn":3,
-		"Head":4,
-		"Continue":5,
-		"Turn slight left":6,
-		"Turn slight right":7,
-		"Turn sharp left":8,
-		"Turn sharp right":9,
-		"Enter roundabout and leave at first exit":10,
-		"Enter roundabout and leave at second exit":11,
-		"Enter roundabout and leave at third exit":12,
-		"Enter roundabout and leave at fourth exit":13,
-		"Enter roundabout and leave at fifth exit":14,
-		"Enter roundabout and leave at sixth exit":15,
-		"Enter roundabout and leave at seventh exit":16,
-		"Enter roundabout and leave at eighth exit":17,
-		"Enter roundabout and leave at nineth exit":18,
-		"Enter roundabout and leave at tenth exit":19,
-		"Enter roundabout and leave at one of the too many exit":20,
-		"You have reached your destination":21
-	};
+// retrieve driving instructions from instruction ids
+getDrivingInstruction: function(server_instruction_id) {
+	var local_instruction_id = "DIRECTION_";
+	server_instruction_id = server_instruction_id.replace(/^11-\d{2,}$/,"11-x");	// dumb check, if there are 10+ exits on a roundabout (say the same for exit 10+)
+	local_instruction_id += server_instruction_id;
 	
-	if( directions[name] )
-		return directions[name];
-	else
-		return 0;
+	var description = OSRM.loc( local_instruction_id );
+	if( description == local_instruction_id)
+		return OSRM.loc("DIRECTION_0");
+	return description;
 }
 
 };

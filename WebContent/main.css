@@ -128,9 +128,9 @@ html, body {
 /* styles for main-input input-mask-header */
 #gui-language-toggle
 {
+	position:absolute;
 	border: 0px;
 	text-decoration:none;
-	position: relative;
  	opacity: 0;
 	filter: alpha(opacity=0);
 	z-index: 5;

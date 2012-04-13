@@ -73,7 +73,6 @@ showRoute: function(response) {
 	
 	OSRM.G.response = response; 
 	OSRM.G.via_points = response.via_points.slice(0);
-	console.log(OSRM.G.via_points);
 	if(response.status == 207) {
 		OSRM.RoutingGeometry.showNA();
 		OSRM.RoutingNoNames.showNA();
