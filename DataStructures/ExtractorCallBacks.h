@@ -84,6 +84,14 @@ private:
         }
         return matched;
     }
+    
+    int parseMaxspeed(std::string input) {
+        int n = atoi(input.c_str());
+        if (input.find("mph") != input.npos) {
+            n = (n*1609)/1000;
+        }
+        return n;
+    }
 
 public:
     ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap) {
@@ -135,7 +143,7 @@ public:
         std::string ref( w.keyVals.Find("ref"));
         std::string junction( w.keyVals.Find("junction") );
         std::string route( w.keyVals.Find("route") );
-        int maxspeed( atoi(w.keyVals.Find("maxspeed").c_str()) );
+        int maxspeed( parseMaxspeed(w.keyVals.Find("maxspeed")) );
         std::string access( w.keyVals.Find("access") );
         std::string accessTag( w.keyVals.Find(settings.accessTag) );
         std::string man_made( w.keyVals.Find("man_made") );
