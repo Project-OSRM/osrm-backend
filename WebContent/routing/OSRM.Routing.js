@@ -48,6 +48,7 @@ timeoutRoute: function() {
 	OSRM.RoutingGeometry.showNA();
 	OSRM.RoutingNoNames.showNA();
 	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
+	OSRM.Routing._snapRoute();	
 },
 showRouteSimple: function(response) {
  	if(!response)
@@ -77,6 +78,7 @@ showRoute: function(response) {
 		OSRM.RoutingGeometry.showNA();
 		OSRM.RoutingNoNames.showNA();
 		OSRM.RoutingDescription.showNA( OSRM.loc("NO_ROUTE_FOUND") );
+		OSRM.Routing._snapRoute();		
 	} else {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingNoNames.show(response);
