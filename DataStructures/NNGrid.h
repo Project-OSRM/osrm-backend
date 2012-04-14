@@ -241,7 +241,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = (numeric_limits<double>::max)();
+        double dist = (std::numeric_limits<double>::max)();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(inputCoordinate, candidate.startCoord, candidate.targetCoord, tmp, &r);
@@ -265,7 +265,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = (numeric_limits<double>::max)();
+        double dist = (std::numeric_limits<double>::max)();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
@@ -300,12 +300,12 @@ private:
     }
 
     unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const unsigned long fileOffset ) {
-        vector<char> tmpBuffer(32*32*4096,0);
+    	std::vector<char> tmpBuffer(32*32*4096,0);
         unsigned long indexIntoTmpBuffer = 0;
         unsigned numberOfWrittenBytes = 0;
         assert(indexOutFile.is_open());
 
-        vector<unsigned long> cellIndex(32*32,ULONG_MAX);
+        std::vector<unsigned long> cellIndex(32*32,ULONG_MAX);
         boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap(1024);
 
         unsigned ramIndex = entriesWithSameRAMIndex.begin()->ramIndex;
@@ -355,7 +355,7 @@ private:
         return numberOfWrittenBytes;
     }
 
-    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> & tmpBuffer, const unsigned long index) {
+    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, std::vector<char> & tmpBuffer, const unsigned long index) {
         tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) + sizeof(unsigned) );
         unsigned counter = 0;
 
@@ -524,8 +524,8 @@ private:
 
     const static unsigned long END_OF_BUCKET_DELIMITER = UINT_MAX;
 
-    ofstream indexOutFile;
-    ifstream ramInFile;
+    std::ofstream indexOutFile;
+    std::ifstream ramInFile;
 #ifndef ROUTED
     stxxl::vector<GridEntry> entries;
 #endif

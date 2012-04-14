@@ -46,7 +46,7 @@ struct _Node : NodeInfo{
         return _Node(0,0,0, false, false);
     }
     static _Node max_value() {
-        return _Node((numeric_limits<int>::max)(), (numeric_limits<int>::max)(), (numeric_limits<unsigned int>::max)(), false, false);
+        return _Node((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)(), (std::numeric_limits<unsigned int>::max)(), false, false);
     }
     NodeID key() const {
         return id;

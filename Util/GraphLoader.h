@@ -56,7 +56,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
     for (NodeID i=0; i<n; ++i) {
         in.read((char*)&node, sizeof(_Node));
         int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
-        ext2IntNodeMap.insert(make_pair(node.id, i));
+        ext2IntNodeMap.insert(std::make_pair(node.id, i));
         if(node.bollard)
         	bollardNodes.push_back(i);
         if(node.trafficLight)
@@ -162,7 +162,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
     return n;
 }
 template<typename EdgeT>
-NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeInfo> * int2ExtNodeMap) {
+NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeInfo> * int2ExtNodeMap) {
     NodeID n, source, target, id;
     EdgeID m;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
@@ -172,7 +172,7 @@ NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
     for (NodeID i=0; i<n;++i) {
         in >> id >> ycoord >> xcoord;
         int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
-        ext2IntNodeMap.insert(make_pair(id, i));
+        ext2IntNodeMap.insert(std::make_pair(id, i));
     }
     in >> m;
     DEBUG(" and " << m << " edges");
@@ -269,13 +269,13 @@ NodeID readDTMPGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();
-    vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
-    cout << "ok" << endl;
+    std::vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    std::cout << "ok" << std::endl;
     return n;
 }
 
 template<typename EdgeT>
-NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<NodeID> & int2ExtNodeMap) {
+NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> & int2ExtNodeMap) {
     ExternalNodeMap nodeMap;
     NodeID n, source, target;
     unsigned numberOfNodes = 0;
@@ -319,14 +319,14 @@ NodeID readDDSGGraphFromStream(istream &in, vector<EdgeT>& edgeList, vector<Node
         EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
         edgeList.push_back(inputEdge);
     }
-    vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    std::vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
 
     nodeMap.clear();
     return numberOfNodes;
 }
 
 template<typename NodeT, typename EdgeT>
-unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> & edgeList, unsigned * checkSum) {
+unsigned readHSGRFromStream(std::istream &in, std::vector<NodeT>& nodeList, std::vector<EdgeT> & edgeList, unsigned * checkSum) {
     unsigned numberOfNodes = 0;
     in.read((char*) checkSum, sizeof(unsigned));
     in.read((char*) & numberOfNodes, sizeof(unsigned));

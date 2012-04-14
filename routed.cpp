@@ -39,8 +39,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/LinuxStackTrace.h"
 #endif
 
-using namespace std;
-
 typedef http::RequestHandler RequestHandler;
 
 #ifdef _WIN32
