@@ -24,14 +24,44 @@ OSRM.DEFAULTS = {
 	HOST_GEOCODER_URL: 'http://nominatim.openstreetmap.org/search',
 	HOST_REVERSE_GEOCODER_URL: 'http://nominatim.openstreetmap.org/reverse',
 	WEBSITE_URL: document.URL.replace(/#*(\?.*|$)/i,""),					// truncates URL before first ?, and removes tailing #
-	JSONP_TIMEOUT: 5000,
+	JSONP_TIMEOUT: 10000,
 	ZOOM_LEVEL: 14,
 	ONLOAD_LATITUDE: 48.84,
 	ONLOAD_LONGITUDE: 10.10,
 	ONLOAD_SOURCE: "",
 	ONLOAD_TARGET: "",
 	HIGHLIGHT_ZOOM_LEVEL: 16,
+	GEOCODER_BOUNDS: '',													// the world is not enough!
+	//GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0',			// bounds for Europe
+	
 	LANGUAGE: "en",
 	LANGUAGE_FILES_DIRECTORY: "localization/",
-	GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0'
+	LANUGAGE_ONDEMAND_RELOADING: true,
+	LANGUAGE_SUPPORTED: [ 
+		{display_name:"en", encoding:"en"},
+		{display_name:"de", encoding:"de"}
+	],
+		
+	TILE_SERVERS: [
+		{	display_name: 'osm.org',
+			url:'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+			attribution:'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
+			options:{maxZoom: 18}
+		},
+		{	display_name: 'osm.de',
+			url:'http://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
+			attribution:'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
+			options:{maxZoom: 18}
+		},
+		{	display_name: 'MapQuest',
+			url:'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+			attribution:'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 MapQuest',
+			options:{maxZoom: 18, subdomains: '1234'}
+		},
+		{	display_name: 'CloudMade',
+			url:'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png',
+			attribution:'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
+			options:{maxZoom: 18}
+		}		
+	]
 };

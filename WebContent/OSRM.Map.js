@@ -72,56 +72,34 @@ init: function() {
 		OSRM.GUI.init();
 	
 	// setup tile servers
-	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-		osmorgAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
-		osmorgOptions = {maxZoom: 18, attribution: osmorgAttribution};
-
-	var osmdeURL = 'http://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png',
-		osmdeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 Mapnik',
-		osmdeOptions = {maxZoom: 18, attribution: osmdeAttribution};
-	
-	var mapquestURL = 'http://otile{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
-		mapquestAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 MapQuest',
-		mapquestOptions = {maxZoom: 18, attribution: mapquestAttribution, subdomains: '1234'};	
-	
-	var cloudmadeURL = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png',
-    	cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
-	    cloudmadeOptions = {maxZoom: 18, attribution: cloudmadeAttribution};
-
-	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions),
-    	osmde = new L.TileLayer(osmdeURL, osmdeOptions),
-    	mapquest = new L.TileLayer(mapquestURL, mapquestOptions),
-	    cloudmade = new L.TileLayer(cloudmadeURL, cloudmadeOptions);
+	var tile_servers = OSRM.DEFAULTS.TILE_SERVERS;
+	var base_maps = {};
+	for(var i=0, size=tile_servers.length; i<size; i++) {
+		tile_servers[i].options.attribution = tile_servers[i].attribution; 
+		base_maps[ tile_servers[i].display_name ] = new L.TileLayer( tile_servers[i].url, tile_servers[i].options );
+	}
 
 	// setup map
 	OSRM.G.map = new OSRM.MapView('map', {
-    	center: new L.LatLng(51.505, -0.09),
-	    zoom: 13,
-	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
-	    fadeAnimation: false,
-	    layers: [osmorg]
+    	center: new L.LatLng(OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE),
+	    zoom: OSRM.DEFAULTS.ZOOM_LEVEL,
+	    layers: [base_maps[tile_servers[0].display_name]],	    
+	    zoomAnimation: false,								// remove animations -> routes are not hidden during zoom
+	    fadeAnimation: false
 	});
 
-	// add tileservers
-	var baseMaps = {
-		"osm.org": osmorg,
-		"osm.de": osmde,
-		"MapQuest": mapquest,
-		"CloudMade": cloudmade
-	};
-
-	var overlayMaps = {};
-	var layersControl = new L.Control.Layers(baseMaps, overlayMaps);
+	// add layer control
+	var layersControl = new L.Control.Layers(base_maps, {});
 	OSRM.G.map.addControl(layersControl);
 
     // move zoom markers
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
 	getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
-	// initial map position and zoom
+	// initial correct map position and zoom (respect UI visibility, use browser position)
 	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
 	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ZOOM_LEVEL);
-	if (navigator.geolocation && document.URL.indexOf("file://") == -1)
+	if (navigator.geolocation && document.URL.indexOf("file://") == -1)		// convenience during development, as FF doesn't save rights for local files 
 		navigator.geolocation.getCurrentPosition(OSRM.Map.geolocationResponse);
 
 	// map events

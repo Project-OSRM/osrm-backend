@@ -21,10 +21,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Localization = {
 
-use_ondemand_reloading: true,
-supported_languages: [ {display_name:"en", encoding:"en"},
-                       {display_name:"de", encoding:"de"}
-],
 current_language: OSRM.DEFAULTS.LANGUAGE,
 		
 // initialize localization
@@ -36,10 +32,11 @@ init: function() {
 	select.onchange = function() { OSRM.Localization.setLanguage(this.value); };	
 		
 	// fill dropdown menu
-	for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
+	var supported_languages = OSRM.DEFAULTS.LANGUAGE_SUPPORTED;
+	for(var i=0, size=supported_languages.length; i<size; i++) {
 		var option=document.createElement("option");
-		option.innerHTML = OSRM.Localization.supported_languages[i].display_name;
-		option.value = OSRM.Localization.supported_languages[i].encoding;
+		option.innerHTML = supported_languages[i].display_name;
+		option.value = supported_languages[i].encoding;
 		select.appendChild(option);
 	}
 	select.value = OSRM.DEFAULTS.LANGUAGE; 
@@ -87,9 +84,10 @@ setLanguage: function(language) {
 			document.getElementById('information-box').innerHTML = "";
 			document.getElementById('information-box-header').innerHTML = "";			
 		}
-	} else if(OSRM.Localization.use_ondemand_reloading==true) {
-		for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
-			if( OSRM.Localization.supported_languages[i].encoding == language) {
+	} else if(OSRM.DEFAULTS.LANUGAGE_ONDEMAND_RELOADING==true) {
+		var supported_languages = OSRM.DEFAULTS.LANGUAGE_SUPPORTED;
+		for(var i=0, size=supported_languages.length; i<size; i++) {
+			if( supported_languages[i].encoding == language) {
 				var script = document.createElement('script');
 				script.type = 'text/javascript';
 				script.src = OSRM.DEFAULTS.LANGUAGE_FILES_DIRECTORY + "OSRM.Locale."+language+".js";
