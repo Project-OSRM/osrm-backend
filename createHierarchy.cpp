@@ -121,10 +121,10 @@ int main (int argc, char *argv[]) {
     boost::property_tree::ptree speedProfile;
     boost::property_tree::ini_parser::read_ini("speedprofile.ini", speedProfile);
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile, SRTM_ROOT);
-    edgeList.clear();
     std::vector<ImportEdge>().swap(edgeList);
 
     edgeBasedGraphFactory->Run();
+    std::vector<_Restriction>().swap(inputRestrictions);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     std::vector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
@@ -149,7 +149,6 @@ int main (int argc, char *argv[]) {
     mapOutFile.close();
 
     std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
-    std::vector<_Restriction>().swap(inputRestrictions);
 
     INFO("initializing contractor");
     Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
