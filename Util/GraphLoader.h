@@ -335,20 +335,12 @@ unsigned readHSGRFromStream(istream &in, vector<NodeT>& nodeList, vector<EdgeT> 
     in.read((char*) checkSum, sizeof(unsigned));
     in.read((char*) & numberOfNodes, sizeof(unsigned));
     nodeList.resize(numberOfNodes + 1);
-    NodeT currentNode;
-    for(unsigned nodeCounter = 0; nodeCounter < numberOfNodes; ++nodeCounter ) {
-        in.read((char*) &currentNode, sizeof(NodeT));
-        nodeList[nodeCounter] = currentNode;
-    }
+    in.read((char*) &(nodeList[0]), numberOfNodes*sizeof(NodeT));
 
     unsigned numberOfEdges = 0;
     in.read((char*) &numberOfEdges, sizeof(unsigned));
     edgeList.resize(numberOfEdges);
-    EdgeT currentEdge;
-    for(unsigned edgeCounter = 0; edgeCounter < numberOfEdges; ++edgeCounter) {
-        in.read((char*) &currentEdge, sizeof(EdgeT));
-        edgeList[edgeCounter] = currentEdge;
-    }
+    in.read((char*) &(edgeList[0]), numberOfEdges*sizeof(EdgeT));
 
     return numberOfNodes;
 }
