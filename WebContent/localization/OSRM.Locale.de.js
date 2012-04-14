@@ -84,4 +84,5 @@ OSRM.Localization["de"] = {
 };
 
 // set GUI language on load
-OSRM.Localization.change("de");
+if( OSRM.Localization.use_ondemand_reloading==true)
+	OSRM.Localization.setLanguage("de");

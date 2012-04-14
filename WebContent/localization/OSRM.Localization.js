@@ -20,10 +20,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Localization = {
-		
+
+use_ondemand_reloading: true,
 supported_languages: [ {display_name:"en", encoding:"en"},
                        {display_name:"de", encoding:"de"}
-],		
+],
+current_language: OSRM.DEFAULTS.LANGUAGE,
 		
 // initialize localization
 init: function() {
@@ -31,8 +33,8 @@ init: function() {
 	var select = document.createElement('select');
 	select.id = "gui-language-toggle";
 	select.className = "top-left-button";
-	select.onchange = function() { OSRM.Localization.change(this.value); };
-	
+	select.onchange = function() { OSRM.Localization.setLanguage(this.value); };	
+		
 	// fill dropdown menu
 	for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
 		var option=document.createElement("option");
@@ -40,6 +42,7 @@ init: function() {
 		option.value = OSRM.Localization.supported_languages[i].encoding;
 		select.appendChild(option);
 	}
+	select.value = OSRM.DEFAULTS.LANGUAGE; 
 	
 	// add element to DOM
 	var input_mask_header = document.getElementById('input-mask-header'); 
@@ -54,26 +57,25 @@ init: function() {
 	select.parentNode.insertBefore(myspan, select);
 	myspan.style.width = (select.clientWidth-2)+"px";
 	myspan.style.height = (select.clientHeight)+"px";
-	
-	// initialize default language
-	OSRM.Localization.change( OSRM.DEFAULTS.LANGUAGE );
 },
 
 // perform language change
-change: function(language) {
-	OSRM.DEFAULTS.LANGUAGE = language;
-	// update selector
-	var select = document.getElementById('gui-language-toggle');
-	var option = select.getElementsByTagName("option");
-	select.value = language;
-	for(var i = 0; i < option.length; i++)
-		if(option[i].selected == true) {
-			document.getElementById("styled-select" + select.id).childNodes[0].nodeValue = option[i].childNodes[0].nodeValue;
-			break;
-		}	
-	// change gui language
+setLanguage: function(language) {
 	if( OSRM.Localization[language]) {
-		OSRM.GUI.setLanguage();
+		OSRM.Localization.current_language = language;
+		// update selector
+		if( select = document.getElementById('gui-language-toggle') ) {		// yes, = not == !
+			var option = select.getElementsByTagName("option");
+			select.value = language;
+			for(var i = 0; i < option.length; i++)
+				if(option[i].selected == true) {
+					document.getElementById("styled-select" + select.id).childNodes[0].nodeValue = option[i].childNodes[0].nodeValue;
+					break;
+				}
+		}		
+		// change gui language		
+		OSRM.GUI.setLabels();
+		// requery data
 		if( OSRM.G.markers.route.length > 1)
 			OSRM.Routing.getRoute();
 		else if(OSRM.G.markers.route.length > 0 && document.getElementById('information-box').innerHTML != "" ) {
@@ -85,20 +87,25 @@ change: function(language) {
 			document.getElementById('information-box').innerHTML = "";
 			document.getElementById('information-box-header').innerHTML = "";			
 		}
-	} else {
-		var script = document.createElement('script');
-		script.type = 'text/javascript';
-		script.src = "localization/OSRM.Locale."+language+".js";
-		document.head.appendChild(script);		
+	} else if(OSRM.Localization.use_ondemand_reloading==true) {
+		for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
+			if( OSRM.Localization.supported_languages[i].encoding == language) {
+				var script = document.createElement('script');
+				script.type = 'text/javascript';
+				script.src = OSRM.DEFAULTS.LANGUAGE_FILES_DIRECTORY + "OSRM.Locale."+language+".js";
+				document.head.appendChild(script);
+				break;
+			}
+		}		
 	}
 },
 		
 // if existing, return localized string -> English string -> input string
 translate: function(text) {
-	if( OSRM.Localization[OSRM.DEFAULTS.LANGUAGE] && OSRM.Localization[OSRM.DEFAULTS.LANGUAGE][text] )
+	if( OSRM.Localization[OSRM.Localization.current_language] && OSRM.Localization[OSRM.Localization.current_language][text] )
+		return OSRM.Localization[OSRM.Localization.current_language][text];
+	else if( OSRM.Localization[OSRM.DEFAULTS.LANGUAGE] && OSRM.Localization[OSRM.DEFAULTS.LANGUAGE][text] )
 		return OSRM.Localization[OSRM.DEFAULTS.LANGUAGE][text];
-	else if( OSRM.Localization["en"] && OSRM.Localization["en"][text] )
-		return OSRM.Localization["en"][text];
 	else
 		return text;
 }

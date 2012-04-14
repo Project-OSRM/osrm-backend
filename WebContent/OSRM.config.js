@@ -19,8 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [has to be loaded directly after OSRM.base]
 
 OSRM.DEFAULTS = {
-	//HOST_ROUTING_URL: 'http://router.project-osrm.org/viaroute',
-	HOST_ROUTING_URL: 'http://141.3.24.68:5000/viaroute',
+	HOST_ROUTING_URL: 'http://router.project-osrm.org/viaroute',
 	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
 	HOST_GEOCODER_URL: 'http://nominatim.openstreetmap.org/search',
 	HOST_REVERSE_GEOCODER_URL: 'http://nominatim.openstreetmap.org/reverse',
@@ -33,5 +32,6 @@ OSRM.DEFAULTS = {
 	ONLOAD_TARGET: "",
 	HIGHLIGHT_ZOOM_LEVEL: 16,
 	LANGUAGE: "en",
+	LANGUAGE_FILES_DIRECTORY: "localization/",
 	GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0'
 };

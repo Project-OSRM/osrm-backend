@@ -63,11 +63,14 @@ init: function() {
 		document.getElementById('main-wrapper').addEventListener("webkitTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
 		document.getElementById('main-wrapper').addEventListener("oTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
 		document.getElementById('main-wrapper').addEventListener("MSTransitionEnd", OSRM.GUI.onMainTransitionEnd, false);
-	}	
+	}
+	
+	// set default language
+	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
 },
 
 // set language dependent labels
-setLanguage: function() {
+setLabels: function() {
 	document.getElementById("open-josm").innerHTML = OSRM.loc("OPEN_JOSM");
 	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");	
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");

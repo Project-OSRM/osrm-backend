@@ -126,12 +126,7 @@ OSRM.parseParameters = function(){
 			continue;
 		
 		if(name_val[0] == 'hl') {
-			for(var i=0, size=OSRM.Localization.supported_languages.length; i<size; i++) {
-				if( OSRM.Localization.supported_languages[i].encoding == name_val[1]) {
-					OSRM.Localization.change(name_val[1]);
-					break;
-				}
-			}
+			OSRM.Localization.setLanguage(name_val[1]);
 		}
 		else if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');
