@@ -69,8 +69,7 @@ struct ObjectsForQueryStruct {
             namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
             buf[sizeOfString] = '\0'; // instead of memset
             namesInStream.read(buf, sizeOfString);
-            std::string currentStreetName(buf);
-            names->push_back(currentStreetName);
+            names->push_back(buf);
         }
         std::vector<std::string>(*names).swap(*names);
         hsgrInStream.close();
