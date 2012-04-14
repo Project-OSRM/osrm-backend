@@ -119,8 +119,9 @@ public:
             edge.data.backward = currentEdge.isForward();
             edges.push_back( edge );
         }
-        //remove data from memory
+        //clear input vector and trim the current set of edges with the well-known swap trick
         std::vector< InputEdge >().swap( inputEdges );
+
         sort( edges.begin(), edges.end() );
         NodeID edge = 0;
         for ( NodeID i = 0; i < edges.size(); ) {
@@ -170,7 +171,8 @@ public:
         }
         std::cout << "ok" << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
         edges.resize( edge );
-        edges.swap(edges);
+        std::vector<_ImportEdge>(edges).swap(edges);
+
         _graph.reset( new _DynamicGraph( nodes, edges ) );
         std::vector< _ImportEdge >().swap( edges );
 //        unsigned maxdegree = 0;
