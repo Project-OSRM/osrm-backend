@@ -23,18 +23,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <cassert>
 #include <cmath>
+
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <vector>
 
 #include <boost/unordered_map.hpp>
-
-#ifdef _GLIBCXX_PARALLEL
-#include <parallel/algorithm>
-#else
-#include <algorithm>
-#endif
 
 #include "../DataStructures/ImportEdge.h"
 #include "../typedefs.h"

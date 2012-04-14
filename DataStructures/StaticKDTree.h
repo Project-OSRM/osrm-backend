@@ -24,11 +24,7 @@ KD Tree coded by Christian Vetter, Monav Project
 #define STATICKDTREE_H_INCLUDED
 
 #include <vector>
-#ifdef _GLIBCXX_PARALLEL
-#include <parallel/algorithm>
-#else
 #include <algorithm>
-#endif
 #include <stack>
 #include <limits>
 
@@ -119,11 +115,7 @@ public:
                 continue;
 
             Iterator middle = tree.left + ( tree.right - tree.left ) / 2;
-#ifdef _GLIBCXX_PARALLEL
-            __gnu_parallel::nth_element( kdtree + tree.left, kdtree + middle, kdtree + tree.right, Less( tree.dimension ) );
-#else
             std::nth_element( kdtree + tree.left, kdtree + middle, kdtree + tree.right, Less( tree.dimension ) );
-#endif
             s.push( Tree( tree.left, middle, ( tree.dimension + 1 ) % k ) );
             s.push( Tree( middle + 1, tree.right, ( tree.dimension + 1 ) % k ) );
         }
