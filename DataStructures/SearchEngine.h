@@ -44,14 +44,14 @@ class SearchEngine {
 private:
 	const GraphT * _graph;
 	NodeInformationHelpDesk * nodeHelpDesk;
-	std::vector<string> * _names;
+	std::vector<string> & _names;
 	static HeapPtr _forwardHeap;
 	static HeapPtr _backwardHeap;
 	static HeapPtr _forwardHeap2;
 	static HeapPtr _backwardHeap2;
 	inline double absDouble(double input) { if(input < 0) return input*(-1); else return input;}
 public:
-	SearchEngine(GraphT * g, NodeInformationHelpDesk * nh, std::vector<string> * n = new std::vector<string>()) : _graph(g), nodeHelpDesk(nh), _names(n) {}
+	SearchEngine(GraphT * g, NodeInformationHelpDesk * nh, std::vector<string> & n) : _graph(g), nodeHelpDesk(nh), _names(n) {}
 	~SearchEngine() {}
 
 	inline const void GetCoordinatesForNodeID(NodeID id, _Coordinate& result) const {
@@ -377,7 +377,7 @@ public:
 	}
 
 	inline std::string GetEscapedNameForNameID(const NodeID nameID) const {
-		return ((nameID >= _names->size() || nameID == 0) ? std::string("") : HTMLEntitize(_names->at(nameID)));
+		return ((nameID >= _names.size() || nameID == 0) ? std::string("") : HTMLEntitize(_names.at(nameID)));
 	}
 
 	inline std::string GetEscapedNameForEdgeBasedEdgeID(const unsigned edgeID) const {

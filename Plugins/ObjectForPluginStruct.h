@@ -34,7 +34,7 @@ struct ObjectsForQueryStruct {
     typedef QueryGraph::InputEdge InputEdge;
 
     NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<std::string> * names;
+    std::vector<std::string> names;
     QueryGraph * graph;
     unsigned checkSum;
 
@@ -61,7 +61,7 @@ struct ObjectsForQueryStruct {
         std::ifstream namesInStream(namesPath.c_str(), ios::binary);
         unsigned size(0);
         namesInStream.read((char *)&size, sizeof(unsigned));
-        names = new std::vector<std::string>();
+//        names = new std::vector<std::string>();
 
         char buf[1024];
         for(unsigned i = 0; i < size; ++i) {
@@ -69,16 +69,16 @@ struct ObjectsForQueryStruct {
             namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
             buf[sizeOfString] = '\0'; // instead of memset
             namesInStream.read(buf, sizeOfString);
-            names->push_back(buf);
+            names.push_back(buf);
         }
-        std::vector<std::string>(*names).swap(*names);
+        std::vector<std::string>(names).swap(names);
         hsgrInStream.close();
         namesInStream.close();
         INFO("All query data structures loaded");
     }
 
     ~ObjectsForQueryStruct() {
-        delete names;
+//        delete names;
         delete graph;
         delete nodeHelpDesk;
     }
