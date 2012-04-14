@@ -136,7 +136,7 @@ class DynamicGraph {
                     m_edges[node.firstEdge] = m_edges[node.firstEdge + node.edges];
                 } else {
                     EdgeIterator newFirstEdge = ( EdgeIterator ) m_edges.size();
-                    unsigned newSize = node.edges * 1.2 + 2;
+                    unsigned newSize = node.edges * 1.1 + 2;
                     EdgeIterator requiredCapacity = newSize + m_edges.size();
                     EdgeIterator oldCapacity = m_edges.capacity();
                     if ( requiredCapacity >= oldCapacity ) {
