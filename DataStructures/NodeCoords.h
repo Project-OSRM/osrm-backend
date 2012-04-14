@@ -45,7 +45,7 @@ struct NodeCoords {
 		return NodeCoords<NodeT>(90*100000, 180*100000, numeric_limits<NodeT>::max());
 	}
 
-	value_type operator[](size_t n) const {
+	value_type operator[](std::size_t n) const {
 		switch(n) {
 		case 1:
 			return lat;
