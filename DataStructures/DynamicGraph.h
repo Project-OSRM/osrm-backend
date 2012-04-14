@@ -49,7 +49,7 @@ class DynamicGraph {
             m_nodes.reserve( m_numNodes );
             m_nodes.resize( m_numNodes );
 
-            m_edges.reserve( m_numNodes * 1.2 );
+            m_edges.reserve( m_numNodes * 1.1 );
             m_edges.resize( m_numNodes );
         }
         DynamicGraph( int nodes, const std::vector< InputEdge > &graph )
@@ -69,7 +69,7 @@ class DynamicGraph {
                 m_nodes[node].edges = edge - lastEdge;
                 position += m_nodes[node].edges;
             }
-            m_edges.reserve( position * 1.2 );
+            m_edges.reserve( position * 1.1 );
             m_edges.resize( position );
             edge = 0;
             for ( NodeIterator node = 0; node < m_numNodes; ++node ) {

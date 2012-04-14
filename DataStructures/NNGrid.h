@@ -100,6 +100,7 @@ public:
 
     template<typename EdgeT>
     void ConstructGrid(std::vector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
+    	//TODO: Implement this using STXXL-Streams
 #ifndef ROUTED
         Percent p(edgeList.size());
         BOOST_FOREACH(EdgeT & edge, edgeList) {
@@ -298,7 +299,7 @@ private:
         return (std::fabs(d1 - d2) < 0.0001);
     }
 
-    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned long fileOffset ) {
+    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const unsigned long fileOffset ) {
         vector<char> tmpBuffer(32*32*4096,0);
         unsigned long indexIntoTmpBuffer = 0;
         unsigned numberOfWrittenBytes = 0;
@@ -373,7 +374,7 @@ private:
             ++counter;
         }
 
-        BOOST_FOREACH(GridEntry entry, vectorWithSameFileIndex) {
+        BOOST_FOREACH(const GridEntry & entry, vectorWithSameFileIndex) {
             char * data = (char *)&(entry.edge);
             for(unsigned i = 0; i < sizeof(_GridEdge); ++i) {
                 tmpBuffer[index+counter] = data[i];
@@ -419,7 +420,7 @@ private:
         localStream->read((char *)&result[currentSizeOfResult], lengthOfBucket*sizeof(_GridEdge));
     }
 
-    void AddEdge(_GridEdge edge) {
+    void AddEdge(const _GridEdge & edge) {
 #ifndef ROUTED
         std::vector<BresenhamPixel> indexList;
         GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
@@ -468,7 +469,7 @@ private:
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
-    void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
+    void GetListOfIndexesForEdgeAndGridSize(const _Coordinate& start, const _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
         double lat1 = start.lat/100000.;
         double lon1 = start.lon/100000.;
 
