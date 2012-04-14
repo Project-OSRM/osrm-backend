@@ -168,8 +168,9 @@ public:
                 }
             }
         }
-        std::cout << "ok" << std::endl << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
+        std::cout << "ok" << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
         edges.resize( edge );
+        edges.swap(edges);
         _graph.reset( new _DynamicGraph( nodes, edges ) );
         std::vector< _ImportEdge >().swap( edges );
 //        unsigned maxdegree = 0;
@@ -188,10 +189,10 @@ public:
 //            INFO(" ->(" << highestNode << "," << _graph->GetTarget(i) << "); via: " << _graph->GetEdgeData(i).via);
 //        }
 
-
         //Create temporary file
         
         GetTemporaryFileName(temporaryEdgeStorageFilename);
+        std::cout << "contractor finished initalization" << std::endl;
     }
 
     ~Contractor() {
