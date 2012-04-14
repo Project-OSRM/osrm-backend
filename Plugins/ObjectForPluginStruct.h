@@ -45,6 +45,7 @@ struct ObjectsForQueryStruct {
         std::vector< QueryGraph::_StrNode> nodeList;
         std::vector< QueryGraph::_StrEdge> edgeList;
         const int n = readHSGRFromStream(hsgrInStream, nodeList, edgeList, &checkSum);
+
         INFO("Data checksum is " << checkSum);
         graph = new QueryGraph(nodeList, edgeList);
         assert(0 == nodeList.size());
@@ -71,6 +72,7 @@ struct ObjectsForQueryStruct {
             std::string currentStreetName(buf);
             names->push_back(currentStreetName);
         }
+        std::vector<std::string>(*names).swap(*names);
         hsgrInStream.close();
         namesInStream.close();
         INFO("All query data structures loaded");
