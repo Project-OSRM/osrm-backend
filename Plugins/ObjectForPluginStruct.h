@@ -67,7 +67,7 @@ struct ObjectsForQueryStruct {
         for(unsigned i = 0; i < size; ++i) {
             unsigned sizeOfString = 0;
             namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
-            memset(buf, 0, 1024*sizeof(char));
+            buf[sizeOfString] = '\0'; // instead of memset
             namesInStream.read(buf, sizeOfString);
             std::string currentStreetName(buf);
             names->push_back(currentStreetName);
