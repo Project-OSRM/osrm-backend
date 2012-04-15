@@ -27,7 +27,7 @@ OSRM.init = function() {
 	OSRM.Localization.init();
 	OSRM.GUI.init();
 	OSRM.Map.init();
-	OSRM.Printing.init();
+	//OSRM.Printing.init();
 	OSRM.Routing.init();
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
