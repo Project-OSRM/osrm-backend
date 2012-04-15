@@ -39,34 +39,30 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 <!-- scripts -->
 <script src="../leaflet/leaflet-src.js" type="text/javascript"></script>
+
 <script>
 function initialize() {
-/* 	// setup map
+	// setup events
+	document.getElementById('gui-printer').onclick= printsite;
+	
+ 	// setup map
 	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 	osmorgOptions = {maxZoom: 18};	
 	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions);
-	var temp1 = new L.Map("map1", {
+	var temp1 = new L.Map("map", {
     	center: new L.LatLng(51.505, -0.09),
 	    zoom: 13,
-	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
+	    zoomAnimation: false,
 	    fadeAnimation: false,
 	    layers: [osmorg],
 	    attributionControl: false,
-	    zoomControl: false
+	    zoomControl: false,
+	    dragging:false,
+	    scrollWheelZoom:false,
+	    touchZoom:false,
+	    doubleClickZoom:false
 	});
-	
-	var osmorgURL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-	osmorgOptions = {maxZoom: 18, attributionControl:false};
-	var osmorg = new L.TileLayer(osmorgURL, osmorgOptions);	
-	var temp2 = new L.Map("map2", {
-    	center: new L.LatLng(51.505, -0.09),
-	    zoom: 13,
-	    zoomAnimation: false,					// false: removes animations and hiding of routes during zoom
-	    fadeAnimation: false,
-	    layers: [osmorg],
-	    attributionControl: false,
-	    zoomControl: false
-	}); */
+	return temp1;
 }
 
 function printsite() {
@@ -78,14 +74,20 @@ function printsite() {
 
 
 <!-- body -->
-<body>
-<div style="position:absolute;right:5px;top:5px;" class="printer" onclick="printsite();"></div>
-<!--maps-->
-<!-- <div id="map1" style='width:100px;height:100px'></div>
-<div id="map2" style='width:100px;height:100px'></div> -->
+<body class="base-font">
+
+<!--  header -->
+<div id="printing-header">
+<div id="gui-printer" class="iconic-button top-right-button"></div>
+</div>
+
 <!--description-->
-<div id="description-headline"></div>
 <div id="description"></div>
+
+<!--map-->
+<div class="quad"></div>
+<div class="header-title">Übersichtskarte</div>
+<div id="map"></div>
 
 </body>
 </html>

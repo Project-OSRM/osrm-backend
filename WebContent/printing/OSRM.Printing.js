@@ -36,15 +36,29 @@ init: function() {
 },
 		
 windowLoaded: function(){
-	OSRM.printwindow.initialize();
 	OSRM.Printing.show( OSRM.G.response );
 	OSRM.printwindow.focus();
 },
 
 show: function(response) {
+	// create header
+	header = 
+		'<div class="full">' +
+		'<div class="left">' +
+		'<div class="header-title base-font">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
+		'<div class="header-content">' + OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="header-content">' + OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'</div>' +
+		'<div class="right">' +
+		'</div>' +		
+		'</div>';	
+	
 	// create route description
-	var route_desc = "";
-	route_desc += '<table class="results-table">';
+	var route_desc = '';
+	route_desc += '<table id="thetable" class="results-table medium-font">';
+	route_desc += '<thead style="display:table-header-group;"><tr><td colspan="3">'+header+'</td></tr></thead>';
+	route_desc += '</thead>';
+	route_desc += '<tbody stlye="display:table-row-group">';
 
 	for(var i=0; i < response.route_instructions.length; i++){
 		//odd or even ?
@@ -54,20 +68,21 @@ show: function(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<img width="18px" src="../images/'+OSRM.RoutingDescription.getDirectionIcon(response.route_instructions[i][0])+'" alt="" />';
+		route_desc += '<img width="18px" src="'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
-		route_desc += '<span class="result-item">';
-		route_desc += response.route_instructions[i][0];
+		route_desc += '<div class="result-item">';
+
+		// build route description
 		if( i == 0 )
-			route_desc += ' ' + OSRM.loc( response.route_instructions[i][6] );		
-		if( response.route_instructions[i][1] != "" ) {
-			route_desc += ' on ';
-			route_desc += '<b>' + response.route_instructions[i][1] + '</b>';
-		}
-		//route_desc += ' for ';
-		route_desc += '</span>';
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, OSRM.loc(response.route_instructions[i][6]) );
+		else if( response.route_instructions[i][1] != "" )
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]);
+		else
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"");
+
+		route_desc += '</div>';
 		route_desc += "</td>";
 		
 		route_desc += '<td class="result-distance">';
@@ -76,29 +91,31 @@ show: function(response) {
 		route_desc += "</td>";
 		
 		route_desc += "</tr>";
-	}	
-		
-	route_desc += '</table>';		
-	headline = "";
-	headline += OSRM.loc("ROUTE_DESCRIPTION")+":<br/>";
-	headline += '<div style="float:left;width:40%">';
-	headline += "<span class='route-summary'>"
-		+ OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance)
-		+ "<br/>"
-		+ OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time)
-		+ "</span>";		
-	headline +=	'</div>';
-
-	var output = "";
-	output += route_desc;
-
-	OSRM.printwindow.document.getElementById('description-headline').innerHTML = headline;
-	OSRM.printwindow.document.getElementById('description').innerHTML = output;
+	}
+	route_desc += '</tbody>';
+	route_desc += '</table>';
+	
+	// put everything in DOM
+	OSRM.printwindow.document.getElementById('description').innerHTML = route_desc;
+	
+	// init map
+	var map = OSRM.printwindow.initialize();
+	var markers = OSRM.G.markers.route;
+	map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
+	for(var i=1, size=markers.length-1; i<size; i++)
+		map.addLayer( new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} ) );
+	map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ));
+	var route = new L.DashedPolyline();
+	route.setLatLngs( OSRM.G.route.getPositions() );
+	route.setStyle( {dashed:false,clickable:false,color:'#0033FF', weight:5} );
+	map.addLayer( route );
+	var bounds = new L.LatLngBounds( OSRM.G.route.getPositions() );
+	map.fitBounds( bounds );
 },
 
 // react to click
 print: function() {
-	OSRM.printwindow = window.open("printing/printing.html","","width=400,height=300,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
+	OSRM.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
 	OSRM.printwindow.addEventListener("DOMContentLoaded", OSRM.Printing.windowLoaded, false);
 }
 

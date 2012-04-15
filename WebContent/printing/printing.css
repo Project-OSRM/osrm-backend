@@ -17,89 +17,207 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 /* OSRM CSS styles for printing*/
 
-
-/* printer button */
-.printer-inactive
+/* page setup */
+body
 {
-	cursor:pointer;
-	width:16px;
-	height:16px;
-	background-image:url("../images/printer_inactive.png");
-}
-.printer
-{
-	cursor:pointer;
-	width:16px;
-	height:16px;
-	background-image:url("../images/printer.png");
-}
-.printer:hover
-{
-	background-image:url("../images/printer_hover.png");
-}
-.printer:active
-{
-	background-image:url("../images/printer_active.png");
+	margin: 8px;
 }
 
-/* route summary */
-.route-summary
-{
-	font-size: 12px;
-}
 
 /* route description box */
 #description
 {
-	position:absolute;
-	bottom:15px;
-	top:60px;
-	width:380px;
-	font-size:12px;
+	width:500px;
 	margin:5px;
 }
+
+
+/* route map box */
+#map
+{
+	width:500px;
+	height:500px;
+	margin:5px;
+}
+
+
+/* styles for information-box-header */
+div.header-title
+{
+	font-weight:bold;
+	margin-bottom:10px;
+}
+.header-content
+{
+	font-weight:normal;
+}
+.result-link
+{
+	color:#0000ff;
+	text-decoration:none;
+	cursor:pointer;
+}
+.result-link:hover
+{
+	color:#ff0000;
+}
+
+
+/* style for information-box table (search results, driving directions) */
 .results-table
 {
 	border-spacing:0px;
+	width:100%;
 }
 .results-odd
 {
-	background-color: #FAF3E9; //#ffffff;
+	background-color: #FFFDE3;
 }
 .results-even
 {
-	background-color: #F2DE9C; //#ffffe0;
+	background-color: #FFF9BB;
+}
+.result-counter
+{
+	text-align:right;
+	vertical-align:top;
+	font-weight:bold;
+	padding:1px 5px 1px 5px;
 }
 .result-items
 {
 	text-align:left;
 	vertical-align: middle;
 	width:100%;
-	padding-left:1px;
-	padding-right:1px;
-	padding-top:1px;
-	padding-bottom:1px;	
+	padding:1px;
 }
-.result-direction
+.result-directions
 {
-	width:30px;
-	padding-left:1px;
-	padding-right:1px;
-	padding-top:1px;
-	padding-bottom:1px;	
+	text-align:left;
+	vertical-align: middle;
+	padding:1px 5px 1px 5px;
 }
 .result-distance
 {
 	text-align:right;
-	vertical-align: middle;	
-	width:30px;
-	padding-left:1px;
-	padding-right:1px;
-	padding-top:1px;
-	padding-bottom:1px;	
+	vertical-align: middle;
+	padding:1px 1px 1px 5px;
 }
 .result-item
 {
 	cursor:pointer;
 	color:#000000
+}
+.no-results
+{
+	text-align:center;
+	margin:28px;
+}
+
+
+/* header area */
+#printing-header
+{
+	left:0px;
+	right:0px;
+	top:0px;
+	height:20px;
+}
+.top-left-button
+{
+	float:left;
+}
+.top-right-button
+{
+	float:right;
+}
+
+
+/* utility styles */
+@media print {
+.quad
+{
+	page-break-before:always;
+}
+}
+@media screen {
+.quad
+{
+	min-width:10px;
+	min-height:10px;
+}
+}
+
+
+/* iconic buttons */
+.iconic-button
+{
+	cursor:pointer;
+	width:16px;
+	height:16px;
+	background-repeat:no-repeat;
+	background-position:center;
+}
+
+#gui-printer
+{
+	background-image:url("../images/printer.png");
+}
+#gui-printer:hover
+{
+	background-image:url("../images/printer_hover.png");
+}
+#gui-printer:active
+{
+	background-image:url("../images/printer_active.png");
+}
+
+
+/* fonts */
+@media print  {
+	
+.base-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 16px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 18px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 14px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 12px;
+	font-weight: normal;	
+}
+
+}
+
+@media screen {
+.base-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10.5px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;	
+}	
 }
