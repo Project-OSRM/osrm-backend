@@ -52,7 +52,7 @@ OSRM.Localization["de"] = {
 "NO_ROUTE_FOUND": "Keine Route hierher möglich",
 // directions
 "N": "Norden",
-"O": "Ost",
+"E": "Ost",
 "S": "Süden",
 "W": "Westen",
 "NE": "Nordost",
