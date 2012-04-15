@@ -50,6 +50,8 @@ OSRM.Localization["de"] = {
 "DURATION": "Dauer",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Ihre Route wird berechnet",
 "NO_ROUTE_FOUND": "Keine Route hierher möglich",
+// printing
+"OVERVIEW_MAP": "Übersichtskarte",
 // directions
 "N": "Norden",
 "E": "Ost",

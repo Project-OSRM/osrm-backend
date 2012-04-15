@@ -33,7 +33,7 @@ body
 
 
 /* route map box */
-#map
+#overview-map
 {
 	width:500px;
 	height:500px;

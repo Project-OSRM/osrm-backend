@@ -40,6 +40,9 @@ init: function() {
 show: function(response) {
 	// add events
 	OSRM.printwindow.document.getElementById('gui-printer').onclick = OSRM.printwindow.printWindow;
+	
+	// 
+	OSRM.printwindow.document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
 
 	// create header
 	header = 
