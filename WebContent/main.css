@@ -165,10 +165,18 @@ html, body {
 {
 	padding-bottom:4px;
 }
+.input-label 
+{
+	margin:0px 2px 0px 0px;	
+}
+.input-delete 
+{
+	margin:0px 15px 0px 6px;
+ 	visibility:hidden;
+}
 .input-box
 {
-	width: 250px;
-	padding-right: 2px;
+	width: 100%;
 }
 
 
@@ -370,7 +378,6 @@ html, body {
 .delete-marker
 {
 	background-image:url("images/cancel.png");
-	visibility:hidden;
 }
 .delete-marker:hover
 {
