@@ -27,27 +27,27 @@ OSRM.GLOBALS.map = null;
 OSRM.MapView = L.Map.extend({
 	setViewUI: function(position, zoom) {
 		if( OSRM.GUI.visible == true ) {
-			var point = OSRM.G.map.project( position, zoom);
+			var point = this.project( position, zoom);
 			point.x-=OSRM.GUI.width/2;
-			position = OSRM.G.map.unproject(point,zoom);		
+			position = this.unproject(point,zoom);		
 		}
 		this.setView( position, zoom);	
 	},
 	fitBoundsUI: function(bounds) {
 		var southwest = bounds.getSouthWest();
 		var northeast = bounds.getNorthEast();
-		var zoom = OSRM.G.map.getBoundsZoom(bounds);
-		var sw_point = OSRM.G.map.project( southwest, zoom);
+		var zoom = this.getBoundsZoom(bounds);
+		var sw_point = this.project( southwest, zoom);
 		if( OSRM.GUI.visible == true )
 			sw_point.x-=OSRM.GUI.width/2;
 		else
 			sw_point.x-=10;
 		sw_point.y+=10;
-		var ne_point = OSRM.G.map.project( northeast, zoom);
+		var ne_point = this.project( northeast, zoom);
 		ne_point.y-=10;
 		sw_point.x+=10;
-		bounds.extend( OSRM.G.map.unproject(sw_point,zoom) );
-		bounds.extend( OSRM.G.map.unproject(ne_point,zoom) );
+		bounds.extend( this.unproject(sw_point,zoom) );
+		bounds.extend( this.unproject(ne_point,zoom) );
 		this.fitBounds( bounds );	
 	},
 	getCenterUI: function(unbounded) {
