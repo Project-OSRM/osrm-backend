@@ -85,7 +85,7 @@ public:
             unsigned prefixSumOfNecessarySegments = 0;
             roundAbout.leaveAtExit = 0;
             roundAbout.nameID = 0;
-            std::string tmpDist, tmpLength, tmpDuration, tmpBearing;
+            std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
             //Fetch data from Factory and generate a string from it.
             BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
                 short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
@@ -100,13 +100,16 @@ public:
                         }
                         reply.content += "[\"";
                         if(TurnInstructions.LeaveRoundAbout == currentInstruction) {
-                            reply.content += TurnInstructions.TurnStrings[TurnInstructions.EnterRoundAbout];
+                            intToString(TurnInstructions.EnterRoundAbout, tmpInstruction);
+                            reply.content += tmpInstruction;
                             reply.content += " and leave at ";
-                            reply.content += TurnInstructions.Ordinals[std::min(11,roundAbout.leaveAtExit+1)];
+                            intToString(roundAbout.leaveAtExit+1, tmpInstruction);
+                            reply.content += tmpInstruction;
                             reply.content += " exit";
                             roundAbout.leaveAtExit = 0;
                         } else {
-                            reply.content += TurnInstructions.TurnStrings[currentInstruction];
+                            intToString(currentInstruction, tmpInstruction);
+                            reply.content += tmpInstruction;
                         }
                         reply.content += "\",\"";
                         reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
@@ -137,7 +140,8 @@ public:
             }
             if(durationOfTrip != INT_MAX) {
                 reply.content += ",[\"";
-                reply.content += TurnInstructions.TurnStrings[TurnInstructions.ReachedYourDestination];
+                intToString(TurnInstructions.ReachedYourDestination, tmpInstruction);
+                reply.content += tmpInstruction;
                 reply.content += "\",\"";
                 reply.content += "\",";
                 reply.content += "0";
