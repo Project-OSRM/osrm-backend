@@ -29,13 +29,13 @@ std::string NasaGridSquare::make_filename(const char* ext) const {
     char EW =(longitude>=0 ? 'E' : 'W' );
     char NS =(latitude >=0 ? 'N' : 'S');
     std::stringstream ss;
-    ss<<setfill('0')
+    ss<<std::setfill('0')
     << ROOT_PATH
     << "/"
     <<NS
-    <<setw(2)<<abs(latitude)<<setw(0)
+    <<std::setw(2)<<std::abs(latitude)<<std::setw(0)
     <<EW
-    <<setw(3)<<abs(longitude)<<setw(0)
+    <<std::setw(3)<<std::abs(longitude)<<std::setw(0)
     <<'.'<<ext;
     return ss.str();
 }

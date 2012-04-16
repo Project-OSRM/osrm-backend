@@ -100,6 +100,7 @@ public:
 
     template<typename EdgeT>
     void ConstructGrid(std::vector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
+    	//TODO: Implement this using STXXL-Streams
 #ifndef ROUTED
         Percent p(edgeList.size());
         BOOST_FOREACH(EdgeT & edge, edgeList) {
@@ -240,7 +241,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = (numeric_limits<double>::max)();
+        double dist = (std::numeric_limits<double>::max)();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(inputCoordinate, candidate.startCoord, candidate.targetCoord, tmp, &r);
@@ -264,7 +265,7 @@ public:
             }
         }
         _Coordinate tmp;
-        double dist = (numeric_limits<double>::max)();
+        double dist = (std::numeric_limits<double>::max)();
         BOOST_FOREACH(_GridEdge candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
@@ -298,13 +299,13 @@ private:
         return (std::fabs(d1 - d2) < 0.0001);
     }
 
-    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, unsigned long fileOffset ) {
-        vector<char> tmpBuffer(32*32*4096,0);
+    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const unsigned long fileOffset ) {
+    	std::vector<char> tmpBuffer(32*32*4096,0);
         unsigned long indexIntoTmpBuffer = 0;
         unsigned numberOfWrittenBytes = 0;
         assert(indexOutFile.is_open());
 
-        vector<unsigned long> cellIndex(32*32,ULONG_MAX);
+        std::vector<unsigned long> cellIndex(32*32,ULONG_MAX);
         boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap(1024);
 
         unsigned ramIndex = entriesWithSameRAMIndex.begin()->ramIndex;
@@ -354,7 +355,7 @@ private:
         return numberOfWrittenBytes;
     }
 
-    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, vector<char> & tmpBuffer, const unsigned long index) {
+    unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, std::vector<char> & tmpBuffer, const unsigned long index) {
         tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) + sizeof(unsigned) );
         unsigned counter = 0;
 
@@ -373,7 +374,7 @@ private:
             ++counter;
         }
 
-        BOOST_FOREACH(GridEntry entry, vectorWithSameFileIndex) {
+        BOOST_FOREACH(const GridEntry & entry, vectorWithSameFileIndex) {
             char * data = (char *)&(entry.edge);
             for(unsigned i = 0; i < sizeof(_GridEdge); ++i) {
                 tmpBuffer[index+counter] = data[i];
@@ -419,7 +420,7 @@ private:
         localStream->read((char *)&result[currentSizeOfResult], lengthOfBucket*sizeof(_GridEdge));
     }
 
-    void AddEdge(_GridEdge edge) {
+    void AddEdge(const _GridEdge & edge) {
 #ifndef ROUTED
         std::vector<BresenhamPixel> indexList;
         GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
@@ -468,7 +469,7 @@ private:
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
-    void GetListOfIndexesForEdgeAndGridSize(_Coordinate& start, _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
+    void GetListOfIndexesForEdgeAndGridSize(const _Coordinate& start, const _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
         double lat1 = start.lat/100000.;
         double lon1 = start.lon/100000.;
 
@@ -523,8 +524,8 @@ private:
 
     const static unsigned long END_OF_BUCKET_DELIMITER = UINT_MAX;
 
-    ofstream indexOutFile;
-    ifstream ramInFile;
+    std::ofstream indexOutFile;
+    std::ifstream ramInFile;
 #ifndef ROUTED
     stxxl::vector<GridEntry> entries;
 #endif

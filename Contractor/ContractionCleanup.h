@@ -21,11 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef CONTRACTIONCLEANUP_H_INCLUDED
 #define CONTRACTIONCLEANUP_H_INCLUDED
 
-#ifdef _GLIBCXX_PARALLEL
-#include <parallel/algorithm>
-#else
 #include <algorithm>
-#endif
 #ifndef _WIN32
 #include <sys/time.h>
 #endif
@@ -120,11 +116,7 @@ public:
                 edges.push_back( newEdge );
             }
         }
-#ifdef _GLIBCXX_PARALLEL
-        __gnu_parallel::sort( edges.begin(), edges.end() );
-#else
         sort( edges.begin(), edges.end() );
-#endif
     }
 
 private:

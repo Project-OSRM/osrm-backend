@@ -24,22 +24,21 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
+#include "Server/DataStructures/QueryObjectsStorage.h"
 #include "Server/ServerConfiguration.h"
 #include "Server/ServerFactory.h"
 
 #include "Plugins/HelloWorldPlugin.h"
 #include "Plugins/LocatePlugin.h"
 #include "Plugins/NearestPlugin.h"
-#include "Plugins/ObjectForPluginStruct.h"
 #include "Plugins/ViaRoutePlugin.h"
+
 #include "Util/InputFileUtil.h"
 #include "Util/OpenMPReplacement.h"
 
 #ifndef _WIN32
 #include "Util/LinuxStackTrace.h"
 #endif
-
-using namespace std;
 
 typedef http::RequestHandler RequestHandler;
 
@@ -89,7 +88,7 @@ int main (int argc, char *argv[]) {
         Server * s = ServerFactory::CreateServer(serverConfig);
         RequestHandler & h = s->GetRequestHandlerPtr();
 
-        ObjectsForQueryStruct * objects = new ObjectsForQueryStruct(serverConfig.GetParameter("hsgrData"),
+        QueryObjectsStorage * objects = new QueryObjectsStorage(serverConfig.GetParameter("hsgrData"),
                 serverConfig.GetParameter("ramIndex"),
                 serverConfig.GetParameter("fileIndex"),
                 serverConfig.GetParameter("nodesData"),

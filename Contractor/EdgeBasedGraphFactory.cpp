@@ -260,8 +260,12 @@ void EdgeBasedGraphFactory::Run() {
         }
         p.printIncrement();
     }
+    INFO("Sorting edge-based Nodes");
     std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
+    INFO("Removing duplicate nodes (if any)");
     edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
+    INFO("Applying vector self-swap trick to free up memory");
+    edgeBasedNodes.swap(edgeBasedNodes);
     INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
     INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << (double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter);
     INFO("Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << numberOfTurnRestrictions << " restrictions.");

@@ -27,8 +27,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
-#include "ObjectForPluginStruct.h"
-
 #include "BasePlugin.h"
 #include "RouteParameters.h"
 
@@ -44,20 +42,21 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../Util/StringUtil.h"
 
+#include "../Server/DataStructures/QueryObjectsStorage.h"
+
 class ViaRoutePlugin : public BasePlugin {
 private:
     NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<std::string> * names;
+    std::vector<std::string> & names;
     StaticGraph<EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
     std::string pluginDescriptorString;
     SearchEngine<EdgeData, StaticGraph<EdgeData> > * searchEngine;
 public:
 
-    ViaRoutePlugin(ObjectsForQueryStruct * objects, std::string psd = "viaroute") : pluginDescriptorString(psd) {
+    ViaRoutePlugin(QueryObjectsStorage * objects, std::string psd = "viaroute") : names(objects->names), pluginDescriptorString(psd) {
         nodeHelpDesk = objects->nodeHelpDesk;
         graph = objects->graph;
-        names = objects->names;
 
         searchEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names);
 

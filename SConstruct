@@ -258,6 +258,6 @@ if sys.platform != 'darwin':
 
 env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStructures/pbf-proto/*.pb.cc'), Glob('Util/*.cpp')], depends=['osm1', 'osm2'])
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
-env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
+env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc'), Glob('Server/DataStructures/*.cpp')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
 env = conf.Finish()
 

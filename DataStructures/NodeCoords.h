@@ -39,13 +39,13 @@ struct NodeCoords {
 	NodeT id;
 
 	static NodeCoords<NodeT> min_value() {
-		return NodeCoords<NodeT>(-90*100000,-180*100000,numeric_limits<NodeT>::min());
+		return NodeCoords<NodeT>(-90*100000,-180*100000,std::numeric_limits<NodeT>::min());
 	}
 	static NodeCoords<NodeT> max_value() {
-		return NodeCoords<NodeT>(90*100000, 180*100000, numeric_limits<NodeT>::max());
+		return NodeCoords<NodeT>(90*100000, 180*100000, std::numeric_limits<NodeT>::max());
 	}
 
-	value_type operator[](size_t n) const {
+	value_type operator[](std::size_t n) const {
 		switch(n) {
 		case 1:
 			return lat;

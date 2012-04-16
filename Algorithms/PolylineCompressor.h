@@ -29,7 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class PolylineCompressor {
 private:
-	inline void encodeVectorSignedNumber(vector<int> & numbers, string & output) {
+	inline void encodeVectorSignedNumber(std::vector<int> & numbers, std::string & output) {
 		for(unsigned i = 0; i < numbers.size(); ++i) {
 			numbers[i] <<= 1;
 			if (numbers[i] < 0) {
@@ -41,7 +41,7 @@ private:
 		}
 	}
 
-	inline void encodeNumber(int numberToEncode, string & output) {
+	inline void encodeNumber(int numberToEncode, std::string & output) {
 		while (numberToEncode >= 0x20) {
 			int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
 			output += (static_cast<char> (nextValue));
@@ -57,8 +57,8 @@ private:
 	}
 
 public:
-    inline void printEncodedString(const vector<SegmentInformation>& polyline, string &output) {
-        vector<int> deltaNumbers;
+    inline void printEncodedString(const std::vector<SegmentInformation>& polyline, std::string &output) {
+    	std::vector<int> deltaNumbers;
         output += "\"";
         if(!polyline.empty()) {
             _Coordinate lastCoordinate = polyline[0].location;
@@ -77,8 +77,8 @@ public:
 
     }
 
-	inline void printEncodedString(const vector<_Coordinate>& polyline, string &output) {
-		vector<int> deltaNumbers(2*polyline.size());
+	inline void printEncodedString(const std::vector<_Coordinate>& polyline, std::string &output) {
+		std::vector<int> deltaNumbers(2*polyline.size());
 		output += "\"";
 		if(!polyline.empty()) {
 			deltaNumbers[0] = polyline[0].lat;
@@ -92,9 +92,9 @@ public:
 		output += "\"";
 	}
 
-    inline void printUnencodedString(vector<_Coordinate> & polyline, string & output) {
+    inline void printUnencodedString(std::vector<_Coordinate> & polyline, std::string & output) {
         output += "[";
-        string tmp;
+        std::string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
             convertInternalLatLonToString(polyline[i].lat, tmp);
             output += "[";
@@ -110,9 +110,9 @@ public:
         output += "]";
     }
 
-    inline void printUnencodedString(vector<SegmentInformation> & polyline, string & output) {
+    inline void printUnencodedString(std::vector<SegmentInformation> & polyline, std::string & output) {
         output += "[";
-        string tmp;
+        std::string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
             if(!polyline[i].necessary)
                 continue;

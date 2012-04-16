@@ -26,7 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BasePlugin.h"
 #include "RouteParameters.h"
 
-#include "ObjectForPluginStruct.h"
+#include "../Server/DataStructures/QueryObjectsStorage.h"
 
 #include "../DataStructures/NodeInformationHelpDesk.h"
 #include "../DataStructures/HashTable.h"
@@ -37,7 +37,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(ObjectsForQueryStruct * objects) {
+    NearestPlugin(QueryObjectsStorage * objects) {
         nodeHelpDesk = objects->nodeHelpDesk;
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("kml", 0);

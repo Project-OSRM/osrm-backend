@@ -59,7 +59,7 @@ typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef BaseConfiguration ContractorConfiguration;
 
-std::vector<NodeInfo> internalToExternaleNodeMapping;
+std::vector<NodeInfo> internalToExternalNodeMapping;
 std::vector<_Restriction> inputRestrictions;
 std::vector<NodeID> bollardNodes;
 std::vector<NodeID> trafficLightNodes;
@@ -111,7 +111,7 @@ int main (int argc, char *argv[]) {
     char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
 
     std::vector<ImportEdge> edgeList;
-    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternaleNodeMapping, inputRestrictions);
+    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
     INFO("Loaded " << inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
@@ -120,11 +120,11 @@ int main (int argc, char *argv[]) {
     }
     boost::property_tree::ptree speedProfile;
     boost::property_tree::ini_parser::read_ini("speedprofile.ini", speedProfile);
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternaleNodeMapping, speedProfile, SRTM_ROOT);
-    edgeList.clear();
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile, SRTM_ROOT);
     std::vector<ImportEdge>().swap(edgeList);
 
     edgeBasedGraphFactory->Run();
+    std::vector<_Restriction>().swap(inputRestrictions);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     std::vector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
@@ -140,23 +140,15 @@ int main (int argc, char *argv[]) {
     delete writeableGrid;
     CRC32 crc32;
     unsigned crc32OfNodeBasedEdgeList = crc32((char *)&(nodeBasedEdgeList[0]), nodeBasedEdgeList.size()*sizeof(EdgeBasedGraphFactory::EdgeBasedNode));
-//    INFO("CRC32 of data is " << crc32OfNodeBasedEdgeList);
 
-    nodeBasedEdgeList.clear();
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);
 
     INFO("writing node map ...");
     std::ofstream mapOutFile(nodeOut, ios::binary);
-    mapOutFile.write((char *)&(internalToExternaleNodeMapping[0]), internalToExternaleNodeMapping.size()*sizeof(NodeInfo));
+    mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
     mapOutFile.close();
 
-
-    std::vector<NodeInfo>().swap(internalToExternaleNodeMapping);
-    inputRestrictions.clear();
-    std::vector<_Restriction>().swap(inputRestrictions);
-
-//    unsigned crc32OfNodeBasedEdgeList = crc32((char*)&edgeBasedEdgeList[0], edgeBasedEdgeList.size());
-//    INFO("CRC32 of data is " << crc32OfNodeBasedEdgeList);
+    std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
 
     INFO("initializing contractor");
     Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
@@ -167,15 +159,6 @@ int main (int argc, char *argv[]) {
     std::vector< ContractionCleanup::Edge > contractedEdgeList;
     contractor->GetEdges( contractedEdgeList );
     delete contractor;
-
-//    ContractionCleanup * cleanup = new ContractionCleanup(edgeBasedNodeNumber, contractedEdges);
-//    contractedEdges.clear();
-//    std::vector<ContractionCleanup::Edge>().swap(contractedEdges);
-//    cleanup->Run();
-//
-//    std::vector< InputEdge> cleanedEdgeList;
-//    cleanup->GetData(cleanedEdgeList);
-//    delete cleanup;
 
     INFO("Building Node Array");
     sort(contractedEdgeList.begin(), contractedEdgeList.end());

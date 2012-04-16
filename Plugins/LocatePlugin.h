@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <fstream>
 
-#include "ObjectForPluginStruct.h"
+#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "BasePlugin.h"
 #include "RouteParameters.h"
 #include "../Util/StringUtil.h"
@@ -34,7 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 class LocatePlugin : public BasePlugin {
 public:
-    LocatePlugin(ObjectsForQueryStruct * objects) {
+    LocatePlugin(QueryObjectsStorage * objects) {
         nodeHelpDesk = objects->nodeHelpDesk;
     }
 	std::string GetDescriptor() const { return std::string("locate"); }

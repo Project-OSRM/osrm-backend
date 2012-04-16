@@ -22,11 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define STATICGRAPH_H_INCLUDED
 
 #include <vector>
-#ifdef _GLIBCXX_PARALLEL
-#include <parallel/algorithm>
-#else
 #include <algorithm>
-#endif
 
 #include "../typedefs.h"
 #include "ImportEdge.h"
