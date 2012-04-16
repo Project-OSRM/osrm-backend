@@ -31,6 +31,13 @@ body
 	margin:5px;
 }
 
+/* route description box */
+#overview-description
+{
+	width:500px;
+	margin:5px;
+}
+
 
 /* route map box */
 #overview-map
@@ -220,4 +227,30 @@ div.header-title
 	font-size: 9px;
 	font-weight: normal;	
 }	
+}
+
+
+/* table */
+.full
+{
+	display:table;
+	width:100%;
+}
+.left
+{
+	display:table-cell;
+	text-align:left;
+	vertical-align:middle;
+}
+.right
+{
+	display:table-cell;
+	text-align:right;
+	vertical-align:middle;
+}
+.center
+{
+	display:table-cell;
+	text-align:center;
+	vertical-align:middle;
 }
