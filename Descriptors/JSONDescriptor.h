@@ -102,10 +102,9 @@ public:
                         if(TurnInstructions.LeaveRoundAbout == currentInstruction) {
                             intToString(TurnInstructions.EnterRoundAbout, tmpInstruction);
                             reply.content += tmpInstruction;
-                            reply.content += " and leave at ";
+                            reply.content += "-";
                             intToString(roundAbout.leaveAtExit+1, tmpInstruction);
                             reply.content += tmpInstruction;
-                            reply.content += " exit";
                             roundAbout.leaveAtExit = 0;
                         } else {
                             intToString(currentInstruction, tmpInstruction);
