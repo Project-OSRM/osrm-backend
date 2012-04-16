@@ -148,7 +148,7 @@ OSRM.parseParameters = function(){
 			var zoom_level = Number(name_val[1]);
 			if( zoom_level<0 || zoom_level > 18)
 				return;
-			params.zoom = zoom;
+			params.zoom = zoom_level;
 		}
 		else if(name_val[0] == 'center') {
 			var coordinates = unescape(name_val[1]).split(',');
