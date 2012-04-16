@@ -69,7 +69,7 @@ OSRM.prefetchImages = function() {
 		              	{id:'direction_8',						url:'images/sharp-left.png'},
 		        		{id:'direction_11',						url:'images/round-about.png'},
 		        		{id:'direction_15',						url:'images/target.png'},
-		        		{id:'favicon',							url:'images/osrm-favicon.ico'},
+		        		{id:'favicon',							url:'images/osrm-favicon.ico'}
 	               ];
 		
 	for(var i=0; i<image_list.length; i++) {
@@ -206,5 +206,5 @@ OSRM.parseParameters = function(){
 // onload event
 if(document.addEventListener)		// FF, CH
 	document.addEventListener("DOMContentLoaded", OSRM.init, false);
-else								// old IE
-	document.onreadystatechange = function(){if(document.readyState == "interactive" || document.readyState == "complete") OSRM.init();};
+else if(document.attachEvent)
+	document.attachEvent("onreadystatechange", function() { if ( document.readyState === "interactive" ) OSRM.init(); });

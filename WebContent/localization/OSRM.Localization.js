@@ -73,6 +73,8 @@ setLanguage: function(language) {
 		// change gui language		
 		OSRM.GUI.setLabels();
 		// requery data
+		if( OSRM.G.markers == null )
+			return;
 		if( OSRM.G.markers.route.length > 1)
 			OSRM.Routing.getRoute();
 		else if(OSRM.G.markers.route.length > 0 && document.getElementById('information-box').innerHTML != "" ) {
