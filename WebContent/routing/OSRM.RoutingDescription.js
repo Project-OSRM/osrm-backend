@@ -154,9 +154,9 @@ getDrivingInstructionIcon: function(server_instruction_id) {
 	local_icon_id += server_instruction_id;
 	
 	if( OSRM.G.images[local_icon_id] )
-		return OSRM.G.images[local_icon_id].src;
+		return OSRM.G.images[local_icon_id].getAttribute("src");
 	else
-		return OSRM.G.images["direction_0"].src;
+		return OSRM.G.images["direction_0"].getAttribute("src");
 },
 
 // retrieve driving instructions from instruction ids

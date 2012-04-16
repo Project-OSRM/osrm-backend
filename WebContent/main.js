@@ -95,15 +95,15 @@ OSRM.prefetchIcons = function() {
 
 	for(var i=0; i<icon_list.length; i++) {
 		var icon = {
-				iconUrl: OSRM.G.images[icon_list[i].image_id].src, iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
-				shadowUrl: OSRM.G.images["marker-shadow"].src, shadowSize: new L.Point(41, 41),
+				iconUrl: OSRM.G.images[icon_list[i].image_id].getAttribute("src"), iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
+				shadowUrl: OSRM.G.images["marker-shadow"].getAttribute("src"), shadowSize: new L.Point(41, 41),
 				popupAnchor: new L.Point(0, -33)
 			};
 		OSRM.G.icons[icon_list[i].id] = new L.SwitchableIcon(icon);
 	}
 	
 	// special values for drag marker
-	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: OSRM.G.images["marker-drag"].src, iconSize: new L.Point(18, 18) } );	
+	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: OSRM.G.images["marker-drag"].getAttribute("src"), iconSize: new L.Point(18, 18) } );	
 };
 
 
