@@ -39,13 +39,13 @@ OSRM.MapView = L.Map.extend({
 		var zoom = this.getBoundsZoom(bounds);
 		var sw_point = this.project( southwest, zoom);
 		if( OSRM.GUI.visible == true )
-			sw_point.x-=OSRM.GUI.width/2;
+			sw_point.x-=OSRM.GUI.width/2+20;
 		else
-			sw_point.x-=10;
-		sw_point.y+=10;
+			sw_point.x-=20;
+		sw_point.y+=20;
 		var ne_point = this.project( northeast, zoom);
-		ne_point.y-=10;
-		sw_point.x+=10;
+		ne_point.y-=20;
+		sw_point.x+=20;
 		bounds.extend( this.unproject(sw_point,zoom) );
 		bounds.extend( this.unproject(ne_point,zoom) );
 		this.fitBounds( bounds );	
