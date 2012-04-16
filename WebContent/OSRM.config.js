@@ -26,6 +26,7 @@ OSRM.DEFAULTS = {
 	WEBSITE_URL: document.URL.replace(/#*(\?.*|$)/i,""),					// truncates URL before first ?, and removes tailing #
 	JSONP_TIMEOUT: 10000,
 	ZOOM_LEVEL: 14,
+	ONLOAD_ZOOM_LEVEL: 5,
 	ONLOAD_LATITUDE: 48.84,
 	ONLOAD_LONGITUDE: 10.10,
 	ONLOAD_SOURCE: "",

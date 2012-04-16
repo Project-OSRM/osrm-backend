@@ -82,7 +82,7 @@ init: function() {
 	// setup map
 	OSRM.G.map = new OSRM.MapView('map', {
     	center: new L.LatLng(OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE),
-	    zoom: OSRM.DEFAULTS.ZOOM_LEVEL,
+	    zoom: OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL,
 	    layers: [base_maps[tile_servers[0].display_name]],	    
 	    zoomAnimation: false,								// remove animations -> routes are not hidden during zoom
 	    fadeAnimation: false
@@ -98,7 +98,7 @@ init: function() {
 
 	// initial correct map position and zoom (respect UI visibility, use browser position)
 	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
-	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ZOOM_LEVEL);
+	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL);
 	if (navigator.geolocation && document.URL.indexOf("file://") == -1)		// convenience during development, as FF doesn't save rights for local files 
 		navigator.geolocation.getCurrentPosition(OSRM.Map.geolocationResponse);
 
