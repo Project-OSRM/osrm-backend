@@ -41,26 +41,43 @@ show: function(response) {
 	// add events
 	OSRM.printwindow.document.getElementById('gui-printer').onclick = OSRM.printwindow.printWindow;
 	
-	// 
+	// localization 
+	OSRM.printwindow.document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
 	OSRM.printwindow.document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
 
 	// create header
 	header = 
 		'<div class="full">' +
+		'<div style="display:table-row">' +
+		
 		'<div class="left">' +
-		'<div class="header-title base-font">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
-		'<div class="header-content">' + OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
-		'<div class="header-content">' + OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'<div class="header-content" style="margin:0px 2px 0px 0px;">' + OSRM.loc("GUI_START")+ ': </div>' +
+		'<div class="header-content" style="margin:0px 2px 0px 0px;">' + OSRM.loc("GUI_END")+ ': </div>' +
 		'</div>' +
-		'<div class="right">' +
+		
+		'<div class="left" style="width:100%">' +
+		'<div class="header-content" style="font-weight:bold;">' + document.getElementById("gui-input-source").value + '</div>' +
+		'<div class="header-content" style="font-weight:bold;">' + document.getElementById("gui-input-target").value + '</div>' +
+		'</div>' +
+		
+		'<div class="left">' +
+		'<div class="header-content" style="margin:0px 2px 0px 0px;">' + OSRM.loc("DISTANCE")+': </div>' +
+		'<div class="header-content" style="margin:0px 2px 0px 0px;">' + OSRM.loc("DURATION")+': </div>' +
 		'</div>' +		
-		'</div>';	
+		
+		'<div class="left">' +
+		'<div class="header-content" style="font-weight:bold;">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="header-content" style="font-weight:bold;">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'</div>' +
+		
+		'</div>' +
+		'</div>' +
+		'<div class="quad"></div>';	
 	
 	// create route description
 	var route_desc = '';
 	route_desc += '<table id="thetable" class="results-table medium-font">';
 	route_desc += '<thead style="display:table-header-group;"><tr><td colspan="3">'+header+'</td></tr></thead>';
-	route_desc += '</thead>';
 	route_desc += '<tbody stlye="display:table-row-group">';
 
 	for(var i=0; i < response.route_instructions.length; i++){
@@ -72,7 +89,6 @@ show: function(response) {
 		
 		route_desc += '<td class="result-directions">';
 		route_desc += '<img width="18px" src="../'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
-		console.log(route_desc);
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
@@ -99,8 +115,14 @@ show: function(response) {
 	route_desc += '</tbody>';
 	route_desc += '</table>';
 	
+	
+	
 	// put everything in DOM
 	OSRM.printwindow.document.getElementById('description').innerHTML = route_desc;
+	OSRM.printwindow.document.getElementById('overview-description').innerHTML = 
+		'<table id="" class="results-table medium-font">' +
+		'<thead style="display:table-header-group;"><tr><td colspan="3">'+header+'</td></tr></thead>'+
+		'</table>';
 	
 	// init map
 	var map = OSRM.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[0] );
