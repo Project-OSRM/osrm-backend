@@ -1,5 +1,8 @@
 require 'net/http'
 
+DESTINATION_REACHED = 15      #OSRM instruction code
+
+
 def request_route a,b
   @query = "http://localhost:5000/viaroute?loc=#{a}&loc=#{b}&output=json&geomformat=cmp"
   #log @query
@@ -61,7 +64,7 @@ def route_status response
 end
 
 def way_list instructions
-  instructions.reject { |r| r[0]=='You have reached your destination' }.
+  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
   map { |r| r[1] }.
   map { |r| r=="" ? '""' : r }.
   join(',')
