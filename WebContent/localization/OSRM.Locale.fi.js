@@ -50,6 +50,8 @@ OSRM.Localization["fi"] = {
 "DURATION": "Aika",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Reittiä lasketaan",
 "NO_ROUTE_FOUND": "Reittiä ei löytynyt",
+//printing
+"OVERVIEW_MAP": "Yleiskuvakartta",
 // directions
 "N": "pohjoiseen",
 "E": "itään",
