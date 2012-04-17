@@ -19,7 +19,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [printing support]
 
 OSRM.Printing = {
-		
+
+// create UI for printing in mainwindow
 init: function() {
 	var icon = document.createElement('div');
 	icon.id = "gui-printer";
@@ -35,12 +36,14 @@ init: function() {
 	document.getElementById("gui-printer").onclick = OSRM.Printing.print;	
 },
 		
-windowLoaded: function(){
-	OSRM.Printing.show( OSRM.G.response );
-	OSRM.printwindow.focus();
-},
-
+// create UI in printwindow
 show: function(response) {
+	// add events
+	OSRM.printwindow.document.getElementById('gui-printer').onclick = OSRM.printwindow.printWindow;
+	
+	// 
+	OSRM.printwindow.document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
+
 	// create header
 	header = 
 		'<div class="full">' +
@@ -68,7 +71,7 @@ show: function(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<img width="18px" src="'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
+		route_desc += '<img width="18px" src=../"'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
 		route_desc += "</td>";		
 		
 		route_desc += '<td class="result-items">';
@@ -99,7 +102,7 @@ show: function(response) {
 	OSRM.printwindow.document.getElementById('description').innerHTML = route_desc;
 	
 	// init map
-	var map = OSRM.printwindow.initialize();
+	var map = OSRM.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[0] );
 	var markers = OSRM.G.markers.route;
 	map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
 	for(var i=1, size=markers.length-1; i<size; i++)
@@ -110,13 +113,25 @@ show: function(response) {
 	route.setStyle( {dashed:false,clickable:false,color:'#0033FF', weight:5} );
 	map.addLayer( route );
 	var bounds = new L.LatLngBounds( OSRM.G.route.getPositions() );
-	map.fitBounds( bounds );
+	map.fitBoundsUI( bounds );
 },
 
-// react to click
+// open printwindow
 print: function() {
+	// do not open window if there is no route to draw
+	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() )
+		return;
+	// close old window (should we really do this?)
+	if( OSRM.printwindow )
+		OSRM.printwindow.close();
 	OSRM.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
-	OSRM.printwindow.addEventListener("DOMContentLoaded", OSRM.Printing.windowLoaded, false);
+	OSRM.printwindow.addEventListener("DOMContentLoaded", OSRM.Printing.printwindowLoaded, false);
+},
+
+// add content to printwindow after it has finished loading
+printwindowLoaded: function(){
+	OSRM.Printing.show( OSRM.G.response );
+	OSRM.printwindow.focus();
 }
 
 };
