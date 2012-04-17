@@ -31,19 +31,19 @@ struct Azimuth {
             if(heading >= 0 && heading <= 22.5)
                 return "N";
             if(heading > 22.5 && heading <= 67.5)
-                return "NE";
+                return "NW";
             if(heading > 67.5 && heading <= 112.5)
-                return "E";
+                return "W";
             if(heading > 112.5 && heading <= 157.5)
-                return "SE";
+                return "SW";
             return "S";
         }
         if(heading > 202.5 && heading <= 247.5)
-            return "SW";
+            return "SE";
         if(heading > 247.5 && heading <= 292.5)
-            return "W";
+            return "E";
         if(heading > 292.5 && heading <= 337.5)
-            return "NW";
+            return "NE";
         return "N";
     }
 };
