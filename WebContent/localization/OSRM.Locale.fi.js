@@ -22,7 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.Localization["fi"] = {
 //gui
 "OPEN_JOSM": "JOSM",
-"OPEN_OSMBUGS": "OSM-bugit",
+"OPEN_OSMBUGS": "OSM Bugs",
 "GUI_START": "Lähtöpaikka",
 "GUI_END": "Määränpää",
 "GUI_RESET": "&nbsp;&nbsp;Tyhjennä&nbsp;&nbsp;",

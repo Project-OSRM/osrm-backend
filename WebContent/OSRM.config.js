@@ -40,7 +40,8 @@ OSRM.DEFAULTS = {
 	LANUGAGE_ONDEMAND_RELOADING: true,
 	LANGUAGE_SUPPORTED: [ 
 		{display_name:"en", encoding:"en"},
-		{display_name:"de", encoding:"de"}
+		{display_name:"de", encoding:"de"},
+		{display_name:"fi", encoding:"fi"}
 	],
 		
 	TILE_SERVERS: [
