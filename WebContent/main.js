@@ -68,8 +68,7 @@ OSRM.prefetchImages = function() {
 		              	{id:'direction_7',						url:'images/turn-left.png'},
 		              	{id:'direction_8',						url:'images/sharp-left.png'},
 		        		{id:'direction_11',						url:'images/round-about.png'},
-		        		{id:'direction_15',						url:'images/target.png'},
-		        		{id:'favicon',							url:'images/osrm-favicon.ico'}
+		        		{id:'direction_15',						url:'images/target.png'}
 	               ];
 		
 	for(var i=0; i<image_list.length; i++) {
