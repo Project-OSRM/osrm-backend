@@ -25,11 +25,7 @@ OSRM.RoutingGeometry = {
 show: function(response) {
 	var geometry = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
 
-	var positions = [];
-	for( var i=0, size=geometry.length; i < size; i++)
-		positions.push( new L.LatLng(geometry[i][0], geometry[i][1]) );
-	
-	OSRM.G.route.showRoute(positions, OSRM.Route.ROUTE);
+	OSRM.G.route.showRoute(geometry, OSRM.Route.ROUTE);
 },
 
 //show route geometry - if there is no route
@@ -63,7 +59,7 @@ _decode: function(encoded, precision) {
 		} while (b >= 0x20);
 		var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
 		lng += dlng;
-		array.push([lat * precision, lng * precision]);
+		array.push( {lat: lat * precision, lng: lng * precision} );
 	}
 	return array;
 }
