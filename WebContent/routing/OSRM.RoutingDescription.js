@@ -44,7 +44,7 @@ showRouteLink_TimeOut: function(){
 // handling of routing description
 show: function(response) {
 	// compute query string
-	var query_string = '?rebuild=1';
+	var query_string = '?hl=' + OSRM.Localization.current_language;
 	for(var i=0; i<OSRM.G.markers.route.length; i++)
 		query_string += '&loc=' + OSRM.G.markers.route[i].getLat().toFixed(6) + ',' + OSRM.G.markers.route[i].getLng().toFixed(6); 
  						
