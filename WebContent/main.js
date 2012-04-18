@@ -203,7 +203,4 @@ OSRM.parseParameters = function(){
 
 
 // onload event
-if(document.addEventListener)		// FF, CH
-	document.addEventListener("DOMContentLoaded", OSRM.init, false);
-else if(document.attachEvent)
-	document.attachEvent("onreadystatechange", function() { if ( document.readyState === "interactive" ) OSRM.init(); });
+OSRM.Browser.onLoadHandler( OSRM.init );

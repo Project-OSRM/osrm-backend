@@ -15,8 +15,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// OSRM old browser support
-// [simple browser detection and routines to support some old browsers] 
+// OSRM old/cross browser support
+// [browser detection and routines for old/cross browser support] 
 
 
 // browser detection (runs anonymous function to prevent local variables cluttering global namespace)
@@ -30,13 +30,37 @@ or see http://www.gnu.org/licenses/agpl.txt.
 }());
 
 
-// compatibility tools for old browsers
-function getElementsByClassName(node, classname) {
+// compatibility tools
+
+//add document.head reference for older browsers
+document.head = document.head || document.getElementsByTagName('head')[0];
+
+// supply getElementsByClassName method for older browser
+OSRM.Browser.getElementsByClassName = function( node, classname ) {
     var a = [];
     var re = new RegExp('(^| )'+classname+'( |$)');
     var els = node.getElementsByTagName("*");
     for(var i=0,j=els.length; i<j; i++)
         if(re.test(els[i].className))a.push(els[i]);
     return a;
-}
-document.head = document.head || document.getElementsByTagName('head')[0];
+};
+
+// call a function when DOM has finished loading and remove event handler
+OSRM.Browser.onLoadHandler = function( function_pointer ) {
+	if(document.addEventListener) {		// FF, CH, IE9+
+		var temp_function = function() { 
+			document.removeEventListener("DOMContentLoaded", arguments.callee, false);
+			function_pointer.call();
+		};
+		document.addEventListener("DOMContentLoaded", temp_function, false);
+	}
+	else if(document.attachEvent) {		// IE8-
+		var temp_function = function() { 
+			if ( document.readyState === "interactive" || document.readyState === "complete" ) { 
+				document.detachEvent("onreadystatechange", arguments.callee); 
+				function_pointer.call(); 
+			}
+		};
+		document.attachEvent("onreadystatechange", temp_function);
+	}
+};

@@ -25,13 +25,13 @@ OSRM.GLOBALS.map = null;
 // map view/model
 // [extending Leaflet L.Map with setView/fitBounds methods that respect UI visibility] 
 OSRM.MapView = L.Map.extend({
-	setViewUI: function(position, zoom) {
+	setViewUI: function(position, zoom, no_animation) {
 		if( OSRM.GUI.visible == true ) {
 			var point = this.project( position, zoom);
 			point.x-=OSRM.GUI.width/2;
 			position = this.unproject(point,zoom);		
 		}
-		this.setView( position, zoom);	
+		this.setView( position, zoom, no_animation);	
 	},
 	fitBoundsUI: function(bounds) {
 		var southwest = bounds.getSouthWest();
@@ -93,12 +93,12 @@ init: function() {
 	OSRM.G.map.addControl(layersControl);
 
     // move zoom markers
-	getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
-	getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
+	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
+	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
 	// initial correct map position and zoom (respect UI visibility, use browser position)
 	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
-	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL);
+	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL, true);
 	if (navigator.geolocation && document.URL.indexOf("file://") == -1)		// convenience during development, as FF doesn't save rights for local files 
 		navigator.geolocation.getCurrentPosition(OSRM.Map.geolocationResponse);
 

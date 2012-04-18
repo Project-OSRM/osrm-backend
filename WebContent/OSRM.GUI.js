@@ -87,15 +87,15 @@ setLabels: function() {
 toggleMain: function() {
 	// show main-gui
 	if( OSRM.GUI.visible == false ) {
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";;
+		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
+		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";;
 		
 		document.getElementById('blob-wrapper').style.visibility="hidden";
 		document.getElementById('main-wrapper').style.left="5px";
 	// hide main-gui
 	} else {
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="30px";
+		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
+		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="30px";
 			
 		document.getElementById('main-wrapper').style.left=-OSRM.GUI.width+"px";
 	}
@@ -110,11 +110,11 @@ onMainTransitionEnd: function() {
 	// after hiding main-gui
 	if( OSRM.GUI.visible == true ) {
 		document.getElementById('blob-wrapper').style.visibility="visible";
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
+		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
 		OSRM.GUI.visible = false;		
 	// after showing main-gui
 	} else {
-		getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
+		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
  		OSRM.GUI.visible = true;		
 	}
 },

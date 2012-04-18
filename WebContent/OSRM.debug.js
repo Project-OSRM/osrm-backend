@@ -63,7 +63,4 @@ OSRM.debug.init = function() {
 
 
 // onload event
-if(document.addEventListener)	// FF, CH
-	document.addEventListener("DOMContentLoaded", OSRM.debug.init, false);
-else if(document.attachEvent)	// IE
-	document.attachEvent("onreadystatechange", function() { if ( document.readyState === "interactive" ) OSRM.debug.init(); });
+OSRM.Browser.onLoadHandler( OSRM.debug.init );
