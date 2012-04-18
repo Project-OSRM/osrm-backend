@@ -32,6 +32,10 @@ OSRM.init = function() {
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
  	OSRM.parseParameters();
+ 
+ 	// only init default position / geolocation position if GET parameters do not specify a different one
+ 	if( OSRM.G.initial_position_override == false )
+ 		OSRM.Map.initPosition();
 };
 
 
@@ -110,7 +114,10 @@ OSRM.prefetchIcons = function() {
 OSRM.parseParameters = function(){
 	var called_url = document.location.search.substr(1,document.location.search.length);
 	
-	// reject messages that are clearly too long or too small 
+	// state, if GET parameters specify a different initial position
+	OSRM.G.initial_position_override = false;
+	
+	// reject messages that are clearly too long or too small
 	if( called_url.length > 1000 || called_url.length == 0)
 		return;
 	
@@ -166,6 +173,7 @@ OSRM.parseParameters = function(){
 			OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		OSRM.G.markers.route[index].show();
 		OSRM.G.markers.route[index].centerView();
+		OSRM.G.initial_position_override = true;
 		return;
 	}
 
@@ -195,10 +203,12 @@ OSRM.parseParameters = function(){
 			
 		// compute route
 		OSRM.Routing.getRoute();
+		OSRM.G.initial_position_override = true;
 		return;
 	}
 	
-	// default case: do nothing
+	// default case: do nothing	
+	return;
 };
 
 

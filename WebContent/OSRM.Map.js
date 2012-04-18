@@ -39,7 +39,7 @@ OSRM.MapView = L.Map.extend({
 		var zoom = this.getBoundsZoom(bounds);
 		var sw_point = this.project( southwest, zoom);
 		if( OSRM.GUI.visible == true )
-			sw_point.x-=OSRM.GUI.width/2+20;
+			sw_point.x-=OSRM.GUI.width+20;
 		else
 			sw_point.x-=20;
 		sw_point.y+=20;
@@ -96,17 +96,19 @@ init: function() {
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
-	// initial correct map position and zoom (respect UI visibility, use browser position)
-	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
-	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL, true);
-	if (navigator.geolocation && document.URL.indexOf("file://") == -1)		// convenience during development, as FF doesn't save rights for local files 
-		navigator.geolocation.getCurrentPosition(OSRM.Map.geolocationResponse);
-
 	// map events
 	OSRM.G.map.on('zoomend', OSRM.Map.zoomed );
 	OSRM.G.map.on('click', OSRM.Map.click );
 	OSRM.G.map.on('contextmenu', OSRM.Map.contextmenu );
 	OSRM.G.map.on('mousemove', OSRM.Map.mousemove );
+},
+
+// init map position and zoom (respect UI visibility / use browser geolocation) 
+initPosition: function() {
+	var position = new L.LatLng( OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE);
+	OSRM.G.map.setViewUI( position, OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL, true);
+	if (navigator.geolocation && document.URL.indexOf("file://") == -1)		// convenience: FF does not save access rights for local files 
+		navigator.geolocation.getCurrentPosition(OSRM.Map.geolocationResponse);
 },
 
 // map event handlers
