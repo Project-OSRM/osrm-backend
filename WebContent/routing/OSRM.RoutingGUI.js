@@ -42,33 +42,43 @@ reverseRouting: function() {
 	var tmp = document.getElementById("gui-input-source").value;
 	document.getElementById("gui-input-source").value = document.getElementById("gui-input-target").value;
 	document.getElementById("gui-input-target").value = tmp;
-	
-	// invert route
-	OSRM.G.markers.route.reverse();
-	if(OSRM.G.markers.route.length == 1) {
-		if(OSRM.G.markers.route[0].label == OSRM.C.TARGET_LABEL) {
-			OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
-			OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-source'] );
-		} else if(OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL) {
-			OSRM.G.markers.route[0].label = OSRM.C.TARGET_LABEL;
-			OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-target'] );
-		}
-	} else if(OSRM.G.markers.route.length > 1){
-		OSRM.G.markers.route[0].label = OSRM.C.SOURCE_LABEL;
-		OSRM.G.markers.route[0].marker.setIcon( OSRM.G.icons['marker-source'] );
-		
-		OSRM.G.markers.route[OSRM.G.markers.route.length-1].label = OSRM.C.TARGET_LABEL;
-		OSRM.G.markers.route[OSRM.G.markers.route.length-1].marker.setIcon( OSRM.G.icons['marker-target'] );		
-	}
-	
-	// recompute route
+
+	// invert route, if a route is shown
 	if( OSRM.G.route.isShown() ) {
+		// switch positions in nodes
+		var temp_position = OSRM.G.markers.route[0].getPosition();
+		OSRM.G.markers.route[0].setPosition( OSRM.G.markers.route[OSRM.G.markers.route.length-1].getPosition() );
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1].setPosition( temp_position );
+		// switch nodes in array
+		var temp_node = OSRM.G.markers.route[0];
+		OSRM.G.markers.route[0] = OSRM.G.markers.route[OSRM.G.markers.route.length-1];
+		OSRM.G.markers.route[OSRM.G.markers.route.length-1] = temp_node;
+		// reverse route
+		OSRM.G.markers.route.reverse();
+		// query new route
 		OSRM.Routing.getRoute();
 		OSRM.G.markers.highlight.hide();
-	} else {
-		document.getElementById('information-box').innerHTML = "";
-		document.getElementById('information-box-header').innerHTML = "";		
+		
+	// invert marker, if only one marker is shown
+	} else if( OSRM.G.markers.route.length > 0 ) {
+		// requery geocoder, if geocoding results were shown
+		if( document.getElementById('information-box').innerHTML != "" ) {
+			OSRM.Geocoder.call( OSRM.C.SOURCE_LABEL, document.getElementById("gui-input-source").value );
+			OSRM.Geocoder.call( OSRM.C.TARGET_LABEL, document.getElementById("gui-input-target").value );
+		}
+		// switch single node
+		if( OSRM.G.markers.route[0].label == OSRM.C.TARGET_LABEL ) {			
+			OSRM.G.markers.setSource( OSRM.G.markers.route[0].getPosition() );
+			OSRM.G.markers.removeMarker(1);
+			OSRM.G.markers.route[0].show();
+		} else if(OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL) {
+			OSRM.G.markers.setTarget( OSRM.G.markers.route[0].getPosition() );
+			OSRM.G.markers.removeMarker(0);
+			OSRM.G.markers.route[0].show();
+		}
 	}
+	
+	// otherwise do nothing
 },
 
 // click: button "show"
