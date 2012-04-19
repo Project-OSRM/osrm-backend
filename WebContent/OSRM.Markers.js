@@ -236,6 +236,38 @@ removeMarker: function(id) {
 	this.route[id].hide();
 	this.route.splice(id, 1);
 },
+reverseMarkers: function() {
+	var size = this.route.length;
+	
+	// invert route, if a route is shown	
+	if( size > 1 ) {
+		// switch positions in nodes
+		var temp_position = this.route[0].getPosition();
+		this.route[0].setPosition( this.route[size-1].getPosition() );
+		OSRM.G.markers.route[size-1].setPosition( temp_position );
+		// switch nodes in array
+		var temp_node = OSRM.G.markers.route[0];
+		OSRM.G.markers.route[0] = OSRM.G.markers.route[size-1];
+		OSRM.G.markers.route[size-1] = temp_node;
+		// reverse route
+		OSRM.G.markers.route.reverse();
+		// clear information (both delete markers stay visible)
+		document.getElementById('information-box').innerHTML = "";
+		document.getElementById('information-box-header').innerHTML = "";
+		
+	// invert marker, if only one marker is shown (implicit clear of information / delete markers)
+	} else if( size > 0 ) {
+		var position = this.route[0].getPosition();
+		var label = this.route[0].label;
+		this.removeMarker(0);
+		if( label == OSRM.C.TARGET_LABEL )			
+			this.setSource( position );
+		else if( label == OSRM.C.SOURCE_LABEL )
+			this.setTarget( position );
+		this.route[0].show();
+	}
+
+},
 hasSource: function() {
 	if( OSRM.G.markers.route[0] && OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL )
 		return true;
