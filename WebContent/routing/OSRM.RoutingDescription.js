@@ -73,12 +73,10 @@ show: function(response) {
 		route_desc += '<div class="result-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
 
 		// build route description
-		if( i == 0 )
-			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, OSRM.loc(response.route_instructions[i][6]) );
-		else if( response.route_instructions[i][1] != "" )
-			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]);
+		if( response.route_instructions[i][1] != "" )
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]).replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
 		else
-			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"");
+			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"").replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
 
 		route_desc += '</div>';
 		route_desc += "</td>";

@@ -63,6 +63,7 @@ OSRM.Localization["de"] = {
 "NW": "Nordwest",
 // driving directions
 // %s: road name
+// %d: direction
 // [*]: will only be printed when there actually is a road name
 "DIRECTION_0":"Unbekannte Anweisung[ auf <b>%s</b>]",
 "DIRECTION_1":"Geradeaus weiterfahren[ auf <b>%s</b>]",
@@ -73,7 +74,7 @@ OSRM.Localization["de"] = {
 "DIRECTION_6":"Leicht links abbiegen[ auf <b>%s</b>]",
 "DIRECTION_7":"Links abbiegen[ auf <b>%s</b>]",
 "DIRECTION_8":"Scharf links abbiegen[ auf <b>%s</b>]",
-"DIRECTION_10":"Fahren Sie Richtung <b>%s</b>",
+"DIRECTION_10":"Fahren Sie Richtung <b>%d</b>[ auf <b>%s</b>]",
 "DIRECTION_11-1":"In den Kreisverkehr einfahren und bei erster Möglichkeit[ in Richtung <b>%s</b>] verlassen",
 "DIRECTION_11-2":"In den Kreisverkehr einfahren und bei zweiter Möglichkeit[ in Richtung <b>%s</b>] verlassen",
 "DIRECTION_11-3":"In den Kreisverkehr einfahren und bei dritter Möglichkeit[ in Richtung <b>%s</b>] verlassen",

@@ -63,6 +63,7 @@ OSRM.Localization["fi"] = {
 "NW": "luoteeseen",
 // driving directions
 // %s: road name
+// %d: direction
 // [*]: will only be printed when there actually is a road name
 "DIRECTION_0":"Tuntematon ohje[ tielle <b>%s</b>]",
 "DIRECTION_1":"Jatka[ tielle <b>%s</b>]",
@@ -73,7 +74,7 @@ OSRM.Localization["fi"] = {
 "DIRECTION_6":"Käänny loivasti vasemmalle[ tielle <b>%s</b>]",
 "DIRECTION_7":"Käänny vasemmalle[ tielle <b>%s</b>]",
 "DIRECTION_8":"Käänny jyrkästi vasemmalle [ tielle <b>%s</b>]",
-"DIRECTION_10":"Aja <b>%s</b>",
+"DIRECTION_10":"Aja <b>%d</b> [ tielle <b>%s</b>]",
 "DIRECTION_11-1":"Aja liikenneympyrään ja poistu ensimmäisestä haarasta[ tielle <b>%s</b>]",
 "DIRECTION_11-2":"Aja liikenneympyrään ja poistu toisesta haarasta[ tielle <b>%s</b>]",
 "DIRECTION_11-3":"Aja liikenneympyrään ja poistu kolmannesta haarasta[ tielle <b>%s</b>]",
