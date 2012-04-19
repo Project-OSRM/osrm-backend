@@ -48,6 +48,7 @@ reverseRouting: function() {
 	
 	// recompute route if needed
 	if( OSRM.G.route.isShown() ) {
+		OSRM.G.route.hideRoute();
 		OSRM.Routing.getRoute();
 		OSRM.G.markers.highlight.hide();
 		OSRM.RoutingDescription.showSimple( OSRM.G.response );
