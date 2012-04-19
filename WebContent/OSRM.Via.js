@@ -19,7 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [find correct position for a via marker]
 
 // store location of via points returned by server
-OSRM.GLOBALS.via_points = null;
+OSRM.GLOBALS.via_points = [];
 
 
 OSRM.Via = {
