@@ -44,7 +44,7 @@ show: function(response) {
 	var current_positions = [];
 	var all_positions = [];
 	for( var i=0; i < geometry.length; i++) {
-		current_positions.push( new L.LatLng(geometry[i][0], geometry[i][1]) );
+		current_positions.push( geometry[i] );
 
 		// still named/unnamed?
 		if( (named[i] == is_named || named[i] == undefined) && i != geometry.length-1 )
@@ -54,7 +54,7 @@ show: function(response) {
 		if(is_named == false)
 			all_positions.push( current_positions );
 		current_positions = [];
-		current_positions.push( new L.LatLng(geometry[i][0], geometry[i][1]) );
+		current_positions.push( geometry[i] );
 		is_named = named[i];
 	}
 	
