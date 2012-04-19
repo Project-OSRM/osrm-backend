@@ -279,10 +279,7 @@ html, body {
 .result-direction
 {
 	width:18px;
-	height:21px;
-	
-	background-repeat:no-repeat;
-	background-position:center;	
+	height:18px;
 }
 .result-distance
 {

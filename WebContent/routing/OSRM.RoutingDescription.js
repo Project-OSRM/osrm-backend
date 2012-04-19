@@ -66,7 +66,7 @@ show: function(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<div class="result-direction" style="background-image:url(\''+ OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0]) + '\');"></div>';		
+		route_desc += '<img class="result-direction" src="'+ OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0]) + '" alt=""/>';		
 		route_desc += '</td>';
 		
 		route_desc += '<td class="result-items">';
