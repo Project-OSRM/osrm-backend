@@ -276,11 +276,20 @@ html, body {
 	vertical-align: middle;
 	padding:1px 5px 1px 5px;
 }
+.result-direction
+{
+	width:18px;
+	height:21px;
+	
+	background-repeat:no-repeat;
+	background-position:center;	
+}
 .result-distance
 {
 	text-align:right;
 	vertical-align: middle;
 	padding:1px 1px 1px 5px;
+
 }
 .result-item
 {

@@ -66,8 +66,8 @@ show: function(response) {
 		route_desc += '<tr class="'+rowstyle+'">';
 		
 		route_desc += '<td class="result-directions">';
-		route_desc += '<img width="18px" src="'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
-		route_desc += "</td>";		
+		route_desc += '<div class="result-direction" style="background-image:url(\''+ OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0]) + '\');"></div>';		
+		route_desc += "</td>";
 		
 		route_desc += '<td class="result-items">';
 		route_desc += '<div class="result-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
