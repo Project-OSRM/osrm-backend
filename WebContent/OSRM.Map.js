@@ -112,7 +112,12 @@ initPosition: function() {
 },
 
 // map event handlers
-zoomed: function(e) { OSRM.Routing.getRoute(); },
+zoomed: function(e) {
+	if(OSRM.G.dragging)
+		OSRM.Routing.getDragRoute();
+	else
+		OSRM.Routing.getZoomRoute();
+},
 contextmenu: function(e) {;},
 mousemove: function(e) { OSRM.Via.drawDragMarker(e); },
 click: function(e) {

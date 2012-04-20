@@ -18,7 +18,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM JSONP call wrapper 
 // [wrapper for JSONP calls with DOM cleaning, fencing, timout handling]
 
-
+xxx="test";
 OSRM.JSONP = {
 		
 	// storage to keep track of unfinished JSONP calls
@@ -29,8 +29,8 @@ OSRM.JSONP = {
 	
 	
 	// default callback routines
-	late: function() { /*OSRM.debug.log("[jsonp] reply too late");*/ },	
-	empty: function() { /*OSRM.debug.log("[jsonp] empty callback");*/ },
+	late: function() {},	
+	empty: function() {},
 	
 	
 	// init JSONP call
@@ -42,6 +42,7 @@ OSRM.JSONP = {
 		
 		// wrap timeout function
 		OSRM.JSONP.timeouts[id] = function(response) {
+			console.log("timeout",id);
 			try {
 				timeout_function(response, parameters);
 			} finally {
@@ -49,8 +50,6 @@ OSRM.JSONP = {
 				OSRM.JSONP.timeouts[id] = OSRM.JSONP.empty;
 				OSRM.JSONP.fences[id] = undefined;						// clean fence
 			}
-			
-//			OSRM.debug.log("[jsonp] timout handling: "+id);
 		};
 		
 		// wrap callback function
@@ -65,32 +64,35 @@ OSRM.JSONP = {
 				OSRM.JSONP.timeouts[id] = OSRM.JSONP.late;
 				OSRM.JSONP.fences[id] = undefined;						// clean fence
 			}
-			
-//			OSRM.JSONP.sum[id] += new Number( new Date() - OSRM.JSONP.durations[id] );
-//			OSRM.debug.log("[jsonp] response handling: "+id+" "+ (OSRM.JSONP.sum[id]/OSRM.JSONP.counter[id]).toFixed(2) );
 		};
 		
-		// clean DOM (unfortunately, script elements cannot be reused by all browsers)
-		var jsonp = document.getElementById('jsonp_'+id);
-		if(jsonp)
-			jsonp.parentNode.removeChild(jsonp);
+		// clean DOM
+		//var jsonp = document.getElementById('jsonp_'+id);
+		//if(jsonp)
+		//	jsonp.parentNode.removeChild(jsonp);
 		
 		// add script to DOM
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
-		script.id = 'jsonp_'+id;
-		script.src = source + "&json_callback=OSRM.JSONP.callbacks."+id + "&jsonp=OSRM.JSONP.callbacks."+id;
+		//script.id = 'jsonp_'+id;
+		script.src = source + "&json_callback=OSRM.JSONP.callbacks."+id + "&jsonp=console.log(xxx);OSRM.JSONP.callbacks."+id;
 		document.head.appendChild(script);
 		
 		// start timeout timer
 		OSRM.JSONP.timers[id] = setTimeout(OSRM.JSONP.timeouts[id], timeout);
-		
-//		if(!OSRM.JSONP.durations) { OSRM.JSONP.durations = {}; OSRM.JSONP.counter = {}; OSRM.JSONP.sum = {}; }
-//		if(OSRM.JSONP.counter[id]) OSRM.JSONP.counter[id]++; else {OSRM.JSONP.counter[id] = 1;OSRM.JSONP.sum[id] = 0;}
-//		OSRM.JSONP.durations[id] = new Date();		
-//		OSRM.debug.log("[jsonp] init: "+id);
-		
 		return true;
+	},
+	
+	clear: function(id) {
+		clearTimeout(OSRM.JSONP.timers[id]);					// clear timeout timer
+		OSRM.JSONP.callbacks[id] = OSRM.JSONP.empty;			// clean functions
+		OSRM.JSONP.timeouts[id] = OSRM.JSONP.empty;
+		OSRM.JSONP.fences[id] = undefined;						// clean fence
+		
+		// clean DOM
+		var jsonp = document.getElementById('jsonp_'+id);
+		if(jsonp)
+			jsonp.parentNode.removeChild(jsonp);		
 	},
 	
 	// reset all data

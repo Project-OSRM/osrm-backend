@@ -52,7 +52,7 @@ init: function() {
 	document.getElementById("gui-options-toggle").onclick = OSRM.GUI.toggleOptions;
 	document.getElementById("open-josm").onclick = OSRM.RoutingGUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.RoutingGUI.openOSMBugs;
-	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getRoute;
+	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getZoomRoute;
 	
 	// gui after transition events
 	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_9==-1 ) {

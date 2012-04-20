@@ -25,7 +25,6 @@ OSRM.GLOBALS.markers = null;
 OSRM.GLOBALS.dragging = null;
 OSRM.GLOBALS.dragid = null;
 OSRM.GLOBALS.pending = false;
-OSRM.GLOBALS.pendingTimer = null;
 
 
 OSRM.Routing = {
@@ -53,7 +52,7 @@ timeoutRoute: function() {
 showRouteSimple: function(response) {
  	if(!response)
  		return;
- 	if( !OSRM.G.dragging )		// prevent simple routing when no longer dragging
+ 	if( !OSRM.G.dragging )		// prevent simple routing when not dragging (required as there can be drag events after a dragstop event!)
  		return;
  	
 	if( response.status == 207) {
@@ -66,7 +65,7 @@ showRouteSimple: function(response) {
 	OSRM.Routing._updateHints(response);
 
 	if(OSRM.G.pending)
-		OSRM.G.pendingTimer = setTimeout(OSRM.Routing.draggingTimeout,1);		
+		setTimeout(OSRM.Routing.draggingTimeout,1);		
 },
 showRoute: function(response) {
 	if(!response)
@@ -87,6 +86,16 @@ showRoute: function(response) {
 	}
 	OSRM.Routing._updateHints(response);
 },
+showRouteZooming: function(response) {
+	if(!response)
+		return;
+	
+	if(response.status != 207) {
+		OSRM.RoutingGeometry.show(response);
+		OSRM.RoutingNoNames.show(response);
+	}
+	OSRM.Routing._updateHints(response);
+},
 
 
 
@@ -100,8 +109,18 @@ getRoute: function() {
 		OSRM.G.route.hideRoute();
 		return;
 	}
-	
+	OSRM.JSONP.clear('dragging');
+	OSRM.JSONP.clear('zooming');
+	OSRM.JSONP.clear('route');
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');
+},
+getZoomRoute: function() {
+	if( OSRM.G.markers.route.length < 2 )
+		return;
+	
+	OSRM.JSONP.clear('dragging');
+	OSRM.JSONP.clear('zooming');
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRouteZooming, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'zooming');	
 },
 getDragRoute: function() {
 	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRouteSimple, OSRM.Routing.timeoutRouteSimple, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
