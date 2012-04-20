@@ -79,7 +79,7 @@ private:
 					compressionHeader.name = "Content-Encoding";
 					compressionHeader.value = "deflate";
 					reply.headers.insert(reply.headers.begin(), compressionHeader);   //push_back(compressionHeader);
-					compressCharArray(reply.content.c_str(), strlen(reply.content.c_str()), compressed, compressionType);
+					compressCharArray(reply.content.c_str(), reply.content.length(), compressed, compressionType);
 					reply.setSize(compressed.size());
 					outputBuffer = reply.HeaderstoBuffers();
 					outputBuffer.push_back(boost::asio::buffer(compressed));
@@ -89,7 +89,7 @@ private:
 					compressionHeader.name = "Content-Encoding";
 					compressionHeader.value = "gzip";
 					reply.headers.insert(reply.headers.begin(), compressionHeader);
-					compressCharArray(reply.content.c_str(), strlen(reply.content.c_str()), compressed, compressionType);
+					compressCharArray(reply.content.c_str(), reply.content.length(), compressed, compressionType);
 					reply.setSize(compressed.size());
 					outputBuffer = reply.HeaderstoBuffers();
 					outputBuffer.push_back(boost::asio::buffer(compressed));
@@ -126,8 +126,10 @@ private:
 		unsigned char temp_buffer[BUFSIZE];
 
 		z_stream strm;
-		strm.zalloc = 0;
-		strm.zfree = 0;
+		strm.zalloc = Z_NULL;
+		strm.zfree = Z_NULL;
+		strm.opaque = Z_NULL;
+		strm.total_out = 0;
 		strm.next_in = (unsigned char *)(in_data);
 		strm.avail_in = in_data_size;
 		strm.next_out = temp_buffer;
@@ -143,11 +145,8 @@ private:
 			 * Big thanks to deusty who explains how to have gzip compression turned on by the right call to deflateInit2():
 			 * http://deusty.blogspot.com/2007/07/gzip-compressiondecompression.html
 			 */
-			deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, (15+16), 8, Z_DEFAULT_STRATEGY);
+			deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, (15+16), 9, Z_DEFAULT_STRATEGY);
 			break;
-		case noCompression:
-			std::cerr << "[error] contradicting compression request" << std::endl;
-			return;
 		}
 
 		int deflate_res = Z_OK;
@@ -159,7 +158,7 @@ private:
 			}
 			deflate_res = deflate(&strm, Z_FINISH);
 
-		} while (strm.avail_out == 0);
+		} while (deflate_res == Z_OK);
 
 		assert(deflate_res == Z_STREAM_END);
 		buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE - strm.avail_out);
