@@ -156,6 +156,14 @@ private:
                 return false;
             }
         case header_line_start:
+            if(header.name == "Accept-Encoding") {
+                /* giving gzip precedence over deflate */
+                if(header.value.find("deflate") != std::string::npos)
+                    *compressionType = deflateRFC1951;
+                if(header.value.find("gzip") != std::string::npos)
+                    *compressionType = gzipRFC1952;
+            }
+
             if (input == '\r') {
                 state_ = expecting_newline_3;
                 return boost::indeterminate;
@@ -163,13 +171,6 @@ private:
                 return false;
             } else {
                 state_ = header_name;
-                if(header.name == "Accept-Encoding") {
-                	/* giving gzip precedence over deflate */
-                	if(header.value.find("deflate") != std::string::npos)
-                        *compressionType = deflateRFC1951;
-                    if(header.value.find("gzip") != std::string::npos)
-                        *compressionType = gzipRFC1952;
-                }
                 header.Clear();
                 header.name.push_back(input);
                 return boost::indeterminate;
