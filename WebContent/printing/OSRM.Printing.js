@@ -125,19 +125,38 @@ show: function(response) {
 		'</table>';
 	
 	// init map
-	var map = OSRM.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[0] );
+	OSRM.Printing.map = OSRM.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[0] );
+	var map = OSRM.Printing.map;
 	var markers = OSRM.G.markers.route;
 	map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
 	for(var i=1, size=markers.length-1; i<size; i++)
 		map.addLayer( new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} ) );
 	map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ));
-	var route = new L.DashedPolyline();
+	
+	OSRM.Printing.route = new L.DashedPolyline();
+	var route = OSRM.Printing.route; 
 	route.setLatLngs( OSRM.G.route.getPositions() );
 	route.setStyle( {dashed:false,clickable:false,color:'#0033FF', weight:5} );
 	map.addLayer( route );
 	var bounds = new L.LatLngBounds( OSRM.G.route.getPositions() );
 	map.fitBoundsUI( bounds );
+	
+	// query better geometry
+	var zoom = map.getBoundsZoom(bounds);
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&z='+zoom+'&instructions=false', OSRM.Printing.drawRoute, OSRM.Printing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'print');
 },
+timeoutRoute: function() {},
+drawRoute: function(response) {
+	if(!response)
+		return;
+	var geometry = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
+	var positions = [];
+	for( var i=0, size=geometry.length; i < size; i++)
+		positions.push( new L.LatLng(geometry[i][0], geometry[i][1]) );	
+	OSRM.Printing.route.setLatLngs( positions );
+},
+
+
 
 // open printwindow
 print: function() {
