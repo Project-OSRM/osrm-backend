@@ -18,7 +18,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM JSONP call wrapper 
 // [wrapper for JSONP calls with DOM cleaning, fencing, timout handling]
 
-xxx="test";
 OSRM.JSONP = {
 		
 	// storage to keep track of unfinished JSONP calls
@@ -67,15 +66,15 @@ OSRM.JSONP = {
 		};
 		
 		// clean DOM
-		//var jsonp = document.getElementById('jsonp_'+id);
-		//if(jsonp)
-		//	jsonp.parentNode.removeChild(jsonp);
+		var jsonp = document.getElementById('jsonp_'+id);
+		if(jsonp)
+			jsonp.parentNode.removeChild(jsonp);
 		
 		// add script to DOM
 		var script = document.createElement('script');
 		script.type = 'text/javascript';
-		//script.id = 'jsonp_'+id;
-		script.src = source + "&json_callback=OSRM.JSONP.callbacks."+id + "&jsonp=console.log(xxx);OSRM.JSONP.callbacks."+id;
+		script.id = 'jsonp_'+id;
+		script.src = source.replace(/%jsonp/,"OSRM.JSONP.callbacks."+id);
 		document.head.appendChild(script);
 		
 		// start timeout timer
