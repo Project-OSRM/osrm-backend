@@ -31,7 +31,10 @@ onClickRouteDescription: function(geometry_index) {
 },
 onClickCreateShortcut: function(src){
 	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat.toFixed(6) + ',' + OSRM.G.map.getCenter().lng.toFixed(6);
-	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_SHORTENER_URL+src, OSRM.RoutingDescription.showRouteLink, OSRM.RoutingDescription.showRouteLink_TimeOut, OSRM.DEFAULTS.JSONP_TIMEOUT, 'shortener');
+	
+	var source = OSRM.DEFAULTS.SHORTENER_PARAMETERS.replace(/%url/, OSRM.DEFAULTS.HOST_SHORTENER_URL+src); 
+	
+	OSRM.JSONP.call(source, OSRM.RoutingDescription.showRouteLink, OSRM.RoutingDescription.showRouteLink_TimeOut, OSRM.DEFAULTS.JSONP_TIMEOUT, 'shortener');
 	document.getElementById('route-link').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
 },
 showRouteLink: function(response){

@@ -35,6 +35,8 @@ OSRM.DEFAULTS = {
 	GEOCODER_BOUNDS: '',													// the world is not enough!
 	//GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0',			// bounds for Europe
 	
+	SHORTENER_PARAMETERS: '%url&jsonp=%jsonp',
+	
 	LANGUAGE: "en",
 	LANGUAGE_FILES_DIRECTORY: "localization/",
 	LANUGAGE_ONDEMAND_RELOADING: true,
