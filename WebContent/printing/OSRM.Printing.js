@@ -150,10 +150,7 @@ drawRoute: function(response) {
 	if(!response)
 		return;
 	var geometry = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
-	var positions = [];
-	for( var i=0, size=geometry.length; i < size; i++)
-		positions.push( new L.LatLng(geometry[i][0], geometry[i][1]) );	
-	OSRM.Printing.route.setLatLngs( positions );
+	OSRM.Printing.route.setLatLngs( geometry );
 },
 
 
