@@ -220,6 +220,28 @@ html, body {
 }
 
 
+/* workaround for invisible scrollbars in Chrome */
+#information-box::-webkit-scrollbar {
+	height: 10px;
+	width: 10px;
+}
+#information-box::-webkit-scrollbar-track {
+    background: #FFFFFF;
+}
+#information-box::-webkit-scrollbar-thumb {
+	min-height: 30px;
+    background: #EEEEEE;
+    border: 1px solid #999999;
+    -webkit-border-radius: 5ex;
+}
+#information-box::-webkit-scrollbar-thumb:hover {
+    background: #F9F9F9;
+}
+#information-box::-webkit-scrollbar-thumb:active {
+    background: #F4F4F4;
+}
+
+
 /* styles for information-box-header */
 .header-title
 {
