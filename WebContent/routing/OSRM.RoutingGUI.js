@@ -43,15 +43,17 @@ reverseRouting: function() {
 	document.getElementById("gui-input-source").value = document.getElementById("gui-input-target").value;
 	document.getElementById("gui-input-target").value = tmp;
 	
-	// reverse markers
-	OSRM.G.markers.reverseMarkers();
-	
 	// recompute route if needed
 	if( OSRM.G.route.isShown() ) {
-		OSRM.G.route.hideRoute();
-		OSRM.Routing.getRoute();
+		OSRM.G.markers.route.reverse();
+		OSRM.Routing.getRoute();				// temporary route reversal for query, actual reversal done after receiving response
+		OSRM.G.markers.route.reverse();
 		OSRM.G.markers.highlight.hide();
 		OSRM.RoutingDescription.showSimple( OSRM.G.response );
+	
+	// simply reverse markers		
+	} else {
+		OSRM.G.markers.reverseMarkers();		
 	}
 },
 

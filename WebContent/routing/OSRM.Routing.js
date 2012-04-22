@@ -49,6 +49,10 @@ timeoutRoute: function() {
 	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
 	OSRM.Routing._snapRoute();	
 },
+timeoutRouteReverse: function() {
+	OSRM.G.markers.reverseMarkers();
+	timeoutRoute();
+},
 showRouteSimple: function(response) {
  	if(!response)
  		return;
@@ -124,6 +128,15 @@ getZoomRoute: function() {
 },
 getDragRoute: function() {
 	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRouteSimple, OSRM.Routing.timeoutRouteSimple, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
+},
+getReverseRoute: function() {
+	if( OSRM.G.markers.route.length < 2 )
+		return;
+	
+	OSRM.JSONP.clear('dragging');
+	OSRM.JSONP.clear('zooming');
+	OSRM.JSONP.clear('route');
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRouteReverse, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');	
 },
 draggingTimeout: function() {
 	OSRM.G.markers.route[OSRM.G.dragid].hint = null;
