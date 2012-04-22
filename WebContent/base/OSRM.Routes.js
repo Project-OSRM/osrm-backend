@@ -15,91 +15,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// OSRM routes
-// [drawing of all types of route geometry] 
-
-
-// simple route class (wraps Leaflet Polyline)
-OSRM.SimpleRoute = function (label, style) {
-	this.label = (label ? label : "route");
-	this.route = new L.DashedPolyline();
-	this.route.setLatLngs( [] );
-	if(style) this.route.setStyle( style );
-
-	this.shown = false;
-};
-OSRM.extend( OSRM.SimpleRoute,{
-show: function() {
-	OSRM.G.map.addLayer(this.route);
-	this.shown = true;
-},
-hide: function() {
-	OSRM.G.map.removeLayer(this.route);
-	this.shown = false;
-},
-isShown: function() {
-	return this.shown;
-},
-getPoints: function() {
-	return this.route._originalPoints;
-},
-getPositions: function() {
-	return this.route.getLatLngs();
-},
-setPositions: function(positions) {
-	this.route.setLatLngs( positions );
-},
-setStyle: function(style) {
-	this.route.setStyle(style);
-},
-centerView: function() {
-	var bounds = new L.LatLngBounds( this.getPositions() );
-	OSRM.g.map.fitBoundsUI( bounds );
-},
-toString: function() {
-	return "OSRM.Route("+ this.label + ", " + this.route.getLatLngs().length + " points)";
-}
-});
-
-
-// multiroute class (wraps Leaflet LayerGroup to hold several disjoint routes)
-OSRM.MultiRoute = function (label) {
-	this.label = (label ? label : "multiroute");
-	this.route = new L.LayerGroup();
-
-	this.shown = false;
-};
-OSRM.extend( OSRM.MultiRoute,{
-show: function() {
-	OSRM.G.map.addLayer(this.route);
-	this.shown = true;
-},
-hide: function() {
-	OSRM.G.map.removeLayer(this.route);
-	this.shown = false;
-},
-isShown: function() {
-	return this.shown;
-},
-addRoute: function(positions) {
-	var line = new L.DashedPolyline( positions );
-	line.on('click', function(e) { OSRM.G.route.fire('click',e); });
-	this.route.addLayer( line );
-},
-clearRoutes: function() {
-	this.route.clearLayers();
-},
-setStyle: function(style) {
-	this.route.invoke('setStyle', style);
-},
-toString: function() {
-	return "OSRM.MultiRoute("+ this.label + ")";
-}
-});
-
-
-// route management (handles drawing of route geometry - current route, old route, unnamed route, highlight unnamed streets) 
+// OSRM route management (handles drawing of route geometry - current route, old route, unnamed route, highlight unnamed streets) 
 // [this holds the route geometry]
+
 OSRM.Route = function() {
 	this._current_route	= new OSRM.SimpleRoute("current" , {dashed:false} );
 	this._old_route		= new OSRM.SimpleRoute("old", {dashed:false,color:"#123"} );

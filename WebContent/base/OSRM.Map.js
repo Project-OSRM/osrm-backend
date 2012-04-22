@@ -41,7 +41,7 @@ init: function() {
 	}
 
 	// setup map
-	OSRM.G.map = new L.MapView('map', {
+	OSRM.G.map = new OSRM.MapView('map', {
     	center: new L.LatLng(OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE),
 	    zoom: OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL,
 	    layers: [base_maps[tile_servers[0].display_name]],	    

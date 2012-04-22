@@ -17,7 +17,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 // map view/model
 // [extending Leaflet L.Map with setView/fitBounds methods that respect UI visibility] 
-L.MapView = L.Map.extend({
+OSRM.MapView = L.Map.extend({
 	setViewUI: function(position, zoom, no_animation) {
 		if( OSRM.GUI.visible == true ) {
 			var point = this.project( position, zoom);
