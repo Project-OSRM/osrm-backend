@@ -26,32 +26,3 @@ OSRM.DEFAULTS = {};
 OSRM.GLOBALS = {};
 OSRM.G = OSRM.GLOBALS;		// abbreviations
 OSRM.C = OSRM.CONSTANTS;
-
-
-// declare one class to be a subclass of another class
-// (runs anonymous function to prevent local functions cluttering global namespace)
-(function() {
-var _inheritFromHelper = function() {};
-OSRM.inheritFrom = function( sub_class, base_class ) {
-	_inheritFromHelper.prototype = base_class.prototype;
-	sub_class.prototype = new _inheritFromHelper();
-	sub_class.prototype.constructor = sub_class;
-	sub_class.prototype.base = base_class.prototype;
-};
-}());
-
-
-// extend prototypes of a class -> used to add member values and functions
-OSRM.extend = function( target_class, properties ) {
-	for( property in properties ) {
-		target_class.prototype[property] = properties[property];
-	}
-};
-
-
-// [usage of convenience functions]
-// SubClass = function() {
-// 	SubClass.prototype.base.constructor.apply(this, arguments);
-// }
-// OSRM.inheritFrom( SubClass, BaseClass );
-// OSRM.extend( SubClass, { property:value } );
