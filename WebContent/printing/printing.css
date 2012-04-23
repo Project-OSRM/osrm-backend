@@ -256,3 +256,11 @@ div.header-title
 	text-align:center;
 	vertical-align:middle;
 }
+.header-group
+{
+	display:table-header-group;
+}
+.row-group
+{
+	display:table-row-group;
+}

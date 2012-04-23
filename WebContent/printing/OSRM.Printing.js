@@ -41,7 +41,9 @@ init: function() {
 // create UI in printwindow
 show: function(response) {
 	// create header
-	header = 
+	var header = 
+		'<thead class="header-group"><tr><td colspan="3">' +
+		
 		'<div class="full">' +
 		'<div style="display:table-row">' +
 		
@@ -67,14 +69,12 @@ show: function(response) {
 		
 		'</div>' +
 		'</div>' +
-		'<div class="quad"></div>';	
+		
+		'<div class="quad"></div>' + 
+		'</td></tr></thead>';	
 	
 	// create route description
-	var route_desc = '';
-	route_desc += '<table id="thetable" class="results-table medium-font">';
-	route_desc += '<thead style="display:table-header-group;"><tr><td colspan="3">'+header+'</td></tr></thead>';
-	route_desc += '<tbody stlye="display:table-row-group">';
-
+	var route_desc = '<tbody class="row-group">';
 	for(var i=0; i < response.route_instructions.length; i++){
 		//odd or even ?
 		var rowstyle='results-odd';
@@ -106,32 +106,21 @@ show: function(response) {
 		route_desc += "</tr>";
 	}
 	route_desc += '</tbody>';
-	route_desc += '</table>';
 	
 	// put everything in DOM
-	OSRM.G.printwindow.document.getElementById('description').innerHTML = route_desc;
-	OSRM.G.printwindow.document.getElementById('overview-map-description').innerHTML = 
-		'<table id="" class="results-table medium-font">' +
-		'<thead style="display:table-header-group;"><tr><td colspan="3">'+header+'</td></tr></thead>'+
-		'</table>';
+	OSRM.G.printwindow.document.getElementById('description').innerHTML = '<table class="results-table medium-font">' + header + route_desc + '</table>';		
+	OSRM.G.printwindow.document.getElementById('overview-map-description').innerHTML = '<table class="results-table medium-font">' + header + '</table>';
 	
-	// init map
-	var tile_servers = OSRM.DEFAULTS.TILE_SERVERS;
-	var tile_server_name = OSRM.G.map.layerControl.getActive();
-	var tile_server_id = 0;
-	for(var size=tile_servers.length;tile_server_id < size; tile_server_id++) {
-		if( tile_servers[tile_server_id].display_name == tile_server_name )
-			break;
-	}
-	
-	OSRM.Printing.map = OSRM.G.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id] );
-	var map = OSRM.Printing.map;
+	// draw map
+	var tile_server_id = OSRM.MapView.getActiveLayerId();
+	var map = OSRM.G.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id] );
+	// draw markers
 	var markers = OSRM.G.markers.route;
 	map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
 	for(var i=1, size=markers.length-1; i<size; i++)
 		map.addLayer( new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} ) );
 	map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ));
-	
+	// draw route
 	OSRM.Printing.route = new L.DashedPolyline();
 	var route = OSRM.Printing.route; 
 	route.setLatLngs( OSRM.G.route.getPositions() );
@@ -139,8 +128,7 @@ show: function(response) {
 	map.addLayer( route );
 	var bounds = new L.LatLngBounds( OSRM.G.route.getPositions() );
 	map.fitBoundsUI( bounds );
-	
-	// query better geometry
+	// query for a better route geometry
 	var zoom = map.getBoundsZoom(bounds);
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&z='+zoom+'&instructions=false', OSRM.Printing.drawRoute, OSRM.Printing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'print');
 },
