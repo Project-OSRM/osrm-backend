@@ -28,7 +28,7 @@ function initialize(tile_server) {
  	// setup map
 	var tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
 	OSRM.G.map = new OSRM.MapView("overview-map", {
-    	center: new L.LatLng(51.505, -0.09),
+    	center: new L.LatLng(48.84, 10.10),
 	    zoom: 13,
 	    zoomAnimation: false,
 	    fadeAnimation: false,

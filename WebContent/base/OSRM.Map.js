@@ -22,6 +22,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.GLOBALS.map = null;
 
 
+L.MyLayers = L.Control.Layers.extend({
+getActive: function () {
+	var i, input, obj,
+	inputs = this._form.getElementsByTagName('input'),
+	inputsLen = inputs.length;
+
+	for (i = 0; i < inputsLen; i++) {
+		input = inputs[i];
+		obj = this._layers[input.layerId];
+		if (input.checked && !obj.overlay) {
+			return obj.name;
+		}
+	}
+}
+});
+
 // map controller
 // [map initialization, event handling]
 OSRM.Map = {
@@ -50,7 +66,8 @@ init: function() {
 	});
 
 	// add layer control
-	var layersControl = new L.Control.Layers(base_maps, {});
+	var layersControl = new L.MyLayers(base_maps, {});
+	OSRM.G.map.layerControl = layersControl;
 	OSRM.G.map.addControl(layersControl);
 
     // move zoom markers

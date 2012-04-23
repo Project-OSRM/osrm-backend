@@ -38,7 +38,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <script src="printing.js" type="text/javascript"></script>
 <script src="../leaflet/leaflet-src.js" type="text/javascript"></script>
 <script src="../base/osrm/OSRM.MapView.js" type="text/javascript"></script>
-<script src="../base/OSRM.Map.js" type="text/javascript"></script>
 </head>
 
 
@@ -46,7 +45,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <body class="base-font">
 
 <!--  header -->
-<div id="printing-header">
+<div id="printing-header" class="noprint">
 <div id="gui-printer" class="iconic-button top-right-button"></div>
 </div>
 
@@ -55,9 +54,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <div id="description"></div>
 
 <!--map-->
-<div class="quad"></div>
+<div class="pagebreak"></div>
+<div class="quad noprint"></div>
+<div class="quad noprint"></div>
 <div id="overview-map-label" class="header-title">Übersichtskarte</div>
-<div id="overview-description" class="results-table medium-font"></div>
+<div id="overview-map-description" class="results-table medium-font"></div>
 <div id="overview-map"></div>
 
 </body>

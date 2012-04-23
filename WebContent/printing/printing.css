@@ -32,7 +32,7 @@ body
 }
 
 /* route description box */
-#overview-description
+#overview-map-description
 {
 	width:500px;
 	margin:5px;
@@ -141,17 +141,19 @@ div.header-title
 
 
 /* utility styles */
-@media print {
-.quad
-{
-	page-break-before:always;
-}
-}
-@media screen {
 .quad
 {
 	min-width:10px;
 	min-height:10px;
+}
+@media print {
+.pagebreak
+{
+	page-break-before:always;
+}
+.noprint
+{
+	display:none;
 }
 }
 

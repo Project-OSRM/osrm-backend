@@ -15,11 +15,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// OSRM printer
+// OSRM printing
 // [printing support]
 
-OSRM.Printing = {
 
+OSRM.Printing = {
+		
 // create UI for printing in mainwindow
 init: function() {
 	var icon = document.createElement('div');
@@ -36,15 +37,9 @@ init: function() {
 	document.getElementById("gui-printer").onclick = OSRM.Printing.print;	
 },
 		
+
 // create UI in printwindow
 show: function(response) {
-	// add events
-	OSRM.printwindow.document.getElementById('gui-printer').onclick = OSRM.printwindow.printWindow;
-	
-	// localization 
-	OSRM.printwindow.document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
-	OSRM.printwindow.document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
-
 	// create header
 	header = 
 		'<div class="full">' +
@@ -114,14 +109,22 @@ show: function(response) {
 	route_desc += '</table>';
 	
 	// put everything in DOM
-	OSRM.printwindow.document.getElementById('description').innerHTML = route_desc;
-	OSRM.printwindow.document.getElementById('overview-description').innerHTML = 
+	OSRM.G.printwindow.document.getElementById('description').innerHTML = route_desc;
+	OSRM.G.printwindow.document.getElementById('overview-map-description').innerHTML = 
 		'<table id="" class="results-table medium-font">' +
 		'<thead style="display:table-header-group;"><tr><td colspan="3">'+header+'</td></tr></thead>'+
 		'</table>';
 	
 	// init map
-	OSRM.Printing.map = OSRM.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[0] );
+	var tile_servers = OSRM.DEFAULTS.TILE_SERVERS;
+	var tile_server_name = OSRM.G.map.layerControl.getActive();
+	var tile_server_id = 0;
+	for(var size=tile_servers.length;tile_server_id < size; tile_server_id++) {
+		if( tile_servers[tile_server_id].display_name == tile_server_name )
+			break;
+	}
+	
+	OSRM.Printing.map = OSRM.G.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id] );
 	var map = OSRM.Printing.map;
 	var markers = OSRM.G.markers.route;
 	map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
@@ -150,23 +153,39 @@ drawRoute: function(response) {
 },
 
 
-
-// open printwindow
+//open printWindow
 print: function() {
 	// do not open window if there is no route to draw
 	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() )
 		return;
+	
 	// close old window (should we really do this?)
-	if( OSRM.printwindow )
-		OSRM.printwindow.close();
-	OSRM.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
-	OSRM.printwindow.addEventListener("DOMContentLoaded", OSRM.Printing.printwindowLoaded, false);
+	if( OSRM.G.printwindow )
+		OSRM.G.printwindow.close();
+	
+	// generate a new window and wait till it has finished loading
+	OSRM.G.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
+	OSRM.Browser.onLoadHandler( OSRM.Printing.printwindowLoaded, OSRM.G.printwindow );
 },
 
-// add content to printwindow after it has finished loading
+
+//add content to printwindow after it has finished loading
 printwindowLoaded: function(){
+	var print_window = OSRM.G.printwindow;
+	var print_document = print_window.document;
+	
+	// add events
+	print_document.getElementById('gui-printer').onclick = print_window.printWindow;
+	
+	// localization 
+	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
+	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
+
+	// add routing content	
 	OSRM.Printing.show( OSRM.G.response );
-	OSRM.printwindow.focus();
+	
+	// finally, focus on printwindow
+	print_window.focus();
 }
 
 };
