@@ -45,22 +45,25 @@ OSRM.Browser.getElementsByClassName = function( node, classname ) {
     return a;
 };
 
-// call a function when DOM has finished loading and remove event handler
-OSRM.Browser.onLoadHandler = function( function_pointer ) {
-	if(document.addEventListener) {		// FF, CH, IE9+
+// call a function when DOM has finished loading and remove event handler (optionally pass a different window object)
+OSRM.Browser.onLoadHandler = function( function_pointer, the_document ) {
+	the_document = the_document || document;	// default document
+	
+	if(the_document.addEventListener) {			// FF, CH, IE9+
 		var temp_function = function() { 
-			document.removeEventListener("DOMContentLoaded", arguments.callee, false);
+			the_document.removeEventListener("DOMContentLoaded", arguments.callee, false);
 			function_pointer.call();
 		};
-		document.addEventListener("DOMContentLoaded", temp_function, false);
+		the_document.addEventListener("DOMContentLoaded", temp_function, false);
 	}
-	else if(document.attachEvent) {		// IE8-
+	
+	else if(the_document.attachEvent) {			// IE8-
 		var temp_function = function() { 
-			if ( document.readyState === "interactive" || document.readyState === "complete" ) { 
-				document.detachEvent("onreadystatechange", arguments.callee); 
+			if ( the_document.readyState === "interactive" || the_document.readyState === "complete" ) { 
+				the_document.detachEvent("onreadystatechange", arguments.callee); 
 				function_pointer.call(); 
 			}
 		};
-		document.attachEvent("onreadystatechange", temp_function);
+		the_document.attachEvent("onreadystatechange", temp_function);
 	}
 };
