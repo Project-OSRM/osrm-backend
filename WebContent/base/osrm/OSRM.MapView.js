@@ -38,7 +38,7 @@ OSRM.MapView = L.Map.extend({
 		sw_point.y+=20;
 		var ne_point = this.project( northeast, zoom);
 		ne_point.y-=20;
-		sw_point.x+=20;
+		ne_point.x+=20;
 		bounds.extend( this.unproject(sw_point,zoom) );
 		bounds.extend( this.unproject(ne_point,zoom) );
 		this.fitBounds( bounds );	
