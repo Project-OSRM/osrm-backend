@@ -58,78 +58,53 @@ show: function(response) {
 	var gpx_link = '[<a class="result-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
 		
 	// create route description
-	var route_desc = "";
-	route_desc += '<table class="results-table medium-font">';
-
+	var body = "";
+	
+	body += '<table class="description medium-font">';
 	for(var i=0; i < response.route_instructions.length; i++){
 		//odd or even ?
-		var rowstyle='results-odd';
-		if(i%2==0) { rowstyle='results-even'; }
+		var rowstyle='description-body-odd';
+		if(i%2==0) { rowstyle='description-body-even'; }
 
-		route_desc += '<tr class="'+rowstyle+'">';
+		body += '<tr class="'+rowstyle+'">';
 		
-		route_desc += '<td class="result-directions">';
-		route_desc += '<img class="result-direction" src="'+ OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0]) + '" alt=""/>';		
-		route_desc += '</td>';
+		body += '<td class="description-body-directions">';
+		body += '<img class="description-body-direction" src="'+ OSRM.RoutingDescription._getDrivingInstructionIcon(response.route_instructions[i][0]) + '" alt=""/>';		
+		body += '</td>';
 		
-		route_desc += '<td class="result-items">';
-		route_desc += '<div class="result-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
+		body += '<td class="description-body-items">';
+		body += '<div class="description-body-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
 
 		// build route description
 		if( response.route_instructions[i][1] != "" )
-			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]).replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
+			body += OSRM.loc(OSRM.RoutingDescription._getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]).replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
 		else
-			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"").replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
+			body += OSRM.loc(OSRM.RoutingDescription._getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"").replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
 
-		route_desc += '</div>';
-		route_desc += "</td>";
+		body += '</div>';
+		body += "</td>";
 		
-		route_desc += '<td class="result-distance">';
+		body += '<td class="description-body-distance">';
 		if( i != response.route_instructions.length-1 )
-		route_desc += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
-		route_desc += "</td>";
+		body += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
+		body += "</td>";
 		
-		route_desc += "</tr>";
+		body += "</tr>";
 	}	
-	route_desc += '</table>';
+	body += '</table>';
 	
-	// create header
-	header = 
-		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
-		'<div class="full">' +		
-		'<div class="row">' +
-		'<div class="left header-content">' + OSRM.loc("DISTANCE")+":" + '</div>' +
-		'<div class="left header-content">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
-		'<div class="right header-content" id="route-link">' + route_link + '</div>' +
-		'</div>' +		
-		'<div class="row">' +
-		'<div class="left header-content">' + OSRM.loc("DURATION")+":" + '</div>' + 
-		'<div class="left header-content">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
-		'<div class="right header-content">' + gpx_link + '</div>' +
-		'</div>' +		
-		'</div>';
+	// build header
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.metersToDistance(response.route_summary.total_distance), OSRM.Utils.secondsToTime(response.route_summary.total_time), route_link, gpx_link);	
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
-	document.getElementById('information-box').innerHTML = route_desc;
+	document.getElementById('information-box').innerHTML = body;
 },
 
 // simple description
 showSimple: function(response) {
-	header =
-		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
-		'<div class="full">' +
-		'<div class="row">' +
-		'<div class="left header-content">' + OSRM.loc("DISTANCE")+":" + '</div>' +
-		'<div class="left header-content">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
-		'<div class="right header-content" id="route-link"></div>' +
-		'</div>' +
-		'<div class="row">' +
-		'<div class="left header-content">' + OSRM.loc("DURATION")+":" + '</div>' + 
-		'<div class="left header-content">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
-		'<div class="right header-content"></div>' +
-		'</div>' +
-		'</div>';
+	// build header
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.metersToDistance(response.route_summary.total_distance), OSRM.Utils.secondsToTime(response.route_summary.total_time), "", "");
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
@@ -138,28 +113,68 @@ showSimple: function(response) {
 
 // no description
 showNA: function( display_text ) {
-	header =
-		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
-		'<div class="full">' +
-		'<div class="row">' +
-		'<div class="left header-content">' + OSRM.loc("DISTANCE")+":" + '</div>' +
-		'<div class="left header-content">' + "N/A" + '</div>' +
-		'<div class="right header-content" id="route-link"></div>' +
-		'</div>' +
-		'<div class="row">' +
-		'<div class="left header-content">' + OSRM.loc("DURATION")+":" + '</div>' +
-		'<div class="left header-content">' + "N/A" + '</div>' +
-		'<div class="right header-content"></div>' +
-		'</div>' +
-		'</div>';
+	// build header
+	header = OSRM.RoutingDescription._buildHeader("N/A", "N/A", "", "");
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
 	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+display_text+"</div>";	
 },
 
+// build header
+_buildHeader: function(distance, duration, route_link, gpx_link) {
+	var temp = 
+		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
+		
+		'<div class="full">' +
+		'<div class="row">' +
+
+		'<div class="left">' +
+		'<div class="full">' +
+		'<div class="row">' +
+		'<div class="left header-label">' + OSRM.loc("DISTANCE")+":" + '</div>' +
+		'<div class="left header-content stretch">' + distance + '</div>' +
+		'</div>' +
+		'<div class="row">' +
+		'<div class="left header-label">' + OSRM.loc("DURATION")+":" + '</div>' +
+		'<div class="left header-content stretch">' + duration + '</div>' +
+		'</div>' +
+		'</div>' +
+		'</div>' +
+		
+		'<div class="left">' +
+		'<div class="full">' +
+		'<div class="row">' +
+		'<div class="right header-content" id="route-link">' + route_link + '</div>' +
+		'</div>' +
+		'<div class="row">' +
+		'<div class="right header-content">' + gpx_link + '</div>' +
+		'</div>' +
+		'</div>' +
+		'</div>' +
+		
+		'</div>' +
+		'</div>' +		
+		
+		'</div>';	
+//		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
+//		'<div class="full">' +
+//		'<div class="row">' +
+//		'<div class="left header-label">' + OSRM.loc("DISTANCE")+":" + '</div>' +
+//		'<div class="left header-content">' + distance + '</div>' +
+//		'<div class="right header-content" id="route-link">' + route_link + '</div>' +
+//		'</div>' +
+//		'<div class="row">' +
+//		'<div class="left header-label">' + OSRM.loc("DURATION")+":" + '</div>' +
+//		'<div class="left header-content">' + duration + '</div>' +
+//		'<div class="right header-content">' + gpx_link + '</div>' +
+//		'</div>' +
+//		'</div>';
+	return temp;
+},
+
 // retrieve driving instruction icon from instruction id
-getDrivingInstructionIcon: function(server_instruction_id) {
+_getDrivingInstructionIcon: function(server_instruction_id) {
 	var local_icon_id = "direction_";
 	server_instruction_id = server_instruction_id.replace(/^11-\d{1,}$/,"11");		// dumb check, if there is a roundabout (all have the same icon)
 	local_icon_id += server_instruction_id;
@@ -171,7 +186,7 @@ getDrivingInstructionIcon: function(server_instruction_id) {
 },
 
 // retrieve driving instructions from instruction ids
-getDrivingInstruction: function(server_instruction_id) {
+_getDrivingInstruction: function(server_instruction_id) {
 	var local_instruction_id = "DIRECTION_";
 	server_instruction_id = server_instruction_id.replace(/^11-\d{2,}$/,"11-x");	// dumb check, if there are 10+ exits on a roundabout (say the same for exit 10+)
 	local_instruction_id += server_instruction_id;

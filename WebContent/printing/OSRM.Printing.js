@@ -89,15 +89,15 @@ show: function(response) {
 		body += '<tr class="'+rowstyle+'">';
 		
 		body += '<td class="description-body-directions">';
-		body += '<img class="description-body-direction" src="../'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
+		body += '<img class="description-body-direction" src="../'+OSRM.RoutingDescription._getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
 		body += "</td>";		
 
 		// build route description
 		body += '<td class="description-body-items">';
 		if( response.route_instructions[i][1] != "" )
-			body += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]).replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
+			body += OSRM.loc(OSRM.RoutingDescription._getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]).replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
 		else
-			body += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"").replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
+			body += OSRM.loc(OSRM.RoutingDescription._getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"").replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
 		body += "</td>";
 		
 		body += '<td class="description-body-distance">';
