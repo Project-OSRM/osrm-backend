@@ -42,35 +42,20 @@ init: function() {
 show: function(response) {
 	// create header
 	var header = 
-		'<thead class="header-group"><tr><td colspan="3">' +
-		
-//		'<div class="full">' +
-//		'<div class="row">' +
-//		'<div class="left header-content" style="padding:0px 5px 0px 0px;">' + OSRM.loc("GUI_START")+ ': </div>' +
-//		'<div class="left header-content" style="width:100%;font-weight:bold;">' + document.getElementById("gui-input-source").value + '</div>' +
-//		'<div class="left header-content" style="padding:0px 5px 0px 0px;">' +  OSRM.loc("DISTANCE")+': </div>' +
-//		'<div class="left header-content" style="font-weight:bold;">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
-//		'</div>' +
-//		'<div class="row">' +
-//		'<div class="left header-content" style="padding:0px 5px 0px 0px;">' + OSRM.loc("GUI_END")+ ': </div>' +
-//		'<div class="left header-content" style="width:100%;font-weight:bold;">' + document.getElementById("gui-input-target").value + '</div>' +
-//		'<div class="left header-content" style="padding:0px 5px 0px 0x;">' +  OSRM.loc("DURATION")+': </div>' +
-//		'<div class="left header-content" style="font-weight:bold;">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
-//		'</div>' +		
-//		'</div>' +
+		'<thead class="description-header"><tr><td colspan="3">' +
 		
 		'<div class="full">' +
 		'<div class="row">' +
 		
-		'<div class="left" style="width:100%">' +
+		'<div class="left stretch">' +
 		'<div class="full">' +
 		'<div class="row">' +
-		'<div class="left header-content" style="padding:0px 5px 0px 0px;">' + OSRM.loc("GUI_START")+ ': </div>' +
-		'<div class="left header-content" style="width:100%;font-weight:bold;">' + document.getElementById("gui-input-source").value + '</div>' +
+		'<div class="left description-header-label">' + OSRM.loc("GUI_START")+ ': </div>' +
+		'<div class="left description-header-content stretch">' + document.getElementById("gui-input-source").value + '</div>' +
 		'</div>' +
 		'<div class="row">' +
-		'<div class="left header-content" style="padding:0px 5px 0px 0px;">' + OSRM.loc("GUI_END")+ ': </div>' +
-		'<div class="left header-content" style="font-weight:bold;">' + document.getElementById("gui-input-target").value + '</div>' +
+		'<div class="left description-header-label">' + OSRM.loc("GUI_END")+ ': </div>' +
+		'<div class="left description-header-content stretch">' + document.getElementById("gui-input-target").value + '</div>' +
 		'</div>' +		
 		'</div>' +
 		'</div>' +
@@ -78,12 +63,12 @@ show: function(response) {
 		'<div class="left">' +
 		'<div class="full">' +
 		'<div class="row">' +
-		'<div class="left header-content" style="padding:0px 5px 0px 0px;">' +  OSRM.loc("DISTANCE")+': </div>' +
-		'<div class="left header-content" style="font-weight:bold;">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="left description-header-label">' +  OSRM.loc("DISTANCE")+': </div>' +
+		'<div class="left description-header-content">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
 		'</div>' +
 		'<div class="row">' +
-		'<div class="left header-content" style="padding:0px 5px 0px 0x;">' +  OSRM.loc("DURATION")+': </div>' +
-		'<div class="left header-content" style="font-weight:bold;">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'<div class="left description-header-label">' +  OSRM.loc("DURATION")+': </div>' +
+		'<div class="left description-header-content">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
 		'</div>' +
 		'</div>' +
 		'</div>' +
@@ -91,42 +76,42 @@ show: function(response) {
 		'</div>' +
 		'</div>' +
 		
-		'<div class="quad" />' + 
+		'<div class="quad"></div>' + 
 		'</td></tr></thead>';	
 	
 	// create route description
-	var route_desc = '<tbody style="row-group">';
+	var body = '<tbody class="description-body">';
 	for(var i=0; i < response.route_instructions.length; i++){
 		//odd or even ?
-		var rowstyle='results-odd';
-		if(i%2==0) { rowstyle='results-even'; }
+		var rowstyle='description-body-odd';
+		if(i%2==0) { rowstyle='description-body-even'; }
 
-		route_desc += '<tr class="'+rowstyle+'">';
+		body += '<tr class="'+rowstyle+'">';
 		
-		route_desc += '<td class="result-directions">';
-		route_desc += '<img class="result-direction" src="../'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
-		route_desc += "</td>";		
+		body += '<td class="description-body-directions">';
+		body += '<img class="description-body-direction" src="../'+OSRM.RoutingDescription.getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
+		body += "</td>";		
 
 		// build route description
-		route_desc += '<td class="result-items">';
+		body += '<td class="description-body-items">';
 		if( response.route_instructions[i][1] != "" )
-			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]).replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
+			body += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"$1").replace(/%s/, response.route_instructions[i][1]).replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
 		else
-			route_desc += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"").replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
-		route_desc += "</td>";
+			body += OSRM.loc(OSRM.RoutingDescription.getDrivingInstruction(response.route_instructions[i][0])).replace(/\[(.*)\]/,"").replace(/%d/, OSRM.loc(response.route_instructions[i][6]));
+		body += "</td>";
 		
-		route_desc += '<td class="result-distance">';
+		body += '<td class="description-body-distance">';
 		if( i != response.route_instructions.length-1 )
-		route_desc += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
-		route_desc += "</td>";
+		body += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
+		body += "</td>";
 		
-		route_desc += "</tr>";
+		body += "</tr>";
 	}
-	route_desc += '</tbody>';
+	body += '</tbody>';
 	
 	// put everything in DOM
-	OSRM.G.printwindow.document.getElementById('description').innerHTML = '<table class="results-table medium-font">' + header + route_desc + '</table>';		
-	OSRM.G.printwindow.document.getElementById('overview-map-description').innerHTML = '<table class="results-table medium-font">' + header + '</table>';
+	OSRM.G.printwindow.document.getElementById('description').innerHTML = '<table class="description medium-font">' + header + body + '</table>';		
+	OSRM.G.printwindow.document.getElementById('overview-map-description').innerHTML = '<table class="description medium-font">' + header + '</table>';
 	
 	// draw map
 	var tile_server_id = OSRM.G.map.getActiveLayerId();
