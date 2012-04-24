@@ -22,7 +22,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define DOUGLASPEUCKER_H_
 
 #include <cfloat>
-#include "../DataStructures/SimpleStack.h"
+
+#include <stack>
 
 /*This class object computes the bitvector of indicating generalized input points
  * according to the (Ramer-)Douglas-Peucker algorithm.

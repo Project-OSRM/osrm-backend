@@ -26,8 +26,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 #include <climits>
-#include <cstring>
-#include <string>
 
 using namespace std;
 
@@ -47,7 +45,6 @@ using namespace std;
 #define DEBUG(x) do {std::cout << "[debug " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 #define GUARANTEE(x,y) do { {do{ if(false == (x)) { ERR(y) } } while(0);} } while(0);
 #endif
-//#define DELETE(x) do { if(NULL != x) { delete x; x = NULL; } }while(0);
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -65,20 +62,10 @@ typedef unsigned int EdgeWeight;
 static const NodeID SPECIAL_NODEID = UINT_MAX;
 static const EdgeID SPECIAL_EDGEID = UINT_MAX;
 
-#ifndef _ONLYTYPEDEFS
-#include <boost/thread.hpp>
-#include <libxml/xmlreader.h>
-#include "DataStructures/Util.h"
-#endif //_ONLYTYPEDEFS
-
-#include "DataStructures/HashTable.h"
 #include "DataStructures/NodeCoords.h"
 typedef NodeCoords<NodeID> NodeInfo;
 #include "DataStructures/NodeInformationHelpDesk.h"
-#include "DataStructures/BinaryHeap.h"
-#include "Contractor/Contractor.h"
 #include "Contractor/ContractionCleanup.h"
 typedef ContractionCleanup::Edge::EdgeData EdgeData;
-#include "DataStructures/DynamicGraph.h"
 
 #endif /* TYPEDEFS_H_ */

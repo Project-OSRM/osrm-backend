@@ -24,6 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 #include <string>
 #include <boost/unordered_map.hpp>
+#include "../DataStructures/HashTable.h"
 #include "../typedefs.h"
 #include "Util.h"
 

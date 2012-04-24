@@ -24,6 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cassert>
 #include <cstddef>
 #include <climits>
+#include <limits>
 
 #include "../typedefs.h"
 
