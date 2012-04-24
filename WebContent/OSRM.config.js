@@ -43,7 +43,8 @@ OSRM.DEFAULTS = {
 	LANGUAGE_SUPPORTED: [ 
 		{display_name:"en", encoding:"en"},
 		{display_name:"de", encoding:"de"},
-		{display_name:"fi", encoding:"fi"}
+		{display_name:"fi", encoding:"fi"},
+		{display_name:"fr", encoding:"fr"}
 	],
 		
 	TILE_SERVERS: [
