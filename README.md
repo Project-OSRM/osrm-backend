@@ -26,6 +26,14 @@ Bugtracking
 -----------
 Please use the OSRM-Project bug tracker [(4)] for submitting any bug reports or feature requests.
 
+
+Contribute
+----------
+If you like to contribute, you can simply fork the project and start coding.
+When you are going to provide a more substantial addition, please create a new branch first.
+For pull requests use the develop branch as target, never the master branch. 
+
+
 Integration into Project-OSRM repository
 ----------------------------------------
 The Project-OSRM repository already contains the frontend repository as a submodule.
