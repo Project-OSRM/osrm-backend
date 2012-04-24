@@ -112,7 +112,7 @@ show: function(response) {
 	OSRM.G.printwindow.document.getElementById('overview-map-description').innerHTML = '<table class="results-table medium-font">' + header + '</table>';
 	
 	// draw map
-	var tile_server_id = OSRM.MapView.getActiveLayerId();
+	var tile_server_id = OSRM.G.map.getActiveLayerId();
 	var map = OSRM.G.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id] );
 	// draw markers
 	var markers = OSRM.G.markers.route;
