@@ -475,6 +475,10 @@ html, body {
 	display:table;
 	width:100%;
 }
+.row
+{
+	display:table-row;
+}
 .left
 {
 	display:table-cell;

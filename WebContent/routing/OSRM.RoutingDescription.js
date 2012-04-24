@@ -96,14 +96,16 @@ show: function(response) {
 	// create header
 	header = 
 		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
-		'<div class="full">' +
-		'<div class="left">' +
-		'<div class="header-content">' + OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
-		'<div class="header-content">' + OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
-		'</div>' +
-		'<div class="right">' +
-		'<div id="route-link" class="header-content">' + route_link + '</div>' +
-		'<div class="header-content">' + gpx_link + '</div>' +
+		'<div class="full">' +		
+		'<div class="row">' +
+		'<div class="left header-content">' + OSRM.loc("DISTANCE")+":" + '</div>' +
+		'<div class="left header-content">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="right header-content" id="route-link">' + route_link + '</div>' +
+		'</div>' +		
+		'<div class="row">' +
+		'<div class="left header-content">' + OSRM.loc("DURATION")+":" + '</div>' + 
+		'<div class="left header-content">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'<div class="right header-content">' + gpx_link + '</div>' +
 		'</div>' +		
 		'</div>';
 
@@ -114,16 +116,20 @@ show: function(response) {
 
 // simple description
 showSimple: function(response) {
-	header = 
+	header =
 		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
 		'<div class="full">' +
-		'<div class="left">' +
-		'<div class="header-content">' + OSRM.loc("DISTANCE")+": " + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
-		'<div class="header-content">' + OSRM.loc("DURATION")+": " + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'<div class="row">' +
+		'<div class="left header-content">' + OSRM.loc("DISTANCE")+":" + '</div>' +
+		'<div class="left header-content">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="right header-content" id="route-link"></div>' +
 		'</div>' +
-		'<div class="right">' +
-		'</div>' +		
-		'</div>';	
+		'<div class="row">' +
+		'<div class="left header-content">' + OSRM.loc("DURATION")+":" + '</div>' + 
+		'<div class="left header-content">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'<div class="right header-content"></div>' +
+		'</div>' +
+		'</div>';
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
@@ -132,15 +138,19 @@ showSimple: function(response) {
 
 // no description
 showNA: function( display_text ) {
-	header = 
+	header =
 		'<div class="header-title">' + OSRM.loc("ROUTE_DESCRIPTION") + '</div>' +
 		'<div class="full">' +
-		'<div class="left">' +
-		'<div class="header-content">' + OSRM.loc("DISTANCE")+": N/A" + '</div>' +
-		'<div class="header-content">' + OSRM.loc("DURATION")+": N/A" + '</div>' +
+		'<div class="row">' +
+		'<div class="left header-content">' + OSRM.loc("DISTANCE")+":" + '</div>' +
+		'<div class="left header-content">' + "N/A" + '</div>' +
+		'<div class="right header-content" id="route-link"></div>' +
 		'</div>' +
-		'<div class="right">' +
-		'</div>' +		
+		'<div class="row">' +
+		'<div class="left header-content">' + OSRM.loc("DURATION")+":" + '</div>' +
+		'<div class="left header-content">' + "N/A" + '</div>' +
+		'<div class="right header-content"></div>' +
+		'</div>' +
 		'</div>';
 
 	// update DOM
