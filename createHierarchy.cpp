@@ -90,12 +90,10 @@ int main (int argc, char *argv[]) {
     _Restriction restriction;
     unsigned usableRestrictionsCounter(0);
     restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
-    for(unsigned i = 0; i < usableRestrictionsCounter; ++i) {
-        restrictionsInstream.read((char *)&(restriction), sizeof(_Restriction));
-        inputRestrictions.push_back(restriction);
-    }
+    inputRestrictions.resize(usableRestrictionsCounter);
+    restrictionsInstream.read((char *)&(inputRestrictions[0]), usableRestrictionsCounter*sizeof(_Restriction));
     restrictionsInstream.close();
-
+    INFO("restrictions size: " << inputRestrictions.size() << ", capacity: " <<  inputRestrictions.capacity());
 
     std::ifstream in;
     in.open (argv[1], std::ifstream::in | std::ifstream::binary);
@@ -112,6 +110,7 @@ int main (int argc, char *argv[]) {
 
     std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
+    INFO("EdgeList size: " << edgeList.size() << ", edgeList.capacity: " << edgeList.capacity());
     in.close();
     INFO("Loaded " << inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
