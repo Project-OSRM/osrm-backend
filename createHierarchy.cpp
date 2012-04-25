@@ -110,7 +110,7 @@ int main (int argc, char *argv[]) {
 
     std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
-    INFO("EdgeList size: " << edgeList.size() << ", edgeList.capacity: " << edgeList.capacity());
+    INFO("bollardNodes size: " << bollardNodes.size() << ", bollardNodes.capacity: " << bollardNodes.capacity());
     in.close();
     INFO("Loaded " << inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
