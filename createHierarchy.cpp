@@ -138,7 +138,7 @@ int main (int argc, char *argv[]) {
     BOOST_FOREACH(EdgeBasedEdge & edge, edgeBasedEdgeList) {
         externalEdgeBasedEdgeList.push_back(edge);
     }
-    edgeBasedEdgeList.clear();
+    std::vector<EdgeBasedEdge>().swap(edgeBasedEdgeList);
 
     /***
      * Writing info on original (node-based) nodes
