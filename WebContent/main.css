@@ -399,6 +399,11 @@ html, body {
 {
 	background-image:url("images/printer.png");
 }
+#gui-printer-inactive
+{
+	cursor:default;
+	background-image:url("images/printer_inactive.png");
+}
 #gui-printer:hover
 {
 	background-image:url("images/printer_hover.png");

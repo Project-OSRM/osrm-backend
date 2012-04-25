@@ -24,7 +24,7 @@ OSRM.Printing = {
 // create UI for printing in mainwindow
 init: function() {
 	var icon = document.createElement('div');
-	icon.id = "gui-printer";
+	icon.id = "gui-printer-inactive";
 	icon.className = "iconic-button top-right-button";
 	
 	var spacer = document.createElement('div');
@@ -34,9 +34,20 @@ init: function() {
 	input_mask_header.appendChild(spacer,input_mask_header.lastChild);
 	input_mask_header.appendChild(icon,input_mask_header.lastChild);
 	
-	document.getElementById("gui-printer").onclick = OSRM.Printing.print;	
+	document.getElementById("gui-printer-inactive").onclick = OSRM.Printing.print;
 },
 		
+
+// switch printer button on/off
+activate: function() {		// use showing route description as trigger
+	if( document.getElementById("gui-printer-inactive") )
+		document.getElementById("gui-printer-inactive").id = "gui-printer";
+},
+deactivate: function() {	// use hide route as trigger
+	if( document.getElementById("gui-printer") )
+		document.getElementById("gui-printer").id = "gui-printer-inactive";
+},		
+
 
 // create UI in printwindow
 show: function(response) {

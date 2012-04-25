@@ -49,12 +49,16 @@ OSRM.extend( OSRM.Route,{
 	hideRoute: function() {
 		this._current_route.hide();
 		this._unnamed_route.hide();
+		// activate printing
+		OSRM.Printing.deactivate();		
 	},
 	hideAll: function() {
 		this._current_route.hide();
 		this._unnamed_route.hide();
 		this._old_route.hide();
 		this._noroute = OSRM.Route.ROUTE;
+		// activate printing
+		OSRM.Printing.deactivate();		
 	},	
 	
 	showUnnamedRoute: function(positions) {
