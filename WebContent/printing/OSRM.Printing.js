@@ -166,7 +166,9 @@ print: function() {
 	
 	// generate a new window and wait till it has finished loading
 	OSRM.G.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
-	OSRM.Browser.onLoadHandler( OSRM.Printing.printwindowLoaded, OSRM.G.printwindow );
+	//OSRM.Browser.onLoadHandler( OSRM.Printing.printwindowLoaded, OSRM.G.printwindow );
+	//OSRM.Browser.onLoadHandler( OSRM.Printing.printwindowLoaded, OSRM.G.printwindow.document );
+	setTimeout( OSRM.Printing.printwindowLoaded, 500);
 },
 
 
@@ -182,7 +184,7 @@ printwindowLoaded: function(){
 	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
 	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
 
-	// add routing content	
+	// add routing content
 	OSRM.Printing.show( OSRM.G.response );
 	
 	// finally, focus on printwindow
