@@ -64,6 +64,10 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         	trafficLightNodes.push_back(i);
     }
 
+    //tighten vector sizes
+    std::vector<NodeID>(bollardNodes).swap(bollardNodes);
+    std::vector<NodeID>(trafficLightNodes).swap(trafficLightNodes);
+
     in.read((char*)&m, sizeof(unsigned));
     DEBUG(" and " << m << " edges ");
     for(unsigned i = 0; i < inputRestrictions.size(); ++i) {

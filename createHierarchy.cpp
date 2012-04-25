@@ -93,7 +93,6 @@ int main (int argc, char *argv[]) {
     inputRestrictions.resize(usableRestrictionsCounter);
     restrictionsInstream.read((char *)&(inputRestrictions[0]), usableRestrictionsCounter*sizeof(_Restriction));
     restrictionsInstream.close();
-    INFO("restrictions size: " << inputRestrictions.size() << ", capacity: " <<  inputRestrictions.capacity());
 
     std::ifstream in;
     in.open (argv[1], std::ifstream::in | std::ifstream::binary);
@@ -110,9 +109,8 @@ int main (int argc, char *argv[]) {
 
     std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
-    INFO("bollardNodes size: " << bollardNodes.size() << ", bollardNodes.capacity: " << bollardNodes.capacity());
     in.close();
-    INFO("Loaded " << inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
+    INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
     if(!testDataFile("speedprofile.ini")) {
         ERR("Need speedprofile.ini to apply traffic signal penalty");
@@ -124,6 +122,7 @@ int main (int argc, char *argv[]) {
      * Building an edge-expanded graph from node-based input an turn restrictions
      */
 
+    INFO("Generating edge-expanded graph representation");
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile, SRTM_ROOT);
     std::vector<ImportEdge>().swap(edgeList);
 
@@ -132,14 +131,14 @@ int main (int argc, char *argv[]) {
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
-    std::vector<EdgeBasedEdge> edgeBasedEdgeList;
+    std::deque<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
 
     stxxl::vector<EdgeBasedEdge> externalEdgeBasedEdgeList;
     BOOST_FOREACH(EdgeBasedEdge & edge, edgeBasedEdgeList) {
         externalEdgeBasedEdgeList.push_back(edge);
     }
-    std::vector<EdgeBasedEdge>().swap(edgeBasedEdgeList);
+    edgeBasedEdgeList.clear();
 
     /***
      * Writing info on original (node-based) nodes

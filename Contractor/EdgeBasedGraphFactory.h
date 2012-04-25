@@ -29,6 +29,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
+#include <deque>
 #include <vector>
 
 #include <cstdlib>
@@ -103,7 +104,7 @@ private:
     RestrictionMap _restrictionMap;
 
 
-    std::vector<EdgeBasedEdge> edgeBasedEdges;
+    std::deque<EdgeBasedEdge> edgeBasedEdges;
     std::vector<EdgeBasedNode> edgeBasedNodes;
     std::vector<OriginalEdgeData> originalEdgeData;
     std::vector<NodeInfo>       inputNodeInfoList;
@@ -127,7 +128,7 @@ public:
     explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm);
 
     void Run();
-    void GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& edges );
+    void GetEdgeBasedEdges( std::deque< EdgeBasedEdge >& edges );
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
     short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
