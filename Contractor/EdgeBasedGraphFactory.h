@@ -104,10 +104,10 @@ private:
     RestrictionMap _restrictionMap;
 
 
-    std::vector<EdgeBasedEdge> edgeBasedEdges;
-    std::vector<EdgeBasedNode> edgeBasedNodes;
-    std::vector<OriginalEdgeData> originalEdgeData;
-    std::vector<NodeInfo>       inputNodeInfoList;
+    std::vector<EdgeBasedEdge>      edgeBasedEdges;
+    std::vector<EdgeBasedNode>      edgeBasedNodes;
+    std::vector<OriginalEdgeData>   originalEdgeData;
+    std::vector<NodeInfo>           inputNodeInfoList;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
