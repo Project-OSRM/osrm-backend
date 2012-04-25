@@ -107,7 +107,7 @@ public:
             edge.data = _EdgeBasedContractorEdgeData( (std::max)((int)currentEdge.weight(), 1 ),  1,  currentEdge.id()/*,  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction()*/,  false,  currentEdge.isForward(),  currentEdge.isBackward());
 
             assert( edge.data.distance > 0 );
-#ifdef NDEBUG
+#ifndef NDEBUG
             if ( edge.data.distance > 24 * 60 * 60 * 10 ) {
                 std::cout << "Edge Weight too large -> May lead to invalid CH" << std::endl;
                 continue;

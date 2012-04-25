@@ -127,8 +127,7 @@ public:
     explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm);
 
     void Run();
-    template< class ImportEdgeT >
-    void GetEdgeBasedEdges( std::vector< ImportEdgeT >& edges );
+    void GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& edges );
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
     short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
