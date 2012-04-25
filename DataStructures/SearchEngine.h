@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/thread.hpp>
 
 #include "BinaryHeap.h"
+#include "NodeInformationHelpDesk.h"
 #include "PhantomNodes.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
@@ -376,8 +377,9 @@ public:
 		return ed.via;
 	}
 
-	inline std::string GetEscapedNameForNameID(const NodeID nameID) const {
-		return ((nameID >= _names.size() || nameID == 0) ? std::string("") : HTMLEntitize(_names.at(nameID)));
+	inline std::string GetEscapedNameForNameID(const unsigned nameID) const {
+	    INFO("Getting name for ID: " << nameID);
+	    return ((nameID >= _names.size() || nameID == 0) ? std::string("") : HTMLEntitize(_names.at(nameID)));
 	}
 
 	inline std::string GetEscapedNameForEdgeBasedEdgeID(const unsigned edgeID) const {
@@ -517,13 +519,14 @@ private:
 
 			const EdgeData& ed = _graph->GetEdgeData(smallestEdge);
 			if(ed.shortcut) {//unpack
-				const NodeID middle = ed.via;
+				const NodeID middle = ed.id;
 				//again, we need to this in reversed order
 				recursionStack.push(std::make_pair(middle, edge.second));
 				recursionStack.push(std::make_pair(edge.first, middle));
 			} else {
 				assert(!ed.shortcut);
-				unpackedPath.push_back(_PathData(ed.via, ed.nameID, ed.turnInstruction, ed.distance) );
+				//TODO: Hier die lookups in den nodehelpdeks machen
+				unpackedPath.push_back(_PathData(ed.id, nodeHelpDesk->getNameIndexFromEdgeID(ed.id), nodeHelpDesk->getTurnInstructionFromEdgeID(ed.id), ed.distance) );
 			}
 		}
 	}

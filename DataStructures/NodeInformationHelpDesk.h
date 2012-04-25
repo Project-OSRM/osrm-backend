@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 #include "../typedefs.h"
+#include "../DataStructures/QueryEdge.h"
 #include "NNGrid.h"
 #include "PhantomNodes.h"
 
@@ -44,27 +45,51 @@ public:
 	~NodeInformationHelpDesk() {
 		delete readOnlyGrid;
 	}
-	void initNNGrid(std::ifstream& in) {
+	void initNNGrid(std::ifstream& nodesInstream, std::ifstream& edgesInStream) {
+	    INFO("Loading node data");
 		NodeInfo b;
-	    while(!in.eof()) {
-			in.read((char *)&b, sizeof(NodeInfo));
+	    while(!nodesInstream.eof()) {
+			nodesInstream.read((char *)&b, sizeof(NodeInfo));
 			coordinateVector.push_back(_Coordinate(b.lat, b.lon));
 		}
 	    std::vector<_Coordinate>(coordinateVector).swap(coordinateVector);
 	    numberOfNodes = coordinateVector.size();
-	    in.close();
-		readOnlyGrid->OpenIndexFiles();
+	    nodesInstream.close();
+
+        INFO("Loading edge data");
+        unsigned numberOfOrigEdges(0);
+        edgesInStream.read((char*)&numberOfOrigEdges, sizeof(unsigned));
+        origEdgeData.resize(numberOfOrigEdges);
+        edgesInStream.read((char*)&(origEdgeData[0]), numberOfOrigEdges*sizeof(OriginalEdgeData));
+        edgesInStream.close();
+        INFO("Loaded " << numberOfOrigEdges << " orig edges");
+	    INFO("Opening NN indices");
+	    readOnlyGrid->OpenIndexFiles();
 	}
 
 	void initNNGrid() {
 	    readOnlyGrid->OpenIndexFiles();
 	}
 
-	inline int getLatitudeOfNode(const NodeID node) const { return coordinateVector.at(node).lat; }
+	inline int getLatitudeOfNode(const unsigned id) const {
+	    const NodeID node = origEdgeData.at(id).viaNode;
+	    return coordinateVector.at(node).lat;
+	}
 
-	inline int getLongitudeOfNode(const NodeID node) const { return coordinateVector.at(node).lon; }
+	inline int getLongitudeOfNode(const unsigned id) const {
+        const NodeID node = origEdgeData.at(id).viaNode;
+	    return coordinateVector.at(node).lon;
+	}
 
-	inline NodeID getNumberOfNodes() const { return numberOfNodes; }
+	inline unsigned getNameIndexFromEdgeID(const unsigned id) const {
+	    return origEdgeData.at(id).nameID;
+	}
+
+    inline short getTurnInstructionFromEdgeID(const unsigned id) const {
+        return origEdgeData.at(id).turnInstruction;
+    }
+
+    inline NodeID getNumberOfNodes() const { return numberOfNodes; }
 	inline NodeID getNumberOfNodes2() const { return coordinateVector.size(); }
 
 	inline void FindNearestNodeCoordForLatLon(const _Coordinate& coord, _Coordinate& result) const {
@@ -88,6 +113,8 @@ public:
 
 private:
 	std::vector<_Coordinate> coordinateVector;
+    std::vector<OriginalEdgeData> origEdgeData;
+
 	ReadOnlyGrid * readOnlyGrid;
 	unsigned numberOfNodes;
 	unsigned checkSum;

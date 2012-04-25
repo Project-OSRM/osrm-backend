@@ -92,6 +92,7 @@ int main (int argc, char *argv[]) {
                 serverConfig.GetParameter("ramIndex"),
                 serverConfig.GetParameter("fileIndex"),
                 serverConfig.GetParameter("nodesData"),
+                serverConfig.GetParameter("edgesData"),
                 serverConfig.GetParameter("namesData"));
 
         h.RegisterPlugin(new HelloWorldPlugin());

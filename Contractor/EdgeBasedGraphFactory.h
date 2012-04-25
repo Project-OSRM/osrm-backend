@@ -38,6 +38,7 @@
 #include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/BaseConfiguration.h"
@@ -104,6 +105,7 @@ private:
 
     std::vector<EdgeBasedEdge> edgeBasedEdges;
     std::vector<EdgeBasedNode> edgeBasedNodes;
+    std::vector<OriginalEdgeData> originalEdgeData;
     std::vector<NodeInfo>       inputNodeInfoList;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
@@ -128,6 +130,7 @@ public:
     template< class ImportEdgeT >
     void GetEdgeBasedEdges( std::vector< ImportEdgeT >& edges );
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
+    void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
     short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
     unsigned GetNumberOfNodes() const;
 };

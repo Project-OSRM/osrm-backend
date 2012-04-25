@@ -27,6 +27,7 @@
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
@@ -39,7 +40,7 @@ class DescriptionFactory {
     PolylineCompressor pc;
     PhantomNode startPhantom, targetPhantom;
 
-    typedef SearchEngine<ContractionCleanup::Edge::EdgeData, StaticGraph<ContractionCleanup::Edge::EdgeData> > SearchEngineT;
+    typedef SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > SearchEngineT;
 public:
     struct _RouteSummary {
         std::string lengthString;

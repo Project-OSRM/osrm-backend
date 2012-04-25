@@ -25,10 +25,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include<vector>
 #include<string>
 
+#include "../../DataStructures/NodeInformationHelpDesk.h"
+#include "../../DataStructures/QueryEdge.h"
 #include "../../DataStructures/StaticGraph.h"
 
 struct QueryObjectsStorage {
-    typedef StaticGraph<EdgeData> QueryGraph;
+    typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
     typedef QueryGraph::InputEdge InputEdge;
 
     NodeInformationHelpDesk * nodeHelpDesk;
@@ -36,7 +38,7 @@ struct QueryObjectsStorage {
     QueryGraph * graph;
     unsigned checkSum;
 
-    QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string namesPath, std::string psd = "route");
+    QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string psd = "route");
 
     ~QueryObjectsStorage();
 };

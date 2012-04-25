@@ -43,11 +43,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/OpenMPReplacement.h"
 #include "typedefs.h"
 #include "Contractor/Contractor.h"
-#include "Contractor/ContractionCleanup.h"
 #include "Contractor/EdgeBasedGraphFactory.h"
 #include "DataStructures/BinaryHeap.h"
 #include "DataStructures/ExtractorStructs.h"
 #include "DataStructures/NNGrid.h"
+#include "DataStructures/QueryEdge.h"
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
@@ -55,6 +55,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 using namespace std;
 
+typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef BaseConfiguration ContractorConfiguration;
@@ -104,8 +105,9 @@ int main (int argc, char *argv[]) {
         ERR("Cannot open " << argv[1]);
     }
 
-    char nodeOut[1024];    		strcpy(nodeOut, argv[1]);    		strcat(nodeOut, ".nodes");
-    char edgeOut[1024];    		strcpy(edgeOut, argv[1]);    		strcat(edgeOut, ".hsgr");
+    char nodeOut[1024];         strcpy(nodeOut, argv[1]);           strcat(nodeOut, ".nodes");
+    char edgeOut[1024];         strcpy(edgeOut, argv[1]);           strcat(edgeOut, ".edges");
+    char graphOut[1024];    	strcpy(graphOut, argv[1]);      	strcat(graphOut, ".hsgr");
     char ramIndexOut[1024];    	strcpy(ramIndexOut, argv[1]);    	strcat(ramIndexOut, ".ramIndex");
     char fileIndexOut[1024];    strcpy(fileIndexOut, argv[1]);    	strcat(fileIndexOut, ".fileIndex");
     char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
@@ -129,6 +131,17 @@ int main (int argc, char *argv[]) {
     std::vector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
 
+    std::vector<OriginalEdgeData> originalEdgeData;
+    edgeBasedGraphFactory->GetOriginalEdgeData(originalEdgeData);
+
+    INFO("writing info on original edges");
+    std::ofstream oedOutFile(edgeOut, std::ios::binary);
+    unsigned numberOfOrigEdges = originalEdgeData.size();
+    oedOutFile.write((char*)&numberOfOrigEdges, sizeof(unsigned));
+    oedOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
+    oedOutFile.close();
+    std::vector<OriginalEdgeData>().swap(originalEdgeData);
+
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
     delete edgeBasedGraphFactory;
@@ -144,10 +157,9 @@ int main (int argc, char *argv[]) {
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);
 
     INFO("writing node map ...");
-    std::ofstream mapOutFile(nodeOut, ios::binary);
+    std::ofstream mapOutFile(nodeOut, std::ios::binary);
     mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
     mapOutFile.close();
-
     std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
 
     INFO("initializing contractor");
@@ -156,7 +168,7 @@ int main (int argc, char *argv[]) {
     contractor->Run();
     INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");
 
-    std::vector< ContractionCleanup::Edge > contractedEdgeList;
+    std::vector< QueryEdge > contractedEdgeList;
     contractor->GetEdges( contractedEdgeList );
     delete contractor;
 
@@ -165,9 +177,9 @@ int main (int argc, char *argv[]) {
     unsigned numberOfNodes = 0;
     unsigned numberOfEdges = contractedEdgeList.size();
     INFO("Serializing compacted graph");
-    ofstream edgeOutFile(edgeOut, ios::binary);
+    ofstream edgeOutFile(graphOut, ios::binary);
 
-    BOOST_FOREACH(ContractionCleanup::Edge & edge, contractedEdgeList) {
+    BOOST_FOREACH(QueryEdge & edge, contractedEdgeList) {
         if(edge.source > numberOfNodes) {
             numberOfNodes = edge.source;
         }

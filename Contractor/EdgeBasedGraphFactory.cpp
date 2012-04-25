@@ -145,6 +145,10 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nod
     nodes.swap(edgeBasedNodes);
 }
 
+void EdgeBasedGraphFactory::GetOriginalEdgeData( std::vector< OriginalEdgeData> & oed) {
+    oed.swap(originalEdgeData);
+}
+
 NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const {
     std::pair < NodeID, NodeID > restrictionSource = std::make_pair(u, v);
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);
@@ -250,7 +254,10 @@ void EdgeBasedGraphFactory::Run() {
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
-                        EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, v,  edgeData2.nameID, distance, true, false, turnInstruction);
+                        OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
+                        //TODO: replace v by pointer to oed-list
+                        EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
+                        originalEdgeData.push_back(oed);
                         edgeBasedEdges.push_back(newEdge);
                     } else {
                         ++numberOfSkippedTurns;

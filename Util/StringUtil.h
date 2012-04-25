@@ -21,8 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
+#include <cstdio>
 #include <cstdlib>
 #include <string>
+
+#include "../DataStructures/ExtractorStructs.h"
 
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals

@@ -37,6 +37,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Descriptors/JSONDescriptor.h"
 
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/SearchEngine.h"
 
@@ -48,17 +49,17 @@ class ViaRoutePlugin : public BasePlugin {
 private:
     NodeInformationHelpDesk * nodeHelpDesk;
     std::vector<std::string> & names;
-    StaticGraph<EdgeData> * graph;
+    StaticGraph<QueryEdge::EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
     std::string pluginDescriptorString;
-    SearchEngine<EdgeData, StaticGraph<EdgeData> > * searchEngine;
+    SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > * searchEngine;
 public:
 
     ViaRoutePlugin(QueryObjectsStorage * objects, std::string psd = "viaroute") : names(objects->names), pluginDescriptorString(psd) {
         nodeHelpDesk = objects->nodeHelpDesk;
         graph = objects->graph;
 
-        searchEngine = new SearchEngine<EdgeData, StaticGraph<EdgeData> >(graph, nodeHelpDesk, names);
+        searchEngine = new SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> >(graph, nodeHelpDesk, names);
 
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("json", 0);
@@ -139,7 +140,7 @@ public:
         reply.status = http::Reply::ok;
 
         //TODO: Move to member as smart pointer
-        BaseDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > > * desc;
+        BaseDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > > * desc;
         std::string JSONParameter = routeParameters.options.Find("jsonp");
         if("" != JSONParameter) {
             reply.content += JSONParameter;
@@ -166,15 +167,15 @@ public:
         }
         switch(descriptorType){
         case 0:
-            desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            desc = new JSONDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
 
             break;
         case 1:
-            desc = new GPXDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            desc = new GPXDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
 
             break;
         default:
-            desc = new JSONDescriptor<SearchEngine<EdgeData, StaticGraph<EdgeData> > >();
+            desc = new JSONDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
 
             break;
         }

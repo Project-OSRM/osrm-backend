@@ -32,6 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/unordered_map.hpp>
 
+#include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../typedefs.h"
 

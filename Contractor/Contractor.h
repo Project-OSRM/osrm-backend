@@ -41,14 +41,14 @@ class Contractor {
 private:
     struct _EdgeBasedContractorEdgeData {
         _EdgeBasedContractorEdgeData() :
-            distance(0), originalEdges(0), via(0), nameID(0), turnInstruction(0), shortcut(0), forward(0), backward(0) {}
-        _EdgeBasedContractorEdgeData( unsigned _distance, unsigned _originalEdges, unsigned _via, unsigned _nameID, short _turnInstruction, bool _shortcut, bool _forward, bool _backward) :
-            distance(_distance), originalEdges(_originalEdges), via(_via), nameID(_nameID), turnInstruction(_turnInstruction), shortcut(_shortcut), forward(_forward), backward(_backward), originalViaNodeID(false) {}
+            distance(0), originalEdges(0), id(0)/*, nameID(0), turnInstruction(0)*/, shortcut(0), forward(0), backward(0) {}
+        _EdgeBasedContractorEdgeData( unsigned _distance, unsigned _originalEdges, unsigned _id/*, unsigned _nameID, short _turnInstruction*/, bool _shortcut, bool _forward, bool _backward) :
+            distance(_distance), originalEdges(_originalEdges), id(_id)/*, nameID(_nameID), turnInstruction(_turnInstruction)*/, shortcut(_shortcut), forward(_forward), backward(_backward), originalViaNodeID(false) {}
         unsigned distance;
         unsigned originalEdges;
-        unsigned via;
-        unsigned nameID;
-        short turnInstruction;
+        unsigned id;
+//        unsigned nameID;
+//        short turnInstruction;
         bool shortcut:1;
         bool forward:1;
         bool backward:1;
@@ -104,7 +104,7 @@ public:
             _ImportEdge edge;
             edge.source = currentEdge.source();
             edge.target = currentEdge.target();
-            edge.data = _EdgeBasedContractorEdgeData( (std::max)((int)currentEdge.weight(), 1 ),  1,  currentEdge.via(),  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction(),  false,  currentEdge.isForward(),  currentEdge.isBackward());
+            edge.data = _EdgeBasedContractorEdgeData( (std::max)((int)currentEdge.weight(), 1 ),  1,  currentEdge.id()/*,  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction()*/,  false,  currentEdge.isForward(),  currentEdge.isBackward());
 
             assert( edge.data.distance > 0 );
 #ifdef NDEBUG
@@ -127,8 +127,8 @@ public:
         for ( NodeID i = 0; i < edges.size(); ) {
             const NodeID source = edges[i].source;
             const NodeID target = edges[i].target;
-            const NodeID via = edges[i].data.via;
-            const short turnType = edges[i].data.turnInstruction;
+            const NodeID id = edges[i].data.id;
+//            const short turnType = edges[i].data.turnInstruction;
             //remove eigenloops
             if ( source == target ) {
                 i++;
@@ -140,10 +140,10 @@ public:
             forwardEdge.target = backwardEdge.target = target;
             forwardEdge.data.forward = backwardEdge.data.backward = true;
             forwardEdge.data.backward = backwardEdge.data.forward = false;
-            forwardEdge.data.turnInstruction = backwardEdge.data.turnInstruction = turnType;
-            forwardEdge.data.nameID = backwardEdge.data.nameID = edges[i].data.nameID;
+//            forwardEdge.data.turnInstruction = backwardEdge.data.turnInstruction = turnType;
+//            forwardEdge.data.nameID = backwardEdge.data.nameID = edges[i].data.nameID;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
-            forwardEdge.data.via = backwardEdge.data.via = via;
+            forwardEdge.data.id = backwardEdge.data.id = id;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
             forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
             //remove parallel edges
@@ -441,13 +441,13 @@ public:
                 newEdge.data.distance = data.distance;
                 newEdge.data.shortcut = data.shortcut;
                 if(!data.originalViaNodeID)
-                    newEdge.data.via = oldNodeIDFromNewNodeIDMap[data.via];
+                    newEdge.data.id = oldNodeIDFromNewNodeIDMap[data.id];
                 else
-                    newEdge.data.via = data.via;
+                    newEdge.data.id = data.id;
 
                 assert(newEdge.data.via != UINT_MAX);
-                newEdge.data.nameID = data.nameID;
-                newEdge.data.turnInstruction = data.turnInstruction;
+//                newEdge.data.nameID = data.nameID;
+//                newEdge.data.turnInstruction = data.turnInstruction;
                 newEdge.data.forward = data.forward;
                 newEdge.data.backward = data.backward;
                 edges.push_back( newEdge );
@@ -470,9 +470,9 @@ public:
             newEdge.target = target;
             newEdge.data.distance = data.distance;
             newEdge.data.shortcut = data.shortcut;
-            newEdge.data.via = data.via;
-            newEdge.data.nameID = data.nameID;
-            newEdge.data.turnInstruction = data.turnInstruction;
+            newEdge.data.id = data.id;
+//            newEdge.data.nameID = data.nameID;
+//            newEdge.data.turnInstruction = data.turnInstruction;
             newEdge.data.forward = data.forward;
             newEdge.data.backward = data.backward;
             edges.push_back( newEdge );
@@ -604,7 +604,7 @@ private:
                         _ImportEdge newEdge;
                         newEdge.source = source;
                         newEdge.target = target;
-                        newEdge.data = _EdgeBasedContractorEdgeData( pathDistance, outData.originalEdges + inData.originalEdges, node, 0, inData.turnInstruction, true, true, false);;
+                        newEdge.data = _EdgeBasedContractorEdgeData( pathDistance, outData.originalEdges + inData.originalEdges, node/*, 0, inData.turnInstruction*/, true, true, false);;
                         insertedEdges.push_back( newEdge );
                         std::swap( newEdge.source, newEdge.target );
                         newEdge.data.forward = false;

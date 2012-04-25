@@ -31,6 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "ServerConfiguration.h"
 
 #include "../Util/InputFileUtil.h"
+#include "../Util/OpenMPReplacement.h"
 
 typedef http::Server Server;
 
