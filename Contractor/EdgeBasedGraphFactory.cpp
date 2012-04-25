@@ -52,7 +52,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         _restrictionBucketVector.at(index).push_back(std::make_pair(restriction.toNode, restriction.flags.isOnly));
     }
 
-    std::string usedSpeedProfile(speedProfile.get_child("").begin()->first);
+    std::string usedSpeedProfile( speedProfile.get_child("").begin()->first );
     BOOST_FOREACH(boost::property_tree::ptree::value_type &v, speedProfile.get_child(usedSpeedProfile)) {
         if("trafficSignalPenalty" ==  v.first) {
             std::string value = v.second.get<std::string>("");
