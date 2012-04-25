@@ -40,7 +40,7 @@ private:
 public:
     CRC32();
     unsigned operator()(char *str, unsigned len);
-    virtual ~CRC32();
+    virtual ~CRC32() {};
 };
 
 #endif /* CRC32_H_ */

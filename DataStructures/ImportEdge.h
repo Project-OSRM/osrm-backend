@@ -105,28 +105,22 @@ public:
     EdgeBasedEdge() :
         _source(0), _target(0), _edgeID(0)/*, _nameID1(0)*/, _weight(0), _forward(0), _backward(0)/*, _turnInstruction(0)*/ { assert(false); } //shall not be used.
 
-    explicit EdgeBasedEdge(NodeID s, NodeID t, NodeID v, /*unsigned n1,*/ EdgeWeight w, bool f, bool b/*, short ty*/) :
-            _source(s), _target(t), _edgeID(v), /*_nameID1(n1),*/ _weight(w), _forward(f), _backward(b)/*, _turnInstruction(ty)*/ { assert(ty >= 0); }
+    explicit EdgeBasedEdge(NodeID s, NodeID t, NodeID v, EdgeWeight w, bool f, bool b) :
+            _source(s), _target(t), _edgeID(v), _weight(w), _forward(f), _backward(b){}
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
     EdgeWeight weight() const {return _weight; }
     NodeID id() const { return _edgeID; }
-//    short turnInstruction() const { assert(_turnInstruction >= 0); return _turnInstruction; }
     bool isBackward() const { return _backward; }
     bool isForward() const { return _forward; }
-
-//    unsigned getNameIDOfTurnTarget() const { return _nameID1; }
 
     NodeID _source;
     NodeID _target;
     NodeID _edgeID;
-//    unsigned _nameID1;
     EdgeWeight _weight;
     bool _forward;
     bool _backward;
-//    short _turnInstruction;
-
 };
 
 struct MinimalEdgeData {

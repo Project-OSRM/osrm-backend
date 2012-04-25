@@ -525,7 +525,6 @@ private:
 				recursionStack.push(std::make_pair(edge.first, middle));
 			} else {
 				assert(!ed.shortcut);
-				//TODO: Hier die lookups in den nodehelpdeks machen
 				unpackedPath.push_back(_PathData(ed.id, nodeHelpDesk->getNameIndexFromEdgeID(ed.id), nodeHelpDesk->getTurnInstructionFromEdgeID(ed.id), ed.distance) );
 			}
 		}

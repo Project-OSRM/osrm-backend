@@ -83,9 +83,3 @@ unsigned CRC32::operator()(char *str, unsigned len){
     crc =((*this).*(crcFunction))(str, len, crc);
     return crc;
 }
-
-
-CRC32::~CRC32() {
-    // TODO Auto-generated destructor stub
-}
-

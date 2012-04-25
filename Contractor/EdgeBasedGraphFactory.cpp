@@ -255,7 +255,6 @@ void EdgeBasedGraphFactory::Run() {
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
-                        //TODO: replace v by pointer to oed-list
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
                         originalEdgeData.push_back(oed);
                         edgeBasedEdges.push_back(newEdge);
