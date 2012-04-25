@@ -253,6 +253,10 @@ void EdgeBasedGraphFactory::Run() {
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
+                        if(edgeBasedEdges.size() == edgeBasedEdges.capacity()-3)
+                            edgeBasedEdges.reserve(edgeBasedEdges.size()*1.1);
+                        if(originalEdgeData.size() == originalEdgeData.capacity()-3)
+                            originalEdgeData.reserve(originalEdgeData.size()*1.1);
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
                         originalEdgeData.push_back(oed);
