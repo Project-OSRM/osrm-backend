@@ -362,7 +362,7 @@ public:
 		nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
 	}
 
-	inline NodeID GetNameIDForOriginDestinationNodeID(NodeID s, NodeID t) const {
+	inline NodeID GetNameIDForOriginDestinationNodeID(const NodeID s, const NodeID t) const {
 		if(s == t)
 			return 0;
 
@@ -378,7 +378,6 @@ public:
 	}
 
 	inline std::string GetEscapedNameForNameID(const unsigned nameID) const {
-	    INFO("Getting name for ID: " << nameID);
 	    return ((nameID >= _names.size() || nameID == 0) ? std::string("") : HTMLEntitize(_names.at(nameID)));
 	}
 
