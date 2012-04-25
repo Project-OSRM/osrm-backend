@@ -41,7 +41,6 @@ OSRM.JSONP = {
 		
 		// wrap timeout function
 		OSRM.JSONP.timeouts[id] = function(response) {
-			console.log("timeout",id);
 			try {
 				timeout_function(response, parameters);
 			} finally {

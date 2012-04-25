@@ -24,104 +24,6 @@ body
 }
 
 
-/* route description box */
-#description
-{
-	width:500px;
-	margin:5px;
-}
-
-/* route description box */
-#overview-description
-{
-	width:500px;
-	margin:5px;
-}
-
-
-/* route map box */
-#overview-map
-{
-	width:500px;
-	height:500px;
-	margin:5px;
-}
-
-
-/* styles for information-box-header */
-div.header-title
-{
-	font-weight:bold;
-	margin-bottom:10px;
-}
-.header-content
-{
-	font-weight:normal;
-}
-.result-link
-{
-	color:#0000ff;
-	text-decoration:none;
-	cursor:pointer;
-}
-.result-link:hover
-{
-	color:#ff0000;
-}
-
-
-/* style for information-box table (search results, driving directions) */
-.results-table
-{
-	border-spacing:0px;
-	width:100%;
-}
-.results-odd
-{
-	background-color: #FFFDE3;
-}
-.results-even
-{
-	background-color: #FFF9BB;
-}
-.result-counter
-{
-	text-align:right;
-	vertical-align:top;
-	font-weight:bold;
-	padding:1px 5px 1px 5px;
-}
-.result-items
-{
-	text-align:left;
-	vertical-align: middle;
-	width:100%;
-	padding:1px;
-}
-.result-directions
-{
-	text-align:left;
-	vertical-align: middle;
-	padding:1px 5px 1px 5px;
-}
-.result-distance
-{
-	text-align:right;
-	vertical-align: middle;
-	padding:1px 1px 1px 5px;
-}
-.result-item
-{
-	cursor:pointer;
-	color:#000000
-}
-.no-results
-{
-	text-align:center;
-	margin:28px;
-}
-
-
 /* header area */
 #printing-header
 {
@@ -140,19 +42,156 @@ div.header-title
 }
 
 
-/* utility styles */
-@media print {
-.quad
+/* content area */
+div.label
 {
-	page-break-before:always;
+	font-weight:bold;
+	margin-bottom:10px;
+}
+.box
+{
+	width:500px;
+	margin:5px;
+}
+#overview-map
+{
+	width:500px;
+	height:500px;
+	margin:5px;
+}
+
+
+/* description content */
+.description
+{
+	border-spacing:0px;
+	width:100%;
+}
+
+/* styles for description header */
+.description-header
+{
+	display:table-header-group;
+}
+.description-header-label
+{
+	padding:0px 5px 0px 0px;
+}
+.description-header-content
+{
+	font-weight:bold;
+}
+
+
+/* styles for description body */
+.description-body
+{
+	display:table-row-group;
+}
+.description-body-odd
+{
+	background-color: #FFFDE3;
+}
+.description-body-even
+{
+	background-color: #FFF9BB;
+}
+.description-body-items
+{
+	text-align:left;
+	vertical-align: middle;
+	width:100%;
+	padding:1px;
+}
+.description-body-directions
+{
+	text-align:left;
+	vertical-align: middle;
+	padding:1px 5px 1px 5px;
+}
+.description-body-direction
+{
+	height:36px;
+	width:36px;
+}
+.description-body-distance
+{
+	text-align:right;
+	vertical-align: middle;
+	padding:1px 1px 1px 5px;
+}
+@media print {
+.description-body-even > td,
+.description-body-odd > td
+{
+	border-bottom: 1px solid black;
 }
 }
-@media screen {
+
+
+/* utility styles */
 .quad
 {
 	min-width:10px;
 	min-height:10px;
 }
+@media print {
+.pagebreak
+{
+	page-break-before:always;
+}
+.noprint
+{
+	display:none;
+}
+}
+
+
+/* fonts */
+@media print {
+.base-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 16px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 18px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 14px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 12px;
+	font-weight: normal;	
+}
+}
+
+@media screen {
+.base-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10.5px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;	
+}	
 }
 
 
@@ -180,77 +219,35 @@ div.header-title
 }
 
 
-/* fonts */
-@media print  {
-	
-.base-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 16px;
-	font-weight: normal;
-}
-.big-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 18px;
-	font-weight: bold;	
-}
-.medium-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 14px;
-	font-weight: normal;	
-}
-.small-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 12px;
-	font-weight: normal;	
-}
-
-}
-
-@media screen {
-.base-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	font-weight: normal;
-}
-.big-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 14px;
-	font-weight: bold;	
-}
-.medium-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 10.5px;
-	font-weight: normal;	
-}
-.small-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 9px;
-	font-weight: normal;	
-}	
-}
-
-
 /* table */
 .full
 {
 	display:table;
 	width:100%;
 }
+.row
+{
+	display:table-row;
+}
 .left
 {
 	display:table-cell;
 	text-align:left;
-	vertical-align:middle;
+	vertical-align:top;
 }
 .right
 {
 	display:table-cell;
 	text-align:right;
-	vertical-align:middle;
+	vertical-align:top;
 }
 .center
 {
 	display:table-cell;
 	text-align:center;
-	vertical-align:middle;
+	vertical-align:top;
+}
+.stretch
+{
+	width:100%;	
 }

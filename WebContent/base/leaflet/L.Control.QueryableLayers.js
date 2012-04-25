@@ -15,14 +15,20 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// OSRM base class
-// [has to be loaded before all other OSRM classes]
+// queryable Layers control
+// [simply Control.Layers extended by query functions]
+L.Control.QueryableLayers = L.Control.Layers.extend({
+getActiveLayerName: function () {
+	var i, input, obj,
+	inputs = this._form.getElementsByTagName('input'),
+	inputsLen = inputs.length;
 
-var OSRM = {};
-OSRM.VERSION = '0.1.4x';
-OSRM.DATE = '120416';
-OSRM.CONSTANTS = {};
-OSRM.DEFAULTS = {};
-OSRM.GLOBALS = {};
-OSRM.G = OSRM.GLOBALS;		// abbreviations
-OSRM.C = OSRM.CONSTANTS;
+	for (i = 0; i < inputsLen; i++) {
+		input = inputs[i];
+		obj = this._layers[input.layerId];
+		if (input.checked && !obj.overlay) {
+			return obj.name;
+		}
+	}
+}
+});

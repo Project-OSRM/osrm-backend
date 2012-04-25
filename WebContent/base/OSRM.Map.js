@@ -22,45 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.GLOBALS.map = null;
 
 
-// map view/model
-// [extending Leaflet L.Map with setView/fitBounds methods that respect UI visibility] 
-OSRM.MapView = L.Map.extend({
-	setViewUI: function(position, zoom, no_animation) {
-		if( OSRM.GUI.visible == true ) {
-			var point = this.project( position, zoom);
-			point.x-=OSRM.GUI.width/2;
-			position = this.unproject(point,zoom);		
-		}
-		this.setView( position, zoom, no_animation);	
-	},
-	fitBoundsUI: function(bounds) {
-		var southwest = bounds.getSouthWest();
-		var northeast = bounds.getNorthEast();
-		var zoom = this.getBoundsZoom(bounds);
-		var sw_point = this.project( southwest, zoom);
-		if( OSRM.GUI.visible == true )
-			sw_point.x-=OSRM.GUI.width+20;
-		else
-			sw_point.x-=20;
-		sw_point.y+=20;
-		var ne_point = this.project( northeast, zoom);
-		ne_point.y-=20;
-		sw_point.x+=20;
-		bounds.extend( this.unproject(sw_point,zoom) );
-		bounds.extend( this.unproject(ne_point,zoom) );
-		this.fitBounds( bounds );	
-	},
-	getCenterUI: function(unbounded) {
-		var viewHalf = this.getSize();
-		if( OSRM.GUI.visible == true )
-			viewHalf.x += OSRM.GUI.width;
-		var centerPoint = this._getTopLeftPoint().add(viewHalf.divideBy(2));
-		
-		return this.unproject(centerPoint, this._zoom, unbounded);
-	}
-});
-
-
 // map controller
 // [map initialization, event handling]
 OSRM.Map = {
@@ -89,8 +50,8 @@ init: function() {
 	});
 
 	// add layer control
-	var layersControl = new L.Control.Layers(base_maps, {});
-	OSRM.G.map.addControl(layersControl);
+	var layerControl = new L.Control.QueryableLayers(base_maps, {});
+	OSRM.G.map.addLayerControl(layerControl);
 
     // move zoom markers
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";

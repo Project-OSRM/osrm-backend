@@ -248,6 +248,11 @@ html, body {
 	font-weight:bold;
 	margin-bottom:10px;
 }
+.header-label
+{
+	font-weight:normal;
+	padding:0px 5px 0px 0px;
+}
 .header-content
 {
 	font-weight:normal;
@@ -265,57 +270,57 @@ html, body {
 
 
 /* style for information-box table (search results, driving directions) */
-.results-table
+.description
 {
 	border-spacing:0px;
 	width:100%;
 }
-.results-odd
+.description-body-odd
 {
 	background-color: #FFFDE3;
 }
-.results-even
+.description-body-even
 {
 	background-color: #FFF9BB;
 }
-.result-counter
+.description-body-counter
 {
 	text-align:right;
 	vertical-align:top;
 	font-weight:bold;
 	padding:1px 5px 1px 5px;
 }
-.result-items
+.description-body-items
 {
 	text-align:left;
 	vertical-align: middle;
 	width:100%;
 	padding:1px;
 }
-.result-directions
+.description-body-directions
 {
 	text-align:left;
 	vertical-align: middle;
 	padding:1px 5px 1px 5px;
 }
-.result-direction
+.description-body-direction
 {
 	width:18px;
 	height:18px;
 }
-.result-distance
+.description-body-distance
 {
 	text-align:right;
 	vertical-align: middle;
 	padding:1px 1px 1px 5px;
 
 }
-.result-item
+.description-body-item
 {
 	cursor:pointer;
 	color:#000000
 }
-.result-item:hover
+.description-body-item:hover
 {
 	color:#ff0000
 }
@@ -475,6 +480,10 @@ html, body {
 	display:table;
 	width:100%;
 }
+.row
+{
+	display:table-row;
+}
 .left
 {
 	display:table-cell;
@@ -492,4 +501,8 @@ html, body {
 	display:table-cell;
 	text-align:center;
 	vertical-align:middle;
+}
+.stretch
+{
+	width:100%;
 }
