@@ -18,8 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-//g++ createHierarchy.cpp -fopenmp -Wno-deprecated -o createHierarchy -O3 -march=native -DNDEBUG -I/usr/include/libxml2 -lstxxl
-
 #define VERBOSE(x) x
 #define VERBOSE2(x)
 
@@ -99,8 +97,8 @@ int main (int argc, char *argv[]) {
     restrictionsInstream.close();
 
 
-    ifstream in;
-    in.open (argv[1], ifstream::in | ifstream::binary);
+    std::ifstream in;
+    in.open (argv[1], std::ifstream::in | std::ifstream::binary);
     if (!in.is_open()) {
         ERR("Cannot open " << argv[1]);
     }
@@ -122,19 +120,45 @@ int main (int argc, char *argv[]) {
     }
     boost::property_tree::ptree speedProfile;
     boost::property_tree::ini_parser::read_ini("speedprofile.ini", speedProfile);
+
+    /***
+     * Building an edge-expanded graph from node-based input an turn restrictions
+     */
+
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile, SRTM_ROOT);
     std::vector<ImportEdge>().swap(edgeList);
 
     edgeBasedGraphFactory->Run();
     std::vector<_Restriction>().swap(inputRestrictions);
+    std::vector<NodeID>().swap(bollardNodes);
+    std::vector<NodeID>().swap(trafficLightNodes);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     std::vector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
 
+    stxxl::vector<EdgeBasedEdge> externalEdgeBasedEdgeList;
+    BOOST_FOREACH(EdgeBasedEdge & edge, edgeBasedEdgeList) {
+        externalEdgeBasedEdgeList.push_back(edge);
+    }
+    std::vector<EdgeBasedEdge>().swap(edgeBasedEdgeList);
+
+    /***
+     * Writing info on original (node-based) nodes
+     */
+
+    INFO("writing node map ...");
+    std::ofstream mapOutFile(nodeOut, std::ios::binary);
+    mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
+    mapOutFile.close();
+    std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
+
+    /***
+     * Writing info on original (node-based) edges
+     */
+    INFO("writing info on original edges");
     std::vector<OriginalEdgeData> originalEdgeData;
     edgeBasedGraphFactory->GetOriginalEdgeData(originalEdgeData);
 
-    INFO("writing info on original edges");
     std::ofstream oedOutFile(edgeOut, std::ios::binary);
     unsigned numberOfOrigEdges = originalEdgeData.size();
     oedOutFile.write((char*)&numberOfOrigEdges, sizeof(unsigned));
@@ -147,23 +171,24 @@ int main (int argc, char *argv[]) {
     delete edgeBasedGraphFactory;
     double expansionHasFinishedTime = get_timestamp() - startupTime;
 
-    WritableGrid * writeableGrid = new WritableGrid();
+    /***
+     * Building grid-like nearest-neighbor data structure
+     */
+
     INFO("building grid ...");
+    WritableGrid * writeableGrid = new WritableGrid();
     writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut, fileIndexOut);
     delete writeableGrid;
     CRC32 crc32;
     unsigned crc32OfNodeBasedEdgeList = crc32((char *)&(nodeBasedEdgeList[0]), nodeBasedEdgeList.size()*sizeof(EdgeBasedGraphFactory::EdgeBasedNode));
-
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);
 
-    INFO("writing node map ...");
-    std::ofstream mapOutFile(nodeOut, std::ios::binary);
-    mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
-    mapOutFile.close();
-    std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
+    /***
+     * Contracting the edge-expanded graph
+     */
 
     INFO("initializing contractor");
-    Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
+    Contractor* contractor = new Contractor( edgeBasedNodeNumber, externalEdgeBasedEdgeList );
     double contractionStartedTimestamp(get_timestamp());
     contractor->Run();
     INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");
@@ -171,6 +196,10 @@ int main (int argc, char *argv[]) {
     std::vector< QueryEdge > contractedEdgeList;
     contractor->GetEdges( contractedEdgeList );
     delete contractor;
+
+    /***
+     * Sorting contracted edges in a way that the static query graph can read some in in-place.
+     */
 
     INFO("Building Node Array");
     sort(contractedEdgeList.begin(), contractedEdgeList.end());

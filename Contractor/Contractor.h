@@ -96,11 +96,11 @@ private:
 
 public:
 
-    template< class InputEdge >
-    Contractor( int nodes, std::vector< InputEdge >& inputEdges) {
+    template<class ContainerT >
+    Contractor( int nodes, ContainerT& inputEdges) {
         std::vector< _ImportEdge > edges;
         edges.reserve( 2 * inputEdges.size() );
-        BOOST_FOREACH(InputEdge & currentEdge, inputEdges) {
+        BOOST_FOREACH(typename ContainerT::value_type & currentEdge, inputEdges) {
             _ImportEdge edge;
             edge.source = currentEdge.source();
             edge.target = currentEdge.target();
@@ -120,7 +120,7 @@ public:
             edges.push_back( edge );
         }
         //clear input vector and trim the current set of edges with the well-known swap trick
-        std::vector< InputEdge >().swap( inputEdges );
+        ContainerT().swap( inputEdges );
 
         sort( edges.begin(), edges.end() );
         NodeID edge = 0;
