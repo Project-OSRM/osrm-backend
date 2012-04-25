@@ -128,7 +128,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     INFO("Converted " << inputEdges.size() << " node-based edges into " << _nodeBasedGraph->GetNumberOfEdges() << " edge-based nodes.");
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::deque< EdgeBasedEdge >& outputEdgeList ) {
+void EdgeBasedGraphFactory::GetEdgeBasedEdges(std::deque< EdgeBasedEdge >& outputEdgeList ) {
 
     GUARANTEE(0 == outputEdgeList.size(), "Vector passed to EdgeBasedGraphFactory::GetEdgeBasedEdges(..) is not empty");
     GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
