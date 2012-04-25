@@ -128,7 +128,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     INFO("Converted " << inputEdges.size() << " node-based edges into " << _nodeBasedGraph->GetNumberOfEdges() << " edge-based nodes.");
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& outputEdgeList ) {
+void EdgeBasedGraphFactory::GetEdgeBasedEdges( std::deque< EdgeBasedEdge >& outputEdgeList ) {
 
     GUARANTEE(0 == outputEdgeList.size(), "Vector passed to EdgeBasedGraphFactory::GetEdgeBasedEdges(..) is not empty");
     GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
@@ -195,7 +195,6 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
 }
 
 void EdgeBasedGraphFactory::Run() {
-    INFO("Generating edge based representation of input data");
 //    edgeBasedNodes.reserve(_nodeBasedGraph->GetNumberOfEdges());
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfSkippedTurns(0);
@@ -253,8 +252,8 @@ void EdgeBasedGraphFactory::Run() {
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
-                        if(edgeBasedEdges.size() == edgeBasedEdges.capacity()-3)
-                            edgeBasedEdges.reserve(edgeBasedEdges.size()*1.1);
+//                        if(edgeBasedEdges.size() == edgeBasedEdges.capacity()-3)
+//                            edgeBasedEdges.reserve(edgeBasedEdges.size()*1.1);
                         if(originalEdgeData.size() == originalEdgeData.capacity()-3)
                             originalEdgeData.reserve(originalEdgeData.size()*1.1);
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
