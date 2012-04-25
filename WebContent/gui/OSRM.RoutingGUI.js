@@ -78,16 +78,22 @@ inputChanged: function(marker_id) {
 
 // click: button "open JOSM"
 openJOSM: function() {
-	var x = OSRM.G.map.getCenterUI();
-	var ydelta = 0.01;
-	var xdelta = ydelta * 2;
-	var p = [ 'left='  + (x.lng - xdelta), 'bottom=' + (x.lat - ydelta), 'right=' + (x.lng + xdelta), 'top='    + (x.lat + ydelta)];
-	var url = 'http://localhost:8111/load_and_zoom?' + p.join('&');
+	var center = OSRM.G.map.getCenterUI();
+	var bounds = OSRM.G.map.getBoundsUI();
 	
-	var frame = L.DomUtil.create('iframe', null, document.body);
-	frame.style.width = frame.style.height = "0px";
+	var xdelta = Math.min(0.02, Math.abs(bounds.getSouthWest().lng - center.lng) );
+	var ydelta = Math.min(0.01, Math.abs(bounds.getSouthWest().lat - center.lat) );
+	
+	var p = [ 'left='  + (center.lng - xdelta), 'bottom=' + (center.lat - ydelta), 'right=' + (center.lng + xdelta), 'top=' + (center.lat + ydelta)];
+	var url = 'http://127.0.0.1:8111/load_and_zoom?' + p.join('&');
+ 
+	var frame = document.getElementById('josm-frame');
+	if(!frame) {
+		frame = L.DomUtil.create('iframe', null, document.body);
+		frame.style.display = "none";
+		frame.id = 'josm-frame';
+	}
 	frame.src = url;
-	frame.onload = function(e) { document.body.removeChild(frame); };
 },
 
 //click: button "open OSM Bugs"

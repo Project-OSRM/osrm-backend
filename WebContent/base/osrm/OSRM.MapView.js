@@ -43,6 +43,14 @@ OSRM.MapView = L.Map.extend({
 		bounds.extend( this.unproject(ne_point,zoom) );
 		this.fitBounds( bounds );	
 	},
+	getBoundsUI: function(unbounded) {
+		var bounds = this.getPixelBounds();
+		if( OSRM.GUI.visible == true )
+			bounds.min.x+=OSRM.GUI.width;
+		var sw = this.unproject(new L.Point(bounds.min.x, bounds.max.y), this._zoom, true),
+			ne = this.unproject(new L.Point(bounds.max.x, bounds.min.y), this._zoom, true);
+		return new L.LatLngBounds(sw, ne);		
+	},	
 	getCenterUI: function(unbounded) {
 		var viewHalf = this.getSize();
 		if( OSRM.GUI.visible == true )
