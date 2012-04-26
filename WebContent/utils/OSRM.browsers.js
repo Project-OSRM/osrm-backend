@@ -46,17 +46,18 @@ OSRM.Browser.getElementsByClassName = function( node, classname ) {
 };
 
 // call a function when DOM has finished loading and remove event handler (optionally pass a different window object)
-OSRM.Browser.onLoadHandler = function( function_pointer, the_document ) {
-	the_document = the_document || document;	// default document
+OSRM.Browser.onLoadHandler = function( function_pointer, the_window ) {
+	the_window = the_window || window;			// default document
+	var the_document = the_window.document;
 	
-	if(the_document.addEventListener) {			// FF, CH, IE9+
+	if(the_window.addEventListener) {			// FF, CH, IE9+
 		var temp_function = function() { 
-			the_document.removeEventListener("DOMContentLoaded", arguments.callee, false);
+			the_window.removeEventListener("DOMContentLoaded", arguments.callee, false);
 			function_pointer.call();
 		};
-		the_document.addEventListener("DOMContentLoaded", temp_function, false);
+		the_window.addEventListener("DOMContentLoaded", temp_function, false);
 	}
-	
+
 	else if(the_document.attachEvent) {			// IE8-
 		var temp_function = function() { 
 			if ( the_document.readyState === "interactive" || the_document.readyState === "complete" ) { 
