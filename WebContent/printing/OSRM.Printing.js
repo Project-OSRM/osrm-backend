@@ -34,7 +34,7 @@ init: function() {
 	input_mask_header.appendChild(spacer,input_mask_header.lastChild);
 	input_mask_header.appendChild(icon,input_mask_header.lastChild);
 	
-	document.getElementById("gui-printer-inactive").onclick = OSRM.Printing.print;
+	document.getElementById("gui-printer-inactive").onclick = OSRM.Printing.openPrintWindow;
 },
 		
 
@@ -89,7 +89,7 @@ show: function(response) {
 		
 		'<div class="quad"></div>' + 
 		'</td></tr></thead>';	
-	
+
 	// create route description
 	var body = '<tbody class="description-body">';
 	for(var i=0; i < response.route_instructions.length; i++){
@@ -121,41 +121,34 @@ show: function(response) {
 	body += '</tbody>';
 	
 	// put everything in DOM
-	OSRM.G.printwindow.document.getElementById('description').innerHTML = '<table class="description medium-font">' + header + body + '</table>';		
-	OSRM.G.printwindow.document.getElementById('overview-map-description').innerHTML = '<table class="description medium-font">' + header + '</table>';
+	var print_window = OSRM.G.printwindow;	
+	print_window.document.getElementById('description').innerHTML = '<table class="description medium-font">' + header + body + '</table>';		
+	print_window.document.getElementById('overview-map-description').innerHTML = '<table class="description medium-font">' + header + '</table>';
 	
 	// draw map
+	var positions = OSRM.G.route.getPositions();
 	var tile_server_id = OSRM.G.map.getActiveLayerId();
-	var map = OSRM.G.printwindow.initialize( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id] );
+	var zoom = print_window.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
+	
 	// draw markers
-	var markers = OSRM.G.markers.route;
-	map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
-	for(var i=1, size=markers.length-1; i<size; i++)
-		map.addLayer( new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} ) );
-	map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ));
-	// draw route
-	OSRM.Printing.route = new L.DashedPolyline();
-	var route = OSRM.Printing.route; 
-	route.setLatLngs( OSRM.G.route.getPositions() );
-	route.setStyle( {dashed:false,clickable:false,color:'#0033FF', weight:5} );
-	map.addLayer( route );
-	var bounds = new L.LatLngBounds( OSRM.G.route.getPositions() );
-	map.fitBoundsUI( bounds );
-	// query for a better route geometry
-	var zoom = map.getBoundsZoom(bounds);
+	print_window.prefetchIcons( OSRM.G.images );
+	print_window.drawMarkers( OSRM.G.markers.route );
+	
+	// draw route & query for better geometry	
+	print_window.drawRoute( positions );
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&z='+zoom+'&instructions=false', OSRM.Printing.drawRoute, OSRM.Printing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'print');
 },
 timeoutRoute: function() {},
 drawRoute: function(response) {
 	if(!response)
 		return;
-	var geometry = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
-	OSRM.Printing.route.setLatLngs( geometry );
+	var positions = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
+	OSRM.G.printwindow.drawRoute( positions );
 },
 
 
-//open printWindow
-print: function() {
+// opens the print window and closes old instances
+openPrintWindow: function() {
 	// do not open window if there is no route to draw
 	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() )
 		return;
@@ -166,12 +159,11 @@ print: function() {
 	
 	// generate a new window and wait till it has finished loading
 	OSRM.G.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
-	OSRM.Browser.onLoadHandler( OSRM.Printing.printwindowLoaded, OSRM.G.printwindow );
 },
 
 
-//add content to printwindow after it has finished loading
-printwindowLoaded: function(){
+// add content to printwindow after it has finished loading
+printWindowLoaded: function(){
 	var print_window = OSRM.G.printwindow;
 	var print_document = print_window.document;
 	
