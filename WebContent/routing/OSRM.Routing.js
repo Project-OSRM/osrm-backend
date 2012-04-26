@@ -149,7 +149,7 @@ _buildCall: function() {
 	if(OSRM.G.markers.checksum)
 		source += '&checksum=' + OSRM.G.markers.checksum;
 	for(var i=0,size=OSRM.G.markers.route.length; i<size; i++) {
-		source += '&loc='  + OSRM.G.markers.route[i].getLat() + ',' + OSRM.G.markers.route[i].getLng();
+		source += '&loc='  + OSRM.G.markers.route[i].getLat().toFixed(6) + ',' + OSRM.G.markers.route[i].getLng().toFixed(6);
 		if( OSRM.G.markers.route[i].hint)
 			source += '&hint=' + OSRM.G.markers.route[i].hint;
 	}

@@ -148,14 +148,14 @@ updateAddress: function(marker_id, do_fallback_to_lat_lng) {
 	
 	if(marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource()) {
 		lat = OSRM.G.markers.route[0].getLat();
-		lng = OSRM.G.markers.route[0].getLng();		
+		lng = OSRM.G.markers.route[0].getLng();
 	} else if(marker_id == OSRM.C.TARGET_LABEL && OSRM.G.markers.hasTarget() ) {
 		lat = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLat();
-		lng = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng();		
+		lng = OSRM.G.markers.route[OSRM.G.markers.route.length-1].getLng();
 	} else
 		return;
 	
-	var call = OSRM.DEFAULTS.HOST_REVERSE_GEOCODER_URL + "?format=json&json_callback=%jsonp" + "&accept-language="+OSRM.Localization.current_language + "&lat=" + lat + "&lon=" + lng;
+	var call = OSRM.DEFAULTS.HOST_REVERSE_GEOCODER_URL + "?format=json&json_callback=%jsonp" + "&accept-language="+OSRM.Localization.current_language + "&lat=" + lat.toFixed(6) + "&lon=" + lng.toFixed(6);
 	OSRM.JSONP.call( call, OSRM.Geocoder._showReverseResults, OSRM.Geocoder._showReverseResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "reverse_geocoder_"+marker_id, {marker_id:marker_id, do_fallback: do_fallback_to_lat_lng} );
 },
 
