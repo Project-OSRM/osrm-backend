@@ -122,9 +122,10 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
             edges.push_back( edge );
         }
     }
-    INFO("Expanded " << inputEdges.size() << " node-based edges into " << nodes << " edge-based nodes.");
     std::vector<NodeBasedEdge>().swap(inputEdges);
+    std::vector<_NodeBasedEdge>(edges).swap(edges);
     std::sort( edges.begin(), edges.end() );
+    INFO("edges size: " << edges.size() << ", capacity: " << edges.capacity());
 
     _nodeBasedGraph.reset(new _NodeBasedDynamicGraph( nodes, edges ));
 }
@@ -252,10 +253,16 @@ void EdgeBasedGraphFactory::Run() {
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
-//                        if(edgeBasedEdges.size() == edgeBasedEdges.capacity()-3)
-//                            edgeBasedEdges.reserve(edgeBasedEdges.size()*1.1);
-                        if(originalEdgeData.size() == originalEdgeData.capacity()-3)
+                        if(edgeBasedEdges.size() == edgeBasedEdges.capacity()-3) {
+                            INFO("old edge capacity: " << edgeBasedEdges.capacity());
+                            edgeBasedEdges.reserve(edgeBasedEdges.size()*1.1);
+                            INFO("new edge capacity: " << edgeBasedEdges.capacity());
+                        }
+                        if(originalEdgeData.size() == originalEdgeData.capacity()-3) {
+                            INFO("old oed capacity: " << originalEdgeData.capacity());
                             originalEdgeData.reserve(originalEdgeData.size()*1.1);
+                            INFO("new oed capacity: " << originalEdgeData.capacity());
+                        }
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
                         originalEdgeData.push_back(oed);
