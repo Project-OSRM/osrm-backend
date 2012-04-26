@@ -84,7 +84,7 @@ openJOSM: function() {
 	var xdelta = Math.min(0.02, Math.abs(bounds.getSouthWest().lng - center.lng) );
 	var ydelta = Math.min(0.01, Math.abs(bounds.getSouthWest().lat - center.lat) );
 	
-	var p = [ 'left='  + (center.lng - xdelta), 'bottom=' + (center.lat - ydelta), 'right=' + (center.lng + xdelta), 'top=' + (center.lat + ydelta)];
+	var p = [ 'left='  + (center.lng - xdelta).toFixed(6), 'bottom=' + (center.lat - ydelta).toFixed(6), 'right=' + (center.lng + xdelta).toFixed(6), 'top=' + (center.lat + ydelta).toFixed(6)];
 	var url = 'http://127.0.0.1:8111/load_and_zoom?' + p.join('&');
  
 	var frame = document.getElementById('josm-frame');
