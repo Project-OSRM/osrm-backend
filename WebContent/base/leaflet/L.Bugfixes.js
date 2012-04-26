@@ -19,6 +19,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [assorted bugfixes to Leaflet functions we use]
 
 
+// find relative leaflet URL
+var i = 0;
+while( L.ROOT_URL[i] == document.URL[i] ) { i++; }
+L.RELATIVE_ROOT_URL = L.ROOT_URL.slice(i);
+
+
 // return closest point on segment or distance to that point
 L.LineUtil._sqClosestPointOnSegment = function (p, p1, p2, sqDist) {
 	var x = p1.x,

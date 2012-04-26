@@ -42,7 +42,7 @@ OSRM.init = function() {
 // prefetch images
 OSRM.GLOBALS.images = {};
 OSRM.prefetchImages = function() {
-	var image_list = [	{id:'marker-shadow',					url:L.ROOT_URL + 'images/marker-shadow.png'},
+	var image_list = [	{id:'marker-shadow',					url:L.RELATIVE_ROOT_URL + 'images/marker-shadow.png'},
 	                  	{id:'marker-source',					url:'images/marker-source.png'},
 						{id:'marker-target',					url:'images/marker-target.png'},
 						{id:'marker-via',						url:'images/marker-via.png'},
