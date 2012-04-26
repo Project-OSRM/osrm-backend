@@ -21,7 +21,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef CONTRACTOR_H_INCLUDED
 #define CONTRACTOR_H_INCLUDED
 #include <algorithm>
+#include <ctime>
+#include <limits>
+#include <queue>
+#include <set>
+#include <vector>
+
+#include <stxxl.h>
+
 #include <boost/shared_ptr.hpp>
+
 
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/Percent.h"
@@ -29,12 +38,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/OpenMPReplacement.h"
 #include "../Util/StringUtil.h"
 
-#include <ctime>
-#include <vector>
-#include <queue>
-#include <set>
-#include <stack>
-#include <limits>
 
 class Contractor {
 
@@ -98,7 +101,7 @@ public:
 
     template<class ContainerT >
     Contractor( int nodes, ContainerT& inputEdges) {
-        std::vector< _ImportEdge > edges;
+        stxxl::vector< _ImportEdge > edges;
         edges.reserve( 2 * inputEdges.size() );
         BOOST_FOREACH(typename ContainerT::value_type & currentEdge, inputEdges) {
             _ImportEdge edge;
@@ -169,12 +172,12 @@ public:
                 }
             }
         }
-        std::cout << "ok" << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
+        std::cout << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
         edges.resize( edge );
-        std::vector<_ImportEdge>(edges).swap(edges);
 
         _graph.reset( new _DynamicGraph( nodes, edges ) );
-        std::vector< _ImportEdge >().swap( edges );
+        INFO("Finished building dynamic graph");
+        edges.clear();
 //        unsigned maxdegree = 0;
 //        NodeID highestNode = 0;
 //
