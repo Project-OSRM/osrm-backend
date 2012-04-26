@@ -131,14 +131,14 @@ int main (int argc, char *argv[]) {
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
-    std::vector<EdgeBasedEdge> edgeBasedEdgeList;
+    stxxl::vector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
 
-    stxxl::vector<EdgeBasedEdge> externalEdgeBasedEdgeList;
-    BOOST_FOREACH(EdgeBasedEdge & edge, edgeBasedEdgeList) {
-        externalEdgeBasedEdgeList.push_back(edge);
-    }
-    std::vector<EdgeBasedEdge>().swap(edgeBasedEdgeList);
+//    stxxl::vector<EdgeBasedEdge> externalEdgeBasedEdgeList;
+//    BOOST_FOREACH(EdgeBasedEdge & edge, edgeBasedEdgeList) {
+//        externalEdgeBasedEdgeList.push_back(edge);
+//    }
+//    std::vector<EdgeBasedEdge>().swap(edgeBasedEdgeList);
 
     /***
      * Writing info on original (node-based) nodes
@@ -186,7 +186,7 @@ int main (int argc, char *argv[]) {
      */
 
     INFO("initializing contractor");
-    Contractor* contractor = new Contractor( edgeBasedNodeNumber, externalEdgeBasedEdgeList );
+    Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
     double contractionStartedTimestamp(get_timestamp());
     contractor->Run();
     INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");

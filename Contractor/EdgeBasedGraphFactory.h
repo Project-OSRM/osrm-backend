@@ -30,7 +30,7 @@
 #include <boost/property_tree/ini_parser.hpp>
 
 #include <vector>
-
+#include <stxxl.h>
 #include <cstdlib>
 
 #include "../typedefs.h"
@@ -103,7 +103,7 @@ private:
     RestrictionMap _restrictionMap;
 
 
-    std::vector<EdgeBasedEdge>      edgeBasedEdges;
+    stxxl::vector<EdgeBasedEdge>      edgeBasedEdges;
     std::vector<EdgeBasedNode>      edgeBasedNodes;
     std::vector<OriginalEdgeData>   originalEdgeData;
     std::vector<NodeInfo>           inputNodeInfoList;
@@ -127,7 +127,7 @@ public:
     explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm);
 
     void Run();
-    void GetEdgeBasedEdges( std::vector< EdgeBasedEdge >& edges );
+    void GetEdgeBasedEdges( stxxl::vector< EdgeBasedEdge >& edges );
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
     short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;

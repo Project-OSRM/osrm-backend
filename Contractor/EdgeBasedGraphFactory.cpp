@@ -125,12 +125,11 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     std::vector<NodeBasedEdge>().swap(inputEdges);
     std::vector<_NodeBasedEdge>(edges).swap(edges);
     std::sort( edges.begin(), edges.end() );
-    INFO("edges size: " << edges.size() << ", capacity: " << edges.capacity());
 
     _nodeBasedGraph.reset(new _NodeBasedDynamicGraph( nodes, edges ));
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedEdges(std::vector< EdgeBasedEdge >& outputEdgeList ) {
+void EdgeBasedGraphFactory::GetEdgeBasedEdges(stxxl::vector< EdgeBasedEdge >& outputEdgeList ) {
     GUARANTEE(0 == outputEdgeList.size(), "Vector passed to EdgeBasedGraphFactory::GetEdgeBasedEdges(..) is not empty");
     GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
 
