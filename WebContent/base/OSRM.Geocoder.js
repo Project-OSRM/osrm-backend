@@ -84,20 +84,20 @@ _showResults: function(response, parameters) {
 	
 	// show possible results for input
 	var html = "";
-	html += '<table class="results-table medium-font">';	
+	html += '<table class="description medium-font">';	
 	for(var i=0; i < response.length; i++){
 		var result = response[i];
 
 		//odd or even ?
-		var rowstyle='results-odd';
-		if(i%2==0) { rowstyle='results-even'; }
+		var rowstyle='description-body-odd';
+		if(i%2==0) { rowstyle='description-body-even'; }
  
 		html += '<tr class="'+rowstyle+'">';
-		html += '<td class="result-counter"><span">'+(i+1)+'.</span></td>';
-		html += '<td class="result-items">';
+		html += '<td class="description-body-counter"><span">'+(i+1)+'.</span></td>';
+		html += '<td class="description-body-items">';
 
 		if(result.display_name){
-			html += '<div class="result-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
+			html += '<div class="description-body-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
 		}
 		html += "</td></tr>";
 	}
