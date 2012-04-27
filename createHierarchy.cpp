@@ -131,7 +131,7 @@ int main (int argc, char *argv[]) {
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
-    stxxl::vector<EdgeBasedEdge> edgeBasedEdgeList;
+    std::vector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
 
 //    stxxl::vector<EdgeBasedEdge> externalEdgeBasedEdgeList;
