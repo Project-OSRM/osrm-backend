@@ -42,16 +42,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 class Contractor {
 
 private:
-    struct _EdgeBasedContractorEdgeData {
-        _EdgeBasedContractorEdgeData() :
+    struct _ContractorEdgeData {
+        _ContractorEdgeData() :
             distance(0), originalEdges(0), id(0)/*, nameID(0), turnInstruction(0)*/, shortcut(0), forward(0), backward(0) {}
-        _EdgeBasedContractorEdgeData( unsigned _distance, unsigned _originalEdges, unsigned _id/*, unsigned _nameID, short _turnInstruction*/, bool _shortcut, bool _forward, bool _backward) :
-            distance(_distance), originalEdges(_originalEdges), id(_id)/*, nameID(_nameID), turnInstruction(_turnInstruction)*/, shortcut(_shortcut), forward(_forward), backward(_backward), originalViaNodeID(false) {}
+        _ContractorEdgeData( unsigned _distance, unsigned _originalEdges, unsigned _id, bool _shortcut, bool _forward, bool _backward) :
+            distance(_distance), originalEdges(std::min((unsigned)1<<28, _originalEdges) ), id(_id), shortcut(_shortcut), forward(_forward), backward(_backward), originalViaNodeID(false) {}
         unsigned distance;
-        unsigned originalEdges;
         unsigned id;
-//        unsigned nameID;
-//        short turnInstruction;
+        unsigned originalEdges:28;
         bool shortcut:1;
         bool forward:1;
         bool backward:1;
@@ -65,13 +63,13 @@ private:
         _HeapData( short h, bool t ) : hop(h), target(t) {}
     };
 
-    typedef DynamicGraph< _EdgeBasedContractorEdgeData > _DynamicGraph;
+    typedef DynamicGraph< _ContractorEdgeData > _DynamicGraph;
     typedef BinaryHeap< NodeID, NodeID, int, _HeapData > _Heap;
-    typedef _DynamicGraph::InputEdge _ImportEdge;
+    typedef _DynamicGraph::InputEdge _ContractorEdge;
 
     struct _ThreadData {
         _Heap heap;
-        std::vector< _ImportEdge > insertedEdges;
+        std::vector< _ContractorEdge > insertedEdges;
         std::vector< NodeID > neighbours;
         _ThreadData( NodeID nodes ): heap( nodes ) {
         }
@@ -101,13 +99,13 @@ public:
 
     template<class ContainerT >
     Contractor( int nodes, ContainerT& inputEdges) {
-        stxxl::vector< _ImportEdge > edges;
+        std::vector< _ContractorEdge > edges;
         edges.reserve( 2 * inputEdges.size() );
         BOOST_FOREACH(typename ContainerT::value_type & currentEdge, inputEdges) {
-            _ImportEdge edge;
+            _ContractorEdge edge;
             edge.source = currentEdge.source();
             edge.target = currentEdge.target();
-            edge.data = _EdgeBasedContractorEdgeData( (std::max)((int)currentEdge.weight(), 1 ),  1,  currentEdge.id()/*,  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction()*/,  false,  currentEdge.isForward(),  currentEdge.isBackward());
+            edge.data = _ContractorEdgeData( (std::max)((int)currentEdge.weight(), 1 ),  1,  currentEdge.id()/*,  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction()*/,  false,  currentEdge.isForward(),  currentEdge.isBackward());
 
             assert( edge.data.distance > 0 );
 #ifndef NDEBUG
@@ -137,8 +135,8 @@ public:
                 i++;
                 continue;
             }
-            _ImportEdge forwardEdge;
-            _ImportEdge backwardEdge;
+            _ContractorEdge forwardEdge;
+            _ContractorEdge backwardEdge;
             forwardEdge.source = backwardEdge.source = source;
             forwardEdge.target = backwardEdge.target = target;
             forwardEdge.data.forward = backwardEdge.data.backward = true;
@@ -364,7 +362,7 @@ public:
             for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
                 _ThreadData& data = *threadData[threadNum];
                 for ( int i = 0; i < ( int ) data.insertedEdges.size(); ++i ) {
-                    const _ImportEdge& edge = data.insertedEdges[i];
+                    const _ContractorEdge& edge = data.insertedEdges[i];
                     _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
                     if(currentEdgeID != _graph->EndEdges(edge.source)) {
                         _DynamicGraph::EdgeData & currentEdgeData = _graph->GetEdgeData(currentEdgeID);
@@ -510,7 +508,7 @@ private:
 
             //iterate over all edges of node
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
-                const _EdgeBasedContractorEdgeData& data = _graph->GetEdgeData( edge );
+                const _ContractorEdgeData& data = _graph->GetEdgeData( edge );
                 if ( !data.forward )
                     continue;
                 const NodeID to = _graph->GetTarget( edge );
@@ -549,10 +547,10 @@ private:
     bool _Contract( _ThreadData* data, NodeID node, _ContractionInformation* stats = NULL ) {
         _Heap& heap = data->heap;
         int insertedEdgesSize = data->insertedEdges.size();
-        std::vector< _ImportEdge >& insertedEdges = data->insertedEdges;
+        std::vector< _ContractorEdge >& insertedEdges = data->insertedEdges;
 
         for ( _DynamicGraph::EdgeIterator inEdge = _graph->BeginEdges( node ), endInEdges = _graph->EndEdges( node ); inEdge != endInEdges; ++inEdge ) {
-            const _EdgeBasedContractorEdgeData& inData = _graph->GetEdgeData( inEdge );
+            const _ContractorEdgeData& inData = _graph->GetEdgeData( inEdge );
             const NodeID source = _graph->GetTarget( inEdge );
             if ( Simulate ) {
                 assert( stats != NULL );
@@ -570,7 +568,7 @@ private:
             unsigned numTargets = 0;
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
-                const _EdgeBasedContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
+                const _ContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
                 if ( !outData.forward )
                     continue;
                 const NodeID target = _graph->GetTarget( outEdge );
@@ -590,7 +588,7 @@ private:
                 _Dijkstra( maxDistance, numTargets, 2000, (true ? INT_MAX : 7), data );
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
-                const _EdgeBasedContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
+                const _ContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
                 if ( !outData.forward )
                     continue;
                 const NodeID target = _graph->GetTarget( outEdge );
@@ -602,10 +600,10 @@ private:
                         stats->edgesAdded+=2;
                         stats->originalEdgesAdded += 2* ( outData.originalEdges + inData.originalEdges );
                     } else {
-                        _ImportEdge newEdge;
+                        _ContractorEdge newEdge;
                         newEdge.source = source;
                         newEdge.target = target;
-                        newEdge.data = _EdgeBasedContractorEdgeData( pathDistance, outData.originalEdges + inData.originalEdges, node/*, 0, inData.turnInstruction*/, true, true, false);;
+                        newEdge.data = _ContractorEdgeData( pathDistance, outData.originalEdges + inData.originalEdges, node/*, 0, inData.turnInstruction*/, true, true, false);;
                         insertedEdges.push_back( newEdge );
                         std::swap( newEdge.source, newEdge.target );
                         newEdge.data.forward = false;
