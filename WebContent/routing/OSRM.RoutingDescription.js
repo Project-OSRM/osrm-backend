@@ -38,7 +38,7 @@ onClickCreateShortcut: function(src){
 	document.getElementById('route-link').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
 },
 showRouteLink: function(response){
-	document.getElementById('route-link').innerHTML = '[<a class="result-link text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
+	document.getElementById('route-link').innerHTML = '[<a class="route-link text-selectable" href="' +response.ShortURL+ '">'+response.ShortURL+'</a>]';
 },
 showRouteLink_TimeOut: function(){
 	document.getElementById('route-link').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
@@ -55,10 +55,10 @@ show: function(response) {
 		query_string += '&loc=' + OSRM.G.markers.route[i].getLat().toFixed(6) + ',' + OSRM.G.markers.route[i].getLng().toFixed(6); 
  						
 	// create link to the route
-	var route_link ='[<a class="result-link" onclick="OSRM.RoutingDescription.onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]';
+	var route_link ='[<a class="route-link" onclick="OSRM.RoutingDescription.onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]';
 
 	// create GPX link
-	var gpx_link = '[<a class="result-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
+	var gpx_link = '[<a class="route-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
 		
 	// create route description
 	var body = "";
