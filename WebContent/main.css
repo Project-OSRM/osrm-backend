@@ -515,6 +515,14 @@ html, body {
 	vertical-align:2px;
 }
 
+input[type=checkbox],
+select
+{
+	cursor:pointer;
+}
+
+
+/* table styles */
 .full
 {
 	display:table;

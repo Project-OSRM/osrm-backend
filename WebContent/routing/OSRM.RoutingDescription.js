@@ -41,7 +41,7 @@ showRouteLink: function(response){
 	if(!response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER])
 		OSRM.RoutingDescription.showRouteLink_TimeOut();
 	else
-		document.getElementById('route-link').innerHTML = '[<a class="route-link text-selectable" href="' +response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+ '">'+response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+'</a>]';
+		document.getElementById('route-link').innerHTML = '[<a class="route-link" href="' +response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+ '">'+response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+'</a>]';
 },
 showRouteLink_TimeOut: function(){
 	document.getElementById('route-link').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';

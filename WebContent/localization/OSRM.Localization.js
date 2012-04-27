@@ -49,11 +49,11 @@ init: function() {
 	var textnode = document.createTextNode(OSRM.DEFAULTS.LANGUAGE);
 	var myspan = document.createElement("span");
 	myspan.className = "styled-select";
-	myspan.id = "styled-select" + select.id;
+	myspan.id = "styled-select-" + select.id;
 	myspan.appendChild(textnode);
 	select.parentNode.insertBefore(myspan, select);
 	myspan.style.width = (select.clientWidth-2)+"px";
-	myspan.style.height = (select.clientHeight)+"px";
+	myspan.style.height = (select.clientHeight+2)/supported_languages.length+"px";
 },
 
 // perform language change
@@ -66,7 +66,7 @@ setLanguage: function(language) {
 			select.value = language;
 			for(var i = 0; i < option.length; i++)
 				if(option[i].selected == true) {
-					document.getElementById("styled-select" + select.id).childNodes[0].nodeValue = option[i].childNodes[0].nodeValue;
+					document.getElementById("styled-select-" + select.id).childNodes[0].nodeValue = option[i].childNodes[0].nodeValue;
 					break;
 				}
 		}		
