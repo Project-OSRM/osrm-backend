@@ -71,11 +71,12 @@ OSRM.MapView = L.Map.extend({
 		
 		var tile_servers = OSRM.DEFAULTS.TILE_SERVERS;
 		var tile_server_name = this.layerControl.getActiveLayerName();
-		for(var i=0, size=tile_servers.length; i<size; i++)
-			if( tile_servers[tile_server_id].display_name == tile_server_name ) {
+		for(var i=0, size=tile_servers.length; i<size; i++) {
+			if( tile_servers[i].display_name == tile_server_name ) {
 				tile_server_id = i;
 				break;
 			}
+		}
 		
 		return tile_server_id;
 	}
