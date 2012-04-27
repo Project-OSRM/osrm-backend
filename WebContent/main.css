@@ -257,13 +257,13 @@ html, body {
 {
 	font-weight:normal;
 }
-.result-link
+.route-link
 {
 	color:#0000ff;
 	text-decoration:none;
 	cursor:pointer;
 }
-.result-link:hover
+.route-link:hover
 {
 	color:#ff0000;
 }
