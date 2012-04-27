@@ -36,6 +36,7 @@ OSRM.DEFAULTS = {
 	//GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0',			// bounds for Europe
 	
 	SHORTENER_PARAMETERS: '%url&jsonp=%jsonp',
+	SHORTENER_REPLY_PARAMETER: 'ShortURL',
 	
 	LANGUAGE: "en",
 	LANGUAGE_FILES_DIRECTORY: "localization/",
