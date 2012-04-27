@@ -126,7 +126,7 @@ int main (int argc, char *argv[]) {
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile, SRTM_ROOT);
     std::vector<ImportEdge>().swap(edgeList);
 
-    edgeBasedGraphFactory->Run();
+    edgeBasedGraphFactory->Run(edgeOut);
     std::vector<_Restriction>().swap(inputRestrictions);
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
@@ -157,12 +157,12 @@ int main (int argc, char *argv[]) {
     std::vector<OriginalEdgeData> originalEdgeData;
     edgeBasedGraphFactory->GetOriginalEdgeData(originalEdgeData);
 
-    std::ofstream oedOutFile(edgeOut, std::ios::binary);
-    unsigned numberOfOrigEdges = originalEdgeData.size();
-    oedOutFile.write((char*)&numberOfOrigEdges, sizeof(unsigned));
-    oedOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
-    oedOutFile.close();
-    std::vector<OriginalEdgeData>().swap(originalEdgeData);
+//    std::ofstream oedOutFile(edgeOut, std::ios::binary);
+//    unsigned numberOfOrigEdges = originalEdgeData.size();
+//    oedOutFile.write((char*)&numberOfOrigEdges, sizeof(unsigned));
+//    oedOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
+//    oedOutFile.close();
+//    std::vector<OriginalEdgeData>().swap(originalEdgeData);
 
     std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);

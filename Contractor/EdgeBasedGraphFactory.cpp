@@ -194,11 +194,14 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     edgeBasedNodes.push_back(currentNode);
 }
 
-void EdgeBasedGraphFactory::Run() {
-//    edgeBasedNodes.reserve(_nodeBasedGraph->GetNumberOfEdges());
+void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfSkippedTurns(0);
     int nodeBasedEdgeCounter(0);
+    unsigned numberOfOriginalEdges(0);
+    std::ofstream originalEdgeDataOutFile(originalEdgeDataFilename, std::ios::binary);
+    originalEdgeDataOutFile.write((char*)&numberOfOriginalEdges, sizeof(unsigned));
+
 
     //loop over all edges and generate new set of nodes.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
@@ -265,6 +268,12 @@ void EdgeBasedGraphFactory::Run() {
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
                         originalEdgeData.push_back(oed);
+                        if(originalEdgeData.size() > 100000) {
+                            originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
+                            originalEdgeData.clear();
+                        }
+                        ++numberOfOriginalEdges;
+                        ++nodeBasedEdgeCounter;
                         edgeBasedEdges.push_back(newEdge);
                     } else {
                         ++numberOfSkippedTurns;
@@ -274,6 +283,12 @@ void EdgeBasedGraphFactory::Run() {
         }
         p.printIncrement();
     }
+    numberOfOriginalEdges += originalEdgeData.size();
+    originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
+    originalEdgeDataOutFile.seekp(std::ios::beg);
+    originalEdgeDataOutFile.write((char*)&numberOfOriginalEdges, sizeof(unsigned));
+    originalEdgeDataOutFile.close();
+
     INFO("Sorting edge-based Nodes");
     std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
     INFO("Removing duplicate nodes (if any)");
