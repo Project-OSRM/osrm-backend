@@ -129,7 +129,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     _nodeBasedGraph.reset(new _NodeBasedDynamicGraph( nodes, edges ));
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedEdges(stxxl::vector< EdgeBasedEdge >& outputEdgeList ) {
+void EdgeBasedGraphFactory::GetEdgeBasedEdges(std::vector< EdgeBasedEdge >& outputEdgeList ) {
     GUARANTEE(0 == outputEdgeList.size(), "Vector passed to EdgeBasedGraphFactory::GetEdgeBasedEdges(..) is not empty");
     GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
 

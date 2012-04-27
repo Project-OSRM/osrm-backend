@@ -143,8 +143,6 @@ public:
             forwardEdge.target = backwardEdge.target = target;
             forwardEdge.data.forward = backwardEdge.data.backward = true;
             forwardEdge.data.backward = backwardEdge.data.forward = false;
-//            forwardEdge.data.turnInstruction = backwardEdge.data.turnInstruction = turnType;
-//            forwardEdge.data.nameID = backwardEdge.data.nameID = edges[i].data.nameID;
             forwardEdge.data.shortcut = backwardEdge.data.shortcut = false;
             forwardEdge.data.id = backwardEdge.data.id = id;
             forwardEdge.data.originalEdges = backwardEdge.data.originalEdges = 1;
