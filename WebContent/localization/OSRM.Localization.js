@@ -53,7 +53,7 @@ init: function() {
 	myspan.appendChild(textnode);
 	select.parentNode.insertBefore(myspan, select);
 	myspan.style.width = (select.clientWidth-2)+"px";
-	myspan.style.height = (select.clientHeight+2)/supported_languages.length+"px";
+	myspan.style.height = (select.clientHeight)+"px";
 },
 
 // perform language change
