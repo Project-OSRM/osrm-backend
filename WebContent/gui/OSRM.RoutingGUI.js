@@ -16,10 +16,29 @@ or see http://www.gnu.org/licenses/agpl.txt.
 */
 
 // OSRM RoutingGUI
-// [handles all GUI events that interact with routing]
+// [handles all GUI events that interact with routing in main window]
 
 
-OSRM.RoutingGUI = {
+OSRM.GUI.extend( {
+		
+// init
+init: function() {
+	// init events
+	document.getElementById("gui-input-source").onchange = function() {OSRM.GUI.inputChanged(OSRM.C.SOURCE_LABEL);};
+	document.getElementById("gui-delete-source").onclick = function() {OSRM.GUI.deleteMarker(OSRM.C.SOURCE_LABEL);};
+	document.getElementById("gui-search-source").onclick = function() {OSRM.GUI.showMarker(OSRM.C.SOURCE_LABEL);};	
+	
+	document.getElementById("gui-input-target").onchange = function() {OSRM.GUI.inputChanged(OSRM.C.TARGET_LABEL);};
+	document.getElementById("gui-delete-target").onclick = function() {OSRM.GUI.deleteMarker(OSRM.C.TARGET_LABEL);};
+	document.getElementById("gui-search-target").onclick = function() {OSRM.GUI.showMarker(OSRM.C.TARGET_LABEL);};
+	
+	document.getElementById("gui-reset").onclick = OSRM.GUI.resetRouting;
+	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
+	document.getElementById("gui-options-toggle").onclick = OSRM.GUI.toggleOptions;
+	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
+	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
+	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getZoomRoute;	
+},
 
 // click: button "reset"
 resetRouting: function() {
@@ -117,4 +136,4 @@ deleteMarker: function(marker_id) {
 	OSRM.G.markers.highlight.hide();	
 }
 
-};
+});
