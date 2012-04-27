@@ -92,7 +92,7 @@ setLanguage: function(language) {
 			if( supported_languages[i].encoding == language) {
 				var script = document.createElement('script');
 				script.type = 'text/javascript';
-				script.src = OSRM.DEFAULTS.LANGUAGE_FILES_DIRECTORY + "OSRM.Locale."+language+".js";
+				script.src = "localization/OSRM.Locale."+language+".js";
 				document.head.appendChild(script);
 				break;
 			}

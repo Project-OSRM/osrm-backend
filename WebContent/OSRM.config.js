@@ -39,7 +39,6 @@ OSRM.DEFAULTS = {
 	SHORTENER_REPLY_PARAMETER: 'ShortURL',
 	
 	LANGUAGE: "en",
-	LANGUAGE_FILES_DIRECTORY: "localization/",
 	LANUGAGE_ONDEMAND_RELOADING: true,
 	LANGUAGE_SUPPORTED: [ 
 		{display_name:"en", encoding:"en"},
