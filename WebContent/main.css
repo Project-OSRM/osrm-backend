@@ -269,7 +269,54 @@ html, body {
 }
 
 
-/* style for information-box table (search results, driving directions) */
+/* style for information-box table (general) */
+.no-results
+{
+	text-align:center;
+	margin:28px;
+}
+
+
+/* style for information-box table (search results) */
+.results
+{
+	border-spacing:0px;
+	width:100%;
+}
+.results-body-odd
+{
+	background-color: #FFFDE3;
+}
+.results-body-even
+{
+	background-color: #FFF9BB;
+}
+.results-body-counter
+{
+	text-align:right;
+	vertical-align:top;
+	font-weight:bold;
+	padding:1px 5px 1px 5px;
+}
+.results-body-items
+{
+	text-align:left;
+	vertical-align: middle;
+	width:100%;
+	padding:1px;
+}
+.results-body-item
+{
+	cursor:pointer;
+	color:#000000
+}
+.results-body-item:hover
+{
+	color:#ff0000
+}
+
+
+/* style for information-box table (driving directions) */
 .description
 {
 	border-spacing:0px;
@@ -282,13 +329,6 @@ html, body {
 .description-body-even
 {
 	background-color: #FFF9BB;
-}
-.description-body-counter
-{
-	text-align:right;
-	vertical-align:top;
-	font-weight:bold;
-	padding:1px 5px 1px 5px;
 }
 .description-body-items
 {
@@ -323,11 +363,6 @@ html, body {
 .description-body-item:hover
 {
 	color:#ff0000
-}
-.no-results
-{
-	text-align:center;
-	margin:28px;
 }
 
 
