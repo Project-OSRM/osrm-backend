@@ -52,6 +52,7 @@ OSRM.Localization["fi"] = {
 "NO_ROUTE_FOUND": "Reittiä ei löytynyt",
 //printing
 "OVERVIEW_MAP": "Yleiskuvakartta",
+"NO_ROUTE_SELECTED": "Ei reitti valittu",
 // directions
 "N": "pohjoiseen",
 "E": "itään",

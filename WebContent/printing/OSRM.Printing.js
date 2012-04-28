@@ -35,6 +35,12 @@ init: function() {
 	input_mask_header.appendChild(icon,input_mask_header.lastChild);
 	
 	document.getElementById("gui-printer-inactive").onclick = OSRM.Printing.openPrintWindow;
+	
+	OSRM.Browser.onUnloadHandler( OSRM.Printing.uninit );	
+},
+uninit: function() {
+	if(OSRM.G.printwindow)
+		OSRM.G.printwindow.close();
 },
 		
 
@@ -128,14 +134,14 @@ show: function(response) {
 	// draw map
 	var positions = OSRM.G.route.getPositions();
 	var tile_server_id = OSRM.G.map.getActiveLayerId();
-	var zoom = print_window.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
+	var zoom = print_window.OSRM.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
 	
 	// draw markers
-	print_window.prefetchIcons( OSRM.G.images );
-	print_window.drawMarkers( OSRM.G.markers.route );
+	print_window.OSRM.prefetchIcons( OSRM.G.images );
+	print_window.OSRM.drawMarkers( OSRM.G.markers.route );
 	
 	// draw route & query for better geometry	
-	print_window.drawRoute( positions );
+	print_window.OSRM.drawRoute( positions );
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&z='+zoom+'&instructions=false', OSRM.Printing.drawRoute, OSRM.Printing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'print');
 },
 timeoutRoute: function() {},
@@ -143,13 +149,13 @@ drawRoute: function(response) {
 	if(!response)
 		return;
 	var positions = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
-	OSRM.G.printwindow.drawRoute( positions );
+	OSRM.G.printwindow.OSRM.drawRoute( positions );
 },
 
 
 // opens the print window and closes old instances
 openPrintWindow: function() {
-	// do not open window if there is no route to draw
+	// do not open window if there is no route to draw (should never trigger!)
 	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() )
 		return;
 	
@@ -167,15 +173,20 @@ printWindowLoaded: function(){
 	var print_window = OSRM.G.printwindow;
 	var print_document = print_window.document;
 	
-	// add events
-	print_document.getElementById('gui-printer').onclick = print_window.printWindow;
-	
 	// localization 
 	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
-	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
-
+	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );	
+	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() ) {		// error message if no route available (can trigger if user refreshes print-window)
+		print_document.getElementById("description").innerHTML = OSRM.loc("NO_ROUTE_SELECTED");
+		return;	
+	}
+	
 	// add routing content
 	OSRM.Printing.show( OSRM.G.response );
+	
+	// add events
+	print_document.getElementById("gui-printer-inactive").id = "gui-printer";	
+	print_document.getElementById('gui-printer').onclick = print_window.printWindow;	
 	
 	// finally, focus on printwindow
 	print_window.focus();

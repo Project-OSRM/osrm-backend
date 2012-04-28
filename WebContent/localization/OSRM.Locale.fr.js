@@ -52,6 +52,7 @@ OSRM.Localization["fr"] = {
 "NO_ROUTE_FOUND": "Pas d’itinéraire possible",
 //printing
 "OVERVIEW_MAP": "Overview Map",
+"NO_ROUTE_SELECTED": "Pas d’itinéraire choisi",
 // directions
 "N": "nord",
 "E": "est",

@@ -32,7 +32,7 @@ function printWindow() {
 
 //prefetch icons
 OSRM.GLOBALS.icons = {};
-prefetchIcons = function(images_list) {
+OSRM.prefetchIcons = function(images_list) {
 	var icon_list = [	{id:'marker-source',					image_id:'marker-source'},
 						{id:'marker-target',					image_id:'marker-target'},
 						{id:'marker-via',						image_id:'marker-via'},
@@ -51,7 +51,7 @@ prefetchIcons = function(images_list) {
 
 
 // function to initialize a map in the new window
-function drawMap(tile_server, bounds) {
+OSRM.drawMap = function(tile_server, bounds) {
  	// setup map
 	var tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
 	OSRM.G.map = new OSRM.MapView("overview-map", {
@@ -70,29 +70,30 @@ function drawMap(tile_server, bounds) {
 	
 	OSRM.G.map.fitBoundsUI(bounds);
 	return OSRM.G.map.getBoundsZoom(bounds);
-}
+};
 
 
 // manage makers
-function drawMarkers( markers ) {
+OSRM.drawMarkers = function( markers ) {
 	OSRM.G.map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
 	for(var i=1, size=markers.length-1; i<size; i++)
 		OSRM.G.map.addLayer( new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} ) );
 	OSRM.G.map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ) );
-}
+};
 
 
 // manage route
-function drawRoute( positions ) {
+OSRM.drawRoute = function( positions ) {
 	OSRM.G.route = new L.DashedPolyline();
 	OSRM.G.route.setLatLngs( positions );
 	OSRM.G.route.setStyle( {dashed:false,clickable:false,color:'#0033FF', weight:5} );
 	OSRM.G.map.addLayer( OSRM.G.route );	
-}
-function updateRoute( positions ) {
+};
+OSRM.updateRoute = function( positions ) {
 	OSRM.G.route.setLatLngs( positions );
-}
+};
 
 
-// start populating the window when it is fully loaded
-window.opener.OSRM.Browser.onLoadHandler( window.opener.OSRM.Printing.printWindowLoaded, window );
+// start populating the window when it is fully loaded - and only if it was loaded from OSRM 
+if(window.opener && window.opener.OSRM)
+	window.opener.OSRM.Browser.onLoadHandler( window.opener.OSRM.Printing.printWindowLoaded, window );

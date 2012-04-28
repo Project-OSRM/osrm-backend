@@ -52,6 +52,7 @@ OSRM.Localization["en"] = {
 "NO_ROUTE_FOUND": "No route possible",
 //printing
 "OVERVIEW_MAP": "Overview Map",
+"NO_ROUTE_SELECTED": "No route selected",
 // directions
 "N": "north",
 "E": "east",
