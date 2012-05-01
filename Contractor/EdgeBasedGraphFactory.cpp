@@ -28,7 +28,7 @@
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), trafficSignalPenalty(0) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), trafficSignalPenalty(0), turnPenalty(0), turnBias(1.0) {
     BOOST_FOREACH(_Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
@@ -72,6 +72,21 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         if("takeMinimumOfSpeeds" ==  v.first) {
             std::string value = v.second.get<std::string>("");
             takeMinimumOfSpeeds = (v.second.get<std::string>("") == "yes");
+        }
+        if("turnPenalty" ==  v.first) {
+            try {
+                turnPenalty = boost::lexical_cast<int>(v.second.get<std::string>(""));
+            } catch(boost::bad_lexical_cast &) {
+                turnPenalty = 0;
+            }
+        }
+        if("turnBias" ==  v.first) {
+            std::string value = v.second.get<std::string>("");
+            try {
+                turnBias = boost::lexical_cast<float>(v.second.get<std::string>(""));
+            } catch(boost::bad_lexical_cast &) {
+                turnBias = 1;
+            }
         }
     }
 
@@ -236,11 +251,12 @@ void EdgeBasedGraphFactory::Run() {
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += trafficSignalPenalty;
                         }
-                        short turnInstruction = AnalyzeTurn(u, v, w);
+						unsigned penalty = 0;
+                        short turnInstruction = AnalyzeTurn(u, v, w, penalty);
+                        //distance += heightPenalty;
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += uturnPenalty;
-                        //distance += heightPenalty;
-                        //distance += ComputeTurnPenalty(u, v, w);
+						distance += penalty;
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, v,  edgeData2.nameID, distance, true, false, turnInstruction);
                         edgeBasedEdges.push_back(newEdge);
@@ -260,8 +276,11 @@ void EdgeBasedGraphFactory::Run() {
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
 
-short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
-    if(u == w) {
+short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty) const {
+	double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+	penalty = ComputeTurnPenalty( angle );
+
+	if(u == w) {
         return TurnInstructions.UTurn;
     }
 
@@ -297,8 +316,20 @@ short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const N
     if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) <= 2) )
         return TurnInstructions.NoTurn;
 
-    double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);
+}
+
+unsigned EdgeBasedGraphFactory::ComputeTurnPenalty(const float angle) const {
+	unsigned out;
+	float a = angle-180;
+	float k = turnPenalty/(90.0*90.0);
+	if( a>=0 ) {
+		out = k*a*a*turnBias;		//right turn
+	} else {
+		out = k*a*a/turnBias;		//left turn
+	}
+	//INFO("angle " << a << ", out "<< out);
+	return out;
 }
 
 unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {

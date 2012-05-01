@@ -80,7 +80,7 @@ struct TurnInstructionsClass {
     };
 
     static inline double GetTurnDirectionOfInstruction( const double angle ) {
-        if(angle >= 23 && angle < 67) {
+		if(angle >= 23 && angle < 67) {
             return TurnSharpRight;
         }
         if (angle >= 67 && angle < 113) {

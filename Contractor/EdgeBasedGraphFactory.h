@@ -117,6 +117,8 @@ private:
     unsigned numberOfTurnRestrictions;
     unsigned trafficSignalPenalty;
     unsigned uturnPenalty;
+    unsigned turnPenalty;
+    double turnBias;
     bool takeMinimumOfSpeeds;
 
 public:
@@ -127,8 +129,9 @@ public:
     template< class ImportEdgeT >
     void GetEdgeBasedEdges( std::vector< ImportEdgeT >& edges );
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
-    short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
-    unsigned GetNumberOfNodes() const;
+    short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty) const;
+	unsigned ComputeTurnPenalty(const float angle) const;
+   unsigned GetNumberOfNodes() const;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */
