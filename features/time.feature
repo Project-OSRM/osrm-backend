@@ -6,6 +6,23 @@ Feature: Estimation of travel time
 	
 	Background: Use specific speeds
 		Given the speedprofile "bicycle"
+		And the speedprofile settings
+		 | defaultSpeed | 15 |
+		 | primary      | 15 |
+		 | footway      | 5  |
+
+	Scenario: Time of travelling 100 meters
+		Given a grid size of 100 meters
+		Given the node map
+		 | a | b |
+
+		And the ways
+		 | nodes | highway   |
+		 | ab    | primary   |
+
+		When I route I should get
+		 | from | to | route | time |
+		 | a    | b  | ab    | 24s  |
 
 	Scenario: Basic travel time, 1m scale
 		Given a grid size of 1 meters
@@ -176,3 +193,17 @@ Feature: Estimation of travel time
 		 | 4    | 3  | ab    | 24s  |
 		 | 4    | 2  | ab    | 48s  |
 		 | 4    | 1  | ab    | 72s  |
+
+	@bike_speed
+	Scenario: Time of travel when bicycle=yes
+		Given the node map
+		 | a | b |
+		 | c | d |
+
+		And the ways
+		 | nodes | highway   | bicycle |
+		 | ab    | footway   | yes     |
+
+		When I route I should get
+		 | from | to | route | time |
+		 | a    | b  | ab    | 24s  |
