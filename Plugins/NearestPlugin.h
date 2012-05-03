@@ -37,31 +37,41 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(QueryObjectsStorage * objects) {
+    NearestPlugin(QueryObjectsStorage * objects) : names(objects->names) {
         nodeHelpDesk = objects->nodeHelpDesk;
+
         descriptorTable.Set("", 0); //default descriptor
-        descriptorTable.Set("kml", 0);
         descriptorTable.Set("json", 1);
     }
     std::string GetDescriptor() const { return std::string("nearest"); }
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
+    	INFO("1");
         //check number of parameters
-        if(routeParameters.parameters.size() != 2) {
+        if(!routeParameters.viaPoints.size()) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
+            INFO("2, size: " << routeParameters.viaPoints.size());
             return;
         }
+        std::vector<std::string> textCoord;
+        stringSplit (routeParameters.viaPoints[0], ',', textCoord);
+        if(textCoord.size() != 2) {
+        	reply = http::Reply::stockReply(http::Reply::badRequest);
+        	return;
+        }
 
-        int lat = static_cast<int>(100000.*atof(routeParameters.parameters[0].c_str()));
-        int lon = static_cast<int>(100000.*atof(routeParameters.parameters[1].c_str()));
-
-        if(lat>90*100000 || lat <-90*100000 || lon>180*100000 || lon <-180*100000) {
+        int lat = 100000.*atof(textCoord[0].c_str());
+        int lon = 100000.*atof(textCoord[1].c_str());
+        _Coordinate myCoordinate(lat, lon);
+        if(false == checkCoord(myCoordinate)) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
+            INFO("3");
             return;
         }
+        INFO("4");
         //query to helpdesk
-        _Coordinate result;
-        nodeHelpDesk->FindNearestPointOnEdge(_Coordinate(lat, lon), result);
+        PhantomNode result;
+        nodeHelpDesk->FindPhantomNodeForCoordinate(myCoordinate, result);
 
         std::string tmp;
         std::string JSONParameter;
@@ -78,13 +88,15 @@ public:
         reply.content += ("\"version\":0.3,");
         reply.content += ("\"status\":0,");
         reply.content += ("\"result\":");
-        convertInternalLatLonToString(result.lat, tmp);
+        convertInternalLatLonToString(result.location.lat, tmp);
         reply.content += "[";
         reply.content += tmp;
-        convertInternalLatLonToString(result.lon, tmp);
+        convertInternalLatLonToString(result.location.lon, tmp);
         reply.content += ", ";
         reply.content += tmp;
-        reply.content += "]";
+        reply.content += "], \"name\": \"";
+        reply.content += names[result.nodeBasedEdgeNameID];
+        reply.content += "\"";
         reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Nearest (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
@@ -105,8 +117,16 @@ public:
         reply.headers[0].value = tmp;
     }
 private:
+    inline bool checkCoord(const _Coordinate & c) {
+        if(c.lat > 90*100000 || c.lat < -90*100000 || c.lon > 180*100000 || c.lon <-180*100000) {
+            return false;
+        }
+        return true;
+    }
+
     NodeInformationHelpDesk * nodeHelpDesk;
     HashTable<std::string, unsigned> descriptorTable;
+    std::vector<std::string> & names;
 };
 
 #endif /* NearestPlugin_H_ */
