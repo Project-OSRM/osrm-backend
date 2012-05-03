@@ -147,6 +147,9 @@ private:
 			 */
 			deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, (15+16), 9, Z_DEFAULT_STRATEGY);
 			break;
+		default:
+			assert(false);
+			break;
 		}
 
 		int deflate_res = Z_OK;
