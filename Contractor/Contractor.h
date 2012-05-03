@@ -426,31 +426,30 @@ public:
     template< class Edge >
     void GetEdges( std::vector< Edge >& edges ) {
         NodeID numberOfNodes = _graph->GetNumberOfNodes();
-        for ( NodeID node = 0; node < numberOfNodes; ++node ) {
-            for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; edge++ ) {
-                const NodeID target = _graph->GetTarget( edge );
-                const _DynamicGraph::EdgeData& data = _graph->GetEdgeData( edge );
-                Edge newEdge;
-                newEdge.source = oldNodeIDFromNewNodeIDMap[node];
-                newEdge.target = oldNodeIDFromNewNodeIDMap[target];
+        if(oldNodeIDFromNewNodeIDMap.size()) {
+        	for ( NodeID node = 0; node < numberOfNodes; ++node ) {
+        		for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; edge++ ) {
+        			const NodeID target = _graph->GetTarget( edge );
+        			const _DynamicGraph::EdgeData& data = _graph->GetEdgeData( edge );
+        			Edge newEdge;
+        			newEdge.source = oldNodeIDFromNewNodeIDMap[node];
+        			newEdge.target = oldNodeIDFromNewNodeIDMap[target];
+        			assert(UINT_MAX != newEdge.source);
+        			assert(UINT_MAX != newEdge.target);
 
-                assert(UINT_MAX != newEdge.source);
-                assert(UINT_MAX != newEdge.target);
+        			newEdge.data.distance = data.distance;
+        			newEdge.data.shortcut = data.shortcut;
+        			if(!data.originalViaNodeID)
+        				newEdge.data.id = oldNodeIDFromNewNodeIDMap[data.id];
+        			else
+        				newEdge.data.id = data.id;
 
-                newEdge.data.distance = data.distance;
-                newEdge.data.shortcut = data.shortcut;
-                if(!data.originalViaNodeID)
-                    newEdge.data.id = oldNodeIDFromNewNodeIDMap[data.id];
-                else
-                    newEdge.data.id = data.id;
-
-                assert(newEdge.data.id != UINT_MAX);
-//                newEdge.data.nameID = data.nameID;
-//                newEdge.data.turnInstruction = data.turnInstruction;
-                newEdge.data.forward = data.forward;
-                newEdge.data.backward = data.backward;
-                edges.push_back( newEdge );
-            }
+        			assert(newEdge.data.id != UINT_MAX);
+        			newEdge.data.forward = data.forward;
+        			newEdge.data.backward = data.backward;
+        			edges.push_back( newEdge );
+        		}
+        	}
         }
         std::ifstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
         //Also get the edges from temporary storage
@@ -461,20 +460,18 @@ public:
         NodeID target;
         _DynamicGraph::EdgeData data;
         for(unsigned i = 0; i < numberOfTemporaryEdges; ++i) {
-            temporaryEdgeStorage.read((char*)&start,  sizeof(NodeID));
-            temporaryEdgeStorage.read((char*)&target, sizeof(NodeID));
-            temporaryEdgeStorage.read((char*)&data,   sizeof(_DynamicGraph::EdgeData));
-            Edge newEdge;
-            newEdge.source =  start;
-            newEdge.target = target;
-            newEdge.data.distance = data.distance;
-            newEdge.data.shortcut = data.shortcut;
-            newEdge.data.id = data.id;
-//            newEdge.data.nameID = data.nameID;
-//            newEdge.data.turnInstruction = data.turnInstruction;
-            newEdge.data.forward = data.forward;
-            newEdge.data.backward = data.backward;
-            edges.push_back( newEdge );
+        	temporaryEdgeStorage.read((char*)&start,  sizeof(NodeID));
+        	temporaryEdgeStorage.read((char*)&target, sizeof(NodeID));
+        	temporaryEdgeStorage.read((char*)&data,   sizeof(_DynamicGraph::EdgeData));
+        	Edge newEdge;
+        	newEdge.source =  start;
+        	newEdge.target = target;
+        	newEdge.data.distance = data.distance;
+        	newEdge.data.shortcut = data.shortcut;
+        	newEdge.data.id = data.id;
+        	newEdge.data.forward = data.forward;
+        	newEdge.data.backward = data.backward;
+        	edges.push_back( newEdge );
         }
         temporaryEdgeStorage.close();
     }
