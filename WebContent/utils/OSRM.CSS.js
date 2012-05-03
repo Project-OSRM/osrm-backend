@@ -23,7 +23,6 @@ OSRM.CSS = {
 		the_document = the_document || document;
 		var stylesheets = the_document.styleSheets;
 		for(var i=0, size=stylesheets.length; i<size; i++) {
-			console.log(stylesheets[i].href);
 			if( stylesheets[i].href.indexOf(filename) >= 0)
 				return stylesheets[i];
 		}
