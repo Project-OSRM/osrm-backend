@@ -17,7 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
-
+#ifdef __linux__
+#include <sys/mman.h>
+#endif
 #include <iostream>
 #include <signal.h>
 
@@ -62,7 +64,12 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 #endif
 
 int main (int argc, char *argv[]) {
+#ifdef __linux__
+    if(!mlockall(MCL_CURRENT | MCL_FUTURE))
+        ERR("Process " << argv[0] << "could not be locked to RAM");
+#endif
 #ifndef _WIN32
+
     installCrashHandler(argv[0]);
 #endif
 
@@ -131,5 +138,9 @@ int main (int argc, char *argv[]) {
     } catch (std::exception& e) {
         std::cerr << "[fatal error] exception: " << e.what() << std::endl;
     }
+#ifdef __linux__
+    munlockall();
+#endif
+
     return 0;
 }
