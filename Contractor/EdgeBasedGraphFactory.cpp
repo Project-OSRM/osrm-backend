@@ -256,14 +256,10 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
                         if(edgeBasedEdges.size() == edgeBasedEdges.capacity()-3) {
-                            INFO("old edge capacity: " << edgeBasedEdges.capacity());
                             edgeBasedEdges.reserve(edgeBasedEdges.size()*1.1);
-                            INFO("new edge capacity: " << edgeBasedEdges.capacity());
                         }
                         if(originalEdgeData.size() == originalEdgeData.capacity()-3) {
-                            INFO("old oed capacity: " << originalEdgeData.capacity());
                             originalEdgeData.reserve(originalEdgeData.size()*1.1);
-                            INFO("new oed capacity: " << originalEdgeData.capacity());
                         }
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );

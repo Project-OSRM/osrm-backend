@@ -46,7 +46,7 @@ public:
 		delete readOnlyGrid;
 	}
 	void initNNGrid(std::ifstream& nodesInstream, std::ifstream& edgesInStream) {
-	    INFO("Loading node data");
+	    DEBUG("Loading node data");
 		NodeInfo b;
 	    while(!nodesInstream.eof()) {
 			nodesInstream.read((char *)&b, sizeof(NodeInfo));
@@ -56,14 +56,14 @@ public:
 	    numberOfNodes = coordinateVector.size();
 	    nodesInstream.close();
 
-        INFO("Loading edge data");
+        DEBUG("Loading edge data");
         unsigned numberOfOrigEdges(0);
         edgesInStream.read((char*)&numberOfOrigEdges, sizeof(unsigned));
         origEdgeData.resize(numberOfOrigEdges);
         edgesInStream.read((char*)&(origEdgeData[0]), numberOfOrigEdges*sizeof(OriginalEdgeData));
         edgesInStream.close();
-        INFO("Loaded " << numberOfOrigEdges << " orig edges");
-	    INFO("Opening NN indices");
+        DEBUG("Loaded " << numberOfOrigEdges << " orig edges");
+	    DEBUG("Opening NN indices");
 	    readOnlyGrid->OpenIndexFiles();
 	}
 

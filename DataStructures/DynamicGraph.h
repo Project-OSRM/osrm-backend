@@ -58,9 +58,7 @@ class DynamicGraph {
             m_numNodes = nodes;
             m_numEdges = ( EdgeIterator ) graph.size();
             m_nodes.reserve( m_numNodes );
-            INFO("reserved nodes");
             m_nodes.resize( m_numNodes );
-            INFO("resized nodes");
             EdgeIterator edge = 0;
             EdgeIterator position = 0;
             for ( NodeIterator node = 0; node < m_numNodes; ++node ) {
@@ -73,9 +71,7 @@ class DynamicGraph {
                 position += m_nodes[node].edges;
             }
             m_edges.reserve( position * 1.1 );
-            INFO("reserced edges");
             m_edges.resize( position );
-            INFO("resized edges");
             edge = 0;
             for ( NodeIterator node = 0; node < m_numNodes; ++node ) {
                 for ( EdgeIterator i = m_nodes[node].firstEdge, e = m_nodes[node].firstEdge + m_nodes[node].edges; i != e; ++i ) {
