@@ -44,7 +44,8 @@ OSRM.DEFAULTS = {
 		{display_name:"en", encoding:"en"},
 		{display_name:"de", encoding:"de"},
 		{display_name:"fi", encoding:"fi"},
-		{display_name:"fr", encoding:"fr"}
+		{display_name:"fr", encoding:"fr"},
+		{display_name:"pl", encoding:"pl"}
 	],
 		
 	TILE_SERVERS: [
