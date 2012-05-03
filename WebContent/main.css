@@ -113,7 +113,6 @@ html, body {
 	height:50px;
 	background-repeat:no-repeat;
 	background-position:center;
-	background-image:url("images/osrm-logo.png");		
 }
 #input-mask
 {
@@ -139,7 +138,6 @@ html, body {
 .styled-select
 {
 	position:absolute;
-	background: url("images/selector.png");
 	background-repeat:no-repeat;	
 	background-position: top right;
 	padding: 1px 1px 1px 1px;
@@ -404,61 +402,9 @@ html, body {
 	background-position:center;
 }
 
-#gui-toggle-out
-{
-	background-image:url("images/cancel.png");	
-}
-#gui-toggle-out:hover
-{
-	background-image:url("images/cancel_hover.png");
-}
-#gui-toggle-out:active
-{
-	background-image:url("images/cancel_active.png");
-}
-
-#gui-toggle-in
-{
-	background-image:url("images/restore.png");	
-}
-#gui-toggle-in:hover
-{
-	background-image:url("images/restore_hover.png");
-}
-#gui-toggle-in:active
-{
-	background-image:url("images/restore_active.png");
-}
-
-#gui-printer
-{
-	background-image:url("images/printer.png");
-}
 #gui-printer-inactive
 {
 	cursor:default;
-	background-image:url("images/printer_inactive.png");
-}
-#gui-printer:hover
-{
-	background-image:url("images/printer_hover.png");
-}
-#gui-printer:active
-{
-	background-image:url("images/printer_active.png");
-}
-
-.delete-marker
-{
-	background-image:url("images/cancel.png");
-}
-.delete-marker:hover
-{
-	background-image:url("images/cancel_hover.png");
-}
-.delete-marker:active
-{
-	background-image:url("images/cancel_active.png");
 }
 
 

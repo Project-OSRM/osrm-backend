@@ -173,6 +173,18 @@ printWindowLoaded: function(){
 	var print_window = OSRM.G.printwindow;
 	var print_document = print_window.document;
 	
+	// add css images
+	var css_list = [
+                	{ id:'#gui-printer-inactive',		image_id:'printer_inactive'},
+                	{ id:'#gui-printer',				image_id:'printer'},
+                	{ id:'#gui-printer:hover',			image_id:'printer_hover'},
+                	{ id:'#gui-printer:active',			image_id:'printer_active'}
+                ];
+	var stylesheet = OSRM.CSS.getStylesheet("printing.css", print_document);
+	for(var i=0; i<css_list.length; i++) {
+		OSRM.CSS.insert( stylesheet, css_list[i].id, "background-image:url("+ "../" + OSRM.G.images[css_list[i].image_id].getAttribute("src") + ");" );
+	}	
+	
 	// localization 
 	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
 	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );	

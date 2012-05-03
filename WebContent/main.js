@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.init = function() {
 	OSRM.prefetchImages();
 	OSRM.prefetchIcons();
+	OSRM.prefetchCSSIcons();
 	
 	OSRM.Localization.init();
 	OSRM.GUI.init();
@@ -73,7 +74,9 @@ OSRM.prefetchImages = function() {
 		              	{id:'direction_8',						url:'images/sharp-left.png'},
 		              	{id:'direction_10',						url:'images/head.png'},
 		        		{id:'direction_11',						url:'images/round-about.png'},
-		        		{id:'direction_15',						url:'images/target.png'}
+		        		{id:'direction_15',						url:'images/target.png'},
+		        		{id:'osrm-logo',						url:'images/osrm-logo.png'},
+		        		{id:'selector',							url:'images/selector.png'}
 	               ];
 		
 	for(var i=0; i<image_list.length; i++) {
@@ -107,7 +110,34 @@ OSRM.prefetchIcons = function() {
 	}
 	
 	// special values for drag marker
-	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: OSRM.G.images["marker-drag"].getAttribute("src"), iconSize: new L.Point(18, 18) } );	
+	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: OSRM.G.images["marker-drag"].getAttribute("src"), iconSize: new L.Point(18, 18) } );
+};
+
+
+// set css styles for images
+OSRM.prefetchCSSIcons = function() {
+	var css_list = [
+	                	{ id:'#gui-printer-inactive',		image_id:'printer_inactive'},
+	                	{ id:'#gui-printer',				image_id:'printer'},
+	                	{ id:'#gui-printer:hover',			image_id:'printer_hover'},
+	                	{ id:'#gui-printer:active',			image_id:'printer_active'},
+	                	{ id:'#gui-toggle-in',				image_id:'restore'},
+	                	{ id:'#gui-toggle-in:hover',		image_id:'restore_hover'},
+	                	{ id:'#gui-toggle-in:active',		image_id:'restore_active'},
+	                	{ id:'#gui-toggle-out',				image_id:'cancel'},
+	                	{ id:'#gui-toggle-out:hover',		image_id:'cancel_hover'},
+	                	{ id:'#gui-toggle-out:active',		image_id:'cancel_active'},
+	                	{ id:'.delete-marker',				image_id:'cancel'},
+	                	{ id:'.delete-marker:hover',		image_id:'cancel_hover'},
+	                	{ id:'.delete-marker:active',		image_id:'cancel_active'},
+	                	{ id:'#input-mask-header',			image_id:'osrm-logo'},
+	                	{ id:'.styled-select',				image_id:'selector'}
+	                ];
+	
+	var stylesheet = OSRM.CSS.getStylesheet("main.css");
+	for(var i=0; i<css_list.length; i++) {
+		OSRM.CSS.insert( stylesheet, css_list[i].id, "background-image:url("+ OSRM.G.images[css_list[i].image_id].getAttribute("src") + ");" );
+	}
 };
 
 

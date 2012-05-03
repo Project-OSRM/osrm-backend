@@ -213,22 +213,9 @@ div.label
 	background-position:center;
 }
 
-#gui-printer
-{
-	background-image:url("../images/printer.png");
-}
-#gui-printer:hover
-{
-	background-image:url("../images/printer_hover.png");
-}
-#gui-printer:active
-{
-	background-image:url("../images/printer_active.png");
-}
 #gui-printer-inactive
 {
 	cursor:default;
-	background-image:url("../images/printer_inactive.png");
 }
 
 
