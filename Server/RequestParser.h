@@ -164,6 +164,9 @@ private:
                     *compressionType = gzipRFC1952;
             }
 
+            if(header.name == "Referer")
+                req.referrer = header.value;
+
             if (input == '\r') {
                 state_ = expecting_newline_3;
                 return boost::indeterminate;

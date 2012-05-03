@@ -52,6 +52,7 @@ enum CompressionType {
 
 struct Request {
 	std::string uri;
+	std::string referrer;
 	boost::asio::ip::address endpoint;
 };
 
