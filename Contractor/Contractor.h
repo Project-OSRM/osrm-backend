@@ -444,7 +444,7 @@ public:
                 else
                     newEdge.data.id = data.id;
 
-                assert(newEdge.data.via != UINT_MAX);
+                assert(newEdge.data.id != UINT_MAX);
 //                newEdge.data.nameID = data.nameID;
 //                newEdge.data.turnInstruction = data.turnInstruction;
                 newEdge.data.forward = data.forward;
