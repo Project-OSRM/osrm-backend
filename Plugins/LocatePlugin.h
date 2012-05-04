@@ -37,28 +37,32 @@ public:
     LocatePlugin(QueryObjectsStorage * objects) {
         nodeHelpDesk = objects->nodeHelpDesk;
     }
-	std::string GetDescriptor() const { return std::string("locate"); }
-	std::string GetVersionString() const { return std::string("0.3 (DL)"); }
-	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
-		//check number of parameters
-		if(routeParameters.parameters.size() != 2) {
-			reply = http::Reply::stockReply(http::Reply::badRequest);
-			return;
-		}
+    std::string GetDescriptor() const { return std::string("locate"); }
+    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
+    void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
+        //check number of parameters
+        if(!routeParameters.viaPoints.size()) {
+            reply = http::Reply::stockReply(http::Reply::badRequest);
+            return;
+        }
+        std::vector<std::string> textCoord;
+        stringSplit (routeParameters.viaPoints[0], ',', textCoord);
+        if(textCoord.size() != 2) {
+            reply = http::Reply::stockReply(http::Reply::badRequest);
+            return;
+        }
 
-		int lat = static_cast<int>(100000.*atof(routeParameters.parameters[0].c_str()));
-		int lon = static_cast<int>(100000.*atof(routeParameters.parameters[1].c_str()));
+        int lat = 100000.*atof(textCoord[0].c_str());
+        int lon = 100000.*atof(textCoord[1].c_str());
+        _Coordinate myCoordinate(lat, lon);
+        if(false == checkCoord(myCoordinate)) {
+            reply = http::Reply::stockReply(http::Reply::badRequest);
+            return;
+        }
 
-		if(lat>90*100000 || lat <-90*100000 || lon>180*100000 || lon <-180*100000) {
-		    reply = http::Reply::stockReply(http::Reply::badRequest);
-		    return;
-		}
-		//query to helpdesk
-		_Coordinate result;
-		nodeHelpDesk->FindNearestNodeCoordForLatLon(_Coordinate(lat, lon), result);
-
-		std::string tmp;
-        std::string JSONParameter;
+        //query to helpdesk
+        _Coordinate result;
+        std::string JSONParameter, tmp;
         //json
 
         JSONParameter = routeParameters.options.Find("jsonp");
@@ -66,20 +70,25 @@ public:
             reply.content += JSONParameter;
             reply.content += "(";
         }
-
-		//Write to stream
         reply.status = http::Reply::ok;
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
-        reply.content += ("\"status\":0,");
-        reply.content += ("\"result\":");
-        convertInternalLatLonToString(result.lat, tmp);
-        reply.content += "[";
-        reply.content += tmp;
-        convertInternalLatLonToString(result.lon, tmp);
-        reply.content += ", ";
-        reply.content += tmp;
-        reply.content += "]";
+        if(!nodeHelpDesk->FindNearestNodeCoordForLatLon(myCoordinate, result)) {
+            reply.content += ("\"status\":207,");
+            reply.content += ("\"mapped_coordinate\":[]");
+        } else {
+            //Write coordinate to stream
+            reply.status = http::Reply::ok;
+            reply.content += ("\"status\":0,");
+            reply.content += ("\"mapped_coordinate\":");
+            convertInternalLatLonToString(result.lat, tmp);
+            reply.content += "[";
+            reply.content += tmp;
+            convertInternalLatLonToString(result.lon, tmp);
+            reply.content += ",";
+            reply.content += tmp;
+            reply.content += "]";
+        }
         reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
@@ -98,10 +107,17 @@ public:
         reply.headers[0].name = "Content-Length";
         intToString(reply.content.size(), tmp);
         reply.headers[0].value = tmp;
-		return;
-	}
+        return;
+    }
 private:
-	NodeInformationHelpDesk * nodeHelpDesk;
+    inline bool checkCoord(const _Coordinate & c) {
+        if(c.lat > 90*100000 || c.lat < -90*100000 || c.lon > 180*100000 || c.lon <-180*100000) {
+            return false;
+        }
+        return true;
+    }
+
+    NodeInformationHelpDesk * nodeHelpDesk;
 };
 
 #endif /* LOCATEPLUGIN_H_ */

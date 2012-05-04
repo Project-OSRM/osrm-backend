@@ -231,7 +231,8 @@ public:
                 FindPhantomNodeForCoordinate( target, routingStarts.targetPhantom) );
     }
 
-    void FindNearestCoordinateOnEdgeInNodeBasedGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
+    bool FindNearestCoordinateOnEdgeInNodeBasedGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
+        bool found = false;
         unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
         std::vector<_GridEdge> candidates;
         boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
@@ -246,11 +247,13 @@ public:
             double r = 0.;
             double tmpDist = ComputeDistance(inputCoordinate, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(tmpDist < dist) {
+                found = true;
                 dist = tmpDist;
                 outputCoordinate = tmp;
             }
         }
         outputCoordinate.lat = 100000*(y2lat(static_cast<double>(outputCoordinate.lat)/100000.));
+        return found;
     }
 
     void FindNearestPointOnEdge(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {

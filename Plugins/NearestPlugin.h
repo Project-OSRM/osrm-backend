@@ -46,11 +46,9 @@ public:
     std::string GetDescriptor() const { return std::string("nearest"); }
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
-    	INFO("1");
         //check number of parameters
         if(!routeParameters.viaPoints.size()) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
-            INFO("2, size: " << routeParameters.viaPoints.size());
             return;
         }
         std::vector<std::string> textCoord;
@@ -65,10 +63,8 @@ public:
         _Coordinate myCoordinate(lat, lon);
         if(false == checkCoord(myCoordinate)) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
-            INFO("3");
             return;
         }
-        INFO("4");
         //query to helpdesk
         PhantomNode result;
         nodeHelpDesk->FindPhantomNodeForCoordinate(myCoordinate, result);
@@ -86,18 +82,26 @@ public:
         reply.status = http::Reply::ok;
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
-        reply.content += ("\"status\":0,");
-        reply.content += ("\"result\":");
-        convertInternalLatLonToString(result.location.lat, tmp);
+        reply.content += ("\"status\":");
+        if(UINT_MAX != result.edgeBasedNode)
+            reply.content += "0,";
+        else
+            reply.content += "207,";
+        reply.content += ("\"mapped_coordinate\":");
         reply.content += "[";
-        reply.content += tmp;
-        convertInternalLatLonToString(result.location.lon, tmp);
-        reply.content += ", ";
-        reply.content += tmp;
-        reply.content += "], \"name\": \"";
-        reply.content += names[result.nodeBasedEdgeNameID];
+        if(UINT_MAX != result.edgeBasedNode) {
+            convertInternalLatLonToString(result.location.lat, tmp);
+            reply.content += tmp;
+            convertInternalLatLonToString(result.location.lon, tmp);
+            reply.content += ",";
+            reply.content += tmp;
+        }
+        reply.content += "],";
+        reply.content += "\"name\":\"";
+        if(UINT_MAX != result.edgeBasedNode)
+            reply.content += names[result.nodeBasedEdgeNameID];
         reply.content += "\"";
-        reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Nearest (v0.3)\"";
+        reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
         if("" != JSONParameter) {
