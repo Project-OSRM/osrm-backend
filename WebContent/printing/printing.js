@@ -32,7 +32,7 @@ function printWindow() {
 
 //prefetch icons
 OSRM.GLOBALS.icons = {};
-OSRM.prefetchIcons = function(images_list) {
+OSRM.prefetchIcons = function(images_list, BASE_DIRECTORY) {
 	var icon_list = [	{id:'marker-source',					image_id:'marker-source'},
 						{id:'marker-target',					image_id:'marker-target'},
 						{id:'marker-via',						image_id:'marker-via'},
@@ -41,8 +41,8 @@ OSRM.prefetchIcons = function(images_list) {
 
 	for(var i=0; i<icon_list.length; i++) {
 		var icon = {
-				iconUrl: "../"+images_list[icon_list[i].image_id].getAttribute("src"), iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
-				shadowUrl: "../"+images_list["marker-shadow"].getAttribute("src"), shadowSize: new L.Point(41, 41),
+				iconUrl: BASE_DIRECTORY+images_list[icon_list[i].image_id].getAttribute("src"), iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
+				shadowUrl: BASE_DIRECTORY+images_list["marker-shadow"].getAttribute("src"), shadowSize: new L.Point(41, 41),
 				popupAnchor: new L.Point(0, -33)
 			};
 		OSRM.G.icons[icon_list[i].id] = new L.SwitchableIcon(icon);

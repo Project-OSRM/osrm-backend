@@ -21,8 +21,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Localization = {
 
+// default directory for localization files
+DIRECTORY: "localization/",
+
+// holds currently active language
 current_language: OSRM.DEFAULTS.LANGUAGE,
-		
+
 // initialize localization
 init: function() {
 	// create dropdown menu
@@ -92,7 +96,7 @@ setLanguage: function(language) {
 			if( supported_languages[i].encoding == language) {
 				var script = document.createElement('script');
 				script.type = 'text/javascript';
-				script.src = "localization/OSRM.Locale."+language+".js";
+				script.src = OSRM.Localization.DIRECTORY+"OSRM.Locale."+language+".js";
 				document.head.appendChild(script);
 				break;
 			}

@@ -21,6 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Printing = {
 		
+// directory with printing code, and base OSRM directory relative to this directory
+DIRECTORY: 'printing/',
+BASE_DIRECTORY: '../',
+		
 // create UI for printing in mainwindow
 init: function() {
 	var icon = document.createElement('div');
@@ -106,7 +110,7 @@ show: function(response) {
 		body += '<tr class="'+rowstyle+'">';
 		
 		body += '<td class="description-body-directions">';
-		body += '<img class="description-body-direction" src="../'+OSRM.RoutingDescription._getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
+		body += '<img class="description-body-direction" src="'+OSRM.Printing.BASE_DIRECTORY+OSRM.RoutingDescription._getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
 		body += "</td>";		
 
 		// build route description
@@ -137,7 +141,7 @@ show: function(response) {
 	var zoom = print_window.OSRM.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
 	
 	// draw markers
-	print_window.OSRM.prefetchIcons( OSRM.G.images );
+	print_window.OSRM.prefetchIcons( OSRM.G.images, OSRM.Printing.BASE_DIRECTORY );
 	print_window.OSRM.drawMarkers( OSRM.G.markers.route );
 	
 	// draw route & query for better geometry	
@@ -164,7 +168,7 @@ openPrintWindow: function() {
 		OSRM.G.printwindow.close();
 	
 	// generate a new window and wait till it has finished loading
-	OSRM.G.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
+	OSRM.G.printwindow = window.open( OSRM.Printing.DIRECTORY + "printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
 },
 
 
@@ -182,7 +186,7 @@ printWindowLoaded: function(){
                 ];
 	var stylesheet = OSRM.CSS.getStylesheet("printing.css", print_document);
 	for(var i=0; i<css_list.length; i++) {
-		OSRM.CSS.insert( stylesheet, css_list[i].id, "background-image:url("+ "../" + OSRM.G.images[css_list[i].image_id].getAttribute("src") + ");" );
+		OSRM.CSS.insert( stylesheet, css_list[i].id, "background-image:url("+ OSRM.Printing.BASE_DIRECTORY + OSRM.G.images[css_list[i].image_id].getAttribute("src") + ");" );
 	}	
 	
 	// localization 
