@@ -158,17 +158,20 @@ public:
     }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
+//        double time1 = get_timestamp();
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
-        boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
+//        boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
         for(int j = -32768; (j < (32768+1)) && (fileIndex != UINT_MAX); j+=32768) {
             for(int i = -1; i < 2; ++i){
-                GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
+                GetContentsOfFileBucketEnumerated(fileIndex+i+j, candidates/*, cellMap*/);
             }
         }
+//        double time2 = get_timestamp();
+//        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
         _GridEdge smallestEdge;
         _Coordinate tmp;
         double dist = numeric_limits<double>::max();
@@ -222,6 +225,7 @@ public:
         resultNode.ratio = ratio;
         //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
         //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
+//        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
         return foundNode;
     }
 
@@ -282,6 +286,24 @@ public:
 
 
 private:
+    inline unsigned GetCellIndexFromRAMAndFileIndex(const unsigned ramIndex, const unsigned fileIndex) const {
+        unsigned lineBase = ramIndex/1024;
+        lineBase = lineBase*32*32768;
+        unsigned columnBase = ramIndex%1024;
+        columnBase=columnBase*32;
+        for (int i = 0;i < 32;++i) {
+            for (int j = 0;j < 32;++j) {
+                const unsigned localFileIndex = lineBase + i * 32768 + columnBase + j;
+                if(localFileIndex == fileIndex) {
+                    unsigned cellIndex = i * 32 + j;
+                    return cellIndex;
+                }
+            }
+        }
+        return UINT_MAX;
+    }
+
+
     inline void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned, unsigned, IdenticalHashFunction >& cellMap){
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
@@ -389,6 +411,44 @@ private:
         return counter;
     }
 
+    inline void GetContentsOfFileBucketEnumerated(const unsigned fileIndex, std::vector<_GridEdge>& result) const {
+        unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
+        unsigned long startIndexInFile = ramIndexTable[ramIndex];
+        if(startIndexInFile == ULONG_MAX) {
+            return;
+        }
+        unsigned enumeratedIndex = GetCellIndexFromRAMAndFileIndex(ramIndex, fileIndex);
+
+
+        //todo: move to thread specific pointer
+        unsigned long cellIndex[32*32];
+
+        if(!localStream.get() || !localStream->is_open()) {
+            localStream.reset(new std::ifstream(iif.c_str(), std::ios::in | std::ios::binary));
+        }
+        if(!localStream->good()) {
+            localStream->clear(std::ios::goodbit);
+            DEBUG("Resetting stale filestream");
+        }
+
+        localStream->seekg(startIndexInFile);
+        //todo: only read the single necessary cell index
+        localStream->read((char*) cellIndex, 32*32*sizeof(unsigned long));
+
+        if(cellIndex[enumeratedIndex] == ULONG_MAX) {
+            return;
+        }
+        const unsigned long position = cellIndex[enumeratedIndex] + 32*32*sizeof(unsigned long) ;
+
+        unsigned lengthOfBucket;
+        unsigned currentSizeOfResult = result.size();
+        localStream->seekg(position);
+        localStream->read((char *)&(lengthOfBucket), sizeof(unsigned));
+        result.resize(currentSizeOfResult+lengthOfBucket);
+        localStream->read((char *)&result[currentSizeOfResult], lengthOfBucket*sizeof(_GridEdge));
+    }
+
+
     inline void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_GridEdge>& result, boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > & cellMap) {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
         unsigned long startIndexInFile = ramIndexTable[ramIndex];
@@ -415,6 +475,7 @@ private:
             return;
         }
         const unsigned long position = cellIndex[cellMap[fileIndex]] + 32*32*sizeof(unsigned long) ;
+
         unsigned lengthOfBucket;
         unsigned currentSizeOfResult = result.size();
         localStream->seekg(position);
@@ -514,7 +575,7 @@ private:
         return fileIndex;
     }
 
-    inline unsigned GetRAMIndexFromFileIndex(const int fileIndex) {
+    inline unsigned GetRAMIndexFromFileIndex(const int fileIndex) const {
         unsigned fileLine = fileIndex / 32768;
         fileLine = fileLine / 32;
         fileLine = fileLine * 1024;
