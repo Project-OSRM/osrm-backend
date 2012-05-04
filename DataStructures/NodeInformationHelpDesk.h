@@ -92,11 +92,11 @@ public:
     inline NodeID getNumberOfNodes() const { return numberOfNodes; }
 	inline NodeID getNumberOfNodes2() const { return coordinateVector.size(); }
 
-	inline void FindNearestNodeCoordForLatLon(const _Coordinate& coord, _Coordinate& result) const {
-		readOnlyGrid->FindNearestCoordinateOnEdgeInNodeBasedGraph(coord, result);
+	inline bool FindNearestNodeCoordForLatLon(const _Coordinate& coord, _Coordinate& result) const {
+		return readOnlyGrid->FindNearestCoordinateOnEdgeInNodeBasedGraph(coord, result);
 	}
-	inline void FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) const {
-	    readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode);
+	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) const {
+	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode);
 	}
 
 	inline void FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes & phantomNodes) const {
