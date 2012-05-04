@@ -146,7 +146,7 @@ div.label
 @media print {
 .pagebreak
 {
-	page-break-before:always;
+	page-break-after:always;
 }
 .noprint
 {
