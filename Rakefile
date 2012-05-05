@@ -64,6 +64,7 @@ def write_server_ini osm_file
 
   hsgrData=#{DATA_FOLDER}/#{osm_file}.osrm.hsgr
   nodesData=#{DATA_FOLDER}/#{osm_file}.osrm.nodes
+  edgesData=#{DATA_FOLDER}/#{osm_file}.osrm.edges
   ramIndex=#{DATA_FOLDER}/#{osm_file}.osrm.ramIndex
   fileIndex=#{DATA_FOLDER}/#{osm_file}.osrm.fileIndex
   namesData=#{DATA_FOLDER}/#{osm_file}.osrm.names
