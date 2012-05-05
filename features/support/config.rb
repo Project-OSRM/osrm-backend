@@ -32,6 +32,7 @@ Port = 5000
 
 hsgrData=#{@osm_file}.osrm.hsgr
 nodesData=#{@osm_file}.osrm.nodes
+edgesData=#{@osm_file}.osrm.edges
 ramIndex=#{@osm_file}.osrm.ramIndex
 fileIndex=#{@osm_file}.osrm.fileIndex
 namesData=#{@osm_file}.osrm.names

@@ -58,6 +58,7 @@ Given /^the preprocessed files for "([^"]*)" are present and up to date$/ do |ar
   File.exists?("#{area}.osrm.restrictions").should == true
   File.exists?("#{area}.osrm.hsgr").should == true
   File.exists?("#{area}.osrm.nodes").should == true
+  File.exists?("#{area}.osrm.edges").should == true
   File.exists?("#{area}.osrm.ramIndex").should == true
   File.exists?("#{area}.osrm.fileIndex").should == true
 end
