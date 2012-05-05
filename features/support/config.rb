@@ -10,7 +10,7 @@ end
 def read_speedprofile profile
   @speedprofile = {}
   @speedprofile_str = nil
-  s = File.read "speedprofiles/#{profile}.ini"
+  s = File.read "test/speedprofiles/#{profile}.ini"
   s.scan /(.*)=(.*)/ do |option|
     @speedprofile[option[0].strip] = option[1].strip
   end
