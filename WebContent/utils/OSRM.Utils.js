@@ -24,7 +24,7 @@ OSRM.Utils = {
 // [human readabilty functions]
 
 // human readable time
-secondsToTime: function(seconds){
+toHumanTime: function(seconds){
    seconds = parseInt(seconds);
    minutes = parseInt(seconds/60);
    seconds = seconds%60;
@@ -38,13 +38,22 @@ secondsToTime: function(seconds){
    }
 },
 //human readable distance
-metersToDistance: function(distance){
-	distance = parseInt(distance);
+toHumanDistance: function(meters){
+	var distance = parseInt(meters);
 	
-	if(distance >= 100000){ return (parseInt(distance/1000))+'&nbsp;' + 'km'; }
-	else if(distance >= 10000){ return (parseInt(distance/1000).toFixed(1))+'&nbsp;' + 'km'; }
-	else if(distance >= 1000){ return (parseFloat(distance/1000).toFixed(2))+'&nbsp;' + 'km'; }
-	else{ return distance+'&nbsp;' + 'm'; }
+	if(OSRM.G.DISTANCE_FORMAT == 1) {	// miles
+		distance = distance / 1609.344;
+		if(distance >= 100){ return (distance).toFixed(0)+'&nbsp;' + 'mi'; }
+		else if(distance >= 10){ return (distance).toFixed(1)+'&nbsp;' + 'mi'; }
+		else if(distance >= 0.1){ return (distance).toFixed(2)+'&nbsp;' + 'mi'; }
+		else{ return (distance*5280).toFixed(0)+'&nbsp;' + 'ft'; }
+	} else {	// default to km, m
+		distance = distance / 1000;
+		if(distance >= 100){ return (distance).toFixed(0)+'&nbsp;' + 'km'; }
+		else if(distance >= 10){ return (distance).toFixed(1)+'&nbsp;' + 'km'; }
+		else if(distance >= 0.1){ return (distance).toFixed(2)+'&nbsp;' + 'km'; }
+		else{ return (distance*1000).toFixed(0)+'&nbsp;' + 'm'; }		
+	}
 },
 
 

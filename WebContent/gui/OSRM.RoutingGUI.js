@@ -23,6 +23,9 @@ OSRM.GUI.extend( {
 		
 // init
 init: function() {
+	// init variables
+	OSRM.G.DISTANCE_FORMAT = OSRM.DEFAULTS.DISTANCE_FORMAT;
+	
 	// init events
 	document.getElementById("gui-input-source").onchange = function() {OSRM.GUI.inputChanged(OSRM.C.SOURCE_LABEL);};
 	document.getElementById("gui-delete-source").onclick = function() {OSRM.GUI.deleteMarker(OSRM.C.SOURCE_LABEL);};

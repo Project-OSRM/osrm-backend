@@ -92,7 +92,7 @@ show: function(response) {
 		
 		body += '<td class="description-body-distance">';
 		if( i != response.route_instructions.length-1 )
-		body += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
+		body += '<b>'+OSRM.Utils.toHumanDistance(response.route_instructions[i][2])+'</b>';
 		body += "</td>";
 		
 		body += "</tr>";
@@ -100,7 +100,7 @@ show: function(response) {
 	body += '</table>';
 	
 	// build header
-	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.metersToDistance(response.route_summary.total_distance), OSRM.Utils.secondsToTime(response.route_summary.total_time), route_link, gpx_link);	
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), route_link, gpx_link);	
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
@@ -110,7 +110,7 @@ show: function(response) {
 // simple description
 showSimple: function(response) {
 	// build header
-	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.metersToDistance(response.route_summary.total_distance), OSRM.Utils.secondsToTime(response.route_summary.total_time), "", "");
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), "", "");
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;

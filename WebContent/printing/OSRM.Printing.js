@@ -85,11 +85,11 @@ show: function(response) {
 		'<div class="full">' +
 		'<div class="row">' +
 		'<div class="left description-header-label">' +  OSRM.loc("DISTANCE")+': </div>' +
-		'<div class="left description-header-content">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="left description-header-content">' + OSRM.Utils.toHumanDistance(response.route_summary.total_distance) + '</div>' +
 		'</div>' +
 		'<div class="row">' +
 		'<div class="left description-header-label">' +  OSRM.loc("DURATION")+': </div>' +
-		'<div class="left description-header-content">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'<div class="left description-header-content">' + OSRM.Utils.toHumanTime(response.route_summary.total_time) + '</div>' +
 		'</div>' +
 		'</div>' +
 		'</div>' +
@@ -123,7 +123,7 @@ show: function(response) {
 		
 		body += '<td class="description-body-distance">';
 		if( i != response.route_instructions.length-1 )
-		body += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
+		body += '<b>'+OSRM.Utils.toHumanDistance(response.route_instructions[i][2])+'</b>';
 		body += "</td>";
 		
 		body += "</tr>";
