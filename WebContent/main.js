@@ -165,6 +165,12 @@ OSRM.parseParameters = function(){
 		if(name_val[0] == 'hl') {
 			OSRM.Localization.setLanguage(name_val[1]);
 		}
+		else if(name_val[0] == 'df') {
+			var type = parseInt(name_val[1]);
+			if(type != 0 && type != 1)
+				return;
+			OSRM.Utils.setToHumanDistanceFunction(type);
+		}		
 		else if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
