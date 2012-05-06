@@ -30,7 +30,16 @@ OSRM.Route = function() {
 	this._unnamed_route_style = {dashed:false, color:'#FF00FF', weight:10};
 	this._old_unnamed_route_style = {dashed:false, color:'#990099', weight:10};
 	
+//	this._route_history_styles = [{dashed:false, color:'#0033FF', weight:5},
+//	                              {dashed:false, color:'#0011DD', weight:5},
+//	                              {dashed:false, color:'#0000BB', weight:5},
+//	                              {dashed:false, color:'#000099', weight:5},
+//	                              {dashed:false, color:'#000077', weight:5}
+//	                              ];
+	
 	this._noroute = OSRM.Route.ROUTE;
+	
+//	this._route_history = [];
 };
 OSRM.Route.NOROUTE = true;
 OSRM.Route.ROUTE = false;
@@ -38,6 +47,16 @@ OSRM.extend( OSRM.Route,{
 	
 	showRoute: function(positions, noroute) {
 		this._noroute = noroute;
+//		this._route_history.push( this._current_route );
+//		if(this._route_history.length==6) {
+//			this._route_history[0].hide();
+//			this._route_history.splice(0,1);
+//		}
+//		for(var i=0,size=this._route_history.length; i<size; i++) {
+//			this._route_history[i].setStyle( this._route_history_styles[i] );
+//			this._route_history[i].show();
+//		}
+//		this._current_route = new OSRM.SimpleRoute("current" , {dashed:false} );
 		this._current_route.setPositions( positions );
 		if ( this._noroute == OSRM.Route.NOROUTE )
 			this._current_route.setStyle( this._current_noroute_style );
