@@ -6,4 +6,6 @@ Pascal Neis
 Teemu Koskinen
 Nicolas Belett Vigneron
 Moyg
-Jean-Frédéric
+Jean-Frederic
+Zbigniew Czernik
+Jonas H�ggqvist
