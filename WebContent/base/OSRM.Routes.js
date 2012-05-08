@@ -36,17 +36,16 @@ OSRM.Route = function() {
 //	                              {dashed:false, color:'#000099', weight:5},
 //	                              {dashed:false, color:'#000077', weight:5}
 //	                              ];
+//	this._route_history = [];	
 	
 	this._noroute = OSRM.Route.ROUTE;
-	
-//	this._route_history = [];
 };
 OSRM.Route.NOROUTE = true;
 OSRM.Route.ROUTE = false;
 OSRM.extend( OSRM.Route,{
 	
 	showRoute: function(positions, noroute) {
-		this._noroute = noroute;
+//		if(!this._noroute) {
 //		this._route_history.push( this._current_route );
 //		if(this._route_history.length==6) {
 //			this._route_history[0].hide();
@@ -57,6 +56,8 @@ OSRM.extend( OSRM.Route,{
 //			this._route_history[i].show();
 //		}
 //		this._current_route = new OSRM.SimpleRoute("current" , {dashed:false} );
+//		}
+		this._noroute = noroute;
 		this._current_route.setPositions( positions );
 		if ( this._noroute == OSRM.Route.NOROUTE )
 			this._current_route.setStyle( this._current_noroute_style );
