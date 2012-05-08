@@ -29,16 +29,25 @@ OSRM.GUIBoxGroup = function() {
 OSRM.extend( OSRM.GUIBoxGroup, {
 add: function( handle ) {
 	this._handles.push( handle );
-	handle.addToGroup(this);
+	handle.$addToGroup(this);
 },
-hide: function() {
+select: function( handle ) {
 	for(var i=0; i< this._handles.length; i++) {
-		this._handles[i].hide();
+		if( this._handles[i] != handle )
+			this._handles[i].$hideBox();
+		else
+			this._handles[i].$showBox();
 	}
 },
-show: function() {
+
+$hide: function() {
 	for(var i=0; i< this._handles.length; i++) {
-		this._handles[i].show();
+		this._handles[i].$hide();
+	}
+},
+$show: function() {
+	for(var i=0; i< this._handles.length; i++) {
+		this._handles[i].$show();
 	}
 }
 });

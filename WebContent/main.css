@@ -40,6 +40,9 @@ html, body {
 	-webkit-border-radius:10px;
 	background-color:#666666;
 	background-color:rgba(0, 0, 0, 0.25);
+}
+.box-animated
+{	
 	transition:left 1s, right 1s;
 	-moz-transition:left 1s,right 1s;
 	-webkit-transition:left 1s,right 1s;

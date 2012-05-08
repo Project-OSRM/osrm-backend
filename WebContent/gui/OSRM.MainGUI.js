@@ -24,14 +24,18 @@ OSRM.GUI.extend( {
 // init GUI
 init: function() {
 	// init main box
+	var main_group = new OSRM.GUIBoxGroup();
 	OSRM.G.main_handle = new OSRM.GUIBoxHandle("main", "left", "left:-5px;top:5px;", OSRM.GUI.beforeMainTransition, OSRM.GUI.afterMainTransition);
+	main_group.add( OSRM.G.main_handle );
+	main_group.select( OSRM.G.main_handle );
 	
 	// init additional boxes
 	var option_group = new OSRM.GUIBoxGroup();
 	var config_handle = new OSRM.GUIBoxHandle("config", "right", "right:-5px;bottom:70px;");
 	var mapping_handle = new OSRM.GUIBoxHandle("mapping", "right", "right:-5px;bottom:25px;");
 	option_group.add( config_handle );
-	option_group.add( mapping_handle );	
+	option_group.add( mapping_handle );
+	option_group.select( null );
 	
 	// init starting source/target
 	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
@@ -75,18 +79,18 @@ toggleOptions: function() {
 	
 // reposition and hide zoom controls before main box animation
 beforeMainTransition: function() {
-	if( OSRM.G.main_handle.boxVisible() == false ) {
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.G.main_handle.boxWidth()+10)+"px";
-	} else {
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="30px";
-	}
+	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');
+	if( zoom_controls.length > 0)
+		zoom_controls[0].style.visibility="hidden";
 },
 
 // show zoom controls after main box animation
 afterMainTransition: function() {
-	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
+	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');
+	if( zoom_controls.length > 0) {
+		zoom_controls[0].style.left = ( OSRM.G.main_handle.boxVisible() == true ? (OSRM.G.main_handle.boxWidth()+10) : "30") + "px";
+		zoom_controls[0].style.visibility="visible";
+	}
 }
 
 });
