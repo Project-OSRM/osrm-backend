@@ -58,6 +58,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <script src="base/OSRM.Markers.js" type="text/javascript"></script>
 <script src="base/OSRM.Routes.js" type="text/javascript"></script>
 <script src="gui/OSRM.GUI.js" type="text/javascript"></script>
+<script src="gui/OSRM.GUIBoxGroup.js" type="text/javascript"></script>
+<script src="gui/OSRM.GUIBoxHandle.js" type="text/javascript"></script>
 <script src="gui/OSRM.MainGUI.js" type="text/javascript"></script>
 <script src="routing/OSRM.Routing.js" type="text/javascript"></script>
 <script src="routing/OSRM.RoutingDescription.js" type="text/javascript"></script>
@@ -81,21 +83,28 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!--map-->
 <div id="map"></div>
 
-<!-- show ui blob -->
-<div id="blob-wrapper" class="gui-wrapper">
-<div id="blob-content" class="gui-box">
-   	<div id="gui-toggle-in" class="iconic-button"></div>
+<div id="config-wrapper" class="box-wrapper not-sectable" style="width:410px;height:100px;bottom:25px;right:-410px;">
+<div id="config-content" class="box-content" style="width:390px;height:80px;">
+<div id="config-toggle" class="iconic-button cancel-marker top-right-button"></div>
+Config block
+</div>
+</div>
+
+<div id="mapping-wrapper" class="box-wrapper not-sectable" style="width:410px;height:100px;bottom:25px;right:-410px;">
+<div id="mapping-content" class="box-content" style="width:390px;height:80px;">
+<div id="mapping-toggle" class="iconic-button cancel-marker top-right-button"></div>
+Mapping block
 </div>
 </div>
 
 <!-- show main gui -->
-<div id="main-wrapper" class="gui-wrapper not-selectable">
+<div id="main-wrapper" class="box-wrapper not-selectable">
 
 <!-- input box -->
-<div id="main-input" class="gui-box">
+<div id="main-input" class="box-content">
 	<!--  header -->
 	<div id="input-mask-header">
-	<div id="gui-toggle-out" class="iconic-button top-right-button"></div>
+	<div id="main-toggle" class="iconic-button cancel-marker top-right-button"></div>
 	</div>
 	
 	<!--  input mask -->
@@ -106,13 +115,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div id="input-source" class="input-marker">
 	<div class="left"><span  id="gui-search-source-label" class="input-label">Start:</span></div>
 	<div class="center input-box"><input id="gui-input-source" class="input-box" type="text" maxlength="200" value="" title="Enter start" /></div>
-	<div class="left"><div id="gui-delete-source" class="iconic-button delete-marker input-delete"></div></div>
+	<div class="left"><div id="gui-delete-source" class="iconic-button cancel-marker input-delete"></div></div>
 	<div class="right"><a class="button" id="gui-search-source">Show</a></div>
 	</div>
 	<div id="input-target" class="input-marker">
 	<div class="left"><span id="gui-search-target-label" class="input-label">End:</span></div>
 	<div class="center input-box"><input id="gui-input-target" class="input-box" type="text" maxlength="200" value="" title="Enter destination" /></div>	
-	<div class="left"><div id="gui-delete-target" class="iconic-button delete-marker input-delete"></div></div>
+	<div class="left"><div id="gui-delete-target" class="iconic-button cancel-marker input-delete"></div></div>
 	<div class="right"><a class="button" id="gui-search-target">Show</a></div>	
 	</div>
 	</div>
@@ -149,13 +158,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 </div>
 
 <!-- output box -->
-<div id="main-output" class="gui-box">
+<div id="main-output" class="box-content">
 	<div id="information-box-header"></div>
 	<div id="information-box"></div>
 	<div id="legal-notice" class="small-font">GUI2 - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a></div>
 </div>
 
 </div>
-
 </body>
 </html>

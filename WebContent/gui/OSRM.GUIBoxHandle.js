@@ -1,0 +1,127 @@
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+// OSRM GUIBoxHandle
+// [performs showing and hiding of UI boxes]
+
+OSRM.GUIBoxHandle = function( box_name, side, cssText, transitionStartFct, transitionEndFct  ) {
+	// do not create handle if box does not contain a toggle button
+	var toggle = document.getElementById( box_name + '-toggle');
+	if( toggle == null ) {
+		console.log("[error] No toggle button for " + box_name);
+		return;
+	}
+	
+	// create DOM elements
+	var wrapper = document.createElement('div');
+	wrapper.id = box_name + '-handle-wrapper';
+	wrapper.className = 'not-selectable box-wrapper box-handle-wrapper-'+side;
+	wrapper.style.cssText += cssText;
+	var content = document.createElement('div');
+	content.id = box_name + '-handle-content';
+	content.className = 'box-content box-handle-content-'+side;
+	var icon = document.createElement('div');
+	icon.id = box_name + '-handle-icon';
+	icon.className = 'iconic-button';
+	
+	content.appendChild(icon);
+	wrapper.appendChild(content);
+	document.body.appendChild(wrapper);
+	
+	// create attributes
+	this._box = document.getElementById( box_name + '-wrapper' );
+	this._width = this._box.clientWidth;
+	this._handle = wrapper;
+	this._box_group = null;
+
+	// show or hide
+	if(side=="left") {
+		this._box_visible = true;
+		this._handle.style.visibility="hidden";
+	} else {
+		this._box_visible = false;
+		this._handle.style.visibility="visible";		
+	}	
+	
+	// add functionality
+	var toggle_fct = side == "left" ? this._toggleLeft : this._toggleRight;
+	var full_fct = transitionStartFct ? OSRM.concat(toggle_fct, transitionStartFct) : toggle_fct;
+	var fct = OSRM.bind( this, full_fct );
+	toggle.onclick = fct;
+	icon.onclick = fct;
+	
+	var full_fct = transitionEndFct ? OSRM.concat(this._onTransitionEnd, transitionEndFct) : this._onTransitionEnd;
+	var fct = OSRM.bind( this, full_fct );	
+	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_9==-1 ) {
+		var box_wrapper = document.getElementById(box_name + '-wrapper');
+		box_wrapper.addEventListener("transitionend", fct, false);
+		box_wrapper.addEventListener("webkitTransitionEnd", fct, false);
+		box_wrapper.addEventListener("oTransitionEnd", fct, false);
+		box_wrapper.addEventListener("MSTransitionEnd", fct, false);
+	} else {
+		this._transitionEndFct = fct;
+	}
+};
+
+OSRM.extend( OSRM.GUIBoxHandle, {
+addToGroup: function(group) {
+	this._box_group = group;
+},
+show: function() {
+	this._handle.style.visibility="visible";
+},
+hide: function() {
+	this._handle.style.visibility="hidden";
+},
+boxVisible: function() {
+	return this._box_visible;
+},
+boxWidth: function() {
+	return this._width;
+},
+
+_toggleLeft: function() {
+	if( this._box_visible == false ) {
+		if(this._box_group) this._box_group.hide(); else this.hide();
+		this._box.style.left="5px";
+	} else {
+		this._box.style.left=-this._width+"px";
+	}
+	// old browser support
+	if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 )
+		setTimeout(this._transitionEndFct, 0);
+},
+_toggleRight: function() {
+	if( this._box_visible == false ) {
+		if(this._box_group) this._box_group.hide(); else this.hide();
+		this._box.style.right="5px";
+	} else {
+		this._box.style.right=-this._width+"px";
+	}
+	// old browser support
+	if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 )
+		setTimeout(this._transitionEndFct, 0);
+},
+_onTransitionEnd: function() {
+	if( this._box_visible == true ) {
+		if(this._box_group) this._box_group.show(); else this.show();
+		this._box_visible = false;
+	} else {
+		this._box_visible = true;		
+	}	
+}
+});

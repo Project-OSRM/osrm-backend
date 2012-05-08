@@ -23,6 +23,7 @@ html, body {
     padding: 0;
     margin: 0;
     height: 100%;
+    overflow:hidden;
 }
 #map {
 	height: 100%;
@@ -31,7 +32,7 @@ html, body {
 
 
 /* general styles for gui boxes */
-.gui-wrapper
+.box-wrapper
 {
 	position:absolute;
 	border-radius:10px;
@@ -39,13 +40,13 @@ html, body {
 	-webkit-border-radius:10px;
 	background-color:#666666;
 	background-color:rgba(0, 0, 0, 0.25);
-	transition:left 1s;
-	-moz-transition:left 1s;
-	-webkit-transition:left 1s;
-	-o-transition:left 1s;
-	-ms-transition:left 1s;
+	transition:left 1s, right 1s;
+	-moz-transition:left 1s,right 1s;
+	-webkit-transition:left 1s,right 1s;
+	-o-transition:left 1s,right 1s;
+	-ms-transition:left 1s,right 1s;	
 }
-.gui-box
+.box-content
 {
 	position:absolute;
 	background-color:#ffffff;	
@@ -55,6 +56,50 @@ html, body {
 	-webkit-border-radius:10px;	
 	margin:5px;
 	padding:5px;	
+}
+.box-handle-wrapper-right
+{
+	width:36px;
+	height:36px;
+	border-top-right-radius:0px;
+	border-bottom-right-radius:0px;
+	-moz-border-radius-topright:0px;
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-top-right-radius:0px;
+	-webkit-border-bottom-right-radius:0px;
+}
+.box-handle-content-right
+{
+	width:16px;
+	height:16px;
+	border-top-right-radius:0px;
+	border-bottom-right-radius:0px;
+	-moz-border-radius-topright:0px;
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-top-right-radius:0px;
+	-webkit-border-bottom-right-radius:0px;	
+}
+.box-handle-wrapper-left
+{
+	width:36px;
+	height:36px;
+	border-top-left-radius:0px;
+	border-bottom-left-radius:0px;
+	-moz-border-radius-topleft:0px;
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-top-left-radius:0px;
+	-webkit-border-bottom-left-radius:0px;
+}
+.box-handle-content-left
+{
+	width:16px;
+	height:16px;
+	border-top-left-radius:0px;
+	border-bottom-left-radius:0px;
+	-moz-border-radius-topleft:0px;
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-top-left-radius:0px;
+	-webkit-border-bottom-left-radius:0px;	
 }
 
 
@@ -76,31 +121,6 @@ html, body {
 	width:390px;
 	top:220px;			/* main-input.height+2*gui-box.margin+2*gui-box.padding */
 	bottom:0px;
-}
-#blob-wrapper
-{
-	left:-5px;
-	top:5px;
-	width:36px;
-	height:36px;
-	border-top-left-radius:0px;
-	border-bottom-left-radius:0px;
-	-moz-border-radius-topleft:0px;
-	-moz-border-radius-bottomleft:0px;
-	-webkit-border-top-left-radius:0px;
-	-webkit-border-bottom-left-radius:0px;
-	visibility:hidden;
-}
-#blob-content
-{
-	width:16px;
-	height:16px;
-	border-top-left-radius:0px;
-	border-bottom-left-radius:0px;
-	-moz-border-radius-topleft:0px;
-	-moz-border-radius-bottomleft:0px;
-	-webkit-border-top-left-radius:0px;
-	-webkit-border-bottom-left-radius:0px;	
 }
 
 

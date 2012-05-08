@@ -121,17 +121,25 @@ OSRM.prefetchCSSIcons = function() {
 	                	{ id:'#gui-printer',				image_id:'printer'},
 	                	{ id:'#gui-printer:hover',			image_id:'printer_hover'},
 	                	{ id:'#gui-printer:active',			image_id:'printer_active'},
-	                	{ id:'#gui-toggle-in',				image_id:'restore'},
-	                	{ id:'#gui-toggle-in:hover',		image_id:'restore_hover'},
-	                	{ id:'#gui-toggle-in:active',		image_id:'restore_active'},
-	                	{ id:'#gui-toggle-out',				image_id:'cancel'},
-	                	{ id:'#gui-toggle-out:hover',		image_id:'cancel_hover'},
-	                	{ id:'#gui-toggle-out:active',		image_id:'cancel_active'},
-	                	{ id:'.delete-marker',				image_id:'cancel'},
-	                	{ id:'.delete-marker:hover',		image_id:'cancel_hover'},
-	                	{ id:'.delete-marker:active',		image_id:'cancel_active'},
+	                	
+	                	{ id:'.cancel-marker',				image_id:'cancel'},
+	                	{ id:'.cancel-marker:hover',		image_id:'cancel_hover'},
+	                	{ id:'.cancel-marker:active',		image_id:'cancel_active'},
+	                	
 	                	{ id:'#input-mask-header',			image_id:'osrm-logo'},
-	                	{ id:'.styled-select',				image_id:'selector'}
+	                	{ id:'.styled-select',				image_id:'selector'},
+	                	
+	                	{ id:'#config-handle-icon',			image_id:'cancel'},
+	                	{ id:'#config-handle-icon:hover',	image_id:'cancel_hover'},
+	                	{ id:'#config-handle-icon:active',	image_id:'cancel_active'},
+	                	           	
+	                	{ id:'#mapping-handle-icon',		image_id:'cancel'},
+	                	{ id:'#mapping-handle-icon:hover',	image_id:'cancel_hover'},
+	                	{ id:'#mapping-handle-icon:active',	image_id:'cancel_active'},
+	                	          	
+	                	{ id:'#main-handle-icon',			image_id:'restore'},
+	                	{ id:'#main-handle-icon:hover',		image_id:'restore_hover'},
+	                	{ id:'#main-handle-icon:active',	image_id:'restore_active'}	                	
 	                ];
 	
 	var stylesheet = OSRM.CSS.getStylesheet("main.css");

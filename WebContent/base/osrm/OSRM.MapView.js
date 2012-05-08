@@ -19,9 +19,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [extending Leaflet L.Map with setView/fitBounds methods that respect UI visibility, better layerControl] 
 OSRM.MapView = L.Map.extend({
 	setViewUI: function(position, zoom, no_animation) {
-		if( OSRM.GUI.visible == true ) {
+		if( OSRM.G.main_handle.boxVisible() ) {
 			var point = this.project( position, zoom);
-			point.x-=OSRM.GUI.width/2;
+			point.x-=OSRM.G.main_handle.boxWidth()/2;
 			position = this.unproject(point,zoom);		
 		}
 		this.setView( position, zoom, no_animation);	
@@ -31,8 +31,8 @@ OSRM.MapView = L.Map.extend({
 		var northeast = bounds.getNorthEast();
 		var zoom = this.getBoundsZoom(bounds);
 		var sw_point = this.project( southwest, zoom);
-		if( OSRM.GUI.visible == true )
-			sw_point.x-=OSRM.GUI.width+20;
+		if( OSRM.G.main_handle.boxVisible() )
+			sw_point.x-=OSRM.G.main_handle.boxWidth()+20;
 		else
 			sw_point.x-=20;
 		sw_point.y+=20;
@@ -45,16 +45,16 @@ OSRM.MapView = L.Map.extend({
 	},
 	getBoundsUI: function(unbounded) {
 		var bounds = this.getPixelBounds();
-		if( OSRM.GUI.visible == true )
-			bounds.min.x+=OSRM.GUI.width;
+		if( OSRM.G.main_handle.boxVisible() )
+			bounds.min.x+=OSRM.G.main_handle.boxWidth();
 		var sw = this.unproject(new L.Point(bounds.min.x, bounds.max.y), this._zoom, true),
 			ne = this.unproject(new L.Point(bounds.max.x, bounds.min.y), this._zoom, true);
 		return new L.LatLngBounds(sw, ne);		
 	},	
 	getCenterUI: function(unbounded) {
 		var viewHalf = this.getSize();
-		if( OSRM.GUI.visible == true )
-			viewHalf.x += OSRM.GUI.width;
+		if( OSRM.G.main_handle.boxVisible() )
+			viewHalf.x += OSRM.G.main_handle.boxWidth();
 		var centerPoint = this._getTopLeftPoint().add(viewHalf.divideBy(2));
 		
 		return this.unproject(centerPoint, this._zoom, unbounded);

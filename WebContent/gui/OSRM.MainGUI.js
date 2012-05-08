@@ -21,30 +21,21 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.GUI.extend( {
 		
-// defaults
-visible: null,
-width: null,
-
 // init GUI
 init: function() {
-	OSRM.GUI.visible = true;
-	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
+	// init main box
+	OSRM.G.main_handle = new OSRM.GUIBoxHandle("main", "left", "left:-5px;top:5px;", OSRM.GUI.beforeMainTransition, OSRM.GUI.afterMainTransition);
+	
+	// init additional boxes
+	var option_group = new OSRM.GUIBoxGroup();
+	var config_handle = new OSRM.GUIBoxHandle("config", "right", "right:-5px;bottom:70px;");
+	var mapping_handle = new OSRM.GUIBoxHandle("mapping", "right", "right:-5px;bottom:25px;");
+	option_group.add( config_handle );
+	option_group.add( mapping_handle );	
 	
 	// init starting source/target
 	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
 	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;
-	
-	// init events
-	document.getElementById("gui-toggle-in").onclick = OSRM.GUI.toggleMain;
-	document.getElementById("gui-toggle-out").onclick = OSRM.GUI.toggleMain;
-
-	// gui after transition events
-	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_9==-1 ) {
-		document.getElementById('main-wrapper').addEventListener("transitionend", OSRM.GUI._onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("webkitTransitionEnd", OSRM.GUI._onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("oTransitionEnd", OSRM.GUI._onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("MSTransitionEnd", OSRM.GUI._onMainTransitionEnd, false);
-	}
 	
 	// set default language
 	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
@@ -67,13 +58,13 @@ setLabels: function() {
 	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
 },
 
-//clear output area
+// clear output area
 clearResults: function() {
 	document.getElementById('information-box').innerHTML = "";
 	document.getElementById('information-box-header').innerHTML = "";	
 },
 
-//show/hide small options bubble
+// show/hide small options bubble
 toggleOptions: function() {
 	if(document.getElementById('options-box').style.visibility=="visible") {
 		document.getElementById('options-box').style.visibility="hidden";
@@ -82,40 +73,20 @@ toggleOptions: function() {
 	}
 },
 	
-// show/hide main-gui
-toggleMain: function() {
-	// show main-gui
-	if( OSRM.GUI.visible == false ) {
+// reposition and hide zoom controls before main box animation
+beforeMainTransition: function() {
+	if( OSRM.G.main_handle.boxVisible() == false ) {
 		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";;
-		
-		document.getElementById('blob-wrapper').style.visibility="hidden";
-		document.getElementById('main-wrapper').style.left="5px";
-	// hide main-gui
+		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.G.main_handle.boxWidth()+10)+"px";
 	} else {
 		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
 		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="30px";
-			
-		document.getElementById('main-wrapper').style.left=-OSRM.GUI.width+"px";
 	}
-
-	// execute after animation (old browser support)
-	if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 )
-		OSRM.GUI._onMainTransitionEnd();		
 },
 
-// do stuff after main-gui animation finished
-_onMainTransitionEnd: function() {
-	// after hiding main-gui
-	if( OSRM.GUI.visible == true ) {
-		document.getElementById('blob-wrapper').style.visibility="visible";
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
-		OSRM.GUI.visible = false;		
-	// after showing main-gui
-	} else {
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
- 		OSRM.GUI.visible = true;		
-	}
+// show zoom controls after main box animation
+afterMainTransition: function() {
+	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
 }
 
 });

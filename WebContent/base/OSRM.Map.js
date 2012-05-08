@@ -29,7 +29,7 @@ OSRM.Map = {
 // map initialization
 init: function() {
 	// check if GUI is initialized!
-	if(OSRM.GUI.visible == null)
+	if(OSRM.G.main_handle == null)
 		OSRM.GUI.init();
 	
 	// setup tile servers
@@ -54,7 +54,7 @@ init: function() {
 	OSRM.G.map.addLayerControl(layerControl);
 
     // move zoom markers
-	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
+	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.G.main_handle.boxWidth()+10)+"px";
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
 	// map events
