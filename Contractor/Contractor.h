@@ -171,6 +171,7 @@ public:
         std::cout << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
         edges.resize( edge );
 
+        _graph.reset();
         _graph.reset( new _DynamicGraph( nodes, edges ) );
         INFO("Finished building dynamic graph");
         edges.clear();
