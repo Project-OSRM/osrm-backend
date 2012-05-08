@@ -117,13 +117,45 @@ html, body {
 #main-input
 {
 	width:390px;
-	height:200px;
+	height:140px;
 }
 #main-output
 {
 	width:390px;
-	top:220px;			/* main-input.height+2*gui-box.margin+2*gui-box.padding */
+	top:160px;			/* main-input.height+2*gui-box.margin+2*gui-box.padding */
 	bottom:0px;
+}
+#mapping-wrapper
+{
+	width:410px;
+	height:100px;
+	bottom:25px;
+	right:-410px;
+}
+#mapping-content
+{
+	width:390px;
+	height:80px;	
+}
+#config-wrapper
+{
+	width:410px;
+	height:100px;
+	bottom:25px;
+	right:-410px;
+}
+#config-content
+{
+	width:390px;
+	height:80px;	
+}
+
+
+/* general styles for gui box content */
+div.label
+{
+	font-weight:bold;
+	margin-bottom:10px;
 }
 
 

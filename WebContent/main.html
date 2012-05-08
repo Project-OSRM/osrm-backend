@@ -83,21 +83,41 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!--map-->
 <div id="map"></div>
 
-<div id="config-wrapper" class="box-wrapper not-sectable" style="width:410px;height:100px;bottom:25px;right:-410px;">
-<div id="config-content" class="box-content" style="width:390px;height:80px;">
+<!-- config gui -->
+<div id="config-wrapper" class="box-wrapper not-sectable">
+<div id="config-content" class="box-content">
 <div id="config-toggle" class="iconic-button cancel-marker top-right-button"></div>
-Config block
+
+<div id="config-label" class="label">Configuraion</div>
+<div class="full">
+<div class="row"><div class="left">Language:</div><div class="left">German</div></div>
+<div class="row"><div class="left">Units:</div><div class="left">Miles</div></div>
+</div>
+
 </div>
 </div>
 
-<div id="mapping-wrapper" class="box-wrapper not-sectable" style="width:410px;height:100px;bottom:25px;right:-410px;">
-<div id="mapping-content" class="box-content" style="width:390px;height:80px;">
+<!-- mapping gui -->
+<div id="mapping-wrapper" class="box-wrapper not-sectable">
+<div id="mapping-content" class="box-content">
 <div id="mapping-toggle" class="iconic-button cancel-marker top-right-button"></div>
-Mapping block
+
+<div id="mapping-label" class="label">Mapping Tools</div>
+<div class="full">
+<div class="left">
+<input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" />
+<span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Highlight unnamed streets</span>
+</div>
+<div class="right">
+<a class="button" id="open-josm">JOSM</a>
+<a class="button" id="open-osmbugs">OSM Bugs</a>
 </div>
 </div>
 
-<!-- show main gui -->
+</div>
+</div>
+
+<!-- main gui -->
 <div id="main-wrapper" class="box-wrapper not-selectable">
 
 <!-- input box -->
@@ -134,27 +154,6 @@ Mapping block
 	<div class="right"><a class="button" id="gui-reverse">Reverse</a></div>
     </div>
     </div>
-
-	<div class="quad"></div>
-
-	<!-- options -->
-	<div id="input-mask-options">
-	
-	<!-- option toggle -->
-	<span id="gui-options-toggle" class="small-font">Mapping Tools</span>
-	
-	<!-- actual options -->
-	<div id="options-box" class="full">
-	<div class="left">
-	<input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" />
-	<span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Highlight unnamed streets</span>
-	</div>
-	<div class="right">
-	<a class="button" id="open-josm">JOSM</a>
-	<a class="button" id="open-osmbugs">OSM Bugs</a>
-	</div>
-	</div>
-	</div>
 </div>
 
 <!-- output box -->

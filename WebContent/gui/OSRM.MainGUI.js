@@ -52,7 +52,6 @@ setLabels: function() {
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
-	document.getElementById("gui-options-toggle").innerHTML = OSRM.loc("GUI_OPTIONS");
 	document.getElementById("gui-search-source").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-target").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-source-label").innerHTML = OSRM.loc("GUI_START")+":";
@@ -68,15 +67,6 @@ clearResults: function() {
 	document.getElementById('information-box-header').innerHTML = "";	
 },
 
-// show/hide small options bubble
-toggleOptions: function() {
-	if(document.getElementById('options-box').style.visibility=="visible") {
-		document.getElementById('options-box').style.visibility="hidden";
-	} else {
-		document.getElementById('options-box').style.visibility="visible";
-	}
-},
-	
 // reposition and hide zoom controls before main box animation
 beforeMainTransition: function() {
 	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');

@@ -37,7 +37,6 @@ init: function() {
 	
 	document.getElementById("gui-reset").onclick = OSRM.GUI.resetRouting;
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
-	document.getElementById("gui-options-toggle").onclick = OSRM.GUI.toggleOptions;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
 	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getZoomRoute;	
