@@ -19,8 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [for printing window]
 
 OSRM = {};
-OSRM.GLOBALS = {};
-OSRM.GUI = { visible:false };
+OSRM.GLOBALS = { main_handle:{boxVisible:function(){return false;}} };	// needed for fitBoundsUI to work
 OSRM.G = OSRM.GLOBALS;
 
 
@@ -41,7 +40,7 @@ OSRM.prefetchIcons = function(images_list) {
 
 	for(var i=0; i<icon_list.length; i++) {
 		var icon = {
-				// using absolute src directory for compatibility reasons with IE quirks mode
+				// absolute directories used for compatibility with legacy IE (quirks mode)
 				iconUrl: images_list[icon_list[i].image_id].src, iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
 				shadowUrl: images_list["marker-shadow"].src, shadowSize: new L.Point(41, 41),
 				popupAnchor: new L.Point(0, -33)
