@@ -61,44 +61,81 @@ deactivate: function() {	// use hide route as trigger
 
 // create UI in printwindow
 show: function(response) {
-	// create header
+	// create header (using tables for compatibility with IE quirks mode)
 	var header = 
 		'<thead class="description-header"><tr><td colspan="3">' +
 		
-		'<div class="full">' +
-		'<div class="row">' +
+		'<table class="full">' +
+		'<tr class="row">' +
 		
-		'<div class="left stretch">' +
-		'<div class="full">' +
-		'<div class="row">' +
-		'<div class="left description-header-label">' + OSRM.loc("GUI_START")+ ': </div>' +
-		'<div class="left description-header-content stretch">' + document.getElementById("gui-input-source").value + '</div>' +
-		'</div>' +
-		'<div class="row">' +
-		'<div class="left description-header-label">' + OSRM.loc("GUI_END")+ ': </div>' +
-		'<div class="left description-header-content stretch">' + document.getElementById("gui-input-target").value + '</div>' +
-		'</div>' +		
-		'</div>' +
-		'</div>' +
+		'<td class="left stretch">' +
+		'<table class="full">' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' + OSRM.loc("GUI_START")+ ': </td>' +
+		'<td class="left description-header-content stretch">' + document.getElementById("gui-input-source").value + '</td>' +
+		'</tr>' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' + OSRM.loc("GUI_END")+ ': </td>' +
+		'<td class="left description-header-content stretch">' + document.getElementById("gui-input-target").value + '</td>' +
+		'</tr>' +		
+		'</table>' +
+		'</td>' +
 		
-		'<div class="left">' +
-		'<div class="full">' +
-		'<div class="row">' +
-		'<div class="left description-header-label">' +  OSRM.loc("DISTANCE")+': </div>' +
-		'<div class="left description-header-content">' + OSRM.Utils.toHumanDistance(response.route_summary.total_distance) + '</div>' +
-		'</div>' +
-		'<div class="row">' +
-		'<div class="left description-header-label">' +  OSRM.loc("DURATION")+': </div>' +
-		'<div class="left description-header-content">' + OSRM.Utils.toHumanTime(response.route_summary.total_time) + '</div>' +
-		'</div>' +
-		'</div>' +
-		'</div>' +
+		'<td class="left">' +
+		'<table class="full">' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' +  OSRM.loc("DISTANCE")+': </td>' +
+		'<td class="left description-header-content">' + OSRM.Utils.toHumanDistance(response.route_summary.total_distance) + '</td>' +
+		'</tr>' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' +  OSRM.loc("DURATION")+': </td>' +
+		'<td class="left description-header-content">' + OSRM.Utils.toHumanTime(response.route_summary.total_time) + '</td>' +
+		'</tr>' +
+		'</table>' +
+		'</td>' +
 		
-		'</div>' +
-		'</div>' +
+		'</tr>' +
+		'</table>' +
 		
 		'<div class="quad"></div>' + 
 		'</td></tr></thead>';	
+//	var header = 
+//		'<thead class="description-header"><tr><td colspan="3">' +
+//		
+//		'<div class="full">' +
+//		'<div class="row">' +
+//		
+//		'<div class="left stretch">' +
+//		'<div class="full">' +
+//		'<div class="row">' +
+//		'<div class="left description-header-label">' + OSRM.loc("GUI_START")+ ': </div>' +
+//		'<div class="left description-header-content stretch">' + document.getElementById("gui-input-source").value + '</div>' +
+//		'</div>' +
+//		'<div class="row">' +
+//		'<div class="left description-header-label">' + OSRM.loc("GUI_END")+ ': </div>' +
+//		'<div class="left description-header-content stretch">' + document.getElementById("gui-input-target").value + '</div>' +
+//		'</div>' +		
+//		'</div>' +
+//		'</div>' +
+//		
+//		'<div class="left">' +
+//		'<div class="full">' +
+//		'<div class="row">' +
+//		'<div class="left description-header-label">' +  OSRM.loc("DISTANCE")+': </div>' +
+//		'<div class="left description-header-content">' + OSRM.Utils.toHumanDistance(response.route_summary.total_distance) + '</div>' +
+//		'</div>' +
+//		'<div class="row">' +
+//		'<div class="left description-header-label">' +  OSRM.loc("DURATION")+': </div>' +
+//		'<div class="left description-header-content">' + OSRM.Utils.toHumanTime(response.route_summary.total_time) + '</div>' +
+//		'</div>' +
+//		'</div>' +
+//		'</div>' +
+//		
+//		'</div>' +
+//		'</div>' +
+//		
+//		'<div class="quad"></div>' + 
+//		'</td></tr></thead>';	
 
 	// create route description
 	var body = '<tbody class="description-body">';
@@ -122,8 +159,7 @@ show: function(response) {
 		body += "</td>";
 		
 		body += '<td class="description-body-distance">';
-		if( i != response.route_instructions.length-1 )
-		body += '<b>'+OSRM.Utils.toHumanDistance(response.route_instructions[i][2])+'</b>';
+		body += (i == response.route_instructions.length-1) ? '&nbsp;' : '<b>'+OSRM.Utils.toHumanDistance(response.route_instructions[i][2])+'</b>';	// fill last entry with a space
 		body += "</td>";
 		
 		body += "</tr>";
@@ -141,7 +177,7 @@ show: function(response) {
 	var zoom = print_window.OSRM.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
 	
 	// draw markers
-	print_window.OSRM.prefetchIcons( OSRM.G.images, OSRM.Printing.BASE_DIRECTORY );
+	print_window.OSRM.prefetchIcons( OSRM.G.images );
 	print_window.OSRM.drawMarkers( OSRM.G.markers.route );
 	
 	// draw route & query for better geometry	

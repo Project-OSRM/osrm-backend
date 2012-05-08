@@ -192,7 +192,7 @@ div.label
 }
 .medium-font {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 10.5px;
+	font-size: 10.5px;			/* will be 10px in IE quirks mode */
 	font-weight: normal;	
 }
 .small-font {
