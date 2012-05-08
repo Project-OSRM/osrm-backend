@@ -22,10 +22,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.RoutingDescription = {
 		
 // route description events
-onClickRouteDescription: function(geometry_index) {
-	var positions = OSRM.G.route.getPositions();
-
-	OSRM.G.markers.highlight.setPosition( positions[geometry_index] );
+onClickRouteDescription: function(lat, lng) {
+	OSRM.G.markers.highlight.setPosition( new L.LatLng(lat, lng) );
 	OSRM.G.markers.highlight.show();
 	OSRM.G.markers.highlight.centerView(OSRM.DEFAULTS.HIGHLIGHT_ZOOM_LEVEL);	
 },
@@ -65,8 +63,8 @@ show: function(response) {
 	var gpx_link = '[<a class="route-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
 		
 	// create route description
+	var positions = OSRM.G.route.getPositions();
 	var body = "";
-	
 	body += '<table class="description medium-font">';
 	for(var i=0; i < response.route_instructions.length; i++){
 		//odd or even ?
@@ -80,7 +78,8 @@ show: function(response) {
 		body += '</td>';
 		
 		body += '<td class="description-body-items">';
-		body += '<div class="description-body-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
+		var pos = positions[response.route_instructions[i][3]];
+		body += '<div class="description-body-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')">';
 
 		// build route description
 		if( response.route_instructions[i][1] != "" )
