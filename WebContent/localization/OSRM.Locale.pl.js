@@ -20,19 +20,29 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Localization["pl"] = {
+// own language
+"LANGUAGE": "Polski",		
 //gui
-"OPEN_JOSM": "JOSM",
-"OPEN_OSMBUGS": "OSM Bugs",
 "GUI_START": "Początek",
 "GUI_END": "Koniec",
-"GUI_RESET": "&nbsp;&nbsp;Reset&nbsp;&nbsp;",
-"GUI_SEARCH": "&nbsp;&nbsp;Pokaż&nbsp;&nbsp;",
+"GUI_RESET": "Reset",
+"GUI_SEARCH": "Pokaż",
 "GUI_REVERSE": "Odwróć",
-"GUI_OPTIONS": "Narzędzia",
-"GUI_HIGHLIGHT_UNNAMED_ROADS": "Zaznacz ulice bez nazwy",
 "GUI_START_TOOLTIP": "Wprowadź początek",
 "GUI_END_TOOLTIP": "Wprowadź koniec",
 "GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting: <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder: <a href='http://www.osm.org/'>OSM</a>",
+//config
+"GUI_CONFIGURATION": "Konfiguracja",
+"GUI_LANGUAGE": "Język",
+"GUI_UNITS": "Jednostki",
+"GUI_KILOMETERS": "Kilometrów",
+"GUI_MILES": "Miles",
+// mapping
+"GUI_MAPPING_TOOLS": "Narzędzia mapowania",
+"GUI_HIGHLIGHT_UNNAMED_ROADS": "Zaznacz ulice bez nazwy",
+"GUI_SHOW_PREVIOUS_ROUTES": "Pokaż poprzednie trasy",
+"OPEN_JOSM": "JOSM",
+"OPEN_OSMBUGS": "OSM Bugs",
 // geocoder
 "SEARCH_RESULTS": "Wyniki wyszukiwania",
 "FOUND_X_RESULTS": "znaleziono %i wyników",

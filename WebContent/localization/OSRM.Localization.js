@@ -39,7 +39,7 @@ init: function() {
 	var supported_languages = OSRM.DEFAULTS.LANGUAGE_SUPPORTED;
 	for(var i=0, size=supported_languages.length; i<size; i++) {
 		var option=document.createElement("option");
-		option.innerHTML = supported_languages[i].display_name;
+		option.innerHTML = supported_languages[i].encoding;
 		option.value = supported_languages[i].encoding;
 		select.appendChild(option);
 	}
