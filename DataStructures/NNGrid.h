@@ -158,20 +158,17 @@ public:
     }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
-//        double time1 = get_timestamp();
+        double time1 = get_timestamp();
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
-//        boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
         for(int j = -32768; (j < (32768+1)) && (fileIndex != UINT_MAX); j+=32768) {
             for(int i = -1; i < 2; ++i){
-                GetContentsOfFileBucketEnumerated(fileIndex+i+j, candidates/*, cellMap*/);
+                GetContentsOfFileBucketEnumerated(fileIndex+i+j, candidates);
             }
         }
-//        double time2 = get_timestamp();
-//        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
         _GridEdge smallestEdge;
         _Coordinate tmp;
         double dist = numeric_limits<double>::max();
@@ -225,7 +222,8 @@ public:
         resultNode.ratio = ratio;
         //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
         //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
-//        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
+        double time2 = get_timestamp();
+        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
         return foundNode;
     }
 
@@ -419,10 +417,6 @@ private:
         }
         unsigned enumeratedIndex = GetCellIndexFromRAMAndFileIndex(ramIndex, fileIndex);
 
-
-        //todo: move to thread specific pointer
-        unsigned long cellIndex[32*32];
-
         if(!localStream.get() || !localStream->is_open()) {
             localStream.reset(new std::ifstream(iif.c_str(), std::ios::in | std::ios::binary));
         }
@@ -431,14 +425,15 @@ private:
             DEBUG("Resetting stale filestream");
         }
 
-        localStream->seekg(startIndexInFile);
-        //todo: only read the single necessary cell index
-        localStream->read((char*) cellIndex, 32*32*sizeof(unsigned long));
+        //only read the single necessary cell index
+        localStream->seekg(startIndexInFile+(enumeratedIndex*sizeof(unsigned long)));
+        unsigned long fetchedIndex = 0;
+        localStream->read((char*) &fetchedIndex, sizeof(unsigned long));
 
-        if(cellIndex[enumeratedIndex] == ULONG_MAX) {
+        if(fetchedIndex == ULONG_MAX) {
             return;
         }
-        const unsigned long position = cellIndex[enumeratedIndex] + 32*32*sizeof(unsigned long) ;
+        const unsigned long position = fetchedIndex + 32*32*sizeof(unsigned long) ;
 
         unsigned lengthOfBucket;
         unsigned currentSizeOfResult = result.size();
