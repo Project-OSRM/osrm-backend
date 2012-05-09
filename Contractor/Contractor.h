@@ -239,7 +239,8 @@ public:
         bool flushedContractor = false;
         while ( numberOfContractedNodes < numberOfNodes ) {
         	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.75) ) ){
-        		INFO("Flushing memory after " << numberOfContractedNodes << " nodes");
+        	    std::vector<_ContractorEdge> newSetOfEdges; //this one is not explicitely cleared since it goes out of scope anywa
+        		std::cout << " [flush " << numberOfContractedNodes << " nodes] " << std::flush;
         		
         		//Delete old heap data to free memory that we need for the coming operations
                 for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
@@ -264,9 +265,6 @@ public:
         			remainingNodes[newNodeID].first = newNodeID;
         		}
         		
-        		//create new _DynamicGraph, goes out of scope after the renumbering
-        		boost::shared_ptr<_DynamicGraph> _newGraph ( new _DynamicGraph(remainingNodes.size()) );
-
         		//Write dummy number of edges to temporary file
         		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
         		initialFilePosition = temporaryEdgeStorage.tellp();
@@ -277,7 +275,6 @@ public:
         		for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
         		    //INFO("Restructuring node " << i << "|" << _graph->GetNumberOfNodes());
         		    const NodeID start = i;
-        		    //UINT_MAX indicates that node is already contracted
         		    for(_DynamicGraph::EdgeIterator currentEdge = _graph->BeginEdges(start); currentEdge < _graph->EndEdges(start); ++currentEdge) {
         		        _DynamicGraph::EdgeData & data = _graph->GetEdgeData(currentEdge);
         		        const NodeID target = _graph->GetTarget(currentEdge);
@@ -290,10 +287,15 @@ public:
         		        }else {
                             //node is not yet contracted.
                             //add (renumbered) outgoing edges to new DynamicGraph.
-        		            data.originalViaNodeID = true;
+        		            _ContractorEdge newEdge;
+        		            newEdge.source = newNodeIDFromOldNodeIDMap[start];
+        		            newEdge.target = newNodeIDFromOldNodeIDMap[target];
+                            newEdge.data = data;
+                            newEdge.data.originalViaNodeID = true;
         		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[start] );
         		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[target]);
-        		            _newGraph->InsertEdge(newNodeIDFromOldNodeIDMap[start], newNodeIDFromOldNodeIDMap[target], data );
+//        		            _newGraph->InsertEdge(newNodeIDFromOldNodeIDMap[start], newNodeIDFromOldNodeIDMap[target], data );
+        		            newSetOfEdges.push_back(newEdge);
         		        }
         		    }
         		}
@@ -310,17 +312,22 @@ public:
         		nodePriority.swap(newNodePriority);
         		//Delete old nodePriority vector
         		std::vector<double>().swap(newNodePriority);
-        		//Alten Graphen löschen und neuen Graphen speichern.
+                //old Graph is removed
+                _graph.reset();
 
+                //create new graph
+                std::sort(newSetOfEdges.begin(), newSetOfEdges.end());
+
+                //int nodes, const ContainerT &graph
+                _graph.reset( new _DynamicGraph(remainingNodes.size(), newSetOfEdges));
+        		flushedContractor = true;
+
+        		//INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
         		//reinitialize heaps and ThreadData objects with appropriate size
                 for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
-                    threadData.push_back( new _ThreadData( _newGraph->GetNumberOfNodes() ) );
+                    threadData.push_back( new _ThreadData( _graph->GetNumberOfNodes() ) );
                 }
 
-                //old Graph is removed
-                _graph.swap(_newGraph);
-
-        		flushedContractor = true;
         	}
 
             const int last = ( int ) remainingNodes.size();

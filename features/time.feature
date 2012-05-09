@@ -6,9 +6,6 @@ Feature: Estimation of travel time
 	
 	Background: Use specific speeds
 		Given the speedprofile "bicycle"
-		And the speedprofile settings
-		 | primary | 15 |
-		 | footway | 5 |
 
 	Scenario: Basic travel time, 1m scale
 		Given a grid size of 1 meters
@@ -179,4 +176,3 @@ Feature: Estimation of travel time
 		 | 4    | 3  | ab    | 24s  |
 		 | 4    | 2  | ab    | 48s  |
 		 | 4    | 1  | ab    | 72s  |
-
