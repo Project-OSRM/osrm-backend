@@ -190,15 +190,6 @@ div.label
 	z-index: 5;
 }
 
-.styled-select
-{
-	position:absolute;
-	background-repeat:no-repeat;	
-	background-position: top right;
-	padding: 1px 1px 1px 1px;
-	overflow: hidden;
-}
-
 .top-left-button
 {
 	float:left;
@@ -501,7 +492,6 @@ div.label
 	-ms-user-select: none;
 	user-select: none;
 }
-
 .text-selectable
 {
 	cursor:default;
@@ -514,6 +504,23 @@ div.label
 .checkbox-label
 {
 	vertical-align:2px;
+}
+
+.styled-select-helper
+{
+	border: 0px;
+	text-decoration:none;
+ 	opacity: 0;
+	filter: alpha(opacity=0);
+	z-index: 5;
+}
+.styled-select
+{
+	position:absolute;
+	background-repeat:no-repeat;	
+	background-position: top right;
+	padding: 1px 1px 1px 1px;
+	overflow: hidden;
 }
 
 input[type=checkbox],

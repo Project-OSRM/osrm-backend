@@ -27,53 +27,31 @@ DIRECTORY: "localization/",
 // holds currently active language
 current_language: OSRM.DEFAULTS.LANGUAGE,
 
-// initialize localization
+//initialize localization
 init: function() {
-	// create dropdown menu
-	var select = document.createElement('select');
-	select.id = "gui-language-toggle";
-	select.className = "top-left-button";
-	select.onchange = function() { OSRM.Localization.setLanguage(this.value); };	
-		
-	// fill dropdown menu
+	// fill option list and find default entry
+	var options = [];
+	var options_2 = [];
+	var selected = 0;	
 	var supported_languages = OSRM.DEFAULTS.LANGUAGE_SUPPORTED;
 	for(var i=0, size=supported_languages.length; i<size; i++) {
-		var option=document.createElement("option");
-		option.innerHTML = supported_languages[i].encoding;
-		option.value = supported_languages[i].encoding;
-		select.appendChild(option);
+		options.push( {display:supported_languages[i].encoding, value:supported_languages[i].encoding} );
+		options_2.push( {display:supported_languages[i].name, value:supported_languages[i].encoding} );
+		if( supported_languages[i].encoding == OSRM.DEFAULTS.LANGUAGE )
+			selected=i;
 	}
-	select.value = OSRM.DEFAULTS.LANGUAGE; 
 	
-	// add element to DOM
-	var input_mask_header = document.getElementById('input-mask-header'); 
-	input_mask_header.insertBefore(select,input_mask_header.firstChild);
+	// generate selectors
+	OSRM.GUI.initSelector("gui-language-toggle", options, selected, OSRM.Localization.setLanguage);
+	OSRM.GUI.initSelector("gui-language-toggle-2", options_2, selected, OSRM.Localization.setLanguage);
 	
-	// create visible dropdown menu
-	var textnode = document.createTextNode(OSRM.DEFAULTS.LANGUAGE);
-	var myspan = document.createElement("span");
-	myspan.className = "styled-select";
-	myspan.id = "styled-select-" + select.id;
-	myspan.appendChild(textnode);
-	select.parentNode.insertBefore(myspan, select);
-	myspan.style.width = (select.clientWidth-2)+"px";
-	myspan.style.height = (select.clientHeight)+"px";
+	// set default language
+	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );	
 },
-
-// perform language change
 setLanguage: function(language) {
+	// TODO: also change language of other selector
 	if( OSRM.Localization[language]) {
 		OSRM.Localization.current_language = language;
-		// update selector
-		if( select = document.getElementById('gui-language-toggle') ) {		// yes, = not == !
-			var option = select.getElementsByTagName("option");
-			select.value = language;
-			for(var i = 0; i < option.length; i++)
-				if(option[i].selected == true) {
-					document.getElementById("styled-select-" + select.id).childNodes[0].nodeValue = option[i].childNodes[0].nodeValue;
-					break;
-				}
-		}		
 		// change gui language		
 		OSRM.GUI.setLabels();
 		// requery data

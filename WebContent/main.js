@@ -25,8 +25,8 @@ OSRM.init = function() {
 	OSRM.prefetchIcons();
 	OSRM.prefetchCSSIcons();
 	
-	OSRM.Localization.init();
 	OSRM.GUI.init();
+	OSRM.Localization.init();
 	OSRM.Map.init();
 	OSRM.Printing.init();
 	OSRM.Routing.init();

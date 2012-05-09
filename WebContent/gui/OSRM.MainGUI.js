@@ -41,8 +41,8 @@ init: function() {
 	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
 	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;
 	
-	// set default language
-	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
+	// init units selector
+	OSRM.GUI.initSelector( "gui-units-toggle", [{display:"Kilometers",value:0},{display:"Miles",value:1}], 0, OSRM.GUI.onUnitsChanged );
 },
 
 // set language dependent labels
@@ -52,6 +52,7 @@ setLabels: function() {
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
+	document.getElementById("gui-option-show-previous-routes-label").innerHTML = OSRM.loc("GUI_SHOW_PREVIOUS_ROUTES");
 	document.getElementById("gui-search-source").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-target").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-source-label").innerHTML = OSRM.loc("GUI_START")+":";
@@ -61,8 +62,12 @@ setLabels: function() {
 	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
 	document.getElementById("gui-mapping-label").innerHTML = OSRM.loc("GUI_MAPPING_TOOLS");
 	document.getElementById("gui-config-label").innerHTML = OSRM.loc("GUI_CONFIGURATION");
-	document.getElementById("gui-language-label").innerHTML = OSRM.loc("GUI_LANGUAGE");
-	document.getElementById("gui-units-label").innerHTML = OSRM.loc("GUI_UNITS");
+	document.getElementById("gui-language-label").innerHTML = OSRM.loc("GUI_LANGUAGE")+":";
+	document.getElementById("gui-units-label").innerHTML = OSRM.loc("GUI_UNITS")+":";
+	
+	document.getElementById("gui-units-toggle").getElementsByTagName("option")[0].innerHTML = OSRM.loc("GUI_KILOMETERS");
+	document.getElementById("gui-units-toggle").getElementsByTagName("option")[1].innerHTML = OSRM.loc("GUI_MILES");
+	OSRM.GUI.selectorOnChange( document.getElementById("gui-units-toggle") );
 },
 
 // clear output area
@@ -85,6 +90,12 @@ afterMainTransition: function() {
 		zoom_controls[0].style.left = ( OSRM.G.main_handle.boxVisible() == true ? (OSRM.G.main_handle.boxWidth()+10) : "30") + "px";
 		zoom_controls[0].style.visibility="visible";
 	}
+},
+
+// toggle distance units
+onUnitsChanged: function(value) {
+	OSRM.Utils.setToHumanDistanceFunction(value);
+	OSRM.Routing.getRoute();
 }
 
 });

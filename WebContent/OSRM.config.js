@@ -42,12 +42,12 @@ OSRM.DEFAULTS = {
 	LANGUAGE: "en",
 	LANUGAGE_ONDEMAND_RELOADING: true,
 	LANGUAGE_SUPPORTED: [ 
-		{display_name:"en", encoding:"en"},
-		{display_name:"da", encoding:"da"},
-		{display_name:"de", encoding:"de"},
-		{display_name:"fi", encoding:"fi"},
-		{display_name:"fr", encoding:"fr"},
-		{display_name:"pl", encoding:"pl"}
+		{encoding:"en", name:"English"},
+		{encoding:"da", name:"Dansk"},
+		{encoding:"de", name:"Deutsch"},
+		{encoding:"fi", name:"Suomi"},
+		{encoding:"fr", name:"Français"},
+		{encoding:"pl", name:"Polski"}
 	],
 		
 	TILE_SERVERS: [
