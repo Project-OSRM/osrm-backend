@@ -42,7 +42,7 @@ init: function() {
 	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;
 	
 	// init units selector
-	OSRM.GUI.initSelector( "gui-units-toggle", [{display:"Kilometers",value:0},{display:"Miles",value:1}], 0, OSRM.GUI.onUnitsChanged );
+	OSRM.GUI.selectorInit( "gui-units-toggle", [{display:"Kilometers",value:0},{display:"Miles",value:1}], 0, OSRM.GUI.onUnitsChanged );
 },
 
 // set language dependent labels

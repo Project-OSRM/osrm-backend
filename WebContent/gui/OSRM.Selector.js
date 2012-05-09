@@ -22,7 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.GUI.extend( {
 
 // initialize selector with all options and our look&feel
-initSelector: function(id, options, selected, onchange_fct) {
+selectorInit: function(id, options, selected, onchange_fct) {
 	// create dropdown menu
 	var select = document.getElementById(id);
 	select.className = "styled-select-helper base-font";
@@ -56,6 +56,12 @@ selectorOnChange: function(select) {
 		document.getElementById("styled-select-" + select.id).childNodes[0].nodeValue = option[i].childNodes[0].nodeValue;
 		break;
 	}
+},
+
+// change selector value
+selectorChange: function(select, value) {
+	select.value = value;
+	OSRM.GUI.selectorOnChange(select);
 }
 
 });
