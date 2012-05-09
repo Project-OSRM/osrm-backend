@@ -158,7 +158,7 @@ public:
     }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
-        double time1 = get_timestamp();
+//        double time1 = get_timestamp();
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
@@ -222,8 +222,8 @@ public:
         resultNode.ratio = ratio;
         //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
         //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
-        double time2 = get_timestamp();
-        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
+//        double time2 = get_timestamp();
+//        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
         return foundNode;
     }
 
