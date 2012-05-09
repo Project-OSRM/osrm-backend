@@ -205,7 +205,7 @@ public:
         const NodeID numberOfNodes = _graph->GetNumberOfNodes();
         Percent p (numberOfNodes);
 
-        unsigned maxThreads = omp_get_max_threads();
+        const unsigned maxThreads = omp_get_max_threads();
         std::vector < _ThreadData* > threadData;
         for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
             threadData.push_back( new _ThreadData( numberOfNodes ) );
