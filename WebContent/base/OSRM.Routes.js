@@ -45,6 +45,7 @@ OSRM.Route.ROUTE = false;
 OSRM.extend( OSRM.Route,{
 	
 	showRoute: function(positions, noroute) {
+//		if( document.getElementById('option-show-previous-routes').checked == true)
 //		if(!this._noroute) {
 //		this._route_history.push( this._current_route );
 //		if(this._route_history.length==6) {
@@ -69,17 +70,20 @@ OSRM.extend( OSRM.Route,{
 	hideRoute: function() {
 		this._current_route.hide();
 		this._unnamed_route.hide();
+//		this.clearHistoryRoutes();
 		// activate printing
 		OSRM.Printing.deactivate();		
 	},
 	hideAll: function() {
-		this._current_route.hide();
-		this._unnamed_route.hide();
+		this.hideRoute();
 		this._old_route.hide();
 		this._noroute = OSRM.Route.ROUTE;
-		// activate printing
-		OSRM.Printing.deactivate();		
-	},	
+	},
+//	clearHistoryRoutes: function() {
+//		for(var i=0,size=this._route_history.length; i<size; i++)
+//			this._route_history[i].hide();
+//		this._route_history[i] = [];
+//	},
 	
 	showUnnamedRoute: function(positions) {
 		this._unnamed_route.clearRoutes();
