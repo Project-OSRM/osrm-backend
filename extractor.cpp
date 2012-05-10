@@ -464,8 +464,8 @@ int main (int argc, char *argv[]) {
         cout << "ok" << endl;
         time = get_timestamp();
         cout << "[extractor] writing street name index ... " << flush;
-        outputFileName.append(".names");
-        ofstream nameOutFile(outputFileName.c_str(), ios::binary);
+        std::string nameOutFileName = (outputFileName + ".names");
+        ofstream nameOutFile(nameOutFileName.c_str(), ios::binary);
         unsigned sizeOfNameIndex = externalMemory.nameVector.size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
@@ -499,7 +499,9 @@ int main (int argc, char *argv[]) {
     stringMap.clear();
     delete parser;
     delete extractCallBacks;
-    cout << "[extractor] finished." << endl;
+    INFO("[extractor] finished.");
+    std::cout << "\nRun:\n"
+                   "./osrm-prepare " << outputFileName << " " << restrictionsFileName << std::endl;
     return 0;
 }
 
