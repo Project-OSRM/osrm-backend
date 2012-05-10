@@ -39,7 +39,8 @@ init: function() {
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
-	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getZoomRoute;	
+	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getZoomRoute;
+	document.getElementById("option-show-previous-routes").onclick = OSRM.GUI.showPreviousRoutes;
 },
 
 // click: button "reset"
@@ -135,6 +136,19 @@ deleteMarker: function(marker_id) {
 	OSRM.G.markers.removeMarker( id );
 	OSRM.Routing.getRoute();
 	OSRM.G.markers.highlight.hide();	
+},
+
+//click: checkbox "show previous routes"
+showPreviousRoutes: function(value) {
+//	if( document.getElementById('option-show-previous-routes').checked == false) {
+//		document.getElementById('information-box').innerHTML = "";
+//	} else {
+//		document.getElementById('information-box').innerHTML = ""; 
+//	}
+	if( document.getElementById('option-show-previous-routes').checked == false)
+		OSRM.G.route.clearHistoryRoutes();
+	else
+		OSRM.G.route.storeHistoryRoute();
 }
 
 });
