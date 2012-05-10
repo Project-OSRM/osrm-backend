@@ -48,8 +48,7 @@ resetRouting: function() {
 	document.getElementById('gui-input-target').value = "";
 	
 	OSRM.G.route.hideAll();
-	OSRM.G.markers.removeAll();
-	OSRM.G.markers.highlight.hide();
+	OSRM.G.markers.reset();
 	
 	document.getElementById('information-box').innerHTML = "";
 	document.getElementById('information-box-header').innerHTML = "";

@@ -24,12 +24,16 @@ OSRM.Markers = function() {
 	this.dragger = new OSRM.DragMarker("drag", {draggable:true,icon:OSRM.G.icons['marker-drag'],dragicon:OSRM.G.icons['marker-drag']});;
 };
 OSRM.extend( OSRM.Markers,{
-removeAll: function() {
+reset: function() {
+	// remove route markers
 	for(var i=0; i<this.route.length;i++)
 		this.route[i].hide();
 	this.route.splice(0, this.route.length);
 	document.getElementById('gui-delete-source').style.visibility = "hidden";
 	document.getElementById('gui-delete-target').style.visibility = "hidden";
+	// remove special markers
+	this.highlight.hide();
+	this.dragger.hide();
 },
 removeVias: function() {
 	// assert correct route array s - v - t
