@@ -30,13 +30,28 @@ OSRM.Route = function() {
 	this._unnamed_route_style = {dashed:false, color:'#FF00FF', weight:10};
 	this._old_unnamed_route_style = {dashed:false, color:'#990099', weight:10};
 	
-//	this._route_history_styles = [{dashed:false, color:'#0033FF', weight:5},
-//	                              {dashed:false, color:'#0011DD', weight:5},
-//	                              {dashed:false, color:'#0000BB', weight:5},
-//	                              {dashed:false, color:'#000099', weight:5},
-//	                              {dashed:false, color:'#000077', weight:5}
-//	                              ];
-//	this._route_history = [];
+	this._route_history_styles = [{dashed:false, color:'#FF0000', weight:5},
+	                              {dashed:false, color:'#00FF00', weight:5},
+	                              {dashed:false, color:'#0000FF', weight:5},
+	                              {dashed:false, color:'#FF00FF', weight:5},
+	                              {dashed:false, color:'#00FFFF', weight:5},
+	                              {dashed:false, color:'#770000', weight:5},
+	                              {dashed:false, color:'#007700', weight:5},
+	                              {dashed:false, color:'#000077', weight:5},
+	                              {dashed:false, color:'#770077', weight:5},
+	                              {dashed:false, color:'#007777', weight:5}	                              
+	                              ];
+	this._route_history = [ new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ),
+	                        new OSRM.SimpleRoute("current" , {dashed:false} ) ];
+	this._route_history_count = 0;
 	
 	this._noroute = OSRM.Route.ROUTE;
 };
@@ -45,21 +60,12 @@ OSRM.Route.ROUTE = false;
 OSRM.extend( OSRM.Route,{
 	
 	showRoute: function(positions, noroute) {
-//		console.log("show route", this._route_history.length);
-//		if( document.getElementById('option-show-previous-routes').checked == true) {
-//			if(!this._noroute && this.isShown()) {
-//				this._route_history.push( this._current_route );
-//				if(this._route_history.length==6) {
-//					this._route_history[0].hide();
-//					this._route_history.splice(0,1);
-//				}
-//				for(var i=0,size=this._route_history.length; i<size; i++) {
-//					this._route_history[i].setStyle( this._route_history_styles[i] );
-//					this._route_history[i].show();
-//				}
-//				this._current_route = new OSRM.SimpleRoute("current" , {dashed:false} );
-//			}
-//		}
+		if( document.getElementById('option-show-previous-routes').checked == true) {
+			for(var i=0,size=this._route_history.length; i<size; i++) {
+				this._route_history[i].setStyle( this._route_history_styles[i] );
+				this._route_history[i].show();
+			}
+		}
 		this._noroute = noroute;
 		this._current_route.setPositions( positions );
 		if ( this._noroute == OSRM.Route.NOROUTE )
@@ -68,24 +74,38 @@ OSRM.extend( OSRM.Route,{
 			this._current_route.setStyle( this._current_route_style );
 		this._current_route.show();
 		//this._raiseUnnamedRoute();
+		
+//		if( document.getElementById('option-show-previous-routes').checked == true) {
+//			if(this._noroute != OSRM.Route.NOROUTE) {
+//				for(var i=4; i>0; i--)
+//					this._route_history[i].setPositions( this._route_history[i-1].getPositions() );
+//				this._route_history[0].setPositions( this._current_route.getPositions() );
+//			}
+//		}
 	},
 	hideRoute: function() {
+		if( document.getElementById('option-show-previous-routes').checked == true) {
+			for(var i=0,size=this._route_history.length; i<size; i++) {
+				this._route_history[i].setStyle( this._route_history_styles[i] );
+				this._route_history[i].show();
+			}
+		}		
 		this._current_route.hide();
 		this._unnamed_route.hide();
-		// activate printing
+		// deactivate printing
 		OSRM.Printing.deactivate();		
 	},
 	hideAll: function() {
 		this.hideRoute();
 		this._old_route.hide();
 		this._noroute = OSRM.Route.ROUTE;
-//		this.clearHistoryRoutes();
+		this.clearHistoryRoutes();
 	},
-//	clearHistoryRoutes: function() {
-//		for(var i=0,size=this._route_history.length; i<size; i++)
-//			this._route_history[i].hide();
-//		this._route_history = [];
-//	},
+	clearHistoryRoutes: function() {
+		for(var i=0,size=this._route_history.length; i<size; i++)
+			this._route_history[i].hide();
+		this._route_history = [];
+	},
 	
 	showUnnamedRoute: function(positions) {
 		this._unnamed_route.clearRoutes();

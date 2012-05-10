@@ -130,7 +130,7 @@ html, body {
 	width:410px;
 	height:100px;
 	bottom:25px;
-	right:-410px;
+	right:5px;
 }
 #mapping-content
 {
@@ -142,7 +142,7 @@ html, body {
 	width:410px;
 	height:100px;
 	bottom:25px;
-	right:-410px;
+	right:5px;
 }
 #config-content
 {
@@ -152,11 +152,16 @@ html, body {
 
 
 /* general styles for gui box content */
-div.label
+.label
 {
 	font-weight:bold;
 	margin-bottom:10px;
 }
+.inner-label
+{
+	padding:0px 20px 0px 5px;
+}
+
 
 
 /* styles for main-input areas */
@@ -183,11 +188,6 @@ div.label
 #gui-language-toggle
 {
 	position:absolute;
-	border: 0px;
-	text-decoration:none;
- 	opacity: 0;
-	filter: alpha(opacity=0);
-	z-index: 5;
 }
 
 .top-left-button
