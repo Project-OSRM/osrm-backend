@@ -151,19 +151,6 @@ html, body {
 }
 
 
-/* general styles for gui box content */
-.label
-{
-	font-weight:bold;
-	margin-bottom:10px;
-}
-.inner-label
-{
-	padding:0px 20px 0px 5px;
-}
-
-
-
 /* styles for main-input areas */
 #input-mask-header
 {
@@ -187,7 +174,7 @@ html, body {
 /* styles for main-input input-mask-header */
 #gui-language-toggle
 {
-	position:absolute;
+	position:relative;
 }
 
 .top-left-button
@@ -407,6 +394,30 @@ html, body {
 .description-body-item:hover
 {
 	color:#ff0000
+}
+
+
+/* styles for config and mapping boxes */
+#gui-language-toggle-2
+{
+	position:relative;
+}
+#gui-units-toggle
+{
+	position:relative;
+}
+.config-select
+{
+	width:100px;
+}
+.label
+{
+	font-weight:bold;
+	margin-bottom:10px;
+}
+.inner-label
+{
+	padding:0px 20px 0px 5px;
 }
 
 
