@@ -172,7 +172,6 @@ public:
         edges.resize( edge );
 
         _graph.reset( new _DynamicGraph( nodes, edges ) );
-        INFO("Finished building dynamic graph");
         edges.clear();
 //        unsigned maxdegree = 0;
 //        NodeID highestNode = 0;
