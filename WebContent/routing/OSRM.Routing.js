@@ -65,16 +65,7 @@ showRouteSimple: function(response) {
 	} else {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingDescription.showSimple(response);
-		
-		// store history route
-		var route = OSRM.G.route;
-		if( document.getElementById('option-show-previous-routes').checked == true) {
-			if(route._noroute != OSRM.Route.NOROUTE) {
-				for(var i=route._route_history.length-1; i>0; i--)
-					route._route_history[i].setPositions( route._route_history[i-1].getPositions() );
-				route._route_history[0].setPositions( route._current_route.getPositions() );
-			}
-		}		
+		OSRM.G.route.storeHistoryRoute();
 	}
 	OSRM.Routing._updateHints(response);
 
@@ -97,6 +88,7 @@ showRoute: function(response) {
 		OSRM.RoutingNoNames.show(response);
 		OSRM.RoutingDescription.show(response);
 		OSRM.Routing._snapRoute();
+		OSRM.G.route.storeHistoryRoute();
 	}
 	OSRM.Routing._updateHints(response);
 },
