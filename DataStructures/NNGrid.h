@@ -53,12 +53,12 @@ static const unsigned MAX_CACHE_ELEMENTS = 1000;
 
 namespace NNGrid{
 
-struct IdenticalHashFunction {
-public:
-    inline unsigned operator ()(const unsigned value) const {
-        return value;
-    }
-};
+//struct IdenticalHashFunction {
+//public:
+//    inline unsigned operator ()(const unsigned value) const {
+//        return value;
+//    }
+//};
 
 
 static boost::thread_specific_ptr<std::ifstream> localStream;
@@ -123,16 +123,16 @@ public:
         std::vector<GridEntry> entriesInFileWithRAMSameIndex;
         unsigned indexInRamTable = entries.begin()->ramIndex;
         unsigned long lastPositionInIndexFile = 0;
-        unsigned maxNumberOfRAMCellElements = 0;
         cout << "writing data ..." << flush;
         p.reinit(entries.size());
+        boost::unordered_map< unsigned, unsigned > cellMap(1024);
         BOOST_FOREACH(GridEntry & gridEntry, entries) {
             p.printIncrement();
             if(gridEntry.ramIndex != indexInRamTable) {
-                unsigned numberOfBytesInCell = FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
-                if(entriesInFileWithRAMSameIndex.size() > maxNumberOfRAMCellElements)
-                    maxNumberOfRAMCellElements = entriesInFileWithRAMSameIndex.size();
+                cellMap.clear();
+                BuildCellIndexToFileIndexMap(indexInRamTable, cellMap);
 
+                unsigned numberOfBytesInCell = FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile, cellMap);
                 ramIndexTable[indexInRamTable] = lastPositionInIndexFile;
                 lastPositionInIndexFile += numberOfBytesInCell;
                 entriesInFileWithRAMSameIndex.clear();
@@ -140,7 +140,9 @@ public:
             }
             entriesInFileWithRAMSameIndex.push_back(gridEntry);
         }
-        /*unsigned numberOfBytesInCell = */FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile);
+        cellMap.clear();
+         BuildCellIndexToFileIndexMap(indexInRamTable, cellMap);
+        /*unsigned numberOfBytesInCell = */FillCell(entriesInFileWithRAMSameIndex, lastPositionInIndexFile, cellMap);
         ramIndexTable[indexInRamTable] = lastPositionInIndexFile;
         entriesInFileWithRAMSameIndex.clear();
         std::vector<GridEntry>().swap(entriesInFileWithRAMSameIndex);
@@ -237,7 +239,7 @@ public:
         bool found = false;
         unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
         std::vector<_GridEdge> candidates;
-        boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
+        boost::unordered_map< unsigned, unsigned > cellMap;
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; ++i) {
                 GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
@@ -263,7 +265,7 @@ public:
         unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
 
         std::vector<_GridEdge> candidates;
-        boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap;
+        boost::unordered_map< unsigned, unsigned > cellMap;
         for(int j = -32768; j < (32768+1); j+=32768) {
             for(int i = -1; i < 2; ++i) {
                 GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
@@ -302,7 +304,7 @@ private:
     }
 
 
-    inline void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned, unsigned, IdenticalHashFunction >& cellMap){
+    inline void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned, unsigned >& cellMap){
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
         unsigned columnBase = ramIndex%1024;
@@ -322,17 +324,13 @@ private:
         return (std::fabs(d1 - d2) < 0.0001);
     }
 
-    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const unsigned long fileOffset ) {
-    	std::vector<char> tmpBuffer(32*32*4096,0);
+    unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const unsigned long fileOffset, boost::unordered_map< unsigned, unsigned > & cellMap ) {
+        std::vector<char> tmpBuffer(32*32*4096,0);
         unsigned long indexIntoTmpBuffer = 0;
         unsigned numberOfWrittenBytes = 0;
         assert(indexOutFile.is_open());
 
         std::vector<unsigned long> cellIndex(32*32,ULONG_MAX);
-        boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > cellMap(1024);
-
-        unsigned ramIndex = entriesWithSameRAMIndex.begin()->ramIndex;
-        BuildCellIndexToFileIndexMap(ramIndex, cellMap);
 
         for(unsigned i = 0; i < entriesWithSameRAMIndex.size() -1; ++i) {
             assert(entriesWithSameRAMIndex[i].ramIndex== entriesWithSameRAMIndex[i+1].ramIndex);
@@ -405,7 +403,7 @@ private:
             }
         }
         //Freeing data
-        std::vector<GridEntry>().swap(vectorWithSameFileIndex);
+        vectorWithSameFileIndex.clear();
         return counter;
     }
 
@@ -444,7 +442,7 @@ private:
     }
 
 
-    inline void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_GridEdge>& result, boost::unordered_map< unsigned, unsigned, IdenticalHashFunction > & cellMap) {
+    inline void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_GridEdge>& result, boost::unordered_map< unsigned, unsigned> & cellMap) {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
         unsigned long startIndexInFile = ramIndexTable[ramIndex];
         if(startIndexInFile == ULONG_MAX) {
@@ -528,7 +526,7 @@ private:
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
-    void GetListOfIndexesForEdgeAndGridSize(const _Coordinate& start, const _Coordinate& target, std::vector<BresenhamPixel> &indexList) {
+    void GetListOfIndexesForEdgeAndGridSize(const _Coordinate& start, const _Coordinate& target, std::vector<BresenhamPixel> &indexList) const {
         double lat1 = start.lat/100000.;
         double lon1 = start.lon/100000.;
 
