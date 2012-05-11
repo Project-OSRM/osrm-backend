@@ -92,7 +92,7 @@ showRoute: function(response) {
 	}
 	OSRM.Routing._updateHints(response);
 },
-showRouteZooming: function(response) {
+showRouteRedraw: function(response) {
 	if(!response)
 		return;
 	
@@ -101,6 +101,15 @@ showRouteZooming: function(response) {
 		OSRM.RoutingNoNames.show(response);
 	}
 	OSRM.Routing._updateHints(response);
+},
+showRouteHistory: function(response, history_id) {
+	if(!response)
+		return;
+	
+	if(response.status != 207) {
+		var positions = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
+		OSRM.G.route._history_route[history_id].setPositions(positions);
+	}
 },
 
 
@@ -116,33 +125,40 @@ getRoute: function() {
 		return;
 	}
 	OSRM.JSONP.clear('dragging');
-	OSRM.JSONP.clear('zooming');
+	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.clear('route');
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');
 },
-getZoomRoute: function() {
+getRoute_Reversed: function() {
 	if( OSRM.G.markers.route.length < 2 )
 		return;
 	
 	OSRM.JSONP.clear('dragging');
-	OSRM.JSONP.clear('zooming');
-	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRouteZooming, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'zooming');	
-},
-getDragRoute: function() {
-	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRouteSimple, OSRM.Routing.timeoutRouteSimple, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
-},
-getReverseRoute: function() {
-	if( OSRM.G.markers.route.length < 2 )
-		return;
-	
-	OSRM.JSONP.clear('dragging');
-	OSRM.JSONP.clear('zooming');
+	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.clear('route');
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRouteReverse, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');	
 },
+getRoute_Redraw: function() {
+	if( OSRM.G.markers.route.length < 2 )
+		return;
+	
+	OSRM.JSONP.clear('dragging');
+	OSRM.JSONP.clear('redraw');
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRouteRedraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw');
+},
+getRoute_History: function() {
+	for(var i=0; i<10; i++)
+		if( OSRM.G.route._history_data[i].length > 0 ) {
+			OSRM.JSONP.clear('history'+i);
+			OSRM.JSONP.call(OSRM.Routing._buildHistoryCall(i)+'&instructions=false', OSRM.Routing.showRouteHistory, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'history'+i, i);
+		}
+},
+getRoute_Dragging: function() {
+	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRouteSimple, OSRM.Routing.timeoutRouteSimple, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
+},
 draggingTimeout: function() {
 	OSRM.G.markers.route[OSRM.G.dragid].hint = null;
-	OSRM.Routing.getDragRoute();
+	OSRM.Routing.getRoute_Dragging();
 },
 
 _buildCall: function() {
@@ -150,10 +166,24 @@ _buildCall: function() {
 	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp&geomformat=cmp';	
 	if(OSRM.G.markers.checksum)
 		source += '&checksum=' + OSRM.G.markers.checksum;
-	for(var i=0,size=OSRM.G.markers.route.length; i<size; i++) {
-		source += '&loc='  + OSRM.G.markers.route[i].getLat().toFixed(6) + ',' + OSRM.G.markers.route[i].getLng().toFixed(6);
-		if( OSRM.G.markers.route[i].hint)
-			source += '&hint=' + OSRM.G.markers.route[i].hint;
+	var markers = OSRM.G.markers.route;
+	for(var i=0,size=markers.length; i<size; i++) {
+		source += '&loc='  + markers[i].getLat().toFixed(6) + ',' + markers[i].getLng().toFixed(6);
+		if( markers[i].hint)
+			source += '&hint=' + markers[i].hint;
+	}
+	return source;
+},
+_buildHistoryCall: function(history_id) {
+	var source = OSRM.DEFAULTS.HOST_ROUTING_URL;
+	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp&geomformat=cmp';	
+	if(OSRM.G.markers.checksum)
+		source += '&checksum=' + OSRM.G.markers.checksum;
+	var markers = OSRM.G.route._history_data[history_id];
+	for(var i=0,size=markers.length; i<size; i++) {
+		source += '&loc='  + markers[i].lat.toFixed(6) + ',' + markers[i].lng.toFixed(6);
+		if( markers[i].hint)
+			source += '&hint=' + markers[i].hint;
 	}
 	return source;
 },

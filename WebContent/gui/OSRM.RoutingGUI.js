@@ -39,7 +39,7 @@ init: function() {
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
-	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getZoomRoute;
+	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getRoute_Redraw;
 	document.getElementById("option-show-previous-routes").onclick = OSRM.GUI.showPreviousRoutes;
 },
 
@@ -67,7 +67,7 @@ reverseRouting: function() {
 	// recompute route if needed
 	if( OSRM.G.route.isShown() ) {
 		OSRM.G.markers.route.reverse();
-		OSRM.Routing.getRoute();				// temporary route reversal for query, actual reversal done after receiving response
+		OSRM.Routing.getRoute_Reversed();				// temporary route reversal for query, actual reversal done after receiving response
 		OSRM.G.markers.route.reverse();
 		OSRM.G.markers.highlight.hide();
 		OSRM.RoutingDescription.showSimple( OSRM.G.response );

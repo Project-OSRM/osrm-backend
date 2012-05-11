@@ -75,9 +75,10 @@ initPosition: function() {
 // map event handlers
 zoomed: function(e) {
 	if(OSRM.G.dragging)
-		OSRM.Routing.getDragRoute();
+		OSRM.Routing.getRoute_Dragging();
 	else
-		OSRM.Routing.getZoomRoute();
+		OSRM.Routing.getRoute_Redraw();
+//	OSRM.Routing.getRoute_History();
 },
 contextmenu: function(e) {;},
 mousemove: function(e) { OSRM.Via.drawDragMarker(e); },

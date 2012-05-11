@@ -18,6 +18,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM route management (handles drawing of route geometry - current route, old route, unnamed route, highlight unnamed streets) 
 // [this holds the route geometry]
 
+//OSRM.SimplePosition = function(lat, lng, hint) {
+//	this.lat = lat;
+//	this.lng = lng;
+//	this.hint = hint;
+//};
+//OSRM.extend( OSRM.SimplePosition,{
+//getLat: function() { return this.lat; },
+//getLng: function() { return this.lng; }
+//});
+
+
 OSRM.Route = function() {
 	this._current_route	= new OSRM.SimpleRoute("current" , {dashed:false} );
 	this._old_route		= new OSRM.SimpleRoute("old", {dashed:false,color:"#123"} );
@@ -32,20 +43,24 @@ OSRM.Route = function() {
 	
 	this._noroute = OSRM.Route.ROUTE;	
 	
-	this._route_history_styles = [{dashed:false, color:'#FF0000', weight:5},
-	                              {dashed:false, color:'#00FF00', weight:5},
-	                              {dashed:false, color:'#0000FF', weight:5},
-	                              {dashed:false, color:'#FF00FF', weight:5},
-	                              {dashed:false, color:'#00FFFF', weight:5},
-	                              {dashed:false, color:'#770000', weight:5},
-	                              {dashed:false, color:'#007700', weight:5},
-	                              {dashed:false, color:'#000077', weight:5},
-	                              {dashed:false, color:'#770077', weight:5},
-	                              {dashed:false, color:'#007777', weight:5}	                              
-	                              ];
-	this._route_history = [];
-	for(var i=0, size=this._route_history_styles.length; i<size; i++)
-		this._route_history.push( new OSRM.SimpleRoute("current" , {dashed:false} ) );
+	this._history_styles = [{dashed:false, color:'#FF0000', weight:5},
+	                        {dashed:false, color:'#00FF00', weight:5},
+	                        {dashed:false, color:'#0000FF', weight:5},
+	                        {dashed:false, color:'#FF00FF', weight:5},
+	                        {dashed:false, color:'#00FFFF', weight:5},
+	                        {dashed:false, color:'#770000', weight:5},
+	                        {dashed:false, color:'#007700', weight:5},
+	                        {dashed:false, color:'#000077', weight:5},
+	                        {dashed:false, color:'#770077', weight:5},
+	                        {dashed:false, color:'#007777', weight:5}	                              
+	                        ];
+	this._history_routes = this._history_styles.length;
+	this._history_route = [];
+	this._history_data = [];
+	for(var i=0, size=this._history_routes; i<size; i++) {
+		this._history_route.push( new OSRM.SimpleRoute("current" , {dashed:false} ) );
+		this._history_data[i] = [];
+	}
 };
 OSRM.Route.NOROUTE = true;
 OSRM.Route.ROUTE = false;
@@ -130,26 +145,41 @@ OSRM.extend( OSRM.Route,{
 	
 	// history route handling
 	storeHistoryRoute: function() {
-		if( document.getElementById('option-show-previous-routes').checked == false)
-			return;
-		if(this.isShown() && this.isRoute()) {
-			for(var i=this._route_history.length-1; i>0; i--)
-				this._route_history[i].setPositions( this._route_history[i-1].getPositions() );
-			this._route_history[0].setPositions( this._current_route.getPositions() );
-		}
+//		if( document.getElementById('option-show-previous-routes').checked == false)
+//			return;
+//		if(this.isShown() && this.isRoute()) {
+//			// move route and positions
+//			for(var i=this._history_routes-1; i>0; i--) {
+//				this._history_route[i].setPositions( this._history_route[i-1].getPositions() );
+//				this._history_data[i] = this._history_data[i-1];
+//			}
+//			// store new route and positions
+//			this._history_route[0].setPositions( this._current_route.getPositions() );
+//			this._history_data[0] = [];
+//			var markers = OSRM.G.markers.route;
+//			for(var i=0,size=markers.length; i<size; i++) {
+//				var position = new OSRM.SimplePosition(markers[i].getLat(), markers[i].getLng(), markers[i].hint);
+////						lat:markers[i].getLat(),
+////						lng:markers[i].getLng(),
+////						hint:markers[i].hint
+////				};
+//				this._history_data[0].push(position);
+//			}
+//		}
 	},
 	showHistoryRoutes: function() {
-		if( document.getElementById('option-show-previous-routes').checked == false)
-			return;
-		for(var i=1,size=this._route_history.length; i<size; i++) {
-			this._route_history[i].setStyle( this._route_history_styles[i] );
-			this._route_history[i].show();
-		}
+//		if( document.getElementById('option-show-previous-routes').checked == false)
+//			return;
+//		for(var i=1,size=this._history_routes; i<size; i++) {
+//			this._history_route[i].setStyle( this._history_styles[i] );
+//			this._history_route[i].show();
+//		}
 	},
 	clearHistoryRoutes: function() {
-		for(var i=0,size=this._route_history.length; i<size; i++) {
-			this._route_history[i].hide();
-			this._route_history[i].setPositions( [] );
-		}
+//		for(var i=0,size=this._history_route.length; i<size; i++) {
+//			this._history_route[i].hide();
+//			this._history_route[i].setPositions( [] );
+//			this._history_data[i] = [];
+//		}
 	}	
 });
