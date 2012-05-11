@@ -80,7 +80,7 @@ reverseRouting: function() {
 
 // click: button "show"
 showMarker: function(marker_id) {
-	if( OSRM.JSONP.fences["geocoder_source"] || OSRM.JSONP.fences["geocoder_target"] )
+	if( OSRM.JSONP.fences["geocoder_source"] || OSRM.JSONP.fences["geocoder_target"] )	// needed when focus was on input box and user clicked on button
 		return;
 	
 	if( marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() )
@@ -140,10 +140,10 @@ deleteMarker: function(marker_id) {
 
 //click: checkbox "show previous routes"
 showPreviousRoutes: function(value) {
-	if( document.getElementById('option-show-previous-routes').checked == false)
-		OSRM.G.route.clearHistoryRoutes();
-	else
-		OSRM.G.route.storeHistoryRoute();
+//	if( document.getElementById('option-show-previous-routes').checked == false)
+//		OSRM.G.route.clearHistoryRoutes();
+//	else
+//		OSRM.G.route.storeHistoryRoute();
 }
 
 });

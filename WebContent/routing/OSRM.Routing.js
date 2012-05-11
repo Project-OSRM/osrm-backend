@@ -65,7 +65,7 @@ showRouteSimple: function(response) {
 	} else {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingDescription.showSimple(response);
-		OSRM.G.route.storeHistoryRoute();
+//		OSRM.G.route.storeHistoryRoute();		
 	}
 	OSRM.Routing._updateHints(response);
 
@@ -88,7 +88,7 @@ showRoute: function(response) {
 		OSRM.RoutingNoNames.show(response);
 		OSRM.RoutingDescription.show(response);
 		OSRM.Routing._snapRoute();
-		OSRM.G.route.storeHistoryRoute();
+//		OSRM.G.route.storeHistoryRoute();		
 	}
 	OSRM.Routing._updateHints(response);
 },
@@ -146,7 +146,7 @@ getRoute_Redraw: function() {
 	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRouteRedraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw');
 },
-getRoute_History: function() {
+getRoute_RedrawHistory: function() {
 	for(var i=0; i<10; i++)
 		if( OSRM.G.route._history_data[i].length > 0 ) {
 			OSRM.JSONP.clear('history'+i);

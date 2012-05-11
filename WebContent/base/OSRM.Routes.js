@@ -18,16 +18,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM route management (handles drawing of route geometry - current route, old route, unnamed route, highlight unnamed streets) 
 // [this holds the route geometry]
 
-//OSRM.SimplePosition = function(lat, lng, hint) {
-//	this.lat = lat;
-//	this.lng = lng;
-//	this.hint = hint;
-//};
-//OSRM.extend( OSRM.SimplePosition,{
-//getLat: function() { return this.lat; },
-//getLng: function() { return this.lng; }
-//});
-
 
 OSRM.Route = function() {
 	this._current_route	= new OSRM.SimpleRoute("current" , {dashed:false} );
@@ -67,7 +57,7 @@ OSRM.Route.ROUTE = false;
 OSRM.extend( OSRM.Route,{
 	
 	showRoute: function(positions, noroute) {
-		this.showHistoryRoutes();
+//		this.showHistoryRoutes();
 		this._noroute = noroute;
 		this._current_route.setPositions( positions );
 		if ( this._noroute == OSRM.Route.NOROUTE )
@@ -78,7 +68,8 @@ OSRM.extend( OSRM.Route,{
 		//this._raiseUnnamedRoute();
 	},
 	hideRoute: function() {
-		this.showHistoryRoutes();		
+//		this.fetchHistoryRoute();
+//		this.showHistoryRoutes();	
 		this._current_route.hide();
 		this._unnamed_route.hide();
 		// deactivate printing
@@ -88,7 +79,7 @@ OSRM.extend( OSRM.Route,{
 		this.hideRoute();
 		this._old_route.hide();
 		this._noroute = OSRM.Route.ROUTE;
-		this.clearHistoryRoutes();
+//		this.clearHistoryRoutes();
 	},
 	
 	showUnnamedRoute: function(positions) {
@@ -145,41 +136,54 @@ OSRM.extend( OSRM.Route,{
 	
 	// history route handling
 	storeHistoryRoute: function() {
-//		if( document.getElementById('option-show-previous-routes').checked == false)
-//			return;
-//		if(this.isShown() && this.isRoute()) {
-//			// move route and positions
-//			for(var i=this._history_routes-1; i>0; i--) {
-//				this._history_route[i].setPositions( this._history_route[i-1].getPositions() );
-//				this._history_data[i] = this._history_data[i-1];
-//			}
-//			// store new route and positions
-//			this._history_route[0].setPositions( this._current_route.getPositions() );
-//			this._history_data[0] = [];
-//			var markers = OSRM.G.markers.route;
-//			for(var i=0,size=markers.length; i<size; i++) {
-//				var position = new OSRM.SimplePosition(markers[i].getLat(), markers[i].getLng(), markers[i].hint);
-////						lat:markers[i].getLat(),
-////						lng:markers[i].getLng(),
-////						hint:markers[i].hint
-////				};
-//				this._history_data[0].push(position);
-//			}
-//		}
+		if( document.getElementById('option-show-previous-routes').checked == false)
+			return;
+		console.log("store");
+		this.fetchHistoryRoute();
+		if(this.isShown() && this.isRoute()) {
+			// store new route and positions in staging spot
+			this._history_route[0].setPositions( this._current_route.getPositions() );
+			this._history_data[0] = [];
+			var markers = OSRM.G.markers.route;
+			for(var i=0,size=markers.length; i<size; i++) {
+				var position = {
+						lat:markers[i].getLat(),
+						lng:markers[i].getLng(),
+						hint:markers[i].hint
+				};
+				this._history_data[0].push(position);
+			}
+		}
 	},
 	showHistoryRoutes: function() {
-//		if( document.getElementById('option-show-previous-routes').checked == false)
-//			return;
-//		for(var i=1,size=this._history_routes; i<size; i++) {
-//			this._history_route[i].setStyle( this._history_styles[i] );
-//			this._history_route[i].show();
-//		}
+		if( document.getElementById('option-show-previous-routes').checked == false)
+			return;
+		console.log("show");
+		for(var i=1,size=this._history_routes; i<size; i++) {
+			this._history_route[i].setStyle( this._history_styles[i] );
+			this._history_route[i].show();
+		}
 	},
 	clearHistoryRoutes: function() {
-//		for(var i=0,size=this._history_route.length; i<size; i++) {
-//			this._history_route[i].hide();
-//			this._history_route[i].setPositions( [] );
-//			this._history_data[i] = [];
-//		}
+		for(var i=0,size=this._history_route.length; i<size; i++) {
+			this._history_route[i].hide();
+			this._history_route[i].setPositions( [] );
+			this._history_data[i] = [];
+		}
+	},
+	fetchHistoryRoute: function() {
+		if( document.getElementById('option-show-previous-routes').checked == false)
+			return;
+		if( this._history_data[0].length == 0)
+			return;
+		console.log("fetch");
+		// move route and positions
+		for(var i=this._history_routes-1; i>0; i--) {
+			this._history_route[i].setPositions( this._history_route[i-1].getPositions() );
+			this._history_data[i] = this._history_data[i-1];
+		}
+		// reset staging spot
+		this._history_route[0].setPositions( [] );
+		this._history_data[0] = [];
 	}	
 });
