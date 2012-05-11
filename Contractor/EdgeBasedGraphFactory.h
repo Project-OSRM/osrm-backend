@@ -80,11 +80,11 @@ public:
         bool operator==(const EdgeBasedNode & other) const {
             return id == other.id;
         }
+        NodeID id;
         int lat1;
         int lat2;
         int lon1;
         int lon2;
-        NodeID id;
         NodeID nameID;
         unsigned weight:31;
         bool ignoreInGrid:1;
