@@ -57,7 +57,9 @@ OSRM.Route.ROUTE = false;
 OSRM.extend( OSRM.Route,{
 	
 	showRoute: function(positions, noroute) {
-//		this.showHistoryRoutes();
+		this.fetchHistoryRoute();
+		this.showHistoryRoutes();
+		
 		this._noroute = noroute;
 		this._current_route.setPositions( positions );
 		if ( this._noroute == OSRM.Route.NOROUTE )
@@ -68,10 +70,11 @@ OSRM.extend( OSRM.Route,{
 		//this._raiseUnnamedRoute();
 	},
 	hideRoute: function() {
-//		this.fetchHistoryRoute();
-//		this.showHistoryRoutes();	
 		this._current_route.hide();
 		this._unnamed_route.hide();
+		
+		this.fetchHistoryRoute();
+		this.showHistoryRoutes();		
 		// deactivate printing
 		OSRM.Printing.deactivate();		
 	},
@@ -79,7 +82,7 @@ OSRM.extend( OSRM.Route,{
 		this.hideRoute();
 		this._old_route.hide();
 		this._noroute = OSRM.Route.ROUTE;
-//		this.clearHistoryRoutes();
+		this.clearHistoryRoutes();
 	},
 	
 	showUnnamedRoute: function(positions) {
@@ -138,9 +141,8 @@ OSRM.extend( OSRM.Route,{
 	storeHistoryRoute: function() {
 		if( document.getElementById('option-show-previous-routes').checked == false)
 			return;
-		console.log("store");
-		this.fetchHistoryRoute();
 		if(this.isShown() && this.isRoute()) {
+			console.log("store");			
 			// store new route and positions in staging spot
 			this._history_route[0].setPositions( this._current_route.getPositions() );
 			this._history_data[0] = [];
@@ -176,6 +178,8 @@ OSRM.extend( OSRM.Route,{
 			return;
 		if( this._history_data[0].length == 0)
 			return;
+		if( this._equalRoute() )
+			return;
 		console.log("fetch");
 		// move route and positions
 		for(var i=this._history_routes-1; i>0; i--) {
@@ -185,5 +189,14 @@ OSRM.extend( OSRM.Route,{
 		// reset staging spot
 		this._history_route[0].setPositions( [] );
 		this._history_data[0] = [];
-	}	
+	},
+	_equalRoute: function() {
+		var lhs = OSRM.G.markers.route;
+		var rhs = this._history_data[0];
+		for(var i=0,size=Math.min(rhs.length,lhs.length); i<size; i++) {
+			if( lhs[i].getLat() != rhs[i].lat || lhs[i].getLng() != rhs[i].lng)
+				return false;
+		}
+		return true;
+	}
 });

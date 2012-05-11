@@ -65,7 +65,7 @@ showRouteSimple: function(response) {
 	} else {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingDescription.showSimple(response);
-//		OSRM.G.route.storeHistoryRoute();		
+		OSRM.G.route.storeHistoryRoute();
 	}
 	OSRM.Routing._updateHints(response);
 
@@ -88,7 +88,7 @@ showRoute: function(response) {
 		OSRM.RoutingNoNames.show(response);
 		OSRM.RoutingDescription.show(response);
 		OSRM.Routing._snapRoute();
-//		OSRM.G.route.storeHistoryRoute();		
+		OSRM.G.route.storeHistoryRoute();
 	}
 	OSRM.Routing._updateHints(response);
 },
