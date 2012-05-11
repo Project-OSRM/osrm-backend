@@ -237,7 +237,7 @@ public:
 
         bool flushedContractor = false;
         while ( numberOfContractedNodes < numberOfNodes ) {
-        	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.75) ) ){
+        	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.65) ) ){
         	    std::vector<_ContractorEdge> newSetOfEdges; //this one is not explicitely cleared since it goes out of scope anywa
         		std::cout << " [flush " << numberOfContractedNodes << " nodes] " << std::flush;
         		
@@ -293,7 +293,6 @@ public:
                             newEdge.data.originalViaNodeID = true;
         		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[start] );
         		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[target]);
-//        		            _newGraph->InsertEdge(newNodeIDFromOldNodeIDMap[start], newNodeIDFromOldNodeIDMap[target], data );
         		            newSetOfEdges.push_back(newEdge);
         		        }
         		    }
@@ -457,6 +456,11 @@ public:
         		}
         	}
         }
+        INFO("Renumbered remaining edges, freeing space");
+        _graph.reset();
+        std::vector<NodeID>().swap(oldNodeIDFromNewNodeIDMap);
+        INFO("Loading temporary edges");
+
         std::ifstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
         //Also get the edges from temporary storage
         unsigned numberOfTemporaryEdges = 0;
@@ -464,6 +468,7 @@ public:
         //loads edges of graph before renumbering, no need for further numbering action.
         NodeID start;
         NodeID target;
+        edges.reserve(edges.size()+numberOfTemporaryEdges);
         _DynamicGraph::EdgeData data;
         for(unsigned i = 0; i < numberOfTemporaryEdges; ++i) {
         	temporaryEdgeStorage.read((char*)&start,  sizeof(NodeID));
