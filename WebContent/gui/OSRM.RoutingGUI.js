@@ -140,11 +140,6 @@ deleteMarker: function(marker_id) {
 
 //click: checkbox "show previous routes"
 showPreviousRoutes: function(value) {
-//	if( document.getElementById('option-show-previous-routes').checked == false) {
-//		document.getElementById('information-box').innerHTML = "";
-//	} else {
-//		document.getElementById('information-box').innerHTML = ""; 
-//	}
 	if( document.getElementById('option-show-previous-routes').checked == false)
 		OSRM.G.route.clearHistoryRoutes();
 	else
