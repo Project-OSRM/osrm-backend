@@ -81,55 +81,49 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!-- body -->
 <body class="base-font not-selectable">
 
-<!--map-->
+<!-- map -->
 <div id="map"></div>
 
 <!-- config gui -->
 <div id="config-wrapper" class="box-wrapper not-selectable">
 <div id="config-content" class="box-content">
+	<!-- header -->
+	<div id="config-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="gui-config-label" class="box-label">Configuraion</div>
 
-<div id="config-toggle" class="iconic-button cancel-marker top-right-button"></div>
-<div id="gui-config-label" class="label">Configuraion</div>
-<div class="full">
-<div class="row">
-<div id="gui-language-label" class="left inner-label">Language:</div>
-<div id="gui-language-area" class="left stretch"><select id="gui-language-toggle-2" class="config-select"></select></div></div>
-<div class="row">
-<div id="gui-units-label" class="left inner-label">Units:</div>
-<div id="gui-units-area" class="left stretch"><select id="gui-units-toggle" class="config-select"></select></div>
-</div>
-</div>
-
+	<!-- config options -->
+	<div class="full">
+	<div class="row">
+	<div class="left fixed"><span id="gui-language-2-label" class="config-label">Language:</span></div>
+	<div class="left stretch"><select id="gui-language-2-toggle" class="config-select"></select></div>
+	</div>
+	<div class="row">
+	<div class="left fixed"><span id="gui-units-label" class="config-label">Units:</span></div>
+	<div class="left stretch"><select id="gui-units-toggle" class="config-select"></select></div>
+	</div>
+	</div>
 </div>
 </div>
 
 <!-- mapping gui -->
 <div id="mapping-wrapper" class="box-wrapper not-selectable">
 <div id="mapping-content" class="box-content">
-
-<div id="mapping-toggle" class="iconic-button cancel-marker top-right-button"></div>
-<div id="gui-mapping-label" class="label">Mapping Tools</div>
-<div class="full">
-<div class="row">
-<div class="left">
-<input type="checkbox" id="option-highlight-nonames" value="highlight-nonames"/>
-<span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Highlight unnamed streets</span>
-</div>
-</div>
-<div class="row">
-<div class="left">
-<input type="checkbox" id="option-show-previous-routes" value="show-previous-routes"/>
-<span id="gui-option-show-previous-routes-label" class="checkbox-label small-font">Show previous routes</span>
-</div>
-</div>
-<div class="row" style="max-height:14px;">
-<div class="right" style="max-height:14px;">
-<a class="button" id="open-josm">JOSM</a>
-<a class="button" id="open-osmbugs">OSM Bugs</a>
-</div>
-</div>
-</div>
-
+	<!-- header -->
+	<div id="mapping-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="gui-mapping-label" class="box-label">Mapping Tools</div>
+	
+	<!-- header -->
+	<div class="full">
+	<div class="row">
+	<div class="left"><input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" class="mapping-checkbox"/></div>
+	<div class="left stretch"><span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Highlight unnamed streets</span></div>
+	</div>
+	<div class="row">
+	<div class="left"><input type="checkbox" id="option-show-previous-routes" value="show-previous-routes" class="mapping-checkbox"/></div>
+	<div class="left stretch"><span id="gui-option-show-previous-routes-label" class="checkbox-label small-font">Show previous routes</span></div>
+	</div>
+	</div>
+	<a class="button mapping-button" id="open-osmbugs">OSM Bugs</a><span class="quad mapping-button"></span><a class="button mapping-button" id="open-josm">JOSM</a>
 </div>
 </div>
 
@@ -181,5 +175,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 </div>
 
 </div>
+
 </body>
 </html>

@@ -32,13 +32,10 @@ body
 	top:0px;
 	height:20px;
 }
-.top-left-button
-{
-	float:left;
-}
 .top-right-button
 {
 	float:right;
+	vertical-align:top;
 }
 
 

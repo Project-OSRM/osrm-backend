@@ -25,7 +25,7 @@ OSRM.GUI.extend( {
 selectorInit: function(id, options, selected, onchange_fct) {
 	// create dropdown menu
 	var select = document.getElementById(id);
-	select.className = "styled-select-helper base-font";
+	select.className += " styled-select-helper base-font";
 	select.onchange = function() { OSRM.GUI.selectorOnChange(this); onchange_fct(this.value); };	
 		
 	// fill dropdown menu
@@ -44,7 +44,7 @@ selectorInit: function(id, options, selected, onchange_fct) {
 	myspan.id = "styled-select-" + select.id;
 	myspan.appendChild(textnode);
 	select.parentNode.insertBefore(myspan, select);
-	myspan.style.width = (select.clientWidth)+"px";
+	myspan.style.width = (select.clientWidth-2)+"px";
 	myspan.style.height = (select.clientHeight)+"px";
 },
 

@@ -17,6 +17,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 /* OSRM CSS styles */
 
+/* ------------------------------------------------------------------------ */
 
 /* fullscreen map */
 html, body {
@@ -30,6 +31,7 @@ html, body {
 	z-index: 0;
 }
 
+/* ------------------------------------------------------------------------ */
 
 /* general styles for gui boxes */
 .box-wrapper
@@ -106,7 +108,21 @@ html, body {
 }
 
 
-/* styles for specific gui boxes */
+/* general styles for gui box headers */
+.top-left-button
+{
+	float:left;
+	vertical-align:top;
+}
+.top-right-button
+{
+	float:right;
+	vertical-align:top;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* styles for main gui boxes */
 #main-wrapper
 {
 	width:410px;
@@ -124,30 +140,6 @@ html, body {
 	width:390px;
 	top:160px;			/* main-input.height+2*gui-box.margin+2*gui-box.padding */
 	bottom:0px;
-}
-#mapping-wrapper
-{
-	width:410px;
-	height:100px;
-	bottom:25px;
-	right:5px;
-}
-#mapping-content
-{
-	width:390px;
-	height:80px;	
-}
-#config-wrapper
-{
-	width:410px;
-	height:100px;
-	bottom:25px;
-	right:5px;
-}
-#config-content
-{
-	width:390px;
-	height:80px;	
 }
 
 
@@ -174,16 +166,7 @@ html, body {
 /* styles for main-input input-mask-header */
 #gui-language-toggle
 {
-	position:relative;
-}
-
-.top-left-button
-{
-	float:left;
-}
-.top-right-button
-{
-	float:right;
+	position:absolute;
 }
 
 
@@ -251,29 +234,7 @@ html, body {
 }
 
 
-/* workaround for invisible scrollbars in Chrome */
-#information-box::-webkit-scrollbar {
-	height: 10px;
-	width: 10px;
-}
-#information-box::-webkit-scrollbar-track {
-    background: #FFFFFF;
-}
-#information-box::-webkit-scrollbar-thumb {
-	min-height: 30px;
-    background: #EEEEEE;
-    border: 1px solid #999999;
-    -webkit-border-radius: 5ex;
-}
-#information-box::-webkit-scrollbar-thumb:hover {
-    background: #F9F9F9;
-}
-#information-box::-webkit-scrollbar-thumb:active {
-    background: #F4F4F4;
-}
-
-
-/* styles for information-box-header */
+/* styles for main-output information-box-header */
 .header-title
 {
 	font-weight:bold;
@@ -300,7 +261,29 @@ html, body {
 }
 
 
-/* style for information-box table (general) */
+/* styles for main-output information-box -> workaround for invisible scrollbars in Chrome */
+#information-box::-webkit-scrollbar {
+	height: 10px;
+	width: 10px;
+}
+#information-box::-webkit-scrollbar-track {
+    background: #FFFFFF;
+}
+#information-box::-webkit-scrollbar-thumb {
+	min-height: 30px;
+    background: #EEEEEE;
+    border: 1px solid #999999;
+    -webkit-border-radius: 5ex;
+}
+#information-box::-webkit-scrollbar-thumb:hover {
+    background: #F9F9F9;
+}
+#information-box::-webkit-scrollbar-thumb:active {
+    background: #F4F4F4;
+}
+
+
+/* style for main-output information-box -> table (general) */
 .no-results
 {
 	text-align:center;
@@ -308,7 +291,7 @@ html, body {
 }
 
 
-/* style for information-box table (search results) */
+/* style for main-output information-box -> table (search results) */
 .results
 {
 	border-spacing:0px;
@@ -347,7 +330,7 @@ html, body {
 }
 
 
-/* style for information-box table (driving directions) */
+/* style for main-output information-box -> table (driving directions) */
 .description
 {
 	border-spacing:0px;
@@ -396,9 +379,37 @@ html, body {
 	color:#ff0000
 }
 
+/* ------------------------------------------------------------------------ */
 
-/* styles for config and mapping boxes */
-#gui-language-toggle-2
+/* styles for other gui boxes */
+#mapping-wrapper
+{
+	width:410px;
+	height:100px;
+	bottom:25px;
+	right:5px;
+}
+#mapping-content
+{
+	width:390px;
+	height:80px;	
+}
+#config-wrapper
+{
+	width:410px;
+	height:100px;
+	bottom:25px;
+	right:5px;
+}
+#config-content
+{
+	width:390px;
+	height:80px;	
+}
+
+
+/* styles for content of other gui boxes */
+#gui-language-2-toggle
 {
 	position:relative;
 }
@@ -406,20 +417,30 @@ html, body {
 {
 	position:relative;
 }
-.config-select
-{
-	width:100px;
-}
-.label
+.box-label
 {
 	font-weight:bold;
 	margin-bottom:10px;
 }
-.inner-label
+.config-label
 {
-	padding:0px 20px 0px 5px;
+	margin: 0px 0px 0px 5px;
+}
+.config-select
+{
+	width:100px;
+}
+.mapping-checkbox
+{
+	margin: 0px 5px 3px 5px;
+}
+.mapping-button
+{
+	float: right;
 }
 
+
+/* ------------------------------------------------------------------------ */
 
 /* buttons */
 .button
@@ -465,30 +486,39 @@ html, body {
 }
 
 
-/* fonts */
-.base-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	font-weight: normal;
+/* styled select */
+.styled-select-helper
+{
+	border: 0px;
+	text-decoration:none;
+ 	opacity: 0;
+	filter: alpha(opacity=0);
+	z-index: 5;
+	cursor:pointer;
 }
-.big-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 14px;
-	font-weight: bold;	
-}
-.medium-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 10.5px;
-	font-weight: normal;	
-}
-.small-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 9px;
-	font-weight: normal;	
+.styled-select
+{
+	position:absolute;
+	background-repeat:no-repeat;	
+	background-position: top right;
+	padding: 1px 1px 1px 1px;
+	overflow: hidden;
 }
 
 
-/* utility styles (defined above buttons, so that buttons retain cursor:pointer)*/
+/* checkboxes */
+input[type=checkbox],
+{
+	cursor:pointer;
+}
+.checkbox-label
+{
+	vertical-align:2px;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* utility styles */
 .quad
 {
 	min-width:10px;
@@ -512,34 +542,7 @@ html, body {
 	user-select: text;
 }
 
-.checkbox-label
-{
-	vertical-align:2px;
-}
-
-.styled-select-helper
-{
-	border: 0px;
-	text-decoration:none;
- 	opacity: 0;
-	filter: alpha(opacity=0);
-	z-index: 5;
-}
-.styled-select
-{
-	position:absolute;
-	background-repeat:no-repeat;	
-	background-position: top right;
-	padding: 1px 1px 1px 1px;
-	overflow: hidden;
-}
-
-input[type=checkbox],
-select
-{
-	cursor:pointer;
-}
-
+/* ------------------------------------------------------------------------ */
 
 /* table styles */
 .full
@@ -572,4 +575,32 @@ select
 .stretch
 {
 	width:100%;
+}
+.fixed
+{
+	min-width:100px;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* fonts */
+.base-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10.5px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;	
 }
