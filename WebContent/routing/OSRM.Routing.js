@@ -31,46 +31,27 @@ OSRM.Routing = {
 		
 // init routing data structures
 init: function() {
+	OSRM.G.markers = new OSRM.Markers();	
 	OSRM.G.route = new OSRM.Route();
-	OSRM.G.markers = new OSRM.Markers();
 },
 
 
 // -- JSONP processing -- 
 
 // process JSONP response of routing server
-timeoutRouteSimple: function() {
-	OSRM.RoutingGeometry.showNA();
-	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
-},
 timeoutRoute: function() {
 	OSRM.RoutingGeometry.showNA();
 	OSRM.RoutingNoNames.showNA();
 	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
 	OSRM.Routing._snapRoute();	
 },
-timeoutRouteReverse: function() {
+timeoutRoute_Dragging: function() {
+	OSRM.RoutingGeometry.showNA();
+	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
+},
+timeoutRoute_Reversed: function() {
 	OSRM.G.markers.reverseMarkers();
 	timeoutRoute();
-},
-showRouteSimple: function(response) {
- 	if(!response)
- 		return;
- 	if( !OSRM.G.dragging )		// prevent simple routing when not dragging (required as there can be drag events after a dragstop event!)
- 		return;
- 	
-	if( response.status == 207) {
-		OSRM.RoutingGeometry.showNA();
-		OSRM.RoutingDescription.showNA( OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED") );
-	} else {
-		OSRM.RoutingGeometry.show(response);
-		OSRM.RoutingDescription.showSimple(response);
-		OSRM.G.route.storeHistoryRoute();
-	}
-	OSRM.Routing._updateHints(response);
-
-	if(OSRM.G.pending)
-		setTimeout(OSRM.Routing.draggingTimeout,1);		
 },
 showRoute: function(response) {
 	if(!response)
@@ -92,7 +73,26 @@ showRoute: function(response) {
 	}
 	OSRM.Routing._updateHints(response);
 },
-showRouteRedraw: function(response) {
+showRoute_Dragging: function(response) {
+ 	if(!response)
+ 		return;
+ 	if( !OSRM.G.dragging )		// prevent simple routing when not dragging (required as there can be drag events after a dragstop event!)
+ 		return;
+ 	
+	if( response.status == 207) {
+		OSRM.RoutingGeometry.showNA();
+		OSRM.RoutingDescription.showNA( OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED") );
+	} else {
+		OSRM.RoutingGeometry.show(response);
+		OSRM.RoutingDescription.showSimple(response);
+		OSRM.G.route.storeHistoryRoute();
+	}
+	OSRM.Routing._updateHints(response);
+
+	if(OSRM.G.pending)
+		setTimeout(OSRM.Routing.draggingTimeout,1);		
+},
+showRoute_Redraw: function(response) {
 	if(!response)
 		return;
 	
@@ -102,7 +102,7 @@ showRouteRedraw: function(response) {
 	}
 	OSRM.Routing._updateHints(response);
 },
-showRouteHistory: function(response, history_id) {
+showRoute_RedrawHistory: function(response, history_id) {
 	if(!response)
 		return;
 	
@@ -136,7 +136,7 @@ getRoute_Reversed: function() {
 	OSRM.JSONP.clear('dragging');
 	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.clear('route');
-	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRouteReverse, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');	
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute_Reversed, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');	
 },
 getRoute_Redraw: function() {
 	if( OSRM.G.markers.route.length < 2 )
@@ -144,17 +144,17 @@ getRoute_Redraw: function() {
 	
 	OSRM.JSONP.clear('dragging');
 	OSRM.JSONP.clear('redraw');
-	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRouteRedraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw');
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute_Redraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw');
 },
 getRoute_RedrawHistory: function() {
 	for(var i=0; i<10; i++)
 		if( OSRM.G.route._history_data[i].length > 0 ) {
 			OSRM.JSONP.clear('history'+i);
-			OSRM.JSONP.call(OSRM.Routing._buildHistoryCall(i)+'&instructions=false', OSRM.Routing.showRouteHistory, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'history'+i, i);
+			OSRM.JSONP.call(OSRM.Routing._buildHistoryCall(i)+'&instructions=false', OSRM.Routing.showRoute_RedrawHistory, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'history'+i, i);
 		}
 },
 getRoute_Dragging: function() {
-	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRouteSimple, OSRM.Routing.timeoutRouteSimple, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
+	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRoute_Dragging, OSRM.Routing.timeoutRoute_Dragging, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
 },
 draggingTimeout: function() {
 	OSRM.G.markers.route[OSRM.G.dragid].hint = null;
