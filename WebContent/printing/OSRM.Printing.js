@@ -184,9 +184,10 @@ show: function(response) {
 	print_window.OSRM.prefetchIcons( OSRM.G.images );
 	print_window.OSRM.drawMarkers( OSRM.G.markers.route );
 	
-	// draw route & query for better geometry	
+	// draw route & query for better geometry
 	print_window.OSRM.drawRoute( positions );
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&z='+zoom+'&instructions=false', OSRM.Printing.drawRoute, OSRM.Printing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'print');
+	// NOTE: simply appended correct zoom level as second zoom parameter to JSONP call -> OSRM API only considers the last one! 
 },
 timeoutRoute: function() {},
 drawRoute: function(response) {
