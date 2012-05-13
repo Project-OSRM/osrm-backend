@@ -69,7 +69,6 @@ showRoute: function(response) {
 		OSRM.RoutingNoNames.show(response);
 		OSRM.RoutingDescription.show(response);
 		OSRM.Routing._snapRoute();
-		OSRM.G.route.storeHistoryRoute();
 	}
 	OSRM.Routing._updateHints(response);
 },
@@ -78,14 +77,14 @@ showRoute_Dragging: function(response) {
  		return;
  	if( !OSRM.G.dragging )		// prevent simple routing when not dragging (required as there can be drag events after a dragstop event!)
  		return;
- 	
+
+	OSRM.G.response = response;
 	if( response.status == 207) {
 		OSRM.RoutingGeometry.showNA();
 		OSRM.RoutingDescription.showNA( OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED") );
 	} else {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingDescription.showSimple(response);
-		OSRM.G.route.storeHistoryRoute();
 	}
 	OSRM.Routing._updateHints(response);
 
@@ -102,16 +101,6 @@ showRoute_Redraw: function(response) {
 	}
 	OSRM.Routing._updateHints(response);
 },
-showRoute_RedrawHistory: function(response, history_id) {
-	if(!response)
-		return;
-	
-	if(response.status != 207) {
-		var positions = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
-		OSRM.G.route._history_route[history_id].setPositions(positions);
-	}
-},
-
 
 
 //-- main function --
@@ -146,13 +135,6 @@ getRoute_Redraw: function() {
 	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute_Redraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw');
 },
-getRoute_RedrawHistory: function() {
-	for(var i=0; i<10; i++)
-		if( OSRM.G.route._history_data[i].length > 0 ) {
-			OSRM.JSONP.clear('history'+i);
-			OSRM.JSONP.call(OSRM.Routing._buildHistoryCall(i)+'&instructions=false', OSRM.Routing.showRoute_RedrawHistory, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'history'+i, i);
-		}
-},
 getRoute_Dragging: function() {
 	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRoute_Dragging, OSRM.Routing.timeoutRoute_Dragging, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
 },
@@ -169,19 +151,6 @@ _buildCall: function() {
 	var markers = OSRM.G.markers.route;
 	for(var i=0,size=markers.length; i<size; i++) {
 		source += '&loc='  + markers[i].getLat().toFixed(6) + ',' + markers[i].getLng().toFixed(6);
-		if( markers[i].hint)
-			source += '&hint=' + markers[i].hint;
-	}
-	return source;
-},
-_buildHistoryCall: function(history_id) {
-	var source = OSRM.DEFAULTS.HOST_ROUTING_URL;
-	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp&geomformat=cmp';	
-	if(OSRM.G.markers.checksum)
-		source += '&checksum=' + OSRM.G.markers.checksum;
-	var markers = OSRM.G.route._history_data[history_id];
-	for(var i=0,size=markers.length; i<size; i++) {
-		source += '&loc='  + markers[i].lat.toFixed(6) + ',' + markers[i].lng.toFixed(6);
 		if( markers[i].hint)
 			source += '&hint=' + markers[i].hint;
 	}

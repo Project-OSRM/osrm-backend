@@ -78,7 +78,6 @@ zoomed: function(e) {
 		OSRM.Routing.getRoute_Dragging();
 	else
 		OSRM.Routing.getRoute_Redraw();
-//	OSRM.Routing.getRoute_RedrawHistory();
 },
 contextmenu: function(e) {;},
 mousemove: function(e) { OSRM.Via.drawDragMarker(e); },

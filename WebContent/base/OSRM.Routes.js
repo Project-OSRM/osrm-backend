@@ -31,35 +31,15 @@ OSRM.Route = function() {
 	this._unnamed_route_style = {dashed:false, color:'#FF00FF', weight:10};
 	this._old_unnamed_route_style = {dashed:false, color:'#990099', weight:10};
 	
-	this._noroute = OSRM.Route.ROUTE;	
-	
-	this._history_styles = [{dashed:false, color:'#FF0000', weight:5},
-	                        {dashed:false, color:'#00FF00', weight:5},
-	                        {dashed:false, color:'#0000FF', weight:5},
-	                        {dashed:false, color:'#FF00FF', weight:5},
-	                        {dashed:false, color:'#00FFFF', weight:5},
-	                        {dashed:false, color:'#770000', weight:5},
-	                        {dashed:false, color:'#007700', weight:5},
-	                        {dashed:false, color:'#000077', weight:5},
-	                        {dashed:false, color:'#770077', weight:5},
-	                        {dashed:false, color:'#007777', weight:5}	                              
-	                        ];
-	this._history_routes = this._history_styles.length;
-	this._history_route = [];
-	this._history_data = [];
-	for(var i=0, size=this._history_routes; i<size; i++) {
-		this._history_route.push( new OSRM.SimpleRoute("current" , {dashed:false} ) );
-		this._history_data[i] = [];
-	}
+	this._noroute = OSRM.Route.ROUTE;
+	this._history = new OSRM.HistoryRoute();
 };
 OSRM.Route.NOROUTE = true;
 OSRM.Route.ROUTE = false;
 OSRM.extend( OSRM.Route,{
-	
+
+	// show/hide route
 	showRoute: function(positions, noroute) {
-		this.fetchHistoryRoute();
-		this.showHistoryRoutes();
-		
 		this._noroute = noroute;
 		this._current_route.setPositions( positions );
 		if ( this._noroute == OSRM.Route.NOROUTE )
@@ -68,23 +48,22 @@ OSRM.extend( OSRM.Route,{
 			this._current_route.setStyle( this._current_route_style );
 		this._current_route.show();
 		//this._raiseUnnamedRoute();
+
+		this._history.fetchHistoryRoute();
+		this._history.showHistoryRoutes();		
+		this._history.storeHistoryRoute();		
 	},
 	hideRoute: function() {
 		this._current_route.hide();
 		this._unnamed_route.hide();
 		
-		this.fetchHistoryRoute();
-		this.showHistoryRoutes();		
+		this._history.fetchHistoryRoute();
+		this._history.showHistoryRoutes();		
 		// deactivate printing
 		OSRM.Printing.deactivate();		
 	},
-	hideAll: function() {
-		this.hideRoute();
-		this._old_route.hide();
-		this._noroute = OSRM.Route.ROUTE;
-		this.clearHistoryRoutes();
-	},
 	
+	// show/hide highlighting for unnamed routes
 	showUnnamedRoute: function(positions) {
 		this._unnamed_route.clearRoutes();
 		for(var i=0; i<positions.length; i++) {
@@ -102,7 +81,9 @@ OSRM.extend( OSRM.Route,{
 			this._unnamed_route.hide();
 			this._unnamed_route.show();
 		}		
-	},	
+	},
+	
+	// show/hide previous route as shadow
 	showOldRoute: function() {
 		this._old_route.setPositions( this._current_route.getPositions() );
 		if ( this._noroute == OSRM.Route.NOROUTE)
@@ -118,6 +99,7 @@ OSRM.extend( OSRM.Route,{
 		this._old_route.hide();
 	},
 	
+	// query routines
 	isShown: function() {
 		return this._current_route.isShown();
 	},
@@ -129,74 +111,27 @@ OSRM.extend( OSRM.Route,{
 	},
 	getPoints: function() {
 		return this._current_route.getPoints();
-	},	
+	},
+	
+	// helper routines
+	reset: function() {
+		this.hideRoute();
+		this._old_route.hide();
+		this._noroute = OSRM.Route.ROUTE;
+		this._history.clearHistoryRoutes();
+	},
 	fire: function(type,event) {
 		this._current_route.route.fire(type,event);
 	},
 	centerView: function() {
 		this._current_route.centerView();
-	},
+	},	
 	
-	// history route handling
-	storeHistoryRoute: function() {
-		if( document.getElementById('option-show-previous-routes').checked == false)
-			return;
-		if(this.isShown() && this.isRoute()) {
-			console.log("store");			
-			// store new route and positions in staging spot
-			this._history_route[0].setPositions( this._current_route.getPositions() );
-			this._history_data[0] = [];
-			var markers = OSRM.G.markers.route;
-			for(var i=0,size=markers.length; i<size; i++) {
-				var position = {
-						lat:markers[i].getLat(),
-						lng:markers[i].getLng(),
-						hint:markers[i].hint
-				};
-				this._history_data[0].push(position);
-			}
-		}
+	// handle history routes
+	activateHistoryRoutes: function() {
+		this._history.activate();
 	},
-	showHistoryRoutes: function() {
-		if( document.getElementById('option-show-previous-routes').checked == false)
-			return;
-		console.log("show");
-		for(var i=1,size=this._history_routes; i<size; i++) {
-			this._history_route[i].setStyle( this._history_styles[i] );
-			this._history_route[i].show();
-		}
-	},
-	clearHistoryRoutes: function() {
-		for(var i=0,size=this._history_route.length; i<size; i++) {
-			this._history_route[i].hide();
-			this._history_route[i].setPositions( [] );
-			this._history_data[i] = [];
-		}
-	},
-	fetchHistoryRoute: function() {
-		if( document.getElementById('option-show-previous-routes').checked == false)
-			return;
-		if( this._history_data[0].length == 0)
-			return;
-		if( this._equalRoute() )
-			return;
-		console.log("fetch");
-		// move route and positions
-		for(var i=this._history_routes-1; i>0; i--) {
-			this._history_route[i].setPositions( this._history_route[i-1].getPositions() );
-			this._history_data[i] = this._history_data[i-1];
-		}
-		// reset staging spot
-		this._history_route[0].setPositions( [] );
-		this._history_data[0] = [];
-	},
-	_equalRoute: function() {
-		var lhs = OSRM.G.markers.route;
-		var rhs = this._history_data[0];
-		for(var i=0,size=Math.min(rhs.length,lhs.length); i<size; i++) {
-			if( lhs[i].getLat() != rhs[i].lat || lhs[i].getLng() != rhs[i].lng)
-				return false;
-		}
-		return true;
-	}
+	deactivateHistoryRoutes: function() {
+		this._history.deactivate();
+	}	
 });

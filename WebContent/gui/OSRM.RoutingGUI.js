@@ -48,7 +48,7 @@ resetRouting: function() {
 	document.getElementById('gui-input-source').value = "";
 	document.getElementById('gui-input-target').value = "";
 	
-	OSRM.G.route.hideAll();
+	OSRM.G.route.reset();
 	OSRM.G.markers.reset();
 	
 	document.getElementById('information-box').innerHTML = "";
@@ -141,9 +141,9 @@ deleteMarker: function(marker_id) {
 //click: checkbox "show previous routes"
 showPreviousRoutes: function(value) {
 	if( document.getElementById('option-show-previous-routes').checked == false)
-		OSRM.G.route.clearHistoryRoutes();
+		OSRM.G.route.deactivateHistoryRoutes();
 	else
-		OSRM.G.route.storeHistoryRoute();
+		OSRM.G.route.activateHistoryRoutes();
 }
 
 });
