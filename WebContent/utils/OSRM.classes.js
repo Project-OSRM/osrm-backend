@@ -40,10 +40,9 @@ OSRM.extend = function( target_class, properties ) {
 
 
 // bind a function to an execution context, i.e. an object (needed for correcting this pointers)
-OSRM.bind = function( context, fct1, fct2 ) {
+OSRM.bind = function( context, fct1 ) {
 	return function() {
-		if(fct1) fct1.apply(context, arguments);
-		if(fct2) fct2.apply(context, arguments);
+		fct1.apply(context, arguments);
 	};
 };
 
