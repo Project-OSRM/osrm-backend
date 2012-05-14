@@ -58,7 +58,6 @@ showRoute: function(response) {
 		return;
 	
 	OSRM.G.response = response;	// needed for printing & history routes!
-	OSRM.G.via_points = response.via_points.slice(0);
 	if(response.status == 207) {
 		OSRM.RoutingGeometry.showNA();
 		OSRM.RoutingNoNames.showNA();
@@ -95,6 +94,7 @@ showRoute_Redraw: function(response) {
 	if(!response)
 		return;
 	
+	//OSRM.G.response = response;	// not needed, even harmful as important information is not stored!
 	if(response.status != 207) {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingNoNames.show(response);
@@ -171,11 +171,13 @@ _updateHints: function(response) {
 // snap all markers to the received route
 _snapRoute: function() {
 	var positions = OSRM.G.route.getPositions();
- 	
- 	OSRM.G.markers.route[0].setPosition( positions[0] );
- 	OSRM.G.markers.route[OSRM.G.markers.route.length-1].setPosition( positions[positions.length-1] );
- 	for(var i=0; i<OSRM.G.via_points.length; i++)
-		OSRM.G.markers.route[i+1].setPosition( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
+	var markers = OSRM.G.markers.route;
+	var via_points = OSRM.G.response.via_points;
+	
+ 	markers[0].setPosition( positions[0] );
+ 	markers[markers.length-1].setPosition( positions[positions.length-1] );
+ 	for(var i=0; i<via_points.length; i++)
+ 		markers[i+1].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) );
 
  	OSRM.Geocoder.updateAddress(OSRM.C.SOURCE_LABEL);
  	OSRM.Geocoder.updateAddress(OSRM.C.TARGET_LABEL);

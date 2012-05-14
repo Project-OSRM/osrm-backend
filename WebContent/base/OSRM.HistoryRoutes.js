@@ -78,35 +78,28 @@ OSRM.extend( OSRM.HistoryRoute,{
 	// actual functions
 	_storeHistoryRoute: function() {
 		var route = OSRM.G.route;
-		if(route.isShown() && route.isRoute()) {
-			// store current route in staging spot
-			this._history[0].route.setPositions( route.getPositions() );
-			this._history[0].checksum = OSRM.G.markers.checksum;
-			this._history[0].markers = [];
+		if( !route.isShown() || !route.isRoute() )
+			return;
+			
+		// store current route in staging spot
+		var hint_data = OSRM.G.response.hint_data;
+		this._history[0].route.setPositions( route.getPositions() );
+		this._history[0].checksum = hint_data.checksum;
+		this._history[0].markers = [];
 
-			var route = this._currentRoute();
-			for(var i=0,size=OSRM.G.response.hint_data.locations.length; i<size; i++) {
-				var position = {
-						lat:route[i].lat,
-						lng:route[i].lng,
-						//hint:OSRM.G.response.hint_data.locations[i]
-				};
-				this._history[0].markers.push(position);
-			}
-		
-			console.log("store", this._history[0].markers);
+		var markers = this._getCurrentMarkers();
+		for(var i=0,size=markers.length; i<size; i++) {
+			var position = { lat:markers[i].lat, lng:markers[i].lng, hint:hint_data.locations[i] };
+			this._history[0].markers.push(position);
 		}
 	},
 	_fetchHistoryRoute: function() {
-		var route = this._currentRoute();
-		if( OSRM.G.route.isShown() && this._equalRoute(this._history[0].markers, route) ) {
-			console.log("fetch failed 1");
+		if( this._history[0].markers.length == 0 )
 			return;
-		}
-		if( this._equalRoute(this._history[1].markers, this._history[0].markers) ) {
-			console.log("fetch failed 2");
+		if( OSRM.G.route.isShown() && this._equalMarkers(this._history[0].markers, this._getCurrentMarkers()) )
 			return;
-		}
+		if( this._equalMarkers(this._history[0].markers, this._history[1].markers) )
+			return;		
 
 		// move all routes down one position
 		for(var i=this._history_length-1; i>0; i--) {
@@ -118,18 +111,15 @@ OSRM.extend( OSRM.HistoryRoute,{
 		this._history[0].route.setPositions( [] );
 		this._history[0].markers = [];
 		this._history[0].checksum = null;
-		
-		console.log("fetch", this._history[1].markers);		
 	},	
 	_showHistoryRoutes: function() {
-		console.log("show");
 		for(var i=1,size=this._history_length; i<size; i++) {
 			this._history[i].route.setStyle( this._history_styles[i] );
 			this._history[i].route.show();
+			OSRM.G.route.hideOldRoute();
 		}
 	},
 	_clearHistoryRoutes: function() {
-		console.log("clear");
 		for(var i=0,size=this._history_length; i<size; i++) {
 			this._history[i].route.hide();
 			this._history[i].route.setPositions( [] );
@@ -138,36 +128,29 @@ OSRM.extend( OSRM.HistoryRoute,{
 		}
 	},
 	
-	//get current route
-	_currentRoute: function() {
+	// get positions of current markers (note: data of jsonp response used, as not all data structures updated!)
+	_getCurrentMarkers: function() {
 		var route = [];
 		
 		var positions = OSRM.G.route.getPositions();
 		if(positions.length == 0)
 			return route;
+		
 		route.push( {lat: positions[0].lat, lng: positions[0].lng });
 		for(var i=0; i<OSRM.G.response.via_points.length; i++)
 			route.push( {lat:OSRM.G.response.via_points[i][0], lng:OSRM.G.response.via_points[i][1]} );
 		route.push( {lat: positions[positions.length-1].lat, lng: positions[positions.length-1].lng });
-		
 		return route;
 	},
 	
-	// check if routes are the same
-	_equalRoute: function(lhs, rhs) {
-		console.log("lhs",lhs);
-		console.log("rhs",rhs);
-		if(lhs.length == 0) {
-			console.log("different routes");
+	// check if two routes are equivalent by checking their markers
+	_equalMarkers: function(lhs, rhs) {
+		if(lhs.length != rhs.length)
 			return false;
-		}
-		for(var i=0,size=Math.min(rhs.length,lhs.length); i<size; i++) {
-			if( lhs[i].lat != rhs[i].lat || lhs[i].lng != rhs[i].lng) {
-				console.log("different routes");
+		for(var i=0,size=lhs.length; i<size; i++) {
+			if( lhs[i].lat != rhs[i].lat || lhs[i].lng != rhs[i].lng)
 				return false;
-			}
 		}
-		console.log("same routes");
 		return true;
 	},
 	
@@ -178,7 +161,7 @@ OSRM.extend( OSRM.HistoryRoute,{
 		
 		var positions = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
 		this._history[history_id].route.setPositions(positions);
-		//this._updateHints(response, history_id);
+		this._updateHints(response, history_id);
 	},
 	_getRoute_RedrawHistory: function() {
 		for(var i=0,size=this._history_length; i<size; i++)
