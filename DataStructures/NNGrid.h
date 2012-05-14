@@ -377,7 +377,8 @@ private:
     }
 
     unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, std::vector<char> & tmpBuffer, const unsigned long index) {
-        tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*vectorWithSameFileIndex.size()) + sizeof(unsigned) );
+        const unsigned lengthOfBucket = vectorWithSameFileIndex.size();
+        tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*lengthOfBucket) + sizeof(unsigned) );
         unsigned counter = 0;
 
         for(unsigned i = 0; i < vectorWithSameFileIndex.size()-1; ++i) {
@@ -385,22 +386,14 @@ private:
             assert( vectorWithSameFileIndex[i].ramIndex == vectorWithSameFileIndex[i+1].ramIndex );
         }
 
-        sort( vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end() );
-        vectorWithSameFileIndex.erase(unique(vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end()), vectorWithSameFileIndex.end());
-
         //write length of bucket
-        unsigned lengthOfBucket = vectorWithSameFileIndex.size();
-        for(unsigned i = 0; i < sizeof(unsigned); ++i) {
-            tmpBuffer[index+counter] = ((char *)&lengthOfBucket)[i];
-            ++counter;
-        }
+        memcpy((char*)&(tmpBuffer[index+counter]), (char *)&lengthOfBucket, sizeof(lengthOfBucket));
+        counter += sizeof(lengthOfBucket);
 
         BOOST_FOREACH(const GridEntry & entry, vectorWithSameFileIndex) {
             char * data = (char *)&(entry.edge);
-            for(unsigned i = 0; i < sizeof(_GridEdge); ++i) {
-                tmpBuffer[index+counter] = data[i];
-                ++counter;
-            }
+            memcpy((char*)&(tmpBuffer[index+counter]), data, sizeof(entry.edge));
+            counter += sizeof(entry.edge);
         }
         //Freeing data
         vectorWithSameFileIndex.clear();
