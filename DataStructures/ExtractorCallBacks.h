@@ -157,6 +157,10 @@ public:
         std::string cycleway( w.keyVals.Find("cycleway"));
         std::string duration ( w.keyVals.Find("duration"));
         std::string service (w.keyVals.Find("service"));
+        std::string area(w.keyVals.Find("area"));
+
+        if("yes" == area && settings.ignoreAreas)
+            return true;
 
         //Save the name of the way if it has one, ref has precedence over name tag.
         if ( 0 < ref.length() )
