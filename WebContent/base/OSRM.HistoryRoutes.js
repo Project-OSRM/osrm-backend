@@ -148,7 +148,7 @@ OSRM.extend( OSRM.HistoryRoute,{
 		if(lhs.length != rhs.length)
 			return false;
 		for(var i=0,size=lhs.length; i<size; i++) {
-			if( lhs[i].lat != rhs[i].lat || lhs[i].lng != rhs[i].lng)
+			if( lhs[i].lat.toFixed(5) != rhs[i].lat.toFixed(5) || lhs[i].lng.toFixed(5) != rhs[i].lng.toFixed(5) )
 				return false;
 		}
 		return true;
