@@ -162,8 +162,8 @@ public:
         if(routeParameters.options.Find("geometry") == "false" ) {
             descriptorConfig.geometry = false;
         }
-        if("cmp" == routeParameters.options.Find("geomformat") || "cmp6" == routeParameters.options.Find("geomformat")  ) {
-            descriptorConfig.encodeGeometry = true;
+        if("cmp" == routeParameters.options.Find("no") || "cmp6" == routeParameters.options.Find("no")  ) {
+            descriptorConfig.encodeGeometry = false;
         }
         switch(descriptorType){
         case 0:
