@@ -57,7 +57,7 @@ showRoute: function(response) {
 	if(!response)
 		return;
 	
-	OSRM.G.response = response; 
+	OSRM.G.response = response;	// needed for printing & history routes!
 	OSRM.G.via_points = response.via_points.slice(0);
 	if(response.status == 207) {
 		OSRM.RoutingGeometry.showNA();
@@ -78,7 +78,7 @@ showRoute_Dragging: function(response) {
  	if( !OSRM.G.dragging )		// prevent simple routing when not dragging (required as there can be drag events after a dragstop event!)
  		return;
 
-	OSRM.G.response = response;
+	OSRM.G.response = response;	// needed for history routes!
 	if( response.status == 207) {
 		OSRM.RoutingGeometry.showNA();
 		OSRM.RoutingDescription.showNA( OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED") );
