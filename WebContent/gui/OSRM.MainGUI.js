@@ -43,6 +43,10 @@ init: function() {
 	
 	// init units selector
 	OSRM.GUI.selectorInit( "gui-units-toggle", [{display:"Kilometers",value:0},{display:"Miles",value:1}], 0, OSRM.GUI.onUnitsChanged );
+	
+	// query last update of data
+	OSRM.G.data_updated = "n/a";
+	OSRM.JSONP.call('OSRM.DEFAULTS.HOST_ROUTING_URL?data_updated=true', OSRM.GUI.setDataUpdated, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_updated');
 },
 
 // set language dependent labels
@@ -64,6 +68,7 @@ setLabels: function() {
 	document.getElementById("gui-config-label").innerHTML = OSRM.loc("GUI_CONFIGURATION");
 	document.getElementById("gui-language-2-label").innerHTML = OSRM.loc("GUI_LANGUAGE")+":";
 	document.getElementById("gui-units-label").innerHTML = OSRM.loc("GUI_UNITS")+":";
+	document.getElementById('gui-data-updated').innerHTML = OSRM.loc("GUI_DATA_UPDATED")+": " + OSRM.G.data_updated;
 	
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[0].innerHTML = OSRM.loc("GUI_KILOMETERS");
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[1].innerHTML = OSRM.loc("GUI_MILES");
@@ -96,6 +101,15 @@ afterMainTransition: function() {
 onUnitsChanged: function(value) {
 	OSRM.Utils.setToHumanDistanceFunction(value);
 	OSRM.Routing.getRoute();
+},
+
+// set time when data was last updated
+setDataUpdated: function(response) {
+	if(!response)
+		return;
+	
+	OSRM.G.data_updated = response.data_updated;
+	document.getElementById('gui-data-updated').innerHTML = OSRM.loc("GUI_DATA_UPDATED")+": " + OSRM.G.data_updated;
 }
 
 });

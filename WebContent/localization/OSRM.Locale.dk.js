@@ -37,6 +37,7 @@ OSRM.Localization["dk"] = {
 "GUI_UNITS": "Enheder",
 "GUI_KILOMETERS": "Kilometer",
 "GUI_MILES": "Miles",
+"GUI_DATA_UPDATED": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Kortlægnings værktøjer",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Fremhæv unavngivne veje",

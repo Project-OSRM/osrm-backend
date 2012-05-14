@@ -37,6 +37,7 @@ OSRM.Localization["fi"] = {
 "GUI_UNITS": "Yksiköt",
 "GUI_KILOMETERS": "Kilometri",
 "GUI_MILES": "Miles",
+"GUI_DATA_UPDATED": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Kartoitustyökalut",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Korosta nimettömät tiet",
