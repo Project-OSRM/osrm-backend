@@ -33,6 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/HelloWorldPlugin.h"
 #include "Plugins/LocatePlugin.h"
 #include "Plugins/NearestPlugin.h"
+#include "Plugins/TimestampPlugin.h"
 #include "Plugins/ViaRoutePlugin.h"
 
 #include "Util/InputFileUtil.h"
@@ -107,6 +108,8 @@ int main (int argc, char *argv[]) {
         h.RegisterPlugin(new LocatePlugin(objects));
 
         h.RegisterPlugin(new NearestPlugin(objects));
+
+        h.RegisterPlugin(new TimestampPlugin(objects));
 
         h.RegisterPlugin(new ViaRoutePlugin(objects));
 
