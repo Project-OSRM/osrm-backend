@@ -43,8 +43,8 @@ OSRM.DEFAULTS = {
 	LANUGAGE_ONDEMAND_RELOADING: true,
 	LANGUAGE_SUPPORTED: [ 
 		{encoding:"en", name:"English"},
-		{encoding:"dk", name:"Dansk"},
 		{encoding:"de", name:"Deutsch"},
+		{encoding:"dk", name:"Dansk"},
 		{encoding:"fi", name:"Suomi"},
 		{encoding:"fr", name:"Français"},
 		{encoding:"it", name:"Italiano"},
