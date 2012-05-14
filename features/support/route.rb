@@ -69,3 +69,17 @@ def way_list instructions
   map { |r| r=="" ? '""' : r }.
   join(',')
 end
+
+def compass_list instructions
+  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
+  map { |r| r[6] }.
+  map { |r| r=="" ? '""' : r }.
+  join(',')
+end
+
+def bearing_list instructions
+  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
+  map { |r| r[7] }.
+  map { |r| r=="" ? '""' : r }.
+  join(',')
+end
