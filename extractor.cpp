@@ -146,6 +146,8 @@ int main (int argc, char *argv[]) {
                 settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
             } else if( name == "takeMinimumOfSpeeds") {
                 settings.takeMinimumOfSpeeds = ("yes" == value);
+            } else if( name == "ignoreAreas") {
+                settings.ignoreAreas = ("yes" == value);
             } else if( name == "accessRestrictedService") {
                 //split value at commas
                 std::vector<std::string> tokens;
