@@ -29,9 +29,10 @@ Please use the OSRM-Project bug tracker [(4)] for submitting any bug reports or 
 
 Contribute
 ----------
-If you like to contribute, you can simply fork the project and start coding.
-When you are going to provide a more substantial addition, please create a new branch first.
-For pull requests use the develop branch as target, never the master branch. 
+If you like to contribute, simply fork the project and start coding.
+It is best practice to create a new branch (from the current master) with a descriptive name for your contributions.
+When you are done, send a pull request from that branch.
+With this workflow, each pull request is isolated and can be easily merged.
 
 
 Integration into Project-OSRM repository
