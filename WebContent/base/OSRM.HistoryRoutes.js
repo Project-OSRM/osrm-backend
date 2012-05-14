@@ -128,7 +128,7 @@ OSRM.extend( OSRM.HistoryRoute,{
 		}
 	},
 	
-	// get positions of current markers (note: data of jsonp response used, as not all data structures updated!)
+	// get positions of current markers (data of jsonp response used, as not all data structures up-to-date!)
 	_getCurrentMarkers: function() {
 		var route = [];
 		

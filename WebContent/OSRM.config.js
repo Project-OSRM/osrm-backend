@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.DEFAULTS = {
 	HOST_ROUTING_URL: 'http://router.project-osrm.org/viaroute',
 	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
+	HOST_TIMESTAMP_URL: 'http://router.project-osrm.org/timestamp',
 	HOST_GEOCODER_URL: 'http://nominatim.openstreetmap.org/search',
 	HOST_REVERSE_GEOCODER_URL: 'http://nominatim.openstreetmap.org/reverse',
 	WEBSITE_URL: document.URL.replace(/#*(\?.*|$)/i,""),					// truncates URL before first ?, and removes tailing #

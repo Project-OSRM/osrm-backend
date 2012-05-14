@@ -37,7 +37,7 @@ OSRM.Localization["de"] = {
 "GUI_UNITS": "Einheiten",
 "GUI_KILOMETERS": "Kilometer",
 "GUI_MILES": "Meilen",
-"GUI_DATA_UPDATED": "data",
+"GUI_DATA_TIMESTAMP": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Kartenwerkzeuge",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Unbenannte Straßen hervorheben",
