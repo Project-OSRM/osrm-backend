@@ -72,6 +72,18 @@ OSRM.DEFAULTS = {
 			url:'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png',
 			attribution:'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
 			options:{maxZoom: 18}
-		}		
+		},
+		{
+			display_name: 'Bing Road',
+			apikey:'Ag_G9YGvTnWtqqSsQ5S4s44ddrRS7GmC7WO94Vo-NoL_p1TiWdwsYcIDirB3_5q-',
+			type:"Road",
+			bing:true,
+		},
+		{
+			display_name: 'Bing Aerial',
+			apikey:'Ag_G9YGvTnWtqqSsQ5S4s44ddrRS7GmC7WO94Vo-NoL_p1TiWdwsYcIDirB3_5q-',
+			type:"Aerial",
+			bing:true,
+		}
 	]
 };

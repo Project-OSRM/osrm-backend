@@ -36,8 +36,12 @@ init: function() {
 	var tile_servers = OSRM.DEFAULTS.TILE_SERVERS;
 	var base_maps = {};
 	for(var i=0, size=tile_servers.length; i<size; i++) {
-		tile_servers[i].options.attribution = tile_servers[i].attribution; 
-		base_maps[ tile_servers[i].display_name ] = new L.TileLayer( tile_servers[i].url, tile_servers[i].options );
+		if( tile_servers[i].bing == true ) {
+			base_maps[ tile_servers[i].display_name ] = new L.TileLayer.Bing( tile_servers[i].apikey, tile_servers[i].type );		
+		} else {
+			tile_servers[i].options.attribution = tile_servers[i].attribution; 
+			base_maps[ tile_servers[i].display_name ] = new L.TileLayer( tile_servers[i].url, tile_servers[i].options );
+		}
 	}
 
 	// setup map

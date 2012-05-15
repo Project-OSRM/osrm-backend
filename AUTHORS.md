@@ -10,3 +10,4 @@ Jean-Frederic
 Zbigniew Czernik
 Jonas Häggqvist
 Sabas
+Paul Spencer
