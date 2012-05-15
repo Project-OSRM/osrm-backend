@@ -108,7 +108,7 @@ setDataTimestamp: function(response) {
 	if(!response)
 		return;
 	
-	OSRM.G.data_timestamp = response.timestamp;
+	OSRM.G.data_timestamp = response.timestamp.slice(0,25).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags
 	document.getElementById('gui-data-timestamp').innerHTML = OSRM.loc("GUI_DATA_TIMESTAMP")+": " + OSRM.G.data_timestamp;
 }
 
