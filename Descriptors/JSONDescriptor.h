@@ -185,18 +185,23 @@ public:
         reply.content += "\"via_points\":[";
         std::string tmp;
         if(true == config.geometry) {
-            for(unsigned segmentIdx = 1; segmentIdx < rawRoute.segmentEndCoordinates.size(); ++segmentIdx) {
-                if(segmentIdx > 1)
-                    reply.content += ",";
+            for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
                 reply.content += "[";
-                if(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location.isSet())
-                    convertInternalReversedCoordinateToString(rawRoute.segmentEndCoordinates[segmentIdx].startPhantom.location, tmp);
+                if(rawRoute.segmentEndCoordinates[i].startPhantom.location.isSet())
+                    convertInternalReversedCoordinateToString(rawRoute.segmentEndCoordinates[i].startPhantom.location, tmp);
                 else
-                    convertInternalReversedCoordinateToString(rawRoute.rawViaNodeCoordinates[segmentIdx], tmp);
+                    convertInternalReversedCoordinateToString(rawRoute.rawViaNodeCoordinates[i], tmp);
 
                 reply.content += tmp;
-                reply.content += "]";
+                reply.content += "],";
             }
+            reply.content += "[";
+            if(rawRoute.segmentEndCoordinates.back().startPhantom.location.isSet())
+                convertInternalReversedCoordinateToString(rawRoute.segmentEndCoordinates.back().targetPhantom.location, tmp);
+            else
+                convertInternalReversedCoordinateToString(rawRoute.rawViaNodeCoordinates.back(), tmp);
+            reply.content += tmp;
+            reply.content += "]";
         }
         reply.content += "],";
         reply.content += "\"hint_data\": {";
@@ -205,14 +210,13 @@ public:
         reply.content += tmp;
         reply.content += ", \"locations\": [";
 
+        std::string hint;
         for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
-            std::string hint;
             reply.content += "\"";
             EncodeObjectToBase64(rawRoute.segmentEndCoordinates[i].startPhantom, hint);
             reply.content += hint;
             reply.content += "\", ";
         }
-        std::string hint;
         EncodeObjectToBase64(rawRoute.segmentEndCoordinates.back().targetPhantom, hint);
         reply.content += "\"";
         reply.content += hint;
