@@ -118,9 +118,9 @@ public:
     NodeID _source;
     NodeID _target;
     NodeID _edgeID;
-    EdgeWeight _weight;
-    bool _forward;
-    bool _backward;
+    EdgeWeight _weight:30;
+    bool _forward:1;
+    bool _backward:1;
 };
 
 struct MinimalEdgeData {
