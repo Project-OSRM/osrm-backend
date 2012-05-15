@@ -35,7 +35,6 @@ double DescriptionFactory::GetAzimuth(const _Coordinate& A, const _Coordinate& B
     return angle;
 }
 
-
 void DescriptionFactory::SetStartSegment(const PhantomNode & _startPhantom) {
     startPhantom = _startPhantom;
     AppendSegment(_startPhantom.location, _PathData(0, _startPhantom.nodeBasedEdgeNameID, 10, _startPhantom.weight1));
