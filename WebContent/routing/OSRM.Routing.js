@@ -171,14 +171,11 @@ _updateHints: function(response) {
 
 // snap all markers to the received route
 _snapRoute: function() {
-	var positions = OSRM.G.route.getPositions();
 	var markers = OSRM.G.markers.route;
 	var via_points = OSRM.G.response.via_points;
 	
- 	markers[0].setPosition( positions[0] );
- 	markers[markers.length-1].setPosition( positions[positions.length-1] );
  	for(var i=0; i<via_points.length; i++)
- 		markers[i+1].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) );
+		markers[i].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) );	
 
  	OSRM.Geocoder.updateAddress(OSRM.C.SOURCE_LABEL);
  	OSRM.Geocoder.updateAddress(OSRM.C.TARGET_LABEL);

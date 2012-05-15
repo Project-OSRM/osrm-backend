@@ -136,10 +136,8 @@ OSRM.extend( OSRM.HistoryRoute,{
 		if(positions.length == 0)
 			return route;
 		
-		route.push( {lat: positions[0].lat, lng: positions[0].lng });
 		for(var i=0; i<OSRM.G.response.via_points.length; i++)
 			route.push( {lat:OSRM.G.response.via_points[i][0], lng:OSRM.G.response.via_points[i][1]} );
-		route.push( {lat: positions[positions.length-1].lat, lng: positions[positions.length-1].lng });
 		return route;
 	},
 	
