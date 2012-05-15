@@ -30,5 +30,18 @@ getActiveLayerName: function () {
 			return obj.name;
 		}
 	}
+},
+getActiveLayer: function () {
+	var i, input, obj,
+	inputs = this._form.getElementsByTagName('input'),
+	inputsLen = inputs.length;
+
+	for (i = 0; i < inputsLen; i++) {
+		input = inputs[i];
+		obj = this._layers[input.layerId];
+		if (input.checked && !obj.overlay) {
+			return obj.layer;
+		}
+	}
 }
 });
