@@ -231,6 +231,7 @@ printWindowLoaded: function(){
 	}	
 	
 	// localization 
+	print_window.OSRM.Localization.current_language = OSRM.Localization.current_language; 
 	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
 	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );	
 	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() ) {		// error message if no route available (can trigger if user refreshes print-window)

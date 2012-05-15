@@ -31,6 +31,8 @@ L.TileLayer.Bing = L.TileLayer.extend({
        '<a style="white-space: nowrap" target="_blank" '+
        'href="http://www.microsoft.com/maps/product/terms.html">' +
        'Terms of Use</a></span></span>',
+       
+  supportedCultures: {"en":"en-US", "de":"de-DE", "fr":"fr-FR", "it":"it-IT", "es":"es-ES", "nl":"nl-BE"},
   
   initialize: function(/*String*/ apiKey, /*String*/ mapType, /*Object*/ options) {
     
@@ -40,6 +42,11 @@ L.TileLayer.Bing = L.TileLayer.extend({
     this._loadMetadata();
     
     L.Util.setOptions(this, options);
+  },
+  
+  redraw: function() {
+    this._reset();
+    this._update();  
   },
   
   _loadMetadata: function() {
@@ -110,8 +117,7 @@ L.TileLayer.Bing = L.TileLayer.extend({
     }
 
 		return this._url
-				//.replace('{culture}', OSRM.Localization.current_culture)
-				.replace('{culture}', "en-US")
+				.replace('{culture}', this.supportedCultures[OSRM.Localization.current_language] || "en-US" )
 				.replace('{subdomain}', subdomains[(xy.x + xy.y) % subdomains.length])
 				.replace('{quadkey}', quadDigits.join(""));		
   },

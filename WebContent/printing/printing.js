@@ -20,6 +20,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM = {};
 OSRM.GLOBALS = { main_handle:{boxVisible:function(){return false;}} };	// needed for fitBoundsUI to work
+OSRM.Localization = { current_language:"en"};							// needed for localized map tiles
 OSRM.G = OSRM.GLOBALS;
 
 
@@ -54,7 +55,7 @@ OSRM.prefetchIcons = function(images_list) {
 OSRM.drawMap = function(tile_server, bounds) {
  	// setup map
 	var tile_layer;
-	if( tile_server.bing )	tile_layer = new L.TileLayer.Bing(tile_server.apikey, tile_server.type);
+	if( tile_server.bing )	tile_layer = new L.TileLayer.Bing(tile_server.apikey, tile_server.type, tile_server.options);
 	else 					tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
 	OSRM.G.map = new OSRM.MapView("overview-map", {
     	center: new L.LatLng(48.84, 10.10),

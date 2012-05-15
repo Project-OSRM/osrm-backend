@@ -52,21 +52,14 @@ setLanguage: function(language) {
 	// change value of both language selectors
 	OSRM.GUI.selectorChange( document.getElementById('gui-language-toggle'), language );
 	OSRM.GUI.selectorChange( document.getElementById('gui-language-2-toggle'), language );
-//	// change culture value
-//	OSRM.Localization.current_culture = language+"-"+language;
-//	var supported_languages = OSRM.DEFAULTS.LANGUAGE_SUPPORTED;
-//	for(var i=0, size=supported_languages.length; i<size; i++) {
-//		if( supported_languages[i].encoding==language )
-//			OSRM.Localization.current_culture = supported_languages[i].culture;
-//	}
 	
 	if( OSRM.Localization[language]) {
 		OSRM.Localization.current_language = language;
 		// change gui language		
 		OSRM.GUI.setLabels();
-//		// change map language
-//		OSRM.G.map.layerControl.getActiveLayer()._reset();
-//		OSRM.G.map.layerControl.getActiveLayer()._update();
+		// change map language
+		if(OSRM.G.map.layerControl.getActiveLayer().redraw)
+			OSRM.G.map.layerControl.getActiveLayer().redraw();
 		// requery data
 		if( OSRM.G.markers == null )
 			return;
