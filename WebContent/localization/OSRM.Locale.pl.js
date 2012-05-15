@@ -77,7 +77,7 @@ OSRM.Localization["pl"] = {
 // %d: direction
 // [*]: will only be printed when there actually is a road name
 "DIRECTION_0":"Nieznana instrukcja[ na <b>%s</b>]",
-"DIRECTION_1":"Podążaj[ drogą <b>%s</b>]",
+"DIRECTION_1":"Kontynuuj[ drogą <b>%s</b>]",
 "DIRECTION_2":"Skręć lekko w prawo[ na drogę <b>%s</b>]",
 "DIRECTION_3":"Skręć w prawo[ na drogę <b>%s</b>]",
 "DIRECTION_4":"Skręć ostro w prawo[ na drogę <b>%s</b>]",
@@ -85,7 +85,7 @@ OSRM.Localization["pl"] = {
 "DIRECTION_6":"Skręć lekko w lewo[ na drogę <b>%s</b>]",
 "DIRECTION_7":"Skręć w lewo[ na drogę <b>%s</b>]",
 "DIRECTION_8":"Skręć ostro w lewo[ na drogę <b>%s</b>]",
-"DIRECTION_10":"Podążaj <b>%d</b>[ drogą <b>%s</b>]",
+"DIRECTION_10":"Podążaj na <b>%d</b>[ drogą <b>%s</b>]",
 "DIRECTION_11-1":"Wjedź na rondo, zjedź pierwszym zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-2":"Wjedź na rondo, zjedź drugim zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-3":"Wjedź na rondo, zjedź trzecim zjazdem[ na drogę <b>%s</b>]",
