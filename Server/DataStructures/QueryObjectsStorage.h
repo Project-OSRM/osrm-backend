@@ -36,9 +36,10 @@ struct QueryObjectsStorage {
     NodeInformationHelpDesk * nodeHelpDesk;
     std::vector<std::string> names;
     QueryGraph * graph;
+    std::string timestamp;
     unsigned checkSum;
 
-    QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string psd = "route");
+    QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string timestampPath, std::string psd = "route");
 
     ~QueryObjectsStorage();
 };

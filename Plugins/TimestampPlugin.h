@@ -28,8 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class TimestampPlugin : public BasePlugin {
 public:
-    TimestampPlugin(QueryObjectsStorage * objects) {
-        nodeHelpDesk = objects->nodeHelpDesk;
+    TimestampPlugin(QueryObjectsStorage * o) : objects(o) {
     }
     std::string GetDescriptor() const { return std::string("timestamp"); }
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
@@ -50,7 +49,7 @@ public:
         reply.content += ("\"status\":");
             reply.content += "0,";
         reply.content += ("\"timestamp\":\"");
-        reply.content += "n/a";
+        reply.content += objects->timestamp;
         reply.content += "\"";
         reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON timestamp (v0.3)\"";
         reply.content += ("}");
@@ -72,14 +71,7 @@ public:
         reply.headers[0].value = tmp;
     }
 private:
-    inline bool checkCoord(const _Coordinate & c) {
-        if(c.lat > 90*100000 || c.lat < -90*100000 || c.lon > 180*100000 || c.lon <-180*100000) {
-            return false;
-        }
-        return true;
-    }
-
-    NodeInformationHelpDesk * nodeHelpDesk;
+    QueryObjectsStorage * objects;
 };
 
 #endif /* TIMESTAMPPLUGIN_H_ */

@@ -22,7 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "QueryObjectsStorage.h"
 #include "../../Util/GraphLoader.h"
 
-QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string psd) {
+QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string timestampPath, std::string psd) {
 	INFO("loading graph data");
 	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
 	//Deserialize road network graph
@@ -35,6 +35,14 @@ QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIn
 	assert(0 == nodeList.size());
 	assert(0 == edgeList.size());
 
+	if(timestampPath.length()) {
+	    INFO("Loading Timestamp")
+	        std::ifstream timestampInStream(timestampPath.c_str());
+	    getline(timestampInStream, timestamp);
+	    timestampInStream.close();
+	}
+	if(!timestamp.length())
+	    timestamp = "n/a";
 
     INFO("Loading auxiliary information");
     //Init nearest neighbor data structure

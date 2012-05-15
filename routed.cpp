@@ -101,7 +101,9 @@ int main (int argc, char *argv[]) {
                 serverConfig.GetParameter("fileIndex"),
                 serverConfig.GetParameter("nodesData"),
                 serverConfig.GetParameter("edgesData"),
-                serverConfig.GetParameter("namesData"));
+                serverConfig.GetParameter("namesData"),
+                serverConfig.GetParameter("timestamp")
+                );
 
         h.RegisterPlugin(new HelloWorldPlugin());
 
