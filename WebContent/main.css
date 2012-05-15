@@ -425,6 +425,32 @@ html, body {
 	width:390px;
 	height:80px;	
 }
+#notification-wrapper
+{
+	width:600px;
+	height:170px;
+	top: 50%;
+	left: 50%;
+	margin-top:-85px;
+	margin-left:-300px;
+}
+#notification-content
+{
+	width:580px;
+	height:150px;
+}
+#notification-blanket
+{
+	position:absolute;
+	top:0px;
+	left:0px;
+	width:100%;
+	height:100%;
+	background-color:#666666;
+	background-color:rgba(0, 0, 0, 0.25);
+	z-index:100;
+	display:none;
+}
 
 
 /* styles for content of other gui boxes */
@@ -457,6 +483,10 @@ html, body {
 .mapping-button
 {
 	float: right;
+}
+#notification-box
+{
+	margin:5px 5px 5px 5px;
 }
 
 /* ------------------------------------------------------------------------ */

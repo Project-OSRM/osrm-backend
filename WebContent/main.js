@@ -31,6 +31,10 @@ OSRM.init = function() {
 	OSRM.Printing.init();
 	OSRM.Routing.init();
 	
+	// stop if in maintenance mode
+	if( OSRM.inMaintenance() == true )
+		return;
+	
  	// check if the URL contains some GET parameter, e.g. for showing a route
  	OSRM.parseParameters();
  
@@ -262,6 +266,16 @@ OSRM.parseParameters = function(){
 	return;
 };
 
+
+// check whether to activate maintenance mode
+OSRM.inMaintenance = function(){
+	if( OSRM.DEFAULTS.MAINTENANCE == true ) {
+		document.getElementById('notification-blanket').style.display = "block";
+		document.getElementById('notification-toggle').style.display = "none";
+		return true;
+	}
+	return false;
+};
 
 // onload event
 OSRM.Browser.onLoadHandler( OSRM.init );
