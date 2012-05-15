@@ -131,5 +131,11 @@ hasTarget: function() {
 	if( this.route[this.route.length-1] && this.route[this.route.length-1].label == OSRM.C.TARGET_LABEL )
 		return true;
 	return false;
+},
+
+//relabel all via markers
+relabelViaMarkers: function() {
+	for(var i=1, size=this.route.length-1; i<size; i++)
+		this.route[i].marker.setLabel(i);
 }
 });

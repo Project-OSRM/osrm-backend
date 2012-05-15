@@ -80,8 +80,16 @@ L.SwitchableIcon = L.Class.extend({
 	_createImg: function (src) {
 		var el;
 		if (!L.Browser.ie6) {
-			el = document.createElement('img');
-			el.src = src;
+			el = document.createElement('div');
+			
+			var img = document.createElement('img');
+			var num = document.createElement('div');
+			img.src = src;
+			num.className = 'via-counter';
+			num.innerHTML = "";
+			
+			el.appendChild(img);
+			el.appendChild(num);
 		} else {
 			el = document.createElement('div');
 			el.style.filter = 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src="' + src + '")';
@@ -106,7 +114,7 @@ L.SwitchableIcon = L.Class.extend({
 	
 	_switchImg: function (src, el) {
 		if (!L.Browser.ie6) {
-			el.src = src;
+			el.firstChild.src = src;
 		} else {
 			el.style.filter = 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src="' + src + '")';
 		}

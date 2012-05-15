@@ -33,6 +33,25 @@ html, body {
 
 /* ------------------------------------------------------------------------ */
 
+/* changes/additions to leaflet styles */
+.via-counter
+{
+	position:absolute;
+	top:-3px;
+	right:-6px;
+	width:16px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	background-color:#FFFFFF;
+	text-align:center;
+	vertical-align:middle;	
+	font-size:9px;
+	display:none;
+}
+
+/* ------------------------------------------------------------------------ */
+
 /* general styles for gui boxes */
 .box-wrapper
 {

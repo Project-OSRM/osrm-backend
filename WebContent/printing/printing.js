@@ -78,8 +78,11 @@ OSRM.drawMap = function(tile_server, bounds) {
 // manage makers
 OSRM.drawMarkers = function( markers ) {
 	OSRM.G.map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
-	for(var i=1, size=markers.length-1; i<size; i++)
-		OSRM.G.map.addLayer( new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} ) );
+	for(var i=1, size=markers.length-1; i<size; i++) {
+		var via_marker = new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} );
+		OSRM.G.map.addLayer( via_marker );
+		via_marker.setLabel(i);
+	}
 	OSRM.G.map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ) );
 };
 

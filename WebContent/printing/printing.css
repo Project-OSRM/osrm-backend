@@ -17,12 +17,34 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 /* OSRM CSS styles for printing*/
 
+/* ------------------------------------------------------------------------ */
+
 /* page setup */
 body
 {
 	margin: 8px;
 }
 
+/* ------------------------------------------------------------------------ */
+
+/* changes/additions to leaflet styles */
+.via-counter
+{
+	position:absolute;
+	top:-3px;
+	right:-6px;
+	width:16px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	background-color:#FFFFFF;
+	text-align:center;
+	vertical-align:middle;	
+	font-size:9px;
+	display:none;
+}
+
+/* ------------------------------------------------------------------------ */
 
 /* header area */
 #printing-header
@@ -57,6 +79,7 @@ div.label
 	margin:5px;
 }
 
+/* ------------------------------------------------------------------------ */
 
 /* description content */
 .description
@@ -125,6 +148,24 @@ div.label
 }
 }
 
+/* ------------------------------------------------------------------------ */
+
+/* iconic buttons */
+.iconic-button
+{
+	cursor:pointer;
+	width:16px;
+	height:16px;
+	background-repeat:no-repeat;
+	background-position:center;
+}
+
+#gui-printer-inactive
+{
+	cursor:default;
+}
+
+/* ------------------------------------------------------------------------ */
 
 /* utility styles */
 .quad
@@ -151,6 +192,42 @@ div.label
 }
 }
 
+/* ------------------------------------------------------------------------ */
+
+/* table */
+.full
+{
+	display:table;
+	width:100%;
+}
+.row
+{
+	display:table-row;
+}
+.left
+{
+	display:table-cell;
+	text-align:left;
+	vertical-align:top;
+}
+.right
+{
+	display:table-cell;
+	text-align:right;
+	vertical-align:top;
+}
+.center
+{
+	display:table-cell;
+	text-align:center;
+	vertical-align:top;
+}
+.stretch
+{
+	width:100%;	
+}
+
+/* ------------------------------------------------------------------------ */
 
 /* fonts */
 @media print {
@@ -197,54 +274,4 @@ div.label
 	font-size: 9px;
 	font-weight: normal;	
 }	
-}
-
-
-/* iconic buttons */
-.iconic-button
-{
-	cursor:pointer;
-	width:16px;
-	height:16px;
-	background-repeat:no-repeat;
-	background-position:center;
-}
-
-#gui-printer-inactive
-{
-	cursor:default;
-}
-
-
-/* table */
-.full
-{
-	display:table;
-	width:100%;
-}
-.row
-{
-	display:table-row;
-}
-.left
-{
-	display:table-cell;
-	text-align:left;
-	vertical-align:top;
-}
-.right
-{
-	display:table-cell;
-	text-align:right;
-	vertical-align:top;
-}
-.center
-{
-	display:table-cell;
-	text-align:center;
-	vertical-align:top;
-}
-.stretch
-{
-	width:100%;	
 }
