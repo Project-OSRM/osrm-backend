@@ -29,7 +29,7 @@ OSRM.HistoryRoute = function() {
 	                        {dashed:false, color:'#000055', opacity:0.25, weight:5},
 	                        {dashed:false, color:'#000033', opacity:0.20, weight:5},
 	                        {dashed:false, color:'#000011', opacity:0.15, weight:5},
-	                        {dashed:false, color:'#FF0000', opacity:0.50, weight:5}	                              
+	                        {dashed:false, color:'#000000', opacity:0.10, weight:5}	                              
 	                        ];
 	this._history_length = this._history_styles.length;
 	
