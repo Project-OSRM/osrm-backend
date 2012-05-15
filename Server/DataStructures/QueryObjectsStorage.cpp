@@ -43,6 +43,8 @@ QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIn
 	}
 	if(!timestamp.length())
 	    timestamp = "n/a";
+	if(15 < timestamp.length())
+	    timestamp.resize(15);
 
     INFO("Loading auxiliary information");
     //Init nearest neighbor data structure
