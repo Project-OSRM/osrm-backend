@@ -52,7 +52,7 @@ timeoutRoute_Dragging: function() {
 },
 timeoutRoute_Reversed: function() {
 	OSRM.G.markers.reverseMarkers();
-	timeoutRoute();
+	OSRM.Routing.timeoutRoute();
 },
 showRoute: function(response) {
 	if(!response)
