@@ -8,13 +8,14 @@
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
+   You should have received a copy of the GNU Lesser General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
+option optimize_for = LITE_RUNTIME;
 option java_package = "crosby.binary";
 package OSMPBF;
 
@@ -125,6 +126,16 @@ message Info {
    optional int64 changeset = 3;
    optional int32 uid = 4;
    optional uint32 user_sid = 5; // String IDs
+
+   // The visible flag is used to store history information. It indicates that
+   // the current object version has been created by a delete operation on the
+   // OSM API.
+   // When a writer sets this flag, it MUST add a required_features tag with
+   // value "HistoricalInformation" to the HeaderBlock.
+   // If this flag is not available for some object it MUST be assumed to be
+   // true if the file has the required_features tag "HistoricalInformation"
+   // set.
+   optional bool visible = 6;
 }
 
 /** Optional metadata that may be included into each primitive. Special dense format used in DenseNodes. */
@@ -134,6 +145,16 @@ message DenseInfo {
    repeated sint64 changeset = 3 [packed = true]; // DELTA coded
    repeated sint32 uid = 4 [packed = true]; // DELTA coded
    repeated sint32 user_sid = 5 [packed = true]; // String IDs for usernames. DELTA coded
+
+   // The visible flag is used to store history information. It indicates that
+   // the current object version has been created by a delete operation on the
+   // OSM API.
+   // When a writer sets this flag, it MUST add a required_features tag with
+   // value "HistoricalInformation" to the HeaderBlock.
+   // If this flag is not available for some object it MUST be assumed to be
+   // true if the file has the required_features tag "HistoricalInformation"
+   // set.
+   repeated bool visible = 6 [packed = true];
 }
 
 
@@ -223,4 +244,3 @@ message Relation {
    repeated sint64 memids = 9 [packed = true]; // DELTA encoded
    repeated MemberType types = 10 [packed = true];
 }
-
