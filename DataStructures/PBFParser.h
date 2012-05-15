@@ -118,7 +118,7 @@ public:
                 return false;
             }
 
-            for(int i = 0; i < initData.PBFHeaderBlock.required_features_size(); i++) {
+            for(int i = 0; i < initData.PBFHeaderBlock.required_features_size(); ++i) {
                 const std::string& feature = initData.PBFHeaderBlock.required_features( i );
                 bool supported = false;
                 if ( feature == "OsmSchema-V0.6" )
@@ -163,6 +163,7 @@ public:
             }
 
             loadBlock(threadData);
+
             for(int i = 0; i < threadData->PBFprimitiveBlock.primitivegroup_size(); i++) {
                 threadData->currentGroupID = i;
                 loadGroup(threadData);
