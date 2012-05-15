@@ -110,6 +110,8 @@ L.TileLayer.Bing = L.TileLayer.extend({
     }
 
 		return this._url
+				//.replace('{culture}', OSRM.Localization.current_culture)
+				.replace('{culture}', "en-US")
 				.replace('{subdomain}', subdomains[(xy.x + xy.y) % subdomains.length])
 				.replace('{quadkey}', quadDigits.join(""));		
   },
@@ -174,7 +176,7 @@ L.TileLayer.Bing.processMetadata = function(metadata) {
     }
   }
   
-  this._url = res.imageUrl.replace('{culture}','en-US');
+  this._url = res.imageUrl;
   this.options.subdomains = [].concat(res.imageUrlSubdomains);
   script.parentNode.removeChild(script);
   window[this._callbackId] = undefined; // cannot delete from window in IE

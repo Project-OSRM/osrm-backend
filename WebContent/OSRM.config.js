@@ -43,13 +43,13 @@ OSRM.DEFAULTS = {
 	LANGUAGE: "en",
 	LANUGAGE_ONDEMAND_RELOADING: true,
 	LANGUAGE_SUPPORTED: [ 
-		{encoding:"en", name:"English"},
-		{encoding:"de", name:"Deutsch"},
-		{encoding:"dk", name:"Dansk"},
-		{encoding:"fi", name:"Suomi"},
-		{encoding:"fr", name:"Français"},
-		{encoding:"it", name:"Italiano"},
-		{encoding:"pl", name:"Polski"}
+		{encoding:"en", name:"English", culture:"en-US"},
+		{encoding:"de", name:"Deutsch", culture:"de-DE"},
+		{encoding:"dk", name:"Dansk", culture:"en-US"},
+		{encoding:"fi", name:"Suomi", culture:"en-US"},
+		{encoding:"fr", name:"Français", culture:"fr-FR"},
+		{encoding:"it", name:"Italiano", culture:"it-IT"},
+		{encoding:"pl", name:"Polski", culture:"en-US"}
 	],
 		
 	TILE_SERVERS: [
@@ -75,13 +75,13 @@ OSRM.DEFAULTS = {
 		},
 		{
 			display_name: 'Bing Road',
-			apikey:'Ag_G9YGvTnWtqqSsQ5S4s44ddrRS7GmC7WO94Vo-NoL_p1TiWdwsYcIDirB3_5q-',
+			apikey:'AjCb2f6Azv_xt9c6pl_xok96bgAYrXQNctnG4o07sTj4iS9N68Za4B3pRJyeCjGr',
 			type:"Road",
 			bing:true,
 		},
 		{
 			display_name: 'Bing Aerial',
-			apikey:'Ag_G9YGvTnWtqqSsQ5S4s44ddrRS7GmC7WO94Vo-NoL_p1TiWdwsYcIDirB3_5q-',
+			apikey:'AjCb2f6Azv_xt9c6pl_xok96bgAYrXQNctnG4o07sTj4iS9N68Za4B3pRJyeCjGr',
 			type:"Aerial",
 			bing:true,
 		}
