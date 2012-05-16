@@ -377,6 +377,8 @@ private:
     }
 
     unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, std::vector<char> & tmpBuffer, const unsigned long index) {
+        sort( vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end() );
+        vectorWithSameFileIndex.erase(unique(vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end()), vectorWithSameFileIndex.end());
         const unsigned lengthOfBucket = vectorWithSameFileIndex.size();
         tmpBuffer.resize(tmpBuffer.size()+(sizeof(_GridEdge)*lengthOfBucket) + sizeof(unsigned) );
         unsigned counter = 0;
