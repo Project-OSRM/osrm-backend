@@ -19,7 +19,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [has to be loaded directly after OSRM.base]
 
 OSRM.DEFAULTS = {
-	MAINTENANCE: true,
 	HOST_ROUTING_URL: 'http://router.project-osrm.org/viaroute',
 	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
 	HOST_TIMESTAMP_URL: 'http://router.project-osrm.org/timestamp',
@@ -88,5 +87,9 @@ OSRM.DEFAULTS = {
 			options:{minZoom: 1},
 			bing:true,
 		}
-	]
+	],
+	
+	MAINTENANCE: true,
+	MAINTENANCE_HEADER: "Scheduled Maintenance",
+	MAINTENANCE_TEXT: "The OSRM Website is down for a scheduled maintenance. Please be patient while required updates are performed. The site will be back online shortly.<br/><br/>In the meantime you may want to go out an map a friendly neighborhood near you...<br/><br/><br/>[OSRM]",	
 };

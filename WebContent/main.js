@@ -26,10 +26,10 @@ OSRM.init = function() {
 	OSRM.prefetchCSSIcons();
 	
 	OSRM.GUI.init();
-	OSRM.Localization.init();
 	OSRM.Map.init();
 	OSRM.Printing.init();
 	OSRM.Routing.init();
+	OSRM.Localization.init();	
 	
 	// stop if in maintenance mode
 	if( OSRM.inMaintenance() == true )
@@ -271,6 +271,8 @@ OSRM.parseParameters = function(){
 OSRM.inMaintenance = function(){
 	if( OSRM.DEFAULTS.MAINTENANCE == true ) {
 		document.getElementById('notification-blanket').style.display = "block";
+		document.getElementById('notification-label').innerHTML = OSRM.DEFAULTS.MAINTENANCE_HEADER;
+		document.getElementById('notification-box').innerHTML = OSRM.DEFAULTS.MAINTENANCE_TEXT;
 		document.getElementById('notification-toggle').style.display = "none";
 		return true;
 	}
