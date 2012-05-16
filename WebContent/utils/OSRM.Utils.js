@@ -24,28 +24,46 @@ OSRM.Utils = {
 // [human readabilty functions]
 
 // human readable time
-secondsToTime: function(seconds){
+toHumanTime: function(seconds){
    seconds = parseInt(seconds);
    minutes = parseInt(seconds/60);
    seconds = seconds%60;
    hours = parseInt(minutes/60);
    minutes = minutes%60;
    if(hours==0){
-   	return minutes + '&nbsp;' + 'min';
+	   return minutes + '&nbsp;' + 'min';
    }
    else{
-   	return hours + '&nbsp;' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';
+	   return hours + '&nbsp;' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';
    }
 },
 //human readable distance
-metersToDistance: function(distance){
-	distance = parseInt(distance);
-	
-	if(distance >= 100000){ return (parseInt(distance/1000))+'&nbsp;' + 'km'; }
-	else if(distance >= 10000){ return (parseInt(distance/1000).toFixed(1))+'&nbsp;' + 'km'; }
-	else if(distance >= 1000){ return (parseFloat(distance/1000).toFixed(2))+'&nbsp;' + 'km'; }
-	else{ return distance+'&nbsp;' + 'm'; }
+setToHumanDistanceFunction: function(type) {
+	OSRM.G.DISTANCE_FORMAT = type;
+	if( type == 1 )
+		OSRM.Utils.toHumanDistance = OSRM.Utils.toHumanDistanceMiles;
+	else
+		OSRM.Utils.toHumanDistance = OSRM.Utils.toHumanDistanceMeters;	
 },
+toHumanDistanceMeters: function(meters){
+	var distance = parseInt(meters);
+	
+	distance = distance / 1000;
+	if(distance >= 100){ return (distance).toFixed(0)+'&nbsp;' + 'km'; }
+	else if(distance >= 10){ return (distance).toFixed(1)+'&nbsp;' + 'km'; }
+	else if(distance >= 0.1){ return (distance).toFixed(2)+'&nbsp;' + 'km'; }
+	else{ return (distance*1000).toFixed(0)+'&nbsp;' + 'm'; }		
+},
+toHumanDistanceMiles: function(meters){
+	var distance = parseInt(meters);
+	
+	distance = distance / 1609.344;
+	if(distance >= 100){ return (distance).toFixed(0)+'&nbsp;' + 'mi'; }
+	else if(distance >= 10){ return (distance).toFixed(1)+'&nbsp;' + 'mi'; }
+	else if(distance >= 0.1){ return (distance).toFixed(2)+'&nbsp;' + 'mi'; }
+	else{ return (distance*5280).toFixed(0)+'&nbsp;' + 'ft'; }
+},
+toHumanDistance: null,
 
 
 // [verification routines]

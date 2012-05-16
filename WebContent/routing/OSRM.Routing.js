@@ -31,52 +31,34 @@ OSRM.Routing = {
 		
 // init routing data structures
 init: function() {
+	OSRM.G.markers = new OSRM.Markers();	
 	OSRM.G.route = new OSRM.Route();
-	OSRM.G.markers = new OSRM.Markers();
+	OSRM.G.response = { via_points:[] };
 },
 
 
 // -- JSONP processing -- 
 
 // process JSONP response of routing server
-timeoutRouteSimple: function() {
-	OSRM.RoutingGeometry.showNA();
-	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
-},
 timeoutRoute: function() {
 	OSRM.RoutingGeometry.showNA();
 	OSRM.RoutingNoNames.showNA();
 	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
 	OSRM.Routing._snapRoute();	
 },
-timeoutRouteReverse: function() {
-	OSRM.G.markers.reverseMarkers();
-	timeoutRoute();
+timeoutRoute_Dragging: function() {
+	OSRM.RoutingGeometry.showNA();
+	OSRM.RoutingDescription.showNA( OSRM.loc("TIMED_OUT") );
 },
-showRouteSimple: function(response) {
- 	if(!response)
- 		return;
- 	if( !OSRM.G.dragging )		// prevent simple routing when not dragging (required as there can be drag events after a dragstop event!)
- 		return;
- 	
-	if( response.status == 207) {
-		OSRM.RoutingGeometry.showNA();
-		OSRM.RoutingDescription.showNA( OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED") );
-	} else {
-		OSRM.RoutingGeometry.show(response);
-		OSRM.RoutingDescription.showSimple(response);
-	}
-	OSRM.Routing._updateHints(response);
-
-	if(OSRM.G.pending)
-		setTimeout(OSRM.Routing.draggingTimeout,1);		
+timeoutRoute_Reversed: function() {
+	OSRM.G.markers.reverseMarkers();
+	OSRM.Routing.timeoutRoute();
 },
 showRoute: function(response) {
 	if(!response)
 		return;
 	
-	OSRM.G.response = response; 
-	OSRM.G.via_points = response.via_points.slice(0);
+	OSRM.G.response = response;	// needed for printing & history routes!
 	if(response.status == 207) {
 		OSRM.RoutingGeometry.showNA();
 		OSRM.RoutingNoNames.showNA();
@@ -90,17 +72,36 @@ showRoute: function(response) {
 	}
 	OSRM.Routing._updateHints(response);
 },
-showRouteZooming: function(response) {
+showRoute_Dragging: function(response) {
+ 	if(!response)
+ 		return;
+ 	if( !OSRM.G.dragging )		// prevent simple routing when not dragging (required as there can be drag events after a dragstop event!)
+ 		return;
+
+	OSRM.G.response = response;	// needed for history routes!
+	if( response.status == 207) {
+		OSRM.RoutingGeometry.showNA();
+		OSRM.RoutingDescription.showNA( OSRM.loc("YOUR_ROUTE_IS_BEING_COMPUTED") );
+	} else {
+		OSRM.RoutingGeometry.show(response);
+		OSRM.RoutingDescription.showSimple(response);
+	}
+	OSRM.Routing._updateHints(response);
+
+	if(OSRM.G.pending)
+		setTimeout(OSRM.Routing.draggingTimeout,1);		
+},
+showRoute_Redraw: function(response) {
 	if(!response)
 		return;
 	
+	//OSRM.G.response = response;	// not needed, even harmful as important information is not stored!
 	if(response.status != 207) {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingNoNames.show(response);
 	}
 	OSRM.Routing._updateHints(response);
 },
-
 
 
 //-- main function --
@@ -114,33 +115,33 @@ getRoute: function() {
 		return;
 	}
 	OSRM.JSONP.clear('dragging');
-	OSRM.JSONP.clear('zooming');
+	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.clear('route');
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');
 },
-getZoomRoute: function() {
+getRoute_Reversed: function() {
 	if( OSRM.G.markers.route.length < 2 )
 		return;
 	
 	OSRM.JSONP.clear('dragging');
-	OSRM.JSONP.clear('zooming');
-	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRouteZooming, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'zooming');	
-},
-getDragRoute: function() {
-	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRouteSimple, OSRM.Routing.timeoutRouteSimple, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
-},
-getReverseRoute: function() {
-	if( OSRM.G.markers.route.length < 2 )
-		return;
-	
-	OSRM.JSONP.clear('dragging');
-	OSRM.JSONP.clear('zooming');
+	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.clear('route');
-	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRouteReverse, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');	
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute_Reversed, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');	
+},
+getRoute_Redraw: function() {
+	if( OSRM.G.markers.route.length < 2 )
+		return;
+	
+	OSRM.JSONP.clear('dragging');
+	OSRM.JSONP.clear('redraw');
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute_Redraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw');
+},
+getRoute_Dragging: function() {
+	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRoute_Dragging, OSRM.Routing.timeoutRoute_Dragging, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;
 },
 draggingTimeout: function() {
 	OSRM.G.markers.route[OSRM.G.dragid].hint = null;
-	OSRM.Routing.getDragRoute();
+	OSRM.Routing.getRoute_Dragging();
 },
 
 _buildCall: function() {
@@ -148,10 +149,11 @@ _buildCall: function() {
 	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp&geomformat=cmp';	
 	if(OSRM.G.markers.checksum)
 		source += '&checksum=' + OSRM.G.markers.checksum;
-	for(var i=0,size=OSRM.G.markers.route.length; i<size; i++) {
-		source += '&loc='  + OSRM.G.markers.route[i].getLat().toFixed(6) + ',' + OSRM.G.markers.route[i].getLng().toFixed(6);
-		if( OSRM.G.markers.route[i].hint)
-			source += '&hint=' + OSRM.G.markers.route[i].hint;
+	var markers = OSRM.G.markers.route;
+	for(var i=0,size=markers.length; i<size; i++) {
+		source += '&loc='  + markers[i].getLat().toFixed(6) + ',' + markers[i].getLng().toFixed(6);
+		if( markers[i].hint)
+			source += '&hint=' + markers[i].hint;
 	}
 	return source;
 },
@@ -169,15 +171,16 @@ _updateHints: function(response) {
 
 // snap all markers to the received route
 _snapRoute: function() {
-	var positions = OSRM.G.route.getPositions();
- 	
- 	OSRM.G.markers.route[0].setPosition( positions[0] );
- 	OSRM.G.markers.route[OSRM.G.markers.route.length-1].setPosition( positions[positions.length-1] );
- 	for(var i=0; i<OSRM.G.via_points.length; i++)
-		OSRM.G.markers.route[i+1].setPosition( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
+	var markers = OSRM.G.markers.route;
+	var via_points = OSRM.G.response.via_points;
+	
+ 	for(var i=0; i<via_points.length; i++)
+		markers[i].setPosition( new L.LatLng(via_points[i][0], via_points[i][1]) );	
 
  	OSRM.Geocoder.updateAddress(OSRM.C.SOURCE_LABEL);
  	OSRM.Geocoder.updateAddress(OSRM.C.TARGET_LABEL);
+
+	OSRM.G.markers.relabelViaMarkers();
 }
 
 };

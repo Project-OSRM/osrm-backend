@@ -23,6 +23,9 @@ OSRM.GUI.extend( {
 		
 // init
 init: function() {
+	// init variables
+	OSRM.Utils.setToHumanDistanceFunction(OSRM.DEFAULTS.DISTANCE_FORMAT);
+	
 	// init events
 	document.getElementById("gui-input-source").onchange = function() {OSRM.GUI.inputChanged(OSRM.C.SOURCE_LABEL);};
 	document.getElementById("gui-delete-source").onclick = function() {OSRM.GUI.deleteMarker(OSRM.C.SOURCE_LABEL);};
@@ -34,10 +37,10 @@ init: function() {
 	
 	document.getElementById("gui-reset").onclick = OSRM.GUI.resetRouting;
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
-	document.getElementById("gui-options-toggle").onclick = OSRM.GUI.toggleOptions;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
-	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getZoomRoute;	
+	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getRoute_Redraw;
+	document.getElementById("option-show-previous-routes").onclick = OSRM.GUI.showPreviousRoutes;
 },
 
 // click: button "reset"
@@ -45,9 +48,8 @@ resetRouting: function() {
 	document.getElementById('gui-input-source').value = "";
 	document.getElementById('gui-input-target').value = "";
 	
-	OSRM.G.route.hideAll();
-	OSRM.G.markers.removeAll();
-	OSRM.G.markers.highlight.hide();
+	OSRM.G.route.reset();
+	OSRM.G.markers.reset();
 	
 	document.getElementById('information-box').innerHTML = "";
 	document.getElementById('information-box-header').innerHTML = "";
@@ -65,7 +67,7 @@ reverseRouting: function() {
 	// recompute route if needed
 	if( OSRM.G.route.isShown() ) {
 		OSRM.G.markers.route.reverse();
-		OSRM.Routing.getRoute();				// temporary route reversal for query, actual reversal done after receiving response
+		OSRM.Routing.getRoute_Reversed();				// temporary route reversal for query, actual reversal done after receiving response
 		OSRM.G.markers.route.reverse();
 		OSRM.G.markers.highlight.hide();
 		OSRM.RoutingDescription.showSimple( OSRM.G.response );
@@ -78,7 +80,7 @@ reverseRouting: function() {
 
 // click: button "show"
 showMarker: function(marker_id) {
-	if( OSRM.JSONP.fences["geocoder_source"] || OSRM.JSONP.fences["geocoder_target"] )
+	if( OSRM.JSONP.fences["geocoder_source"] || OSRM.JSONP.fences["geocoder_target"] )	// needed when focus was on input box and user clicked on button
 		return;
 	
 	if( marker_id == OSRM.C.SOURCE_LABEL && OSRM.G.markers.hasSource() )
@@ -134,6 +136,14 @@ deleteMarker: function(marker_id) {
 	OSRM.G.markers.removeMarker( id );
 	OSRM.Routing.getRoute();
 	OSRM.G.markers.highlight.hide();	
+},
+
+//click: checkbox "show previous routes"
+showPreviousRoutes: function(value) {
+	if( document.getElementById('option-show-previous-routes').checked == false)
+		OSRM.G.route.deactivateHistoryRoutes();
+	else
+		OSRM.G.route.activateHistoryRoutes();
 }
 
 });

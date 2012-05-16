@@ -95,7 +95,7 @@ onClick: function(e) {
 onDrag: function(e) {
 	this.parent.setPosition( e.target.getLatLng() );
 	if(OSRM.G.markers.route.length>1)
-		OSRM.Routing.getDragRoute();
+		OSRM.Routing.getRoute_Dragging();
 	OSRM.Geocoder.updateLocation( this.parent.label );
 },
 onDragStart: function(e) {

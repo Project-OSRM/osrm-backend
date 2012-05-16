@@ -23,12 +23,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.init = function() {
 	OSRM.prefetchImages();
 	OSRM.prefetchIcons();
+	OSRM.prefetchCSSIcons();
 	
-	OSRM.Localization.init();
 	OSRM.GUI.init();
 	OSRM.Map.init();
 	OSRM.Printing.init();
 	OSRM.Routing.init();
+	OSRM.Localization.init();	
+	
+	// stop if in maintenance mode
+	if( OSRM.inMaintenance() == true )
+		return;
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
  	OSRM.parseParameters();
@@ -42,7 +47,7 @@ OSRM.init = function() {
 // prefetch images
 OSRM.GLOBALS.images = {};
 OSRM.prefetchImages = function() {
-	var image_list = [	{id:'marker-shadow',					url:L.RELATIVE_ROOT_URL + 'images/marker-shadow.png'},
+	var image_list = [	{id:'marker-shadow',					url:'leaflet/images/marker-shadow.png'},
 	                  	{id:'marker-source',					url:'images/marker-source.png'},
 						{id:'marker-target',					url:'images/marker-target.png'},
 						{id:'marker-via',						url:'images/marker-via.png'},
@@ -58,6 +63,12 @@ OSRM.prefetchImages = function() {
 		              	{id:'restore',							url:'images/restore.png'},
 		              	{id:'restore_active',					url:'images/restore_active.png'},
 		              	{id:'restore_hover',					url:'images/restore_hover.png'},
+		              	{id:'config',							url:'images/config.png'},
+		              	{id:'config_active',					url:'images/config_active.png'},
+		              	{id:'config_hover',						url:'images/config_hover.png'},		              	
+		              	{id:'mapping',							url:'images/mapping.png'},
+		              	{id:'mapping_active',					url:'images/mapping_active.png'},
+		              	{id:'mapping_hover',					url:'images/mapping_hover.png'},		              	
 		              	{id:'printer',							url:'images/printer.png'},
 		              	{id:'printer_active',					url:'images/printer_active.png'},
 		              	{id:'printer_hover',					url:'images/printer_hover.png'},
@@ -73,7 +84,9 @@ OSRM.prefetchImages = function() {
 		              	{id:'direction_8',						url:'images/sharp-left.png'},
 		              	{id:'direction_10',						url:'images/head.png'},
 		        		{id:'direction_11',						url:'images/round-about.png'},
-		        		{id:'direction_15',						url:'images/target.png'}
+		        		{id:'direction_15',						url:'images/target.png'},
+		        		{id:'osrm-logo',						url:'images/osrm-logo.png'},
+		        		{id:'selector',							url:'images/selector.png'}
 	               ];
 		
 	for(var i=0; i<image_list.length; i++) {
@@ -107,7 +120,42 @@ OSRM.prefetchIcons = function() {
 	}
 	
 	// special values for drag marker
-	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: OSRM.G.images["marker-drag"].getAttribute("src"), iconSize: new L.Point(18, 18) } );	
+	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: OSRM.G.images["marker-drag"].getAttribute("src"), iconSize: new L.Point(18, 18) } );
+};
+
+
+// set css styles for images
+OSRM.prefetchCSSIcons = function() {
+	var css_list = [
+	                	{ id:'#gui-printer-inactive',		image_id:'printer_inactive'},
+	                	{ id:'#gui-printer',				image_id:'printer'},
+	                	{ id:'#gui-printer:hover',			image_id:'printer_hover'},
+	                	{ id:'#gui-printer:active',			image_id:'printer_active'},
+	                	
+	                	{ id:'.cancel-marker',				image_id:'cancel'},
+	                	{ id:'.cancel-marker:hover',		image_id:'cancel_hover'},
+	                	{ id:'.cancel-marker:active',		image_id:'cancel_active'},
+	                	
+	                	{ id:'#input-mask-header',			image_id:'osrm-logo'},
+	                	{ id:'.styled-select',				image_id:'selector'},
+	                	
+	                	{ id:'#config-handle-icon',			image_id:'config'},
+	                	{ id:'#config-handle-icon:hover',	image_id:'config_hover'},
+	                	{ id:'#config-handle-icon:active',	image_id:'config_active'},
+	                	           	
+	                	{ id:'#mapping-handle-icon',		image_id:'mapping'},
+	                	{ id:'#mapping-handle-icon:hover',	image_id:'mapping_hover'},
+	                	{ id:'#mapping-handle-icon:active',	image_id:'mapping_active'},
+	                	          	
+	                	{ id:'#main-handle-icon',			image_id:'restore'},
+	                	{ id:'#main-handle-icon:hover',		image_id:'restore_hover'},
+	                	{ id:'#main-handle-icon:active',	image_id:'restore_active'}	                	
+	                ];
+	
+	var stylesheet = OSRM.CSS.getStylesheet("main.css");
+	for(var i=0; i<css_list.length; i++) {
+		OSRM.CSS.insert( stylesheet, css_list[i].id, "background-image:url("+ OSRM.G.images[css_list[i].image_id].getAttribute("src") + ");" );
+	}
 };
 
 
@@ -135,6 +183,12 @@ OSRM.parseParameters = function(){
 		if(name_val[0] == 'hl') {
 			OSRM.Localization.setLanguage(name_val[1]);
 		}
+		else if(name_val[0] == 'df') {
+			var type = parseInt(name_val[1]);
+			if(type != 0 && type != 1)
+				return;
+			OSRM.Utils.setToHumanDistanceFunction(type);
+		}		
 		else if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
@@ -212,6 +266,18 @@ OSRM.parseParameters = function(){
 	return;
 };
 
+
+// check whether to activate maintenance mode
+OSRM.inMaintenance = function(){
+	if( OSRM.DEFAULTS.MAINTENANCE == true ) {
+		document.getElementById('notification-blanket').style.display = "block";
+		document.getElementById('notification-label').innerHTML = OSRM.DEFAULTS.MAINTENANCE_HEADER;
+		document.getElementById('notification-box').innerHTML = OSRM.DEFAULTS.MAINTENANCE_TEXT;
+		document.getElementById('notification-toggle').style.display = "none";
+		return true;
+	}
+	return false;
+};
 
 // onload event
 OSRM.Browser.onLoadHandler( OSRM.init );

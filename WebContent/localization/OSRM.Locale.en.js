@@ -20,19 +20,30 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Localization["en"] = {
-//gui
-"OPEN_JOSM": "JOSM",
-"OPEN_OSMBUGS": "OSM Bugs",
+// own language
+"LANGUAGE": "English",
+// gui
 "GUI_START": "Start",
 "GUI_END": "End",
 "GUI_RESET": "&nbsp;&nbsp;Reset&nbsp;&nbsp;",
 "GUI_SEARCH": "&nbsp;&nbsp;Show&nbsp;&nbsp;",
 "GUI_REVERSE": "Reverse",
-"GUI_OPTIONS": "Mapping Tools",
-"GUI_HIGHLIGHT_UNNAMED_ROADS": "Highlight unnamed streets",
 "GUI_START_TOOLTIP": "Enter start",
 "GUI_END_TOOLTIP": "Enter destination",
 "GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
+// config
+"GUI_CONFIGURATION": "Configuration",
+"GUI_LANGUAGE": "Language",
+"GUI_UNITS": "Units",
+"GUI_KILOMETERS": "Kilometers",
+"GUI_MILES": "Miles",
+"GUI_DATA_TIMESTAMP": "data",
+// mapping
+"GUI_MAPPING_TOOLS": "Mapping Tools",
+"GUI_HIGHLIGHT_UNNAMED_ROADS": "Highlight unnamed streets",
+"GUI_SHOW_PREVIOUS_ROUTES": "Show previous routes",
+"OPEN_JOSM": "JOSM",
+"OPEN_OSMBUGS": "OSM Bugs",
 // geocoder
 "SEARCH_RESULTS": "Search Results",
 "FOUND_X_RESULTS": "found %i results",
@@ -40,7 +51,7 @@ OSRM.Localization["en"] = {
 "NO_RESULTS_FOUND": "No results found",
 "NO_RESULTS_FOUND_SOURCE": "No results found for start",
 "NO_RESULTS_FOUND_TARGET": "No results found for end",
-//routing
+// routing
 "ROUTE_DESCRIPTION": "Route Description",
 "GET_LINK_TO_ROUTE": "Generate Link",
 "GENERATE_LINK_TO_ROUTE": "waiting for link",
@@ -50,8 +61,9 @@ OSRM.Localization["en"] = {
 "DURATION": "Duration",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Your route is being computed",
 "NO_ROUTE_FOUND": "No route possible",
-//printing
+// printing
 "OVERVIEW_MAP": "Overview Map",
+"NO_ROUTE_SELECTED": "No route selected",
 // directions
 "N": "north",
 "E": "east",
@@ -88,6 +100,6 @@ OSRM.Localization["en"] = {
 "DIRECTION_15":"You have reached your destination"
 };
 
-//set GUI language on load
+// set GUI language on load
 if( OSRM.DEFAULTS.LANUGAGE_ONDEMAND_RELOADING == true )
 	OSRM.Localization.setLanguage("en");

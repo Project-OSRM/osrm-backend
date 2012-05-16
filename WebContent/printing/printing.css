@@ -17,12 +17,34 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 /* OSRM CSS styles for printing*/
 
+/* ------------------------------------------------------------------------ */
+
 /* page setup */
 body
 {
 	margin: 8px;
 }
 
+/* ------------------------------------------------------------------------ */
+
+/* changes/additions to leaflet styles */
+.via-counter
+{
+	position:absolute;
+	top:-3px;
+	right:-6px;
+	width:16px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	background-color:#FFFFFF;
+	text-align:center;
+	vertical-align:middle;	
+	font-size:9px;
+	display:none;
+}
+
+/* ------------------------------------------------------------------------ */
 
 /* header area */
 #printing-header
@@ -32,13 +54,10 @@ body
 	top:0px;
 	height:20px;
 }
-.top-left-button
-{
-	float:left;
-}
 .top-right-button
 {
 	float:right;
+	vertical-align:top;
 }
 
 
@@ -60,6 +79,7 @@ div.label
 	margin:5px;
 }
 
+/* ------------------------------------------------------------------------ */
 
 /* description content */
 .description
@@ -128,72 +148,7 @@ div.label
 }
 }
 
-
-/* utility styles */
-.quad
-{
-	min-width:10px;
-	min-height:10px;
-}
-@media print {
-.pagebreak
-{
-	page-break-before:always;
-}
-.noprint
-{
-	display:none;
-}
-}
-
-
-/* fonts */
-@media print {
-.base-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 16px;
-	font-weight: normal;
-}
-.big-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 18px;
-	font-weight: bold;	
-}
-.medium-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 14px;
-	font-weight: normal;	
-}
-.small-font {
-	font-family: Times New Roman, Times, serif;
-	font-size: 12px;
-	font-weight: normal;	
-}
-}
-
-@media screen {
-.base-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	font-weight: normal;
-}
-.big-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 14px;
-	font-weight: bold;	
-}
-.medium-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 10.5px;
-	font-weight: normal;	
-}
-.small-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 9px;
-	font-weight: normal;	
-}	
-}
-
+/* ------------------------------------------------------------------------ */
 
 /* iconic buttons */
 .iconic-button
@@ -205,19 +160,39 @@ div.label
 	background-position:center;
 }
 
-#gui-printer
+#gui-printer-inactive
 {
-	background-image:url("../images/printer.png");
-}
-#gui-printer:hover
-{
-	background-image:url("../images/printer_hover.png");
-}
-#gui-printer:active
-{
-	background-image:url("../images/printer_active.png");
+	cursor:default;
 }
 
+/* ------------------------------------------------------------------------ */
+
+/* utility styles */
+.quad
+{
+	min-width:10px;
+	min-height:10px;
+}
+.not-selectable
+{
+	cursor:default;
+	-moz-user-select: -moz-none;  
+	-webkit-user-select: none;  
+	-ms-user-select: none;
+	user-select: none;
+}
+@media print {
+.pagebreak
+{
+	page-break-after:always;
+}
+.noprint
+{
+	display:none;
+}
+}
+
+/* ------------------------------------------------------------------------ */
 
 /* table */
 .full
@@ -250,4 +225,53 @@ div.label
 .stretch
 {
 	width:100%;	
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* fonts */
+@media print {
+.base-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 16px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 18px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 14px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Times New Roman, Times, serif;
+	font-size: 12px;
+	font-weight: normal;	
+}
+}
+
+@media screen {
+.base-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 15px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;	
+}	
 }

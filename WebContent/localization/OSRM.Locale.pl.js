@@ -20,19 +20,30 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Localization["pl"] = {
+// own language
+"LANGUAGE": "Polski",		
 //gui
-"OPEN_JOSM": "JOSM",
-"OPEN_OSMBUGS": "OSM Bugs",
 "GUI_START": "Początek",
 "GUI_END": "Koniec",
-"GUI_RESET": "&nbsp;&nbsp;Reset&nbsp;&nbsp;",
-"GUI_SEARCH": "&nbsp;&nbsp;Pokaż&nbsp;&nbsp;",
+"GUI_RESET": "Reset",
+"GUI_SEARCH": "Pokaż",
 "GUI_REVERSE": "Odwróć",
-"GUI_OPTIONS": "Narzędzia",
-"GUI_HIGHLIGHT_UNNAMED_ROADS": "Zaznacz ulice bez nazwy",
 "GUI_START_TOOLTIP": "Wprowadź początek",
 "GUI_END_TOOLTIP": "Wprowadź koniec",
 "GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting: <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder: <a href='http://www.osm.org/'>OSM</a>",
+//config
+"GUI_CONFIGURATION": "Konfiguracja",
+"GUI_LANGUAGE": "Język",
+"GUI_UNITS": "Jednostki",
+"GUI_KILOMETERS": "Kilometrów",
+"GUI_MILES": "Miles",
+"GUI_DATA_TIMESTAMP": "data",
+// mapping
+"GUI_MAPPING_TOOLS": "Narzędzia mapowania",
+"GUI_HIGHLIGHT_UNNAMED_ROADS": "Zaznacz ulice bez nazwy",
+"GUI_SHOW_PREVIOUS_ROUTES": "Pokaż poprzednie trasy",
+"OPEN_JOSM": "JOSM",
+"OPEN_OSMBUGS": "OSM Bugs",
 // geocoder
 "SEARCH_RESULTS": "Wyniki wyszukiwania",
 "FOUND_X_RESULTS": "znaleziono %i wyników",
@@ -66,7 +77,7 @@ OSRM.Localization["pl"] = {
 // %d: direction
 // [*]: will only be printed when there actually is a road name
 "DIRECTION_0":"Nieznana instrukcja[ na <b>%s</b>]",
-"DIRECTION_1":"Podążaj[ drogą <b>%s</b>]",
+"DIRECTION_1":"Kontynuuj[ drogą <b>%s</b>]",
 "DIRECTION_2":"Skręć lekko w prawo[ na drogę <b>%s</b>]",
 "DIRECTION_3":"Skręć w prawo[ na drogę <b>%s</b>]",
 "DIRECTION_4":"Skręć ostro w prawo[ na drogę <b>%s</b>]",
@@ -74,7 +85,7 @@ OSRM.Localization["pl"] = {
 "DIRECTION_6":"Skręć lekko w lewo[ na drogę <b>%s</b>]",
 "DIRECTION_7":"Skręć w lewo[ na drogę <b>%s</b>]",
 "DIRECTION_8":"Skręć ostro w lewo[ na drogę <b>%s</b>]",
-"DIRECTION_10":"Podążaj <b>%d</b>[ drogą <b>%s</b>]",
+"DIRECTION_10":"Podążaj na <b>%d</b>[ drogą <b>%s</b>]",
 "DIRECTION_11-1":"Wjedź na rondo, zjedź pierwszym zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-2":"Wjedź na rondo, zjedź drugim zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-3":"Wjedź na rondo, zjedź trzecim zjazdem[ na drogę <b>%s</b>]",

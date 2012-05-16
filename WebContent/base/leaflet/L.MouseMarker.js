@@ -34,6 +34,13 @@ L.MouseMarker = L.Marker.extend({
 		}
 	},
 	
+	setLabel: function( label ) {
+		if(this._icon) {
+			this._icon.lastChild.innerHTML=label;
+			this._icon.lastChild.style.display = "block";
+		}
+	},
+	
 	_changeIcon: function () {
 		var options = this.options;
 

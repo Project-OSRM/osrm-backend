@@ -25,6 +25,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	
 	OSRM.Browser = {
  		FF3:	useragent.search(/Firefox\/3/),
+ 		IE6_8:	useragent.search(/MSIE (6|7|8)/),
 		IE6_9:	useragent.search(/MSIE (6|7|8|9)/)
 	};
 }());
@@ -66,5 +67,16 @@ OSRM.Browser.onLoadHandler = function( function_pointer, the_window ) {
 			}
 		};
 		the_document.attachEvent("onreadystatechange", temp_function);
+	}
+};
+OSRM.Browser.onUnloadHandler = function( function_pointer, the_window ) {
+	the_window = the_window || window;			// default document
+	var the_document = the_window.document;
+	
+	if(the_window.addEventListener) {			// FF, CH, IE9+
+		the_window.addEventListener("unload", function_pointer, false);
+	}
+	else if(the_document.attachEvent) {			// IE8-
+		the_document.attachEvent("onunload", function_pointer);
 	}
 };

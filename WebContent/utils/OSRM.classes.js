@@ -15,8 +15,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// OSRM base class
-// [support for inheritance]
+// OSRM classes
+// [support for inheritance and other function related functionality]
 
 // declare one class to be a subclass of another class
 // (runs anonymous function to prevent local functions cluttering global namespace)
@@ -36,6 +36,23 @@ OSRM.extend = function( target_class, properties ) {
 	for( property in properties ) {
 		target_class.prototype[property] = properties[property];
 	}
+};
+
+
+// bind a function to an execution context, i.e. an object (needed for correcting this pointers)
+OSRM.bind = function( context, fct1 ) {
+	return function() {
+		fct1.apply(context, arguments);
+	};
+};
+
+
+// concatenate the execution of two functions with the same set of parameters
+OSRM.concat = function( fct1, fct2 ) {
+	return function() { 
+		fct1.apply(this,arguments); 
+		fct2.apply(this,arguments); 
+	};
 };
 
 

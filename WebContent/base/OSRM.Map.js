@@ -29,15 +29,19 @@ OSRM.Map = {
 // map initialization
 init: function() {
 	// check if GUI is initialized!
-	if(OSRM.GUI.visible == null)
+	if(OSRM.G.main_handle == null)
 		OSRM.GUI.init();
 	
 	// setup tile servers
 	var tile_servers = OSRM.DEFAULTS.TILE_SERVERS;
 	var base_maps = {};
 	for(var i=0, size=tile_servers.length; i<size; i++) {
-		tile_servers[i].options.attribution = tile_servers[i].attribution; 
-		base_maps[ tile_servers[i].display_name ] = new L.TileLayer( tile_servers[i].url, tile_servers[i].options );
+		if( tile_servers[i].bing == true ) {
+			base_maps[ tile_servers[i].display_name ] = new L.TileLayer.Bing( tile_servers[i].apikey, tile_servers[i].type, tile_servers[i].options );		
+		} else {
+			tile_servers[i].options.attribution = tile_servers[i].attribution; 
+			base_maps[ tile_servers[i].display_name ] = new L.TileLayer( tile_servers[i].url, tile_servers[i].options );
+		}
 	}
 
 	// setup map
@@ -54,7 +58,7 @@ init: function() {
 	OSRM.G.map.addLayerControl(layerControl);
 
     // move zoom markers
-	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";
+	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.G.main_handle.boxWidth()+10)+"px";
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
 
 	// map events
@@ -75,9 +79,9 @@ initPosition: function() {
 // map event handlers
 zoomed: function(e) {
 	if(OSRM.G.dragging)
-		OSRM.Routing.getDragRoute();
+		OSRM.Routing.getRoute_Dragging();
 	else
-		OSRM.Routing.getZoomRoute();
+		OSRM.Routing.getRoute_Redraw();
 },
 contextmenu: function(e) {;},
 mousemove: function(e) { OSRM.Via.drawDragMarker(e); },

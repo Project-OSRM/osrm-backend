@@ -19,8 +19,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [for printing window]
 
 OSRM = {};
-OSRM.GLOBALS = {};
-OSRM.GUI = { visible:false };
+OSRM.GLOBALS = { main_handle:{boxVisible:function(){return false;}} };	// needed for fitBoundsUI to work
+OSRM.Localization = { current_language:"en"};							// needed for localized map tiles
 OSRM.G = OSRM.GLOBALS;
 
 
@@ -32,7 +32,7 @@ function printWindow() {
 
 //prefetch icons
 OSRM.GLOBALS.icons = {};
-prefetchIcons = function(images_list) {
+OSRM.prefetchIcons = function(images_list) {
 	var icon_list = [	{id:'marker-source',					image_id:'marker-source'},
 						{id:'marker-target',					image_id:'marker-target'},
 						{id:'marker-via',						image_id:'marker-via'},
@@ -41,8 +41,9 @@ prefetchIcons = function(images_list) {
 
 	for(var i=0; i<icon_list.length; i++) {
 		var icon = {
-				iconUrl: "../"+images_list[icon_list[i].image_id].getAttribute("src"), iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
-				shadowUrl: "../"+images_list["marker-shadow"].getAttribute("src"), shadowSize: new L.Point(41, 41),
+				// absolute directories used for compatibility with legacy IE (quirks mode)
+				iconUrl: images_list[icon_list[i].image_id].src, iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
+				shadowUrl: images_list["marker-shadow"].src, shadowSize: new L.Point(41, 41),
 				popupAnchor: new L.Point(0, -33)
 			};
 		OSRM.G.icons[icon_list[i].id] = new L.SwitchableIcon(icon);
@@ -51,9 +52,11 @@ prefetchIcons = function(images_list) {
 
 
 // function to initialize a map in the new window
-function drawMap(tile_server, bounds) {
+OSRM.drawMap = function(tile_server, bounds) {
  	// setup map
-	var tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
+	var tile_layer;
+	if( tile_server.bing )	tile_layer = new L.TileLayer.Bing(tile_server.apikey, tile_server.type, tile_server.options);
+	else 					tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
 	OSRM.G.map = new OSRM.MapView("overview-map", {
     	center: new L.LatLng(48.84, 10.10),
 	    zoom: 13,
@@ -70,29 +73,34 @@ function drawMap(tile_server, bounds) {
 	
 	OSRM.G.map.fitBoundsUI(bounds);
 	return OSRM.G.map.getBoundsZoom(bounds);
-}
+};
 
 
 // manage makers
-function drawMarkers( markers ) {
+OSRM.drawMarkers = function( markers ) {
 	OSRM.G.map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
-	for(var i=1, size=markers.length-1; i<size; i++)
-		OSRM.G.map.addLayer( new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} ) );
+	for(var i=1, size=markers.length-1; i<size; i++) {
+		var via_marker = new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} );
+		OSRM.G.map.addLayer( via_marker );
+		via_marker.setLabel(i);
+	}
 	OSRM.G.map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ) );
-}
+};
 
 
 // manage route
-function drawRoute( positions ) {
-	OSRM.G.route = new L.DashedPolyline();
+OSRM.drawRoute = function( positions ) {
+	if( OSRM.G.route == undefined )
+		OSRM.G.route = new L.DashedPolyline();
 	OSRM.G.route.setLatLngs( positions );
 	OSRM.G.route.setStyle( {dashed:false,clickable:false,color:'#0033FF', weight:5} );
 	OSRM.G.map.addLayer( OSRM.G.route );	
-}
-function updateRoute( positions ) {
+};
+OSRM.updateRoute = function( positions ) {
 	OSRM.G.route.setLatLngs( positions );
-}
+};
 
 
-// start populating the window when it is fully loaded
-window.opener.OSRM.Browser.onLoadHandler( window.opener.OSRM.Printing.printWindowLoaded, window );
+// start populating the window when it is fully loaded - and only if it was loaded from OSRM 
+if(window.opener && window.opener.OSRM)
+	window.opener.OSRM.Browser.onLoadHandler( window.opener.OSRM.Printing.printWindowLoaded, window );

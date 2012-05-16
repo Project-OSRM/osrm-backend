@@ -18,6 +18,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM route management (handles drawing of route geometry - current route, old route, unnamed route, highlight unnamed streets) 
 // [this holds the route geometry]
 
+
 OSRM.Route = function() {
 	this._current_route	= new OSRM.SimpleRoute("current" , {dashed:false} );
 	this._old_route		= new OSRM.SimpleRoute("old", {dashed:false,color:"#123"} );
@@ -31,11 +32,13 @@ OSRM.Route = function() {
 	this._old_unnamed_route_style = {dashed:false, color:'#990099', weight:10};
 	
 	this._noroute = OSRM.Route.ROUTE;
+	this._history = new OSRM.HistoryRoute();
 };
 OSRM.Route.NOROUTE = true;
 OSRM.Route.ROUTE = false;
 OSRM.extend( OSRM.Route,{
-	
+
+	// show/hide route
 	showRoute: function(positions, noroute) {
 		this._noroute = noroute;
 		this._current_route.setPositions( positions );
@@ -45,22 +48,22 @@ OSRM.extend( OSRM.Route,{
 			this._current_route.setStyle( this._current_route_style );
 		this._current_route.show();
 		//this._raiseUnnamedRoute();
+
+		this._history.fetchHistoryRoute();
+		this._history.showHistoryRoutes();		
+		this._history.storeHistoryRoute();		
 	},
 	hideRoute: function() {
 		this._current_route.hide();
 		this._unnamed_route.hide();
-		// activate printing
+		
+		this._history.fetchHistoryRoute();
+		this._history.showHistoryRoutes();		
+		// deactivate printing
 		OSRM.Printing.deactivate();		
 	},
-	hideAll: function() {
-		this._current_route.hide();
-		this._unnamed_route.hide();
-		this._old_route.hide();
-		this._noroute = OSRM.Route.ROUTE;
-		// activate printing
-		OSRM.Printing.deactivate();		
-	},	
 	
+	// show/hide highlighting for unnamed routes
 	showUnnamedRoute: function(positions) {
 		this._unnamed_route.clearRoutes();
 		for(var i=0; i<positions.length; i++) {
@@ -78,7 +81,9 @@ OSRM.extend( OSRM.Route,{
 			this._unnamed_route.hide();
 			this._unnamed_route.show();
 		}		
-	},	
+	},
+	
+	// show/hide previous route as shadow
 	showOldRoute: function() {
 		this._old_route.setPositions( this._current_route.getPositions() );
 		if ( this._noroute == OSRM.Route.NOROUTE)
@@ -94,6 +99,7 @@ OSRM.extend( OSRM.Route,{
 		this._old_route.hide();
 	},
 	
+	// query routines
 	isShown: function() {
 		return this._current_route.isShown();
 	},
@@ -105,11 +111,27 @@ OSRM.extend( OSRM.Route,{
 	},
 	getPoints: function() {
 		return this._current_route.getPoints();
-	},	
+	},
+	
+	// helper routines
+	reset: function() {
+		this.hideRoute();
+		this._old_route.hide();
+		this._noroute = OSRM.Route.ROUTE;
+		this._history.clearHistoryRoutes();
+	},
 	fire: function(type,event) {
 		this._current_route.route.fire(type,event);
 	},
 	centerView: function() {
 		this._current_route.centerView();
-	}
+	},	
+	
+	// handle history routes
+	activateHistoryRoutes: function() {
+		this._history.activate();
+	},
+	deactivateHistoryRoutes: function() {
+		this._history.deactivate();
+	}	
 });

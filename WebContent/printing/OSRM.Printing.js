@@ -21,6 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Printing = {
 		
+// directory with printing code, and base OSRM directory relative to this directory
+DIRECTORY: 'printing/',
+BASE_DIRECTORY: '../',
+		
 // create UI for printing in mainwindow
 init: function() {
 	var icon = document.createElement('div');
@@ -35,6 +39,12 @@ init: function() {
 	input_mask_header.appendChild(icon,input_mask_header.lastChild);
 	
 	document.getElementById("gui-printer-inactive").onclick = OSRM.Printing.openPrintWindow;
+	
+	OSRM.Browser.onUnloadHandler( OSRM.Printing.uninit );	
+},
+uninit: function() {
+	if(OSRM.G.printwindow)
+		OSRM.G.printwindow.close();
 },
 		
 
@@ -52,7 +62,47 @@ deactivate: function() {	// use hide route as trigger
 // create UI in printwindow
 show: function(response) {
 	// create header
-	var header = 
+	var header;
+	if( OSRM.Browser.IE6_8 ) {	// tables used for compatibility with legacy IE (quirks mode)
+		header =
+		'<thead class="description-header"><tr><td colspan="3">' +
+		
+		'<table class="full">' +
+		'<tr class="row">' +
+		
+		'<td class="left stretch">' +
+		'<table class="full">' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' + OSRM.loc("GUI_START")+ ': </td>' +
+		'<td class="left description-header-content stretch">' + document.getElementById("gui-input-source").value + '</td>' +
+		'</tr>' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' + OSRM.loc("GUI_END")+ ': </td>' +
+		'<td class="left description-header-content stretch">' + document.getElementById("gui-input-target").value + '</td>' +
+		'</tr>' +		
+		'</table>' +
+		'</td>' +
+		
+		'<td class="left">' +
+		'<table class="full">' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' +  OSRM.loc("DISTANCE")+': </td>' +
+		'<td class="left description-header-content">' + OSRM.Utils.toHumanDistance(response.route_summary.total_distance) + '</td>' +
+		'</tr>' +
+		'<tr class="row">' +
+		'<td class="left description-header-label">' +  OSRM.loc("DURATION")+': </td>' +
+		'<td class="left description-header-content">' + OSRM.Utils.toHumanTime(response.route_summary.total_time) + '</td>' +
+		'</tr>' +
+		'</table>' +
+		'</td>' +
+		
+		'</tr>' +
+		'</table>' +
+		
+		'<div class="quad"></div>' + 
+		'</td></tr></thead>';
+	} else {
+		header = 
 		'<thead class="description-header"><tr><td colspan="3">' +
 		
 		'<div class="full">' +
@@ -75,11 +125,11 @@ show: function(response) {
 		'<div class="full">' +
 		'<div class="row">' +
 		'<div class="left description-header-label">' +  OSRM.loc("DISTANCE")+': </div>' +
-		'<div class="left description-header-content">' + OSRM.Utils.metersToDistance(response.route_summary.total_distance) + '</div>' +
+		'<div class="left description-header-content">' + OSRM.Utils.toHumanDistance(response.route_summary.total_distance) + '</div>' +
 		'</div>' +
 		'<div class="row">' +
 		'<div class="left description-header-label">' +  OSRM.loc("DURATION")+': </div>' +
-		'<div class="left description-header-content">' + OSRM.Utils.secondsToTime(response.route_summary.total_time) + '</div>' +
+		'<div class="left description-header-content">' + OSRM.Utils.toHumanTime(response.route_summary.total_time) + '</div>' +
 		'</div>' +
 		'</div>' +
 		'</div>' +
@@ -88,7 +138,8 @@ show: function(response) {
 		'</div>' +
 		
 		'<div class="quad"></div>' + 
-		'</td></tr></thead>';	
+		'</td></tr></thead>';
+	}
 
 	// create route description
 	var body = '<tbody class="description-body">';
@@ -100,7 +151,7 @@ show: function(response) {
 		body += '<tr class="'+rowstyle+'">';
 		
 		body += '<td class="description-body-directions">';
-		body += '<img class="description-body-direction" src="../'+OSRM.RoutingDescription._getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
+		body += '<img class="description-body-direction" src="'+OSRM.Printing.BASE_DIRECTORY+OSRM.RoutingDescription._getDrivingInstructionIcon(response.route_instructions[i][0])+'" alt="" />';
 		body += "</td>";		
 
 		// build route description
@@ -112,8 +163,7 @@ show: function(response) {
 		body += "</td>";
 		
 		body += '<td class="description-body-distance">';
-		if( i != response.route_instructions.length-1 )
-		body += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
+		body += (i == response.route_instructions.length-1) ? '&nbsp;' : '<b>'+OSRM.Utils.toHumanDistance(response.route_instructions[i][2])+'</b>';	// fill last entry with a space
 		body += "</td>";
 		
 		body += "</tr>";
@@ -128,28 +178,29 @@ show: function(response) {
 	// draw map
 	var positions = OSRM.G.route.getPositions();
 	var tile_server_id = OSRM.G.map.getActiveLayerId();
-	var zoom = print_window.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
+	var zoom = print_window.OSRM.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
 	
 	// draw markers
-	print_window.prefetchIcons( OSRM.G.images );
-	print_window.drawMarkers( OSRM.G.markers.route );
+	print_window.OSRM.prefetchIcons( OSRM.G.images );
+	print_window.OSRM.drawMarkers( OSRM.G.markers.route );
 	
-	// draw route & query for better geometry	
-	print_window.drawRoute( positions );
+	// draw route & query for better geometry
+	print_window.OSRM.drawRoute( positions );
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&z='+zoom+'&instructions=false', OSRM.Printing.drawRoute, OSRM.Printing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'print');
+	// NOTE: simply appended correct zoom level as second zoom parameter to JSONP call -> OSRM API only considers the last one! 
 },
 timeoutRoute: function() {},
 drawRoute: function(response) {
 	if(!response)
 		return;
 	var positions = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
-	OSRM.G.printwindow.drawRoute( positions );
+	OSRM.G.printwindow.OSRM.drawRoute( positions );
 },
 
 
 // opens the print window and closes old instances
 openPrintWindow: function() {
-	// do not open window if there is no route to draw
+	// do not open window if there is no route to draw (should never trigger!)
 	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() )
 		return;
 	
@@ -158,7 +209,7 @@ openPrintWindow: function() {
 		OSRM.G.printwindow.close();
 	
 	// generate a new window and wait till it has finished loading
-	OSRM.G.printwindow = window.open("printing/printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
+	OSRM.G.printwindow = window.open( OSRM.Printing.DIRECTORY + "printing.html","","width=540,height=500,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=yes,status=no,toolbar=no,resizable=yes");
 },
 
 
@@ -167,15 +218,33 @@ printWindowLoaded: function(){
 	var print_window = OSRM.G.printwindow;
 	var print_document = print_window.document;
 	
-	// add events
-	print_document.getElementById('gui-printer').onclick = print_window.printWindow;
+	// add css images
+	var css_list = [
+                	{ id:'#gui-printer-inactive',		image_id:'printer_inactive'},
+                	{ id:'#gui-printer',				image_id:'printer'},
+                	{ id:'#gui-printer:hover',			image_id:'printer_hover'},
+                	{ id:'#gui-printer:active',			image_id:'printer_active'}
+                ];
+	var stylesheet = OSRM.CSS.getStylesheet("printing.css", print_document);
+	for(var i=0; i<css_list.length; i++) {
+		OSRM.CSS.insert( stylesheet, css_list[i].id, "background-image:url("+ OSRM.Printing.BASE_DIRECTORY + OSRM.G.images[css_list[i].image_id].getAttribute("src") + ");" );
+	}	
 	
 	// localization 
+	print_window.OSRM.Localization.current_language = OSRM.Localization.current_language; 
 	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
-	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );
-
+	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );	
+	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() ) {		// error message if no route available (can trigger if user refreshes print-window)
+		print_document.getElementById("description").innerHTML = OSRM.loc("NO_ROUTE_SELECTED");
+		return;	
+	}
+	
 	// add routing content
 	OSRM.Printing.show( OSRM.G.response );
+	
+	// add events
+	print_document.getElementById("gui-printer-inactive").id = "gui-printer";	
+	print_document.getElementById('gui-printer').onclick = print_window.printWindow;	
 	
 	// finally, focus on printwindow
 	print_window.focus();

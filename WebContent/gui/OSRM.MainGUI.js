@@ -21,33 +21,32 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.GUI.extend( {
 		
-// defaults
-visible: null,
-width: null,
-
 // init GUI
 init: function() {
-	OSRM.GUI.visible = true;
-	OSRM.GUI.width = document.getElementById("main-wrapper").clientWidth;
+	// init main box
+	var main_group = new OSRM.GUIBoxGroup();
+	OSRM.G.main_handle = new OSRM.GUIBoxHandle("main", "left", "left:-5px;top:5px;", OSRM.GUI.beforeMainTransition, OSRM.GUI.afterMainTransition);
+	main_group.add( OSRM.G.main_handle );
+	main_group.select( OSRM.G.main_handle );
+	
+	// init additional boxes
+	var option_group = new OSRM.GUIBoxGroup();
+	var config_handle = new OSRM.GUIBoxHandle("config", "right", "right:-5px;bottom:70px;");
+	var mapping_handle = new OSRM.GUIBoxHandle("mapping", "right", "right:-5px;bottom:25px;");
+	option_group.add( config_handle );
+	option_group.add( mapping_handle );
+	option_group.select( null );
 	
 	// init starting source/target
 	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
 	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;
 	
-	// init events
-	document.getElementById("gui-toggle-in").onclick = OSRM.GUI.toggleMain;
-	document.getElementById("gui-toggle-out").onclick = OSRM.GUI.toggleMain;
-
-	// gui after transition events
-	if( OSRM.Browser.FF3==-1 && OSRM.Browser.IE6_9==-1 ) {
-		document.getElementById('main-wrapper').addEventListener("transitionend", OSRM.GUI._onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("webkitTransitionEnd", OSRM.GUI._onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("oTransitionEnd", OSRM.GUI._onMainTransitionEnd, false);
-		document.getElementById('main-wrapper').addEventListener("MSTransitionEnd", OSRM.GUI._onMainTransitionEnd, false);
-	}
+	// init units selector
+	OSRM.GUI.selectorInit( "gui-units-toggle", [{display:"Kilometers",value:0},{display:"Miles",value:1}], 0, OSRM.GUI.onUnitsChanged );
 	
-	// set default language
-	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
+	// query last update of data
+	OSRM.G.data_timestamp = "n/a";
+	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_TIMESTAMP_URL+"?jsonp=%jsonp", OSRM.GUI.setDataTimestamp, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');
 },
 
 // set language dependent labels
@@ -57,7 +56,7 @@ setLabels: function() {
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
-	document.getElementById("gui-options-toggle").innerHTML = OSRM.loc("GUI_OPTIONS");
+	document.getElementById("gui-option-show-previous-routes-label").innerHTML = OSRM.loc("GUI_SHOW_PREVIOUS_ROUTES");
 	document.getElementById("gui-search-source").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-target").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-source-label").innerHTML = OSRM.loc("GUI_START")+":";
@@ -65,57 +64,52 @@ setLabels: function() {
 	document.getElementById("gui-input-source").title = OSRM.loc("GUI_START_TOOLTIP");
 	document.getElementById("gui-input-target").title = OSRM.loc("GUI_END_TOOLTIP");
 	document.getElementById("legal-notice").innerHTML = OSRM.loc("GUI_LEGAL_NOTICE");
+	document.getElementById("gui-mapping-label").innerHTML = OSRM.loc("GUI_MAPPING_TOOLS");
+	document.getElementById("gui-config-label").innerHTML = OSRM.loc("GUI_CONFIGURATION");
+	document.getElementById("gui-language-2-label").innerHTML = OSRM.loc("GUI_LANGUAGE")+":";
+	document.getElementById("gui-units-label").innerHTML = OSRM.loc("GUI_UNITS")+":";
+	document.getElementById('gui-data-timestamp').innerHTML = OSRM.loc("GUI_DATA_TIMESTAMP")+": " + OSRM.G.data_timestamp;
+	
+	document.getElementById("gui-units-toggle").getElementsByTagName("option")[0].innerHTML = OSRM.loc("GUI_KILOMETERS");
+	document.getElementById("gui-units-toggle").getElementsByTagName("option")[1].innerHTML = OSRM.loc("GUI_MILES");
+	OSRM.GUI.selectorOnChange( document.getElementById("gui-units-toggle") );
 },
 
-//clear output area
+// clear output area
 clearResults: function() {
 	document.getElementById('information-box').innerHTML = "";
 	document.getElementById('information-box-header').innerHTML = "";	
 },
 
-//show/hide small options bubble
-toggleOptions: function() {
-	if(document.getElementById('options-box').style.visibility=="visible") {
-		document.getElementById('options-box').style.visibility="hidden";
-	} else {
-		document.getElementById('options-box').style.visibility="visible";
+// reposition and hide zoom controls before main box animation
+beforeMainTransition: function() {
+	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');
+	if( zoom_controls.length > 0)
+		zoom_controls[0].style.visibility="hidden";
+},
+
+// show zoom controls after main box animation
+afterMainTransition: function() {
+	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');
+	if( zoom_controls.length > 0) {
+		zoom_controls[0].style.left = ( OSRM.G.main_handle.boxVisible() == true ? (OSRM.G.main_handle.boxWidth()+10) : "30") + "px";
+		zoom_controls[0].style.visibility="visible";
 	}
 },
+
+// toggle distance units
+onUnitsChanged: function(value) {
+	OSRM.Utils.setToHumanDistanceFunction(value);
+	OSRM.Routing.getRoute();
+},
+
+// set timestamp of data
+setDataTimestamp: function(response) {
+	if(!response)
+		return;
 	
-// show/hide main-gui
-toggleMain: function() {
-	// show main-gui
-	if( OSRM.GUI.visible == false ) {
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.GUI.width+10)+"px";;
-		
-		document.getElementById('blob-wrapper').style.visibility="hidden";
-		document.getElementById('main-wrapper').style.left="5px";
-	// hide main-gui
-	} else {
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="hidden";
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left="30px";
-			
-		document.getElementById('main-wrapper').style.left=-OSRM.GUI.width+"px";
-	}
-
-	// execute after animation (old browser support)
-	if( OSRM.Browser.FF3!=-1 || OSRM.Browser.IE6_9!=-1 )
-		OSRM.GUI._onMainTransitionEnd();		
-},
-
-// do stuff after main-gui animation finished
-_onMainTransitionEnd: function() {
-	// after hiding main-gui
-	if( OSRM.GUI.visible == true ) {
-		document.getElementById('blob-wrapper').style.visibility="visible";
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
-		OSRM.GUI.visible = false;		
-	// after showing main-gui
-	} else {
-		OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.visibility="visible";
- 		OSRM.GUI.visible = true;		
-	}
+	OSRM.G.data_timestamp = response.timestamp.slice(0,25).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags
+	document.getElementById('gui-data-timestamp').innerHTML = OSRM.loc("GUI_DATA_TIMESTAMP")+": " + OSRM.G.data_timestamp;
 }
 
 });

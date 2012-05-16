@@ -15,33 +15,25 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// queryable Layers control
-// [simply Control.Layers extended by query functions]
-L.Control.QueryableLayers = L.Control.Layers.extend({
-getActiveLayerName: function () {
-	var i, input, obj,
-	inputs = this._form.getElementsByTagName('input'),
-	inputsLen = inputs.length;
+// OSRM CSS manipulator
+// [edit css styles]
 
-	for (i = 0; i < inputsLen; i++) {
-		input = inputs[i];
-		obj = this._layers[input.layerId];
-		if (input.checked && !obj.overlay) {
-			return obj.name;
+OSRM.CSS = {
+	getStylesheet: function(filename, the_document) {
+		the_document = the_document || document;
+		var stylesheets = the_document.styleSheets;
+		for(var i=0, size=stylesheets.length; i<size; i++) {
+			if( stylesheets[i].href.indexOf(filename) >= 0)
+				return stylesheets[i];
 		}
-	}
-},
-getActiveLayer: function () {
-	var i, input, obj,
-	inputs = this._form.getElementsByTagName('input'),
-	inputsLen = inputs.length;
-
-	for (i = 0; i < inputsLen; i++) {
-		input = inputs[i];
-		obj = this._layers[input.layerId];
-		if (input.checked && !obj.overlay) {
-			return obj.layer;
+		return null;
+	},
+	
+	insert: function(stylesheet, selector, rule) {
+		if( stylesheet.addRule ){
+			stylesheet.addRule(selector, rule);
+		} else if( stylesheet.insertRule ){
+            stylesheet.insertRule(selector + ' { ' + rule + ' }', stylesheet.cssRules.length);
 		}
-	}
-}
-});
+	}		
+};

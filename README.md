@@ -29,9 +29,10 @@ Please use the OSRM-Project bug tracker [(4)] for submitting any bug reports or 
 
 Contribute
 ----------
-If you like to contribute, you can simply fork the project and start coding.
-When you are going to provide a more substantial addition, please create a new branch first.
-For pull requests use the develop branch as target, never the master branch. 
+If you like to contribute, simply fork the project and start coding.
+It is best practice to create a new branch (from the current master) with a descriptive name for your contributions.
+When you are done, send a pull request from that branch.
+With this workflow, each pull request is isolated and can be easily merged.
 
 
 Integration into Project-OSRM repository
@@ -47,6 +48,14 @@ To successfully work a repository that contains submodules, use the following gi
 	to pull the latest version of the repository and update its submodules if required
 
 Note that the frontend can also be checked out independently of the Project-OSRM repository.
+
+
+Compatibility
+-------------
+The frontend has been tested with Firefox 3.0+, Internet Explorer 8+ and Chrome 18+.
+Certain visuals like rounded corners or moving boxes will only show in newer browser versions.
+But no actual functionality is affected by this.
+Note that the frontend will not work with Internet Explorer 6 or 7.
 
 
 References

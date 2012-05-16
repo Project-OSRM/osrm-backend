@@ -20,19 +20,30 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Localization["dk"] = {
+// own language
+"LANGUAGE": "Dansk",
 //gui
-"OPEN_JOSM": "JOSM",
-"OPEN_OSMBUGS": "OSM Fejl",
 "GUI_START": "Start",
 "GUI_END": "Destination",
-"GUI_RESET": "&nbsp;&nbsp;Nulstil&nbsp;&nbsp;",
-"GUI_SEARCH": "&nbsp;&nbsp;Vis&nbsp;&nbsp;",
+"GUI_RESET": "Nulstil",
+"GUI_SEARCH": "Vis",
 "GUI_REVERSE": "Omvendt",
-"GUI_OPTIONS": "Kortlægnings værktøjer",
-"GUI_HIGHLIGHT_UNNAMED_ROADS": "Fremhæv unavngivne veje",
 "GUI_START_TOOLTIP": "Indtast start",
 "GUI_END_TOOLTIP": "Indtast destination",
 "GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting af <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder af <a href='http://www.osm.org/'>OSM</a>",
+//config
+"GUI_CONFIGURATION": "Konfiguration",
+"GUI_LANGUAGE": "Sprog",
+"GUI_UNITS": "Enheder",
+"GUI_KILOMETERS": "Kilometer",
+"GUI_MILES": "Miles",
+"GUI_DATA_TIMESTAMP": "data",
+// mapping
+"GUI_MAPPING_TOOLS": "Kortlægnings værktøjer",
+"GUI_HIGHLIGHT_UNNAMED_ROADS": "Fremhæv unavngivne veje",
+"GUI_SHOW_PREVIOUS_ROUTES": "Vis tidligere ruter",
+"OPEN_JOSM": "JOSM",
+"OPEN_OSMBUGS": "OSM Bugs",
 // geocoder
 "SEARCH_RESULTS": "Søgeresultater",
 "FOUND_X_RESULTS": "fandt %i resultater",

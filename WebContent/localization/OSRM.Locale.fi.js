@@ -20,19 +20,30 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Localization["fi"] = {
+// own language
+"LANGUAGE": "Suomi",
 //gui
-"OPEN_JOSM": "JOSM",
-"OPEN_OSMBUGS": "OSM Bugs",
 "GUI_START": "Lähtöpaikka",
 "GUI_END": "Määränpää",
-"GUI_RESET": "&nbsp;&nbsp;Tyhjennä&nbsp;&nbsp;",
-"GUI_SEARCH": "&nbsp;&nbsp;Etsi&nbsp;&nbsp;",
+"GUI_RESET": "Tyhjennä",
+"GUI_SEARCH": "Etsi",
 "GUI_REVERSE": "Käänteinen reitti",
-"GUI_OPTIONS": "Kartoitustyökalut",
-"GUI_HIGHLIGHT_UNNAMED_ROADS": "Korosta nimettömät tiet",
 "GUI_START_TOOLTIP": "Syötä lähtöpaikka",
 "GUI_END_TOOLTIP": "Syötä määränpää",
 "GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
+//config
+"GUI_CONFIGURATION": "Kokoonpano",
+"GUI_LANGUAGE": "Kieli",
+"GUI_UNITS": "Yksiköt",
+"GUI_KILOMETERS": "Kilometri",
+"GUI_MILES": "Miles",
+"GUI_DATA_TIMESTAMP": "data",
+// mapping
+"GUI_MAPPING_TOOLS": "Kartoitustyökalut",
+"GUI_HIGHLIGHT_UNNAMED_ROADS": "Korosta nimettömät tiet",
+"GUI_SHOW_PREVIOUS_ROUTES": "Näytä edelliset reitit",
+"OPEN_JOSM": "JOSM",
+"OPEN_OSMBUGS": "OSM Bugs",
 // geocoder
 "SEARCH_RESULTS": "Haun tulokset",
 "FOUND_X_RESULTS": "Löytyi %i vaihtoehtoa",
@@ -52,6 +63,7 @@ OSRM.Localization["fi"] = {
 "NO_ROUTE_FOUND": "Reittiä ei löytynyt",
 //printing
 "OVERVIEW_MAP": "Yleiskuvakartta",
+"NO_ROUTE_SELECTED": "Ei reitti valittu",
 // directions
 "N": "pohjoiseen",
 "E": "itään",

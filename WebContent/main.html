@@ -41,6 +41,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <script src="base/leaflet/L.DashedPolyline.js" type="text/javascript"></script>
 <script src="base/leaflet/L.MouseMarker.js" type="text/javascript"></script>
 <script src="base/leaflet/L.SwitchableIcon.js" type="text/javascript"></script>
+<script src="base/leaflet/L.TileLayer.Bing.js" type="text/javascript"></script>
 
 <script src="OSRM.base.js" type="text/javascript"></script>
 <script src="OSRM.config.js" type="text/javascript"></script>
@@ -57,7 +58,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <script src="base/OSRM.Map.js" type="text/javascript"></script>
 <script src="base/OSRM.Markers.js" type="text/javascript"></script>
 <script src="base/OSRM.Routes.js" type="text/javascript"></script>
+<script src="base/OSRM.HistoryRoutes.js" type="text/javascript"></script>
 <script src="gui/OSRM.GUI.js" type="text/javascript"></script>
+<script src="gui/OSRM.GUIBoxGroup.js" type="text/javascript"></script>
+<script src="gui/OSRM.GUIBoxHandle.js" type="text/javascript"></script>
+<script src="gui/OSRM.Selector.js" type="text/javascript"></script>
 <script src="gui/OSRM.MainGUI.js" type="text/javascript"></script>
 <script src="routing/OSRM.Routing.js" type="text/javascript"></script>
 <script src="routing/OSRM.RoutingDescription.js" type="text/javascript"></script>
@@ -67,6 +72,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <script src="base/OSRM.Via.js" type="text/javascript"></script>
 <script src="base/OSRM.Geocoder.js" type="text/javascript"></script>
 
+<script src="utils/OSRM.CSS.js" type="text/javascript"></script>
 <script src="utils/OSRM.JSONP.js" type="text/javascript"></script>
 <script src="localization/OSRM.Localization.js" type="text/javascript"></script>
 <script src="printing/OSRM.Printing.js" type="text/javascript"></script>
@@ -77,24 +83,82 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!-- body -->
 <body class="base-font not-selectable">
 
-<!--map-->
+<!-- map -->
 <div id="map"></div>
 
-<!-- show ui blob -->
-<div id="blob-wrapper" class="gui-wrapper">
-<div id="blob-content" class="gui-box">
-   	<div id="gui-toggle-in" class="iconic-button"></div>
+<!-- notification -->
+<div id="notification-blanket">
+<div id="notification-wrapper" class="box-wrapper not-selectable">
+<div id="notification-content" class="box-content">
+	<!-- header -->
+	<div id="notification-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="notification-label" class="box-label">Notification</div>
+
+	<!-- notification text -->
+	<div id="notification-box"></div>
+</div>
 </div>
 </div>
 
-<!-- show main gui -->
-<div id="main-wrapper" class="gui-wrapper not-selectable">
+<!-- config gui -->
+<div id="config-wrapper" class="box-wrapper not-selectable">
+<div id="config-content" class="box-content">
+	<!-- header -->
+	<div id="config-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="gui-config-label" class="box-label">Configuraion</div>
+
+	<!-- config options -->
+	<div class="full">
+	<div class="row">
+	<div class="left fixed"><span id="gui-language-2-label" class="config-label">Language:</span></div>
+	<div class="left stretch"><select id="gui-language-2-toggle" class="config-select"></select></div>
+	</div>
+	<div class="row">
+	<div class="left fixed"><span id="gui-units-label" class="config-label">Units:</span></div>
+	<div class="left stretch"><select id="gui-units-toggle" class="config-select"></select></div>
+	</div>
+	</div>
+	
+	<!-- data timestamp -->
+	<div class="full">
+	<div class="row">	
+	<div class="right small-font"><span id="gui-data-timestamp">data: n/a</span></div>
+	</div>
+	</div>
+</div>
+</div>
+
+<!-- mapping gui -->
+<div id="mapping-wrapper" class="box-wrapper not-selectable">
+<div id="mapping-content" class="box-content">
+	<!-- header -->
+	<div id="mapping-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="gui-mapping-label" class="box-label">Mapping Tools</div>
+	
+	<!-- header -->
+	<div class="full">
+	<div class="row">
+	<div class="left"><input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" class="mapping-checkbox"/></div>
+	<div class="left stretch"><span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Highlight unnamed streets</span></div>
+	</div>
+	<div class="row">
+	<div class="left"><input type="checkbox" id="option-show-previous-routes" value="show-previous-routes" class="mapping-checkbox"/></div>
+	<div class="left stretch"><span id="gui-option-show-previous-routes-label" class="checkbox-label small-font">Show previous routes</span></div>
+	</div>
+	</div>
+	<a class="button mapping-button" id="open-osmbugs">OSM Bugs</a><span class="quad mapping-button"></span><a class="button mapping-button" id="open-josm">JOSM</a>
+</div>
+</div>
+
+<!-- main gui -->
+<div id="main-wrapper" class="box-wrapper not-selectable">
 
 <!-- input box -->
-<div id="main-input" class="gui-box">
+<div id="main-input" class="box-content">
 	<!--  header -->
 	<div id="input-mask-header">
-	<div id="gui-toggle-out" class="iconic-button top-right-button"></div>
+	<select id="gui-language-toggle" class="top-left-button"></select>
+	<div id="main-toggle" class="iconic-button cancel-marker top-right-button"></div>
 	</div>
 	
 	<!--  input mask -->
@@ -105,13 +169,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div id="input-source" class="input-marker">
 	<div class="left"><span  id="gui-search-source-label" class="input-label">Start:</span></div>
 	<div class="center input-box"><input id="gui-input-source" class="input-box" type="text" maxlength="200" value="" title="Enter start" /></div>
-	<div class="left"><div id="gui-delete-source" class="iconic-button delete-marker input-delete"></div></div>
+	<div class="left"><div id="gui-delete-source" class="iconic-button cancel-marker input-delete"></div></div>
 	<div class="right"><a class="button" id="gui-search-source">Show</a></div>
 	</div>
 	<div id="input-target" class="input-marker">
 	<div class="left"><span id="gui-search-target-label" class="input-label">End:</span></div>
 	<div class="center input-box"><input id="gui-input-target" class="input-box" type="text" maxlength="200" value="" title="Enter destination" /></div>	
-	<div class="left"><div id="gui-delete-target" class="iconic-button delete-marker input-delete"></div></div>
+	<div class="left"><div id="gui-delete-target" class="iconic-button cancel-marker input-delete"></div></div>
 	<div class="right"><a class="button" id="gui-search-target">Show</a></div>	
 	</div>
 	</div>
@@ -124,31 +188,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div class="right"><a class="button" id="gui-reverse">Reverse</a></div>
     </div>
     </div>
-
-	<div class="quad"></div>
-
-	<!-- options -->
-	<div id="input-mask-options">
-	
-	<!-- option toggle -->
-	<span id="gui-options-toggle" class="small-font">Mapping Tools</span>
-	
-	<!-- actual options -->
-	<div id="options-box" class="full">
-	<div class="left">
-	<input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" />
-	<span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Highlight unnamed streets</span>
-	</div>
-	<div class="right">
-	<a class="button" id="open-josm">JOSM</a>
-	<a class="button" id="open-osmbugs">OSM Bugs</a>
-	</div>
-	</div>
-	</div>
 </div>
 
 <!-- output box -->
-<div id="main-output" class="gui-box">
+<div id="main-output" class="box-content">
 	<div id="information-box-header"></div>
 	<div id="information-box"></div>
 	<div id="legal-notice" class="small-font">GUI2 - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a></div>

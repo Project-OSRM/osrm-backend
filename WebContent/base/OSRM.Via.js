@@ -18,9 +18,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // OSRM via marker routines
 // [find correct position for a via marker]
 
-// store location of via points returned by server
-OSRM.GLOBALS.via_points = [];
-
 
 OSRM.Via = {
 		
@@ -49,12 +46,13 @@ findViaIndex: function( new_via_position ) {
 	var nearest_index = OSRM.Via._findNearestRouteSegment( new_via_position );
 
 	// find correct index to insert new via node
-	var new_via_index = OSRM.G.via_points.length;
+	var via_points = OSRM.G.response.via_points;
+	var new_via_index = via_points.length-2;
 	var via_index = Array();
-	for(var i=0; i<OSRM.G.via_points.length; i++) {
-		via_index[i] = OSRM.Via._findNearestRouteSegment( new L.LatLng(OSRM.G.via_points[i][0], OSRM.G.via_points[i][1]) );
-		if(via_index[i] > nearest_index) {
-			new_via_index = i;
+	for(var i=1; i<via_points.length-1; i++) {
+		via_index[i-1] = OSRM.Via._findNearestRouteSegment( new L.LatLng(via_points[i][0], via_points[i][1]) );
+		if(via_index[i-1] > nearest_index) {
+			new_via_index = i-1;
 			break;
 		}
 	}

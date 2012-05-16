@@ -24,12 +24,16 @@ OSRM.Markers = function() {
 	this.dragger = new OSRM.DragMarker("drag", {draggable:true,icon:OSRM.G.icons['marker-drag'],dragicon:OSRM.G.icons['marker-drag']});;
 };
 OSRM.extend( OSRM.Markers,{
-removeAll: function() {
+reset: function() {
+	// remove route markers
 	for(var i=0; i<this.route.length;i++)
 		this.route[i].hide();
 	this.route.splice(0, this.route.length);
 	document.getElementById('gui-delete-source').style.visibility = "hidden";
 	document.getElementById('gui-delete-target').style.visibility = "hidden";
+	// remove special markers
+	this.highlight.hide();
+	this.dragger.hide();
 },
 removeVias: function() {
 	// assert correct route array s - v - t
@@ -94,13 +98,13 @@ reverseMarkers: function() {
 		// switch positions in nodes
 		var temp_position = this.route[0].getPosition();
 		this.route[0].setPosition( this.route[size-1].getPosition() );
-		OSRM.G.markers.route[size-1].setPosition( temp_position );
+		this.route[size-1].setPosition( temp_position );
 		// switch nodes in array
-		var temp_node = OSRM.G.markers.route[0];
-		OSRM.G.markers.route[0] = OSRM.G.markers.route[size-1];
-		OSRM.G.markers.route[size-1] = temp_node;
+		var temp_node = this.route[0];
+		this.route[0] = this.route[size-1];
+		this.route[size-1] = temp_node;
 		// reverse route
-		OSRM.G.markers.route.reverse();
+		this.route.reverse();
 		// clear information (both delete markers stay visible)
 		document.getElementById('information-box').innerHTML = "";
 		document.getElementById('information-box-header').innerHTML = "";
@@ -119,13 +123,19 @@ reverseMarkers: function() {
 
 },
 hasSource: function() {
-	if( OSRM.G.markers.route[0] && OSRM.G.markers.route[0].label == OSRM.C.SOURCE_LABEL )
+	if( this.route[0] && this.route[0].label == OSRM.C.SOURCE_LABEL )
 		return true;
 	return false;
 },
 hasTarget: function() {
-	if( OSRM.G.markers.route[OSRM.G.markers.route.length-1] && OSRM.G.markers.route[OSRM.G.markers.route.length-1].label == OSRM.C.TARGET_LABEL )
+	if( this.route[this.route.length-1] && this.route[this.route.length-1].label == OSRM.C.TARGET_LABEL )
 		return true;
 	return false;
+},
+
+//relabel all via markers
+relabelViaMarkers: function() {
+	for(var i=1, size=this.route.length-1; i<size; i++)
+		this.route[i].marker.setLabel(i);
 }
 });

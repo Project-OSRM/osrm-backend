@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.DEFAULTS = {
 	HOST_ROUTING_URL: 'http://router.project-osrm.org/viaroute',
 	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
+	HOST_TIMESTAMP_URL: 'http://router.project-osrm.org/timestamp',
 	HOST_GEOCODER_URL: 'http://nominatim.openstreetmap.org/search',
 	HOST_REVERSE_GEOCODER_URL: 'http://nominatim.openstreetmap.org/reverse',
 	WEBSITE_URL: document.URL.replace(/#*(\?.*|$)/i,""),					// truncates URL before first ?, and removes tailing #
@@ -32,6 +33,7 @@ OSRM.DEFAULTS = {
 	ONLOAD_SOURCE: "",
 	ONLOAD_TARGET: "",
 	HIGHLIGHT_ZOOM_LEVEL: 16,
+	DISTANCE_FORMAT: 0,														// 0: km, 1: miles
 	GEOCODER_BOUNDS: '',													// the world is not enough!
 	//GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0',			// bounds for Europe
 	
@@ -39,15 +41,15 @@ OSRM.DEFAULTS = {
 	SHORTENER_REPLY_PARAMETER: 'ShortURL',
 	
 	LANGUAGE: "en",
-	LANGUAGE_FILES_DIRECTORY: "localization/",	
 	LANUGAGE_ONDEMAND_RELOADING: true,
 	LANGUAGE_SUPPORTED: [ 
-		{display_name:"en", encoding:"en"},
-		{display_name:"dk", encoding:"dk"},
-		{display_name:"de", encoding:"de"},
-		{display_name:"fi", encoding:"fi"},
-		{display_name:"fr", encoding:"fr"},
-		{display_name:"pl", encoding:"pl"}
+		{encoding:"en", name:"English"},
+		{encoding:"de", name:"Deutsch"},
+		{encoding:"dk", name:"Dansk"},
+		{encoding:"fi", name:"Suomi"},
+		{encoding:"fr", name:"Français"},
+		{encoding:"it", name:"Italiano"},
+		{encoding:"pl", name:"Polski", culture:"en-US"}
 	],
 		
 	TILE_SERVERS: [
@@ -70,6 +72,24 @@ OSRM.DEFAULTS = {
 			url:'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png',
 			attribution:'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
 			options:{maxZoom: 18}
-		}		
-	]
+		},
+		{
+			display_name: 'Bing Road',
+			apikey:'AjCb2f6Azv_xt9c6pl_xok96bgAYrXQNctnG4o07sTj4iS9N68Za4B3pRJyeCjGr',	// please use your own apikey (http://msdn.microsoft.com/en-us/library/ff428642.aspx) 
+			type:"Road",
+			options:{minZoom: 1},
+			bing:true,
+		},
+		{
+			display_name: 'Bing Aerial',
+			apikey:'AjCb2f6Azv_xt9c6pl_xok96bgAYrXQNctnG4o07sTj4iS9N68Za4B3pRJyeCjGr',	// please use your own apikey (http://msdn.microsoft.com/en-us/library/ff428642.aspx)
+			type:"Aerial",
+			options:{minZoom: 1},
+			bing:true,
+		}
+	],
+	
+	MAINTENANCE: false,
+	MAINTENANCE_HEADER: "Scheduled Maintenance",
+	MAINTENANCE_TEXT: "The OSRM Website is down for a scheduled maintenance. Please be patient while required updates are performed. The site will be back online shortly.<br/><br/>In the meantime you may want to go out an map a friendly neighborhood near you...<br/><br/><br/>[OSRM]",	
 };

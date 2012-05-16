@@ -22,15 +22,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.RoutingDescription = {
 		
 // route description events
-onClickRouteDescription: function(geometry_index) {
-	var positions = OSRM.G.route.getPositions();
-
-	OSRM.G.markers.highlight.setPosition( positions[geometry_index] );
+onClickRouteDescription: function(lat, lng) {
+	OSRM.G.markers.highlight.setPosition( new L.LatLng(lat, lng) );
 	OSRM.G.markers.highlight.show();
 	OSRM.G.markers.highlight.centerView(OSRM.DEFAULTS.HIGHLIGHT_ZOOM_LEVEL);	
 },
 onClickCreateShortcut: function(src){
 	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat.toFixed(6) + ',' + OSRM.G.map.getCenter().lng.toFixed(6);
+	src += '&df=' + OSRM.G.DISTANCE_FORMAT;
 	
 	var source = OSRM.DEFAULTS.SHORTENER_PARAMETERS.replace(/%url/, OSRM.DEFAULTS.HOST_SHORTENER_URL+src); 
 	
@@ -41,7 +40,7 @@ showRouteLink: function(response){
 	if(!response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER])
 		OSRM.RoutingDescription.showRouteLink_TimeOut();
 	else
-		document.getElementById('route-link').innerHTML = '[<a class="route-link text-selectable" href="' +response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+ '">'+response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+'</a>]';
+		document.getElementById('route-link').innerHTML = '[<a class="route-link" href="' +response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+ '">'+response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+'</a>]';
 },
 showRouteLink_TimeOut: function(){
 	document.getElementById('route-link').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
@@ -64,8 +63,8 @@ show: function(response) {
 	var gpx_link = '[<a class="route-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
 		
 	// create route description
+	var positions = OSRM.G.route.getPositions();
 	var body = "";
-	
 	body += '<table class="description medium-font">';
 	for(var i=0; i < response.route_instructions.length; i++){
 		//odd or even ?
@@ -79,7 +78,8 @@ show: function(response) {
 		body += '</td>';
 		
 		body += '<td class="description-body-items">';
-		body += '<div class="description-body-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+response.route_instructions[i][3]+')">';
+		var pos = positions[response.route_instructions[i][3]];
+		body += '<div class="description-body-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')">';
 
 		// build route description
 		if( response.route_instructions[i][1] != "" )
@@ -92,7 +92,7 @@ show: function(response) {
 		
 		body += '<td class="description-body-distance">';
 		if( i != response.route_instructions.length-1 )
-		body += '<b>'+OSRM.Utils.metersToDistance(response.route_instructions[i][2])+'</b>';
+		body += '<b>'+OSRM.Utils.toHumanDistance(response.route_instructions[i][2])+'</b>';
 		body += "</td>";
 		
 		body += "</tr>";
@@ -100,7 +100,7 @@ show: function(response) {
 	body += '</table>';
 	
 	// build header
-	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.metersToDistance(response.route_summary.total_distance), OSRM.Utils.secondsToTime(response.route_summary.total_time), route_link, gpx_link);	
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), route_link, gpx_link);	
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
@@ -110,7 +110,7 @@ show: function(response) {
 // simple description
 showSimple: function(response) {
 	// build header
-	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.metersToDistance(response.route_summary.total_distance), OSRM.Utils.secondsToTime(response.route_summary.total_time), "", "");
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), "", "");
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;

@@ -17,35 +17,60 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 /* OSRM CSS styles */
 
+/* ------------------------------------------------------------------------ */
 
 /* fullscreen map */
 html, body {
     padding: 0;
     margin: 0;
     height: 100%;
+    overflow:hidden;
 }
 #map {
 	height: 100%;
 	z-index: 0;
 }
 
+/* ------------------------------------------------------------------------ */
+
+/* changes/additions to leaflet styles */
+.via-counter
+{
+	position:absolute;
+	top:-3px;
+	right:-6px;
+	width:16px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	background-color:#FFFFFF;
+	text-align:center;
+	vertical-align:middle;	
+	font-size:9px;
+	display:none;
+}
+
+/* ------------------------------------------------------------------------ */
 
 /* general styles for gui boxes */
-.gui-wrapper
+.box-wrapper
 {
 	position:absolute;
 	border-radius:10px;
 	-moz-border-radius:10px;
 	-webkit-border-radius:10px;
-	background-color:#666666;
 	background-color:rgba(0, 0, 0, 0.25);
-	transition:left 1s;
-	-moz-transition:left 1s;
-	-webkit-transition:left 1s;
-	-o-transition:left 1s;
-	-ms-transition:left 1s;
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3f000000, endColorstr=#3f000000);	
 }
-.gui-box
+.box-animated
+{	
+	transition:left 1s, right 1s;
+	-moz-transition:left 1s,right 1s;
+	-webkit-transition:left 1s,right 1s;
+	-o-transition:left 1s,right 1s;
+	-ms-transition:left 1s,right 1s;	
+}
+.box-content
 {
 	position:absolute;
 	background-color:#ffffff;	
@@ -56,31 +81,30 @@ html, body {
 	margin:5px;
 	padding:5px;	
 }
-
-
-/* styles for specific gui boxes */
-#main-wrapper
+.box-handle-wrapper-right
 {
-	width:410px;
-	top:5px;
-	bottom:25px;
-	left:5px;
+	width:36px;
+	height:36px;
+	border-top-right-radius:0px;
+	border-bottom-right-radius:0px;
+	-moz-border-radius-topright:0px;
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-top-right-radius:0px;
+	-webkit-border-bottom-right-radius:0px;
 }
-#main-input
+.box-handle-content-right
 {
-	width:390px;
-	height:200px;
+	width:16px;
+	height:16px;
+	border-top-right-radius:0px;
+	border-bottom-right-radius:0px;
+	-moz-border-radius-topright:0px;
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-top-right-radius:0px;
+	-webkit-border-bottom-right-radius:0px;	
 }
-#main-output
+.box-handle-wrapper-left
 {
-	width:390px;
-	top:220px;			/* main-input.height+2*gui-box.margin+2*gui-box.padding */
-	bottom:0px;
-}
-#blob-wrapper
-{
-	left:-5px;
-	top:5px;
 	width:36px;
 	height:36px;
 	border-top-left-radius:0px;
@@ -89,9 +113,8 @@ html, body {
 	-moz-border-radius-bottomleft:0px;
 	-webkit-border-top-left-radius:0px;
 	-webkit-border-bottom-left-radius:0px;
-	visibility:hidden;
 }
-#blob-content
+.box-handle-content-left
 {
 	width:16px;
 	height:16px;
@@ -104,6 +127,41 @@ html, body {
 }
 
 
+/* general styles for gui box headers */
+.top-left-button
+{
+	float:left;
+	vertical-align:top;
+}
+.top-right-button
+{
+	float:right;
+	vertical-align:top;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* styles for main gui boxes */
+#main-wrapper
+{
+	width:410px;
+	top:5px;
+	bottom:25px;
+	left:5px;
+}
+#main-input
+{
+	width:390px;
+	height:140px;
+}
+#main-output
+{
+	width:390px;
+	top:160px;			/* main-input.height+2*gui-box.margin+2*gui-box.padding */
+	bottom:0px;
+}
+
+
 /* styles for main-input areas */
 #input-mask-header
 {
@@ -113,7 +171,6 @@ html, body {
 	height:50px;
 	background-repeat:no-repeat;
 	background-position:center;
-	background-image:url("images/osrm-logo.png");		
 }
 #input-mask
 {
@@ -129,30 +186,6 @@ html, body {
 #gui-language-toggle
 {
 	position:absolute;
-	border: 0px;
-	text-decoration:none;
- 	opacity: 0;
-	filter: alpha(opacity=0);
-	z-index: 5;
-}
-
-.styled-select
-{
-	position:absolute;
-	background: url("images/selector.png");
-	background-repeat:no-repeat;	
-	background-position: top right;
-	padding: 1px 1px 1px 1px;
-	overflow: hidden;
-}
-
-.top-left-button
-{
-	float:left;
-}
-.top-right-button
-{
-	float:right;
 }
 
 
@@ -220,29 +253,7 @@ html, body {
 }
 
 
-/* workaround for invisible scrollbars in Chrome */
-#information-box::-webkit-scrollbar {
-	height: 10px;
-	width: 10px;
-}
-#information-box::-webkit-scrollbar-track {
-    background: #FFFFFF;
-}
-#information-box::-webkit-scrollbar-thumb {
-	min-height: 30px;
-    background: #EEEEEE;
-    border: 1px solid #999999;
-    -webkit-border-radius: 5ex;
-}
-#information-box::-webkit-scrollbar-thumb:hover {
-    background: #F9F9F9;
-}
-#information-box::-webkit-scrollbar-thumb:active {
-    background: #F4F4F4;
-}
-
-
-/* styles for information-box-header */
+/* styles for main-output information-box-header */
 .header-title
 {
 	font-weight:bold;
@@ -269,7 +280,29 @@ html, body {
 }
 
 
-/* style for information-box table (general) */
+/* styles for main-output information-box -> workaround for invisible scrollbars in Chrome */
+#information-box::-webkit-scrollbar {
+	height: 10px;
+	width: 10px;
+}
+#information-box::-webkit-scrollbar-track {
+    background: #FFFFFF;
+}
+#information-box::-webkit-scrollbar-thumb {
+	min-height: 30px;
+    background: #EEEEEE;
+    border: 1px solid #999999;
+    -webkit-border-radius: 5ex;
+}
+#information-box::-webkit-scrollbar-thumb:hover {
+    background: #F9F9F9;
+}
+#information-box::-webkit-scrollbar-thumb:active {
+    background: #F4F4F4;
+}
+
+
+/* style for main-output information-box -> table (general) */
 .no-results
 {
 	text-align:center;
@@ -277,7 +310,7 @@ html, body {
 }
 
 
-/* style for information-box table (search results) */
+/* style for main-output information-box -> table (search results) */
 .results
 {
 	border-spacing:0px;
@@ -316,7 +349,7 @@ html, body {
 }
 
 
-/* style for information-box table (driving directions) */
+/* style for main-output information-box -> table (driving directions) */
 .description
 {
 	border-spacing:0px;
@@ -365,6 +398,98 @@ html, body {
 	color:#ff0000
 }
 
+/* ------------------------------------------------------------------------ */
+
+/* styles for other gui boxes */
+#mapping-wrapper
+{
+	width:410px;
+	height:100px;
+	bottom:25px;
+	right:5px;
+}
+#mapping-content
+{
+	width:390px;
+	height:80px;	
+}
+#config-wrapper
+{
+	width:410px;
+	height:100px;
+	bottom:25px;
+	right:5px;
+}
+#config-content
+{
+	width:390px;
+	height:80px;	
+}
+#notification-wrapper
+{
+	width:600px;
+	height:170px;
+	top: 50%;
+	left: 50%;
+	margin-top:-85px;
+	margin-left:-300px;
+}
+#notification-content
+{
+	width:580px;
+	height:150px;
+}
+#notification-blanket
+{
+	position:absolute;
+	top:0px;
+	left:0px;
+	width:100%;
+	height:100%;
+	background-color:rgba(0, 0, 0, 0.25);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3f000000, endColorstr=#3f000000);
+	z-index:100;
+	display:none;
+}
+
+
+/* styles for content of other gui boxes */
+#gui-language-2-toggle
+{
+	position:relative;
+}
+#gui-units-toggle
+{
+	position:relative;
+}
+.box-label
+{
+	font-weight:bold;
+	margin-bottom:10px;
+}
+.config-label
+{
+	margin: 0px 0px 0px 5px;
+}
+.config-select
+{
+	width:100px;
+}
+.mapping-checkbox
+{
+	margin: 0px 5px 3px 5px;
+	padding: 0px;
+}
+.mapping-button
+{
+	float: right;
+}
+#notification-box
+{
+	margin:5px 5px 5px 5px;
+}
+
+/* ------------------------------------------------------------------------ */
 
 /* buttons */
 .button
@@ -404,88 +529,45 @@ html, body {
 	background-position:center;
 }
 
-#gui-toggle-out
-{
-	background-image:url("images/cancel.png");	
-}
-#gui-toggle-out:hover
-{
-	background-image:url("images/cancel_hover.png");
-}
-#gui-toggle-out:active
-{
-	background-image:url("images/cancel_active.png");
-}
-
-#gui-toggle-in
-{
-	background-image:url("images/restore.png");	
-}
-#gui-toggle-in:hover
-{
-	background-image:url("images/restore_hover.png");
-}
-#gui-toggle-in:active
-{
-	background-image:url("images/restore_active.png");
-}
-
-#gui-printer
-{
-	background-image:url("images/printer.png");
-}
 #gui-printer-inactive
 {
 	cursor:default;
-	background-image:url("images/printer_inactive.png");
-}
-#gui-printer:hover
-{
-	background-image:url("images/printer_hover.png");
-}
-#gui-printer:active
-{
-	background-image:url("images/printer_active.png");
-}
-
-.delete-marker
-{
-	background-image:url("images/cancel.png");
-}
-.delete-marker:hover
-{
-	background-image:url("images/cancel_hover.png");
-}
-.delete-marker:active
-{
-	background-image:url("images/cancel_active.png");
 }
 
 
-/* fonts */
-.base-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	font-weight: normal;
+/* styled select */
+.styled-select-helper
+{
+	border: 0px;
+	text-decoration:none;
+ 	opacity: 0;
+	filter: alpha(opacity=0);
+	z-index: 5;
+	cursor:pointer;
 }
-.big-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 14px;
-	font-weight: bold;	
-}
-.medium-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 10.5px;
-	font-weight: normal;	
-}
-.small-font {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 9px;
-	font-weight: normal;	
+.styled-select
+{
+	position:absolute;
+	background-repeat:no-repeat;	
+	background-position: top right;
+	padding: 1px 1px 1px 1px;
+	overflow: hidden;
 }
 
 
-/* utility styles (defined above buttons, so that buttons retain cursor:pointer)*/
+/* checkboxes */
+input[type=checkbox],
+{
+	cursor:pointer;
+}
+.checkbox-label
+{
+	vertical-align:2px;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* utility styles */
 .quad
 {
 	min-width:10px;
@@ -500,7 +582,6 @@ html, body {
 	-ms-user-select: none;
 	user-select: none;
 }
-
 .text-selectable
 {
 	cursor:default;
@@ -510,11 +591,9 @@ html, body {
 	user-select: text;
 }
 
-.checkbox-label
-{
-	vertical-align:2px;
-}
+/* ------------------------------------------------------------------------ */
 
+/* table styles */
 .full
 {
 	display:table;
@@ -545,4 +624,32 @@ html, body {
 .stretch
 {
 	width:100%;
+}
+.fixed
+{
+	min-width:100px;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* fonts */
+.base-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+}
+.big-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;	
+}
+.medium-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10.5px;
+	font-weight: normal;	
+}
+.small-font {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 9px;
+	font-weight: normal;	
 }
