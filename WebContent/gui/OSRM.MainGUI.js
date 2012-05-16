@@ -46,7 +46,7 @@ init: function() {
 	
 	// query last update of data
 	OSRM.G.data_timestamp = "n/a";
-	OSRM.JSONP.call('OSRM.DEFAULTS.HOST_TIMESTAMP_URL', OSRM.GUI.setDataTimestamp, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');
+	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_TIMESTAMP_URL+"?jsonp=%jsonp", OSRM.GUI.setDataTimestamp, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');
 },
 
 // set language dependent labels
