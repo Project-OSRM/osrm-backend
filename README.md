@@ -50,6 +50,14 @@ To successfully work a repository that contains submodules, use the following gi
 Note that the frontend can also be checked out independently of the Project-OSRM repository.
 
 
+Compatibility
+-------------
+The frontend has been tested with Firefox 3.0+, Internet Explorer 8+ and Chrome 18+.
+Certain visuals like rounded corners or moving boxes will only show in newer browser versions.
+But no actual functionality is affected by this.
+Note that the frontend will not work with Internet Explorer 6 or 7.
+
+
 References
 ----------
 [(1)] Cloudmade Leaflet: http://leaflet.cloudmade.com/  
