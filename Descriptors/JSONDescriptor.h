@@ -184,7 +184,7 @@ public:
         //list all viapoints so that the client may display it
         reply.content += "\"via_points\":[";
         std::string tmp;
-        if(true == config.geometry) {
+        if(config.geometry && INT_MAX != durationOfTrip) {
             for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
                 reply.content += "[";
                 if(rawRoute.segmentEndCoordinates[i].startPhantom.location.isSet())
