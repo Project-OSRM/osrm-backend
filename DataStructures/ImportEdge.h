@@ -103,7 +103,7 @@ public:
 
     /** Default constructor. target and weight are set to 0.*/
     EdgeBasedEdge() :
-        _source(0), _target(0), _edgeID(0)/*, _nameID1(0)*/, _weight(0), _forward(0), _backward(0)/*, _turnInstruction(0)*/ { assert(false); } //shall not be used.
+        _source(0), _target(0), _edgeID(0), _weight(0), _forward(false), _backward(false) { }
 
     explicit EdgeBasedEdge(NodeID s, NodeID t, NodeID v, EdgeWeight w, bool f, bool b) :
             _source(s), _target(t), _edgeID(v), _weight(w), _forward(f), _backward(b){}

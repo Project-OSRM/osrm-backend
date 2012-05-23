@@ -85,7 +85,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         _trafficLights[id] = true;
     }
 
-    std::vector< _NodeBasedEdge > edges;
+    DeallocatingVector< _NodeBasedEdge > edges;
 //    edges.reserve( 2 * inputEdges.size() );
     for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
 
@@ -123,13 +123,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         }
     }
     std::vector<NodeBasedEdge>().swap(inputEdges);
-    std::vector<_NodeBasedEdge>(edges).swap(edges);
+    //std::vector<_NodeBasedEdge>(edges).swap(edges);
     std::sort( edges.begin(), edges.end() );
 
     _nodeBasedGraph.reset(new _NodeBasedDynamicGraph( nodes, edges ));
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedEdges(std::vector< EdgeBasedEdge >& outputEdgeList ) {
+void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector< EdgeBasedEdge >& outputEdgeList ) {
     GUARANTEE(0 == outputEdgeList.size(), "Vector passed to EdgeBasedGraphFactory::GetEdgeBasedEdges(..) is not empty");
     GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
 
@@ -255,9 +255,6 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
-                        if(edgeBasedEdges.size() == edgeBasedEdges.capacity()-3) {
-                            edgeBasedEdges.reserve(edgeBasedEdges.size()*1.2);
-                        }
                         if(originalEdgeData.size() == originalEdgeData.capacity()-3) {
                             originalEdgeData.reserve(originalEdgeData.size()*1.2);
                         }
@@ -290,7 +287,9 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     INFO("Removing duplicate nodes (if any)");
     edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
     INFO("Applying vector self-swap trick to free up memory");
-    edgeBasedNodes.swap(edgeBasedNodes);
+    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
+    std::vector<EdgeBasedNode>(edgeBasedNodes).swap(edgeBasedNodes);
+    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
     INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
     INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << (double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter);
     INFO("Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << numberOfTurnRestrictions << " restrictions.");

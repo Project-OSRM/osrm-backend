@@ -31,7 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/shared_ptr.hpp>
 
-
+#include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/BinaryHeap.h"
@@ -77,8 +77,7 @@ private:
 
     struct _PriorityData {
         int depth;
-        NodeID bias;
-        _PriorityData() : depth(0), bias(0) { }
+        _PriorityData() : depth(0) { }
     };
 
     struct _ContractionInformation {
@@ -95,17 +94,39 @@ private:
         }
     };
 
+    class XORFastHash {
+        std::vector<unsigned short> hashLookups;
+    public:
+        XORFastHash() {
+               hashLookups.resize(1 << 16);
+                for(unsigned i = 0; i < (1 << 16); ++i)
+                    hashLookups[i] = i;
+                std::random_shuffle(hashLookups.begin(), hashLookups.end());
+        }
+        unsigned short operator()(const unsigned originalValue) const {
+
+            unsigned short msb = (((originalValue-1) >> 16) & 0xffff);
+            unsigned short lsb = ((originalValue-1) & 0xffff);
+            return hashLookups[lsb] ^ msb;
+        }
+    };
+
 public:
 
     template<class ContainerT >
     Contractor( int nodes, ContainerT& inputEdges) {
-        std::vector< _ContractorEdge > edges;
-        edges.reserve( 2 * inputEdges.size() );
-        BOOST_FOREACH(typename ContainerT::value_type & currentEdge, inputEdges) {
+        DeallocatingVector< _ContractorEdge > edges;
+
+        typename ContainerT::deallocation_iterator diter = inputEdges.dbegin();
+        typename ContainerT::deallocation_iterator dend  = inputEdges.dend();
+
+
+        //BOOST_FOREACH(typename ContainerT::value_type & currentEdge, inputEdges) {
+        for(; diter!=dend; ++diter) {
             _ContractorEdge edge;
-            edge.source = currentEdge.source();
-            edge.target = currentEdge.target();
-            edge.data = _ContractorEdgeData( (std::max)((int)currentEdge.weight(), 1 ),  1,  currentEdge.id()/*,  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction()*/,  false,  currentEdge.isForward(),  currentEdge.isBackward());
+            edge.source = diter->source();
+            edge.target = diter->target();
+            edge.data = _ContractorEdgeData( (std::max)((int)diter->weight(), 1 ),  1,  diter->id()/*,  currentEdge.getNameIDOfTurnTarget(),  currentEdge.turnInstruction()*/,  false,  diter->isForward(),  diter->isBackward());
 
             assert( edge.data.distance > 0 );
 #ifndef NDEBUG
@@ -116,12 +137,12 @@ public:
 #endif
             edges.push_back( edge );
             std::swap( edge.source, edge.target );
-            edge.data.forward = currentEdge.isBackward();
-            edge.data.backward = currentEdge.isForward();
+            edge.data.forward = diter->isBackward();
+            edge.data.backward = diter->isForward();
             edges.push_back( edge );
         }
         //clear input vector and trim the current set of edges with the well-known swap trick
-        ContainerT().swap( inputEdges );
+        inputEdges.clear();
 
         sort( edges.begin(), edges.end() );
         NodeID edge = 0;
@@ -169,7 +190,7 @@ public:
             }
         }
         std::cout << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
-        edges.resize( edge );
+//        edges.resize( edge );
 
         _graph.reset( new _DynamicGraph( nodes, edges ) );
         edges.clear();
@@ -213,16 +234,13 @@ public:
 
         NodeID numberOfContractedNodes = 0;
         std::vector< std::pair< NodeID, bool > > remainingNodes( numberOfNodes );
-        std::vector< double > nodePriority( numberOfNodes );
+        std::vector< float > nodePriority( numberOfNodes );
         std::vector< _PriorityData > nodeData( numberOfNodes );
 
         //initialize the variables
 #pragma omp parallel for schedule ( guided )
         for ( int x = 0; x < ( int ) numberOfNodes; ++x )
             remainingNodes[x].first = x;
-        std::random_shuffle( remainingNodes.begin(), remainingNodes.end() );
-        for ( int x = 0; x < ( int ) numberOfNodes; ++x )
-            nodeData[remainingNodes[x].first].bias = x;
 
         std::cout << "initializing elimination PQ ..." << std::flush;
 #pragma omp parallel
@@ -238,7 +256,7 @@ public:
         bool flushedContractor = false;
         while ( numberOfContractedNodes < numberOfNodes ) {
         	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.65) ) ){
-        	    std::vector<_ContractorEdge> newSetOfEdges; //this one is not explicitely cleared since it goes out of scope anywa
+        	    DeallocatingVector<_ContractorEdge> newSetOfEdges; //this one is not explicitely cleared since it goes out of scope anywa
         		std::cout << " [flush " << numberOfContractedNodes << " nodes] " << std::flush;
         		
         		//Delete old heap data to free memory that we need for the coming operations
@@ -249,7 +267,7 @@ public:
 
 
         		//Create new priority array
-        		std::vector<double> newNodePriority(remainingNodes.size());
+        		std::vector<float> newNodePriority(remainingNodes.size());
         		//this map gives the old IDs from the new ones, necessary to get a consistent graph at the end of contraction
         		oldNodeIDFromNewNodeIDMap.resize(remainingNodes.size());
         		//this map gives the new IDs from the old ones, necessary to remap targets from the remaining graph
@@ -309,7 +327,7 @@ public:
         		//Replace old priorities array by new one
         		nodePriority.swap(newNodePriority);
         		//Delete old nodePriority vector
-        		std::vector<double>().swap(newNodePriority);
+        		std::vector<float>().swap(newNodePriority);
                 //old Graph is removed
                 _graph.reset();
 
@@ -318,6 +336,7 @@ public:
 
                 //int nodes, const ContainerT &graph
                 _graph.reset( new _DynamicGraph(remainingNodes.size(), newSetOfEdges));
+                newSetOfEdges.clear();
         		flushedContractor = true;
 
         		//INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
@@ -325,7 +344,6 @@ public:
                 for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
                     threadData.push_back( new _ThreadData( _graph->GetNumberOfNodes() ) );
                 }
-
         	}
 
             const int last = ( int ) remainingNodes.size();
@@ -417,8 +435,8 @@ public:
 //
 //            avgdegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
 //            quaddegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
-
-           // INFO("rest: " << remainingNodes.size() << ", max: " << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ", quad: " << quaddegree);
+//
+//            INFO("rest: " << remainingNodes.size() << ", max: " << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ", quad: " << quaddegree);
 
             p.printStatus(numberOfContractedNodes);
         }
@@ -429,11 +447,14 @@ public:
     }
 
     template< class Edge >
-    void GetEdges( std::vector< Edge >& edges ) {
+    void GetEdges( DeallocatingVector< Edge >& edges ) {
+        Percent p (_graph->GetNumberOfNodes());
+        INFO("Getting edges of minimized graph");
         NodeID numberOfNodes = _graph->GetNumberOfNodes();
         if(oldNodeIDFromNewNodeIDMap.size()) {
         	for ( NodeID node = 0; node < numberOfNodes; ++node ) {
-        		for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; edge++ ) {
+        	    p.printStatus(node);
+        		for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; ++edge ) {
         			const NodeID target = _graph->GetTarget( edge );
         			const _DynamicGraph::EdgeData& data = _graph->GetEdgeData( edge );
         			Edge newEdge;
@@ -456,7 +477,7 @@ public:
         		}
         	}
         }
-        INFO("Renumbered remaining edges, freeing space");
+        INFO("Renumbered edges of minimized graph, freeing space");
         _graph.reset();
         std::vector<NodeID>().swap(oldNodeIDFromNewNodeIDMap);
         INFO("Loading temporary edges");
@@ -468,7 +489,7 @@ public:
         //loads edges of graph before renumbering, no need for further numbering action.
         NodeID start;
         NodeID target;
-        edges.reserve(edges.size()+numberOfTemporaryEdges);
+        //edges.reserve(edges.size()+numberOfTemporaryEdges);
         _DynamicGraph::EdgeData data;
         for(unsigned i = 0; i < numberOfTemporaryEdges; ++i) {
         	temporaryEdgeStorage.read((char*)&start,  sizeof(NodeID));
@@ -666,7 +687,7 @@ private:
         }
     }
 
-    bool _UpdateNeighbours( std::vector< double > & priorities, std::vector< _PriorityData > & nodeData, _ThreadData* const data, NodeID node) {
+    bool _UpdateNeighbours( std::vector< float > & priorities, std::vector< _PriorityData > & nodeData, _ThreadData* const data, NodeID node) {
         std::vector< NodeID >& neighbours = data->neighbours;
         neighbours.clear();
 
@@ -691,7 +712,7 @@ private:
         return true;
     }
 
-    bool _IsIndependent( const std::vector< double >& priorities, const std::vector< _PriorityData >& nodeData, _ThreadData* const data, NodeID node ) {
+    bool _IsIndependent( const std::vector< float >& priorities, const std::vector< _PriorityData >& nodeData, _ThreadData* const data, NodeID node ) {
         const double priority = priorities[node];
 
         std::vector< NodeID >& neighbours = data->neighbours;
@@ -699,14 +720,17 @@ private:
 
         for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( node ) ; e < _graph->EndEdges( node ) ; ++e ) {
             const NodeID target = _graph->GetTarget( e );
+            if(node==target)
+                continue;
             const double targetPriority = priorities[target];
             assert( targetPriority >= 0 );
             //found a neighbour with lower priority?
             if ( priority > targetPriority )
                 return false;
             //tie breaking
-            if ( priority == targetPriority && nodeData[node].bias < nodeData[target].bias )
+              if ( priority == targetPriority && bias(node, target) ) {
                 return false;
+            }
             neighbours.push_back( target );
         }
 
@@ -719,19 +743,35 @@ private:
 
             for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( u ) ; e < _graph->EndEdges( u ) ; ++e ) {
                 const NodeID target = _graph->GetTarget( e );
+                if(node==target)
+                    continue;
 
                 const double targetPriority = priorities[target];
                 assert( targetPriority >= 0 );
                 //found a neighbour with lower priority?
-                if ( priority > targetPriority )
+                if ( priority > targetPriority)
                     return false;
                 //tie breaking
-                if ( priority == targetPriority && nodeData[node].bias < nodeData[target].bias )
+                if ( priority == targetPriority && bias(node, target) ) {
                     return false;
+                }
             }
         }
 
         return true;
+    }
+
+    inline bool bias(const NodeID a, const NodeID b) {
+        unsigned short hasha = fastHash(a);
+        unsigned short hashb = fastHash(b);
+
+        //Decision with branching
+//        if(hasha != hashb)
+//            return hasha < hashb;
+//        return a < b;
+
+        //Decision without branching
+        return (hasha < hashb)+((hasha==hashb)*(a<b));
     }
 
     boost::shared_ptr<_DynamicGraph> _graph;
@@ -739,6 +779,8 @@ private:
     std::string temporaryEdgeStorageFilename;
     std::vector<NodeID> oldNodeIDFromNewNodeIDMap;
     long initialFilePosition;
+
+    XORFastHash fastHash;
 };
 
 #endif // CONTRACTOR_H_INCLUDED
