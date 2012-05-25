@@ -43,6 +43,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Contractor/Contractor.h"
 #include "Contractor/EdgeBasedGraphFactory.h"
 #include "DataStructures/BinaryHeap.h"
+#include "DataStructures/DeallocatingVector.h"
 #include "DataStructures/ExtractorStructs.h"
 #include "DataStructures/NNGrid.h"
 #include "DataStructures/QueryEdge.h"
@@ -125,20 +126,13 @@ int main (int argc, char *argv[]) {
     INFO("Generating edge-expanded graph representation");
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile, SRTM_ROOT);
     std::vector<ImportEdge>().swap(edgeList);
-
     edgeBasedGraphFactory->Run(edgeOut);
     std::vector<_Restriction>().swap(inputRestrictions);
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
-    std::vector<EdgeBasedEdge> edgeBasedEdgeList;
+    DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
-
-//    stxxl::vector<EdgeBasedEdge> externalEdgeBasedEdgeList;
-//    BOOST_FOREACH(EdgeBasedEdge & edge, edgeBasedEdgeList) {
-//        externalEdgeBasedEdgeList.push_back(edge);
-//    }
-//    std::vector<EdgeBasedEdge>().swap(edgeBasedEdgeList);
 
     /***
      * Writing info on original (node-based) nodes
@@ -191,7 +185,7 @@ int main (int argc, char *argv[]) {
     contractor->Run();
     INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");
 
-    std::vector< QueryEdge > contractedEdgeList;
+    DeallocatingVector< QueryEdge > contractedEdgeList;
     contractor->GetEdges( contractedEdgeList );
     delete contractor;
 
