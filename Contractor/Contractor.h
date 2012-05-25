@@ -39,6 +39,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/StringUtil.h"
 
 
+#include <valgrind/callgrind.h>
+
 class Contractor {
 
 private:
@@ -95,19 +97,22 @@ private:
     };
 
     class XORFastHash {
-        std::vector<unsigned short> hashLookups;
+        std::vector<unsigned char> table1;
+        std::vector<unsigned char> table2;
     public:
         XORFastHash() {
-               hashLookups.resize(1 << 16);
-                for(unsigned i = 0; i < (1 << 16); ++i)
-                    hashLookups[i] = i;
-                std::random_shuffle(hashLookups.begin(), hashLookups.end());
+            table1.resize(1 << 16);
+            table2.resize(1 << 16);
+            for(unsigned i = 0; i < (1 << 16); ++i) {
+                table1[i] = i; table2[i];
+            }
+            std::random_shuffle(table1.begin(), table1.end());
+            std::random_shuffle(table2.begin(), table2.end());
         }
         unsigned short operator()(const unsigned originalValue) const {
-
-            unsigned short msb = (((originalValue-1) >> 16) & 0xffff);
             unsigned short lsb = ((originalValue-1) & 0xffff);
-            return hashLookups[lsb] ^ msb;
+            unsigned short msb = (((originalValue-1) >> 16) & 0xffff);
+            return table1[lsb] ^ table2[msb];
         }
     };
 
@@ -222,6 +227,7 @@ public:
     }
 
     void Run() {
+        CALLGRIND_START_INSTRUMENTATION;
         const NodeID numberOfNodes = _graph->GetNumberOfNodes();
         Percent p (numberOfNodes);
 
@@ -440,7 +446,7 @@ public:
 
             p.printStatus(numberOfContractedNodes);
         }
-
+        CALLGRIND_STOP_INSTRUMENTATION;
         for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
             delete threadData[threadNum];
         }
