@@ -31,15 +31,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/shared_ptr.hpp>
 
+#include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/Percent.h"
-#include "../DataStructures/BinaryHeap.h"
+#include "../DataStructures/XORFastHash.h"
 #include "../Util/OpenMPReplacement.h"
 #include "../Util/StringUtil.h"
-
-
-#include <valgrind/callgrind.h>
 
 class Contractor {
 
@@ -93,26 +91,6 @@ private:
     struct _NodePartitionor {
         bool operator()( std::pair< NodeID, bool > & nodeData ) const {
             return !nodeData.second;
-        }
-    };
-
-    class XORFastHash {
-        std::vector<unsigned char> table1;
-        std::vector<unsigned char> table2;
-    public:
-        XORFastHash() {
-            table1.resize(1 << 16);
-            table2.resize(1 << 16);
-            for(unsigned i = 0; i < (1 << 16); ++i) {
-                table1[i] = i; table2[i];
-            }
-            std::random_shuffle(table1.begin(), table1.end());
-            std::random_shuffle(table2.begin(), table2.end());
-        }
-        unsigned short operator()(const unsigned originalValue) const {
-            unsigned short lsb = ((originalValue-1) & 0xffff);
-            unsigned short msb = (((originalValue-1) >> 16) & 0xffff);
-            return table1[lsb] ^ table2[msb];
         }
     };
 
@@ -227,7 +205,6 @@ public:
     }
 
     void Run() {
-        CALLGRIND_START_INSTRUMENTATION;
         const NodeID numberOfNodes = _graph->GetNumberOfNodes();
         Percent p (numberOfNodes);
 
@@ -446,7 +423,6 @@ public:
 
             p.printStatus(numberOfContractedNodes);
         }
-        CALLGRIND_STOP_INSTRUMENTATION;
         for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
             delete threadData[threadNum];
         }
@@ -562,18 +538,18 @@ private:
         }
     }
 
-    double _Evaluate( _ThreadData* const data, _PriorityData* const nodeData, NodeID node){
+    float _Evaluate( _ThreadData* const data, _PriorityData* const nodeData, NodeID node){
         _ContractionInformation stats;
 
         //perform simulated contraction
         _Contract< true> ( data, node, &stats );
 
         // Result will contain the priority
-        double result;
+        float result;
         if ( stats.edgesDeleted == 0 || stats.originalEdgesDeleted == 0 )
                 result = 1 * nodeData->depth;
         else
-                result =  2 * ((( double ) stats.edgesAdded ) / stats.edgesDeleted ) + 4 * ((( double ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + 1 * nodeData->depth;
+                result =  2 * ((( float ) stats.edgesAdded ) / stats.edgesDeleted ) + 4 * ((( float ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + 1 * nodeData->depth;
         assert( result >= 0 );
         return result;
     }
@@ -763,21 +739,21 @@ private:
                 }
             }
         }
-
         return true;
     }
 
-    inline bool bias(const NodeID a, const NodeID b) {
+
+    /**
+     * This bias function takes up 22 assembly instructions in total on X86
+     */
+    inline bool bias(const NodeID a, const NodeID b) const {
         unsigned short hasha = fastHash(a);
         unsigned short hashb = fastHash(b);
 
-        //Decision with branching
-//        if(hasha != hashb)
-//            return hasha < hashb;
-//        return a < b;
-
-        //Decision without branching
-        return (hasha < hashb)+((hasha==hashb)*(a<b));
+        //The compiler optimizes that to conditional register flags but without branching statements!
+        if(hasha != hashb)
+            return hasha < hashb;
+        return a < b;
     }
 
     boost::shared_ptr<_DynamicGraph> _graph;
