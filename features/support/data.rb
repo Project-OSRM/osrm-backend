@@ -166,11 +166,11 @@ def reprocess
   Dir.chdir TEST_FOLDER do
     write_speedprofile
     write_osm
-    #convert_osm_to_pbf
+    convert_osm_to_pbf
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-extract #{@osm_file}.osm 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise "*** osrm-extract exited with code #{$?.exitstatus}. The file preprocess.log might contain more info." 
       end
