@@ -202,6 +202,8 @@ When /^I route I should get$/ do |table|
         json = JSON.parse response.body
         if json['status'] == 0
           instructions = way_list json['route_instructions']
+          bearings = bearing_list json['route_instructions']
+          compasses = compass_list json['route_instructions']
         end
       end
       
@@ -220,6 +222,12 @@ When /^I route I should get$/ do |table|
         if table.headers.include? 'time'
           raise "*** time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
           got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : nil
+        end
+        if table.headers.include? 'bearing'
+          got['bearing'] = bearings
+        end
+        if table.headers.include? 'compass'
+          got['compass'] = compasses
         end
       end
       
