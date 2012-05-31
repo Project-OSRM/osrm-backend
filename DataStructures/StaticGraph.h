@@ -88,6 +88,9 @@ public:
         _nodes.swap(nodes);
         _edges.swap(edges);
 
+        //Add dummy node to end of _nodes array;
+        _nodes.push_back(_nodes.back());
+
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
         for(unsigned u = 0; u < GetNumberOfNodes(); ++u) {
