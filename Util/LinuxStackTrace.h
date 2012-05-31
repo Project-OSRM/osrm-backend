@@ -139,7 +139,7 @@ void installCrashHandler(std::string b) {
 #ifndef NDEBUG
     binaryName = b;
     struct sigaction sigact;
-
+    sigemptyset(&sigact.sa_mask);
     sigact.sa_sigaction = crashHandler;
     sigact.sa_flags = SA_RESTART | SA_SIGINFO;
 
