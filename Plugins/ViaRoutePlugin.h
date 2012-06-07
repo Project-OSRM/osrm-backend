@@ -35,6 +35,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
+#include "../Descriptors/GMLDescriptor.h"
+#include "../Descriptors/KMLDescriptor.h"
 
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/QueryEdge.h"
@@ -64,6 +66,8 @@ public:
         descriptorTable.Set("", 0); //default descriptor
         descriptorTable.Set("json", 0);
         descriptorTable.Set("gpx", 1);
+        descriptorTable.Set("gml", 2);
+        descriptorTable.Set("kml", 3);  
     }
 
     virtual ~ViaRoutePlugin() {
@@ -174,6 +178,13 @@ public:
             desc = new GPXDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
 
             break;
+        case 2:
+            desc = new GMLDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
+
+            break;
+        case 3:
+            desc = new KMLDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
+            break;
         default:
             desc = new JSONDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
 
@@ -219,6 +230,21 @@ public:
             reply.headers[2].value = "attachment; filename=\"route.gpx\"";
 
             break;
+        case 2:
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "application/gml+xml; charset=UTF-8";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"route.gml\"";
+
+            break;
+        case 3:
+            reply.headers[1].name = "Content-Type";
+            reply.headers[1].value = "application/kml; charset=UTF-8";
+            reply.headers[2].name = "Content-Disposition";
+            reply.headers[2].value = "attachment; filename=\"route.kml\"";
+
+            break;
+
         default:
             if("" != JSONParameter){
                 reply.headers[1].name = "Content-Type";
