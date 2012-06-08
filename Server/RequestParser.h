@@ -164,8 +164,11 @@ private:
                     *compressionType = gzipRFC1952;
             }
 
-            if(header.name == "Referer")
+            if("Referer" == header.name)
                 req.referrer = header.value;
+
+            if("User-Agent" == header.name)
+                req.agent = header.value;
 
             if (input == '\r') {
                 state_ = expecting_newline_3;
