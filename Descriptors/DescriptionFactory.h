@@ -41,6 +41,9 @@ class DescriptionFactory {
     PhantomNode startPhantom, targetPhantom;
 
     typedef SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > SearchEngineT;
+
+    double DegreeToRadian(const double degree) const;
+    double RadianToDegree(const double degree) const;
 public:
     struct _RouteSummary {
         std::string lengthString;
@@ -66,7 +69,7 @@ public:
     std::vector <SegmentInformation> pathDescription;
     DescriptionFactory();
     virtual ~DescriptionFactory();
-    double GetAzimuth(const _Coordinate& C, const _Coordinate& B) const;
+    double GetBearing(const _Coordinate& C, const _Coordinate& B) const;
     void AppendEncodedPolylineString(std::string &output);
     void AppendUnencodedPolylineString(std::string &output);
     void AppendSegment(const _Coordinate & coordinate, const _PathData & data);

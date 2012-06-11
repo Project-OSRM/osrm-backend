@@ -127,7 +127,7 @@ public:
                         reply.content += "m\",\"";
                         reply.content += Azimuth::Get(segment.bearing);
                         reply.content += "\",";
-                        doubleToStringWithTwoDigitsBehindComma(segment.bearing, tmpBearing);
+                        intToString(round(segment.bearing), tmpBearing);
                         reply.content += tmpBearing;
                         reply.content += "]";
                     }

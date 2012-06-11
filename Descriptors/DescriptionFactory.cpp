@@ -24,15 +24,29 @@ DescriptionFactory::DescriptionFactory() : entireLength(0) { }
 
 DescriptionFactory::~DescriptionFactory() { }
 
-double DescriptionFactory::GetAzimuth(const _Coordinate& A, const _Coordinate& B) const {
-    double lonDiff = (A.lon-B.lon)/100000.;
-    double angle = atan2(sin(lonDiff)*cos(B.lat/100000.),
-            cos(A.lat/100000.)*sin(B.lat/100000.)-sin(A.lat/100000.)*cos(B.lat/100000.)*cos(lonDiff));
-    angle*=180/M_PI;
-    while(angle < 0)
-        angle += 360;
+inline double DescriptionFactory::DegreeToRadian(const double degree) const {
+        return degree * (M_PI/180);
+}
 
-    return angle;
+inline double DescriptionFactory::RadianToDegree(const double radian) const {
+        return radian * (180/M_PI);
+}
+
+double DescriptionFactory::GetBearing(const _Coordinate& A, const _Coordinate& B) const {
+    double deltaLong = DegreeToRadian(B.lon/100000. - A.lon/100000.);
+
+    double lat1 = DegreeToRadian(A.lat/100000.);
+    double lat2 = DegreeToRadian(B.lat/100000.);
+
+    double y = sin(deltaLong) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLong);
+    double result = RadianToDegree(atan2(y, x));
+    while(result <= 0.)
+        result += 360.;
+    while(result >= 360.)
+        result -= 360.;
+
+    return result;
 }
 
 void DescriptionFactory::SetStartSegment(const PhantomNode & _startPhantom) {
@@ -170,8 +184,8 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
     //fix what needs to be fixed else
     for(unsigned i = 0; i < pathDescription.size()-1 && pathDescription.size() >= 2; ++i){
         if(pathDescription[i].necessary) {
-            int angle = 100*GetAzimuth(pathDescription[i].location, pathDescription[i+1].location);
-            pathDescription[i].bearing = angle/100.;
+            double angle = GetBearing(pathDescription[i].location, pathDescription[i+1].location);
+            pathDescription[i].bearing = angle;
         }
     }
 
