@@ -26,6 +26,7 @@ OSRM.Localization["it"] = {
 "GUI_START": "Partenza",
 "GUI_END": "Destinazione",
 "GUI_RESET": "Reset",
+"GUI_ZOOM": "Zoom su Percorso",
 "GUI_SEARCH": "Mostra",
 "GUI_REVERSE": "Inverti",
 "GUI_START_TOOLTIP": "Inserire la Partenza",
@@ -41,7 +42,7 @@ OSRM.Localization["it"] = {
 // mapping
 "GUI_MAPPING_TOOLS": "Strumenti per la Mappatura",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Evidenzia strade senza nome",
-"GUI_SHOW_PREVIOUS_ROUTES": "Show previous routes",
+"GUI_SHOW_PREVIOUS_ROUTES": "Mostra le percorsi precedenti",
 "OPEN_JOSM": "JOSM",
 "OPEN_OSMBUGS": "OSM Bugs",
 // geocoder

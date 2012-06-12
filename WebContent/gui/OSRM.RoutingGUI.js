@@ -36,11 +36,22 @@ init: function() {
 	document.getElementById("gui-search-target").onclick = function() {OSRM.GUI.showMarker(OSRM.C.TARGET_LABEL);};
 	
 	document.getElementById("gui-reset").onclick = OSRM.GUI.resetRouting;
+	document.getElementById("gui-zoom").onclick = OSRM.GUI.zoomOnRoute;
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
 	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getRoute_Redraw;
 	document.getElementById("option-show-previous-routes").onclick = OSRM.GUI.showPreviousRoutes;
+},
+
+// toggle GUI features that need a route to work
+activateRouteFeatures: function() {
+	OSRM.Printing.activate();
+	document.getElementById("gui-zoom").className = "button";	
+},
+deactivateRouteFeatures: function() {
+	OSRM.Printing.deactivate();
+	document.getElementById("gui-zoom").className = "button-inactive";
 },
 
 // click: button "reset"
@@ -144,6 +155,15 @@ showPreviousRoutes: function(value) {
 		OSRM.G.route.deactivateHistoryRoutes();
 	else
 		OSRM.G.route.activateHistoryRoutes();
+},
+
+//click: button "zoom on route"
+zoomOnRoute: function() {
+	if( OSRM.G.route.isShown() == false )
+		return;
+	
+	var bounds = new L.LatLngBounds( OSRM.G.route._current_route.getPositions() );
+	OSRM.G.map.fitBoundsUI(bounds);	
 }
 
 });

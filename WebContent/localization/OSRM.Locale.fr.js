@@ -26,6 +26,7 @@ OSRM.Localization["fr"] = {
 "GUI_START": "Départ",
 "GUI_END": "Arrivée",
 "GUI_RESET": "Réinitialiser",
+"GUI_ZOOM": "Zoom sur la Route",
 "GUI_SEARCH": "Montrer",
 "GUI_REVERSE": "Inverser",
 "GUI_START_TOOLTIP": "Entrez le lieu de départ",

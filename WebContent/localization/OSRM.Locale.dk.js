@@ -26,6 +26,7 @@ OSRM.Localization["dk"] = {
 "GUI_START": "Start",
 "GUI_END": "Destination",
 "GUI_RESET": "Nulstil",
+"GUI_ZOOM": "Zoom på Rute",
 "GUI_SEARCH": "Vis",
 "GUI_REVERSE": "Omvendt",
 "GUI_START_TOOLTIP": "Indtast start",

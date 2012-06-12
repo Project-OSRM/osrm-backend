@@ -54,6 +54,7 @@ setLabels: function() {
 	document.getElementById("open-josm").innerHTML = OSRM.loc("OPEN_JOSM");
 	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");	
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
+	document.getElementById("gui-zoom").innerHTML = OSRM.loc("GUI_ZOOM");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
 	document.getElementById("gui-option-show-previous-routes-label").innerHTML = OSRM.loc("GUI_SHOW_PREVIOUS_ROUTES");

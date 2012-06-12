@@ -517,6 +517,21 @@ html, body {
 	background-color:#F4F4F4;
 	color:#FF0000;
 }
+.button-inactive
+{
+	cursor:default;
+	padding:2px 10px 2px 10px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	background-color:#F9F9F9;
+	border:1px solid #CCCCCC;
+	color:#999999;
+	text-decoration:none;
+	font-size:9px;
+	outline-style:none;
+	vertical-align:1px;	
+}
 
 
 /* iconic buttons */

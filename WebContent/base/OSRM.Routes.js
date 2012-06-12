@@ -59,8 +59,8 @@ OSRM.extend( OSRM.Route,{
 		
 		this._history.fetchHistoryRoute();
 		this._history.showHistoryRoutes();		
-		// deactivate printing
-		OSRM.Printing.deactivate();		
+		// deactivate GUI features that need a route
+		OSRM.GUI.deactivateRouteFeatures();
 	},
 	
 	// show/hide highlighting for unnamed routes

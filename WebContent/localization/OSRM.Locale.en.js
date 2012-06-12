@@ -26,6 +26,7 @@ OSRM.Localization["en"] = {
 "GUI_START": "Start",
 "GUI_END": "End",
 "GUI_RESET": "&nbsp;&nbsp;Reset&nbsp;&nbsp;",
+"GUI_ZOOM": "Zoom on Route",
 "GUI_SEARCH": "&nbsp;&nbsp;Show&nbsp;&nbsp;",
 "GUI_REVERSE": "Reverse",
 "GUI_START_TOOLTIP": "Enter start",

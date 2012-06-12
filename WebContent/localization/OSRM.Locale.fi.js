@@ -26,6 +26,7 @@ OSRM.Localization["fi"] = {
 "GUI_START": "Lähtöpaikka",
 "GUI_END": "Määränpää",
 "GUI_RESET": "Tyhjennä",
+"GUI_ZOOM": "Zoom reitillä",
 "GUI_SEARCH": "Etsi",
 "GUI_REVERSE": "Käänteinen reitti",
 "GUI_START_TOOLTIP": "Syötä lähtöpaikka",

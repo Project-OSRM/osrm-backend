@@ -48,8 +48,8 @@ showRouteLink_TimeOut: function(){
 
 // handling of routing description
 show: function(response) {
-	// activate printing
-	OSRM.Printing.activate();
+	// activate GUI features that need a route
+	OSRM.GUI.activateRouteFeatures();
 	
 	// compute query string
 	var query_string = '?hl=' + OSRM.Localization.current_language;
