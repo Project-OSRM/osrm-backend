@@ -53,6 +53,16 @@ public:
             itemsInCache.pop_back();
         }
     }
+
+    void Insert(const KeyT key, ValueT value) {
+        itemsInCache.push_front(CacheEntry(key, value));
+        positionMap.insert(std::make_pair(key, itemsInCache.begin()));
+        if(itemsInCache.size() > capacity) {
+            positionMap.erase(itemsInCache.back().key);
+            itemsInCache.pop_back();
+        }
+    }
+
     bool Fetch(const KeyT key, ValueT& result) {
         if(Holds(key)) {
             CacheEntry e = *(positionMap.find(key)->second);
