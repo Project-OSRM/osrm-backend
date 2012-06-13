@@ -347,6 +347,10 @@ html, body {
 {
 	color:#ff0000
 }
+.results-body-item-remark
+{
+	color:#999999
+}
 
 
 /* style for main-output information-box -> table (driving directions) */
@@ -666,5 +670,5 @@ input[type=checkbox],
 .small-font {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 9px;
-	font-weight: normal;	
+	font-weight: normal;
 }

@@ -85,22 +85,39 @@ _showResults: function(response, parameters) {
 	if( OSRM.G.markers.route.length > 1 )		// if a route is displayed, we don't need to show other possible geocoding results
 		return;
 	
+	// filter/sort inputs
+	var filtered_response = [];
+	for(var i=0; i < response.length; i++){
+		var result = response[i];
+		if( OSRM.Geocoder._filterResult( result ) )
+			continue;
+		filtered_response.push( result );
+	}
+	filtered_response.sort( OSRM.Geocoder._compareResults );
+	
 	// show possible results for input
 	var html = "";
 	html += '<table class="results medium-font">';	
-	for(var i=0; i < response.length; i++){
-		var result = response[i];
-
+	for(var i=0; i < filtered_response.length; i++){
+		var result = filtered_response[i];
+		
 		//odd or even ?
 		var rowstyle='results-body-odd';
 		if(i%2==0) { rowstyle='results-body-even'; }
  
 		html += '<tr class="'+rowstyle+'">';
-		html += '<td class="results-body-counter"><span">'+(i+1)+'.</span></td>';
+//		html += '<td class="results-body-counter"><span">'+(i+1)+'.</span></td>';
+		// optimally show Nominatim icons instead of numbers
+		if(!result.icon)
+			result.icon = "http://nominatim.openstreetmap.org/images/mapicons/poi_point_of_interest.glow.12.png";
+		html += '<td class="results-body-counter"><img src="'+ result.icon + '" alt=""/></td>';
 		html += '<td class="results-body-items">';
 
 		if(result.display_name){
-			html += '<div class="results-body-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name+'</div>';
+			html += '<div class="results-body-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name;
+			// optionally show osm_type, class, type			
+			html += '<br/><span class="results-body-item-remark small-font">[osm_type: ' + result.osm_type + ', class: ' + result.class + ', type: ' + result.type + ']</span>';
+			html += '</div>';
 		}
 		html += "</td></tr>";
 	}
@@ -108,8 +125,8 @@ _showResults: function(response, parameters) {
 		
 	document.getElementById('information-box-header').innerHTML = 
 		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
-		"<div class='header-content'>("+OSRM.loc("FOUND_X_RESULTS").replace(/%i/,response.length)+")</div>";
-		"<div class='header-content'>(found "+response.length+" results)"+"</div>";
+		"<div class='header-content'>("+OSRM.loc("FOUND_X_RESULTS").replace(/%i/,filtered_response.length)+")</div>";
+		"<div class='header-content'>(found "+filtered_response.length+" results)"+"</div>";
 	document.getElementById('information-box').innerHTML = html;
 },
 _showResults_Empty: function(parameters) {
@@ -128,6 +145,41 @@ _showResults_Timeout: function() {
 		"<div class='header-title'>"+OSRM.loc("SEARCH_RESULTS")+"</div>" +
 		"<div class='header-content'>("+OSRM.loc("FOUND_X_RESULTS").replace(/%i/,0)+")</div>";		
 	document.getElementById('information-box').innerHTML = "<div class='no-results big-font'>"+OSRM.loc("TIMED_OUT")+"</div>";	
+},
+
+
+// filter search results [false: result will not be displayed]
+_filterResult: function(result) {
+	return false;
+},
+
+
+// comparator for sorting results [higher weight: result will appear first]
+_compare_class_weights: {
+	place: 9000,
+	highway: 8000,
+	boundary: 7000
+}, 
+_compare_type_weights: {
+	country: 13,
+	state: 12,
+	county: 11,
+	city: 10, 
+	town: 9,
+	village: 8,
+	hamlet: 7,
+	suburb: 6,
+	locality: 5,
+	farm: 4
+},
+_compareResults: function(lhs, rhs) {
+	var class_values = OSRM.Geocoder._compare_class_weights;
+	var type_values = OSRM.Geocoder._compare_type_weights;
+	
+	var lhs_value = (-class_values[ lhs.class ] || 0) + (-type_values[ lhs.type ] || 0);
+	var rhs_value = (-class_values[ rhs.class ] || 0) + (-type_values[ rhs.type ] || 0);
+
+	return (lhs_value - rhs_value);
 },
 
 
