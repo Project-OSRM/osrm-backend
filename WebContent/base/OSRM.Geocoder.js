@@ -34,7 +34,7 @@ call: function(marker_id, query) {
 	if(query=="")
 		return;
 	
-	//geo coordinates given -> directly draw results
+	// geo coordinates given -> directly draw results
 	if(query.match(/^\s*[-+]?[0-9]*\.?[0-9]+\s*[,;]\s*[-+]?[0-9]*\.?[0-9]+\s*$/)){
 		var coord = query.split(/[,;]/);
 		OSRM.Geocoder._onclickResult(marker_id, coord[0], coord[1]);
@@ -42,8 +42,11 @@ call: function(marker_id, query) {
 		return;
 	}
 	
-	//build request for geocoder
+	// build basic request for geocoder
 	var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json&json_callback=%jsonp" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&accept-language="+OSRM.Localization.current_language+"&q=" + query;
+	// prioritize results in currently shown mapview
+	var bounds = OSRM.G.map.getBounds();
+	call += "&viewbox=" + bounds._southWest.lat + "," + bounds._northEast.lng + "," + bounds._northEast.lat + "," + bounds._southWest.lng;
 	OSRM.JSONP.call( call, OSRM.Geocoder._showResults, OSRM.Geocoder._showResults_Timeout, OSRM.DEFAULTS.JSONP_TIMEOUT, "geocoder_"+marker_id, {marker_id:marker_id,query:query} );
 },
 
