@@ -28,7 +28,7 @@ OSRM.Localization["fi"] = {
 "GUI_RESET": "Tyhjennä",
 "GUI_ZOOM": "Zoom reitillä",
 "GUI_SEARCH": "Etsi",
-"GUI_REVERSE": "Käänteinen reitti",
+"GUI_REVERSE": "Käänteinen&nbsp;reitti",
 "GUI_START_TOOLTIP": "Syötä lähtöpaikka",
 "GUI_END_TOOLTIP": "Syötä määränpää",
 "GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
