@@ -54,6 +54,7 @@ OSRM.GUIBoxHandle = function( box_name, side, css, transitionStartFct, transitio
 	// hide box and show handle by default
 	this._box.style[this._side]=-this._width+"px";
 	this._box_visible = false;
+	this._box.style.visibility="hidden";
 	this._handle.style.visibility="visible";
 
 	// add functionality
@@ -94,12 +95,14 @@ $hide: function() {
 },
 $showBox: function() {
 	this._box_visible = true;
+	this._box.style.visibility="visible";
 	this._handle.style.visibility="hidden";
 	this._box.style[this._side]="5px";
 	this._transitionEndFct();
 },
 $hideBox: function() {
 	this._box_visible = false;
+	this._box.style.visibility="hidden";
 	this._handle.style.visibility="visible";
 	this._box.style[this._side]=-this._width+"px";
 },
@@ -109,6 +112,7 @@ _toggle: function() {
 	if( this._box_visible == false ) {
 		this._box_group.$hide();
 		this._box.style[this._side]="5px";
+		this._box.style.visibility="visible";			// already show box, so that animation is seen
 	} else {
 		this._box.style[this._side]=-this._width+"px";
 	}
@@ -121,8 +125,10 @@ _onTransitionEnd: function() {
 	if( this._box_visible == true ) {
 		this._box_group.$show();
 		this._box_visible = false;
+		this._box.style.visibility="hidden";
 	} else {
-		this._box_visible = true;		
+		this._box_visible = true;
+		this._box.style.visibility="visible";
 	}	
 }
 });
