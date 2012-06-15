@@ -43,7 +43,7 @@ typedef
 
 template<class ToEncodeT>
 static void EncodeObjectToBase64(const ToEncodeT & object, std::string& encoded) {
-    assert(0 == encoded.length());
+    encoded.clear();
     char * pointerToOriginalObject = (char *)&object;
     encoded = std::string(base64_t(pointerToOriginalObject), base64_t(pointerToOriginalObject+sizeof(ToEncodeT)));
     //replace "+" with "-" and "/" with "_"
