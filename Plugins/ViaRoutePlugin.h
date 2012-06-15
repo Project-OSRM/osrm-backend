@@ -82,10 +82,6 @@ public:
         RawRouteData rawRoute;
         rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
         bool checksumOK = ((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
-//        if(!checksumOK) {
-//            INFO((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) << "!=" << rawRoute.checkSum);
-//            INFO("mismatching checksum");
-//        }
         std::vector<std::string> textCoord;
         for(unsigned i = 0; i < routeParameters.viaPoints.size(); ++i) {
             textCoord.resize(0);
@@ -117,23 +113,36 @@ public:
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
         }
         unsigned distance = 0;
-        //single route or via point routing
-        if(2 == rawRoute.rawViaNodeCoordinates.size()) {
+        for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
             PhantomNodes segmentPhantomNodes;
-            segmentPhantomNodes.startPhantom = phantomNodeVector[0];
-            segmentPhantomNodes.targetPhantom = phantomNodeVector[1];
-            distance = searchEngine->ComputeRoute(segmentPhantomNodes, rawRoute.computedRouted);
+            segmentPhantomNodes.startPhantom = phantomNodeVector[i];
+            segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
-        } else {
-            //Getting the shortest via path is a dynamic programming problem and is solved as such.
-            for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
-                 PhantomNodes segmentPhantomNodes;
-                 segmentPhantomNodes.startPhantom = phantomNodeVector[i];
-                 segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
-                 rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
-            }
-            distance = searchEngine->ComputeViaRoute(rawRoute.segmentEndCoordinates, rawRoute.computedRouted);
         }
+        distance = searchEngine->shortestPath(rawRoute.segmentEndCoordinates, rawRoute.computedRouted);
+
+        std::vector<_PathData> alternative;
+        if(1 == rawRoute.segmentEndCoordinates.size()) {
+            INFO("Checking for alternative paths");
+            int distance2 = searchEngine->alternativePaths(rawRoute.segmentEndCoordinates[0], alternative);
+        }
+        std::cout << "latitude,longitude" << std::endl;
+        for(unsigned i = 0; i < rawRoute.computedRouted.size(); ++i) {
+            _Coordinate current;
+            searchEngine->GetCoordinatesForNodeID(rawRoute.computedRouted[i].node, current);
+            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
+        }
+        std::cout << std::endl;
+
+        std::cout << "latitude,longitude" << std::endl;
+        for(unsigned i = 0; i <alternative.size(); ++i) {
+            _Coordinate current;
+            searchEngine->GetCoordinatesForNodeID(alternative[i].node, current);
+            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
+        }
+        std::cout << std::endl;
+
+
         if(INT_MAX == distance ) {
             DEBUG( "Error occurred, single path not found" );
         }

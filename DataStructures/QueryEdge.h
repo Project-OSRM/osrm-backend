@@ -72,6 +72,4 @@ struct QueryEdge {
     }
 };
 
-
-
 #endif /* QUERYEDGE_H_ */
