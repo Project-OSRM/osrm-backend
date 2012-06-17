@@ -97,6 +97,7 @@ showRoute_Redraw: function(response) {
 		return;
 	
 	//OSRM.G.response = response;	// not needed, even harmful as important information is not stored!
+	//OSRM.RoutingAlternatives.prepare_Redraw(response);
 	if(response.status != 207) {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingNoNames.show(response);
