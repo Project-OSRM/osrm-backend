@@ -68,6 +68,7 @@ showRoute: function(response) {
 		OSRM.RoutingGeometry.show(response);
 		OSRM.RoutingNoNames.show(response);
 		OSRM.RoutingDescription.show(response);
+		OSRM.RoutingAlternatives.prepare(response);
 		OSRM.Routing._snapRoute();
 	}
 	OSRM.Routing._updateHints(response);

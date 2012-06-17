@@ -532,6 +532,21 @@ html, body {
 	outline-style:none;
 	vertical-align:1px;	
 }
+.button-pressed
+{
+	cursor:pointer;
+	padding:2px 10px 2px 10px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	background-color:#DDDDDD;
+	border:1px solid #999999;
+	color:#000000;
+	text-decoration:none;
+	font-size:9px;
+	outline-style:none;
+	vertical-align:1px;  
+}
 
 
 /* iconic buttons */
