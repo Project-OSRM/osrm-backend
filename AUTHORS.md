@@ -11,5 +11,5 @@ Zbigniew Czernik
 Jonas HÃ¤ggqvist
 Sabas
 Paul Spencer
-Raphaël Pinson
-Juan Luis Rodríguez Ponce
+Raphael Pinson
+Juan Luis Rodriguez Ponce
