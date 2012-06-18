@@ -25,6 +25,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "BasicRoutingInterface.h"
 
+const double VIAPATH_EPSILON = 0.25;
+
 template<class QueryDataT>
 class AlternativeRouting : private BasicRoutingInterface<QueryDataT>{
     typedef BasicRoutingInterface<QueryDataT> super;
@@ -56,7 +58,7 @@ public:
         typename QueryDataT::HeapPtr & forwardHeap = super::_queryData.forwardHeap;
         typename QueryDataT::HeapPtr & backwardHeap = super::_queryData.backwardHeap;
         typename QueryDataT::HeapPtr & forwardHeap2 = super::_queryData.forwardHeap2;
-        typename QueryDataT::HeapPtr & backwardHea2 = super::_queryData.backwardHeap2;
+        typename QueryDataT::HeapPtr & backwardHeap2 = super::_queryData.backwardHeap2;
 
         //Initialize Queues
         super::_queryData.InitializeOrClearFirstThreadLocalStorage();
@@ -94,6 +96,9 @@ public:
         INFO("found " << viaNodeCandidates.size() << " nodes in search space intersection");
 
         INFO("upper bound: " << _upperBound);
+        //TODO: save (packed) shortest path of shortest path and keep it for later use.
+        //we need it during the checks and dont want to recompute it always
+
         //ch-pruning of via nodes in both search spaces
 
         std::vector< PreselectedNode> nodesThatPassPreselection;
@@ -137,18 +142,20 @@ public:
         NodeID selectedViaNode = UINT_MAX;
 
         BOOST_FOREACH(const RankedCandidateNode candidate, rankedCandidates){
-            //TODO: select first admissable
-            //TODO: conduct T-Test
-//            selectedViaNode = candidate.node;
+            //conduct T-Test
+            if(viaNodeCandidatePasses_T_Test(forwardHeap, backwardHeap, forwardHeap2, backwardHeap2, candidate, offset, middle, _upperBound)) {
+                // select first admissable
+                selectedViaNode = candidate.node;
+                break;
+            }
         }
 
-        selectedViaNode = rankedCandidates[0].node;
+        //compute and unpack <s,..,v> and <v,..,t> by exploring search spaces from v and intersecting against queues
+        //Same (co-)routines necessary as for computing length and sharing
+        if(selectedViaNode != UINT_MAX) {
 
-        //TODO: compute and unpack <s,..,v> and <v,..,t> by exploring search spaces from v and intersecting against queues
-        //TODO: Same (co-)routines necessary as for computing length and sharing
-
-        retrievePackedViaPath(forwardHeap, backwardHeap, forwardHeap, backwardHea2, selectedViaNode, unpackedPath);
-
+            retrievePackedViaPath(forwardHeap, backwardHeap, forwardHeap2, backwardHeap2, selectedViaNode, unpackedPath);
+        }
         return 0;
     }
 
@@ -157,8 +164,9 @@ private:
         //unpack s,v
         std::deque<NodeID> packed_s_v_path, packed_v_t_path;
         std::cout << "1" << std::endl;
-        //super::RetrievePackedPathFromHeap(_forwardHeap1, _backwardHeap2, viaNode, packed_s_v_path);
+        super::RetrievePackedPathFromHeap(_forwardHeap1, _backwardHeap2, viaNode, packed_s_v_path);
         std::cout << "2" << std::endl;
+        packed_s_v_path.resize(packed_s_v_path.size()-1);
         super::RetrievePackedPathFromHeap(_forwardHeap2, _backwardHeap1, viaNode, packed_v_t_path);
         std::cout << "3" << std::endl;
         packed_s_v_path.insert(packed_s_v_path.end(),packed_v_t_path.begin(), packed_v_t_path.end() );
@@ -373,6 +381,167 @@ private:
 
     }
 
+    inline bool viaNodeCandidatePasses_T_Test(typename QueryDataT::HeapPtr & _forwardHeap1, typename QueryDataT::HeapPtr & _backwardHeap1, typename QueryDataT::HeapPtr & _forwardHeap2, typename QueryDataT::HeapPtr & _backwardHeap2, const RankedCandidateNode& candidate, const int offset, const NodeID middleOfShortestPath, const int lengthOfShortestPath) {
+        bool hasPassed_T_Test = true;
+        std::cout << "computing via path for T-Test " << candidate.node << std::endl;
+        int lengthOfViaPath = 0;
+        super::_queryData.InitializeOrClearSecondThreadLocalStorage();
+
+        typename QueryDataT::HeapPtr & existingForwardHeap = super::_queryData.forwardHeap;
+        typename QueryDataT::HeapPtr & existingBackwardHeap = super::_queryData.backwardHeap;
+
+        typename QueryDataT::HeapPtr & newForwardHeap = super::_queryData.forwardHeap2;
+        typename QueryDataT::HeapPtr & newBackwardHeap = super::_queryData.backwardHeap2;
+
+        NodeID s_v_middle = UINT_MAX;
+        int upperBoundFor_s_v_Path = INT_MAX;//existingForwardHeap->GetKey(node.first);
+
+        //compute path <s,..,v> by reusing forward search from s
+        newBackwardHeap->Insert(candidate.node, 0, candidate.node);
+        while(newBackwardHeap->Size() > 0){
+            super::RoutingStep(newBackwardHeap, existingForwardHeap, &s_v_middle, &upperBoundFor_s_v_Path, 2*offset, false);
+        }
+        std::cout << "  length of <s,..,v>: " << upperBoundFor_s_v_Path << " with middle node " << s_v_middle << std::endl;
+
+        //compute path <v,..,t> by reusing backward search from t
+        NodeID v_t_middle = UINT_MAX;
+        int upperBoundFor_v_t_Path = INT_MAX;//existingBackwardHeap->GetKey(node.first);
+        newForwardHeap->Insert(candidate.node, 0, candidate.node);
+        while(newForwardHeap->Size() > 0){
+            super::RoutingStep(newForwardHeap, existingBackwardHeap, &v_t_middle, &upperBoundFor_v_t_Path, 2*offset, true);
+        }
+        std::cout << "  length of <v,..,t>: " << upperBoundFor_v_t_Path << " with middle node " << v_t_middle << std::endl;
+
+        lengthOfViaPath = upperBoundFor_s_v_Path+upperBoundFor_v_t_Path;
+        std::cout << "  exact length of via path: " << lengthOfViaPath << std::endl;
+        std::cout << "  T-Test shall pass with length 0.25*" << (lengthOfShortestPath)  << "=" << 0.25*(lengthOfShortestPath) << std::endl;
+
+//        std::deque<NodeID> packedShortestPath;
+        std::deque<NodeID> packed_s_v_path;
+        std::deque<NodeID> packed_v_t_path;
+        //retrieve packed paths
+        std::cout << "  retrieving packed path for middle nodes " << middleOfShortestPath << "," << s_v_middle << "," << v_t_middle << " (shorstest, sv, vt)" << std::endl;
+//        super::RetrievePackedPathFromHeap(existingForwardHeap, existingBackwardHeap, middleOfShortestPath, packedShortestPath);
+        super::RetrievePackedPathFromHeap(existingForwardHeap, newBackwardHeap, s_v_middle, packed_s_v_path);
+        super::RetrievePackedPathFromHeap(newForwardHeap, existingBackwardHeap, v_t_middle,packed_v_t_path);
+
+        std::cout << "packed sv: ";
+        for(unsigned i = 0; i < packed_s_v_path.size(); ++i) {
+            std::cout << packed_s_v_path[i] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "packed vt: ";
+        for(unsigned i = 0; i < packed_v_t_path.size(); ++i) {
+            std::cout << packed_v_t_path[i] << " ";
+        }
+        std::cout << std::endl;
+//        std::cout << "packed shortest: ";
+//        for(unsigned i = 0; i < packedShortestPath.size(); ++i) {
+//            std::cout << packedShortestPath[i] << " ";
+//        }
+//        std::cout << std::endl;
+
+        NodeID s_P = s_v_middle, t_P = v_t_middle;
+        const int T_threshold = VIAPATH_EPSILON * lengthOfShortestPath;
+        int unpackedUntilDistance = 0;
+        typedef std::pair<NodeID, NodeID> UnpackEdge;
+        std::stack<UnpackEdge > unpackStack;
+
+        //partial unpacking until target of edge is the first endpoint of a non-shortcut edge farther away than threshold
+        //First partially unpack s-->v until paths deviate, note length of common path.
+        std::cout << "unpacking sv-path until a node of non-shortcut edge is farther away than " << T_threshold << std::endl;
+        for(unsigned i = packed_s_v_path.size()-1; (i > 0) && unpackStack.empty(); --i ) {
+            std::cout << "   checking indices [" << i << "] and [" << (i+1) << "]" << std::endl;
+            typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection(packed_s_v_path[i-1], packed_s_v_path[i]);
+            int lengthOfCurrentEdge = super::_queryData.graph->GetEdgeData(edgeID).distance;
+                if(lengthOfCurrentEdge + unpackedUntilDistance > T_threshold) {
+                    unpackStack.push(std::make_pair(packed_s_v_path[i-1], packed_s_v_path[i]));
+                } else {
+                    unpackedUntilDistance += lengthOfCurrentEdge;
+                    s_P = packed_s_v_path[i-1];
+                }
+        }
+        while(!unpackStack.empty()) {
+            UnpackEdge viaPathEdge      = unpackStack.top(); unpackStack.pop();
+            std::cout << "  unpacking edge (" << viaPathEdge.first << "," << viaPathEdge.second << ")" << std::endl;
+            typename QueryDataT::Graph::EdgeIterator edgeIDInViaPath        = super::_queryData.graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
+            std::cout << "   id is " << edgeIDInViaPath << " (via)" << std::endl;
+            typename QueryDataT::Graph::EdgeData currentEdgeData = super::_queryData.graph->GetEdgeData(edgeIDInViaPath);
+            bool IsViaEdgeShortCut = currentEdgeData.shortcut;
+
+            if( IsViaEdgeShortCut) {
+                const NodeID middleOfViaPath = currentEdgeData.id;
+                typename QueryDataT::Graph::EdgeIterator edgeIDOfFirstSegment = super::_queryData.graph->FindEdgeInEitherDirection(viaPathEdge.first, middleOfViaPath);
+                typename QueryDataT::Graph::EdgeIterator edgeIDOfSecondSegment = super::_queryData.graph->FindEdgeInEitherDirection(middleOfViaPath, viaPathEdge.second);
+                int lengthOfFirstSegment = super::_queryData.graph->GetEdgeData(edgeIDOfFirstSegment).distance;
+                int lengthOfSecondSegment = super::_queryData.graph->GetEdgeData(edgeIDOfSecondSegment).distance;
+
+                //attention: !unpacking in reverse!
+                //Check if second segment is the one to go over treshold? if yes add second segment to stack, else push first segment to stack and add distance of second one.
+                if(unpackedUntilDistance+lengthOfSecondSegment > T_threshold ) {
+                    unpackStack.push(std::make_pair(middleOfViaPath, viaPathEdge.second));
+                } else {
+                    unpackedUntilDistance+=lengthOfSecondSegment;
+                    unpackStack.push(std::make_pair(viaPathEdge.first, middleOfViaPath));
+                }
+            } else { // edge is not a shortcut, set the start node for T-Test to end of edge.
+                unpackedUntilDistance += currentEdgeData.distance;
+                s_P = viaPathEdge.second;
+            }
+        }
+        std::cout << "threshold: " << T_threshold << ", unpackedDistance: " << unpackedUntilDistance << ", s_P: " << s_P << std::endl;
+        int lengthOfPathT_Test_Path = unpackedUntilDistance;
+        unpackedUntilDistance = 0;
+
+        //partial unpacking until target of edge is the first endpoint of a non-shortcut edge farther away than threshold
+        //First partially unpack s-->v until paths deviate, note length of common path.
+        std::cout << "unpacking vt-path until a node of non-shortcut edge is farther away than " << T_threshold << std::endl;
+        for(unsigned i = 0, lengthOfPackedPath = packed_v_t_path.size()-1; (i < lengthOfPackedPath) && unpackStack.empty(); ++i ) {
+            std::cout << "   checking indices [" << i << "] and [" << (i+1) << "]" << std::endl;
+            typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection(packed_v_t_path[i], packed_v_t_path[i+1]);
+            int lengthOfCurrentEdge = super::_queryData.graph->GetEdgeData(edgeID).distance;
+                if(lengthOfCurrentEdge + unpackedUntilDistance > T_threshold) {
+                    unpackStack.push(std::make_pair(packed_v_t_path[i], packed_v_t_path[i+1]));
+                } else {
+                    unpackedUntilDistance += lengthOfCurrentEdge;
+                    t_P =  packed_v_t_path[i+1];
+                }
+        }
+        while(!unpackStack.empty()) {
+            UnpackEdge viaPathEdge = unpackStack.top(); unpackStack.pop();
+            std::cout << "  unpacking edge (" << viaPathEdge.first << "," << viaPathEdge.second << ")" << std::endl;
+            typename QueryDataT::Graph::EdgeIterator edgeIDInViaPath        = super::_queryData.graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
+            std::cout << "   id is " << edgeIDInViaPath << " (via)" << std::endl;
+            typename QueryDataT::Graph::EdgeData currentEdgeData = super::_queryData.graph->GetEdgeData(edgeIDInViaPath);
+            bool IsViaEdgeShortCut = currentEdgeData.shortcut;
+
+            if( IsViaEdgeShortCut) {
+                const NodeID middleOfViaPath = currentEdgeData.id;
+                typename QueryDataT::Graph::EdgeIterator edgeIDOfFirstSegment = super::_queryData.graph->FindEdgeInEitherDirection(viaPathEdge.first, middleOfViaPath);
+                typename QueryDataT::Graph::EdgeIterator edgeIDOfSecondSegment = super::_queryData.graph->FindEdgeInEitherDirection(middleOfViaPath, viaPathEdge.second);
+                int lengthOfFirstSegment = super::_queryData.graph->GetEdgeData(edgeIDOfFirstSegment).distance;
+                int lengthOfSecondSegment = super::_queryData.graph->GetEdgeData(edgeIDOfSecondSegment).distance;
+
+                //Check if first segment is the one to go over treshold? if yes first segment to stack, else push second segment to stack and add distance of first one.
+                if(unpackedUntilDistance+lengthOfFirstSegment > T_threshold ) {
+                    unpackStack.push(std::make_pair(viaPathEdge.first, middleOfViaPath));
+                } else {
+                    unpackedUntilDistance+=lengthOfFirstSegment;
+                    unpackStack.push(std::make_pair(middleOfViaPath, viaPathEdge.second));
+                }
+            } else { // edge is not a shortcut, set the start node for T-Test to end of edge.
+                unpackedUntilDistance += currentEdgeData.distance;
+                t_P = viaPathEdge.second;
+            }
+        }
+        lengthOfPathT_Test_Path += unpackedUntilDistance;
+        std::cout << "check if path (" << s_P << "," << t_P << ") is not less than " << lengthOfPathT_Test_Path << ", while shortest path has length: " << lengthOfShortestPath << std::endl;
+        //TODO: Run query and compare distances.
+
+        std::cout << "passed T-Test: " << (hasPassed_T_Test ? "yes" : "no") << std::endl;
+        return hasPassed_T_Test;
+    }
+
     inline int approximateAmountOfSharing(const NodeID middleNodeIDOfShortestPath, const NodeID middleNodeIDOfAlternativePath, typename QueryDataT::HeapPtr & _forwardHeap, typename QueryDataT::HeapPtr & _backwardHeap) {
         std::deque<NodeID> packedShortestPath;
         std::deque<NodeID> packedAlternativePath;
@@ -450,14 +619,6 @@ private:
                 }
             }
         }
-    }
-
-    void pruneViaNodeCandidates() {
-
-    }
-
-    unsigned computeApproximatedOverlap(const NodeID s, const NodeID t, const NodeID v) {
-
     }
 
     unsigned computeOverlap(const NodeID s, const NodeID t, const NodeID v) {
