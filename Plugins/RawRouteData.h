@@ -22,10 +22,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define RAWROUTEDATA_H_
 
 struct RawRouteData {
-    std::vector< _PathData > computedRouted;
+    std::vector< _PathData > computedShortestPath;
+    std::vector< _PathData > computedAlternativePath;
     std::vector< PhantomNodes > segmentEndCoordinates;
     std::vector< _Coordinate > rawViaNodeCoordinates;
     unsigned checkSum;
+    int lengthOfShortestPath;
+    int lengthOfAlternativePath;
 };
 
 #endif /* RAWROUTEDATA_H_ */

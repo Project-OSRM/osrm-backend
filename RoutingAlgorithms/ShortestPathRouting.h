@@ -33,10 +33,12 @@ public:
 
     ~ShortestPathRouting() {}
 
-    int operator()(std::vector<PhantomNodes> & phantomNodesVector, std::vector<_PathData> & unpackedPath) {
+    void operator()(std::vector<PhantomNodes> & phantomNodesVector,  RawRouteData & rawRouteData) {
         BOOST_FOREACH(PhantomNodes & phantomNodePair, phantomNodesVector) {
-            if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX())
-                return INT_MAX;
+            if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX()) {
+                rawRouteData.lengthOfShortestPath = rawRouteData.lengthOfAlternativePath = INT_MAX;
+                return;
+            }
         }
         int distance1 = 0;
         int distance2 = 0;
@@ -115,7 +117,8 @@ public:
 
             //No path found for both target nodes?
             if(INT_MAX == _localUpperbound1 && INT_MAX == _localUpperbound2) {
-                return INT_MAX;
+                rawRouteData.lengthOfShortestPath = rawRouteData.lengthOfAlternativePath = INT_MAX;
+                return;
             }
             if(UINT_MAX == middle1) {
                 searchFrom1stStartNode = false;
@@ -215,30 +218,34 @@ public:
 //      INFO("length path2: " << distance2);
         if(distance1 <= distance2){
             //remove consecutive duplicates
-          std::cout << "unclean 1: ";
-          for(unsigned i = 0; i < packedPath1.size(); ++i)
-              std::cout << packedPath1[i] << " ";
-          std::cout << std::endl;
-            _RemoveConsecutiveDuplicatesFromContainer(packedPath1);
+//          std::cout << "unclean 1: ";
+//          for(unsigned i = 0; i < packedPath1.size(); ++i)
+//              std::cout << packedPath1[i] << " ";
+//          std::cout << std::endl;
+
 //          std::cout << "cleaned 1: ";
 //          for(unsigned i = 0; i < packedPath1.size(); ++i)
 //              std::cout << packedPath1[i] << " ";
 //          std::cout << std::endl;
-            super::UnpackPath(packedPath1, unpackedPath);
+//            super::UnpackPath(packedPath1, rawRouteData.computedShortestPath);
         } else {
-          std::cout << "unclean 2: ";
-          for(unsigned i = 0; i < packedPath2.size(); ++i)
-              std::cout << packedPath2[i] << " ";
-          std::cout << std::endl;
-            _RemoveConsecutiveDuplicatesFromContainer(packedPath2);
+            std::swap(packedPath1, packedPath2);
+//          std::cout << "unclean 2: ";
+//          for(unsigned i = 0; i < packedPath2.size(); ++i)
+//              std::cout << packedPath2[i] << " ";
+//          std::cout << std::endl;
+//            _RemoveConsecutiveDuplicatesFromContainer(packedPath2);
 //          std::cout << "cleaned 2: ";
 //          for(unsigned i = 0; i < packedPath2.size(); ++i)
 //              std::cout << packedPath2[i] << " ";
 //          std::cout << std::endl;
-            super::UnpackPath(packedPath2, unpackedPath);
+//            super::UnpackPath(packedPath2, unpackedPath);
         }
+        _RemoveConsecutiveDuplicatesFromContainer(packedPath1);
+        super::UnpackPath(packedPath1, rawRouteData.computedShortestPath);
+        rawRouteData.lengthOfShortestPath = std::min(distance1, distance2);
 //      INFO("Found via route with distance " << std::min(distance1, distance2));
-        return std::min(distance1, distance2);
+        return;
     }
 private:
     template<class ContainerT>

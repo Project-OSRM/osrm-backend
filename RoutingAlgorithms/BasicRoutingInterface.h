@@ -26,6 +26,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cassert>
 #include <climits>
 
+#include "../Plugins/RawRouteData.h"
+
 template<class QueryDataT>
 class BasicRoutingInterface {
 protected:

@@ -33,20 +33,20 @@ private:
     std::string tmp;
 public:
     void SetConfig(const _DescriptorConfig& c) { config = c; }
-    void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, unsigned distance) {
+    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine) {
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         reply.content += "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" "
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                 "\">";
         reply.content += "<rte>";
-        if(distance != UINT_MAX && rawRoute.computedRouted.size()) {
+        if(rawRoute.lengthOfShortestPath != UINT_MAX && rawRoute.computedShortestPath.size()) {
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
-            BOOST_FOREACH(_PathData pathData, rawRoute.computedRouted) {
+            BOOST_FOREACH(_PathData pathData, rawRoute.computedShortestPath) {
                 sEngine.GetCoordinatesForNodeID(pathData.node, current);
 
                 convertInternalLatLonToString(current.lat, tmp);

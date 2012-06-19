@@ -56,6 +56,8 @@ struct SearchEngineData {
     static HeapPtr backwardHeap;
     static HeapPtr forwardHeap2;
     static HeapPtr backwardHeap2;
+    static HeapPtr forwardHeap3;
+    static HeapPtr backwardHeap3;
 
     inline void InitializeOrClearFirstThreadLocalStorage() {
         if(!forwardHeap.get()) {
@@ -83,6 +85,20 @@ struct SearchEngineData {
         }
         else
             backwardHeap2->Clear();
+    }
+
+    inline void InitializeOrClearThirdThreadLocalStorage() {
+        if(!forwardHeap3.get()) {
+            forwardHeap3.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+        }
+        else
+            forwardHeap3->Clear();
+
+        if(!backwardHeap3.get()) {
+            backwardHeap3.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+        }
+        else
+            backwardHeap3->Clear();
     }
 };
 
@@ -148,5 +164,8 @@ template<class EdgeData, class GraphT> SearchEngineHeapPtr SearchEngineData<Edge
 
 template<class EdgeData, class GraphT> SearchEngineHeapPtr SearchEngineData<EdgeData, GraphT>::forwardHeap2;
 template<class EdgeData, class GraphT> SearchEngineHeapPtr SearchEngineData<EdgeData, GraphT>::backwardHeap2;
+
+template<class EdgeData, class GraphT> SearchEngineHeapPtr SearchEngineData<EdgeData, GraphT>::forwardHeap3;
+template<class EdgeData, class GraphT> SearchEngineHeapPtr SearchEngineData<EdgeData, GraphT>::backwardHeap3;
 
 #endif /* SEARCHENGINE_H_ */

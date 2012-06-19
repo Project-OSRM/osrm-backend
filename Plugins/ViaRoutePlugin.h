@@ -112,38 +112,39 @@ public:
 //            INFO("Brute force lookup of coordinate " << i);
             searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
         }
-        unsigned distance = 0;
+        //unsigned distance = 0;
+
         for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
             PhantomNodes segmentPhantomNodes;
             segmentPhantomNodes.startPhantom = phantomNodeVector[i];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         }
-        distance = searchEngine->shortestPath(rawRoute.segmentEndCoordinates, rawRoute.computedRouted);
-
-        std::vector<_PathData> alternative;
         if(1 == rawRoute.segmentEndCoordinates.size()) {
-            INFO("Checking for alternative paths");
-            int distance2 = searchEngine->alternativePaths(rawRoute.segmentEndCoordinates[0], alternative);
-        }
-        std::cout << "latitude,longitude" << std::endl;
-        for(unsigned i = 0; i < rawRoute.computedRouted.size(); ++i) {
-            _Coordinate current;
-            searchEngine->GetCoordinatesForNodeID(rawRoute.computedRouted[i].node, current);
-            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
-        }
-        std::cout << std::endl;
+//            INFO("Checking for alternative paths");
+            searchEngine->alternativePaths(rawRoute.segmentEndCoordinates[0],  rawRoute);
 
-        std::cout << "latitude,longitude" << std::endl;
-        for(unsigned i = 0; i <alternative.size(); ++i) {
-            _Coordinate current;
-            searchEngine->GetCoordinatesForNodeID(alternative[i].node, current);
-            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
+        } else {
+            searchEngine->shortestPath(rawRoute.segmentEndCoordinates, rawRoute);
         }
-        std::cout << std::endl;
+//        std::cout << "latitude,longitude" << std::endl;
+//        for(unsigned i = 0; i < rawRoute.computedShortestPath.size(); ++i) {
+//            _Coordinate current;
+//            searchEngine->GetCoordinatesForNodeID(rawRoute.computedShortestPath[i].node, current);
+//            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
+//        }
+//        std::cout << std::endl;
+//
+//        std::cout << "latitude,longitude" << std::endl;
+//        for(unsigned i = 0; i < rawRoute.computedAlternativePath.size(); ++i) {
+//            _Coordinate current;
+//            searchEngine->GetCoordinatesForNodeID(rawRoute.computedAlternativePath[i].node, current);
+//            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
+//        }
+//        std::cout << std::endl;
 
 
-        if(INT_MAX == distance ) {
+        if(INT_MAX == rawRoute.lengthOfShortestPath ) {
             DEBUG( "Error occurred, single path not found" );
         }
         reply.status = http::Reply::ok;
@@ -197,7 +198,7 @@ public:
 //        INFO("Number of segments: " << rawRoute.segmentEndCoordinates.size());
         desc->SetConfig(descriptorConfig);
 
-        desc->Run(reply, rawRoute, phantomNodes, *searchEngine, distance);
+        desc->Run(reply, rawRoute, phantomNodes, *searchEngine);
         if("" != JSONParameter) {
             reply.content += ")\n";
         }
