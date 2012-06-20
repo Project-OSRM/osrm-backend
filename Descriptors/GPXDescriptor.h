@@ -40,7 +40,7 @@ public:
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                 "\">";
         reply.content += "<rte>";
-        if(rawRoute.lengthOfShortestPath != UINT_MAX && rawRoute.computedShortestPath.size()) {
+        if(rawRoute.lengthOfShortestPath != INT_MAX && rawRoute.computedShortestPath.size()) {
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lat, tmp);
             reply.content += "<rtept lat=\"" + tmp + "\" ";
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
