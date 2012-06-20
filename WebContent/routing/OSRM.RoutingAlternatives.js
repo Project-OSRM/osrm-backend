@@ -35,14 +35,15 @@ _buttons: [
 // prepare using alternatives
 prepare: function(response) {
 	// store basic information
-	OSRM.G.alternative_count = response.alternative_geometries.length;
+	OSRM.G.alternative_count = response.alternative_geometries.length + 1;
 	OSRM.G.alternative_active = 0;
 	
 	// do nothing if there is no alternative
-	if( OSRM.G.alternative_count == 0 )
+	if( OSRM.G.alternative_count == 1 )
 		return;
 
 	// move best route to alternative array
+	console.log("prepare");
 	var the_response = OSRM.G.response;
 	the_response.alternative_geometries.unshift( response.route_geometry );
 	the_response.alternative_instructions.unshift( response.route_instructions );
@@ -86,12 +87,13 @@ _click: function(button_id) {
 	var the_response = OSRM.G.response;
 	the_response.route_geometry = the_response.alternative_geometries[button_id];
 	the_response.route_instructions = the_response.alternative_instructions[button_id];
-	the_response.alternative_summaries = the_response.alternative_summaries[button_id];
+	the_response.route_summary = the_response.alternative_summaries[button_id];
 	
 	// show alternative
 	OSRM.RoutingGeometry.show(the_response);
 	OSRM.RoutingNoNames.show(the_response);
 	OSRM.RoutingDescription.show(the_response);
+	OSRM.RoutingAlternatives._addGUI();
 },
 _mouseover: function(button_id) {
 	console.log("over "+button_id);
@@ -118,6 +120,8 @@ _addGUI: function() {
 		var tooltip = OSRM.loc("DISTANCE")+":"+distance+" "+OSRM.loc("DURATION")+":"+time;
 		var data = '<a class="button top-right-button" id="'+buttons[i].id+'" title="'+tooltip+'">'+buttons[i].label+'</a>';
 		document.getElementById('information-box-header').innerHTML = data + document.getElementById('information-box-header').innerHTML;
+	}
+	for(var i=0, size=OSRM.G.alternative_count; i<size; i++) {
 		document.getElementById(buttons[i].id).onclick = function (button_id) { return function() {OSRM.RoutingAlternatives._click(button_id); }; }(i) ;
 		document.getElementById(buttons[i].id).onmouseover = function (button_id) { return function() {OSRM.RoutingAlternatives._mouseover(button_id); }; } (i);
 		document.getElementById(buttons[i].id).onmouseout = function (button_id) { return function() {OSRM.RoutingAlternatives._mouseout(button_id); }; } (i);

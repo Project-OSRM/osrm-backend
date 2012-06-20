@@ -30,12 +30,9 @@ toHumanTime: function(seconds){
    seconds = seconds%60;
    hours = parseInt(minutes/60);
    minutes = minutes%60;
-   if(hours==0){
-	   return minutes + '&nbsp;' + 'min';
-   }
-   else{
-	   return hours + '&nbsp;' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';
-   }
+   if(hours==0 && minutes==0){ return seconds + '&nbsp;' + 's'; }
+   else if(hours==0){ return minutes + '&nbsp;' + 'min'; }
+   else{ return hours + '&nbsp;' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';}
 },
 //human readable distance
 setToHumanDistanceFunction: function(type) {
