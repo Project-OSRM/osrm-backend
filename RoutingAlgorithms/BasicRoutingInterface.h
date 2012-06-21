@@ -158,7 +158,53 @@ public:
         }
     }
 
-    inline void RetrievePackedPathFromHeap(typename QueryDataT::HeapPtr & _fHeap, typename QueryDataT::HeapPtr & _bHeap, const NodeID middle, std::deque<NodeID>& packedPath) {
+    inline void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> & unpackedPath) const {
+
+        std::stack<std::pair<NodeID, NodeID> > recursionStack;
+        recursionStack.push(std::make_pair(s,t));
+
+        std::pair<NodeID, NodeID> edge;
+        while(!recursionStack.empty()) {
+            edge = recursionStack.top();
+            recursionStack.pop();
+
+            typename QueryDataT::Graph::EdgeIterator smallestEdge = SPECIAL_EDGEID;
+            int smallestWeight = INT_MAX;
+            for(typename QueryDataT::Graph::EdgeIterator eit = _queryData.graph->BeginEdges(edge.first);eit < _queryData.graph->EndEdges(edge.first);++eit){
+                const int weight = _queryData.graph->GetEdgeData(eit).distance;
+                if(_queryData.graph->GetTarget(eit) == edge.second && weight < smallestWeight && _queryData.graph->GetEdgeData(eit).forward){
+                    smallestEdge = eit;
+                    smallestWeight = weight;
+                }
+            }
+
+            if(smallestEdge == SPECIAL_EDGEID){
+                for(typename QueryDataT::Graph::EdgeIterator eit = _queryData.graph->BeginEdges(edge.second);eit < _queryData.graph->EndEdges(edge.second);++eit){
+                    const int weight = _queryData.graph->GetEdgeData(eit).distance;
+                    if(_queryData.graph->GetTarget(eit) == edge.first && weight < smallestWeight && _queryData.graph->GetEdgeData(eit).backward){
+                        smallestEdge = eit;
+                        smallestWeight = weight;
+                    }
+                }
+            }
+            assert(smallestWeight != INT_MAX);
+
+            const typename QueryDataT::Graph::EdgeData& ed = _queryData.graph->GetEdgeData(smallestEdge);
+            if(ed.shortcut) {//unpack
+                const NodeID middle = ed.id;
+                //again, we need to this in reversed order
+//                INFO("unpacking (" << middle << "," <<  edge.second << ") and (" << edge.first << "," << middle << ")");
+                recursionStack.push(std::make_pair(middle, edge.second));
+                recursionStack.push(std::make_pair(edge.first, middle));
+            } else {
+                assert(!ed.shortcut);
+                unpackedPath.push_back(edge.first );
+            }
+        }
+        unpackedPath.push_back(t);
+    }
+
+    inline void RetrievePackedPathFromHeap(const typename QueryDataT::HeapPtr & _fHeap, const typename QueryDataT::HeapPtr & _bHeap, const NodeID middle, std::deque<NodeID>& packedPath) {
         NodeID pathNode = middle;
         if(_fHeap->GetData(pathNode).parent != middle) {
             do {
