@@ -53,14 +53,24 @@ prepare: function(response) {
 	OSRM.RoutingAlternatives._addGUI();
 },
 prepare_Redraw: function(response) {
-	var original = {};
-	original.route_geometry = response.route_geometry;
-	original.route_instructions = response.route_instructions;
-	original.route_summary = response.route_summary;
-	OSRM.G.response.alternatives = response.alternatives;
-	OSRM.G.response.alternatives.push( original );
+	// do nothing if there is no alternative
+	if( OSRM.G.alternative_count == 1 )
+		return;	
 	
-	OSRM.RoutingAlternatives._addGUI();
+	// move results
+	var the_response = OSRM.G.response;
+	the_response.alternative_geometries = response.alternative_geometries;
+	the_response.alternative_instructions = response.alternative_instructions;
+	the_response.alternative_summaries = response.alternative_summaries;
+	
+	the_response.alternative_geometries.unshift( response.route_geometry );
+	the_response.alternative_instructions.unshift( response.route_instructions );
+	the_response.alternative_summaries.unshift( response.route_summary );	
+
+	// switch data
+	the_response.route_geometry = the_response.alternative_geometries[OSRM.G.alternative_active];
+	the_response.route_instructions = the_response.alternative_instructions[OSRM.G.alternative_active];
+	the_response.route_summary = the_response.alternative_summaries[OSRM.G.alternative_active];
 },
 
 // press one of the buttons
