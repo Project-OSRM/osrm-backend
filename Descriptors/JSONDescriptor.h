@@ -122,13 +122,13 @@ public:
 
         //give an array of alternative routes
         reply.content += "\"alternative_geometries\": [";
-        if(config.geometry) {
+        if(config.geometry && INT_MAX != rawRoute.lengthOfAlternativePath) {
             //Generate the linestrings for each alternative
             alternateDescriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
         }
         reply.content += "],";
         reply.content += "\"alternative_instructions\":[";
-        if(config.instructions) {
+        if(config.instructions && INT_MAX != rawRoute.lengthOfAlternativePath) {
             reply.content += "[";
             //Generate instructions for each alternative
             BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine);
@@ -136,16 +136,24 @@ public:
         }
         reply.content += "],";
         reply.content += "\"alternative_summaries\":[";
-        //Generate route summary (length, duration) for each alternative
-        alternateDescriptionFactory.BuildRouteSummary(alternateDescriptionFactory.entireLength, rawRoute.lengthOfAlternativePath - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenalty));
-        reply.content += "{";
-        reply.content += "\"total_distance\":";
-        reply.content += alternateDescriptionFactory.summary.lengthString;
-        reply.content += ","
-                "\"total_time\":";
-        reply.content += alternateDescriptionFactory.summary.durationString;
-        reply.content += "}";
-
+        if(INT_MAX != rawRoute.lengthOfAlternativePath) {
+            //Generate route summary (length, duration) for each alternative
+            alternateDescriptionFactory.BuildRouteSummary(alternateDescriptionFactory.entireLength, rawRoute.lengthOfAlternativePath - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenalty));
+            reply.content += "{";
+            reply.content += "\"total_distance\":";
+            reply.content += alternateDescriptionFactory.summary.lengthString;
+            reply.content += ","
+                    "\"total_time\":";
+            reply.content += alternateDescriptionFactory.summary.durationString;
+            reply.content += ","
+                    "\"start_point\":\"";
+            reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.startName);
+            reply.content += "\","
+                    "\"end_point\":\"";
+            reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
+            reply.content += "\"";
+            reply.content += "}";
+        }
         reply.content += "],";
 
         //list all viapoints so that the client may display it
