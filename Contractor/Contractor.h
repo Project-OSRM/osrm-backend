@@ -351,7 +351,7 @@ public:
                 for ( int position = firstIndependent ; position < last; ++position ) {
                     NodeID x = remainingNodes[position].first;
                     _Contract< false > ( data, x );
-                    nodePriority[x] = -1;
+                    //nodePriority[x] = -1;
                 }
                 std::sort( data->insertedEdges.begin(), data->insertedEdges.end() );
             }
