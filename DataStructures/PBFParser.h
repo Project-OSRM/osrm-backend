@@ -24,11 +24,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <zlib.h>
 #include <boost/shared_ptr.hpp>
 
-#include "BaseParser.h"
+#include <osmpbf/fileformat.pb.h>
+#include <osmpbf/osmformat.pb.h>
 
-#include "pbf-proto/fileformat.pb.h"
-#include "pbf-proto/osmformat.pb.h"
 #include "../typedefs.h"
+
+#include "BaseParser.h"
 #include "HashTable.h"
 #include "ExtractorStructs.h"
 #include "ConcurrentQueue.h"

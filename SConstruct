@@ -120,6 +120,10 @@ if not conf.CheckHeader('omp.h'):
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
+if not conf.CheckLibWithHeader('osmpbf', 'osmpbf/osmpbf.h', 'CXX'):
+	print "osmpbf library not found. Exiting"
+	print "Either install libosmpbf-dev (Ubuntu) or use https://github.com/scrosby/OSM-binary"
+	Exit(-1)
 if not conf.CheckLibWithHeader('png', 'png.h', 'CXX'):
 	print "png library not found. Exiting"
 	Exit(-1)
@@ -245,18 +249,12 @@ if not conf.CheckCXXHeader('boost/unordered_map.hpp'):
 #	print "tbb/task_scheduler_init.h not found. Exiting"
 #	Exit(-1)
 
-
-protobld = Builder(action = 'protoc -I=DataStructures/pbf-proto --cpp_out=DataStructures/pbf-proto $SOURCE')
-env.Append(BUILDERS = {'Protobuf' : protobld})
-osm1 = env.Protobuf('DataStructures/pbf-proto/fileformat.proto')
-osm2 = env.Protobuf('DataStructures/pbf-proto/osmformat.proto')
-
 #Hack to make OSRM compile on the default OS X Compiler.
 if sys.platform != 'darwin':
 	env.Append(CCFLAGS = ['-fopenmp'])
 	env.Append(LINKFLAGS = ['-fopenmp'])
 
-env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('DataStructures/pbf-proto/*.pb.cc'), Glob('Util/*.cpp')], depends=['osm1', 'osm2'])
+env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('Util/*.cpp')])
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
 env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc'), Glob('Server/DataStructures/*.cpp')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
 env = conf.Finish()
