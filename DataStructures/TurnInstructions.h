@@ -46,7 +46,7 @@ struct TurnInstructionsClass {
     const static short AccessRestrictionFlag = (1<<14);
     const static short InverseAccessRestrictionFlag = ~(1<<14);
 
-    const static int   AccessRestrictionPenaly = 1 << 15; //unrelated to the bit set in the restriction flag
+    const static int   AccessRestrictionPenalty = 1 << 15; //unrelated to the bit set in the restriction flag
 
 //    std::string TurnStrings[16];
 //    std::string Ordinals[12];

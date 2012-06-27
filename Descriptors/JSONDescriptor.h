@@ -36,6 +36,7 @@ class JSONDescriptor : public BaseDescriptor<SearchEngineT>{
 private:
     _DescriptorConfig config;
     DescriptionFactory descriptionFactory;
+    DescriptionFactory alternateDescriptionFactory;
     _Coordinate current;
     unsigned numberOfEnteredRestrictedAreas;
     struct {
@@ -48,15 +49,15 @@ public:
     JSONDescriptor() : numberOfEnteredRestrictedAreas(0) {}
     void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-    void Run(http::Reply & reply, RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine, const unsigned durationOfTrip) {
+    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine) {
         WriteHeaderToOutput(reply.content);
-        if(durationOfTrip != INT_MAX) {
+        if(rawRoute.lengthOfShortestPath != INT_MAX) {
             descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
             reply.content += "0,"
                     "\"status_message\": \"Found route between points\",";
 
             //Get all the coordinates for the computed route
-            BOOST_FOREACH(_PathData & pathData, rawRoute.computedRouted) {
+            BOOST_FOREACH(const _PathData & pathData, rawRoute.computedShortestPath) {
                 sEngine.GetCoordinatesForNodeID(pathData.node, current);
                 descriptionFactory.AppendSegment(current, pathData );
             }
@@ -67,7 +68,7 @@ public:
                     "\"status_message\": \"Cannot find route between points\",";
         }
 
-        descriptionFactory.Run(sEngine, config.z, durationOfTrip);
+        descriptionFactory.Run(sEngine, config.z, rawRoute.lengthOfShortestPath);
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
             descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
@@ -77,85 +78,9 @@ public:
 
         reply.content += ","
                 "\"route_instructions\": [";
+        numberOfEnteredRestrictedAreas = 0;
         if(config.instructions) {
-            //Segment information has following format:
-            //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
-            //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
-            //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
-            unsigned prefixSumOfNecessarySegments = 0;
-            roundAbout.leaveAtExit = 0;
-            roundAbout.nameID = 0;
-            std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
-            //Fetch data from Factory and generate a string from it.
-            BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
-                short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
-                numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
-                if(TurnInstructions.TurnIsNecessary( currentInstruction) ) {
-                    if(TurnInstructions.EnterRoundAbout == currentInstruction) {
-                        roundAbout.nameID = segment.nameID;
-                        roundAbout.startIndex = prefixSumOfNecessarySegments;
-                    } else {
-                        if(0 != prefixSumOfNecessarySegments){
-                            reply.content += ",";
-                        }
-                        reply.content += "[\"";
-                        if(TurnInstructions.LeaveRoundAbout == currentInstruction) {
-                            intToString(TurnInstructions.EnterRoundAbout, tmpInstruction);
-                            reply.content += tmpInstruction;
-                            reply.content += "-";
-                            intToString(roundAbout.leaveAtExit+1, tmpInstruction);
-                            reply.content += tmpInstruction;
-                            roundAbout.leaveAtExit = 0;
-                        } else {
-                            intToString(currentInstruction, tmpInstruction);
-                            reply.content += tmpInstruction;
-                        }
-                        reply.content += "\",\"";
-                        reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
-                        reply.content += "\",";
-                        intToString(segment.length, tmpDist);
-                        reply.content += tmpDist;
-                        reply.content += ",";
-                        intToString(prefixSumOfNecessarySegments, tmpLength);
-                        reply.content += tmpLength;
-                        reply.content += ",";
-                        intToString(segment.duration, tmpDuration);
-                        reply.content += tmpDuration;
-                        reply.content += ",\"";
-                        intToString(segment.length, tmpLength);
-                        reply.content += tmpLength;
-                        reply.content += "m\",\"";
-                        reply.content += Azimuth::Get(segment.bearing);
-                        reply.content += "\",";
-                        intToString(round(segment.bearing), tmpBearing);
-                        reply.content += tmpBearing;
-                        reply.content += "]";
-                    }
-                } else if(TurnInstructions.StayOnRoundAbout == currentInstruction) {
-                    ++roundAbout.leaveAtExit;
-                }
-                if(segment.necessary)
-                    ++prefixSumOfNecessarySegments;
-            }
-            if(durationOfTrip != INT_MAX) {
-                reply.content += ",[\"";
-                intToString(TurnInstructions.ReachedYourDestination, tmpInstruction);
-                reply.content += tmpInstruction;
-                reply.content += "\",\"";
-                reply.content += "\",";
-                reply.content += "0";
-                reply.content += ",";
-                intToString(prefixSumOfNecessarySegments-1, tmpLength);
-                reply.content += tmpLength;
-                reply.content += ",";
-                reply.content += "0";
-                reply.content += ",\"";
-                reply.content += "\",\"";
-                reply.content += Azimuth::Get(0.0);
-                reply.content += "\",";
-                reply.content += "0.0";
-                reply.content += "]";
-            }
+            BuildTextualDescription(descriptionFactory, reply, rawRoute.lengthOfShortestPath, sEngine);
         } else {
             BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
                 short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
@@ -163,11 +88,11 @@ public:
             }
         }
         reply.content += "],";
-        //		INFO("Entered " << numberOfEnteredRestrictedAreas << " restricted areas");
-        descriptionFactory.BuildRouteSummary(descriptionFactory.entireLength, durationOfTrip - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenaly));
+        descriptionFactory.BuildRouteSummary(descriptionFactory.entireLength, rawRoute.lengthOfShortestPath - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenalty));
 
-        reply.content += "\"route_summary\": {"
-                "\"total_distance\":";
+        reply.content += "\"route_summary\":";
+        reply.content += "{";
+        reply.content += "\"total_distance\":";
         reply.content += descriptionFactory.summary.lengthString;
         reply.content += ","
                 "\"total_time\":";
@@ -179,12 +104,62 @@ public:
                 "\"end_point\":\"";
         reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
         reply.content += "\"";
-        reply.content += "},";
+        reply.content += "}";
+        reply.content +=",";
+
+        //only one alternative route is computed at this time, so this is hardcoded
+
+        if(rawRoute.lengthOfAlternativePath != INT_MAX) {
+            alternateDescriptionFactory.SetStartSegment(phantomNodes.startPhantom);
+            //Get all the coordinates for the computed route
+            BOOST_FOREACH(const _PathData & pathData, rawRoute.computedAlternativePath) {
+                sEngine.GetCoordinatesForNodeID(pathData.node, current);
+                alternateDescriptionFactory.AppendSegment(current, pathData );
+            }
+            alternateDescriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
+        }
+        alternateDescriptionFactory.Run(sEngine, config.z, rawRoute.lengthOfAlternativePath);
+
+        //give an array of alternative routes
+        reply.content += "\"alternative_geometries\": [";
+        if(config.geometry && INT_MAX != rawRoute.lengthOfAlternativePath) {
+            //Generate the linestrings for each alternative
+            alternateDescriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
+        }
+        reply.content += "],";
+        reply.content += "\"alternative_instructions\":[";
+        if(config.instructions && INT_MAX != rawRoute.lengthOfAlternativePath) {
+            reply.content += "[";
+            //Generate instructions for each alternative
+            BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine);
+            reply.content += "]";
+        }
+        reply.content += "],";
+        reply.content += "\"alternative_summaries\":[";
+        if(INT_MAX != rawRoute.lengthOfAlternativePath) {
+            //Generate route summary (length, duration) for each alternative
+            alternateDescriptionFactory.BuildRouteSummary(alternateDescriptionFactory.entireLength, rawRoute.lengthOfAlternativePath - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenalty));
+            reply.content += "{";
+            reply.content += "\"total_distance\":";
+            reply.content += alternateDescriptionFactory.summary.lengthString;
+            reply.content += ","
+                    "\"total_time\":";
+            reply.content += alternateDescriptionFactory.summary.durationString;
+            reply.content += ","
+                    "\"start_point\":\"";
+            reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.startName);
+            reply.content += "\","
+                    "\"end_point\":\"";
+            reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
+            reply.content += "\"";
+            reply.content += "}";
+        }
+        reply.content += "],";
 
         //list all viapoints so that the client may display it
         reply.content += "\"via_points\":[";
         std::string tmp;
-        if(config.geometry && INT_MAX != durationOfTrip) {
+        if(config.geometry && INT_MAX != rawRoute.lengthOfShortestPath) {
             for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
                 reply.content += "[";
                 if(rawRoute.segmentEndCoordinates[i].startPhantom.location.isSet())
@@ -231,5 +206,88 @@ public:
                 "\"version\": 0.3,"
                 "\"status\":";
     }
+
+    inline void BuildTextualDescription(DescriptionFactory & descriptionFactory, http::Reply & reply, const int lengthOfRoute, const SearchEngineT &sEngine) {
+        //Segment information has following format:
+        //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
+        //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
+        //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
+        unsigned prefixSumOfNecessarySegments = 0;
+        roundAbout.leaveAtExit = 0;
+        roundAbout.nameID = 0;
+        std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
+        //Fetch data from Factory and generate a string from it.
+        BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
+            short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+            numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
+            if(TurnInstructions.TurnIsNecessary( currentInstruction) ) {
+                if(TurnInstructions.EnterRoundAbout == currentInstruction) {
+                    roundAbout.nameID = segment.nameID;
+                    roundAbout.startIndex = prefixSumOfNecessarySegments;
+                } else {
+                    if(0 != prefixSumOfNecessarySegments){
+                        reply.content += ",";
+                    }
+                    reply.content += "[\"";
+                    if(TurnInstructions.LeaveRoundAbout == currentInstruction) {
+                        intToString(TurnInstructions.EnterRoundAbout, tmpInstruction);
+                        reply.content += tmpInstruction;
+                        reply.content += "-";
+                        intToString(roundAbout.leaveAtExit+1, tmpInstruction);
+                        reply.content += tmpInstruction;
+                        roundAbout.leaveAtExit = 0;
+                    } else {
+                        intToString(currentInstruction, tmpInstruction);
+                        reply.content += tmpInstruction;
+                    }
+                    reply.content += "\",\"";
+                    reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
+                    reply.content += "\",";
+                    intToString(segment.length, tmpDist);
+                    reply.content += tmpDist;
+                    reply.content += ",";
+                    intToString(prefixSumOfNecessarySegments, tmpLength);
+                    reply.content += tmpLength;
+                    reply.content += ",";
+                    intToString(segment.duration, tmpDuration);
+                    reply.content += tmpDuration;
+                    reply.content += ",\"";
+                    intToString(segment.length, tmpLength);
+                    reply.content += tmpLength;
+                    reply.content += "m\",\"";
+                    reply.content += Azimuth::Get(segment.bearing);
+                    reply.content += "\",";
+                    intToString(round(segment.bearing), tmpBearing);
+                    reply.content += tmpBearing;
+                    reply.content += "]";
+                }
+            } else if(TurnInstructions.StayOnRoundAbout == currentInstruction) {
+                ++roundAbout.leaveAtExit;
+            }
+            if(segment.necessary)
+                ++prefixSumOfNecessarySegments;
+        }
+        if(INT_MAX != lengthOfRoute) {
+            reply.content += ",[\"";
+            intToString(TurnInstructions.ReachedYourDestination, tmpInstruction);
+            reply.content += tmpInstruction;
+            reply.content += "\",\"";
+            reply.content += "\",";
+            reply.content += "0";
+            reply.content += ",";
+            intToString(prefixSumOfNecessarySegments-1, tmpLength);
+            reply.content += tmpLength;
+            reply.content += ",";
+            reply.content += "0";
+            reply.content += ",\"";
+            reply.content += "\",\"";
+            reply.content += Azimuth::Get(0.0);
+            reply.content += "\",";
+            reply.content += "0.0";
+            reply.content += "]";
+        }
+
+    }
+
 };
 #endif /* JSON_DESCRIPTOR_H_ */
