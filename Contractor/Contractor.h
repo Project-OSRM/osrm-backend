@@ -368,21 +368,42 @@ public:
             for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
                 _ThreadData& data = *threadData[threadNum];
                 for ( int i = 0; i < ( int ) data.insertedEdges.size(); ++i ) {
-                    const _ContractorEdge& edge = data.insertedEdges[i];
-                    _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
-                    if(currentEdgeID != _graph->EndEdges(edge.source)) {
-                        _DynamicGraph::EdgeData & currentEdgeData = _graph->GetEdgeData(currentEdgeID);
-                        if(edge.data.forward == currentEdgeData.forward && edge.data.backward == currentEdgeData.backward ) {
-                            if(_graph->GetEdgeData(_graph->FindEdge(edge.source, edge.target)).distance <= edge.data.distance) {
+                    _ContractorEdge& edgeToInsert = data.insertedEdges[i];
+                    const _DynamicGraph::EdgeIterator existingEdgeID = _graph->FindEdge(edgeToInsert.source, edgeToInsert.target);
+                    if(existingEdgeID != _graph->EndEdges(edgeToInsert.source)) {
+                        _DynamicGraph::EdgeData & existingEdgeData = _graph->GetEdgeData(existingEdgeID);
+                        if((edgeToInsert.data.forward == existingEdgeData.forward) && (edgeToInsert.data.backward == existingEdgeData.backward) ){
+                            if(existingEdgeData.distance <= edgeToInsert.data.distance) {
+                                continue;
+                            } else {
+                                existingEdgeData.distance = edgeToInsert.data.distance;
                                 continue;
                             }
-                            if(currentEdgeData.distance > edge.data.distance) {
-                                currentEdgeData.distance = edge.data.distance;
+                        } else if(existingEdgeData.forward && existingEdgeData.backward) {
+                            //existing edge is bidirectional, new edge is not
+                            if(existingEdgeData.distance > edgeToInsert.data.distance) {
+                                //split existing edge, because edge to insert is smaller in the one direction it goes than the existing edge
+                                existingEdgeData.forward =~ edgeToInsert.data.forward;
+                                existingEdgeData.backward =~ edgeToInsert.data.backward;
+                            } else {
                                 continue;
+                            }
+                        } else {
+                            //new edge is bidirectional, existing one is not
+                            if(existingEdgeData.distance > edgeToInsert.data.distance) {
+                                existingEdgeData = edgeToInsert.data;
+                                continue;
+                            } else {
+                                //existing edge is lower distance, but unidirectional.
+                                //split new edge before insertion, because it is only valid in one direction
+//                                edgeToInsert.data.forward =~ existingEdgeData.forward;
+//                                edgeToInsert.data.backward =~ existingEdgeData.backward;
+                                //INFO("should not happen too often");
                             }
                         }
+
                     }
-                    _graph->InsertEdge( edge.source, edge.target, edge.data );
+                    _graph->InsertEdge( edgeToInsert.source, edgeToInsert.target, edgeToInsert.data );
                 }
                 data.insertedEdges.clear();
             }
@@ -488,6 +509,7 @@ public:
         	edges.push_back( newEdge );
         }
         temporaryEdgeStorage.close();
+        INFO("CH has " << edges.size() << " edges");
     }
 
 private:
@@ -573,8 +595,8 @@ private:
 
             heap.Clear();
             heap.Insert( source, 0, _HeapData() );
-            if ( node != source )
-                heap.Insert( node, inData.distance, _HeapData() );
+//            if ( node != source )
+//                heap.Insert( node, inData.distance, _HeapData() );
             int maxDistance = 0;
             unsigned numTargets = 0;
 
