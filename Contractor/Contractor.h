@@ -44,7 +44,7 @@ class Contractor {
 private:
     struct _ContractorEdgeData {
         _ContractorEdgeData() :
-            distance(0), originalEdges(0), id(0), shortcut(0), forward(0), backward(0) {}
+            distance(0), originalEdges(0), id(0), shortcut(0), forward(0), backward(0), originalViaNodeID(false) {}
         _ContractorEdgeData( unsigned _distance, unsigned _originalEdges, unsigned _id, bool _shortcut, bool _forward, bool _backward) :
             distance(_distance), id(_id), originalEdges(std::min((unsigned)1<<28, _originalEdges) ), shortcut(_shortcut), forward(_forward), backward(_backward), originalViaNodeID(false) {}
         unsigned distance;
@@ -267,7 +267,7 @@ public:
         		
         		//Write dummy number of edges to temporary file
         		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
-        		initialFilePosition = temporaryEdgeStorage.tellp();
+        		long initialFilePosition = temporaryEdgeStorage.tellp();
         		unsigned numberOfTemporaryEdges = 0;
         		temporaryEdgeStorage.write((char*)&numberOfTemporaryEdges, sizeof(unsigned));
 
@@ -782,7 +782,6 @@ private:
     std::vector<_DynamicGraph::InputEdge> contractedEdges;
     std::string temporaryEdgeStorageFilename;
     std::vector<NodeID> oldNodeIDFromNewNodeIDMap;
-    long initialFilePosition;
 
     XORFastHash fastHash;
 };
