@@ -34,6 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/NodeCoords.h"
 #include "../typedefs.h"
 
 typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;

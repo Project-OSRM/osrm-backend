@@ -64,4 +64,6 @@ struct NodeCoords {
 	}
 };
 
+typedef NodeCoords<NodeID> NodeInfo;
+
 #endif //_NODE_COORDS_H

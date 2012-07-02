@@ -63,10 +63,4 @@ typedef unsigned int EdgeWeight;
 static const NodeID SPECIAL_NODEID = UINT_MAX;
 static const EdgeID SPECIAL_EDGEID = UINT_MAX;
 
-#include "DataStructures/NodeCoords.h"
-typedef NodeCoords<NodeID> NodeInfo;
-//#include "DataStructures/NodeInformationHelpDesk.h"
-//#include "Contractor/ContractionCleanup.h"
-//typedef ContractionCleanup::Edge::EdgeData EdgeData;
-
 #endif /* TYPEDEFS_H_ */
