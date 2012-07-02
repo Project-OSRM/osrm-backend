@@ -31,6 +31,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/shared_ptr.hpp>
 
+#include "TemporaryStorage.h"
+
 #include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
@@ -195,13 +197,15 @@ public:
 
         //Create temporary file
         
-        GetTemporaryFileName(temporaryEdgeStorageFilename);
+//        GetTemporaryFileName(temporaryEdgeStorageFilename);
+        temporaryStorageSlotID = TemporaryStorage::GetInstance().allocateSlot();
         std::cout << "contractor finished initalization" << std::endl;
     }
 
     ~Contractor() {
         //Delete temporary file
-        remove(temporaryEdgeStorageFilename.c_str());
+//        remove(temporaryEdgeStorageFilename.c_str());
+        TemporaryStorage::GetInstance().deallocateSlot(temporaryStorageSlotID);
     }
 
     void Run() {
@@ -264,12 +268,12 @@ public:
         			newNodePriority[newNodeID] = nodePriority[remainingNodes[newNodeID].first];
         			remainingNodes[newNodeID].first = newNodeID;
         		}
-        		
+        		TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
         		//Write dummy number of edges to temporary file
-        		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
-        		long initialFilePosition = temporaryEdgeStorage.tellp();
+//        		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
+        		long initialFilePosition = tempStorage.tell(temporaryStorageSlotID);
         		unsigned numberOfTemporaryEdges = 0;
-        		temporaryEdgeStorage.write((char*)&numberOfTemporaryEdges, sizeof(unsigned));
+        		tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
 
         		//walk over all nodes
         		for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
@@ -280,9 +284,9 @@ public:
         		        const NodeID target = _graph->GetTarget(currentEdge);
         		        if(UINT_MAX == newNodeIDFromOldNodeIDMap[i] ){
         		            //Save edges of this node w/o renumbering.
-        		            temporaryEdgeStorage.write((char*)&start,  sizeof(NodeID));
-        		            temporaryEdgeStorage.write((char*)&target, sizeof(NodeID));
-        		            temporaryEdgeStorage.write((char*)&data,   sizeof(_DynamicGraph::EdgeData));
+        		            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
+        		            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
+        		            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
         		            ++numberOfTemporaryEdges;
         		        }else {
                             //node is not yet contracted.
@@ -299,9 +303,9 @@ public:
         		    }
         		}
         		//Note the number of temporarily stored edges
-        		temporaryEdgeStorage.seekp(initialFilePosition);
-        		temporaryEdgeStorage.write((char*)&numberOfTemporaryEdges, sizeof(unsigned));
-        		temporaryEdgeStorage.close();
+        		tempStorage.seek(temporaryStorageSlotID, initialFilePosition);
+        		tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
+
 //        		INFO("Flushed " << numberOfTemporaryEdges << " edges to disk");
 
         		//Delete map from old NodeIDs to new ones.
@@ -485,19 +489,20 @@ public:
         std::vector<NodeID>().swap(oldNodeIDFromNewNodeIDMap);
         INFO("Loading temporary edges");
 
-        std::ifstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
+//        std::ifstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
+        TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
         //Also get the edges from temporary storage
         unsigned numberOfTemporaryEdges = 0;
-        temporaryEdgeStorage.read((char*)&numberOfTemporaryEdges, sizeof(unsigned));
+        tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
         //loads edges of graph before renumbering, no need for further numbering action.
         NodeID start;
         NodeID target;
         //edges.reserve(edges.size()+numberOfTemporaryEdges);
         _DynamicGraph::EdgeData data;
         for(unsigned i = 0; i < numberOfTemporaryEdges; ++i) {
-        	temporaryEdgeStorage.read((char*)&start,  sizeof(NodeID));
-        	temporaryEdgeStorage.read((char*)&target, sizeof(NodeID));
-        	temporaryEdgeStorage.read((char*)&data,   sizeof(_DynamicGraph::EdgeData));
+        	tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
+        	tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
+        	tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
         	Edge newEdge;
         	newEdge.source =  start;
         	newEdge.target = target;
@@ -508,7 +513,7 @@ public:
         	newEdge.data.backward = data.backward;
         	edges.push_back( newEdge );
         }
-        temporaryEdgeStorage.close();
+        tempStorage.deallocateSlot(temporaryStorageSlotID);
         INFO("CH has " << edges.size() << " edges");
     }
 
@@ -780,7 +785,8 @@ private:
 
     boost::shared_ptr<_DynamicGraph> _graph;
     std::vector<_DynamicGraph::InputEdge> contractedEdges;
-    std::string temporaryEdgeStorageFilename;
+//    std::string temporaryEdgeStorageFilename;
+    unsigned temporaryStorageSlotID;
     std::vector<NodeID> oldNodeIDFromNewNodeIDMap;
 
     XORFastHash fastHash;
