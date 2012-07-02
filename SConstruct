@@ -150,8 +150,8 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
 	print "zlib library or header not found. Exiting"
 	Exit(-1)
 #Check BOOST installation
-if not (conf.CheckBoost('1.41')):
-	print 'Boost version >= 1.41 needed'
+if not (conf.CheckBoost('1.44')):
+	print 'Boost version >= 1.44 needed'
 	Exit(-1);
 if not conf.CheckLibWithHeader('boost_thread', 'boost/thread.hpp', 'CXX'):
 	if not conf.CheckLibWithHeader('boost_thread-mt', 'boost/thread.hpp', 'CXX'):
@@ -177,6 +177,14 @@ if not conf.CheckLib('boost_system', language="C++"):
 		print "using boost -mt"
 		env.Append(CCFLAGS = ' -lboost_system-mt')
 		env.Append(LINKFLAGS = ' -lboost_system-mt')
+if not conf.CheckLib('boost_filesystem', language="C++"):
+	if not conf.CheckLib('boost_filesystem-mt', language="C++"):
+		print "boost_filesystem library not found. Exiting"
+		Exit(-1)
+	else:
+		print "using boost -mt"
+		env.Append(CCFLAGS = ' -lboost_filesystem-mt')
+		env.Append(LINKFLAGS = ' -lboost_filesystem-mt')
 if not conf.CheckCXXHeader('boost/archive/iterators/base64_from_binary.hpp'):
 	print "boost/archive/iterators/base64_from_binary.hpp not found. Exiting"
 	Exit(-1)
@@ -255,7 +263,7 @@ if sys.platform != 'darwin':
 	env.Append(LINKFLAGS = ['-fopenmp'])
 
 env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('Util/*.cpp')])
-env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", 'Contractor/EdgeBasedGraphFactory.cpp', Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
+env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", Glob('Contractor/*.cpp'), Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
 env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc'), Glob('Server/DataStructures/*.cpp')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
 env = conf.Finish()
 
