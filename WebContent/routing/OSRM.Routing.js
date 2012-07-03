@@ -146,7 +146,7 @@ draggingTimeout: function() {
 
 _buildCall: function() {
 	var source = OSRM.DEFAULTS.HOST_ROUTING_URL;
-	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp&geomformat=cmp';	
+	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp';	
 	if(OSRM.G.markers.checksum)
 		source += '&checksum=' + OSRM.G.markers.checksum;
 	var markers = OSRM.G.markers.route;
