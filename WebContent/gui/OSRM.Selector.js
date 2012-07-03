@@ -44,8 +44,8 @@ selectorInit: function(id, options, selected, onchange_fct) {
 	myspan.id = "styled-select-" + select.id;
 	myspan.appendChild(textnode);
 	select.parentNode.insertBefore(myspan, select);
-	myspan.style.width = (select.clientWidth-2)+"px";
-	myspan.style.height = (select.clientHeight)+"px";
+	myspan.style.width = (select.offsetWidth-2)+"px";
+	myspan.style.height = (select.offsetHeight)+"px";	// clientHeight gives the height of the opened dropbox!
 },
 
 // required behaviour of selector on change to switch shown name
