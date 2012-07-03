@@ -71,6 +71,8 @@ showRoute: function(response) {
 		OSRM.Routing._snapRoute();
 	}
 	OSRM.Routing._updateHints(response);
+	var bounds = new L.LatLngBounds( OSRM.G.route._current_route.getPositions() );
+	OSRM.G.map.setViewBoundsUI(bounds);	
 },
 showRoute_Dragging: function(response) {
  	if(!response)
