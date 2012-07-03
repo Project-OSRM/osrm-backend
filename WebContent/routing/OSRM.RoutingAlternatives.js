@@ -26,9 +26,7 @@ OSRM.RoutingAlternatives = {
 // data of gui buttons for alternativess
 _buttons: [ 
 	{id:"gui-a", label:"A"},
-	{id:"gui-b", label:"B"},
-	{id:"gui-c", label:"C"},
-	{id:"gui-d", label:"D"}
+	{id:"gui-b", label:"B"}
 ],
 
 
@@ -36,21 +34,20 @@ _buttons: [
 prepare: function(response) {
 	// store basic information
 	OSRM.G.alternative_count = response.alternative_geometries.length + 1;
-	OSRM.G.alternative_active = 0;
+	OSRM.G.active_alternative = 0;
 	
 	// do nothing if there is no alternative
-	if( OSRM.G.alternative_count == 1 )
-		return;
+//	if( OSRM.G.alternative_count == 1 )
+//		return;
 
 	// move best route to alternative array
-	console.log("prepare");
 	var the_response = OSRM.G.response;
 	the_response.alternative_geometries.unshift( response.route_geometry );
 	the_response.alternative_instructions.unshift( response.route_instructions );
 	the_response.alternative_summaries.unshift( response.route_summary );
 	
 	// add alternative GUI
-	OSRM.RoutingAlternatives._addGUI();
+	OSRM.RoutingAlternatives._drawGUI();
 },
 prepare_Redraw: function(response) {
 	// do nothing if there is no alternative
@@ -68,29 +65,29 @@ prepare_Redraw: function(response) {
 	the_response.alternative_summaries.unshift( response.route_summary );	
 
 	// switch data
-	the_response.route_geometry = the_response.alternative_geometries[OSRM.G.alternative_active];
-	the_response.route_instructions = the_response.alternative_instructions[OSRM.G.alternative_active];
-	the_response.route_summary = the_response.alternative_summaries[OSRM.G.alternative_active];
+	the_response.route_geometry = the_response.alternative_geometries[OSRM.G.active_alternative];
+	the_response.route_instructions = the_response.alternative_instructions[OSRM.G.active_alternative];
+	the_response.route_summary = the_response.alternative_summaries[OSRM.G.active_alternative];
 },
 
-// press one of the buttons
-press: function(button_id) {
+// switch active alternative and redraw buttons accordingly
+setActive: function(button_id) {
 	// switch active alternative
-	OSRM.G.alternative_active = button_id;
+	OSRM.G.active_alternative = button_id;
 	
-	// redraw buttons
+	// redraw clickable buttons
 	var buttons = OSRM.RoutingAlternatives._buttons;
 	for(var i=0, size=OSRM.G.alternative_count; i<size; i++) {
 		document.getElementById( buttons[i].id ).className = (button_id == i) ? "button-pressed top-right-button" : "button top-right-button";
 	}
+	// do nothing for non-clickable buttons
 },
 
 // mouse events on buttons
 _click: function(button_id) {
-	console.log("click "+button_id);	
-	if( OSRM.G.alternative_active == button_id )
+	if( OSRM.G.active_alternative == button_id )
 		return;
-	OSRM.RoutingAlternatives.press(button_id);
+	OSRM.RoutingAlternatives.setActive(button_id);
 	OSRM.G.route.hideAlternativeRoute();
 	
 	// switch data
@@ -103,40 +100,45 @@ _click: function(button_id) {
 	OSRM.RoutingGeometry.show(the_response);
 	OSRM.RoutingNoNames.show(the_response);
 	OSRM.RoutingDescription.show(the_response);
-	OSRM.RoutingAlternatives._addGUI();
+	OSRM.RoutingAlternatives._drawGUI();
 },
 _mouseover: function(button_id) {
-	console.log("over "+button_id);
-	if( OSRM.G.alternative_active == button_id )
+	if( OSRM.G.active_alternative == button_id )
 		return;
 
 	var geometry = OSRM.RoutingGeometry._decode( OSRM.G.response.alternative_geometries[button_id], 5);
 	OSRM.G.route.showAlternativeRoute(geometry);
 },
 _mouseout: function(button_id) {
-	console.log("out "+button_id);
-	if( OSRM.G.alternative_active == button_id )
+	if( OSRM.G.active_alternative == button_id )
 		return;
 	
 	OSRM.G.route.hideAlternativeRoute();		
 },
 
-// add alternatives
-_addGUI: function() {
+// draw alternative GUI
+_drawGUI: function() {
 	var buttons = OSRM.RoutingAlternatives._buttons;
+	// draw clickable buttons
 	for(var i=0, size=OSRM.G.alternative_count; i<size; i++) {
 		var distance = OSRM.Utils.toHumanDistance(OSRM.G.response.alternative_summaries[i].total_distance);
 		var time = OSRM.Utils.toHumanTime(OSRM.G.response.alternative_summaries[i].total_time);
 		var tooltip = OSRM.loc("DISTANCE")+":"+distance+" "+OSRM.loc("DURATION")+":"+time;
-		var data = '<a class="button top-right-button" id="'+buttons[i].id+'" title="'+tooltip+'">'+buttons[i].label+'</a>';
+		var buttonClass = (i == OSRM.G.active_alternative) ? "button-pressed" : "button";
+		var data = '<a class="'+buttonClass+' top-right-button" id="'+buttons[i].id+'" title="'+tooltip+'">'+buttons[i].label+'</a>';
 		document.getElementById('information-box-header').innerHTML = data + document.getElementById('information-box-header').innerHTML;
 	}
+	// draw non-clickable buttons
+	for(var i=OSRM.G.alternative_count, size=buttons.length; i<size; ++i) {
+		var data = '<a class="button-inactive top-right-button" id="'+buttons[i].id+'">'+buttons[i].label+'</a>';
+		document.getElementById('information-box-header').innerHTML = data + document.getElementById('information-box-header').innerHTML;		
+	}
+	// add events
 	for(var i=0, size=OSRM.G.alternative_count; i<size; i++) {
 		document.getElementById(buttons[i].id).onclick = function (button_id) { return function() {OSRM.RoutingAlternatives._click(button_id); }; }(i) ;
 		document.getElementById(buttons[i].id).onmouseover = function (button_id) { return function() {OSRM.RoutingAlternatives._mouseover(button_id); }; } (i);
 		document.getElementById(buttons[i].id).onmouseout = function (button_id) { return function() {OSRM.RoutingAlternatives._mouseout(button_id); }; } (i);
 	}
-	OSRM.RoutingAlternatives.press( OSRM.G.alternative_active );
 }
 
 };
