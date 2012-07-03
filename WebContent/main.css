@@ -589,23 +589,6 @@ input[type=checkbox],
 	min-height:10px;
 }
 
-.not-selectable
-{
-	cursor:default;
-	-moz-user-select: -moz-none;  
-	-webkit-user-select: none;  
-	-ms-user-select: none;
-	user-select: none;
-}
-.text-selectable
-{
-	cursor:default;
-	-moz-user-select: text;  
-	-webkit-user-select: text;  
-	-ms-user-select: text;
-	user-select: text;
-}
-
 /* ------------------------------------------------------------------------ */
 
 /* table styles */

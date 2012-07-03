@@ -29,7 +29,7 @@ OSRM.GUIBoxHandle = function( box_name, side, css, transitionStartFct, transitio
 	// create handle DOM elements
 	var wrapper = document.createElement('div');
 	wrapper.id = box_name + '-handle-wrapper';
-	wrapper.className = 'not-selectable box-wrapper box-handle-wrapper-'+side;
+	wrapper.className = 'box-wrapper box-handle-wrapper-'+side;
 	wrapper.style.cssText += css;
 	var content = document.createElement('div');
 	content.id = box_name + '-handle-content';

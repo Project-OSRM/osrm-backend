@@ -46,7 +46,7 @@ OSRM.debug.init = function() {
 	
 	var clear = document.createElement('a');
 	clear.id = "OSRM.debug-clear";
-	clear.className = "button not-selectable";
+	clear.className = "button";
 	clear.innerHTML = "clear";
 	clear.onclick = OSRM.debug.clear;
 
