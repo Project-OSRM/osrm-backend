@@ -23,34 +23,50 @@ OSRM.GUI.extend( {
 	
 // notifications
 notifications: [
-	{	time:30000,
+	{	time:	30000,
 		header: "[Tooltip] Clicking and Dragging",
 		body: 	"You can simply click on the map to set source and target markers. " +
 				"Then you can continue and drag the markers over the map or create. " +
 				"<br/><br/>" +
 				"You can even create additional markers by dragging them off of the main route." + 
-				"Markers can be simply deleted by clicking on them."
+				"Markers can be simply deleted by clicking on them.",
+		_class:	"Routing",
+		_func:	"getRoute_Dragging"
 	}
 ],
 		
-// init
+// initialize notification timers
 init: function() {
 	// init variables
 	var notifications = OSRM.GUI.notifications;	
 	OSRM.G.notification_timers = new Array( notifications.length );
 
 	// init timers
-	for( var i=0, iEnd=notifications.length; i<iEnd; ++i)
-		OSRM.G.notification_timers[i] = setTimeout( function(id){ return function(){ OSRM.GUI.timeout(id);}; }(i), notifications[i].time);
+	for( var i=0, iEnd=notifications.length; i<iEnd; ++i) {
+		notifications[i].timer = setTimeout( function(id){ return function(){ OSRM.GUI.notification_timeout(id);}; }(i), notifications[i].time);
+
+		notifications[i].old_function = OSRM[notifications[i]._class][notifications[i]._func];
+		OSRM[notifications[i]._class][notifications[i]._func] = function(id){ return function(){ OSRM.GUI.notification_wrapper(id);}; }(i);
+	}
 },
 
-//
-timeout: function(id) {
+// wrapper function to clear timeouts
+notification_wrapper: function(id) {
+	var notifications = OSRM.GUI.notifications;
+	
+	clearTimeout( notifications[id].timer );
+	notifications[id].old_function();
+	OSRM[notifications[id]._class][notifications[id]._func] = notifications[id].old_function;	
+},
+
+// show notification message after timeout expired
+notification_timeout: function(id) {
 	OSRM.notify( OSRM.GUI.notifications[id].header, OSRM.GUI.notifications[id].body, true );
 },
 
-clear_timeout: function(id) {
-	clearTimeout( OSRM.G.notification_timers[id] );	
+// clear notification timeout
+notification_clear: function(id) {
+	clearTimeout( OSRM.GUI.notifications[id].timer );
 }
 
 });
