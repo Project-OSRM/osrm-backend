@@ -23,44 +23,65 @@ OSRM.GUI.extend( {
 	
 // notifications
 notifications: [
-	{	time:	30000,
-		header: "[Tooltip] Clicking and Dragging",
-		body: 	"You can simply click on the map to set source and target markers. " +
-				"Then you can continue and drag the markers over the map or create. " +
-				"<br/><br/>" +
-				"You can even create additional markers by dragging them off of the main route." + 
-				"Markers can be simply deleted by clicking on them.",
-		_class:	"Routing",
-		_func:	"getRoute_Dragging"
-	}
+	{	time:		7000,
+		header: 	"[Tooltip] Clicking and Dragging",
+		body: 		"You can simply click on the map to set source and target markers. " +
+					"Then you can continue and drag the markers over the map or create. " +
+					"<br/><br/>" +
+					"You can even create additional markers by dragging them off of the main route." + 
+					"Markers can be simply deleted by clicking on them.",
+		_classes:	["Routing"],
+		_funcs:		["getRoute_Dragging"]
+	},
+	{	time:		4000,
+		header: 	"[Tooltip] Clicking and Dragging 2",
+		body: 		"You can simply click on the map to set source and target markers. " +
+					"Then you can continue and drag the markers over the map or create. " +
+					"<br/><br/>" +
+					"You can even create additional markers by dragging them off of the main route." + 
+					"Markers can be simply deleted by clicking on them.",
+		_classes:	["Routing"],
+		_funcs:		["getRoute_Dragging"]
+	}	
 ],
 		
 // initialize notification timers
 init: function() {
-	// init variables
+	// init timers
 	var notifications = OSRM.GUI.notifications;	
 	OSRM.G.notification_timers = new Array( notifications.length );
-
-	// init timers
 	for( var i=0, iEnd=notifications.length; i<iEnd; ++i) {
+		// start timer
 		notifications[i].timer = setTimeout( function(id){ return function(){ OSRM.GUI.notification_timeout(id);}; }(i), notifications[i].time);
 
-		notifications[i].old_function = OSRM[notifications[i]._class][notifications[i]._func];
-		OSRM[notifications[i]._class][notifications[i]._func] = function(id){ return function(){ OSRM.GUI.notification_wrapper(id);}; }(i);
+		// create wrapper functions for function calls that will stop the timer
+		notifications[i].old_functions = [];
+		for(var j=0, jEnd=notifications[i]._classes.length; j<jEnd;j++) {
+			notifications[i].old_functions[j] = OSRM[notifications[i]._classes[j]][notifications[i]._funcs[j]];
+			OSRM[notifications[i]._classes[j]][notifications[i]._funcs[j]] = function(id,id2){ return function(){ OSRM.GUI.notification_wrapper(id,id2);}; }(i,j);
+		}
 	}
 },
 
 // wrapper function to clear timeouts
-notification_wrapper: function(id) {
+notification_wrapper: function(id, id2) {
 	var notifications = OSRM.GUI.notifications;
 	
 	clearTimeout( notifications[id].timer );
-	notifications[id].old_function();
-	OSRM[notifications[id]._class][notifications[id]._func] = notifications[id].old_function;	
+	notifications[id].old_functions[id2]();
+	for(var j=0, jEnd=notifications[id]._classes.length; j<jEnd;j++) {
+		OSRM[notifications[id]._classes[j]][notifications[id]._funcs[j]] = notifications[id].old_functions[j];
+	}
 },
 
 // show notification message after timeout expired
 notification_timeout: function(id) {
+	// if a notification is already shown, restart timer
+	if( OSRM.isNotifyVisible() ) {
+		OSRM.GUI.notifications[id].timer = setTimeout( function(id){ return function(){ OSRM.GUI.notification_timeout(id);}; }(id), OSRM.GUI.notifications[id].time);
+		return;
+	}
+	// show notification
 	OSRM.notify( OSRM.GUI.notifications[id].header, OSRM.GUI.notifications[id].body, true );
 },
 

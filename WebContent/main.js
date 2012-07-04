@@ -63,6 +63,12 @@ OSRM.prefetchImages = function() {
 		              	{id:'restore',							url:'images/restore.png'},
 		              	{id:'restore_active',					url:'images/restore_active.png'},
 		              	{id:'restore_hover',					url:'images/restore_hover.png'},
+		              	{id:'up',								url:'images/up.png'},
+		              	{id:'up_active',						url:'images/up_active.png'},
+		              	{id:'up_hover',							url:'images/up_hover.png'},		
+		              	{id:'down',								url:'images/down.png'},
+		              	{id:'down_active',						url:'images/down_active.png'},
+		              	{id:'down_hover',						url:'images/down_hover.png'},
 		              	{id:'config',							url:'images/config.png'},
 		              	{id:'config_active',					url:'images/config_active.png'},
 		              	{id:'config_hover',						url:'images/config_hover.png'},		              	
@@ -135,6 +141,14 @@ OSRM.prefetchCSSIcons = function() {
 	                	{ id:'.cancel-marker',				image_id:'cancel'},
 	                	{ id:'.cancel-marker:hover',		image_id:'cancel_hover'},
 	                	{ id:'.cancel-marker:active',		image_id:'cancel_active'},
+	                	
+	                	{ id:'.up-marker',					image_id:'up'},
+	                	{ id:'.up-marker:hover',			image_id:'up_hover'},
+	                	{ id:'.up-marker:active',			image_id:'up_active'},
+	                	
+	                	{ id:'.down-marker',				image_id:'down'},
+	                	{ id:'.down-marker:hover',			image_id:'down_hover'},
+	                	{ id:'.down-marker:active',			image_id:'down_active'},
 	                	
 	                	{ id:'#input-mask-header',			image_id:'osrm-logo'},
 	                	{ id:'.styled-select',				image_id:'selector'},
@@ -270,25 +284,56 @@ OSRM.parseParameters = function(){
 // check whether to activate maintenance mode
 OSRM.inMaintenance = function(){
 	if( OSRM.DEFAULTS.MAINTENANCE == true ) {
-		OSRM.notify( OSRM.DEFAULTS.MAINTENANCE_HEADER, OSRM.DEFAULTS.MAINTENANCE_TEXT, false);
+		OSRM.xnotify( OSRM.DEFAULTS.MAINTENANCE_HEADER, OSRM.DEFAULTS.MAINTENANCE_TEXT, false);
 		return true;
 	}
 	return false;
 };
 
 
-//general notification box
-OSRM.notify = function( header, text, closable ){
-	document.getElementById('notification-blanket').style.display = "block";
+// important notifications
+OSRM.xnotify = function( header, text, closable ){
+	document.getElementById('important-notification-blanket').style.display = "block";
+	document.getElementById('important-notification-label').innerHTML = header;
+	document.getElementById('important-notification-box').innerHTML = text;
+	if( closable )
+		document.getElementById('important-notification-toggle').onclick = OSRM.xdenotify;
+	else
+		document.getElementById('important-notification-toggle').style.display = "none";
+};
+OSRM.xdenotify = function() {
+	document.getElementById('important-notification-blanket').style.display = "none";
+};
+
+// normal notification box
+OSRM.notify = function( header, text ){
+	document.getElementById('notification-wrapper').style.display = "block";
 	document.getElementById('notification-label').innerHTML = header;
 	document.getElementById('notification-box').innerHTML = text;
-	if( closable )
-		document.getElementById('notification-toggle').onclick = OSRM.denotify;
-	else
-		document.getElementById('notification-toggle').style.display = "none";
-},
+	document.getElementById('notification-box').style.display = "block";		// trick to always obtain a closed notification box
+	OSRM.resize();
+	
+	document.getElementById('notification-toggle').onclick = OSRM.denotify;
+	document.getElementById('notification-resize').onclick = OSRM.resize;
+};
+OSRM.resize = function() {
+	if( document.getElementById('notification-box').style.display == "none" ) {	
+		document.getElementById('notification-content').style.height = "200px";
+		document.getElementById('notification-wrapper').style.height = "220px";
+		document.getElementById('notification-box').style.display = "block";
+		document.getElementById('notification-resize').className = "iconic-button up-marker top-right-button";
+	} else {
+		document.getElementById('notification-content').style.height = "18px";
+		document.getElementById('notification-wrapper').style.height = "38px";
+		document.getElementById('notification-box').style.display = "none";
+		document.getElementById('notification-resize').className = "iconic-button down-marker top-right-button";
+	}
+};
 OSRM.denotify = function() {
-	document.getElementById('notification-blanket').style.display = "none";
+	document.getElementById('notification-wrapper').style.display = "none";
+};
+OSRM.isNotifyVisible = function() {
+	return document.getElementById('notification-wrapper').style.display == "block"; 
 };
 
 

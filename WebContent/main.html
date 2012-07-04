@@ -87,17 +87,31 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!-- map -->
 <div id="map"></div>
 
-<!-- notification -->
-<div id="notification-blanket">
+<!-- important notification -->
+<div id="important-notification-blanket">
+<div id="important-notification-wrapper" class="box-wrapper not-selectable">
+<div id="important-notification-content" class="box-content">
+	<!-- header -->
+	<div id="important-notification-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="important-notification-label" class="box-label">Notification</div>
+
+	<!-- notification text -->
+	<div id="important-notification-box"></div>
+</div>
+</div>
+</div>
+
+<!-- normal notification -->
 <div id="notification-wrapper" class="box-wrapper not-selectable">
 <div id="notification-content" class="box-content">
 	<!-- header -->
 	<div id="notification-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div class="quad top-right-button"></div>
+	<div id="notification-resize" class="iconic-button cancel-marker top-right-button"></div>
 	<div id="notification-label" class="box-label">Notification</div>
 
 	<!-- notification text -->
 	<div id="notification-box"></div>
-</div>
 </div>
 </div>
 

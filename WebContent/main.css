@@ -425,7 +425,7 @@ html, body {
 	width:390px;
 	height:80px;	
 }
-#notification-wrapper
+#important-notification-wrapper
 {
 	width:600px;
 	height:170px;
@@ -434,12 +434,12 @@ html, body {
 	margin-top:-85px;
 	margin-left:-300px;
 }
-#notification-content
+#important-notification-content
 {
 	width:580px;
 	height:150px;
 }
-#notification-blanket
+#important-notification-blanket
 {
 	position:absolute;
 	top:0px;
@@ -450,6 +450,20 @@ html, body {
 	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3f000000, endColorstr=#3f000000);
 	z-index:100;
 	display:none;
+}
+#notification-wrapper
+{
+	width:700px;
+	height:38px;
+	top: 10px;
+	left: 50%;
+	margin-left:-350px;
+	display: none;	
+}
+#notification-content
+{
+	width:680px;
+	height:18px;
 }
 
 
