@@ -42,11 +42,14 @@ init: function() {
 	}
 	
 	// generate selectors
-	OSRM.GUI.selectorInit("gui-language-toggle", options, selected, OSRM.Localization.setLanguage);
-	OSRM.GUI.selectorInit("gui-language-2-toggle", options_2, selected, OSRM.Localization.setLanguage);
+	OSRM.GUI.selectorInit("gui-language-toggle", options, selected, OSRM.Localization.setLanguageWrapper);
+	OSRM.GUI.selectorInit("gui-language-2-toggle", options_2, selected, OSRM.Localization.setLanguageWrapper);
 	
 	// set default language
 	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
+},
+setLanguageWrapper: function(language) {
+	OSRM.Localization.setLanguage(language);
 },
 setLanguage: function(language) {
 	// change value of both language selectors
