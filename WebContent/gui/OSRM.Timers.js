@@ -25,23 +25,30 @@ OSRM.GUI.extend( {
 notifications: [
 	{	time:		4000,
 		header: 	"[Tooltip] Localization",
-		body: 		"You can use the pulldown menu in the upper left corner to select your favorite language." +
+		body: 		"You can use the pulldown menu in the upper left corner to select your favorite language. " +
 					"<br/><br/>" +
-					"If you cannot find your preferred language, you can help us to provide additionals translations!",
-		_classes:	[],
-		_funcs:		[]
+					"Don't despair if you cannot find your language of choice. " +
+					"If you want, you can help to provide additional translations! " +
+					"Visit <a href='https://github.com/DennisSchiefer/Project-OSRM-Web'>here</a> for more information.",
+		_classes:	["Localization"],
+		_funcs:		["setLanguageWrapper"]
 	},                
 	{	time:		6000,
 		header: 	"[Tooltip] Clicking to set markers",
-		body: 		"You can simply click on the map to set a source or target marker. " +
-					"When you click on a marker again, it will be deleted.",
+		body:		"You can click on the map with the left mouse button to set a source marker (green) or a target marker (red), " +
+					"if the source marker already exists. " +
+					"The address of the selected location will be displayed in the boxes to the left. " + 
+					"<br/><br/>" +
+					"You can delete a marker by clicking on it again with the left mouse button.",
 		_classes:	["Map"],
 		_funcs:		["click"]
 	},
 	{	time:		8000,
 		header: 	"[Tooltip] Dragging markers",
-		body: 		"You can drag a marker over the map and get instantanous route updates. " +
-					"You can even create additional markers by dragging them off of the main route.",
+		body:		"You can drag a marker by clicking on it with the left mouse button and holding the button pressed. " +
+					"Then you can move the marker around the map and the route will be updated instantaneously. " +
+					"<br/><br/>" +
+					"You can even create additional markers by dragging them off of the main route! ",
 		_classes:	["Routing"],
 		_funcs:		["getRoute_Dragging"]
 	}
@@ -66,11 +73,13 @@ init: function() {
 },
 
 // wrapper function to clear timeouts
-notification_wrapper: function(id, id2, params) {
+notification_wrapper: function(id, id2) {
 	var notifications = OSRM.GUI.notifications;
 	
 	clearTimeout( notifications[id].timer );
-	notifications[id].old_functions[id2](params);
+	//notifications[id].old_functions[id2](params);
+	var args = Array.prototype.slice.call(arguments, 2);	
+	notifications[id].old_functions[id2].apply(this, args);
 	for(var j=0, jEnd=notifications[id]._classes.length; j<jEnd;j++) {
 		OSRM[notifications[id]._classes[j]][notifications[id]._funcs[j]] = notifications[id].old_functions[j];
 	}
@@ -85,11 +94,9 @@ notification_timeout: function(id) {
 	}
 	// show notification
 	OSRM.notify( OSRM.GUI.notifications[id].header, OSRM.GUI.notifications[id].body, true );
-},
-
-// clear notification timeout
-notification_clear: function(id) {
-	clearTimeout( OSRM.GUI.notifications[id].timer );
+	for(var j=0, jEnd=notifications[id]._classes.length; j<jEnd;j++) {
+		OSRM[notifications[id]._classes[j]][notifications[id]._funcs[j]] = notifications[id].old_functions[j];
+	}
 }
 
 });

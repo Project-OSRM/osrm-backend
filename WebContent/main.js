@@ -312,21 +312,22 @@ OSRM.notify = function( header, text ){
 	document.getElementById('notification-label').innerHTML = header;
 	document.getElementById('notification-box').innerHTML = text;
 	document.getElementById('notification-box').style.display = "block";		// trick to always obtain a closed notification box
-	OSRM.resize();
+	OSRM.resizeNotify();
 	
 	document.getElementById('notification-toggle').onclick = OSRM.denotify;
-	document.getElementById('notification-resize').onclick = OSRM.resize;
+	document.getElementById('notification-resize').onclick = OSRM.resizeNotify;
 };
-OSRM.resize = function() {
+OSRM.resizeNotify = function() {
 	if( document.getElementById('notification-box').style.display == "none" ) {	
-		document.getElementById('notification-content').style.height = "200px";
-		document.getElementById('notification-wrapper').style.height = "220px";
 		document.getElementById('notification-box').style.display = "block";
+		var height = document.getElementById('notification-box').clientHeight;
+		document.getElementById('notification-content').style.height = (height + 28) + "px";
+		document.getElementById('notification-wrapper').style.height = (height + 48) + "px";
 		document.getElementById('notification-resize').className = "iconic-button up-marker top-right-button";
 	} else {
-		document.getElementById('notification-content').style.height = "18px";
-		document.getElementById('notification-wrapper').style.height = "38px";
 		document.getElementById('notification-box').style.display = "none";
+		document.getElementById('notification-content').style.height = "18px";
+		document.getElementById('notification-wrapper').style.height = "38px";		
 		document.getElementById('notification-resize').className = "iconic-button down-marker top-right-button";
 	}
 };
