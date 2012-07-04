@@ -305,6 +305,7 @@ OSRM.xdenotify = function() {
 	document.getElementById('important-notification-blanket').style.display = "none";
 };
 
+
 // normal notification box
 OSRM.notify = function( header, text ){
 	document.getElementById('notification-wrapper').style.display = "block";

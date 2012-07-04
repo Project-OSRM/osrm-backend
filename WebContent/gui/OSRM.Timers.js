@@ -23,26 +23,28 @@ OSRM.GUI.extend( {
 	
 // notifications
 notifications: [
-	{	time:		7000,
-		header: 	"[Tooltip] Clicking and Dragging",
-		body: 		"You can simply click on the map to set source and target markers. " +
-					"Then you can continue and drag the markers over the map or create. " +
-					"<br/><br/>" +
-					"You can even create additional markers by dragging them off of the main route." + 
-					"Markers can be simply deleted by clicking on them.",
-		_classes:	["Routing"],
-		_funcs:		["getRoute_Dragging"]
-	},
 	{	time:		4000,
-		header: 	"[Tooltip] Clicking and Dragging 2",
-		body: 		"You can simply click on the map to set source and target markers. " +
-					"Then you can continue and drag the markers over the map or create. " +
+		header: 	"[Tooltip] Localization",
+		body: 		"You can use the pulldown menu in the upper left corner to select your favorite language." +
 					"<br/><br/>" +
-					"You can even create additional markers by dragging them off of the main route." + 
-					"Markers can be simply deleted by clicking on them.",
+					"If you cannot find your preferred language, you can help us to provide additionals translations!",
+		_classes:	[],
+		_funcs:		[]
+	},                
+	{	time:		6000,
+		header: 	"[Tooltip] Clicking to set markers",
+		body: 		"You can simply click on the map to set a source or target marker. " +
+					"When you click on a marker again, it will be deleted.",
+		_classes:	["Map"],
+		_funcs:		["click"]
+	},
+	{	time:		8000,
+		header: 	"[Tooltip] Dragging markers",
+		body: 		"You can drag a marker over the map and get instantanous route updates. " +
+					"You can even create additional markers by dragging them off of the main route.",
 		_classes:	["Routing"],
 		_funcs:		["getRoute_Dragging"]
-	}	
+	}
 ],
 		
 // initialize notification timers
@@ -58,17 +60,17 @@ init: function() {
 		notifications[i].old_functions = [];
 		for(var j=0, jEnd=notifications[i]._classes.length; j<jEnd;j++) {
 			notifications[i].old_functions[j] = OSRM[notifications[i]._classes[j]][notifications[i]._funcs[j]];
-			OSRM[notifications[i]._classes[j]][notifications[i]._funcs[j]] = function(id,id2){ return function(){ OSRM.GUI.notification_wrapper(id,id2);}; }(i,j);
+			OSRM[notifications[i]._classes[j]][notifications[i]._funcs[j]] = function(id,id2){ return function(params){ OSRM.GUI.notification_wrapper(id,id2,params);}; }(i,j);
 		}
 	}
 },
 
 // wrapper function to clear timeouts
-notification_wrapper: function(id, id2) {
+notification_wrapper: function(id, id2, params) {
 	var notifications = OSRM.GUI.notifications;
 	
 	clearTimeout( notifications[id].timer );
-	notifications[id].old_functions[id2]();
+	notifications[id].old_functions[id2](params);
 	for(var j=0, jEnd=notifications[id]._classes.length; j<jEnd;j++) {
 		OSRM[notifications[id]._classes[j]][notifications[id]._funcs[j]] = notifications[id].old_functions[j];
 	}
