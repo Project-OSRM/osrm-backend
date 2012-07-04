@@ -270,14 +270,27 @@ OSRM.parseParameters = function(){
 // check whether to activate maintenance mode
 OSRM.inMaintenance = function(){
 	if( OSRM.DEFAULTS.MAINTENANCE == true ) {
-		document.getElementById('notification-blanket').style.display = "block";
-		document.getElementById('notification-label').innerHTML = OSRM.DEFAULTS.MAINTENANCE_HEADER;
-		document.getElementById('notification-box').innerHTML = OSRM.DEFAULTS.MAINTENANCE_TEXT;
-		document.getElementById('notification-toggle').style.display = "none";
+		OSRM.notify( OSRM.DEFAULTS.MAINTENANCE_HEADER, OSRM.DEFAULTS.MAINTENANCE_TEXT, false);
 		return true;
 	}
 	return false;
 };
+
+
+//general notification box
+OSRM.notify = function( header, text, closable ){
+	document.getElementById('notification-blanket').style.display = "block";
+	document.getElementById('notification-label').innerHTML = header;
+	document.getElementById('notification-box').innerHTML = text;
+	if( closable )
+		document.getElementById('notification-toggle').onclick = OSRM.denotify;
+	else
+		document.getElementById('notification-toggle').style.display = "none";
+},
+OSRM.denotify = function() {
+	document.getElementById('notification-blanket').style.display = "none";
+};
+
 
 // onload event
 OSRM.Browser.onLoadHandler( OSRM.init );
