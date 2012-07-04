@@ -43,7 +43,7 @@ call: function(marker_id, query) {
 	}
 	
 	// build basic request for geocoder
-	var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json&json_callback=%jsonp" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&accept-language="+OSRM.Localization.current_language+"&q=" + query;
+	var call = OSRM.DEFAULTS.HOST_GEOCODER_URL + "?format=json&json_callback=%jsonp" + OSRM.DEFAULTS.GEOCODER_BOUNDS + "&accept-language="+OSRM.Localization.current_language+"&limit=30&q=" + query;
 	// prioritize results in currently shown mapview
 	var bounds = OSRM.G.map.getBounds();
 	call += "&viewbox=" + bounds._southWest.lat + "," + bounds._northEast.lng + "," + bounds._northEast.lat + "," + bounds._southWest.lng;
@@ -79,6 +79,8 @@ _showResults: function(response, parameters) {
 		OSRM.Geocoder._showResults_Empty(parameters);
 		return;
 	}
+	console.log(response.length);
+	console.log(response);
 	
 	// show first result
 	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
