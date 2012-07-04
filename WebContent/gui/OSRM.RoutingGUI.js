@@ -59,6 +59,8 @@ resetRouting: function() {
 	document.getElementById('gui-input-source').value = "";
 	document.getElementById('gui-input-target').value = "";
 	
+	OSRM.RoutingAlternatives.reset();
+	
 	OSRM.G.route.reset();
 	OSRM.G.markers.reset();
 	
@@ -74,6 +76,8 @@ reverseRouting: function() {
 	var tmp = document.getElementById("gui-input-source").value;
 	document.getElementById("gui-input-source").value = document.getElementById("gui-input-target").value;
 	document.getElementById("gui-input-target").value = tmp;
+	
+	OSRM.RoutingAlternatives.reset();
 	
 	// recompute route if needed
 	if( OSRM.G.route.isShown() ) {
@@ -102,6 +106,8 @@ showMarker: function(marker_id) {
 
 // changed: any inputbox (is called when enter is pressed [after] or focus is lost [before])
 inputChanged: function(marker_id) {
+	OSRM.RoutingAlternatives.reset();
+	
 	if( marker_id == OSRM.C.SOURCE_LABEL)	
 		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('gui-input-source').value);
 	else if( marker_id == OSRM.C.TARGET_LABEL)
@@ -143,6 +149,8 @@ deleteMarker: function(marker_id) {
 		id = OSRM.G.markers.route.length-1;
 	if( id == null)
 		return;
+	
+	OSRM.RoutingAlternatives.reset();
 	
 	OSRM.G.markers.removeMarker( id );
 	OSRM.Routing.getRoute();

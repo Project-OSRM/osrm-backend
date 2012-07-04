@@ -30,6 +30,33 @@ _buttons: [
 ],
 
 
+// reset stored values
+reset: function() {
+	OSRM.G.active_alternative = 0;
+	OSRM.G.alternative_count = 0;
+},
+
+// restructure response data  
+init: function(response) {
+	// move best route to alternative array
+	var the_response = OSRM.G.response;
+	the_response.alternative_geometries.unshift( response.route_geometry );
+	the_response.alternative_instructions.unshift( response.route_instructions );
+	the_response.alternative_summaries.unshift( response.route_summary );
+	
+	// update basic information
+	OSRM.G.alternative_count = response.alternative_geometries.length;
+	if( OSRM.G.active_alternative == undefined )
+		OSRM.G.active_alternative = 0;
+	if( OSRM.G.active_alternative > OSRM.G.alternative_count - 1 )
+		OSRM.G.active_alternative = 0;
+	
+	// switch data
+	the_response.route_geometry = the_response.alternative_geometries[OSRM.G.active_alternative];
+	the_response.route_instructions = the_response.alternative_instructions[OSRM.G.active_alternative];
+	the_response.route_summary = the_response.alternative_summaries[OSRM.G.active_alternative];	
+},
+
 // prepare using alternatives
 prepare: function(response) {
 	// store basic information

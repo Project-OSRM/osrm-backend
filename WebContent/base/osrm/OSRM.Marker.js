@@ -81,6 +81,8 @@ OSRM.RouteMarker = function ( label, style, position ) {
 OSRM.inheritFrom( OSRM.RouteMarker, OSRM.Marker );
 OSRM.extend( OSRM.RouteMarker, {
 onClick: function(e) {
+	OSRM.RoutingAlternatives.reset();
+	
 	for( var i=0; i<OSRM.G.markers.route.length; i++) {
 		if( OSRM.G.markers.route[i].marker === this ) {
 			OSRM.G.markers.removeMarker( i );
@@ -101,6 +103,8 @@ onDrag: function(e) {
 onDragStart: function(e) {
 	OSRM.G.dragging = true;
 	this.switchIcon(this.options.dragicon);
+	
+	OSRM.RoutingAlternatives.reset();
 	
 	// store id of dragged marker
 	for( var i=0; i<OSRM.G.markers.route.length; i++)

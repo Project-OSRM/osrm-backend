@@ -65,10 +65,11 @@ showRoute: function(response) {
 		OSRM.RoutingDescription.showNA( OSRM.loc("NO_ROUTE_FOUND") );
 		OSRM.Routing._snapRoute();		
 	} else {
-		OSRM.RoutingGeometry.show(response);
-		OSRM.RoutingNoNames.show(response);
-		OSRM.RoutingDescription.show(response);
-		OSRM.RoutingAlternatives.prepare(response);
+		OSRM.RoutingAlternatives.init(OSRM.G.response);
+		OSRM.RoutingGeometry.show(OSRM.G.response);
+		OSRM.RoutingNoNames.show(OSRM.G.response);
+		OSRM.RoutingDescription.show(OSRM.G.response);
+		OSRM.RoutingAlternatives._drawGUI();
 		OSRM.Routing._snapRoute();
 	}
 	OSRM.Routing._updateHints(response);
@@ -96,12 +97,11 @@ showRoute_Redraw: function(response) {
 	if(!response)
 		return;
 	
-	//OSRM.G.response = response;	// not needed, even harmful as important information is not stored!
-	//OSRM.RoutingAlternatives.prepare_Redraw(response);
+	OSRM.G.response = response;	// not needed, even harmful as important information is not stored! ????
 	if(response.status != 207) {
-		OSRM.RoutingAlternatives.prepare_Redraw(response);
+		OSRM.RoutingAlternatives.init(OSRM.G.response);
 		OSRM.RoutingGeometry.show(OSRM.G.response);
-		OSRM.RoutingNoNames.show(OSRM.Gresponse);		
+		OSRM.RoutingNoNames.show(OSRM.G.response);		
 	}
 	OSRM.Routing._updateHints(response);
 },
