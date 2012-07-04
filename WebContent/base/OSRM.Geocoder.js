@@ -106,8 +106,6 @@ _showResults: function(response, parameters) {
 		if(i%2==0) { rowstyle='results-body-even'; }
  
 		html += '<tr class="'+rowstyle+'">';
-//		html += '<td class="results-body-counter"><span">'+(i+1)+'.</span></td>';
-		// optimally show Nominatim icons instead of numbers
 		if(!result.icon)
 			result.icon = "http://nominatim.openstreetmap.org/images/mapicons/poi_point_of_interest.glow.12.png";
 		html += '<td class="results-body-counter"><img src="'+ result.icon + '" alt=""/></td>';
@@ -115,8 +113,8 @@ _showResults: function(response, parameters) {
 
 		if(result.display_name){
 			html += '<div class="results-body-item" onclick="OSRM.Geocoder._onclickResult(\''+parameters.marker_id+'\', '+result.lat+', '+result.lon+');">'+result.display_name;
-			// optionally show osm_type, class, type			
-			html += '<br/><span class="results-body-item-remark small-font">[osm_type: ' + result.osm_type + ', class: ' + result.class + ', type: ' + result.type + ']</span>';
+			// debug output to show osm_type, class, type			
+			// html += '<br/><span class="results-body-item-remark small-font">[osm_type: ' + result.osm_type + ', class: ' + result.class + ', type: ' + result.type + ']</span>';
 			html += '</div>';
 		}
 		html += "</td></tr>";
