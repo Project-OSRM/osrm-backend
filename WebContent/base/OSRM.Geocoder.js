@@ -152,6 +152,8 @@ _showResults_Timeout: function() {
 _filterResult: function(result) {
 	if( result.osm_type == "relation")
 		return true;
+	if( result.type == "aerial_views")
+		return true;	
 	return false;
 },
 
