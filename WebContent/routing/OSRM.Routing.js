@@ -54,7 +54,7 @@ timeoutRoute_Reversed: function() {
 	OSRM.G.markers.reverseMarkers();
 	OSRM.Routing.timeoutRoute();
 },
-showRoute: function(response) {
+showRoute: function(response, parameters) {
 	if(!response)
 		return;
 	
@@ -71,6 +71,10 @@ showRoute: function(response) {
 		OSRM.Routing._snapRoute();
 	}
 	OSRM.Routing._updateHints(response);
+	if( parameters && parameters.recenter == true ) {		// allow recentering when the route is first shown
+		var bounds = new L.LatLngBounds( OSRM.G.route._current_route.getPositions() );
+		OSRM.G.map.setViewBoundsUI(bounds);
+	}
 },
 showRoute_Dragging: function(response) {
  	if(!response)
@@ -107,7 +111,7 @@ showRoute_Redraw: function(response) {
 //-- main function --
 
 //generate server calls to query routes
-getRoute: function() {
+getRoute: function(parameters) {
 	
 	// if source or target are not set -> hide route
 	if( OSRM.G.markers.route.length < 2 ) {
@@ -117,7 +121,7 @@ getRoute: function() {
 	OSRM.JSONP.clear('dragging');
 	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.clear('route');
-	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route', parameters);
 },
 getRoute_Reversed: function() {
 	if( OSRM.G.markers.route.length < 2 )
