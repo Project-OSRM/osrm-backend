@@ -89,13 +89,13 @@ click: function(e) {
 	if( !OSRM.G.markers.hasSource() ) {
 		var index = OSRM.G.markers.setSource( e.latlng );
 		OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
-		OSRM.G.markers.route[index].show();
-		OSRM.Routing.getRoute();
+		OSRM.G.markers.route[index].show();		
+		OSRM.Routing.getRoute( {recenter:OSRM.G.markers.route.length == 2} );	// allow recentering when the route is first shown 
 	} else if( !OSRM.G.markers.hasTarget() ) {
 		var index = OSRM.G.markers.setTarget( e.latlng );
 		OSRM.Geocoder.updateAddress( OSRM.C.TARGET_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
 		OSRM.G.markers.route[index].show();
-		OSRM.Routing.getRoute();
+		OSRM.Routing.getRoute( {recenter:OSRM.G.markers.route.length == 2} );	// allow recentering when the route is first shown
 	}
 },
 geolocationResponse: function(response) {
