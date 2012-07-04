@@ -79,13 +79,6 @@ _showResults: function(response, parameters) {
 		OSRM.Geocoder._showResults_Empty(parameters);
 		return;
 	}
-	console.log(response.length);
-	console.log(response);
-	
-	// show first result
-	OSRM.Geocoder._onclickResult(parameters.marker_id, response[0].lat, response[0].lon);
-	if( OSRM.G.markers.route.length > 1 )		// if a route is displayed, we don't need to show other possible geocoding results
-		return;
 	
 	// filter/sort inputs
 	var filtered_response = [];
@@ -96,6 +89,11 @@ _showResults: function(response, parameters) {
 		filtered_response.push( result );
 	}
 	filtered_response.sort( OSRM.Geocoder._compareResults );
+	
+	// show first result
+	OSRM.Geocoder._onclickResult(parameters.marker_id, filtered_response[0].lat, filtered_response[0].lon);
+	if( OSRM.G.markers.route.length > 1 )		// if a route is displayed, we don't need to show other possible geocoding results
+		return;	
 	
 	// show possible results for input
 	var html = "";
@@ -150,8 +148,10 @@ _showResults_Timeout: function() {
 },
 
 
-// filter search results [false: result will not be displayed]
+// filter search results [true: result will not be displayed]
 _filterResult: function(result) {
+	if( result.osm_type == "relation")
+		return true;
 	return false;
 },
 
