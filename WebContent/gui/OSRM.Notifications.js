@@ -46,11 +46,11 @@ tooltips: {
 	// triggered in OSRM.Routing.getRoute_Dragging	
 	dragging:
 	{	timeout:	1200,		// 2min
-		header: 	"Did you know? You can drag each route marker around the map.",
+		header: 	"Did you know? You can drag each route marker on the map.",
 		body:		"You can drag a marker by clicking on it with the left mouse button and holding the button pressed. " +
 					"Then you can move the marker around the map and the route will be updated instantaneously. " +
 					"<br/><br/>" +
-					"You can even create additional markers by dragging them off of the main route! "
+					"You can even create intermediate markers by dragging them off of the main route! "
 	}
 },
 
