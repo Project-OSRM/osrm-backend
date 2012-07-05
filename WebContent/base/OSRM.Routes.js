@@ -20,9 +20,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Route = function() {
-	this._current_route	= new OSRM.SimpleRoute("current" , {dashed:false} );
-	this._old_route		= new OSRM.SimpleRoute("old", {dashed:false,color:"#123"} );
-	this._unnamed_route	= new OSRM.MultiRoute("unnamed");
+	this._current_route		= new OSRM.SimpleRoute("current" , {dashed:false} );
+	this._alternative_route	= new OSRM.SimpleRoute("alternative" , {dashed:false} );
+	this._old_route			= new OSRM.SimpleRoute("old", {dashed:false,color:"#123"} );
+	this._unnamed_route		= new OSRM.MultiRoute("unnamed");
 	
 	this._current_route_style	= {dashed:false,color:'#0033FF', weight:5};
 	this._current_noroute_style	= {dashed:true, color:'#222222', weight:2};
@@ -30,6 +31,7 @@ OSRM.Route = function() {
 	this._old_noroute_style	= {dashed:true, color:'#000000', weight:2};
 	this._unnamed_route_style = {dashed:false, color:'#FF00FF', weight:10};
 	this._old_unnamed_route_style = {dashed:false, color:'#990099', weight:10};
+	this._alternative_route_style	= {dashed:false,color:'#770033', weight:5, opacity:0.6};
 	
 	this._noroute = OSRM.Route.ROUTE;
 	this._history = new OSRM.HistoryRoute();
@@ -97,6 +99,16 @@ OSRM.extend( OSRM.Route,{
 	},
 	hideOldRoute: function() {
 		this._old_route.hide();
+	},
+	
+	// show/hide alternative route
+	showAlternativeRoute: function(positions) {
+		this._alternative_route.setPositions( positions );
+		this._alternative_route.setStyle( this._alternative_route_style );
+		this._alternative_route.show();		
+	},
+	hideAlternativeRoute: function() {
+		this._alternative_route.hide();
 	},
 	
 	// query routines

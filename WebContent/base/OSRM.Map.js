@@ -81,7 +81,7 @@ zoomed: function(e) {
 	if(OSRM.G.dragging)
 		OSRM.Routing.getRoute_Dragging();
 	else
-		OSRM.Routing.getRoute_Redraw();
+		OSRM.Routing.getRoute_Redraw({keepAlternative:true});
 },
 contextmenu: function(e) {;},
 mousemove: function(e) { OSRM.Via.drawDragMarker(e); },

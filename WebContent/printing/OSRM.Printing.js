@@ -187,13 +187,17 @@ show: function(response) {
 	// draw route & query for better geometry
 	print_window.OSRM.drawRoute( positions );
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&z='+zoom+'&instructions=false', OSRM.Printing.drawRoute, OSRM.Printing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'print');
-	// NOTE: simply appended correct zoom level as second zoom parameter to JSONP call -> OSRM API only considers the last one! 
+	// NOTE: correct zoom level was appended as second zoom parameter to JSONP call -> OSRM API only considers the last one! 
 },
 timeoutRoute: function() {},
 drawRoute: function(response) {
 	if(!response)
 		return;
-	var positions = OSRM.RoutingGeometry._decode(response.route_geometry, 5);
+
+	response.alternative_geometries.unshift( response.route_geometry );
+	if( OSRM.G.active_alternative >= response.alternative_geometries.length )	// no redraw if the selected alternative cannot be found
+		return;
+	positions = OSRM.RoutingGeometry._decode( response.alternative_geometries[ OSRM.G.active_alternative ], 5 );
 	OSRM.G.printwindow.OSRM.drawRoute( positions );
 },
 

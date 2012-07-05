@@ -57,6 +57,8 @@ timeoutRoute_Reversed: function() {
 showRoute: function(response, parameters) {
 	if(!response)
 		return;
+	if(!parameters || parameters.keepAlternative == false)
+		OSRM.G.active_alternative = 0;
 	
 	OSRM.G.response = response;	// needed for printing & history routes!
 	if(response.status == 207) {
@@ -65,9 +67,10 @@ showRoute: function(response, parameters) {
 		OSRM.RoutingDescription.showNA( OSRM.loc("NO_ROUTE_FOUND") );
 		OSRM.Routing._snapRoute();		
 	} else {
-		OSRM.RoutingGeometry.show(response);
-		OSRM.RoutingNoNames.show(response);
-		OSRM.RoutingDescription.show(response);
+		OSRM.RoutingAlternatives.prepare(OSRM.G.response);
+		OSRM.RoutingGeometry.show(OSRM.G.response);
+		OSRM.RoutingNoNames.show(OSRM.G.response);
+		OSRM.RoutingDescription.show(OSRM.G.response);
 		OSRM.Routing._snapRoute();
 	}
 	OSRM.Routing._updateHints(response);
@@ -95,14 +98,17 @@ showRoute_Dragging: function(response) {
 	if(OSRM.G.pending)
 		setTimeout(OSRM.Routing.draggingTimeout,1);		
 },
-showRoute_Redraw: function(response) {
+showRoute_Redraw: function(response, parameters) {
 	if(!response)
 		return;
+	if(!parameters || parameters.keepAlternative == false)
+		OSRM.G.active_alternative = 0;	
 	
-	//OSRM.G.response = response;	// not needed, even harmful as important information is not stored!
+	OSRM.G.response = response;	// not needed, even harmful as important information is not stored! ==> really ????
 	if(response.status != 207) {
-		OSRM.RoutingGeometry.show(response);
-		OSRM.RoutingNoNames.show(response);
+		OSRM.RoutingAlternatives.prepare(OSRM.G.response);
+		OSRM.RoutingGeometry.show(OSRM.G.response);
+		OSRM.RoutingNoNames.show(OSRM.G.response);		
 	}
 	OSRM.Routing._updateHints(response);
 },
@@ -132,13 +138,13 @@ getRoute_Reversed: function() {
 	OSRM.JSONP.clear('route');
 	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute, OSRM.Routing.timeoutRoute_Reversed, OSRM.DEFAULTS.JSONP_TIMEOUT, 'route');	
 },
-getRoute_Redraw: function() {
+getRoute_Redraw: function(parameters) {
 	if( OSRM.G.markers.route.length < 2 )
 		return;
 	
 	OSRM.JSONP.clear('dragging');
 	OSRM.JSONP.clear('redraw');
-	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute_Redraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw');
+	OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=true', OSRM.Routing.showRoute_Redraw, OSRM.Routing.timeoutRoute, OSRM.DEFAULTS.JSONP_TIMEOUT, 'redraw',parameters);
 },
 getRoute_Dragging: function() {
 	OSRM.G.pending = !OSRM.JSONP.call(OSRM.Routing._buildCall()+'&instructions=false', OSRM.Routing.showRoute_Dragging, OSRM.Routing.timeoutRoute_Dragging, OSRM.DEFAULTS.JSONP_TIMEOUT, 'dragging');;

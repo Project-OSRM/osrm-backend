@@ -40,7 +40,7 @@ init: function() {
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
-	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getRoute_Redraw;
+	document.getElementById("option-highlight-nonames").onclick = OSRM.GUI.hightlightNonames;
 	document.getElementById("option-show-previous-routes").onclick = OSRM.GUI.showPreviousRoutes;
 },
 
@@ -164,6 +164,11 @@ zoomOnRoute: function() {
 	
 	var bounds = new L.LatLngBounds( OSRM.G.route._current_route.getPositions() );
 	OSRM.G.map.fitBoundsUI(bounds);	
+},
+
+//click: toggle highlighting unnamed streets
+hightlightNonames: function() {
+	OSRM.Routing.getRoute_Redraw({keepAlternative:true});
 }
 
 });

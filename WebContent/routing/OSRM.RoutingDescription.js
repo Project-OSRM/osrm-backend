@@ -29,6 +29,7 @@ onClickRouteDescription: function(lat, lng) {
 },
 onClickCreateShortcut: function(src){
 	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat.toFixed(6) + ',' + OSRM.G.map.getCenter().lng.toFixed(6);
+	src += '&alt='+OSRM.G.active_alternative;
 	src += '&df=' + OSRM.G.DISTANCE_FORMAT;
 	
 	var source = OSRM.DEFAULTS.SHORTENER_PARAMETERS.replace(/%url/, OSRM.DEFAULTS.HOST_SHORTENER_URL+src); 
@@ -100,11 +101,14 @@ show: function(response) {
 	body += '</table>';
 	
 	// build header
-	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), route_link, gpx_link);	
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), route_link, gpx_link);
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
 	document.getElementById('information-box').innerHTML = body;
+	
+	// add alternative GUI (has to be done last since DOM has to be updated before events are registered)
+	OSRM.RoutingAlternatives.show();	
 },
 
 // simple description

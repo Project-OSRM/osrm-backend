@@ -29,6 +29,7 @@ OSRM.init = function() {
 	OSRM.Map.init();
 	OSRM.Printing.init();
 	OSRM.Routing.init();
+	OSRM.RoutingAlternatives.init();
 	OSRM.Localization.init();	
 	
 	// stop if in maintenance mode
@@ -216,7 +217,13 @@ OSRM.parseParameters = function(){
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
 			params.center = new L.LatLng( coordinates[0], coordinates[1]);			
-		}		
+		}
+		else if(name_val[0] == 'alt') {
+			var active_alternative = Number(name_val[1]);
+			if( active_alternative<0 || active_alternative>OSRM.RoutingAlternatives>10)	// using 10 as arbitrary upper limit
+				return;
+			params.active_alternative = active_alternative;
+		}
 	}
 		
 	// case 1: destination given
@@ -255,9 +262,12 @@ OSRM.parseParameters = function(){
 		} else {
 			OSRM.G.map.setView(params.center, params.zoom);
 		}
+		
+		// set active alternative (if via points are set or alternative does not exists: automatic fallback to shortest route)
+		OSRM.G.active_alternative = params.active_alternative;
 			
 		// compute route
-		OSRM.Routing.getRoute();
+		OSRM.Routing.getRoute({keepAlternative:true});
 		OSRM.G.initial_position_override = true;
 		return;
 	}
