@@ -99,7 +99,6 @@ onDrag: function(e) {
 	OSRM.Geocoder.updateLocation( this.parent.label );
 },
 onDragStart: function(e) {
-	//OSRM.GUI.clear_timeout(0);
 	OSRM.G.dragging = true;
 	this.switchIcon(this.options.dragicon);
 	
