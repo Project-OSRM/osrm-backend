@@ -57,7 +57,7 @@ timeoutRoute_Reversed: function() {
 showRoute: function(response, parameters) {
 	if(!response)
 		return;
-	if(!parameters || parameters.keepAlternative == false)
+	if( parameters.keepAlternative == false )
 		OSRM.G.active_alternative = 0;
 	
 	OSRM.G.response = response;	// needed for printing & history routes!
@@ -74,7 +74,7 @@ showRoute: function(response, parameters) {
 		OSRM.Routing._snapRoute();
 	}
 	OSRM.Routing._updateHints(response);
-	if( parameters && parameters.recenter == true ) {		// allow recentering when the route is first shown
+	if( parameters.recenter == true ) {		// allow recentering when the route is first shown
 		var bounds = new L.LatLngBounds( OSRM.G.route._current_route.getPositions() );
 		OSRM.G.map.setViewBoundsUI(bounds);
 	}
@@ -101,7 +101,7 @@ showRoute_Dragging: function(response) {
 showRoute_Redraw: function(response, parameters) {
 	if(!response)
 		return;
-	if(!parameters || parameters.keepAlternative == false)
+	if( parameters.keepAlternative == false )
 		OSRM.G.active_alternative = 0;	
 	
 	OSRM.G.response = response;	// not needed, even harmful as important information is not stored! ==> really ????
@@ -118,12 +118,14 @@ showRoute_Redraw: function(response, parameters) {
 
 //generate server calls to query routes
 getRoute: function(parameters) {
-	
 	// if source or target are not set -> hide route
 	if( OSRM.G.markers.route.length < 2 ) {
 		OSRM.G.route.hideRoute();
 		return;
 	}
+	
+	parameters = parameters || {};
+	
 	OSRM.JSONP.clear('dragging');
 	OSRM.JSONP.clear('redraw');
 	OSRM.JSONP.clear('route');
@@ -141,6 +143,8 @@ getRoute_Reversed: function() {
 getRoute_Redraw: function(parameters) {
 	if( OSRM.G.markers.route.length < 2 )
 		return;
+	
+	parameters = parameters || {};
 	
 	OSRM.JSONP.clear('dragging');
 	OSRM.JSONP.clear('redraw');
