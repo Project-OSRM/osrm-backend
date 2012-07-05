@@ -25,8 +25,8 @@ OSRM.GUI.extend( {
 tooltips: {
 	// triggered in OSRM.Localization.setLanguageWrapper
 	localization:
-	{	timeout:	1800000,	// 30min
-		header: 	"[Tooltip] Localization",
+	{	timeout:	1800,		// 30min
+		header: 	"Did you know? You can change the display language.",
 		body: 		"You can use the pulldown menu in the upper left corner to select your favorite language. " +
 					"<br/><br/>" +
 					"Don't despair if you cannot find your language of choice. " +
@@ -35,8 +35,8 @@ tooltips: {
 	},
 	// triggered in OSRM.Map.click
 	clicking:
-	{	timeout:	60000,		// 1min
-		header: 	"[Tooltip] Clicking to set markers",
+	{	timeout:	600,		// 1min
+		header: 	"Did you know? You can click on the map to set route markers.",
 		body:		"You can click on the map with the left mouse button to set a source marker (green) or a target marker (red), " +
 					"if the source marker already exists. " +
 					"The address of the selected location will be displayed in the boxes to the left. " + 
@@ -45,8 +45,8 @@ tooltips: {
 	},
 	// triggered in OSRM.Routing.getRoute_Dragging	
 	dragging:
-	{	timeout:	120000,		// 2min
-		header: 	"[Tooltip] Dragging markers",
+	{	timeout:	1200,		// 2min
+		header: 	"Did you know? You can drag each route marker around the map.",
 		body:		"You can drag a marker by clicking on it with the left mouse button and holding the button pressed. " +
 					"Then you can move the marker around the map and the route will be updated instantaneously. " +
 					"<br/><br/>" +
