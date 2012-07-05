@@ -49,7 +49,7 @@ init: function() {
 	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
 },
 setLanguageWrapper: function(language) {
-	OSRM.Localization.setLanguage(language);
+	OSRM.Localization.setLanguage(language);		// wrapping required as trigger function for suppressing notifications
 },
 setLanguage: function(language) {
 	// change value of both language selectors
