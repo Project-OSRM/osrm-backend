@@ -48,8 +48,9 @@ init: function() {
 	// set default language
 	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
 },
-setLanguageWrapper: function(language) {
-	OSRM.Localization.setLanguage(language);		// wrapping required as trigger function for suppressing notifications
+setLanguageWrapper: function(language) {		// wrapping required to correctly prevent localization tooltip from showing
+	OSRM.GUI.deactivateTooltip( "localization" );
+	OSRM.Localization.setLanguage(language);
 },
 setLanguage: function(language) {
 	// change value of both language selectors

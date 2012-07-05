@@ -86,6 +86,7 @@ zoomed: function(e) {
 contextmenu: function(e) {;},
 mousemove: function(e) { OSRM.Via.drawDragMarker(e); },
 click: function(e) {
+	OSRM.GUI.deactivateTooltip( "clicking" );	
 	if( !OSRM.G.markers.hasSource() ) {
 		var index = OSRM.G.markers.setSource( e.latlng );
 		OSRM.Geocoder.updateAddress( OSRM.C.SOURCE_LABEL, OSRM.C.DO_FALLBACK_TO_LAT_LNG );
