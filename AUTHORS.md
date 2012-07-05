@@ -1,4 +1,4 @@
-The following people contributed code to the Open Source Routing Machine:
+The following people contributed to the Open Source Routing Machine web frontend:
 
 Dennis Schieferdecker 
 Dennis Luxen
