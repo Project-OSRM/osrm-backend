@@ -57,7 +57,7 @@ timeoutRoute_Reversed: function() {
 showRoute: function(response, parameters) {
 	if(!response)
 		return;
-	if( parameters.keepAlternative == false )
+	if( parameters.keepAlternative != true )
 		OSRM.G.active_alternative = 0;
 	
 	OSRM.G.response = response;	// needed for printing & history routes!
