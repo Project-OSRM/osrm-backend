@@ -64,6 +64,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <script src="gui/OSRM.GUIBoxHandle.js" type="text/javascript"></script>
 <script src="gui/OSRM.Selector.js" type="text/javascript"></script>
 <script src="gui/OSRM.MainGUI.js" type="text/javascript"></script>
+<script src="gui/OSRM.Notifications.js" type="text/javascript"></script>
 <script src="routing/OSRM.Routing.js" type="text/javascript"></script>
 <script src="routing/OSRM.RoutingAlternatives.js" type="text/javascript"></script>
 <script src="routing/OSRM.RoutingDescription.js" type="text/javascript"></script>
@@ -87,17 +88,31 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!-- map -->
 <div id="map"></div>
 
-<!-- notification -->
-<div id="notification-blanket">
-<div id="notification-wrapper" class="box-wrapper">
-<div id="notification-content" class="box-content">
+<!-- exclusive notification -->
+<div id="exclusive-notification-blanket">
+<div id="exclusive-notification-wrapper" class="box-wrapper not-selectable">
+<div id="exclusive-notification-content" class="box-content">
 	<!-- header -->
-	<div id="notification-toggle" class="iconic-button cancel-marker top-right-button"></div>
-	<div id="notification-label" class="box-label">Notification</div>
+	<div id="exclusive-notification-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="exclusive-notification-label" class="box-label">Notification</div>
 
 	<!-- notification text -->
-	<div id="notification-box"></div>
+	<div id="exclusive-notification-box"></div>
 </div>
+</div>
+</div>
+
+<!-- tooltip notification -->
+<div id="tooltip-notification-wrapper" class="box-wrapper not-selectable">
+<div id="tooltip-notification-content" class="box-content">
+	<!-- header -->
+	<div id="tooltip-notification-toggle" class="iconic-button cancel-marker top-right-button"></div>
+	<div class="quad top-right-button"></div>
+	<div id="tooltip-notification-resize" class="iconic-button cancel-marker top-right-button"></div>
+	<div id="tooltip-notification-label" class="box-label">Notification</div>
+
+	<!-- notification text -->
+	<div id="tooltip-notification-box"></div>
 </div>
 </div>
 

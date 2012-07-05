@@ -64,6 +64,12 @@ OSRM.prefetchImages = function() {
 		              	{id:'restore',							url:'images/restore.png'},
 		              	{id:'restore_active',					url:'images/restore_active.png'},
 		              	{id:'restore_hover',					url:'images/restore_hover.png'},
+		              	{id:'up',								url:'images/up.png'},
+		              	{id:'up_active',						url:'images/up_active.png'},
+		              	{id:'up_hover',							url:'images/up_hover.png'},		
+		              	{id:'down',								url:'images/down.png'},
+		              	{id:'down_active',						url:'images/down_active.png'},
+		              	{id:'down_hover',						url:'images/down_hover.png'},
 		              	{id:'config',							url:'images/config.png'},
 		              	{id:'config_active',					url:'images/config_active.png'},
 		              	{id:'config_hover',						url:'images/config_hover.png'},		              	
@@ -136,6 +142,14 @@ OSRM.prefetchCSSIcons = function() {
 	                	{ id:'.cancel-marker',				image_id:'cancel'},
 	                	{ id:'.cancel-marker:hover',		image_id:'cancel_hover'},
 	                	{ id:'.cancel-marker:active',		image_id:'cancel_active'},
+	                	
+	                	{ id:'.up-marker',					image_id:'up'},
+	                	{ id:'.up-marker:hover',			image_id:'up_hover'},
+	                	{ id:'.up-marker:active',			image_id:'up_active'},
+	                	
+	                	{ id:'.down-marker',				image_id:'down'},
+	                	{ id:'.down-marker:hover',			image_id:'down_hover'},
+	                	{ id:'.down-marker:active',			image_id:'down_active'},
 	                	
 	                	{ id:'#input-mask-header',			image_id:'osrm-logo'},
 	                	{ id:'.styled-select',				image_id:'selector'},
@@ -280,14 +294,12 @@ OSRM.parseParameters = function(){
 // check whether to activate maintenance mode
 OSRM.inMaintenance = function(){
 	if( OSRM.DEFAULTS.MAINTENANCE == true ) {
-		document.getElementById('notification-blanket').style.display = "block";
-		document.getElementById('notification-label').innerHTML = OSRM.DEFAULTS.MAINTENANCE_HEADER;
-		document.getElementById('notification-box').innerHTML = OSRM.DEFAULTS.MAINTENANCE_TEXT;
-		document.getElementById('notification-toggle').style.display = "none";
+		OSRM.GUI.exclusiveNotify( OSRM.DEFAULTS.MAINTENANCE_HEADER, OSRM.DEFAULTS.MAINTENANCE_TEXT, false);
 		return true;
 	}
 	return false;
 };
+
 
 // onload event
 OSRM.Browser.onLoadHandler( OSRM.init );
