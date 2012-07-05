@@ -459,9 +459,10 @@ html, body {
 {
 	width:700px;
 	height:38px;
-	top: 10px;
+	top: 20px;
 	left: 50%;
 	margin-left:-350px;
+	z-index:98;
 	display: none;	
 }
 #tooltip-notification-content
