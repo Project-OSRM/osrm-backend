@@ -31,7 +31,7 @@ OSRM.Route = function() {
 	this._old_noroute_style	= {dashed:true, color:'#000000', weight:2};
 	this._unnamed_route_style = {dashed:false, color:'#FF00FF', weight:10};
 	this._old_unnamed_route_style = {dashed:false, color:'#990099', weight:10};
-	this._alternative_route_style	= {dashed:false,color:'#FF3300', weight:5};
+	this._alternative_route_style	= {dashed:false,color:'#770033', weight:5, opacity:0.6};
 	
 	this._noroute = OSRM.Route.ROUTE;
 	this._history = new OSRM.HistoryRoute();

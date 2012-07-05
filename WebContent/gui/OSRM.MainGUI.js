@@ -101,7 +101,7 @@ afterMainTransition: function() {
 // toggle distance units
 onUnitsChanged: function(value) {
 	OSRM.Utils.setToHumanDistanceFunction(value);
-	OSRM.Routing.getRoute();
+	OSRM.Routing.getRoute({keepAlternative:true});
 },
 
 // set timestamp of data

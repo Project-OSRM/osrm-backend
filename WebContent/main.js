@@ -29,6 +29,7 @@ OSRM.init = function() {
 	OSRM.Map.init();
 	OSRM.Printing.init();
 	OSRM.Routing.init();
+	OSRM.RoutingAlternatives.init();
 	OSRM.Localization.init();	
 	
 	// stop if in maintenance mode
@@ -266,7 +267,7 @@ OSRM.parseParameters = function(){
 		OSRM.G.active_alternative = params.active_alternative;
 			
 		// compute route
-		OSRM.Routing.getRoute();
+		OSRM.Routing.getRoute({keepAlternative:true});
 		OSRM.G.initial_position_override = true;
 		return;
 	}

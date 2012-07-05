@@ -195,6 +195,8 @@ drawRoute: function(response) {
 		return;
 
 	response.alternative_geometries.unshift( response.route_geometry );
+	if( OSRM.G.active_alternative >= response.alternative_geometries.length )	// no redraw if the selected alternative cannot be found
+		return;
 	positions = OSRM.RoutingGeometry._decode( response.alternative_geometries[ OSRM.G.active_alternative ], 5 );
 	OSRM.G.printwindow.OSRM.drawRoute( positions );
 },

@@ -40,7 +40,7 @@ init: function() {
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
-	document.getElementById("option-highlight-nonames").onclick = OSRM.Routing.getRoute_Redraw;
+	document.getElementById("option-highlight-nonames").onclick = OSRM.GUI.hightlightNonames;
 	document.getElementById("option-show-previous-routes").onclick = OSRM.GUI.showPreviousRoutes;
 },
 
@@ -59,8 +59,6 @@ resetRouting: function() {
 	document.getElementById('gui-input-source').value = "";
 	document.getElementById('gui-input-target').value = "";
 	
-	OSRM.RoutingAlternatives.reset();
-	
 	OSRM.G.route.reset();
 	OSRM.G.markers.reset();
 	
@@ -76,8 +74,6 @@ reverseRouting: function() {
 	var tmp = document.getElementById("gui-input-source").value;
 	document.getElementById("gui-input-source").value = document.getElementById("gui-input-target").value;
 	document.getElementById("gui-input-target").value = tmp;
-	
-	OSRM.RoutingAlternatives.reset();
 	
 	// recompute route if needed
 	if( OSRM.G.route.isShown() ) {
@@ -106,8 +102,6 @@ showMarker: function(marker_id) {
 
 // changed: any inputbox (is called when enter is pressed [after] or focus is lost [before])
 inputChanged: function(marker_id) {
-	OSRM.RoutingAlternatives.reset();
-	
 	if( marker_id == OSRM.C.SOURCE_LABEL)	
 		OSRM.Geocoder.call(OSRM.C.SOURCE_LABEL, document.getElementById('gui-input-source').value);
 	else if( marker_id == OSRM.C.TARGET_LABEL)
@@ -150,8 +144,6 @@ deleteMarker: function(marker_id) {
 	if( id == null)
 		return;
 	
-	OSRM.RoutingAlternatives.reset();
-	
 	OSRM.G.markers.removeMarker( id );
 	OSRM.Routing.getRoute();
 	OSRM.G.markers.highlight.hide();	
@@ -172,6 +164,11 @@ zoomOnRoute: function() {
 	
 	var bounds = new L.LatLngBounds( OSRM.G.route._current_route.getPositions() );
 	OSRM.G.map.fitBoundsUI(bounds);	
+},
+
+//click: toggle highlighting unnamed streets
+hightlightNonames: function() {
+	OSRM.Routing.getRoute_Redraw({keepAlternative:true});
 }
 
 });

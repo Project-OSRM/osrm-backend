@@ -101,11 +101,14 @@ show: function(response) {
 	body += '</table>';
 	
 	// build header
-	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), route_link, gpx_link);	
+	header = OSRM.RoutingDescription._buildHeader(OSRM.Utils.toHumanDistance(response.route_summary.total_distance), OSRM.Utils.toHumanTime(response.route_summary.total_time), route_link, gpx_link);
 
 	// update DOM
 	document.getElementById('information-box-header').innerHTML = header;
 	document.getElementById('information-box').innerHTML = body;
+	
+	// add alternative GUI (has to be done last since DOM has to be updated before events are registered)
+	OSRM.RoutingAlternatives.show();	
 },
 
 // simple description

@@ -64,7 +64,7 @@ setLanguage: function(language) {
 		if( OSRM.G.markers == null )
 			return;
 		if( OSRM.G.markers.route.length > 1)
-			OSRM.Routing.getRoute();
+			OSRM.Routing.getRoute({keepAlternative:true});
 		else if(OSRM.G.markers.route.length > 0 && document.getElementById('information-box').innerHTML != "" ) {
 			OSRM.Geocoder.call( OSRM.C.SOURCE_LABEL, document.getElementById("gui-input-source").value );
 			OSRM.Geocoder.call( OSRM.C.TARGET_LABEL, document.getElementById("gui-input-target").value );
