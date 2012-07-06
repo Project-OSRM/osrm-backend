@@ -73,7 +73,7 @@ show: function() {
 	for(var i=0, size=OSRM.G.alternative_count; i<size; i++) {
 		var distance = OSRM.Utils.toHumanDistance(OSRM.G.response.alternative_summaries[i].total_distance);
 		var time = OSRM.Utils.toHumanTime(OSRM.G.response.alternative_summaries[i].total_time);
-		var tooltip = OSRM.loc("DISTANCE")+":"+distance+" "+OSRM.loc("DURATION")+":"+time;
+		var tooltip = OSRM.loc("DISTANCE")+": "+distance+" "+OSRM.loc("DURATION")+": "+time;
 		var buttonClass = (i == OSRM.G.active_alternative) ? "button-pressed" : "button";
 		data = '<a class="'+buttonClass+' top-right-button" id="'+buttons[i].id+'" title="'+tooltip+'">'+buttons[i].label+'</a>' + data;
 	}
