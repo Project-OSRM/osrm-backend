@@ -178,8 +178,8 @@ _compareResults: function(lhs, rhs) {
 	var class_values = OSRM.Geocoder._compare_class_weights;
 	var type_values = OSRM.Geocoder._compare_type_weights;
 	
-	var lhs_value = (-class_values[ lhs.class ] || 0) + (-type_values[ lhs.type ] || 0);
-	var rhs_value = (-class_values[ rhs.class ] || 0) + (-type_values[ rhs.type ] || 0);
+	var lhs_value = (-class_values[ lhs["class"] ] || 0) + (-type_values[ lhs.type ] || 0);
+	var rhs_value = (-class_values[ rhs["class"] ] || 0) + (-type_values[ rhs.type ] || 0);
 
 	return (lhs_value - rhs_value);
 },
