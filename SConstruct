@@ -58,6 +58,10 @@ AddOption('--buildconfiguration', dest='buildconfiguration', type='string', narg
 AddOption('--no-march', dest='nomarch', type='string', nargs=0, action='store', metavar='STRING', help='turn off -march optimization in release mode')
 
 env = Environment( ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cxx'))
+env["CC"] = os.getenv("CC") or env["CC"]
+env["CXX"] = os.getenv("CXX") or env["CXX"]
+env["ENV"].update(x for x in os.environ.items() if x[0].startswith("CCC_"))
+
 conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf' : CheckProtobuf })
 
 if GetOption('cxx') is None:
@@ -70,7 +74,7 @@ else:
 if GetOption('buildconfiguration') == 'debug':
 	env.Append(CCFLAGS = ['-Wall', '-g3', '-rdynamic'])
 else:
-	env.Append(CCFLAGS = ['-O3', '-DNDEBUG'])
+	env.Append(CCFLAGS = ['-O3', '-DNDEBUG', '-minline-all-stringops'])
 
 if sys.platform == 'darwin':	#Mac OS X
 	#os x default installations
