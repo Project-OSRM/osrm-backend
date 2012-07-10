@@ -278,7 +278,7 @@ OSRM.parseParameters = function(){
 		}
 		
 		// set active alternative (if via points are set or alternative does not exists: automatic fallback to shortest route)
-		OSRM.G.active_alternative = params.active_alternative;
+		OSRM.G.active_alternative = params.active_alternative || 0;
 			
 		// compute route
 		OSRM.Routing.getRoute({keepAlternative:true});
