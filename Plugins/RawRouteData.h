@@ -29,6 +29,7 @@ struct RawRouteData {
     unsigned checkSum;
     int lengthOfShortestPath;
     int lengthOfAlternativePath;
+    RawRouteData() : checkSum(UINT_MAX), lengthOfShortestPath(INT_MAX), lengthOfAlternativePath(INT_MAX) {}
 };
 
 #endif /* RAWROUTEDATA_H_ */
