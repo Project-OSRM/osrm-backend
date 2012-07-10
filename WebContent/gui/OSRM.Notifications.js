@@ -25,7 +25,7 @@ OSRM.GUI.extend( {
 tooltips: {
 	// triggered in OSRM.Localization.setLanguageWrapper
 	localization:
-	{	timeout:	180000,		// 30min
+	{	timeout:	1800000,		// 30min
 		header: 	"Did you know? You can change the display language.",
 		body: 		"You can use the pulldown menu in the upper left corner to select your favorite language. " +
 					"<br/><br/>" +
