@@ -23,6 +23,7 @@ KD Tree coded by Christian Vetter, Monav Project
 #ifndef STATICKDTREE_H_INCLUDED
 #define STATICKDTREE_H_INCLUDED
 
+#include <cassert>
 #include <vector>
 #include <algorithm>
 #include <stack>
