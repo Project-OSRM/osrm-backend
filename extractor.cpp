@@ -349,7 +349,6 @@ int main (int argc, char *argv[]) {
         }
 
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
 
         cout << "[extractor] setting number of nodes   ... " << flush;
         ios::pos_type positionInFile = fout.tellp();
@@ -457,9 +456,8 @@ int main (int argc, char *argv[]) {
             }
         }
         cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
         cout << "[extractor] setting number of edges   ... " << flush;
+
         fout.seekp(positionInFile);
         fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
         fout.close();
