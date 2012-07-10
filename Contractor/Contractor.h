@@ -38,6 +38,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/XORFastHash.h"
+#include "../DataStructures/XORFastHashStorage.h"
 #include "../Util/OpenMPReplacement.h"
 #include "../Util/StringUtil.h"
 
@@ -66,7 +67,8 @@ private:
     };
 
     typedef DynamicGraph< _ContractorEdgeData > _DynamicGraph;
-    typedef BinaryHeap< NodeID, NodeID, int, _HeapData > _Heap;
+//    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, ArrayStorage<NodeID, NodeID> > _Heap;
+    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, XORFastHashStorage<NodeID, NodeID> > _Heap;
     typedef _DynamicGraph::InputEdge _ContractorEdge;
 
     struct _ThreadData {
@@ -91,7 +93,7 @@ private:
     };
 
     struct _NodePartitionor {
-        bool operator()( std::pair< NodeID, bool > & nodeData ) const {
+        inline bool operator()( std::pair< NodeID, bool > & nodeData ) const {
             return !nodeData.second;
         }
     };

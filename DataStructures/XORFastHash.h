@@ -41,27 +41,55 @@ or see http://www.gnu.org/licenses/agpl.txt.
     10: ret
 
 */
-class XORFastHash {
-    std::vector<unsigned char> table1;
-    std::vector<unsigned char> table2;
+class XORFastHash { //65k entries
+    std::vector<unsigned short> table1;
+    std::vector<unsigned short> table2;
 public:
     XORFastHash() {
-        table1.resize(1 << 16);
-        table2.resize(1 << 16);
-        for(unsigned i = 0; i < (1 << 16); ++i) {
+        table1.resize(2 << 16);
+        table2.resize(2 << 16);
+        for(unsigned i = 0; i < (2 << 16); ++i) {
             table1[i] = i; table2[i];
         }
         std::random_shuffle(table1.begin(), table1.end());
         std::random_shuffle(table2.begin(), table2.end());
     }
-    unsigned short operator()(const unsigned originalValue) const {
+
+    inline unsigned short operator()(const unsigned originalValue) const {
         unsigned short lsb = ((originalValue) & 0xffff);
         unsigned short msb = (((originalValue) >> 16) & 0xffff);
         return table1[lsb] ^ table2[msb];
     }
 };
 
+class XORMiniHash { //256 entries
+    std::vector<unsigned char> table1;
+    std::vector<unsigned char> table2;
+    std::vector<unsigned char> table3;
+    std::vector<unsigned char> table4;
 
-
+public:
+    XORMiniHash() {
+        table1.resize(1 << 8);
+        table2.resize(1 << 8);
+        table3.resize(1 << 8);
+        table4.resize(1 << 8);
+        for(unsigned i = 0; i < (1 << 8); ++i) {
+            table1[i] = i; table2[i];
+            table3[i] = i; table4[i];
+        }
+        std::random_shuffle(table1.begin(), table1.end());
+        std::random_shuffle(table2.begin(), table2.end());
+        std::random_shuffle(table3.begin(), table3.end());
+        std::random_shuffle(table4.begin(), table4.end());
+    }
+    unsigned char operator()(const unsigned originalValue) const {
+        unsigned char byte1 = ((originalValue) & 0xff);
+        unsigned char byte2 = ((originalValue >> 8) & 0xff);
+        unsigned char byte3 = ((originalValue >> 16) & 0xff);
+        unsigned char byte4 = ((originalValue >> 24) & 0xff);
+        return table1[byte1] ^ table2[byte2] ^ table3[byte3] ^ table4[byte4];
+    }
+};
 
 #endif /* FASTXORHASH_H_ */
