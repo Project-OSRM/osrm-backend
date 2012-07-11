@@ -128,10 +128,18 @@ public:
         }
         reply.content += "],";
         reply.content += "\"alternative_instructions\":[";
-        if(config.instructions && INT_MAX != rawRoute.lengthOfAlternativePath) {
+        numberOfEnteredRestrictedAreas = 0;
+        if(INT_MAX != rawRoute.lengthOfAlternativePath) {
             reply.content += "[";
             //Generate instructions for each alternative
-            BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine);
+            if(config.instructions) {
+                BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine);
+            } else {
+                BOOST_FOREACH(const SegmentInformation & segment, alternateDescriptionFactory.pathDescription) {
+                    short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+                    numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
+                }
+            }
             reply.content += "]";
         }
         reply.content += "],";
