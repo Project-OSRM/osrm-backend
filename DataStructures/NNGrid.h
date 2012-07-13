@@ -100,7 +100,7 @@ public:
             int slon = edge.lon1;
             int tlat = 100000*lat2y(edge.lat2/100000.);
             int tlon = edge.lon2;
-            AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon) ) );
+            AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon), edge.belongsToTinyComponent ) );
         }
         double timestamp = get_timestamp();
         //create index file on disk, old one is over written
@@ -148,7 +148,9 @@ public:
 #endif
     }
 
-    bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) {
+    bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
+        bool ignoreTinyComponents = (zoomLevel <= 14);
+//        INFO("ZoomLevel: " << zoomLevel << ", ignoring tinyComponentents: " << (ignoreTinyComponents ? "yes" : "no"));
 //        double time1 = get_timestamp();
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
@@ -166,10 +168,12 @@ public:
         double r, tmpDist;
 
         BOOST_FOREACH(_GridEdge candidate, candidates) {
+            if(candidate.belongsToTinyComponent && ignoreTinyComponents)
+                continue;
             r = 0.;
             tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
-                //INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
+//                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist << ", tinyCC: " << (candidate.belongsToTinyComponent ? "yes" : "no"));
                 dist = tmpDist;
                 resultNode.edgeBasedNode = candidate.edgeBasedNode;
                 resultNode.nodeBasedEdgeNameID = candidate.nameID;
@@ -212,41 +216,23 @@ public:
         }
         resultNode.ratio = ratio;
         //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
-        //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
+//        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
 //        double time2 = get_timestamp();
 //        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
         return foundNode;
     }
 
-    bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes & routingStarts) {
+    bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes & routingStarts, unsigned zoomLevel) {
         routingStarts.Reset();
-        return (FindPhantomNodeForCoordinate( start, routingStarts.startPhantom) &&
-                FindPhantomNodeForCoordinate( target, routingStarts.targetPhantom) );
+        return (FindPhantomNodeForCoordinate( start, routingStarts.startPhantom, zoomLevel) &&
+                FindPhantomNodeForCoordinate( target, routingStarts.targetPhantom, zoomLevel) );
     }
 
-    bool FindNearestCoordinateOnEdgeInNodeBasedGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {
-        bool found = false;
-        unsigned fileIndex = GetFileIndexForLatLon(100000*(lat2y(static_cast<double>(inputCoordinate.lat)/100000.)), inputCoordinate.lon);
-        std::vector<_GridEdge> candidates;
-        boost::unordered_map< unsigned, unsigned > cellMap;
-        for(int j = -32768; j < (32768+1); j+=32768) {
-            for(int i = -1; i < 2; ++i) {
-                GetContentsOfFileBucket(fileIndex+i+j, candidates, cellMap);
-            }
-        }
-        _Coordinate tmp;
-        double dist = (std::numeric_limits<double>::max)();
-        BOOST_FOREACH(_GridEdge candidate, candidates) {
-            double r = 0.;
-            double tmpDist = ComputeDistance(inputCoordinate, candidate.startCoord, candidate.targetCoord, tmp, &r);
-            if(tmpDist < dist) {
-                found = true;
-                dist = tmpDist;
-                outputCoordinate = tmp;
-            }
-        }
-        outputCoordinate.lat = 100000*(y2lat(static_cast<double>(outputCoordinate.lat)/100000.));
-        return found;
+    bool FindNearestCoordinateOnEdgeInNodeBasedGraph(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate, unsigned zoomLevel = 18) {
+        PhantomNode resultNode;
+        bool foundNode = FindPhantomNodeForCoordinate(inputCoordinate, resultNode, zoomLevel);
+        outputCoordinate = resultNode.location;
+        return foundNode;
     }
 
     void FindNearestPointOnEdge(const _Coordinate& inputCoordinate, _Coordinate& outputCoordinate) {

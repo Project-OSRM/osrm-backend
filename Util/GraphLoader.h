@@ -41,7 +41,7 @@ typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;
 
 template<class EdgeT>
 struct _ExcessRemover {
-    bool operator()( EdgeT & edge ) const {
+    inline bool operator()( EdgeT & edge ) const {
         return edge.source() == UINT_MAX;
     }
 };
@@ -155,9 +155,31 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
     std::sort(edgeList.begin(), edgeList.end());
     for(unsigned i = 1; i < edgeList.size(); ++i) {
         if( (edgeList[i-1].target() == edgeList[i].target()) && (edgeList[i-1].source() == edgeList[i].source()) ) {
-            if( (edgeList[i-1].isForward() == edgeList[i].isForward()) && (edgeList[i-1].isBackward() == edgeList[i].isBackward()) ) {
+            bool edgeFlagsAreEquivalent = (edgeList[i-1].isForward() == edgeList[i].isForward()) && (edgeList[i-1].isBackward() == edgeList[i].isBackward());
+            bool edgeFlagsAreSuperSet1 = (edgeList[i-1].isForward() && edgeList[i-1].isBackward()) && (edgeList[i].isBackward() != edgeList[i].isBackward() );
+            bool edgeFlagsAreSuperSet2 = (edgeList[i].isForward() && edgeList[i].isBackward()) && (edgeList[i-1].isBackward() != edgeList[i-1].isBackward() );
+
+            if( edgeFlagsAreEquivalent ) {
                 edgeList[i]._weight = std::min(edgeList[i-1].weight(), edgeList[i].weight());
                 edgeList[i-1]._source = UINT_MAX;
+            } else if (edgeFlagsAreSuperSet1) {
+                if(edgeList[i-1].weight() <= edgeList[i].weight()) {
+                    //edge i-1 is smaller and goes in both directions. Throw away the other edge
+                    edgeList[i]._source = UINT_MAX;
+                } else {
+                    //edge i-1 is open in both directions, but edge i is smaller in one direction. Close edge i-1 in this direction
+                    edgeList[i-1].forward = ~edgeList[i].isForward();
+                    edgeList[i-1].backward = ~edgeList[i].isBackward();
+                }
+            } else if (edgeFlagsAreSuperSet2) {
+                if(edgeList[i-1].weight() <= edgeList[i].weight()) {
+                     //edge i-1 is smaller for one direction. edge i is open in both. close edge i in the other direction
+                     edgeList[i].forward = ~edgeList[i-1].isForward();
+                     edgeList[i].backward = ~edgeList[i-1].isBackward();
+                 } else {
+                     //edge i is smaller and goes in both direction. Throw away edge i-1
+                     edgeList[i-1]._source = UINT_MAX;
+                 }
             }
         }
     }

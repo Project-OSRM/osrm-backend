@@ -85,7 +85,8 @@ public:
         int lat1;
         int lat2;
         int lon1;
-        int lon2;
+        int lon2:31;
+        bool belongsToTinyComponent;
         NodeID nameID;
         unsigned weight:31;
         bool ignoreInGrid:1;
@@ -114,7 +115,8 @@ private:
     void InsertEdgeBasedNode(
             _NodeBasedDynamicGraph::EdgeIterator e1,
             _NodeBasedDynamicGraph::NodeIterator u,
-            _NodeBasedDynamicGraph::NodeIterator v);
+            _NodeBasedDynamicGraph::NodeIterator v,
+            bool belongsToTinyComponent);
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 //    SRTMLookup srtmLookup;

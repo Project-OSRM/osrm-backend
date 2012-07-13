@@ -53,7 +53,6 @@ public:
 			coordinateVector.push_back(_Coordinate(b.lat, b.lon));
 		}
 	    std::vector<_Coordinate>(coordinateVector).swap(coordinateVector);
-	    numberOfNodes = coordinateVector.size();
 	    nodesInstream.close();
 
         DEBUG("Loading edge data");
@@ -95,12 +94,13 @@ public:
 	inline bool FindNearestNodeCoordForLatLon(const _Coordinate& coord, _Coordinate& result) const {
 		return readOnlyGrid->FindNearestCoordinateOnEdgeInNodeBasedGraph(coord, result);
 	}
-	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode) const {
-	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode);
+
+	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) const {
+	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode, zoomLevel);
 	}
 
-	inline void FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes & phantomNodes) const {
-		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes);
+	inline void FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes & phantomNodes, const unsigned zoomLevel) const {
+		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes, zoomLevel);
 	}
 
 	inline void FindNearestPointOnEdge(const _Coordinate & input, _Coordinate& output){
@@ -116,8 +116,8 @@ private:
     std::vector<OriginalEdgeData> origEdgeData;
 
 	ReadOnlyGrid * readOnlyGrid;
-	unsigned numberOfNodes;
-	unsigned checkSum;
+	const unsigned numberOfNodes;
+	const unsigned checkSum;
 };
 
 #endif /*NODEINFORMATIONHELPDESK_H_*/

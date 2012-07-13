@@ -65,9 +65,17 @@ public:
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
+
+        unsigned zoomLevel = 18;
+        if(routeParameters.options.Find("z") != ""){
+            zoomLevel = atoi(routeParameters.options.Find("z").c_str());
+            if(18 < zoomLevel)
+                zoomLevel = 18;
+        }
+
         //query to helpdesk
         PhantomNode result;
-        nodeHelpDesk->FindPhantomNodeForCoordinate(myCoordinate, result);
+        nodeHelpDesk->FindPhantomNodeForCoordinate(myCoordinate, result, zoomLevel);
 
         std::string tmp;
         std::string JSONParameter;

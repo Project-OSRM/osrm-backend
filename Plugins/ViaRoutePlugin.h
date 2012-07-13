@@ -79,6 +79,13 @@ public:
             return;
         }
 
+        unsigned zoomLevel = 18;
+        if(routeParameters.options.Find("z") != ""){
+            zoomLevel = atoi(routeParameters.options.Find("z").c_str());
+            if(18 < zoomLevel)
+                zoomLevel = 18;
+        }
+
         RawRouteData rawRoute;
         rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
         bool checksumOK = ((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
@@ -110,7 +117,7 @@ public:
                 }
             }
 //            INFO("Brute force lookup of coordinate " << i);
-            searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i]);
+            searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i], zoomLevel);
         }
         //unsigned distance = 0;
 
@@ -159,13 +166,7 @@ public:
 
         _DescriptorConfig descriptorConfig;
         unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
-        unsigned short zoom = 18;
-        if(routeParameters.options.Find("z") != ""){
-            zoom = atoi(routeParameters.options.Find("z").c_str());
-            if(18 < zoom)
-                zoom = 18;
-        }
-        descriptorConfig.z = zoom;
+        descriptorConfig.z = zoomLevel;
         if(routeParameters.options.Find("instructions") == "false") {
             descriptorConfig.instructions = false;
         }

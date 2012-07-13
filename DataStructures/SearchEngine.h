@@ -129,8 +129,8 @@ public:
 	    _queryData.nodeHelpDesk->FindRoutingStarts(start, target, routingStarts);
 	}
 
-	inline void FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result) const {
-	    _queryData.nodeHelpDesk->FindPhantomNodeForCoordinate(location, result);
+	inline void FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result, unsigned zoomLevel) const {
+	    _queryData.nodeHelpDesk->FindPhantomNodeForCoordinate(location, result, zoomLevel);
 	}
 
 	inline NodeID GetNameIDForOriginDestinationNodeID(const NodeID s, const NodeID t) const {
