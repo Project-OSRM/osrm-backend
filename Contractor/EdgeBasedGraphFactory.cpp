@@ -277,6 +277,9 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
         }
     }
 
+    std::vector<NodeID>().swap(vectorOfComponentSizes);
+    std::vector<NodeID>().swap(componentsIndex);
+
     //Loop over all turns and generate new set of edges.
     //Three nested loop look super-linear, but we are dealing with a linear number of turns only.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
