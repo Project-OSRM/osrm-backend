@@ -215,7 +215,7 @@ OSRM.parseParameters = function(){
 			var coordinates = unescape(name_val[1]).split(',');
 			if(coordinates.length!=2 || !OSRM.Utils.isLatitude(coordinates[0]) || !OSRM.Utils.isLongitude(coordinates[1]) )
 				return;				
-			params.destination = new L.LatLng( coordinates[0], coordinates[1]);
+			params.destination = new L.LatLng( coordinates[0], coordinates[1] );
 		}
 		else if(name_val[0] == 'destname') {
 			params.destination_name = decodeURI(name_val[1]).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags	
@@ -242,7 +242,7 @@ OSRM.parseParameters = function(){
 		
 	// case 1: destination given
 	if( params.destination ) {
-		var index = OSRM.G.markers.setTarget( params.destination.latlng );
+		var index = OSRM.G.markers.setTarget( params.destination );
 		if( params.destination_name )
 			document.getElementById("gui-input-target").value = params.destination_name;
 		else 
