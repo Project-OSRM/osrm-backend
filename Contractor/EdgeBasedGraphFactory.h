@@ -86,7 +86,7 @@ public:
         int lat2;
         int lon1;
         int lon2:31;
-        bool belongsToTinyComponent;
+        bool belongsToTinyComponent:1;
         NodeID nameID;
         unsigned weight:31;
         bool ignoreInGrid:1;
