@@ -90,6 +90,7 @@ if sys.platform == 'darwin':	#Mac OS X
 	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [boost_prefix+"/include"] )
 	env.Append(LIBPATH = [boost_prefix+"/lib"] )	
+	env.ParseConfig('pkg-config --cflags --libs libzip')
 elif sys.platform.startswith("freebsd"):
 	env.ParseConfig('pkg-config --cflags --libs protobuf')
 	env.Append(CPPPATH = ['/usr/local/include', '/usr/local/include/libxml2'])
