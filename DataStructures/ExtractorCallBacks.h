@@ -194,23 +194,27 @@ public:
         //Is the highway tag listed as usable way?
         if(("track" == highway && ("yes" == access || "yes" == accessTag)) || ("track" != highway && (0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) )) {
             if(!w.isDurationSet) {
-                if(0 < settings[highway]) {
-                    if(0 < maxspeed)
-                        if(settings.takeMinimumOfSpeeds)
-                            w.speed = std::min(settings[highway], maxspeed);
-                        else
-                            w.speed = maxspeed;
-                    else
-                        w.speed = settings[highway];
-                } else {
-                    if(0 < maxspeed)
-                        if(settings.takeMinimumOfSpeeds)
-                            w.speed = std::min(settings.defaultSpeed, maxspeed);
-                        else w.speed = maxspeed;
-                    else
-                        w.speed = settings.defaultSpeed;
-                    highway = "default";
+                int speed;
+                
+                if( accessTag=="yes" || accessTag=="designated" )
+                    speed = std::max( settings.defaultSpeed, settings[highway] );
+                else if( settings[highway]>0 )
+                    speed = settings[highway];
+                else {
+                    speed = settings.defaultSpeed;
                 }
+                
+                if( !settings[highway]>0 )
+                    highway = "default";
+                    
+                if( maxspeed>0 ) {
+                    if( settings.takeMinimumOfSpeeds )
+                        w.speed = std::min( speed, maxspeed );
+                    else
+                        w.speed = maxspeed;
+                }
+                else
+                    w.speed = speed;
             }
             w.useful = true;
 
