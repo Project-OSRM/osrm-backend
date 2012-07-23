@@ -36,9 +36,11 @@ template<typename ElementT, size_t bucketSizeC = 10485760/sizeof(ElementT), bool
 class DeallocatingVectorIterator : public std::iterator<std::random_access_iterator_tag, ElementT> {
 protected:
 
-    struct DeallocatingVectorIteratorState {
+    class DeallocatingVectorIteratorState {
+    private:
         //make constructors explicit, so we do not mix random access and deallocation iterators.
-        explicit DeallocatingVectorIteratorState() : mData(DEALLOCATION_VECTOR_NULL_PTR), mIndex(-1) { assert(false); }
+        DeallocatingVectorIteratorState();
+    public:
         explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r) : mData(r.mData), mIndex(r.mIndex), mBucketList(r.mBucketList) {}
         //explicit DeallocatingVectorIteratorState(const ElementT * ptr, const size_t idx, const std::vector<ElementT *> & input_list) : mData(ptr), mIndex(idx), mBucketList(input_list) {}
         explicit DeallocatingVectorIteratorState(const size_t idx, std::vector<ElementT *> & input_list) : mData(DEALLOCATION_VECTOR_NULL_PTR), mIndex(idx), mBucketList(input_list) {
