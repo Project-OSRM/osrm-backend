@@ -298,7 +298,8 @@ private:
             }
         }
 
-        if((distance-edgeBasedOffset)*(1+VIAPATH_EPSILON) > *_upperbound){
+        int scaledDistance = (distance+edgeBasedOffset)/(1.+VIAPATH_EPSILON);
+        if(scaledDistance > *_upperbound){
             _forwardHeap->DeleteAll();
             return;
         }
