@@ -313,10 +313,10 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         short turnInstruction = AnalyzeTurn(u, v, w);
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += uturnPenalty;
-                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
-                            distance += TurnInstructions.AccessRestrictionPenalty;
-                            turnInstruction |= TurnInstructions.AccessRestrictionFlag;
-                        }
+//                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
+//                            distance += TurnInstructions.AccessRestrictionPenalty;
+//                            turnInstruction |= TurnInstructions.AccessRestrictionFlag;
+//                        }
 
 
                         //distance += heightPenalty;
