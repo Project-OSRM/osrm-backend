@@ -31,7 +31,7 @@ onClickCreateShortcut: function(src){
 	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat.toFixed(6) + ',' + OSRM.G.map.getCenter().lng.toFixed(6);
 	src += '&alt='+OSRM.G.active_alternative;
 	src += '&df=' + OSRM.G.DISTANCE_FORMAT;
-	src += '&rs=' + OSRM.G.active_routing_server;
+	src += '&rs=' + OSRM.G.active_routing_server_id;
 	
 	var source = OSRM.DEFAULTS.SHORTENER_PARAMETERS.replace(/%url/, OSRM.DEFAULTS.HOST_SHORTENER_URL+src); 
 	
@@ -62,7 +62,7 @@ show: function(response) {
 	var route_link ='[<a class="route-link" onclick="OSRM.RoutingDescription.onClickCreateShortcut(\'' + OSRM.DEFAULTS.WEBSITE_URL + query_string + '\')">'+OSRM.loc("GET_LINK_TO_ROUTE")+'</a>]';
 
 	// create GPX link
-	var gpx_link = '[<a class="route-link" onClick="document.location.href=\'' + OSRM.DEFAULTS.HOST_ROUTING_URL[OSRM.G.active_routing_server] + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
+	var gpx_link = '[<a class="route-link" onClick="document.location.href=\'' + OSRM.G.active_routing_server_url + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
 		
 	// create route description
 	var positions = OSRM.G.route.getPositions();

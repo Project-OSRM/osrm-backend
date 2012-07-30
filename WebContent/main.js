@@ -239,10 +239,10 @@ OSRM.parseParameters = function(){
 			params.active_alternative = active_alternative;
 		}
 		else if(name_val[0] == 'rs') {
-			var active_routing_server = Number(name_val[1]);
-			if( active_routing_server<0 || active_routing_server>=OSRM.DEFAULTS.HOST_ROUTING_URL.length)
+			var active_routing_server_id = Number(name_val[1]);
+			if( active_routing_server_id<0 || active_routing_server_id>=OSRM.DEFAULTS.HOST_ROUTING_URL.length)
 				return;
-			params.active_routing_server = active_routing_server;
+			params.active_routing_server_id = active_routing_server_id;
 		}		
 	}
 		
@@ -287,7 +287,8 @@ OSRM.parseParameters = function(){
 		OSRM.G.active_alternative = params.active_alternative || 0;
 		
 		// set routing server
-		OSRM.G.active_routing_server = params.active_routing_server || 0;
+		OSRM.G.active_routing_server_id = params.active_routing_server_id || 0;
+		OSRM.G.active_routing_server_url = OSRM.DEFAULTS.HOST_ROUTING_URL[ OSRM.G.active_routing_server_id ];
 			
 		// compute route
 		OSRM.Routing.getRoute({keepAlternative:true});

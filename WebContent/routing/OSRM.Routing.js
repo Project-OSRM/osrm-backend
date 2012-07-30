@@ -31,7 +31,8 @@ OSRM.Routing = {
 		
 // init routing data structures
 init: function() {
-	OSRM.G.active_routing_server = 0;
+	OSRM.G.active_routing_server_id = 0;
+	OSRM.G.active_routing_server_url = OSRM.DEFAULTS.HOST_ROUTING_URL[ OSRM.G.active_routing_server_id ];
 	OSRM.G.markers = new OSRM.Markers();	
 	OSRM.G.route = new OSRM.Route();
 	OSRM.G.response = { via_points:[] };
@@ -160,7 +161,7 @@ draggingTimeout: function() {
 },
 
 _buildCall: function() {
-	var source = OSRM.DEFAULTS.HOST_ROUTING_URL[OSRM.G.active_routing_server];
+	var source = OSRM.G.active_routing_server_url;
 	source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp';	
 	if(OSRM.G.markers.checksum)
 		source += '&checksum=' + OSRM.G.markers.checksum;
