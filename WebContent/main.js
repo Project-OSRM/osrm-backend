@@ -238,6 +238,12 @@ OSRM.parseParameters = function(){
 				return;
 			params.active_alternative = active_alternative;
 		}
+		else if(name_val[0] == 'rs') {
+			var active_routing_server = Number(name_val[1]);
+			if( active_routing_server<0 || active_routing_server>=OSRM.DEFAULTS.HOST_ROUTING_URL.length)
+				return;
+			params.active_routing_server = active_routing_server;
+		}		
 	}
 		
 	// case 1: destination given
@@ -279,6 +285,9 @@ OSRM.parseParameters = function(){
 		
 		// set active alternative (if via points are set or alternative does not exists: automatic fallback to shortest route)
 		OSRM.G.active_alternative = params.active_alternative || 0;
+		
+		// set routing server
+		OSRM.G.active_routing_server = params.active_routing_server || 0;
 			
 		// compute route
 		OSRM.Routing.getRoute({keepAlternative:true});

@@ -169,7 +169,7 @@ OSRM.extend( OSRM.HistoryRoute,{
 			}
 	},
 	_buildCall: function(history_id) {
-		var source = OSRM.DEFAULTS.HOST_ROUTING_URL;
+		var source = OSRM.DEFAULTS.HOST_ROUTING_URL[OSRM.G.active_routing_server];
 		source += '?z=' + OSRM.G.map.getZoom() + '&output=json&jsonp=%jsonp';
 		
 		if(this._history[history_id].checksum)
