@@ -77,6 +77,9 @@ isLongitude: function(value) {
 		return true;
 	else
 		return false;
+},
+isNumber: function(n) {
+	  return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
 };
