@@ -98,7 +98,32 @@ OSRM.Localization["en"] = {
 "DIRECTION_11-8":"Enter roundabout and leave at eighth exit[ onto <b>%s</b>]",
 "DIRECTION_11-9":"Enter roundabout and leave at nineth exit[ onto <b>%s</b>]",
 "DIRECTION_11-x":"Enter roundabout and leave at one of the too many exits[ onto <b>%s</b>]",
-"DIRECTION_15":"You have reached your destination"
+"DIRECTION_15":"You have reached your destination",
+// notifications
+"NOTIFICATION_MAINTENANCE_HEADER":	"Scheduled Maintenance",
+"NOTIFICATION_MAINTENANCE_BODY":	"The OSRM Website is down for a scheduled maintenance. " + 
+									"Please be patient while required updates are performed. " +
+									"The site will be back online shortly." +
+									"<br/><br/>" + 
+									"In the meantime you may want to go out an map a friendly neighborhood near you..." + 
+									"<br/><br/><br/>[OSRM]",
+"NOTIFICATION_LOCALIZATION_HEADER":	"Did you know? You can change the display language.",
+"NOTIFICATION_LOCALIZATION_BODY":	"You can use the pulldown menu in the upper left corner to select your favorite language. " +
+									"<br/><br/>" +
+									"Don't despair if you cannot find your language of choice. " +
+									"If you want, you can help to provide additional translations! " +
+									"Visit <a href='https://github.com/DennisSchiefer/Project-OSRM-Web'>here</a> for more information.",
+"NOTIFICATION_CLICKING_HEADER":		"Did you know? You can click on the map to set route markers.",
+"NOTIFICATION_CLICKING_BODY":		"You can click on the map with the left mouse button to set a source marker (green) or a target marker (red), " +
+									"if the source marker already exists. " +
+									"The address of the selected location will be displayed in the boxes to the left. " + 
+									"<br/><br/>" +
+									"You can delete a marker by clicking on it again with the left mouse button.",
+"NOTIFICATION_DRAGGING_HEADER":		"Did you know? You can drag each route marker on the map.",
+"NOTIFICATION_DRAGGING_BODY":		"You can drag a marker by clicking on it with the left mouse button and holding the button pressed. " +
+									"Then you can move the marker around the map and the route will be updated instantaneously. " +
+									"<br/><br/>" +
+									"You can even create intermediate markers by dragging them off of the main route! "
 };
 
 // set GUI language on load

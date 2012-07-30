@@ -33,7 +33,7 @@ OSRM.init = function() {
 	OSRM.Localization.init();	
 	
 	// stop if in maintenance mode
-	if( OSRM.inMaintenance() == true )
+	if( OSRM.GUI.inMaintenance() == true )
 		return;
 	
  	// check if the URL contains some GET parameter, e.g. for showing a route
@@ -288,16 +288,6 @@ OSRM.parseParameters = function(){
 	
 	// default case: do nothing	
 	return;
-};
-
-
-// check whether to activate maintenance mode
-OSRM.inMaintenance = function(){
-	if( OSRM.DEFAULTS.MAINTENANCE == true ) {
-		OSRM.GUI.exclusiveNotify( OSRM.DEFAULTS.MAINTENANCE_HEADER, OSRM.DEFAULTS.MAINTENANCE_TEXT, false);
-		return true;
-	}
-	return false;
 };
 
 

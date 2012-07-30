@@ -49,7 +49,7 @@ init: function() {
 	OSRM.Localization.setLanguage( OSRM.DEFAULTS.LANGUAGE );
 },
 setLanguageWrapper: function(language) {		// wrapping required to correctly prevent localization tooltip from showing
-	OSRM.GUI.deactivateTooltip( "localization" );
+	OSRM.GUI.deactivateTooltip( "LOCALIZATION" );
 	OSRM.Localization.setLanguage(language);
 },
 setLanguage: function(language) {

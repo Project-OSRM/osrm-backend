@@ -91,8 +91,14 @@ OSRM.DEFAULTS = {
 			bing:true,
 		}
 	],
-	
-	MAINTENANCE: false,
-	MAINTENANCE_HEADER: "Scheduled Maintenance",
-	MAINTENANCE_TEXT: "The OSRM Website is down for a scheduled maintenance. Please be patient while required updates are performed. The site will be back online shortly.<br/><br/>In the meantime you may want to go out an map a friendly neighborhood near you...<br/><br/><br/>[OSRM]",	
+
+	NOTIFICATIONS: {
+		LOCALIZATION:	1800000,	// 30min
+		CLICKING: 		60000,		// 1min
+		DRAGGING: 		120000,		// 2min 
+		MAINTENANCE:	false
+	},
+
+	OVERRIDE_MAINTENANCE_HEADER: undefined,
+	OVERRIDE_MAINTENANCE_BODY: undefined
 };

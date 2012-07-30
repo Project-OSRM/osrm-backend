@@ -22,51 +22,40 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.GUI.extend( {
 	
 // tooltips
-tooltips: {
-	// triggered in OSRM.Localization.setLanguageWrapper
-	localization:
-	{	timeout:	1800000,		// 30min
-		header: 	"Did you know? You can change the display language.",
-		body: 		"You can use the pulldown menu in the upper left corner to select your favorite language. " +
-					"<br/><br/>" +
-					"Don't despair if you cannot find your language of choice. " +
-					"If you want, you can help to provide additional translations! " +
-					"Visit <a href='https://github.com/DennisSchiefer/Project-OSRM-Web'>here</a> for more information."
-	},
-	// triggered in OSRM.Map.click
-	clicking:
-	{	timeout:	60000,		// 1min
-		header: 	"Did you know? You can click on the map to set route markers.",
-		body:		"You can click on the map with the left mouse button to set a source marker (green) or a target marker (red), " +
-					"if the source marker already exists. " +
-					"The address of the selected location will be displayed in the boxes to the left. " + 
-					"<br/><br/>" +
-					"You can delete a marker by clicking on it again with the left mouse button."
-	},
-	// triggered in OSRM.Routing.getRoute_Dragging	
-	dragging:
-	{	timeout:	120000,		// 2min
-		header: 	"Did you know? You can drag each route marker on the map.",
-		body:		"You can drag a marker by clicking on it with the left mouse button and holding the button pressed. " +
-					"Then you can move the marker around the map and the route will be updated instantaneously. " +
-					"<br/><br/>" +
-					"You can even create intermediate markers by dragging them off of the main route! "
-	}
-},
+activeExclusive: undefined,
+activeTooltip: undefined,
+tooltips: {},
+	// LOCALIZATION:	deactivation triggered in OSRM.Localization.setLanguageWrapper
+	// CLICKING:		deactivation triggered in OSRM.Map.click
+	// DRAGGING:		deactivation triggered in OSRM.Routing.getRoute_Dragging
+	// MAINTENANCE:		deactivation only by config
 
 
 // initialize notifications and tooltip timers
 init: function() {
-	// notifications
-	// [nothing to be done at the moment]
+	// exclusive notifications
+	var config = OSRM.DEFAULTS.NOTIFICATIONS;
+	if( config["MAINTENANCE"] == true ) {
+		var header = OSRM.DEFAULTS.OVERRIDE_MAINTENANCE_HEADER || OSRM.loc("NOTIFICATION_MAINTENANCE_HEADER");
+		var body = OSRM.DEFAULTS.OVERRIDE_MAINTENANCE_BODY || OSRM.loc("NOTIFICATION_MAINTENANCE_BODY");
+		OSRM.GUI.exclusiveNotify( header, body, false);
+		OSRM.GUI.activeExclusive = "MAINTENANCE";
+		return;
+	}
 	
 	// tooltip timers
+	var config = OSRM.DEFAULTS.NOTIFICATIONS;	
 	var tooltips = OSRM.GUI.tooltips;
-	for( id in tooltips ) {
+	for( id in config ) {
+		// skip notification?
+		if( !OSRM.Utils.isNumber( config[id] ) )
+			continue;		
+		// create structure to hold timer data
+		tooltips[id] = {};
 		// start timer
 		tooltips[id]._timer = setTimeout(
 				function(_id){ return function(){OSRM.GUI._showTooltip(_id);}; }(id),
-				tooltips[id].timeout
+				config[id]
 		);
 		
 		// mark tooltip as pending
@@ -87,6 +76,7 @@ deactivateTooltip: function(id) {
 // show tooltip after timer expired
 _showTooltip: function(id) {
 	var tooltips = OSRM.GUI.tooltips;
+	// only show tooltip if it exists
 	if(tooltips[id] == undefined)
 		return;	
 	
@@ -96,16 +86,18 @@ _showTooltip: function(id) {
 	}
 		
 	// if a notification is currently shown, restart timer
+	var config = OSRM.DEFAULTS.NOTIFICATIONS;
 	if( OSRM.GUI.isTooltipVisible() ) {
 		tooltips[id]._timer = setTimeout(
 				function(_id){ return function(){OSRM.GUI._showTooltip(_id);}; }(id),
-				tooltips[id].timeout
+				config[id]
 		);		
 		return;
 	}
 	
 	// show notification
-	OSRM.GUI.tooltipNotify( tooltips[id].header, tooltips[id].body );
+	OSRM.GUI.tooltipNotify( OSRM.loc("NOTIFICATION_"+id+"_HEADER"), OSRM.loc("NOTIFICATION_"+id+"_BODY") );
+	OSRM.GUI.activeTooltip = id;
 	
 	// mark tooltip as no longer pending
 	tooltips[id]._pending = false;
@@ -121,11 +113,32 @@ exclusiveNotify: function( header, text, closable ){
 		document.getElementById('exclusive-notification-toggle').onclick = OSRM.GUI.exclusiveDenotify;
 	else
 		document.getElementById('exclusive-notification-toggle').style.display = "none";
+	OSRM.GUI.exclusiveResize();
 },
 exclusiveDenotify: function() {
 	document.getElementById('exclusive-notification-blanket').style.display = "none";
+	OSRM.GUI.activeExclusive = undefined;
 },
-
+exclusiveUpdate: function() {
+	if( OSRM.GUI.activeExclusive == undefined )
+		return;
+	
+	// override mainly intended for maintenance mode
+	var header = OSRM.DEFAULTS["OVERRIDE_"+OSRM.GUI.activeExclusive+"_HEADER"] || OSRM.loc("NOTIFICATION_MAINTENANCE_HEADER");
+	var body = OSRM.DEFAULTS["OVERRIDE_"+OSRM.GUI.activeExclusive+"_BODY"] || OSRM.loc("NOTIFICATION_MAINTENANCE_BODY");
+	
+	document.getElementById('exclusive-notification-label').innerHTML = header;
+	document.getElementById('exclusive-notification-box').innerHTML = body;
+	OSRM.GUI.exclusiveResize();
+},
+exclusiveResize: function() {
+	var height = document.getElementById('exclusive-notification-box').clientHeight;
+	document.getElementById('exclusive-notification-content').style.height = (height + 28) + "px";
+	document.getElementById('exclusive-notification-wrapper').style.height = (height + 48) + "px";
+},
+inMaintenance: function() {
+	return OSRM.GUI.activeExclusive == "MAINTENANCE"; 
+},
 
 // tooltip notification
 tooltipNotify: function( header, text ){
@@ -137,6 +150,18 @@ tooltipNotify: function( header, text ){
 	
 	document.getElementById('tooltip-notification-toggle').onclick = OSRM.GUI.tooltipDenotify;
 	document.getElementById('tooltip-notification-resize').onclick = OSRM.GUI.tooltipResize;
+},
+tooltipDenotify: function() {
+	document.getElementById('tooltip-notification-wrapper').style.display = "none";
+	OSRM.GUI.activeTooltip = undefined;
+},
+tooltipUpdate: function() {
+	if( OSRM.GUI.activeTooltip == undefined )
+		return;
+	document.getElementById('tooltip-notification-label').innerHTML = OSRM.loc("NOTIFICATION_"+OSRM.GUI.activeTooltip+"_HEADER");
+	document.getElementById('tooltip-notification-box').innerHTML = OSRM.loc("NOTIFICATION_"+OSRM.GUI.activeTooltip+"_BODY");
+	OSRM.GUI.tooltipResize();
+	OSRM.GUI.tooltipResize();															// simple trick to retain opened/closed state of tooltip
 },
 tooltipResize: function() {
 	if( document.getElementById('tooltip-notification-box').style.display == "none" ) {	
@@ -152,11 +177,15 @@ tooltipResize: function() {
 		document.getElementById('tooltip-notification-resize').className = "iconic-button down-marker top-right-button";
 	}
 },
-tooltipDenotify: function() {
-	document.getElementById('tooltip-notification-wrapper').style.display = "none";
-},
 isTooltipVisible: function() {
 	return document.getElementById('tooltip-notification-wrapper').style.display == "block"; 
+},
+
+
+// update language of any notification
+updateNotifications: function() {
+	OSRM.GUI.exclusiveUpdate();
+	OSRM.GUI.tooltipUpdate();
 }
 
 });

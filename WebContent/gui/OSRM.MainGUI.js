@@ -74,6 +74,7 @@ setLabels: function() {
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[0].innerHTML = OSRM.loc("GUI_KILOMETERS");
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[1].innerHTML = OSRM.loc("GUI_MILES");
 	OSRM.GUI.selectorOnChange( document.getElementById("gui-units-toggle") );
+	OSRM.GUI.updateNotifications();
 },
 
 // clear output area
