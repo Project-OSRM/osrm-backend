@@ -20,18 +20,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 OSRM.Route = function() {
-	this._current_route		= new OSRM.SimpleRoute("current" , {} );
-	this._alternative_route	= new OSRM.SimpleRoute("alternative" , {} );
-	this._old_route			= new OSRM.SimpleRoute("old", {color:"#123"} );
+	this._current_route		= new OSRM.SimpleRoute("current" , {dashArray:""} );
+	this._alternative_route	= new OSRM.SimpleRoute("alternative" , {dashArray:""} );
+	this._old_route			= new OSRM.SimpleRoute("old", {color:"#123", dashArray:""} );
 	this._unnamed_route		= new OSRM.MultiRoute("unnamed");
 	
-	this._current_route_style	= {color:'#0033FF', weight:5};
+	this._current_route_style	= {color:'#0033FF', weight:5, dashArray:""};
 	this._current_noroute_style	= {color:'#222222', weight:2, dashArray:"8,6"};
-	this._old_route_style	= {color:'#112233', weight:5};
+	this._old_route_style	= {color:'#112233', weight:5, dashArray:""};
 	this._old_noroute_style	= {color:'#000000', weight:2, dashArray:"8,6"};
-	this._unnamed_route_style = {color:'#FF00FF', weight:10};
-	this._old_unnamed_route_style = {color:'#990099', weight:10};
-	this._alternative_route_style	= {color:'#770033', weight:5, opacity:0.6};
+	this._unnamed_route_style = {color:'#FF00FF', weight:10, dashArray:""};
+	this._old_unnamed_route_style = {color:'#990099', weight:10, dashArray:""};
+	this._alternative_route_style	= {color:'#770033', weight:5, opacity:0.6, dashArray:""};
 	
 	this._noroute = OSRM.Route.ROUTE;
 	this._history = new OSRM.HistoryRoute();

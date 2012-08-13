@@ -94,7 +94,7 @@ OSRM.drawRoute = function( positions ) {
 	if( OSRM.G.route == undefined )
 		OSRM.G.route = new L.Polyline();
 	OSRM.G.route.setLatLngs( positions );
-	OSRM.G.route.setStyle( {clickable:false,color:'#0033FF', weight:5} );
+	OSRM.G.route.setStyle( {clickable:false,color:'#0033FF', weight:5, dashArray:""} );
 	OSRM.G.map.addLayer( OSRM.G.route );	
 };
 OSRM.updateRoute = function( positions ) {
