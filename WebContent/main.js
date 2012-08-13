@@ -28,7 +28,7 @@ OSRM.init = function() {
 	OSRM.GUI.init();
 	OSRM.Map.init();
 	OSRM.Printing.init();
-//	OSRM.Routing.init();
+	OSRM.Routing.init();
 //	OSRM.RoutingAlternatives.init();
 	OSRM.Localization.init();	
 	

@@ -80,13 +80,13 @@ initPosition: function() {
 
 // map event handlers
 zoomed: function(e) {
-	/*if(OSRM.G.dragging)
+	if(OSRM.G.dragging)
 		OSRM.Routing.getRoute_Dragging();
 	else
-		OSRM.Routing.getRoute_Redraw({keepAlternative:true});*/
+		OSRM.Routing.getRoute_Redraw({keepAlternative:true});
 },
 contextmenu: function(e) {;},
-mousemove: function(e) { },//OSRM.Via.drawDragMarker(e); },
+mousemove: function(e) { OSRM.Via.drawDragMarker(e); },
 click: function(e) {
 	OSRM.GUI.deactivateTooltip( "CLICKING" );	
 	if( !OSRM.G.markers.hasSource() ) {
