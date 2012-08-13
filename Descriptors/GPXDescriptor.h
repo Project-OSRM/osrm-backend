@@ -35,7 +35,7 @@ public:
     void SetConfig(const _DescriptorConfig& c) { config = c; }
     void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine) {
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        reply.content += "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" "
+        reply.content += "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" xmlns=\"http://www.topografix.com/GPX/1/1\" "
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                 "\">";
