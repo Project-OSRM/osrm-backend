@@ -155,9 +155,10 @@ public:
         bool foundNode = false;
         _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
-        unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
+        const unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
-        for(int j = -32768; (j < (32768+1)) && (fileIndex != UINT_MAX); j+=32768) {
+        const int lowerBoundForLoop = (fileIndex < 32768 ? 0 : -32768);
+        for(int j = lowerBoundForLoop; (j < (32768+1)) && (fileIndex != UINT_MAX); j+=32768) {
             for(int i = -1; i < 2; ++i){
                 GetContentsOfFileBucketEnumerated(fileIndex+i+j, candidates);
             }
