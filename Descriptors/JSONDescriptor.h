@@ -257,7 +257,7 @@ public:
                     intToString(prefixSumOfNecessarySegments, tmpLength);
                     reply.content += tmpLength;
                     reply.content += ",";
-                    intToString(segment.duration, tmpDuration);
+                    intToString(segment.duration/10, tmpDuration);
                     reply.content += tmpDuration;
                     reply.content += ",\"";
                     intToString(segment.length, tmpLength);
