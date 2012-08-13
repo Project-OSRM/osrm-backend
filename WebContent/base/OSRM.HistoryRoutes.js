@@ -21,15 +21,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.HistoryRoute = function() {
 	// style and count of history routes
-	this._history_styles = [{dashed:false, color:'#FFFFFF', opacity:0.5, weight:5},
-	                        {dashed:false, color:'#0000DD', opacity:0.45, weight:5},
-	                        {dashed:false, color:'#0000BB', opacity:0.40, weight:5},
-	                        {dashed:false, color:'#000099', opacity:0.35, weight:5},
-	                        {dashed:false, color:'#000077', opacity:0.30, weight:5},
-	                        {dashed:false, color:'#000055', opacity:0.25, weight:5},
-	                        {dashed:false, color:'#000033', opacity:0.20, weight:5},
-	                        {dashed:false, color:'#000011', opacity:0.15, weight:5},
-	                        {dashed:false, color:'#000000', opacity:0.10, weight:5}	                              
+	this._history_styles = [{color:'#FFFFFF', opacity:0.5, weight:5},
+	                        {color:'#0000DD', opacity:0.45, weight:5},
+	                        {color:'#0000BB', opacity:0.40, weight:5},
+	                        {color:'#000099', opacity:0.35, weight:5},
+	                        {color:'#000077', opacity:0.30, weight:5},
+	                        {color:'#000055', opacity:0.25, weight:5},
+	                        {color:'#000033', opacity:0.20, weight:5},
+	                        {color:'#000011', opacity:0.15, weight:5},
+	                        {color:'#000000', opacity:0.10, weight:5}	                              
 	                        ];
 	this._history_length = this._history_styles.length;
 	
@@ -37,7 +37,7 @@ OSRM.HistoryRoute = function() {
 	this._history = [];
 	for(var i=0, size=this._history_length; i<size; i++) {
 		var history = {};
-		history.route = new OSRM.SimpleRoute("current" , {dashed:false} );
+		history.route = new OSRM.SimpleRoute("current" , {} );
 		history.markers = [];
 		history.checksum = null;
 		this._history.push(history);

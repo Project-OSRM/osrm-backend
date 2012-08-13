@@ -22,10 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // simple route class (wraps Leaflet Polyline)
 OSRM.SimpleRoute = function (label, style) {
 	this.label = (label ? label : "route");
-	this.route = new L.DashedPolyline();
-	this.route.setLatLngs( [] );
-	if(style) this.route.setStyle( style );
-
+	this.route = new L.Polyline( [], style );
 	this.shown = false;
 };
 OSRM.extend( OSRM.SimpleRoute,{
@@ -82,7 +79,7 @@ isShown: function() {
 	return this.shown;
 },
 addRoute: function(positions) {
-	var line = new L.DashedPolyline( positions );
+	var line = new L.Polyline( positions );
 	line.on('click', function(e) { OSRM.G.route.fire('click',e); });
 	this.route.addLayer( line );
 },

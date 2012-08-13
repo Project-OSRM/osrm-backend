@@ -51,8 +51,8 @@ init: function() {
     	center: new L.LatLng(OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE),
 	    zoom: OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL,
 	    layers: [base_maps[tile_servers[0].display_name]],	    
-	    zoomAnimation: false,								// remove animations -> routes are not hidden during zoom
-	    fadeAnimation: false
+	    zoomAnimation: true,								// remove animations -> routes are not hidden during zoom
+	    fadeAnimation: true
 	});
 
 	// add layer control
@@ -80,10 +80,10 @@ initPosition: function() {
 
 // map event handlers
 zoomed: function(e) {
-	if(OSRM.G.dragging)
+	/*if(OSRM.G.dragging)
 		OSRM.Routing.getRoute_Dragging();
 	else
-		OSRM.Routing.getRoute_Redraw({keepAlternative:true});
+		OSRM.Routing.getRoute_Redraw({keepAlternative:true});*/
 },
 contextmenu: function(e) {;},
 mousemove: function(e) { },//OSRM.Via.drawDragMarker(e); },
