@@ -42,12 +42,6 @@ OSRM.init = function() {
 // 	// only init default position / geolocation position if GET parameters do not specify a different one
 // 	if( OSRM.G.initial_position_override == false )
 // 		OSRM.Map.initPosition();
-	
-	
-	//var polyline = L.polyline([ [51.509, -0.08], [51.503, -0.06], [51.51, -0.047] ], {dashArray:"8,6"}).addTo( OSRM.G.map );
-	var route = new OSRM.SimpleRoute("test", {dashArray:"8,5"});
-	route.setPositions( [ [51.509, -0.08], [51.503, -0.06], [51.51, -0.047] ] );
-	route.show();
 };
 
 
