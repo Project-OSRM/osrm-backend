@@ -79,15 +79,13 @@ OSRM.DEFAULTS = {
 		{
 			display_name: 'Bing Road',
 			apikey:'AjCb2f6Azv_xt9c6pl_xok96bgAYrXQNctnG4o07sTj4iS9N68Za4B3pRJyeCjGr',	// please use your own apikey (http://msdn.microsoft.com/en-us/library/ff428642.aspx) 
-			type:"Road",
-			options:{minZoom: 1},
+			options:{type:"Road", minZoom: 1},
 			bing:true,
 		},
 		{
 			display_name: 'Bing Aerial',
 			apikey:'AjCb2f6Azv_xt9c6pl_xok96bgAYrXQNctnG4o07sTj4iS9N68Za4B3pRJyeCjGr',	// please use your own apikey (http://msdn.microsoft.com/en-us/library/ff428642.aspx)
-			type:"Aerial",
-			options:{minZoom: 1},
+			options:{type:"Aerial", minZoom: 1},
 			bing:true,
 		}
 	],
