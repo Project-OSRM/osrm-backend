@@ -25,7 +25,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <signal.h>
 #endif
 
+#include <cmath>
 #include <climits>
+#include <cstdlib>
 #include <iostream>
 
 using namespace std;
@@ -36,7 +38,7 @@ using namespace std;
 #define STXXL_VERBOSE_LEVEL -100
 
 #define INFO(x) do {std::cout << "[info " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
-#define ERR(x) do {std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; exit(-1);} while(0);
+#define ERR(x) do {std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; std::exit(-1);} while(0);
 #define WARN(x) do {std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 
 #ifdef NDEBUG
@@ -51,10 +53,14 @@ using namespace std;
 #define M_PI 3.14159265358979323846
 #endif
 
-#ifndef HAVE_ROUNDF
-#include <boost/math/tr1.hpp>
-using namespace boost::math;
+//Necessary workaround for Windows as VS doesn't implement C99
+#ifdef _MSC_VER
+template<typename digitT>
+digitT round(digitT x) {
+    return std::floor(x + 0.5);
+}
 #endif
+
 
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
