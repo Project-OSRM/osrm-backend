@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Localization["de"] = {
 // own language
+"CULTURE": "de-DE",
 "LANGUAGE": "Deutsch",
 //gui
 "GUI_START": "Start",

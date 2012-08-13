@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Localization["lv"] = {
 // own language
+"CULTURE": "lv-LV",
 "LANGUAGE": "Latviešu",
 // gui
 "GUI_START": "Sākums",

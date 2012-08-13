@@ -62,6 +62,9 @@ setLanguage: function(language) {
 		// change gui language		
 		OSRM.GUI.setLabels();
 		// change map language
+		for(var i=0, size=OSRM.G.localizable_maps.length; i<size; i++) {
+			OSRM.G.localizable_maps[i].options.culture = OSRM.loc("CULTURE");
+		}
 		if(OSRM.G.map.layerControl.getActiveLayer().redraw)
 			OSRM.G.map.layerControl.getActiveLayer().redraw();
 		// requery data

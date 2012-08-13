@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Localization["fi"] = {
 // own language
+"CULTURE": "fi-FI",
 "LANGUAGE": "Suomi",
 //gui
 "GUI_START": "Lähtöpaikka",

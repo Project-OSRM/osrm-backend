@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.Localization["dk"] = {
 // own language
+"CULTURE": "da-DK",
 "LANGUAGE": "Dansk",
 //gui
 "GUI_START": "Start",

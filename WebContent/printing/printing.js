@@ -55,8 +55,9 @@ OSRM.prefetchIcons = function(images_list) {
 OSRM.drawMap = function(tile_server, bounds) {
  	// setup map
 	var tile_layer;
-	if( tile_server.bing )	tile_layer = new L.TileLayer.Bing(tile_server.apikey, tile_server.type, tile_server.options);
+	if( tile_server.bing )	tile_layer = new L.BingLayer(tile_server.apikey, tile_server.options);
 	else 					tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
+	tile_layer.options.culture = OSRM.loc("CULTURE");
 	OSRM.G.map = new OSRM.MapView("overview-map", {
     	center: new L.LatLng(48.84, 10.10),
 	    zoom: 13,
