@@ -49,7 +49,7 @@ OSRM.prefetchIcons = function(images_list) {
 			popupAnchor:  [0, -33]
 		} });
 	for(var i=0; i<icon_list.length; i++) {
-		OSRM.G.icons[icon_list[i].id] = new LabelMarkerIcon({iconUrl: images_list[icon_list[i].image_id].getAttribute("src")});
+		OSRM.G.icons[icon_list[i].id] = new LabelMarkerIcon({iconUrl: images_list[icon_list[i].image_id].src });
 	}	
 };
 
@@ -75,20 +75,25 @@ OSRM.drawMap = function(tile_server, bounds) {
 	    doubleClickZoom:false
 	});
 	
-	OSRM.G.map.fitBoundsUI(bounds);
-	return OSRM.G.map.getBoundsZoom(bounds);
+	// need to rebuild objects for instanceof to work correctly
+    var converted_bounds = new L.LatLngBounds([bounds.getSouthWest().lat, bounds.getSouthWest().lng], [bounds.getNorthEast().lat, bounds.getNorthEast().lng]);
+    
+	OSRM.G.map.fitBoundsUI(converted_bounds);
+	return OSRM.G.map.getBoundsZoom(converted_bounds);
 };
 
 
 // manage makers
 OSRM.drawMarkers = function( markers ) {
-	OSRM.G.map.addLayer( new L.LabelMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
-	for(var i=1, size=markers.length-1; i<size; i++) {
-		var via_marker = new L.LabelMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} );
+	// need to rebuild objects for instanceof to work correctly	
+	OSRM.G.map.addLayer( new L.LabelMarker( [markers[0].getPosition().lat,markers[0].getPosition().lng] , {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
+	var last = markers.length-1;
+	for(var i=1; i<last; i++) {
+		var via_marker = new L.LabelMarker( [markers[i].getPosition().lat,markers[i].getPosition().lng], {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} );
 		OSRM.G.map.addLayer( via_marker );
 		via_marker.setLabel(i);
 	}
-	OSRM.G.map.addLayer( new L.LabelMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ) );
+	OSRM.G.map.addLayer( new L.LabelMarker( [markers[last].getPosition().lat,markers[last].getPosition().lng], {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ) );
 };
 
 
@@ -96,12 +101,19 @@ OSRM.drawMarkers = function( markers ) {
 OSRM.drawRoute = function( positions ) {
 	if( OSRM.G.route == undefined )
 		OSRM.G.route = new L.Polyline( [] );
-	OSRM.G.route.setLatLngs( positions );
+	
+	// need to rebuild objects for instanceof to work correctly
+	var converted_positions = [];	
+	if( positions[0].lat )		// geometry returned by OSRM.G.route.getPositions -> original data
+		for(var i=0, size=positions.length; i<size; i++)
+			converted_positions.push( [positions[i].lat, positions[i].lng] );
+	else						// geometry returned by OSRM.RoutingGeometry._decode -> requeried data
+		for(var i=0, size=positions.length; i<size; i++)
+			converted_positions.push( [positions[i][0], positions[i][1]] );
+	
+	OSRM.G.route.setLatLngs( converted_positions );
 	OSRM.G.route.setStyle( {clickable:false,color:'#0033FF', weight:5, dashArray:""} );
 	OSRM.G.map.addLayer( OSRM.G.route );	
-};
-OSRM.updateRoute = function( positions ) {
-	OSRM.G.route.setLatLngs( positions );
 };
 
 
