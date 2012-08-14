@@ -20,7 +20,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM = {};
 OSRM.GLOBALS = { main_handle:{boxVisible:function(){return false;}} };	// needed for fitBoundsUI to work
-OSRM.Localization = { culture:"en-US" };								// needed for localized map tiles
+OSRM.GLOBALS.Localization = { culture:"en-US" };						// needed for localized map tiles
+OSRM.GLOBALS.DISTANCE_FORMAT = 0;										// needed for scale control
 OSRM.G = OSRM.GLOBALS;
 
 
@@ -60,7 +61,7 @@ OSRM.drawMap = function(tile_server, bounds) {
 	var tile_layer;
 	if( tile_server.bing )	tile_layer = new L.BingLayer(tile_server.apikey, tile_server.options);
 	else 					tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
-	tile_layer.options.culture = OSRM.Localization.culture;
+	tile_layer.options.culture = OSRM.G.Localization.culture;
 	OSRM.G.map = new OSRM.MapView("overview-map", {
     	center: new L.LatLng(48.84, 10.10),
 	    zoom: 13,
@@ -74,6 +75,12 @@ OSRM.drawMap = function(tile_server, bounds) {
 	    touchZoom:false,
 	    doubleClickZoom:false
 	});
+	
+	// add scale control
+	OSRM.G.map.scaleControl = new L.Control.Scale();
+	OSRM.G.map.scaleControl.options.metric = (OSRM.G.DISTANCE_FORMAT != 1);
+	OSRM.G.map.scaleControl.options.imperial = (OSRM.G.DISTANCE_FORMAT == 1);	
+	OSRM.G.map.scaleControl.addTo(OSRM.G.map);	
 	
 	// need to rebuild objects for instanceof to work correctly
     var converted_bounds = new L.LatLngBounds([bounds.getSouthWest().lat, bounds.getSouthWest().lng], [bounds.getNorthEast().lat, bounds.getNorthEast().lng]);

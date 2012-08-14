@@ -29,19 +29,19 @@ OSRM.init = function() {
 	OSRM.Map.init();
 	OSRM.Printing.init();
 	OSRM.Routing.init();
-//	OSRM.RoutingAlternatives.init();
+	OSRM.RoutingAlternatives.init();
 	OSRM.Localization.init();	
 	
 	// stop if in maintenance mode
 	if( OSRM.GUI.inMaintenance() == true )
 		return;
 	
-// 	// check if the URL contains some GET parameter, e.g. for showing a route
-// 	OSRM.parseParameters();
-// 
-// 	// only init default position / geolocation position if GET parameters do not specify a different one
-// 	if( OSRM.G.initial_position_override == false )
-// 		OSRM.Map.initPosition();
+ 	// check if the URL contains some GET parameter, e.g. for showing a route
+ 	OSRM.parseParameters();
+ 
+ 	// only init default position / geolocation position if GET parameters do not specify a different one
+ 	if( OSRM.G.initial_position_override == false )
+ 		OSRM.Map.initPosition();
 };
 
 
@@ -206,7 +206,7 @@ OSRM.parseParameters = function(){
 			var type = parseInt(name_val[1]);
 			if(type != 0 && type != 1)
 				return;
-			OSRM.Utils.setToHumanDistanceFunction(type);
+			OSRM.GUI.changeDistanceFormat(type);
 		}		
 		else if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');

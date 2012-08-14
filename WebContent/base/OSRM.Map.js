@@ -62,6 +62,12 @@ init: function() {
     // move zoom markers
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.G.main_handle.boxWidth()+10)+"px";
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
+	
+	// add scale control
+	OSRM.G.map.scaleControl = new L.Control.Scale();
+	OSRM.G.map.scaleControl.options.metric = (OSRM.G.DISTANCE_FORMAT != 1);
+	OSRM.G.map.scaleControl.options.imperial = (OSRM.G.DISTANCE_FORMAT == 1);	
+	OSRM.G.map.scaleControl.addTo(OSRM.G.map);
 
 	// map events
 	OSRM.G.map.on('zoomend', OSRM.Map.zoomed );

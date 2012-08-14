@@ -35,13 +35,6 @@ toHumanTime: function(seconds){
    else{ return hours + '&nbsp;' + 'h' + '&nbsp;' + minutes + '&nbsp;' + 'min';}
 },
 //human readable distance
-setToHumanDistanceFunction: function(type) {
-	OSRM.G.DISTANCE_FORMAT = type;
-	if( type == 1 )
-		OSRM.Utils.toHumanDistance = OSRM.Utils.toHumanDistanceMiles;
-	else
-		OSRM.Utils.toHumanDistance = OSRM.Utils.toHumanDistanceMeters;	
-},
 toHumanDistanceMeters: function(meters){
 	var distance = parseInt(meters);
 	

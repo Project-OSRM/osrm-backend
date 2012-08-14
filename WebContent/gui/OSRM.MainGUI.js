@@ -100,9 +100,28 @@ afterMainTransition: function() {
 },
 
 // toggle distance units
-onUnitsChanged: function(value) {
-	OSRM.Utils.setToHumanDistanceFunction(value);
+onUnitsChanged: function(type) {
+	OSRM.GUI.changeDistanceFormat(type);
 	OSRM.Routing.getRoute({keepAlternative:true});
+},
+
+// change distance format
+changeDistanceFormat: function(type) {
+	OSRM.G.DISTANCE_FORMAT = type;
+	
+	// change scale control
+	if(OSRM.G.map) {
+		OSRM.G.map.scaleControl.removeFrom(OSRM.G.map);
+		OSRM.G.map.scaleControl.options.metric = (type != 1);
+		OSRM.G.map.scaleControl.options.imperial = (type == 1);
+		OSRM.G.map.scaleControl.addTo(OSRM.G.map);
+	}
+	
+	// change converter
+	if( type == 1 )
+		OSRM.Utils.toHumanDistance = OSRM.Utils.toHumanDistanceMiles;
+	else
+		OSRM.Utils.toHumanDistance = OSRM.Utils.toHumanDistanceMeters;
 },
 
 // set timestamp of data

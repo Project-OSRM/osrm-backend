@@ -233,10 +233,13 @@ printWindowLoaded: function(){
 	var stylesheet = OSRM.CSS.getStylesheet("printing.css", print_document);
 	for(var i=0; i<css_list.length; i++) {
 		OSRM.CSS.insert( stylesheet, css_list[i].id, "background-image:url("+ OSRM.Printing.BASE_DIRECTORY + OSRM.G.images[css_list[i].image_id].getAttribute("src") + ");" );
-	}	
+	}
+	
+	// scale control
+	print_window.OSRM.G.DISTANCE_FORMAT = OSRM.G.DISTANCE_FORMAT;
 	
 	// localization 
-	print_window.OSRM.Localization.culture = OSRM.loc("CULTURE"); 
+	print_window.OSRM.G.Localization.culture = OSRM.loc("CULTURE"); 
 	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
 	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );	
 	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() ) {		// error message if no route available (can trigger if user refreshes print-window)
