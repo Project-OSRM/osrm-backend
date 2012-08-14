@@ -20,7 +20,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM = {};
 OSRM.GLOBALS = { main_handle:{boxVisible:function(){return false;}} };	// needed for fitBoundsUI to work
-OSRM.Localization = { current_language:"en"};							// needed for localized map tiles
+OSRM.Localization = { culture:"en-US" };								// needed for localized map tiles
 OSRM.G = OSRM.GLOBALS;
 
 
@@ -41,7 +41,7 @@ OSRM.prefetchIcons = function(images_list) {
 	
 	var LabelMarkerIcon = L.LabelMarkerIcon.extend({
 		options: {
-			shadowUrl: OSRM.G.images["marker-shadow"].getAttribute("src"),
+			shadowUrl: images_list["marker-shadow"].src,
 			iconSize:     [25, 41],
 			shadowSize:   [41, 41],
 			iconAnchor:   [13, 41],
@@ -49,7 +49,7 @@ OSRM.prefetchIcons = function(images_list) {
 			popupAnchor:  [0, -33]
 		} });
 	for(var i=0; i<icon_list.length; i++) {
-		OSRM.G.icons[icon_list[i].id] = new LabelMarkerIcon({iconUrl: OSRM.G.images[icon_list[i].image_id].getAttribute("src")});
+		OSRM.G.icons[icon_list[i].id] = new LabelMarkerIcon({iconUrl: images_list[icon_list[i].image_id].getAttribute("src")});
 	}	
 };
 
@@ -60,7 +60,7 @@ OSRM.drawMap = function(tile_server, bounds) {
 	var tile_layer;
 	if( tile_server.bing )	tile_layer = new L.BingLayer(tile_server.apikey, tile_server.options);
 	else 					tile_layer = new L.TileLayer(tile_server.url, tile_server.options);
-	tile_layer.options.culture = OSRM.loc("CULTURE");
+	tile_layer.options.culture = OSRM.Localization.culture;
 	OSRM.G.map = new OSRM.MapView("overview-map", {
     	center: new L.LatLng(48.84, 10.10),
 	    zoom: 13,
@@ -95,7 +95,7 @@ OSRM.drawMarkers = function( markers ) {
 // manage route
 OSRM.drawRoute = function( positions ) {
 	if( OSRM.G.route == undefined )
-		OSRM.G.route = new L.Polyline();
+		OSRM.G.route = new L.Polyline( [] );
 	OSRM.G.route.setLatLngs( positions );
 	OSRM.G.route.setStyle( {clickable:false,color:'#0033FF', weight:5, dashArray:""} );
 	OSRM.G.map.addLayer( OSRM.G.route );	

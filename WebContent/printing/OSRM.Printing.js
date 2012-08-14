@@ -176,10 +176,11 @@ show: function(response) {
 	print_window.document.getElementById('overview-map-description').innerHTML = '<table class="description medium-font">' + header + '</table>';
 	
 	// draw map
-	var positions = OSRM.G.route.getPositions();
 	var tile_server_id = OSRM.G.map.getActiveLayerId();
-	var zoom = print_window.OSRM.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], new L.LatLngBounds( positions ) );
-	
+	var positions = OSRM.G.route.getPositions();	
+	var bounds = new L.LatLngBounds( positions );	
+	var zoom = print_window.OSRM.drawMap( OSRM.DEFAULTS.TILE_SERVERS[tile_server_id], bounds );
+
 	// draw markers
 	print_window.OSRM.prefetchIcons( OSRM.G.images );
 	print_window.OSRM.drawMarkers( OSRM.G.markers.route );
@@ -235,7 +236,7 @@ printWindowLoaded: function(){
 	}	
 	
 	// localization 
-	print_window.OSRM.Localization.current_language = OSRM.Localization.current_language; 
+	print_window.OSRM.Localization.culture = OSRM.loc("CULTURE"); 
 	print_document.getElementById('description-label').innerHTML = OSRM.loc( "ROUTE_DESCRIPTION" );
 	print_document.getElementById('overview-map-label').innerHTML = OSRM.loc( "OVERVIEW_MAP" );	
 	if( !OSRM.G.route.isRoute() || !OSRM.G.route.isShown() ) {		// error message if no route available (can trigger if user refreshes print-window)
