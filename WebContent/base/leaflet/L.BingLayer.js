@@ -117,6 +117,7 @@ L.BingLayer = L.TileLayer.extend({
 	_update_attribution: function() {
 		var bounds = this._map.getBounds();
 		var zoom = this._map.getZoom();
+		if(this._map.attributionControl)	// check if attributionControl is active
 		for (var i = 0; i < this._providers.length; i++) {
 			var p = this._providers[i];
 			if ((zoom <= p.zoomMax && zoom >= p.zoomMin) &&
@@ -133,6 +134,7 @@ L.BingLayer = L.TileLayer.extend({
 	},
 
 	onRemove: function(map) {
+		if(this._map.attributionControl)	// check if attributionControl is activ
 		for (var i = 0; i < this._providers.length; i++) {
 			var p = this._providers[i];
 			if (p.active) {
@@ -140,6 +142,6 @@ L.BingLayer = L.TileLayer.extend({
 				p.active = false;
 			}
 		}
-        	L.TileLayer.prototype.onRemove.apply(this, [map]);
+       	L.TileLayer.prototype.onRemove.apply(this, [map]);
 	}
 });
