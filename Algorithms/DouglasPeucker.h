@@ -34,7 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
  * Note: points may also be pre-selected*/
 
 //These thresholds are more or less heuristically chosen.
-static const double DouglasPeuckerThresholds[19] = { 10240000., 5120000., 2560000., 1280000., 640000., 320000., 160000., 80000., 40000., 20000., 10000., 5000., 2400., 1200., 200, 16, 6, 3., 1. };
+static double DouglasPeuckerThresholds[19] = { 10240000., 5120000., 2560000., 1280000., 640000., 320000., 160000., 80000., 40000., 20000., 10000., 5000., 2400., 1200., 200, 16, 6, 3., 1. };
 
 template<class PointT>
 class DouglasPeucker {
@@ -43,7 +43,7 @@ private:
     //Stack to simulate the recursion
     std::stack<PairOfPoints > recursionStack;
 
-    double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) {
+    double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) const {
         double r;
         const double x = (double)inputPoint.lat;
         const double y = (double)inputPoint.lon;
