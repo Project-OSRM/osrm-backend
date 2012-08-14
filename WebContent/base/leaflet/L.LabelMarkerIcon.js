@@ -15,12 +15,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// Leaflet extension: MarkerIcon
+// Leaflet extension: LabelMarkerIcon
 // [icon class with extra label and simple icon changing]
 
 
 // extended icon class 
-L.MarkerIcon = L.Icon.extend({
+L.LabelMarkerIcon = L.Icon.extend({
 	// altered icon creation (with label)
 	_createImg: function (src) {
 		var el;

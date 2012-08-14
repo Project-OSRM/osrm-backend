@@ -24,7 +24,7 @@ OSRM.Marker = function( label, style, position ) {
 	this.label = label ? label : "marker";
 	this.position = position ? position : new L.LatLng(0,0);
 
-	this.marker = new L.MouseMarker( this.position, style );
+	this.marker = new L.LabelMarker( this.position, style );
 	this.marker.parent = this;
 	
 	this.shown = false;
@@ -101,7 +101,7 @@ onDrag: function(e) {
 onDragStart: function(e) {
 	OSRM.GUI.deactivateTooltip( "DRAGGING" );	
 	OSRM.G.dragging = true;
-	this.switchIcon(this.options.dragicon);
+	this.changeIcon(this.options.dragicon);
 	
 	// store id of dragged marker
 	for( var i=0; i<OSRM.G.markers.route.length; i++)
@@ -119,7 +119,7 @@ onDragStart: function(e) {
 },
 onDragEnd: function(e) {
 	OSRM.G.dragging = false;
-	this.switchIcon(this.options.baseicon);
+	this.changeIcon(this.options.baseicon);
 	
 	this.parent.setPosition( e.target.getLatLng() );	
 	if (OSRM.G.route.isShown()) {

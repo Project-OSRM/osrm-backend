@@ -15,16 +15,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// Leaflet extension: MouseMarker
+// Leaflet extension: LabelMarker
 // [marker class that allows for changing icons while dragging]
 
 
 // extended marker class
-L.MouseMarker = L.Marker.extend({
-//	initialize: function (latlng, options) {
-//		L.Marker.prototype.initialize.apply(this, arguments);
-//	},
-	
+L.LabelMarker = L.Marker.extend({
 	// change marker icon
 	changeIcon: function( icon ) {
 		this.options.icon = icon;

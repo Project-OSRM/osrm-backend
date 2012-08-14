@@ -116,18 +116,22 @@ OSRM.prefetchIcons = function() {
 						{id:'marker-highlight-drag',			image_id:'marker-highlight-drag'}
 						//{id:'marker-drag',						image_id:'marker-drag'}				// special treatment because of size
 	              ];
-
+	
+	var LabelMarkerIcon = L.LabelMarkerIcon.extend({
+		options: {
+			shadowUrl: OSRM.G.images["marker-shadow"].getAttribute("src"),
+			iconSize:     [25, 41],
+			shadowSize:   [41, 41],
+			iconAnchor:   [13, 41],
+			shadowAnchor: [13, 41],
+			popupAnchor:  [0, -33]
+		} });
 	for(var i=0; i<icon_list.length; i++) {
-		var icon = {
-				iconUrl: OSRM.G.images[icon_list[i].image_id].getAttribute("src"), iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
-				shadowUrl: OSRM.G.images["marker-shadow"].getAttribute("src"), shadowSize: new L.Point(41, 41),
-				popupAnchor: new L.Point(0, -33)
-			};
-		OSRM.G.icons[icon_list[i].id] = new L.SwitchableIcon(icon);
+		OSRM.G.icons[icon_list[i].id] = new LabelMarkerIcon({iconUrl: OSRM.G.images[icon_list[i].image_id].getAttribute("src")});
 	}
 	
 	// special values for drag marker
-	OSRM.G.icons['marker-drag'] = new L.SwitchableIcon( {iconUrl: OSRM.G.images["marker-drag"].getAttribute("src"), iconSize: new L.Point(18, 18) } );
+	OSRM.G.icons['marker-drag'] = new L.LabelMarkerIcon( {iconUrl: OSRM.G.images["marker-drag"].getAttribute("src"), iconSize: new L.Point(18, 18) } );
 };
 
 

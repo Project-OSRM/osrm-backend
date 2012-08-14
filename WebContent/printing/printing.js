@@ -38,16 +38,19 @@ OSRM.prefetchIcons = function(images_list) {
 						{id:'marker-via',						image_id:'marker-via'},
 						{id:'marker-highlight',					image_id:'marker-highlight'}
 		              ];
-
+	
+	var LabelMarkerIcon = L.LabelMarkerIcon.extend({
+		options: {
+			shadowUrl: OSRM.G.images["marker-shadow"].getAttribute("src"),
+			iconSize:     [25, 41],
+			shadowSize:   [41, 41],
+			iconAnchor:   [13, 41],
+			shadowAnchor: [13, 41],
+			popupAnchor:  [0, -33]
+		} });
 	for(var i=0; i<icon_list.length; i++) {
-		var icon = {
-				// absolute directories used for compatibility with legacy IE (quirks mode)
-				iconUrl: images_list[icon_list[i].image_id].src, iconSize: new L.Point(25, 41), iconAnchor: new L.Point(13, 41),
-				shadowUrl: images_list["marker-shadow"].src, shadowSize: new L.Point(41, 41),
-				popupAnchor: new L.Point(0, -33)
-			};
-		OSRM.G.icons[icon_list[i].id] = new L.SwitchableIcon(icon);
-	}
+		OSRM.G.icons[icon_list[i].id] = new LabelMarkerIcon({iconUrl: OSRM.G.images[icon_list[i].image_id].getAttribute("src")});
+	}	
 };
 
 
@@ -79,13 +82,13 @@ OSRM.drawMap = function(tile_server, bounds) {
 
 // manage makers
 OSRM.drawMarkers = function( markers ) {
-	OSRM.G.map.addLayer( new L.MouseMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
+	OSRM.G.map.addLayer( new L.LabelMarker( markers[0].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-source']} ) );
 	for(var i=1, size=markers.length-1; i<size; i++) {
-		var via_marker = new L.MouseMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} );
+		var via_marker = new L.LabelMarker( markers[i].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-via']} );
 		OSRM.G.map.addLayer( via_marker );
 		via_marker.setLabel(i);
 	}
-	OSRM.G.map.addLayer( new L.MouseMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ) );
+	OSRM.G.map.addLayer( new L.LabelMarker( markers[markers.length-1].getPosition(), {draggable:false,clickable:false,icon:OSRM.G.icons['marker-target']} ) );
 };
 
 
