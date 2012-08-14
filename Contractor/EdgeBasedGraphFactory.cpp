@@ -353,12 +353,12 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
     INFO("Removing duplicate nodes (if any)");
     edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
-    INFO("Applying vector self-swap trick to free up memory");
-    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
+//    INFO("Applying vector self-swap trick to free up memory");
+//    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
     std::vector<EdgeBasedNode>(edgeBasedNodes).swap(edgeBasedNodes);
-    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
+//    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
     INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
-    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << (double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter);
+//    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << 2*((double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter));
     INFO("Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << numberOfTurnRestrictions << " restrictions.");
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
