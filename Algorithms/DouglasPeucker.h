@@ -34,7 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
  * Note: points may also be pre-selected*/
 
 //These thresholds are more or less heuristically chosen.
-static double DouglasPeuckerThresholds[19] = { 10240000., 5120000., 2560000., 1280000., 640000., 320000., 160000., 80000., 40000., 20000., 10000., 5000., 2400., 1200., 200, 16, 6, 3., 1. };
+static const double DouglasPeuckerThresholds[19] = { 10240000., 5120000., 2560000., 1280000., 640000., 320000., 160000., 80000., 40000., 20000., 10000., 5000., 2400., 1200., 200, 16, 6, 3., 1. };
 
 template<class PointT>
 class DouglasPeucker {
