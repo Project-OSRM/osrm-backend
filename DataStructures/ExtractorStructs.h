@@ -270,7 +270,7 @@ struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDSta
 };
 
 struct Settings {
-    Settings() : obeyBollards(true), obeyOneways(true), useRestrictions(true), ignoreAreas(false), accessTag("motorcar"), defaultSpeed(30), takeMinimumOfSpeeds(false), excludeFromGrid("ferry") {}
+    Settings() : obeyBollards(true), obeyOneways(true), useRestrictions(true), ignoreAreas(false), defaultSpeed(30), takeMinimumOfSpeeds(false), excludeFromGrid("ferry") {}
     StringToIntPairMap speedProfile;
     int operator[](const std::string & param) const {
         if(speedProfile.find(param) == speedProfile.end())
@@ -294,12 +294,14 @@ struct Settings {
     bool obeyOneways;
     bool useRestrictions;
     bool ignoreAreas;
-    std::string accessTag;
+    std::vector<std::string> accessTags;
     int defaultSpeed;
     bool takeMinimumOfSpeeds;
     std::string excludeFromGrid;
     boost::unordered_map<std::string, bool> accessRestrictedService;
     boost::unordered_map<std::string, bool> accessRestrictionKeys;
+    boost::unordered_map<std::string, bool> accessForbiddenKeys;
+    boost::unordered_map<std::string, bool> accessForbiddenDefault;
 };
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {

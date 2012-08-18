@@ -137,8 +137,10 @@ int main (int argc, char *argv[]) {
             } else if(name == "useRestrictions") {
                 if(value == "no")
                     settings.useRestrictions = false;
-            } else if(name == "accessTag") {
-                settings.accessTag = value;
+            } else if(name == "accessTags") {
+                std::vector<std::string> tokens;
+                stringSplit(value, ',', tokens);
+                settings.accessTags = tokens;
             } else if(name == "excludeFromGrid") {
                 settings.excludeFromGrid = value;
             } else if(name == "defaultSpeed") {
@@ -165,6 +167,24 @@ int main (int argc, char *argv[]) {
                 BOOST_FOREACH(std::string & s, tokens) {
                     INFO("adding " << s << " to accessRestrictionKeys");
                     settings.accessRestrictionKeys.insert(std::make_pair(s, true));
+                }
+            } else if( name == "accessForbiddenKeys") {
+                //split value at commas
+                std::vector<std::string> tokens;
+                stringSplit(value, ',', tokens);
+                //put each value into map
+                BOOST_FOREACH(std::string & s, tokens) {
+                    INFO("adding " << s << " to accessForbiddenKeys");
+                    settings.accessForbiddenKeys.insert(std::make_pair(s, true));
+                }
+            } else if( name == "accessForbiddenDefault") {
+                //split value at commas
+                std::vector<std::string> tokens;
+                stringSplit(value, ',', tokens);
+                //put each value into map
+                BOOST_FOREACH(std::string & s, tokens) {
+                    INFO("adding " << s << " to accessForbiddenDefault");
+                    settings.accessForbiddenDefault.insert(std::make_pair(s, true));
                 }
             }
             settings.speedProfile[name] = std::make_pair(std::atoi(value.c_str()), settings.speedProfile.size() );
