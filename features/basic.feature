@@ -132,5 +132,28 @@ Feature: Basic Routing
 		 | c    | a  | abc     |
 		 | c    | e  | cde     |
 		 | e    | c  | cde     |
+	
+	@rows
+	Scenario: Basic routability using row test
+	 	Then routability should be
+		 | highway       | forw | backw |
+		 | cycleway      | x    | x     |
+		 | cycleway      | x    | x     |
+		
+	@rows
+	Scenario: Basic routability using node map
+	This test mimics what the row test above acutally does: construct a map with isolated ways, then route on each.
+		Given the node map
+		 | a | b | c | d |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | e | f | g | h |
 
+		And the ways
+		 | nodes |
+		 | abcd  |
+		 | efgh  |
 
+		When I route I should get
+		 | from | to | route |
+		 | b    | c  | abcd  |
+		 | c    | b  | abcd  |
+		 | f    | g  | efgh  |
+		 | g    | f  | efgh  |
