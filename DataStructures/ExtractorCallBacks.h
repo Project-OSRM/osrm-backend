@@ -148,12 +148,9 @@ public:
         std::string junction( w.keyVals.Find("junction") );
         std::string route( w.keyVals.Find("route") );
         int maxspeed( parseMaxspeed(w.keyVals.Find("maxspeed")) );
-        std::string access( w.keyVals.Find("access") );
-        std::string accessTag( w.keyVals.Find(settings.accessTag) );
         std::string man_made( w.keyVals.Find("man_made") );
         std::string barrier( w.keyVals.Find("barrier") );
         std::string oneway( w.keyVals.Find("oneway"));
-        std::string onewayClass( w.keyVals.Find("oneway:"+settings.accessTag));
         std::string cycleway( w.keyVals.Find("cycleway"));
         std::string duration ( w.keyVals.Find("duration"));
         std::string service (w.keyVals.Find("service"));
@@ -191,8 +188,28 @@ public:
             }
         }
 
+        //determine the access value
+        std::string access;
+        std::string onewayClass;
+        std::string accessTag;
+        BOOST_FOREACH(std::string & s, settings.accessTags) {
+            access = std::string(w.keyVals.Find(s));
+            if(0 < access.size()) {
+                accessTag = s;
+                onewayClass = std::string(w.keyVals.Find("oneway:"+access));
+                break;
+            }
+        }
+
+        if(0 < access.size()) {
+            // handle ways with default access = no
+            if(settings.accessForbiddenDefault.find(access) != settings.accessForbiddenDefault.end()) {
+                access = std::string("no");
+            }
+        }
+
         //Is the highway tag listed as usable way?
-        if(("track" == highway && ("yes" == access || "yes" == accessTag)) || ("track" != highway && (0 < settings[highway] || "yes" == accessTag || "designated" == accessTag) )) {
+        if(0 < settings[highway] || "yes" == access || "designated" == access) {
             if(!w.isDurationSet) {
                 if(0 < settings[highway]) {
                     if(0 < maxspeed)
@@ -217,7 +234,7 @@ public:
             //Okay, do we have access to that way?
             if(0 < access.size()) { //fastest way to check for non-empty string
                 //If access is forbidden, we don't want to route there.
-                if(access == "no" || access == "agricultural" || access == "forestry" || access == "delivery") { //Todo: this is still hard coded
+                if(settings.accessForbiddenKeys.find(access) != settings.accessForbiddenKeys.end()) {
                     w.access = false;
                 }
                 if(settings.accessRestrictionKeys.find(access) != settings.accessRestrictionKeys.end()) {
@@ -231,7 +248,7 @@ public:
                 }
             }
 
-            if("no" == accessTag) {
+            if("no" == access) {
                 return true;
             }
 
@@ -244,7 +261,7 @@ public:
                     w.direction = _Way::opposite;
                 } else if( oneway == "no" || oneway == "0" || oneway == "false" ) {
                     w.direction = _Way::bidirectional;
-                } else if( settings.accessTag == "bicycle" && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane") ) {
+                } else if( accessTag == "bicycle" && (cycleway == "opposite" || cycleway == "opposite_track" || cycleway == "opposite_lane") ) {
                     w.direction = _Way::bidirectional;
                 } else if( oneway == "-1") {
                     w.direction  = _Way::opposite;
