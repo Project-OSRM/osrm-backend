@@ -111,6 +111,8 @@ int main (int argc, char *argv[]) {
     std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
+    if(0 == edgeList.size())
+        ERR("Loaded an empty graph");
     INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
     if(!testDataFile("speedprofile.ini")) {
