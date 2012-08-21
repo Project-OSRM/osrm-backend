@@ -201,6 +201,9 @@ private:
         }
         *lengthOfViaPath = upperBoundFor_s_v_Path + upperBoundFor_v_t_Path;
 
+        if(UINT_MAX == s_v_middle || UINT_MAX == v_t_middle)
+            return;
+
         //retrieve packed paths
         super::RetrievePackedPathFromHeap(existingForwardHeap, newBackwardHeap, s_v_middle, packed_s_v_path);
         super::RetrievePackedPathFromHeap(newForwardHeap, existingBackwardHeap, v_t_middle, packed_v_t_path);
