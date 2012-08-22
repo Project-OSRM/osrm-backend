@@ -42,6 +42,9 @@ OSRM.init = function() {
  	// only init default position / geolocation position if GET parameters do not specify a different one
  	if( OSRM.G.initial_position_override == false )
  		OSRM.Map.initPosition();
+ 	
+ 	// finalize initialization of map
+ 	OSRM.Map.initFinally();
 };
 
 

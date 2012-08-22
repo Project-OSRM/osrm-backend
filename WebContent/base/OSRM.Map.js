@@ -51,8 +51,8 @@ init: function() {
     	center: new L.LatLng(OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE),
 	    zoom: OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL,
 	    layers: [base_maps[tile_servers[0].display_name]],	    
-	    zoomAnimation: true,								// remove animations -> routes are not hidden during zoom
-	    fadeAnimation: true
+	    zoomAnimation: false,								// animations have to be inactive during initialization (leaflet issue #918)
+	    fadeAnimation: false
 	});
 
 	// add layer control
@@ -74,6 +74,12 @@ init: function() {
 	OSRM.G.map.on('click', OSRM.Map.click );
 	OSRM.G.map.on('contextmenu', OSRM.Map.contextmenu );
 	OSRM.G.map.on('mousemove', OSRM.Map.mousemove );
+},
+initFinally: function() {
+	L.Util.setOptions( OSRM.G.map, {
+		zoomAnimation: true,
+		fadeAnimation: true
+	} );
 },
 
 // init map position and zoom (respect UI visibility / use browser geolocation) 
