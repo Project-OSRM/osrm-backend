@@ -349,8 +349,8 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     originalEdgeDataOutFile.write((char*)&numberOfOriginalEdges, sizeof(unsigned));
     originalEdgeDataOutFile.close();
 
-    INFO("Sorting edge-based Nodes");
-    std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
+//    INFO("Sorting edge-based Nodes");
+//    std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
 //    INFO("Removing duplicate nodes (if any)");
 //    edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
 //    INFO("Applying vector self-swap trick to free up memory");
