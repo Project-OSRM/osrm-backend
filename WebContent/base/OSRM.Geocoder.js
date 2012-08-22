@@ -74,19 +74,33 @@ _showResults: function(response, parameters) {
 		OSRM.Geocoder._showResults_Empty(parameters);
 		return;
 	}
-	
 	if(response.length == 0) {
 		OSRM.Geocoder._showResults_Empty(parameters);
 		return;
-	}
+	}	
 	
 	// filter/sort inputs
-	var filtered_response = [];
-	for(var i=0; i < response.length; i++){
+	var filtered_response_temp = [];									// filter unwanted results
+	for(var i=0, iEnd=response.length; i < iEnd; i++){
 		var result = response[i];
 		if( OSRM.Geocoder._filterResult( result ) )
 			continue;
-		filtered_response.push( result );
+		filtered_response_temp.push( result );
+	}
+	if(filtered_response_temp.length == 0) {							// stop if no results remain
+		OSRM.Geocoder._showResults_Empty(parameters);
+		return;
+	}	
+	filtered_response_temp.sort( OSRM.Geocoder._compareResults );		// sort results
+	filtered_response_temp.sort( OSRM.Geocoder._compareLocations );		// remove duplicate locations (stable sort -> retain highest ranked)
+	var filtered_response = [];
+	filtered_response.push( filtered_response_temp[0] );
+	for(var i=filtered_response_temp.length-1, iEnd = 0; i>iEnd; i--) {
+		var prev_result = response[i-1];
+		var result = response[i];
+		if( result.lat != prev_result.lat || result.lon != prev_result.lon ) {
+			filtered_response.push( result );
+		}
 	}
 	filtered_response.sort( OSRM.Geocoder._compareResults );
 	
@@ -148,8 +162,8 @@ _showResults_Timeout: function() {
 
 // filter search results [true: result will not be displayed]
 _filterResult: function(result) {
-	if( result.osm_type == "relation")
-		return true;
+//	if( result.osm_type == "relation")
+//		return true;
 	if( result.type == "aerial_views")
 		return true;	
 	return false;
@@ -158,9 +172,9 @@ _filterResult: function(result) {
 
 // comparator for sorting results [higher weight: result will appear first]
 _compare_class_weights: {
-	place: 9000,
-	highway: 8000,
-	boundary: 7000
+	boundary: 9000,	
+	place: 8000,
+	highway: 7000,
 }, 
 _compare_type_weights: {
 	country: 13,
@@ -182,6 +196,15 @@ _compareResults: function(lhs, rhs) {
 	var rhs_value = (-class_values[ rhs["class"] ] || 0) + (-type_values[ rhs.type ] || 0);
 
 	return (lhs_value - rhs_value);
+},
+
+
+// comparator for sorting objects according to their locations
+_compareLocations: function(lhs, rhs) {
+	if( lhs.lat != rhs.lat )
+		return lhs.lat < rhs.lat;
+	else
+		return lhs.lon < rhs.lon;
 },
 
 
