@@ -137,7 +137,7 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector< EdgeBasedEdge 
     edgeBasedEdges.swap(outputEdgeList);
 }
 
-void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes) {
+void EdgeBasedGraphFactory::GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes) {
     BOOST_FOREACH(EdgeBasedNode & node, edgeBasedNodes){
         assert(node.lat1 != INT_MAX); assert(node.lon1 != INT_MAX);
         assert(node.lat2 != INT_MAX); assert(node.lon2 != INT_MAX);
@@ -351,11 +351,11 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
 
     INFO("Sorting edge-based Nodes");
     std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
-    INFO("Removing duplicate nodes (if any)");
-    edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
+//    INFO("Removing duplicate nodes (if any)");
+//    edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
 //    INFO("Applying vector self-swap trick to free up memory");
 //    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
-    std::vector<EdgeBasedNode>(edgeBasedNodes).swap(edgeBasedNodes);
+//    std::vector<EdgeBasedNode>(edgeBasedNodes).swap(edgeBasedNodes);
 //    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
     INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
 //    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << 2*((double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter));

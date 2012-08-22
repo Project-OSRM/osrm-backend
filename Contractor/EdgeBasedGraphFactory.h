@@ -105,10 +105,10 @@ private:
     RestrictionMap _restrictionMap;
 
 
-    DeallocatingVector<EdgeBasedEdge>      edgeBasedEdges;
-    std::vector<EdgeBasedNode>      edgeBasedNodes;
-    std::vector<OriginalEdgeData>   originalEdgeData;
-    std::vector<NodeInfo>           inputNodeInfoList;
+    DeallocatingVector<EdgeBasedEdge>   edgeBasedEdges;
+    DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
+    std::vector<OriginalEdgeData>       originalEdgeData;
+    std::vector<NodeInfo>               inputNodeInfoList;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
@@ -131,7 +131,7 @@ public:
 
     void Run(const char * originalEdgeDataFilename);
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
-    void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
+    void GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
     short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
     unsigned GetNumberOfNodes() const;

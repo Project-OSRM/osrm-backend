@@ -161,7 +161,7 @@ int main (int argc, char *argv[]) {
 //    oedOutFile.close();
 //    std::vector<OriginalEdgeData>().swap(originalEdgeData);
 
-    std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
+    DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
     delete edgeBasedGraphFactory;
     double expansionHasFinishedTime = get_timestamp() - startupTime;
@@ -176,7 +176,7 @@ int main (int argc, char *argv[]) {
     delete writeableGrid;
     CRC32 crc32;
     unsigned crc32OfNodeBasedEdgeList = crc32((char *)&(nodeBasedEdgeList[0]), nodeBasedEdgeList.size()*sizeof(EdgeBasedGraphFactory::EdgeBasedNode));
-    std::vector<EdgeBasedGraphFactory::EdgeBasedNode>().swap(nodeBasedEdgeList);
+    nodeBasedEdgeList.clear();
 
     /***
      * Contracting the edge-expanded graph

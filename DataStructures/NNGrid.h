@@ -40,6 +40,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 
+#include "DeallocatingVector.h"
 #include "ExtractorStructs.h"
 #include "GridEdge.h"
 #include "Percent.h"
@@ -88,7 +89,7 @@ public:
     }
 
     template<typename EdgeT>
-    inline void ConstructGrid(std::vector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
+    inline void ConstructGrid(DeallocatingVector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
     	//TODO: Implement this using STXXL-Streams
 #ifndef ROUTED
         Percent p(edgeList.size());
