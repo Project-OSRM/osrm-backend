@@ -32,6 +32,7 @@ OSRM.Localization["dk"] = {
 "GUI_REVERSE": "Omvendt",
 "GUI_START_TOOLTIP": "Indtast start",
 "GUI_END_TOOLTIP": "Indtast destination",
+"GUI_MAIN_WINDOW": "Hovedvinduet",
 //config
 "GUI_CONFIGURATION": "Konfiguration",
 "GUI_LANGUAGE": "Sprog",

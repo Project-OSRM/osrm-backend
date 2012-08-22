@@ -32,6 +32,7 @@ OSRM.Localization["ru"] = {
 "GUI_REVERSE": "Обратно",
 "GUI_START_TOOLTIP": "Укажите начальную точку",
 "GUI_END_TOOLTIP": "Укажите пункт назначения",
+"GUI_MAIN_WINDOW": "Главное окно",
 // config
 "GUI_CONFIGURATION": "Настройки",
 "GUI_LANGUAGE": "Язык",

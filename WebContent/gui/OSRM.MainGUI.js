@@ -73,6 +73,9 @@ setLabels: function() {
 	document.getElementById('gui-data-timestamp').innerHTML = OSRM.G.data_timestamp;
 	document.getElementById('gui-timestamp-label').innerHTML = OSRM.loc("GUI_VERSION");	
 	document.getElementById('gui-timestamp').innerHTML = OSRM.DATE+"; v"+OSRM.VERSION;
+	document.getElementById('config-handle-icon').title = OSRM.loc("GUI_CONFIGURATION");
+	document.getElementById('mapping-handle-icon').title = OSRM.loc("GUI_MAPPING_TOOLS");
+	document.getElementById('main-handle-icon').title = OSRM.loc("GUI_MAIN_WINDOW");
 	
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[0].innerHTML = OSRM.loc("GUI_KILOMETERS");
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[1].innerHTML = OSRM.loc("GUI_MILES");

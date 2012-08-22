@@ -32,6 +32,7 @@ OSRM.Localization["en"] = {
 "GUI_REVERSE": "Reverse",
 "GUI_START_TOOLTIP": "Enter start",
 "GUI_END_TOOLTIP": "Enter destination",
+"GUI_MAIN_WINDOW": "Main window",
 // config
 "GUI_CONFIGURATION": "Configuration",
 "GUI_LANGUAGE": "Language",

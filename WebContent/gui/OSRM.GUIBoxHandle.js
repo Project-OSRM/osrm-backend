@@ -37,6 +37,7 @@ OSRM.GUIBoxHandle = function( box_name, side, css, transitionStartFct, transitio
 	var icon = document.createElement('div');
 	icon.id = box_name + '-handle-icon';
 	icon.className = 'iconic-button';
+	icon.title = box_name;
 	
 	content.appendChild(icon);
 	wrapper.appendChild(content);

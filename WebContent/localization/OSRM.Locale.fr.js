@@ -32,6 +32,7 @@ OSRM.Localization["fr"] = {
 "GUI_REVERSE": "Inverser",
 "GUI_START_TOOLTIP": "Entrez le lieu de départ",
 "GUI_END_TOOLTIP": "Entrez le lieu d’arrivée",
+"GUI_MAIN_WINDOW": "Fenêtre principale",
 //config
 "GUI_CONFIGURATION": "Configuration",
 "GUI_LANGUAGE": "Langue",

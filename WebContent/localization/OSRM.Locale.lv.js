@@ -32,6 +32,7 @@ OSRM.Localization["lv"] = {
 "GUI_REVERSE": "Pretējā&nbsp;virzienā",
 "GUI_START_TOOLTIP": "Izvēlieties sākumu",
 "GUI_END_TOOLTIP": "Izvēlieties galamērķi",
+"GUI_MAIN_WINDOW": "Galvenais logs",
 // config
 "GUI_CONFIGURATION": "Konfigurācija",
 "GUI_LANGUAGE": "Valoda",

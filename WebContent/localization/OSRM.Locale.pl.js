@@ -32,6 +32,7 @@ OSRM.Localization["pl"] = {
 "GUI_REVERSE": "Odwróć",
 "GUI_START_TOOLTIP": "Wprowadź początek",
 "GUI_END_TOOLTIP": "Wprowadź koniec",
+"GUI_MAIN_WINDOW": "Główne okno",
 //config
 "GUI_CONFIGURATION": "Konfiguracja",
 "GUI_LANGUAGE": "Język",

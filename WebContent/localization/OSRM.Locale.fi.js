@@ -32,6 +32,7 @@ OSRM.Localization["fi"] = {
 "GUI_REVERSE": "Käänteinen&nbsp;reitti",
 "GUI_START_TOOLTIP": "Syötä lähtöpaikka",
 "GUI_END_TOOLTIP": "Syötä määränpää",
+"GUI_MAIN_WINDOW": "Pääikkuna",
 //config
 "GUI_CONFIGURATION": "Kokoonpano",
 "GUI_LANGUAGE": "Kieli",
