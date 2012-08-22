@@ -32,7 +32,6 @@ OSRM.Localization["ru"] = {
 "GUI_REVERSE": "Обратно",
 "GUI_START_TOOLTIP": "Укажите начальную точку",
 "GUI_END_TOOLTIP": "Укажите пункт назначения",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM хостинг от <a href='http://algo2.iti.kit.edu/'>KIT</a> - Геокодинг от <a href='http://www.osm.org/'>OSM</a>",
 // config
 "GUI_CONFIGURATION": "Настройки",
 "GUI_LANGUAGE": "Язык",
@@ -99,7 +98,9 @@ OSRM.Localization["ru"] = {
 "DIRECTION_11-8":"На кольцевой дороге выполните 8-ой съезд[ на <b>%s</b>]",
 "DIRECTION_11-9":"На кольцевой дороге выполните 9-ый съезд[ на <b>%s</b>]",
 "DIRECTION_11-x":"На кольцевой дороге выполните съезд[ на <b>%s</b>]",
-"DIRECTION_15":"Вы прибыли в пункт назначения"
+"DIRECTION_15":"Вы прибыли в пункт назначения",
+// do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 // set GUI language on load

@@ -32,7 +32,6 @@ OSRM.Localization["it"] = {
 "GUI_REVERSE": "Inverti",
 "GUI_START_TOOLTIP": "Inserire la Partenza",
 "GUI_END_TOOLTIP": "Inserire la destinazione",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
 //config
 "GUI_CONFIGURATION": "Configurazione",
 "GUI_LANGUAGE": "Lingua",
@@ -98,7 +97,9 @@ OSRM.Localization["it"] = {
 "DIRECTION_11-8":"Immettersi nella rotonda ed abbandonarla alla ottava uscita[ su <b>%s</b>]",
 "DIRECTION_11-9":"Immettersi nella rotonda ed abbandonarla alla nona uscita[ su <b>%s</b>]",
 "DIRECTION_11-x":"Immettersi nella rotonda ed abbandonarla ad una delle tante uscite[ su <b>%s</b>]",
-"DIRECTION_15":"Hai raggiunto la tua destinazione"
+"DIRECTION_15":"Hai raggiunto la tua destinazione",
+//do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 //set GUI language on load

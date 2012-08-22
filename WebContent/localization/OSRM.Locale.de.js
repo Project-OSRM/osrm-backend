@@ -32,7 +32,6 @@ OSRM.Localization["de"] = {
 "GUI_REVERSE": "Umdrehen",
 "GUI_START_TOOLTIP": "Startposition eingeben",
 "GUI_END_TOOLTIP": "Zielposition eingeben",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
 //config
 "GUI_CONFIGURATION": "Einstellungen",
 "GUI_LANGUAGE": "Sprache",
@@ -99,7 +98,9 @@ OSRM.Localization["de"] = {
 "DIRECTION_11-8":"In den Kreisverkehr einfahren und bei achter Möglichkeit[ in Richtung <b>%s</b>] verlassen",
 "DIRECTION_11-9":"In den Kreisverkehr einfahren und bei neunter Möglichkeit[ in Richtung <b>%s</b>] verlassen",
 "DIRECTION_11-x":"In den Kreisverkehr einfahren und bei einer der vielen Möglichkeiten[ in Richtung <b>%s</b>] verlassen",
-"DIRECTION_15":"Sie haben Ihr Ziel erreicht"
+"DIRECTION_15":"Sie haben Ihr Ziel erreicht",
+// do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 // set GUI language on load

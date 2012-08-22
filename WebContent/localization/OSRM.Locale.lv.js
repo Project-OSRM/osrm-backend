@@ -32,7 +32,6 @@ OSRM.Localization["lv"] = {
 "GUI_REVERSE": "Pretējā&nbsp;virzienā",
 "GUI_START_TOOLTIP": "Izvēlieties sākumu",
 "GUI_END_TOOLTIP": "Izvēlieties galamērķi",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
 // config
 "GUI_CONFIGURATION": "Konfigurācija",
 "GUI_LANGUAGE": "Valoda",
@@ -99,7 +98,9 @@ OSRM.Localization["lv"] = {
 "DIRECTION_11-8":"Iebrauciet aplī, brauciet pa astoto izeju[ uz <b>%s</b>]",
 "DIRECTION_11-9":"Iebrauciet aplī, brauciet pa devīto izeju[ uz <b>%s</b>]",
 "DIRECTION_11-x":"Ieprauciet aplī, brauciet pa vienu no pārāk daudzajām izejām[ uz <b>%s</b>]",
-"DIRECTION_15":"Sasniegts galamērķis"
+"DIRECTION_15":"Sasniegts galamērķis",
+//do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 // set GUI language on load

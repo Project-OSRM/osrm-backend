@@ -32,7 +32,6 @@ OSRM.Localization["en"] = {
 "GUI_REVERSE": "Reverse",
 "GUI_START_TOOLTIP": "Enter start",
 "GUI_END_TOOLTIP": "Enter destination",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
 // config
 "GUI_CONFIGURATION": "Configuration",
 "GUI_LANGUAGE": "Language",
@@ -124,7 +123,9 @@ OSRM.Localization["en"] = {
 "NOTIFICATION_DRAGGING_BODY":		"You can drag a marker by clicking on it with the left mouse button and holding the button pressed. " +
 									"Then you can move the marker around the map and the route will be updated instantaneously. " +
 									"<br/><br/>" +
-									"You can even create intermediate markers by dragging them off of the main route! "
+									"You can even create intermediate markers by dragging them off of the main route! ",
+// do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 // set GUI language on load

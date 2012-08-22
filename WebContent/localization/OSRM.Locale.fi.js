@@ -32,7 +32,6 @@ OSRM.Localization["fi"] = {
 "GUI_REVERSE": "Käänteinen&nbsp;reitti",
 "GUI_START_TOOLTIP": "Syötä lähtöpaikka",
 "GUI_END_TOOLTIP": "Syötä määränpää",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
 //config
 "GUI_CONFIGURATION": "Kokoonpano",
 "GUI_LANGUAGE": "Kieli",
@@ -99,7 +98,9 @@ OSRM.Localization["fi"] = {
 "DIRECTION_11-8":"Aja liikenneympyrään ja poistu kahdeksannesta haarasta[ tielle <b>%s</b>]",
 "DIRECTION_11-9":"Aja liikenneympyrään ja poistu yhdeksännestä haarasta[ tielle <b>%s</b>]",
 "DIRECTION_11-x":"Aja liikenneympyrään ja poistu monen haaran jälkeen[ tielle <b>%s</b>]",
-"DIRECTION_15":"Saavuit määränpäähän"
+"DIRECTION_15":"Saavuit määränpäähän",
+//do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 //set GUI language tielle load

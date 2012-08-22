@@ -32,7 +32,6 @@ OSRM.Localization["cs"] = {
 "GUI_REVERSE": "Prohodit",
 "GUI_START_TOOLTIP": "Zadejte začátek cesty",
 "GUI_END_TOOLTIP": "Zadejte cíl cesty",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - Routing engine: <a href='http://project-osrm.org/'>OSRM</a> - Geocoder: <a href='http://www.osm.org/'>OSM</a>",
 //config
 "GUI_CONFIGURATION": "Nastavení",
 "GUI_LANGUAGE": "Jazyk",
@@ -99,7 +98,9 @@ OSRM.Localization["cs"] = {
 "DIRECTION_11-8":"Najeďte na kruhový objezd a opusťte jej osmým výjezdem[ na silnici <b>%s</b>]",
 "DIRECTION_11-9":"Najeďte na kruhový objezd a opusťte jej devátým výjezdem[ na silnici <b>%s</b>]",
 "DIRECTION_11-1":"Najeďte na kruhový objezd a opusťte jej vámi vybraným výjezdem[ na silnici <b>%s</b>]",
-"DIRECTION_15":"Jste u cíle"
+"DIRECTION_15":"Jste u cíle",
+//do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 //set GUI language on load

@@ -32,7 +32,6 @@ OSRM.Localization["pl"] = {
 "GUI_REVERSE": "Odwróć",
 "GUI_START_TOOLTIP": "Wprowadź początek",
 "GUI_END_TOOLTIP": "Wprowadź koniec",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting: <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder: <a href='http://www.osm.org/'>OSM</a>",
 //config
 "GUI_CONFIGURATION": "Konfiguracja",
 "GUI_LANGUAGE": "Język",
@@ -98,7 +97,9 @@ OSRM.Localization["pl"] = {
 "DIRECTION_11-8":"Wjedź na rondo, zjedź ósmym zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-9":"Wjedź na rondo, zjedź dziewiątym zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-x":"Wjedź na rondo, zjedź wybranym przez siebie zjazdem [ na drogę <b>%s</b>]",
-"DIRECTION_15":"Cel został osiągnięty"
+"DIRECTION_15":"Cel został osiągnięty",
+//do not translate below this line
+"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 };
 
 //set GUI language on load
