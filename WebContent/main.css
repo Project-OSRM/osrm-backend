@@ -550,6 +550,13 @@ html, body {
 {
 	width:100px;
 }
+#config-timestamps
+{
+	display:table;
+	position:absolute;
+	right: 5px;				/* equal to box-content padding */
+	bottom: 5px;
+}
 .mapping-checkbox
 {
 	margin: 0px 5px 3px 5px;

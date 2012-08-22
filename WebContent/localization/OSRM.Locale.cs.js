@@ -38,7 +38,6 @@ OSRM.Localization["cs"] = {
 "GUI_UNITS": "Jednotky",
 "GUI_KILOMETERS": "kilometry",
 "GUI_MILES": "míle",
-"GUI_DATA_TIMESTAMP": "datum",
 // mapping
 "GUI_MAPPING_TOOLS": "Mapovací nástroje",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Zvýraznit nepojmenované ulice",
@@ -98,9 +97,7 @@ OSRM.Localization["cs"] = {
 "DIRECTION_11-8":"Najeďte na kruhový objezd a opusťte jej osmým výjezdem[ na silnici <b>%s</b>]",
 "DIRECTION_11-9":"Najeďte na kruhový objezd a opusťte jej devátým výjezdem[ na silnici <b>%s</b>]",
 "DIRECTION_11-1":"Najeďte na kruhový objezd a opusťte jej vámi vybraným výjezdem[ na silnici <b>%s</b>]",
-"DIRECTION_15":"Jste u cíle",
-//do not translate below this line
-"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
+"DIRECTION_15":"Jste u cíle"
 };
 
 //set GUI language on load

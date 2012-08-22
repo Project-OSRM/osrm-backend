@@ -38,7 +38,6 @@ OSRM.Localization["en"] = {
 "GUI_UNITS": "Units",
 "GUI_KILOMETERS": "Kilometers",
 "GUI_MILES": "Miles",
-"GUI_DATA_TIMESTAMP": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Mapping Tools",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Highlight unnamed streets",
@@ -126,6 +125,8 @@ OSRM.Localization["en"] = {
 									"You can even create intermediate markers by dragging them off of the main route! ",
 // do not translate below this line
 "GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
+"GUI_DATA_TIMESTAMP": "data: ",
+"GUI_VERSION": "gui: "
 };
 
 // set GUI language on load

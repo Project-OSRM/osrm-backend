@@ -38,7 +38,6 @@ OSRM.Localization["ru"] = {
 "GUI_UNITS": "Единицы",
 "GUI_KILOMETERS": "Километры",
 "GUI_MILES": "Мили",
-"GUI_DATA_TIMESTAMP": "версия",
 // mapping
 "GUI_MAPPING_TOOLS": "Настройки карты",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Выделить безымянные улицы",
@@ -98,9 +97,7 @@ OSRM.Localization["ru"] = {
 "DIRECTION_11-8":"На кольцевой дороге выполните 8-ой съезд[ на <b>%s</b>]",
 "DIRECTION_11-9":"На кольцевой дороге выполните 9-ый съезд[ на <b>%s</b>]",
 "DIRECTION_11-x":"На кольцевой дороге выполните съезд[ на <b>%s</b>]",
-"DIRECTION_15":"Вы прибыли в пункт назначения",
-// do not translate below this line
-"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
+"DIRECTION_15":"Вы прибыли в пункт назначения"
 };
 
 // set GUI language on load

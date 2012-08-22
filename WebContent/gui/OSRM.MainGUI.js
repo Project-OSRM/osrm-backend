@@ -69,7 +69,10 @@ setLabels: function() {
 	document.getElementById("gui-config-label").innerHTML = OSRM.loc("GUI_CONFIGURATION");
 	document.getElementById("gui-language-2-label").innerHTML = OSRM.loc("GUI_LANGUAGE")+":";
 	document.getElementById("gui-units-label").innerHTML = OSRM.loc("GUI_UNITS")+":";
-	document.getElementById('gui-data-timestamp').innerHTML = OSRM.loc("GUI_DATA_TIMESTAMP")+": " + OSRM.G.data_timestamp;
+	document.getElementById('gui-data-timestamp-label').innerHTML = OSRM.loc("GUI_DATA_TIMESTAMP");
+	document.getElementById('gui-data-timestamp').innerHTML = OSRM.G.data_timestamp;
+	document.getElementById('gui-timestamp-label').innerHTML = OSRM.loc("GUI_VERSION");	
+	document.getElementById('gui-timestamp').innerHTML = OSRM.DATE+"; v"+OSRM.VERSION;
 	
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[0].innerHTML = OSRM.loc("GUI_KILOMETERS");
 	document.getElementById("gui-units-toggle").getElementsByTagName("option")[1].innerHTML = OSRM.loc("GUI_MILES");
@@ -130,7 +133,7 @@ setDataTimestamp: function(response) {
 		return;
 	
 	OSRM.G.data_timestamp = response.timestamp.slice(0,25).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags
-	document.getElementById('gui-data-timestamp').innerHTML = OSRM.loc("GUI_DATA_TIMESTAMP")+": " + OSRM.G.data_timestamp;
+	document.getElementById('gui-data-timestamp').innerHTML = OSRM.G.data_timestamp;
 }
 
 });

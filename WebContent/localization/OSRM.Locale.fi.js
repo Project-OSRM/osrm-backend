@@ -38,7 +38,6 @@ OSRM.Localization["fi"] = {
 "GUI_UNITS": "Yksiköt",
 "GUI_KILOMETERS": "Kilometri",
 "GUI_MILES": "Miles",
-"GUI_DATA_TIMESTAMP": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Kartoitustyökalut",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Korosta nimettömät tiet",
@@ -98,9 +97,7 @@ OSRM.Localization["fi"] = {
 "DIRECTION_11-8":"Aja liikenneympyrään ja poistu kahdeksannesta haarasta[ tielle <b>%s</b>]",
 "DIRECTION_11-9":"Aja liikenneympyrään ja poistu yhdeksännestä haarasta[ tielle <b>%s</b>]",
 "DIRECTION_11-x":"Aja liikenneympyrään ja poistu monen haaran jälkeen[ tielle <b>%s</b>]",
-"DIRECTION_15":"Saavuit määränpäähän",
-//do not translate below this line
-"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
+"DIRECTION_15":"Saavuit määränpäähän"
 };
 
 //set GUI language tielle load

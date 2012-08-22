@@ -38,7 +38,6 @@ OSRM.Localization["dk"] = {
 "GUI_UNITS": "Enheder",
 "GUI_KILOMETERS": "Kilometer",
 "GUI_MILES": "Miles",
-"GUI_DATA_TIMESTAMP": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Kortlægnings værktøjer",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Fremhæv unavngivne veje",
@@ -98,9 +97,7 @@ OSRM.Localization["dk"] = {
 "DIRECTION_11-8":"Kør ind i rundkørslen og tag ottende udkørsel[ ad <b>%s</b>]",
 "DIRECTION_11-9":"Kør ind i rundkørslen og tag niende udkørsel[ ad <b>%s</b>]",
 "DIRECTION_11-x":"Kør ind i rundkørslen og tag en af de alt for mange udkørsler[ ad <b>%s</b>]",
-"DIRECTION_15":"Du er ankommet til din destination",
-//do not translate below this line
-"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
+"DIRECTION_15":"Du er ankommet til din destination"
 };
 
 //set GUI language on load

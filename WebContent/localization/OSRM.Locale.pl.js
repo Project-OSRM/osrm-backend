@@ -38,7 +38,6 @@ OSRM.Localization["pl"] = {
 "GUI_UNITS": "Jednostki",
 "GUI_KILOMETERS": "Kilometrów",
 "GUI_MILES": "Miles",
-"GUI_DATA_TIMESTAMP": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Narzędzia mapowania",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Zaznacz ulice bez nazwy",
@@ -97,9 +96,7 @@ OSRM.Localization["pl"] = {
 "DIRECTION_11-8":"Wjedź na rondo, zjedź ósmym zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-9":"Wjedź na rondo, zjedź dziewiątym zjazdem[ na drogę <b>%s</b>]",
 "DIRECTION_11-x":"Wjedź na rondo, zjedź wybranym przez siebie zjazdem [ na drogę <b>%s</b>]",
-"DIRECTION_15":"Cel został osiągnięty",
-//do not translate below this line
-"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
+"DIRECTION_15":"Cel został osiągnięty"
 };
 
 //set GUI language on load

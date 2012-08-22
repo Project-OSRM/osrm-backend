@@ -38,7 +38,6 @@ OSRM.Localization["lv"] = {
 "GUI_UNITS": "Mērvienība",
 "GUI_KILOMETERS": "Kilometri",
 "GUI_MILES": "Jūdzes",
-"GUI_DATA_TIMESTAMP": "data",
 // mapping
 "GUI_MAPPING_TOOLS": "Kartēšanas rīki",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "Izcelt ielas bez nosaukumiem",
@@ -98,9 +97,7 @@ OSRM.Localization["lv"] = {
 "DIRECTION_11-8":"Iebrauciet aplī, brauciet pa astoto izeju[ uz <b>%s</b>]",
 "DIRECTION_11-9":"Iebrauciet aplī, brauciet pa devīto izeju[ uz <b>%s</b>]",
 "DIRECTION_11-x":"Ieprauciet aplī, brauciet pa vienu no pārāk daudzajām izejām[ uz <b>%s</b>]",
-"DIRECTION_15":"Sasniegts galamērķis",
-//do not translate below this line
-"GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
+"DIRECTION_15":"Sasniegts galamērķis"
 };
 
 // set GUI language on load
