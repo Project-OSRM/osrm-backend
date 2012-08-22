@@ -359,6 +359,7 @@ public:
                     _Contract< false > ( data, x );
                     //nodePriority[x] = -1;
                 }
+
                 std::sort( data->insertedEdges.begin(), data->insertedEdges.end() );
             }
 #pragma omp parallel
@@ -371,45 +372,24 @@ public:
                 }
             }
             //insert new edges
-            for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
-                _ThreadData& data = *threadData[threadNum];
-                for ( int i = 0; i < ( int ) data.insertedEdges.size(); ++i ) {
-                    _ContractorEdge& edgeToInsert = data.insertedEdges[i];
-                    const _DynamicGraph::EdgeIterator existingEdgeID = _graph->FindEdge(edgeToInsert.source, edgeToInsert.target);
-                    if(existingEdgeID != _graph->EndEdges(edgeToInsert.source)) {
-                        _DynamicGraph::EdgeData & existingEdgeData = _graph->GetEdgeData(existingEdgeID);
-                        if((edgeToInsert.data.forward == existingEdgeData.forward) && (edgeToInsert.data.backward == existingEdgeData.backward) ){
-                            if(existingEdgeData.distance <= edgeToInsert.data.distance) {
-                                continue;
-                            } else {
-                                existingEdgeData.distance = edgeToInsert.data.distance;
+             for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+                 _ThreadData& data = *threadData[threadNum];
+                 for ( int i = 0; i < ( int ) data.insertedEdges.size(); ++i ) {
+                     const _ContractorEdge& edge = data.insertedEdges[i];
+                     _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
+                    if(currentEdgeID != _graph->EndEdges(edge.source)) {
+                        _DynamicGraph::EdgeData & currentEdgeData = _graph->GetEdgeData(currentEdgeID);
+                        if(edge.data.forward == currentEdgeData.forward && edge.data.backward == currentEdgeData.backward ) {
+                            if(_graph->GetEdgeData(_graph->FindEdge(edge.source, edge.target)).distance <= edge.data.distance) {
                                 continue;
                             }
-                        } else if(existingEdgeData.forward && existingEdgeData.backward) {
-                            //existing edge is bidirectional, new edge is not
-                            if(existingEdgeData.distance > edgeToInsert.data.distance) {
-                                //split existing edge, because edge to insert is smaller in the one direction it goes than the existing edge
-                                existingEdgeData.forward =~ edgeToInsert.data.forward;
-                                existingEdgeData.backward =~ edgeToInsert.data.backward;
-                            } else {
+                            if(currentEdgeData.distance > edge.data.distance) {
+                                currentEdgeData.distance = edge.data.distance;
                                 continue;
-                            }
-                        } else {
-                            //new edge is bidirectional, existing one is not
-                            if(existingEdgeData.distance > edgeToInsert.data.distance) {
-                                existingEdgeData = edgeToInsert.data;
-                                continue;
-                            } else {
-                                //existing edge is lower distance, but unidirectional.
-                                //split new edge before insertion, because it is only valid in one direction
-//                                edgeToInsert.data.forward =~ existingEdgeData.forward;
-//                                edgeToInsert.data.backward =~ existingEdgeData.backward;
-                                //INFO("should not happen too often");
                             }
                         }
-
                     }
-                    _graph->InsertEdge( edgeToInsert.source, edgeToInsert.target, edgeToInsert.data );
+                    _graph->InsertEdge( edge.source, edge.target, edge.data );
                 }
                 data.insertedEdges.clear();
             }
@@ -520,7 +500,7 @@ public:
     }
 
 private:
-    inline void _Dijkstra( const int maxDistance, const unsigned numTargets, const int maxNodes, const int hopLimit, _ThreadData* const data ){
+    inline void _Dijkstra( const int maxDistance, const unsigned numTargets, const int maxNodes, _ThreadData* const data ){
 
         _Heap& heap = data->heap;
 
@@ -542,9 +522,6 @@ private:
                 if ( targetsFound >= numTargets )
                     return;
             }
-
-            if(currentHop >= hopLimit)
-                continue;
 
             //iterate over all edges of node
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
@@ -623,9 +600,9 @@ private:
             }
 
             if( Simulate )
-                _Dijkstra( maxDistance, numTargets, 1000, (true ? INT_MAX : 5), data );
+                _Dijkstra( maxDistance, numTargets, 1000, data );
             else
-                _Dijkstra( maxDistance, numTargets, 2000, (true ? INT_MAX : 7), data );
+                _Dijkstra( maxDistance, numTargets, 2000, data );
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _ContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
