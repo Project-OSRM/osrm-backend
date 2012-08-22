@@ -308,7 +308,7 @@ public:
                 externalMemory->allEdges.push_back(_Edge(w.path[n], w.path[n+1], w.type, w.direction, w.speed, w.nameID, w.roundabout, highway == settings.excludeFromGrid || "pier" == highway, w.isDurationSet, w.isAccessRestricted));
                 externalMemory->usedNodeIDs.push_back(w.path[n]);
             }
-            externalMemory->usedNodeIDs.push_back(w.path[w.path.size()-1]);
+            externalMemory->usedNodeIDs.push_back(w.path.back());
 
             //The following information is needed to identify start and end segments of restrictions
             externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(w.id, w.path[0], w.path[1], w.path[w.path.size()-2], w.path[w.path.size()-1]));
