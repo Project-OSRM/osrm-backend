@@ -49,62 +49,130 @@ html, body {
 	font-size:9px;
 	display:none;
 }
-/* .leaflet-control-goto {
-	padding: 5px;
-	background: rgba(0, 0, 0, 0.25);	
-	-moz-border-radius: 7px;
-	-webkit-border-radius: 7px;
-	border-radius: 7px;	
+
+
+.leaflet-control-zoom {
+	border-radius:8px;
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;
+	background-color:rgba(0, 0, 0, 0.25);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3f000000, endColorstr=#3f000000);
+	padding:0px;
 }
-.leaflet-control-goto a {
-	background-color: rgba(255, 255, 255, 0.75);
+.leaflet-control-zoom a {
+	background-color: #ffffff;
+	background-color: rgba(255,255,255,1);
+	border-radius:4px;
+	-moz-border-radius:4px;
+	-webkit-border-radius:4px;	
+	margin:5px;
+	padding:2px;
 	background-position: 50% 50%;
 	background-repeat: no-repeat;
 	display: block;
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	border-radius: 4px;
-	width: 26px;
-	height: 26px;			
+	width: 19px;
+	height: 19px;
 }
-.leaflet-control-goto a:hover {
-	background-color: #fff;
+.leaflet-control-zoom a:hover {
+	background-color: #CCCCCC;
 }
-.leaflet-touch .leaflet-control-goto a {
+.leaflet-touch .leaflet-control-zoom a {
 	width: 27px;
 	height: 27px;
 }
-.leaflet-control-goto-my-location {
-	background-image:url('images/location.png');
-	margin-bottom:5px;
-}
 
-.leaflet-control-goto-route {
-	background-image:url('images/route.png');
-}
 
-.leaflet-control-layers {
-	padding: 5px;
-	background: rgba(0, 0, 0, 0.25);	
-	-moz-border-radius: 7px;
-	-webkit-border-radius: 7px;
-	border-radius: 7px;
+
+.leaflet-control-locations {
+	border-radius:10px;
+	-moz-border-radius:10px;
+	-webkit-border-radius:10px;
+	background-color:rgba(0, 0, 0, 0.25);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3f000000, endColorstr=#3f000000);
+	padding:0px;	
 }
-.leaflet-control-layers a {
-	background-color: rgba(255, 255, 255, 0.75);
+.leaflet-control-locations a {
+	float:left;
+	background-color: #ffffff;
+	background-color: rgba(255,255,255,1);
+	border-radius:8px;
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;	
+	margin:5px;
+	padding:2px;
 	background-position: 50% 50%;
 	background-repeat: no-repeat;
 	display: block;
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	border-radius: 4px;
 	width: 26px;
-	height: 26px;
-	background-image: url(images/layers.png);
+	height: 26px;	
+}
+.leaflet-control-locations a:hover {
+	background-color: #CCCCCC;
+}
+.leaflet-touch .leaflet-control-locations a {
+	width: 32px;
+	height: 32px;
+}
+.leaflet-control-zoom-in {
+	background-image: url(images/zoom-in.png);
+	margin-bottom: 5px;
+	}
+.leaflet-control-zoom-out {
+	background-image: url(images/zoom-out.png);
+	}
+
+.leaflet-control-locations-user {
+	background-image:url('images/control_zoom_user.png');
+}
+.leaflet-control-locations-user-active {
+	background-image:url('images/control_zoom_route.png');
+	background-color: rgba(255,255,0,1);
+}
+.leaflet-control-locations-user-inactive {
+	background-image:url('images/control_zoom_route.png');
+	background-color: rgba(0,255,255,1);
+}
+
+.leaflet-control-locations-route {
+	background-image:url('images/control_zoom_route.png');
+}
+.leaflet-control-locations-route-active {
+	background-image:url('images/control_zoom_user.png');
+}
+.leaflet-control-locations-route-inactive {
+	background-image:url('images/control_zoom_user.png');
+}
+
+
+.leaflet-control-layers {
+	box-shadow: 0 0px 0px;	
+	border-radius:10px;
+	-moz-border-radius:10px;
+	-webkit-border-radius:10px;
+	background-color:rgba(0, 0, 0, 0.25);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3f000000, endColorstr=#3f000000);
+}
+.leaflet-control-layers-expanded {
+	background-color:rgba(255, 255, 255, 1);
+}
+.leaflet-control-layers a {
+	background-color: #FFFFFF;
+	background-color: rgba(255,255,255,1);
+	border-radius:8px;
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;	
+	margin:5px;
+	padding:2px;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	width: 26px;
+	height: 26px;	
+	background-image:url('images/control_layers.png');
 }
 .leaflet-control-layers a:hover {
-	background-color: #fff;
-} */
+	background-color: #CCCCCC;
+}
 
 /* ------------------------------------------------------------------------ */
 
@@ -131,9 +199,9 @@ html, body {
 	position:absolute;
 	background-color:#ffffff;	
 	background-color:rgba(255,255,255,1);
-	border-radius:10px;
-	-moz-border-radius:10px;
-	-webkit-border-radius:10px;	
+	border-radius:8px;
+	-moz-border-radius:8px;
+	-webkit-border-radius:8px;	
 	margin:5px;
 	padding:5px;	
 }

@@ -55,9 +55,13 @@ init: function() {
 	    fadeAnimation: false
 	});
 
+	// add locations control
+	var locationsControl = new L.Control.Locations();
+	OSRM.G.map.addControl(locationsControl);
+	
 	// add layer control
 	var layerControl = new L.Control.QueryableLayers(base_maps, {});
-	OSRM.G.map.addLayerControl(layerControl);
+	OSRM.G.map.addLayerControl(layerControl);	
 
     // move zoom markers
 	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.G.main_handle.boxWidth()+10)+"px";
