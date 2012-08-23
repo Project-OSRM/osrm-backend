@@ -80,7 +80,7 @@ _showResults: function(response, parameters) {
 	}	
 	
 	// filter/sort inputs
-	var filtered_response_temp = [];									// filter unwanted results
+	var filtered_response_temp = [];									// filter results
 	for(var i=0, iEnd=response.length; i < iEnd; i++){
 		var result = response[i];
 		if( OSRM.Geocoder._filterResult( result ) )
@@ -90,19 +90,19 @@ _showResults: function(response, parameters) {
 	if(filtered_response_temp.length == 0) {							// stop if no results remain
 		OSRM.Geocoder._showResults_Empty(parameters);
 		return;
-	}	
-	filtered_response_temp.sort( OSRM.Geocoder._compareResults );		// sort results
+	}
+	filtered_response_temp.sort( OSRM.Geocoder._compareResults );		// rank results
 	filtered_response_temp.sort( OSRM.Geocoder._compareLocations );		// remove duplicate locations (stable sort -> retain highest ranked)
 	var filtered_response = [];
 	filtered_response.push( filtered_response_temp[0] );
-	for(var i=filtered_response_temp.length-1, iEnd = 0; i>iEnd; i--) {
-		var prev_result = response[i-1];
-		var result = response[i];
+	for(var i=1, iEnd = filtered_response_temp.length; i<iEnd; i++) {
+		var prev_result = filtered_response_temp[i-1];
+		var result = filtered_response_temp[i];
 		if( result.lat != prev_result.lat || result.lon != prev_result.lon ) {
 			filtered_response.push( result );
 		}
 	}
-	filtered_response.sort( OSRM.Geocoder._compareResults );
+	filtered_response.sort( OSRM.Geocoder._compareResults );			// rank results again
 	
 	// show first result
 	OSRM.Geocoder._onclickResult(parameters.marker_id, filtered_response[0].lat, filtered_response[0].lon);
