@@ -151,7 +151,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 <!-- mapping gui -->
 <div id="mapping-wrapper" class="box-wrapper">
 <div id="mapping-content" class="box-content">
-	<!-- header -->
+	<!-- header -->select
 	<div id="mapping-toggle" class="iconic-button cancel-marker top-right-button"></div>
 	<div id="gui-mapping-label" class="box-label">Mapping Tools</div>
 	
@@ -204,9 +204,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	
 	<!-- action buttons -->
     <div class="full">
+    <div class="row">
     <div class="left"><a class="button" id="gui-reset">Reset</a></div>
-    <div class="center full"><a class="button-inactive" id="gui-zoom">Reset</a></div>
+	<!-- <div class="center"><select id="gui-engine-toggle" class="engine-select"></select></div> -->
+	<div class="center"><a class="button-inactive" id="gui-zoom">Reset</a></div>
 	<div class="right"><a class="button" id="gui-reverse">Reverse</a></div>
+    </div>
     </div>
     </div>
 </div>

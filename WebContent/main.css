@@ -270,19 +270,6 @@ html, body {
 
 
 /* styles for main-input input-mask-options */
-#gui-options-toggle
-{
-	cursor:pointer;
-	color:#0000ff
-}
-#gui-options-toggle:hover
-{
-	color:#ff0000
-}
-#options-box
-{
-	visibility:hidden;
-}
 
 
 /* styles for main-output areas */
@@ -650,6 +637,7 @@ html, body {
 /* styled select */
 .styled-select-helper
 {
+	position:relative;
 	border: 0px;
 	text-decoration:none;
  	opacity: 0;
@@ -659,6 +647,7 @@ html, body {
 }
 .styled-select
 {
+	text-align:left;
 	position:absolute;
 	background-repeat:no-repeat;	
 	background-position: top right;
