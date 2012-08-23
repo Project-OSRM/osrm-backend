@@ -367,17 +367,10 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     assert(lat2 != INT_MIN);
     assert(lon2 != INT_MIN);
     static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
-    //Earth's quatratic mean radius for WGS-84
-    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-    double latitudeArc  = ( lat1/100000. - lat2/100000. ) * DEG_TO_RAD;
-    double longitudeArc = ( lon1/100000. - lon2/100000. ) * DEG_TO_RAD;
-    double latitudeH = sin( latitudeArc * 0.5 );
-    latitudeH *= latitudeH;
-    double lontitudeH = sin( longitudeArc * 0.5 );
-    lontitudeH *= lontitudeH;
-    double tmp = cos( lat1/100000. * DEG_TO_RAD ) * cos( lat2/100000. * DEG_TO_RAD );
-    double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
-    return EARTH_RADIUS_IN_METERS * distanceArc;
+    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;    //Earth's quatratic mean radius for WGS-84
+    double latArc = lat2-lat1;
+    double lonArc = lon2-lon1;
+    return EARTH_RADIUS_IN_METERS * DEG_TO_RAD * sqrt( latArc*latArc + lonArc*lonArc ) / 100000.0;
 }
 
 inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
