@@ -166,6 +166,12 @@ zoomOnRoute: function() {
 	OSRM.G.map.fitBoundsUI(bounds);	
 },
 
+//click: button "zoom on user"
+zoomOnUser: function() {
+	if (navigator.geolocation) 
+		navigator.geolocation.getCurrentPosition(OSRM.Map.geolocationResponse);	
+},
+
 //click: toggle highlighting unnamed streets
 hightlightNonames: function() {
 	OSRM.Routing.getRoute_Redraw({keepAlternative:true});
