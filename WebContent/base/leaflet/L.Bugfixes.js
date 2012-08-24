@@ -19,36 +19,4 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [assorted bugfixes to Leaflet functions we use]
 
 
-// return closest point on segment or distance to that point
-L.LineUtil._sqClosestPointOnSegment = function (p, p1, p2, sqDist) {
-	var x = p1.x,
-		y = p1.y,
-		dx = p2.x - x,
-		dy = p2.y - y,
-		dot = dx * dx + dy * dy,
-		t;
-
-	if (dot > 0) {
-		t = ((p.x - x) * dx + (p.y - y) * dy) / dot;
-
-		if (t > 1) {
-			x = p2.x;
-			y = p2.y;
-		} else if (t > 0) {
-			x += dx * t;
-			y += dy * t;
-		}
-	}
-
-	dx = p.x - x;
-	dy = p.y - y;
-		
-	// DS_CHANGE: modified return values
-	if(sqDist)
-		return dx*dx + dy*dy;
-	else {
-		var p = new L.Point(x,y);
-		p._sqDist = dx*dx + dy*dy;
-		return p;
-	}
-};
+// none at the moment, thanks to Leaflet 0.4+

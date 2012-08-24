@@ -78,7 +78,7 @@ drawDragMarker: function(event) {
 	
 	// get distance to route
 	var minpoint = OSRM.G.route._current_route.route.closestLayerPoint( event.layerPoint );
-	var min_dist = minpoint ? minpoint._sqDist : 1000;
+	var min_dist = minpoint ? minpoint.distance : 1000;
 	
 	// get distance to markers
 	var mouse = event.latlng;
@@ -109,7 +109,7 @@ drawDragMarker: function(event) {
 			min_dist = 1000;
 	}
 	
-	if( min_dist < 400) {
+	if( min_dist < 20) {
 		OSRM.G.markers.dragger.setPosition( OSRM.G.map.layerPointToLatLng(minpoint) );
 		OSRM.G.markers.dragger.show();
 	} else
