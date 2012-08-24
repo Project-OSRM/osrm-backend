@@ -36,45 +36,23 @@ init: function() {
 	document.getElementById("gui-search-target").onclick = function() {OSRM.GUI.showMarker(OSRM.C.TARGET_LABEL);};
 	
 	document.getElementById("gui-reset").onclick = OSRM.GUI.resetRouting;
-//	document.getElementById("gui-zoom").onclick = OSRM.GUI.zoomOnRoute;
+	document.getElementById("gui-zoom").onclick = OSRM.GUI.zoomOnRoute;
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
 	document.getElementById("option-highlight-nonames").onclick = OSRM.GUI.hightlightNonames;
 	document.getElementById("option-show-previous-routes").onclick = OSRM.GUI.showPreviousRoutes;
-	
-	// engine toggle
-	var engines = OSRM.DEFAULTS.ROUTING_ENGINES;
-	var options = [];
-	for(var i=0, size=engines.length; i<size; i++) {
-		options.push( {display:engines[i].title, value:i} );
-	}
-	
-	// generate selectors
-	OSRM.GUI.selectorInit("gui-engine-toggle", options, OSRM.DEFAULTS.ONLOAD_ENGINE, OSRM.GUI.engineChanged);	
-},
-
-engineChanged: function( engine ) {
-	OSRM.G.active_routing_engine = engine; 
-	OSRM.G.active_routing_server_url = OSRM.DEFAULTS.ROUTING_ENGINES[ OSRM.G.active_routing_engine ].url;
-	
-	// query route
-	if( OSRM.G.markers.route.length > 1 )
-		OSRM.Routing.getRoute();
-	
-	// query timestamp of data
-	OSRM.JSONP.call( OSRM.DEFAULTS.ROUTING_ENGINES[ OSRM.G.active_routing_engine ].timestamp+"?jsonp=%jsonp", OSRM.GUI.setDataTimestamp, OSRM.GUI.setDataTimestampTimeout, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');
 },
 
 // toggle GUI features that need a route to work
 activateRouteFeatures: function() {
 	OSRM.Printing.activate();
-//	document.getElementById("gui-zoom").className = "button";
+	document.getElementById("gui-zoom").className = "button";
 //	document.getElementById('leaflet-control-locations-route').className = "leaflet-control-locations-route";
 },
 deactivateRouteFeatures: function() {
 	OSRM.Printing.deactivate();
-//	document.getElementById("gui-zoom").className = "button-inactive";
+	document.getElementById("gui-zoom").className = "button-inactive";
 //	document.getElementById('leaflet-control-locations-route').className = "leaflet-control-locations-route-inactive";	
 },
 

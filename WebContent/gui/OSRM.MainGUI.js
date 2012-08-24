@@ -46,7 +46,7 @@ init: function() {
 	
 	// query last update of data
 	OSRM.G.data_timestamp = "n/a";
-	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_TIMESTAMP_URL+"?jsonp=%jsonp", OSRM.GUI.setDataTimestamp, OSRM.GUI.setDataTimestampTimeout, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');
+	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_TIMESTAMP_URL+"?jsonp=%jsonp", OSRM.GUI.setDataTimestamp, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');
 },
 
 // set language dependent labels
@@ -54,7 +54,7 @@ setLabels: function() {
 	document.getElementById("open-josm").innerHTML = OSRM.loc("OPEN_JOSM");
 	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");	
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
-//	document.getElementById("gui-zoom").innerHTML = OSRM.loc("GUI_ZOOM_ON_ROUTE");
+	document.getElementById("gui-zoom").innerHTML = OSRM.loc("GUI_ZOOM_ON_ROUTE");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
 	document.getElementById("gui-option-show-previous-routes-label").innerHTML = OSRM.loc("GUI_SHOW_PREVIOUS_ROUTES");
@@ -133,13 +133,9 @@ changeDistanceFormat: function(type) {
 // set timestamp of data
 setDataTimestamp: function(response) {
 	if(!response)
-		OSRM.GUI.setDataTimestampTimeout();
-
+		return;
+	
 	OSRM.G.data_timestamp = response.timestamp.slice(0,25).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags
-	document.getElementById('gui-data-timestamp').innerHTML = OSRM.G.data_timestamp;
-},
-setDataTimestampTimeout: function() {
-	OSRM.G.data_timestamp = "n/a";
 	document.getElementById('gui-data-timestamp').innerHTML = OSRM.G.data_timestamp;
 }
 
