@@ -52,29 +52,3 @@ L.LineUtil._sqClosestPointOnSegment = function (p, p1, p2, sqDist) {
 		return p;
 	}
 };
-
-
-// makes requestAnimFrame respect the immediate paramter -> prevents drag events after dragend events
-// (alternatively: add if(!this.dragging ) return to L.Draggable._updatePosition, but must be done in leaflet.js!)
-// [TODO: In Leaflet 0.4 use L.Util.cancelAnimFrame(this._animRequest) in L.Draggable._onUp() instead, also has to be done in leaflet.js!]
-L.Util.requestAnimFrame = (function () {
-	function timeoutDefer(callback) {
-		window.setTimeout(callback, 1000 / 60);
-	}
-
-	var requestFn = window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.oRequestAnimationFrame ||
-		window.msRequestAnimationFrame ||
-		timeoutDefer;
-
-	return function (callback, context, immediate, contextEl) {
-		callback = context ? L.Util.bind(callback, context) : callback;
-		if (immediate ) {		// DS_CHANGE: removed additional condition requestFn === timeoutDefer
-			callback();
-		} else {
-			requestFn(callback, contextEl);
-		}
-	};
-}());	
