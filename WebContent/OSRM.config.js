@@ -19,6 +19,23 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [has to be loaded directly after OSRM.base]
 
 OSRM.DEFAULTS = {
+	ROUTING_ENGINES: [
+		{	url:'http://router.project-osrm.org/viaroute', 
+			timestamp:'http://router.project-osrm.org/timestamp',
+			title:'car (fastest route)', 
+			metric:0},
+		{	url:'http://mapa.ump.waw.pl/ump-www/viaroute',
+			timestamp:'http://mapa.ump.waw.pl/ump-www/timestamp',
+			title:'car (poland)',
+			metric:0
+		},
+		{	url:'http://mapa.ump.waw.pl/ump-www/rower/viaroute',
+			timestamp:'http://mapa.ump.waw.pl/ump-www/rower/timestamp',
+			title:'bike (poland)', 
+			metric:0
+		}		
+	],
+	ONLOAD_ENGINE: 0,
 	HOST_ROUTING_URL: ['http://router.project-osrm.org/viaroute'],
 	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
 	HOST_TIMESTAMP_URL: 'http://router.project-osrm.org/timestamp',

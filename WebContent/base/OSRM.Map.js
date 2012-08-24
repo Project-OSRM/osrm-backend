@@ -55,9 +55,9 @@ init: function() {
 	    fadeAnimation: false
 	});
 
-	// add locations control
-	var locationsControl = new L.Control.Locations();
-	OSRM.G.map.addControl(locationsControl);
+//	// add locations control
+//	var locationsControl = new L.Control.Locations();
+//	OSRM.G.map.addControl(locationsControl);
 	
 	// add layer control
 	var layerControl = new L.Control.QueryableLayers(base_maps, {});
