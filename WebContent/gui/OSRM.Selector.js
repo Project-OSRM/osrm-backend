@@ -26,7 +26,7 @@ selectorInit: function(id, options, selected, onchange_fct) {
 	// create dropdown menu
 	var select = document.getElementById(id);
 	select.className += " styled-select-helper base-font";
-	select.onchange = function() { OSRM.GUI.selectorOnChange(this); onchange_fct(this.value); };	
+	select.onchange = function() { OSRM.GUI._selectorOnChange(this); onchange_fct(this.value); };	
 		
 	// fill dropdown menu
 	for(var i=0, size=options.length; i<size; i++) {
@@ -49,7 +49,7 @@ selectorInit: function(id, options, selected, onchange_fct) {
 },
 
 // required behaviour of selector on change to switch shown name
-selectorOnChange: function(select) {
+_selectorOnChange: function(select) {
 	var option = select.getElementsByTagName("option");	
 	for(var i = 0; i < option.length; i++)
 	if(option[i].selected == true) {
@@ -59,9 +59,29 @@ selectorOnChange: function(select) {
 },
 
 // change selector value
-selectorChange: function(select, value) {
+selectorChange: function(id, value) {
+	var select = document.getElementById(id);
 	select.value = value;
-	OSRM.GUI.selectorOnChange(select);
+	OSRM.GUI._selectorOnChange(select);
+},
+
+// replace selector options with new names
+selectorRenameOptions: function(id, options) {
+	var select = document.getElementById(id);
+	var select_options = select.getElementsByTagName("option");
+	var styledSelect = document.getElementById("styled-select-"+id);
+	
+	// fill dropdown menu with new option names
+	for(var i = 0; i < select_options.length; i++) {
+		select_options[i].childNodes[0].nodeValue = options[i].display;
+		
+		if(select_options[i].selected == true)
+			styledSelect.childNodes[0].nodeValue = options[i].display;
+	}
+	
+	// resize visible dropdown menu as needed
+	styledSelect.style.width = (select.offsetWidth-2)+"px";
+	styledSelect.style.height = (select.offsetHeight)+"px";	// clientHeight gives the height of the opened dropbox!	
 }
 
 });

@@ -78,8 +78,8 @@ OSRM.drawMap = function(tile_server, bounds) {
 	
 	// add scale control
 	OSRM.G.map.scaleControl = new L.Control.Scale();
-	OSRM.G.map.scaleControl.options.metric = (OSRM.G.DISTANCE_FORMAT != 1);
-	OSRM.G.map.scaleControl.options.imperial = (OSRM.G.DISTANCE_FORMAT == 1);	
+	OSRM.G.map.scaleControl.options.metric = (OSRM.G.active_distance_format != 1);
+	OSRM.G.map.scaleControl.options.imperial = (OSRM.G.active_distance_format == 1);	
 	OSRM.G.map.scaleControl.addTo(OSRM.G.map);	
 	
 	// need to rebuild objects for instanceof to work correctly

@@ -24,7 +24,7 @@ OSRM.GUI.extend( {
 // init
 init: function() {
 	// init variables
-	OSRM.GUI.changeDistanceFormat(OSRM.DEFAULTS.DISTANCE_FORMAT);
+	OSRM.GUI.setDistanceFormat(OSRM.DEFAULTS.DISTANCE_FORMAT);
 	
 	// init events
 	document.getElementById("gui-input-source").onchange = function() {OSRM.GUI.inputChanged(OSRM.C.SOURCE_LABEL);};
@@ -36,7 +36,6 @@ init: function() {
 	document.getElementById("gui-search-target").onclick = function() {OSRM.GUI.showMarker(OSRM.C.TARGET_LABEL);};
 	
 	document.getElementById("gui-reset").onclick = OSRM.GUI.resetRouting;
-	document.getElementById("gui-zoom").onclick = OSRM.GUI.zoomOnRoute;
 	document.getElementById("gui-reverse").onclick = OSRM.GUI.reverseRouting;
 	document.getElementById("open-josm").onclick = OSRM.GUI.openJOSM;
 	document.getElementById("open-osmbugs").onclick = OSRM.GUI.openOSMBugs;
@@ -47,12 +46,12 @@ init: function() {
 // toggle GUI features that need a route to work
 activateRouteFeatures: function() {
 	OSRM.Printing.activate();
-	document.getElementById("gui-zoom").className = "button";
+//	document.getElementById("gui-zoom").className = "button";
 //	document.getElementById('leaflet-control-locations-route').className = "leaflet-control-locations-route";
 },
 deactivateRouteFeatures: function() {
 	OSRM.Printing.deactivate();
-	document.getElementById("gui-zoom").className = "button-inactive";
+//	document.getElementById("gui-zoom").className = "button-inactive";
 //	document.getElementById('leaflet-control-locations-route').className = "leaflet-control-locations-route-inactive";	
 },
 

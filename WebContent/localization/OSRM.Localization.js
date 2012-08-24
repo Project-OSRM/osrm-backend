@@ -54,8 +54,8 @@ setLanguageWrapper: function(language) {		// wrapping required to correctly prev
 },
 setLanguage: function(language) {
 	// change value of both language selectors
-	OSRM.GUI.selectorChange( document.getElementById('gui-language-toggle'), language );
-	OSRM.GUI.selectorChange( document.getElementById('gui-language-2-toggle'), language );
+	OSRM.GUI.selectorChange( 'gui-language-toggle', language );
+	OSRM.GUI.selectorChange( 'gui-language-2-toggle', language );
 	
 	if( OSRM.Localization[language]) {
 		OSRM.Localization.current_language = language;

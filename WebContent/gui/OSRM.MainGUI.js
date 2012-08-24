@@ -41,20 +41,15 @@ init: function() {
 	document.getElementById('gui-input-source').value = OSRM.DEFAULTS.ONLOAD_SOURCE;
 	document.getElementById('gui-input-target').value = OSRM.DEFAULTS.ONLOAD_TARGET;
 	
-	// init units selector
-	OSRM.GUI.selectorInit( "gui-units-toggle", [{display:"Kilometers",value:0},{display:"Miles",value:1}], 0, OSRM.GUI.onUnitsChanged );
-	
-	// query last update of data
-	OSRM.G.data_timestamp = "n/a";
-	OSRM.JSONP.call(OSRM.DEFAULTS.HOST_TIMESTAMP_URL+"?jsonp=%jsonp", OSRM.GUI.setDataTimestamp, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');
+	//init units selector
+	OSRM.GUI.initDistanceFormatsSelector();
 },
 
 // set language dependent labels
 setLabels: function() {
 	document.getElementById("open-josm").innerHTML = OSRM.loc("OPEN_JOSM");
-	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");	
+	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
-	document.getElementById("gui-zoom").innerHTML = OSRM.loc("GUI_ZOOM_ON_ROUTE");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
 	document.getElementById("gui-option-highlight-nonames-label").innerHTML = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
 	document.getElementById("gui-option-show-previous-routes-label").innerHTML = OSRM.loc("GUI_SHOW_PREVIOUS_ROUTES");
@@ -72,15 +67,12 @@ setLabels: function() {
 	document.getElementById('gui-data-timestamp-label').innerHTML = OSRM.loc("GUI_DATA_TIMESTAMP");
 	document.getElementById('gui-data-timestamp').innerHTML = OSRM.G.data_timestamp;
 	document.getElementById('gui-timestamp-label').innerHTML = OSRM.loc("GUI_VERSION");	
-	document.getElementById('gui-timestamp').innerHTML = OSRM.DATE+"; v"+OSRM.VERSION;
+	document.getElementById('gui-timestamp').innerHTML = OSRM.DATE+"; v"+OSRM.VERSION;	
 	document.getElementById('config-handle-icon').title = OSRM.loc("GUI_CONFIGURATION");
 	document.getElementById('mapping-handle-icon').title = OSRM.loc("GUI_MAPPING_TOOLS");
 	document.getElementById('main-handle-icon').title = OSRM.loc("GUI_MAIN_WINDOW");
-	
-	document.getElementById("gui-units-toggle").getElementsByTagName("option")[0].innerHTML = OSRM.loc("GUI_KILOMETERS");
-	document.getElementById("gui-units-toggle").getElementsByTagName("option")[1].innerHTML = OSRM.loc("GUI_MILES");
-	OSRM.GUI.selectorOnChange( document.getElementById("gui-units-toggle") );
-	OSRM.GUI.updateNotifications();
+	OSRM.GUI.setDistanceFormatsLanguage();
+	OSRM.GUI.setRoutingEnginesLanguage();	
 },
 
 // clear output area
@@ -95,7 +87,6 @@ beforeMainTransition: function() {
 	if( zoom_controls.length > 0)
 		zoom_controls[0].style.visibility="hidden";
 },
-
 // show zoom controls after main box animation
 afterMainTransition: function() {
 	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');
@@ -105,15 +96,15 @@ afterMainTransition: function() {
 	}
 },
 
-// toggle distance units
-onUnitsChanged: function(type) {
-	OSRM.GUI.changeDistanceFormat(type);
-	OSRM.Routing.getRoute({keepAlternative:true});
+// distance format routines
+initDistanceFormatsSelector: function() {
+	var options = OSRM.GUI.getDistanceFormats();
+	OSRM.GUI.selectorInit( "gui-units-toggle", options, OSRM.DEFAULTS.DISTANCE_FORMAT, OSRM.GUI._onDistanceFormatChanged );	
 },
-
-// change distance format
-changeDistanceFormat: function(type) {
-	OSRM.G.DISTANCE_FORMAT = type;
+setDistanceFormat: function(type) {
+	if( OSRM.G.active_distance_format == type )
+		return;
+	OSRM.active_distance_format = type;
 	
 	// change scale control
 	if(OSRM.G.map) {
@@ -129,12 +120,27 @@ changeDistanceFormat: function(type) {
 	else
 		OSRM.Utils.toHumanDistance = OSRM.Utils.toHumanDistanceMeters;
 },
+_onDistanceFormatChanged: function(type) {
+	OSRM.GUI.setDistanceFormat(type);
+	OSRM.Routing.getRoute({keepAlternative:true});
+},
+setDistanceFormatsLanguage: function() {
+	var options = OSRM.GUI.getDistanceFormats();
+	OSRM.GUI.selectorRenameOptions("gui-units-toggle", options );	
+},
+getDistanceFormats: function() {
+	return [{display:OSRM.loc("GUI_KILOMETERS"),value:0},{display:OSRM.loc("GUI_MILES"),value:1}];
+},
 
-// set timestamp of data
+// data timestamp routines
+queryDataTimestamp: function() {
+	OSRM.G.data_timestamp = "n/a";	
+	OSRM.JSONP.call( OSRM.G.active_routing_timestamp_url+"?jsonp=%jsonp", OSRM.GUI.setDataTimestamp, OSRM.JSONP.empty, OSRM.DEFAULTS.JSONP_TIMEOUT, 'data_timestamp');	
+},
 setDataTimestamp: function(response) {
 	if(!response)
 		return;
-	
+
 	OSRM.G.data_timestamp = response.timestamp.slice(0,25).replace(/<\/?[^>]+(>|$)/g ,"");	// discard tags
 	document.getElementById('gui-data-timestamp').innerHTML = OSRM.G.data_timestamp;
 }

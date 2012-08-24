@@ -30,9 +30,8 @@ onClickRouteDescription: function(lat, lng) {
 onClickCreateShortcut: function(src){
 	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat.toFixed(6) + ',' + OSRM.G.map.getCenter().lng.toFixed(6);
 	src += '&alt='+OSRM.G.active_alternative;
-	src += '&df=' + OSRM.G.DISTANCE_FORMAT;
+	src += '&df=' + OSRM.G.active_distance_format;
 	src += '&re=' + OSRM.G.active_routing_engine;
-	src += '&rm=' + OSRM.G.active_routing_metric;
 	
 	var source = OSRM.DEFAULTS.SHORTENER_PARAMETERS.replace(/%url/, OSRM.DEFAULTS.HOST_SHORTENER_URL+src); 
 	

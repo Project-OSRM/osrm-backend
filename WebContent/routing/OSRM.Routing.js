@@ -31,9 +31,9 @@ OSRM.Routing = {
 		
 // init routing data structures
 init: function() {
-	OSRM.G.active_routing_engine = 0;
-	OSRM.G.active_routing_metric = 0;
-	OSRM.G.active_routing_server_url = OSRM.DEFAULTS.HOST_ROUTING_URL[ OSRM.G.active_routing_engine ];
+	// init variables	
+	OSRM.GUI.setRoutingEngine( OSRM.DEFAULTS.ROUTING_ENGINE );
+
 	OSRM.G.markers = new OSRM.Markers();	
 	OSRM.G.route = new OSRM.Route();
 	OSRM.G.response = { via_points:[] };

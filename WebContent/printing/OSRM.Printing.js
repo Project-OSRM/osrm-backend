@@ -236,7 +236,7 @@ printWindowLoaded: function(){
 	}
 	
 	// scale control
-	print_window.OSRM.G.DISTANCE_FORMAT = OSRM.G.DISTANCE_FORMAT;
+	print_window.OSRM.G.active_distance_format = OSRM.G.active_distance_format;
 	
 	// localization 
 	print_window.OSRM.G.Localization.culture = OSRM.loc("CULTURE"); 

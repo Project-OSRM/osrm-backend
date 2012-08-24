@@ -338,6 +338,10 @@ html, body {
 
 
 /* styles for main-input input-mask-options */
+#gui-engine-toggle
+{
+	max-width: 200px;
+}
 
 
 /* styles for main-output areas */

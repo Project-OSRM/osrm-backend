@@ -209,7 +209,7 @@ OSRM.parseParameters = function(){
 			var type = parseInt(name_val[1]);
 			if(type != 0 && type != 1)
 				return;
-			OSRM.GUI.changeDistanceFormat(type);
+			OSRM.GUI.setDistanceFormat(type);
 		}		
 		else if(name_val[0] == 'loc') {
 			var coordinates = unescape(name_val[1]).split(',');
@@ -247,16 +247,10 @@ OSRM.parseParameters = function(){
 		}
 		else if(name_val[0] == 're') {
 			var active_routing_engine = Number(name_val[1]);
-			if( active_routing_engine<0 || active_routing_engine>=OSRM.DEFAULTS.HOST_ROUTING_URL.length)
+			if( active_routing_engine<0 || active_routing_engine>=OSRM.DEFAULTS.ROUTING_ENGINES.length)
 				return;
 			params.active_routing_engine = active_routing_engine;
 		}
-		else if(name_val[0] == 'rm') {
-			var active_routing_metric = Number(name_val[1]);
-			if( active_routing_metric<0 )
-				return;
-			params.active_routing_metric = active_routing_metric;
-		}		
 	}
 		
 	// case 1: destination given
@@ -300,9 +294,7 @@ OSRM.parseParameters = function(){
 		OSRM.G.active_alternative = params.active_alternative || 0;
 		
 		// set routing server
-		OSRM.G.active_routing_engine = params.active_routing_engine || 0;
-		OSRM.G.active_routing_metric = params.active_routing_metric || 0;
-		OSRM.G.active_routing_server_url = OSRM.DEFAULTS.HOST_ROUTING_URL[ OSRM.G.active_routing_engine ];
+		OSRM.GUI.setRoutingEngine( params.active_routing_engine || OSRM.DEFAULTS.ROUTING_ENGINE );
 			
 		// compute route
 		OSRM.Routing.getRoute({keepAlternative:true});

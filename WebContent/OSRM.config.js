@@ -19,26 +19,44 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [has to be loaded directly after OSRM.base]
 
 OSRM.DEFAULTS = {
-	HOST_ROUTING_URL: ['http://router.project-osrm.org/viaroute'],
-	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
-	HOST_TIMESTAMP_URL: 'http://router.project-osrm.org/timestamp',
+	ROUTING_ENGINES: [
+		{	url: 'http://router.project-osrm.org/viaroute',
+			timestamp: 'http://router.project-osrm.org/timestamp',
+			metric: 0,
+			label: 'ENGINE_0',
+		},
+		{	url: 'http://mapa.ump.waw.pl/ump-www/viaroute',
+			timestamp: 'http://mapa.ump.waw.pl/ump-www/timestamp',
+			metric: 0,
+			label: 'ENGINE_1',
+		},
+		{	url: 'http://mapa.ump.waw.pl/ump-www/rower/viaroute',
+			timestamp: 'http://mapa.ump.waw.pl/ump-www/rower/timestamp',
+			metric: 0,
+			label: 'ENGINE_2',
+		}
+	],
+	
+	WEBSITE_URL: document.URL.replace(/#*(\?.*|$)/i,""),					// truncates URL before first ?, and removes tailing #
 	HOST_GEOCODER_URL: 'http://nominatim.openstreetmap.org/search',
 	HOST_REVERSE_GEOCODER_URL: 'http://nominatim.openstreetmap.org/reverse',
-	WEBSITE_URL: document.URL.replace(/#*(\?.*|$)/i,""),					// truncates URL before first ?, and removes tailing #
-	JSONP_TIMEOUT: 10000,
+	HOST_SHORTENER_URL: 'http://map.project-osrm.org/shorten/',
+	
+	SHORTENER_PARAMETERS: '%url&jsonp=%jsonp',
+	SHORTENER_REPLY_PARAMETER: 'ShortURL',	
+	
+	ROUTING_ENGINE: 0,
+	DISTANCE_FORMAT: 0,														// 0: km, 1: miles
+	GEOCODER_BOUNDS: '',	
 	ZOOM_LEVEL: 14,
+	HIGHLIGHT_ZOOM_LEVEL: 16,
+	JSONP_TIMEOUT: 10000,
+	
 	ONLOAD_ZOOM_LEVEL: 5,
 	ONLOAD_LATITUDE: 48.84,
 	ONLOAD_LONGITUDE: 10.10,
 	ONLOAD_SOURCE: "",
 	ONLOAD_TARGET: "",
-	HIGHLIGHT_ZOOM_LEVEL: 16,
-	DISTANCE_FORMAT: 0,														// 0: km, 1: miles
-	GEOCODER_BOUNDS: '',													// the world is not enough!
-	//GEOCODER_BOUNDS: '&bounded=1&viewbox=-27.0,72.0,46.0,36.0',			// bounds for Europe
-	
-	SHORTENER_PARAMETERS: '%url&jsonp=%jsonp',
-	SHORTENER_REPLY_PARAMETER: 'ShortURL',
 	
 	LANGUAGE: "en",
 	LANUGAGE_ONDEMAND_RELOADING: true,
@@ -97,7 +115,6 @@ OSRM.DEFAULTS = {
 		DRAGGING: 		120000,		// 2min 
 		MAINTENANCE:	false
 	},
-
-	OVERRIDE_MAINTENANCE_HEADER: undefined,
-	OVERRIDE_MAINTENANCE_BODY: undefined
+	OVERRIDE_MAINTENANCE_NOTIFICATION_HEADER: undefined,
+	OVERRIDE_MAINTENANCE_NOTIFICATION_BODY: undefined
 };
