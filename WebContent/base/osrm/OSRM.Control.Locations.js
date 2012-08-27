@@ -34,7 +34,7 @@ OSRM.Control.Locations = L.Control.extend({
 		L.DomEvent.disableClickPropagation(container);
 		
 		// create buttons
-		this._createButton('gui-locations-user', container, OSRM.GUI.zoomOnUser, map, navigator.geolocation );
+		this._createButton('gui-locations-user', container, OSRM.GUI.zoomOnUser, map, !!navigator.geolocation );
 		this._createButton('gui-locations-route', container, OSRM.GUI.zoomOnRoute, map, false);
 
 		return container;
