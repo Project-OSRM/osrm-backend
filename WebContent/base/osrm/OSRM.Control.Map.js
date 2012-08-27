@@ -15,9 +15,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-// map view/model
-// [extending Leaflet L.Map with setView/fitBounds methods that respect UI visibility, better layerControl] 
-OSRM.MapView = L.Map.extend({
+// OSRM Map control
+// [extension of L.Map with additional view & bounds methods that respect OSRM UI visibility; methods for querying active layers]
+OSRM.Control.Map = L.Map.extend({
 	_boundsInsideView: function(bounds) {
 		var viewBounds = this.getBounds(),
 		viewSw = this.project(viewBounds.getSouthWest()),
@@ -105,13 +105,6 @@ OSRM.MapView = L.Map.extend({
 		var centerPoint = this._getTopLeftPoint().add(viewHalf.divideBy(2));
 		
 		return this.unproject(centerPoint, this._zoom, unbounded);
-	},
-	addLayerControl: function( layerControl ) {
-		if( this.layerControl )
-			return;
-		
-		this.layerControl = layerControl;
-		this.addControl(this.layerControl);
 	},
 	getActiveLayerId: function() {
 		var tile_server_id = 0;

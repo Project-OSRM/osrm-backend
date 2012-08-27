@@ -34,6 +34,8 @@ OSRM.Localization["lv"] = {
 "GUI_START_TOOLTIP": "Izvēlieties sākumu",
 "GUI_END_TOOLTIP": "Izvēlieties galamērķi",
 "GUI_MAIN_WINDOW": "Galvenais logs",
+"GUI_ZOOM_IN": "Palielinātu",
+"GUI_ZOOM_OUT": "Attālinātu",
 // config
 "GUI_CONFIGURATION": "Konfigurācija",
 "GUI_LANGUAGE": "Valoda",
@@ -66,6 +68,8 @@ OSRM.Localization["lv"] = {
 // printing
 "OVERVIEW_MAP": "Kartes pārskats",
 "NO_ROUTE_SELECTED": "Nav norādīts maršruts",
+// routing engines
+"ENGINE_0": "Auto (ātrākais)",
 // directions
 "N": "ziemeļu",
 "E": "austrumu",

@@ -34,7 +34,9 @@ OSRM.Localization["fr"] = {
 "GUI_START_TOOLTIP": "Entrez le lieu de départ",
 "GUI_END_TOOLTIP": "Entrez le lieu d’arrivée",
 "GUI_MAIN_WINDOW": "Fenêtre principale",
-//config
+"GUI_ZOOM_IN": "Zoomer",
+"GUI_ZOOM_OUT": "Rétrécir",
+// config
 "GUI_CONFIGURATION": "Configuration",
 "GUI_LANGUAGE": "Langue",
 "GUI_UNITS": "Unités",
@@ -53,7 +55,7 @@ OSRM.Localization["fr"] = {
 "NO_RESULTS_FOUND": "Aucun résultat trouvé",
 "NO_RESULTS_FOUND_SOURCE": "Aucun résultat pour le départ",
 "NO_RESULTS_FOUND_TARGET": "Aucun résultat pour l'arrivée",
-//routing
+// routing
 "ROUTE_DESCRIPTION": "Description de l’itinéraire",
 "GET_LINK_TO_ROUTE": "Générer un lien",
 "GENERATE_LINK_TO_ROUTE": "en attente du lien",
@@ -63,9 +65,11 @@ OSRM.Localization["fr"] = {
 "DURATION": "Durée",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Votre itinéraire est en cours de calcul",
 "NO_ROUTE_FOUND": "Pas d’itinéraire possible",
-//printing
+// printing
 "OVERVIEW_MAP": "Carte",
 "NO_ROUTE_SELECTED": "Pas d’itinéraire choisi",
+// routing engines
+"ENGINE_0": "voiture (le plus rapide)",
 // directions
 "N": "nord",
 "E": "est",
@@ -101,6 +105,6 @@ OSRM.Localization["fr"] = {
 "DIRECTION_15":"Vous êtes arrivé"
 };
 
-//set GUI language on load
+// set GUI language on load
 if( OSRM.DEFAULTS.LANUGAGE_ONDEMAND_RELOADING == true )
 	OSRM.Localization.setLanguage("fr");

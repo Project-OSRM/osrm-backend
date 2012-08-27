@@ -23,7 +23,7 @@ OSRM.Localization["cs"] = {
 // own language
 "CULTURE": "cs-CZ",
 "LANGUAGE": "česky", 		
-//gui
+// gui
 "GUI_START": "Odkud",
 "GUI_END": "Kam",
 "GUI_RESET": "Vyčistit",
@@ -32,7 +32,9 @@ OSRM.Localization["cs"] = {
 "GUI_REVERSE": "Prohodit",
 "GUI_START_TOOLTIP": "Zadejte začátek cesty",
 "GUI_END_TOOLTIP": "Zadejte cíl cesty",
-//config
+"GUI_ZOOM_IN": "Najíždět",
+"GUI_ZOOM_OUT": "Oddálit",
+// config
 "GUI_CONFIGURATION": "Nastavení",
 "GUI_LANGUAGE": "Jazyk",
 "GUI_UNITS": "Jednotky",
@@ -61,9 +63,11 @@ OSRM.Localization["cs"] = {
 "DURATION": "Doba",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Vaše trasa byla vyznačena",
 "NO_ROUTE_FOUND": "Trasu nelze vyznačit",
-//printing
+// printing
 "OVERVIEW_MAP": "Přehledová mapka",
 "NO_ROUTE_SELECTED": "Ne vybranou trasu",
+// routing engines
+"ENGINE_0": "Auto (nejrychlejší)",
 // directions
 "N": "sever",
 "E": "východ",
@@ -100,6 +104,6 @@ OSRM.Localization["cs"] = {
 "DIRECTION_15":"Jste u cíle"
 };
 
-//set GUI language on load
+// set GUI language on load
 if( OSRM.DEFAULTS.LANUGAGE_ONDEMAND_RELOADING == true )
 	OSRM.Localization.setLanguage("cs");

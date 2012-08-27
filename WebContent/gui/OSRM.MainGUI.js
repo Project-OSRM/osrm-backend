@@ -71,10 +71,8 @@ setLabels: function() {
 	document.getElementById('config-handle-icon').title = OSRM.loc("GUI_CONFIGURATION");
 	document.getElementById('mapping-handle-icon').title = OSRM.loc("GUI_MAPPING_TOOLS");
 	document.getElementById('main-handle-icon').title = OSRM.loc("GUI_MAIN_WINDOW");
-	document.getElementById('gui-locations-route').title = OSRM.loc("GUI_ZOOM_ON_ROUTE");
-	document.getElementById('gui-locations-user').title = OSRM.loc("GUI_ZOOM_ON_USER");
-	document.getElementById('gui-zoom-in').title = OSRM.loc("GUI_ZOOM_IN");
-	document.getElementById('gui-zoom-out').title = OSRM.loc("GUI_ZOOM_OUT");	
+	OSRM.G.map.zoomControl.setTooltips( OSRM.loc("GUI_ZOOM_IN"), OSRM.loc("GUI_ZOOM_OUT") );
+	OSRM.G.map.locationsControl.setTooltips( OSRM.loc("GUI_ZOOM_ON_USER"), OSRM.loc("GUI_ZOOM_ON_ROUTE") );
 	OSRM.GUI.setDistanceFormatsLanguage();
 	OSRM.GUI.setRoutingEnginesLanguage();	
 },
@@ -87,11 +85,11 @@ clearResults: function() {
 
 // reposition and hide zoom controls before main box animation
 beforeMainTransition: function() {
-	OSRM.Control.Zoom.prototype.hide();
+	OSRM.G.map.zoomControl.hide();
 },
 // show zoom controls after main box animation
 afterMainTransition: function() {
-	OSRM.Control.Zoom.prototype.show();
+	OSRM.G.map.zoomControl.show();
 },
 
 // distance format routines

@@ -99,7 +99,6 @@ $showBox: function() {
 	this._box.style.visibility="visible";
 	this._handle.style.visibility="hidden";
 	this._box.style[this._side]="5px";
-	this._transitionEndFct();
 },
 $hideBox: function() {
 	this._box_visible = false;

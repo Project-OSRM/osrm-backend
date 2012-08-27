@@ -24,5 +24,6 @@ OSRM.DATE = '120705';
 OSRM.CONSTANTS = {};
 OSRM.DEFAULTS = {};
 OSRM.GLOBALS = {};
+OSRM.Control = {};			// control container
 OSRM.G = OSRM.GLOBALS;		// abbreviations
 OSRM.C = OSRM.CONSTANTS;

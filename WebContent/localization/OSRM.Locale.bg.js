@@ -34,6 +34,8 @@ OSRM.Localization["bg"] = {
 "GUI_START_TOOLTIP": "Въведи начало",
 "GUI_END_TOOLTIP": "Въведи карйна цел",
 "GUI_MAIN_WINDOW": "главния прозорец",
+"GUI_ZOOM_IN": "Приближаване",
+"GUI_ZOOM_OUT": "Oтдалечаване",
 // config
 "GUI_CONFIGURATION": "Конфигурация",
 "GUI_LANGUAGE": "Език",
@@ -66,6 +68,8 @@ OSRM.Localization["bg"] = {
 // printing
 "OVERVIEW_MAP": "сбит изглед",
 "NO_ROUTE_SELECTED": "Не е изберан маршрут",
+// routing engines
+"ENGINE_0": "Kола (най-бързо)",
 // directions
 "N": "север",
 "E": "изток",

@@ -46,11 +46,11 @@ init: function() {
 // toggle GUI features that need a route to work
 activateRouteFeatures: function() {
 	OSRM.Printing.activate();
-	OSRM.Control.Locations.prototype.activate('gui-locations-route');
+	OSRM.G.map.locationsControl.activateRoute();
 },
 deactivateRouteFeatures: function() {
 	OSRM.Printing.deactivate();
-	OSRM.Control.Locations.prototype.deactivate('gui-locations-route');
+	OSRM.G.map.locationsControl.deactivateRoute();
 },
 
 // click: button "reset"

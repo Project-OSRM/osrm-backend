@@ -17,34 +17,28 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 // zoom control
 // [modified zoom control with ids, prevention of click propagation, show/hide with respect to main OSRM window]
-OSRM.Control = OSRM.Control || {};
 OSRM.Control.Zoom = L.Control.extend({
 	options: {
 		position: 'topleft'
 	},
 
 	onAdd: function (map) {
-		// unique control
-		if( document.getElementById('gui-control-zoom') )
-			return document.getElementById('gui-control-zoom');
-		
 		// create wrapper
 		var container = L.DomUtil.create('div', 'box-wrapper gui-control-wrapper');
-		container.id = 'gui-control-zoom';
 		L.DomEvent.disableClickPropagation(container);
 		
 		// create buttons
-		this._createButton('gui-zoom-in', container, map.zoomIn, map, true);
-		this._createButton('gui-zoom-out', container, map.zoomOut, map, true);
-
+		this._zoomIn = this._createButton('gui-zoom-in', container, map.zoomIn, map, true);
+		this._zoomOut = this._createButton('gui-zoom-out', container, map.zoomOut, map, true);
+		
+		this._container = container;
 		return container;
 	},
 
 	_createButton: function (id, container, fn, context, isActive) {
 		var inactive = (isActive == false) ? "-inactive" : "";
-		var classNames = "box-content" + " " + "gui-control"+inactive + " " + id+inactive;		
+		var classNames = "box-content gui-control " + id+inactive;		
 		var link = L.DomUtil.create('a', classNames, container);
-		link.id = id;
 		link.title = id;
 
 		L.DomEvent
@@ -57,17 +51,19 @@ OSRM.Control.Zoom = L.Control.extend({
 	},
 	
 	hide: function() {
-		var zoom_controls = document.getElementById("gui-control-zoom");
-		if( zoom_controls )
-			zoom_controls.style.visibility="hidden";		
+		if( this._container )
+			this._container.style.visibility="hidden";		
 	},
 	
 	show: function() {
-		var zoom_controls = document.getElementById("gui-control-zoom");
-		if( zoom_controls ) {
-			zoom_controls.style.top = "5px";
-			zoom_controls.style.left = ( OSRM.G.main_handle.boxVisible() == true ? (OSRM.G.main_handle.boxWidth()+10) : "30") + "px";
-			zoom_controls.style.visibility="visible";
+		if( this._container ) {
+			this._container.style.top = "5px";
+			this._container.style.left = ( OSRM.G.main_handle.boxVisible() == true ? (OSRM.G.main_handle.boxWidth()+10) : "30") + "px";
+			this._container.style.visibility="visible";
 		}		
+	},
+	setTooltips: function( zoomIn, zoomOut) {
+		this._zoomIn.title = zoomIn;
+		this._zoomOut.title = zoomOut;
 	}
 });

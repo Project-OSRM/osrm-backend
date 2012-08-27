@@ -47,7 +47,7 @@ init: function() {
 	}
 
 	// setup map
-	OSRM.G.map = new OSRM.MapView('map', {
+	OSRM.G.map = new OSRM.Control.Map('map', {
     	center: new L.LatLng(OSRM.DEFAULTS.ONLOAD_LATITUDE, OSRM.DEFAULTS.ONLOAD_LONGITUDE),
 	    zoom: OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL,
 	    layers: [base_maps[tile_servers[0].display_name]],	    
@@ -57,18 +57,17 @@ init: function() {
 	});
 
 	// add locations control
-	var locationsControl = new OSRM.Control.Locations();
-	OSRM.G.map.addControl(locationsControl);
+	OSRM.G.map.locationsControl = new OSRM.Control.Locations();
+	OSRM.G.map.locationsControl.addTo(OSRM.G.map);
 	
 	// add layer control
-	var layerControl = new L.Control.QueryableLayers(base_maps, {});
-	OSRM.G.map.addLayerControl(layerControl);	
+	OSRM.G.map.layerControl = new OSRM.Control.Layers(base_maps, {});
+	OSRM.G.map.layerControl.addTo(OSRM.G.map);	
 
 	// add zoom control
-	var zoomControl = new OSRM.Control.Zoom();
-	OSRM.G.map.addControl(zoomControl);
-	zoomControl.show();	
-
+	OSRM.G.map.zoomControl = new OSRM.Control.Zoom();
+	OSRM.G.map.zoomControl.addTo(OSRM.G.map);
+	OSRM.G.map.zoomControl.show();
 	
 	// add scale control
 	OSRM.G.map.scaleControl = new L.Control.Scale();

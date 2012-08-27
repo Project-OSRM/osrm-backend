@@ -23,7 +23,7 @@ OSRM.Localization["dk"] = {
 // own language
 "CULTURE": "da-DK",
 "LANGUAGE": "Dansk",
-//gui
+// gui
 "GUI_START": "Start",
 "GUI_END": "Destination",
 "GUI_RESET": "Nulstil",
@@ -34,7 +34,9 @@ OSRM.Localization["dk"] = {
 "GUI_START_TOOLTIP": "Indtast start",
 "GUI_END_TOOLTIP": "Indtast destination",
 "GUI_MAIN_WINDOW": "Hovedvinduet",
-//config
+"GUI_ZOOM_IN": "Zoome ind",
+"GUI_ZOOM_OUT": "Zoome ud",
+// config
 "GUI_CONFIGURATION": "Konfiguration",
 "GUI_LANGUAGE": "Sprog",
 "GUI_UNITS": "Enheder",
@@ -53,7 +55,7 @@ OSRM.Localization["dk"] = {
 "NO_RESULTS_FOUND": "Ingen resultater",
 "NO_RESULTS_FOUND_SOURCE": "Ingen resultater for start",
 "NO_RESULTS_FOUND_TARGET": "Ingen resultater for destination",
-//routing
+// routing
 "ROUTE_DESCRIPTION": "Rutebeskrivelse",
 "GET_LINK_TO_ROUTE": "Lav link",
 "GENERATE_LINK_TO_ROUTE": "venter på link",
@@ -63,9 +65,11 @@ OSRM.Localization["dk"] = {
 "DURATION": "Varighed",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Din rute bliver beregnet",
 "NO_ROUTE_FOUND": "Ingen mulig rute fundet",
-//printing
+// printing
 "OVERVIEW_MAP": "Oversigtskort",
 "NO_ROUTE_SELECTED": "Ikke valgte rute",
+// routing engines
+"ENGINE_0": "Bil (hurtigste)",
 // directions
 "N": "nord",
 "E": "øst",
@@ -102,6 +106,6 @@ OSRM.Localization["dk"] = {
 "DIRECTION_15":"Du er ankommet til din destination"
 };
 
-//set GUI language on load
+// set GUI language on load
 if( OSRM.DEFAULTS.LANUGAGE_ONDEMAND_RELOADING == true )
 	OSRM.Localization.setLanguage("dk");

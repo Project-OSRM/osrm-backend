@@ -35,7 +35,7 @@ html, body {
 
 /* changes/additions to leaflet styles */
 .leaflet-control-layers {
-	box-shadow: 0 0px 0px;	
+	box-shadow: none;	
 	border-radius:10px;
 	-moz-border-radius:10px;
 	-webkit-border-radius:10px;
@@ -547,14 +547,6 @@ html, body {
 	background-repeat: no-repeat;
 	display: block;
 }
-.gui-control-inactive {
-	cursor:default;
-	position:relative;	
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	display: block;
-	background-color: #EFEFEF;	
-}
 
 
 /* zoom buttons */
@@ -766,3 +758,68 @@ input[type=checkbox],
 	font-size: 9px;
 	font-weight: normal;
 }
+
+
+
+
+
+
+/* .leaflet-control-layers {
+	box-shadow: 0 1px 7px #999;
+	background: #f8f8f9;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	border-radius: 8px;
+	}
+.leaflet-touch .leaflet-control-layers {
+	box-shadow: none;
+	border: 5px solid #bbb;	
+	}
+
+
+.leaflet-control-layers a {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	background-image: url(images/layers.png);
+	width: 36px;
+	height: 36px;	
+	}
+.leaflet-touch .leaflet-control-layers a {
+	width: 44px;
+	height: 44px;
+	}
+	
+	
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+	
+
+
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+	color: #333;
+	background: #fff;
+	}
+	
+
+.leaflet-control-layers input {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	} */

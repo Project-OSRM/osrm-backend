@@ -23,7 +23,7 @@ OSRM.Localization["pl"] = {
 // own language
 "CULTURE": "pl-PL",
 "LANGUAGE": "Polski",		
-//gui
+// gui
 "GUI_START": "Początek",
 "GUI_END": "Koniec",
 "GUI_RESET": "Reset",
@@ -34,7 +34,9 @@ OSRM.Localization["pl"] = {
 "GUI_START_TOOLTIP": "Wprowadź początek",
 "GUI_END_TOOLTIP": "Wprowadź koniec",
 "GUI_MAIN_WINDOW": "Główne okno",
-//config
+"GUI_ZOOM_IN": "Powiększyć",
+"GUI_ZOOM_OUT": "Pomniejszyć",
+// config
 "GUI_CONFIGURATION": "Konfiguracja",
 "GUI_LANGUAGE": "Język",
 "GUI_UNITS": "Jednostki",
@@ -53,7 +55,7 @@ OSRM.Localization["pl"] = {
 "NO_RESULTS_FOUND": "Brak wyników",
 "NO_RESULTS_FOUND_SOURCE": "Brak wyników dla początku trasy",
 "NO_RESULTS_FOUND_TARGET": "Brak wyników dla końca trasy",
-//routing
+// routing
 "ROUTE_DESCRIPTION": "Opis trasy",
 "GET_LINK_TO_ROUTE": "Generuj link",
 "GENERATE_LINK_TO_ROUTE": "oczekiwanie na link",
@@ -63,8 +65,10 @@ OSRM.Localization["pl"] = {
 "DURATION": "Czas",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Twoja trasa została wyznaczona",
 "NO_ROUTE_FOUND": "Nie można wyznaczyć trasy",
-//printing
+// printing
 "OVERVIEW_MAP": "Mapa poglądowa",
+// routing engines
+"ENGINE_0": "samochód (najszybciej)",
 // directions
 "N": "północ",
 "E": "wschód",
@@ -101,6 +105,6 @@ OSRM.Localization["pl"] = {
 "DIRECTION_15":"Cel został osiągnięty"
 };
 
-//set GUI language on load
+// set GUI language on load
 if( OSRM.DEFAULTS.LANUGAGE_ONDEMAND_RELOADING == true )
 	OSRM.Localization.setLanguage("pl");

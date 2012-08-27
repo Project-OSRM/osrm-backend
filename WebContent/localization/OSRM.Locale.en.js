@@ -34,6 +34,8 @@ OSRM.Localization["en"] = {
 "GUI_START_TOOLTIP": "Enter start",
 "GUI_END_TOOLTIP": "Enter destination",
 "GUI_MAIN_WINDOW": "Main window",
+"GUI_ZOOM_IN": "Zoom in",
+"GUI_ZOOM_OUT": "Zoom out",
 // config
 "GUI_CONFIGURATION": "Configuration",
 "GUI_LANGUAGE": "Language",
@@ -67,7 +69,7 @@ OSRM.Localization["en"] = {
 "OVERVIEW_MAP": "Overview Map",
 "NO_ROUTE_SELECTED": "No route selected",
 // routing engines
-"ENGINE_0": "Car (fastest route)",
+"ENGINE_0": "Car (fastest)",
 "ENGINE_1": "Car (Poland only)",
 "ENGINE_2": "Bike (Poland only)",
 // directions

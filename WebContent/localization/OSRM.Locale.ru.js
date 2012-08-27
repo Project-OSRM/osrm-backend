@@ -26,14 +26,16 @@ OSRM.Localization["ru"] = {
 // gui
 "GUI_START": "Начало",
 "GUI_END": "Конец",
-"GUI_RESET": "&nbsp;&nbsp;Сброс&nbsp;&nbsp;",
+"GUI_RESET": "Сброс",
 "GUI_ZOOM_ON_ROUTE": "зум на маршрут",
 "GUI_ZOOM_ON_USER": "зум на Пользователь",
-"GUI_SEARCH": "&nbsp;&nbsp;Показать&nbsp;&nbsp;",
+"GUI_SEARCH": "Показать",
 "GUI_REVERSE": "Обратно",
 "GUI_START_TOOLTIP": "Укажите начальную точку",
 "GUI_END_TOOLTIP": "Укажите пункт назначения",
 "GUI_MAIN_WINDOW": "Главное окно",
+"GUI_ZOOM_IN": "Yвеличить",
+"GUI_ZOOM_OUT": "Mасштаб",
 // config
 "GUI_CONFIGURATION": "Настройки",
 "GUI_LANGUAGE": "Язык",
@@ -66,6 +68,8 @@ OSRM.Localization["ru"] = {
 // printing
 "OVERVIEW_MAP": "Обзорная карта",
 "NO_ROUTE_SELECTED": "Маршрут не выбран",
+// routing engines
+"ENGINE_0": "Aвтомобиля (быстрый)",
 // directions
 "N": "север",
 "E": "восток",

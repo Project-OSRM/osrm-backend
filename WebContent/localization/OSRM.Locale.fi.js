@@ -23,7 +23,7 @@ OSRM.Localization["fi"] = {
 // own language
 "CULTURE": "fi-FI",
 "LANGUAGE": "Suomi",
-//gui
+// gui
 "GUI_START": "Lähtöpaikka",
 "GUI_END": "Määränpää",
 "GUI_RESET": "Tyhjennä",
@@ -34,7 +34,9 @@ OSRM.Localization["fi"] = {
 "GUI_START_TOOLTIP": "Syötä lähtöpaikka",
 "GUI_END_TOOLTIP": "Syötä määränpää",
 "GUI_MAIN_WINDOW": "Pääikkuna",
-//config
+"GUI_ZOOM_IN": "Lähennä",
+"GUI_ZOOM_OUT": "Loitonna",
+// config
 "GUI_CONFIGURATION": "Kokoonpano",
 "GUI_LANGUAGE": "Kieli",
 "GUI_UNITS": "Yksiköt",
@@ -53,7 +55,7 @@ OSRM.Localization["fi"] = {
 "NO_RESULTS_FOUND": "Ei hakutuloksia",
 "NO_RESULTS_FOUND_SOURCE": "Ei hakutuloksia lähtöpaikka",
 "NO_RESULTS_FOUND_TARGET": "Ei hakutuloksia määränpäälle",
-//routing
+// routing
 "ROUTE_DESCRIPTION": "Reittiohjeet",
 "GET_LINK_TO_ROUTE": "Luo linkki",
 "GENERATE_LINK_TO_ROUTE": "odotetaan linkkiä",
@@ -63,9 +65,11 @@ OSRM.Localization["fi"] = {
 "DURATION": "Aika",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "Reittiä lasketaan",
 "NO_ROUTE_FOUND": "Reittiä ei löytynyt",
-//printing
+// printing
 "OVERVIEW_MAP": "Yleiskuvakartta",
 "NO_ROUTE_SELECTED": "Ei reitti valittu",
+// routing engines
+"ENGINE_0": "Auton (nopein)",
 // directions
 "N": "pohjoiseen",
 "E": "itään",
@@ -102,6 +106,6 @@ OSRM.Localization["fi"] = {
 "DIRECTION_15":"Saavuit määränpäähän"
 };
 
-//set GUI language tielle load
+// set GUI language tielle load
 if( OSRM.DEFAULTS.LANUGAGE_ONDEMAND_RELOADING == true )
 	OSRM.Localization.setLanguage("fi");

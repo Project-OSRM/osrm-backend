@@ -34,6 +34,8 @@ OSRM.Localization["es"] = {
 "GUI_START_TOOLTIP": "Escriba la dirección de origen",
 "GUI_END_TOOLTIP": "Escriba la dirección de destino",
 "GUI_MAIN_WINDOW": "Ventana principal",
+"GUI_ZOOM_IN": "Ampliar",
+"GUI_ZOOM_OUT": "Alejar",
 // config
 "GUI_CONFIGURATION": "Configuración",
 "GUI_LANGUAGE": "Idioma",
@@ -66,6 +68,8 @@ OSRM.Localization["es"] = {
 // printing
 "OVERVIEW_MAP": "Mapa de referencia",
 "NO_ROUTE_SELECTED": "Ninguna ruta seleccionada",
+// routing engines
+"ENGINE_0": "Coche (el más rápido)",
 // directions
 "N": "norte",
 "E": "este",
