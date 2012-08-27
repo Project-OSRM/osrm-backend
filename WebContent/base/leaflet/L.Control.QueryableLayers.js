@@ -16,10 +16,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 */
 
 // queryable Layers control
-// [simply Control.Layers extended by query functions]
+// [extension of Layers.Control with OSRM styling and additional query methods]
 L.Control.QueryableLayers = L.Control.Layers.extend({
 	
-// new query functionality
+// query functionality
 getActiveLayerName: function () {
 	var i, input, obj,
 	inputs = this._form.getElementsByTagName('input'),
@@ -45,5 +45,15 @@ getActiveLayer: function () {
 			return obj.layer;
 		}
 	}
+},
+
+
+// overwrite Control.Layers methods to get OSRM styling 
+_expand: function () {
+	L.DomUtil.addClass(this._container, 'leaflet-control-layers-expanded');
+},
+_collapse: function () {
+	this._container.className = this._container.className.replace(' leaflet-control-layers-expanded', '');
 }
+
 });

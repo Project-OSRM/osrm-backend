@@ -46,13 +46,11 @@ init: function() {
 // toggle GUI features that need a route to work
 activateRouteFeatures: function() {
 	OSRM.Printing.activate();
-//	document.getElementById("gui-zoom").className = "button";
-//	document.getElementById('leaflet-control-locations-route').className = "leaflet-control-locations-route";
+	OSRM.Control.Locations.prototype.activate('gui-locations-route');
 },
 deactivateRouteFeatures: function() {
 	OSRM.Printing.deactivate();
-//	document.getElementById("gui-zoom").className = "button-inactive";
-//	document.getElementById('leaflet-control-locations-route').className = "leaflet-control-locations-route-inactive";	
+	OSRM.Control.Locations.prototype.deactivate('gui-locations-route');
 },
 
 // click: button "reset"

@@ -71,6 +71,10 @@ setLabels: function() {
 	document.getElementById('config-handle-icon').title = OSRM.loc("GUI_CONFIGURATION");
 	document.getElementById('mapping-handle-icon').title = OSRM.loc("GUI_MAPPING_TOOLS");
 	document.getElementById('main-handle-icon').title = OSRM.loc("GUI_MAIN_WINDOW");
+	document.getElementById('gui-locations-route').title = OSRM.loc("GUI_ZOOM_ON_ROUTE");
+	document.getElementById('gui-locations-user').title = OSRM.loc("GUI_ZOOM_ON_USER");
+	document.getElementById('gui-zoom-in').title = OSRM.loc("GUI_ZOOM_IN");
+	document.getElementById('gui-zoom-out').title = OSRM.loc("GUI_ZOOM_OUT");	
 	OSRM.GUI.setDistanceFormatsLanguage();
 	OSRM.GUI.setRoutingEnginesLanguage();	
 },
@@ -83,17 +87,11 @@ clearResults: function() {
 
 // reposition and hide zoom controls before main box animation
 beforeMainTransition: function() {
-	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');
-	if( zoom_controls.length > 0)
-		zoom_controls[0].style.visibility="hidden";
+	OSRM.Control.Zoom.prototype.hide();
 },
 // show zoom controls after main box animation
 afterMainTransition: function() {
-	var zoom_controls = OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom');
-	if( zoom_controls.length > 0) {
-		zoom_controls[0].style.left = ( OSRM.G.main_handle.boxVisible() == true ? (OSRM.G.main_handle.boxWidth()+10) : "30") + "px";
-		zoom_controls[0].style.visibility="visible";
-	}
+	OSRM.Control.Zoom.prototype.show();
 },
 
 // distance format routines

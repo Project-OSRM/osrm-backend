@@ -83,6 +83,21 @@ OSRM.prefetchImages = function() {
 		              	{id:'printer_active',					url:'images/printer_active.png'},
 		              	{id:'printer_hover',					url:'images/printer_hover.png'},
 		              	{id:'printer_inactive',					url:'images/printer_inactive.png'},
+		              	{id:'zoom_in',							url:'images/zoom_in.png'},
+		              	{id:'zoom_in_active',					url:'images/zoom_in_active.png'},
+		              	{id:'zoom_in_hover',					url:'images/zoom_in_hover.png'},
+		              	{id:'zoom_out',							url:'images/zoom_out.png'},
+		              	{id:'zoom_out_active',					url:'images/zoom_out_active.png'},
+		              	{id:'zoom_out_hover',					url:'images/zoom_out_hover.png'},		              	
+		              	{id:'locations_user',					url:'images/locations_user.png'},
+		              	{id:'locations_user_active',			url:'images/locations_user_active.png'},
+		              	{id:'locations_user_hover',				url:'images/locations_user_hover.png'},
+		              	{id:'locations_user_inactive',			url:'images/locations_user_inactive.png'},
+		              	{id:'locations_route',					url:'images/locations_route.png'},
+		              	{id:'locations_route_active',			url:'images/locations_route_active.png'},
+		              	{id:'locations_route_hover',			url:'images/locations_route_hover.png'},
+		              	{id:'locations_route_inactive',			url:'images/locations_route_inactive.png'},
+		              	{id:'layers',							url:'images/layers.png'},
 		        		{id:'direction_0',						url:'images/default.png'},		              	
 		              	{id:'direction_1',						url:'images/continue.png'},
 		              	{id:'direction_2',						url:'images/slight-right.png'},
@@ -141,37 +156,57 @@ OSRM.prefetchIcons = function() {
 // set css styles for images
 OSRM.prefetchCSSIcons = function() {
 	var css_list = [
-	                	{ id:'#gui-printer-inactive',		image_id:'printer_inactive'},
-	                	{ id:'#gui-printer',				image_id:'printer'},
-	                	{ id:'#gui-printer:hover',			image_id:'printer_hover'},
-	                	{ id:'#gui-printer:active',			image_id:'printer_active'},
+	                	{ id:'#gui-printer-inactive',			image_id:'printer_inactive'},
+	                	{ id:'#gui-printer',					image_id:'printer'},
+	                	{ id:'#gui-printer:hover',				image_id:'printer_hover'},
+	                	{ id:'#gui-printer:active',				image_id:'printer_active'},
+                	
+	                	{ id:'.gui-zoom-in',					image_id:'zoom_in'},
+	                	{ id:'.gui-zoom-in:hover',				image_id:'zoom_in_hover'},
+	                	{ id:'.gui-zoom-in:active',				image_id:'zoom_in_active'},
 	                	
-	                	{ id:'.cancel-marker',				image_id:'cancel'},
-	                	{ id:'.cancel-marker:hover',		image_id:'cancel_hover'},
-	                	{ id:'.cancel-marker:active',		image_id:'cancel_active'},
+	                	{ id:'.gui-zoom-out',					image_id:'zoom_out'},
+	                	{ id:'.gui-zoom-out:hover',				image_id:'zoom_out_hover'},
+	                	{ id:'.gui-zoom-out:active',			image_id:'zoom_out_active'},
 	                	
-	                	{ id:'.up-marker',					image_id:'up'},
-	                	{ id:'.up-marker:hover',			image_id:'up_hover'},
-	                	{ id:'.up-marker:active',			image_id:'up_active'},
+	                	{ id:'.gui-locations-user-inactive',	image_id:'locations_user_inactive'},
+	                	{ id:'.gui-locations-user',				image_id:'locations_user'},
+	                	{ id:'.gui-locations-user:hover',		image_id:'locations_user_hover'},
+	                	{ id:'.gui-locations-user:active',		image_id:'locations_user_active'},
 	                	
-	                	{ id:'.down-marker',				image_id:'down'},
-	                	{ id:'.down-marker:hover',			image_id:'down_hover'},
-	                	{ id:'.down-marker:active',			image_id:'down_active'},
+	                	{ id:'.gui-locations-route-inactive',	image_id:'locations_route_inactive'},
+	                	{ id:'.gui-locations-route',			image_id:'locations_route'},
+	                	{ id:'.gui-locations-route:hover',		image_id:'locations_route_hover'},
+	                	{ id:'.gui-locations-route:active',		image_id:'locations_route_active'},
 	                	
-	                	{ id:'#input-mask-header',			image_id:'osrm-logo'},
-	                	{ id:'.styled-select',				image_id:'selector'},
+	                	{ id:'.leaflet-control-layers a',		image_id:'layers'},
 	                	
-	                	{ id:'#config-handle-icon',			image_id:'config'},
-	                	{ id:'#config-handle-icon:hover',	image_id:'config_hover'},
-	                	{ id:'#config-handle-icon:active',	image_id:'config_active'},
+	                	{ id:'.cancel-marker',					image_id:'cancel'},
+	                	{ id:'.cancel-marker:hover',			image_id:'cancel_hover'},
+	                	{ id:'.cancel-marker:active',			image_id:'cancel_active'},
+	                	
+	                	{ id:'.up-marker',						image_id:'up'},
+	                	{ id:'.up-marker:hover',				image_id:'up_hover'},
+	                	{ id:'.up-marker:active',				image_id:'up_active'},
+	                	
+	                	{ id:'.down-marker',					image_id:'down'},
+	                	{ id:'.down-marker:hover',				image_id:'down_hover'},
+	                	{ id:'.down-marker:active',				image_id:'down_active'},
+	                	
+	                	{ id:'#input-mask-header',				image_id:'osrm-logo'},
+	                	{ id:'.styled-select',					image_id:'selector'},
+	                	
+	                	{ id:'#config-handle-icon',				image_id:'config'},
+	                	{ id:'#config-handle-icon:hover',		image_id:'config_hover'},
+	                	{ id:'#config-handle-icon:active',		image_id:'config_active'},
 	                	           	
-	                	{ id:'#mapping-handle-icon',		image_id:'mapping'},
-	                	{ id:'#mapping-handle-icon:hover',	image_id:'mapping_hover'},
-	                	{ id:'#mapping-handle-icon:active',	image_id:'mapping_active'},
+	                	{ id:'#mapping-handle-icon',			image_id:'mapping'},
+	                	{ id:'#mapping-handle-icon:hover',		image_id:'mapping_hover'},
+	                	{ id:'#mapping-handle-icon:active',		image_id:'mapping_active'},
 	                	          	
-	                	{ id:'#main-handle-icon',			image_id:'restore'},
-	                	{ id:'#main-handle-icon:hover',		image_id:'restore_hover'},
-	                	{ id:'#main-handle-icon:active',	image_id:'restore_active'}	                	
+	                	{ id:'#main-handle-icon',				image_id:'restore'},
+	                	{ id:'#main-handle-icon:hover',			image_id:'restore_hover'},
+	                	{ id:'#main-handle-icon:active',		image_id:'restore_active'}	                	
 	                ];
 	
 	var stylesheet = OSRM.CSS.getStylesheet("main.css");

@@ -52,20 +52,23 @@ init: function() {
 	    zoom: OSRM.DEFAULTS.ONLOAD_ZOOM_LEVEL,
 	    layers: [base_maps[tile_servers[0].display_name]],	    
 	    zoomAnimation: false,								// animations have to be inactive during initialization (leaflet issue #918)
-	    fadeAnimation: false
+	    fadeAnimation: false,
+	    zoomControl: false									// use OSRM zoom buttons
 	});
 
-//	// add locations control
-//	var locationsControl = new L.Control.Locations();
-//	OSRM.G.map.addControl(locationsControl);
+	// add locations control
+	var locationsControl = new OSRM.Control.Locations();
+	OSRM.G.map.addControl(locationsControl);
 	
 	// add layer control
 	var layerControl = new L.Control.QueryableLayers(base_maps, {});
 	OSRM.G.map.addLayerControl(layerControl);	
 
-    // move zoom markers
-	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.left=(OSRM.G.main_handle.boxWidth()+10)+"px";
-	OSRM.Browser.getElementsByClassName(document,'leaflet-control-zoom')[0].style.top="5px";
+	// add zoom control
+	var zoomControl = new OSRM.Control.Zoom();
+	OSRM.G.map.addControl(zoomControl);
+	zoomControl.show();	
+
 	
 	// add scale control
 	OSRM.G.map.scaleControl = new L.Control.Scale();
