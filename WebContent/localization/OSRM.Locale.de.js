@@ -23,7 +23,7 @@ OSRM.Localization["de"] = {
 // own language
 "CULTURE": "de-DE",
 "LANGUAGE": "Deutsch",
-//gui
+// gui
 "GUI_START": "Start",
 "GUI_END": "Ziel",
 "GUI_RESET": "Reset",
@@ -34,7 +34,7 @@ OSRM.Localization["de"] = {
 "GUI_START_TOOLTIP": "Startposition eingeben",
 "GUI_END_TOOLTIP": "Zielposition eingeben",
 "GUI_MAIN_WINDOW": "Hauptfenster",
-//config
+// config
 "GUI_CONFIGURATION": "Einstellungen",
 "GUI_LANGUAGE": "Sprache",
 "GUI_UNITS": "Einheiten",
