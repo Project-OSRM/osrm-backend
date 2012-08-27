@@ -29,6 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/QueryEdge.h"
 #include "NNGrid.h"
 #include "PhantomNodes.h"
+#include "NodeCoords.h"
 
 class NodeInformationHelpDesk{
 public:

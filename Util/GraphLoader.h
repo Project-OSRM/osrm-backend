@@ -32,9 +32,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/unordered_map.hpp>
 
-#include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/ImportNode.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/Restriction.h"
 #include "../typedefs.h"
 
 typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;

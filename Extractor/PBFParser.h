@@ -30,9 +30,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 #include "BaseParser.h"
-#include "HashTable.h"
 #include "ExtractorStructs.h"
-#include "ConcurrentQueue.h"
+#include "../DataStructures/HashTable.h"
+#include "../DataStructures/ConcurrentQueue.h"
 
 class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
 

@@ -36,7 +36,7 @@
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
-#include "../DataStructures/ExtractorStructs.h"
+#include "../Extractor/ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/QueryEdge.h"

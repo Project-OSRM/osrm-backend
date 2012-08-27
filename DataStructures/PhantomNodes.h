@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef PHANTOMNODES_H_
 #define PHANTOMNODES_H_
 
-#include "ExtractorStructs.h"
+#include "Coordinate.h"
 
 struct PhantomNode {
     PhantomNode() : edgeBasedNode(UINT_MAX), nodeBasedEdgeNameID(UINT_MAX), weight1(INT_MAX), weight2(INT_MAX), ratio(0.) {}

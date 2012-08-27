@@ -24,8 +24,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <sstream>
 
-#include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/Coordinate.h"
 
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals

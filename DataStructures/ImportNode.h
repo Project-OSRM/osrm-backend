@@ -18,28 +18,27 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef RAWROUTEDATA_H_
-#define RAWROUTEDATA_H_
+#ifndef IMPORTNODE_H_
+#define IMPORTNODE_H_
 
-#include "../typedefs.h"
+#include "NodeCoords.h"
 
-struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu) { }
-    NodeID node;
-    unsigned nameID;
-    unsigned durationOfSegment;
-    short turnInstruction;
+struct _Node : NodeInfo{
+    _Node(int _lat, int _lon, unsigned int _id, bool _bollard, bool _trafficLight) : NodeInfo(_lat, _lon,  _id), bollard(_bollard), trafficLight(_trafficLight) {}
+    _Node() : bollard(false), trafficLight(false) {}
+
+    static _Node min_value() {
+        return _Node(0,0,0, false, false);
+    }
+    static _Node max_value() {
+        return _Node((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)(), (std::numeric_limits<unsigned int>::max)(), false, false);
+    }
+    NodeID key() const {
+        return id;
+    }
+    bool bollard;
+    bool trafficLight;
+
 };
 
-struct RawRouteData {
-    std::vector< _PathData > computedShortestPath;
-    std::vector< _PathData > computedAlternativePath;
-    std::vector< PhantomNodes > segmentEndCoordinates;
-    std::vector< _Coordinate > rawViaNodeCoordinates;
-    unsigned checkSum;
-    int lengthOfShortestPath;
-    int lengthOfAlternativePath;
-    RawRouteData() : checkSum(UINT_MAX), lengthOfShortestPath(INT_MAX), lengthOfAlternativePath(INT_MAX) {}
-};
-
-#endif /* RAWROUTEDATA_H_ */
+#endif /* IMPORTNODE_H_ */

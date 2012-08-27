@@ -24,65 +24,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 #include <string>
 #include <boost/unordered_map.hpp>
+#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/ImportNode.h"
 #include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/Restriction.h"
+#include "../DataStructures/Util.h"
 #include "../typedefs.h"
-#include "Util.h"
-
-struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu) { }
-    NodeID node;
-    unsigned nameID;
-    unsigned durationOfSegment;
-    short turnInstruction;
-};
 
 typedef boost::unordered_map<std::string, NodeID > StringMap;
 typedef boost::unordered_map<std::string, std::pair<int, short> > StringToIntPairMap;
-
-struct _Node : NodeInfo{
-    _Node(int _lat, int _lon, unsigned int _id, bool _bollard, bool _trafficLight) : NodeInfo(_lat, _lon,  _id), bollard(_bollard), trafficLight(_trafficLight) {}
-    _Node() : bollard(false), trafficLight(false) {}
-
-    static _Node min_value() {
-        return _Node(0,0,0, false, false);
-    }
-    static _Node max_value() {
-        return _Node((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)(), (std::numeric_limits<unsigned int>::max)(), false, false);
-    }
-    NodeID key() const {
-        return id;
-    }
-    bool bollard;
-    bool trafficLight;
-
-};
-
-struct _Coordinate {
-    int lat;
-    int lon;
-    _Coordinate () : lat(INT_MIN), lon(INT_MIN) {}
-    _Coordinate (int t, int n) : lat(t) , lon(n) {}
-    void Reset() {
-        lat = INT_MIN;
-        lon = INT_MIN;
-    }
-    bool isSet() const {
-        return (INT_MIN != lat) && (INT_MIN != lon);
-    }
-    inline bool isValid() const {
-        if(lat > 90*100000 || lat < -90*100000 || lon > 180*100000 || lon <-180*100000) {
-            return false;
-        }
-        return true;
-    }
-
-};
-
-inline ostream & operator<<(ostream & out, const _Coordinate & c){
-    out << "(" << c.lat << "," << c.lon << ")";
-    return out;
-}
 
 struct _Way {
     _Way() : id(UINT_MAX), nameID(UINT_MAX) {
@@ -170,73 +121,6 @@ struct _Edge {
         return _Edge((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
     }
 
-};
-
-struct _Restriction {
-    NodeID viaNode;
-    NodeID fromNode;
-    NodeID toNode;
-    struct Bits { //mostly unused
-        Bits() : isOnly(false), unused1(false), unused2(false), unused3(false), unused4(false), unused5(false), unused6(false), unused7(false) {}
-        char isOnly:1;
-        char unused1:1;
-        char unused2:1;
-        char unused3:1;
-        char unused4:1;
-        char unused5:1;
-        char unused6:1;
-        char unused7:1;
-    } flags;
-
-    _Restriction(NodeID vn) : viaNode(vn), fromNode(UINT_MAX), toNode(UINT_MAX) { }
-    _Restriction(bool isOnly = false) : viaNode(UINT_MAX), fromNode(UINT_MAX), toNode(UINT_MAX) {
-        flags.isOnly = isOnly;
-    }
-};
-
-inline bool CmpRestrictionByFrom ( _Restriction a, _Restriction b) { return (a.fromNode < b.fromNode);  }
-
-struct _RawRestrictionContainer {
-    _Restriction restriction;
-    EdgeID fromWay;
-    EdgeID toWay;
-    unsigned viaNode;
-
-    _RawRestrictionContainer(EdgeID f, EdgeID t, NodeID vn, unsigned vw) : fromWay(f), toWay(t), viaNode(vw) { restriction.viaNode = vn;}
-    _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaNode(UINT_MAX) { restriction.flags.isOnly = isOnly;}
-
-    static _RawRestrictionContainer min_value() {
-        return _RawRestrictionContainer((numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)());
-    }
-    static _RawRestrictionContainer max_value() {
-        return _RawRestrictionContainer((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
-    }
-};
-
-struct CmpRestrictionContainerByFrom: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
-    typedef _RawRestrictionContainer value_type;
-    bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
-        return a.fromWay < b.fromWay;
-    }
-    value_type max_value()  {
-        return _RawRestrictionContainer::max_value();
-    }
-    value_type min_value() {
-        return _RawRestrictionContainer::min_value();
-    }
-};
-
-struct CmpRestrictionContainerByTo: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
-    typedef _RawRestrictionContainer value_type;
-    bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
-        return a.toWay < b.toWay;
-    }
-    value_type max_value()  {
-        return _RawRestrictionContainer::max_value();
-    }
-    value_type min_value() {
-        return _RawRestrictionContainer::min_value();
-    }
 };
 
 struct _WayIDStartAndEndEdge {
@@ -360,29 +244,6 @@ struct CmpEdgeByTargetID : public std::binary_function<_Edge, _Edge, bool>
         return _Edge::min_value();
     }
 };
-
-inline double ApproximateDistance( const int lat1, const int lon1, const int lat2, const int lon2 ) {
-    assert(lat1 != INT_MIN);
-    assert(lon1 != INT_MIN);
-    assert(lat2 != INT_MIN);
-    assert(lon2 != INT_MIN);
-    static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
-    //Earth's quatratic mean radius for WGS-84
-    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-    double latitudeArc  = ( lat1/100000. - lat2/100000. ) * DEG_TO_RAD;
-    double longitudeArc = ( lon1/100000. - lon2/100000. ) * DEG_TO_RAD;
-    double latitudeH = sin( latitudeArc * 0.5 );
-    latitudeH *= latitudeH;
-    double lontitudeH = sin( longitudeArc * 0.5 );
-    lontitudeH *= lontitudeH;
-    double tmp = cos( lat1/100000. * DEG_TO_RAD ) * cos( lat2/100000. * DEG_TO_RAD );
-    double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
-    return EARTH_RADIUS_IN_METERS * distanceArc;
-}
-
-inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
-    return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
-}
 
 inline string GetRandomString() {
     char s[128];

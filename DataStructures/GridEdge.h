@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GRIDEDGE_H_
 #define GRIDEDGE_H_
 
+#include "Coordinate.h"
+
 struct _GridEdge {
     _GridEdge(NodeID n, NodeID na, int w, _Coordinate sc, _Coordinate tc, bool bttc) : edgeBasedNode(n), nameID(na), weight(w), startCoord(sc), targetCoord(tc), belongsToTinyComponent(bttc) {}
     _GridEdge() : edgeBasedNode(UINT_MAX), nameID(UINT_MAX), weight(INT_MAX), belongsToTinyComponent(false) {}

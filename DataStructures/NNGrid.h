@@ -41,7 +41,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/unordered_map.hpp>
 
 #include "DeallocatingVector.h"
-#include "ExtractorStructs.h"
+//#include "ExtractorStructs.h"
 #include "GridEdge.h"
 #include "Percent.h"
 #include "PhantomNodes.h"

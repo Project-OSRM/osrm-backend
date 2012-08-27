@@ -25,7 +25,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
-#include "../Util/OpenMPReplacement.h"
+#include "../Util/OpenMPWrapper.h"
 #include "../DataStructures/Percent.h"
 #include "EdgeBasedGraphFactory.h"
 

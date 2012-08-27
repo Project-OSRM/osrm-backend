@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <string>
 
-#include "../DataStructures/ExtractorStructs.h"
+//#include "../DataStructures/ExtractorStructs.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../Util/StringUtil.h"
 

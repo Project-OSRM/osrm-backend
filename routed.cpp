@@ -37,7 +37,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Plugins/ViaRoutePlugin.h"
 
 #include "Util/InputFileUtil.h"
-#include "Util/OpenMPReplacement.h"
+#include "Util/OpenMPWrapper.h"
 
 #ifndef _WIN32
 #include "Util/LinuxStackTrace.h"

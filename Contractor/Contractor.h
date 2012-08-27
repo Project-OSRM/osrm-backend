@@ -39,7 +39,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/XORFastHash.h"
 #include "../DataStructures/XORFastHashStorage.h"
-#include "../Util/OpenMPReplacement.h"
+#include "../Util/OpenMPWrapper.h"
 #include "../Util/StringUtil.h"
 
 class Contractor {

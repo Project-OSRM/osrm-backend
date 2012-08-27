@@ -28,7 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 #include "../typedefs.h"
-#include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/HashTable.h"
 #include "../Util/StringUtil.h"
 

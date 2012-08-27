@@ -38,19 +38,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 #include "Algorithms/CRC32.h"
-#include "Util/OpenMPReplacement.h"
+#include "Util/OpenMPWrapper.h"
 #include "typedefs.h"
 #include "Contractor/Contractor.h"
 #include "Contractor/EdgeBasedGraphFactory.h"
 #include "DataStructures/BinaryHeap.h"
 #include "DataStructures/DeallocatingVector.h"
-#include "DataStructures/ExtractorStructs.h"
+//#include "Extractor/ExtractorStructs.h"
 #include "DataStructures/NNGrid.h"
 #include "DataStructures/QueryEdge.h"
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
-#include "Util/OpenMPReplacement.h"
 
 using namespace std;
 

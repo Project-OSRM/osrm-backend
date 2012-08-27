@@ -26,7 +26,7 @@
 #include "../typedefs.h"
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
-#include "../DataStructures/ExtractorStructs.h"
+#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../DataStructures/SegmentInformation.h"

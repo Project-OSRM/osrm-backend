@@ -25,9 +25,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../typedefs.h"
 #include "BaseParser.h"
-#include "HashTable.h"
 #include "ExtractorStructs.h"
-#include "InputReaderFactory.h"
+#include "../DataStructures/HashTable.h"
+#include "../DataStructures/InputReaderFactory.h"
 
 class XMLParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
 public:
