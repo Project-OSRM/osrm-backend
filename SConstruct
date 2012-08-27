@@ -148,6 +148,9 @@ if not (env.Detect('protoc')):
 if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
 	print "stxxl library not found. Exiting"
 	Exit(-1)
+if not conf.CheckLibWithHeader('v8', 'v8.h', 'CXX'):
+	print "v8 library not found. Exiting"
+	Exit(-1)
 if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
 	Exit(-1)
