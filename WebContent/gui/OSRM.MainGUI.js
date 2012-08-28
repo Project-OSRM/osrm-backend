@@ -100,7 +100,7 @@ initDistanceFormatsSelector: function() {
 setDistanceFormat: function(type) {
 	if( OSRM.G.active_distance_format == type )
 		return;
-	OSRM.active_distance_format = type;
+	OSRM.G.active_distance_format = type;
 	
 	// change scale control
 	if(OSRM.G.map) {
