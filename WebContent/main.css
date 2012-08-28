@@ -611,12 +611,14 @@ html, body
 }
 .gui-layers-list input
 {
+	cursor:pointer;
 	margin-top: 2px;
 	position: relative;
     top: 2px;    
 }
 .gui-layers-list label
 {
+	cursor:pointer;	
 	display: block;
     vertical-align:middle;
 }
