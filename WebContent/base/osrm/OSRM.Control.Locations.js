@@ -37,7 +37,7 @@ OSRM.Control.Locations = L.Control.extend({
 
 	_createButton: function (id, container, fn, context, isActive) {
 		var inactive = (isActive == false) ? "-inactive" : "";
-		var classNames = "box-content gui-control " + id+inactive;
+		var classNames = "box-content" + " " + "gui-control"+inactive + " " + id+inactive;
 		var link = L.DomUtil.create('a', classNames, container);
 		link.title = id;
 
@@ -54,7 +54,7 @@ OSRM.Control.Locations = L.Control.extend({
 		this._routeButton.className = "box-content gui-control gui-locations-route";		
 	},
 	deactivateRoute: function() {
-		this._routeButton.className = "box-content gui-control gui-locations-route-inactive";		
+		this._routeButton.className = "box-content gui-control-inactive gui-locations-route-inactive";		
 	},
 	setTooltips: function( userButton, routeButton) {
 		this._userButton.title = userButton;

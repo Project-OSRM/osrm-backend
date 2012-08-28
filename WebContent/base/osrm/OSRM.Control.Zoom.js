@@ -37,7 +37,7 @@ OSRM.Control.Zoom = L.Control.extend({
 
 	_createButton: function (id, container, fn, context, isActive) {
 		var inactive = (isActive == false) ? "-inactive" : "";
-		var classNames = "box-content gui-control " + id+inactive;		
+		var classNames = "box-content" + " " + "gui-control"+inactive + " " + id+inactive;		
 		var link = L.DomUtil.create('a', classNames, container);
 		link.title = id;
 

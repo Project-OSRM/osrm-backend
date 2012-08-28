@@ -540,6 +540,13 @@ html, body
 	background-repeat: no-repeat;
 	display: block;
 }
+.gui-control-inactive {
+	cursor:default;
+	position:relative;	
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+}
 
 
 /* zoom buttons */
