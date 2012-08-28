@@ -31,6 +31,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <stxxl.h>
 #include "ExtractorStructs.h"
 
+#include "V8Helper.h"
+
 typedef stxxl::vector<NodeID> STXXLNodeIDVector;
 typedef stxxl::vector<_Node> STXXLNodeVector;
 typedef stxxl::vector<_Edge> STXXLEdgeVector;
@@ -97,14 +99,62 @@ private:
         return n;
     }
 
+    /** V8 JavaScript Engine **/
+    v8::HandleScope handle_scope;
+    v8::Handle<v8::ObjectTemplate> global_templ;
+    v8::Persistent<v8::Context> context;
+
+    //forbid default c'tor
+    ExtractorCallbacks() {externalMemory = NULL; stringMap = NULL; }
 public:
-    ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap) {
+    explicit ExtractorCallbacks(STXXLContainers * ext, Settings set, StringMap * strMap) {
         externalMemory = ext;
         settings = set;
         stringMap = strMap;
+
+        global_templ = v8::ObjectTemplate::New();
+
+
+        //register global print function
+        global_templ->Set(v8::String::New("print"), v8::FunctionTemplate::New(V8Helper::PrintToConsole));
+
+        //register global version function
+        global_templ->Set(v8::String::New("version"), v8::FunctionTemplate::New(V8Helper::Version));
+
+//        v8::Persistent<v8::Object> script_core;
+
+        context = v8::Context::New(0, global_templ);
+        //Enter the created context for compiling
+        v8::Context::Scope context_scope = v8::Context::Scope(context);
+
+        //todo: open speedprofile.js
+        std::string text = "print('Starting V8 Scripting Engine '+version());";
+        v8::Handle<v8::String> source = v8::String::New(text.c_str());
+        v8::TryCatch try_catch;
+        v8::Handle<v8::Script> script = v8::Script::Compile(source);
+        if (script.IsEmpty()) {
+            // Print errors that happened during compilation.
+            V8Helper::ReportException(&try_catch);
+        } else {
+            v8::Handle<v8::Value> result = script->Run();
+            if (result.IsEmpty()) {
+                assert(try_catch.HasCaught());
+                // Print errors that happened during execution.
+                V8Helper::ReportException(&try_catch);
+            } else {
+                assert(!try_catch.HasCaught());
+                if (!result->IsUndefined()) {
+                    // If all went well and the result wasn't undefined then print
+                    // the returned value.
+                    v8::String::Utf8Value str(result);
+                    std::cout << V8Helper::ToCString(str) << std::endl;
+                }
+            }
+        }
     }
 
     ~ExtractorCallbacks() {
+        context.Dispose();
     }
 
     /** warning: caller needs to take care of synchronization! */

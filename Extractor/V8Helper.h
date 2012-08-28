@@ -21,6 +21,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef V8HELPER_H_
 #define V8HELPER_H_
 
+#include <iostream>
+
+#include <v8.h>
+
+namespace V8Helper {
+//Provides an output mechanism to the V8 Engine
+static v8::Handle<v8::Value> PrintToConsole (const v8::Arguments& args){
+    std::cout << "[JS] : " << *v8::String::AsciiValue(args[0]) << std::endl;
+    return v8::Undefined();
+}
+
+//Returns the version of the V8 Engine
+v8::Handle<v8::Value> Version(const v8::Arguments& args) {
+    return v8::String::New(v8::V8::GetVersion());
+}
+
 //Most of the stuff below is from http://blog.owned.co.za provided with an MIT License
 
 template<class T>
@@ -101,5 +117,45 @@ v8::Handle<v8::Value> GetInt(v8::Local<v8::String> property, const v8::AccessorI
     return JSPropertyType::New(value);
 }
 
+// Extracts a C string from a V8 Utf8Value.
+const char* ToCString(const v8::String::Utf8Value& value) {
+    return *value ? *value : "<string conversion failed>";
+}
+
+void ReportException(v8::TryCatch* try_catch) {
+    v8::HandleScope handle_scope;
+    v8::String::Utf8Value exception(try_catch->Exception());
+    const char* exception_string = ToCString(exception);
+    v8::Handle<v8::Message> message = try_catch->Message();
+    if (message.IsEmpty()) {
+        // V8 didn't provide any extra information about this error; just
+        // print the exception.
+        std::cout << exception_string << std::endl;
+    } else {
+        // Print (filename):(line number): (message).
+        v8::String::Utf8Value filename(message->GetScriptResourceName());
+        int linenum = message->GetLineNumber();
+        std::cout << ToCString(filename) << ":" << linenum << ": " << exception_string << std::endl;
+        // Print line of source code.
+        v8::String::Utf8Value sourceline(message->GetSourceLine());
+        std::cout << ToCString(sourceline) << std::endl;
+
+        // Print wavy underline (GetUnderline is deprecated).
+        int start = message->GetStartColumn();
+        for (int i = 0; i < start; ++i) {
+            std::cout << " ";
+        }
+
+        for (int i = start, end = message->GetEndColumn(); i < end; ++i) {
+            std::cout << "^";
+        }
+        std::cout << std::endl;
+        v8::String::Utf8Value stack_trace(try_catch->StackTrace());
+        if (stack_trace.length()) {
+            std::cout << ToCString(stack_trace) << std::endl;
+        }
+    }
+}
+}
 
 #endif /* V8HELPER_H_ */
