@@ -20,13 +20,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 /* ------------------------------------------------------------------------ */
 
 /* fullscreen map */
-html, body {
+html, body
+{
     padding: 0;
     margin: 0;
     height: 100%;
     overflow:hidden;
 }
-#map {
+#map
+{
 	height: 100%;
 	z-index: 0;
 }
@@ -34,34 +36,6 @@ html, body {
 /* ------------------------------------------------------------------------ */
 
 /* changes/additions to leaflet styles */
-.leaflet-control-layers {
-	box-shadow: none;	
-	border-radius:10px;
-	-moz-border-radius:10px;
-	-webkit-border-radius:10px;
-	background-color:rgba(0, 0, 0, 0.25);
-	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#3f000000, endColorstr=#3f000000);
-}
-.leaflet-control-layers-expanded {
-	background-color:rgba(255, 255, 255, 1);
-}
-.leaflet-control-layers a {
-	background-color: #FFFFFF;
-	background-color: rgba(255,255,255,1);
-	border-radius:8px;
-	-moz-border-radius:8px;
-	-webkit-border-radius:8px;	
-	margin:5px;
-	padding:5px;
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	display: block;
-	width: 26px;
-	height: 26px;	
-}
-
-
-/* counter for leaflet markers*/
 .via-counter
 {
 	position:absolute;
@@ -300,23 +274,28 @@ html, body {
 
 
 /* styles for main-output information-box -> workaround for invisible scrollbars in Chrome */
-#information-box::-webkit-scrollbar {
+#information-box::-webkit-scrollbar
+{
 	height: 10px;
 	width: 10px;
 }
-#information-box::-webkit-scrollbar-track {
+#information-box::-webkit-scrollbar-track
+{
     background: #FFFFFF;
 }
-#information-box::-webkit-scrollbar-thumb {
+#information-box::-webkit-scrollbar-thumb
+{
 	min-height: 30px;
     background: #EEEEEE;
     border: 1px solid #999999;
     -webkit-border-radius: 5ex;
 }
-#information-box::-webkit-scrollbar-thumb:hover {
+#information-box::-webkit-scrollbar-thumb:hover
+{
     background: #F9F9F9;
 }
-#information-box::-webkit-scrollbar-thumb:active {
+#information-box::-webkit-scrollbar-thumb:active
+{
     background: #F4F4F4;
 }
 
@@ -520,10 +499,22 @@ html, body {
 	right: 5px;				/* equal to box-content padding */
 	bottom: 5px;
 }
-.mapping-checkbox
+#mapping-checkboxes
 {
-	margin: 0px 5px 3px 5px;
+	margin-top: -2px;
+}
+#mapping-checkboxes input
+{
+	cursor:pointer;
+	position: relative;	
+	margin: 0px 5px 5px 5px;
 	padding: 0px;
+    top: 3px;    
+}
+#mapping-checkboxes label
+{
+	display: block;
+    vertical-align:middle;
 }
 .mapping-button
 {
@@ -537,10 +528,12 @@ html, body {
 /* ------------------------------------------------------------------------ */
 
 /* map buttons */
-.gui-control-wrapper {
+.gui-control-wrapper
+{
 	position:relative;
 }
-.gui-control {
+.gui-control
+{
 	cursor:pointer;
 	position:relative;	
 	background-position: 50% 50%;
@@ -551,12 +544,14 @@ html, body {
 
 /* zoom buttons */
 .gui-zoom-in,
-.gui-zoom-out {
+.gui-zoom-out
+{
 	width: 15px;
 	height: 15px;	
 }
 .leaflet-touch .gui-zoom-in,
-.leaflet-touch .gui-zoom-out {
+.leaflet-touch .gui-zoom-out
+{
 	width: 23px;
 	height: 23px;
 }
@@ -566,7 +561,8 @@ html, body {
 .gui-locations-user,
 .gui-locations-route,
 .gui-locations-user-inactive,
-.gui-locations-route-inactive {
+.gui-locations-route-inactive
+{
 	float:left;
 	width: 26px;
 	height: 26px;	
@@ -574,9 +570,55 @@ html, body {
 .leaflet-touch .gui-locations-user,
 .leaflet-touch .gui-locations-route,
 .leaflet-touch .gui-locations-user-inactive,
-.leaflet-touch .gui-locations-route-inactive {
+.leaflet-touch .gui-locations-route-inactive
+{
 	width: 32px;
 	height: 32px;
+}
+
+
+/* layer selection */
+.gui-layers
+{
+	width: 26px;
+	height: 26px;	
+}
+.leaflet-touch .gui-layers
+{
+	width: 32px;
+	height: 32px;	
+}
+.gui-layers-expanded .gui-layers
+{
+	display: none;
+}
+
+.gui-layers-list
+{
+	display: none;
+}
+.gui-layers-expanded .gui-layers-list
+{
+	display: block;
+	position: relative;
+}
+.gui-layers-list input
+{
+	margin-top: 2px;
+	position: relative;
+    top: 2px;    
+}
+.gui-layers-list label
+{
+	display: block;
+    vertical-align:middle;
+}
+
+.gui-layers-separator
+{
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -676,17 +718,6 @@ html, body {
 	overflow: hidden;
 }
 
-
-/* checkboxes */
-input[type=checkbox],
-{
-	cursor:pointer;
-}
-.checkbox-label
-{
-	vertical-align:2px;
-}
-
 /* ------------------------------------------------------------------------ */
 
 /* utility styles */
@@ -738,88 +769,27 @@ input[type=checkbox],
 /* ------------------------------------------------------------------------ */
 
 /* fonts */
-.base-font {
+.base-font
+{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 12px;
 	font-weight: normal;
 }
-.big-font {
+.big-font
+{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 14px;
 	font-weight: bold;	
 }
-.medium-font {
+.medium-font
+{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 10.5px;
-	font-weight: normal;	
+	font-weight: normal;
 }
-.small-font {
+.small-font
+{
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: 9px;
 	font-weight: normal;
 }
-
-
-
-
-
-
-/* .leaflet-control-layers {
-	box-shadow: 0 1px 7px #999;
-	background: #f8f8f9;
-	-moz-border-radius: 8px;
-	-webkit-border-radius: 8px;
-	border-radius: 8px;
-	}
-.leaflet-touch .leaflet-control-layers {
-	box-shadow: none;
-	border: 5px solid #bbb;	
-	}
-
-
-.leaflet-control-layers a {
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	display: block;
-	background-image: url(images/layers.png);
-	width: 36px;
-	height: 36px;	
-	}
-.leaflet-touch .leaflet-control-layers a {
-	width: 44px;
-	height: 44px;
-	}
-	
-	
-.leaflet-control-layers .leaflet-control-layers-list,
-.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
-	display: none;
-	}
-.leaflet-control-layers-expanded .leaflet-control-layers-list {
-	display: block;
-	position: relative;
-	}
-	
-
-
-.leaflet-control-layers-expanded {
-	padding: 6px 10px 6px 6px;
-	font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
-	color: #333;
-	background: #fff;
-	}
-	
-
-.leaflet-control-layers input {
-	margin-top: 2px;
-	position: relative;
-	top: 1px;
-	}
-.leaflet-control-layers label {
-	display: block;
-	}
-.leaflet-control-layers-separator {
-	height: 0;
-	border-top: 1px solid #ddd;
-	margin: 5px -10px 5px -6px;
-	} */

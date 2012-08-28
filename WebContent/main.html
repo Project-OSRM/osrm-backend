@@ -158,17 +158,21 @@ or see http://www.gnu.org/licenses/agpl.txt.
 	<div id="mapping-toggle" class="iconic-button cancel-marker top-right-button"></div>
 	<div id="gui-mapping-label" class="box-label">Mapping Tools</div>
 	
-	<!-- header -->
-	<div class="full">
-	<div class="row">
-	<div class="left"><input type="checkbox" id="option-highlight-nonames" value="highlight-nonames" class="mapping-checkbox"/></div>
-	<div class="left stretch"><span id="gui-option-highlight-nonames-label" class="checkbox-label small-font">Highlight unnamed streets</span></div>
+	<!-- mapping options -->
+	<form id="mapping-checkboxes" class="small-font">
+	<div>
+		<label id="gui-option-highlight-nonames-label">
+			<input type="checkbox" id="option-highlight-nonames" value="show-previous-routes"/>
+			Highlight unnamed streets
+		</label>
+		<label id="gui-option-show-previous-routes-label">
+			<input type="checkbox" id="option-show-previous-routes" value="show-previous-routes"/>
+			Show previous routes
+		</label>
 	</div>
-	<div class="row">
-	<div class="left"><input type="checkbox" id="option-show-previous-routes" value="show-previous-routes" class="mapping-checkbox"/></div>
-	<div class="left stretch"><span id="gui-option-show-previous-routes-label" class="checkbox-label small-font">Show previous routes</span></div>
-	</div>
-	</div>
+	</form>
+	
+	<!-- off-site links -->
 	<a class="button mapping-button" id="open-osmbugs">OSM Bugs</a><span class="quad mapping-button"></span><a class="button mapping-button" id="open-josm">JOSM</a>
 </div>
 </div>

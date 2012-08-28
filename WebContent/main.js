@@ -179,7 +179,7 @@ OSRM.prefetchCSSIcons = function() {
 	                	{ id:'.gui-locations-route:hover',		image_id:'locations_route_hover'},
 	                	{ id:'.gui-locations-route:active',		image_id:'locations_route_active'},
 	                	
-	                	{ id:'.leaflet-control-layers a',		image_id:'layers'},
+	                	{ id:'.gui-layers',						image_id:'layers'},
 	                	
 	                	{ id:'.cancel-marker',					image_id:'cancel'},
 	                	{ id:'.cancel-marker:hover',			image_id:'cancel_hover'},
