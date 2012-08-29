@@ -118,6 +118,8 @@ else:
 if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None and sys.platform != 'darwin':
 	env.Append(CCFLAGS = ['-march=native'])
 
+env.ParseConfig('pkg-config --cflags --libs luabind')
+
 if not conf.CheckHeader('omp.h'):
 	print "Compiler does not support OpenMP. Exiting"
 	Exit(-1)
@@ -147,9 +149,6 @@ if not (env.Detect('protoc')):
 	Exit(-1);
 if not conf.CheckLibWithHeader('stxxl', 'stxxl.h', 'CXX'):
 	print "stxxl library not found. Exiting"
-	Exit(-1)
-if not conf.CheckLibWithHeader('v8', 'v8.h', 'CXX'):
-	print "v8 library not found. Exiting"
 	Exit(-1)
 if not conf.CheckLibWithHeader('xml2', 'libxml/xmlreader.h', 'CXX'):
 	print "libxml2 library or header not found. Exiting"
@@ -270,7 +269,7 @@ if sys.platform != 'darwin':
 	env.Append(CCFLAGS = ['-fopenmp'])
 	env.Append(LINKFLAGS = ['-fopenmp'])
 
-env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('Util/*.cpp')])
+env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('Util/*.cpp'), Glob('Extractor/*.cpp')])
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", Glob('Contractor/*.cpp'), Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
 env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc'), Glob('Server/DataStructures/*.cpp')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
 env = conf.Finish()

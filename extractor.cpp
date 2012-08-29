@@ -35,17 +35,24 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
+extern "C" {
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+}
+#include <luabind/luabind.hpp>
+
 #include <libxml/xmlreader.h>
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <unistd.h>
-#include <stxxl.h>
 
 #include "typedefs.h"
 #include "DataStructures/InputReaderFactory.h"
-#include "Extractor/ExtractorCallBacks.h"
+#include "Extractor/ExtractorCallbacks.h"
 #include "Extractor/ExtractorStructs.h"
+#include "Extractor/LuaUtil.h"
 #include "Extractor/PBFParser.h"
 #include "Extractor/XMLParser.h"
 #include "Util/BaseConfiguration.h"
@@ -53,21 +60,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/MachineInfo.h"
 #include "Util/StringUtil.h"
 
+#include "Extractor/ExtractionContainers.h"
+
 using namespace std;
 
 typedef BaseConfiguration ExtractorConfiguration;
 
 unsigned globalRestrictionCounter = 0;
 ExtractorCallbacks * extractCallBacks;
-
+//
 bool nodeFunction(_Node n);
-bool adressFunction(_Node n, HashTable<string, string> & keyVals);
 bool restrictionFunction(_RawRestrictionContainer r);
 bool wayFunction(_Way w);
-
-template<class ClassT>
-bool removeIfUnused(ClassT n) { return (false == n.used); }
-
 
 int main (int argc, char *argv[]) {
 
@@ -193,6 +197,52 @@ int main (int argc, char *argv[]) {
         ERR("caught: " << e.what() );
     }
 
+    /*** Setup Scripting Environment ***/
+
+    // Create a new lua state
+    lua_State *myLuaState = luaL_newstate();
+
+    // Connect LuaBind to this lua state
+    luabind::open(myLuaState);
+
+    // Add our function to the state's global scope
+    luabind::module(myLuaState) [
+      luabind::def("print", LUA_print<std::string>)
+    ];
+
+    if(0 != luaL_dostring(
+      myLuaState,
+      "print('Initializing LUA engine')\n"
+    )) {
+        ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+    }
+
+    luabind::module(myLuaState) [
+      luabind::class_<HashTable<std::string, std::string> >("keyVals")
+      .def("Add", &HashTable<std::string, std::string>::Add)
+      .def("Find", &HashTable<std::string, std::string>::Find)
+    ];
+
+    luabind::module(myLuaState) [
+      luabind::class_<ImportNode>("Node")
+          .def(luabind::constructor<>())
+          .def_readwrite("lat", &ImportNode::lat)
+          .def_readwrite("lon", &ImportNode::lon)
+          .def_readwrite("id", &ImportNode::id)
+          .def_readwrite("bollard", &ImportNode::bollard)
+          .def_readwrite("traffic_light", &ImportNode::trafficLight)
+          .def_readwrite("tags", &ImportNode::keyVals)
+    ];
+    // Now call our function in a lua script
+    if(0 != luaL_dofile(myLuaState, "profile.lua")) {
+        ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+    }
+
+    //open string library;
+    luaopen_string(myLuaState);
+
+    /*** End of Scripting Environment Setup; ***/
+
     unsigned amountOfRAM = 1;
     unsigned installedRAM = GetPhysicalmemory(); 
     if(installedRAM < 2048264) {
@@ -207,11 +257,7 @@ int main (int argc, char *argv[]) {
     }
 
     StringMap stringMap;
-    STXXLContainers externalMemory;
-
-    unsigned usedNodeCounter = 0;
-    unsigned usedEdgeCounter = 0;
-    double time = get_timestamp();
+    ExtractionContainers externalMemory;
 
     stringMap[""] = 0;
     extractCallBacks = new ExtractorCallbacks(&externalMemory, settings, &stringMap);
@@ -221,301 +267,15 @@ int main (int argc, char *argv[]) {
     } else {
         parser = new XMLParser(argv[1]);
     }
-    parser->RegisterCallbacks(&nodeFunction, &restrictionFunction, &wayFunction, &adressFunction);
+    parser->RegisterCallbacks(&nodeFunction, &restrictionFunction, &wayFunction);
+    parser->RegisterLUAState(myLuaState);
+
     if(!parser->Init())
         INFO("Parser not initialized!");
     parser->Parse();
 
-    try {
-        //        INFO("raw no. of names:        " << externalMemory.nameVector.size());
-        //        INFO("raw no. of nodes:        " << externalMemory.allNodes.size());
-        //        INFO("no. of used nodes:       " << externalMemory.usedNodeIDs.size());
-        //        INFO("raw no. of edges:        " << externalMemory.allEdges.size());
-        //        INFO("raw no. of ways:         " << externalMemory.wayStartEndVector.size());
-        //        INFO("raw no. of addresses:    " << externalMemory.adressVector.size());
-        //        INFO("raw no. of restrictions: " << externalMemory.restrictionsVector.size());
+    externalMemory.PrepareData(settings, outputFileName, restrictionsFileName, amountOfRAM);
 
-        cout << "[extractor] parsing finished after " << get_timestamp() - time << " seconds" << endl;
-        time = get_timestamp();
-        boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
-
-        cout << "[extractor] Sorting used nodes        ... " << flush;
-        stxxl::sort(externalMemory.usedNodeIDs.begin(), externalMemory.usedNodeIDs.end(), Cmp(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-        time = get_timestamp();
-        cout << "[extractor] Erasing duplicate nodes   ... " << flush;
-        stxxl::vector<NodeID>::iterator NewEnd = unique ( externalMemory.usedNodeIDs.begin(),externalMemory.usedNodeIDs.end() ) ;
-        externalMemory.usedNodeIDs.resize ( NewEnd - externalMemory.usedNodeIDs.begin() );
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        cout << "[extractor] Sorting all nodes         ... " << flush;
-        stxxl::sort(externalMemory.allNodes.begin(), externalMemory.allNodes.end(), CmpNodeByID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        cout << "[extractor] Sorting used ways         ... " << flush;
-        stxxl::sort(externalMemory.wayStartEndVector.begin(), externalMemory.wayStartEndVector.end(), CmpWayByID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-        cout << "[extractor] Sorting restrctns. by from... " << flush;
-        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionContainerByFrom(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-        cout << "[extractor] Fixing restriction starts ... " << flush;
-        STXXLRestrictionsVector::iterator restrictionsIT = externalMemory.restrictionsVector.begin();
-        STXXLWayIDStartEndVector::iterator wayStartAndEndEdgeIT = externalMemory.wayStartEndVector.begin();
-
-        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
-            if(wayStartAndEndEdgeIT->wayID < restrictionsIT->fromWay){
-                ++wayStartAndEndEdgeIT;
-                continue;
-            }
-            if(wayStartAndEndEdgeIT->wayID > restrictionsIT->fromWay) {
-                ++restrictionsIT;
-                continue;
-            }
-            assert(wayStartAndEndEdgeIT->wayID == restrictionsIT->fromWay);
-            NodeID viaNode = restrictionsIT->restriction.viaNode;
-
-            if(wayStartAndEndEdgeIT->firstStart == viaNode) {
-                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->firstTarget;
-            } else if(wayStartAndEndEdgeIT->firstTarget == viaNode) {
-                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->firstStart;
-            } else if(wayStartAndEndEdgeIT->lastStart == viaNode) {
-                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->lastTarget;
-            } else if(wayStartAndEndEdgeIT->lastTarget == viaNode) {
-                restrictionsIT->restriction.fromNode = wayStartAndEndEdgeIT->lastStart;
-            }
-            ++restrictionsIT;
-        }
-
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        cout << "[extractor] Sorting restrctns. by to  ... " << flush;
-        stxxl::sort(externalMemory.restrictionsVector.begin(), externalMemory.restrictionsVector.end(), CmpRestrictionContainerByTo(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-        time = get_timestamp();
-        unsigned usableRestrictionsCounter(0);
-        cout << "[extractor] Fixing restriction ends   ... " << flush;
-        restrictionsIT = externalMemory.restrictionsVector.begin();
-        wayStartAndEndEdgeIT = externalMemory.wayStartEndVector.begin();
-        while(wayStartAndEndEdgeIT != externalMemory.wayStartEndVector.end() && restrictionsIT != externalMemory.restrictionsVector.end()) {
-            if(wayStartAndEndEdgeIT->wayID < restrictionsIT->toWay){
-                ++wayStartAndEndEdgeIT;
-                continue;
-            }
-            if(wayStartAndEndEdgeIT->wayID > restrictionsIT->toWay) {
-                ++restrictionsIT;
-                continue;
-            }
-            NodeID viaNode = restrictionsIT->restriction.viaNode;
-            if(wayStartAndEndEdgeIT->lastStart == viaNode) {
-                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->lastTarget;
-            } else if(wayStartAndEndEdgeIT->lastTarget == viaNode) {
-                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->lastStart;
-            } else if(wayStartAndEndEdgeIT->firstStart == viaNode) {
-                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->firstTarget;
-            } else if(wayStartAndEndEdgeIT->firstTarget == viaNode) {
-                restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->firstStart;
-            }
-
-            if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
-                ++usableRestrictionsCounter;
-            }
-            ++restrictionsIT;
-        }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        INFO("usable restrictions: " << usableRestrictionsCounter );
-        //serialize restrictions
-        ofstream restrictionsOutstream;
-        restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);
-        restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
-        for(restrictionsIT = externalMemory.restrictionsVector.begin(); restrictionsIT != externalMemory.restrictionsVector.end(); ++restrictionsIT) {
-            if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
-                restrictionsOutstream.write((char *)&(restrictionsIT->restriction), sizeof(_Restriction));
-            }
-        }
-        restrictionsOutstream.close();
-
-        ofstream fout;
-        fout.open(outputFileName.c_str(), ios::binary);
-        fout.write((char*)&usedNodeCounter, sizeof(unsigned));
-        time = get_timestamp();
-        cout << "[extractor] Confirming/Writing used nodes     ... " << flush;
-
-        STXXLNodeVector::iterator nodesIT = externalMemory.allNodes.begin();
-        STXXLNodeIDVector::iterator usedNodeIDsIT = externalMemory.usedNodeIDs.begin();
-        while(usedNodeIDsIT != externalMemory.usedNodeIDs.end() && nodesIT != externalMemory.allNodes.end()) {
-            if(*usedNodeIDsIT < nodesIT->id){
-                ++usedNodeIDsIT;
-                continue;
-            }
-            if(*usedNodeIDsIT > nodesIT->id) {
-                ++nodesIT;
-                continue;
-            }
-            if(*usedNodeIDsIT == nodesIT->id) {
-                if(!settings.obeyBollards && nodesIT->bollard)
-                    nodesIT->bollard = false;
-                fout.write((char*)&(*nodesIT), sizeof(_Node));
-                ++usedNodeCounter;
-                ++usedNodeIDsIT;
-                ++nodesIT;
-            }
-        }
-
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-        cout << "[extractor] setting number of nodes   ... " << flush;
-        ios::pos_type positionInFile = fout.tellp();
-        fout.seekp(ios::beg);
-        fout.write((char*)&usedNodeCounter, sizeof(unsigned));
-        fout.seekp(positionInFile);
-
-        cout << "ok" << endl;
-        time = get_timestamp();
-
-        // Sort edges by start.
-        cout << "[extractor] Sorting edges by start    ... " << flush;
-        stxxl::sort(externalMemory.allEdges.begin(), externalMemory.allEdges.end(), CmpEdgeByStartID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        cout << "[extractor] Setting start coords      ... " << flush;
-        fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
-        // Traverse list of edges and nodes in parallel and set start coord
-        nodesIT = externalMemory.allNodes.begin();
-        STXXLEdgeVector::iterator edgeIT = externalMemory.allEdges.begin();
-        while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
-            if(edgeIT->start < nodesIT->id){
-                ++edgeIT;
-                continue;
-            }
-            if(edgeIT->start > nodesIT->id) {
-                nodesIT++;
-                continue;
-            }
-            if(edgeIT->start == nodesIT->id) {
-                edgeIT->startCoord.lat = nodesIT->lat;
-                edgeIT->startCoord.lon = nodesIT->lon;
-                ++edgeIT;
-            }
-        }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        // Sort Edges by target
-        cout << "[extractor] Sorting edges by target   ... " << flush;
-        stxxl::sort(externalMemory.allEdges.begin(), externalMemory.allEdges.end(), CmpEdgeByTargetID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        time = get_timestamp();
-
-        cout << "[extractor] Setting target coords     ... " << flush;
-        // Traverse list of edges and nodes in parallel and set target coord
-        nodesIT = externalMemory.allNodes.begin();
-        edgeIT = externalMemory.allEdges.begin();
-
-        while(edgeIT != externalMemory.allEdges.end() && nodesIT != externalMemory.allNodes.end()) {
-            if(edgeIT->target < nodesIT->id){
-                ++edgeIT;
-                continue;
-            }
-            if(edgeIT->target > nodesIT->id) {
-                ++nodesIT;
-                continue;
-            }
-            if(edgeIT->target == nodesIT->id) {
-                if(edgeIT->startCoord.lat != INT_MIN && edgeIT->startCoord.lon != INT_MIN) {
-                    edgeIT->targetCoord.lat = nodesIT->lat;
-                    edgeIT->targetCoord.lon = nodesIT->lon;
-
-                    double distance = ApproximateDistance(edgeIT->startCoord.lat, edgeIT->startCoord.lon, nodesIT->lat, nodesIT->lon);
-                    assert(edgeIT->speed != -1);
-                    double weight = ( distance * 10. ) / (edgeIT->speed / 3.6);
-                    int intWeight = std::max(1, (int)std::floor((edgeIT->isDurationSet ? edgeIT->speed : weight)+.5) );
-                    int intDist = std::max(1, (int)distance);
-                    short zero = 0;
-                    short one = 1;
-
-                    fout.write((char*)&edgeIT->start, sizeof(unsigned));
-                    fout.write((char*)&edgeIT->target, sizeof(unsigned));
-                    fout.write((char*)&intDist, sizeof(int));
-                    switch(edgeIT->direction) {
-                    case _Way::notSure:
-                        fout.write((char*)&zero, sizeof(short));
-                        break;
-                    case _Way::oneway:
-                        fout.write((char*)&one, sizeof(short));
-                        break;
-                    case _Way::bidirectional:
-                        fout.write((char*)&zero, sizeof(short));
-
-                        break;
-                    case _Way::opposite:
-                        fout.write((char*)&one, sizeof(short));
-                        break;
-                    default:
-                        cerr << "[error] edge with no direction: " << edgeIT->direction << endl;
-                        assert(false);
-                        break;
-                    }
-                    fout.write((char*)&intWeight, sizeof(int));
-                    assert(edgeIT->type >= 0);
-                    fout.write((char*)&edgeIT->type, sizeof(short));
-                    fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
-                    fout.write((char*)&edgeIT->isRoundabout, sizeof(bool));
-                    fout.write((char*)&edgeIT->ignoreInGrid, sizeof(bool));
-                    fout.write((char*)&edgeIT->isAccessRestricted, sizeof(bool));
-                }
-                ++usedEdgeCounter;
-                ++edgeIT;
-            }
-        }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        cout << "[extractor] setting number of edges   ... " << flush;
-
-        fout.seekp(positionInFile);
-        fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
-        fout.close();
-        cout << "ok" << endl;
-        time = get_timestamp();
-        cout << "[extractor] writing street name index ... " << flush;
-        std::string nameOutFileName = (outputFileName + ".names");
-        ofstream nameOutFile(nameOutFileName.c_str(), ios::binary);
-        unsigned sizeOfNameIndex = externalMemory.nameVector.size();
-        nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
-
-        BOOST_FOREACH(string str, externalMemory.nameVector) {
-            unsigned lengthOfRawString = strlen(str.c_str());
-            nameOutFile.write((char *)&(lengthOfRawString), sizeof(unsigned));
-            nameOutFile.write(str.c_str(), lengthOfRawString);
-        }
-
-        nameOutFile.close();
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-        //        time = get_timestamp();
-        //        cout << "[extractor] writing address list      ... " << flush;
-        //
-        //        adressFileName.append(".address");
-        //        ofstream addressOutFile(adressFileName.c_str());
-        //        for(STXXLAddressVector::iterator it = adressVector.begin(); it != adressVector.end(); it++) {
-        //            addressOutFile << it->node.id << "|" << it->node.lat << "|" << it->node.lon << "|" << it->city << "|" << it->street << "|" << it->housenumber << "|" << it->state << "|" << it->country << "\n";
-        //        }
-        //        addressOutFile.close();
-        //        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-    } catch ( const exception& e ) {
-        cerr <<  "Caught Execption:" << e.what() << endl;
-        return false;
-    }
-
-    double endTime = (get_timestamp() - startupTime);
-    INFO("Processed " << (usedNodeCounter)/(endTime) << " nodes/sec and " << usedEdgeCounter/endTime << " edges/sec");
     stringMap.clear();
     delete parser;
     delete extractCallBacks;
@@ -527,11 +287,6 @@ int main (int argc, char *argv[]) {
 
 bool nodeFunction(_Node n) {
     extractCallBacks->nodeFunction(n);
-    return true;
-}
-
-bool adressFunction(_Node n, HashTable<string, string> & keyVals){
-    extractCallBacks->adressFunction(n, keyVals);
     return true;
 }
 

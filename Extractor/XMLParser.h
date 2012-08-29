@@ -31,18 +31,23 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class XMLParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
 public:
-    XMLParser(const char * filename) : nodeCallback(NULL), wayCallback(NULL), restrictionCallback(NULL){
+    XMLParser(const char * filename) : nodeCallback(NULL), wayCallback(NULL), restrictionCallback(NULL), myLuaState(NULL){
         WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
         inputReader = inputReaderFactory(filename);
     }
     virtual ~XMLParser() {}
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way), bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>&) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way)) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
         restrictionCallback = *restrictionCallbackPointer;
         return true;
     }
+
+    void RegisterLUAState(lua_State *ml) {
+        myLuaState = ml;
+    }
+
     bool Init() {
         return (xmlTextReaderRead( inputReader ) == 1);
     }
@@ -293,6 +298,7 @@ private:
     bool (*wayCallback)(_Way);
     bool (*restrictionCallback)(_RawRestrictionContainer);
 
+    lua_State *myLuaState;
 };
 
 #endif /* XMLPARSER_H_ */

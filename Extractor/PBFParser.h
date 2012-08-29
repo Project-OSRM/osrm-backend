@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define PBFPARSER_H_
 
 #include <zlib.h>
+#include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <osmpbf/fileformat.pb.h>
@@ -35,6 +36,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/ConcurrentQueue.h"
 
 class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
+
+    typedef BaseParser<_Node, _RawRestrictionContainer, _Way> super;
 
     enum EntityType {
         TypeNode = 1,
@@ -63,7 +66,7 @@ class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
     };
 
 public:
-    PBFParser(const char * fileName) {
+    PBFParser(const char * fileName) : myLuaState(NULL) {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
         //TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
         threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(2500) ); /* Max 2500 items in queue, hardcoded. */
@@ -77,16 +80,20 @@ public:
         groupCount = 0;
 
         //Dummy initialization
-        wayCallback = NULL;         nodeCallback = NULL;
-        addressCallback = NULL;     restrictionCallback = NULL;
+        wayCallback = NULL;
+        nodeCallback = NULL;
+        restrictionCallback = NULL;
     }
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way),bool (*addressCallbackPointer)(_Node, HashTable<std::string, std::string>&) ) {
+    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way) ) {
         nodeCallback = *nodeCallbackPointer;
         wayCallback = *wayCallbackPointer;
         restrictionCallback = *restrictionCallbackPointer;
-        addressCallback = *addressCallbackPointer;
         return true;
+    }
+
+    void RegisterLUAState(lua_State *ml) {
+        myLuaState = ml;
     }
 
     ~PBFParser() {
@@ -188,7 +195,7 @@ public:
         // Start the read and parse threads
         boost::thread readThread(boost::bind(&PBFParser::ReadData, this));
         boost::thread parseThread(boost::bind(&PBFParser::ParseData, this));
-        
+
         // Wait for the threads to finish
         readThread.join();
         parseThread.join();
@@ -206,11 +213,11 @@ private:
         int m_lastDenseLongitude = 0;
 
         for(int i = 0; i < dense.id_size(); i++) {
-            HashTable<std::string, std::string> keyVals;
+
             m_lastDenseID += dense.id( i );
             m_lastDenseLatitude += dense.lat( i );
             m_lastDenseLongitude += dense.lon( i );
-            _Node n;
+            ImportNode n;
             n.id = m_lastDenseID;
             n.lat = 100000*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() +threadData-> PBFprimitiveBlock.lat_offset() ) / NANO;
             n.lon = 100000*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
@@ -223,22 +230,35 @@ private:
                 int keyValue = dense.keys_vals ( denseTagIndex+1 );
                 std::string key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
                 std::string value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
-                keyVals.Add(key, value);
+                n.keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
-            std::string barrierValue = keyVals.Find("barrier");
-            std::string access = keyVals.Find("access");
-            if(access != "yes" && 0 < barrierValue.length() && "cattle_grid" != barrierValue && "border_control" != barrierValue && "toll_booth" != barrierValue && "no" != barrierValue)
-                n.bollard = true;
 
-            if("traffic_signals" == keyVals.Find("highway"))
-                n.trafficLight = true;
+            int ret = -1;
+            try {
+                ret = luabind::call_function<int>(
+                        myLuaState,
+                        "node_function",
+                        boost::ref(n)
+                );
+                if(!(*nodeCallback)(n))
+                    std::cerr << "[PBFParser] dense node not parsed" << std::endl;
+            } catch (const luabind::error &er) {
+                cerr << er.what() << endl;
+                lua_State* Ler=er.state();
+                report_errors(Ler, -1);
+            }
+            catch (...) {
+                cerr<<"Unknown error!"<<endl;
+            }
+        }
+    }
 
-            if(!(*addressCallback)(n, keyVals))
-                std::cerr << "[PBFParser] adress not parsed" << std::endl;
-            
-            if(!(*nodeCallback)(n))
-                std::cerr << "[PBFParser] dense node not parsed" << std::endl;
+    void report_errors(lua_State *L, int status)
+    {
+        if ( status!=0 ) {
+            std::cerr << "-- " << lua_tostring(L, -1) << std::endl;
+            lua_pop(L, 1); // remove error message
         }
     }
 
@@ -311,11 +331,11 @@ private:
                         break;
                     }
                 }
-//                if(UINT_MAX != currentRestriction.viaNode) {
-//                    cout << "restr from " << currentRestriction.from << " via ";
-//                    cout << "node " << currentRestriction.viaNode;
-//                    cout << " to " << currentRestriction.to << endl;
-//                }
+                //                if(UINT_MAX != currentRestriction.viaNode) {
+                //                    cout << "restr from " << currentRestriction.from << " via ";
+                //                    cout << "node " << currentRestriction.viaNode;
+                //                    cout << " to " << currentRestriction.to << endl;
+                //                }
                 if(!(*restrictionCallback)(currentRestrictionContainer))
                     std::cerr << "[PBFParser] relation not parsed" << std::endl;
             }
@@ -537,12 +557,13 @@ private:
     bool (*nodeCallback)(_Node);
     bool (*wayCallback)(_Way);
     bool (*restrictionCallback)(_RawRestrictionContainer);
-    bool (*addressCallback)(_Node, HashTable<std::string, std::string>&);
     /* the input stream to parse */
     std::fstream input;
 
     /* ThreadData Queue */
     boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;
+
+    lua_State *myLuaState;
 };
 
 #endif /* PBFPARSER_H_ */

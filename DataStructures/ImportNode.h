@@ -22,6 +22,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define IMPORTNODE_H_
 
 #include "NodeCoords.h"
+#include "../DataStructures/HashTable.h"
+
 
 struct _Node : NodeInfo{
     _Node(int _lat, int _lon, unsigned int _id, bool _bollard, bool _trafficLight) : NodeInfo(_lat, _lon,  _id), bollard(_bollard), trafficLight(_trafficLight) {}
@@ -38,7 +40,10 @@ struct _Node : NodeInfo{
     }
     bool bollard;
     bool trafficLight;
+};
 
+struct ImportNode : public _Node {
+    HashTable<std::string, std::string> keyVals;
 };
 
 #endif /* IMPORTNODE_H_ */

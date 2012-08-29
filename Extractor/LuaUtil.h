@@ -18,19 +18,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef BASEPARSER_H_
-#define BASEPARSER_H_
 
-#include <luabind/luabind.hpp>
 
-template<typename NodeT, typename RestrictionT, typename WayT>
-class BaseParser {
-public:
-    virtual ~BaseParser() {}
-    virtual bool Init() = 0;
-    virtual bool RegisterCallbacks(bool (*nodeCallbackPointer)(NodeT), bool (*restrictionCallbackPointer)(RestrictionT), bool (*wayCallbackPointer)(WayT)) = 0;
-    virtual void RegisterLUAState(lua_State *myLuaState) = 0;
-    virtual bool Parse() = 0;
-};
+#ifndef LUAUTIL_H_
+#define LUAUTIL_H_
 
-#endif /* BASEPARSER_H_ */
+#include <iostream>
+
+template<typename T>
+void LUA_print(T number) {
+  std::cout << "[LUA] " << number << std::endl;
+}
+
+#endif /* LUAUTIL_H_ */
