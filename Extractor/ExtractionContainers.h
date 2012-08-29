@@ -32,7 +32,6 @@ public:
     typedef stxxl::vector<NodeID> STXXLNodeIDVector;
     typedef stxxl::vector<_Node> STXXLNodeVector;
     typedef stxxl::vector<_Edge> STXXLEdgeVector;
-    typedef stxxl::vector<_Address> STXXLAddressVector;
     typedef stxxl::vector<std::string> STXXLStringVector;
     typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
     typedef stxxl::vector<_WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
@@ -42,7 +41,6 @@ public:
         usedNodeIDs.clear();
         allNodes.clear();
         allEdges.clear();
-        adressVector.clear();
         nameVector.clear();
         restrictionsVector.clear();
         wayStartEndVector.clear();
@@ -53,7 +51,6 @@ public:
     STXXLNodeIDVector           usedNodeIDs;
     STXXLNodeVector             allNodes;
     STXXLEdgeVector             allEdges;
-    STXXLAddressVector          adressVector;
     STXXLStringVector           nameVector;
     STXXLRestrictionsVector     restrictionsVector;
     STXXLWayIDStartEndVector    wayStartEndVector;
