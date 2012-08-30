@@ -19,4 +19,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [assorted bugfixes to Leaflet functions we use]
 
 
-// none at the moment, thanks to Leaflet 0.4+
+// bugfix for issue #892 of Leaflet
+L.DomUtil.enableTextSelection = function () {
+	if( !document.onselectstart )
+		return;
+	document.onselectstart = this._onselectstart;
+	this._onselectstart = null;
+};
