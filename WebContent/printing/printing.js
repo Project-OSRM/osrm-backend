@@ -19,6 +19,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 // [for printing window]
 
 OSRM = {};
+OSRM.Control = {};
 OSRM.GLOBALS = { main_handle:{boxVisible:function(){return false;}} };	// needed for fitBoundsUI to work
 OSRM.GLOBALS.Localization = { culture:"en-US" };						// needed for localized map tiles
 OSRM.GLOBALS.DISTANCE_FORMAT = 0;										// needed for scale control
