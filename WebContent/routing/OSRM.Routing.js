@@ -37,6 +37,8 @@ init: function() {
 	OSRM.G.markers = new OSRM.Markers();	
 	OSRM.G.route = new OSRM.Route();
 	OSRM.G.response = { via_points:[] };
+	
+	OSRM.RoutingDescription.init();
 },
 
 

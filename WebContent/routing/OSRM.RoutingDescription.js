@@ -21,6 +21,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM.RoutingDescription = {
 		
+// directory with qrcodes files
+QR_DIRECTORY: 'qrcodes/',
+		
+// initialization of required variables and events
+init: function() {
+	OSRM.G.active_shortlink = null;
+	OSRM.Browser.onUnloadHandler( OSRM.RoutingDescription.uninit );
+},
+uninit: function() {
+	if( OSRM.G.qrcodewindow )
+		OSRM.G.qrcodewindow.close();	
+},
+
 // route description events
 onClickRouteDescription: function(lat, lng) {
 	OSRM.G.markers.highlight.setPosition( new L.LatLng(lat, lng) );
@@ -39,13 +52,23 @@ onClickCreateShortcut: function(src){
 	document.getElementById('route-link').innerHTML = '['+OSRM.loc("GENERATE_LINK_TO_ROUTE")+']';
 },
 showRouteLink: function(response){
-	if(!response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER])
+	if(!response || !response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]) {
 		OSRM.RoutingDescription.showRouteLink_TimeOut();
-	else
-		document.getElementById('route-link').innerHTML = '[<a class="route-link" href="' +response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+ '">'+response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER]+'</a>]';
+		return;
+	}
+	
+	OSRM.G.active_shortlink = response[OSRM.DEFAULTS.SHORTENER_REPLY_PARAMETER];
+	document.getElementById('route-link').innerHTML =
+		'[<a class="route-link" onClick="OSRM.RoutingDescription.showQRCode();">'+OSRM.loc("QR")+'</a>]' + ' ' +
+		'[<a class="route-link" href="' +OSRM.G.active_shortlink+ '">'+OSRM.G.active_shortlink.substring(7)+'</a>]';
 },
 showRouteLink_TimeOut: function(){
 	document.getElementById('route-link').innerHTML = '['+OSRM.loc("LINK_TO_ROUTE_TIMEOUT")+']';
+},
+showQRCode: function(response){
+	if( OSRM.G.qrcodewindow )
+		OSRM.G.qrcodewindow.close();	
+	OSRM.G.qrcodewindow = window.open( OSRM.RoutingDescription.QR_DIRECTORY+"qrcodes.html","","width=280,height=240,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=no,status=no,toolbar=no,resizable=no");
 },
 
 // handling of routing description

@@ -1,0 +1,71 @@
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+*/
+
+/* OSRM CSS styles for qr codes */
+
+/* ------------------------------------------------------------------------ */
+
+/* page setup */
+body
+{
+	margin: 10;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* containers */
+#qrcode-container
+{
+	text-align:center;
+}
+#qrcode-link
+{
+	margin-top:10px;
+	text-align:center;
+}
+
+/* qrcode table for IE8 */
+.qrcode
+{
+	border-spacing:0px;
+    margin-left:auto; 
+    margin-right:auto;
+}
+.black
+{
+	background-color:#000000;
+	width:6px;
+	height:6px;
+	padding:0px;
+}
+.white
+{
+	background-color:#FFFFFF;
+	width:6px;
+	height:6px;
+	padding:0px;
+}
+
+/* ------------------------------------------------------------------------ */
+
+/* fonts */
+.base-font
+{
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+}

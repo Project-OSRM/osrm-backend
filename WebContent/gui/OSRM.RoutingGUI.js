@@ -47,10 +47,12 @@ init: function() {
 activateRouteFeatures: function() {
 	OSRM.Printing.activate();
 	OSRM.G.map.locationsControl.activateRoute();
+	OSRM.G.active_shortlink = null;							// delete shortlink when new route is shown (RoutingDescription calls this method!)
 },
 deactivateRouteFeatures: function() {
 	OSRM.Printing.deactivate();
 	OSRM.G.map.locationsControl.deactivateRoute();
+	OSRM.G.active_shortlink = null;							// delete shortlink when the route is hidden
 },
 
 // click: button "reset"
