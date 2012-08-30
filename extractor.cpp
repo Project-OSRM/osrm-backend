@@ -18,11 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifdef STXXL_VERBOSE_LEVEL
-#undef STXXL_VERBOSE_LEVEL
-#endif
-#define STXXL_VERBOSE_LEVEL -1000
-
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
