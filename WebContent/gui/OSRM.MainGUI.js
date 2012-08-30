@@ -51,8 +51,8 @@ setLabels: function() {
 	document.getElementById("open-osmbugs").innerHTML = OSRM.loc("OPEN_OSMBUGS");
 	document.getElementById("gui-reset").innerHTML = OSRM.loc("GUI_RESET");
 	document.getElementById("gui-reverse").innerHTML = OSRM.loc("GUI_REVERSE");
-	document.getElementById("gui-option-highlight-nonames-label").text = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
-	document.getElementById("gui-option-show-previous-routes-label").text = OSRM.loc("GUI_SHOW_PREVIOUS_ROUTES");
+	document.getElementById("gui-option-highlight-nonames-label").lastChild.nodeValue = OSRM.loc("GUI_HIGHLIGHT_UNNAMED_ROADS");
+	document.getElementById("gui-option-show-previous-routes-label").lastChild.nodeValue = OSRM.loc("GUI_SHOW_PREVIOUS_ROUTES");
 	document.getElementById("gui-search-source").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-target").innerHTML = OSRM.loc("GUI_SEARCH");
 	document.getElementById("gui-search-source-label").innerHTML = OSRM.loc("GUI_START")+":";
