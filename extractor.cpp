@@ -23,17 +23,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 #define STXXL_VERBOSE_LEVEL -1000
 
-#include <algorithm>
-#include <cassert>
-#include <climits>
-#include <cstdio>
 #include <cstdlib>
-#include <exception>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
-#include <vector>
 
 extern "C" {
 #include <lua.h>
@@ -42,14 +35,7 @@ extern "C" {
 }
 #include <luabind/luabind.hpp>
 
-#include <libxml/xmlreader.h>
-#include <boost/foreach.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-#include <unistd.h>
-
 #include "typedefs.h"
-#include "DataStructures/InputReaderFactory.h"
 #include "Extractor/ExtractorCallbacks.h"
 #include "Extractor/ExtractionContainers.h"
 #include "Extractor/ExtractionHelperFunctions.h"
@@ -60,13 +46,9 @@ extern "C" {
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
-#include "Util/StringUtil.h"
-
-using namespace std;
 
 typedef BaseConfiguration ExtractorConfiguration;
 
-unsigned globalRestrictionCounter = 0;
 ExtractorCallbacks * extractCallBacks;
 //
 bool nodeFunction(_Node n);
@@ -74,18 +56,9 @@ bool restrictionFunction(_RawRestrictionContainer r);
 bool wayFunction(_Way w);
 
 int main (int argc, char *argv[]) {
-
     if(argc < 2) {
         ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>");
     }
-
-    //Check if another instance of stxxl is already running or if there is a general problem
-    try {
-        stxxl::vector<unsigned> testForRunningInstance;
-    } catch(std::exception & e) {
-        ERR("Could not instantiate STXXL layer." << std::endl << e.what());
-    }
-    double startupTime = get_timestamp();
 
     INFO("extracting data from input file " << argv[1]);
     bool isPBF(false);
@@ -231,7 +204,6 @@ bool nodeFunction(_Node n) {
 }
 bool restrictionFunction(_RawRestrictionContainer r) {
     extractCallBacks->restrictionFunction(r);
-    ++globalRestrictionCounter;
     return true;
 }
 bool wayFunction(_Way w) {

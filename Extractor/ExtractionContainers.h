@@ -36,7 +36,16 @@ public:
     typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
     typedef stxxl::vector<_WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
 
-    ExtractionContainers() { nameVector.push_back(""); }
+    ExtractionContainers() {
+        //Check if another instance of stxxl is already running or if there is a general problem
+        try {
+            stxxl::vector<unsigned> testForRunningInstance;
+        } catch(std::exception & e) {
+            ERR("Could not instantiate STXXL layer." << std::endl << e.what());
+        }
+
+        nameVector.push_back("");
+    }
     virtual ~ExtractionContainers() {
         usedNodeIDs.clear();
         allNodes.clear();
