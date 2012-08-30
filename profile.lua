@@ -4,6 +4,7 @@ bollards_whitelist = { [""] = true, ["cattle_grid"] = true, ["border_control"] =
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
+access_tags = { "motor_vehicle", "vehicle" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true, ["pier"] = true }
 
@@ -86,6 +87,16 @@ function way_function (way, numberOfNodesInWay)
 		return 0;
     end
     
+  -- Check if our vehicle types are forbidden
+    for i,v in ipairs(access_tags) do 
+      local mode_value = way.tags:Find(v)
+      if nil ~= mode_value and "no" == mode_value then
+	    return 0;
+      end
+    end
+  
+    
+  -- Set the name that will be used for instructions  
 	if "" ~= ref then
 	  way.name = ref
 	elseif "" ~= name then
