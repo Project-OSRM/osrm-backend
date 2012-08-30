@@ -20,7 +20,7 @@
 
 #include "ExtractionContainers.h"
 
-void ExtractionContainers::PrepareData(const Settings & settings, const std::string & outputFileName, const std::string restrictionsFileName, const unsigned amountOfRAM) {
+void ExtractionContainers::PrepareData(const std::string & outputFileName, const std::string restrictionsFileName, const unsigned amountOfRAM) {
     try {
         unsigned usedNodeCounter = 0;
         unsigned usedEdgeCounter = 0;
@@ -157,8 +157,6 @@ void ExtractionContainers::PrepareData(const Settings & settings, const std::str
                 continue;
             }
             if(*usedNodeIDsIT == nodesIT->id) {
-                if(!settings.obeyBollards && nodesIT->bollard)
-                    nodesIT->bollard = false;
                 fout.write((char*)&(*nodesIT), sizeof(_Node));
                 ++usedNodeCounter;
                 ++usedNodeIDsIT;

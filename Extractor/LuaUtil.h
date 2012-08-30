@@ -30,4 +30,6 @@ void LUA_print(T number) {
   std::cout << "[LUA] " << number << std::endl;
 }
 
+
+
 #endif /* LUAUTIL_H_ */

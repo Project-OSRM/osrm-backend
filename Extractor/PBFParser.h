@@ -234,6 +234,7 @@ private:
                 denseTagIndex += 2;
             }
 
+            /** Pass the unpacked node to the LUA call back **/
             int ret = -1;
             try {
                 ret = luabind::call_function<int>(
@@ -249,23 +250,16 @@ private:
                 report_errors(Ler, -1);
             }
             catch (...) {
-                cerr<<"Unknown error!"<<endl;
+                ERR("Unknown error occurred during PBF dense node parsing!");
             }
         }
     }
 
-    void report_errors(lua_State *L, int status)
-    {
-        if ( status!=0 ) {
-            std::cerr << "-- " << lua_tostring(L, -1) << std::endl;
-            lua_pop(L, 1); // remove error message
-        }
-    }
-
     void parseNode(_ThreadData * threadData) {
-        _Node n;
-        if(!(*nodeCallback)(n))
-            std::cerr << "[PBFParser] simple node not parsed" << std::endl;
+        ERR("Parsing of simple nodes not supported. PBF should use dense nodes");
+//        _Node n;
+//        if(!(*nodeCallback)(n))
+//            std::cerr << "[PBFParser] simple node not parsed" << std::endl;
     }
 
     void parseRelation(_ThreadData * threadData) {
@@ -360,8 +354,25 @@ private:
                     w.keyVals.Add(key, val);
                 }
 
-                if(!(*wayCallback)(w)) {
-                    std::cerr << "[PBFParser] way not parsed" << std::endl;
+                /** Pass the unpacked way to the LUA call back **/
+                int ret = -1;
+                try {
+                    ret = luabind::call_function<int>(
+                            myLuaState,
+                            "way_function",
+                            boost::ref(w),
+                            w.path.size()
+                    );
+                    if(!(*wayCallback)(w)) {
+                        std::cerr << "[PBFParser] way not parsed" << std::endl;
+                    }
+                } catch (const luabind::error &er) {
+                    cerr << er.what() << endl;
+                    lua_State* Ler=er.state();
+                    report_errors(Ler, -1);
+                }
+                catch (...) {
+                    cerr<<"Unknown error!"<<endl;
                 }
             }
         }

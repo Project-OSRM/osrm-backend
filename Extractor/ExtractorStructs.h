@@ -23,7 +23,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <climits>
 #include <string>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
 #include <boost/unordered_map.hpp>
+
 #include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportNode.h"
@@ -41,11 +46,12 @@ struct _Way {
         direction = _Way::notSure;
         speed = -1;
         type = -1;
-        useful = false;
+//        useful = false;
         access = true;
         roundabout = false;
         isDurationSet = false;
         isAccessRestricted = false;
+        ignoreInGrid = false;
     }
 
     enum {
@@ -56,11 +62,12 @@ struct _Way {
     std::string name;
     double speed;
     short type;
-    bool useful;
+//    bool useful;
     bool access;
     bool roundabout;
     bool isDurationSet;
     bool isAccessRestricted;
+    bool ignoreInGrid;
     std::vector< NodeID > path;
     HashTable<std::string, std::string> keyVals;
 };
@@ -131,41 +138,6 @@ struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDSta
     value_type min_value() {
         return _WayIDStartAndEndEdge::min_value();
     }
-};
-
-struct Settings {
-    Settings() : obeyBollards(true), obeyOneways(true), useRestrictions(true), ignoreAreas(false), defaultSpeed(30), takeMinimumOfSpeeds(false), excludeFromGrid("ferry") {}
-    StringToIntPairMap speedProfile;
-    int operator[](const std::string & param) const {
-        if(speedProfile.find(param) == speedProfile.end())
-            return 0;
-        else
-            return speedProfile.at(param).first;
-    }
-    int GetHighwayTypeID(const std::string & param) const {
-    	if(param == excludeFromGrid) {
-    		return SHRT_MAX;
-    	}
-    	assert(param != "ferry");
-        if(speedProfile.find(param) == speedProfile.end()) {
-            ERR("There is a bug with highway \"" << param << "\"");
-            return -1;
-        } else {
-            return speedProfile.at(param).second;
-        }
-    }
-    bool obeyBollards;
-    bool obeyOneways;
-    bool useRestrictions;
-    bool ignoreAreas;
-    std::vector<std::string> accessTags;
-    int defaultSpeed;
-    bool takeMinimumOfSpeeds;
-    std::string excludeFromGrid;
-    boost::unordered_map<std::string, bool> accessRestrictedService;
-    boost::unordered_map<std::string, bool> accessRestrictionKeys;
-    boost::unordered_map<std::string, bool> accessForbiddenKeys;
-    boost::unordered_map<std::string, bool> accessForbiddenDefault;
 };
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {

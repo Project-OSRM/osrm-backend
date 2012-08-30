@@ -46,7 +46,7 @@ public:
         wayStartEndVector.clear();
     }
 
-    void PrepareData(const Settings & settings, const std::string & outputFileName, const std::string restrictionsFileName, const unsigned amountOfRAM);
+    void PrepareData( const std::string & outputFileName, const std::string restrictionsFileName, const unsigned amountOfRAM);
 
     STXXLNodeIDVector           usedNodeIDs;
     STXXLNodeVector             allNodes;

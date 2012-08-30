@@ -51,6 +51,8 @@ extern "C" {
 #include "typedefs.h"
 #include "DataStructures/InputReaderFactory.h"
 #include "Extractor/ExtractorCallbacks.h"
+#include "Extractor/ExtractionContainers.h"
+#include "Extractor/ExtractionHelperFunctions.h"
 #include "Extractor/ExtractorStructs.h"
 #include "Extractor/LuaUtil.h"
 #include "Extractor/PBFParser.h"
@@ -59,8 +61,6 @@ extern "C" {
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
 #include "Util/StringUtil.h"
-
-#include "Extractor/ExtractionContainers.h"
 
 using namespace std;
 
@@ -111,91 +111,6 @@ int main (int argc, char *argv[]) {
             restrictionsFileName.append(".osrm.restrictions");
         }
     }
-    std::string adressFileName(outputFileName);
-    Settings settings;
-
-    boost::property_tree::ptree pt;
-    try {
-        INFO("Loading speed profiles");
-        boost::property_tree::ini_parser::read_ini("speedprofile.ini", pt);
-        INFO("Found the following speed profiles: ");
-        int profileCounter(0);
-        BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child("")) {
-            std::string name = v.first;
-            cout << " [" << profileCounter << "]" << name << endl;
-            ++profileCounter;
-        }
-        std::string usedSpeedProfile(pt.get_child("").begin()->first);
-        INFO("Using profile \"" << usedSpeedProfile << "\"")
-        BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(usedSpeedProfile)) {
-            std::string name = v.first;
-            std::string value = v.second.get<std::string>("");
-            DEBUG("inserting " << name << "=" << value);
-            if(name == "obeyOneways") {
-                if(value == "no")
-                    settings.obeyOneways = false;
-            } else if(name == "obeyBollards") {
-                if(value == "no") {
-                    settings.obeyBollards = false;
-                }
-            } else if(name == "useRestrictions") {
-                if(value == "no")
-                    settings.useRestrictions = false;
-            } else if(name == "accessTags") {
-                std::vector<std::string> tokens;
-                stringSplit(value, ',', tokens);
-                settings.accessTags = tokens;
-            } else if(name == "excludeFromGrid") {
-                settings.excludeFromGrid = value;
-            } else if(name == "defaultSpeed") {
-                settings.defaultSpeed = atoi(value.c_str());
-                settings.speedProfile["default"] = std::make_pair(settings.defaultSpeed, settings.speedProfile.size() );
-            } else if( name == "takeMinimumOfSpeeds") {
-                settings.takeMinimumOfSpeeds = ("yes" == value);
-            } else if( name == "ignoreAreas") {
-                settings.ignoreAreas = ("yes" == value);
-            } else if( name == "accessRestrictedService") {
-                //split value at commas
-                std::vector<std::string> tokens;
-                stringSplit(value, ',', tokens);
-                //put each value into map
-                BOOST_FOREACH(std::string & s, tokens) {
-                    INFO("adding " << s << " to accessRestrictedService");
-                    settings.accessRestrictedService.insert(std::make_pair(s, true));
-                }
-            } else if( name == "accessRestrictionKeys") {
-                //split value at commas
-                std::vector<std::string> tokens;
-                stringSplit(value, ',', tokens);
-                //put each value into map
-                BOOST_FOREACH(std::string & s, tokens) {
-                    INFO("adding " << s << " to accessRestrictionKeys");
-                    settings.accessRestrictionKeys.insert(std::make_pair(s, true));
-                }
-            } else if( name == "accessForbiddenKeys") {
-                //split value at commas
-                std::vector<std::string> tokens;
-                stringSplit(value, ',', tokens);
-                //put each value into map
-                BOOST_FOREACH(std::string & s, tokens) {
-                    INFO("adding " << s << " to accessForbiddenKeys");
-                    settings.accessForbiddenKeys.insert(std::make_pair(s, true));
-                }
-            } else if( name == "accessForbiddenDefault") {
-                //split value at commas
-                std::vector<std::string> tokens;
-                stringSplit(value, ',', tokens);
-                //put each value into map
-                BOOST_FOREACH(std::string & s, tokens) {
-                    INFO("adding " << s << " to accessForbiddenDefault");
-                    settings.accessForbiddenDefault.insert(std::make_pair(s, true));
-                }
-            }
-            settings.speedProfile[name] = std::make_pair(std::atoi(value.c_str()), settings.speedProfile.size() );
-        }
-    } catch(std::exception& e) {
-        ERR("caught: " << e.what() );
-    }
 
     /*** Setup Scripting Environment ***/
 
@@ -207,7 +122,10 @@ int main (int argc, char *argv[]) {
 
     // Add our function to the state's global scope
     luabind::module(myLuaState) [
-      luabind::def("print", LUA_print<std::string>)
+      luabind::def("print", LUA_print<std::string>),
+      luabind::def("parseMaxspeed", parseMaxspeed),
+      luabind::def("durationIsValid", durationIsValid),
+      luabind::def("parseDuration", parseDuration)
     ];
 
     if(0 != luaL_dostring(
@@ -233,13 +151,35 @@ int main (int argc, char *argv[]) {
           .def_readwrite("traffic_light", &ImportNode::trafficLight)
           .def_readwrite("tags", &ImportNode::keyVals)
     ];
+
+    luabind::module(myLuaState) [
+      luabind::class_<_Way>("Way")
+          .def(luabind::constructor<>())
+          .def_readwrite("name", &_Way::name)
+          .def_readwrite("speed", &_Way::speed)
+          .def_readwrite("type", &_Way::type)
+          .def_readwrite("access", &_Way::access)
+          .def_readwrite("roundabout", &_Way::roundabout)
+          .def_readwrite("is_duration_set", &_Way::isDurationSet)
+          .def_readwrite("is_access_restricted", &_Way::isAccessRestricted)
+          .def_readwrite("ignore_in_grid", &_Way::ignoreInGrid)
+          .def_readwrite("tags", &_Way::keyVals)
+          .def_readwrite("direction", &_Way::direction)
+          .enum_("constants")
+          [
+           luabind::value("notSure", 0),
+           luabind::value("oneway", 1),
+           luabind::value("bidirectional", 2),
+           luabind::value("opposite", 3)
+          ]
+    ];
     // Now call our function in a lua script
     if(0 != luaL_dofile(myLuaState, "profile.lua")) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
 
-    //open string library;
-    luaopen_string(myLuaState);
+    //open utility libraries string library;
+    luaL_openlibs(myLuaState);
 
     /*** End of Scripting Environment Setup; ***/
 
@@ -260,7 +200,7 @@ int main (int argc, char *argv[]) {
     ExtractionContainers externalMemory;
 
     stringMap[""] = 0;
-    extractCallBacks = new ExtractorCallbacks(&externalMemory, settings, &stringMap);
+    extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
     BaseParser<_Node, _RawRestrictionContainer, _Way> * parser;
     if(isPBF) {
         parser = new PBFParser(argv[1]);
@@ -274,7 +214,7 @@ int main (int argc, char *argv[]) {
         INFO("Parser not initialized!");
     parser->Parse();
 
-    externalMemory.PrepareData(settings, outputFileName, restrictionsFileName, amountOfRAM);
+    externalMemory.PrepareData(outputFileName, restrictionsFileName, amountOfRAM);
 
     stringMap.clear();
     delete parser;
@@ -289,7 +229,6 @@ bool nodeFunction(_Node n) {
     extractCallBacks->nodeFunction(n);
     return true;
 }
-
 bool restrictionFunction(_RawRestrictionContainer r) {
     extractCallBacks->restrictionFunction(r);
     ++globalRestrictionCounter;

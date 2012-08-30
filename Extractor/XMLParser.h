@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef XMLPARSER_H_
 #define XMLPARSER_H_
 
+#include <boost/ref.hpp>
 #include <libxml/xmlreader.h>
 
 #include "../typedefs.h"
@@ -65,15 +66,49 @@ public:
 
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
                 _Node n = _ReadXMLNode(  );
-                if(!(*nodeCallback)(n))
-                    std::cerr << "[XMLParser] node not parsed" << std::endl;
+                /** Pass the unpacked node to the LUA call back **/
+                int ret = -1;
+                try {
+                    ret = luabind::call_function<int>(
+                            myLuaState,
+                            "node_function",
+                            boost::ref(n)
+                    );
+                    if(!(*nodeCallback)(n))
+                        std::cerr << "[XMLParser] dense node not parsed" << std::endl;
+                } catch (const luabind::error &er) {
+                    cerr << er.what() << endl;
+                    lua_State* Ler=er.state();
+                    report_errors(Ler, -1);
+                }
+                catch (...) {
+                    ERR("Unknown error occurred during PBF dense node parsing!");
+                }
             }
 
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
                 string name;
                 _Way way = _ReadXMLWay( );
-                if(!(*wayCallback)(way)) {
-                    std::cerr << "[XMLParser] way not parsed" << std::endl;
+
+                /** Pass the unpacked way to the LUA call back **/
+                int ret = -1;
+                try {
+                    ret = luabind::call_function<int>(
+                            myLuaState,
+                            "way_function",
+                            boost::ref(way),
+                            way.path.size()
+                    );
+                    if(!(*wayCallback)(way)) {
+                        std::cerr << "[PBFParser] way not parsed" << std::endl;
+                    }
+                } catch (const luabind::error &er) {
+                    cerr << er.what() << endl;
+                    lua_State* Ler=er.state();
+                    report_errors(Ler, -1);
+                }
+                catch (...) {
+                    cerr<<"Unknown error!"<<endl;
                 }
             }
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
@@ -157,12 +192,6 @@ private:
 
     _Way _ReadXMLWay( ) {
         _Way way;
-        way.direction = _Way::notSure;
-        way.speed = -1;
-        way.type = -1;
-        way.useful = false;
-        way.access = true;
-        //    cout << "new way" << endl;
         if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
             const int depth = xmlTextReaderDepth( inputReader );
             while ( xmlTextReaderRead( inputReader ) == 1 ) {

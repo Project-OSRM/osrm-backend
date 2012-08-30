@@ -33,20 +33,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class ExtractorCallbacks{
 private:
-    Settings settings;
     StringMap * stringMap;
     ExtractionContainers * externalMemory;
 
-    struct DurationContainer {
-        int hours;
-        int minutes;
-    };
-
-    bool checkForValidTiming(const std::string &s, DurationContainer & duration);
-    inline int parseMaxspeed(std::string input) const;
     ExtractorCallbacks();
 public:
-    explicit ExtractorCallbacks(ExtractionContainers * ext, Settings set, StringMap * strMap);
+    explicit ExtractorCallbacks(ExtractionContainers * ext, StringMap * strMap);
 
     ~ExtractorCallbacks();
 
