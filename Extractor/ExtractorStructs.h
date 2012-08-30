@@ -62,7 +62,6 @@ struct _Way {
     std::string name;
     double speed;
     short type;
-//    bool useful;
     bool access;
     bool roundabout;
     bool isDurationSet;
