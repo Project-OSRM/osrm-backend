@@ -134,7 +134,8 @@ OSRM.Localization["en"] = {
 // do not translate below this line
 "GUI_LEGAL_NOTICE": "Routing by <a href='http://project-osrm.org/'>Project OSRM</a> - Geocoder by <a href='http://wiki.openstreetmap.org/wiki/Nominatim/'>Nominatim</a> - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a>",
 "GUI_DATA_TIMESTAMP": "data: ",
-"GUI_VERSION": "gui: "
+"GUI_VERSION": "gui: ",
+"QR": "QR"
 };
 
 // set GUI language on load
