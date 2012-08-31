@@ -4,7 +4,7 @@ bollards_whitelist = { [""] = true, ["cattle_grid"] = true, ["border_control"] =
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags = { "motor_vehicle", "vehicle" }
+access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true, ["pier"] = true }
 
@@ -39,16 +39,20 @@ function node_function (node)
   local access = node.tags:Find ("access")
   local traffic_signal = node.tags:Find("highway")
   
+  --flag node if it carries a traffic light
+  
   if traffic_signal == "traffic_signals" then
 	node.traffic_light = true;
   end
   
+  --flag node as unpassable if it black listed as unpassable
   if access_tag_blacklist[barrier] then
 	node.bollard = true;
   end
   
-  if not bollards_whitelist[barrier] and not access_tag_whitelist[barrier] then
-	node.bollard = true;
+  --reverse the previous flag if there is an access tag specifying entrance
+  if node.bollard and not bollards_whitelist[barrier] and not access_tag_whitelist[barrier] then
+	node.bollard = false;
   end
   return 1
 end
