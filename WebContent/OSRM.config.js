@@ -24,16 +24,6 @@ OSRM.DEFAULTS = {
 			timestamp: 'http://router.project-osrm.org/timestamp',
 			metric: 0,
 			label: 'ENGINE_0',
-		},
-		{	url: 'http://mapa.ump.waw.pl/ump-www/viaroute',
-			timestamp: 'http://mapa.ump.waw.pl/ump-www/timestamp',
-			metric: 0,
-			label: 'ENGINE_1',
-		},
-		{	url: 'http://mapa.ump.waw.pl/ump-www/rower/viaroute',
-			timestamp: 'http://mapa.ump.waw.pl/ump-www/rower/timestamp',
-			metric: 0,
-			label: 'ENGINE_2',
 		}
 	],
 	
