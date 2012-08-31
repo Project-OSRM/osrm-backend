@@ -65,7 +65,7 @@ public:
                 continue;
 
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
-                _Node n = _ReadXMLNode(  );
+                ImportNode n = _ReadXMLNode(  );
                 /** Pass the unpacked node to the LUA call back **/
                 int ret = -1;
                 try {
@@ -76,13 +76,17 @@ public:
                     );
                     if(!(*nodeCallback)(n))
                         std::cerr << "[XMLParser] dense node not parsed" << std::endl;
+
                 } catch (const luabind::error &er) {
                     cerr << er.what() << endl;
                     lua_State* Ler=er.state();
                     report_errors(Ler, -1);
+                } catch (std::exception & e) {
+                    ERR("LUA: " << e.what());
                 }
+
                 catch (...) {
-                    ERR("Unknown error occurred during PBF dense node parsing!");
+                    ERR("Unknown error occurred during XML dense node parsing!");
                 }
             }
 
@@ -240,8 +244,8 @@ private:
         return way;
     }
 
-    _Node _ReadXMLNode( ) {
-        _Node node;
+    ImportNode _ReadXMLNode( ) {
+        ImportNode node;
 
         xmlChar* attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "lat" );
         if ( attribute != NULL ) {
@@ -280,39 +284,17 @@ private:
                     continue;
                 }
 
-                bool accessYes = false;
                 if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
                     xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
                     xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
                     if ( k != NULL && value != NULL ) {
-                        if ( xmlStrEqual( k, ( const xmlChar* ) "access" ) == 1 ) {
-                            if ( xmlStrEqual( value, ( const xmlChar* ) "yes" ) == 1 ){
-                                accessYes = true;
-                            }
-                        }
-                        if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
-                            if ( xmlStrEqual( value, ( const xmlChar* ) "traffic_signals" ) == 1 ){
-                                node.trafficLight = true;
-                            }
-                        }
-                        if ( xmlStrEqual( k, ( const xmlChar* ) "barrier" ) == 1 ) {
-                            if (!accessYes && xmlStrEqual( value, ( const xmlChar* ) "" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "border_control" ) != 1  && xmlStrEqual( value, ( const xmlChar* ) "cattle_grid" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "toll_booth" ) != 1 && xmlStrEqual( value, ( const xmlChar* ) "no" ) != 1){
-                                node.bollard = true;
-                            }
-                        }
-                        if ( xmlStrEqual( k, ( const xmlChar* ) "highway" ) == 1 ) {
-                            if ( xmlStrEqual( value, ( const xmlChar* ) "traffic_lights" ) == 1 ){
-                                node.trafficLight = true;
-                            }
-                        }
+                        node.keyVals.Add(std::string( (char *) k ), std::string( (char *) value));
                     }
                     if ( k != NULL )
                         xmlFree( k );
                     if ( value != NULL )
                         xmlFree( value );
                 }
-                if(accessYes)
-                    node.bollard = false;
 
                 xmlFree( childName );
             }
