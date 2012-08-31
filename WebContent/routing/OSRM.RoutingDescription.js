@@ -68,7 +68,7 @@ showRouteLink_TimeOut: function(){
 showQRCode: function(response){
 	if( OSRM.G.qrcodewindow )
 		OSRM.G.qrcodewindow.close();	
-	OSRM.G.qrcodewindow = window.open( OSRM.RoutingDescription.QR_DIRECTORY+"qrcodes.html","","width=280,height=240,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=no,status=no,toolbar=no,resizable=no");
+	OSRM.G.qrcodewindow = window.open( OSRM.RoutingDescription.QR_DIRECTORY+"qrcodes.html","","width=280,height=250,left=100,top=100,dependent=yes,location=no,menubar=no,scrollbars=no,status=no,toolbar=no,resizable=no");
 },
 
 // handling of routing description
