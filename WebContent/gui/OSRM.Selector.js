@@ -68,20 +68,52 @@ selectorChange: function(id, value) {
 // replace selector options with new names
 selectorRenameOptions: function(id, options) {
 	var select = document.getElementById(id);
-	var select_options = select.getElementsByTagName("option");
 	var styledSelect = document.getElementById("styled-select-"+id);
-	
-	// fill dropdown menu with new option names
-	for(var i = 0; i < select_options.length; i++) {
-		select_options[i].childNodes[0].nodeValue = options[i].display;
+
+	// create new dropdown menu
+	var new_select = document.createElement("select");
+	new_select.id = id;
+	new_select.className = select.className;
+	new_select.onchange = select.onchange;	
 		
-		if(select_options[i].selected == true)
-			styledSelect.childNodes[0].nodeValue = options[i].display;
+	// fill new dropdown menu
+	var selected_display = "";
+	for(var i=0, size=options.length; i<size; i++) {
+		var option=document.createElement("option");
+		option.innerHTML = options[i].display;
+		option.value = options[i].value;
+		new_select.appendChild(option);
+		
+		if( options[i].value == select.value )
+			selected_display = options[i].display;		
 	}
+	new_select.value = select.value;
 	
-	// resize visible dropdown menu as needed
-	styledSelect.style.width = (select.offsetWidth-2)+"px";
-	styledSelect.style.height = (select.offsetHeight)+"px";	// clientHeight gives the height of the opened dropbox!	
+	// switch old with new dropdown menu
+	select.parentNode.insertBefore(new_select, select);
+	select.parentNode.removeChild(select);
+	
+	// change styled dropdown menu size & language
+	styledSelect.childNodes[0].nodeValue = selected_display;
+	styledSelect.style.width = (new_select.offsetWidth-2)+"px";
+	styledSelect.style.height = (new_select.offsetHeight)+"px";
+	
+//	// old variant without creating a new dropdown menu (works in current browsers, but not in older FF or IE)
+//	var select = document.getElementById(id);
+//	var select_options = select.getElementsByTagName("option");
+//	var styledSelect = document.getElementById("styled-select-"+id);
+//	
+//	// fill dropdown menu with new option names
+//	for(var i = 0; i < select_options.length; i++) {
+//		select_options[i].childNodes[0].nodeValue = options[i].display;
+//		
+//		if(select_options[i].selected == true)
+//			styledSelect.childNodes[0].nodeValue = options[i].display;
+//	}
+//	
+//	// resize visible dropdown menu as needed
+//	styledSelect.style.width = (select.offsetWidth-2)+"px";
+//	styledSelect.style.height = (select.offsetHeight)+"px";	// clientHeight gives the height of the opened dropbox!	
 }
 
 });
