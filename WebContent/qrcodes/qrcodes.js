@@ -42,7 +42,7 @@ function createQRCode(text) {
 	var qrsize = qrcode.getModuleCount();
 		
 	// HTML5 capable browsers
-	if(!window.opener.OSRM.Browser.IE6_8) {
+	if( window.opener.OSRM.Browser.IE6_8 == -1 ) {
 		// fill canvas		
 		var canvas = document.createElement("canvas");
 		canvas.setAttribute('height', dotsize*qrsize );
