@@ -119,6 +119,7 @@ if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None a
 	env.Append(CCFLAGS = ['-march=native'])
 
 env.ParseConfig('pkg-config --cflags --libs luabind')
+env.ParseConfig('pkg-config --cflags --libs luajit')
 
 if not conf.CheckHeader('omp.h'):
 	print "Compiler does not support OpenMP. Exiting"
