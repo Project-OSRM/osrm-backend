@@ -44,6 +44,7 @@ init: function() {
 			tile_servers[i].options.attribution = tile_servers[i].attribution; 
 			base_maps[ tile_servers[i].display_name ] = new L.TileLayer( tile_servers[i].url, tile_servers[i].options );
 		}
+		L.Util.stamp( base_maps[ tile_servers[i].display_name ] );			// stamp tile servers so that their order is correct in layers control
 	}
 
 	// setup map
