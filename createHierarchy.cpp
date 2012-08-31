@@ -44,7 +44,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Contractor/EdgeBasedGraphFactory.h"
 #include "DataStructures/BinaryHeap.h"
 #include "DataStructures/DeallocatingVector.h"
-//#include "Extractor/ExtractorStructs.h"
 #include "DataStructures/NNGrid.h"
 #include "DataStructures/QueryEdge.h"
 #include "Util/BaseConfiguration.h"
