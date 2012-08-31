@@ -22,7 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 /* page setup */
 body
 {
-	margin: 10;
+	margin: 10px;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -36,6 +36,13 @@ body
 {
 	margin-top:10px;
 	text-align:center;
+}
+
+/* qrcode image for modern browsers */
+#qrcode
+{
+	display:block;
+	margin: 0px auto;
 }
 
 /* qrcode table for IE8 */
