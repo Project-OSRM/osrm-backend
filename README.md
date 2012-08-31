@@ -10,8 +10,7 @@ A deployed version of the the web frontend can be seen at [(3)].
 Setup
 -----
 The frontend should work directly as provided.
-Several settings - including the URL for the routing server and the geocoder server - can be specified in `OSRM.config.js`.
-Different tile servers can be specified in `OSRM.Map.js`.
+Settings - including URLs of the routing server, geocoder server and tile servers - are specified in `OSRM.config.js`.
 Note that the URL shortener used for generating route links only works with URLs pointing to the official Project-OSRM website.
 
 
