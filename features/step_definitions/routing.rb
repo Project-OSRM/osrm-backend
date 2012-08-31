@@ -231,7 +231,32 @@ When /^I route I should get$/ do |table|
         end
       end
       
-      if row != got
+      ok = true
+      row.keys.each do |key|
+        if row[key].match /(.*)\s+~(.+)%$/
+          margin = 1 - $2.to_f*0.01
+          from = $1.to_f*margin
+          to = $1.to_f/margin
+          if (from..to).cover? got[key].to_f
+            got[key] = row[key]
+          else
+            ok = false
+          end
+        elsif row[key].match /(.*)\s+\+\-(.+)$/
+            margin = $2.to_f
+            from = $1.to_f-margin
+            to = $1.to_f+margin
+            if (from..to).cover? got[key].to_f
+              got[key] = row[key]
+            else
+              ok = false
+            end
+        else
+          ok = row[key] == got[key].to_f
+        end
+      end
+      
+      unless ok
         failed = { :attempt => 'route', :query => @query, :response => response }
         log_fail row,got,[failed]
       end

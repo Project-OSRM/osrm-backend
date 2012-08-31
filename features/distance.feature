@@ -145,6 +145,23 @@ Feature: Distance calculation
 		 | x    | w  | xw    | 3610     |
 		 | x    | y  | xy    | 3160     |
 
+	Scenario: 1-10m distances
+		Given a grid size of 2 meters
+		Given the node map
+		 | a | b | c | d | e | f |
+
+		And the ways
+		 | nodes  |
+		 | abcdee |
+
+		When I route I should get
+		 | from | to | route  | distance |
+		 | a    | b  | abcedf | 2        |
+		 | a    | c  | abcedf | 4        |
+		 | a    | d  | abcedf | 6        |
+		 | a    | e  | abcedf | 8        |
+		 | a    | f  | abcedf | 10        |
+
 	Scenario: 1m distances
 		Given a grid size of 1 meters
 		Given the node map
@@ -213,13 +230,13 @@ Feature: Distance calculation
 		 | abc   |
 
 		When I route I should get
-		 | from | to | route | distance |
-		 | a    | b  | abc   | 1000     |
-		 | b    | a  | abc   | 1000     |
-		 | b    | c  | abc   | 1000     |
-		 | c    | b  | abc   | 1000     |
-		 | a    | c  | abc   | 2000     |
-		 | c    | a  | abc   | 2000     |
+		 | from | to | route | distance   |
+		 | a    | b  | abc   | 1000 ~0.01% |
+		 | b    | a  | abc   | 1000 ~0.01% |
+		 | b    | c  | abc   | 1000 ~0.01% |
+		 | c    | b  | abc   | 1000 ~0.01% |
+		 | a    | c  | abc   | 2000 ~0.01% |
+		 | c    | a  | abc   | 2000 ~0.01% |
 
 	Scenario: 10km distances
 		Given a grid size of 10000 meters
@@ -232,13 +249,13 @@ Feature: Distance calculation
 		 | abc   |
 
 		When I route I should get
-		 | from | to | route | distance |
-		 | a    | b  | abc   | 10000    |
-		 | b    | a  | abc   | 10000    |
-		 | b    | c  | abc   | 10000    |
-		 | c    | b  | abc   | 10000    |
-		 | a    | c  | abc   | 20000    |
-		 | c    | a  | abc   | 20000    |
+		 | from | to | route | distance     |
+		 | a    | b  | abc   | 10000  ~0.01% |
+		 | b    | a  | abc   | 10000  ~0.01% |
+		 | b    | c  | abc   | 10000  ~0.01% |
+		 | c    | b  | abc   | 10000  ~0.01% |
+		 | a    | c  | abc   | 20000  ~0.01% |
+		 | c    | a  | abc   | 20000  ~0.01% |
 
 	Scenario: 100km distances
 		Given a grid size of 100000 meters
@@ -251,33 +268,14 @@ Feature: Distance calculation
 		 | abc   |
 
 		When I route I should get
-		 | from | to | route | distance |
-		 | a    | b  | abc   | 100000   |
-		 | b    | a  | abc   | 100000   |
-		 | b    | c  | abc   | 100000   |
-		 | c    | b  | abc   | 100000   |
-		 | a    | c  | abc   | 200000   |
-		 | c    | a  | abc   | 200000   |
+		 | from | to | route | distance      |
+		 | a    | b  | abc   | 100000  ~0.01% |
+		 | b    | a  | abc   | 100000  ~0.01% |
+		 | b    | c  | abc   | 100000  ~0.01% |
+		 | c    | b  | abc   | 100000  ~0.01% |
+		 | a    | c  | abc   | 200000  ~0.01% |
+		 | c    | a  | abc   | 200000  ~0.01% |
 
-	Scenario: 1000km distances
-		Given a grid size of 1000000 meters
-		Given the node map
-		 | a | b |
-		 |   | c |
-
-		And the ways
-		 | nodes |
-		 | abc   |
-
-		When I route I should get
-		 | from | to | route | distance |
-		 | a    | b  | abc   | 1000000  |
-		 | b    | a  | abc   | 1000000  |
-		 | b    | c  | abc   | 1000000  |
-		 | c    | b  | abc   | 1000000  |
-		 | a    | c  | abc   | 2000000  |
-		 | c    | a  | abc   | 2000000  |
-		
 	Scenario: Angles at 1000km scale
 		Given a grid size of 1000 meters
 		Given the node map
