@@ -76,17 +76,14 @@ public:
                     );
                     if(!(*nodeCallback)(n))
                         std::cerr << "[XMLParser] dense node not parsed" << std::endl;
-
                 } catch (const luabind::error &er) {
                     cerr << er.what() << endl;
                     lua_State* Ler=er.state();
                     report_errors(Ler, -1);
                 } catch (std::exception & e) {
-                    ERR("LUA: " << e.what());
-                }
-
-                catch (...) {
-                    ERR("Unknown error occurred during XML dense node parsing!");
+                    ERR(e.what());
+                } catch (...) {
+                    ERR("Unknown error occurred during XML node parsing!");
                 }
             }
 
@@ -110,9 +107,10 @@ public:
                     cerr << er.what() << endl;
                     lua_State* Ler=er.state();
                     report_errors(Ler, -1);
-                }
-                catch (...) {
-                    cerr<<"Unknown error!"<<endl;
+                } catch (std::exception & e) {
+                    ERR(e.what());
+                } catch (...) {
+                    ERR("Unknown error occurred during XML way parsing!");
                 }
             }
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
