@@ -109,6 +109,7 @@ _click: function(button_id) {
 	OSRM.RoutingGeometry.show(the_response);
 	OSRM.RoutingNoNames.show(the_response);
 	OSRM.RoutingDescription.show(the_response);
+	OSRM.G.markers.highlight.hide();
 },
 _mouseover: function(button_id) {
 	if( OSRM.G.active_alternative == button_id )
