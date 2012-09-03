@@ -35,6 +35,14 @@ uninit: function() {
 },
 
 // route description events
+onMouseOverRouteDescription: function(lat, lng) {
+	OSRM.G.markers.hover.setPosition( new L.LatLng(lat, lng) );
+	OSRM.G.markers.hover.show();
+
+},
+onMouseOutRouteDescription: function(lat, lng) {
+	OSRM.G.markers.hover.hide();	
+},
 onClickRouteDescription: function(lat, lng) {
 	OSRM.G.markers.highlight.setPosition( new L.LatLng(lat, lng) );
 	OSRM.G.markers.highlight.show();
@@ -104,7 +112,10 @@ show: function(response) {
 		
 		body += '<td class="description-body-items">';
 		var pos = positions[response.route_instructions[i][3]];
-		body += '<div class="description-body-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')">';
+		body += '<div id="description-'+i+'" class="description-body-item" ' +
+			'onclick="OSRM.RoutingDescription.onClickRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')" ' +
+			'onmouseover="OSRM.RoutingDescription.onMouseOverRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')" ' +
+			'onmouseout="OSRM.RoutingDescription.onMouseOutRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')">';
 
 		// build route description
 		if( response.route_instructions[i][1] != "" )
