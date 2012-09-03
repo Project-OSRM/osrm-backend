@@ -103,7 +103,32 @@ OSRM.Localization["es"] = {
 "DIRECTION_11-8":"En la rotonda, tome la octava salida[ en dirección <b>%s</b>]",
 "DIRECTION_11-9":"En la rotonda, tome la novena salida[ en dirección <b>%s</b>]",
 "DIRECTION_11-x":"En la rotonda, tome una de sus muchas salidas [ en dirección <b>%s</b>]",
-"DIRECTION_15":"Ha llegado a su destino"
+"DIRECTION_15":"Ha llegado a su destino",
+// notifications
+"NOTIFICATION_MAINTENANCE_HEADER":	"Mantenimiento programado",
+"NOTIFICATION_MAINTENANCE_BODY":	"La web de OSRM está desactivada debido a una interrupción de mantenimiento programado. " + 
+									"Sea paciente mientra se realizan las actualizaciones requeridas. " +
+									"La web volverá a estar online pronto." +
+									"<br/><br/>" + 
+									"Mientras, quizá quiera salir y mapear un barrio cercano..." + 
+									"<br/><br/><br/>[OSRM]",
+"NOTIFICATION_LOCALIZATION_HEADER":	"¿Lo sabía? Puede cambiar el idioma de la web.",
+"NOTIFICATION_LOCALIZATION_BODY":	"Use el menú desplegable en la esquina superior izquierda para seleccionar su idioma favorito. " +
+									"<br/><br/>" +
+									"No desespere si no encuentre el idioma que busca. " +
+									"Si lo desea, ¡puede ayudar proporcionando traducciones adicionales! " +
+									"Visite <a href='https://github.com/DennisSchiefer/Project-OSRM-Web'>esta página</a> para más detalles.",
+"NOTIFICATION_CLICKING_HEADER":		"¿Lo sabía? Puede hacer click en el mapa para añadir los marcadores de ruta.",
+"NOTIFICATION_CLICKING_BODY":		"Puede hacer click en el mapa con el botón izquierdo del ratón para añadir el marcador origen (verde) o el destino (rojo) " +
+									"si el marcador origen ya existe. " +
+									"La dirección de la posición seleccionada se mostrará en los campos de texto de la izquierda. " + 
+									"<br/><br/>" +
+									"Puede borrar un marcador haciendo click de nuevo en él con el botón izquierdo del ratón.",
+"NOTIFICATION_DRAGGING_HEADER":		"¿Lo sabía? Puede arrastrar los marcadores por el mapa.",
+"NOTIFICATION_DRAGGING_BODY":		"Puede arrastrar un marcador haciendo clic en él con el botón izquierdo del ratón y manteniéndolo pulsado. " +
+									"A continuación mueva el ratón por el mapa y la ruta se actualizará instantáneamente. " +
+									"<br/><br/>" +
+									"¡Puede incluso crear marcadores intermedios arrastrando un punto de la ruta! "
 };
 
 // set GUI language on load
