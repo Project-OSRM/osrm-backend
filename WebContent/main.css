@@ -393,11 +393,16 @@ html, body
 .description-body-item
 {
 	cursor:pointer;
-	color:#000000
+	color:#000000;
 }
 .description-body-item:hover
 {
-	color:#ff0000
+	color:#ff0000;
+}
+.description-body-item-selected
+{
+	cursor:pointer;
+	color:#ff00ff;
 }
 
 /* ------------------------------------------------------------------------ */
