@@ -29,6 +29,20 @@ Given /^the node map$/ do |table|
   end
 end
 
+Given /^the node locations$/ do |table|
+  table.hashes.each do |row|
+    name = row['node']
+    raise "*** node invalid name '#{name}', must be single characters" unless name.size == 1
+    raise "*** invalid node name '#{name}', must me alphanumeric" unless name.match /[a-z0-9]/
+    raise "*** duplicate node '#{name}'" if name_node_hash[name]
+    node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, row['lon'].to_f, row['lat'].to_f 
+    node << { :name => name }
+    node.uid = OSM_UID
+    osm_db << node
+    name_node_hash[name] = node
+  end
+end
+
 Given /^the nodes$/ do |table|
   table.hashes.each do |row|
     name = row.delete 'node'
