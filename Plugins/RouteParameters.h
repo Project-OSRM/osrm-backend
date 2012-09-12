@@ -69,7 +69,8 @@ struct RouteParameters {
     }
 
     void addHint(const std::string & s) {
-        hints.push_back(s);
+        hints.resize(coordinates.size());
+        hints.back() = s;
     }
 
     void setLanguage(const std::string & s) {
