@@ -16,7 +16,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 */
 
 // OSRM localization
-// [English language support]
+// [Turkish language support]
 
 
 OSRM.Localization["tr"] = {
@@ -69,41 +69,66 @@ OSRM.Localization["tr"] = {
 "OVERVIEW_MAP": "Haritaya genel bakış",
 "NO_ROUTE_SELECTED": "Hiç rota seçilmedi",
 // routing engines
-"ENGINE_0": "Araba (hızlı)",
+"ENGINE_0": "Araba (en hızlı)",
 // directions
-"N": "north",
-"E": "east",
-"S": "south",
-"W": "west",
-"NE": "northeast",
-"SE": "southeast",
-"SW": "southwest",
-"NW": "northwest",
+"N": "kuzey",
+"E": "doğu",
+"S": "güney",
+"W": "batı",
+"NE": "kuzeydoğu",
+"SE": "güneydoğu",
+"SW": "güneybatı",
+"NW": "kuzeybatı",
 // driving directions
 // %s: road name
 // %d: direction
 // [*]: will only be printed when there actually is a road name
-"DIRECTION_0":"Unknown instruction[ onto <b>%s</b>]",
-"DIRECTION_1":"Continue[ onto <b>%s</b>]",
-"DIRECTION_2":"Turn slight right[ onto <b>%s</b>]",
-"DIRECTION_3":"Turn right[ onto <b>%s</b>]",
-"DIRECTION_4":"Turn sharp right[ onto <b>%s</b>]",
-"DIRECTION_5":"U-Turn[ onto <b>%s</b>]",
-"DIRECTION_6":"Turn sharp left[ onto <b>%s</b>]",
-"DIRECTION_7":"Turn left[ onto <b>%s</b>]",
-"DIRECTION_8":"Turn slight left[ onto <b>%s</b>]",
-"DIRECTION_10":"Head <b>%d</b>[ onto <b>%s</b>]",
-"DIRECTION_11-1":"Enter roundabout and leave at first exit[ onto <b>%s</b>]",
-"DIRECTION_11-2":"Enter roundabout and leave at second exit[ onto <b>%s</b>]",
-"DIRECTION_11-3":"Enter roundabout and leave at third exit[ onto <b>%s</b>]",
-"DIRECTION_11-4":"Enter roundabout and leave at fourth exit[ onto <b>%s</b>]",
-"DIRECTION_11-5":"Enter roundabout and leave at fifth exit[ onto <b>%s</b>]",
-"DIRECTION_11-6":"Enter roundabout and leave at sixth exit[ onto <b>%s</b>]",
-"DIRECTION_11-7":"Enter roundabout and leave at seventh exit[ onto <b>%s</b>]",
-"DIRECTION_11-8":"Enter roundabout and leave at eighth exit[ onto <b>%s</b>]",
-"DIRECTION_11-9":"Enter roundabout and leave at nineth exit[ onto <b>%s</b>]",
-"DIRECTION_11-x":"Enter roundabout and leave at one of the too many exits[ onto <b>%s</b>]",
-"DIRECTION_15":"Hedefinize ulaştınız"
+"DIRECTION_0":"Bilinmeyen açıklama[ onto <b>%s</b>]",
+"DIRECTION_1":"Devam[ onto <b>%s</b>]",
+"DIRECTION_2":"Hafif sağa dönün[ onto <b>%s</b>]",
+"DIRECTION_3":"Sağa dönün[ onto <b>%s</b>]",
+"DIRECTION_4":"Sağa keskin dönün[ onto <b>%s</b>]",
+"DIRECTION_5":"U-Dönüşü[ onto <b>%s</b>]",
+"DIRECTION_6":"Sola keskin dönün[ onto <b>%s</b>]",
+"DIRECTION_7":"Sola dönün[ onto <b>%s</b>]",
+"DIRECTION_8":"Hafif sola dönün[ onto <b>%s</b>]",
+"DIRECTION_10":"Yön <b>%d</b>[ onto <b>%s</b>]",
+"DIRECTION_11-1":"Kavşağa girin ve ilk çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-2":"Kavşağa girin ve ikinci çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-3":"Kavşağa girin ve üçüncü çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-4":"Kavşağa girin ve dördüncü çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-5":"Kavşağa girin ve beşinci çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-6":"Kavşağa girin ve altıncı çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-7":"Kavşağa girin ve yedinci çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-8":"Kavşağa girin ve sekizinci çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-9":"Kavşağa girin ve dokuzuncu çıkıştan çıkın[ onto <b>%s</b>]",
+"DIRECTION_11-x":"Kavşağa girin ve birçok çıkışın birinden çıkın[ onto <b>%s</b>]",
+"DIRECTION_15":"Hedefinize ulaştınız",
+// notifications
+"NOTIFICATION_MAINTENANCE_HEADER":	"Programlı Bakım",
+"NOTIFICATION_MAINTENANCE_BODY":	"OSRM Web sayfası planlı bakımla yazılmıştır. " + 
+									"Lütfen güncellenmeler yapılırken sabırlı olun. " +
+									"Site kısa bir süre sonra çevrimiçi olacaktır." +
+									"<br/><br/>" + 
+									"Aynı zamanda dışarıya çıkıp komşunuzu haritalamayı isteyebilirsiniz..." + 
+									"<br/><br/><br/>[OSRM]",
+"NOTIFICATION_LOCALIZATION_HEADER":	"Biliyor muydunuz? Dil görünümünü değiştirebilirsiniz.",
+"NOTIFICATION_LOCALIZATION_BODY":	"Favori dilinizi seçmek için üst sol köşedeki aşağı açılna menüye tıklayabilirsiniz. " +
+									"<br/><br/>" +
+									"İstediğiniz dili bulamazsanız umutsuzluğa düşmeyin. " +
+									"Eğer isterseniz, fazladan çeviriler elde etmek için yardım edebilirsiniz! " +
+									"Ziyaret edin <a href='https://github.com/DennisSchiefer/Project-OSRM-Web'>here</a> daha fazla bilgi için.",
+"NOTIFICATION_CLICKING_HEADER":		"Biliyor muydunuz? Rota işaretleyicilerini ayarlamak için haritaya tıklayabilirsiniz.",
+"NOTIFICATION_CLICKING_BODY":		"İşaretleyici kaynağını (yeşil) yada hedef işaretleyici (kırmızı)ayarlamak için farenin sol tarafıyla haritanın üzerine tıklayabilirsiniz. " +
+									"Eğer kaynak işaretleyici zaten varsa. " +
+									"Seçilen bölgenin adresi sola doğru kutularda gözükecek. " + 
+									"<br/><br/>" +
+									"Farenin sol tarafına tıklayarak işaretleyiciyi silebilirsiniz.",
+"NOTIFICATION_DRAGGING_HEADER":		"Biliyor muydunuz? Rota işaretleyicisini harita üzerinde sürükleyebilirsiniz.",
+"NOTIFICATION_DRAGGING_BODY":		"İşaretleyiciyi farenin sol tarafına tıklayarak veya basılı tutarak sürükleyebilirsiniz. " +
+									"Sonra işaretleyiciyi haritanın çevresinde hareket ettirebilirsiniz ve rota kendini otomatik olarak yeniler. " +
+									"<br/><br/>" +
+									"Asıl rotalarına sürükleyerek orta dereceli bir işaretleyici oluşturabilirsiniz ! "
 };
 
 // set GUI language on load

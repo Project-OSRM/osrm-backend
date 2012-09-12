@@ -18,5 +18,6 @@ Barboska
 miszka999
 Konstantin Delchev
 Fumito Mizuno
-Necdet Varoglu
-Madalina Ionescu
+Necdet Varoglu (OSM-Comenius Project)
+Madalina Ionescu (OSM-Comenius Project)
+Luis Costa (OSM-Comenius Project)
