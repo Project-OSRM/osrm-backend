@@ -56,7 +56,7 @@ struct RouteParameters {
         printInstructions = b;
     }
 
-    void printService( const std::string & s) {
+    void setService( const std::string & s) {
         service = s;
     }
 
