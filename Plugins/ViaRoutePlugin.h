@@ -74,37 +74,21 @@ public:
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
-        if( 2 > routeParameters.viaPoints.size() ) {
+        if( 2 > routeParameters.coordinates.size() ) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
 
-        unsigned zoomLevel = 18;
-        if(routeParameters.options.Find("z") != ""){
-            zoomLevel = atoi(routeParameters.options.Find("z").c_str());
-            if(18 < zoomLevel)
-                zoomLevel = 18;
-        }
-
         RawRouteData rawRoute;
         rawRoute.checkSum = nodeHelpDesk->GetCheckSum();
-        bool checksumOK = ((unsigned)atoi(routeParameters.options.Find("checksum").c_str()) == rawRoute.checkSum);
+        bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
         std::vector<std::string> textCoord;
-        for(unsigned i = 0; i < routeParameters.viaPoints.size(); ++i) {
-            textCoord.resize(0);
-            stringSplit (routeParameters.viaPoints[i], ',', textCoord);
-            if(textCoord.size() != 2) {
+        for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
+            if(false == checkCoord(routeParameters.coordinates[i])) {
                 reply = http::Reply::stockReply(http::Reply::badRequest);
                 return;
             }
-            int vialat = static_cast<int>(100000.*atof(textCoord[0].c_str()));
-            int vialon = static_cast<int>(100000.*atof(textCoord[1].c_str()));
-            _Coordinate viaCoord(vialat, vialon);
-            if(false == checkCoord(viaCoord)) {
-                reply = http::Reply::stockReply(http::Reply::badRequest);
-                return;
-            }
-            rawRoute.rawViaNodeCoordinates.push_back(viaCoord);
+            rawRoute.rawViaNodeCoordinates.push_back(routeParameters.coordinates[i]);
         }
         std::vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
@@ -117,9 +101,8 @@ public:
                 }
             }
 //            INFO("Brute force lookup of coordinate " << i);
-            searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i], zoomLevel);
+            searchEngine->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i], routeParameters.zoomLevel);
         }
-        //unsigned distance = 0;
 
         for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
             PhantomNodes segmentPhantomNodes;
@@ -143,24 +126,18 @@ public:
 
         //TODO: Move to member as smart pointer
         BaseDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > > * desc;
-        std::string JSONParameter = routeParameters.options.Find("jsonp");
-        if("" != JSONParameter) {
-            reply.content += JSONParameter;
+        if("" != routeParameters.jsonpParameter) {
+            reply.content += routeParameters.jsonpParameter;
             reply.content += "(";
         }
 
         _DescriptorConfig descriptorConfig;
-        unsigned descriptorType = descriptorTable[routeParameters.options.Find("output")];
-        descriptorConfig.z = zoomLevel;
-        if(routeParameters.options.Find("instructions") == "false") {
-            descriptorConfig.instructions = false;
-        }
-        if(routeParameters.options.Find("geometry") == "false" ) {
-            descriptorConfig.geometry = false;
-        }
-        if("cmp" == routeParameters.options.Find("no") || "cmp6" == routeParameters.options.Find("no")  ) {
-            descriptorConfig.encodeGeometry = false;
-        }
+        unsigned descriptorType = descriptorTable[routeParameters.outputFormat];
+        descriptorConfig.z = routeParameters.zoomLevel;
+        descriptorConfig.instructions = routeParameters.printInstructions;
+        descriptorConfig.geometry = routeParameters.geometry;
+        descriptorConfig.encodeGeometry = routeParameters.compression;
+
         switch(descriptorType){
         case 0:
             desc = new JSONDescriptor<SearchEngine<QueryEdge::EdgeData, StaticGraph<QueryEdge::EdgeData> > >();
@@ -185,7 +162,7 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(reply, rawRoute, phantomNodes, *searchEngine);
-        if("" != JSONParameter) {
+        if("" != routeParameters.jsonpParameter) {
             reply.content += ")\n";
         }
         reply.headers.resize(3);
@@ -195,7 +172,7 @@ public:
         reply.headers[0].value = tmp;
         switch(descriptorType){
         case 0:
-            if("" != JSONParameter){
+            if("" != routeParameters.jsonpParameter){
                 reply.headers[1].name = "Content-Type";
                 reply.headers[1].value = "text/javascript";
                 reply.headers[2].name = "Content-Disposition";
@@ -216,7 +193,7 @@ public:
 
             break;
         default:
-            if("" != JSONParameter){
+            if("" != routeParameters.jsonpParameter){
                 reply.headers[1].name = "Content-Type";
                 reply.headers[1].value = "text/javascript";
                 reply.headers[2].name = "Content-Disposition";

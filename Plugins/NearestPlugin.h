@@ -29,7 +29,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Server/DataStructures/QueryObjectsStorage.h"
 
 #include "../DataStructures/NodeInformationHelpDesk.h"
-#include "../DataStructures/HashTable.h"
 #include "../Util/StringUtil.h"
 
 /*
@@ -47,43 +46,25 @@ public:
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
-        if(!routeParameters.viaPoints.size()) {
+        if(!routeParameters.coordinates.size()) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
-        std::vector<std::string> textCoord;
-        stringSplit (routeParameters.viaPoints[0], ',', textCoord);
-        if(textCoord.size() != 2) {
-        	reply = http::Reply::stockReply(http::Reply::badRequest);
-        	return;
-        }
-
-        int lat = 100000.*atof(textCoord[0].c_str());
-        int lon = 100000.*atof(textCoord[1].c_str());
-        _Coordinate myCoordinate(lat, lon);
-        if(false == checkCoord(myCoordinate)) {
+        if(false == checkCoord(routeParameters.coordinates[0])) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
-        }
-
-        unsigned zoomLevel = 18;
-        if(routeParameters.options.Find("z") != ""){
-            zoomLevel = atoi(routeParameters.options.Find("z").c_str());
-            if(18 < zoomLevel)
-                zoomLevel = 18;
         }
 
         //query to helpdesk
         PhantomNode result;
-        nodeHelpDesk->FindPhantomNodeForCoordinate(myCoordinate, result, zoomLevel);
+        nodeHelpDesk->FindPhantomNodeForCoordinate(routeParameters.coordinates[0], result, routeParameters.zoomLevel);
 
         std::string tmp;
         std::string JSONParameter;
         //json
 
-        JSONParameter = routeParameters.options.Find("jsonp");
-        if("" != JSONParameter) {
-            reply.content += JSONParameter;
+        if("" != routeParameters.jsonpParameter) {
+            reply.content += routeParameters.jsonpParameter;
             reply.content += "(";
         }
 
