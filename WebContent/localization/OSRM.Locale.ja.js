@@ -22,24 +22,26 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.Localization["ja"] = {
 // own language
 "CULTURE": "ja-JP",
-"LANGUAGE": "Japanese",
+"LANGUAGE": "日本人",
 // gui
-"GUI_START": "開始",
-"GUI_END": "終了",
-"GUI_RESET": "&nbsp;&nbsp;リセット&nbsp;&nbsp;",
-"GUI_ZOOM": "ルートにズーム",
-"GUI_SEARCH": "&nbsp;&nbsp;表示&nbsp;&nbsp;",
+"GUI_START": "開&nbsp;始",
+"GUI_END": "終&nbsp;了",
+"GUI_RESET": "リセット",
+"GUI_ZOOM_ON_ROUTE": "ルートにズーム",
+"GUI_ZOOM_ON_USER": "ユーザーへのズーム",
+"GUI_SEARCH": "表&nbsp;示",
 "GUI_REVERSE": "逆にする",
 "GUI_START_TOOLTIP": "出発地を入力",
 "GUI_END_TOOLTIP": "目的地を入力",
-"GUI_LEGAL_NOTICE": "GUI2 v"+OSRM.VERSION+" "+OSRM.DATE+" - OSRM hosting by <a href='http://algo2.iti.kit.edu/'>KIT</a> - Geocoder by <a href='http://www.osm.org/'>OSM</a>",
+"GUI_MAIN_WINDOW": "メインウインドウ",
+"GUI_ZOOM_IN": "拡大する",
+"GUI_ZOOM_OUT": "減らす",
 // config
 "GUI_CONFIGURATION": "設定",
 "GUI_LANGUAGE": "言語",
 "GUI_UNITS": "単位",
 "GUI_KILOMETERS": "キロメートル",
 "GUI_MILES": "マイル",
-"GUI_DATA_TIMESTAMP": "データ",
 // mapping
 "GUI_MAPPING_TOOLS": "マッピングツール",
 "GUI_HIGHLIGHT_UNNAMED_ROADS": "名前の無い道路をハイライト",
@@ -59,14 +61,16 @@ OSRM.Localization["ja"] = {
 "GENERATE_LINK_TO_ROUTE": "リンクを作成",
 "LINK_TO_ROUTE_TIMEOUT": "利用できません",
 "GPX_FILE": "GPX ファイル",
-"DISTANCE": "距離",
-"DURATION": "期間",
+"DISTANCE": "距&nbsp;離",
+"DURATION": "期&nbsp;間",
 "YOUR_ROUTE_IS_BEING_COMPUTED": "ルートを計算しています",
 "NO_ROUTE_FOUND": "ルートが見つかりませんでした",
 // printing
 "OVERVIEW_MAP": "概観図",
 "NO_ROUTE_SELECTED": "ルートが選択されていません",
-// directions
+//routing engines
+"ENGINE_0": "カー（最速）",
+// directionsVergrößern
 "N": "北",
 "E": "東",
 "S": "南",
