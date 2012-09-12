@@ -21,6 +21,7 @@ public:
 	std::string GetVersionString() const { return std::string("0.1a"); }
 
 	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
+		std::cout << "[hello world]: runnning handler" << std::endl;
 		reply.status = http::Reply::ok;
 		reply.content.append("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
 		std::stringstream content;
