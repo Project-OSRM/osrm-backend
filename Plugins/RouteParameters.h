@@ -23,14 +23,73 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <string>
 #include <vector>
-#include "../DataStructures/HashTable.h"
+
+#include <boost/fusion/sequence/intrinsic.hpp>
+
+#include "../DataStructures/Coordinate.h"
 
 struct RouteParameters {
+    RouteParameters() : zoomLevel(18), printInstructions(false), geometry(true), compression(true), checkSum(-1) {}
+    short zoomLevel;
+    bool printInstructions;
+    bool geometry;
+    bool compression;
+    int checkSum;
+    std::string service;
+    std::string outputFormat;
+    std::string jsonpParameter;
+    std::string language;
     std::vector<std::string> hints;
-    std::vector<std::string> parameters;
-    std::vector<std::string> viaPoints;
-    HashTable<std::string, std::string> options;
+    std::vector<_Coordinate> coordinates;
     typedef HashTable<std::string, std::string>::MyIterator OptionsIterator;
+
+    void setZoomLevel(const short i) {
+        if (18 > i && 0 < i)
+            zoomLevel = i;
+    }
+
+    void setChecksum(const int c) {
+        checkSum = c;
+    }
+
+    void setInstructionFlag(const bool b) {
+        printInstructions = b;
+    }
+
+    void printService( const std::string & s) {
+        service = s;
+    }
+
+    void setOutputFormat(const std::string & s) {
+        outputFormat = s;
+    }
+
+    void setJSONpParameter(const std::string & s) {
+        jsonpParameter = s;
+    }
+
+    void addHint(const std::string & s) {
+        hints.push_back(s);
+    }
+
+    void setLanguage(const std::string & s) {
+        language = s;
+    }
+
+    void setGeometryFlag(const bool b) {
+        geometry = b;
+    }
+
+    void setCompressionFlag(const bool b) {
+        compression = b;
+    }
+
+    void addCoordinate(boost::fusion::vector < double, double > arg_) {
+        int lat = 100000.*boost::fusion::at_c < 0 > (arg_);
+        int lon = 100000.*boost::fusion::at_c < 1 > (arg_);
+        _Coordinate myCoordinate(lat, lon);
+        coordinates.push_back(_Coordinate(lat, lon));
+    }
 };
 
 

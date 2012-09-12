@@ -25,16 +25,14 @@ public:
 		reply.status = http::Reply::ok;
 		reply.content.append("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
 		std::stringstream content;
-		content << "Number of parameters: " << routeParameters.parameters.size() << "<br>";
-		for(unsigned i = 0; i < routeParameters.parameters.size(); i++) {
-			content << routeParameters.parameters[i] << "<br>";
-		}
-		content << "Number Of Options: " << routeParameters.options.Size() << "<br>";
-		RouteParameters::OptionsIterator optionsIT = routeParameters.options.begin();
-		for(;optionsIT != routeParameters.options.end(); optionsIT++) {
-		    content << "param  = " << optionsIT->first  << ": ";
-		    content << "option = " << optionsIT->second << "<br>";
-		}
+        content << "Number of locations: " << routeParameters.coordinates.size() << "<br>\n";
+        for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
+            content << "  [" << i << "] " << routeParameters.coordinates[i].lat/100000. << "," << routeParameters.coordinates[i].lon/100000. << "<br>\n";
+        }
+        content << "Number of hints: " << routeParameters.hints.size() << "<br>\n";
+        for(unsigned i = 0; i < routeParameters.hints.size(); ++i) {
+            content << "  [" << i << "] " << routeParameters.hints[i] << "<br>\n";
+        }
 		reply.content.append(content.str());
 		reply.content.append("</body></html>");
 	}

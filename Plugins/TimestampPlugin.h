@@ -37,9 +37,8 @@ public:
         std::string JSONParameter;
 
         //json
-        JSONParameter = routeParameters.options.Find("jsonp");
-        if("" != JSONParameter) {
-            reply.content += JSONParameter;
+        if("" != routeParameters.jsonpParameter) {
+            reply.content += routeParameters.jsonpParameter;
             reply.content += "(";
         }
 
