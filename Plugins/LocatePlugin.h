@@ -41,21 +41,11 @@ public:
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
-        if(!routeParameters.viaPoints.size()) {
+        if(!routeParameters.coordinates.size()) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
-        std::vector<std::string> textCoord;
-        stringSplit (routeParameters.viaPoints[0], ',', textCoord);
-        if(textCoord.size() != 2) {
-            reply = http::Reply::stockReply(http::Reply::badRequest);
-            return;
-        }
-
-        int lat = 100000.*atof(textCoord[0].c_str());
-        int lon = 100000.*atof(textCoord[1].c_str());
-        _Coordinate myCoordinate(lat, lon);
-        if(false == checkCoord(myCoordinate)) {
+        if(false == checkCoord(routeParameters.coordinates[0])) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
@@ -65,15 +55,15 @@ public:
         std::string JSONParameter, tmp;
         //json
 
-        JSONParameter = routeParameters.options.Find("jsonp");
-        if("" != JSONParameter) {
+//        JSONParameter = routeParameters.options.Find("jsonp");
+        if("" != routeParameters.jsonpParameter) {
             reply.content += JSONParameter;
             reply.content += "(";
         }
         reply.status = http::Reply::ok;
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
-        if(!nodeHelpDesk->FindNearestNodeCoordForLatLon(myCoordinate, result)) {
+        if(!nodeHelpDesk->FindNearestNodeCoordForLatLon(routeParameters.coordinates[0], result)) {
             reply.content += ("\"status\":207,");
             reply.content += ("\"mapped_coordinate\":[]");
         } else {
