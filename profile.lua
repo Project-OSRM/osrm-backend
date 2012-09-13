@@ -29,8 +29,13 @@ speed_profile = {
   ["default"] = 50
 }
 
-take_minimum_of_speeds = true
-obey_oneway = true
+take_minimum_of_speeds 	= true
+obey_oneway 			= true
+obey_bollards 			= true
+use_restrictions 		= true
+ignore_areas 			= true -- future feature
+traffic_signal_penalty 	= 2
+u_turn_penalty 			= 20
 
 -- End of globals
 
@@ -45,14 +50,16 @@ function node_function (node)
 	node.traffic_light = true;
   end
   
-  --flag node as unpassable if it black listed as unpassable
-  if access_tag_blacklist[barrier] then
-	node.bollard = true;
-  end
-  
-  --reverse the previous flag if there is an access tag specifying entrance
-  if node.bollard and not bollards_whitelist[barrier] and not access_tag_whitelist[barrier] then
-	node.bollard = false;
+  if obey_bollards then
+	  --flag node as unpassable if it black listed as unpassable
+	  if access_tag_blacklist[barrier] then
+		node.bollard = true;
+	  end
+	  
+	  --reverse the previous flag if there is an access tag specifying entrance
+	  if node.bollard and not bollards_whitelist[barrier] and not access_tag_whitelist[barrier] then
+		node.bollard = false;
+	  end
   end
   return 1
 end
@@ -82,7 +89,7 @@ function way_function (way, numberOfNodesInWay)
 
   -- Second parse the way according to these properties
 
-	if("yes" == area) then
+	if ignore_areas and ("yes" == area) then
 		return 0
 	end
 		

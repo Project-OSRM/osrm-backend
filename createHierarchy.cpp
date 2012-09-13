@@ -26,9 +26,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #undef VERBOSE2
 #endif
 
+extern "C" {
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+}
+#include <luabind/luabind.hpp>
+
 #include <boost/foreach.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
 
 #include <fstream>
 #include <istream>
@@ -111,11 +116,35 @@ int main (int argc, char *argv[]) {
     in.close();
     INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
 
-    if(!testDataFile("speedprofile.ini")) {
-        ERR("Need speedprofile.ini to apply traffic signal penalty");
+    if(!testDataFile("profile.lua")) {
+        ERR("Need profile.lua to apply traffic signal penalty");
     }
-    boost::property_tree::ptree speedProfile;
-    boost::property_tree::ini_parser::read_ini("speedprofile.ini", speedProfile);
+    /*** Setup Scripting Environment ***/
+
+    // Create a new lua state
+    lua_State *myLuaState = luaL_newstate();
+
+    // Connect LuaBind to this lua state
+    luabind::open(myLuaState);
+
+
+    // Now call our function in a lua script
+    if(0 != luaL_dofile(myLuaState, "profile.lua")) {
+        ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+    }
+
+    EdgeBasedGraphFactory::SpeedProfileProperties speedProfile;
+
+    if(0 != luaL_dostring( myLuaState, "return traffic_signal_penalty\n")) {
+        ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+    }
+    speedProfile.trafficSignalPenalty = lua_tointeger(myLuaState, -1);
+
+    if(0 != luaL_dostring( myLuaState, "return u_turn_penalty\n")) {
+        ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+    }
+    speedProfile.uTurnPenalty = lua_tointeger(myLuaState, -1);
+
 
     /***
      * Building an edge-expanded graph from node-based input an turn restrictions
