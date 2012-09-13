@@ -18,19 +18,10 @@
  or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#include <algorithm>
-#include <queue>
-#include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-
-#include "../Util/OpenMPWrapper.h"
-#include "../DataStructures/Percent.h"
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), trafficSignalPenalty(0), uturnPenalty(0), takeMinimumOfSpeeds(false) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), speedProfile(sp) {
     BOOST_FOREACH(_Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
@@ -52,32 +43,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
 
         _restrictionBucketVector.at(index).push_back(std::make_pair(restriction.toNode, restriction.flags.isOnly));
     }
-
-    std::string usedSpeedProfile( speedProfile.get_child("").begin()->first );
-    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, speedProfile.get_child(usedSpeedProfile)) {
-        if("trafficSignalPenalty" ==  v.first) {
-            std::string value = v.second.get<std::string>("");
-            try {
-                trafficSignalPenalty = 10*boost::lexical_cast<int>(v.second.get<std::string>(""));
-            } catch(boost::bad_lexical_cast &) {
-                trafficSignalPenalty = 0;
-            }
-        }
-        if("uturnPenalty" ==  v.first) {
-            std::string value = v.second.get<std::string>("");
-            try {
-                uturnPenalty = 10*boost::lexical_cast<int>(v.second.get<std::string>(""));
-            } catch(boost::bad_lexical_cast &) {
-                uturnPenalty = 0;
-            }
-        }
-        if("takeMinimumOfSpeeds" ==  v.first) {
-            std::string value = v.second.get<std::string>("");
-            takeMinimumOfSpeeds = (v.second.get<std::string>("") == "yes");
-        }
-    }
-
-    //    INFO("traffic signal penalty: " << trafficSignalPenalty << ", U-Turn penalty: " << uturnPenalty << ", takeMinimumOfSpeeds=" << (takeMinimumOfSpeeds ? "yes" : "no"));
 
     BOOST_FOREACH(NodeID id, bn) {
         _barrierNodes[id] = true;
@@ -308,11 +273,11 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
 
                         unsigned distance = edgeData1.distance;
                         if(_trafficLights.find(v) != _trafficLights.end()) {
-                            distance += trafficSignalPenalty;
+                            distance += speedProfile.trafficSignalPenalty;
                         }
                         short turnInstruction = AnalyzeTurn(u, v, w);
                         if(turnInstruction == TurnInstructions.UTurn)
-                            distance += uturnPenalty;
+                            distance += speedProfile.uTurnPenalty;
 //                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
 //                            distance += TurnInstructions.AccessRestrictionPenalty;
 //                            turnInstruction |= TurnInstructions.AccessRestrictionFlag;

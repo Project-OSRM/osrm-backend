@@ -25,13 +25,16 @@
 #ifndef EDGEBASEDGRAPHFACTORY_H_
 #define EDGEBASEDGRAPHFACTORY_H_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-
+#include <algorithm>
+#include <queue>
 #include <vector>
 #include <stxxl.h>
 #include <cstdlib>
+
+#include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/shared_ptr.hpp>
+
 
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
@@ -92,6 +95,12 @@ public:
         bool ignoreInGrid:1;
     };
 
+
+    struct SpeedProfileProperties{
+        SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0) {}
+        int trafficSignalPenalty;
+        int uTurnPenalty;
+    } speedProfile;
 private:
     boost::shared_ptr<_NodeBasedDynamicGraph>   _nodeBasedGraph;
     boost::unordered_map<NodeID, bool>          _barrierNodes;
@@ -121,13 +130,10 @@ private:
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 //    SRTMLookup srtmLookup;
     unsigned numberOfTurnRestrictions;
-    unsigned trafficSignalPenalty;
-    unsigned uturnPenalty;
-    bool takeMinimumOfSpeeds;
 
 public:
     template< class InputEdgeT >
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, boost::property_tree::ptree speedProfile, std::string & srtm);
+    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, SpeedProfileProperties speedProfile, std::string & srtm);
 
     void Run(const char * originalEdgeDataFilename);
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
