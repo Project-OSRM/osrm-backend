@@ -23,6 +23,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <algorithm>
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/bind.hpp>
+
 #include "BaseDescriptor.h"
 #include "DescriptionFactory.h"
 #include "../Algorithms/ObjectToBase64.h"
@@ -44,6 +47,22 @@ private:
         int nameID;
         int leaveAtExit;
     } roundAbout;
+
+    struct Segment {
+        Segment() : nameID(-1), length(-1), position(-1) {}
+        Segment(int n, int l, int p) : nameID(n), length(l), position(p) {}
+        int nameID;
+        int length;
+        int position;
+    };
+    std::vector<Segment> shortestSegments, alternativeSegments;
+
+    struct RouteNames {
+        std::string shortestPathName1;
+        std::string shortestPathName2;
+        std::string alternativePathName1;
+        std::string alternativePathName2;
+    };
 
 public:
     JSONDescriptor() : numberOfEnteredRestrictedAreas(0) {}
@@ -80,7 +99,7 @@ public:
                 "\"route_instructions\": [";
         numberOfEnteredRestrictedAreas = 0;
         if(config.instructions) {
-            BuildTextualDescription(descriptionFactory, reply, rawRoute.lengthOfShortestPath, sEngine);
+            BuildTextualDescription(descriptionFactory, reply, rawRoute.lengthOfShortestPath, sEngine, shortestSegments);
         } else {
             BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
                 short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
@@ -133,7 +152,7 @@ public:
             reply.content += "[";
             //Generate instructions for each alternative
             if(config.instructions) {
-                BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine);
+                BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine, alternativeSegments);
             } else {
                 BOOST_FOREACH(const SegmentInformation & segment, alternateDescriptionFactory.pathDescription) {
                     short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
@@ -164,6 +183,22 @@ public:
         }
         reply.content += "],";
 
+        //Get Names for both routes
+        RouteNames routeNames;
+        GetRouteNames(shortestSegments, alternativeSegments, sEngine, routeNames);
+
+        reply.content += "\"route_names\":[\"";
+        reply.content += routeNames.shortestPathName1;
+        reply.content += "\",\"";
+        reply.content += routeNames.shortestPathName2;
+        reply.content += "\"],"
+                "\"alternative_route_names\":[";
+        reply.content += "[\"";
+        reply.content += routeNames.alternativePathName1;
+        reply.content += "\",\"";
+        reply.content += routeNames.alternativePathName2;
+        reply.content += "\"]";
+        reply.content += "],";
         //list all viapoints so that the client may display it
         reply.content += "\"via_points\":[";
         std::string tmp;
@@ -207,6 +242,57 @@ public:
         reply.content += "},";
         reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"";
         reply.content += "}";
+
+    }
+
+    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, SearchEngineT &sEngine, RouteNames & routeNames) {
+        /*** extract names for both alternatives ***/
+
+        Segment shortestSegment1, shortestSegment2;
+        Segment alternativeSegment1, alternativeSegment2;
+
+        if(0 < shortestSegments.size()) {
+            sort(shortestSegments.begin(), shortestSegments.end(), boost::bind(&Segment::length, _1) > boost::bind(&Segment::length, _2) );
+            shortestSegment1 = shortestSegments[0];
+            if(0 < alternativeSegments.size()) {
+                sort(alternativeSegments.begin(), alternativeSegments.end(), boost::bind(&Segment::length, _1) > boost::bind(&Segment::length, _2) );
+                alternativeSegment1 = alternativeSegments[0];
+            }
+            std::vector<Segment> shortestDifference(shortestSegments.size());
+            std::vector<Segment> alternativeDifference(alternativeSegments.size());
+            std::set_difference(shortestSegments.begin(), shortestSegments.end(), alternativeSegments.begin(), alternativeSegments.end(), shortestDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
+            if(0 < shortestDifference.size() ) {
+                int i = 0;
+                while( i < shortestDifference.size() && shortestDifference[i].nameID == shortestSegments[0].nameID) {
+                    ++i;
+                }
+                if(i < shortestDifference.size()) {
+                    shortestSegment2 = shortestDifference[i];
+                }
+            }
+
+            std::set_difference(alternativeSegments.begin(), alternativeSegments.end(), shortestSegments.begin(), shortestSegments.end(), alternativeDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
+            if(0 < alternativeDifference.size() ) {
+                int i = 0;
+                while( i < alternativeDifference.size() && alternativeDifference[i].nameID == alternativeSegments[0].nameID) {
+                    ++i;
+                }
+                if(i < alternativeDifference.size()) {
+                    alternativeSegment2 = alternativeDifference[i];
+                }
+            }
+            if(shortestSegment1.position > shortestSegment2.position)
+                std::swap(shortestSegment1, shortestSegment2);
+
+            if(alternativeSegment1.position >  alternativeSegment2.position)
+                std::swap(alternativeSegment1, alternativeSegment2);
+
+            routeNames.shortestPathName1 = sEngine.GetEscapedNameForNameID(shortestSegment1.nameID);
+            routeNames.shortestPathName2 = sEngine.GetEscapedNameForNameID(shortestSegment2.nameID);
+
+            routeNames.alternativePathName1 = sEngine.GetEscapedNameForNameID(alternativeSegment1.nameID);
+            routeNames.alternativePathName2 += sEngine.GetEscapedNameForNameID(alternativeSegment2.nameID);
+        }
     }
 
     inline void WriteHeaderToOutput(std::string & output) {
@@ -215,7 +301,7 @@ public:
                 "\"status\":";
     }
 
-    inline void BuildTextualDescription(DescriptionFactory & descriptionFactory, http::Reply & reply, const int lengthOfRoute, const SearchEngineT &sEngine) {
+    inline void BuildTextualDescription(DescriptionFactory & descriptionFactory, http::Reply & reply, const int lengthOfRoute, const SearchEngineT &sEngine, std::vector<Segment> & segmentVector) {
         //Segment information has following format:
         //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
         //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
@@ -248,6 +334,8 @@ public:
                         intToString(currentInstruction, tmpInstruction);
                         reply.content += tmpInstruction;
                     }
+
+
                     reply.content += "\",\"";
                     reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
                     reply.content += "\",";
@@ -268,6 +356,8 @@ public:
                     intToString(round(segment.bearing), tmpBearing);
                     reply.content += tmpBearing;
                     reply.content += "]";
+
+                    segmentVector.push_back( Segment(segment.nameID, segment.length, segmentVector.size() ));
                 }
             } else if(TurnInstructions.StayOnRoundAbout == currentInstruction) {
                 ++roundAbout.leaveAtExit;
