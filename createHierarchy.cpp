@@ -42,7 +42,7 @@ extern "C" {
 #include <string>
 #include <vector>
 
-#include "Algorithms/CRC32.h"
+#include "Algorithms/IteratorBasedCRC32.h"
 #include "Util/OpenMPWrapper.h"
 #include "typedefs.h"
 #include "Contractor/Contractor.h"
@@ -201,9 +201,10 @@ int main (int argc, char *argv[]) {
     WritableGrid * writeableGrid = new WritableGrid();
     writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut, fileIndexOut);
     delete writeableGrid;
-    CRC32 crc32;
-    unsigned crc32OfNodeBasedEdgeList = crc32((char *)&(nodeBasedEdgeList[0]), nodeBasedEdgeList.size()*sizeof(EdgeBasedGraphFactory::EdgeBasedNode));
+    IteratorbasedCRC32<DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
+    unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
     nodeBasedEdgeList.clear();
+    INFO("CRC32 based checksum is " << crc32OfNodeBasedEdgeList);
 
     /***
      * Contracting the edge-expanded graph
