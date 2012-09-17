@@ -62,10 +62,10 @@ CRC32::CRC32CFunctionPtr CRC32::detectBestCRC32C() {
     unsigned ecx = cpuid(1);
     bool hasSSE42 = ecx & (1 << SSE42_BIT);
     if (hasSSE42) {
-        std::cout << "sse based" << std::endl;
+        std::cout << "using hardware base sse computation" << std::endl;
         return &CRC32::SSEBasedCRC32; //crc32 hardware accelarated;
     } else {
-        std::cout << "softbased" << std::endl;
+        std::cout << "using software base sse computation" << std::endl;
         return &CRC32::SoftwareBasedCRC32; //crc32cSlicingBy8;
     }
 }

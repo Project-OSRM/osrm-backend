@@ -192,6 +192,7 @@ private:
     std::vector<ElementT *> mBucketList;
 
 public:
+    typedef ElementT value_type;
     typedef DeallocatingVectorIterator<ElementT, bucketSizeC, false> iterator;
     typedef DeallocatingVectorIterator<ElementT, bucketSizeC, false> const_iterator;
 
