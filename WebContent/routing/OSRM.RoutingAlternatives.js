@@ -37,8 +37,8 @@ init: function() {
 prepare: function(response) {
 	// move best route to alternative array
 	var the_response = OSRM.G.response;
-	the_response.route_name = the_response.route_name || [];
-	the_response.alternative_names = the_response.alternative_names || [ [] ];
+	the_response.route_name = the_response.route_name || [];							// delete when fully implemented in routing engine
+	the_response.alternative_names = the_response.alternative_names || [ [] ];			// delete when fully implemented in routing engine
 	the_response.alternative_geometries.unshift( response.route_geometry );
 	the_response.alternative_instructions.unshift( response.route_instructions );
 	the_response.alternative_summaries.unshift( response.route_summary );
