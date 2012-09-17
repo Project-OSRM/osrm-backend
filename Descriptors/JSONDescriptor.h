@@ -187,12 +187,12 @@ public:
         RouteNames routeNames;
         GetRouteNames(shortestSegments, alternativeSegments, sEngine, routeNames);
 
-        reply.content += "\"route_names\":[\"";
+        reply.content += "\"route_name\":[\"";
         reply.content += routeNames.shortestPathName1;
         reply.content += "\",\"";
         reply.content += routeNames.shortestPathName2;
         reply.content += "\"],"
-                "\"alternative_route_names\":[";
+                "\"alternative_names\":[";
         reply.content += "[\"";
         reply.content += routeNames.alternativePathName1;
         reply.content += "\",\"";
