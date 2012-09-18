@@ -22,7 +22,7 @@
 
 template<>
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), speedProfile(sp) {
-    BOOST_FOREACH(_Restriction & restriction, irs) {
+	BOOST_FOREACH(_Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
         RestrictionMap::iterator restrIter = _restrictionMap.find(restrictionSource);
@@ -89,9 +89,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         }
     }
     std::vector<NodeBasedEdge>().swap(inputEdges);
-    //std::vector<_NodeBasedEdge>(edges).swap(edges);
     std::sort( edges.begin(), edges.end() );
-
+    //TODO: move to make_shared
     _nodeBasedGraph.reset(new _NodeBasedDynamicGraph( nodes, edges ));
 }
 
