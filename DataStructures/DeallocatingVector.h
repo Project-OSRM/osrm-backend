@@ -126,16 +126,16 @@ public:
 
     inline DeallocatingVectorIterator operator++(int) { //postfix
         DeallocatingVectorIteratorState _myState(mState);
-        _myState.mIndex++; _myState.setPointerForIndex();
+        mState.mIndex++; mState.setPointerForIndex();
         return DeallocatingVectorIterator(_myState);
     }
     inline DeallocatingVectorIterator operator --(int) { //postfix
         if(DeallocateC) assert(false);
         DeallocatingVectorIteratorState _myState(mState);
-        _myState.mIndex--; _myState.setPointerForIndex();
+        mState.mIndex--; mState.setPointerForIndex();
         return DeallocatingVectorIterator(_myState);
     }
-
+            
     inline DeallocatingVectorIterator operator+(const difference_type& n) const {
         DeallocatingVectorIteratorState _myState(mState);
         _myState.mIndex+=n; _myState.setPointerForIndex();
