@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 OSRM.Markers = function() {
 	this.route = new Array();
 	this.highlight = new OSRM.DragMarker("highlight", {zIndexOffset:-1,draggable:true,icon:OSRM.G.icons['marker-highlight'],dragicon:OSRM.G.icons['marker-highlight-drag']});;
+	this.hover = new OSRM.Marker("hover", {zIndexOffset:-1,draggable:false,icon:OSRM.G.icons['marker-highlight']});;
 	this.dragger = new OSRM.DragMarker("drag", {draggable:true,icon:OSRM.G.icons['marker-drag'],dragicon:OSRM.G.icons['marker-drag']});;
 };
 OSRM.extend( OSRM.Markers,{

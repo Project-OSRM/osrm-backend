@@ -60,9 +60,14 @@ OSRM.DEFAULTS = {
 		{encoding:"fi", name:"Suomi"},
 		{encoding:"fr", name:"Français"},
 		{encoding:"it", name:"Italiano"},
+		{encoding:"ja", name:"日本人"},
 		{encoding:"lv", name:"Latviešu"},
 		{encoding:"pl", name:"Polski"},
-		{encoding:"ru", name:"Русский"}
+		{encoding:"pt", name:"Portugues"},
+		{encoding:"ro", name:"Română"},
+		{encoding:"ru", name:"Русский"},
+		{encoding:"sv", name:"Svenska"},
+		{encoding:"tr", name:"Türkçe"}
 	],
 		
 	TILE_SERVERS: [

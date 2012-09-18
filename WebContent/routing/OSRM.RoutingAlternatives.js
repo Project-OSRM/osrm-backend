@@ -37,9 +37,12 @@ init: function() {
 prepare: function(response) {
 	// move best route to alternative array
 	var the_response = OSRM.G.response;
+	the_response.route_name = the_response.route_name || [];							// delete when fully implemented in routing engine
+	the_response.alternative_names = the_response.alternative_names || [ [] ];			// delete when fully implemented in routing engine
 	the_response.alternative_geometries.unshift( response.route_geometry );
 	the_response.alternative_instructions.unshift( response.route_instructions );
 	the_response.alternative_summaries.unshift( response.route_summary );
+	the_response.alternative_names.unshift( response.route_name );
 	
 	// update basic information
 	OSRM.G.alternative_count = response.alternative_geometries.length;
@@ -49,7 +52,8 @@ prepare: function(response) {
 	// switch data
 	the_response.route_geometry = the_response.alternative_geometries[OSRM.G.active_alternative];
 	the_response.route_instructions = the_response.alternative_instructions[OSRM.G.active_alternative];
-	the_response.route_summary = the_response.alternative_summaries[OSRM.G.active_alternative];	
+	the_response.route_summary = the_response.alternative_summaries[OSRM.G.active_alternative];
+	the_response.route_name = the_response.alternative_names[OSRM.G.active_alternative];
 },
 
 // switch active alternative and redraw buttons accordingly
@@ -73,7 +77,10 @@ show: function() {
 	for(var i=0, size=OSRM.G.alternative_count; i<size; i++) {
 		var distance = OSRM.Utils.toHumanDistance(OSRM.G.response.alternative_summaries[i].total_distance);
 		var time = OSRM.Utils.toHumanTime(OSRM.G.response.alternative_summaries[i].total_time);
-		var tooltip = OSRM.loc("DISTANCE")+": "+distance+" "+OSRM.loc("DURATION")+": "+time;
+		var route_name = "";
+		for(var j=0, sizej=OSRM.G.response.alternative_names[i].length; j<sizej; j++)
+			route_name += (j==0 ? " &#10;(" : "") + OSRM.G.response.alternative_names[i][j] + (j+1<sizej ? " - " : ")");
+		var tooltip = OSRM.loc("DISTANCE")+": "+distance+" &#10;"+OSRM.loc("DURATION")+": "+time+route_name;
 		var buttonClass = (i == OSRM.G.active_alternative) ? "button-pressed" : "button";
 		data = '<a class="'+buttonClass+' top-right-button" id="'+buttons[i].id+'" title="'+tooltip+'">'+buttons[i].label+'</a>' + data;
 	}
@@ -104,11 +111,13 @@ _click: function(button_id) {
 	the_response.route_geometry = the_response.alternative_geometries[button_id];
 	the_response.route_instructions = the_response.alternative_instructions[button_id];
 	the_response.route_summary = the_response.alternative_summaries[button_id];
+	the_response.route_name = the_response.alternative_names[button_id];
 	
 	// redraw route & data
 	OSRM.RoutingGeometry.show(the_response);
 	OSRM.RoutingNoNames.show(the_response);
 	OSRM.RoutingDescription.show(the_response);
+	OSRM.G.markers.highlight.hide();
 },
 _mouseover: function(button_id) {
 	if( OSRM.G.active_alternative == button_id )

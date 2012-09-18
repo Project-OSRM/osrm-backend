@@ -38,6 +38,12 @@ L.LabelMarker = L.Marker.extend({
 		}
 	},
 	
+	// add/change marker tooltip
+	setTitle: function ( title ) {
+		this.options.title = title;
+		this._icon.title = title;
+	},
+	
 	// actual icon changing routine
 	_changeIcon: function () {
 		var options = this.options,

@@ -38,6 +38,14 @@ show: function() {
 hide: function() {
 	OSRM.G.map.removeLayer(this.marker);
 	this.shown = false;
+	
+	// revert highlighted description
+	if( this.label == "highlight" )
+	if( this.description ) {
+		var desc = document.getElementById("description-"+this.description);
+		desc &&	(desc.className = "description-body-item");
+		this.description = null;
+	}
 },
 setPosition: function( position ) {
 	this.position = position;

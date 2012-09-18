@@ -68,7 +68,7 @@ OSRM.Localization["de"] = {
 // printing
 "OVERVIEW_MAP": "Übersichtskarte",
 "NO_ROUTE_SELECTED": "Keine Route ausgewählt",
-//routing engines
+// routing engines
 "ENGINE_0": "Auto (schnellste)",
 // directions
 "N": "Norden",

@@ -35,10 +35,21 @@ uninit: function() {
 },
 
 // route description events
-onClickRouteDescription: function(lat, lng) {
+onMouseOverRouteDescription: function(lat, lng) {
+	OSRM.G.markers.hover.setPosition( new L.LatLng(lat, lng) );
+	OSRM.G.markers.hover.show();
+
+},
+onMouseOutRouteDescription: function(lat, lng) {
+	OSRM.G.markers.hover.hide();	
+},
+onClickRouteDescription: function(lat, lng, desc) {
 	OSRM.G.markers.highlight.setPosition( new L.LatLng(lat, lng) );
 	OSRM.G.markers.highlight.show();
 	OSRM.G.markers.highlight.centerView(OSRM.DEFAULTS.HIGHLIGHT_ZOOM_LEVEL);	
+	
+	OSRM.G.markers.highlight.description = desc;	
+	document.getElementById("description-"+desc).className = "description-body-item description-body-item-selected";
 },
 onClickCreateShortcut: function(src){
 	src += '&z='+ OSRM.G.map.getZoom() + '&center=' + OSRM.G.map.getCenter().lat.toFixed(6) + ',' + OSRM.G.map.getCenter().lng.toFixed(6);
@@ -86,6 +97,12 @@ show: function(response) {
 
 	// create GPX link
 	var gpx_link = '[<a class="route-link" onClick="document.location.href=\'' + OSRM.G.active_routing_server_url + query_string + '&output=gpx\';">'+OSRM.loc("GPX_FILE")+'</a>]';
+	
+	// check highlight marker to get id of corresponding description
+	// [works as changing language or metric does not remove the highlight marker!]	
+	var selected_description = null;
+	if( OSRM.G.markers.highlight.isShown() )
+		selected_description = OSRM.G.markers.highlight.description;
 		
 	// create route description
 	var positions = OSRM.G.route.getPositions();
@@ -104,7 +121,10 @@ show: function(response) {
 		
 		body += '<td class="description-body-items">';
 		var pos = positions[response.route_instructions[i][3]];
-		body += '<div class="description-body-item" onclick="OSRM.RoutingDescription.onClickRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')">';
+		body += '<div id="description-'+i+'" class="description-body-item '+(selected_description==i ? "description-body-item-selected": "")+'" ' +
+			'onclick="OSRM.RoutingDescription.onClickRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+","+i+')" ' +
+			'onmouseover="OSRM.RoutingDescription.onMouseOverRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')" ' +
+			'onmouseout="OSRM.RoutingDescription.onMouseOutRouteDescription('+pos.lat.toFixed(6)+","+pos.lng.toFixed(6)+')">';
 
 		// build route description
 		if( response.route_instructions[i][1] != "" )

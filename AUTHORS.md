@@ -17,3 +17,8 @@ Lauris Bukšis-Haberkorns
 Barboska
 miszka999
 Konstantin Delchev
+Fumito Mizuno
+Necdet Varoglu (OSM-Comenius Project)
+Madalina Ionescu (OSM-Comenius Project)
+Luis Costa (OSM-Comenius Project)
+Tobias Johansson
