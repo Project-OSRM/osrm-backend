@@ -47,7 +47,7 @@ public:
         }
     };
 
-    XORFastHashStorage( size_t size ) : positions(2<<16), currentTimestamp(0) { }
+    XORFastHashStorage( size_t ) : positions(2<<16), currentTimestamp(0) { }
 
     inline HashCell& operator[]( const NodeID node ) {
         unsigned short position = fastHash(node);
