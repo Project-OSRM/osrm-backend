@@ -90,8 +90,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     }
     std::vector<NodeBasedEdge>().swap(inputEdges);
     std::sort( edges.begin(), edges.end() );
-    //TODO: move to make_shared
-    _nodeBasedGraph.reset(new _NodeBasedDynamicGraph( nodes, edges ));
+    _nodeBasedGraph = boost::make_shared<_NodeBasedDynamicGraph>( nodes, edges );
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector< EdgeBasedEdge >& outputEdgeList ) {
