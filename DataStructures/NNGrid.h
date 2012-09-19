@@ -68,6 +68,8 @@ public:
         iif = std::string(_i);
         ramIndexTable.resize((1024*1024), ULONG_MAX);
         ramInFile.open(rif, std::ios::in | std::ios::binary);
+        if(!ramInFile) { ERR(rif <<  " not found"); }
+
     }
 
     ~NNGrid() {
