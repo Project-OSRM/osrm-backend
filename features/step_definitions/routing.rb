@@ -252,7 +252,7 @@ When /^I route I should get$/ do |table|
               ok = false
             end
         else
-          ok = row[key] == got[key].to_f
+          ok = row[key] == got[key]
         end
       end
       
