@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define PBFPARSER_H_
 
 #include <zlib.h>
+#include <boost/make_shared.hpp>
 #include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -69,7 +70,7 @@ public:
     PBFParser(const char * fileName) : myLuaState(NULL) {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
         //TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
-        threadDataQueue.reset( new ConcurrentQueue<_ThreadData*>(2500) ); /* Max 2500 items in queue, hardcoded. */
+        threadDataQueue = boost::make_shared<ConcurrentQueue<_ThreadData*> >( 2500 ); /* Max 2500 items in queue, hardcoded. */
         input.open(fileName, std::ios::in | std::ios::binary);
 
         if (!input) {
@@ -194,6 +195,8 @@ public:
     bool Parse() {
         // Start the read and parse threads
         boost::thread readThread(boost::bind(&PBFParser::ReadData, this));
+
+        //Open several parse threads that are synchronized before call to
         boost::thread parseThread(boost::bind(&PBFParser::ParseData, this));
 
         // Wait for the threads to finish
@@ -235,9 +238,8 @@ private:
             }
 
             /** Pass the unpacked node to the LUA call back **/
-            int ret = -1;
             try {
-                ret = luabind::call_function<int>(
+                luabind::call_function<int>(
                         myLuaState,
                         "node_function",
                         boost::ref(n)
@@ -255,7 +257,7 @@ private:
         }
     }
 
-    void parseNode(_ThreadData * threadData) {
+    void parseNode(_ThreadData * ) {
         ERR("Parsing of simple nodes not supported. PBF should use dense nodes");
 //        _Node n;
 //        if(!(*nodeCallback)(n))
@@ -343,25 +345,24 @@ private:
                 _Way w;
                 w.id = inputWay.id();
                 unsigned pathNode(0);
-                for(int i = 0; i < inputWay.refs_size(); i++) {
+                for(int i = 0; i < inputWay.refs_size(); ++i) {
                     pathNode += inputWay.refs(i);
                     w.path.push_back(pathNode);
                 }
                 assert(inputWay.keys_size() == inputWay.vals_size());
-                for(int i = 0; i < inputWay.keys_size(); i++) {
+                for(int i = 0; i < inputWay.keys_size(); ++i) {
                     const std::string key = threadData->PBFprimitiveBlock.stringtable().s(inputWay.keys(i));
                     const std::string val = threadData->PBFprimitiveBlock.stringtable().s(inputWay.vals(i));
                     w.keyVals.Add(key, val);
                 }
 
                 /** Pass the unpacked way to the LUA call back **/
-                int ret = -1;
                 try {
-                    ret = luabind::call_function<int>(
-                            myLuaState,
-                            "way_function",
-                            boost::ref(w),
-                            w.path.size()
+                    luabind::call_function<int>(
+                        myLuaState,
+                        "way_function",
+                        boost::ref(w),
+                        w.path.size()
                     );
                     if(!(*wayCallback)(w)) {
                         std::cerr << "[PBFParser] way not parsed" << std::endl;
@@ -433,7 +434,7 @@ private:
         return true;
     }
 
-    bool unpackZLIB(std::fstream & stream, _ThreadData * threadData) {
+    bool unpackZLIB(std::fstream &, _ThreadData * threadData) {
         unsigned rawSize = threadData->PBFBlob.raw_size();
         char* unpackedDataArray = (char*)malloc(rawSize);
         z_stream compressedDataStream;
@@ -474,7 +475,7 @@ private:
         return true;
     }
 
-    bool unpackLZMA(std::fstream & stream, _ThreadData * threadData) {
+    bool unpackLZMA(std::fstream &, _ThreadData * ) {
         return false;
     }
 

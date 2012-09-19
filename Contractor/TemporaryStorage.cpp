@@ -42,7 +42,7 @@ TemporaryStorage::~TemporaryStorage() {
 void TemporaryStorage::removeAll() {
     boost::mutex::scoped_lock lock(mutex);
     try {
-        for(int slotID = 0; slotID < vectorOfStreamDatas.size(); ++slotID)
+        for(unsigned slotID = 0; slotID < vectorOfStreamDatas.size(); ++slotID)
             deallocateSlot(slotID);
 
     } catch(boost::filesystem::filesystem_error & e) {
@@ -127,7 +127,7 @@ boost::filesystem::fstream::pos_type TemporaryStorage::tell(int slotID) {
     return position;
 }
 
-void TemporaryStorage::abort(boost::filesystem::filesystem_error& e) {
+void TemporaryStorage::abort(boost::filesystem::filesystem_error& ) {
     removeAll();
 //    ERR("I/O Error occured: " << e.what());
 }
