@@ -55,7 +55,7 @@ AddOption('--cxx', dest='cxx', type='string', nargs=1, action='store', metavar='
 AddOption('--stxxlroot', dest='stxxlroot', type='string', nargs=1, action='store', metavar='STRING', help='root directory of STXXL')
 AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
 AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
-AddOption('--no-march', dest='nomarch', type='string', nargs=0, action='store', metavar='STRING', help='turn off -march optimization in release mode')
+AddOption('--all-flags', dest='allflags', type='string', nargs=0, action='store', metavar='STRING', help='turn off -march optimization in release mode')
 
 env = Environment( ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cxx'))
 env["CC"] = os.getenv("CC") or env["CC"]
@@ -72,7 +72,8 @@ else:
     env.Replace(CXX = GetOption('cxx'))
     print 'Using user supplied C++ Compiler: ', env['CXX']
 
-env.Append(CXXFLAGS = ["-Wextra", "-Wall", "-Wnon-virtual-dtor", "-Wundef", "-Wno-long-long", "-Woverloaded-virtual", "-Wfloat-equal", "-Wredundant-decls"])
+if GetOption('allflags') is not None:
+    env.Append(CXXFLAGS = ["-Wextra", "-Wall", "-Wnon-virtual-dtor", "-Wundef", "-Wno-long-long", "-Woverloaded-virtual", "-Wfloat-equal", "-Wredundant-decls"])
 
 if "clang" in env["CXX"] :
 	print "Warning building with clang removes OpenMP parallelization"
@@ -90,7 +91,7 @@ if sys.platform == 'darwin':	#Mac OS X
 	#os x default installations
 	env.Append(CPPPATH = ['/usr/include/libxml2'] )		
 	env.Append(CPPPATH = ['/usr/X11/include'])		#comes with os x
-	env.Append(LIBPATH = ['/usr/X11/lib'])			#needed for libpng
+#	env.Append(LIBPATH = ['/usr/X11/lib'])			#needed for libpng
 	
 	#assume stxxl and boost are installed via homebrew. call brew binary to get folder locations
 	import subprocess
@@ -135,7 +136,7 @@ else:
 	env.ParseConfig('pkg-config --cflags --libs luabind')
 
 #Check if architecture optimizations shall be turned off
-if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None and sys.platform != 'darwin':
+if GetOption('buildconfiguration') != 'debug' and sys.platform != 'darwin':
 	env.Append(CCFLAGS = ['-march=native'])
 
 if not conf.CheckHeader('omp.h'):
@@ -147,9 +148,6 @@ if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 if not conf.CheckLibWithHeader('osmpbf', 'osmpbf/osmpbf.h', 'CXX'):
 	print "osmpbf library not found. Exiting"
 	print "Either install libosmpbf-dev (Ubuntu) or use https://github.com/scrosby/OSM-binary"
-	Exit(-1)
-if not conf.CheckLibWithHeader('png', 'png.h', 'CXX'):
-	print "png library not found. Exiting"
 	Exit(-1)
 if not conf.CheckLibWithHeader('zip', 'zip.h', 'CXX'):
 	print "Zip library not found. Exiting"
@@ -177,6 +175,14 @@ if not conf.CheckLibWithHeader('z', 'zlib.h', 'CXX'):
 if not (conf.CheckBoost('1.44')):
 	print 'Boost version >= 1.44 needed'
 	Exit(-1);
+if not conf.CheckLib('boost_system', language="C++"):
+	if not conf.CheckLib('boost_system-mt', language="C++"):
+		print "boost_system library not found. Exiting"
+		Exit(-1)
+	else:
+		print "using boost -mt"
+		env.Append(CCFLAGS = ' -lboost_system-mt')
+		env.Append(LINKFLAGS = ' -lboost_system-mt')
 if not conf.CheckLibWithHeader('boost_thread', 'boost/thread.hpp', 'CXX'):
 	if not conf.CheckLibWithHeader('boost_thread-mt', 'boost/thread.hpp', 'CXX'):
 		print "boost thread library not found. Exiting"
@@ -193,14 +199,6 @@ if not conf.CheckLibWithHeader('boost_regex', 'boost/regex.hpp', 'CXX'):
 		print "using boost_regex -mt"
 		env.Append(CCFLAGS = ' -lboost_regex-mt')
 		env.Append(LINKFLAGS = ' -lboost_regex-mt')
-if not conf.CheckLib('boost_system', language="C++"):
-	if not conf.CheckLib('boost_system-mt', language="C++"):
-		print "boost_system library not found. Exiting"
-		Exit(-1)
-	else:
-		print "using boost -mt"
-		env.Append(CCFLAGS = ' -lboost_system-mt')
-		env.Append(LINKFLAGS = ' -lboost_system-mt')
 if not conf.CheckLib('boost_filesystem', language="C++"):
 	if not conf.CheckLib('boost_filesystem-mt', language="C++"):
 		print "boost_filesystem library not found. Exiting"
