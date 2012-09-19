@@ -120,7 +120,7 @@ public:
 	{}
 	~SearchEngine() {}
 
-	inline const void GetCoordinatesForNodeID(NodeID id, _Coordinate& result) const {
+	inline void GetCoordinatesForNodeID(NodeID id, _Coordinate& result) const {
 		result.lat = _queryData.nodeHelpDesk->getLatitudeOfNode(id);
 		result.lon = _queryData.nodeHelpDesk->getLongitudeOfNode(id);
 	}

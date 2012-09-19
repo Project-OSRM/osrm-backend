@@ -21,18 +21,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef CONTRACTOR_H_INCLUDED
 #define CONTRACTOR_H_INCLUDED
 #include <algorithm>
-#include <ctime>
 #include <limits>
 #include <queue>
 #include <set>
 #include <vector>
 
-#include <stxxl.h>
+#include <cfloat>
+#include <ctime>
 
 #include <boost/shared_ptr.hpp>
 
 #include "TemporaryStorage.h"
-
 #include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
@@ -343,7 +342,7 @@ public:
 #pragma omp for schedule ( guided )
                 for ( int i = 0; i < last; ++i ) {
                     const NodeID node = remainingNodes[i].first;
-                    remainingNodes[i].second = _IsIndependent( nodePriority, nodeData, data, node );
+                    remainingNodes[i].second = _IsIndependent( nodePriority/*, nodeData*/, data, node );
                 }
             }
             _NodePartitionor functor;
@@ -700,7 +699,7 @@ private:
         return true;
     }
 
-    bool _IsIndependent( const std::vector< float >& priorities, const std::vector< _PriorityData >& nodeData, _ThreadData* const data, NodeID node ) {
+    bool _IsIndependent( const std::vector< float >& priorities/*, const std::vector< _PriorityData >& nodeData*/, _ThreadData* const data, NodeID node ) {
         const double priority = priorities[node];
 
         std::vector< NodeID >& neighbours = data->neighbours;
@@ -716,7 +715,7 @@ private:
             if ( priority > targetPriority )
                 return false;
             //tie breaking
-              if ( priority == targetPriority && bias(node, target) ) {
+              if ( fabs(priority - targetPriority) < FLT_EPSILON && bias(node, target) ) {
                 return false;
             }
             neighbours.push_back( target );
@@ -740,7 +739,7 @@ private:
                 if ( priority > targetPriority)
                     return false;
                 //tie breaking
-                if ( priority == targetPriority && bias(node, target) ) {
+                if ( fabs(priority - targetPriority) < FLT_EPSILON && bias(node, target) ) {
                     return false;
                 }
             }

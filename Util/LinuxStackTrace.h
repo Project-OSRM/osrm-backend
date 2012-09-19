@@ -70,7 +70,7 @@ std::string getFileAndLine (char * offset_end) {
 }
 
 
-void crashHandler(int sig_num, siginfo_t * info, void * ucontext) {
+void crashHandler(int sig_num, siginfo_t * info, void * ) {
     const size_t maxDepth = 100;
     //size_t stackDepth;
 
@@ -136,8 +136,8 @@ void crashHandler(int sig_num, siginfo_t * info, void * ucontext) {
 }
 
 void installCrashHandler(std::string b) {
-#ifndef NDEBUG
     binaryName = b;
+#ifndef NDEBUG
     struct sigaction sigact;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_sigaction = crashHandler;
@@ -151,6 +151,6 @@ void installCrashHandler(std::string b) {
 #endif
 }
 #else
-inline void installCrashHandler(std::string b) {}
+inline void installCrashHandler(std::string ) {}
 #endif
 #endif /* LINUXSTACKTRACE_H_ */

@@ -21,7 +21,7 @@
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp, std::string & srtm) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), speedProfile(sp) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), speedProfile(sp) {
 	BOOST_FOREACH(_Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
@@ -101,10 +101,12 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector< EdgeBasedEdge 
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes) {
+#ifndef NDEBUG
     BOOST_FOREACH(EdgeBasedNode & node, edgeBasedNodes){
         assert(node.lat1 != INT_MAX); assert(node.lon1 != INT_MAX);
         assert(node.lat2 != INT_MAX); assert(node.lon2 != INT_MAX);
     }
+#endif
     nodes.swap(edgeBasedNodes);
 }
 
@@ -173,7 +175,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     std::queue<std::pair<NodeID, NodeID> > bfsQueue;
     std::vector<unsigned> componentsIndex(_nodeBasedGraph->GetNumberOfNodes(), UINT_MAX);
     std::vector<NodeID> vectorOfComponentSizes;
-    unsigned currentComponent = 0, sizeOfCurrentComponent = 0, settledNodes = 0;
+    unsigned currentComponent = 0, sizeOfCurrentComponent = 0;
     //put unexplorered node with parent pointer into queue
     for(NodeID node = 0, endNodes = _nodeBasedGraph->GetNumberOfNodes(); node < endNodes; ++node) {
         if(UINT_MAX == componentsIndex[node]) {

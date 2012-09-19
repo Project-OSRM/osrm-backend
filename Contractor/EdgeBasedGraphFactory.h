@@ -48,8 +48,6 @@
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/BaseConfiguration.h"
 
-//#include "../Util/SRTMLookup.h"
-
 class EdgeBasedGraphFactory {
 private:
     struct _NodeBasedEdgeData {
@@ -76,7 +74,8 @@ private:
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
     typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
-
+    std::vector<NodeInfo>               inputNodeInfoList;
+    unsigned numberOfTurnRestrictions;
 public:
     struct EdgeBasedNode {
         bool operator<(const EdgeBasedNode & other) const {
@@ -118,7 +117,6 @@ private:
     DeallocatingVector<EdgeBasedEdge>   edgeBasedEdges;
     DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
     std::vector<OriginalEdgeData>       originalEdgeData;
-    std::vector<NodeInfo>               inputNodeInfoList;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
@@ -130,11 +128,11 @@ private:
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 //    SRTMLookup srtmLookup;
-    unsigned numberOfTurnRestrictions;
+
 
 public:
     template< class InputEdgeT >
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, SpeedProfileProperties speedProfile, std::string & srtm);
+    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, SpeedProfileProperties speedProfile);
 
     void Run(const char * originalEdgeDataFilename);
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );

@@ -77,7 +77,7 @@ public:
     void SetStartSegment(const PhantomNode & startPhantom);
     void SetEndSegment(const PhantomNode & startPhantom);
     void AppendEncodedPolylineString(std::string & output, bool isEncoded);
-    void Run(const SearchEngineT &sEngine, const unsigned zoomLevel, const unsigned duration);
+    void Run(const SearchEngineT &sEngine, const unsigned zoomLevel);
 };
 
 #endif /* DESCRIPTIONFACTORY_H_ */

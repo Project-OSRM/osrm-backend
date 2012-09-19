@@ -367,11 +367,11 @@ private:
         }
 
         //write length of bucket
-        memcpy(static_cast<char*>(static_cast<void*>(&(tmpBuffer[index+counter]))), static_cast<char*>(static_cast<void*>(&lengthOfBucket)), sizeof(lengthOfBucket));
+        memcpy((char*)&(tmpBuffer[index+counter]), (char*)&lengthOfBucket, sizeof(lengthOfBucket));
         counter += sizeof(lengthOfBucket);
 
         BOOST_FOREACH(const GridEntry & entry, vectorWithSameFileIndex) {
-            char * data = static_cast<char*>(static_cast<void*>(&(entry.edge) ));
+            char * data = (char*)&(entry.edge);
             memcpy(static_cast<char*>(static_cast<void*>(&(tmpBuffer[index+counter]) )), data, sizeof(entry.edge));
             counter += sizeof(entry.edge);
         }

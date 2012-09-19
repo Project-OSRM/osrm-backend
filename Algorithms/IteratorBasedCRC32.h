@@ -35,7 +35,7 @@ private:
     typedef boost::crc_optimal<32, 0x1EDC6F41, 0x0, 0x0, true, true> my_crc_32_type;
     typedef unsigned (IteratorbasedCRC32::*CRC32CFunctionPtr)(char *str, unsigned len, unsigned crc);
 
-    unsigned SoftwareBasedCRC32(char *str, unsigned len, unsigned crc){
+    unsigned SoftwareBasedCRC32(char *str, unsigned len, unsigned ){
         boost::crc_optimal<32, 0x1EDC6F41, 0x0, 0x0, true, true> CRC32_Processor;
         CRC32_Processor.process_bytes( str, len);
         return CRC32_Processor.checksum();
@@ -99,7 +99,7 @@ public:
     unsigned operator()( ContainerT_iterator iter, const ContainerT_iterator end) {
         unsigned crc = 0;
         while(iter != end) {
-            char * data = (char*)&(*iter);
+            char * data = reinterpret_cast<char*>(&(*iter) );
             crc =((*this).*(crcFunction))(data, sizeof(typename ContainerT::value_type*), crc);
             ++iter;
         }

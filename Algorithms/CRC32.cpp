@@ -24,7 +24,7 @@ CRC32::CRC32() : crc(0) {
     crcFunction = detectBestCRC32C();
 }
 
-unsigned CRC32::SoftwareBasedCRC32(char *str, unsigned len, unsigned crc) {
+unsigned CRC32::SoftwareBasedCRC32(char *str, unsigned len, unsigned ) {
     boost::crc_optimal<32, 0x1EDC6F41, 0x0, 0x0, true, true> CRC32_Processor;
     CRC32_Processor.process_bytes( str, len);
     return CRC32_Processor.checksum();

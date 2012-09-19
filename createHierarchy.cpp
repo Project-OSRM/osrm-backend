@@ -151,7 +151,7 @@ int main (int argc, char *argv[]) {
      */
 
     INFO("Generating edge-expanded graph representation");
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile, SRTM_ROOT);
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
     std::vector<ImportEdge>().swap(edgeList);
     edgeBasedGraphFactory->Run(edgeOut);
     std::vector<_Restriction>().swap(inputRestrictions);

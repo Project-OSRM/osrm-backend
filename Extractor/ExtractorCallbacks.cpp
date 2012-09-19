@@ -78,7 +78,7 @@ bool ExtractorCallbacks::wayFunction(_Way &w) {
             w.nameID = strit->second;
         }
 
-        if(-1 == w.speed){
+        if(fabs(-1. - w.speed) < FLT_EPSILON){
             WARN("found way with bogus speed, id: " << w.id);
             return true;
         }

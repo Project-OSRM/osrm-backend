@@ -87,7 +87,7 @@ public:
                     "\"status_message\": \"Cannot find route between points\",";
         }
 
-        descriptionFactory.Run(sEngine, config.z, rawRoute.lengthOfShortestPath);
+        descriptionFactory.Run(sEngine, config.z);
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
             descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
@@ -137,7 +137,7 @@ public:
             }
             alternateDescriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
         }
-        alternateDescriptionFactory.Run(sEngine, config.z, rawRoute.lengthOfAlternativePath);
+        alternateDescriptionFactory.Run(sEngine, config.z);
 
         //give an array of alternative routes
         reply.content += "\"alternative_geometries\": [";
