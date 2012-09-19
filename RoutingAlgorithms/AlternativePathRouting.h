@@ -41,7 +41,7 @@ class AlternativeRouting : private BasicRoutingInterface<QueryDataT>{
         NodeID node;
         int length;
         int sharing;
-        const bool operator<(const RankedCandidateNode& other) const {
+        bool operator<(const RankedCandidateNode& other) const {
             return (2*length + sharing) < (2*other.length + other.sharing);
         }
     };
@@ -121,7 +121,7 @@ public:
         BOOST_FOREACH(const PreselectedNode node, nodesThatPassPreselection) {
             int lengthOfViaPath = 0, sharingOfViaPath = 0;
 
-            computeLengthAndSharingOfViaPath(phantomNodePair, node, &lengthOfViaPath, &sharingOfViaPath, offset, packedShortestPath);
+            computeLengthAndSharingOfViaPath(node, &lengthOfViaPath, &sharingOfViaPath, offset, packedShortestPath);
             if(sharingOfViaPath <= VIAPATH_GAMMA*_upperBound)
                 rankedCandidates.push_back(RankedCandidateNode(node.first, lengthOfViaPath, sharingOfViaPath));
         }
@@ -130,7 +130,7 @@ public:
 
         NodeID selectedViaNode = UINT_MAX;
         int lengthOfViaPath = INT_MAX;
-        NodeID s_v_middle, v_t_middle;
+        NodeID s_v_middle = UINT_MAX, v_t_middle = UINT_MAX;
         BOOST_FOREACH(const RankedCandidateNode candidate, rankedCandidates){
             if(viaNodeCandidatePasses_T_Test(forwardHeap, backwardHeap, forwardHeap2, backwardHeap2, candidate, offset, _upperBound, &lengthOfViaPath, &s_v_middle, &v_t_middle)) {
                 // select first admissable
@@ -169,7 +169,7 @@ private:
         super::UnpackPath(packed_s_v_path, unpackedPath);
     }
 
-    inline void computeLengthAndSharingOfViaPath(const PhantomNodes & phantomNodePair, const PreselectedNode& node, int *lengthOfViaPath, int *sharingOfViaPath,
+    inline void computeLengthAndSharingOfViaPath(const PreselectedNode& node, int *lengthOfViaPath, int *sharingOfViaPath,
             const int offset, const std::deque<NodeID> & packedShortestPath) {
         //compute and unpack <s,..,v> and <v,..,t> by exploring search spaces from v and intersecting against queues
         //only half-searches have to be done at this stage

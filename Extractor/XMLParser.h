@@ -67,9 +67,8 @@ public:
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
                 ImportNode n = _ReadXMLNode(  );
                 /** Pass the unpacked node to the LUA call back **/
-                int ret = -1;
                 try {
-                    ret = luabind::call_function<int>(
+                    luabind::call_function<int>(
                             myLuaState,
                             "node_function",
                             boost::ref(n)
@@ -92,9 +91,8 @@ public:
                 _Way way = _ReadXMLWay( );
 
                 /** Pass the unpacked way to the LUA call back **/
-                int ret = -1;
                 try {
-                    ret = luabind::call_function<int>(
+                    luabind::call_function<int>(
                             myLuaState,
                             "way_function",
                             boost::ref(way),
@@ -286,7 +284,7 @@ private:
                     xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
                     xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
                     if ( k != NULL && value != NULL ) {
-                        node.keyVals.Add(std::string( (char *) k ), std::string( (char *) value));
+                        node.keyVals.Add(std::string( reinterpret_cast<char*>(k) ), std::string( reinterpret_cast<char*>(value)));
                     }
                     if ( k != NULL )
                         xmlFree( k );
