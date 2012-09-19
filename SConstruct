@@ -16,12 +16,12 @@ def CheckBoost(context, version):
         version_n += int(v_arr[1])*100
     if len(v_arr) > 2:
         version_n += int(v_arr[2])
-        
+    
     context.Message('Checking for Boost version >= %s... ' % (version))
     ret = context.TryRun("""
     #include <boost/version.hpp>
-
-    int main() 
+    
+    int main()
     {
         return BOOST_VERSION >= %d ? 0 : 1;
     }
@@ -39,7 +39,7 @@ def CheckProtobuf(context, version):
         version_n += int(v_arr[1])*1000
     if len(v_arr) > 2:
         version_n += int(v_arr[2])
-        
+    
     context.Message('Checking for Protobuffer version >= %s... ' % (version))
     ret = context.TryRun("""
     #include <google/protobuf/stubs/common.h>
@@ -67,7 +67,7 @@ conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf
 
 if GetOption('cxx') is None:
     #default Compiler
-    print 'Using default C++ Compiler: ', env['CXX'].strip() 
+    print 'Using default C++ Compiler: ', env['CXX'].strip()
 else:
     env.Replace(CXX = GetOption('cxx'))
     print 'Using user supplied C++ Compiler: ', env['CXX']
@@ -75,9 +75,10 @@ else:
 if GetOption('allflags') is not None:
     env.Append(CXXFLAGS = ["-Wextra", "-Wall", "-Wnon-virtual-dtor", "-Wundef", "-Wno-long-long", "-Woverloaded-virtual", "-Wfloat-equal", "-Wredundant-decls"])
 
-if "clang" in env["CXX"] :
-	print "Warning building with clang removes OpenMP parallelization"
-	env.Append(CXXFLAGS = ["-W#warnings", "-Wc++0x-compat", "-Waddress-of-temporary", "-Wambiguous-member-template", "-Warray-bounds", "-Watomic-properties", "-Wbind-to-temporary-copy", "-Wbuiltin-macro-redefined", "-Wc++-compat", "-Wc++0x-extensions", "-Wcomments", "-Wconditional-uninitialized", "-Wconstant-logical-operand", "-Wdeclaration-after-statement", "-Wdeprecated", "-Wdeprecated-implementations", "-Wdeprecated-writable-strings", "-Wduplicate-method-arg", "-Wempty-body", "-Wendif-labels", "-Wenum-compare", "-Wformat=2", "-Wfour-char-constants", "-Wgnu", "-Wincomplete-implementation", "-Winvalid-noreturn", "-Winvalid-offsetof", "-Winvalid-token-paste", "-Wlocal-type-template-args", "-Wmethod-signatures", "-Wmicrosoft", "-Wmissing-declarations", "-Wnon-pod-varargs", "-Wnonfragile-abi2", "-Wnull-dereference", "-Wout-of-line-declaration", "-Woverlength-strings", "-Wpacked", "-Wpointer-arith", "-Wpointer-sign", "-Wprotocol", "-Wreadonly-setter-attrs", "-Wselector", "-Wshift-overflow", "-Wshift-sign-overflow", "-Wstrict-selector-match", "-Wsuper-class-method-mismatch", "-Wtautological-compare", "-Wtypedef-redefinition", "-Wundeclared-selector", "-Wunnamed-type-template-args", "-Wunused-exception-parameter", "-Wunused-member-function", "-Wused-but-marked-unused", "-Wvariadic-macros"])
+if "clang" in env["CXX"]:
+    print "Warning building with clang removes OpenMP parallelization"
+    if GetOption('allflags') is not None:
+        env.Append(CXXFLAGS = ["-W#warnings", "-Wc++0x-compat", "-Waddress-of-temporary", "-Wambiguous-member-template", "-Warray-bounds", "-Watomic-properties", "-Wbind-to-temporary-copy", "-Wbuiltin-macro-redefined", "-Wc++-compat", "-Wc++0x-extensions", "-Wcomments", "-Wconditional-uninitialized", "-Wconstant-logical-operand", "-Wdeclaration-after-statement", "-Wdeprecated", "-Wdeprecated-implementations", "-Wdeprecated-writable-strings", "-Wduplicate-method-arg", "-Wempty-body", "-Wendif-labels", "-Wenum-compare", "-Wformat=2", "-Wfour-char-constants", "-Wgnu", "-Wincomplete-implementation", "-Winvalid-noreturn", "-Winvalid-offsetof", "-Winvalid-token-paste", "-Wlocal-type-template-args", "-Wmethod-signatures", "-Wmicrosoft", "-Wmissing-declarations", "-Wnon-pod-varargs", "-Wnonfragile-abi2", "-Wnull-dereference", "-Wout-of-line-declaration", "-Woverlength-strings", "-Wpacked", "-Wpointer-arith", "-Wpointer-sign", "-Wprotocol", "-Wreadonly-setter-attrs", "-Wselector", "-Wshift-overflow", "-Wshift-sign-overflow", "-Wstrict-selector-match", "-Wsuper-class-method-mismatch", "-Wtautological-compare", "-Wtypedef-redefinition", "-Wundeclared-selector", "-Wunnamed-type-template-args", "-Wunused-exception-parameter", "-Wunused-member-function", "-Wused-but-marked-unused", "-Wvariadic-macros"])
 else:
 	env.Append(CCFLAGS = ['-minline-all-stringops', '-fopenmp'])
 	env.Append(LINKFLAGS = '-fopenmp')
@@ -89,7 +90,7 @@ else:
 
 if sys.platform == 'darwin':	#Mac OS X
 	#os x default installations
-	env.Append(CPPPATH = ['/usr/include/libxml2'] )		
+	env.Append(CPPPATH = ['/usr/include/libxml2'] )
 	env.Append(CPPPATH = ['/usr/X11/include'])		#comes with os x
 #	env.Append(LIBPATH = ['/usr/X11/lib'])			#needed for libpng
 	
@@ -100,15 +101,16 @@ if sys.platform == 'darwin':	#Mac OS X
 	env.Append(LIBPATH = [stxxl_prefix+"/lib"] )
 	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [boost_prefix+"/include"] )
-	env.Append(LIBPATH = [boost_prefix+"/lib"] )	
-	
+	env.Append(LIBPATH = [boost_prefix+"/lib"] )
+	env.ParseConfig('pkg-config --cflags --libs libzip')
 	if not conf.CheckLibWithHeader('lua', 'lua.h', 'C'):
 		print "lua library not found. Exiting"
 		Exit(-1)
-
+	
 	if not conf.CheckLibWithHeader('luabind', 'luabind/luabind.hpp', 'CXX'):
 		print "luabind library not found. Exiting"
 		Exit(-1)
+
 
 elif sys.platform.startswith("freebsd"):
 	env.ParseConfig('pkg-config --cflags --libs protobuf')
@@ -132,6 +134,10 @@ else:
 	if not conf.CheckLibWithHeader('pthread', 'pthread.h', 'CXX'):
 		print "pthread not found. Exiting"
 		Exit(-1)
+	if not conf.CheckLibWithHeader('zip', 'zip.h', 'CXX'):
+		print "zip library not found. Exiting"
+		Exit(-1)
+	
 	env.ParseConfig('pkg-config --cflags --libs lua5.1-c++')
 	env.ParseConfig('pkg-config --cflags --libs luabind')
 
@@ -148,9 +154,6 @@ if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 if not conf.CheckLibWithHeader('osmpbf', 'osmpbf/osmpbf.h', 'CXX'):
 	print "osmpbf library not found. Exiting"
 	print "Either install libosmpbf-dev (Ubuntu) or use https://github.com/scrosby/OSM-binary"
-	Exit(-1)
-if not conf.CheckLibWithHeader('zip', 'zip.h', 'CXX'):
-	print "Zip library not found. Exiting"
 	Exit(-1)
 if not conf.CheckLibWithHeader('protobuf', 'google/protobuf/descriptor.h', 'CXX'):
 	print "Google Protobuffer library not found. Exiting"
