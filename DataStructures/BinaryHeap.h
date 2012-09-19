@@ -117,14 +117,14 @@ public:
     }
 
     Key Size() const {
-        return ( Key )( heap.size() - 1 );
+        return static_cast<Key>( heap.size() - 1 );
     }
 
     void Insert( NodeID node, Weight weight, const Data &data ) {
         HeapElement element;
-        element.index = ( NodeID ) insertedNodes.size();
+        element.index = static_cast<NodeID>(insertedNodes.size());
         element.weight = weight;
-        const Key key = ( Key ) heap.size();
+        const Key key = static_cast<Key>(heap.size());
         heap.push_back( element );
         insertedNodes.push_back( HeapNode( node, key, weight, data ) );
         nodeIndex[node] = element.index;
@@ -150,7 +150,7 @@ public:
 
     bool WasInserted( NodeID node ) {
         const Key index = nodeIndex[node];
-        if ( index >= ( Key ) insertedNodes.size() )
+        if ( index >= static_cast<Key> (insertedNodes.size()) )
             return false;
         return insertedNodes[index].node == node;
     }
@@ -218,9 +218,9 @@ private:
         const Key droppingIndex = heap[key].index;
         const Weight weight = heap[key].weight;
         Key nextKey = key << 1;
-        while ( nextKey < ( Key ) heap.size() ) {
+        while ( nextKey < static_cast<Key>( heap.size() ) ) {
             const Key nextKeyOther = nextKey + 1;
-            if ( ( nextKeyOther < ( Key ) heap.size() )&& ( heap[nextKey].weight > heap[nextKeyOther].weight) )
+            if ( ( nextKeyOther < static_cast<Key> ( heap.size() ) )&& ( heap[nextKey].weight > heap[nextKeyOther].weight) )
                 nextKey = nextKeyOther;
 
             if ( weight <= heap[nextKey].weight )
