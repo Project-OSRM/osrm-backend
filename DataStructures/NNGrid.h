@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <algorithm>
 #include <cassert>
+#include <cfloat>
 #include <cmath>
 #include <fstream>
 #include <limits>
@@ -84,7 +85,7 @@ public:
 
     void OpenIndexFiles() {
         assert(ramInFile.is_open());
-        ramInFile.read((char*)&ramIndexTable[0], sizeof(unsigned long)*1024*1024);
+        ramInFile.read(static_cast<char*>(static_cast<void*>(&ramIndexTable[0]) ), sizeof(unsigned long)*1024*1024);
         ramInFile.close();
     }
 
@@ -187,7 +188,7 @@ public:
                 smallestEdge = candidate;
                 //}  else if(tmpDist < dist) {
                 //INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
-            } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs((int)candidate.edgeBasedNode-(int)resultNode.edgeBasedNode)) {
+            } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs(static_cast<int>(candidate.edgeBasedNode)-static_cast<int>(resultNode.edgeBasedNode) )) {
                 resultNode.weight2 = candidate.weight;
                 //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
             }
@@ -343,7 +344,7 @@ private:
         indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
 
         assert(entriesWithSameFileIndex.size() == 0);
-        indexOutFile.write((char *)&cellIndex[0],32*32*sizeof(unsigned long));
+        indexOutFile.write(static_cast<char*>(static_cast<void*>(&cellIndex[0])),32*32*sizeof(unsigned long));
         numberOfWrittenBytes += 32*32*sizeof(unsigned long);
 
         //write contents of tmpbuffer to disk
@@ -366,12 +367,12 @@ private:
         }
 
         //write length of bucket
-        memcpy((char*)&(tmpBuffer[index+counter]), (char *)&lengthOfBucket, sizeof(lengthOfBucket));
+        memcpy(static_cast<char*>(static_cast<void*>(&(tmpBuffer[index+counter]))), static_cast<char*>(static_cast<void*>(&lengthOfBucket)), sizeof(lengthOfBucket));
         counter += sizeof(lengthOfBucket);
 
         BOOST_FOREACH(const GridEntry & entry, vectorWithSameFileIndex) {
-            char * data = (char *)&(entry.edge);
-            memcpy((char*)&(tmpBuffer[index+counter]), data, sizeof(entry.edge));
+            char * data = static_cast<char*>(static_cast<void*>(&(entry.edge) ));
+            memcpy(static_cast<char*>(static_cast<void*>(&(tmpBuffer[index+counter]) )), data, sizeof(entry.edge));
             counter += sizeof(entry.edge);
         }
         //Freeing data
@@ -398,7 +399,7 @@ private:
         //only read the single necessary cell index
         localStream->seekg(startIndexInFile+(enumeratedIndex*sizeof(unsigned long)));
         unsigned long fetchedIndex = 0;
-        localStream->read((char*) &fetchedIndex, sizeof(unsigned long));
+        localStream->read(static_cast<char*>( static_cast<void*>(&fetchedIndex)), sizeof(unsigned long));
 
         if(fetchedIndex == ULONG_MAX) {
             return;
@@ -408,9 +409,9 @@ private:
         unsigned lengthOfBucket;
         unsigned currentSizeOfResult = result.size();
         localStream->seekg(position);
-        localStream->read((char *)&(lengthOfBucket), sizeof(unsigned));
+        localStream->read(static_cast<char*>( static_cast<void*>(&(lengthOfBucket))), sizeof(unsigned));
         result.resize(currentSizeOfResult+lengthOfBucket);
-        localStream->read((char *)&result[currentSizeOfResult], lengthOfBucket*sizeof(_GridEdge));
+        localStream->read(static_cast<char*>( static_cast<void*>(&result[currentSizeOfResult])), lengthOfBucket*sizeof(_GridEdge));
     }
 
 
@@ -434,7 +435,7 @@ private:
         }
 
         localStream->seekg(startIndexInFile);
-        localStream->read((char*) cellIndex, 32*32*sizeof(unsigned long));
+        localStream->read(static_cast<char*>(static_cast<void*>( cellIndex)), 32*32*sizeof(unsigned long));
         assert(cellMap.find(fileIndex) != cellMap.end());
         if(cellIndex[cellMap[fileIndex]] == ULONG_MAX) {
             return;
@@ -444,9 +445,9 @@ private:
         unsigned lengthOfBucket;
         unsigned currentSizeOfResult = result.size();
         localStream->seekg(position);
-        localStream->read((char *)&(lengthOfBucket), sizeof(unsigned));
+        localStream->read(static_cast<char*>(static_cast<void*>(&(lengthOfBucket))), sizeof(unsigned));
         result.resize(currentSizeOfResult+lengthOfBucket);
-        localStream->read((char *)&result[currentSizeOfResult], lengthOfBucket*sizeof(_GridEdge));
+        localStream->read(static_cast<char*>(static_cast<void*>(&result[currentSizeOfResult])), lengthOfBucket*sizeof(_GridEdge));
     }
 
     inline void AddEdge(const _GridEdge & edge) {
@@ -461,14 +462,14 @@ private:
 
     inline double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
 
-        const double x = (double)inputPoint.lat;
-        const double y = (double)inputPoint.lon;
-        const double a = (double)source.lat;
-        const double b = (double)source.lon;
-        const double c = (double)target.lat;
-        const double d = (double)target.lon;
+        const double x = static_cast<double>(inputPoint.lat);
+        const double y = static_cast<double>(inputPoint.lon);
+        const double a = static_cast<double>(source.lat);
+        const double b = static_cast<double>(source.lon);
+        const double c = static_cast<double>(target.lat);
+        const double d = static_cast<double>(target.lon);
         double p,q,mX,nY;
-        if(c != a){
+        if(fabs(a-c) < FLT_EPSILON){
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
             p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);

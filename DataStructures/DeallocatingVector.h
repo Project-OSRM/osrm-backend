@@ -235,7 +235,7 @@ public:
         ++mCurrentSize;
     }
 
-    inline void reserve(const size_t new_size) const {
+    inline void reserve(const size_t) const {
         //don't do anything
     }
 
@@ -266,7 +266,7 @@ public:
     }
 
     inline iterator begin() {
-        return iterator((size_t)0, mBucketList);
+        return iterator(static_cast<size_t>(0), mBucketList);
     }
 
     inline iterator end() {
@@ -274,7 +274,7 @@ public:
     }
 
     inline deallocation_iterator dbegin() {
-        return deallocation_iterator((size_t)0, mBucketList);
+        return deallocation_iterator(static_cast<size_t>(0), mBucketList);
     }
 
     inline deallocation_iterator dend() {
@@ -282,7 +282,7 @@ public:
     }
 
     inline const_iterator begin() const {
-        return const_iterator((size_t)0, mBucketList);
+        return const_iterator(static_cast<size_t>(0), mBucketList);
     }
 
     inline const_iterator end() const {
