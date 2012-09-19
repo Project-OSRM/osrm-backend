@@ -61,6 +61,7 @@ env = Environment( ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cx
 env["CC"] = os.getenv("CC") or env["CC"]
 env["CXX"] = os.getenv("CXX") or env["CXX"]
 env["ENV"].update(x for x in os.environ.items() if x[0].startswith("CCC_"))
+env['ENV']['TERM'] = os.environ['TERM']
 
 conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf' : CheckProtobuf })
 
@@ -71,10 +72,19 @@ else:
     env.Replace(CXX = GetOption('cxx'))
     print 'Using user supplied C++ Compiler: ', env['CXX']
 
+env.Append(CXXFLAGS = ["-Wextra", "-Wall", "-Wnon-virtual-dtor", "-Wundef", "-Wno-long-long", "-Woverloaded-virtual", "-Wfloat-equal", "-Wredundant-decls"])
+
+if "clang" in env["CXX"] :
+	print "Warning building with clang removes OpenMP parallelization"
+	env.Append(CXXFLAGS = ["-W#warnings", "-Wc++0x-compat", "-Waddress-of-temporary", "-Wambiguous-member-template", "-Warray-bounds", "-Watomic-properties", "-Wbind-to-temporary-copy", "-Wbuiltin-macro-redefined", "-Wc++-compat", "-Wc++0x-extensions", "-Wcomments", "-Wconditional-uninitialized", "-Wconstant-logical-operand", "-Wdeclaration-after-statement", "-Wdeprecated", "-Wdeprecated-implementations", "-Wdeprecated-writable-strings", "-Wduplicate-method-arg", "-Wempty-body", "-Wendif-labels", "-Wenum-compare", "-Wformat=2", "-Wfour-char-constants", "-Wgnu", "-Wincomplete-implementation", "-Winvalid-noreturn", "-Winvalid-offsetof", "-Winvalid-token-paste", "-Wlocal-type-template-args", "-Wmethod-signatures", "-Wmicrosoft", "-Wmissing-declarations", "-Wnon-pod-varargs", "-Wnonfragile-abi2", "-Wnull-dereference", "-Wout-of-line-declaration", "-Woverlength-strings", "-Wpacked", "-Wpointer-arith", "-Wpointer-sign", "-Wprotocol", "-Wreadonly-setter-attrs", "-Wselector", "-Wshift-overflow", "-Wshift-sign-overflow", "-Wstrict-selector-match", "-Wsuper-class-method-mismatch", "-Wtautological-compare", "-Wtypedef-redefinition", "-Wundeclared-selector", "-Wunnamed-type-template-args", "-Wunused-exception-parameter", "-Wunused-member-function", "-Wused-but-marked-unused", "-Wvariadic-macros"])
+else:
+	env.Append(CCFLAGS = ['-minline-all-stringops', '-fopenmp'])
+	env.Append(LINKFLAGS = '-fopenmp')
+
 if GetOption('buildconfiguration') == 'debug':
 	env.Append(CCFLAGS = ['-Wall', '-g3', '-rdynamic'])
 else:
-	env.Append(CCFLAGS = ['-O3', '-DNDEBUG', '-minline-all-stringops'])
+	env.Append(CCFLAGS = ['-O3', '-DNDEBUG'])
 
 if sys.platform == 'darwin':	#Mac OS X
 	#os x default installations
@@ -90,7 +100,15 @@ if sys.platform == 'darwin':	#Mac OS X
 	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [boost_prefix+"/include"] )
 	env.Append(LIBPATH = [boost_prefix+"/lib"] )	
-	env.ParseConfig('pkg-config --cflags --libs libzip')
+	
+	if not conf.CheckLibWithHeader('lua', 'lua.h', 'C'):
+		print "lua library not found. Exiting"
+		Exit(-1)
+
+	if not conf.CheckLibWithHeader('luabind', 'luabind/luabind.hpp', 'CXX'):
+		print "luabind library not found. Exiting"
+		Exit(-1)
+
 elif sys.platform.startswith("freebsd"):
 	env.ParseConfig('pkg-config --cflags --libs protobuf')
 	env.Append(CPPPATH = ['/usr/local/include', '/usr/local/include/libxml2'])
@@ -113,18 +131,16 @@ else:
 	if not conf.CheckLibWithHeader('pthread', 'pthread.h', 'CXX'):
 		print "pthread not found. Exiting"
 		Exit(-1)
+	env.ParseConfig('pkg-config --cflags --libs lua5.1-c++')
+	env.ParseConfig('pkg-config --cflags --libs luabind')
 
 #Check if architecture optimizations shall be turned off
 if GetOption('buildconfiguration') != 'debug' and GetOption('nomarch') == None and sys.platform != 'darwin':
 	env.Append(CCFLAGS = ['-march=native'])
 
-env.ParseConfig('pkg-config --cflags --libs luabind')
-env.ParseConfig('pkg-config --cflags --libs luajit')
-
 if not conf.CheckHeader('omp.h'):
 	print "Compiler does not support OpenMP. Exiting"
 	Exit(-1)
-
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
@@ -264,11 +280,6 @@ if not conf.CheckCXXHeader('boost/unordered_map.hpp'):
 #if not conf.CheckCXXHeader('tbb/task_scheduler_init.h'):
 #	print "tbb/task_scheduler_init.h not found. Exiting"
 #	Exit(-1)
-
-#Hack to make OSRM compile on the default OS X Compiler.
-if sys.platform != 'darwin':
-	env.Append(CCFLAGS = ['-fopenmp'])
-	env.Append(LINKFLAGS = ['-fopenmp'])
 
 env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('Util/*.cpp'), Glob('Extractor/*.cpp')])
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", Glob('Contractor/*.cpp'), Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
