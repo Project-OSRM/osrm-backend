@@ -3,8 +3,6 @@ Feature: Penalties
 	
 	Background:
 		Given the speedprofile "bicycle"
-		And the speedprofile settings
-		 | trafficSignalPenalty | 20 |
 			
 	Scenario: Passing a traffic signal should incur a delay
 		Given the node map

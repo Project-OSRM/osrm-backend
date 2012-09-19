@@ -79,3 +79,5 @@ win/bin-debug/
 # Sandbox folder #
 ###################
 sandbox/
+
+test/profile.lua

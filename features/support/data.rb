@@ -14,7 +14,7 @@ DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
 
-ORIGIN = [1,1]
+ORIGIN = [12,55]
 
 def set_grid_size meters    
   @zoom = 0.001*(meters.to_f/111.21)

@@ -13,12 +13,13 @@ def log_scenario_fail_info
   log "========================================="
   log "Failed scenario: #{@scenario_title}"
   log "Time: #{@scenario_time}"
+  log "Fingerprint: #{@fingerprint}"
+  log "Profile: #{@speedprofile}"
   log
   log '```xml' #so output can be posted directly to github comment fields
   log osm_str.strip
   log '```'
   log
-  log speedprofile_str
   log
   @has_logged_scenario_info = true
 end
@@ -27,7 +28,7 @@ def log_fail expected,actual,failed
   log_scenario_fail_info
   log "== "
   log "Expected: #{expected}"
-  log "Got: #{actual}"
+  log "Got:      #{actual}"
   log
   failed.each do |fail|
     log "Attempt: #{fail[:attempt]}"
@@ -49,8 +50,8 @@ def log_preprocess_info
   log osm_str, :preprocess
   log '```', :preprocess
   log '', :preprocess
-  log "== Speed profile:", :preprocess
-  log speedprofile_str.strip, :preprocess
+  log "== Profile:", :preprocess
+  log @speedprofile, :preprocess
   log '', :preprocess
   @has_logged_preprocess_info = true
 end

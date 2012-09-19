@@ -2,12 +2,6 @@ Given /^the speedprofile "([^"]*)"$/ do |profile|
   read_speedprofile profile
 end
 
-Given /^the speedprofile settings$/ do |table|
-  table.raw.each do |row|
-    speedprofile[ row[0] ] = row[1]
-  end
-end
-
 Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
