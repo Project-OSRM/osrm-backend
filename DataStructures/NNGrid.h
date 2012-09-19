@@ -89,10 +89,10 @@ public:
         ramInFile.close();
     }
 
+#ifndef ROUTED
     template<typename EdgeT>
     inline void ConstructGrid(DeallocatingVector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
     	//TODO: Implement this using STXXL-Streams
-#ifndef ROUTED
         Percent p(edgeList.size());
         BOOST_FOREACH(EdgeT & edge, edgeList) {
             p.printIncrement();
@@ -147,8 +147,8 @@ public:
         ramFile.write((char *)&ramIndexTable[0], sizeof(unsigned long)*1024*1024 );
         //close ram index file
         ramFile.close();
-#endif
     }
+#endif
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
         bool ignoreTinyComponents = (zoomLevel <= 14);
@@ -450,15 +450,15 @@ private:
         localStream->read(static_cast<char*>(static_cast<void*>(&result[currentSizeOfResult])), lengthOfBucket*sizeof(_GridEdge));
     }
 
-    inline void AddEdge(const _GridEdge & edge) {
 #ifndef ROUTED
+    inline void AddEdge(const _GridEdge & edge) {
         std::vector<BresenhamPixel> indexList;
         GetListOfIndexesForEdgeAndGridSize(edge.startCoord, edge.targetCoord, indexList);
         for(unsigned i = 0; i < indexList.size(); ++i) {
             entries.push_back(GridEntry(edge, indexList[i].first, indexList[i].second));
         }
-#endif
     }
+#endif
 
     inline double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
 
@@ -469,7 +469,7 @@ private:
         const double c = static_cast<double>(target.lat);
         const double d = static_cast<double>(target.lon);
         double p,q,mX,nY;
-        if(fabs(a-c) < FLT_EPSILON){
+        if(fabs(a-c) > FLT_EPSILON){
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
             p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
