@@ -46,14 +46,14 @@ private:
 
     double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) const {
         double r;
-        const double x = (double)inputPoint.lat;
-        const double y = (double)inputPoint.lon;
-        const double a = (double)source.lat;
-        const double b = (double)source.lon;
-        const double c = (double)target.lat;
-        const double d = (double)target.lon;
+        const double x = static_cast<double>(inputPoint.lat);
+        const double y = static_cast<double>(inputPoint.lon);
+        const double a = static_cast<double>(source.lat);
+        const double b = static_cast<double>(source.lon);
+        const double c = static_cast<double>(target.lat);
+        const double d = static_cast<double>(target.lon);
         double p,q,mX,nY;
-        if(c != a) {
+        if(fabs(a - c) <= FLT_EPSILON) {
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
             p = ((x + (m*y)) + (m*m*a - m*b))/(1 + m*m);
