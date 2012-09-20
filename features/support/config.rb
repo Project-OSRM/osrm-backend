@@ -3,25 +3,16 @@ def speedprofile
 end
 
 def reset_speedprofile
-  @speedprofile = {}
+  @speedprofile = nil
   read_speedprofile DEFAULT_SPEEDPROFILE
 end
 
 def read_speedprofile profile
-  @speedprofile = {}
-  @speedprofile_str = nil
-  s = File.read "test/speedprofiles/#{profile}.ini"
-  s.scan /(.*)=(.*)/ do |option|
-    @speedprofile[option[0].strip] = option[1].strip
-  end
-end
-
-def speedprofile_str
-  @speedprofile_str ||= "[Scenario: #{@scenario_title}]\n" + @speedprofile.map { |k,v| "    #{k} = #{v}" }.join("\n")
+  @speedprofile = profile
 end
 
 def write_speedprofile
-  File.open( 'speedprofile.ini', 'w') {|f| f.write( speedprofile_str ) }
+  FileUtils.copy_file "profiles/#{@speedprofile}.lua", "profile.lua"
 end
 
 def write_server_ini

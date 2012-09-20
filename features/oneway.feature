@@ -78,20 +78,6 @@ Feature: Oneway streets
 		 | motorway_link |            | -1     |      | x     |
 		 | trunk_link    |            | -1     |      | x     |
 		 | primary       | roundabout | -1     |      | x     |
-
-	Scenario: Disabling oneways in speedprofile
- 		Given the speedprofile "car"
-	 	And the speedprofile settings
-		 | obeyOneways | no |
-		Then routability should be
-		 | highway       | junction   | oneway | forw | backw |
-		 | primary       |            | yes    | x    | x     |
-		 | primary       |            | true   | x    | x     |
-		 | primary       |            | 1      | x    | x     |
-		 | primary       |            | -1     | x    | x     |
-		 | motorway_link |            |        | x    | x     |
-		 | trunk_link    |            |        | x    | x     |
-		 | primary       | roundabout |        | x    | x     |
 	
 	@bicycle
 	Scenario: Oneway:bicycle should override normal oneways tags

@@ -12,11 +12,7 @@ def hash_of_file path
 end
 
 def speedprofile_hash
-  @speedprofile_hash ||= Digest::SHA1.hexdigest speedprofile_str
-end
-
-def osm_hash
-  @osm_hash ||= Digest::SHA1.hexdigest osm_str
+  @speedprofile_hash ||= hash_of_file "profile.lua"
 end
 
 def osm_hash
