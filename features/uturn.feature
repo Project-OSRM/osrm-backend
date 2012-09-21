@@ -10,34 +10,34 @@ Scenario: Don't add u-turns when not needed.
 	 | abcdef |
 
 	When I route I should get
-	 | from | to | route  |
-	 | a    | b  | abcdef |
-	 | a    | c  | abcdef |
-	 | a    | d  | abcdef |
-	 | a    | e  | abcdef |
-	 | a    | f  | abcdef |
-	 | b    | a  | abcdef |
-	 | b    | c  | abcdef |
-	 | b    | d  | abcdef |
-	 | b    | e  | abcdef |
-	 | b    | f  | abcdef |
-	 | c    | a  | abcdef |
-	 | c    | b  | abcdef |
-	 | c    | d  | abcdef |
-	 | c    | e  | abcdef |
-	 | c    | f  | abcdef |
-	 | d    | a  | abcdef |
-	 | d    | b  | abcdef |
-	 | d    | c  | abcdef |
-	 | d    | e  | abcdef |
-	 | d    | f  | abcdef |
-	 | e    | a  | abcdef |
-	 | e    | b  | abcdef |
-	 | e    | c  | abcdef |
-	 | e    | d  | abcdef |
-	 | e    | f  | abcdef |
-	 | f    | a  | abcdef |
-	 | f    | b  | abcdef |
-	 | f    | c  | abcdef |
-	 | f    | d  | abcdef |
-	 | f    | e  | abcdef |
+	 | from | to | route  | compass | bearing |
+	 | a    | b  | abcdef | E       | 90      |
+	 | a    | c  | abcdef | E       | 90      |
+	 | a    | d  | abcdef | E       | 90      |
+	 | a    | e  | abcdef | E       | 90      |
+	 | a    | f  | abcdef | E       | 90      |
+	 | b    | a  | abcdef | W       | 270     |
+	 | b    | c  | abcdef | E       | 90      |
+	 | b    | d  | abcdef | E       | 90      |
+	 | b    | e  | abcdef | E       | 90      |
+	 | b    | f  | abcdef | E       | 90      |
+	 | c    | a  | abcdef | W       | 90      |
+	 | c    | b  | abcdef | W       | 270     |
+	 | c    | d  | abcdef | E       | 90      |
+	 | c    | e  | abcdef | E       | 90      |
+	 | c    | f  | abcdef | E       | 90      |
+	 | d    | a  | abcdef | W       | 270     |
+	 | d    | b  | abcdef | W       | 270     |
+	 | d    | c  | abcdef | W       | 270     |
+	 | d    | e  | abcdef | E       | 90      |
+	 | d    | f  | abcdef | E       | 90      |
+	 | e    | a  | abcdef | W       | 270     |
+	 | e    | b  | abcdef | W       | 270     |
+	 | e    | c  | abcdef | W       | 270     |
+	 | e    | d  | abcdef | W       | 270     |
+	 | e    | f  | abcdef | E       | 90      |
+	 | f    | a  | abcdef | W       | 270     |
+	 | f    | b  | abcdef | W       | 270     |
+	 | f    | c  | abcdef | W       | 270     |
+	 | f    | d  | abcdef | W       | 270     |
+	 | f    | e  | abcdef | W       | 270     |
