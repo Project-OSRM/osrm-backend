@@ -14,10 +14,13 @@ DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
 
-ORIGIN = [12,55]
+ORIGIN = [0,0]
 
-def set_grid_size meters    
-  @zoom = 0.001*(meters.to_f/111.21)
+def set_grid_size meters
+  #the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
+  #see ApproximateDistance() in ExtractorStructs.h
+  #it's only accurate when measuring along the equator, or going exactly north-south
+  @zoom = meters.to_f*0.8990679362704610899694577444566908445396483347536032203503E-5
 end
 
 def build_ways_from_table table
