@@ -90,7 +90,7 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
         pathDescription[i].length = ApproximateDistance(pathDescription[i-1].location, pathDescription[i].location);
     }
 
-    unsigned lengthOfSegment = 0;
+    double lengthOfSegment = 0;
     unsigned durationOfSegment = 0;
     unsigned indexOfSegmentBegin = 0;
 
@@ -193,7 +193,7 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
     return;
 }
 
-void DescriptionFactory::BuildRouteSummary(const unsigned distance, const unsigned time) {
+void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time) {
     summary.startName = startPhantom.nodeBasedEdgeNameID;
     summary.destName = targetPhantom.nodeBasedEdgeNameID;
     summary.BuildDurationAndLengthStrings(distance, time);
