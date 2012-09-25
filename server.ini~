@@ -1,0 +1,11 @@
+Threads = 8
+IP = 0.0.0.0
+Port = 5000
+
+hsgrData=/opt/osm/baden-wuerttemberg.osrm.hsgr
+nodesData=/opt/osm/baden-wuerttemberg.osrm.nodes
+edgesData=/opt/osm/baden-wuerttemberg.osrm.edges
+ramIndex=/opt/osm/baden-wuerttemberg.osrm.ramIndex
+fileIndex=/opt/osm/baden-wuerttemberg.osrm.fileIndex
+namesData=/opt/osm/baden-wuerttemberg.osrm.names
+timestamp=/opt/osm/baden-wuerttemberg.osrm.timestamp
