@@ -56,13 +56,17 @@ AddOption('--stxxlroot', dest='stxxlroot', type='string', nargs=1, action='store
 AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store', metavar='STRING', help='make Scons talking')
 AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
 AddOption('--all-flags', dest='allflags', type='string', nargs=0, action='store', metavar='STRING', help='turn off -march optimization in release mode')
+AddOption('--with-tools', dest='withtools', type='string', nargs=0, action='store', metavar='STRING', help='build tools for data analysis')
 
 env = Environment( ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cxx'))
 env["CC"] = os.getenv("CC") or env["CC"]
 env["CXX"] = os.getenv("CXX") or env["CXX"]
 env["ENV"].update(x for x in os.environ.items() if x[0].startswith("CCC_"))
-env['ENV']['TERM'] = os.environ['TERM']
-
+try:
+	env['ENV']['TERM'] = os.environ['TERM']
+except KeyError:
+	env['ENV']['TERM'] = 'none'
+	
 conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf' : CheckProtobuf })
 
 if GetOption('cxx') is None:
@@ -138,7 +142,7 @@ else:
 		print "zip library not found. Exiting"
 		Exit(-1)
 	
-	env.ParseConfig('pkg-config --cflags --libs lua5.1-c++')
+	env.ParseConfig('pkg-config --cflags --libs lua5.1')
 	env.ParseConfig('pkg-config --cflags --libs luabind')
 
 #Check if architecture optimizations shall be turned off
@@ -151,6 +155,10 @@ if not conf.CheckHeader('omp.h'):
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
+if GetOption('withtools') is not None:
+	if not conf.CheckLibWithHeader('gdal1.7.0', 'gdal/gdal.h', 'CXX'):
+		print "gdal library not found. Exiting"
+		Exit(-1)
 if not conf.CheckLibWithHeader('osmpbf', 'osmpbf/osmpbf.h', 'CXX'):
 	print "osmpbf library not found. Exiting"
 	print "Either install libosmpbf-dev (Ubuntu) or use https://github.com/scrosby/OSM-binary"
@@ -285,5 +293,7 @@ if not conf.CheckCXXHeader('boost/unordered_map.hpp'):
 env.Program(target = 'osrm-extract', source = ["extractor.cpp", Glob('Util/*.cpp'), Glob('Extractor/*.cpp')])
 env.Program(target = 'osrm-prepare', source = ["createHierarchy.cpp", Glob('Contractor/*.cpp'), Glob('Util/SRTMLookup/*.cpp'), Glob('Algorithms/*.cpp')])
 env.Program(target = 'osrm-routed', source = ["routed.cpp", 'Descriptors/DescriptionFactory.cpp', Glob('ThirdParty/*.cc'), Glob('Server/DataStructures/*.cpp')], CCFLAGS = env['CCFLAGS'] + ['-DROUTED'])
+if GetOption('withtools') is not None:
+	env.Program(target = 'Tools/osrm-component', source = ["Tools/componentAnalysis.cpp"])
 env = conf.Finish()
 
