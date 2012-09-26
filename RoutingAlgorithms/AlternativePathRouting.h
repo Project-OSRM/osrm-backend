@@ -301,7 +301,7 @@ private:
             }
         }
 
-        int scaledDistance = (distance+edgeBasedOffset)/(1.+VIAPATH_EPSILON);
+        int scaledDistance = (distance-edgeBasedOffset)/(1.+VIAPATH_EPSILON);
         if(scaledDistance > *_upperbound){
             _forwardHeap->DeleteAll();
             return;
