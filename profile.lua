@@ -50,16 +50,39 @@ function node_function (node)
 	node.traffic_light = true;
   end
   
-  if obey_bollards then
+  if access_tag_blacklist[barrier] then
+    node.bollard = true;
+  end
+  
+  if "" ~= barrier then
+    if obey_bollards then
 	  --flag node as unpassable if it black listed as unpassable
-	  if access_tag_blacklist[barrier] then
-		node.bollard = true;
-	  end
-	  
-	  --reverse the previous flag if there is an access tag specifying entrance
-	  if node.bollard and not bollards_whitelist[barrier] and not access_tag_whitelist[barrier] then
-		node.bollard = false;
-	  end
+	  print(barrier)
+	  node.bollard = true;
+    end
+    --reverse the previous flag if there is an access tag specifying entrance
+	if node.bollard and bollards_whitelist[barrier] and access_tag_whitelist[barrier] then
+	  node.bollard = false;
+	  return 1
+	end
+     -- Check if our vehicle types are allowd to pass the barrier
+    for i,v in ipairs(access_tags) do 
+      local mode_value = node.tags:Find(v)
+      if nil ~= mode_value and "yes" == mode_value then
+        return 1
+	    node.bollard = false
+        return
+      end
+    end
+ else
+    -- Check if our vehicle types are forbidden to pass the node
+    for i,v in ipairs(access_tags) do 
+      local mode_value = node.tags:Find(v)
+      if nil ~= mode_value and "no" == mode_value then
+	    node.bollard = true
+	    return 1
+      end
+    end
   end
   return 1
 end
