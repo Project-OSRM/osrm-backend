@@ -206,25 +206,17 @@ public:
 
     inline void RetrievePackedPathFromHeap(const typename QueryDataT::HeapPtr & _fHeap, const typename QueryDataT::HeapPtr & _bHeap, const NodeID middle, std::deque<NodeID>& packedPath) {
         NodeID pathNode = middle;
-        if(_fHeap->GetData(pathNode).parent != middle) {
-            do {
-                pathNode = _fHeap->GetData(pathNode).parent;
-
-                packedPath.push_front(pathNode);
-            }while(pathNode != _fHeap->GetData(pathNode).parent);
+        while(pathNode != _fHeap->GetData(pathNode).parent) {
+            pathNode = _fHeap->GetData(pathNode).parent;
+            packedPath.push_front(pathNode);
         }
+
         packedPath.push_back(middle);
         pathNode = middle;
-        if(_bHeap->GetData(pathNode).parent != middle) {
-            do{
-                pathNode = _bHeap->GetData(pathNode).parent;
-                packedPath.push_back(pathNode);
-            } while (pathNode != _bHeap->GetData(pathNode).parent);
-        }
-//      std::cout << "unpacking: ";
-//      for(std::deque<NodeID>::iterator it = packedPath.begin(); it != packedPath.end(); ++it)
-//          std::cout << *it << " ";
-//      std::cout << std::endl;
+        while (pathNode != _bHeap->GetData(pathNode).parent){
+            pathNode = _bHeap->GetData(pathNode).parent;
+            packedPath.push_back(pathNode);
+    	}
     }
 };
 
