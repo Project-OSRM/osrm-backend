@@ -56,7 +56,7 @@ Feature: Handle bad data in a graceful manner
 	@poles
 	Scenario: No routing close to the north/south pole
 	Mercator is undefined close to the poles.
-	All nodes and request with lat to close to the pole should therfore be ignored.
+	All nodes and request with latitude to close to either of the poles should therefore be ignored.
 
 		Given the node locations
 		 | node | lat | lon |
@@ -64,6 +64,8 @@ Feature: Handle bad data in a graceful manner
 		 | b    | 87  | 0   |
 		 | c    | 82  | 0   |
 		 | d    | 80  | 0   |
+		 | e    | 78  | 0   |
+		 | k    | -78 | 0   |
 		 | l    | -80 | 0   |
 		 | m    | -82 | 0   |
 		 | n    | -87 | 0   |
@@ -73,6 +75,10 @@ Feature: Handle bad data in a graceful manner
 		 | nodes |
 		 | ab    |
 		 | bc    |
+		 | cd    |
+		 | de    |
+		 | kl    |
+		 | lm    |
 		 | mn    |
 		 | no    |
 
@@ -82,7 +88,7 @@ Feature: Handle bad data in a graceful manner
 		 | b    | c  |       |
 		 | a    | d  |       |
 		 | c    | d  | cd    |
-		 | l    | m  | cd    |
+		 | l    | m  | lm    |
 		 | o    | l  |       |
 		 | n    | m  |       |
 		 | o    | n  |       |
