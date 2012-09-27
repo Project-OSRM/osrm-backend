@@ -14,7 +14,8 @@ DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
 
-ORIGIN = [0,0]
+
+ORIGIN = [1,1]
 
 def set_grid_size meters
   #the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
