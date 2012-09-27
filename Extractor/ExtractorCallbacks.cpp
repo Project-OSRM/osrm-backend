@@ -53,7 +53,8 @@ ExtractorCallbacks::~ExtractorCallbacks() {
 
 /** warning: caller needs to take care of synchronization! */
 bool ExtractorCallbacks::nodeFunction(_Node &n) {
-    externalMemory->allNodes.push_back(n);
+    if(n.lat <= 85*100000 && n.lat >= -85*100000)
+        externalMemory->allNodes.push_back(n);
     return true;
 }
 
