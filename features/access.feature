@@ -17,7 +17,7 @@ Feature: Default speedprofiles
 		 | service       | x    |
 		 | unclassified  | x    |
 		 | living_street | x    |
-		 | road		     | x    |
+		 | road		     |      |
 		 | track         |      |
 		 | path          |      |
 		 | footway       |      |
