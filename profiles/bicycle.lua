@@ -28,7 +28,8 @@ speed_profile = {
 	["pedestrian"] = 5,
 	["pier"] = 5,
 	["steps"] = 1,
-	["default"] = 18
+	["default"] = 18,
+	["ferry"] = 5
 }
 
 
@@ -100,13 +101,33 @@ function way_function (way, numberOfNodesInWay)
 		way.name = highway		-- if no name exists, use way type
 	end
 	
-	-- Set the avg speed on the way if it is accessible by road class
-	if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
-		if (0 < maxspeed and not take_minimum_of_speeds) or (maxspeed == 0) then
-			maxspeed = math.huge
-		end
-		way.speed = math.min(speed_profile[highway], maxspeed)
-	end
+	-- Handling ferries and piers
+    if (speed_profile[route] ~= nil and speed_profile[route] > 0) or
+       (speed_profile[man_made] ~= nil and speed_profile[man_made] > 0) 
+    then
+      if durationIsValid(duration) then
+	    way.speed = math.max( duration / math.max(1, numberOfNodesInWay-1) );
+        way.is_duration_set = true;
+      end
+      way.direction = Way.bidirectional;
+      if speed_profile[route] ~= nil then
+         highway = route;
+      elseif speed_profile[man_made] ~= nil then
+         highway = man_made;
+      end
+      if not way.is_duration_set then
+        way.speed = speed_profile[highway]
+      end
+      print("added "..route.." with speed "..way.speed)
+    end
+    
+  -- Set the avg speed on the way if it is accessible by road class
+    if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
+      if (0 < maxspeed and not take_minimum_of_speeds) or (maxspeed == 0) then
+        maxspeed = math.huge
+      end
+      way.speed = math.min(speed_profile[highway], maxspeed)
+    end
 	
 	-- Set the avg speed on ways that are marked accessible
 	if access_tag_whitelist[access]	and way.speed == -1 then
