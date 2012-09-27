@@ -28,31 +28,6 @@ Feature: Handle bad data in a graceful manner
 		 | 1    | 1  |       |
 		 | 2    | 2  |       |
 
-	Scenario: Start/end point far outside data area
-		Given the node map
-		 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    | 1 |
-		 | a | b |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    | 2 |
-		 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    | 3 |
-
-		Given the ways
-		 | nodes |
-		 | ab    |
-
-		When I route I should get
-		 | from | to | route |
-		 | 1    | a  | ab    |
-		 | 2    | a  | ab    |
-		 | 3    | a  | ab    |
-		 | 1    | b  |       |
-		 | 2    | b  |       |
-		 | 3    | b  |       |
-		 | 1    | 2  |       |
-		 | 1    | 3  |       |
-		 | 2    | 1  |       |
-		 | 2    | 3  |       |
-		 | 3    | 1  |       |
-		 | 3    | 2  |       |
-
 	@poles
 	Scenario: No routing close to the north/south pole
 	Mercator is undefined close to the poles.
