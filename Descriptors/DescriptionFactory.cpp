@@ -60,7 +60,11 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & _targetPhantom) {
 }
 
 void DescriptionFactory::AppendSegment(const _Coordinate & coordinate, const _PathData & data ) {
-    pathDescription.push_back(SegmentInformation(coordinate, data.nameID, 0, data.durationOfSegment, data.turnInstruction) );
+    if(1 == pathDescription.size() && pathDescription.back().location == coordinate) {
+        pathDescription.back().nameID = data.nameID;
+    } else {
+        pathDescription.push_back(SegmentInformation(coordinate, data.nameID, 0, data.durationOfSegment, data.turnInstruction) );
+    }
 }
 
 void DescriptionFactory::AppendEncodedPolylineString(std::string & output, bool isEncoded) {
@@ -167,6 +171,7 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
         pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
     }
     if(0 == pathDescription[0].length) {
+        //TODO: this is never called actually?
         if(pathDescription.size() > 2) {
             pathDescription.erase(pathDescription.begin());
             pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
