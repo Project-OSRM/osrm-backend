@@ -217,11 +217,11 @@ When /^I route I should get$/ do |table|
       if table.headers.include? 'route'
         got['route'] = (instructions || '').strip
         if table.headers.include? 'distance'
-          got['distance'] = instructions ? json['route_summary']['total_distance'].to_s : nil
+          got['distance'] = instructions ? json['route_summary']['total_distance'].to_s : ''
         end
         if table.headers.include? 'time'
           raise "*** time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
-          got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : nil
+          got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : ''
         end
         if table.headers.include? 'bearing'
           got['bearing'] = bearings
