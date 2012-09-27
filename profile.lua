@@ -57,7 +57,6 @@ function node_function (node)
   if "" ~= barrier then
     if obey_bollards then
 	  --flag node as unpassable if it black listed as unpassable
-	  print(barrier)
 	  node.bollard = true;
     end
     --reverse the previous flag if there is an access tag specifying entrance
@@ -69,7 +68,6 @@ function node_function (node)
     for i,v in ipairs(access_tags) do 
       local mode_value = node.tags:Find(v)
       if nil ~= mode_value and "yes" == mode_value then
-        return 1
 	    node.bollard = false
         return
       end
