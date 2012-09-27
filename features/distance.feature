@@ -1,6 +1,36 @@
 @routing @distance
 Feature: Distance calculation
 	
+	@winding
+	Scenario: Distance should equal sum of segments, leftwinded
+		Given the node map
+		 | e |   |
+		 | d | c |
+		 | a | b |
+
+		And the ways
+		 | nodes |
+		 | abcde |
+
+		When I route I should get
+		 | from | to | route | distance |
+		 | a    | d  | abcde | 300 +-1  |
+
+	@winding
+	Scenario: Distance should equal sum of segments, rightwinded
+		Given the node map
+		 |   | e  |
+		 | c | d |
+		 | b | a |
+
+		And the ways
+		 | nodes |
+		 | abcde |
+
+		When I route I should get
+		 | from | to | route | distance |
+		 | a    | d  | abcde | 300 +-1  |
+
 	Scenario: 1m distances
 		Given a grid size of 1 meters
 		Given the node map
@@ -77,6 +107,7 @@ Feature: Distance calculation
 		 | a    | c  | abc   | 2000 +-1 |
 		 | c    | a  | abc   | 2000 +-1 |
 
+	@winding
 	Scenario: Distance of a winding south-north path
 		Given a grid size of 10 meters
 		Given the node map
@@ -99,6 +130,7 @@ Feature: Distance calculation
 		 | a    | g  | abcdefgh | 60 +-1   |
 		 | a    | h  | abcdefgh | 70 +-1   |
 		
+	@winding
 	Scenario: Distance of a winding east-west path
 		Given a grid size of 10 meters
 		Given the node map
