@@ -25,8 +25,8 @@ Feature: Street names in instructions
 		 | bc    | track    |      |
 
 		When I route I should get
-		 | from | to | route         |
-		 | a    | c  | cycleway,trac |
+		 | from | to | route          |
+		 | a    | c  | cycleway,track |
 	
 	Scenario: Don't create instructions for every node of unnamed ways
 		Given the node map
