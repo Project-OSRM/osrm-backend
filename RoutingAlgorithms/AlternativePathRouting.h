@@ -52,10 +52,11 @@ public:
     ~AlternativeRouting() {}
 
     void operator()(const PhantomNodes & phantomNodePair, RawRouteData & rawRouteData) {
-        if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX()) {
+        if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX() || phantomNodePair.PhantomNodesHaveEqualLocation()) {
             rawRouteData.lengthOfShortestPath = rawRouteData.lengthOfAlternativePath = INT_MAX;
             return;
         }
+
         std::vector<NodeID> alternativePath;
         std::vector<NodeID> viaNodeCandidates;
         std::deque <NodeID> packedShortestPath;

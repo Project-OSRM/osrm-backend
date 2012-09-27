@@ -42,7 +42,9 @@ struct _Coordinate {
         }
         return true;
     }
-
+    bool operator==(const _Coordinate & other) const {
+        return lat == other.lat && lon == other.lon;
+    }
 };
 
 inline std::ostream & operator<<(std::ostream & out, const _Coordinate & c){
