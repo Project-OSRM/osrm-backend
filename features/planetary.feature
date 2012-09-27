@@ -85,3 +85,39 @@ Feature: Distance calculation
 		When I route I should get
 		 | from | to | route | distance      |
 		 | a    | b  | ab    | 8905559 ~0.1% |
+
+
+	@poles
+	Scenario: No routing close to the north/south pole
+	Mercator is undefined close to the poles.
+	All nodes and request with lat to close to the pole should therfore be ignored.
+	
+		Given the node locations
+		 | node | lat | lon |
+		 | a    | 89  | 0   |
+		 | b    | 87  | 0   |
+		 | c    | 82  | 0   |
+		 | d    | 80  | 0   |
+		 | l    | -80  | 0   |
+		 | m    | -82  | 0   |
+		 | n    | -87  | 0   |
+		 | o    | -89  | 0   |
+
+		And the ways
+		 | nodes |
+		 | ab    |
+		 | bc    |
+		 | mn    |
+		 | no    |
+
+		When I route I should get
+		 | from | to | route |
+		 | a    | b  |       |
+		 | b    | c  |       | 
+		 | a    | d  |       | 
+		 | c    | d  | cd    |
+		 | l    | m  | cd    |
+		 | o    | l  |       |
+		 | n    | m  |       | 
+		 | o    | n  |       | 
+		 
