@@ -17,6 +17,10 @@ DEFAULT_GRID_SIZE = 100   #meters
 
 ORIGIN = [1,1]
 
+def sanitized_scenario_title
+  @sanitized_scenario_title ||= @scenario_title.gsub /[^0-9A-Za-z.\-]/, '_'
+end
+
 def set_grid_size meters
   #the constant is calculated (with BigDecimal as: 1.0/(DEG_TO_RAD*EARTH_RADIUS_IN_METERS
   #see ApproximateDistance() in ExtractorStructs.h
@@ -134,10 +138,10 @@ def osm_str
   @osm_str
 end
 
-def write_osm  
+def write_osm 
   #write .oms file if needed
   Dir.mkdir DATA_FOLDER unless File.exist? DATA_FOLDER
-  @osm_file = "#{DATA_FOLDER}/#{fingerprint}"
+  @osm_file = "#{DATA_FOLDER}/#{sanitized_scenario_title}_#{fingerprint}"
   unless File.exist?("#{@osm_file}.osm")
     File.open( "#{@osm_file}.osm", 'w') {|f| f.write(osm_str) }
   end
@@ -162,8 +166,7 @@ def extracted?
 end
 
 def prepared?
-  base = "#{DATA_FOLDER}/#{fingerprint}"
-  File.exist?("#{base}.osrm.hsgr")
+  File.exist?("#{@osm_file}.osrm.hsgr")
 end
 
 def reprocess
