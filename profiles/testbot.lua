@@ -14,6 +14,12 @@ speed_profile = {
 }
 
 function node_function (node)
+	local traffic_signal = node.tags:Find("highway")
+
+	if traffic_signal == "traffic_signals" then
+		node.traffic_light = true;
+		-- TODO: a way to set the penalty value
+	end
 	return 1
 end
 
