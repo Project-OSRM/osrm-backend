@@ -13,6 +13,17 @@ speed_profile = {
 	["default"] = 24
 }
 
+-- these settings are read directly by osrm
+
+take_minimum_of_speeds 	= true
+obey_oneway 			= true
+obey_bollards 			= true
+use_restrictions 		= true
+ignore_areas 			= true	-- future feature
+traffic_signal_penalty 	= 7		-- seconds
+u_turn_penalty 			= 20
+
+
 function node_function (node)
 	local traffic_signal = node.tags:Find("highway")
 
