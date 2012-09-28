@@ -48,7 +48,6 @@ inline unsigned parseDuration(const std::string &s) {
         return 600*(hours*60+minutes);
     }
     return UINT_MAX;
-
 }
 
 inline int parseMaxspeed(std::string input) { //call-by-value on purpose.
