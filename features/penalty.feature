@@ -45,11 +45,11 @@ Testbot uses a signal penalty of 7s
 		When I route I should get
 		 | from | to | route | time    |
 		 | a    | b  | abc   | 10s +-1 |
-		 | a    | c  | abc   | 17s +-1 |
+		 | a    | c  | abc   | 27s +-1 |
 		 | d    | e  | def   | 20s +-1 |
-		 | d    | f  | def   | 27s +-1 |
+		 | d    | f  | def   | 47s +-1 |
 		 | g    | h  | ghi   | 30s +-1 |
-		 | g    | i  | ghi   | 37s +-1 |
+		 | g    | i  | ghi   | 67s +-1 |
 
 	Scenario: Passing multiple traffic signals should incur a accumulated delay
 		Given the node map
@@ -68,6 +68,51 @@ Testbot uses a signal penalty of 7s
 		When I route I should get
 		 | from | to | route | time    |
 		 | a    | e  | abcde | 61s +-1 |
+
+		Scenario: Signal penalty should not depend on way type
+			Given the node map
+			 | a | b | c |
+			 | d | e | f |
+			 | g | h | i |
+
+			And the nodes
+			 | node | highway         |
+			 | b    | traffic_signals |
+			 | e    | traffic_signals |
+			 | h    | traffic_signals |
+
+			And the ways
+			 | nodes | highway   |
+			 | abc   | primary   |
+			 | def   | secondary |
+			 | ghi   | tertiary  |
+
+			When I route I should get
+			 | from | to | route | time    |
+			 | a    | b  | abc   | 10s +-1 |
+			 | a    | c  | abc   | 27s +-1 |
+			 | d    | e  | def   | 20s +-1 |
+			 | d    | f  | def   | 47s +-1 |
+			 | g    | h  | ghi   | 30s +-1 |
+			 | g    | i  | ghi   | 67s +-1 |
+
+		Scenario: Passing multiple traffic signals should incur a accumulated delay
+			Given the node map
+			 | a | b | c | d | e |
+
+			And the nodes
+			 | node | highway         |
+			 | b    | traffic_signals |
+			 | c    | traffic_signals |
+			 | d    | traffic_signals |
+
+			And the ways
+			 | nodes  |
+			 | abcde |
+
+			When I route I should get
+			 | from | to | route | time    |
+			 | a    | e  | abcde | 61s +-1 |
 
 	Scenario: Starting or ending at a traffic signal should not incur a delay
 		Given the node map
