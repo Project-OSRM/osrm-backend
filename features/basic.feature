@@ -113,6 +113,38 @@ Feature: Basic Routing
 		 | c    | a  | ca    |
 		 | c    | b  | bc    |
 
+	Scenario: 3 connected triangles
+		Given a grid size of 100 meters
+		Given the node map
+		 | x | a |   | b | s |
+		 | y |   |   |   | t |
+		 |   |   | c |   |   |
+		 |   | v |   | w |   |
+
+		And the ways
+		 | nodes |
+		 | ab    |
+		 | bc    |
+		 | ca    |
+		 | ax    |
+		 | xy    |
+		 | ya    |
+		 | bs    |
+		 | st    |
+		 | tb    |
+		 | cv    |
+		 | vw    |
+		 | wc    |
+		
+		When I route I should get
+		 | from | to | route |
+		 | a    | b  | ab    |
+		 | a    | c  | ca    |
+		 | b    | c  | bc    |
+		 | b    | a  | ab    |
+		 | c    | a  | ca    |
+		 | c    | b  | bc    |
+
 	Scenario: To ways connected at a 45 degree angle
 		Given the node map
 		 | a |   |   |
@@ -132,28 +164,53 @@ Feature: Basic Routing
 		 | c    | a  | abc     |
 		 | c    | e  | cde     |
 		 | e    | c  | cde     |
-	
-	@rows
-	Scenario: Basic routability using row test
-	 	Then routability should be
-		 | highway       | forw | backw |
-		 | cycleway      | x    | x     |
-		 | cycleway      | x    | x     |
 		
-	@rows
-	Scenario: Basic routability using node map
-	This test mimics what the row test above acutally does: construct a map with isolated ways, then route on each.
+	Scenario: Grid city center
 		Given the node map
-		 | a | b | c | d |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | e | f | g | h |
+		 | a | b | c | d |
+		 | e | f | g | h |
+		 | i | j | k | l |
+		 | m | n | o | p |
 
 		And the ways
 		 | nodes |
 		 | abcd  |
 		 | efgh  |
+		 | ijkl  |
+		 | mnop  |
+		 | aeim  |
+		 | bfjn  |
+		 | cgko  |
+		 | dhlp  |
 
 		When I route I should get
 		 | from | to | route |
-		 | b    | c  | abcd  |
-		 | c    | b  | abcd  |
 		 | f    | g  | efgh  |
 		 | g    | f  | efgh  |
+		 | f    | j  | bfjn  |
+		 | j    | f  | bfjn  |
+
+	Scenario: Grid city periphery
+		Given the node map
+		 | a | b | c | d |
+		 | e | f | g | h |
+		 | i | j | k | l |
+		 | m | n | o | p |
+
+		And the ways
+		 | nodes |
+		 | abcd  |
+		 | efgh  |
+		 | ijkl  |
+		 | mnop  |
+		 | aeim  |
+		 | bfjn  |
+		 | cgko  |
+		 | dhlp  |
+
+		When I route I should get
+		 | from | to | route |
+		 | a    | d  | abcd  |
+		 | d    | a  | efgh  |
+		 | a    | m  | aeim  |
+		 | m    | a  | aeim  |
