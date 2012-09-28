@@ -105,12 +105,10 @@ public:
             int tlat = 100000*lat2y(edge.lat2/100000.);
             int tlon = edge.lon2;
             AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon), edge.belongsToTinyComponent ) );
-            INFO("adding edge=> id:" << edge.id);
         }
         double timestamp = get_timestamp();
         //create index file on disk, old one is over written
         indexOutFile.open(fileIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
-        INFO("sorting grid data consisting of " << entries.size() << " edges...");
         //sort entries
         stxxl::sort(entries.begin(), entries.end(), CompareGridEdgeDataByRamIndex(), 1024*1024*1024);
         INFO("finished sorting after " << (get_timestamp() - timestamp) << "s");
