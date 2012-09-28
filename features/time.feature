@@ -1,14 +1,12 @@
 @routing @time
 Feature: Estimation of travel time
-	Note:
-	15km/h = 15000m/3600s = 150m/36s = 100m/24s
-	5km/h = 5000m/3600s = 50m/36s = 100m/72s
-	
-	Going dioganally causes the distance to increase by sqrt(2):
-	24s * sqrt(2)=  33.941125496954285s
+Testbot speeds:
+Primary road:	36km/h = 36000m/3600s = 100m/10s
+Secondary road:	18km/h = 18000m/3600s = 100m/20s
+Tertiary road:	12km/h = 12000m/3600s = 100m/30s
 	
 	Background: Use specific speeds
-		Given the speedprofile "bicycle"
+		Given the speedprofile "testbot"
 	
 	@basic_time
 	Scenario: Basic travel time, 1m scale
@@ -30,15 +28,15 @@ Feature: Estimation of travel time
 		 | xh    | primary   |
 
 		When I route I should get
-		 | from | to | route | time |
-		 | x    | a  | xa    | 0s  |
-		 | x    | b  | xb    | 0s  |
-		 | x    | c  | xc    | 0s  |
-		 | x    | d  | xd    | 0s  |
-		 | x    | e  | xe    | 0s  |
-		 | x    | f  | xf    | 0s  |
-		 | x    | g  | xg    | 0s  |
-		 | x    | h  | xh    | 0s  |
+		 | from | to | route | time   |
+		 | x    | a  | xa    | 0s +-1 |
+		 | x    | b  | xb    | 0s +-1 |
+		 | x    | c  | xc    | 0s +-1 |
+		 | x    | d  | xd    | 0s +-1 |
+		 | x    | e  | xe    | 0s +-1 |
+		 | x    | f  | xf    | 0s +-1 |
+		 | x    | g  | xg    | 0s +-1 |
+		 | x    | h  | xh    | 0s +-1 |
 	
 	@basic_time
 	Scenario: Basic travel time, 10m scale
@@ -60,15 +58,15 @@ Feature: Estimation of travel time
 		 | xh    | primary   |
 
 		When I route I should get
-		 | from | to | route | time |
-		 | x    | a  | xa    | 2s  |
-		 | x    | b  | xb    | 3s  |
-		 | x    | c  | xc    | 2s  |
-		 | x    | d  | xd    | 3s  |
-		 | x    | e  | xe    | 2s  |
-		 | x    | f  | xf    | 3s  |
-		 | x    | g  | xg    | 2s  |
-		 | x    | h  | xh    | 3s  |
+		 | from | to | route | time   |
+		 | x    | a  | xa    | 1s +-1 |
+		 | x    | b  | xb    | 1s +-1 |
+		 | x    | c  | xc    | 1s +-1 |
+		 | x    | d  | xd    | 1s +-1 |
+		 | x    | e  | xe    | 1s +-1 |
+		 | x    | f  | xf    | 1s +-1 |
+		 | x    | g  | xg    | 1s +-1 |
+		 | x    | h  | xh    | 1s +-1 |
 
 	@basic_time
 	Scenario: Basic travel time, 100m scale
@@ -90,15 +88,15 @@ Feature: Estimation of travel time
 		 | xh    | primary   |
 	
 		When I route I should get
-		 | from | to | route | time |
-		 | x    | a  | xa    | 24s  |
-		 | x    | b  | xb    | 34s  |
-		 | x    | c  | xc    | 24s  |
-		 | x    | d  | xd    | 34s  |
-		 | x    | e  | xe    | 24s  |
-		 | x    | f  | xf    | 34s  |
-		 | x    | g  | xg    | 24s  |
-		 | x    | h  | xh    | 34s  |
+		 | from | to | route | time    |
+		 | x    | a  | xa    | 10s +-1 |
+		 | x    | b  | xb    | 14s +-1 |
+		 | x    | c  | xc    | 10s +-1 |
+		 | x    | d  | xd    | 14s +-1 |
+		 | x    | e  | xe    | 10s +-1 |
+		 | x    | f  | xf    | 14s +-1 |
+		 | x    | g  | xg    | 10s +-1 |
+		 | x    | h  | xh    | 14s +-1 |
 
 	@basic_time
 	Scenario: Basic travel time, 1km scale
@@ -120,15 +118,15 @@ Feature: Estimation of travel time
 		 | xh    | primary   |
 
 		When I route I should get
-		 | from | to | route | time |
-		 | x    | a  | xa    | 240s  |
-		 | x    | b  | xb    | 339s  |
-		 | x    | c  | xc    | 240s  |
-		 | x    | d  | xd    | 339s  |
-		 | x    | e  | xe    | 240s  |
-		 | x    | f  | xf    | 339s  |
-		 | x    | g  | xg    | 240s  |
-		 | x    | h  | xh    | 339s  |
+		 | from | to | route | time     |
+		 | x    | a  | xa    | 100s +-1 |
+		 | x    | b  | xb    | 141s +-1 |
+		 | x    | c  | xc    | 100s +-1 |
+		 | x    | d  | xd    | 141s +-1 |
+		 | x    | e  | xe    | 100s +-1 |
+		 | x    | f  | xf    | 141s +-1 |
+		 | x    | g  | xg    | 100s +-1 |
+		 | x    | h  | xh    | 141s +-1 |
 
 	@basic_time
 	Scenario: Basic travel time, 10km scale
@@ -150,64 +148,39 @@ Feature: Estimation of travel time
 		 | xh    | primary   |
 		
 		When I route I should get
-		 | from | to | route | time |
-		 | x    | a  | xa    | 2400s  |
-		 | x    | b  | xb    | 3394s  |
-		 | x    | c  | xc    | 2400s  |
-		 | x    | d  | xd    | 3394s  |
-		 | x    | e  | xe    | 2400s  |
-		 | x    | f  | xf    | 3394s  |
-		 | x    | g  | xg    | 2400s  |
-		 | x    | h  | xh    | 3394s  |
-
-	@basic_time
-	Scenario: Basic travel time, 100km scale
-		Given a grid size of 100000 meters
-		Given the node map
-		 | h | a | b |
-		 | g | x | c |
-		 | f | e | d |
-
-		And the ways
-		 | nodes | highway   |
-		 | xa    | primary   |
-		 | xb    | primary   |
-		 | xc    | primary   |
-		 | xd    | primary   |
-		 | xe    | primary   |
-		 | xf    | primary   |
-		 | xg    | primary   |
-		 | xh    | primary   |
-
-		When I route I should get
-		 | from | to | route | time |
-		 | x    | a  | xa    | 24000s  |
-		 | x    | b  | xb    | 33941s  |
-		 | x    | c  | xc    | 24000s  |
-		 | x    | d  | xd    | 33941s  |
-		 | x    | e  | xe    | 24000s  |
-		 | x    | f  | xf    | 33941s  |
-		 | x    | g  | xg    | 24000s  |
-		 | x    | h  | xh    | 33941s  |
+		 | from | to | route | time      |
+		 | x    | a  | xa    | 1000s +-1 |
+		 | x    | b  | xb    | 1414s +-1 |
+		 | x    | c  | xc    | 1000s +-1 |
+		 | x    | d  | xd    | 1414s +-1 |
+		 | x    | e  | xe    | 1000s +-1 |
+		 | x    | f  | xf    | 1414s +-1 |
+		 | x    | g  | xg    | 1000s +-1 |
+		 | x    | h  | xh    | 1414s +-1 |
 
 	Scenario: Time of travel depending on way type
 		Given the node map
 		 | a | b |
 		 | c | d |
+		 | e | f |
 
 		And the ways
 		 | nodes | highway   |
 		 | ab    | primary   |
-		 | cd    | footway   |
+		 | cd    | secondary |
+		 | ef    | tertiary  |
+		 | ace   | something |
 		
 		When I route I should get
-		 | from | to | route | time |
-		 | a    | b  | ab    | 24s  |
-		 | c    | d  | cd    | 72s  |
+		 | from | to | route | time    |
+		 | a    | b  | ab    | 10s +-1 |
+		 | c    | d  | cd    | 20s +-1 |
+		 | e    | f  | ef    | 30s +-1 |
 
 	Scenario: Time of travel on a series of ways
 		Given the node map
-		 | a | b | c | d |
+		 | a | b |   |
+		 |   | c | d |
 
 		And the ways
 		 | nodes | highway |
@@ -216,42 +189,44 @@ Feature: Estimation of travel time
 		 | cd    | primary |
 
 		When I route I should get
-		 | from | to | route    | time |
-		 | a    | b  | ab       | 24s  |
-		 | a    | c  | ab,bc    | 48s  |
-		 | a    | d  | ab,bc,cd | 72s  |
+		 | from | to | route    | time    |
+		 | a    | b  | ab       | 10s +-1 |
+		 | a    | c  | ab,bc    | 20s +-1 |
+		 | a    | d  | ab,bc,cd | 30s +-1 |
 
 	Scenario: Time of travel on a winding way
 		Given the node map
-		 | a | b |   |   |   |   |
-		 |   | c | d | e |   | i |
-		 |   |   |   | f | g | h |
+		 | a |   | i | h |
+		 | b | c |   | g |
+		 |   | d | e | f |
 
 		And the ways
 		 | nodes     | highway |
 		 | abcdefghi | primary |
 
 		When I route I should get
-		 | from | to | route     | time |
-		 | a    | b  | abcdefghi | 24s  |
-		 | a    | e  | abcdefghi | 96s  |
-		 | a    | i  | abcdefghi | 192s |
+		 | from | to | route     | time    |
+		 | a    | b  | abcdefghi | 10s +-1 |
+		 | a    | e  | abcdefghi | 40s +-1 |
+		 | a    | i  | abcdefghi | 80s +-1 |
 
 	Scenario: Time of travel on combination of road types
 		Given the node map
-		 | a | b | c | d | e |
-
+		 | a | b | c |
+		 |   |   | d |
+		 |   |   | e |
+		
 		And the ways
 		 | nodes | highway   |
 		 | abc   | primary   |
-		 | cde   | footway   |
+		 | cde   | tertiary  |
 
 		When I route I should get
-		 | from | to | route   | time |
-		 | b    | c  | abc     | 24s  |
-		 | c    | e  | cde     | 72s  |
-		 | b    | d  | abc,cde | 144s |
-		 | a    | e  | abc,cde | 192s |
+		 | from | to | route   | time    |
+		 | b    | c  | abc     | 10s +-1 |
+		 | c    | e  | cde     | 60s +-1 |
+		 | b    | d  | abc,cde | 40s +-1 |
+		 | a    | e  | abc,cde | 80s +-1 |
 
 	Scenario: Time of travel on part of a way
 		Given the node map
@@ -265,10 +240,10 @@ Feature: Estimation of travel time
 		 | ab    | primary |
 
 		When I route I should get
-		 | from | to | route | time |
-		 | 1    | 2  | ab    | 24s  |
-		 | 1    | 3  | ab    | 48s  |
-		 | 1    | 4  | ab    | 72s  |
-		 | 4    | 3  | ab    | 24s  |
-		 | 4    | 2  | ab    | 48s  |
-		 | 4    | 1  | ab    | 72s  |
+		 | from | to | route | time    |
+		 | 1    | 2  | ab    | 10s +-1 |
+		 | 1    | 3  | ab    | 20s +-1 |
+		 | 1    | 4  | ab    | 30s +-1 |
+		 | 4    | 3  | ab    | 10s +-1 |
+		 | 4    | 2  | ab    | 20s +-1 |
+		 | 4    | 1  | ab    | 30s +-1 |
