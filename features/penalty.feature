@@ -40,16 +40,16 @@ Testbot uses a signal penalty of 7s
 		 | nodes | highway   |
 		 | abc   | primary   |
 		 | def   | secondary |
-		 | ghi   | tertiary  |
+		 | ghi   | tertiary  |
 
 		When I route I should get
 		 | from | to | route | time    |
 		 | a    | b  | abc   | 10s +-1 |
 		 | a    | c  | abc   | 17s +-1 |
-		 | d    | e  | abc   | 20s +-1 |
-		 | d    | f  | abc   | 27s +-1 |
-		 | g    | h  | abc   | 30s +-1 |
-		 | g    | i  | abc   | 37s +-1 |
+		 | d    | e  | def   | 20s +-1 |
+		 | d    | f  | def   | 27s +-1 |
+		 | g    | h  | ghi   | 30s +-1 |
+		 | g    | i  | ghi   | 37s +-1 |
 
 	Scenario: Passing multiple traffic signals should incur a accumulated delay
 		Given the node map
