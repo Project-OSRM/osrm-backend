@@ -105,6 +105,7 @@ public:
             int tlat = 100000*lat2y(edge.lat2/100000.);
             int tlon = edge.lon2;
             AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon), edge.belongsToTinyComponent ) );
+            INFO("adding edge=> id:" << edge.id);
         }
         double timestamp = get_timestamp();
         //create index file on disk, old one is over written
@@ -191,6 +192,7 @@ public:
                 //}  else if(tmpDist < dist) {
                 //INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
             } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs(static_cast<int>(candidate.edgeBasedNode)-static_cast<int>(resultNode.edgeBasedNode) )) {
+                resultNode.edgeBasedNode = std::min(candidate.edgeBasedNode, resultNode.edgeBasedNode);
                 resultNode.weight2 = candidate.weight;
                 //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
             }
