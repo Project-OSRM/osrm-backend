@@ -138,12 +138,12 @@ int main (int argc, char *argv[]) {
     if(0 != luaL_dostring( myLuaState, "return traffic_signal_penalty\n")) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
-    speedProfile.trafficSignalPenalty = lua_tointeger(myLuaState, -1);
+    speedProfile.trafficSignalPenalty = 10*lua_tointeger(myLuaState, -1);
 
     if(0 != luaL_dostring( myLuaState, "return u_turn_penalty\n")) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
-    speedProfile.uTurnPenalty = lua_tointeger(myLuaState, -1);
+    speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
 
 
     /***
