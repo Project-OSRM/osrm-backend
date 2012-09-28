@@ -1,8 +1,8 @@
-@routing @penalty
+@routing @penalty @signal
 Feature: Penalties
 	
 	Background:
-		Given the speedprofile "bicycle"
+		Given the speedprofile "testbot"
 			
 	Scenario: Passing a traffic signal should incur a delay
 		Given the node map
@@ -19,9 +19,9 @@ Feature: Penalties
 		 | def   |
 
 		When I route I should get
-		 | from | to | route   | time |
-		 | a    | c  | abc     | 38s  |
-		 | d    | f  | def     | 58s  |
+		 | from | to | route | time    |
+		 | a    | c  | abc   | 20s +-1 |
+		 | d    | f  | def   | 50s +-1 |
 
 	Scenario: Passing multiple traffic signals should incur a accumulated delay
 		Given the node map
@@ -38,8 +38,8 @@ Feature: Penalties
 		 | abcde |
 
 		When I route I should get
-		 | from | to | route | time |
-		 | a    | e  | abcde | 136s |
+		 | from | to | route | time     |
+		 | a    | e  | abcde | 130s +-1 |
 
 	Scenario: Starting or ending at a traffic signal should not incur a delay
 		Given the node map
@@ -54,11 +54,9 @@ Feature: Penalties
 		 | abc   |
 
 		When I route I should get
-		 | from | to | route   | time |
-		 | a    | b  | abc     | 19s  |
-		 | b    | a  | abc     | 19s  |
-		 | b    | c  | abc     | 19s  |
-		 | c    | b  | abc     | 19s  |
+		 | from | to | route | time    |
+		 | a    | b  | abc   | 10s +-1 |
+		 | b    | a  | abc   | 10s +-1 |
 
 	Scenario: Routing between signals on the same way should not incur a delay
 		Given the node map
@@ -74,9 +72,9 @@ Feature: Penalties
 		 | abcd   |
 
 		When I route I should get
-		 | from | to | route   | time |
-		 | b    | c  | abcd    | 19s  |
-		 | c    | b  | abcd    | 19s  |
+		 | from | to | route | time    |
+		 | b    | c  | abcd  | 10s +-1 |
+		 | c    | b  | abcd  | 10s +-1 |
 
 	Scenario: Prefer faster route without traffic signals
 		Given the node map
@@ -94,4 +92,4 @@ Feature: Penalties
     
 		When I route I should get
 		 | from | to | route | 
-		 | a    | c | adc   |
+		 | a    | c  | adc   |
