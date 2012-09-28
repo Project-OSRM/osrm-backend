@@ -3,14 +3,25 @@ Feature: Handle bad data in a graceful manner
 	
 	Scenario: Empty dataset
 		Given the node map
-		 | a | b |
+		 |  |
 
 		Given the ways
 		 | nodes |
 		
-		When I route I should get
-		 | from | to | route |
-		 | a    | b  |       |
+		When I preprocess data
+		Then preparing should return code 255
+
+	Scenario: Only dead-end oneways
+		Given the node map
+		 | a | b | c |
+
+		Given the ways
+		 | nodes | oneway |
+		 | ab    | yes    |
+		 | cb    | yes    |
+
+		When I preprocess data
+		Then preparing should return code 255
 
 	Scenario: Start/end point at the same location
 		Given the node map
@@ -29,7 +40,7 @@ Feature: Handle bad data in a graceful manner
 		 | 2    | 2  |       |
 
 	@poles
-	Scenario: No routing close to the north/south pole
+	Scenario: Routing close to the north/south pole
 	Mercator is undefined close to the poles.
 	All nodes and request with latitude to close to either of the poles should therefore be ignored.
 
