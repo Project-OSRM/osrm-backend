@@ -43,19 +43,23 @@ def build_ways_from_table table
     node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(1+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
     node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(2+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
     node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(3+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
+    node5 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(4+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
     node1.uid = OSM_UID
     node2.uid = OSM_UID
     node3.uid = OSM_UID
     node4.uid = OSM_UID
+    node5.uid = OSM_UID
     node1 << { :name => "a#{ri}" }
     node2 << { :name => "b#{ri}" }
     node3 << { :name => "c#{ri}" }
     node4 << { :name => "d#{ri}" }
+    node5 << { :name => "e#{ri}" }
 
     osm_db << node1
     osm_db << node2
     osm_db << node3
     osm_db << node4
+    osm_db << node5
     
     #...with a way between them
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
@@ -64,12 +68,28 @@ def build_ways_from_table table
     way << node2
     way << node3
     way << node4
+    way << node5
+    
     tags = row.dup
     tags.delete 'forw'
     tags.delete 'backw'
-    tags['name'] = "w#{ri}"
     tags.reject! { |k,v| v=='' }
-    way << tags
+    
+    # sort tag keys in the form of 'node/....'
+    way_tags = {}
+    node_tags = {}
+    tags.each_pair do |k,v|
+      if k =~ /node\/(.*)/
+        node_tags[$1] = v
+      else
+        way_tags[k] = v
+      end
+    end
+    
+    way_tags['name'] = "w#{ri}"
+    way << way_tags
+    node3 << node_tags
+    
     osm_db << way
   end
 end
