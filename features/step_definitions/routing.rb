@@ -160,9 +160,9 @@ Then /^routability should be$/ do |table|
       ['forw','backw'].each do |direction|
         if table.headers.include? direction
           if direction == 'forw'
-            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(2+WAY_SPACING*i)*@zoom}")
+            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}")
           elsif direction == 'backw'
-            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(2+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}")
+            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}")
           end
           got[direction] = route_status response
           json = JSON.parse(response.body)
