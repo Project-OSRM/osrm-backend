@@ -76,7 +76,8 @@ def build_ways_from_table table
     tags.reject! { |k,v| v=='' }
     
     # sort tag keys in the form of 'node/....'
-    way_tags = {}
+    way_tags = { 'highway' => 'primary' }
+    
     node_tags = {}
     tags.each_pair do |k,v|
       if k =~ /node\/(.*)/

@@ -7,4 +7,8 @@ class OSRMError < StandardError
     @code = code
     @msg = msg
   end
+  
+  def to_s
+    @msg
+  end
 end

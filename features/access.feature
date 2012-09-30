@@ -1,80 +1,66 @@
 @routing @access
-Feature: Default speedprofiles
-	Basic accessability of various way types depending on speedprofile.
+Feature: Restricted access
 
-	Scenario: Basic access for cars
-	 	Given the speedprofile "car"
+	Background:
+		Given the speedprofile "bicycle"
+		
+	Scenario: Access tags on ways		
 	 	Then routability should be
-		 | highway       | forw |
-		 | motorway      | x    |
-		 | motorway_link | x    |
-		 | trunk         | x    |
-		 | trunk_link    | x    |
-		 | primary       | x    |
-		 | secondary     | x    |
-		 | tertiary      | x    |
-		 | residential   | x    |
-		 | service       | x    |
-		 | unclassified  | x    |
-		 | living_street | x    |
-		 | road		     |      |
-		 | track         |      |
-		 | path          |      |
-		 | footway       |      |
-		 | pedestrian    |      |
-		 | steps         |      |
-		 | pier          |      |
-		 | cycleway      |      |
-		 | bridleway     |      |
+		 | access        | bothw |
+		 | yes           | x     |
+		 | motorcar      | x     |
+		 | motor_vehicle | x     |
+		 | vehicle       | x     |
+		 | permissive    | x     |
+		 | designated    | x     |
+		 | no            |       |
+		 | private       |       |
+		 | agricultural  |       |
+		 | forestry      |       |
+		 | designated    |       |
+		 | some_tag      | x     |
 
-	Scenario: Basic access for bicycles
-	Bikes are allowed on footways etc because you can pull your bike at a lower speed.
-	 	Given the speedprofile "bicycle"
+	Scenario: Access tags for other modes should have no effect	
 	 	Then routability should be
-		 | highway       | forw |
-		 | motorway      |      |
-		 | motorway_link |      |
-		 | trunk         |      |
-		 | trunk_link    |      |
-		 | primary       | x    |
-		 | secondary     | x    |
-		 | tertiary      | x    |
-		 | residential   | x    |
-		 | service       | x    |
-		 | unclassified  | x    |
-		 | living_street | x    |
-		 | road		     | x    |
-		 | track         | x    |
-		 | path          | x    |
-		 | footway       | x    |
-		 | pedestrian    | x    |
-		 | steps         | x    |
-		 | pier          | x    |
-		 | cycleway      | x    |
-		 | bridleway     |      |
+		 | access            | bothw |
+		 | ufo:yes           | x     |
+		 | ufo:motorcar      | x     |
+		 | ufo:motor_vehicle | x     |
+		 | ufo:vehicle       | x     |
+		 | ufo:permissive    | x     |
+		 | ufo:designated    | x     |
+		 | ufo:no            | x     |
+		 | ufo:private       | x     |
+		 | ufo:agricultural  | x     |
+		 | ufo:forestry      | x     |
+		 | ufo:designated    | x     |
+		 | ufo:some_tag      | x     |
 
-	Scenario: Basic access for walking
-	 	Given the speedprofile "foot"
+	Scenario: Access tags on nodes		
 	 	Then routability should be
-		 | highway       | forw |
-		 | motorway      |      |
-		 | motorway_link |      |
-		 | trunk         |      |
-		 | trunk_link    | x    |
-		 | primary       | x    |
-		 | secondary     | x    |
-		 | tertiary      | x    |
-		 | residential   | x    |
-		 | service       | x    |
-		 | unclassified  | x    |
-		 | living_street | x    |
-		 | road		     | x    |
-		 | track         | x    |
-		 | path          | x    |
-		 | footway       | x    |
-		 | pedestrian    | x    |
-		 | steps         | x    |
-		 | pier          | x    |
-		 | cycleway      | x    |
-		 | bridleway     |      |
+		 | node:access   | bothw |
+		 | yes           | x     |
+		 | motorcar      | x     |
+		 | motor_vehicle | x     |
+		 | vehicle       | x     |
+		 | permissive    | x     |
+		 | designated    | x     |
+		 | no            |       |
+		 | private       |       |
+		 | agricultural  |       |
+		 | forestry      |       |
+		 | designated    |       |
+		 | some_tag      | x     |
 
+	Scenario: Access tags on both nodes and way 		
+	 	Then routability should be
+		 | access   | node:access | bothw |
+		 | yes      | yes         | x     |
+		 | yes      | no          |       |
+		 | yes      | some_tag    |       |
+		 | no       | yes         |       |
+		 | no       | no          |       |
+		 | no       | some_tag    |       |
+		 | some_tag | yes         |       |
+		 | some_tag | no          |       |
+		 | some_tag | some_tag    |       |

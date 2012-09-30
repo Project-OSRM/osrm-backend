@@ -150,8 +150,8 @@ Then /^routability should be$/ do |table|
   build_ways_from_table table
   reprocess
   actual = []
-  if table.headers&["forw","backw"] == []
-    raise "*** routability tabel must contain either 'forw' or 'backw' column"
+  if table.headers&["forw","backw","bothw"] == []
+    raise "*** routability tabel must contain either 'forw', 'backw' or 'bothw' column"
   end
   OSRMLauncher.new do
     table.hashes.each_with_index do |row,i|
@@ -159,9 +159,9 @@ Then /^routability should be$/ do |table|
       attempts = []
       ['forw','backw'].each do |direction|
         if table.headers.include? direction
-          if direction == 'forw'
+          if direction == 'forw' || direction == 'bothw'
             response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}")
-          elsif direction == 'backw'
+          elsif direction == 'backw' || direction == 'bothw'
             response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}")
           end
           got[direction] = route_status response
