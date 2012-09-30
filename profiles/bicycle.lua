@@ -17,6 +17,7 @@ speed_profile = {
 	["secondary"] = 18,
 	["secondary_link"] = 18,
 	["tertiary"] = 18,
+	["tertiary_link"] = 18,
 	["residential"] = 18,
 	["unclassified"] = 16,
 	["living_street"] = 16,

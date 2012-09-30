@@ -1,4 +1,4 @@
-@routing @access
+@routing @bicycle @access
 Feature: Restricted access
 
 	Background:

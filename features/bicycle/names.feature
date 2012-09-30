@@ -1,5 +1,8 @@
-@routing @names
+@routing @bicycle @names
 Feature: Street names in instructions
+
+	Background:
+		Given the speedprofile "bicycle"
 	
 	Scenario: A named street
 		Given the node map

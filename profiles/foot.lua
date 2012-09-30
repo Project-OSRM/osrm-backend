@@ -29,14 +29,13 @@ speed_profile = {
   ["ferry"] = 5,
   ["pedestrian"] = 5,
   ["footway"] = 5,
-  ["cycleway"] = 5,
   ["pier"] = 5,
   ["default"] = 5
 }
 
 
 take_minimum_of_speeds 	= true
-obey_oneway 			= false
+obey_oneway 			= true
 obey_bollards 			= false
 use_restrictions 		= false
 ignore_areas 			= true -- future feature
@@ -87,7 +86,7 @@ function way_function (way, numberOfNodesInWay)
     local man_made = way.tags:Find("man_made")
     local barrier = way.tags:Find("barrier")
     local oneway = way.tags:Find("oneway")
-    local cycleway = way.tags:Find("cycleway")
+	local onewayClass = way.tags:Find("oneway:foot")
     local duration  = way.tags:Find("duration")
     local service  = way.tags:Find("service")
     local area = way.tags:Find("area")
@@ -173,15 +172,15 @@ function way_function (way, numberOfNodesInWay)
     
   -- Set direction according to tags on way
     if obey_oneway then
-      if oneway == "no" or oneway == "0" or oneway == "false" then
-	    way.direction = Way.bidirectional
-	  elseif oneway == "-1" then
-	    way.direction = Way.opposite
-      elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
-		way.direction = Way.oneway
-      else
-        way.direction = Way.bidirectional
-      end
+		if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
+			way.direction = Way.oneway
+		elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
+			way.direction = Way.bidirectional
+		elseif onewayClass == "-1" then
+			way.direction = Way.opposite
+		else
+			way.direction = Way.bidirectional
+		end
     else
       way.direction = Way.bidirectional
     end

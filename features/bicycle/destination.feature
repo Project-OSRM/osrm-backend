@@ -1,8 +1,8 @@
-@routing @destination
+@routing @bicycle @destination
 Feature: Destination only, no passing through
 
 	Background:
-		Given the speedprofile "car"
+		Given the speedprofile "bicycle"
 		
 	Scenario: Destination only street
 		Given the node map

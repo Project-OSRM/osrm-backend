@@ -1,10 +1,10 @@
-@routing @restrictions
+@routing @bicycle @restrictions
 Feature: Turn restrictions
 	Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
 	Background: Use car routing
-		Given the speedprofile "car"
+		Given the speedprofile "bicycle"
 	
 	@no_turning
 	Scenario: No left turn
