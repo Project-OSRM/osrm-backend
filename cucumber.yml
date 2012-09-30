@@ -1,0 +1,4 @@
+# config/cucumber.yml
+##YAML Template
+---
+default: --require features
