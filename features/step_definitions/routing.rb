@@ -216,11 +216,13 @@ When /^I route I should get$/ do |table|
       end
       if table.headers.include? 'route'
         got['route'] = (instructions || '').strip
-        if table.headers.include? 'distance'
-          raise "*** Distance must be specied in meters. (ex: 250m)" unless row['distance'] =~ /\d+m/
+        if table.headers.include?('distance')
+          if row['distance']!=''
+            raise "*** Distance must be specied in meters. (ex: 250m)" unless row['distance'] =~ /\d+m/
+          end
           got['distance'] = instructions ? json['route_summary']['total_distance'].to_s : ''
         end
-        if table.headers.include? 'time'
+        if table.headers.include?('time')
           raise "*** Time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
           got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : ''
         end
