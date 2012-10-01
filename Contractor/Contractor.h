@@ -66,7 +66,7 @@ private:
     };
 
     typedef DynamicGraph< _ContractorEdgeData > _DynamicGraph;
-//    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, ArrayStorage<NodeID, NodeID> > _Heap;
+    //    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, ArrayStorage<NodeID, NodeID> > _Heap;
     typedef BinaryHeap< NodeID, NodeID, int, _HeapData, XORFastHashStorage<NodeID, NodeID> > _Heap;
     typedef _DynamicGraph::InputEdge _ContractorEdge;
 
@@ -136,7 +136,7 @@ public:
             const NodeID source = edges[i].source;
             const NodeID target = edges[i].target;
             const NodeID id = edges[i].data.id;
-//            const short turnType = edges[i].data.turnInstruction;
+            //            const short turnType = edges[i].data.turnInstruction;
             //remove eigenloops
             if ( source == target ) {
                 i++;
@@ -176,36 +176,36 @@ public:
             }
         }
         std::cout << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
-//        edges.resize( edge );
+        //        edges.resize( edge );
 
         _graph.reset( new _DynamicGraph( nodes, edges ) );
         edges.clear();
-//        unsigned maxdegree = 0;
-//        NodeID highestNode = 0;
-//
-//        for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
-//            unsigned degree = _graph->EndEdges(i) - _graph->BeginEdges(i);
-//            if(degree > maxdegree) {
-//                maxdegree = degree;
-//                highestNode = i;
-//            }
-//        }
-//
-//        INFO("edges at node with id " << highestNode << " has degree " << maxdegree);
-//        for(unsigned i = _graph->BeginEdges(highestNode); i < _graph->EndEdges(highestNode); ++i) {
-//            INFO(" ->(" << highestNode << "," << _graph->GetTarget(i) << "); via: " << _graph->GetEdgeData(i).via);
-//        }
+        //        unsigned maxdegree = 0;
+        //        NodeID highestNode = 0;
+        //
+        //        for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
+        //            unsigned degree = _graph->EndEdges(i) - _graph->BeginEdges(i);
+        //            if(degree > maxdegree) {
+        //                maxdegree = degree;
+        //                highestNode = i;
+        //            }
+        //        }
+        //
+        //        INFO("edges at node with id " << highestNode << " has degree " << maxdegree);
+        //        for(unsigned i = _graph->BeginEdges(highestNode); i < _graph->EndEdges(highestNode); ++i) {
+        //            INFO(" ->(" << highestNode << "," << _graph->GetTarget(i) << "); via: " << _graph->GetEdgeData(i).via);
+        //        }
 
         //Create temporary file
-        
-//        GetTemporaryFileName(temporaryEdgeStorageFilename);
+
+        //        GetTemporaryFileName(temporaryEdgeStorageFilename);
         temporaryStorageSlotID = TemporaryStorage::GetInstance().allocateSlot();
         std::cout << "contractor finished initalization" << std::endl;
     }
 
     ~Contractor() {
         //Delete temporary file
-//        remove(temporaryEdgeStorageFilename.c_str());
+        //        remove(temporaryEdgeStorageFilename.c_str());
         TemporaryStorage::GetInstance().deallocateSlot(temporaryStorageSlotID);
     }
 
@@ -243,79 +243,79 @@ public:
 
         bool flushedContractor = false;
         while ( numberOfContractedNodes < numberOfNodes ) {
-        	if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.65) ) ){
-        	    DeallocatingVector<_ContractorEdge> newSetOfEdges; //this one is not explicitely cleared since it goes out of scope anywa
-        		std::cout << " [flush " << numberOfContractedNodes << " nodes] " << std::flush;
-        		
-        		//Delete old heap data to free memory that we need for the coming operations
+            if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.65) ) ){
+                DeallocatingVector<_ContractorEdge> newSetOfEdges; //this one is not explicitely cleared since it goes out of scope anywa
+                std::cout << " [flush " << numberOfContractedNodes << " nodes] " << std::flush;
+
+                //Delete old heap data to free memory that we need for the coming operations
                 for ( unsigned threadNum = 0; threadNum < maxThreads; threadNum++ ) {
                     delete threadData[threadNum];
                 }
                 threadData.clear();
 
 
-        		//Create new priority array
-        		std::vector<float> newNodePriority(remainingNodes.size());
-        		//this map gives the old IDs from the new ones, necessary to get a consistent graph at the end of contraction
-        		oldNodeIDFromNewNodeIDMap.resize(remainingNodes.size());
-        		//this map gives the new IDs from the old ones, necessary to remap targets from the remaining graph
-        		std::vector<NodeID> newNodeIDFromOldNodeIDMap(numberOfNodes, UINT_MAX);
-        		
-        		//build forward and backward renumbering map and remap ids in remainingNodes and Priorities.
-        		for(unsigned newNodeID = 0; newNodeID < remainingNodes.size(); ++newNodeID) {
-        			//create renumbering maps in both directions
-        			oldNodeIDFromNewNodeIDMap[newNodeID] = remainingNodes[newNodeID].first;
-        			newNodeIDFromOldNodeIDMap[remainingNodes[newNodeID].first] = newNodeID;
-        			newNodePriority[newNodeID] = nodePriority[remainingNodes[newNodeID].first];
-        			remainingNodes[newNodeID].first = newNodeID;
-        		}
-        		TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
-        		//Write dummy number of edges to temporary file
-//        		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
-        		long initialFilePosition = tempStorage.tell(temporaryStorageSlotID);
-        		unsigned numberOfTemporaryEdges = 0;
-        		tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
+                //Create new priority array
+                std::vector<float> newNodePriority(remainingNodes.size());
+                //this map gives the old IDs from the new ones, necessary to get a consistent graph at the end of contraction
+                oldNodeIDFromNewNodeIDMap.resize(remainingNodes.size());
+                //this map gives the new IDs from the old ones, necessary to remap targets from the remaining graph
+                std::vector<NodeID> newNodeIDFromOldNodeIDMap(numberOfNodes, UINT_MAX);
 
-        		//walk over all nodes
-        		for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
-        		    //INFO("Restructuring node " << i << "|" << _graph->GetNumberOfNodes());
-        		    const NodeID start = i;
-        		    for(_DynamicGraph::EdgeIterator currentEdge = _graph->BeginEdges(start); currentEdge < _graph->EndEdges(start); ++currentEdge) {
-        		        _DynamicGraph::EdgeData & data = _graph->GetEdgeData(currentEdge);
-        		        const NodeID target = _graph->GetTarget(currentEdge);
-        		        if(UINT_MAX == newNodeIDFromOldNodeIDMap[i] ){
-        		            //Save edges of this node w/o renumbering.
-        		            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
-        		            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
-        		            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
-        		            ++numberOfTemporaryEdges;
-        		        }else {
+                //build forward and backward renumbering map and remap ids in remainingNodes and Priorities.
+                for(unsigned newNodeID = 0; newNodeID < remainingNodes.size(); ++newNodeID) {
+                    //create renumbering maps in both directions
+                    oldNodeIDFromNewNodeIDMap[newNodeID] = remainingNodes[newNodeID].first;
+                    newNodeIDFromOldNodeIDMap[remainingNodes[newNodeID].first] = newNodeID;
+                    newNodePriority[newNodeID] = nodePriority[remainingNodes[newNodeID].first];
+                    remainingNodes[newNodeID].first = newNodeID;
+                }
+                TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
+                //Write dummy number of edges to temporary file
+                //        		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
+                long initialFilePosition = tempStorage.tell(temporaryStorageSlotID);
+                unsigned numberOfTemporaryEdges = 0;
+                tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
+
+                //walk over all nodes
+                for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
+                    //INFO("Restructuring node " << i << "|" << _graph->GetNumberOfNodes());
+                    const NodeID start = i;
+                    for(_DynamicGraph::EdgeIterator currentEdge = _graph->BeginEdges(start); currentEdge < _graph->EndEdges(start); ++currentEdge) {
+                        _DynamicGraph::EdgeData & data = _graph->GetEdgeData(currentEdge);
+                        const NodeID target = _graph->GetTarget(currentEdge);
+                        if(UINT_MAX == newNodeIDFromOldNodeIDMap[i] ){
+                            //Save edges of this node w/o renumbering.
+                            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
+                            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
+                            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
+                            ++numberOfTemporaryEdges;
+                        }else {
                             //node is not yet contracted.
                             //add (renumbered) outgoing edges to new DynamicGraph.
-        		            _ContractorEdge newEdge;
-        		            newEdge.source = newNodeIDFromOldNodeIDMap[start];
-        		            newEdge.target = newNodeIDFromOldNodeIDMap[target];
+                            _ContractorEdge newEdge;
+                            newEdge.source = newNodeIDFromOldNodeIDMap[start];
+                            newEdge.target = newNodeIDFromOldNodeIDMap[target];
                             newEdge.data = data;
                             newEdge.data.originalViaNodeID = true;
-        		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[start] );
-        		            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[target]);
-        		            newSetOfEdges.push_back(newEdge);
-        		        }
-        		    }
-        		}
-        		//Note the number of temporarily stored edges
-        		tempStorage.seek(temporaryStorageSlotID, initialFilePosition);
-        		tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
+                            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[start] );
+                            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[target]);
+                            newSetOfEdges.push_back(newEdge);
+                        }
+                    }
+                }
+                //Note the number of temporarily stored edges
+                tempStorage.seek(temporaryStorageSlotID, initialFilePosition);
+                tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
 
-//        		INFO("Flushed " << numberOfTemporaryEdges << " edges to disk");
+                //        		INFO("Flushed " << numberOfTemporaryEdges << " edges to disk");
 
-        		//Delete map from old NodeIDs to new ones.
-        		std::vector<NodeID>().swap(newNodeIDFromOldNodeIDMap);
+                //Delete map from old NodeIDs to new ones.
+                std::vector<NodeID>().swap(newNodeIDFromOldNodeIDMap);
 
-        		//Replace old priorities array by new one
-        		nodePriority.swap(newNodePriority);
-        		//Delete old nodePriority vector
-        		std::vector<float>().swap(newNodePriority);
+                //Replace old priorities array by new one
+                nodePriority.swap(newNodePriority);
+                //Delete old nodePriority vector
+                std::vector<float>().swap(newNodePriority);
                 //old Graph is removed
                 _graph.reset();
 
@@ -325,14 +325,14 @@ public:
                 //int nodes, const ContainerT &graph
                 _graph.reset( new _DynamicGraph(remainingNodes.size(), newSetOfEdges));
                 newSetOfEdges.clear();
-        		flushedContractor = true;
+                flushedContractor = true;
 
-        		//INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
-        		//reinitialize heaps and ThreadData objects with appropriate size
+                //INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
+                //reinitialize heaps and ThreadData objects with appropriate size
                 for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
                     threadData.push_back( new _ThreadData( _graph->GetNumberOfNodes() ) );
                 }
-        	}
+            }
 
             const int last = ( int ) remainingNodes.size();
 #pragma omp parallel
@@ -371,12 +371,12 @@ public:
                 }
             }
             //insert new edges
-             for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
-                 _ThreadData& data = *threadData[threadNum];
-                 for ( int i = 0; i < ( int ) data.insertedEdges.size(); ++i ) {
-                     const _ContractorEdge& edge = data.insertedEdges[i];
-                     _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
-                    if(currentEdgeID != _graph->EndEdges(edge.source)) {
+            for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
+                _ThreadData& data = *threadData[threadNum];
+                for ( int i = 0; i < ( int ) data.insertedEdges.size(); ++i ) {
+                    const _ContractorEdge& edge = data.insertedEdges[i];
+                    _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
+                    if(currentEdgeID != _graph->EndEdges(edge.source) && _graph->GetEdgeData(currentEdgeID).shortcut) {
                         _DynamicGraph::EdgeData & currentEdgeData = _graph->GetEdgeData(currentEdgeID);
                         if(edge.data.forward == currentEdgeData.forward && edge.data.backward == currentEdgeData.backward ) {
                             if(_graph->GetEdgeData(_graph->FindEdge(edge.source, edge.target)).distance <= edge.data.distance) {
@@ -388,7 +388,7 @@ public:
                             }
                         }
                     }
-                    _graph->InsertEdge( edge.source, edge.target, edge.data );
+                    _graph->InsertEdge( data.insertedEdges[i].source, data.insertedEdges[i].target, data.insertedEdges[i].data );
                 }
                 data.insertedEdges.clear();
             }
@@ -406,26 +406,26 @@ public:
             numberOfContractedNodes += last - firstIndependent;
             remainingNodes.resize( firstIndependent );
             std::vector< std::pair< NodeID, bool > >( remainingNodes ).swap( remainingNodes );
-//            unsigned maxdegree = 0;
-//            unsigned avgdegree = 0;
-//            unsigned mindegree = UINT_MAX;
-//            unsigned quaddegree = 0;
-//
-//            for(unsigned i = 0; i < remainingNodes.size(); ++i) {
-//                unsigned degree = _graph->EndEdges(remainingNodes[i].first) - _graph->BeginEdges(remainingNodes[i].first);
-//                if(degree > maxdegree)
-//                    maxdegree = degree;
-//                if(degree < mindegree)
-//                    mindegree = degree;
-//
-//                avgdegree += degree;
-//                quaddegree += (degree*degree);
-//            }
-//
-//            avgdegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
-//            quaddegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
-//
-//            INFO("rest: " << remainingNodes.size() << ", max: " << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ", quad: " << quaddegree);
+            //            unsigned maxdegree = 0;
+            //            unsigned avgdegree = 0;
+            //            unsigned mindegree = UINT_MAX;
+            //            unsigned quaddegree = 0;
+            //
+            //            for(unsigned i = 0; i < remainingNodes.size(); ++i) {
+            //                unsigned degree = _graph->EndEdges(remainingNodes[i].first) - _graph->BeginEdges(remainingNodes[i].first);
+            //                if(degree > maxdegree)
+            //                    maxdegree = degree;
+            //                if(degree < mindegree)
+            //                    mindegree = degree;
+            //
+            //                avgdegree += degree;
+            //                quaddegree += (degree*degree);
+            //            }
+            //
+            //            avgdegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
+            //            quaddegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
+            //
+            //            INFO("rest: " << remainingNodes.size() << ", max: " << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ", quad: " << quaddegree);
 
             p.printStatus(numberOfContractedNodes);
         }
@@ -440,37 +440,37 @@ public:
         INFO("Getting edges of minimized graph");
         NodeID numberOfNodes = _graph->GetNumberOfNodes();
         if(oldNodeIDFromNewNodeIDMap.size()) {
-        	for ( NodeID node = 0; node < numberOfNodes; ++node ) {
-        	    p.printStatus(node);
-        		for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; ++edge ) {
-        			const NodeID target = _graph->GetTarget( edge );
-        			const _DynamicGraph::EdgeData& data = _graph->GetEdgeData( edge );
-        			Edge newEdge;
-        			newEdge.source = oldNodeIDFromNewNodeIDMap[node];
-        			newEdge.target = oldNodeIDFromNewNodeIDMap[target];
-        			assert(UINT_MAX != newEdge.source);
-        			assert(UINT_MAX != newEdge.target);
+            for ( NodeID node = 0; node < numberOfNodes; ++node ) {
+                p.printStatus(node);
+                for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; ++edge ) {
+                    const NodeID target = _graph->GetTarget( edge );
+                    const _DynamicGraph::EdgeData& data = _graph->GetEdgeData( edge );
+                    Edge newEdge;
+                    newEdge.source = oldNodeIDFromNewNodeIDMap[node];
+                    newEdge.target = oldNodeIDFromNewNodeIDMap[target];
+                    assert(UINT_MAX != newEdge.source);
+                    assert(UINT_MAX != newEdge.target);
 
-        			newEdge.data.distance = data.distance;
-        			newEdge.data.shortcut = data.shortcut;
-        			if(!data.originalViaNodeID)
-        				newEdge.data.id = oldNodeIDFromNewNodeIDMap[data.id];
-        			else
-        				newEdge.data.id = data.id;
+                    newEdge.data.distance = data.distance;
+                    newEdge.data.shortcut = data.shortcut;
+                    if(!data.originalViaNodeID)
+                        newEdge.data.id = oldNodeIDFromNewNodeIDMap[data.id];
+                    else
+                        newEdge.data.id = data.id;
 
-        			assert(newEdge.data.id != UINT_MAX);
-        			newEdge.data.forward = data.forward;
-        			newEdge.data.backward = data.backward;
-        			edges.push_back( newEdge );
-        		}
-        	}
+                    assert(newEdge.data.id != UINT_MAX);
+                    newEdge.data.forward = data.forward;
+                    newEdge.data.backward = data.backward;
+                    edges.push_back( newEdge );
+                }
+            }
         }
         INFO("Renumbered edges of minimized graph, freeing space");
         _graph.reset();
         std::vector<NodeID>().swap(oldNodeIDFromNewNodeIDMap);
         INFO("Loading temporary edges");
 
-//        std::ifstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
+        //        std::ifstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
         TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
         //Also get the edges from temporary storage
         unsigned numberOfTemporaryEdges = 0;
@@ -481,18 +481,18 @@ public:
         //edges.reserve(edges.size()+numberOfTemporaryEdges);
         _DynamicGraph::EdgeData data;
         for(unsigned i = 0; i < numberOfTemporaryEdges; ++i) {
-        	tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
-        	tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
-        	tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
-        	Edge newEdge;
-        	newEdge.source =  start;
-        	newEdge.target = target;
-        	newEdge.data.distance = data.distance;
-        	newEdge.data.shortcut = data.shortcut;
-        	newEdge.data.id = data.id;
-        	newEdge.data.forward = data.forward;
-        	newEdge.data.backward = data.backward;
-        	edges.push_back( newEdge );
+            tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
+            tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
+            tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
+            Edge newEdge;
+            newEdge.source =  start;
+            newEdge.target = target;
+            newEdge.data.distance = data.distance;
+            newEdge.data.shortcut = data.shortcut;
+            newEdge.data.id = data.id;
+            newEdge.data.forward = data.forward;
+            newEdge.data.backward = data.backward;
+            edges.push_back( newEdge );
         }
         tempStorage.deallocateSlot(temporaryStorageSlotID);
         INFO("CH has " << edges.size() << " edges");
@@ -552,9 +552,9 @@ private:
         // Result will contain the priority
         float result;
         if ( stats.edgesDeleted == 0 || stats.originalEdgesDeleted == 0 )
-                result = 1 * nodeData->depth;
+            result = 1 * nodeData->depth;
         else
-                result =  2 * ((( float ) stats.edgesAdded ) / stats.edgesDeleted ) + 4 * ((( float ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + 1 * nodeData->depth;
+            result =  2 * ((( float ) stats.edgesAdded ) / stats.edgesDeleted ) + 4 * ((( float ) stats.originalEdgesAdded ) / stats.originalEdgesDeleted ) + 1 * nodeData->depth;
         assert( result >= 0 );
         return result;
     }
@@ -578,8 +578,8 @@ private:
 
             heap.Clear();
             heap.Insert( source, 0, _HeapData() );
-//            if ( node != source )
-//                heap.Insert( node, inData.distance, _HeapData() );
+            //            if ( node != source )
+            //                heap.Insert( node, inData.distance, _HeapData() );
             int maxDistance = 0;
             unsigned numTargets = 0;
 
@@ -715,7 +715,7 @@ private:
             if ( priority > targetPriority )
                 return false;
             //tie breaking
-              if ( fabs(priority - targetPriority) < FLT_EPSILON && bias(node, target) ) {
+            if ( fabs(priority - targetPriority) < FLT_EPSILON && bias(node, target) ) {
                 return false;
             }
             neighbours.push_back( target );
@@ -763,7 +763,7 @@ private:
 
     boost::shared_ptr<_DynamicGraph> _graph;
     std::vector<_DynamicGraph::InputEdge> contractedEdges;
-//    std::string temporaryEdgeStorageFilename;
+    //    std::string temporaryEdgeStorageFilename;
     unsigned temporaryStorageSlotID;
     std::vector<NodeID> oldNodeIDFromNewNodeIDMap;
 
