@@ -1,10 +1,10 @@
 @routing @foot @way
-Feature: Accessability of different way types
+Feature: Foot - Accessability of different way types
 
 	Background:
 		Given the speedprofile "foot"
 
-	Scenario: Basic access for walking
+	Scenario: Foot - Basic access
 	 	Then routability should be
 		 | highway        | forw |
 		 | motorway       |      |

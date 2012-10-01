@@ -4,7 +4,7 @@ Feature: Barriers
 	Background:
 		Given the speedprofile "bicycle"
 
-	Scenario: Barriers 
+	Scenario: Bike - Barriers 
 		Then routability should be
 		 | highway | node/barrier   | node/access   | bothw |
 		 | primary |                |               | x     |
@@ -16,7 +16,7 @@ Feature: Barriers
 		 | primary | bollard        |               | x     |
 		 | primary | some_tag       |               |       |
 
-	Scenario: Access tag trumphs barriers
+	Scenario: Bike - Access tag trumphs barriers
 		Then routability should be
 		 | highway | node/barrier   | node/access   | bothw |
 		 | primary | bollard        | yes           | x     |

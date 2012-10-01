@@ -1,5 +1,5 @@
 @routing @bicycle @restrictions
-Feature: Turn restrictions
+Feature: Bike - Turn restrictions
 	Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
@@ -7,7 +7,7 @@ Feature: Turn restrictions
 		Given the speedprofile "bicycle"
 	
 	@no_turning
-	Scenario: No left turn
+	Scenario: Bike - No left turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -31,7 +31,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 
 	@no_turning
-	Scenario: No right turn
+	Scenario: Bike - No right turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -55,7 +55,7 @@ Feature: Turn restrictions
 		 | s    | e  |       |
 
 	@no_turning
-	Scenario: No u-turn
+	Scenario: Bike - No u-turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -79,7 +79,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 
 	@no_turning
-	Scenario: Handle any no_* relation
+	Scenario: Bike - Handle any no_* relation
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -103,7 +103,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 
 	@only_turning
-	Scenario: Only left turn
+	Scenario: Bike - Only left turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -127,7 +127,7 @@ Feature: Turn restrictions
 		 | s | e |       |
 
 	@only_turning
-	Scenario: Only right turn
+	Scenario: Bike - Only right turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -151,7 +151,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 	
 	@only_turning
-	Scenario: Only straight on
+	Scenario: Bike - Only straight on
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -175,7 +175,7 @@ Feature: Turn restrictions
 		 | s    | e  |       |
 
 	@no_turning
-	Scenario: Handle any only_* restriction
+	Scenario: Bike - Handle any only_* restriction
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |

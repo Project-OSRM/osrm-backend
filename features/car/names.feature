@@ -1,10 +1,10 @@
 @routing @car @names
-Feature: Street names in instructions
+Feature: Car - Street names in instructions
 
 	Background:
 		Given the speedprofile "car"
 	
-	Scenario: A named street
+	Scenario: Car - A named street
 		Given the node map
 		 | a | b |
 		 |   | c |
@@ -18,7 +18,7 @@ Feature: Street names in instructions
 		 | from | to | route           |
 		 | a    | c  | My Way,Your Way |
 	
-	Scenario: Use way type to describe unnamed ways
+	Scenario: Car - Use way type to describe unnamed ways
 		Given the node map
 		 | a | b | c |
 
@@ -31,7 +31,7 @@ Feature: Street names in instructions
 		 | from | to | route                |
 		 | a    | c  | tertiary,residential |
 
-	Scenario: Don't create instructions for every node of unnamed ways
+	Scenario: Car - Don't create instructions for every node of unnamed ways
 		Given the node map
 		 | a | b | c | d |
 

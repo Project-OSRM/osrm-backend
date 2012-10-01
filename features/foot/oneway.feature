@@ -1,11 +1,11 @@
 @routing @foot @oneway
-Feature: Oneway streets
+Feature: Foot - Oneway streets
 Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 
 	Background:
 		Given the speedprofile "foot"
 	
-	Scenario: Walking should not be affected by oneways
+	Scenario: Foot - Walking should not be affected by oneways
 	 	Then routability should be
 		 | oneway   | bothw |
 		 |          | x     |
@@ -18,12 +18,12 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | 1        | x     |
 		 | -1       | x     |
 
-	Scenario: Walking and roundabouts
+	Scenario: Foot - Walking and roundabouts
 	 	Then routability should be
 		 | junction   | bothw |
 		 | roundarout | x     |
 
-	Scenario: Oneway:foot tag should not cause walking on big roads
+	Scenario: Foot - Oneway:foot tag should not cause walking on big roads
 	 	Then routability should be
 		 | highway       | oneway:foot | bothw |
 		 | motorway      | yes         |       |
@@ -39,7 +39,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | trunk         | -1          |       |
 		 | trunk_link    | -1          |       |
                                                
-	Scenario: Walking should respect oneway:foot
+	Scenario: Foot - Walking should respect oneway:foot
 	 	Then routability should be
 		 | oneway:foot | oneway | junction   | forw | backw |
 		 | yes         |        |            | x    |       |

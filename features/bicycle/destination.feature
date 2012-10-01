@@ -1,10 +1,10 @@
 @routing @bicycle @destination
-Feature: Destination only, no passing through
+Feature: Bike - Destination only, no passing through
 
 	Background:
 		Given the speedprofile "bicycle"
 		
-	Scenario: Destination only street
+	Scenario: Bike - Destination only street
 		Given the node map
 		 | a |   |   |   |   |
 		 |   | b | c | d |   |
@@ -31,7 +31,7 @@ Feature: Destination only, no passing through
 		 | d    | c  | bcd       |
 		 | d    | b  | bcd       |
 		
-	Scenario: Series of destination only streets
+	Scenario: Bike - Series of destination only streets
 		Given the node map
 		 | a |   | c |   | e |
 		 |   | b |   | d |   |
@@ -50,7 +50,7 @@ Feature: Destination only, no passing through
 		 | a    | d  | ab    |
 		 | a    | e  | ab    |
 
-	Scenario: Routing inside a destination only area
+	Scenario: Bike - Routing inside a destination only area
 		Given the node map
 		 | a |   | c |   | e |
 		 |   | b |   | d |   |

@@ -1,10 +1,10 @@
 @routing @car @barrier
-Feature: Barriers
+Feature: Car - Barriers
 
 	Background:
 		Given the speedprofile "car"
 
-	Scenario: Barriers 
+	Scenario: Car - Barriers 
 		Then routability should be
 		 | highway | node/barrier   | node/access   | bothw |
 		 | primary |                |               | x     |
@@ -16,7 +16,7 @@ Feature: Barriers
 		 | primary | bollard        |               |       |
 		 | primary | some_tag       |               |       |
 	
-	Scenario: Access tag trumphs barriers
+	Scenario: Car - Access tag trumphs barriers
 		Then routability should be
 		 | highway | node/barrier   | node/access   | bothw |
 		 | primary | bollard        | yes           | x     |

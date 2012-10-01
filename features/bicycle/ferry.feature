@@ -1,10 +1,10 @@
 @routing @bicycle @ferry
-Feature: Handle ferry routes
+Feature: Bike - Handle ferry routes
 
 	Background:
 		Given the speedprofile "bicycle"
 	
-	Scenario: Use a ferry route
+	Scenario: Bike - Use a ferry route
 		Given the node map
 		 | a | b | c |   |   |
 		 |   |   | d |   |   |

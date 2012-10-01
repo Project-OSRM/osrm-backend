@@ -1,11 +1,11 @@
 @routing @bicycle @oneway
-Feature: Oneway streets
+Feature: Bike - Oneway streets
 Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 
 	Background:
 		Given the speedprofile "bicycle"
 	
-	Scenario: Simple oneway
+	Scenario: Bike - Simple oneway
 		Then routability should be
 		 | highway | oneway | forw | backw |
 		 | primary | yes    | x    |       |
@@ -15,7 +15,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | highway | oneway | forw | backw |
 		 | primary | -1     |      | x     |
 
-	Scenario: Around the Block
+	Scenario: Bike - Around the Block
 		Given the node map
 		 | a | b |
 		 | d | c |		
@@ -32,7 +32,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | a    | b  | ab       |
 		 | b    | a  | bc,cd,da |
 	
-	Scenario: Handle various oneway tag values
+	Scenario: Bike - Handle various oneway tag values
 	 	Then routability should be
 		 | oneway   | forw | backw |
 		 |          | x    | x     |
@@ -45,7 +45,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | 1        | x    |       |
 		 | -1       |      | x     |
 	
-	Scenario: Implied oneways
+	Scenario: Bike - Implied oneways
 	 	Then routability should be
 		 | junction   | forw | backw |
 		 |            | x    | x     |
@@ -60,7 +60,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | roundabout | x    |       |
 		 | roundabout | x    |       |
 
-	Scenario: Overriding implied oneways
+	Scenario: Bike - Overriding implied oneways
 	 	Then routability should be
 		 | highway       | junction   | oneway | forw | backw |
 		 | primary       | roundabout | no     | x    | x     |
@@ -69,8 +69,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | trunk_link    |            | -1     |      |       |
 		 | primary       | roundabout | -1     |      | x     |
 	
-	@bicycle
-	Scenario: Oneway:bicycle should override normal oneways tags
+	Scenario: Bike - Oneway:bicycle should override normal oneways tags
 	 	Then routability should be
 		 | oneway:bicycle | oneway | junction   | forw | backw |
 		 | yes            |        |            | x    |       |
@@ -89,8 +88,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | -1             | -1     |            |      | x     |
 		 | -1             |        | roundabout |      | x     |
 	
-	@bicycle
-	Scenario: Bicycles and contra flow
+	Scenario: Bike - Contra flow
 	 	Then routability should be
 		 | oneway | cycleway       | forw | backw |
 		 | yes    | opposite       | x    | x     |
@@ -103,7 +101,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | no     | opposite_track | x    | x     |
 		 | no     | opposite_lane  | x    | x     |
 
-	Scenario: Bikes should not be affected by car tags
+	Scenario: Bike - Should not be affected by car tags
 		Then routability should be
 		 | junction   | oneway | oneway:car | forw | backw |
 		 |            | yes    | yes        | x    |       |

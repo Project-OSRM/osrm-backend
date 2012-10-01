@@ -1,5 +1,5 @@
 @routing @car @restrictions
-Feature: Turn restrictions
+Feature: Car - Turn restrictions
 	Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
@@ -7,7 +7,7 @@ Feature: Turn restrictions
 		Given the speedprofile "car"
 	
 	@no_turning
-	Scenario: No left turn
+	Scenario: Car - No left turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -31,7 +31,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 
 	@no_turning
-	Scenario: No right turn
+	Scenario: Car - No right turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -55,7 +55,7 @@ Feature: Turn restrictions
 		 | s    | e  |       |
 
 	@no_turning
-	Scenario: No u-turn
+	Scenario: Car - No u-turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -79,7 +79,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 
 	@no_turning
-	Scenario: Handle any no_* relation
+	Scenario: Car - Handle any no_* relation
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -103,7 +103,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 
 	@only_turning
-	Scenario: Only left turn
+	Scenario: Car - Only left turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -127,7 +127,7 @@ Feature: Turn restrictions
 		 | s | e |       |
 
 	@only_turning
-	Scenario: Only right turn
+	Scenario: Car - Only right turn
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -151,7 +151,7 @@ Feature: Turn restrictions
 		 | s    | e  | sj,ej |
 	
 	@only_turning
-	Scenario: Only straight on
+	Scenario: Car - Only straight on
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |
@@ -175,7 +175,7 @@ Feature: Turn restrictions
 		 | s    | e  |       |
 
 	@no_turning
-	Scenario: Handle any only_* restriction
+	Scenario: Car - Handle any only_* restriction
 		Given the node map
 		 |   | n |   |
 		 | w | j | e |

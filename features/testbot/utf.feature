@@ -1,5 +1,8 @@
 @routing @utf
-Feature: Basic Routing
+Feature: Handling of UTF characters
+	
+	Background:
+		Given the speedprofile "testbot"
 	
 	Scenario: Streetnames with UTF characters
 		Given the node map

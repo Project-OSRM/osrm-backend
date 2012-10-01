@@ -1,6 +1,8 @@
 @routing @origin
 Feature: Routing close to the [0,0] origin
-Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VDistance/
+	
+	Background:
+		Given the speedprofile "testbot"
  	
 	Scenario: East-west oneways close to the origin
 		Given the node locations

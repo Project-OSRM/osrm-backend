@@ -1,10 +1,10 @@
 @routing @bicycle @access
-Feature: Restricted access
+Feature: Bike - Restricted access
 
 	Background:
 		Given the speedprofile "bicycle"
 		
-	Scenario: Access tags on ways		
+	Scenario: Bike - Access tags on ways		
 	 	Then routability should be
 		 | access        | bothw |
 		 | yes           | x     |
@@ -20,7 +20,7 @@ Feature: Restricted access
 		 | designated    |       |
 		 | some_tag      | x     |
 
-	Scenario: Access tags for other modes should have no effect	
+	Scenario: Bike - Access tags for other modes should have no effect	
 	 	Then routability should be
 		 | access            | bothw |
 		 | ufo:yes           | x     |
@@ -36,7 +36,7 @@ Feature: Restricted access
 		 | ufo:designated    | x     |
 		 | ufo:some_tag      | x     |
 
-	Scenario: Access tags on nodes		
+	Scenario: Bike - Access tags on nodes		
 	 	Then routability should be
 		 | node:access   | bothw |
 		 | yes           | x     |
@@ -52,7 +52,7 @@ Feature: Restricted access
 		 | designated    |       |
 		 | some_tag      | x     |
 
-	Scenario: Access tags on both nodes and way 		
+	Scenario: Bike - Access tags on both nodes and way 		
 	 	Then routability should be
 		 | access   | node:access | bothw |
 		 | yes      | yes         | x     |

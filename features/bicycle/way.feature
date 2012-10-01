@@ -1,10 +1,10 @@
 @routing @bicycle @way
-Feature: Accessability of different way types
+Feature: Bike - Accessability of different way types
 
 	Background:
 		Given the speedprofile "bicycle"
 
-	Scenario: Basic access for bicycles
+	Scenario: Bike - Basic access
 	Bikes are allowed on footways etc because you can pull your bike at a lower speed.
 	 	Given the speedprofile "bicycle"
 	 	Then routability should be

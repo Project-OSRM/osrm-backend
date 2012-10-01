@@ -1,7 +1,9 @@
 @routing @distance
 Feature: Distance calculation
 	
-	@winding
+	Background:
+		Given the speedprofile "testbot"
+	
 	Scenario: Distance should equal sum of segments, leftwinded
 		Given the node map
 		 | e |   |
@@ -16,7 +18,6 @@ Feature: Distance calculation
 		 | from | to | route | distance |
 		 | a    | d  | abcde | 300 +-1  |
 
-	@winding
 	Scenario: Distance should equal sum of segments, rightwinded
 		Given the node map
 		 |   | e  |

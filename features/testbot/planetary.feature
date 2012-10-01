@@ -1,6 +1,6 @@
 @routing @planetary
 Feature: Distance calculation
-#reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VDistance/
+Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VDistance/
  
 	Scenario: Longitudinal distances at equator
 		Given the node locations

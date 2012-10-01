@@ -1,10 +1,10 @@
 @routing @car @destination
-Feature: Destination only, no passing through
+Feature: Car - Destination only, no passing through
 
 	Background:
 		Given the speedprofile "car"
 		
-	Scenario: Destination only street
+	Scenario: Car - Destination only street
 		Given the node map
 		 | a |   |   |   |   |
 		 |   | b | c | d |   |
@@ -31,7 +31,7 @@ Feature: Destination only, no passing through
 		 | d    | c  | bcd       |
 		 | d    | b  | bcd       |
 		
-	Scenario: Series of destination only streets
+	Scenario: Car - Series of destination only streets
 		Given the node map
 		 | a |   | c |   | e |
 		 |   | b |   | d |   |
@@ -50,7 +50,7 @@ Feature: Destination only, no passing through
 		 | a    | d  | ab    |
 		 | a    | e  | ab    |
 
-	Scenario: Routing inside a destination only area
+	Scenario: Car - Routing inside a destination only area
 		Given the node map
 		 | a |   | c |   | e |
 		 |   | b |   | d |   |

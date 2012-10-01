@@ -1,10 +1,10 @@
 @routing @bicycle @names
-Feature: Street names in instructions
+Feature: Bike - Street names in instructions
 
 	Background:
 		Given the speedprofile "bicycle"
 	
-	Scenario: A named street
+	Scenario: Bike - A named street
 		Given the node map
 		 | a | b |
 		 |   | c |
@@ -18,7 +18,7 @@ Feature: Street names in instructions
 		 | from | to | route           |
 		 | a    | c  | My Way,Your Way |
 		
-	Scenario: Use way type to describe unnamed ways
+	Scenario: Bike - Use way type to describe unnamed ways
 		Given the node map
 		 | a | b | c |
 
@@ -31,7 +31,7 @@ Feature: Street names in instructions
 		 | from | to | route          |
 		 | a    | c  | cycleway,track |
 	
-	Scenario: Don't create instructions for every node of unnamed ways
+	Scenario: Bike - Don't create instructions for every node of unnamed ways
 		Given the node map
 		 | a | b | c | d |
 

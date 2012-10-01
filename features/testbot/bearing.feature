@@ -1,7 +1,9 @@
 @routing @bearing
 Feature: Compass bearing
 	
-	@northwest
+	Background:
+		Given the speedprofile "testbot"
+	
 	Scenario: Bearing when going northwest
 		Given the node map
 		 | b |   |
@@ -15,7 +17,6 @@ Feature: Compass bearing
 		 | from | to | route | compass | bearing |
 		 | a    | b  | ab    | NW      | 315     |
 
-	@west
 	Scenario: Bearing when going west
 		Given the node map
 		 | b | a |

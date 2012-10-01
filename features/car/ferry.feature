@@ -1,10 +1,10 @@
 @routing @car @ferry
-Feature: Handle ferry routes
+Feature: Car - Handle ferry routes
 
 	Background:
 		Given the speedprofile "car"
 	
-	Scenario: Use a ferry route
+	Scenario: Car - Use a ferry route
 		Given the node map
 		 | a | b | c |   |   |
 		 |   |   | d |   |   |

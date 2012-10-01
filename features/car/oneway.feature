@@ -1,21 +1,21 @@
 @routing @car @oneway
-Feature: Oneway streets
+Feature: Car - Oneway streets
 Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 
 	Background:
 		Given the speedprofile "car"
 	
-	Scenario: Simple oneway
+	Scenario: Car - Simple oneway
 		Then routability should be
 		 | highway | oneway | forw | backw |
 		 | primary | yes    | x    |       |
 
-	Scenario: Simple reverse oneway
+	Scenario: Car - Simple reverse oneway
 		Then routability should be
 		 | highway | oneway | forw | backw |
 		 | primary | -1     |      | x     |
 
-	Scenario: Around the Block
+	Scenario: Car - Around the Block
 		Given the node map
 		 | a | b |
 		 | d | c |		
@@ -32,7 +32,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | a    | b  | ab       |
 		 | b    | a  | bc,cd,da |
 	
-	Scenario: Cars should not be affected by bicycle tags
+	Scenario: Car - Cars should not be affected by bicycle tags
 		Then routability should be
 		 | highway | junction   | oneway | oneway:bicycle | forw | backw |
 		 | primary |            | yes    | yes            | x    |       |

@@ -1,6 +1,9 @@
 @routing @snap
 Feature: Snap start/end point to the nearest way 
 	
+	Background:
+		Given the speedprofile "testbot"
+	
 	Scenario: Snap to nearest protruding oneway
 		Given the node map
 		 |   | 1 |   | 2 |   |

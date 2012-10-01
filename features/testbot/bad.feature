@@ -1,6 +1,9 @@
 @routing @bad
 Feature: Handle bad data in a graceful manner
 	
+	Background:
+		Given the speedprofile "testbot"
+
 	Scenario: Empty dataset
 		Given the node map
 		 |  |

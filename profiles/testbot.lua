@@ -42,9 +42,21 @@ function way_function (way, numberOfNodesInWay)
 	
 	local highway = way.tags:Find("highway")
 	local name = way.tags:Find("name")
+	local oneway = way.tags:Find("oneway")
+	
 	way.name = name
 	way.speed = speed_profile[highway] or speed_profile['default']
-	way.direction = Way.bidirectional
+
+	if oneway == "no" or oneway == "0" or oneway == "false" then
+		way.direction = Way.bidirectional
+	elseif oneway == "-1" then
+		way.direction = Way.opposite
+	elseif oneway == "yes" or oneway == "1" or oneway == "true" then
+		way.direction = Way.oneway
+	else
+		way.direction = Way.bidirectional
+	end
+	
 	way.type = 1
 	return 1
 end

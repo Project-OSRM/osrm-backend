@@ -1,10 +1,10 @@
 @routing @car @way
-Feature: Accessability of different way types
+Feature: Car - Accessability of different way types
 
 	Background:
 		Given the speedprofile "car"
 
-	Scenario: Basic access for cars
+	Scenario: Car - Basic access
 	 	Then routability should be
 		 | highway        | forw |
 		 | motorway       | x    |
