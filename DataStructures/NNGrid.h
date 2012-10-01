@@ -318,7 +318,7 @@ private:
 
         //sort & unique
         std::sort(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end(), CompareGridEdgeDataByFileIndex());
-        entriesWithSameRAMIndex.erase(std::unique(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end()), entriesWithSameRAMIndex.end());
+//        entriesWithSameRAMIndex.erase(std::unique(entriesWithSameRAMIndex.begin(), entriesWithSameRAMIndex.end()), entriesWithSameRAMIndex.end());
 
         //traverse each file bucket and write its contents to disk
         std::vector<GridEntry> entriesWithSameFileIndex;
