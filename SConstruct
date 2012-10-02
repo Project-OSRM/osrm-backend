@@ -57,6 +57,7 @@ AddOption('--verbosity', dest='verbosity', type='string', nargs=1, action='store
 AddOption('--buildconfiguration', dest='buildconfiguration', type='string', nargs=1, action='store', metavar='STRING', help='debug or release')
 AddOption('--all-flags', dest='allflags', type='string', nargs=0, action='store', metavar='STRING', help='turn off -march optimization in release mode')
 AddOption('--with-tools', dest='withtools', type='string', nargs=0, action='store', metavar='STRING', help='build tools for data analysis')
+AddOption('--no-march', dest='nomarch', type='string', nargs=0, action='store', metavar='STRING', help='turn off native optimizations')
 
 env = Environment( ENV = {'PATH' : os.environ['PATH']} ,COMPILER = GetOption('cxx'))
 env["CC"] = os.getenv("CC") or env["CC"]
@@ -146,7 +147,7 @@ else:
 	env.ParseConfig('pkg-config --cflags --libs luabind')
 
 #Check if architecture optimizations shall be turned off
-if GetOption('buildconfiguration') != 'debug' and sys.platform != 'darwin':
+if GetOption('buildconfiguration') != 'debug' and sys.platform != 'darwin' and GetOption('nomarch') is None:
 	env.Append(CCFLAGS = ['-march=native'])
 
 if not conf.CheckHeader('omp.h'):
