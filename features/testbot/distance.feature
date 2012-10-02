@@ -216,3 +216,21 @@ Feature: Distance calculation
 		 | x    | v  | xv    | 4240m +-1 |
 		 | x    | w  | xw    | 3610m +-1 |
 		 | x    | y  | xy    | 3160m +-1 |
+
+	@maze
+	Scenario: Distance of a winding south-north path
+		Given a grid size of 7 meters
+		Given the node map
+		 | a | b | s | t |
+		 | d | c | r | q |
+		 | e | f | o | p |
+		 | h | g | n | m |
+		 | i | j | k | l |
+
+		And the ways
+		 | nodes    |
+		 | abcdefghijklmnopqrst |
+
+		When I route I should get
+		 | from | to | route                | distance |
+		 | a    | t  | abcdefghijklmnopqrst | 133m +-1  |
