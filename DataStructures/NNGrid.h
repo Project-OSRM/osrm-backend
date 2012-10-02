@@ -150,13 +150,16 @@ public:
         ramFile.close();
     }
 #endif
+    inline bool CoordinatesAreEquivalent(const _Coordinate & a, const _Coordinate & b, const _Coordinate & c, const _Coordinate & d) const {
+        return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
+    }
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
         bool ignoreTinyComponents = (zoomLevel <= 14);
 //        INFO("ZoomLevel: " << zoomLevel << ", ignoring tinyComponentents: " << (ignoreTinyComponents ? "yes" : "no"));
 //        double time1 = get_timestamp();
         bool foundNode = false;
-        _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
+        const _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
         /** search for point on edge close to source */
         const unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
         std::vector<_GridEdge> candidates;
@@ -167,7 +170,7 @@ public:
             }
         }
         _GridEdge smallestEdge;
-        _Coordinate tmp;
+        _Coordinate tmp, edgeStartCoord, edgeEndCoord;
         double dist = numeric_limits<double>::max();
         double r, tmpDist;
 
@@ -185,6 +188,8 @@ public:
                 resultNode.weight2 = INT_MAX;
                 resultNode.location.lat = tmp.lat;
                 resultNode.location.lon = tmp.lon;
+                edgeStartCoord = candidate.startCoord;
+                edgeEndCoord = candidate.targetCoord;
                 foundNode = true;
                 smallestEdge = candidate;
                 //}  else if(tmpDist < dist) {
@@ -283,7 +288,6 @@ private:
         return UINT_MAX;
     }
 
-
     inline void BuildCellIndexToFileIndexMap(const unsigned ramIndex, boost::unordered_map<unsigned, unsigned >& cellMap){
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
@@ -301,7 +305,7 @@ private:
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) {
-        return (std::fabs(d1 - d2) < 0.0001);
+        return (std::fabs(d1 - d2) < FLT_EPSILON);
     }
 
     inline unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const unsigned long fileOffset, boost::unordered_map< unsigned, unsigned > & cellMap ) {
@@ -416,7 +420,6 @@ private:
         localStream->read(static_cast<char*>( static_cast<void*>(&result[currentSizeOfResult])), lengthOfBucket*sizeof(_GridEdge));
     }
 
-
     inline void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_GridEdge>& result, boost::unordered_map< unsigned, unsigned> & cellMap) {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
         unsigned long startIndexInFile = ramIndexTable[ramIndex];
@@ -484,12 +487,12 @@ private:
         nY = (d*p - c*q)/(a*d - b*c);
         mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
         *r = mX;
-        if(*r<=0){
+        if(*r<=0.){
             nearest.lat = source.lat;
             nearest.lon = source.lon;
             return ((b - y)*(b - y) + (a - x)*(a - x));
         }
-        else if(*r >= 1){
+        else if(*r >= 1.){
             nearest.lat = target.lat;
             nearest.lon = target.lon;
             return ((d - y)*(d - y) + (c - x)*(c - x));
