@@ -214,7 +214,7 @@ Feature: Basic Routing
 		When I route I should get
 		 | from | to | route |
 		 | a    | d  | abcd  |
-		 | d    | a  | efgh  |
+		 | d    | a  | abcd  |
 		 | a    | m  | aeim  |
 		 | m    | a  | aeim  |
 
