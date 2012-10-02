@@ -16,7 +16,7 @@ Feature: Max speed restrictions
 
 		When I route I should get
 		 | from | to | route | time     |
-		 | a    | b  | ab    | 60s ~10% |
+		 | a    | b  | ab    | 40s ~10% |
 		 | b    | c  | bc    | 360s +-1 |
 
 	Scenario: Car -  Max speed on a slow roads
