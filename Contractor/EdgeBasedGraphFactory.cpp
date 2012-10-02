@@ -254,22 +254,27 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
             //EdgeWeight heightPenalty = ComputeHeightPenalty(u, v);
             NodeID onlyToNode = CheckForEmanatingIsOnlyTurn(u, v);
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
-                _NodeBasedDynamicGraph::NodeIterator w = _nodeBasedGraph->GetTarget(e2);
+                const _NodeBasedDynamicGraph::NodeIterator w = _nodeBasedGraph->GetTarget(e2);
 
                 if(onlyToNode != UINT_MAX && w != onlyToNode) { //We are at an only_-restriction but not at the right turn.
                     ++numberOfSkippedTurns;
                     continue;
                 }
                 bool isBollardNode = (_barrierNodes.find(v) != _barrierNodes.end());
-                if( (!isBollardNode && (u != w || 1 == _nodeBasedGraph->GetOutDegree(v))) || ((u == w) && isBollardNode)) { //only add an edge if turn is not a U-turn except it is the end of dead-end street.
+                if(u == w && 1 != _nodeBasedGraph->GetOutDegree(v) ) {
+                    continue;
+                }
+
+                if( !isBollardNode ) { //only add an edge if turn is not a U-turn except it is the end of dead-end street.
                     if (!CheckIfTurnIsRestricted(u, v, w) || (onlyToNode != UINT_MAX && w == onlyToNode)) { //only add an edge if turn is not prohibited
                         const _NodeBasedDynamicGraph::EdgeData edgeData1 = _nodeBasedGraph->GetEdgeData(e1);
                         const _NodeBasedDynamicGraph::EdgeData edgeData2 = _nodeBasedGraph->GetEdgeData(e2);
                         assert(edgeData1.edgeBasedNodeID < _nodeBasedGraph->GetNumberOfEdges());
                         assert(edgeData2.edgeBasedNodeID < _nodeBasedGraph->GetNumberOfEdges());
 
-                        if(!edgeData1.forward || !edgeData2.forward)
+                        if(!edgeData1.forward || !edgeData2.forward) {
                             continue;
+                        }
 
                         unsigned distance = edgeData1.distance;
                         if(_trafficLights.find(v) != _trafficLights.end()) {
@@ -292,6 +297,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         }
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
+                        assert(u != w);
                         originalEdgeData.push_back(oed);
                         if(originalEdgeData.size() > 100000) {
                             originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
