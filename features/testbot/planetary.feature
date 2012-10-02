@@ -13,8 +13,8 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | ab    |
 
 		When I route I should get
-		 | from | to | route | distance      |
-		 | a    | b  | ab    | 8905559 ~0.1% |
+		 | from | to | route | distance       |
+		 | a    | b  | ab    | 8905559m ~0.1% |
 
 	Scenario: Longitudinal distances at latitude 45
 		Given the node locations
@@ -27,8 +27,8 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | cd    |
 
 		When I route I should get
-		 | from | to | route | distance      |
-		 | c    | d  | cd    | 6028844 ~0.5% |
+		 | from | to | route | distance       |
+		 | c    | d  | cd    | 6028844m ~0.5% |
 
 	Scenario: Longitudinal distances at latitude 80
 		Given the node locations
@@ -41,8 +41,8 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | cd    |
 
 		When I route I should get
-		 | from | to | route | distance      |
-		 | c    | d  | cd    | 1431469 ~0.5% |
+		 | from | to | route | distance       |
+		 | c    | d  | cd    | 1431469m ~0.5% |
 
 	Scenario: Latitudinal distances at longitude 0
 		Given the node locations
@@ -55,8 +55,8 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | ab    |
 
 		When I route I should get
-		 | from | to | route | distance      |
-		 | a    | b  | ab    | 8905559 ~0.1% |
+		 | from | to | route | distance       |
+		 | a    | b  | ab    | 8905559m ~0.1% |
 
 	Scenario: Latitudinal distances at longitude 45
 		Given the node locations
@@ -69,8 +69,8 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | ab    |
 
 		When I route I should get
-		 | from | to | route | distance      |
-		 | a    | b  | ab    | 8905559 ~0.1% |
+		 | from | to | route | distance       |
+		 | a    | b  | ab    | 8905559m ~0.1% |
 
 	Scenario: Latitudinal distances at longitude 80
 		Given the node locations
@@ -83,5 +83,5 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | ab    |
 
 		When I route I should get
-		 | from | to | route | distance      |
-		 | a    | b  | ab    | 8905559 ~0.1% |		 
+		 | from | to | route | distance       |
+		 | a    | b  | ab    | 8905559m ~0.1% |
