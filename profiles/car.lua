@@ -29,7 +29,7 @@ speed_profile = {
   ["default"] = 50
 }
 
-take_minimum_of_speeds 	= true
+take_minimum_of_speeds 	= false
 obey_oneway 			= true
 obey_bollards 			= true
 use_restrictions 		= true
