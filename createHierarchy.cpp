@@ -115,6 +115,9 @@ int main (int argc, char *argv[]) {
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
     INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
+    if(0 == edgeList.size())
+        ERR("The input data is broken. It is impossible to do any turns in this graph");
+
 
     if(!testDataFile("profile.lua")) {
         ERR("Need profile.lua to apply traffic signal penalty");
@@ -160,9 +163,6 @@ int main (int argc, char *argv[]) {
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
-    if(0 == edgeBasedEdgeList.size())
-        ERR("The input data is broken. It is impossible to do any turns in this graph");
-
 
     /***
      * Writing info on original (node-based) nodes
