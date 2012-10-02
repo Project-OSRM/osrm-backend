@@ -23,8 +23,9 @@ Feature: Handle bad data in a graceful manner
 		 | ab    | yes    |
 		 | cb    | yes    |
 
-		When I preprocess data
-		Then preparing should return code 255
+		When I route I should get
+		 | from | to | route |
+		 | a    | b  | ab    |
 
 	Scenario: Start/end point at the same location
 		Given the node map
