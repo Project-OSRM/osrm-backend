@@ -194,7 +194,7 @@ public:
                 smallestEdge = candidate;
                 //}  else if(tmpDist < dist) {
                 //INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
-            } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs(static_cast<int>(candidate.edgeBasedNode)-static_cast<int>(resultNode.edgeBasedNode) )) {
+            } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs(static_cast<int>(candidate.edgeBasedNode)-static_cast<int>(resultNode.edgeBasedNode) )  && CoordinatesAreEquivalent(edgeStartCoord, candidate.startCoord, edgeEndCoord, candidate.targetCoord)) {
                 resultNode.edgeBasedNode = std::min(candidate.edgeBasedNode, resultNode.edgeBasedNode);
                 resultNode.weight2 = candidate.weight;
                 //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
