@@ -150,9 +150,10 @@ Testbot uses a signal penalty of 7s.
 		 | c    | b  | abcd  | 10s +-1 |
 
 	Scenario: Prefer faster route without traffic signals
-		Given the node map
-		 | a | b | c |
-		 |   | d |   |
+		Given a grid size of 50 meters
+		And the node map
+		 | a |  | b |  | c |
+		 |   |  | d |  |   |
 	
 		And the nodes
 		 | node | highway         |
