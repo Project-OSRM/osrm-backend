@@ -4,6 +4,19 @@ Feature: Distance calculation
 	Background:
 		Given the speedprofile "testbot"
 	
+	Scenario: 100m distance
+		Given a grid size of 100 meters
+		Given the node map
+		 | a | b |
+
+		And the ways
+		 | nodes |
+		 | ab   |
+
+		When I route I should get
+		 | from | to | route | distance |
+		 | a    | b  | ab    | 100m     |
+
 	Scenario: Distance should equal sum of segments, leftwinded
 		Given the node map
 		 | e |   |
