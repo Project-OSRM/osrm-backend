@@ -6,37 +6,43 @@ Feature: Barriers
 
 	Scenario: Bike - Barriers 
 		Then routability should be
-		 | highway | node/barrier   | node/access   | bothw |
-		 | primary |                |               | x     |
-		 | primary | gate           |               | x     |
-		 | primary | cattle_grid    |               | x     |
-		 | primary | border_control |               | x     |
-		 | primary | toll_booth     |               | x     |
-		 | primary | sally_port     |               | x     |
-		 | primary | bollard        |               | x     |
-		 | primary | some_tag       |               |       |
+		 | node/barrier   | bothw |
+		 |                | x     |
+		 | bollard        | x     |
+		 | gate           | x     |
+		 | cattle_grid    | x     |
+		 | border_control | x     |
+		 | toll_booth     | x     |
+		 | sally_port     | x     |
+		 | entrance       | x     |
+		 | wall           |       |
+		 | fence          |       |
+		 | some_tag       |       |
 
 	Scenario: Bike - Access tag trumphs barriers
 		Then routability should be
-		 | highway | node/barrier   | node/access   | bothw |
-		 | primary | bollard        | yes           | x     |
-		 | primary | gate           | yes           | x     |
-		 | primary | cattle_grid    | yes           | x     |
-		 | primary | border_control | yes           | x     |
-		 | primary | toll_booth     | yes           | x     |
-		 | primary | sally_port     | yes           | x     |
-		 | primary | bollard        | no            |       |
-		 | primary | gate           | no            |       |
-		 | primary | cattle_grid    | no            |       |
-		 | primary | border_control | no            |       |
-		 | primary | toll_booth     | no            |       |
-		 | primary | sally_port     | no            |       |
-		 | primary | sally_port     | some_tag      |       |
-		 | primary | some_tag       | bicycle       | x     |
-		 | primary | some_tag       | foot          |       |
-		 | primary | some_tag       | motorcar      |       |
-		 | primary | some_tag       | motor_vehicle |       |
-		 | primary | some_tag       | vehicle       |       |
-		 | primary | some_tag       | motorcar      |       |
-		 | primary | some_tag       | permissive    |       |
-		 | primary | some_tag       | designated    |       |
+		 | node/barrier | node/access   | bothw |
+		 | bollard      |               | x     |
+		 | bollard      | yes           | x     |
+		 | bollard      | bicycle       | x     |
+		 | bollard      | vehicle       | x     |
+		 | bollard      | motorcar      | x     |
+		 | bollard      | motor_vehicle | x     |
+		 | bollard      | permissive    | x     |
+		 | bollard      | designated    | x     |
+		 | bollard      | no            |       |
+		 | bollard      | foot          |       |
+		 | bollard      | private       |       |
+		 | bollard      | agricultural  |       |
+		 | wall         |               |       |
+		 | wall         | yes           | x     |
+		 | wall         | bicycle       | x     |
+		 | wall         | vehicle       | x     |
+		 | wall         | motorcar      | x     |
+		 | wall         | motor_vehicle | x     |
+		 | wall         | permissive    | x     |
+		 | wall         | designated    | x     |
+		 | wall         | no            |       |
+		 | wall         | foot          |       |
+		 | wall         | private       |       |
+		 | wall         | agricultural  |       |

@@ -15,6 +15,16 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | highway | oneway | forw | backw |
 		 | primary | -1     |      | x     |
 
+	Scenario: Car - Implied onewatys
+		Then routability should be
+		 | highway       | junction   | forw | backw |
+		 | motorway      |            | x    |       |
+		 | motorway_link |            | x    |       |
+		 | primary       |            | x    | x     |
+		 | motorway      | roundabout | x    |       |
+		 | motorway_link | roundabout | x    |       |
+		 | primary       | roundabout | x    |       |
+
 	Scenario: Car - Around the Block
 		Given the node map
 		 | a | b |

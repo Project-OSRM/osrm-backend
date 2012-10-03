@@ -121,7 +121,6 @@ Feature: Distance calculation
 		 | a    | c  | abc   | 2000m +-1 |
 		 | c    | a  | abc   | 2000m +-1 |
 
-	@winding
 	Scenario: Distance of a winding south-north path
 		Given a grid size of 10 meters
 		Given the node map
@@ -144,7 +143,6 @@ Feature: Distance calculation
 		 | a    | g  | abcdefgh | 60m +-1  |
 		 | a    | h  | abcdefgh | 70m +-1  |
 		
-	@winding
 	Scenario: Distance of a winding east-west path
 		Given a grid size of 10 meters
 		Given the node map
@@ -231,7 +229,7 @@ Feature: Distance calculation
 		 | x    | y  | xy    | 3162m +-1 |
 
 	@maze
-	Scenario: Distance of a winding south-north path
+	Scenario: Distance of a maze of short segments
 		Given a grid size of 7 meters
 		Given the node map
 		 | a | b | s | t |

@@ -11,7 +11,6 @@ service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 
 speed_profile = { 
-  ["trunk_link"] = 5,
   ["primary"] = 5,
   ["primary_link"] = 5,
   ["secondary"] = 5,

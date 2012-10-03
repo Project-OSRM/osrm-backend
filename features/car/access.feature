@@ -16,29 +16,13 @@ Feature: Car - Restricted access
 		 | no            |       |
 		 | private       |       |
 		 | agricultural  |       |
-		 | forestry      |       |
-		 | designated    |       |
+		 | forestery     |       |
 		 | some_tag      | x     |
 
-	Scenario: Car - Access tags for other modes should have no effect	
-	 	Then routability should be
-		 | access            | bothw |
-		 | ufo:yes           | x     |
-		 | ufo:motorcar      | x     |
-		 | ufo:motor_vehicle | x     |
-		 | ufo:vehicle       | x     |
-		 | ufo:permissive    | x     |
-		 | ufo:designated    | x     |
-		 | ufo:no            | x     |
-		 | ufo:private       | x     |
-		 | ufo:agricultural  | x     |
-		 | ufo:forestry      | x     |
-		 | ufo:designated    | x     |
-		 | ufo:some_tag      | x     |
 
 	Scenario: Car - Access tags on nodes		
 	 	Then routability should be
-		 | node:access   | bothw |
+		 | node/access   | bothw |
 		 | yes           | x     |
 		 | motorcar      | x     |
 		 | motor_vehicle | x     |
@@ -48,19 +32,18 @@ Feature: Car - Restricted access
 		 | no            |       |
 		 | private       |       |
 		 | agricultural  |       |
-		 | forestry      |       |
-		 | designated    |       |
+		 | forestery     |       |
 		 | some_tag      | x     |
 
 	Scenario: Car - Access tags on both nodes and way 		
 	 	Then routability should be
-		 | access   | node:access | bothw |
+		 | access   | node/access | bothw |
 		 | yes      | yes         | x     |
 		 | yes      | no          |       |
-		 | yes      | some_tag    |       |
+		 | yes      | some_tag    | x     |
 		 | no       | yes         |       |
 		 | no       | no          |       |
 		 | no       | some_tag    |       |
-		 | some_tag | yes         |       |
+		 | some_tag | yes         | x     |
 		 | some_tag | no          |       |
-		 | some_tag | some_tag    |       |
+		 | some_tag | some_tag    | x     |

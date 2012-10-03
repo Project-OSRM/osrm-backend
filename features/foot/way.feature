@@ -10,7 +10,7 @@ Feature: Foot - Accessability of different way types
 		 | motorway       |      |
 		 | motorway_link  |      |
 		 | trunk          |      |
-		 | trunk_link     | x    |
+		 | trunk_link     |      |
 		 | primary        | x    |
 		 | primary_link   | x    |
 		 | secondary      | x    |

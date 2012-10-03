@@ -6,37 +6,43 @@ Feature: Car - Barriers
 
 	Scenario: Car - Barriers 
 		Then routability should be
-		 | highway | node/barrier   | node/access   | bothw |
-		 | primary |                |               | x     |
-		 | primary | gate           |               | x     |
-		 | primary | cattle_grid    |               | x     |
-		 | primary | border_control |               | x     |
-		 | primary | toll_booth     |               | x     |
-		 | primary | sally_port     |               | x     |
-		 | primary | bollard        |               |       |
-		 | primary | some_tag       |               |       |
-	
+		 | node/barrier   | bothw |
+		 |                | x     |
+		 | bollard        |       |
+		 | gate           | x     |
+		 | cattle_grid    | x     |
+		 | border_control | x     |
+		 | toll_booth     | x     |
+		 | sally_port     | x     |
+		 | entrance       |       |
+		 | wall           |       |
+		 | fence          |       |
+		 | some_tag       |       |
+
 	Scenario: Car - Access tag trumphs barriers
 		Then routability should be
-		 | highway | node/barrier   | node/access   | bothw |
-		 | primary | bollard        | yes           | x     |
-		 | primary | gate           | yes           | x     |
-		 | primary | cattle_grid    | yes           | x     |
-		 | primary | border_control | yes           | x     |
-		 | primary | toll_booth     | yes           | x     |
-		 | primary | sally_port     | yes           | x     |
-		 | primary | bollard        | no            |       |
-		 | primary | gate           | no            |       |
-		 | primary | cattle_grid    | no            |       |
-		 | primary | border_control | no            |       |
-		 | primary | toll_booth     | no            |       |
-		 | primary | sally_port     | no            |       |
-		 | primary | sally_port     | some_tag      |       |
-		 | primary | bollard        | bicycle       |       |
-		 | primary | bollard        | foot          |       |
-		 | primary | bollard        | motorcar      | x     |
-		 | primary | bollard        | motor_vehicle | x     |
-		 | primary | bollard        | vehicle       | x     |
-		 | primary | bollard        | motorcar      | x     |
-		 | primary | bollard        | permissive    | x     |
-		 | primary | bollard        | designated    | x     |
+		 | node/barrier | node/access   | bothw |
+		 | gate         |               | x     |
+		 | gate         | yes           | x     |
+		 | gate         | vehicle       | x     |
+		 | gate         | motorcar      | x     |
+		 | gate         | motor_vehicle | x     |
+		 | gate         | permissive    | x     |
+		 | gate         | designated    | x     |
+		 | gate         | no            |       |
+		 | gate         | foot          |       |
+		 | gate         | bicycle       |       |
+		 | gate         | private       |       |
+		 | gate         | agricultural  |       |
+		 | wall         |               |       |
+		 | wall         | yes           | x     |
+		 | wall         | vehicle       | x     |
+		 | wall         | motorcar      | x     |
+		 | wall         | motor_vehicle | x     |
+		 | wall         | permissive    | x     |
+		 | wall         | designated    | x     |
+		 | wall         | no            |       |
+		 | wall         | foot          |       |
+		 | wall         | bicycle       |       |
+		 | wall         | private       |       |
+		 | wall         | agricultural  |       |

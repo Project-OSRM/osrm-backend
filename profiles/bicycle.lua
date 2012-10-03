@@ -1,12 +1,9 @@
--- Bicycle profile
-
 -- Begin of globals
 
-bollards_whitelist = { [""] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["no"] = true, ["sally_port"] = true, ["gate"] = true}
-access_tag_whitelist = { ["yes"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true	}
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
+barrier_whitelist = { [""] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["no"] = true, ["sally_port"] = true, ["gate"] = true}
+access_tag_whitelist = { ["yes"] = true, ["bicycle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true	}
+access_tag_blacklist = { ["no"] = true, ["foot"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags = { "bicycle", "vehicle" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 
@@ -49,23 +46,28 @@ function node_function (node)
 	local access = node.tags:Find ("access")
 	local traffic_signal = node.tags:Find("highway")
 	
-	--flag node if it carries a traffic light
-	
+	-- flag node if it carries a traffic light	
 	if traffic_signal == "traffic_signals" then
-	node.traffic_light = true;
+		node.traffic_light = true
 	end
 	
-	if obey_bollards then
-		--flag node as unpassable if it black listed as unpassable
-		if access_tag_blacklist[barrier] then
-		node.bollard = true;
+	-- parse access and barrier tags
+	if access ~= "" then
+		if access_tag_blacklist[access] then
+			node.bollard = true
+		else
+			node.bollard = false
 		end
-		
-		--reverse the previous flag if there is an access tag specifying entrance
-		if node.bollard and not bollards_whitelist[barrier] and not access_tag_whitelist[barrier] then
-		node.bollard = false;
+	elseif barrier ~= "" then
+		if barrier_whitelist[barrier] then
+			node.bollard = false
+		else
+			node.bollard = true
 		end
+	else
+		node.bollard = false
 	end
+	
 	return 1
 end
 
@@ -93,6 +95,11 @@ function way_function (way, numberOfNodesInWay)
 	local access = way.tags:Find("access")
 	
 		
+ 	-- Check if we are allowed to access the way
+    if access_tag_blacklist[access] ~=nil and access_tag_blacklist[access] then
+		return 0
+    end
+
 	-- Set the name that will be used for instructions	
 	if "" ~= ref then
 		way.name = ref

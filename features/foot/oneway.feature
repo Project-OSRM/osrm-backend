@@ -26,6 +26,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 	Scenario: Foot - Oneway:foot tag should not cause walking on big roads
 	 	Then routability should be
 		 | highway       | oneway:foot | bothw |
+		 | footway       |             | x     |
 		 | motorway      | yes         |       |
 		 | motorway_link | yes         |       |
 		 | trunk         | yes         |       |

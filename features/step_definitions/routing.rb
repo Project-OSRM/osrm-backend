@@ -157,7 +157,7 @@ Then /^routability should be$/ do |table|
     table.hashes.each_with_index do |row,i|
       got = row.dup
       attempts = []
-      ['forw','backw'].each do |direction|
+      ['forw','backw','bothw'].each do |direction|
         if table.headers.include? direction
           if direction == 'forw' || direction == 'bothw'
             response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}")
