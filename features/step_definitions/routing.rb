@@ -220,7 +220,7 @@ When /^I route I should get$/ do |table|
           if row['distance']!=''
             raise "*** Distance must be specied in meters. (ex: 250m)" unless row['distance'] =~ /\d+m/
           end
-          got['distance'] = instructions ? json['route_summary']['total_distance'].to_s : ''
+          got['distance'] = instructions ? "#{json['route_summary']['total_distance'].to_s}m" : ''
         end
         if table.headers.include?('time')
           raise "*** Time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
