@@ -193,29 +193,29 @@ Feature: Distance calculation
 		When I route I should get
 		 | from | to | route | distance  |
 		 | x    | a  | xa    | 3000m +-1 |
-		 | x    | b  | xb    | 3160m +-1 |
-		 | x    | c  | xc    | 3610m +-1 |
-		 | x    | d  | xd    | 4240m +-1 |
-		 | x    | e  | xe    | 3610m +-1 |
-		 | x    | f  | xf    | 3160m +-1 |
+		 | x    | b  | xb    | 3162m +-1 |
+		 | x    | c  | xc    | 3606m +-1 |
+		 | x    | d  | xd    | 4243m +-1 |
+		 | x    | e  | xe    | 3606m +-1 |
+		 | x    | f  | xf    | 3162m +-1 |
 		 | x    | g  | xg    | 3000m +-1 |
-		 | x    | h  | xh    | 3160m +-1 |
-		 | x    | i  | xi    | 3610m +-1 |
-		 | x    | j  | xj    | 4240m +-1 |
-		 | x    | k  | xk    | 3610m +-1 |
-		 | x    | l  | xl    | 3160m +-1 |
+		 | x    | h  | xh    | 3162m +-1 |
+		 | x    | i  | xi    | 3606m +-1 |
+		 | x    | j  | xj    | 4243m +-1 |
+		 | x    | k  | xk    | 3606m +-1 |
+		 | x    | l  | xl    | 3162m +-1 |
 		 | x    | m  | xm    | 3000m +-1 |
-		 | x    | n  | xn    | 3160m +-1 |
-		 | x    | o  | xo    | 3610m +-1 |
-		 | x    | p  | xp    | 4240m +-1 |
-		 | x    | q  | xq    | 3610m +-1 |
-		 | x    | r  | xr    | 3160m +-1 |
+		 | x    | n  | xn    | 3162m +-1 |
+		 | x    | o  | xo    | 3606m +-1 |
+		 | x    | p  | xp    | 4243m +-1 |
+		 | x    | q  | xq    | 3606m +-1 |
+		 | x    | r  | xr    | 3162m +-1 |
 		 | x    | s  | xs    | 3000m +-1 |
-		 | x    | t  | xt    | 3160m +-1 |
-		 | x    | u  | xu    | 3610m +-1 |
-		 | x    | v  | xv    | 4240m +-1 |
-		 | x    | w  | xw    | 3610m +-1 |
-		 | x    | y  | xy    | 3160m +-1 |
+		 | x    | t  | xt    | 3162m +-1 |
+		 | x    | u  | xu    | 3606m +-1 |
+		 | x    | v  | xv    | 4243m +-1 |
+		 | x    | w  | xw    | 3606m +-1 |
+		 | x    | y  | xy    | 3162m +-1 |
 
 	@maze
 	Scenario: Distance of a winding south-north path
