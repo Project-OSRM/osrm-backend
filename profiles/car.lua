@@ -2,7 +2,7 @@
 
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["no"] = true, ["sally_port"] = true, ["gate"] = true}
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true  }
-access_tag_blacklist = { ["no"] = true, ["foot"] = true, ["bicycle"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
+access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 service_tag_restricted = { ["parking_aisle"] = true }
@@ -44,29 +44,26 @@ function node_function (node)
   local access = node.tags:Find ("access")
   local traffic_signal = node.tags:Find("highway")
   
-  -- flag node if it carries a traffic light
+  --flag node if it carries a traffic light
+  
   if traffic_signal == "traffic_signals" then
-	node.traffic_light = true
+	node.traffic_light = true;
   end
   
-	-- parse access and barrier tags
-	if access ~= "" then
-		if access_tag_blacklist[access] then
-			node.bollard = true
-		else
-			node.bollard = false
-		end
-	elseif barrier ~= "" then
-		if barrier_whitelist[barrier] then
-			node.bollard = false
-		else
-			node.bollard = true
-		end
-	else
-		node.bollard = false
+  if "" ~= barrier and obey_bollards then
+    node.bollard = true; -- flag as unpassable and then check
+
+    if "yes" == access then
+      node.bollard = false;
+	  return
+    end
+
+    --reverse the previous flag if there is an access tag specifying entrance
+	if node.bollard and (barrier_whitelist[barrier] or access_tag_whitelist[access]) then
+	  node.bollard = false;
+	  return
 	end
-	
-	return 1
+  end
 end
 
 function way_function (way, numberOfNodesInWay)
