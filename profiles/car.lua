@@ -5,6 +5,7 @@ access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] 
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
+access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true, ["pier"] = true }
 
@@ -39,9 +40,20 @@ u_turn_penalty 			= 20
 
 -- End of globals
 
+--find first tag in access hierachy which is set
+function find_access_tag(source)
+	for i,v in ipairs(access_tags_hierachy) do 
+		local tag = source.tags:Find(v)
+		if tag ~= '' then --and tag ~= "" then
+			return tag
+		end
+	end
+	return nil
+end
+
 function node_function (node)
   local barrier = node.tags:Find ("barrier")
-  local access = node.tags:Find ("access")
+  local access = find_access_tag(node)
   local traffic_signal = node.tags:Find("highway")
   
   --flag node if it carries a traffic light
@@ -50,21 +62,22 @@ function node_function (node)
 	node.traffic_light = true;
   end
   
-  if "" ~= barrier and obey_bollards then
-    node.bollard = true; -- flag as unpassable and then check
-
-    if "yes" == access then
-      node.bollard = false;
-	  return
-    end
-
-    --reverse the previous flag if there is an access tag specifying entrance
-	if node.bollard and (barrier_whitelist[barrier] or access_tag_whitelist[access]) then
-	  node.bollard = false;
-	  return
+	-- parse access and barrier tags
+	if access  and access ~= "" then
+		if access_tag_blacklist[access] then
+			node.bollard = true
+		end
+	elseif barrier and barrier ~= "" then
+		if barrier_whitelist[barrier] then
+			return
+		else
+			node.bollard = true
+		end
 	end
-  end
+	
+	return 1
 end
+
 
 function way_function (way, numberOfNodesInWay)
 
@@ -87,26 +100,27 @@ function way_function (way, numberOfNodesInWay)
     local duration  = way.tags:Find("duration")
     local service  = way.tags:Find("service")
     local area = way.tags:Find("area")
-    local access = way.tags:Find("access")
+    local access = find_access_tag(way)
 
-  -- Second parse the way according to these properties
+  -- Second, parse the way according to these properties
 
 	if ignore_areas and ("yes" == area) then
 		return 0
 	end
 		
-  -- Check if we are allowed to access the way
-    if access_tag_blacklist[access] ~=nil and access_tag_blacklist[access] then
-		return 0;
+  	-- Check if we are allowed to access the way
+    if access_tag_blacklist[access] then
+		return 0
     end
+
     
   -- Check if our vehicle types are forbidden
-    for i,v in ipairs(access_tags) do 
-      local mode_value = way.tags:Find(v)
-      if nil ~= mode_value and "no" == mode_value then
-	    return 0;
-      end
-    end
+--    for i,v in ipairs(access_tags) do 
+--      local mode_value = way.tags:Find(v)
+--      if nil ~= mode_value and "no" == mode_value then
+--	    return 0;
+--      end
+--    end
   
     
   -- Set the name that will be used for instructions  
