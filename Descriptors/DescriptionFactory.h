@@ -51,7 +51,7 @@ public:
         unsigned startName;
         unsigned destName;
         _RouteSummary() : lengthString("0"), durationString("0"), startName(0), destName(0) {}
-        void BuildDurationAndLengthStrings(double distance, unsigned time) {
+        void BuildDurationAndLengthStrings(const double distance, const unsigned time) {
             //compute distance/duration for route summary
             std::ostringstream s;
             s << round(distance);

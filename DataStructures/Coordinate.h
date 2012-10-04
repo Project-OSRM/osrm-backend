@@ -57,18 +57,45 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     assert(lon1 != INT_MIN);
     assert(lat2 != INT_MIN);
     assert(lon2 != INT_MIN);
-    static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
-    //Earth's quatratic mean radius for WGS-84
-    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-    double latitudeArc  = ( lat1/100000. - lat2/100000. ) * DEG_TO_RAD;
-    double longitudeArc = ( lon1/100000. - lon2/100000. ) * DEG_TO_RAD;
-    double latitudeH = sin( latitudeArc * 0.5 );
-    latitudeH *= latitudeH;
-    double lontitudeH = sin( longitudeArc * 0.5 );
-    lontitudeH *= lontitudeH;
-    double tmp = cos( lat1/100000. * DEG_TO_RAD ) * cos( lat2/100000. * DEG_TO_RAD );
-    double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
-    return EARTH_RADIUS_IN_METERS * distanceArc;
+//    static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
+//    //Earth's quatratic mean radius for WGS-84
+//    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
+//    double latitudeArc  = ( lat1/100000. - lat2/100000. ) * DEG_TO_RAD;
+//    double longitudeArc = ( lon1/100000. - lon2/100000. ) * DEG_TO_RAD;
+//    double latitudeH = sin( latitudeArc * 0.5 );
+//    latitudeH *= latitudeH;
+//    double lontitudeH = sin( longitudeArc * 0.5 );
+//    lontitudeH *= lontitudeH;
+//    double tmp = cos( lat1/100000. * DEG_TO_RAD ) * cos( lat2/100000. * DEG_TO_RAD );
+//    double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
+//    return EARTH_RADIUS_IN_METERS * distanceArc;
+
+    //double PI = 3.14159265358979323846;//4.0*atan(1.0);
+    double RAD = 0.017453292519943295769236907684886;
+    //std::cout << "RAD: " << RAD << std::endl;
+    //main code inside the class
+    double lt1 = lat1/100000.;
+    double ln1 = lon1/100000.;
+    double lt2 = lat2/100000.;
+    double ln2 = lon2/100000.;
+    double dlat1=lt1*(RAD);
+
+    double dlong1=ln1*(RAD);
+    double dlat2=lt2*(RAD);
+    double dlong2=ln2*(RAD);
+
+    double dLong=dlong1-dlong2;
+    double dLat=dlat1-dlat2;
+
+    double aHarv= pow(sin(dLat/2.0),2.0)+cos(dlat1)*cos(dlat2)*pow(sin(dLong/2.),2);
+    double cHarv=2.*atan2(sqrt(aHarv),sqrt(1.0-aHarv));
+    //earth's radius from wikipedia varies between 6,356.750 km — 6,378.135 km (˜3,949.901 — 3,963.189 miles)
+    //The IUGG value for the equatorial radius of the Earth is 6378.137 km (3963.19 mile)
+    const double earth=6372797.560856;//I am doing miles, just change this to radius in kilometers to get distances in km
+    double distance=earth*cHarv;
+    return distance;
+
+
 }
 
 inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
