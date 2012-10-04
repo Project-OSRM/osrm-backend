@@ -8,35 +8,6 @@ Tertiary road:	12km/h = 12000m/3600s = 100m/30s
 	Background: Use specific speeds
 		Given the speedprofile "testbot"
 	
-	Scenario: Basic travel time, 1m scale
-		Given a grid size of 1 meters
-		Given the node map
-		 | h | a | b |
-		 | g | x | c |
-		 | f | e | d |
-
-		And the ways
-		 | nodes | highway   |
-		 | xa    | primary   |
-		 | xb    | primary   |
-		 | xc    | primary   |
-		 | xd    | primary   |
-		 | xe    | primary   |
-		 | xf    | primary   |
-		 | xg    | primary   |
-		 | xh    | primary   |
-
-		When I route I should get
-		 | from | to | route | time   |
-		 | x    | a  | xa    | 0s +-1 |
-		 | x    | b  | xb    | 0s +-1 |
-		 | x    | c  | xc    | 0s +-1 |
-		 | x    | d  | xd    | 0s +-1 |
-		 | x    | e  | xe    | 0s +-1 |
-		 | x    | f  | xf    | 0s +-1 |
-		 | x    | g  | xg    | 0s +-1 |
-		 | x    | h  | xh    | 0s +-1 |
-	
 	Scenario: Basic travel time, 10m scale
 		Given a grid size of 10 meters
 		Given the node map
