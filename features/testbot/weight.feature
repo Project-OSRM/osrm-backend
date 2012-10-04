@@ -6,19 +6,21 @@ Feature: Choosing route based on length, speed, etc
 	
 	Scenario: Pick the geometrically shortest route, way types being equal
 		Given the node map
-		 |   | s |   |
-		 |   | t |   |
-		 | a |   | b |
+		 |   |   | s |   |   |
+		 |   |   | t |   |   |
+		 | x | a |   | b | y |
 
 		And the ways
 		 | nodes | highway |
+		 | xa    | primary |
+		 | by    | primary |
 		 | atb   | primary |
 		 | asb   | primary |
 
 		When I route I should get
-		 | from | to | route |
-		 | a    | b  | atb   |
-		 | b    | a  | atb   |
+		 | from | to | route     |
+		 | x    | y  | xa,atb,by |
+		 | y    | x  | by,atb,xa |
 
 	Scenario: Pick  the shortest travel time, even when it's longer
 		Given the node map
@@ -34,4 +36,3 @@ Feature: Choosing route based on length, speed, etc
 		 | from | to | route |
 		 | a    | b  | apb   |
 		 | b    | a  | apb   |
-
