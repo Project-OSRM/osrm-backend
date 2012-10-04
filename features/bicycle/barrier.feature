@@ -24,25 +24,15 @@ Feature: Barriers
 		 | node/barrier | node/access   | bothw |
 		 | bollard      |               | x     |
 		 | bollard      | yes           | x     |
-		 | bollard      | bicycle       | x     |
-		 | bollard      | vehicle       | x     |
-		 | bollard      | motorcar      | x     |
-		 | bollard      | motor_vehicle | x     |
 		 | bollard      | permissive    | x     |
 		 | bollard      | designated    | x     |
 		 | bollard      | no            |       |
-		 | bollard      | foot          |       |
 		 | bollard      | private       |       |
 		 | bollard      | agricultural  |       |
 		 | wall         |               |       |
 		 | wall         | yes           | x     |
-		 | wall         | bicycle       | x     |
-		 | wall         | vehicle       | x     |
-		 | wall         | motorcar      | x     |
-		 | wall         | motor_vehicle | x     |
 		 | wall         | permissive    | x     |
 		 | wall         | designated    | x     |
 		 | wall         | no            |       |
-		 | wall         | foot          |       |
 		 | wall         | private       |       |
 		 | wall         | agricultural  |       |

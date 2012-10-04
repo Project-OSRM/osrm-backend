@@ -1,9 +1,10 @@
 -- Begin of globals
 
 barrier_whitelist = { [""] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["no"] = true, ["sally_port"] = true, ["gate"] = true}
-access_tag_whitelist = { ["yes"] = true, ["bicycle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true	}
-access_tag_blacklist = { ["no"] = true, ["foot"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
+access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true	}
+access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
+access_tags_hierachy = { "bicycle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 
@@ -41,9 +42,20 @@ u_turn_penalty 			= 20
 
 -- End of globals
 
+--find first tag in access hierachy which is set
+function find_access_tag(source)
+	for i,v in ipairs(access_tags_hierachy) do 
+		local tag = source.tags:Find(v)
+		if tag ~= '' then --and tag ~= "" then
+			return tag
+		end
+	end
+	return nil
+end
+
 function node_function (node)
 	local barrier = node.tags:Find ("barrier")
-	local access = node.tags:Find ("access")
+	local access = find_access_tag(node)
 	local traffic_signal = node.tags:Find("highway")
 	
 	-- flag node if it carries a traffic light	
@@ -52,20 +64,18 @@ function node_function (node)
 	end
 	
 	-- parse access and barrier tags
-	if access ~= "" then
+	if access  and access ~= "" then
 		if access_tag_blacklist[access] then
 			node.bollard = true
 		else
 			node.bollard = false
 		end
-	elseif barrier ~= "" then
+	elseif barrier and barrier ~= "" then
 		if barrier_whitelist[barrier] then
 			node.bollard = false
 		else
 			node.bollard = true
 		end
-	else
-		node.bollard = false
 	end
 	
 	return 1
@@ -92,11 +102,11 @@ function way_function (way, numberOfNodesInWay)
 	local duration	= way.tags:Find("duration")
 	local service	= way.tags:Find("service")
 	local area = way.tags:Find("area")
-	local access = way.tags:Find("access")
+	local access = find_access_tag(way)
 	
 		
  	-- Check if we are allowed to access the way
-    if access_tag_blacklist[access] ~=nil and access_tag_blacklist[access] then
+    if access_tag_blacklist[access] then
 		return 0
     end
 

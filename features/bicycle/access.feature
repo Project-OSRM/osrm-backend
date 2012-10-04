@@ -8,18 +8,31 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 	Scenario: Bike - Access tag hierachy
 		Then routability should be
 		 | access | vehicle | bicycle | bothw |
+		 |        |         |         | x     |
 		 | yes    |         |         | x     |
 		 | no     |         |         |       |
+		 |        | yes     |         | x     |
 		 | yes    | yes     |         | x     |
 		 | no     | yes     |         | x     |
+		 |        | no      |         |       |
 		 | yes    | no      |         |       |
 		 | no     | no      |         |       |
+		 |        |         | yes     | x     |
+		 | yes    |         | yes     | x     |
+		 | no     |         | yes     | x     |
+		 |        | yes     | yes     | x     |
 		 | yes    | yes     | yes     | x     |
 		 | no     | yes     | yes     | x     |
+		 |        | no      | yes     | x     |
 		 | yes    | no      | yes     | x     |
 		 | no     | no      | yes     | x     |
+		 |        |         | no      |       |
+		 | yes    |         | no      |       |
+		 | no     |         | no      |       |
+		 |        | yes     | no      |       |
 		 | yes    | yes     | no      |       |
 		 | no     | yes     | no      |       |
+		 |        | no      | no      |       |
 		 | yes    | no      | no      |       |
 		 | no     | no      | no      |       |
 

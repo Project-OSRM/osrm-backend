@@ -24,25 +24,15 @@ Feature: Car - Barriers
 		 | node/barrier | node/access   | bothw |
 		 | gate         |               | x     |
 		 | gate         | yes           | x     |
-		 | gate         | vehicle       | x     |
-		 | gate         | motorcar      | x     |
-		 | gate         | motor_vehicle | x     |
 		 | gate         | permissive    | x     |
 		 | gate         | designated    | x     |
 		 | gate         | no            |       |
-		 | gate         | foot          |       |
-		 | gate         | bicycle       |       |
 		 | gate         | private       |       |
 		 | gate         | agricultural  |       |
 		 | wall         |               |       |
 		 | wall         | yes           | x     |
-		 | wall         | vehicle       | x     |
-		 | wall         | motorcar      | x     |
-		 | wall         | motor_vehicle | x     |
 		 | wall         | permissive    | x     |
 		 | wall         | designated    | x     |
 		 | wall         | no            |       |
-		 | wall         | foot          |       |
-		 | wall         | bicycle       |       |
 		 | wall         | private       |       |
 		 | wall         | agricultural  |       |
