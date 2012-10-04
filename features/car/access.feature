@@ -32,7 +32,7 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
 	Scenario: Car - Access tag hierachy on nodes
 		Then routability should be
-		 | node/access | node/vehicle | node/motor_vehicle | mnode/otorcar | bothw |
+		 | node/access | node/vehicle | node/motor_vehicle | node/motorcar | bothw |
 		 |             |              |                    |               | x     |
 		 | yes         |              |                    |               | x     |
 		 | no          |              |                    |               |       |
