@@ -64,7 +64,7 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 }
 #endif
 
-int main (int, char * argv[0]) {
+int main (int argc, char * argv[0]) {
 #ifdef __linux__
     if(!mlockall(MCL_CURRENT | MCL_FUTURE))
         WARN("Process " << argv[0] << "could not be locked to RAM");
@@ -92,7 +92,7 @@ int main (int, char * argv[0]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        ServerConfiguration serverConfig("server.ini");
+        ServerConfiguration serverConfig((argc > 1 ? argv[1] : "server.ini"));
         Server * s = ServerFactory::CreateServer(serverConfig);
         RequestHandler & h = s->GetRequestHandlerPtr();
 

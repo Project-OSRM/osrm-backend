@@ -50,7 +50,7 @@ public:
                 config.close();
             }
         } catch(std::exception& e) {
-            std::cerr << "[config] .ini not found -> Exception: " <<e.what() << std::endl;
+            ERR("[config] " << configFile << " not found -> Exception: " <<e.what());
             if(config.is_open())
                 config.close();
         }
