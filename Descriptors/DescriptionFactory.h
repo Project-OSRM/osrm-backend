@@ -51,10 +51,10 @@ public:
         unsigned startName;
         unsigned destName;
         _RouteSummary() : lengthString("0"), durationString("0"), startName(0), destName(0) {}
-        void BuildDurationAndLengthStrings(unsigned distance, unsigned time) {
+        void BuildDurationAndLengthStrings(double distance, unsigned time) {
             //compute distance/duration for route summary
             std::ostringstream s;
-            s << distance; //10*(round(distance/10.));
+            s << round(distance);
             lengthString = s.str();
             int travelTime = time/10 + 1;
             s.str("");
@@ -63,7 +63,7 @@ public:
         }
     } summary;
 
-    unsigned entireLength;
+    double entireLength;
 
     //I know, declaring this public is considered bad. I'm lazy
     std::vector <SegmentInformation> pathDescription;
@@ -73,7 +73,7 @@ public:
     void AppendEncodedPolylineString(std::string &output);
     void AppendUnencodedPolylineString(std::string &output);
     void AppendSegment(const _Coordinate & coordinate, const _PathData & data);
-    void BuildRouteSummary(const unsigned distance, const unsigned time);
+    void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & startPhantom);
     void SetEndSegment(const PhantomNode & startPhantom);
     void AppendEncodedPolylineString(std::string & output, bool isEncoded);

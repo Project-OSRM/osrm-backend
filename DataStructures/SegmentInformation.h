@@ -26,14 +26,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 struct SegmentInformation {
     _Coordinate location;
     NodeID nameID;
-    unsigned length;
+    double length;
     unsigned duration;
     double bearing;
     short turnInstruction;
     bool necessary;
-    SegmentInformation(const _Coordinate & loc, const NodeID nam, const unsigned len, const unsigned dur, const short tInstr, const bool nec) :
+    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const short tInstr, const bool nec) :
             location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(nec) {}
-    SegmentInformation(const _Coordinate & loc, const NodeID nam, const unsigned len, const unsigned dur, const short tInstr) :
+    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const short tInstr) :
         location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(tInstr != 0) {}
 };
 
