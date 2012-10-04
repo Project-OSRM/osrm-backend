@@ -11,11 +11,11 @@ Feature: Distance calculation
 
 		And the ways
 		 | nodes |
-		 | ab   |
+		 | ab    |
 
 		When I route I should get
-		 | from | to | route | distance |
-		 | a    | b  | ab    | 100m     |
+		 | from | to | route | distance  |
+		 | a    | b  | ab    | 100m +- 2 |
 
 	Scenario: Distance should equal sum of segments, leftwinded
 		Given the node map
@@ -29,11 +29,11 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance |
-		 | a    | d  | abcde | 300m +-1  |
+		 | a    | d  | abcde | 300m +-8 |
 
 	Scenario: Distance should equal sum of segments, rightwinded
 		Given the node map
-		 |   | e  |
+		 |   | e |
 		 | c | d |
 		 | b | a |
 
@@ -43,26 +43,7 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance |
-		 | a    | d  | abcde | 300m +-1  |
-
-	Scenario: 1m distances
-		Given a grid size of 1 meters
-		Given the node map
-		 | a | b |
-		 |   | c |
-
-		And the ways
-		 | nodes |
-		 | abc   |
-
-		When I route I should get
-		 | from | to | route | distance |
-		 | a    | b  | abc   | 1m +-1   |
-		 | b    | a  | abc   | 1m +-1   |
-		 | b    | c  | abc   | 1m +-1   |
-		 | c    | b  | abc   | 1m +-1   |
-		 | a    | c  | abc   | 2m +-1   |
-		 | c    | a  | abc   | 2m +-1   |
+		 | a    | d  | abcde | 300m +-8 |
 
 	Scenario: 10m distances
 		Given a grid size of 10 meters
@@ -76,12 +57,12 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance |
-		 | a    | b  | abc   | 10m +-1  |
-		 | b    | a  | abc   | 10m +-1  |
-		 | b    | c  | abc   | 10m +-1  |
-		 | c    | b  | abc   | 10m +-1  |
-		 | a    | c  | abc   | 20m +-1  |
-		 | c    | a  | abc   | 20m +-1  |
+		 | a    | b  | abc   | 10m +-2  |
+		 | b    | a  | abc   | 10m +-2  |
+		 | b    | c  | abc   | 10m +-2  |
+		 | c    | b  | abc   | 10m +-2  |
+		 | a    | c  | abc   | 20m +-4  |
+		 | c    | a  | abc   | 20m +-4  |
 
 	Scenario: 100m distances
 		Given a grid size of 100 meters
@@ -95,12 +76,12 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance |
-		 | a    | b  | abc   | 100m +-1 |
-		 | b    | a  | abc   | 100m +-1 |
-		 | b    | c  | abc   | 100m +-1 |
-		 | c    | b  | abc   | 100m +-1 |
-		 | a    | c  | abc   | 200m +-1 |
-		 | c    | a  | abc   | 200m +-1 |
+		 | a    | b  | abc   | 100m +-2 |
+		 | b    | a  | abc   | 100m +-2 |
+		 | b    | c  | abc   | 100m +-2 |
+		 | c    | b  | abc   | 100m +-2 |
+		 | a    | c  | abc   | 200m +-4 |
+		 | c    | a  | abc   | 200m +-4 |
 
 	Scenario: 1km distance
 		Given a grid size of 1000 meters
@@ -114,12 +95,12 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance  |
-		 | a    | b  | abc   | 1000m +-1 |
-		 | b    | a  | abc   | 1000m +-1 |
-		 | b    | c  | abc   | 1000m +-1 |
-		 | c    | b  | abc   | 1000m +-1 |
-		 | a    | c  | abc   | 2000m +-1 |
-		 | c    | a  | abc   | 2000m +-1 |
+		 | a    | b  | abc   | 1000m +-2 |
+		 | b    | a  | abc   | 1000m +-2 |
+		 | b    | c  | abc   | 1000m +-2 |
+		 | c    | b  | abc   | 1000m +-2 |
+		 | a    | c  | abc   | 2000m +-4 |
+		 | c    | a  | abc   | 2000m +-4 |
 
 	Scenario: Distance of a winding south-north path
 		Given a grid size of 10 meters
@@ -135,13 +116,13 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route    | distance |
-		 | a    | b  | abcdefgh | 10m +-1  |
-		 | a    | c  | abcdefgh | 20m +-1  |
-		 | a    | d  | abcdefgh | 30m +-1  |
-		 | a    | e  | abcdefgh | 40m +-1  |
-		 | a    | f  | abcdefgh | 50m +-1  |
-		 | a    | g  | abcdefgh | 60m +-1  |
-		 | a    | h  | abcdefgh | 70m +-1  |
+		 | a    | b  | abcdefgh | 10m +-2  |
+		 | a    | c  | abcdefgh | 20m +-4  |
+		 | a    | d  | abcdefgh | 30m +-6  |
+		 | a    | e  | abcdefgh | 40m +-8  |
+		 | a    | f  | abcdefgh | 50m +-10 |
+		 | a    | g  | abcdefgh | 60m +-12 |
+		 | a    | h  | abcdefgh | 70m +-14 |
 		
 	Scenario: Distance of a winding east-west path
 		Given a grid size of 10 meters
@@ -155,13 +136,13 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route    | distance |
-		 | a    | b  | abcdefgh | 10m +-1  |
-		 | a    | c  | abcdefgh | 20m +-1  |
-		 | a    | d  | abcdefgh | 30m +-1  |
-		 | a    | e  | abcdefgh | 40m +-1  |
-		 | a    | f  | abcdefgh | 50m +-1  |
-		 | a    | g  | abcdefgh | 60m +-1  |
-		 | a    | h  | abcdefgh | 70m +-1  |
+		 | a    | b  | abcdefgh | 10m +-2  |
+		 | a    | c  | abcdefgh | 20m +-4  |
+		 | a    | d  | abcdefgh | 30m +-6  |
+		 | a    | e  | abcdefgh | 40m +-8  |
+		 | a    | f  | abcdefgh | 50m +-10 |
+		 | a    | g  | abcdefgh | 60m +-12 |
+		 | a    | h  | abcdefgh | 70m +-14 |
 
 	Scenario: Geometric distances
 		Given a grid size of 1000 meters
@@ -203,30 +184,30 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance  |
-		 | x    | a  | xa    | 3000m +-1 |
-		 | x    | b  | xb    | 3162m +-1 |
-		 | x    | c  | xc    | 3606m +-1 |
-		 | x    | d  | xd    | 4243m +-1 |
-		 | x    | e  | xe    | 3606m +-1 |
-		 | x    | f  | xf    | 3162m +-1 |
-		 | x    | g  | xg    | 3000m +-1 |
-		 | x    | h  | xh    | 3162m +-1 |
-		 | x    | i  | xi    | 3606m +-1 |
-		 | x    | j  | xj    | 4243m +-1 |
-		 | x    | k  | xk    | 3606m +-1 |
-		 | x    | l  | xl    | 3162m +-1 |
-		 | x    | m  | xm    | 3000m +-1 |
-		 | x    | n  | xn    | 3162m +-1 |
-		 | x    | o  | xo    | 3606m +-1 |
-		 | x    | p  | xp    | 4243m +-1 |
-		 | x    | q  | xq    | 3606m +-1 |
-		 | x    | r  | xr    | 3162m +-1 |
-		 | x    | s  | xs    | 3000m +-1 |
-		 | x    | t  | xt    | 3162m +-1 |
-		 | x    | u  | xu    | 3606m +-1 |
-		 | x    | v  | xv    | 4243m +-1 |
-		 | x    | w  | xw    | 3606m +-1 |
-		 | x    | y  | xy    | 3162m +-1 |
+		 | x    | a  | xa    | 3000m +-2 |
+		 | x    | b  | xb    | 3162m +-2 |
+		 | x    | c  | xc    | 3606m +-2 |
+		 | x    | d  | xd    | 4243m +-2 |
+		 | x    | e  | xe    | 3606m +-2 |
+		 | x    | f  | xf    | 3162m +-2 |
+		 | x    | g  | xg    | 3000m +-2 |
+		 | x    | h  | xh    | 3162m +-2 |
+		 | x    | i  | xi    | 3606m +-2 |
+		 | x    | j  | xj    | 4243m +-2 |
+		 | x    | k  | xk    | 3606m +-2 |
+		 | x    | l  | xl    | 3162m +-2 |
+		 | x    | m  | xm    | 3000m +-2 |
+		 | x    | n  | xn    | 3162m +-2 |
+		 | x    | o  | xo    | 3606m +-2 |
+		 | x    | p  | xp    | 4243m +-2 |
+		 | x    | q  | xq    | 3606m +-2 |
+		 | x    | r  | xr    | 3162m +-2 |
+		 | x    | s  | xs    | 3000m +-2 |
+		 | x    | t  | xt    | 3162m +-2 |
+		 | x    | u  | xu    | 3606m +-2 |
+		 | x    | v  | xv    | 4243m +-2 |
+		 | x    | w  | xw    | 3606m +-2 |
+		 | x    | y  | xy    | 3162m +-2 |
 
 	@maze
 	Scenario: Distance of a maze of short segments
@@ -239,9 +220,9 @@ Feature: Distance calculation
 		 | i | j | k | l |
 
 		And the ways
-		 | nodes    |
+		 | nodes                |
 		 | abcdefghijklmnopqrst |
 
 		When I route I should get
 		 | from | to | route                | distance |
-		 | a    | t  | abcdefghijklmnopqrst | 133m +-1  |
+		 | a    | t  | abcdefghijklmnopqrst | 133m +-2 |
