@@ -120,3 +120,25 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 		 | some_tag | yes         | x     |
 		 | some_tag | no          |       |
 		 | some_tag | some_tag    | x     |
+
+	Scenario: Car - Access combinations
+	 	Then routability should be
+		 | highway     | accesss      | vehicle    | motor_vehicle | motorcar   | bothw |
+		 | runway      | private      |            |               | permissive | x     |
+		 | primary     | forestry     |            | yes           |            | x     |
+		 | cycleway    |              |            | designated    |            | x     |
+		 | residential |              | yes        | no            |            |       |
+		 | motorway    | yes          | permissive |               | private    |       |
+		 | trunk       | agricultural | designated | permissive    | no         |       |
+
+	Scenario: Car - Ignore access tags for other modes
+	 	Then routability should be
+		 | highway | foot | bicycle | psv | motorhome | bothw |
+		 | runway  | yes  |         |     |           |       |
+		 | primary | no   |         |     |           | x     |
+		 | runway  |      | yes     |     |           |       |
+		 | primary |      | no      |     |           | x     |
+		 | runway  |      |         | yes |           |       |
+		 | primary |      |         | no  |           | x     |
+		 | runway  |      |         |     | yes       |       |
+		 | primary |      |         |     | no        | x     |

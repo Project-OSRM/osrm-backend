@@ -65,29 +65,61 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
 	Scenario: Bike - Access tags on ways
 	 	Then routability should be
-		 | access       | bothw |
-		 |              | x     |
-		 | yes          | x     |
-		 | permissive   | x     |
-		 | designated   | x     |
-		 | no           |       |
-		 | private      |       |
-		 | agricultural |       |
-		 | forestery    |       |
-		 | some_tag     | x     |
+		 | access       | vehicle      | bicycle      | bothw |
+		 |              |              |              | x     |
+		 | yes          |              |              | x     |
+		 | permissive   |              |              | x     |
+		 | designated   |              |              | x     |
+		 | some_tag     |              |              | x     |
+		 | no           |              |              |       |
+		 | private      |              |              |       |
+		 | agricultural |              |              |       |
+		 | forestery    |              |              |       |
+		 |              | yes          |              | x     |
+		 |              | permissive   |              | x     |
+		 |              | designated   |              | x     |
+		 |              | some_tag     |              | x     |
+		 |              | no           |              |       |
+		 |              | private      |              |       |
+		 |              | agricultural |              |       |
+		 |              | forestery    |              |       |
+		 |              |              | yes          | x     |
+		 |              |              | permissive   | x     |
+		 |              |              | designated   | x     |
+		 |              |              | some_tag     | x     |
+		 |              |              | no           |       |
+		 |              |              | private      |       |
+		 |              |              | agricultural |       |
+		 |              |              | forestery    |       |
 
 	Scenario: Bike - Access tags on nodes
 	 	Then routability should be
-		 | node/access  | bothw |
-		 |              | x     |
-		 | yes          | x     |
-		 | permissive   | x     |
-		 | designated   | x     |
-		 | no           |       |
-		 | private      |       |
-		 | agricultural |       |
-		 | forestery    |       |
-		 | some_tag     | x     |
+		 | node/access  | node/vehicle | node/bicycle | bothw |
+		 |              |              |              | x     |
+		 | yes          |              |              | x     |
+		 | permissive   |              |              | x     |
+		 | designated   |              |              | x     |
+		 | some_tag     |              |              | x     |
+		 | no           |              |              |       |
+		 | private      |              |              |       |
+		 | agricultural |              |              |       |
+		 | forestery    |              |              |       |
+		 |              | yes          |              | x     |
+		 |              | permissive   |              | x     |
+		 |              | designated   |              | x     |
+		 |              | some_tag     |              | x     |
+		 |              | no           |              |       |
+		 |              | private      |              |       |
+		 |              | agricultural |              |       |
+		 |              | forestery    |              |       |
+		 |              |              | yes          | x     |
+		 |              |              | permissive   | x     |
+		 |              |              | designated   | x     |
+		 |              |              | some_tag     | x     |
+		 |              |              | no           |       |
+		 |              |              | private      |       |
+		 |              |              | agricultural |       |
+		 |              |              | forestery    |       |
 
 	Scenario: Bike - Access tags on both node and way
 	 	Then routability should be
@@ -101,3 +133,24 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 		 | some_tag | yes         | x     |
 		 | some_tag | no          |       |
 		 | some_tag | some_tag    | x     |
+
+	Scenario: Bike - Access combinations
+	 	Then routability should be
+		 | highway     | access     | vehicle    | bicycle    | bothw |
+		 | runway      | private    |            | yes        | x     |
+		 | footway     |            | no         | permissive | x     |
+		 | motorway    |            |            | yes        | x     |
+		 | track       | forestry   |            | permissive | x     |
+		 | cycleway    | yes        | designated | no         |       |
+		 | primary     |            | yes        | private    |       |
+		 | residential | permissive |            | no         |       |
+
+	Scenario: Bike - Ignore access tags for other modes
+	 	Then routability should be
+		 | highway  | foot | motor_vehicle | moped | bothw |
+		 | runway   | yes  |               |       |       |
+		 | cycleway | no   |               |       | x     |
+		 | runway   |      | yes           |       |       |
+		 | cycleway |      | no            |       | x     |
+		 | runway   |      |               | yes   |       |
+		 | cycleway |      |               | no    | x     |
