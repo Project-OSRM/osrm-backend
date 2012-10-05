@@ -25,32 +25,36 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
 		 | residential | share_busway | x     |
 		 | residential | sharrow      | x     |
 
-	Scenario: Bike - Left/right side cycleways      
+	Scenario: Bike - Left/right side cycleways on implied bidirectionals   
 	 	Then routability should be
-		 | highway  | cycleway       | cycleway:left  | cycleway:right | forw | backw |
-		 | primary  |                |                |                | x    | x     |
-		 | motorway |                |                |                |      |       |
-		 | motorway | track          |                |                | x    | x     |
-		 | motorway | lane           |                |                | x    | x     |
-		 | motorway | oppposite      |                |                |      | x     |
-		 | motorway | opposite_track |                |                |      | x     |
-		 | motorway | opposite_lane  |                |                |      | x     |
-		 | motorway |                | track          |                |      | x     |
-		 | motorway |                | lane           |                |      | x     |
-		 | motorway |                | opposite_track |                | x    |       |
-		 | motorway |                | opposite_lane  |                | x    |       |
-		 | motorway |                |                | track          | x    |       |
-		 | motorway |                |                | lane           | x    |       |
-		 | motorway |                |                | opposite_track |      | x     |
-		 | motorway |                |                | opposite_lane  |      | x     |
-		 | motorway |                | track          | track          | x    | x     |
-		 | motorway |                | lane           | lane           | x    | x     |
-		 | motorway |                | opposite_track | opposite_track | x    | x     |
-		 | motorway |                | opposite_lane  | opposite_lane  | x    | x     |
-		 | motorway |                | track          | opposite_track |      | x     |
-		 | motorway |                | lane           | opposite_lane  |      | x     |
-		 | motorway |                | opposite_track | track          | x    |       |
-		 | motorway |                | opposite_lane  | lane           | x    |       |
+		 | highway | cycleway | cycleway:left | cycleway:right | forw | backw |
+		 | primary |          |               |                | x    | x     |
+		 | pirmary | track    |               |                | x    | x     |
+		 | pirmary | opposite |               |                | x    | x     |
+		 | pirmary |          | track         |                | x    | x     |
+		 | pirmary |          | opposite      |                | x    | x     |
+		 | pirmary |          |               | track          | x    | x     |
+		 | pirmary |          |               | opposite       | x    | x     |
+		 | pirmary |          | track         | track          | x    | x     |
+		 | pirmary |          | opposite      | opposite       | x    | x     |
+		 | pirmary |          | track         | opposite       | x    | x     |
+		 | pirmary |          | opposite      | track          | x    | x     |
+
+	Scenario: Bike - Left/right side cycleways on implied oneways   
+	 	Then routability should be
+		 | highway  | cycleway | cycleway:left | cycleway:right | forw | backw |
+		 | primary  |          |               |                | x    | x     |
+		 | motorway |          |               |                |      |       |
+		 | motorway | track    |               |                | x    |       |
+		 | motorway | opposite |               |                |      | x     |
+		 | motorway |          | track         |                |      | x     |
+		 | motorway |          | opposite      |                |      | x     |
+		 | motorway |          |               | track          | x    |       |
+		 | motorway |          |               | opposite       | x    |       |
+		 | motorway |          | track         | track          | x    | x     |
+		 | motorway |          | opposite      | opposite       | x    | x     |
+		 | motorway |          | track         | opposite       | x    | x     |
+		 | motorway |          | opposite      | track          | x    | x     |
 
 	Scenario: Bike - Invalid cycleway tags		
 	 	Then routability should be

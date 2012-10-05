@@ -18,7 +18,7 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 	Scenario: Bike - Around the Block
 		Given the node map
 		 | a | b |
-		 | d | c |		
+		 | d | c |
 	
 		And the ways
 		 | nodes | oneway |
@@ -47,18 +47,13 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 	
 	Scenario: Bike - Implied oneways
 	 	Then routability should be
-		 | junction   | forw | backw |
-		 |            | x    | x     |
-		 |            | x    | x     |
-		 |            | x    | x     |
-		 |            | x    | x     |
-		 |            | x    | x     |
-		 |            | x    | x     |
-		 |            | x    | x     |
-		 | roundabout | x    |       |
-		 | roundabout | x    |       |
-		 | roundabout | x    |       |
-		 | roundabout | x    |       |
+		 | highway       | bicycle | junction   | forw | backw |
+		 |               |         |            | x    | x     |
+		 |               |         | roundabout | x    |       |
+		 | motorway      | yes     |            | x    |       |
+		 | motorway_link | yes     |            | x    |       |
+		 | motorway      | yes     | roundabout | x    |       |
+		 | motorway_link | yes     | roundabout | x    |       |
 
 	Scenario: Bike - Overriding implied oneways
 	 	Then routability should be

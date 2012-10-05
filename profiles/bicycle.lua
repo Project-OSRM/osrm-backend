@@ -1,10 +1,10 @@
 -- Begin of globals
-
 barrier_whitelist = { [""] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["no"] = true, ["sally_port"] = true, ["gate"] = true}
 access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true	}
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierachy = { "bicycle", "vehicle", "access" }
+cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 
@@ -30,7 +30,6 @@ speed_profile = {
 	["default"] = 18,
 	["ferry"] = 5
 }
-
 
 take_minimum_of_speeds 	= true
 obey_oneway 			= true
@@ -99,6 +98,8 @@ function way_function (way, numberOfNodesInWay)
 	local oneway = way.tags:Find("oneway")
 	local onewayClass = way.tags:Find("oneway:bicycle")
 	local cycleway = way.tags:Find("cycleway")
+	local cycleway_left = way.tags:Find("cycleway:left")
+	local cycleway_right = way.tags:Find("cycleway:right")
 	local duration	= way.tags:Find("duration")
 	local service	= way.tags:Find("service")
 	local area = way.tags:Find("area")
@@ -139,6 +140,7 @@ function way_function (way, numberOfNodesInWay)
       print("added "..route.." with speed "..way.speed)
     end
     
+	
   -- Set the avg speed on the way if it is accessible by road class
     if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
       if (0 < maxspeed and not take_minimum_of_speeds) or (maxspeed == 0) then
@@ -155,29 +157,58 @@ function way_function (way, numberOfNodesInWay)
 		way.speed = math.min(speed_profile["default"], maxspeed)
 	end
 	
-	-- Set direction according to tags on way
-	if obey_oneway then
-		if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
-			way.direction = Way.oneway
-		elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
-			way.direction = Way.bidirectional
-		elseif onewayClass == "-1" then
+	
+	-- Set direction
+	way.direction = Way.bidirectional
+	local impliedOneway = false
+	if junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
+		way.direction = Way.oneway
+		impliedOneway = true
+	end
+	
+	if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
+		way.direction = Way.oneway
+	elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
+		way.direction = Way.bidirectional
+	elseif onewayClass == "-1" then
+		way.direction = Way.opposite
+	elseif oneway == "no" or oneway == "0" or oneway == "false" then
+		way.direction = Way.bidirectional
+	elseif cycleway and string.find(cycleway, "opposite") == 1 then
+		if impliedOneway then
 			way.direction = Way.opposite
-		elseif oneway == "no" or oneway == "0" or oneway == "false" then
+		else
 			way.direction = Way.bidirectional
-		elseif cycleway == "opposite" or cycleway == "opposite_track" or cycleway == "opposite_lane" then
-			way.direction = Way.bidirectional
-		elseif oneway == "-1" then
+		end
+	elseif cycleway_left and cycleway_tags[cycleway_left] and cycleway_right and cycleway_tags[cycleway_right] then
+		way.direction = Way.bidirectional
+	elseif cycleway_left and cycleway_tags[cycleway_left] then
+		if impliedOneway then
 			way.direction = Way.opposite
-		elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
+		else
+			way.direction = Way.bidirectional
+		end
+	elseif cycleway_right and cycleway_tags[cycleway_right] then
+		if impliedOneway then
 			way.direction = Way.oneway
 		else
 			way.direction = Way.bidirectional
 		end
-	else
-		way.direction = Way.bidirectional
+	elseif oneway == "-1" then
+		way.direction = Way.opposite
+	elseif oneway == "yes" or oneway == "1" or oneway == "true" then
+		way.direction = Way.oneway
 	end
 	
+	-- Cycleways
+	if cycleway and cycleway_tags[cycleway] then
+		way.speed = speed_profile["cycleway"]
+	elseif cycleway_left and cycleway_tags[cycleway_left] then
+		way.speed = speed_profile["cycleway"]
+	elseif cycleway_right and cycleway_tags[cycleway_right] then
+		way.speed = speed_profile["cycleway"]
+	end
+
 	way.type = 1
 	return 1
 end
