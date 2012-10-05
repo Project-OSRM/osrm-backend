@@ -105,13 +105,17 @@ function way_function (way, numberOfNodesInWay)
 	local area = way.tags:Find("area")
 	local access = find_access_tag(way)
 	
+	-- only route on things with highway tag set (not buildings, boundaries, etc)
+    if (not highway or highway == '') and (not route or route == '') then
+		return 0
+    end
 		
- 	-- Check if we are allowed to access the way
+ 	-- access
     if access_tag_blacklist[access] then
 		return 0
     end
 
-	-- Set the name that will be used for instructions	
+	-- name	
 	if "" ~= ref then
 		way.name = ref
 	elseif "" ~= name then
@@ -120,45 +124,38 @@ function way_function (way, numberOfNodesInWay)
 		way.name = highway		-- if no name exists, use way type
 	end
 	
-	-- Handling ferries and piers
-    if (speed_profile[route] ~= nil and speed_profile[route] > 0) or
-       (speed_profile[man_made] ~= nil and speed_profile[man_made] > 0) 
-    then
-      if durationIsValid(duration) then
-	    way.speed = math.max( duration / math.max(1, numberOfNodesInWay-1) );
-        way.is_duration_set = true;
-      end
-      way.direction = Way.bidirectional;
-      if speed_profile[route] ~= nil then
-         highway = route;
-      elseif speed_profile[man_made] ~= nil then
-         highway = man_made;
-      end
-      if not way.is_duration_set then
-        way.speed = speed_profile[highway]
-      end
-      print("added "..route.." with speed "..way.speed)
-    end
-    
-	
-  -- Set the avg speed on the way if it is accessible by road class
-    if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
-      if (0 < maxspeed and not take_minimum_of_speeds) or (maxspeed == 0) then
-        maxspeed = math.huge
-      end
-      way.speed = math.min(speed_profile[highway], maxspeed)
-    end
-	
-	-- Set the avg speed on ways that are marked accessible
-	if access_tag_whitelist[access]	and way.speed == -1 then
-		if (0 < maxspeed and not take_minimum_of_speeds) or maxspeed == 0 then
-			maxspeed = math.huge
+    if (speed_profile[route] and speed_profile[route] > 0) or (speed_profile[man_made] and speed_profile[man_made] > 0) then
+		-- ferries and piers
+		if durationIsValid(duration) then
+		way.speed = math.max( duration / math.max(1, numberOfNodesInWay-1) )
+		 	way.is_duration_set = true;
 		end
-		way.speed = math.min(speed_profile["default"], maxspeed)
+		way.direction = Way.bidirectional;
+		if speed_profile[route] ~= nil then
+		  	highway = route;
+		elseif speed_profile[man_made] ~= nil then
+		  	highway = man_made;
+		end
+		if not way.is_duration_set then
+		 	way.speed = speed_profile[highway]
+		end
+    else
+		-- ways
+		if speed_profile[highway] then 
+	      	way.speed = speed_profile[highway]
+	    elseif access_tag_whitelist[access] then
+			way.speed = speed_profile["default"]
+		end
 	end
 	
+	-- maxspeed
+	if take_minimum_of_speeds then
+		if maxspeed and maxspeed>0 then
+			way.speed = math.min(way.speed, maxspeed)
+		end
+	end
 	
-	-- Set direction
+	-- direction
 	way.direction = Way.bidirectional
 	local impliedOneway = false
 	if junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
@@ -200,7 +197,7 @@ function way_function (way, numberOfNodesInWay)
 		way.direction = Way.oneway
 	end
 	
-	-- Cycleways
+	-- cycleways
 	if cycleway and cycleway_tags[cycleway] then
 		way.speed = speed_profile["cycleway"]
 	elseif cycleway_left and cycleway_tags[cycleway_left] then

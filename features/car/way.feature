@@ -7,6 +7,7 @@ Feature: Car - Accessability of different way types
 	Scenario: Car - Basic access
 	 	Then routability should be
 		 | highway        | forw |
+		 | (nil)          |      |
 		 | motorway       | x    |
 		 | motorway_link  | x    |
 		 | trunk          | x    |

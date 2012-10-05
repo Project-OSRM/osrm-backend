@@ -9,6 +9,7 @@ Feature: Bike - Accessability of different way types
 	 	Given the speedprofile "bicycle"
 	 	Then routability should be
 		 | highway        | forw |
+		 | (nil)          |      |
 		 | motorway       |      |
 		 | motorway_link  |      |
 		 | trunk          |      |
