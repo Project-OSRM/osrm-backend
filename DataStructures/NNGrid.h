@@ -156,7 +156,7 @@ public:
 
     bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
         bool ignoreTinyComponents = (zoomLevel <= 14);
-//        INFO("ZoomLevel: " << zoomLevel << ", ignoring tinyComponentents: " << (ignoreTinyComponents ? "yes" : "no"));
+//        INFO("Coordinate: " << location << ", zoomLevel: " << zoomLevel << ", ignoring tinyComponentents: " << (ignoreTinyComponents ? "yes" : "no"));
 //        double time1 = get_timestamp();
         bool foundNode = false;
         const _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
@@ -166,7 +166,9 @@ public:
         const int lowerBoundForLoop = (fileIndex < 32768 ? 0 : -32768);
         for(int j = lowerBoundForLoop; (j < (32768+1)) && (fileIndex != UINT_MAX); j+=32768) {
             for(int i = -1; i < 2; ++i){
+//                unsigned oldSize = candidates.size();
                 GetContentsOfFileBucketEnumerated(fileIndex+i+j, candidates);
+//                INFO("Getting fileIndex=" << fileIndex+i+j << " with " << candidates.size() - oldSize << " candidates");
             }
         }
         _GridEdge smallestEdge;
@@ -179,6 +181,7 @@ public:
                 continue;
             r = 0.;
             tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
+//            INFO("Looking at edge " << candidate.edgeBasedNode << " at distance " << tmpDist);
             if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
 //                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist << ", tinyCC: " << (candidate.belongsToTinyComponent ? "yes" : "no"));
                 dist = tmpDist;
@@ -225,7 +228,8 @@ public:
             resultNode.weight2 -= resultNode.weight1;
         }
         resultNode.ratio = ratio;
-        //        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
+//        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
+//        INFO("start: " << edgeStartCoord << ", end: " << edgeEndCoord);
 //        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
 //        double time2 = get_timestamp();
 //        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
@@ -466,7 +470,7 @@ private:
 #endif
 
     inline double ComputeDistance(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target, _Coordinate& nearest, double *r) {
-
+//        INFO("comparing point " << inputPoint << " to edge [" << source << "-" << target << "]");
         const double x = static_cast<double>(inputPoint.lat);
         const double y = static_cast<double>(inputPoint.lon);
         const double a = static_cast<double>(source.lat);
@@ -474,6 +478,7 @@ private:
         const double c = static_cast<double>(target.lat);
         const double d = static_cast<double>(target.lon);
         double p,q,mX,nY;
+//        INFO("x=" << x << ", y=" << y << ", a=" << a << ", b=" << b << ", c=" << c << ", d=" << d);
         if(fabs(a-c) > FLT_EPSILON){
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
@@ -486,7 +491,9 @@ private:
         }
         nY = (d*p - c*q)/(a*d - b*c);
         mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
-        *r = mX;
+//        INFO("p=" << p << ", q=" << q << ", nY=" << nY << ", mX=" << mX);
+        *r = std::isnan(mX) ? 0. : mX;
+//        INFO("r=" << *r);
         if(*r<=0.){
             nearest.lat = source.lat;
             nearest.lon = source.lon;

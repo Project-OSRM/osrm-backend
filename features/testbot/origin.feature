@@ -53,7 +53,7 @@ Feature: Routing close to the [0,0] origin
 
 		When I route I should get
 		 | from | to | route | distance  |
-		 | b    | d  | abcde | 200m +-1  |
+		 | b    | d  | abcde | 200m +-2  |
 		 | d    | b  |       |           |
 	
 	Scenario: North-south oneways crossing the origin
@@ -71,5 +71,5 @@ Feature: Routing close to the [0,0] origin
 
 		When I route I should get
 		 | from | to | route | distance  |
-		 | b    | d  | abcde | 200m +-1  |
+		 | b    | d  | abcde | 200m +-2  |
 		 | d    | b  |       |           |
