@@ -64,12 +64,16 @@ Given /^the ways$/ do |table|
     
     defaults = { 'highway' => 'primary' }
     tags = defaults.merge(row)
+
+    if row['highway'] == '(nil)'
+      tags.delete 'highway'
+    end
     
     if row['name'] == nil
       tags['name'] = nodes
     elsif (row['name'] == '""') || (row['name'] == "''")
       tags['name'] = ''
-    elsif row['name'] == ''
+    elsif row['name'] == '' || row['name'] == '(nil)'
       tags.delete 'name'
     else
       tags['name'] = row['name']

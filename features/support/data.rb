@@ -81,9 +81,17 @@ def build_ways_from_table table
     node_tags = {}
     tags.each_pair do |k,v|
       if k =~ /node\/(.*)/
-        node_tags[$1] = v
+        if v=='(nil)'
+          node_tags.delete k
+        else
+          node_tags[$1] = v
+        end
       else
-        way_tags[k] = v
+        if v=='(nil)'
+          way_tags.delete k
+        else
+          way_tags[k] = v
+        end
       end
     end
     
