@@ -1,5 +1,5 @@
-@routing @maxspeed
-Feature: Max speed restrictions
+@routing @maxspeed @car
+Feature: Car - Max speed restrictions
 
 	Background: Use specific speeds
 		Given the speedprofile "car"
