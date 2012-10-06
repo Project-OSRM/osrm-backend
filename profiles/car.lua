@@ -128,8 +128,8 @@ function way_function (way, numberOfNodesInWay)
 	  way.name = ref
 	elseif "" ~= name then
 	  way.name = name
-	else
-      way.name = highway		-- if no name exists, use way type
+--	else
+--      way.name = highway		-- if no name exists, use way type
 	end
 	
 	if "roundabout" == junction then
