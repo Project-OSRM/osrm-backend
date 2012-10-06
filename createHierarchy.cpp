@@ -119,7 +119,7 @@ int main (int argc, char *argv[]) {
         ERR("The input data is broken. It is impossible to do any turns in this graph");
 
 
-    if(!testDataFile( (argc > 4 ? argv[3] : "profile.lua") )) {
+    if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
         ERR("Need profile.lua to apply traffic signal penalty");
     }
     /*** Setup Scripting Environment ***/
