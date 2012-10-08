@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define DOUGLASPEUCKER_H_
 
 #include <cassert>
+#include <cmath>
 #include <cfloat>
 #include <stack>
 
@@ -35,7 +36,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
  * Note: points may also be pre-selected*/
 
 //These thresholds are more or less heuristically chosen.
-static double DouglasPeuckerThresholds[19] = { 10240000., 5120000., 2560000., 1280000., 640000., 320000., 160000., 80000., 40000., 20000., 10000., 5000., 2400., 1200., 200, 16, 6, 3., 1. };
+//                                                  0          1         2         3         4          5         6         7       8       9       10     11       12     13    14   15  16  17   18
+static double DouglasPeuckerThresholds[19] = { 32000000., 16240000., 80240000., 40240000., 20000000., 10000000., 500000., 240000., 120000., 60000., 30000., 19000., 5000., 2000., 200, 16,  6, 3. , 3. };
 
 template<class PointT>
 class DouglasPeucker {
@@ -45,7 +47,7 @@ private:
     std::stack<PairOfPoints > recursionStack;
 
     double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) const {
-        double r;
+        double r = 0.;
         const double x = static_cast<double>(inputPoint.lat);
         const double y = static_cast<double>(inputPoint.lon);
         const double a = static_cast<double>(source.lat);
@@ -64,11 +66,11 @@ private:
         }
         nY = (d*p - c*q)/(a*d - b*c);
         mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
-        r = mX;
-        if(r<=0){
+        r = std::isnan(mX) ? 0. : mX;
+        if(r<=0.){
             return ((b - y)*(b - y) + (a - x)*(a - x));
         }
-        else if(r >= 1){
+        else if(r >= 1.){
             return ((d - y)*(d - y) + (c - x)*(c - x));
 
         }
@@ -108,7 +110,7 @@ public:
             std::size_t indexOfFarthestElement = pair.second;
             //find index idx of element with maxDistance
             for(std::size_t i = pair.first+1; i < pair.second; ++i){
-                double distance = std::fabs(ComputeDistanceOfPointToLine(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
+                const double distance = std::fabs(ComputeDistanceOfPointToLine(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
                 if(distance > DouglasPeuckerThresholds[zoomLevel] && distance > maxDistance) {
                     indexOfFarthestElement = i;
                     maxDistance = distance;
