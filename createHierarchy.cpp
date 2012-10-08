@@ -69,7 +69,7 @@ std::vector<NodeID> trafficLightNodes;
 
 int main (int argc, char *argv[]) {
     if(argc < 3) {
-        ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions>");
+        ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions> [<profile>]");
     }
 
     double startupTime = get_timestamp();
@@ -119,7 +119,7 @@ int main (int argc, char *argv[]) {
         ERR("The input data is broken. It is impossible to do any turns in this graph");
 
 
-    if(!testDataFile("profile.lua")) {
+    if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
         ERR("Need profile.lua to apply traffic signal penalty");
     }
     /*** Setup Scripting Environment ***/
@@ -132,7 +132,8 @@ int main (int argc, char *argv[]) {
 
 
     // Now call our function in a lua script
-    if(0 != luaL_dofile(myLuaState, "profile.lua")) {
+	INFO("Parsing speedprofile from " << (argc > 3 ? argv[3] : "profile.lua") );
+    if(0 != luaL_dofile(myLuaState, (argc > 3 ? argv[3] : "profile.lua") )) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
 

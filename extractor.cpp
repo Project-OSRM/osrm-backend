@@ -52,7 +52,7 @@ bool wayFunction(_Way w);
 
 int main (int argc, char *argv[]) {
     if(argc < 2) {
-        ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf>");
+        ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf> [<profile.lua>]");
     }
 
     INFO("extracting data from input file " << argv[1]);
@@ -142,7 +142,8 @@ int main (int argc, char *argv[]) {
           ]
     ];
     // Now call our function in a lua script
-    if(0 != luaL_dofile(myLuaState, "profile.lua")) {
+	INFO("Parsing speedprofile from " << (argc > 2 ? argv[2] : "profile.lua") );
+    if(0 != luaL_dofile(myLuaState, (argc > 2 ? argv[2] : "profile.lua") )) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
 
@@ -156,14 +157,15 @@ int main (int argc, char *argv[]) {
     if(installedRAM < 2048264) {
         WARN("Machine has less than 2GB RAM.");
     }
-    if(testDataFile("extractor.ini")) {
+/*    if(testDataFile("extractor.ini")) {
         ExtractorConfiguration extractorConfig("extractor.ini");
         unsigned memoryAmountFromFile = atoi(extractorConfig.GetParameter("Memory").c_str());
         if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024))
             amountOfRAM = memoryAmountFromFile;
         INFO("Using " << amountOfRAM << " GB of RAM for buffers");
     }
-
+	*/
+	
     StringMap stringMap;
     ExtractionContainers externalMemory;
 
