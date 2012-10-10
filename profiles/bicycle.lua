@@ -28,7 +28,13 @@ speed_profile = {
 	["pier"] = 5,
 	["steps"] = 1,
 	["default"] = 18,
-	["ferry"] = 5
+	["ferry"] = 5,
+	["train"] = 80,
+	["railway"] = 60,
+	["subway"] = 50,
+	["light_rail"] = 40,
+	["monorail"] = 40,
+	["tram"] = 40
 }
 
 take_minimum_of_speeds 	= true
@@ -92,6 +98,7 @@ function way_function (way, numberOfNodesInWay)
 	local ref = way.tags:Find("ref")
 	local junction = way.tags:Find("junction")
 	local route = way.tags:Find("route")
+	local railway = way.tags:Find("railway")
 	local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
 	local man_made = way.tags:Find("man_made")
 	local barrier = way.tags:Find("barrier")
@@ -106,7 +113,7 @@ function way_function (way, numberOfNodesInWay)
 	local access = find_access_tag(way)
 	
 	-- only route on things with highway tag set (not buildings, boundaries, etc)
-    if (not highway or highway == '') and (not route or route == '') then
+    if (not highway or highway == '') and (not route or route == '') and (not railway or railway=='') then
 		return 0
     end
 		
@@ -139,7 +146,13 @@ function way_function (way, numberOfNodesInWay)
 		if not way.is_duration_set then
 		 	way.speed = speed_profile[highway]
 		end
-    else
+    elseif railway and speed_profile[railway] then
+	 	-- trains and subways
+		if access and access_tag_whitelist[access] then
+			way.speed = speed_profile[railway]		
+			way.direction = Way.bidirectional
+		end
+	else
 		-- ways
 		if speed_profile[highway] then 
 	      	way.speed = speed_profile[highway]
