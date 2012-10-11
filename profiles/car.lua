@@ -166,7 +166,7 @@ function way_function (way, numberOfNodesInWay)
     end
     
   -- Set the avg speed on ways that are marked accessible
-    if speed_profile[highway] and access_tag_whitelist[access] and way.speed == -1 then
+    if "" ~= highway and access_tag_whitelist[access] and way.speed == -1 then
       if (0 < maxspeed and not take_minimum_of_speeds) or maxspeed == 0 then
         maxspeed = math.huge
       end
