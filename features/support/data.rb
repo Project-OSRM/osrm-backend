@@ -200,13 +200,12 @@ end
 
 def reprocess
   Dir.chdir TEST_FOLDER do
-    write_speedprofile
     write_osm
     convert_osm_to_pbf
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@speedprofile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise OSRMError.new 'osrm-extract', $?.exitstatus, "*** osrm-extract exited with code #{$?.exitstatus}. The file preprocess.log might contain more info." 
       end
@@ -215,7 +214,7 @@ def reprocess
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@speedprofile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise OSRMError.new 'osrm-prepare', $?.exitstatus, "*** osrm-prepare exited with code #{$?.exitstatus}. The file preprocess.log might contain more info." 
       end 
