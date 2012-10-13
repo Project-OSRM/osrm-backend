@@ -87,10 +87,10 @@ int main (int argc, char *argv[]) {
 
     // Connect LuaBind to this lua state
     luabind::open(myLuaState);
+    luaL_openlibs(myLuaState);
 
     // Add our function to the state's global scope
     luabind::module(myLuaState) [
-      luabind::def("print", LUA_print<std::string>),
       luabind::def("parseMaxspeed", parseMaxspeed),
       luabind::def("durationIsValid", durationIsValid),
       luabind::def("parseDuration", parseDuration)
@@ -146,9 +146,6 @@ int main (int argc, char *argv[]) {
     if(0 != luaL_dofile(myLuaState, (argc > 2 ? argv[2] : "profile.lua") )) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
-
-    //open utility libraries string library;
-    luaL_openlibs(myLuaState);
 
     /*** End of Scripting Environment Setup; ***/
 
