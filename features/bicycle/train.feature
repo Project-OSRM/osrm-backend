@@ -1,4 +1,4 @@
-@routing @bicycle @train @todo
+@routing @bicycle @train
 Feature: Bike - Handle ferry routes
 Bringing bikes on trains and subways
 

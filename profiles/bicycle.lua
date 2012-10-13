@@ -34,7 +34,7 @@ pedestrian_speeds = {
 	["footway"] = 5,
 	["pedestrian"] = 5,
 	["pier"] = 5,
-	["steps"] = 2,
+	["steps"] = 2
 }
 
 railway_speeds = { 
@@ -44,6 +44,15 @@ railway_speeds = {
 	["light_rail"] = 10,
 	["monorail"] = 10,
 	["tram"] = 10
+}
+
+platform_speeds = { 
+	["platform"] = 5
+}
+
+amenity_speeds = { 
+	["parking"] = 10,
+	["parking_entrance"] = 10
 }
 
 route_speeds = { 
@@ -123,10 +132,14 @@ function way_function (way, numberOfNodesInWay)
 	local duration	= way.tags:Find("duration")
 	local service	= way.tags:Find("service")
 	local area = way.tags:Find("area")
+	local amenity = way.tags:Find("amenity")
 	local access = find_access_tag(way)
 	
 	-- only route on things with highway tag set (not buildings, boundaries, etc)
-    if (not highway or highway == '') and (not route or route == '') and (not railway or railway=='') then
+    if (not highway or highway == '') and 
+		(not route or route == '') and 
+		(not railway or railway=='') and 
+		(not amenity or amenity=='') then
 		return 0
     end
 		
@@ -154,8 +167,11 @@ function way_function (way, numberOfNodesInWay)
 		else
 		 	way.speed = route_speeds[route]
 		end
+	elseif railway and platform_speeds[railway] then
+		-- railway platforms
+		way.speed = platform_speeds[railway]
     elseif railway and railway_speeds[railway] then
-	 	-- trains and subways
+	 	-- railways
 		if access and access_tag_whitelist[access] then
 			way.speed = railway_speeds[railway]		
 			way.direction = Way.bidirectional
@@ -167,6 +183,9 @@ function way_function (way, numberOfNodesInWay)
 		else
 			way.speed = pedestrian_speeds[highway]	-- pushing bikes
 		end
+	elseif amenity and amenity_speeds[amenity] then
+		-- parking areas
+		way.speed = amenity_speeds[amenity]
 	else
 		-- regular ways
 		if main_speeds[highway] then 
