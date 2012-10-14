@@ -53,6 +53,11 @@ public:
         return (xmlTextReaderRead( inputReader ) == 1);
     }
     bool Parse() {
+        if(0 != luaL_dostring( myLuaState, "return use_restrictions\n")) {
+            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+        }
+        bool useRestrictions = lua_toboolean(myLuaState, -1) != 0;
+
         while ( xmlTextReaderRead( inputReader ) == 1 ) {
             const int type = xmlTextReaderNodeType( inputReader );
 
@@ -113,7 +118,7 @@ public:
             }
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
                 _RawRestrictionContainer r = _ReadXMLRestriction();
-                if(r.fromWay != UINT_MAX) {
+                if(useRestrictions && r.fromWay != UINT_MAX) {
                     if(!(*restrictionCallback)(r)) {
                         std::cerr << "[XMLParser] restriction not parsed" << std::endl;
                     }

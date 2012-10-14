@@ -266,6 +266,14 @@ private:
 
     void parseRelation(_ThreadData * threadData) {
         const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
+
+        if(0 != luaL_dostring( myLuaState, "return use_restrictions\n")) {
+            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+        }
+        if (!lua_toboolean(myLuaState, -1)) {
+            return;
+        }
+
         for(int i = 0; i < group.relations_size(); i++ ) {
             const OSMPBF::Relation& inputRelation = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).relations(i);
             bool isRestriction = false;
