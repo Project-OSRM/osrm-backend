@@ -72,6 +72,8 @@ conf = Configure(env, custom_tests = { 'CheckBoost' : CheckBoost, 'CheckProtobuf
 
 if GetOption('cxx') is None:
     #default Compiler
+    if sys.platform == 'darwin':	#Mac OS X
+        env['CXX'] = 'clang++'
     print 'Using default C++ Compiler: ', env['CXX'].strip()
 else:
     env.Replace(CXX = GetOption('cxx'))
