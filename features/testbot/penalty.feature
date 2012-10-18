@@ -5,7 +5,7 @@ Testbot uses a signal penalty of 7s.
 	Background:
 		Given the speedprofile "testbot"
 			
-	Scenario: Passing a traffic signal should incur a delay
+	Scenario: Traffic signals should incur a delay, without changing distance
 		Given the node map
 		 | a | b | c |
 		 | d | e | f |
@@ -20,9 +20,9 @@ Testbot uses a signal penalty of 7s.
 		 | def   |
 
 		When I route I should get
-		 | from | to | route | time    |
-		 | a    | c  | abc   | 20s +-1 |
-		 | d    | f  | def   | 27s +-1 |
+		 | from | to | route | time    | distance |
+		 | a    | c  | abc   | 20s +-1 | 200m +-1 |
+		 | d    | f  | def   | 27s +-1 | 200m +-1 |
 
 	Scenario: Signal penalty should not depend on way type
 		Given the node map
