@@ -1,4 +1,4 @@
-@routing @bicycle @destination @todo
+@routing @car @destination @todo
 Feature: Car - Destination only, no passing through
 
 	Background:

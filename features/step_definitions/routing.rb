@@ -240,7 +240,7 @@ When /^I route I should get$/ do |table|
           margin = 1 - $2.to_f*0.01
           from = $1.to_f*margin
           to = $1.to_f/margin
-          if (from..to).cover? got[key].to_f
+          if got[key].to_f >= from && got[key].to_f <= to
             got[key] = row[key]
           else
             ok = false
@@ -249,7 +249,7 @@ When /^I route I should get$/ do |table|
             margin = $2.to_f
             from = $1.to_f-margin
             to = $1.to_f+margin
-            if (from..to).cover? got[key].to_f
+            if got[key].to_f >= from && got[key].to_f <= to
               got[key] = row[key]
             else
               ok = false

@@ -4,8 +4,8 @@ require 'digest/sha1'
 require 'cucumber/rake/task'
 require 'sys/proctable'
 
-SANDBOX = 'sandbox'
-DATA_FOLDER = 'osm_data'
+DATA_FOLDER = 'sandbox'
+PROFILE = 'bicycle'
 
 Cucumber::Rake::Task.new do |t|
   t.cucumber_opts = %w{--format pretty}
@@ -62,12 +62,12 @@ def write_server_ini osm_file
   IP = 0.0.0.0
   Port = 5000
 
-  hsgrData=#{DATA_FOLDER}/#{osm_file}.osrm.hsgr
-  nodesData=#{DATA_FOLDER}/#{osm_file}.osrm.nodes
-  edgesData=#{DATA_FOLDER}/#{osm_file}.osrm.edges
-  ramIndex=#{DATA_FOLDER}/#{osm_file}.osrm.ramIndex
-  fileIndex=#{DATA_FOLDER}/#{osm_file}.osrm.fileIndex
-  namesData=#{DATA_FOLDER}/#{osm_file}.osrm.names
+  hsgrData=#{osm_file}.osrm.hsgr
+  nodesData=#{osm_file}.osrm.nodes
+  edgesData=#{osm_file}.osrm.edges
+  ramIndex=#{osm_file}.osrm.ramIndex
+  fileIndex=#{osm_file}.osrm.fileIndex
+  namesData=#{osm_file}.osrm.names
   EOF
   File.open( 'server.ini', 'w') {|f| f.write( s ) }
 end
@@ -83,46 +83,48 @@ end
 
 desc "Setup config files."
 task :setup do
-  Dir.mkdir "#{SANDBOX}/#{DATA_FOLDER}" unless File.exist? "#{SANDBOX}/#{DATA_FOLDER}"
-  ['server.ini','speedprofile.ini','extractor.ini','contractor.ini'].each do |file|
-    unless File.exist? "#{SANDBOX}/#{file}"
-      puts "Copying #{file} template to sandbox/#{file}" 
-      FileUtils.cp file, "#{SANDBOX}/#{file}"
+  Dir.mkdir "#{DATA_FOLDER}" unless File.exist? "#{DATA_FOLDER}"
+  ['server.ini','extractor.ini','contractor.ini'].each do |file|
+    unless File.exist? "#{DATA_FOLDER}/#{file}"
+      puts "Copying #{file} template to #{DATA_FOLDER}/#{file}" 
+      FileUtils.cp file, "#{DATA_FOLDER}/#{file}"
     end
   end
 end
 
 desc "Download OSM data."
 task :download => :setup do
+  Dir.mkdir "#{DATA_FOLDER}" unless File.exist? "#{DATA_FOLDER}"
   puts "Downloading..."
-  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/osm/europe/#{osm_data_country}.osm.pbf -o #{SANDBOX}/#{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
+  puts "curl http://download.geofabrik.de/openstreetmap/europe/#{osm_data_country}.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
+  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/openstreetmap/europe/#{osm_data_country}.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
   if osm_data_area_bbox
     puts "Cropping and converting to protobuffer..."
-    raise "Error while cropping data." unless system "osmosis --read-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
+    raise "Error while cropping data." unless system "osmosis --read-pbf file=#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
   end
 end
 
 desc "Crop OSM data"
 task :crop do
   if osm_data_area_bbox
-    raise "Error while cropping data." unless system "osmosis --read-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{SANDBOX}/#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
+    raise "Error while cropping data." unless system "osmosis --read-pbf file=#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
   end
 end
 
 desc "Reprocess OSM data."
 task :process => :setup do
-  Dir.chdir SANDBOX do
-    raise "Error while extracting data." unless system "../osrm-extract #{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf"
+  Dir.chdir DATA_FOLDER do
+    raise "Error while extracting data." unless system "../osrm-extract #{osm_data_area_name}.osm.pbf ../profiles/#{PROFILE}.lua"
     puts
-    raise "Error while preparing data." unless system "../osrm-prepare #{DATA_FOLDER}/#{osm_data_area_name}.osrm #{DATA_FOLDER}/#{osm_data_area_name}.osrm.restrictions"
+    raise "Error while preparing data." unless system "../osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions ../profiles/#{PROFILE}.lua"
     puts
   end
 end
 
 desc "Delete preprocessing files."
 task :clean do
-  File.delete *Dir.glob("#{SANDBOX}/#{DATA_FOLDER}/*.osrm")
-  File.delete *Dir.glob("#{SANDBOX}/#{DATA_FOLDER}/*.osrm.*")
+  File.delete *Dir.glob("#{DATA_FOLDER}/*.osrm")
+  File.delete *Dir.glob("#{DATA_FOLDER}/*.osrm.*")
 end
 
 desc "Run all cucumber test"
@@ -133,7 +135,7 @@ end
 
 desc "Run the routing server in the terminal. Press Ctrl-C to stop."
 task :run => :setup do
-  Dir.chdir SANDBOX do
+  Dir.chdir DATA_FOLDER do
     write_server_ini osm_data_area_name
     system "../osrm-routed"
   end
@@ -141,7 +143,7 @@ end
 
 desc "Launch the routing server in the background. Use rake:down to stop it."
 task :up => :setup do
-  Dir.chdir SANDBOX do
+  Dir.chdir DATA_FOLDER do
     abort("Already up.") if up?
     write_server_ini osm_data_area_name
     pipe = IO.popen('../osrm-routed 1>>osrm-routed.log 2>>osrm-routed.log')
@@ -160,8 +162,11 @@ end
 desc "Stop the routing server."
 task :down do
   pid = find_pid 'osrm-routed'
-  abort("Already down.") unless pid
-  Process.kill 'TERM', pid
+  if pid
+    Process.kill 'TERM', pid
+  else
+    puts "Already down."
+  end 
 end
 
 desc "Kill all osrm-extract, osrm-prepare and osrm-routed processes."
@@ -179,4 +184,8 @@ task :pid do
   each_process 'osrm-routed' do |pid,state|
     puts "#{pid}\t#{state}"
   end
+end
+
+desc "Stop, reprocess and restart."
+task :update => [:down,:process,:up] do
 end

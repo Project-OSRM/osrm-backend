@@ -7,7 +7,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
-ignore_in_grid = { ["ferry"] = true, ["pier"] = true }
+ignore_in_grid = { ["ferry"] = true }
 
 speed_profile = { 
   ["motorway"] = 90, 
@@ -26,7 +26,7 @@ speed_profile = {
   ["service"] = 15,
 --  ["track"] = 5,
   ["ferry"] = 5,
-  ["pier"] = 5,
+--  ["pier"] = 5,
   ["default"] = 50
 }
 
@@ -93,7 +93,7 @@ function way_function (way, numberOfNodesInWay)
     local junction = way.tags:Find("junction")
     local route = way.tags:Find("route")
     local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
-    local man_made = way.tags:Find("man_made")
+    --local man_made = way.tags:Find("man_made")
     local barrier = way.tags:Find("barrier")
     local oneway = way.tags:Find("oneway")
     local cycleway = way.tags:Find("cycleway")
@@ -138,8 +138,8 @@ function way_function (way, numberOfNodesInWay)
 
   -- Handling ferries and piers
 
-    if (speed_profile[route] ~= nil and speed_profile[route] > 0) or
-       (speed_profile[man_made] ~= nil and speed_profile[man_made] > 0) 
+    if (speed_profile[route] ~= nil and speed_profile[route] > 0) --or
+       --(speed_profile[man_made] ~= nil and speed_profile[man_made] > 0) 
     then
       if durationIsValid(duration) then
 	    way.speed = math.max( parseDuration(duration) / math.max(1, numberOfNodesInWay-1) );
@@ -148,8 +148,8 @@ function way_function (way, numberOfNodesInWay)
       way.direction = Way.bidirectional;
       if speed_profile[route] ~= nil then
          highway = route;
-      elseif speed_profile[man_made] ~= nil then
-         highway = man_made;
+      --elseif speed_profile[man_made] ~= nil then
+      --   highway = man_made;
       end
       if not way.is_duration_set then
         way.speed = speed_profile[highway]
@@ -166,7 +166,7 @@ function way_function (way, numberOfNodesInWay)
     end
     
   -- Set the avg speed on ways that are marked accessible
-    if speed_profile[highway] and access_tag_whitelist[access] and way.speed == -1 then
+    if "" ~= highway and access_tag_whitelist[access] and way.speed == -1 then
       if (0 < maxspeed and not take_minimum_of_speeds) or maxspeed == 0 then
         maxspeed = math.huge
       end
