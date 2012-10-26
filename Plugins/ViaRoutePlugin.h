@@ -127,28 +127,13 @@ public:
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         }
-        if(1 == rawRoute.segmentEndCoordinates.size()) {
+        if(( "false" != routeParameters.options.Find("alt") ) (&& (1 == rawRoute.segmentEndCoordinates.size())) {
 //            INFO("Checking for alternative paths");
             searchEngine->alternativePaths(rawRoute.segmentEndCoordinates[0],  rawRoute);
 
         } else {
             searchEngine->shortestPath(rawRoute.segmentEndCoordinates, rawRoute);
         }
-//        std::cout << "latitude,longitude" << std::endl;
-//        for(unsigned i = 0; i < rawRoute.computedShortestPath.size(); ++i) {
-//            _Coordinate current;
-//            searchEngine->GetCoordinatesForNodeID(rawRoute.computedShortestPath[i].node, current);
-//            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
-//        }
-//        std::cout << std::endl;
-//
-//        std::cout << "latitude,longitude" << std::endl;
-//        for(unsigned i = 0; i < rawRoute.computedAlternativePath.size(); ++i) {
-//            _Coordinate current;
-//            searchEngine->GetCoordinatesForNodeID(rawRoute.computedAlternativePath[i].node, current);
-//            std::cout << current.lat/100000. << "," << current.lon/100000. << std::endl;
-//        }
-//        std::cout << std::endl;
 
 
         if(INT_MAX == rawRoute.lengthOfShortestPath ) {
