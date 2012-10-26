@@ -29,15 +29,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/Coordinate.h"
 
 /*This class object computes the bitvector of indicating generalized input points
- * according to the (Ramer-)Douglas-Peucker algorithm.
+ * according to the (Ramer-)Douglas-Peucker algorithm. Runtime n\log n calls to fastDistance
  *
  * Input is vector of pairs. Each pair consists of the point information and a bit
  * indicating if the points is present in the generalization.
  * Note: points may also be pre-selected*/
 
 //These thresholds are more or less heuristically chosen.
-//                                                  0          1         2         3         4          5         6         7       8       9       10     11       12     13    14   15  16  17   18
-static double DouglasPeuckerThresholds[19] = { 32000000., 16240000., 80240000., 40240000., 20000000., 10000000., 500000., 240000., 120000., 60000., 30000., 19000., 5000., 2000., 200, 16,  6, 3. , 3. };
+//                                                 0         1        2        3       4         5         6       7       8       9      10     11     12    13    14   15  16  17 18
+static double DouglasPeuckerThresholds[19] = { 32000000, 16240000, 80240000, 40240000, 20000000, 10000000, 500000, 240000, 120000, 60000, 30000, 19000, 5000, 2000, 200, 16,  6, 3, 3 };
 
 template<class PointT>
 class DouglasPeucker {
@@ -45,58 +45,27 @@ private:
     typedef std::pair<std::size_t, std::size_t> PairOfPoints;
     //Stack to simulate the recursion
     std::stack<PairOfPoints > recursionStack;
-
-    double ComputeDistanceOfPointToLine(const _Coordinate& inputPoint, const _Coordinate& source, const _Coordinate& target) const {
-        double r = 0.;
-        const double x = static_cast<double>(inputPoint.lat);
-        const double y = static_cast<double>(inputPoint.lon);
-        const double a = static_cast<double>(source.lat);
-        const double b = static_cast<double>(source.lon);
-        const double c = static_cast<double>(target.lat);
-        const double d = static_cast<double>(target.lon);
-        double p,q,mX,nY;
-        if(fabs(a - c) <= FLT_EPSILON) {
-            const double m = (d-b)/(c-a); // slope
-            // Projection of (x,y) on line joining (a,b) and (c,d)
-            p = ((x + (m*y)) + (m*m*a - m*b))/(1 + m*m);
-            q = b + m*(p - a);
-        } else {
-            p = c;
-            q = y;
-        }
-        nY = (d*p - c*q)/(a*d - b*c);
-        mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
-        r = std::isnan(mX) ? 0. : mX;
-        if(r<=0.){
-            return ((b - y)*(b - y) + (a - x)*(a - x));
-        }
-        else if(r >= 1.){
-            return ((d - y)*(d - y) + (c - x)*(c - x));
-
-        }
-        // point lies in between
-        return (p-x)*(p-x) + (q-y)*(q-y);
-    }
-
 public:
     void Run(std::vector<PointT> & inputVector, const unsigned zoomLevel) {
+        const unsigned sizeOfInputVector = inputVector.size();
         {
             assert(zoomLevel < 19);
             assert(1 < inputVector.size());
             std::size_t leftBorderOfRange = 0;
             std::size_t rightBorderOfRange = 1;
+
             //Sweep linerarily over array and identify those ranges that need to be checked
-//            recursionStack.hint(inputVector.size());
+            //decision points have been previously marked
             do {
                 assert(inputVector[leftBorderOfRange].necessary);
-                assert(inputVector[inputVector.size()-1].necessary);
+                assert(inputVector[inputVector.back()].necessary);
 
                 if(inputVector[rightBorderOfRange].necessary) {
                     recursionStack.push(std::make_pair(leftBorderOfRange, rightBorderOfRange));
                     leftBorderOfRange = rightBorderOfRange;
                 }
                 ++rightBorderOfRange;
-            } while( rightBorderOfRange < inputVector.size());
+            } while( rightBorderOfRange < sizeOfInputVector);
         }
         while(!recursionStack.empty()) {
             //pop next element
@@ -104,13 +73,13 @@ public:
             recursionStack.pop();
             assert(inputVector[pair.first].necessary);
             assert(inputVector[pair.second].necessary);
-            assert(pair.second < inputVector.size());
+            assert(pair.second < sizeOfInputVector);
             assert(pair.first < pair.second);
-            double maxDistance = -DBL_MAX;
+            int maxDistance = -INT_MIN;
             std::size_t indexOfFarthestElement = pair.second;
             //find index idx of element with maxDistance
             for(std::size_t i = pair.first+1; i < pair.second; ++i){
-                const double distance = std::fabs(ComputeDistanceOfPointToLine(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
+                const int distance = fastDistance(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location);
                 if(distance > DouglasPeuckerThresholds[zoomLevel] && distance > maxDistance) {
                     indexOfFarthestElement = i;
                     maxDistance = distance;
@@ -127,6 +96,34 @@ public:
             }
         }
     }
+
+    /**
+     * This distance computation does integer arithmetic only and is about twice as fast as
+     * the other distance function. It is an approximation only, but works more or less ok.
+     */
+    template<class CoordT>
+    double fastDistance(const CoordT& point, const CoordT& segA, const CoordT& segB) {
+        int p2x = (segB.lon - segA.lat);
+        int p2y = (segB.lon - segA.lat);
+        int something = p2x*p2x + p2y*p2y;
+        int u = ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something;
+
+        if (u > 1)
+            u = 1;
+        else if (u < 0)
+            u = 0;
+
+        int x = segA.lon + u * p2x;
+        int y = segA.lat + u * p2y;
+
+        int dx = x - point.lon;
+        int dy = y - point.lat;
+
+        int dist = (dx*dx + dy*dy);
+
+        return dist;
+    }
+
 };
 
 #endif /* DOUGLASPEUCKER_H_ */
