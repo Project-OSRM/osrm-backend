@@ -128,7 +128,7 @@ function way_function (way, numberOfNodesInWay)
        (speed_profile[man_made] ~= nil and speed_profile[man_made] > 0) 
     then
       if durationIsValid(duration) then
-	    way.speed = parseDuration / math.max(1, numberOfSegments-1);
+	    way.speed = parseDuration / math.max(1, numberOfNodesInWay-1);
         way.is_duration_set = true;
       end
       way.direction = Way.bidirectional;
