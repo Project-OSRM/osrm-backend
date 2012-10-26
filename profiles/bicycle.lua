@@ -6,9 +6,10 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierachy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
-ignore_in_grid = { ["ferry"] = true }
 
-speed_profile = { 
+default_speed = 16
+
+main_speeds = { 
 	["cycleway"] = 18,
 	["primary"] = 17,
 	["primary_link"] = 17,
@@ -23,18 +24,39 @@ speed_profile = {
 	["service"] = 16,
 	["track"] = 13,
 	["path"] = 13,
+	["footway"] = 12,
+	["pedestrian"] = 12,
+	["pier"] = 12,
+	["steps"] = 2
+}
+
+pedestrian_speeds = { 
 	["footway"] = 5,
 	["pedestrian"] = 5,
 	["pier"] = 5,
-	["steps"] = 1,
-	["default"] = 18,
-	["ferry"] = 5,
-	["train"] = 80,
-	["railway"] = 60,
-	["subway"] = 50,
-	["light_rail"] = 40,
-	["monorail"] = 40,
-	["tram"] = 40
+	["steps"] = 2
+}
+
+railway_speeds = { 
+	["train"] = 10,
+	["railway"] = 10,
+	["subway"] = 10,
+	["light_rail"] = 10,
+	["monorail"] = 10,
+	["tram"] = 10
+}
+
+platform_speeds = { 
+	["platform"] = 5
+}
+
+amenity_speeds = { 
+	["parking"] = 10,
+	["parking_entrance"] = 10
+}
+
+route_speeds = { 
+	["ferry"] = 5
 }
 
 take_minimum_of_speeds 	= true
@@ -110,10 +132,14 @@ function way_function (way, numberOfNodesInWay)
 	local duration	= way.tags:Find("duration")
 	local service	= way.tags:Find("service")
 	local area = way.tags:Find("area")
+	local amenity = way.tags:Find("amenity")
 	local access = find_access_tag(way)
 	
 	-- only route on things with highway tag set (not buildings, boundaries, etc)
-    if (not highway or highway == '') and (not route or route == '') and (not railway or railway=='') then
+    if (not highway or highway == '') and 
+		(not route or route == '') and 
+		(not railway or railway=='') and 
+		(not amenity or amenity=='') then
 		return 0
     end
 		
@@ -131,33 +157,43 @@ function way_function (way, numberOfNodesInWay)
 		way.name = highway		-- if no name exists, use way type
 	end
 	
-    if (speed_profile[route] and speed_profile[route] > 0) or (speed_profile[man_made] and speed_profile[man_made] > 0) then
-		-- ferries and piers
+    if route_speeds[route] then
+		-- ferries
+		way.direction = Way.bidirectional
+		way.ignore_in_grid = true
 		if durationIsValid(duration) then
-		way.speed = math.max( duration / math.max(1, numberOfNodesInWay-1) )
-		 	way.is_duration_set = true;
+			way.speed = math.max( parseDuration(duration) / math.max(1, numberOfNodesInWay-1) )
+		 	way.is_duration_set = true
+		else
+		 	way.speed = route_speeds[route]
 		end
-		way.direction = Way.bidirectional;
-		if speed_profile[route] ~= nil then
-		  	highway = route;
-		elseif speed_profile[man_made] ~= nil then
-		  	highway = man_made;
-		end
-		if not way.is_duration_set then
-		 	way.speed = speed_profile[highway]
-		end
-    elseif railway and speed_profile[railway] then
-	 	-- trains and subways
+	elseif railway and platform_speeds[railway] then
+		-- railway platforms
+		way.speed = platform_speeds[railway]
+    elseif railway and railway_speeds[railway] then
+	 	-- railways
 		if access and access_tag_whitelist[access] then
-			way.speed = speed_profile[railway]		
+			way.speed = railway_speeds[railway]		
 			way.direction = Way.bidirectional
 		end
+	elseif pedestrian_speeds[highway] and main_speeds[highway] then
+		-- pedestrian areas
+		if access_tag_whitelist[access] then
+			way.speed = main_speeds[highway]		-- biking 
+		else
+			way.speed = pedestrian_speeds[highway]	-- pushing bikes
+		end
+	elseif amenity and amenity_speeds[amenity] then
+		-- parking areas
+		way.speed = amenity_speeds[amenity]
 	else
-		-- ways
-		if speed_profile[highway] then 
-	      	way.speed = speed_profile[highway]
-	    elseif access_tag_whitelist[access] then
-			way.speed = speed_profile["default"]
+		-- regular ways
+		if main_speeds[highway] then 
+	      	way.speed = main_speeds[highway]
+	    elseif main_speeds[man_made] then 
+			way.speed = main_speeds[man_made]
+		elseif access_tag_whitelist[access] then
+			way.speed = default_speed
 		end
 	end
 	
@@ -212,11 +248,11 @@ function way_function (way, numberOfNodesInWay)
 	
 	-- cycleways
 	if cycleway and cycleway_tags[cycleway] then
-		way.speed = speed_profile["cycleway"]
+		way.speed = main_speeds["cycleway"]
 	elseif cycleway_left and cycleway_tags[cycleway_left] then
-		way.speed = speed_profile["cycleway"]
+		way.speed = main_speeds["cycleway"]
 	elseif cycleway_right and cycleway_tags[cycleway_right] then
-		way.speed = speed_profile["cycleway"]
+		way.speed = main_speeds["cycleway"]
 	end
 
 	way.type = 1
