@@ -12,7 +12,7 @@ def hash_of_file path
 end
 
 def speedprofile_hash
-  @speedprofile_hash ||= hash_of_file "profile.lua"
+  @speedprofile_hash ||= hash_of_file "../profiles/#{@speedprofile}.lua"
 end
 
 def osm_hash

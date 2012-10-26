@@ -11,10 +11,6 @@ def read_speedprofile profile
   @speedprofile = profile
 end
 
-def write_speedprofile
-  FileUtils.copy_file "../profiles/#{@speedprofile}.lua", "profile.lua"
-end
-
 def write_server_ini
   s=<<-EOF
 Threads = 1
