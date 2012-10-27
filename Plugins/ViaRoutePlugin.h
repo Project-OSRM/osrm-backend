@@ -127,7 +127,7 @@ public:
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         }
-        if(( "false" != routeParameters.options.Find("alt") ) && (1 == rawRoute.segmentEndCoordinates.size())) {
+        if(( "false" != routeParameters.options.Find("alt") ) (&& (1 == rawRoute.segmentEndCoordinates.size())) {
 //            INFO("Checking for alternative paths");
             searchEngine->alternativePaths(rawRoute.segmentEndCoordinates[0],  rawRoute);
 
