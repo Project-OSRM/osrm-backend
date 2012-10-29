@@ -158,7 +158,7 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
     //    INFO("#segs: " << pathDescription.size());
 
     //Post-processing to remove empty or nearly empty path segments
-    if(0 == pathDescription.back().length) {
+    if(FLT_EPSILON > pathDescription.back().length) {
         //        INFO("#segs: " << pathDescription.size() << ", last ratio: " << targetPhantom.ratio << ", length: " << pathDescription.back().length);
         if(pathDescription.size() > 2){
             pathDescription.pop_back();
@@ -170,7 +170,7 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
     } else {
         pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
     }
-    if(0 == pathDescription[0].length) {
+    if(FLT_EPSILON > pathDescription[0].length) {
         //TODO: this is never called actually?
         if(pathDescription.size() > 2) {
             pathDescription.erase(pathDescription.begin());
