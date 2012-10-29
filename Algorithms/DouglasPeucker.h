@@ -58,7 +58,7 @@ public:
             //decision points have been previously marked
             do {
                 assert(inputVector[leftBorderOfRange].necessary);
-                assert(inputVector[inputVector.back()].necessary);
+                assert(inputVector.back().necessary);
 
                 if(inputVector[rightBorderOfRange].necessary) {
                     recursionStack.push(std::make_pair(leftBorderOfRange, rightBorderOfRange));
@@ -75,7 +75,7 @@ public:
             assert(inputVector[pair.second].necessary);
             assert(pair.second < sizeOfInputVector);
             assert(pair.first < pair.second);
-            int maxDistance = -INT_MIN;
+            int maxDistance = INT_MIN;
             std::size_t indexOfFarthestElement = pair.second;
             //find index idx of element with maxDistance
             for(std::size_t i = pair.first+1; i < pair.second; ++i){
@@ -102,24 +102,24 @@ public:
      * the other distance function. It is an approximation only, but works more or less ok.
      */
     template<class CoordT>
-    double fastDistance(const CoordT& point, const CoordT& segA, const CoordT& segB) {
-        int p2x = (segB.lon - segA.lat);
-        int p2y = (segB.lon - segA.lat);
-        int something = p2x*p2x + p2y*p2y;
-        int u = ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something;
+    inline int fastDistance(const CoordT& point, const CoordT& segA, const CoordT& segB) const {
+        const int p2x = (segB.lon - segA.lat);
+        const int p2y = (segB.lon - segA.lat);
+        const int something = p2x*p2x + p2y*p2y;
+        int u = (something < FLT_EPSILON ? 0 : ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something);
 
         if (u > 1)
             u = 1;
         else if (u < 0)
             u = 0;
 
-        int x = segA.lon + u * p2x;
-        int y = segA.lat + u * p2y;
+        const int x = segA.lon + u * p2x;
+        const int y = segA.lat + u * p2y;
 
-        int dx = x - point.lon;
-        int dy = y - point.lat;
+        const int dx = x - point.lon;
+        const int dy = y - point.lat;
 
-        int dist = (dx*dx + dy*dy);
+        const int dist = (dx*dx + dy*dy);
 
         return dist;
     }

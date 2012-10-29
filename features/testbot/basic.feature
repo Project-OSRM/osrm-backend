@@ -74,26 +74,42 @@ Feature: Basic Routing
 		
 	Scenario: 2 unconnected parallel ways
 		Given the node map
-		 | a | b |
-		 | c | d |
+		 | a | b | c |
+		 | d | e | f |
 		
 		And the ways
 		 | nodes |
-		 | ab    |
-		 | cd    |
+		 | abc   |
+		 | def   |
 	    
 		When I route I should get
 		 | from | to | route |
-		 | a    | b  | ab    |
-		 | b    | a  | ab    |
-		 | c    | d  | cd    |
-		 | d    | c  | cd    |
-		 | a    | c  |       |
-		 | c    | a  |       |
-		 | b    | d  |       |
-		 | d    | b  |       |
+		 | a    | b  | abc   |
+		 | b    | a  | abc   |
+		 | b    | c  | abc   |
+		 | c    | b  | abc   |
+		 | d    | e  | def   |
+		 | e    | d  | def   |
+		 | e    | f  | def   |
+		 | f    | e  | def   |
 		 | a    | d  |       |
 		 | d    | a  |       |
+		 | b    | d  |       |
+		 | d    | b  |       |
+		 | c    | d  |       |
+		 | d    | c  |       |
+		 | a    | e  |       |
+		 | e    | a  |       |
+		 | b    | e  |       |
+		 | e    | b  |       |
+		 | c    | e  |       |
+		 | e    | c  |       |
+		 | a    | f  |       |
+		 | f    | a  |       |
+		 | b    | f  |       |
+		 | f    | b  |       |
+		 | c    | f  |       |
+		 | f    | c  |       |
 
 	Scenario: 3 ways connected in a triangle
 		Given the node map
