@@ -23,12 +23,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <luabind/luabind.hpp>
 
-template<typename NodeT, typename RestrictionT, typename WayT>
+template<class ExternalMemoryT, typename NodeT, typename RestrictionT, typename WayT>
 class BaseParser {
 public:
     virtual ~BaseParser() {}
     virtual bool Init() = 0;
-    virtual bool RegisterCallbacks(bool (*nodeCallbackPointer)(NodeT), bool (*restrictionCallbackPointer)(RestrictionT), bool (*wayCallbackPointer)(WayT)) = 0;
+    virtual void RegisterCallbacks(ExternalMemoryT * externalMemory) = 0;
     virtual void RegisterLUAState(lua_State *myLuaState) = 0;
     virtual bool Parse() = 0;
 

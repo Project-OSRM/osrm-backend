@@ -45,10 +45,6 @@ extern "C" {
 typedef BaseConfiguration ExtractorConfiguration;
 
 ExtractorCallbacks * extractCallBacks;
-//
-bool nodeFunction(_Node n);
-bool restrictionFunction(_RawRestrictionContainer r);
-bool wayFunction(_Way w);
 
 int main (int argc, char *argv[]) {
     if(argc < 2) {
@@ -157,27 +153,19 @@ int main (int argc, char *argv[]) {
     if(installedRAM < 2048264) {
         WARN("Machine has less than 2GB RAM.");
     }
-/*    if(testDataFile("extractor.ini")) {
-        ExtractorConfiguration extractorConfig("extractor.ini");
-        unsigned memoryAmountFromFile = atoi(extractorConfig.GetParameter("Memory").c_str());
-        if( memoryAmountFromFile != 0 && memoryAmountFromFile <= installedRAM/(1024*1024))
-            amountOfRAM = memoryAmountFromFile;
-        INFO("Using " << amountOfRAM << " GB of RAM for buffers");
-    }
-	*/
 	
     StringMap stringMap;
     ExtractionContainers externalMemory;
 
     stringMap[""] = 0;
     extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
-    BaseParser<_Node, _RawRestrictionContainer, _Way> * parser;
+    BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> * parser;
     if(isPBF) {
         parser = new PBFParser(argv[1]);
     } else {
         parser = new XMLParser(argv[1]);
     }
-    parser->RegisterCallbacks(&nodeFunction, &restrictionFunction, &wayFunction);
+    parser->RegisterCallbacks(extractCallBacks);
     parser->RegisterLUAState(myLuaState);
 
     if(!parser->Init())
@@ -193,17 +181,4 @@ int main (int argc, char *argv[]) {
     std::cout << "\nRun:\n"
                    "./osrm-prepare " << outputFileName << " " << restrictionsFileName << std::endl;
     return 0;
-}
-
-bool nodeFunction(_Node n) {
-    extractCallBacks->nodeFunction(n);
-    return true;
-}
-bool restrictionFunction(_RawRestrictionContainer r) {
-    extractCallBacks->restrictionFunction(r);
-    return true;
-}
-bool wayFunction(_Way w) {
-    extractCallBacks->wayFunction(w);
-    return true;
 }

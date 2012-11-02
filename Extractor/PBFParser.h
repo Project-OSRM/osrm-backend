@@ -32,13 +32,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 #include "BaseParser.h"
+#include "ExtractorCallbacks.h"
 #include "ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ConcurrentQueue.h"
 
-class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
+class PBFParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> {
 
-    typedef BaseParser<_Node, _RawRestrictionContainer, _Way> super;
+    typedef BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> super;
 
     enum EntityType {
         TypeNode = 1,
@@ -67,7 +68,7 @@ class PBFParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
     };
 
 public:
-    PBFParser(const char * fileName) : myLuaState(NULL) {
+    PBFParser(const char * fileName) : externalMemory(NULL), myLuaState(NULL) {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
         //TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
         threadDataQueue = boost::make_shared<ConcurrentQueue<_ThreadData*> >( 2500 ); /* Max 2500 items in queue, hardcoded. */
@@ -81,16 +82,13 @@ public:
         groupCount = 0;
 
         //Dummy initialization
-        wayCallback = NULL;
-        nodeCallback = NULL;
-        restrictionCallback = NULL;
+//        wayCallback = NULL;
+//        nodeCallback = NULL;
+//        restrictionCallback = NULL;
     }
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way) ) {
-        nodeCallback = *nodeCallbackPointer;
-        wayCallback = *wayCallbackPointer;
-        restrictionCallback = *restrictionCallbackPointer;
-        return true;
+    void RegisterCallbacks(ExtractorCallbacks * em) {
+        externalMemory = em;
     }
 
     void RegisterLUAState(lua_State *ml) {
@@ -244,7 +242,7 @@ private:
                         "node_function",
                         boost::ref(n)
                 );
-                if(!(*nodeCallback)(n))
+                if(!externalMemory->nodeFunction(n))
                     std::cerr << "[PBFParser] dense node not parsed" << std::endl;
             } catch (const luabind::error &er) {
                 cerr << er.what() << endl;
@@ -332,7 +330,7 @@ private:
                 //                    cout << "node " << currentRestriction.viaNode;
                 //                    cout << " to " << currentRestriction.to << endl;
                 //                }
-                if(!(*restrictionCallback)(currentRestrictionContainer))
+                if(!externalMemory->restrictionFunction(currentRestrictionContainer))
                     std::cerr << "[PBFParser] relation not parsed" << std::endl;
             }
         }
@@ -364,7 +362,7 @@ private:
                         boost::ref(w),
                         w.path.size()
                     );
-                    if(!(*wayCallback)(w)) {
+                    if(!externalMemory->wayFunction(w)) {
                         std::cerr << "[PBFParser] way not parsed" << std::endl;
                     }
                 } catch (const luabind::error &er) {
@@ -566,9 +564,10 @@ private:
     unsigned blockCount;
 
     /* Function pointer for nodes */
-    bool (*nodeCallback)(_Node);
-    bool (*wayCallback)(_Way);
-    bool (*restrictionCallback)(_RawRestrictionContainer);
+//    bool (*nodeCallback)(_Node);
+//    bool (*wayCallback)(_Way);
+//    bool (*restrictionCallback)(_RawRestrictionContainer);
+    ExtractorCallbacks * externalMemory;
     /* the input stream to parse */
     std::fstream input;
 

@@ -27,22 +27,20 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 #include "BaseParser.h"
 #include "ExtractorStructs.h"
+#include "ExtractorCallbacks.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/InputReaderFactory.h"
 
-class XMLParser : public BaseParser<_Node, _RawRestrictionContainer, _Way> {
+class XMLParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> {
 public:
-    XMLParser(const char * filename) : nodeCallback(NULL), wayCallback(NULL), restrictionCallback(NULL), myLuaState(NULL){
+    XMLParser(const char * filename) : externalMemory(NULL), myLuaState(NULL){
         WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
         inputReader = inputReaderFactory(filename);
     }
     virtual ~XMLParser() {}
 
-    bool RegisterCallbacks(bool (*nodeCallbackPointer)(_Node), bool (*restrictionCallbackPointer)(_RawRestrictionContainer), bool (*wayCallbackPointer)(_Way)) {
-        nodeCallback = *nodeCallbackPointer;
-        wayCallback = *wayCallbackPointer;
-        restrictionCallback = *restrictionCallbackPointer;
-        return true;
+    void RegisterCallbacks(ExtractorCallbacks * em) {
+        externalMemory = em;
     }
 
     void RegisterLUAState(lua_State *ml) {
@@ -73,7 +71,7 @@ public:
                             "node_function",
                             boost::ref(n)
                     );
-                    if(!(*nodeCallback)(n))
+                    if(!externalMemory->nodeFunction(n))
                         std::cerr << "[XMLParser] dense node not parsed" << std::endl;
                 } catch (const luabind::error &er) {
                     cerr << er.what() << endl;
@@ -98,7 +96,7 @@ public:
                             boost::ref(way),
                             way.path.size()
                     );
-                    if(!(*wayCallback)(way)) {
+                    if(!externalMemory->wayFunction(way)) {
                         std::cerr << "[PBFParser] way not parsed" << std::endl;
                     }
                 } catch (const luabind::error &er) {
@@ -114,7 +112,7 @@ public:
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
                 _RawRestrictionContainer r = _ReadXMLRestriction();
                 if(r.fromWay != UINT_MAX) {
-                    if(!(*restrictionCallback)(r)) {
+                    if(!externalMemory->restrictionFunction(r)) {
                         std::cerr << "[XMLParser] restriction not parsed" << std::endl;
                     }
                 }
@@ -301,9 +299,11 @@ private:
     xmlTextReaderPtr inputReader;
 
     /* Function pointer for nodes */
-    bool (*nodeCallback)(_Node);
-    bool (*wayCallback)(_Way);
-    bool (*restrictionCallback)(_RawRestrictionContainer);
+//    bool (*nodeCallback)(_Node);
+//    bool (*wayCallback)(_Way);
+//    bool (*restrictionCallback)(_RawRestrictionContainer);
+
+    ExtractorCallbacks * externalMemory;
 
     lua_State *myLuaState;
 };
