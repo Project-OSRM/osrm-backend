@@ -563,10 +563,6 @@ private:
     unsigned groupCount;
     unsigned blockCount;
 
-    /* Function pointer for nodes */
-//    bool (*nodeCallback)(_Node);
-//    bool (*wayCallback)(_Way);
-//    bool (*restrictionCallback)(_RawRestrictionContainer);
     ExtractorCallbacks * externalMemory;
     /* the input stream to parse */
     std::fstream input;

@@ -298,11 +298,7 @@ private:
     /* Input Reader */
     xmlTextReaderPtr inputReader;
 
-    /* Function pointer for nodes */
-//    bool (*nodeCallback)(_Node);
-//    bool (*wayCallback)(_Way);
-//    bool (*restrictionCallback)(_RawRestrictionContainer);
-
+    //holds the callback functions and storage for our temporary data
     ExtractorCallbacks * externalMemory;
 
     lua_State *myLuaState;
