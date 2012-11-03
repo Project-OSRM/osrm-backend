@@ -25,6 +25,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <climits>
 
+//TODO: Move into LUA
+
 inline bool durationIsValid(const std::string &s) {
     boost::regex e ("((\\d|\\d\\d):)*(\\d|\\d\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
 
