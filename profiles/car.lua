@@ -41,7 +41,7 @@ u_turn_penalty 			= 20
 -- End of globals
 
 --find first tag in access hierachy which is set
-function find_access_tag(source)
+local function find_access_tag(source)
 	for i,v in ipairs(access_tags_hierachy) do 
 		local tag = source.tags:Find(v)
 		if tag ~= '' then --and tag ~= "" then
@@ -49,6 +49,20 @@ function find_access_tag(source)
 		end
 	end
 	return nil
+end
+
+local function parse_maxspeed(source)
+	if source == nil then
+		return 0
+	end
+	local n = tonumber(source)
+	if n == nil then
+		n = 0
+	end
+	if string.match(source, "mph") or string.match(source, "mp/h") then
+		n = (n*1609)/1000;
+	end
+	return n
 end
 
 function node_function (node)
@@ -92,7 +106,7 @@ function way_function (way, numberOfNodesInWay)
     local ref = way.tags:Find("ref")
     local junction = way.tags:Find("junction")
     local route = way.tags:Find("route")
-    local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
+    local maxspeed = parse_maxspeed(way.tags:Find ( "maxspeed") )
     --local man_made = way.tags:Find("man_made")
     local barrier = way.tags:Find("barrier")
     local oneway = way.tags:Find("oneway")
@@ -205,4 +219,12 @@ function way_function (way, numberOfNodesInWay)
   	end
   	way.type = 1
   return 1
+end
+
+-- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT
+
+function node_vector_function(vector)
+ for v in vector.nodes do
+  node_function(v)
+ end
 end
