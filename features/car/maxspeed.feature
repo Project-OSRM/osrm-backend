@@ -19,7 +19,7 @@ Feature: Car - Max speed restrictions
 		 | a    | b  | ab    | 42s ~10%  |
 		 | b    | c  | bc    | 360s ~10% |
 
-	Scenario: Car - Use maxspeed when higher that way type speed
+	Scenario: Car - Ignore maxspeed when higher than way speed
 		Given the node map
 		 | a | b | c |
 
@@ -31,4 +31,4 @@ Feature: Car - Max speed restrictions
 		When I route I should get
 		 | from | to | route | time      |
 		 | a    | b  | ab    | 144s ~10% |
-		 | b    | c  | bc    | 42s ~10%  |
+		 | b    | c  | bc    | 144s ~10%  |
