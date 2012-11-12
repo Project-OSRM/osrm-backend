@@ -41,18 +41,25 @@ typedef boost::unordered_map<std::string, NodeID > StringMap;
 typedef boost::unordered_map<std::string, std::pair<int, short> > StringToIntPairMap;
 
 struct _Way {
-    _Way() : id(UINT_MAX), nameID(UINT_MAX) {
-
+    _Way() {
+		Clear();
+    }
+	
+	inline void Clear(){
+		id = UINT_MAX;
+		nameID = UINT_MAX;
+		path.clear();
+		keyVals.EraseAll();
         direction = _Way::notSure;
         speed = -1;
         type = -1;
-//        useful = false;
         access = true;
         roundabout = false;
         isDurationSet = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
-    }
+		
+	}
 
     enum {
         notSure = 0, oneway, bidirectional, opposite
