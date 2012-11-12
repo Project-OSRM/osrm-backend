@@ -36,19 +36,19 @@ public:
     HashTable(const unsigned size) {
         table.resize(size);
     }
-    void Add(const keyT& key, const valueT& value){
+    inline void Add(const keyT& key, const valueT& value){
         table[key] = value;
     }
-    void Set(const keyT& key, const valueT& value){
+    inline void Set(const keyT& key, const valueT& value){
         table[key] = value;
     }
-    valueT Find(const keyT& key) const {
+    inline valueT Find(const keyT& key) const {
         if(table.find(key) == table.end())
             return valueT();
         return table.find(key)->second;
     }
 
-    bool Holds(const keyT& key) {
+    inline bool Holds(const keyT& key) const {
         if(table.find(key) == table.end())
             return false;
         return true;
@@ -63,7 +63,7 @@ public:
     		return valueT();
     	return table.find(key)->second;
     }
-    unsigned Size() const {
+    inline unsigned Size() const {
         return table.size();
     }
     MyIterator begin() const {

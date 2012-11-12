@@ -103,6 +103,7 @@ int main (int argc, char *argv[]) {
       luabind::class_<HashTable<std::string, std::string> >("keyVals")
       .def("Add", &HashTable<std::string, std::string>::Add)
       .def("Find", &HashTable<std::string, std::string>::Find)
+      .def("Holds", &HashTable<std::string, std::string>::Holds)
     ];
 
     luabind::module(myLuaState) [

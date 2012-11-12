@@ -58,8 +58,7 @@ struct _Way {
         isDurationSet = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
-		
-	}
+    }
 
     enum {
         notSure = 0, oneway, bidirectional, opposite

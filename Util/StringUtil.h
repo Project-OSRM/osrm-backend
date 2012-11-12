@@ -26,6 +26,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <sstream>
 
+#include <boost/spirit/include/karma.hpp>
+
 #include "../DataStructures/Coordinate.h"
 
 // precision:  position after decimal point
@@ -61,9 +63,9 @@ static inline char* printInt( char* buffer, int value ) {
 static inline void intToString(const int value, std::string & output) {
     // The largest 32-bit integer is 4294967295, that is 10 chars
     // On the safe side, add 1 for sign, and 1 for trailing zero
-    char buffer[12] ;
-    sprintf(buffer, "%i", value) ;
-    output = buffer ;
+    output.clear();
+    std::back_insert_iterator<std::string> sink(output);
+    boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
 }
 
 static inline void convertInternalLatLonToString(const int value, std::string & output) {

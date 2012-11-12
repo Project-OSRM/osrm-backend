@@ -26,7 +26,6 @@ speed_profile = {
   ["service"] = 15,
 --  ["track"] = 5,
   ["ferry"] = 5,
---  ["pier"] = 5,
   ["default"] = 50
 }
 
@@ -43,12 +42,22 @@ u_turn_penalty 			= 20
 --find first tag in access hierachy which is set
 local function find_access_tag(source)
 	for i,v in ipairs(access_tags_hierachy) do 
-		local tag = source.tags:Find(v)
-		if tag ~= '' then --and tag ~= "" then
-			return tag
+		if source.tags:Holds(v) then 
+			local tag = source.tags:Find(v)
+			if tag ~= '' then --and tag ~= "" then
+				return tag
+			end
 		end
 	end
 	return nil
+end
+
+local function find_in_keyvals(keyvals, tag)
+	if keyvals:Holds(tag) then
+		return keyvals:Find(tag)
+	else
+		return nil
+	end
 end
 
 local function parse_maxspeed(source)
@@ -62,7 +71,7 @@ local function parse_maxspeed(source)
 	if string.match(source, "mph") or string.match(source, "mp/h") then
 		n = (n*1609)/1000;
 	end
-	return n
+	return math.abs(n)
 end
 
 function node_function (node)
@@ -88,7 +97,6 @@ function node_function (node)
 			node.bollard = true
 		end
 	end
-	
 	return 1
 end
 
@@ -107,7 +115,6 @@ function way_function (way, numberOfNodesInWay)
     local junction = way.tags:Find("junction")
     local route = way.tags:Find("route")
     local maxspeed = parse_maxspeed(way.tags:Find ( "maxspeed") )
-    --local man_made = way.tags:Find("man_made")
     local barrier = way.tags:Find("barrier")
     local oneway = way.tags:Find("oneway")
     local cycleway = way.tags:Find("cycleway")
@@ -127,16 +134,6 @@ function way_function (way, numberOfNodesInWay)
 		return 0
     end
 
-    
-  -- Check if our vehicle types are forbidden
---    for i,v in ipairs(access_tags) do 
---      local mode_value = way.tags:Find(v)
---      if nil ~= mode_value and "no" == mode_value then
---	    return 0;
---      end
---    end
-  
-    
   -- Set the name that will be used for instructions  
 	if "" ~= ref then
 	  way.name = ref
@@ -151,29 +148,24 @@ function way_function (way, numberOfNodesInWay)
 	end
 
   -- Handling ferries and piers
-
-    if (speed_profile[route] ~= nil and speed_profile[route] > 0) --or
-       --(speed_profile[man_made] ~= nil and speed_profile[man_made] > 0) 
+    if (speed_profile[route] ~= nil and speed_profile[route] > 0)
     then
       if durationIsValid(duration) then
 	    way.speed = math.max( parseDuration(duration) / math.max(1, numberOfNodesInWay-1) );
-        way.is_duration_set = true;
+        way.is_duration_set = true
       end
-      way.direction = Way.bidirectional;
+      way.direction = Way.bidirectional
       if speed_profile[route] ~= nil then
          highway = route;
-      --elseif speed_profile[man_made] ~= nil then
-      --   highway = man_made;
       end
       if not way.is_duration_set then
         way.speed = speed_profile[highway]
       end
-      
     end
     
   -- Set the avg speed on the way if it is accessible by road class
     if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
-      if (0 < maxspeed and not take_minimum_of_speeds) or (maxspeed == 0) then
+      if 0 == maxspeed then
         maxspeed = math.huge
       end
       way.speed = math.min(speed_profile[highway], maxspeed)
@@ -181,7 +173,7 @@ function way_function (way, numberOfNodesInWay)
     
   -- Set the avg speed on ways that are marked accessible
     if "" ~= highway and access_tag_whitelist[access] and way.speed == -1 then
-      if (0 < maxspeed and not take_minimum_of_speeds) or maxspeed == 0 then
+      if 0 == maxspeed then
         maxspeed = math.huge
       end
       way.speed = math.min(speed_profile["default"], maxspeed)
