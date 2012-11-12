@@ -113,3 +113,23 @@ Feature: Bike - Handle ferry routes
 		 | from | to | route   | time       |
 		 | a    | g  | abcdefg | 23400s +-1 |
 		 | g    | a  | abcdefg | 23400s +-1 |
+
+	Scenario: Bike - Ferry duration, individual parts
+		Given the node map
+		  | x | y |  | z |  |  | v |
+		  | a | b |  | c |  |  | d |
+
+		And the ways
+		 | nodes | highway | route | bicycle | duration |
+		 | xa    | primary |       |         |          |
+		 | yb    | primary |       |         |          |
+		 | zc    | primary |       |         |          |
+		 | vd    | primary |       |         |          |
+		 | abcd  |         | ferry | yes     | 1:00     |
+
+		When I route I should get
+		 | from | to | route | time      |
+		 | a    | d  | abcd  | 3600s +-1 |
+		 | a    | b  | abcd  | 600s +-1  |
+		 | b    | c  | abcd  | 1200s +-1 |
+		 | c    | d  | abcd  | 1800s +-1 |

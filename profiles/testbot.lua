@@ -43,10 +43,19 @@ function way_function (way, numberOfNodesInWay)
 	local highway = way.tags:Find("highway")
 	local name = way.tags:Find("name")
 	local oneway = way.tags:Find("oneway")
+	local route = way.tags:Find("route")
+	local duration = way.tags:Find("duration")
 	
 	way.name = name
-	way.speed = speed_profile[highway] or speed_profile['default']
 
+  	if route ~= nil and durationIsValid(duration) then
+		way.ignore_in_grid = true
+		way.speed = math.max( 1, parseDuration(duration) / math.max(1, numberOfNodesInWay-1) )
+	 	way.is_duration_set = true
+	else
+		way.speed = speed_profile[highway] or speed_profile['default']
+	end
+	
 	if oneway == "no" or oneway == "0" or oneway == "false" then
 		way.direction = Way.bidirectional
 	elseif oneway == "-1" then
