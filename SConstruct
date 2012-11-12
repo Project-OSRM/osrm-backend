@@ -109,7 +109,7 @@ if sys.platform == 'darwin':	#Mac OS X
 	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [boost_prefix+"/include"] )
 	env.Append(LIBPATH = [boost_prefix+"/lib"] )
-	env.ParseConfig('pkg-config --cflags --libs libzip')
+#	env.ParseConfig('pkg-config --cflags --libs libzip')
 	if not conf.CheckLibWithHeader('lua', 'lua.h', 'C'):
 		print "lua library not found. Exiting"
 		Exit(-1)
