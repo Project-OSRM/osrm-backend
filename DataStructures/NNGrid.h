@@ -171,6 +171,7 @@ public:
 //                INFO("Getting fileIndex=" << fileIndex+i+j << " with " << candidates.size() - oldSize << " candidates");
             }
         }
+//        INFO("looked up " << candidates.size());
         _GridEdge smallestEdge;
         _Coordinate tmp, edgeStartCoord, edgeEndCoord;
         double dist = numeric_limits<double>::max();
@@ -181,6 +182,7 @@ public:
                 continue;
             r = 0.;
             tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
+//            INFO("dist " << startCoord << "->[" << candidate.startCoord << "-" << candidate.targetCoord << "]=" << tmpDist );
 //            INFO("Looking at edge " << candidate.edgeBasedNode << " at distance " << tmpDist);
             if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
 //                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist << ", tinyCC: " << (candidate.belongsToTinyComponent ? "yes" : "no"));
@@ -492,22 +494,30 @@ private:
         nY = (d*p - c*q)/(a*d - b*c);
         mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we neednot calculate the values of m an n as we are just interested in the ratio
 //        INFO("p=" << p << ", q=" << q << ", nY=" << nY << ", mX=" << mX);
-        *r = std::isnan(mX) ? 0. : mX;
+        if(std::isnan(mX)) {
+            *r = (target == inputPoint) ? 1. : 0.;
+        } else {
+            *r = mX;
+        }
 //        INFO("r=" << *r);
         if(*r<=0.){
             nearest.lat = source.lat;
             nearest.lon = source.lon;
+//            INFO("a returning distance " << ((b - y)*(b - y) + (a - x)*(a - x)))
             return ((b - y)*(b - y) + (a - x)*(a - x));
         }
         else if(*r >= 1.){
             nearest.lat = target.lat;
             nearest.lon = target.lon;
-            return ((d - y)*(d - y) + (c - x)*(c - x));
+//            INFO("b returning distance " << ((d - y)*(d - y) + (c - x)*(c - x)))
 
+            return ((d - y)*(d - y) + (c - x)*(c - x));
         }
         // point lies in between
         nearest.lat = p;
         nearest.lon = q;
+//        INFO("c returning distance " << (p-x)*(p-x) + (q-y)*(q-y))
+
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
