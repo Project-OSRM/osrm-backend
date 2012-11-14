@@ -33,7 +33,7 @@ template <typename Iterator, class HandlerT>
 struct APIGrammar : qi::grammar<Iterator> {
     APIGrammar(HandlerT * h) : APIGrammar::base_type(api_call), handler(h) {
         api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >> ('?') >> query;
-        query    = (*(zoom | output | jsonp | checksum | location | hint | compressed_geometry | language | instruction) ) ;
+        query    = (*(zoom | output | jsonp | checksum | location | hint | compressed_geometry | language | instruction | alt_route | old_API) ) ;
 
         zoom        = (-qi::lit('&')) >> qi::lit('z')            >> '=' >> qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
         output      = (-qi::lit('&')) >> qi::lit("output")       >> '=' >> string[boost::bind(&HandlerT::setOutputFormat, handler, ::_1)];
@@ -45,12 +45,16 @@ struct APIGrammar : qi::grammar<Iterator> {
         location    = (-qi::lit('&')) >> qi::lit("loc")          >> '=' >> (qi::double_ >> qi::lit(',') >> qi::double_)[boost::bind(&HandlerT::addCoordinate, handler, ::_1)];
         hint        = (-qi::lit('&')) >> qi::lit("hint")         >> '=' >> stringwithDot[boost::bind(&HandlerT::addHint, handler, ::_1)];
         language    = (-qi::lit('&')) >> qi::lit("hl")           >> '=' >> string[boost::bind(&HandlerT::setLanguage, handler, ::_1)];
+        alt_route   = (-qi::lit('&')) >> qi::lit("alt")          >> '=' >> qi::bool_[boost::bind(&HandlerT::setAlternateRouteFlag, handler, ::_1)];
+        old_API     = (-qi::lit('&')) >> qi::lit("geomformat")   >> '=' >> string[boost::bind(&HandlerT::setDeprecatedAPIFlag, handler, ::_1)];
 
         string        = +(qi::char_("a-zA-Z"));
         stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));
     }
     qi::rule<Iterator> api_call, query;
-    qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location, hint, compressed_geometry, stringwithDot, language, instruction, geometry, cmp;
+    qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location, hint,
+                                      compressed_geometry, stringwithDot, language, instruction, geometry,
+                                      cmp, alt_route, old_API;
 
     HandlerT * handler;
 };

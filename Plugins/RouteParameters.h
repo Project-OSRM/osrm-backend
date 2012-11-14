@@ -29,11 +29,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/Coordinate.h"
 
 struct RouteParameters {
-    RouteParameters() : zoomLevel(18), printInstructions(false), geometry(true), compression(true), checkSum(-1) {}
+    RouteParameters() : zoomLevel(18), printInstructions(false), alternateRoute(true), geometry(true), compression(true), deprecatedAPI(false), checkSum(-1) {}
     short zoomLevel;
     bool printInstructions;
+    bool alternateRoute;
     bool geometry;
     bool compression;
+    bool deprecatedAPI;
     int checkSum;
     std::string service;
     std::string outputFormat;
@@ -46,6 +48,14 @@ struct RouteParameters {
     void setZoomLevel(const short i) {
         if (18 > i && 0 < i)
             zoomLevel = i;
+    }
+
+    void setAlternateRouteFlag(const bool b) {
+        alternateRoute = b;
+    }
+
+    void setDeprecatedAPIFlag(const std::string &) {
+        deprecatedAPI = true;
     }
 
     void setChecksum(const int c) {
