@@ -29,6 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cfloat>
 #include <ctime>
 
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "TemporaryStorage.h"
@@ -178,7 +179,7 @@ public:
         std::cout << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
         //        edges.resize( edge );
 
-        _graph.reset( new _DynamicGraph( nodes, edges ) );
+        _graph = boost::make_shared<_DynamicGraph>( nodes, edges );
         edges.clear();
         //        unsigned maxdegree = 0;
         //        NodeID highestNode = 0;
@@ -323,7 +324,7 @@ public:
                 std::sort(newSetOfEdges.begin(), newSetOfEdges.end());
 
                 //int nodes, const ContainerT &graph
-                _graph.reset( new _DynamicGraph(remainingNodes.size(), newSetOfEdges));
+                _graph = boost::make_shared<_DynamicGraph>(remainingNodes.size(), newSetOfEdges);
                 newSetOfEdges.clear();
                 flushedContractor = true;
 
