@@ -109,7 +109,6 @@ if sys.platform == 'darwin':	#Mac OS X
 	boost_prefix = subprocess.check_output(["brew", "--prefix", "boost"]).strip()
 	env.Append(CPPPATH = [boost_prefix+"/include"] )
 	env.Append(LIBPATH = [boost_prefix+"/lib"] )
-#	env.ParseConfig('pkg-config --cflags --libs libzip')
 	if not conf.CheckLibWithHeader('lua', 'lua.h', 'C'):
 		print "lua library not found. Exiting"
 		Exit(-1)
@@ -117,7 +116,6 @@ if sys.platform == 'darwin':	#Mac OS X
 	if not conf.CheckLibWithHeader('luabind', 'luabind/luabind.hpp', 'CXX'):
 		print "luabind library not found. Exiting"
 		Exit(-1)
-
 
 elif sys.platform.startswith("freebsd"):
 	env.ParseConfig('pkg-config --cflags --libs protobuf')
@@ -141,11 +139,10 @@ else:
 	if not conf.CheckLibWithHeader('pthread', 'pthread.h', 'CXX'):
 		print "pthread not found. Exiting"
 		Exit(-1)
-	if not conf.CheckLibWithHeader('zip', 'zip.h', 'CXX'):
-		print "zip library not found. Exiting"
-		Exit(-1)
 	
-	env.ParseConfig('pkg-config --cflags --libs lua5.1')
+	if not conf.CheckLibWithHeader('luajit-5.1', 'luajit-2.0/lua.h', 'CXX'):
+		print "luajit library not found. Checking for interpreter"
+		env.ParseConfig('pkg-config --cflags --libs lua5.1')
 	env.ParseConfig('pkg-config --cflags --libs luabind')
 
 #Check if architecture optimizations shall be turned off
