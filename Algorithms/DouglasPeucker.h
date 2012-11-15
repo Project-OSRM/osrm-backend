@@ -29,15 +29,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/Coordinate.h"
 
 /*This class object computes the bitvector of indicating generalized input points
- * according to the (Ramer-)Douglas-Peucker algorithm. Runtime n\log n calls to fastDistance
+ * according to the (Ramer-)Douglas-Peucker algorithm.
  *
  * Input is vector of pairs. Each pair consists of the point information and a bit
  * indicating if the points is present in the generalization.
  * Note: points may also be pre-selected*/
 
 //These thresholds are more or less heuristically chosen.
-//                                                 0         1        2        3       4         5         6       7       8       9      10     11     12    13    14   15  16  17 18
-static double DouglasPeuckerThresholds[19] = { 32000000, 16240000, 80240000, 40240000, 20000000, 10000000, 500000, 240000, 120000, 60000, 30000, 19000, 5000, 2000, 200, 16,  6, 3, 3 };
+//                                                  0          1         2         3         4          5         6         7       8       9       10     11       12     13    14   15  16  17   18
+static double DouglasPeuckerThresholds[19] = { 32000000., 16240000., 80240000., 40240000., 20000000., 10000000., 500000., 240000., 120000., 60000., 30000., 19000., 5000., 2000., 200, 16,  6, 3. , 3. };
 
 template<class PointT>
 class DouglasPeucker {
@@ -45,57 +45,6 @@ private:
     typedef std::pair<std::size_t, std::size_t> PairOfPoints;
     //Stack to simulate the recursion
     std::stack<PairOfPoints > recursionStack;
-public:
-    void Run(std::vector<PointT> & inputVector, const unsigned zoomLevel) {
-        const unsigned sizeOfInputVector = inputVector.size();
-        {
-            assert(zoomLevel < 19);
-            assert(1 < inputVector.size());
-            std::size_t leftBorderOfRange = 0;
-            std::size_t rightBorderOfRange = 1;
-
-            //Sweep linerarily over array and identify those ranges that need to be checked
-            //decision points have been previously marked
-            do {
-                assert(inputVector[leftBorderOfRange].necessary);
-                assert(inputVector.back().necessary);
-
-                if(inputVector[rightBorderOfRange].necessary) {
-                    recursionStack.push(std::make_pair(leftBorderOfRange, rightBorderOfRange));
-                    leftBorderOfRange = rightBorderOfRange;
-                }
-                ++rightBorderOfRange;
-            } while( rightBorderOfRange < sizeOfInputVector);
-        }
-        while(!recursionStack.empty()) {
-            //pop next element
-            const PairOfPoints pair = recursionStack.top();
-            recursionStack.pop();
-            assert(inputVector[pair.first].necessary);
-            assert(inputVector[pair.second].necessary);
-            assert(pair.second < sizeOfInputVector);
-            assert(pair.first < pair.second);
-            int maxDistance = INT_MIN;
-            std::size_t indexOfFarthestElement = pair.second;
-            //find index idx of element with maxDistance
-            for(std::size_t i = pair.first+1; i < pair.second; ++i){
-                const int distance = fastDistance(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location);
-                if(distance > DouglasPeuckerThresholds[zoomLevel] && distance > maxDistance) {
-                    indexOfFarthestElement = i;
-                    maxDistance = distance;
-                }
-            }
-            if (maxDistance > DouglasPeuckerThresholds[zoomLevel]) {
-                //  mark idx as necessary
-                inputVector[indexOfFarthestElement].necessary = true;
-                if (1 < indexOfFarthestElement - pair.first) {
-                    recursionStack.push(std::make_pair(pair.first, indexOfFarthestElement) );
-                }
-                if (1 < pair.second - indexOfFarthestElement)
-                    recursionStack.push(std::make_pair(indexOfFarthestElement, pair.second) );
-            }
-        }
-    }
 
     /**
      * This distance computation does integer arithmetic only and is about twice as fast as
@@ -124,6 +73,57 @@ public:
         return dist;
     }
 
+
+public:
+    void Run(std::vector<PointT> & inputVector, const unsigned zoomLevel) {
+        {
+            assert(zoomLevel < 19);
+            assert(1 < inputVector.size());
+            std::size_t leftBorderOfRange = 0;
+            std::size_t rightBorderOfRange = 1;
+            //Sweep linerarily over array and identify those ranges that need to be checked
+//            recursionStack.hint(inputVector.size());
+            do {
+                assert(inputVector[leftBorderOfRange].necessary);
+                assert(inputVector.back().necessary);
+
+                if(inputVector[rightBorderOfRange].necessary) {
+                    recursionStack.push(std::make_pair(leftBorderOfRange, rightBorderOfRange));
+                    leftBorderOfRange = rightBorderOfRange;
+                }
+                ++rightBorderOfRange;
+            } while( rightBorderOfRange < inputVector.size());
+        }
+        while(!recursionStack.empty()) {
+            //pop next element
+            const PairOfPoints pair = recursionStack.top();
+            recursionStack.pop();
+            assert(inputVector[pair.first].necessary);
+            assert(inputVector[pair.second].necessary);
+            assert(pair.second < inputVector.size());
+            assert(pair.first < pair.second);
+            int maxDistance = INT_MIN;
+
+            std::size_t indexOfFarthestElement = pair.second;
+            //find index idx of element with maxDistance
+            for(std::size_t i = pair.first+1; i < pair.second; ++i){
+                const double distance = std::fabs(fastDistance(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
+                if(distance > DouglasPeuckerThresholds[zoomLevel] && distance > maxDistance) {
+                    indexOfFarthestElement = i;
+                    maxDistance = distance;
+                }
+            }
+            if (maxDistance > DouglasPeuckerThresholds[zoomLevel]) {
+                //  mark idx as necessary
+                inputVector[indexOfFarthestElement].necessary = true;
+                if (1 < indexOfFarthestElement - pair.first) {
+                    recursionStack.push(std::make_pair(pair.first, indexOfFarthestElement) );
+                }
+                if (1 < pair.second - indexOfFarthestElement)
+                    recursionStack.push(std::make_pair(indexOfFarthestElement, pair.second) );
+            }
+        }
+    }
 };
 
 #endif /* DOUGLASPEUCKER_H_ */
