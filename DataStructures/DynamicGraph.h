@@ -25,6 +25,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <algorithm>
 #include <limits>
 
+#include "../DataStructures/DeallocatingVector.h"
+
 template< typename EdgeDataT>
 class DynamicGraph {
     public:
@@ -231,8 +233,8 @@ class DynamicGraph {
         NodeIterator m_numNodes;
         EdgeIterator m_numEdges;
 
-        std::vector< Node > m_nodes;
-        std::vector< Edge > m_edges;
+       DeallocatingVector< Node > m_nodes;
+       DeallocatingVector< Edge > m_edges;
 };
 
 #endif // DYNAMICGRAPH_H_INCLUDED
