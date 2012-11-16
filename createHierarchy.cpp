@@ -74,16 +74,16 @@ int main (int argc, char *argv[]) {
 
     double startupTime = get_timestamp();
     unsigned numberOfThreads = omp_get_num_procs();
-    std::string SRTM_ROOT;
+//    std::string SRTM_ROOT;
     if(testDataFile("contractor.ini")) {
         ContractorConfiguration contractorConfig("contractor.ini");
         if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
             numberOfThreads = (unsigned)atoi( contractorConfig.GetParameter("Threads").c_str() );
-        if(0 < contractorConfig.GetParameter("SRTM").size() )
-            SRTM_ROOT = contractorConfig.GetParameter("SRTM");
+//        if(0 < contractorConfig.GetParameter("SRTM").size() )
+//            SRTM_ROOT = contractorConfig.GetParameter("SRTM");
     }
-    if(0 != SRTM_ROOT.size())
-        INFO("Loading SRTM from/to " << SRTM_ROOT);
+//    if(0 != SRTM_ROOT.size())
+//        INFO("Loading SRTM from/to " << SRTM_ROOT);
     omp_set_num_threads(numberOfThreads);
 
     INFO("Using restrictions from file: " << argv[2]);
@@ -111,18 +111,10 @@ int main (int argc, char *argv[]) {
     char fileIndexOut[1024];    strcpy(fileIndexOut, argv[1]);    	strcat(fileIndexOut, ".fileIndex");
     char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
 
-    std::vector<ImportEdge> edgeList;
-    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
-    in.close();
-    INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
-    if(0 == edgeList.size())
-        ERR("The input data is broken. It is impossible to do any turns in this graph");
-
-
+    /*** Setup Scripting Environment ***/
     if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
         ERR("Need profile.lua to apply traffic signal penalty");
     }
-    /*** Setup Scripting Environment ***/
 
     // Create a new lua state
     lua_State *myLuaState = luaL_newstate();
@@ -132,7 +124,7 @@ int main (int argc, char *argv[]) {
 
 
     // Now call our function in a lua script
-	INFO("Parsing speedprofile from " << (argc > 3 ? argv[3] : "profile.lua") );
+    INFO("Parsing speedprofile from " << (argc > 3 ? argv[3] : "profile.lua") );
     if(0 != luaL_dofile(myLuaState, (argc > 3 ? argv[3] : "profile.lua") )) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
@@ -148,6 +140,15 @@ int main (int argc, char *argv[]) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
+
+
+
+    std::vector<ImportEdge> edgeList;
+    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
+    in.close();
+    INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
+    if(0 == edgeList.size())
+        ERR("The input data is broken. It is impossible to do any turns in this graph");
 
 
     /***
