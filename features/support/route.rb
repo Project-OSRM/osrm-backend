@@ -4,7 +4,7 @@ DESTINATION_REACHED = 15      #OSRM instruction code
 
 
 def request_route a,b
-  @query = "http://localhost:5000/viaroute?loc=#{a}&loc=#{b}&output=json&geomformat=cmp"
+  @query = "http://localhost:5000/viaroute?loc=#{a}&loc=#{b}&output=json"
   #log @query
   uri = URI.parse @query
   Net::HTTP.get_response uri
