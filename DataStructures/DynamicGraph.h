@@ -80,7 +80,7 @@ class DynamicGraph {
                     m_edges[i].target = graph[edge].target;
                     m_edges[i].data = graph[edge].data;
                     GUARANTEE(graph[edge].data.distance > 0, "edge: " << edge << "(" << graph[edge].source << "," << graph[edge].target << ")=" << graph[edge].data.distance);
-                    edge++;
+                    ++edge;
                 }
             }
         }
