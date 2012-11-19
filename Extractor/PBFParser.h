@@ -34,8 +34,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BaseParser.h"
 #include "ExtractorCallbacks.h"
 #include "ExtractorStructs.h"
+#include "ScriptingEnvironment.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ConcurrentQueue.h"
+#include "../Util/OpenMPWrapper.h"
 
 class PBFParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> {
 
@@ -68,9 +70,10 @@ class PBFParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionCo
     };
 
 public:
-    PBFParser(const char * fileName) : externalMemory(NULL), myLuaState(NULL) {
+    PBFParser(const char * fileName) : externalMemory(NULL){
         GOOGLE_PROTOBUF_VERIFY_VERSION;
         //TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
+        //NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
         threadDataQueue = boost::make_shared<ConcurrentQueue<_ThreadData*> >( 2500 ); /* Max 2500 items in queue, hardcoded. */
         input.open(fileName, std::ios::in | std::ios::binary);
 
@@ -88,8 +91,9 @@ public:
         externalMemory = em;
     }
 
-    void RegisterLUAState(lua_State *ml) {
-        myLuaState = ml;
+    //call by value, but who cares. It is done once.
+    void RegisterScriptingEnvironment(ScriptingEnvironment & _se) {
+        scriptingEnvironment = _se;
     }
 
     ~PBFParser() {
@@ -210,8 +214,7 @@ private:
         int m_lastDenseLongitude = 0;
 
         ImportNode n;
-		
-		//TODO: abbruchschwellenwert initialisieren
+		std::vector<ImportNode> nodesToParse;
         for(int i = 0, idSize = dense.id_size(); i < idSize; ++i) {
 			n.Clear();
             m_lastDenseID += dense.id( i );
@@ -232,25 +235,34 @@ private:
                 n.keyVals.Add(key, value);
                 denseTagIndex += 2;
             }
+            nodesToParse.push_back(n);
+        }
 
-			//TODO: store in container and process in bulk
+        unsigned endi_nodes = nodesToParse.size();
+#pragma omp parallel for schedule ( guided )
+        for(unsigned i = 0; i < endi_nodes; ++i) {
+            ImportNode &n = nodesToParse[i];
             /** Pass the unpacked node to the LUA call back **/
             try {
                 luabind::call_function<int>(
-                        myLuaState,
+                        scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()),
                         "node_function",
                         boost::ref(n)
                 );
-                if(!externalMemory->nodeFunction(n))
-                    std::cerr << "[PBFParser] dense node not parsed" << std::endl;
             } catch (const luabind::error &er) {
-                cerr << er.what() << endl;
                 lua_State* Ler=er.state();
                 report_errors(Ler, -1);
+                ERR(er.what());
             }
-            catch (...) {
-                ERR("Unknown error occurred during PBF dense node parsing!");
-            }
+//            catch (...) {
+//                ERR("Unknown error occurred during PBF dense node parsing!");
+//            }
+        }
+
+
+        BOOST_FOREACH(ImportNode &n, nodesToParse) {
+            if(!externalMemory->nodeFunction(n))
+                std::cerr << "[PBFParser] dense node not parsed" << std::endl;
         }
     }
 
@@ -338,9 +350,9 @@ private:
     }
 
     inline void parseWay(_ThreadData * threadData) {
-        if( threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size() > 0) {
             _Way w;
-            for(int i = 0; i < threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size(); ++i) {
+            std::vector<_Way> waysToParse(threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size());
+            for(int i = 0, ways_size = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size(); i < ways_size; ++i) {
 				w.Clear();
                 const OSMPBF::Way& inputWay = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways( i );
                 w.id = inputWay.id();
@@ -356,29 +368,37 @@ private:
                     w.keyVals.Add(key, val);
                 }
 
+                waysToParse.push_back(w);
+            }
 
-				//TODO: store in container and process in bulk
+            unsigned endi_ways = waysToParse.size();
+#pragma omp parallel for schedule ( guided )
+            for(unsigned i = 0; i < endi_ways; ++i) {
+                _Way & w = waysToParse[i];
                 /** Pass the unpacked way to the LUA call back **/
                 try {
                     luabind::call_function<int>(
-                        myLuaState,
+                        scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()),
                         "way_function",
                         boost::ref(w),
                         w.path.size()
                     );
-                    if(!externalMemory->wayFunction(w)) {
-                        std::cerr << "[PBFParser] way not parsed" << std::endl;
-                    }
+
                 } catch (const luabind::error &er) {
                     lua_State* Ler=er.state();
                     report_errors(Ler, -1);
                     ERR(er.what());
                 }
-                catch (...) {
-                    ERR("Unknown error!");
+//                catch (...) {
+//                    ERR("Unknown error!");
+//                }
+            }
+
+            BOOST_FOREACH(_Way & w, waysToParse) {
+                if(!externalMemory->wayFunction(w)) {
+                    std::cerr << "[PBFParser] way not parsed" << std::endl;
                 }
             }
-        }
     }
 
     inline void loadGroup(_ThreadData * threadData) {
@@ -412,7 +432,7 @@ private:
         threadData->currentEntityID = 0;
     }
 
-    /* Reverses Network Byte Order into something usable */
+    /* Reverses Network Byte Order into something usable, compiles down to a bswap-mov combination */
     inline unsigned swapEndian(unsigned x) const {
         if(getMachineEndianness() == LittleEndian)
             return ( (x>>24) | ((x<<8) & 0x00FF0000) | ((x>>8) & 0x0000FF00) | (x<<24) );
@@ -548,7 +568,7 @@ private:
         return true;
     }
 
-	//TODO: gets called multiple times, save information instead of recomputing.
+	//Is optimized to a single 'mov eax,1' on GCC, clang and icc using -O3
     inline Endianness getMachineEndianness() const {
         int i(1);
         char *p = (char *) &i;
@@ -574,7 +594,7 @@ private:
     /* ThreadData Queue */
     boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;
 
-    lua_State *myLuaState;
+    ScriptingEnvironment scriptingEnvironment;
 };
 
 #endif /* PBFPARSER_H_ */

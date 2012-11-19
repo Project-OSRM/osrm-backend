@@ -23,6 +23,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EXTRACTIONHELPERFUNCTIONS_H_
 #define EXTRACTIONHELPERFUNCTIONS_H_
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string_regex.hpp>
+#include <boost/regex.hpp>
+
 #include <climits>
 
 //TODO: Move into LUA

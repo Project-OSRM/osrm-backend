@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BaseParser.h"
 #include "ExtractorStructs.h"
 #include "ExtractorCallbacks.h"
+#include "ScriptingEnvironment.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/InputReaderFactory.h"
 
@@ -43,8 +44,8 @@ public:
         externalMemory = em;
     }
 
-    void RegisterLUAState(lua_State *ml) {
-        myLuaState = ml;
+    void RegisterScriptingEnvironment(ScriptingEnvironment & _se) {
+        myLuaState = _se.getLuaStateForThreadID(0);
     }
 
     bool Init() {

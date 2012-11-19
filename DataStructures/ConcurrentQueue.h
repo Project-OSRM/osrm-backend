@@ -37,7 +37,7 @@ class ConcurrentQueue {
 public:
     ConcurrentQueue(const size_t max_size) : internal_queue(max_size) { }
 
-    void push(Data const& data) {
+    inline void push(Data const& data) {
         boost::mutex::scoped_lock lock(m_mutex);
         m_not_full.wait(lock, boost::bind(&ConcurrentQueue<Data>::is_not_full, this));
         internal_queue.push_back(data);
@@ -45,11 +45,11 @@ public:
         m_not_empty.notify_one();
     }
 
-    bool empty() const {
+    inline bool empty() const {
         return internal_queue.empty();
     }
 
-    void wait_and_pop(Data& popped_value) {
+    inline void wait_and_pop(Data& popped_value) {
         boost::mutex::scoped_lock lock(m_mutex);
         m_not_empty.wait(lock, boost::bind(&ConcurrentQueue<Data>::is_not_empty, this));
         popped_value=internal_queue.front();
@@ -58,7 +58,7 @@ public:
         m_not_full.notify_one();
     }
 
-    bool try_pop(Data& popped_value) {
+    inline bool try_pop(Data& popped_value) {
         boost::mutex::scoped_lock lock(m_mutex);
         if(internal_queue.empty()) {
             return false;

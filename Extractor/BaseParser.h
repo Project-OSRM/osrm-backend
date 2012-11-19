@@ -21,7 +21,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASEPARSER_H_
 #define BASEPARSER_H_
 
-#include <luabind/luabind.hpp>
+extern "C" {
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+}
+
+#include "ScriptingEnvironment.h"
 
 template<class ExternalMemoryT, typename NodeT, typename RestrictionT, typename WayT>
 class BaseParser {
@@ -29,7 +35,7 @@ public:
     virtual ~BaseParser() {}
     virtual bool Init() = 0;
     virtual void RegisterCallbacks(ExternalMemoryT * externalMemory) = 0;
-    virtual void RegisterLUAState(lua_State *myLuaState) = 0;
+    virtual void RegisterScriptingEnvironment(ScriptingEnvironment & _se) = 0;
     virtual bool Parse() = 0;
 
     void report_errors(lua_State *L, int status) {
