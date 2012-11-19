@@ -183,13 +183,6 @@ int main (int argc, char *argv[]) {
     std::vector<OriginalEdgeData> originalEdgeData;
     edgeBasedGraphFactory->GetOriginalEdgeData(originalEdgeData);
 
-//    std::ofstream oedOutFile(edgeOut, std::ios::binary);
-//    unsigned numberOfOrigEdges = originalEdgeData.size();
-//    oedOutFile.write((char*)&numberOfOrigEdges, sizeof(unsigned));
-//    oedOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
-//    oedOutFile.close();
-//    std::vector<OriginalEdgeData>().swap(originalEdgeData);
-
     DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
     delete edgeBasedGraphFactory;
