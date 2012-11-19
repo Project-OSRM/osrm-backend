@@ -29,7 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class PolylineCompressor {
 private:
-	inline void encodeVectorSignedNumber(std::vector<int> & numbers, std::string & output) {
+	inline void encodeVectorSignedNumber(std::vector<int> & numbers, std::string & output) const {
 		for(unsigned i = 0; i < numbers.size(); ++i) {
 			numbers[i] <<= 1;
 			if (numbers[i] < 0) {
@@ -41,7 +41,7 @@ private:
 		}
 	}
 
-	inline void encodeNumber(int numberToEncode, std::string & output) {
+	inline void encodeNumber(int numberToEncode, std::string & output) const {
 		while (numberToEncode >= 0x20) {
 			int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
 			output += (static_cast<char> (nextValue));
@@ -57,7 +57,7 @@ private:
 	}
 
 public:
-    inline void printEncodedString(const std::vector<SegmentInformation>& polyline, std::string &output) {
+    inline void printEncodedString(const std::vector<SegmentInformation>& polyline, std::string &output) const {
     	std::vector<int> deltaNumbers;
         output += "\"";
         if(!polyline.empty()) {
@@ -77,7 +77,7 @@ public:
 
     }
 
-	inline void printEncodedString(const std::vector<_Coordinate>& polyline, std::string &output) {
+	inline void printEncodedString(const std::vector<_Coordinate>& polyline, std::string &output) const {
 		std::vector<int> deltaNumbers(2*polyline.size());
 		output += "\"";
 		if(!polyline.empty()) {
@@ -92,7 +92,7 @@ public:
 		output += "\"";
 	}
 
-    inline void printUnencodedString(std::vector<_Coordinate> & polyline, std::string & output) {
+    inline void printUnencodedString(std::vector<_Coordinate> & polyline, std::string & output) const {
         output += "[";
         std::string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
@@ -110,7 +110,7 @@ public:
         output += "]";
     }
 
-    inline void printUnencodedString(std::vector<SegmentInformation> & polyline, std::string & output) {
+    inline void printUnencodedString(std::vector<SegmentInformation> & polyline, std::string & output) const {
         output += "[";
         std::string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
