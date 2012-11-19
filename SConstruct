@@ -145,7 +145,9 @@ else:
 		print "zip library not found. Exiting"
 		Exit(-1)
 	
-	env.ParseConfig('pkg-config --cflags --libs lua5.1')
+	if not conf.CheckLibWithHeader('luajit-5.1', 'luajit-2.0/lua.h', 'CXX'):
+		print "luajit library not found. Checking for interpreter"
+		env.ParseConfig('pkg-config --cflags --libs lua5.1')
 	env.ParseConfig('pkg-config --cflags --libs luabind')
 
 #Check if architecture optimizations shall be turned off
