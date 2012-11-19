@@ -25,16 +25,6 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         unsigned usedNodeCounter = 0;
         unsigned usedEdgeCounter = 0;
         double time = get_timestamp();
-        //        INFO("raw no. of names:        " << nameVector.size());
-        //        INFO("raw no. of nodes:        " << allNodes.size());
-        //        INFO("no. of used nodes:       " << usedNodeIDs.size());
-        //        INFO("raw no. of edges:        " << allEdges.size());
-        //        INFO("raw no. of ways:         " << wayStartEndVector.size());
-        //        INFO("raw no. of addresses:    " << adressVector.size());
-        //        INFO("raw no. of restrictions: " << restrictionsVector.size());
-
-        cout << "[extractor] parsing finished after " << get_timestamp() - time << " seconds" << endl;
-        time = get_timestamp();
         boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
         cout << "[extractor] Sorting used nodes        ... " << flush;

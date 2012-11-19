@@ -170,15 +170,17 @@ int main (int argc, char *argv[]) {
     parser->RegisterLUAState(myLuaState);
 
     if(!parser->Init())
-        INFO("Parser not initialized!");
+        ERR("Parser not initialized!");
+    double time = get_timestamp();
     parser->Parse();
+    INFO("parsing finished after " << get_timestamp() - time << " seconds");
 
     externalMemory.PrepareData(outputFileName, restrictionsFileName, amountOfRAM);
 
     stringMap.clear();
     delete parser;
     delete extractCallBacks;
-    INFO("[extractor] finished.");
+    INFO("finished");
     std::cout << "\nRun:\n"
                    "./osrm-prepare " << outputFileName << " " << restrictionsFileName << std::endl;
     return 0;
