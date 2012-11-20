@@ -16,7 +16,7 @@ areas = {
   :frd => { :country => 'denmark', :bbox => 'top=55.7007 left=12.4765 bottom=55.6576 right=12.5698' },
   :regh => { :country => 'denmark', :bbox => 'top=56.164 left=11.792 bottom=55.403 right=12.731' },
   :dk => { :country => 'denmark', :bbox => nil },
-  :skaane => { :counry => 'sweden', :bbox => 'top=56.55 left=12.4 bottom=55.3 right=14.6' }
+  :skaane => { :country => 'sweden', :bbox => 'top=56.55 left=12.4 bottom=55.3 right=14.6' }
 }
 
 
