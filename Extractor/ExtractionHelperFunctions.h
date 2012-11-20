@@ -26,8 +26,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
 #include <boost/regex.hpp>
-
 #include <climits>
+
+#include "../Util/StringUtil.h"
 
 //TODO: Move into LUA
 
@@ -49,8 +50,8 @@ inline unsigned parseDuration(const std::string &s) {
     boost::algorithm::split_regex( result, s, boost::regex( ":" ) ) ;
     bool matched = regex_match(s, e);
     if(matched) {
-        hours = (result.size()== 2) ?  atoi(result[0].c_str()) : 0;
-        minutes = (result.size()== 2) ?  atoi(result[1].c_str()) : atoi(result[0].c_str());
+        hours = (result.size()== 2) ?  stringToInt(result[0]) : 0;
+        minutes = (result.size()== 2) ?  stringToInt(result[1]) : stringToInt(result[0]);
         return 600*(hours*60+minutes);
     }
     return UINT_MAX;
@@ -58,7 +59,7 @@ inline unsigned parseDuration(const std::string &s) {
 
 inline int parseMaxspeed(std::string input) { //call-by-value on purpose.
     boost::algorithm::to_lower(input);
-    int n = atoi(input.c_str());
+    int n = stringToInt(input);
     if (input.find("mph") != std::string::npos || input.find("mp/h") != std::string::npos) {
         n = (n*1609)/1000;
     }

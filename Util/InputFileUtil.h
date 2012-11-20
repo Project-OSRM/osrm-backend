@@ -26,7 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 // Check if file exists and if it can be opened for reading with ifstream an object
-inline bool testDataFile(const char *filename){
+inline bool testDataFile(const std::string & filename){
     boost::filesystem::path fileToTest(filename);
 	if(!boost::filesystem::exists(fileToTest))       {
 		WARN("Failed to open file " << filename << " for reading.");

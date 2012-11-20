@@ -27,8 +27,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <sstream>
 
 #include <boost/spirit/include/karma.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include "../DataStructures/Coordinate.h"
+#include "../typedefs.h"
 
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
@@ -66,6 +68,16 @@ static inline void intToString(const int value, std::string & output) {
     output.clear();
     std::back_insert_iterator<std::string> sink(output);
     boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
+}
+
+static inline int stringToInt(const std::string& input) {
+    std::string::const_iterator realBeginOfNumber = input.begin();
+    //Delete any trailing white-spaces
+    while(realBeginOfNumber != input.end() && std::isspace(*realBeginOfNumber))
+        ++realBeginOfNumber;
+    int value = 0; // 2
+    boost::spirit::qi::parse(realBeginOfNumber, input.end(), boost::spirit::int_, value); // 3
+    return value;
 }
 
 static inline void convertInternalLatLonToString(const int value, std::string & output) {

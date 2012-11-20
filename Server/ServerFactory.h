@@ -25,42 +25,40 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef SERVERFACTORY_H_
 #define SERVERFACTORY_H_
 
-#include <cstdlib>
+#include <zlib.h>
 
 #include "Server.h"
 #include "ServerConfiguration.h"
 
 #include "../Util/InputFileUtil.h"
 #include "../Util/OpenMPWrapper.h"
+#include "../Util/StringUtil.h"
+
+#include "../typedefs.h"
 
 typedef http::Server Server;
 
 struct ServerFactory {
 	static Server * CreateServer(ServerConfiguration& serverConfig) {
 
-		if(!testDataFile(serverConfig.GetParameter("nodesData").c_str())) {
-			std::cerr << "[error] nodes file not found" << std::endl;
-			exit(-1);
+		if(!testDataFile(serverConfig.GetParameter("nodesData"))) {
+			ERR("nodes file not found");
 		}
 
-		if(!testDataFile(serverConfig.GetParameter("hsgrData").c_str())) {
-			std::cerr << "[error] hsgr file not found" << std::endl;
-			exit(-1);
+		if(!testDataFile(serverConfig.GetParameter("hsgrData"))) {
+		    ERR("hsgr file not found");
 		}
 
-		if(!testDataFile(serverConfig.GetParameter("namesData").c_str())) {
-			std::cerr << "[error] names file not found" << std::endl;
-			exit(-1);
+		if(!testDataFile(serverConfig.GetParameter("namesData"))) {
+		    ERR("names file not found");
 		}
 
-		if(!testDataFile(serverConfig.GetParameter("ramIndex").c_str())) {
-			std::cerr << "[error] ram index file not found" << std::endl;
-			exit(-1);
+		if(!testDataFile(serverConfig.GetParameter("ramIndex"))) {
+		    ERR("ram index file not found");
 		}
 
-		if(!testDataFile(serverConfig.GetParameter("fileIndex").c_str())) {
-			std::cerr << "[error] file index file not found" << std::endl;
-			exit(-1);
+		if(!testDataFile(serverConfig.GetParameter("fileIndex"))) {
+		    ERR("file index file not found");
 		}
 
 		unsigned threads = omp_get_num_procs();
@@ -69,8 +67,8 @@ struct ServerFactory {
 		if(serverConfig.GetParameter("Port") == "")
 			serverConfig.SetParameter("Port", "5000");
 
-		if(atoi(serverConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(serverConfig.GetParameter("Threads").c_str()) <= threads)
-			threads = atoi( serverConfig.GetParameter("Threads").c_str() );
+		if(stringToInt(serverConfig.GetParameter("Threads")) != 0 && stringToInt(serverConfig.GetParameter("Threads")) <= threads)
+			threads = stringToInt( serverConfig.GetParameter("Threads") );
 
 		std::cout << "[server] http 1.1 compression handled by zlib version " << zlibVersion() << std::endl;
 		Server * server = new Server(serverConfig.GetParameter("IP"), serverConfig.GetParameter("Port"), threads);
