@@ -54,6 +54,7 @@ extern "C" {
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
+#include "Util/StringUtil.h"
 
 using namespace std;
 
@@ -74,16 +75,12 @@ int main (int argc, char *argv[]) {
 
     double startupTime = get_timestamp();
     unsigned numberOfThreads = omp_get_num_procs();
-//    std::string SRTM_ROOT;
     if(testDataFile("contractor.ini")) {
         ContractorConfiguration contractorConfig("contractor.ini");
-        if(atoi(contractorConfig.GetParameter("Threads").c_str()) != 0 && (unsigned)atoi(contractorConfig.GetParameter("Threads").c_str()) <= numberOfThreads)
-            numberOfThreads = (unsigned)atoi( contractorConfig.GetParameter("Threads").c_str() );
-//        if(0 < contractorConfig.GetParameter("SRTM").size() )
-//            SRTM_ROOT = contractorConfig.GetParameter("SRTM");
+        unsigned rawNumber = stringToInt(contractorConfig.GetParameter("Threads"));
+        if(rawNumber != 0 && rawNumber <= numberOfThreads)
+            numberOfThreads = rawNumber;
     }
-//    if(0 != SRTM_ROOT.size())
-//        INFO("Loading SRTM from/to " << SRTM_ROOT);
     omp_set_num_threads(numberOfThreads);
 
     INFO("Using restrictions from file: " << argv[2]);
