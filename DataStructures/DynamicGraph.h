@@ -55,7 +55,7 @@ class DynamicGraph {
             m_edges.resize( m_numNodes );
         }
         template<class ContainerT>
-        DynamicGraph( int nodes, const ContainerT &graph )
+        DynamicGraph( const int nodes, const ContainerT &graph )
         {
             m_numNodes = nodes;
             m_numEdges = ( EdgeIterator ) graph.size();
@@ -235,6 +235,7 @@ class DynamicGraph {
 
        DeallocatingVector< Node > m_nodes;
        DeallocatingVector< Edge > m_edges;
+
 };
 
 #endif // DYNAMICGRAPH_H_INCLUDED
