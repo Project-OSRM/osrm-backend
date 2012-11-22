@@ -43,6 +43,9 @@ int main (int argc, char *argv[]) {
         ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf> [<profile.lua>]");
     }
 
+    /*** Setup Scripting Environment ***/
+    ScriptingEnvironment scriptingEnvironment((argc > 2 ? argv[2] : "profile.lua"));
+
     unsigned numberOfThreads = omp_get_num_procs();
     if(testDataFile("extractor.ini")) {
         ExtractorConfiguration extractorConfig("extractor.ini");
@@ -87,8 +90,6 @@ int main (int argc, char *argv[]) {
     StringMap stringMap;
     ExtractionContainers externalMemory;
 
-    /*** Setup Scripting Environment ***/
-    ScriptingEnvironment scriptingEnvironment((argc > 2 ? argv[2] : "profile.lua"));
 
     stringMap[""] = 0;
     extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
