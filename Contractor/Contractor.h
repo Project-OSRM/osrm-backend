@@ -32,8 +32,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <stxxl.h>
-
 #include "TemporaryStorage.h"
 #include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
@@ -109,7 +107,8 @@ public:
 
     template<class ContainerT >
     Contractor( int nodes, ContainerT& inputEdges) {
-        stxxl::vector< _ContractorEdge > edges;
+        std::vector< _ContractorEdge > edges;
+        edges.reserve(inputEdges.size()*2);
 
         typename ContainerT::deallocation_iterator diter = inputEdges.dbegin();
         typename ContainerT::deallocation_iterator dend  = inputEdges.dend();
@@ -136,7 +135,6 @@ public:
         }
         //clear input vector and trim the current set of edges with the well-known swap trick
         inputEdges.clear();
-
         sort( edges.begin(), edges.end() );
         NodeID edge = 0;
         for ( NodeID i = 0; i < edges.size(); ) {
@@ -182,9 +180,10 @@ public:
             }
         }
         std::cout << "merged " << edges.size() - edge << " edges out of " << edges.size() << std::endl;
-        //        edges.resize( edge );
+        edges.resize( edge );
         _graph = boost::make_shared<_DynamicGraph>( nodes, edges );
         edges.clear();
+        std::vector<_ContractorEdge>().swap(edges);
         //        unsigned maxdegree = 0;
         //        NodeID highestNode = 0;
         //
@@ -325,9 +324,8 @@ public:
 
                 //create new graph
                 std::sort(newSetOfEdges.begin(), newSetOfEdges.end());
-
-                //int nodes, const ContainerT &graph
                 _graph = boost::make_shared<_DynamicGraph>(remainingNodes.size(), newSetOfEdges);
+
                 newSetOfEdges.clear();
                 flushedContractor = true;
 
