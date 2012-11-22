@@ -135,7 +135,7 @@ public:
         mState.mIndex--; mState.setPointerForIndex();
         return DeallocatingVectorIterator(_myState);
     }
-            
+
     inline DeallocatingVectorIterator operator+(const difference_type& n) const {
         DeallocatingVectorIteratorState _myState(mState);
         _myState.mIndex+=n; _myState.setPointerForIndex();
@@ -217,11 +217,13 @@ public:
         //Delete[]'ing ptr's to all Buckets
         for(unsigned i = 0; i < mBucketList.size(); ++i) {
             if(DEALLOCATION_VECTOR_NULL_PTR != mBucketList[i]) {
-                delete[] (mBucketList[i]);
+                delete[] mBucketList[i];
+                mBucketList[i] = DEALLOCATION_VECTOR_NULL_PTR;
             }
         }
         //Removing all ptrs from vector
         std::vector<ElementT *>().swap(mBucketList);
+        mCurrentSize = 0;
     }
 
     inline void push_back(const ElementT & element) {
