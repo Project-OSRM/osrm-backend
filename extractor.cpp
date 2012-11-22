@@ -32,6 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
+#include "Util/StringUtil.h"
 
 typedef BaseConfiguration ExtractorConfiguration;
 
@@ -41,6 +42,16 @@ int main (int argc, char *argv[]) {
     if(argc < 2) {
         ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf> [<profile.lua>]");
     }
+
+    unsigned numberOfThreads = omp_get_num_procs();
+    if(testDataFile("extractor.ini")) {
+        ExtractorConfiguration extractorConfig("extractor.ini");
+        unsigned rawNumber = stringToInt(extractorConfig.GetParameter("Threads"));
+        if( rawNumber != 0 && rawNumber <= numberOfThreads)
+            numberOfThreads = rawNumber;
+    }
+    omp_set_num_threads(numberOfThreads);
+
 
     INFO("extracting data from input file " << argv[1]);
     bool isPBF(false);
