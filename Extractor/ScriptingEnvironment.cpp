@@ -32,8 +32,10 @@ extern "C" {
 
 ScriptingEnvironment::ScriptingEnvironment() {}
 ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
+	INFO("Using script " << fileName);
+
     // Create a new lua state
-    for(unsigned i = 0; i < omp_get_max_threads(); ++i)
+    for(int i = 0; i < omp_get_max_threads(); ++i)
         luaStateVector.push_back(luaL_newstate());
 
     // Connect LuaBind to this lua state for all threads
