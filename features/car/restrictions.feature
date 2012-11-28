@@ -197,3 +197,55 @@ Feature: Car - Turn restrictions
 		 | s    | w  |       |
 		 | s    | n  | sj,nj |
 		 | s    | e  |       |
+
+  	@except @todo
+  	Scenario: Bike - Except tag and on no_ restrictions
+  		Given the node map
+  		 | b | x | c |
+  		 | a | j | d |
+  		 |   | s |   |
+
+  		And the ways
+  		 | nodes | oneway |
+  		 | sj    | yes    |
+  		 | xj    | -1     |
+  		 | aj    | -1     |
+  		 | bj    | -1     |
+  		 | cj    | -1     |
+  		 | dj    | -1     |
+
+  		And the relations
+  		 | from | to | via | restriction   | except  |
+  		 | sj   | aj | j   | no_left_turn  | motorcar |
+  		 | sj   | bj | j   | no_left_turn  |         |
+  		 | sj   | cj | j   | no_right_turn | motorcar |
+  		 | sj   | dj | j   | no_right_turn |         |
+
+  		When I route I should get
+  		 | from | to | route |
+  		 | s    | a  | sj,aj |
+  		 | s    | b  |       |
+  		 | s    | c  |       |
+  		 | s    | d  | sj,dj |
+
+   	@except @todo
+   	Scenario: Bike - Except tag and on only_ restrictions
+   		Given the node map
+   		 | a |   | b |
+   		 |   | j |   |
+   		 |   | s |   |
+
+   		And the ways
+   		 | nodes | oneway |
+   		 | sj    | yes    |
+   		 | aj    | -1     |
+   		 | bj    | -1     |
+
+   		And the relations
+   		 | from | to | via | restriction      | except  |
+   		 | sj   | aj | j   | only_straight_on | motorcar |
+
+   		When I route I should get
+   		 | from | to | route |
+   		 | s    | a  | sj,aj |
+   		 | s    | b  | sj,bj |
