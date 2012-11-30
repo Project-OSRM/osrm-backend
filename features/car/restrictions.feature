@@ -14,15 +14,15 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction  |
-		 | sj   | wj | j   | no_left_turn |
+		 | type        | way:from | way:to | node:via | restriction  |
+		 | restriction | sj       | wj     | j        | no_left_turn |
 
 		When I route I should get
 		 | from | to | route |
@@ -38,15 +38,15 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction   |
-		 | sj   | ej | j   | no_right_turn |
+		 | type        | way:from | way:to | node:via | restriction   |
+		 | restriction | sj       | ej     | j        | no_right_turn |
 
 		When I route I should get
 		 | from | to | route |
@@ -62,15 +62,15 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction |
-		 | sj   | wj | j   | no_u_turn   |
+		 | type        | way:from | way:to | node:via | restriction |
+		 | restriction | sj       | wj     | j        | no_u_turn   |
 
 		When I route I should get
 		 | from | to | route |
@@ -86,15 +86,15 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction      |
-		 | sj   | wj | j   | no_weird_zigzags |
+		 | type        | way:from | way:to | node:via | restriction      |
+		 | restriction | sj       | wj     | j        | no_weird_zigzags |
 
 		When I route I should get
 		 | from | to | route |
@@ -110,21 +110,21 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction    |
-		 | sj   | wj | j   | only_left_turn |
+		 | type        | way:from | way:to | node:via | restriction    |
+		 | restriction | sj       | wj     | j        | only_left_turn |
 
 		When I route I should get
 		 | from | to | route |
-		 | s | w | sj,wj |
-		 | s | n |       |
-		 | s | e |       |
+		 | s    | w  | sj,wj |
+		 | s    | n  |       |
+		 | s    | e  |       |
 
 	@only_turning
 	Scenario: Car - Only right turn
@@ -134,15 +134,15 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction     |
-		 | sj   | ej | j   | only_right_turn |
+		 | type        | way:from | way:to | node:via | restriction     |
+		 | restriction | sj       | ej     | j        | only_right_turn |
 
 		When I route I should get
 		 | from | to | route |
@@ -158,15 +158,15 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction      |
-		 | sj   | nj | j   | only_straight_on |
+		 | type        | way:from | way:to | node:via | restriction      |
+		 | restriction | sj       | nj     | j        | only_straight_on |
 
 		When I route I should get
 		 | from | to | route |
@@ -182,15 +182,15 @@ Feature: Car - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway  |
-		 | sj    | yes     |
-		 | nj    | -1      |
-		 | wj    | -1      |
-		 | ej    | -1      |
+		 | nodes | oneway |
+		 | sj    | yes    |
+		 | nj    | -1     |
+		 | wj    | -1     |
+		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction        |
-		 | sj   | nj | j   | only_weird_zigzags |
+		 | type        | way:from | way:to | node:via | restriction        |
+		 | restriction | sj       | nj     | j        | only_weird_zigzags |
 
 		When I route I should get
 		 | from | to | route |
@@ -215,11 +215,11 @@ Feature: Car - Turn restrictions
   		 | dj    | -1     |
 
   		And the relations
-  		 | from | to | via | restriction   | except  |
-  		 | sj   | aj | j   | no_left_turn  | motorcar |
-  		 | sj   | bj | j   | no_left_turn  |         |
-  		 | sj   | cj | j   | no_right_turn | motorcar |
-  		 | sj   | dj | j   | no_right_turn |         |
+  		 | type        | way:from | way:to | node:via | restriction   | except   |
+  		 | restriction | sj       | aj     | j        | no_left_turn  | motorcar |
+  		 | restriction | sj       | bj     | j        | no_left_turn  |          |
+  		 | restriction | sj       | cj     | j        | no_right_turn | motorcar |
+  		 | restriction | sj       | dj     | j        | no_right_turn |          |
 
   		When I route I should get
   		 | from | to | route |
@@ -242,8 +242,8 @@ Feature: Car - Turn restrictions
    		 | bj    | -1     |
 
    		And the relations
-   		 | from | to | via | restriction      | except  |
-   		 | sj   | aj | j   | only_straight_on | motorcar |
+   		 | type        | way:from | way:to | node:via | restriction      | except   |
+   		 | restriction | sj       | aj     | j        | only_straight_on | motorcar |
 
    		When I route I should get
    		 | from | to | route |

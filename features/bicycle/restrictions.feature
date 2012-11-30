@@ -21,8 +21,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction  |
-		 | sj   | wj | j   | no_left_turn |
+		 | type        | way:from | way:to | node:via | restriction  |
+		 | restriction | sj       | wj     | j        | no_left_turn |
 
 		When I route I should get
 		 | from | to | route |
@@ -45,8 +45,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction   |
-		 | sj   | ej | j   | no_right_turn |
+		 | type        | way:from | way:to | node:via | restriction   |
+		 | restriction | sj       | ej     | j        | no_right_turn |
 
 		When I route I should get
 		 | from | to | route |
@@ -69,8 +69,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction |
-		 | sj   | wj | j   | no_u_turn   |
+		 | type        | way:from | way:to | node:via | restriction |
+		 | restriction | sj       | wj     | j        | no_u_turn   |
 
 		When I route I should get
 		 | from | to | route |
@@ -93,8 +93,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction      |
-		 | sj   | wj | j   | no_weird_zigzags |
+		 | type        | way:from | way:to | node:via | restriction      |
+		 | restriction | sj       | wj     | j        | no_weird_zigzags |
 
 		When I route I should get
 		 | from | to | route |
@@ -117,8 +117,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction    |
-		 | sj   | wj | j   | only_left_turn |
+		 | type        | way:from | way:to | node:via | restriction    |
+		 | restriction | sj       | wj     | j        | only_left_turn |
 
 		When I route I should get
 		 | from | to | route |
@@ -141,8 +141,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction     |
-		 | sj   | ej | j   | only_right_turn |
+		 | type        | way:from | way:to | node:via | restriction     |
+		 | restriction | sj       | ej     | j        | only_right_turn |
 
 		When I route I should get
 		 | from | to | route |
@@ -165,8 +165,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction      |
-		 | sj   | nj | j   | only_straight_on |
+		 | type        | way:from | way:to | node:via | restriction      |
+		 | restriction | sj       | nj     | j        | only_straight_on |
 
 		When I route I should get
 		 | from | to | route |
@@ -189,8 +189,8 @@ Feature: Bike - Turn restrictions
 		 | ej    | -1     |
 
 		And the relations
-		 | from | to | via | restriction        |
-		 | sj   | nj | j   | only_weird_zigzags |
+		 | type        | way:from | way:to | node:via | restriction        |
+		 | restriction | sj       | nj     | j        | only_weird_zigzags |
 
 		When I route I should get
 		 | from | to | route |
@@ -215,11 +215,11 @@ Feature: Bike - Turn restrictions
  		 | dj    | -1     |
 
  		And the relations
- 		 | from | to | via | restriction   | except  |
- 		 | sj   | aj | j   | no_left_turn  | bicycle |
- 		 | sj   | bj | j   | no_left_turn  |         |
- 		 | sj   | cj | j   | no_right_turn | bicycle |
- 		 | sj   | dj | j   | no_right_turn |         |
+ 		 | type        | way:from | way:to | node:via | restriction   | except  |
+ 		 | restriction | sj       | aj     | j        | no_left_turn  | bicycle |
+ 		 | restriction | sj       | bj     | j        | no_left_turn  |         |
+ 		 | restriction | sj       | cj     | j        | no_right_turn | bicycle |
+ 		 | restriction | sj       | dj     | j        | no_right_turn |         |
 
  		When I route I should get
  		 | from | to | route |
@@ -242,8 +242,8 @@ Feature: Bike - Turn restrictions
   		 | bj    | -1     |
 
   		And the relations
-  		 | from | to | via | restriction      | except  |
-  		 | sj   | aj | j   | only_straight_on | bicycle |
+  		 | type        | way:from | way:to | node:via | restriction      | except  |
+  		 | restriction | sj       | aj     | j        | only_straight_on | bicycle |
 
   		When I route I should get
   		 | from | to | route |
