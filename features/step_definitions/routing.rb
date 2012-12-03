@@ -236,7 +236,7 @@ When /^I route I should get$/ do |table|
       
       ok = true
       row.keys.each do |key|
-        if row[key].match /(.*)\s+~(.+)%$/
+        if row[key].match /(.*)\s+~(.+)%$/        #percentage range: 100 ~5%
           margin = 1 - $2.to_f*0.01
           from = $1.to_f*margin
           to = $1.to_f/margin
@@ -245,7 +245,7 @@ When /^I route I should get$/ do |table|
           else
             ok = false
           end
-        elsif row[key].match /(.*)\s+\+\-(.+)$/
+        elsif row[key].match /(.*)\s+\+\-(.+)$/   #absolute range: 100 +-5
             margin = $2.to_f
             from = $1.to_f-margin
             to = $1.to_f+margin
@@ -254,6 +254,10 @@ When /^I route I should get$/ do |table|
             else
               ok = false
             end
+        elsif row[key] =~ /^\/(.*)\/$/          #regex: /a,b,.*/
+          if got[key] =~ /#{$1}/
+            got[key] = row[key]
+          end
         else
           ok = row[key] == got[key]
         end
