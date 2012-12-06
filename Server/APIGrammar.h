@@ -32,8 +32,8 @@ namespace qi = boost::spirit::qi;
 template <typename Iterator, class HandlerT>
 struct APIGrammar : qi::grammar<Iterator> {
     APIGrammar(HandlerT * h) : APIGrammar::base_type(api_call), handler(h) {
-        api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >> ('?') >> query;
-        query    = (*(zoom | output | jsonp | checksum | location | hint | compressed_geometry | language | instruction | alt_route | old_API) ) ;
+        api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >> *(query);
+        query    = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | compressed_geometry | language | instruction | alt_route | old_API) ) ;
 
         zoom        = (-qi::lit('&')) >> qi::lit('z')            >> '=' >> qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
         output      = (-qi::lit('&')) >> qi::lit("output")       >> '=' >> string[boost::bind(&HandlerT::setOutputFormat, handler, ::_1)];
