@@ -3,8 +3,8 @@ compiler:
   - gcc
   - clang
 script: 
-  - scons --build=debug --with-tools
-  - scons --with-tools
+  - scons --build=debug
+  - scons
 branches:
   only:
     - master
