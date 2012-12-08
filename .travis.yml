@@ -10,6 +10,7 @@ branches:
     - master
     - develop
 notifications:
+  irc: "irc.oftc.net#osrm"
   recipients:
     - info@project-osrm.org
   email:
