@@ -4,7 +4,7 @@ DESTINATION_REACHED = 15      #OSRM instruction code
 
 
 def request_route a,b
-  @query = "http://localhost:5000/viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true"
+  @query = "http://localhost:5000/viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true&alt=false"
   #log @query
   uri = URI.parse @query
   Net::HTTP.get_response uri
@@ -81,5 +81,29 @@ def bearing_list instructions
   instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
   map { |r| r[7] }.
   map { |r| r=="" ? '""' : r }.
+  join(',')
+end
+
+def turn_list instructions
+  types = {
+    0 => :none,
+    1 => :straight,
+    2 => :slight_right,
+    3 => :right,
+    4 => :sharp_right,
+    5 => :u_turn,
+    6 => :sharp_left,
+    7 => :left,
+    8 => :slight_left,
+    9 => :via,
+    10 => :head,
+    11 => :enter_roundabout,
+    12 => :leave_roundabout,
+    13 => :stay_roundabout,
+    14 => :start_end_of_street,
+    15 => :destination
+  }
+  instructions.
+  map { |r| types[r[0].to_i].to_s }.
   join(',')
 end

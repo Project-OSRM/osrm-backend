@@ -204,6 +204,7 @@ When /^I route I should get$/ do |table|
           instructions = way_list json['route_instructions']
           bearings = bearing_list json['route_instructions']
           compasses = compass_list json['route_instructions']
+          turns = turn_list json['route_instructions']
         end
       end
       
@@ -231,6 +232,9 @@ When /^I route I should get$/ do |table|
         end
         if table.headers.include? 'compass'
           got['compass'] = compasses
+        end
+        if table.headers.include? 'turns'
+          got['turns'] = turns
         end
       end
       
