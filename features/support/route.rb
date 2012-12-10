@@ -2,7 +2,7 @@
 DESTINATION_REACHED = 15      #OSRM instruction code
 
 def request_route a,b
-  request_path "viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true&alt=false"
+  request_path "viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true&alt=true"
 end
 
 def parse_response response
