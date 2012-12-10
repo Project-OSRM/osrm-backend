@@ -12,25 +12,13 @@ When /^I request a route from "([^"]*)" to "([^"]*)"$/ do |a,b|
   @response = request_route "#{locations[a][0]},#{locations[a][1]}", "#{locations[b][0]},#{locations[b][1]}"
 end
 
-Then /^I should get a response/ do
-  @response.code.should == "200"
-  @response.body.should_not == nil
-  @response.body.should_not == ''
-end
-
-Then /^response should be valid JSON$/ do
-  @json = JSON.parse @response.body
-end
-
-Then /^response should be well-formed$/ do
-  @json['version'].class.should == Float
-  @json['status'].class.should == Fixnum
+Then /^response should be a well-formed route$/ do
+  step "response should be well-formed"
   @json['status_message'].class.should == String
   @json['route_summary'].class.should == Hash
   @json['route_geometry'].class.should == String
   @json['route_instructions'].class.should == Array
   @json['via_points'].class.should == Array
-  @json['transactionId'].class.should == String
 end
 
 Then /^a route should be found$/ do
@@ -46,7 +34,7 @@ end
 Then /^I should get a valid response$/ do
   step "I should get a response"
   step "response should be valid JSON"
-  step "response should be well-formed"
+  step "response should be a well-formed route"
  	#step "no error should be reported in terminal"
 end
 

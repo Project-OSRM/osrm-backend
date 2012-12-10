@@ -61,6 +61,7 @@ Given /^the preprocessed files for "([^"]*)" are present and up to date$/ do |ar
   File.exists?("#{area}.osrm.edges").should == true
   File.exists?("#{area}.osrm.ramIndex").should == true
   File.exists?("#{area}.osrm.fileIndex").should == true
+  File.exists?("#{area}.osrm.tiemstamp").should == true
 end
 
 Then /^I should see the file "([^"]*)"$/ do |file|

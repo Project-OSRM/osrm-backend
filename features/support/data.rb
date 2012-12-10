@@ -198,9 +198,14 @@ def prepared?
   File.exist?("#{@osm_file}.osrm.hsgr")
 end
 
+def write_timestamp
+  File.open( "#{@osm_file}.osrm.timestamp", 'w') {|f| f.write(OSM_TIMESTAMP) }
+end
+
 def reprocess
   Dir.chdir TEST_FOLDER do
     write_osm
+    write_timestamp
     convert_osm_to_pbf
     unless extracted?
       log_preprocess_info
