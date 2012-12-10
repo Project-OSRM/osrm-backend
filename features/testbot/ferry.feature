@@ -38,7 +38,8 @@ Feature: Testbot - Handle ferry routes
 		 | from | to | route | time      |
 		 | a    | d  | abcd  | 3600s +-1 |
 		 | d    | a  | abcd  | 3600s +-1 |
-
+    
+    @todo
 	Scenario: Bike - Ferry duration, individual parts
 		Given the node map
 		  | x | y |  | z |  |  | v |

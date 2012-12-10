@@ -10,35 +10,24 @@ Feature: Car - Street names in instructions
 		 |   | c |
 	
 		And the ways
-		 | nodes | name   |
-		 | ab    | My Way |
+		 | nodes | name     |
+		 | ab    | My Way   |
 		 | bc    | Your Way |
     
 		When I route I should get
 		 | from | to | route           |
 		 | a    | c  | My Way,Your Way |
 	
+	@todo
 	Scenario: Car - Use way type to describe unnamed ways
-		Given the node map
-		 | a | b | c |
-
-		And the ways
-		 | nodes | highway     | name |
-		 | ab    | tertiary    |      |
-		 | bc    | residential |      |
-
-		When I route I should get
-		 | from | to | route                |
-		 | a    | c  | tertiary,residential |
-
-	Scenario: Car - Don't create instructions for every node of unnamed ways
 		Given the node map
 		 | a | b | c | d |
 
 		And the ways
-		 | nodes | highway | name |
-		 | abcd  | primary |      |
+		 | nodes | highway     | name |
+		 | ab    | tertiary    |      |
+		 | bcd   | residential |      |
 
 		When I route I should get
-		 | from | to | route   |
-		 | a    | d  | primary |
+		 | from | to | route                |
+		 | a    | c  | tertiary,residential |

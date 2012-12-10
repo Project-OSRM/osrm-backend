@@ -20,25 +20,13 @@ Feature: Bike - Street names in instructions
 		
 	Scenario: Bike - Use way type to describe unnamed ways
 		Given the node map
-		 | a | b | c |
-
-		And the ways
-		 | nodes | highway  | name |
-		 | ab    | cycleway |      |
-		 | bc    | track    |      |
-
-		When I route I should get
-		 | from | to | route          |
-		 | a    | c  | cycleway,track |
-	
-	Scenario: Bike - Don't create instructions for every node of unnamed ways
-		Given the node map
 		 | a | b | c | d |
 
 		And the ways
 		 | nodes | highway  | name |
-		 | abcd  | cycleway |      |
+		 | ab    | cycleway |      |
+		 | bcd  | track    |      |
 
 		When I route I should get
-		 | from | to | route    |
-		 | a    | d  | cycleway |
+		 | from | to | route          |
+		 | a    | d  | cycleway,track |
