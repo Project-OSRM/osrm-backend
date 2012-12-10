@@ -1,17 +1,8 @@
-require 'net/http'
 
 DESTINATION_REACHED = 15      #OSRM instruction code
 
-
 def request_route a,b
-  @query = "http://localhost:5000/viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true&alt=false"
-  #log @query
-  uri = URI.parse @query
-  Net::HTTP.get_response uri
-rescue Errno::ECONNREFUSED => e
-  raise "*** osrm-routed is not running."
-rescue Timeout::Error
-  raise "*** osrm-routed did not respond."
+  request_path "viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true&alt=true"
 end
 
 def parse_response response

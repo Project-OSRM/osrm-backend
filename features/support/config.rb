@@ -23,6 +23,7 @@ edgesData=#{@osm_file}.osrm.edges
 ramIndex=#{@osm_file}.osrm.ramIndex
 fileIndex=#{@osm_file}.osrm.fileIndex
 namesData=#{@osm_file}.osrm.names
+timestamp=#{@osm_file}.osrm.timestamp
 EOF
   File.open( 'server.ini', 'w') {|f| f.write( s ) }
 end
