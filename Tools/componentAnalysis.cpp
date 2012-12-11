@@ -55,6 +55,8 @@ std::vector<NodeInfo> internalToExternalNodeMapping;
 std::vector<_Restriction> inputRestrictions;
 std::vector<NodeID> bollardNodes;
 std::vector<NodeID> trafficLightNodes;
+std::vector<NodeID> miniRoundaboutNodes;
+std::vector<NodeID> trafficCalmingNodes;
 
 int main (int argc, char *argv[]) {
     if(argc < 3) {
@@ -81,21 +83,23 @@ int main (int argc, char *argv[]) {
     }
 
     std::vector<ImportEdge> edgeList;
-    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
+    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, miniRoundaboutNodes, trafficCalmingNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
-    INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
+    INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights, " << miniRoundaboutNodes.size() << " mini roundabouts, " << trafficCalmingNodes.size() << " traffic calming nodes");
 
     /***
      * Building an edge-expanded graph from node-based input an turn restrictions
      */
 
     INFO("Starting SCC graph traversal");
-    TarjanSCC * tarjan = new TarjanSCC (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping);
+    TarjanSCC * tarjan = new TarjanSCC (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, miniRoundaboutNodes, trafficCalmingNodes, inputRestrictions, internalToExternalNodeMapping);
     std::vector<ImportEdge>().swap(edgeList);
     tarjan->Run();
     std::vector<_Restriction>().swap(inputRestrictions);
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
+    std::vector<NodeID>().swap(miniRoundaboutNodes);
+    std::vector<NodeID>().swap(trafficCalmingNodes);
     INFO("finished component analysis");
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- open source routing machine
+/// open source routing machine
  Copyright (C) Dennis Luxen, others 2010
 
  This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), speedProfile(sp) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<NodeID> & mrl, std::vector<NodeID> & tcl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), speedProfile(sp) {
 	BOOST_FOREACH(_Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
@@ -50,6 +50,12 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
     BOOST_FOREACH(NodeID id, tl) {
         _trafficLights[id] = true;
     }
+    BOOST_FOREACH(NodeID id, mrl) {
+		_miniRoundabouts[id] = true;
+	}
+    BOOST_FOREACH(NodeID id, tcl) {
+		_trafficCalmingNodes[id] = true;
+	}
 
     DeallocatingVector< _NodeBasedEdge > edges;
     //    edges.reserve( 2 * inputEdges.size() );
@@ -280,6 +286,12 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += speedProfile.trafficSignalPenalty;
                         }
+                        if(_miniRoundabouts.find(v) != _miniRoundabouts.end()) {
+							distance += speedProfile.miniRoundaboutPenalty;
+						}
+                        if(_trafficCalmingNodes.find(v) != _trafficCalmingNodes.end()) {
+							distance += speedProfile.trafficCalmingPenalty;
+						}
                         short turnInstruction = AnalyzeTurn(u, v, w);
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += speedProfile.uTurnPenalty;

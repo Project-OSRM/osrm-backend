@@ -97,14 +97,18 @@ public:
 
 
     struct SpeedProfileProperties{
-        SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0) {}
+        SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0), miniRoundaboutPenalty(0), trafficCalmingPenalty(0) {}
         int trafficSignalPenalty;
         int uTurnPenalty;
+        int miniRoundaboutPenalty;
+        int trafficCalmingPenalty;
     } speedProfile;
 private:
     boost::shared_ptr<_NodeBasedDynamicGraph>   _nodeBasedGraph;
     boost::unordered_map<NodeID, bool>          _barrierNodes;
     boost::unordered_map<NodeID, bool>          _trafficLights;
+    boost::unordered_map<NodeID, bool>          _miniRoundabouts;
+    boost::unordered_map<NodeID, bool>          _trafficCalmingNodes;
 
     typedef std::pair<NodeID, NodeID> RestrictionSource;
     typedef std::pair<NodeID, bool>   RestrictionTarget;
@@ -132,7 +136,7 @@ private:
 
 public:
     template< class InputEdgeT >
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, SpeedProfileProperties speedProfile);
+    explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<NodeID> & miniRoundabouts, std::vector<NodeID> & trafficCalmingNodes, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, SpeedProfileProperties speedProfile);
 
     void Run(const char * originalEdgeDataFilename);
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );

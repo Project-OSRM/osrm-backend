@@ -77,6 +77,8 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      .def_readwrite("id", &ImportNode::id)
                                      .def_readwrite("bollard", &ImportNode::bollard)
                                      .def_readwrite("traffic_light", &ImportNode::trafficLight)
+                                     .def_readwrite("mini_roundabout", &ImportNode::miniRoundabout)
+                                     .def_readwrite("traffic_calming", &ImportNode::trafficCalming)
                                      .def_readwrite("tags", &ImportNode::keyVals)
                                      ];
 

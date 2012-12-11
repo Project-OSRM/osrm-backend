@@ -26,20 +26,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 struct _Node : NodeInfo{
-    _Node(int _lat, int _lon, unsigned int _id, bool _bollard, bool _trafficLight) : NodeInfo(_lat, _lon,  _id), bollard(_bollard), trafficLight(_trafficLight) {}
-    _Node() : bollard(false), trafficLight(false) {}
+    _Node(int _lat, int _lon, unsigned int _id, bool _bollard, bool _trafficLight, bool _miniRoundabout, bool _trafficCalming) : NodeInfo(_lat, _lon,  _id), bollard(_bollard), trafficLight(_trafficLight), miniRoundabout(_miniRoundabout), trafficCalming(_trafficCalming) {}
+    _Node() : bollard(false), trafficLight(false), miniRoundabout(false), trafficCalming(false) {}
 
     static _Node min_value() {
-        return _Node(0,0,0, false, false);
+        return _Node(0,0,0, false, false, false, false);
     }
     static _Node max_value() {
-        return _Node((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)(), (std::numeric_limits<unsigned int>::max)(), false, false);
+        return _Node((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)(), (std::numeric_limits<unsigned int>::max)(), false, false, false, false);
     }
     NodeID key() const {
         return id;
     }
     bool bollard;
     bool trafficLight;
+    bool miniRoundabout;
+    bool trafficCalming;
 };
 
 struct ImportNode : public _Node {
@@ -47,7 +49,7 @@ struct ImportNode : public _Node {
 	
 	inline void Clear() {
 		keyVals.EraseAll();
-		lat = 0; lon = 0; id = 0; bollard = false; trafficLight = false;
+		lat = 0; lon = 0; id = 0; bollard = false; trafficLight = false, miniRoundabout = false, trafficCalming = false;
 	}
 };
 

@@ -67,6 +67,8 @@ std::vector<NodeInfo> internalToExternalNodeMapping;
 std::vector<_Restriction> inputRestrictions;
 std::vector<NodeID> bollardNodes;
 std::vector<NodeID> trafficLightNodes;
+std::vector<NodeID> miniRoundaboutNodes;
+std::vector<NodeID> trafficCalmingNodes;
 
 int main (int argc, char *argv[]) {
     if(argc < 3) {
@@ -138,12 +140,26 @@ int main (int argc, char *argv[]) {
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
 
+    if(0 != luaL_dostring( myLuaState, "return mini_roundabout_penalty\n")) {
+		ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+	}
+	speedProfile.miniRoundaboutPenalty = 10*lua_tointeger(myLuaState, -1);
+
+	if(0 != luaL_dostring( myLuaState, "return traffic_calming_penalty\n")) {
+		ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+	}
+	speedProfile.trafficCalmingPenalty = 10*lua_tointeger(myLuaState, -1);
+
 
 
     std::vector<ImportEdge> edgeList;
-    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
+    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, miniRoundaboutNodes, trafficCalmingNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
-    INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
+    INFO(inputRestrictions.size() << " restrictions");
+    INFO(bollardNodes.size() << " bollard nodes");
+    INFO(trafficLightNodes.size() << " traffic lights");
+    INFO(miniRoundaboutNodes.size() << " mini roundabouts");
+    INFO(trafficCalmingNodes.size() << " traffic calming nodes");
     if(0 == edgeList.size())
         ERR("The input data is broken. It is impossible to do any turns in this graph");
 
@@ -153,12 +169,14 @@ int main (int argc, char *argv[]) {
      */
 
     INFO("Generating edge-expanded graph representation");
-    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
+    EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, miniRoundaboutNodes, trafficCalmingNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
     std::vector<ImportEdge>().swap(edgeList);
     edgeBasedGraphFactory->Run(edgeOut);
     std::vector<_Restriction>().swap(inputRestrictions);
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
+    std::vector<NodeID>().swap(miniRoundaboutNodes);
+    std::vector<NodeID>().swap(trafficCalmingNodes);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);

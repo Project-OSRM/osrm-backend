@@ -21,6 +21,8 @@ obey_bollards 			= true
 use_restrictions 		= true
 ignore_areas 			= true	-- future feature
 traffic_signal_penalty 	= 7		-- seconds
+mini_roundabout_penalty = 0
+traffic_calming_penalty = 0
 u_turn_penalty 			= 20
 
 
