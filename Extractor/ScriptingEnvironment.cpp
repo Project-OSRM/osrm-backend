@@ -24,8 +24,6 @@ extern "C" {
 #include <lualib.h>
 }
 
-#include <boost/foreach.hpp>
-
 #include "ScriptingEnvironment.h"
 #include "../typedefs.h"
 #include "../Util/OpenMPWrapper.h"
