@@ -48,7 +48,7 @@ struct _ExcessRemover {
 };
 
 template<typename EdgeT>
-NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> &bollardNodes, std::vector<NodeID> &trafficLightNodes, std::vector<NodeInfo> * int2ExtNodeMap, std::vector<_Restriction> & inputRestrictions) {
+NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> &bollardNodes, std::vector<NodeID> &trafficLightNodes, std::vector<NodeID> &miniRoundaboutNodes, std::vector<NodeID> &trafficCalmingNodes, std::vector<NodeInfo> * int2ExtNodeMap, std::vector<_Restriction> & inputRestrictions) {
     NodeID n, source, target;
     EdgeID m;
     short dir;// direction (0 = open, 1 = forward, 2+ = open)
@@ -64,11 +64,17 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         	bollardNodes.push_back(i);
         if(node.trafficLight)
         	trafficLightNodes.push_back(i);
+        if(node.miniRoundabout)
+            miniRoundaboutNodes.push_back(i);
+        if(node.trafficCalming)
+            trafficCalmingNodes.push_back(i);
     }
 
     //tighten vector sizes
     std::vector<NodeID>(bollardNodes).swap(bollardNodes);
     std::vector<NodeID>(trafficLightNodes).swap(trafficLightNodes);
+    std::vector<NodeID>(miniRoundaboutNodes).swap(miniRoundaboutNodes);
+    std::vector<NodeID>(trafficCalmingNodes).swap(trafficCalmingNodes);
 
     in.read((char*)&m, sizeof(unsigned));
     DEBUG(" and " << m << " edges ");

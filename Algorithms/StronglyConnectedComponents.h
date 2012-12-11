@@ -76,6 +76,8 @@ private:
     boost::shared_ptr<_NodeBasedDynamicGraph>   _nodeBasedGraph;
     boost::unordered_map<NodeID, bool>          _barrierNodes;
     boost::unordered_map<NodeID, bool>          _trafficLights;
+    boost::unordered_map<NodeID, bool>          _miniRoundabouts;
+    boost::unordered_map<NodeID, bool>          _trafficCalmingNodes;
 
     typedef std::pair<NodeID, NodeID> RestrictionSource;
     typedef std::pair<NodeID, bool>   RestrictionTarget;
@@ -120,7 +122,7 @@ private:
         NodeID parent;
     };
 public:
-    TarjanSCC(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
+    TarjanSCC(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<NodeID> & mrl, std::vector<NodeID> & tcl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
         BOOST_FOREACH(_Restriction & restriction, irs) {
             std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
             unsigned index;
@@ -149,6 +151,12 @@ public:
         BOOST_FOREACH(NodeID id, tl) {
             _trafficLights[id] = true;
         }
+        BOOST_FOREACH(NodeID id, mrl) {
+			_miniRoundabouts[id] = true;
+		}
+		BOOST_FOREACH(NodeID id, tcl) {
+			_trafficCalmingNodes[id] = true;
+		}
 
         DeallocatingVector< _NodeBasedEdge > edges;
         for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {

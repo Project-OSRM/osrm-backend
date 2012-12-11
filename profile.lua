@@ -34,7 +34,9 @@ obey_oneway 			= true
 obey_bollards 			= true
 use_restrictions 		= true
 ignore_areas 			= true -- future feature
-traffic_signal_penalty 	= 2
+traffic_signal_penalty 	= 20
+mini_roundabout_penalty = 5
+traffic_calming_penalty = 5
 u_turn_penalty 			= 20
 
 -- End of globals
