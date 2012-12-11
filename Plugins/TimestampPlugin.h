@@ -34,7 +34,6 @@ public:
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         std::string tmp;
-        std::string JSONParameter;
 
         //json
         if("" != routeParameters.jsonpParameter) {
@@ -53,7 +52,7 @@ public:
         reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON timestamp (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
-        if("" != JSONParameter) {
+        if("" != routeParameters.jsonpParameter) {
             reply.content += ")";
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
