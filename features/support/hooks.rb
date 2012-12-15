@@ -1,3 +1,6 @@
+
+STRESS_TIMEOUT = 300
+
 Before do |scenario|
   @scenario_title = scenario.title
   @scenario_time = Time.now.strftime("%Y-%m-%dT%H:%m:%SZ")
@@ -7,12 +10,11 @@ Before do |scenario|
   set_grid_size DEFAULT_GRID_SIZE
 end
 
-Around('@routing') do |scenario, block|
-  Timeout.timeout(10) do
+Around('@stress') do |scenario, block|
+ Timeout.timeout(STRESS_TIMEOUT) do
     block.call
   end
 end
 
 After do
-  osrm_kill
 end

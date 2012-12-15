@@ -1,7 +1,6 @@
 
 When /^I preprocess data$/ do
   begin
-    osrm_kill
     reprocess
   rescue OSRMError => e
     @process_error = e

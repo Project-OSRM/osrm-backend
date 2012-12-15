@@ -134,7 +134,6 @@ Then /^"([^"]*)" should be returned$/ do |route|
 end
 
 Then /^routability should be$/ do |table|
-  osrm_kill
   build_ways_from_table table
   reprocess
   actual = []
@@ -176,7 +175,6 @@ Then /^routability should be$/ do |table|
 end
 
 When /^I route I should get$/ do |table|
-  osrm_kill
   reprocess
   actual = []
   OSRMLauncher.new do
@@ -264,4 +262,12 @@ When /^I route I should get$/ do |table|
     end
   end
   table.routing_diff! actual
+end
+
+When /^I route (\d+) times I should get$/ do |n,table|
+  ok = true
+  n.to_i.times do
+    ok = false unless step "I route I should get", table
+  end
+  ok
 end

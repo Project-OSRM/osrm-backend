@@ -15,7 +15,7 @@ def write_server_ini
   s=<<-EOF
 Threads = 1
 IP = 0.0.0.0
-Port = 5000
+Port = #{OSRM_PORT}
 
 hsgrData=#{@osm_file}.osrm.hsgr
 nodesData=#{@osm_file}.osrm.nodes

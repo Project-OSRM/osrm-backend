@@ -1,5 +1,4 @@
 When /^I request \/(.*)$/ do |path|
-  osrm_kill
   reprocess
   OSRMLauncher.new do
     @response = request_path path
