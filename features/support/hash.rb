@@ -20,15 +20,15 @@ def osm_hash
 end
 
 def bin_extract_hash
-  @bin_hash ||= hash_of_file '../osrm-extract'
+  @bin_extract_hash ||= hash_of_file '../osrm-extract'
 end
 
 def bin_prepare_hash
-  @bin_hash ||= hash_of_file '../osrm-prepare'
+  @bin_prepare_hash ||= hash_of_file '../osrm-prepare'
 end
 
 def bin_routed_hash
-  @bin_hash ||= hash_of_file '../osrm-routed'
+  @bin_routed_hash ||= hash_of_file '../osrm-routed'
 end
 
 #combine state of data, speedprofile and binaries into a hash that identifies the exact test scenario
