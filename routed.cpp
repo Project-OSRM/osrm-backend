@@ -82,7 +82,7 @@ int main (int argc, char * argv[0]) {
     //}
 
     try {
-        std::cout << "[server] starting up engines, saved at " << __TIMESTAMP__ << std::endl;
+        std::cout << std::endl << "[server] starting up engines, saved at " << __TIMESTAMP__ << std::endl;
 
 #ifndef _WIN32
         int sig = 0;
@@ -135,11 +135,14 @@ int main (int argc, char * argv[0]) {
         s->Run();
 #endif
 
-        std::cout << std::endl << "[server] shutting down" << std::endl;
+        std::cout << "[server] initiating shutdown" << std::endl;
         s->Stop();
+        std::cout << "[server] stopping threads" << std::endl;
         t.join();
+        std::cout << "[server] freeing objects" << std::endl;
         delete s;
         delete objects;
+        std::cout << "[server] shutdown completed" << std::endl;
     } catch (std::exception& e) {
         std::cerr << "[fatal error] exception: " << e.what() << std::endl;
     }
