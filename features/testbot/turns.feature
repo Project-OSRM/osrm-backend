@@ -111,5 +111,5 @@ Feature: Turn directions/codes
 		 | bc    |
 
 		When I route I should get
-		 | from | to | route | bearing | turns                  |
-		 | a    | c  | ab,bc | 22,113  | head,right,destination |
+		 | from | to | route | turns                  |
+		 | a    | c  | ab,bc | head,right,destination |
