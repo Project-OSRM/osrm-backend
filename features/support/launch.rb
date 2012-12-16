@@ -39,12 +39,7 @@ class OSRMLauncher
   
   def osrm_up?
     if @pid
-      begin
-        Process.getpgid @pid
-        true
-      rescue Errno::ESRCH
-        false
-      end
+      `ps -o state -p #{@pid}`.split[1].to_s =~ /^[DRST]/
     else
       false
     end
