@@ -4,7 +4,7 @@ Feature: Car - Turn restrictions
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
 	Background: Use car routing
-		Given the speedprofile "car"
+		Given the profile "car"
 	
 	@no_turning
 	Scenario: Car - No left turn

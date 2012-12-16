@@ -2,7 +2,7 @@
 Feature: Handle bad data in a graceful manner
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 
 	Scenario: Empty dataset
 		Given the node map

@@ -4,7 +4,7 @@ Platforms and railway/bus lines are connected using a relation rather that a way
 http://wiki.openstreetmap.org/wiki/Tag:public_transport%3Dstop_area
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	Scenario: Bike - Platforms tagged using public_transport
 	 	Then routability should be

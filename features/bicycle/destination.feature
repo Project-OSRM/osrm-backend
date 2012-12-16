@@ -2,7 +2,7 @@
 Feature: Bike - Destination only, no passing through
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 		
 	Scenario: Bike - Destination only street
 		Given the node map

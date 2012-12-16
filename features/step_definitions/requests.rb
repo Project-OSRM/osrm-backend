@@ -21,3 +21,25 @@ Then /^response should be well-formed$/ do
   @json['transactionId'].class.should == String
 end
 
+Then /^response should be a well-formed route$/ do
+  step "response should be well-formed"
+  @json['status_message'].class.should == String
+  @json['route_summary'].class.should == Hash
+  @json['route_geometry'].class.should == String
+  @json['route_instructions'].class.should == Array
+  @json['via_points'].class.should == Array
+end
+
+When /^I preprocess data$/ do
+  begin
+    reprocess
+  rescue OSRMError => e
+    @process_error = e
+  end
+end
+
+Then /^preparing should return code (\d+)$/ do |code|
+  @process_error.class.should == OSRMError
+  @process_error.process.should == 'osrm-prepare'
+  @process_error.code.to_i.should == code.to_i
+end

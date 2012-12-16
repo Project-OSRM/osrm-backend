@@ -2,7 +2,7 @@
 Feature: Weird routings discovered
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	Scenario: Routing on a oneway roundabout
 		Given the node map

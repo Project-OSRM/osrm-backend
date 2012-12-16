@@ -2,7 +2,7 @@
 Feature: Compass bearing
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	Scenario: Bearing when going northwest
 		Given the node map

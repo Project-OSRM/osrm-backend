@@ -1,14 +1,14 @@
-def speedprofile
-  @speedprofile ||= reset_speedprofile
+def profile
+  @profile ||= reset_profile
 end
 
-def reset_speedprofile
-  @speedprofile = nil
-  read_speedprofile DEFAULT_SPEEDPROFILE
+def reset_profile
+  @profile = nil
+  set_profile DEFAULT_SPEEDPROFILE
 end
 
-def read_speedprofile profile
-  @speedprofile = profile
+def set_profile profile
+  @profile = profile
 end
 
 def write_server_ini

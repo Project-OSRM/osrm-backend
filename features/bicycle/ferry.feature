@@ -2,7 +2,7 @@
 Feature: Bike - Handle ferry routes
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	Scenario: Bike - Ferry route
 		Given the node map

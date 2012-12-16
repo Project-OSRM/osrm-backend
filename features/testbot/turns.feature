@@ -2,7 +2,7 @@
 Feature: Turn directions/codes
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	Scenario: Turn directions
 		Given the node map

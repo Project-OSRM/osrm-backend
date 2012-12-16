@@ -2,7 +2,7 @@
 Feature: Routing close to the [0,0] origin
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
  	
 	Scenario: East-west oneways close to the origin
 		Given the node locations

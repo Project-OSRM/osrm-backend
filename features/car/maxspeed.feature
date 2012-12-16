@@ -2,7 +2,7 @@
 Feature: Car - Max speed restrictions
 
 	Background: Use specific speeds
-		Given the speedprofile "car"
+		Given the profile "car"
 		Given a grid size of 1000 meters
 	
 	Scenario: Car - Respect maxspeeds when lower that way type speed

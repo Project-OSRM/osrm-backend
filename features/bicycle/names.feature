@@ -2,7 +2,7 @@
 Feature: Bike - Street names in instructions
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	Scenario: Bike - A named street
 		Given the node map

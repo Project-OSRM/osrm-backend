@@ -3,7 +3,7 @@ Feature: Bike - Oneway streets
 Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	Scenario: Bike - Simple oneway
 		Then routability should be

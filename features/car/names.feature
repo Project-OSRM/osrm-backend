@@ -2,7 +2,7 @@
 Feature: Car - Street names in instructions
 
 	Background:
-		Given the speedprofile "car"
+		Given the profile "car"
 	
 	Scenario: Car - A named street
 		Given the node map

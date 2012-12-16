@@ -3,7 +3,7 @@ Feature: Bike - Restricted access
 Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 		
 	Scenario: Bike - Access tag hierachy on ways
 		Then routability should be

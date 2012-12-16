@@ -2,7 +2,7 @@
 Feature: Car - Barriers
 
 	Background:
-		Given the speedprofile "car"
+		Given the profile "car"
 
 	Scenario: Car - Barriers 
 		Then routability should be

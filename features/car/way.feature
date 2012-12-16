@@ -2,7 +2,7 @@
 Feature: Car - Accessability of different way types
 
 	Background:
-		Given the speedprofile "car"
+		Given the profile "car"
 
 	Scenario: Car - Basic access
 	 	Then routability should be

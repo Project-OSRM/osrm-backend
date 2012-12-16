@@ -3,7 +3,7 @@ Feature: Car - Restricted access
 Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
 	Background:
-		Given the speedprofile "car"
+		Given the profile "car"
 		
 	Scenario: Car - Access tag hierachy	on ways	
 		Then routability should be

@@ -1,5 +1,5 @@
-Given /^the speedprofile "([^"]*)"$/ do |profile|
-  read_speedprofile profile
+Given /^the profile "([^"]*)"$/ do |profile|
+  set_profile profile
 end
 
 Given /^a grid size of (\d+) meters$/ do |meters|

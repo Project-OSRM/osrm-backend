@@ -6,7 +6,7 @@ Secondary road:	18km/h = 18000m/3600s = 100m/20s
 Tertiary road:	12km/h = 12000m/3600s = 100m/30s
 	
 	Background: Use specific speeds
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	Scenario: Basic travel time, 10m scale
 		Given a grid size of 10 meters

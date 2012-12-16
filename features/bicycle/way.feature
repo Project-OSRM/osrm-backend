@@ -2,11 +2,11 @@
 Feature: Bike - Accessability of different way types
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 
 	Scenario: Bike - Basic access
 	Bikes are allowed on footways etc because you can pull your bike at a lower speed.
-	 	Given the speedprofile "bicycle"
+	 	Given the profile "bicycle"
 	 	Then routability should be
 		 | highway        | forw |
 		 | (nil)          |      |
