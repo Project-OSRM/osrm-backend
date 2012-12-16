@@ -1,10 +1,10 @@
 @stress
-Feature: Launching and shutting down
+Feature: Stress testing
 	
 	Background:
 		Given the profile "testbot"
 	
-	Scenario: Stress - 10km routing
+	Scenario: Stress - 10km star, request 1 route
 	#osrm-routed hangs very often
 		Given a grid size of 10000 meters
 		Given the node map
@@ -27,7 +27,7 @@ Feature: Launching and shutting down
  		 | from | to | route |
  		 | x    | h  | xh    |
 
-	Scenario: Stress - 10km routing
+	Scenario: Stress - 10km star, request 8 routes
 	#osrm-routed hangs sometimes
 		Given a grid size of 10000 meters
 		Given the node map
