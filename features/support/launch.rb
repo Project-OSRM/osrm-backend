@@ -1,5 +1,5 @@
 require 'socket'
-require 'sys/proctable'
+require 'open3'
 
 LAUNCH_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 2
@@ -38,9 +38,9 @@ class OSRMLauncher
   
   
   def osrm_up?
-    if @pipe
+    if @pid
       begin
-        Process.getpgid @pipe.pid
+        Process.getpgid @pid
         true
       rescue Errno::ESRCH
         false
@@ -52,22 +52,19 @@ class OSRMLauncher
 
   def osrm_up
     return if osrm_up?
-    #exec avoids popen running osrm-routed inside a shell
-    #if the cmd is run inside a shell, popen returns the pid for the shell, and if we try to kill it,
-    #the child process is orphaned, and we can't terminate it.
-    @pipe = IO.popen('exec ../osrm-routed 1>>osrm-routed.log 2>>osrm-routed.log')
+    @pid = Process.spawn(['../osrm-routed',''],:out=>'osrm-routed.log', :err=>'osrm-routed.log')
   end
 
   def osrm_down
-    if @pipe
-      Process.kill 'TERM', @pipe.pid
+    if @pid
+      Process.kill 'TERM', @pid
       wait_for_shutdown
     end
   end
 
   def kill
-    if @pipe
-      Process.kill 'KILL', @pipe.pid
+    if @pid
+      Process.kill 'KILL', @pid
     end
   end
 
