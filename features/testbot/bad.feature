@@ -12,7 +12,7 @@ Feature: Handle bad data in a graceful manner
 		 | nodes |
 		
 		When I preprocess data
-		Then preparing should return code 255
+		Then "osrm-extract" should return code 255
 
 	Scenario: Only dead-end oneways
 		Given the node map

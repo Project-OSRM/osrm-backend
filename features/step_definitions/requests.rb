@@ -38,8 +38,8 @@ When /^I preprocess data$/ do
   end
 end
 
-Then /^preparing should return code (\d+)$/ do |code|
+Then /^"([^"]*)" should return code (\d+)$/ do |binary, code|
   @process_error.class.should == OSRMError
-  @process_error.process.should == 'osrm-prepare'
+  @process_error.process.should == binary
   @process_error.code.to_i.should == code.to_i
 end
