@@ -23,17 +23,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <climits>
 
+#include "TurnInstructions.h"
+
 struct SegmentInformation {
     _Coordinate location;
     NodeID nameID;
     double length;
     unsigned duration;
     double bearing;
-    short turnInstruction;
+    TurnInstruction turnInstruction;
     bool necessary;
-    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const short tInstr, const bool nec) :
+    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr, const bool nec) :
             location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(nec) {}
-    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const short tInstr) :
+    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr) :
         location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(tInstr != 0) {}
 };
 

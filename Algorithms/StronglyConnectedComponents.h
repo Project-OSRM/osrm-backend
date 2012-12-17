@@ -66,7 +66,7 @@ private:
         unsigned nameID;
         bool forward;
         bool backward;
-        short turnInstruction;
+        TurnInstruction turnInstruction;
     };
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;

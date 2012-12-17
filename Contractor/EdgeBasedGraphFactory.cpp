@@ -280,7 +280,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += speedProfile.trafficSignalPenalty;
                         }
-                        short turnInstruction = AnalyzeTurn(u, v, w);
+                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += speedProfile.uTurnPenalty;
 //                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
@@ -334,7 +334,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
 
-short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
+TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
     if(u == w) {
         return TurnInstructions.UTurn;
     }

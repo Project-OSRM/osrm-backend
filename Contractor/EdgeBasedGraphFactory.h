@@ -69,7 +69,7 @@ private:
         unsigned nameID;
         bool forward;
         bool backward;
-        short turnInstruction;
+        TurnInstruction turnInstruction;
     };
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
@@ -138,7 +138,7 @@ public:
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
     void GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
-    short AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
     unsigned GetNumberOfNodes() const;
 };
 
