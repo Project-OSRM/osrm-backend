@@ -3,6 +3,7 @@ require 'open3'
 
 LAUNCH_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 2
+OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
 class OSRMLauncher
   def initialize &block
@@ -24,10 +25,7 @@ class OSRMLauncher
       wait_for_connection
     end
   rescue Timeout::Error
-    log_path = 'osrm-routed.log'
-    log_lines = 3
-    tail = log_tail log_path,log_lines
-    raise OSRMError.new 'osrm-routed', nil, "*** Launching osrm-routed timed out. Last #{log_lines} lines from #{log_path}:\n#{tail}\n" 
+    raise RoutedError.new "Launching osrm-routed timed out."
   end
   
   def shutdown
@@ -36,10 +34,7 @@ class OSRMLauncher
     end
   rescue Timeout::Error
     kill
-    log_path = 'osrm-routed.log'
-    log_lines = 3
-    tail = log_tail log_path,log_lines
-    raise OSRMError.new 'osrm-routed', nil, "*** Shutting down osrm-routed timed out. Last #{log_lines} lines from #{log_path}:\n#{tail}\n" 
+    raise RoutedError.new "Shutting down osrm-routed timed out."
   end
   
   
@@ -53,7 +48,7 @@ class OSRMLauncher
 
   def osrm_up
     return if osrm_up?
-    @pid = Process.spawn(['../osrm-routed',''],:out=>'osrm-routed.log', :err=>'osrm-routed.log')
+    @pid = Process.spawn(['../osrm-routed',''],:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
   end
 
   def osrm_down

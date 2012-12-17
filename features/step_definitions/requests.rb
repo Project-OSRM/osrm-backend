@@ -39,7 +39,7 @@ When /^I preprocess data$/ do
 end
 
 Then /^"([^"]*)" should return code (\d+)$/ do |binary, code|
-  @process_error.class.should == OSRMError
+  @process_error.is_a?(OSRMError).should == true
   @process_error.process.should == binary
   @process_error.code.to_i.should == code.to_i
 end
