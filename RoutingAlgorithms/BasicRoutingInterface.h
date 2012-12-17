@@ -104,7 +104,7 @@ public:
         }
     }
 
-    inline void UnpackPath(std::deque<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
+    inline void UnpackPath(std::vector<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
 
         const unsigned sizeOfPackedPath = packedPath.size();
         std::stack<std::pair<NodeID, NodeID> > recursionStack;
@@ -204,12 +204,14 @@ public:
         unpackedPath.push_back(t);
     }
 
-    inline void RetrievePackedPathFromHeap(const typename QueryDataT::HeapPtr & _fHeap, const typename QueryDataT::HeapPtr & _bHeap, const NodeID middle, std::deque<NodeID>& packedPath) {
+    inline void RetrievePackedPathFromHeap(const typename QueryDataT::HeapPtr & _fHeap, const typename QueryDataT::HeapPtr & _bHeap, const NodeID middle, std::vector<NodeID>& packedPath) {
         NodeID pathNode = middle;
         while(pathNode != _fHeap->GetData(pathNode).parent) {
             pathNode = _fHeap->GetData(pathNode).parent;
-            packedPath.push_front(pathNode);
+            packedPath.push_back(pathNode);
         }
+
+        std::reverse(packedPath.begin(), packedPath.end());
 
         packedPath.push_back(middle);
         pathNode = middle;

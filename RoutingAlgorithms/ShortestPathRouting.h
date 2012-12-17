@@ -47,8 +47,8 @@ public:
         bool searchFrom2ndStartNode(true);
         NodeID middle1 = ( NodeID ) UINT_MAX;
         NodeID middle2 = ( NodeID ) UINT_MAX;
-        std::deque<NodeID> packedPath1;
-        std::deque<NodeID> packedPath2;
+        std::vector<NodeID> packedPath1;
+        std::vector<NodeID> packedPath2;
 
         typename QueryDataT::HeapPtr & forwardHeap = super::_queryData.forwardHeap;
         typename QueryDataT::HeapPtr & backwardHeap = super::_queryData.backwardHeap;
@@ -141,8 +141,8 @@ public:
 //          INFO("middle1: " << middle1);
 
             //Unpack paths if they exist
-            std::deque<NodeID> temporaryPackedPath1;
-            std::deque<NodeID> temporaryPackedPath2;
+            std::vector<NodeID> temporaryPackedPath1;
+            std::vector<NodeID> temporaryPackedPath2;
             if(INT_MAX != _localUpperbound1) {
                 super::RetrievePackedPathFromHeap(forwardHeap, backwardHeap, middle1, temporaryPackedPath1);
 //              INFO("temporaryPackedPath1 ends with " << *(temporaryPackedPath1.end()-1) );
