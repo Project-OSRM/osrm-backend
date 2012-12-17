@@ -7,7 +7,6 @@ DESTINATION_REACHED = 15      #OSRM instruction code
 
 def request_path path
   @query = path
-  log path
   uri = URI.parse "#{HOST}/#{path}"
   Timeout.timeout(REQUEST_TIMEOUT) do
     Net::HTTP.get_response uri

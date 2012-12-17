@@ -177,7 +177,10 @@ def convert_osm_to_pbf
     log_preprocess_info
     log "== Converting #{@osm_file}.osm to protobuffer format...", :preprocess
     unless system "osmosis --read-xml #{@osm_file}.osm --write-pbf #{@osm_file}.osm.pbf omitmetadata=true 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
-      raise "Failed to convert to proto buffer format. Please see #{hash}.log for more info." 
+      log_path = 'preprocessing.log'
+      log_lines = 30
+      tail = log_tail log_path,log_lines
+      raise OSRMError.new 'osmosis', $?.exitstatus, "*** Failed to convert .oms to .pbf. osmosis exited with code #{$?.exitstatus}. Last #{log_lines} lines from #{log_path}:\n#{tail}\n" 
     end
     log '', :preprocess
   end

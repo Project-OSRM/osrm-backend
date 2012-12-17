@@ -24,7 +24,10 @@ class OSRMLauncher
       wait_for_connection
     end
   rescue Timeout::Error
-    raise "*** Launching osrm-routed timed out."
+    log_path = 'osrm-routed.log'
+    log_lines = 3
+    tail = log_tail log_path,log_lines
+    raise OSRMError.new 'osrm-routed', nil, "*** Launching osrm-routed timed out. Last #{log_lines} lines from #{log_path}:\n#{tail}\n" 
   end
   
   def shutdown
@@ -33,7 +36,10 @@ class OSRMLauncher
     end
   rescue Timeout::Error
     kill
-    raise "*** Shutting down osrm-routed timed out."
+    log_path = 'osrm-routed.log'
+    log_lines = 3
+    tail = log_tail log_path,log_lines
+    raise OSRMError.new 'osrm-routed', nil, "*** Shutting down osrm-routed timed out. Last #{log_lines} lines from #{log_path}:\n#{tail}\n" 
   end
   
   
