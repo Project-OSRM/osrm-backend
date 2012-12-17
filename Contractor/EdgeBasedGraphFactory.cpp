@@ -297,7 +297,6 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         }
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
-                        assert(u != w);
                         originalEdgeData.push_back(oed);
                         if(originalEdgeData.size() > 100000) {
                             originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
