@@ -197,17 +197,28 @@ def write_timestamp
   File.open( "#{@osm_file}.osrm.timestamp", 'w') {|f| f.write(OSM_TIMESTAMP) }
 end
 
+def log_tail path, n
+  File.open(path) do |f|
+    return f.tail(n).map { |line| "  #{line}" }.join "\n"
+  end
+end
+
 def reprocess
   Dir.chdir TEST_FOLDER do
     write_osm
     write_timestamp
     convert_osm_to_pbf
+    
+    log_path = 'preprocessing.log'
+    log_lines = 3
+
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
       unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
-        raise OSRMError.new 'osrm-extract', $?.exitstatus, "*** osrm-extract exited with code #{$?.exitstatus}. The file preprocess.log might contain more info." 
+        tail = log_tail log_path,log_lines
+        raise OSRMError.new 'osrm-extract', $?.exitstatus, "*** osrm-extract exited with code #{$?.exitstatus}. Last #{log_lines} lines from #{log_path}:\n#{tail}\n" 
       end
       log '', :preprocess
     end
@@ -216,7 +227,8 @@ def reprocess
       log "== Preparing #{@osm_file}.osm...", :preprocess
       unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
-        raise OSRMError.new 'osrm-prepare', $?.exitstatus, "*** osrm-prepare exited with code #{$?.exitstatus}. The file preprocess.log might contain more info." 
+        tail = log_tail log_path,log_lines
+        raise OSRMError.new 'osrm-prepare', $?.exitstatus, "*** osrm-prepare exited with code #{$?.exitstatus}. Last #{log_lines} lines from #{log_path}:\n#{tail}\n" 
       end 
       log '', :preprocess
     end
