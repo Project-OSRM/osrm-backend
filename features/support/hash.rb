@@ -12,7 +12,8 @@ def hash_of_file path
 end
 
 def profile_hash
-  @profile_hash ||= hash_of_file "../profiles/#{@profile}.lua"
+  @@profile_hashes ||= {}
+  @@profile_hashes[@profile] ||= hash_of_file "../profiles/#{@profile}.lua"
 end
 
 def osm_hash
@@ -20,15 +21,15 @@ def osm_hash
 end
 
 def bin_extract_hash
-  @bin_extract_hash ||= hash_of_file '../osrm-extract'
+  @@bin_extract_hash ||= hash_of_file '../osrm-extract'
 end
 
 def bin_prepare_hash
-  @bin_prepare_hash ||= hash_of_file '../osrm-prepare'
+  @@bin_prepare_hash ||= hash_of_file '../osrm-prepare'
 end
 
 def bin_routed_hash
-  @bin_routed_hash ||= hash_of_file '../osrm-routed'
+  @@bin_routed_hash ||= hash_of_file '../osrm-routed'
 end
 
 #combine state of data, profile and binaries into a hash that identifies the exact test scenario
