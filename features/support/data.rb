@@ -13,7 +13,7 @@ OSM_TIMESTAMP = '2000-00-00T00:00:00Z'
 DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
-
+PROFILES_PATH = '../profiles'
 
 ORIGIN = [1,1]
 
@@ -205,7 +205,7 @@ def reprocess
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
+      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end
@@ -214,7 +214,7 @@ def reprocess
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
+      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
       end 

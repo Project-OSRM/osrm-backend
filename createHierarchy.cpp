@@ -47,6 +47,7 @@ extern "C" {
 #include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
 #include "Util/StringUtil.h"
+#include "Util/Lua.h"
 
 using namespace std;
 
@@ -111,6 +112,11 @@ int main (int argc, char *argv[]) {
     // Connect LuaBind to this lua state
     luabind::open(myLuaState);
 
+    //open utility libraries string library;
+    luaL_openlibs(myLuaState);
+
+    //adjust lua load path
+    luaAddScriptFolderToLoadPath( myLuaState, (argc > 3 ? argv[3] : "profile.lua") );
 
     // Now call our function in a lua script
     INFO("Parsing speedprofile from " << (argc > 3 ? argv[3] : "profile.lua") );
