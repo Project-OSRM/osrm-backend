@@ -36,7 +36,7 @@ struct RouteParameters {
     bool geometry;
     bool compression;
     bool deprecatedAPI;
-    int checkSum;
+    unsigned checkSum;
     std::string service;
     std::string outputFormat;
     std::string jsonpParameter;
@@ -58,7 +58,7 @@ struct RouteParameters {
         deprecatedAPI = true;
     }
 
-    void setChecksum(const int c) {
+    void setChecksum(const unsigned c) {
         checkSum = c;
     }
 

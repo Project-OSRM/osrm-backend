@@ -61,7 +61,7 @@ struct ServerFactory {
 		    ERR("file index file not found");
 		}
 
-		unsigned threads = omp_get_num_procs();
+		int threads = omp_get_num_procs();
 		if(serverConfig.GetParameter("IP") == "")
 			serverConfig.SetParameter("IP", "0.0.0.0");
 		if(serverConfig.GetParameter("Port") == "")
