@@ -69,7 +69,9 @@ public:
     void SetConfig(const _DescriptorConfig & c) { config = c; }
 
     void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine) {
+
         WriteHeaderToOutput(reply.content);
+
         if(rawRoute.lengthOfShortestPath != INT_MAX) {
             descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
             reply.content += "0,"
@@ -102,7 +104,7 @@ public:
             BuildTextualDescription(descriptionFactory, reply, rawRoute.lengthOfShortestPath, sEngine, shortestSegments);
         } else {
             BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
-                short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+                TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
                 numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
             }
         }
@@ -155,7 +157,7 @@ public:
                 BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine, alternativeSegments);
             } else {
                 BOOST_FOREACH(const SegmentInformation & segment, alternateDescriptionFactory.pathDescription) {
-                    short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+                	TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
                     numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
                 }
             }
@@ -242,7 +244,6 @@ public:
         reply.content += "},";
         reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"";
         reply.content += "}";
-
     }
 
     void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, SearchEngineT &sEngine, RouteNames & routeNames) {
@@ -312,7 +313,7 @@ public:
         std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
         //Fetch data from Factory and generate a string from it.
         BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
-            short currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+        	TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
             numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
             if(TurnInstructions.TurnIsNecessary( currentInstruction) ) {
                 if(TurnInstructions.EnterRoundAbout == currentInstruction) {
@@ -384,7 +385,6 @@ public:
             reply.content += "0.0";
             reply.content += "]";
         }
-
     }
 
 };

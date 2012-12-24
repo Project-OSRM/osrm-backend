@@ -2,3 +2,4 @@
 ##YAML Template
 ---
 default: --require features
+verify: --require features --tags ~@todo --tag ~@stress -f progress

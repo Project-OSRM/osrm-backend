@@ -3,7 +3,7 @@ Feature: Car - Restricted access
 Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
 	Background:
-		Given the speedprofile "car"
+		Given the profile "car"
 		
 	Scenario: Car - Access tag hierachy	on ways	
 		Then routability should be
@@ -92,7 +92,7 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 		 | no           |       |
 		 | private      |       |
 		 | agricultural |       |
-		 | forestery    |       |
+		 | forestry     |       |
 		 | some_tag     | x     |
 
 
@@ -105,7 +105,7 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 		 | no           |       |
 		 | private      |       |
 		 | agricultural |       |
-		 | forestery    |       |
+		 | forestry     |       |
 		 | some_tag     | x     |
 
 	Scenario: Car - Access tags on both node and way

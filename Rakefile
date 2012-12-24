@@ -6,6 +6,7 @@ require 'sys/proctable'
 
 DATA_FOLDER = 'sandbox'
 PROFILE = 'bicycle'
+OSRM_PORT = 5000
 
 Cucumber::Rake::Task.new do |t|
   t.cucumber_opts = %w{--format pretty}
@@ -32,7 +33,7 @@ task osm_data_area_name.to_sym {}   #define empty task to prevent rake from whin
 
 def each_process name, &block
   Sys::ProcTable.ps do |process|
-    if process.comm.strip == name.strip
+    if process.comm.strip == name.strip && process.state != 'zombie'
       yield process.pid.to_i, process.state.strip
     end
   end
@@ -60,7 +61,7 @@ def write_server_ini osm_file
   s=<<-EOF
   Threads = 1
   IP = 0.0.0.0
-  Port = 5000
+  Port = #{OSRM_PORT}
 
   hsgrData=#{osm_file}.osrm.hsgr
   nodesData=#{osm_file}.osrm.nodes
@@ -68,6 +69,7 @@ def write_server_ini osm_file
   ramIndex=#{osm_file}.osrm.ramIndex
   fileIndex=#{osm_file}.osrm.fileIndex
   namesData=#{osm_file}.osrm.names
+  timestamp=#{osm_file}.osrm.timestamp
   EOF
   File.open( 'server.ini', 'w') {|f| f.write( s ) }
 end
@@ -150,7 +152,7 @@ task :up => :setup do
     timeout = 5
     (timeout*10).times do
       begin
-        socket = TCPSocket.new('localhost', 5000)
+        socket = TCPSocket.new('localhost', OSRM_PORT)
         socket.puts 'ping'
       rescue Errno::ECONNREFUSED
         sleep 0.1

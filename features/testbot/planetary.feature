@@ -1,8 +1,7 @@
 @routing @planetary
 Feature: Distance calculation
-Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VDistance/
  
-	Scenario: Longitudinal distances at equator
+	Scenario: Approximated Longitudinal distances at equator
 		Given the node locations
 		 | node | lat | lon |
 		 | a    | 0   | 80  |
@@ -16,7 +15,7 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | from | to | route | distance       |
 		 | a    | b  | ab    | 8905559m ~0.1% |
 
-	Scenario: Longitudinal distances at latitude 45
+	Scenario: Approximated Longitudinal distances at latitude 45
 		Given the node locations
 		 | node | lat | lon |
 		 | c    | 45   | 80 |
@@ -28,9 +27,9 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 
 		When I route I should get
 		 | from | to | route | distance       |
-		 | c    | d  | cd    | 6028844m ~0.5% |
+		 | c    | d  | cd    | 6028844m ~4.5% |
 
-	Scenario: Longitudinal distances at latitude 80
+	Scenario: Approximated Longitudinal distances at latitude 80
 		Given the node locations
 		 | node | lat | lon |
 		 | c    | 80   | 80 |
@@ -42,9 +41,9 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 
 		When I route I should get
 		 | from | to | route | distance       |
-		 | c    | d  | cd    | 1431469m ~0.5% |
+		 | c    | d  | cd    | 1431469m ~9.5% |
 
-	Scenario: Latitudinal distances at longitude 0
+	Scenario: Approximated Latitudinal distances at longitude 0
 		Given the node locations
 		 | node | lat | lon |
 		 | a    | 80  | 0   |
@@ -58,7 +57,7 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | from | to | route | distance       |
 		 | a    | b  | ab    | 8905559m ~0.1% |
 
-	Scenario: Latitudinal distances at longitude 45
+	Scenario: Approximated Latitudinal distances at longitude 45
 		Given the node locations
 		 | node | lat | lon |
 		 | a    | 80  | 45   |
@@ -72,7 +71,7 @@ Reference distances have been calculated usign http://seismo.cqu.edu.au/CQSRG/VD
 		 | from | to | route | distance       |
 		 | a    | b  | ab    | 8905559m ~0.1% |
 
-	Scenario: Latitudinal distances at longitude 80
+	Scenario: Approximated Latitudinal distances at longitude 80
 		Given the node locations
 		 | node | lat | lon |
 		 | a    | 80  | 80   |

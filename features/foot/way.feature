@@ -2,7 +2,7 @@
 Feature: Foot - Accessability of different way types
 
 	Background:
-		Given the speedprofile "foot"
+		Given the profile "foot"
 
 	Scenario: Foot - Basic access
 	 	Then routability should be

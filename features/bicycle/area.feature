@@ -2,7 +2,7 @@
 Feature: Bike - Squares and other areas
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	@square	
 	Scenario: Bike - Route along edge of a squares

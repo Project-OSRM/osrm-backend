@@ -23,16 +23,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef QUERYEDGE_H_
 #define QUERYEDGE_H_
 
-#include <climits>
-
+#include "TurnInstructions.h"
 #include "../typedefs.h"
 
+#include <climits>
+
 struct OriginalEdgeData{
-    explicit OriginalEdgeData(NodeID v, unsigned n, short t) : viaNode(v), nameID(n), turnInstruction(t) {}
-    OriginalEdgeData() : viaNode(UINT_MAX), nameID(UINT_MAX), turnInstruction(SHRT_MAX) {}
+    explicit OriginalEdgeData(NodeID v, unsigned n, TurnInstruction t) : viaNode(v), nameID(n), turnInstruction(t) {}
+    OriginalEdgeData() : viaNode(UINT_MAX), nameID(UINT_MAX), turnInstruction(UCHAR_MAX) {}
     NodeID viaNode;
     unsigned nameID;
-    short turnInstruction;
+    TurnInstruction turnInstruction;
 };
 
 struct QueryEdge {

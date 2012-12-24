@@ -2,7 +2,7 @@
 Feature: Barriers
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 
 	Scenario: Bike - Barriers 
 		Then routability should be
@@ -10,6 +10,7 @@ Feature: Barriers
 		 |                | x     |
 		 | bollard        | x     |
 		 | gate           | x     |
+		 | cycle_barrier  | x     |
 		 | cattle_grid    | x     |
 		 | border_control | x     |
 		 | toll_booth     | x     |

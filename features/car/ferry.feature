@@ -2,7 +2,7 @@
 Feature: Car - Handle ferry routes
 
 	Background:
-		Given the speedprofile "car"
+		Given the profile "car"
 	
 	Scenario: Car - Use a ferry route
 		Given the node map

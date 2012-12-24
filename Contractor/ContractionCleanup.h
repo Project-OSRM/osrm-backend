@@ -60,7 +60,7 @@ public:
         	NodeID via;
         	unsigned nameID;
         	int distance;
-        	short turnInstruction;
+        	TurnInstruction turnInstruction;
         	bool shortcut:1;
         	bool forward:1;
         	bool backward:1;

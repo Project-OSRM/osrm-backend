@@ -2,7 +2,7 @@
 Feature: Distance calculation
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	Scenario: 100m distance
 		Given a grid size of 100 meters

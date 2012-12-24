@@ -57,23 +57,7 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     assert(lon1 != INT_MIN);
     assert(lat2 != INT_MIN);
     assert(lon2 != INT_MIN);
-//    static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
-//    //Earth's quatratic mean radius for WGS-84
-//    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-//    double latitudeArc  = ( lat1/100000. - lat2/100000. ) * DEG_TO_RAD;
-//    double longitudeArc = ( lon1/100000. - lon2/100000. ) * DEG_TO_RAD;
-//    double latitudeH = sin( latitudeArc * 0.5 );
-//    latitudeH *= latitudeH;
-//    double lontitudeH = sin( longitudeArc * 0.5 );
-//    lontitudeH *= lontitudeH;
-//    double tmp = cos( lat1/100000. * DEG_TO_RAD ) * cos( lat2/100000. * DEG_TO_RAD );
-//    double distanceArc =  2.0 * asin( sqrt( latitudeH + tmp * lontitudeH ) );
-//    return EARTH_RADIUS_IN_METERS * distanceArc;
-
-    //double PI = 3.14159265358979323846;//4.0*atan(1.0);
     double RAD = 0.017453292519943295769236907684886;
-    //std::cout << "RAD: " << RAD << std::endl;
-    //main code inside the class
     double lt1 = lat1/100000.;
     double ln1 = lon1/100000.;
     double lt2 = lat2/100000.;
@@ -94,12 +78,29 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     const double earth=6372797.560856;//I am doing miles, just change this to radius in kilometers to get distances in km
     double distance=earth*cHarv;
     return distance;
-
-
 }
 
 inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
     return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
 }
+
+inline double ApproximateDistanceByEuclid(const _Coordinate &c1, const _Coordinate &c2) {
+    assert(c1.lat != INT_MIN);
+    assert(c1.lon != INT_MIN);
+    assert(c2.lat != INT_MIN);
+    assert(c2.lon != INT_MIN);
+    const double RAD = 0.017453292519943295769236907684886;
+    const double lat1 = (c1.lat/100000.)*RAD;
+    const double lon1 = (c1.lon/100000.)*RAD;
+    const double lat2 = (c2.lat/100000.)*RAD;
+    const double lon2 = (c2.lon/100000.)*RAD;
+
+    const double x = (lon2-lon1) * cos((lat1+lat2)/2.);
+    const double y = (lat2-lat1);
+    const double earthRadius = 6372797.560856;
+    const double d = sqrt(x*x + y*y) * earthRadius;
+    return d;
+}
+
 
 #endif /* COORDINATE_H_ */

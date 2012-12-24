@@ -91,7 +91,7 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
     /** starts at index 1 */
     pathDescription[0].length = 0;
     for(unsigned i = 1; i < pathDescription.size(); ++i) {
-        pathDescription[i].length = ApproximateDistance(pathDescription[i-1].location, pathDescription[i].location);
+        pathDescription[i].length = ApproximateDistanceByEuclid(pathDescription[i-1].location, pathDescription[i].location);
     }
 
     double lengthOfSegment = 0;
@@ -111,32 +111,37 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
     becomes:
     10. Turn left on B 36 for 35 km
     */
-    unsigned lastTurn = 0;
-    for(unsigned i = 1; i < pathDescription.size(); ++i) {
-        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].nameID);
-        if(TurnInstructionsClass::GoStraight == pathDescription[i].turnInstruction) {
-            if(std::string::npos != string0.find(string1+";") ||
-                    std::string::npos != string0.find(";"+string1) ||
-                    std::string::npos != string0.find(string1+" ;") ||
-                    std::string::npos != string0.find("; "+string1)){
+//TODO: rework to check only end and start of string.
+//		stl string is way to expensive
+
+//    unsigned lastTurn = 0;
+//    for(unsigned i = 1; i < pathDescription.size(); ++i) {
+//        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].nameID);
+//        if(TurnInstructionsClass::GoStraight == pathDescription[i].turnInstruction) {
+//            if(std::string::npos != string0.find(string1+";")
+//            		|| std::string::npos != string0.find(";"+string1)
+//            		|| std::string::npos != string0.find(string1+" ;")
+//                    || std::string::npos != string0.find("; "+string1)
+//                    ){
 //                INFO("->next correct: " << string0 << " contains " << string1);
-                for(; lastTurn != i; ++lastTurn)
-                    pathDescription[lastTurn].nameID = pathDescription[i].nameID;
-                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
-            } else if(std::string::npos != string1.find(string0+";") ||
-                    std::string::npos != string1.find(";"+string0) ||
-                    std::string::npos != string1.find(string0+" ;")||
-                    std::string::npos != string1.find("; "+string0)) {
+//                for(; lastTurn != i; ++lastTurn)
+//                    pathDescription[lastTurn].nameID = pathDescription[i].nameID;
+//                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
+//            } else if(std::string::npos != string1.find(string0+";")
+//            		|| std::string::npos != string1.find(";"+string0)
+//                    || std::string::npos != string1.find(string0+" ;")
+//                    || std::string::npos != string1.find("; "+string0)
+//                    ){
 //                INFO("->prev correct: " << string1 << " contains " << string0);
-                pathDescription[i].nameID = pathDescription[i-1].nameID;
-                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
-            }
-        }
-        if (TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
-            lastTurn = i;
-        }
-        string0 = string1;
-    }
+//                pathDescription[i].nameID = pathDescription[i-1].nameID;
+//                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
+//            }
+//        }
+//        if (TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
+//            lastTurn = i;
+//        }
+//        string0 = string1;
+//    }
 
 
     for(unsigned i = 1; i < pathDescription.size(); ++i) {

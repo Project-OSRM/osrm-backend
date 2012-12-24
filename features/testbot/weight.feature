@@ -2,7 +2,7 @@
 Feature: Choosing route based on length, speed, etc
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	Scenario: Pick the geometrically shortest route, way types being equal
 		Given the node map

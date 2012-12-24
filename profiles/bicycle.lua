@@ -1,5 +1,5 @@
 -- Begin of globals
-barrier_whitelist = { [""] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true}
+barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true}
 access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true	}
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
@@ -121,6 +121,7 @@ function way_function (way, numberOfNodesInWay)
 	local junction = way.tags:Find("junction")
 	local route = way.tags:Find("route")
 	local railway = way.tags:Find("railway")
+	local public_transport = way.tags:Find("public_transport")
 	local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
 	local man_made = way.tags:Find("man_made")
 	local barrier = way.tags:Find("barrier")
@@ -135,12 +136,14 @@ function way_function (way, numberOfNodesInWay)
 	local amenity = way.tags:Find("amenity")
 	local access = find_access_tag(way)
 	
-	-- only route on things with highway tag set (not buildings, boundaries, etc)
+	-- initial routability check, filters out buildings, boundaries, etc
     if (not highway or highway == '') and 
 		(not route or route == '') and 
 		(not railway or railway=='') and 
-		(not amenity or amenity=='') then
-		return 0
+		(not amenity or amenity=='') and
+    	(not public_transport or public_transport=='')
+    	then
+    	return 0
     end
 		
  	-- access
@@ -168,8 +171,11 @@ function way_function (way, numberOfNodesInWay)
 		 	way.speed = route_speeds[route]
 		end
 	elseif railway and platform_speeds[railway] then
-		-- railway platforms
+		-- railway platforms (old tagging scheme)
 		way.speed = platform_speeds[railway]
+	elseif platform_speeds[public_transport] then
+		-- public_transport platforms (new tagging platform)
+		way.speed = platform_speeds[public_transport]
     elseif railway and railway_speeds[railway] then
 	 	-- railways
 		if access and access_tag_whitelist[access] then

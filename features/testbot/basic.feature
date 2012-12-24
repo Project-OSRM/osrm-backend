@@ -2,7 +2,7 @@
 Feature: Basic Routing
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	@smallest
 	Scenario: A single way with two nodes

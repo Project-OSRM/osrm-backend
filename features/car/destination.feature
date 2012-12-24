@@ -2,7 +2,7 @@
 Feature: Car - Destination only, no passing through
 
 	Background:
-		Given the speedprofile "car"
+		Given the profile "car"
 		
 	Scenario: Car - Destination only street
 		Given the node map

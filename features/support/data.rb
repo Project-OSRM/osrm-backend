@@ -116,7 +116,7 @@ def reset_data
     #clear_log
     #clear_data_files
   end
-  reset_speedprofile
+  reset_profile
   reset_osm
   @fingerprint = nil
 end
@@ -131,10 +131,6 @@ def reset_osm
   name_way_hash.clear
   @osm_str = nil
   @osm_hash = nil
-  
-  ##ID -1 causes trouble, so add a few nodes to avoid it
-  #node = OSM::Node.new nil, OSM_USER, OSM_TIMESTAMP, 0,0 
-  #node = OSM::Node.new nil, OSM_USER, OSM_TIMESTAMP, 0,0 
   @osm_id = 0
 end
 
@@ -180,9 +176,8 @@ def convert_osm_to_pbf
   unless File.exist?("#{@osm_file}.osm.pbf")
     log_preprocess_info
     log "== Converting #{@osm_file}.osm to protobuffer format...", :preprocess
-    #redirect stdout and stderr to a log file avoid output in the cucumber console
     unless system "osmosis --read-xml #{@osm_file}.osm --write-pbf #{@osm_file}.osm.pbf omitmetadata=true 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
-      raise "Failed to convert to proto buffer format. Please see #{hash}.log for more info." 
+      raise OsmosisError.new $?, "osmosis exited with code #{$?.exitstatus}"
     end
     log '', :preprocess
   end
@@ -198,25 +193,30 @@ def prepared?
   File.exist?("#{@osm_file}.osrm.hsgr")
 end
 
+def write_timestamp
+  File.open( "#{@osm_file}.osrm.timestamp", 'w') {|f| f.write(OSM_TIMESTAMP) }
+end
+
 def reprocess
   Dir.chdir TEST_FOLDER do
     write_osm
+    write_timestamp
     convert_osm_to_pbf
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@speedprofile}.lua"
+      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
-        raise OSRMError.new 'osrm-extract', $?.exitstatus, "*** osrm-extract exited with code #{$?.exitstatus}. The file preprocess.log might contain more info." 
+        raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end
       log '', :preprocess
     end
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@speedprofile}.lua"
+      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
-        raise OSRMError.new 'osrm-prepare', $?.exitstatus, "*** osrm-prepare exited with code #{$?.exitstatus}. The file preprocess.log might contain more info." 
+        raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
       end 
       log '', :preprocess
     end

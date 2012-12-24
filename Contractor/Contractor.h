@@ -122,8 +122,7 @@ public:
             assert( newEdge.data.distance > 0 );
 #ifndef NDEBUG
             if ( newEdge.data.distance > 24 * 60 * 60 * 10 ) {
-                std::cout << "Edge Weight too large -> May lead to invalid CH" << std::endl;
-                continue;
+                WARN("Edge weight large -> " << newEdge.data.distance);
             }
 #endif
             edges.push_back( newEdge );

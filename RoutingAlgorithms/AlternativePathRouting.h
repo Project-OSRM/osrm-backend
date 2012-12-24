@@ -59,7 +59,7 @@ public:
 
         std::vector<NodeID> alternativePath;
         std::vector<NodeID> viaNodeCandidates;
-        std::deque <NodeID> packedShortestPath;
+        std::vector <NodeID> packedShortestPath;
         std::vector<PreselectedNode> nodesThatPassPreselection;
 
         HeapPtr & forwardHeap = super::_queryData.forwardHeap;
@@ -161,7 +161,7 @@ private:
     inline void retrievePackedViaPath(const HeapPtr & _forwardHeap1, const HeapPtr & _backwardHeap1, const HeapPtr & _forwardHeap2, const HeapPtr & _backwardHeap2,
             const NodeID s_v_middle, const NodeID v_t_middle, std::vector<_PathData> & unpackedPath) {
         //unpack [s,v)
-        std::deque<NodeID> packed_s_v_path, packed_v_t_path;
+        std::vector<NodeID> packed_s_v_path, packed_v_t_path;
         super::RetrievePackedPathFromHeap(_forwardHeap1, _backwardHeap2, s_v_middle, packed_s_v_path);
         packed_s_v_path.resize(packed_s_v_path.size()-1);
         //unpack [v,t]
@@ -171,7 +171,7 @@ private:
     }
 
     inline void computeLengthAndSharingOfViaPath(const PreselectedNode& node, int *lengthOfViaPath, int *sharingOfViaPath,
-            const int offset, const std::deque<NodeID> & packedShortestPath) {
+            const int offset, const std::vector<NodeID> & packedShortestPath) {
         //compute and unpack <s,..,v> and <v,..,t> by exploring search spaces from v and intersecting against queues
         //only half-searches have to be done at this stage
         super::_queryData.InitializeOrClearSecondThreadLocalStorage();
@@ -181,8 +181,8 @@ private:
         HeapPtr & newForwardHeap       = super::_queryData.forwardHeap2;
         HeapPtr & newBackwardHeap      = super::_queryData.backwardHeap2;
 
-        std::deque < NodeID > packed_s_v_path;
-        std::deque < NodeID > packed_v_t_path;
+        std::vector < NodeID > packed_s_v_path;
+        std::vector < NodeID > packed_v_t_path;
 
         std::vector<NodeID> partiallyUnpackedShortestPath;
         std::vector<NodeID> partiallyUnpackedViaPath;
@@ -258,8 +258,8 @@ private:
         //finished partial unpacking spree! Amount of sharing is stored to appropriate poiner variable
     }
 
-    inline int approximateAmountOfSharing(const NodeID middleNodeIDOfAlternativePath, HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const std::deque<NodeID> & packedShortestPath) {
-        std::deque<NodeID> packedAlternativePath;
+    inline int approximateAmountOfSharing(const NodeID middleNodeIDOfAlternativePath, HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const std::vector<NodeID> & packedShortestPath) {
+        std::vector<NodeID> packedAlternativePath;
         super::RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, middleNodeIDOfAlternativePath, packedAlternativePath);
 
         if(packedShortestPath.size() < 2 || packedAlternativePath.size() < 2)
@@ -336,8 +336,8 @@ private:
 
     //conduct T-Test
     inline bool viaNodeCandidatePasses_T_Test( HeapPtr& existingForwardHeap, HeapPtr& existingBackwardHeap, HeapPtr& newForwardHeap, HeapPtr& newBackwardHeap, const RankedCandidateNode& candidate, const int offset, const int lengthOfShortestPath, int * lengthOfViaPath, NodeID * s_v_middle, NodeID * v_t_middle) {
-        std::deque < NodeID > packed_s_v_path;
-        std::deque < NodeID > packed_v_t_path;
+        std::vector < NodeID > packed_s_v_path;
+        std::vector < NodeID > packed_v_t_path;
 
         super::_queryData.InitializeOrClearSecondThreadLocalStorage();
         *s_v_middle = UINT_MAX;

@@ -2,7 +2,7 @@
 Feature: Bike - Max speed restrictions
 
 	Background: Use specific speeds
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	Scenario: Bike - Respect maxspeeds when lower that way type speed
 		Given the node map

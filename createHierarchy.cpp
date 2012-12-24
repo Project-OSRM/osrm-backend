@@ -18,14 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#define VERBOSE(x) x
-#define VERBOSE2(x)
-
-#ifdef NDEBUG
-#undef VERBOSE
-#undef VERBOSE2
-#endif
-
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
@@ -137,7 +129,6 @@ int main (int argc, char *argv[]) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
-
 
 
     std::vector<ImportEdge> edgeList;

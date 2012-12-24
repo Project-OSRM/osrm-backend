@@ -3,7 +3,7 @@ Feature: Bike - Cycle tracks/lanes
 Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 		
 	Scenario: Bike - Cycle tracks/lanes should enable biking		
 	 	Then routability should be

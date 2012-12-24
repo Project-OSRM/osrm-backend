@@ -2,7 +2,7 @@
 Feature: Bike - Handle ferry routes
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	Scenario: Bike - Ferry route
 		Given the node map
@@ -113,7 +113,8 @@ Feature: Bike - Handle ferry routes
 		 | from | to | route   | time       |
 		 | a    | g  | abcdefg | 23400s +-1 |
 		 | g    | a  | abcdefg | 23400s +-1 |
-
+    
+    @todo
 	Scenario: Bike - Ferry duration, individual parts
 		Given the node map
 		  | x | y |  | z |  |  | v |

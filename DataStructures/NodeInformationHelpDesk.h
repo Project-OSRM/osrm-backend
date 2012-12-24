@@ -85,7 +85,7 @@ public:
 	    return origEdgeData.at(id).nameID;
 	}
 
-    inline short getTurnInstructionFromEdgeID(const unsigned id) const {
+    inline TurnInstruction getTurnInstructionFromEdgeID(const unsigned id) const {
         return origEdgeData.at(id).turnInstruction;
     }
 

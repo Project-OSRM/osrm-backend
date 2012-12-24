@@ -95,8 +95,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
 
 void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector< EdgeBasedEdge >& outputEdgeList ) {
     GUARANTEE(0 == outputEdgeList.size(), "Vector passed to EdgeBasedGraphFactory::GetEdgeBasedEdges(..) is not empty");
-    GUARANTEE(0 != edgeBasedEdges.size(), "No edges in edge based graph");
-
     edgeBasedEdges.swap(outputEdgeList);
 }
 
@@ -280,7 +278,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += speedProfile.trafficSignalPenalty;
                         }
-                        short turnInstruction = AnalyzeTurn(u, v, w);
+                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += speedProfile.uTurnPenalty;
 //                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
@@ -297,7 +295,6 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         }
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
                         EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
-                        assert(u != w);
                         originalEdgeData.push_back(oed);
                         if(originalEdgeData.size() > 100000) {
                             originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
@@ -334,7 +331,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
 
-short EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
+TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
     if(u == w) {
         return TurnInstructions.UTurn;
     }

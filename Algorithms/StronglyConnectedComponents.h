@@ -41,7 +41,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/NodeCoords.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/Restriction.h"
-
+#include "../DataStructures/TurnInstructions.h"
 
 // Strongly connected components using Tarjan's Algorithm
 
@@ -66,7 +66,7 @@ private:
         unsigned nameID;
         bool forward;
         bool backward;
-        short turnInstruction;
+        TurnInstruction turnInstruction;
     };
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;

@@ -2,7 +2,7 @@
 Feature: Snap start/end point to the nearest way 
 	
 	Background:
-		Given the speedprofile "testbot"
+		Given the profile "testbot"
 	
 	Scenario: Snap to nearest protruding oneway
 		Given the node map
@@ -98,7 +98,6 @@ Feature: Snap start/end point to the nearest way
 		 | b    | x  | xb    |
 		 | c    | x  | xc    |
 	
-	@xx
 	Scenario: Find edges within 1km, but not 10km
 		Given a grid size of 1000 meters
 		Given the node map
@@ -153,4 +152,3 @@ Feature: Snap start/end point to the nearest way
 		 | x    | n  |       |
 		 | x    | o  |       |
 		 | x    | p  |       |
-

@@ -3,7 +3,7 @@ Feature: Bike - Handle ferry routes
 Bringing bikes on trains and subways
 
 	Background:
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	Scenario: Bike - Bringing bikes on trains
 	 	Then routability should be

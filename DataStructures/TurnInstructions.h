@@ -23,30 +23,32 @@
 
 #include <string>
 
+typedef unsigned char TurnInstruction;
+
 //This is a hack until c++0x is available enough to use scoped enums
 struct TurnInstructionsClass {
 
-    const static short NoTurn = 0;          //Give no instruction at all
-    const static short GoStraight = 1;      //Tell user to go straight!
-    const static short TurnSlightRight = 2;
-    const static short TurnRight = 3;
-    const static short TurnSharpRight = 4;
-    const static short UTurn = 5;
-    const static short TurnSharpLeft = 6;
-    const static short TurnLeft = 7;
-    const static short TurnSlightLeft = 8;
-    const static short ReachViaPoint = 9;
-    const static short HeadOn = 10;
-    const static short EnterRoundAbout = 11;
-    const static short LeaveRoundAbout = 12;
-    const static short StayOnRoundAbout = 13;
-    const static short StartAtEndOfStreet = 14;
-    const static short ReachedYourDestination = 15;
+    const static TurnInstruction NoTurn = 0;          //Give no instruction at all
+    const static TurnInstruction GoStraight = 1;      //Tell user to go straight!
+    const static TurnInstruction TurnSlightRight = 2;
+    const static TurnInstruction TurnRight = 3;
+    const static TurnInstruction TurnSharpRight = 4;
+    const static TurnInstruction UTurn = 5;
+    const static TurnInstruction TurnSharpLeft = 6;
+    const static TurnInstruction TurnLeft = 7;
+    const static TurnInstruction TurnSlightLeft = 8;
+    const static TurnInstruction ReachViaPoint = 9;
+    const static TurnInstruction HeadOn = 10;
+    const static TurnInstruction EnterRoundAbout = 11;
+    const static TurnInstruction LeaveRoundAbout = 12;
+    const static TurnInstruction StayOnRoundAbout = 13;
+    const static TurnInstruction StartAtEndOfStreet = 14;
+    const static TurnInstruction ReachedYourDestination = 15;
 
-    const static short AccessRestrictionFlag = (1<<14);
-    const static short InverseAccessRestrictionFlag = ~(1<<14);
+    const static TurnInstruction AccessRestrictionFlag = 128;
+    const static TurnInstruction InverseAccessRestrictionFlag = 0x7f; // ~128 does not work without a warning.
 
-    const static int   AccessRestrictionPenalty = 1 << 15; //unrelated to the bit set in the restriction flag
+    const static int AccessRestrictionPenalty = 1 << 15; //unrelated to the bit set in the restriction flag
 
 //    std::string TurnStrings[16];
 //    std::string Ordinals[12];
@@ -84,7 +86,7 @@ struct TurnInstructionsClass {
 //        Ordinals[11]    = "one of the too many";
 //    };
 
-    static inline double GetTurnDirectionOfInstruction( const double angle ) {
+    static inline TurnInstruction GetTurnDirectionOfInstruction( const double angle ) {
         if(angle >= 23 && angle < 67) {
             return TurnSharpRight;
         }

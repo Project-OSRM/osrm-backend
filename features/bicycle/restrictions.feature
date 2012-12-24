@@ -4,7 +4,7 @@ Feature: Bike - Turn restrictions
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
 	Background: Use car routing
-		Given the speedprofile "bicycle"
+		Given the profile "bicycle"
 	
 	@no_turning
 	Scenario: Bike - No left turn
