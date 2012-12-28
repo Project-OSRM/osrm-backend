@@ -47,7 +47,7 @@ extern "C" {
 #include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
 #include "Util/StringUtil.h"
-#include "Util/Lua.h"
+#include "Util/LuaUtil.h"
 
 using namespace std;
 
