@@ -33,12 +33,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 typedef
         boost::archive::iterators::base64_from_binary<
-        boost::archive::iterators::transform_width<string::const_iterator, 6, 8>
+        boost::archive::iterators::transform_width<std::string::const_iterator, 6, 8>
 > base64_t;
 
 typedef
         boost::archive::iterators::transform_width<
-        boost::archive::iterators::binary_from_base64<string::const_iterator>, 8, 6
+        boost::archive::iterators::binary_from_base64<std::string::const_iterator>, 8, 6
         > binary_t;
 
 template<class ToEncodeT>
@@ -54,7 +54,7 @@ static void EncodeObjectToBase64(const ToEncodeT & object, std::string& encoded)
 template<class ToEncodeT>
 static void DecodeObjectFromBase64(ToEncodeT & object, const std::string& _encoded) {
     try {
-        string encoded(_encoded);
+    	std::string encoded(_encoded);
         //replace "-" with "+" and "_" with "/"
         replaceAll(encoded, "-", "+");
         replaceAll(encoded, "_", "/");

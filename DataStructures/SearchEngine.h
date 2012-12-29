@@ -48,10 +48,10 @@ template<class EdgeData, class GraphT>
 struct SearchEngineData {
     typedef SearchEngineHeapPtr HeapPtr;
     typedef GraphT Graph;
-    SearchEngineData(GraphT * g, NodeInformationHelpDesk * nh, std::vector<string> & n) :graph(g), nodeHelpDesk(nh), names(n) {}
+    SearchEngineData(GraphT * g, NodeInformationHelpDesk * nh, std::vector<std::string> & n) :graph(g), nodeHelpDesk(nh), names(n) {}
     const GraphT * graph;
     NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<string> & names;
+    std::vector<std::string> & names;
     static HeapPtr forwardHeap;
     static HeapPtr backwardHeap;
     static HeapPtr forwardHeap2;
@@ -113,7 +113,7 @@ public:
     ShortestPathRouting<SearchEngineDataT> shortestPath;
     AlternativeRouting<SearchEngineDataT> alternativePaths;
 
-    SearchEngine(GraphT * g, NodeInformationHelpDesk * nh, std::vector<string> & n) :
+    SearchEngine(GraphT * g, NodeInformationHelpDesk * nh, std::vector<std::string> & n) :
 	    _queryData(g, nh, n),
 	    shortestPath(_queryData),
 	    alternativePaths(_queryData)

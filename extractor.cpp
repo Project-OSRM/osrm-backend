@@ -67,12 +67,12 @@ int main (int argc, char *argv[]) {
             isPBF = true;
         }
     }
-    if(pos!=string::npos) {
+    if(pos!=std::string::npos) {
         outputFileName.replace(pos, 8, ".osrm");
         restrictionsFileName.replace(pos, 8, ".osrm.restrictions");
     } else {
         pos=outputFileName.find(".osm");
-        if(pos!=string::npos) {
+        if(pos!=std::string::npos) {
             outputFileName.replace(pos, 5, ".osrm");
             restrictionsFileName.replace(pos, 5, ".osrm.restrictions");
         } else {

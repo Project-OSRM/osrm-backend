@@ -35,13 +35,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <iostream>
 
-using namespace std;
-
-#ifdef STXXL_VERBOSE_LEVEL
-#undef STXXL_VERBOSE_LEVEL
-#endif
-#define STXXL_VERBOSE_LEVEL -100
-
 #define INFO(x) do {std::cout << "[info " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 #define ERR(x) do {std::cerr << "[error " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; std::exit(-1);} while(0);
 #define WARN(x) do {std::cerr << "[warn " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);

@@ -110,7 +110,7 @@ struct _Edge {
         return _Edge(0,0);
     }
     static _Edge max_value() {
-        return _Edge((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
+        return _Edge((std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)());
     }
 
 };
@@ -125,10 +125,10 @@ struct _WayIDStartAndEndEdge {
     _WayIDStartAndEndEdge(unsigned w, NodeID fs, NodeID ft, NodeID ls, NodeID lt) :  wayID(w), firstStart(fs), firstTarget(ft), lastStart(ls), lastTarget(lt) {}
 
     static _WayIDStartAndEndEdge min_value() {
-        return _WayIDStartAndEndEdge((numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)(), (numeric_limits<unsigned>::min)());
+        return _WayIDStartAndEndEdge((std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)());
     }
     static _WayIDStartAndEndEdge max_value() {
-        return _WayIDStartAndEndEdge((numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)(), (numeric_limits<unsigned>::max)());
+        return _WayIDStartAndEndEdge((std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)());
     }
 };
 
@@ -202,7 +202,7 @@ struct CmpEdgeByTargetID : public std::binary_function<_Edge, _Edge, bool>
     }
 };
 
-inline string GetRandomString() {
+inline std::string GetRandomString() {
     char s[128];
     static const char alphanum[] =
             "0123456789"
@@ -213,7 +213,7 @@ inline string GetRandomString() {
         s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
     }
     s[127] = 0;
-    return string(s);
+    return std::string(s);
 }
 
 #endif /* EXTRACTORSTRUCTS_H_ */

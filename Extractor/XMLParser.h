@@ -75,7 +75,7 @@ public:
                     if(!externalMemory->nodeFunction(n))
                         std::cerr << "[XMLParser] dense node not parsed" << std::endl;
                 } catch (const luabind::error &er) {
-                    cerr << er.what() << endl;
+                	std::cerr << er.what() << std::endl;
                     lua_State* Ler=er.state();
                     report_errors(Ler, -1);
                 } catch (std::exception & e) {
@@ -86,7 +86,6 @@ public:
             }
 
             if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
-                string name;
                 _Way way = _ReadXMLWay( );
 
                 /** Pass the unpacked way to the LUA call back **/
@@ -101,7 +100,7 @@ public:
                         std::cerr << "[PBFParser] way not parsed" << std::endl;
                     }
                 } catch (const luabind::error &er) {
-                    cerr << er.what() << endl;
+                	std::cerr << er.what() << std::endl;
                     lua_State* Ler=er.state();
                     report_errors(Ler, -1);
                 } catch (std::exception & e) {

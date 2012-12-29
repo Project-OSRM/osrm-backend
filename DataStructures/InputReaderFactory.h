@@ -43,21 +43,21 @@ int readFromBz2Stream( void* pointer, char* buffer, int len ) {
             return read;
         } else if(BZ_STREAM_END == context->error) {
             BZ2_bzReadGetUnused(&context->error, context->bz2, &unusedTmpVoid, &context->nUnused);
-            if(BZ_OK != context->error) { cerr << "Could not BZ2_bzReadGetUnused" << endl; exit(-1);};
+            if(BZ_OK != context->error) {std::cerr << "Could not BZ2_bzReadGetUnused" <<std::endl; exit(-1);};
             unusedTmp = (char*)unusedTmpVoid;
             for(int i=0;i<context->nUnused;i++) {
                 context->unused[i] = unusedTmp[i];
             }
             BZ2_bzReadClose(&context->error, context->bz2);
-            if(BZ_OK != context->error) { cerr << "Could not BZ2_bzReadClose" << endl; exit(-1);};
+            if(BZ_OK != context->error) {std::cerr << "Could not BZ2_bzReadClose" <<std::endl; exit(-1);};
             context->error = BZ_STREAM_END; // set to the stream end for next call to this function
             if(0 == context->nUnused && feof(context->file)) {
                 return read;
             } else {
                 context->bz2 = BZ2_bzReadOpen(&context->error, context->file, 0, 0, context->unused, context->nUnused);
-                if(NULL == context->bz2){ cerr << "Could not open file" << endl; exit(-1);};
+                if(NULL == context->bz2){std::cerr << "Could not open file" <<std::endl; exit(-1);};
             }
-        } else { cerr << "Could not read bz2 file" << endl; exit(-1); }
+        } else { std::cerr << "Could not read bz2 file" << std::endl; exit(-1); }
     }
     return read;
 }
@@ -74,7 +74,7 @@ xmlTextReaderPtr inputReaderFactory( const char* name )
 {
     std::string inputName(name);
 
-    if(inputName.find(".osm.bz2")!=string::npos)
+    if(inputName.find(".osm.bz2")!=std::string::npos)
     {
         BZ2Context* context = new BZ2Context();
         context->error = false;
