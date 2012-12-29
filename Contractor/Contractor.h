@@ -274,7 +274,7 @@ public:
                 TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
                 //Write dummy number of edges to temporary file
                 //        		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
-                long initialFilePosition = tempStorage.tell(temporaryStorageSlotID);
+                uint64_t initialFilePosition = tempStorage.tell(temporaryStorageSlotID);
                 unsigned numberOfTemporaryEdges = 0;
                 tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
 

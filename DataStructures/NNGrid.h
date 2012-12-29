@@ -21,10 +21,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef NNGRID_H_
 #define NNGRID_H_
 
-#include <algorithm>
 #include <cassert>
 #include <cfloat>
 #include <cmath>
+#include <cstring>
+
+#include <algorithm>
 #include <fstream>
 #include <limits>
 #include <vector>
@@ -58,7 +60,7 @@ template<bool WriteAccess = false>
 class NNGrid {
 public:
     NNGrid() /*: cellCache(500), fileCache(500)*/ {
-        ramIndexTable.resize((1024*1024), ULONG_MAX);
+        ramIndexTable.resize((1024*1024), std::numeric_limits<uint64_t>::max());
     }
 
     NNGrid(const char* rif, const char* _i) {
@@ -66,7 +68,7 @@ public:
             ERR("Not available in Write mode");
         }
         iif = std::string(_i);
-        ramIndexTable.resize((1024*1024), ULONG_MAX);
+        ramIndexTable.resize((1024*1024), std::numeric_limits<uint64_t>::max());
         ramInFile.open(rif, std::ios::in | std::ios::binary);
         if(!ramInFile) { ERR(rif <<  " not found"); }
 
@@ -87,7 +89,7 @@ public:
 
     void OpenIndexFiles() {
         assert(ramInFile.is_open());
-        ramInFile.read(static_cast<char*>(static_cast<void*>(&ramIndexTable[0]) ), sizeof(unsigned long)*1024*1024);
+        ramInFile.read(static_cast<char*>(static_cast<void*>(&ramIndexTable[0]) ), sizeof(uint64_t)*1024*1024);
         ramInFile.close();
     }
 
@@ -114,8 +116,8 @@ public:
         INFO("finished sorting after " << (get_timestamp() - timestamp) << "s");
         std::vector<GridEntry> entriesInFileWithRAMSameIndex;
         unsigned indexInRamTable = entries.begin()->ramIndex;
-        unsigned long lastPositionInIndexFile = 0;
-        cout << "writing data ..." << flush;
+        uint64_t lastPositionInIndexFile = 0;
+        std::cout << "writing data ..." << std::flush;
         p.reinit(entries.size());
         boost::unordered_map< unsigned, unsigned > cellMap(1024);
         BOOST_FOREACH(GridEntry & gridEntry, entries) {
@@ -143,9 +145,9 @@ public:
         indexOutFile.close();
 
         //Serialize RAM Index
-        ofstream ramFile(ramIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
+        std::ofstream ramFile(ramIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
         //write 4 MB of index Table in RAM
-        ramFile.write((char *)&ramIndexTable[0], sizeof(unsigned long)*1024*1024 );
+        ramFile.write((char *)&ramIndexTable[0], sizeof(uint64_t)*1024*1024 );
         //close ram index file
         ramFile.close();
     }
@@ -174,7 +176,7 @@ public:
 //        INFO("looked up " << candidates.size());
         _GridEdge smallestEdge;
         _Coordinate tmp, edgeStartCoord, edgeEndCoord;
-        double dist = numeric_limits<double>::max();
+        double dist = std::numeric_limits<double>::max();
         double r, tmpDist;
 
         BOOST_FOREACH(_GridEdge candidate, candidates) {
@@ -314,13 +316,13 @@ private:
         return (std::fabs(d1 - d2) < FLT_EPSILON);
     }
 
-    inline unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const unsigned long fileOffset, boost::unordered_map< unsigned, unsigned > & cellMap ) {
+    inline unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const uint64_t fileOffset, boost::unordered_map< unsigned, unsigned > & cellMap ) {
         std::vector<char> tmpBuffer(32*32*4096,0);
-        unsigned long indexIntoTmpBuffer = 0;
+        uint64_t indexIntoTmpBuffer = 0;
         unsigned numberOfWrittenBytes = 0;
         assert(indexOutFile.is_open());
 
-        std::vector<unsigned long> cellIndex(32*32,ULONG_MAX);
+        std::vector<uint64_t> cellIndex(32*32,std::numeric_limits<uint64_t>::max());
 
         for(unsigned i = 0; i < entriesWithSameRAMIndex.size() -1; ++i) {
             assert(entriesWithSameRAMIndex[i].ramIndex== entriesWithSameRAMIndex[i+1].ramIndex);
@@ -356,8 +358,8 @@ private:
         indexIntoTmpBuffer += FlushEntriesWithSameFileIndexToBuffer(entriesWithSameFileIndex, tmpBuffer, indexIntoTmpBuffer);
 
         assert(entriesWithSameFileIndex.size() == 0);
-        indexOutFile.write(static_cast<char*>(static_cast<void*>(&cellIndex[0])),32*32*sizeof(unsigned long));
-        numberOfWrittenBytes += 32*32*sizeof(unsigned long);
+        indexOutFile.write(static_cast<char*>(static_cast<void*>(&cellIndex[0])),32*32*sizeof(uint64_t));
+        numberOfWrittenBytes += 32*32*sizeof(uint64_t);
 
         //write contents of tmpbuffer to disk
         indexOutFile.write(&tmpBuffer[0], indexIntoTmpBuffer*sizeof(char));
@@ -366,7 +368,7 @@ private:
         return numberOfWrittenBytes;
     }
 
-    inline unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, std::vector<char> & tmpBuffer, const unsigned long index) const {
+    inline unsigned FlushEntriesWithSameFileIndexToBuffer( std::vector<GridEntry> &vectorWithSameFileIndex, std::vector<char> & tmpBuffer, const uint64_t index) const {
         sort( vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end() );
         vectorWithSameFileIndex.erase(unique(vectorWithSameFileIndex.begin(), vectorWithSameFileIndex.end()), vectorWithSameFileIndex.end());
         const unsigned lengthOfBucket = vectorWithSameFileIndex.size();
@@ -394,8 +396,8 @@ private:
 
     inline void GetContentsOfFileBucketEnumerated(const unsigned fileIndex, std::vector<_GridEdge>& result) const {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
-        unsigned long startIndexInFile = ramIndexTable[ramIndex];
-        if(startIndexInFile == ULONG_MAX) {
+        uint64_t startIndexInFile = ramIndexTable[ramIndex];
+        if(startIndexInFile == std::numeric_limits<uint64_t>::max()) {
             return;
         }
         unsigned enumeratedIndex = GetCellIndexFromRAMAndFileIndex(ramIndex, fileIndex);
@@ -409,14 +411,14 @@ private:
         }
 
         //only read the single necessary cell index
-        localStream->seekg(startIndexInFile+(enumeratedIndex*sizeof(unsigned long)));
-        unsigned long fetchedIndex = 0;
-        localStream->read(static_cast<char*>( static_cast<void*>(&fetchedIndex)), sizeof(unsigned long));
+        localStream->seekg(startIndexInFile+(enumeratedIndex*sizeof(uint64_t)));
+        uint64_t fetchedIndex = 0;
+        localStream->read(static_cast<char*>( static_cast<void*>(&fetchedIndex)), sizeof(uint64_t));
 
-        if(fetchedIndex == ULONG_MAX) {
+        if(fetchedIndex == std::numeric_limits<uint64_t>::max()) {
             return;
         }
-        const unsigned long position = fetchedIndex + 32*32*sizeof(unsigned long) ;
+        const uint64_t position = fetchedIndex + 32*32*sizeof(uint64_t) ;
 
         unsigned lengthOfBucket;
         unsigned currentSizeOfResult = result.size();
@@ -428,12 +430,12 @@ private:
 
     inline void GetContentsOfFileBucket(const unsigned fileIndex, std::vector<_GridEdge>& result, boost::unordered_map< unsigned, unsigned> & cellMap) {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
-        unsigned long startIndexInFile = ramIndexTable[ramIndex];
-        if(startIndexInFile == ULONG_MAX) {
+        uint64_t startIndexInFile = ramIndexTable[ramIndex];
+        if(startIndexInFile == std::numeric_limits<uint64_t>::max()) {
             return;
         }
 
-        unsigned long cellIndex[32*32];
+        uint64_t cellIndex[32*32];
 
         cellMap.clear();
         BuildCellIndexToFileIndexMap(ramIndex,  cellMap);
@@ -446,12 +448,12 @@ private:
         }
 
         localStream->seekg(startIndexInFile);
-        localStream->read(static_cast<char*>(static_cast<void*>( cellIndex)), 32*32*sizeof(unsigned long));
+        localStream->read(static_cast<char*>(static_cast<void*>( cellIndex)), 32*32*sizeof(uint64_t));
         assert(cellMap.find(fileIndex) != cellMap.end());
-        if(cellIndex[cellMap[fileIndex]] == ULONG_MAX) {
+        if(cellIndex[cellMap[fileIndex]] == std::numeric_limits<uint64_t>::max()) {
             return;
         }
-        const unsigned long position = cellIndex[cellMap[fileIndex]] + 32*32*sizeof(unsigned long) ;
+        const uint64_t position = cellIndex[cellMap[fileIndex]] + 32*32*sizeof(uint64_t) ;
 
         unsigned lengthOfBucket;
         unsigned currentSizeOfResult = result.size();
@@ -574,14 +576,14 @@ private:
         return ramIndex;
     }
 
-    const static unsigned long END_OF_BUCKET_DELIMITER = UINT_MAX;
+    const static uint64_t END_OF_BUCKET_DELIMITER = boost::integer_traits<uint64_t>::const_max;
 
     std::ofstream indexOutFile;
     std::ifstream ramInFile;
 #ifndef ROUTED
     stxxl::vector<GridEntry> entries;
 #endif
-    std::vector<unsigned long> ramIndexTable; //8 MB for first level index in RAM
+    std::vector<uint64_t> ramIndexTable; //8 MB for first level index in RAM
     std::string iif;
     //    LRUCache<int,std::vector<unsigned> > cellCache;
     //    LRUCache<int,std::vector<_Edge> > fileCache;

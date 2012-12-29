@@ -27,31 +27,31 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         double time = get_timestamp();
         boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
-        cout << "[extractor] Sorting used nodes        ... " << flush;
+        std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
         stxxl::sort(usedNodeIDs.begin(), usedNodeIDs.end(), Cmp(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
         time = get_timestamp();
-        cout << "[extractor] Erasing duplicate nodes   ... " << flush;
-        stxxl::vector<NodeID>::iterator NewEnd = unique ( usedNodeIDs.begin(),usedNodeIDs.end() ) ;
+        std::cout << "[extractor] Erasing duplicate nodes   ... " << std::flush;
+        stxxl::vector<NodeID>::iterator NewEnd = std::unique ( usedNodeIDs.begin(),usedNodeIDs.end() ) ;
         usedNodeIDs.resize ( NewEnd - usedNodeIDs.begin() );
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        cout << "[extractor] Sorting all nodes         ... " << flush;
+        std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
         stxxl::sort(allNodes.begin(), allNodes.end(), CmpNodeByID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        cout << "[extractor] Sorting used ways         ... " << flush;
+        std::cout << "[extractor] Sorting used ways         ... " << std::flush;
         stxxl::sort(wayStartEndVector.begin(), wayStartEndVector.end(), CmpWayByID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
-        cout << "[extractor] Sorting restrctns. by from... " << flush;
+        std::cout << "[extractor] Sorting restrctns. by from... " << std::flush;
         stxxl::sort(restrictionsVector.begin(), restrictionsVector.end(), CmpRestrictionContainerByFrom(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
-        cout << "[extractor] Fixing restriction starts ... " << flush;
+        std::cout << "[extractor] Fixing restriction starts ... " << std::flush;
         STXXLRestrictionsVector::iterator restrictionsIT = restrictionsVector.begin();
         STXXLWayIDStartEndVector::iterator wayStartAndEndEdgeIT = wayStartEndVector.begin();
 
@@ -79,16 +79,16 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
             ++restrictionsIT;
         }
 
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        cout << "[extractor] Sorting restrctns. by to  ... " << flush;
+        std::cout << "[extractor] Sorting restrctns. by to  ... " << std::flush;
         stxxl::sort(restrictionsVector.begin(), restrictionsVector.end(), CmpRestrictionContainerByTo(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
         time = get_timestamp();
         unsigned usableRestrictionsCounter(0);
-        cout << "[extractor] Fixing restriction ends   ... " << flush;
+        std::cout << "[extractor] Fixing restriction ends   ... " << std::flush;
         restrictionsIT = restrictionsVector.begin();
         wayStartAndEndEdgeIT = wayStartEndVector.begin();
         while(wayStartAndEndEdgeIT != wayStartEndVector.end() && restrictionsIT != restrictionsVector.end()) {
@@ -116,11 +116,11 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
             }
             ++restrictionsIT;
         }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         INFO("usable restrictions: " << usableRestrictionsCounter );
         //serialize restrictions
-        ofstream restrictionsOutstream;
-        restrictionsOutstream.open(restrictionsFileName.c_str(), ios::binary);
+        std::ofstream restrictionsOutstream;
+        restrictionsOutstream.open(restrictionsFileName.c_str(), std::ios::binary);
         restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
         for(restrictionsIT = restrictionsVector.begin(); restrictionsIT != restrictionsVector.end(); ++restrictionsIT) {
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
@@ -129,11 +129,11 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         }
         restrictionsOutstream.close();
 
-        ofstream fout;
-        fout.open(outputFileName.c_str(), ios::binary);
+        std::ofstream fout;
+        fout.open(outputFileName.c_str(), std::ios::binary);
         fout.write((char*)&usedNodeCounter, sizeof(unsigned));
         time = get_timestamp();
-        cout << "[extractor] Confirming/Writing used nodes     ... " << flush;
+        std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
 
         STXXLNodeVector::iterator nodesIT = allNodes.begin();
         STXXLNodeIDVector::iterator usedNodeIDsIT = usedNodeIDs.begin();
@@ -154,24 +154,24 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
             }
         }
 
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
-        cout << "[extractor] setting number of nodes   ... " << flush;
-        ios::pos_type positionInFile = fout.tellp();
-        fout.seekp(ios::beg);
+        std::cout << "[extractor] setting number of nodes   ... " << std::flush;
+        std::ios::pos_type positionInFile = fout.tellp();
+        fout.seekp(std::ios::beg);
         fout.write((char*)&usedNodeCounter, sizeof(unsigned));
         fout.seekp(positionInFile);
 
-        cout << "ok" << endl;
+        std::cout << "ok" << std::endl;
         time = get_timestamp();
 
         // Sort edges by start.
-        cout << "[extractor] Sorting edges by start    ... " << flush;
+        std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
         stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByStartID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        cout << "[extractor] Setting start coords      ... " << flush;
+        std::cout << "[extractor] Setting start coords      ... " << std::flush;
         fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
         // Traverse list of edges and nodes in parallel and set start coord
         nodesIT = allNodes.begin();
@@ -191,16 +191,16 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                 ++edgeIT;
             }
         }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
         // Sort Edges by target
-        cout << "[extractor] Sorting edges by target   ... " << flush;
+        std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
         stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByTargetID(), memory_to_use);
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        cout << "[extractor] Setting target coords     ... " << flush;
+        std::cout << "[extractor] Setting target coords     ... " << std::flush;
         // Traverse list of edges and nodes in parallel and set target coord
         nodesIT = allNodes.begin();
         edgeIT = allEdges.begin();
@@ -245,8 +245,8 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                         fout.write((char*)&one, sizeof(short));
                         break;
                     default:
-                        cerr << "[error] edge with no direction: " << edgeIT->direction << endl;
-                        assert(false);
+                      std::cerr << "[error] edge with no direction: " << edgeIT->direction << std::endl;
+                      assert(false);
                         break;
                     }
                     fout.write((char*)&intWeight, sizeof(int));
@@ -261,28 +261,28 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                 ++edgeIT;
             }
         }
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-        cout << "[extractor] setting number of edges   ... " << flush;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        std::cout << "[extractor] setting number of edges   ... " << std::flush;
 
         fout.seekp(positionInFile);
         fout.write((char*)&usedEdgeCounter, sizeof(unsigned));
         fout.close();
-        cout << "ok" << endl;
+        std::cout << "ok" << std::endl;
         time = get_timestamp();
-        cout << "[extractor] writing street name index ... " << flush;
+        std::cout << "[extractor] writing street name index ... " << std::flush;
         std::string nameOutFileName = (outputFileName + ".names");
-        ofstream nameOutFile(nameOutFileName.c_str(), ios::binary);
+        std::ofstream nameOutFile(nameOutFileName.c_str(), std::ios::binary);
         unsigned sizeOfNameIndex = nameVector.size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
-        BOOST_FOREACH(string str, nameVector) {
+        BOOST_FOREACH(const std::string & str, nameVector) {
             unsigned lengthOfRawString = strlen(str.c_str());
             nameOutFile.write((char *)&(lengthOfRawString), sizeof(unsigned));
             nameOutFile.write(str.c_str(), lengthOfRawString);
         }
 
         nameOutFile.close();
-        cout << "ok, after " << get_timestamp() - time << "s" << endl;
+        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
         //        time = get_timestamp();
         //        cout << "[extractor] writing address list      ... " << flush;
@@ -298,8 +298,8 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         INFO("Processed " << usedNodeCounter << " nodes and " << usedEdgeCounter << " edges");
 
 
-    } catch ( const exception& e ) {
-        cerr <<  "Caught Execption:" << e.what() << endl;
+    } catch ( const std::exception& e ) {
+      std::cerr <<  "Caught Execption:" << e.what() << std::endl;
     }
 }
 

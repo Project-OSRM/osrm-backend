@@ -21,13 +21,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 
+#include <cmath>
+#include <climits>
+#include <cstdlib>
+
+// To fix long and long long woes
+#include <boost/integer.hpp>
+#include <boost/integer_traits.hpp>
+
 #ifdef __APPLE__
 #include <signal.h>
 #endif
 
-#include <cmath>
-#include <climits>
-#include <cstdlib>
 #include <iostream>
 
 using namespace std;
@@ -53,7 +58,7 @@ using namespace std;
 #define M_PI 3.14159265358979323846
 #endif
 
-//Necessary workaround for Windows as VS doesn't implement C99
+// Necessary workaround for Windows as VS doesn't implement C99
 #ifdef _MSC_VER
 template<typename digitT>
 digitT round(digitT x) {
@@ -66,7 +71,7 @@ typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
 typedef unsigned int EdgeWeight;
 
-static const NodeID SPECIAL_NODEID = UINT_MAX;
-static const EdgeID SPECIAL_EDGEID = UINT_MAX;
+static const NodeID SPECIAL_NODEID = boost::integer_traits<uint32_t>::const_max;
+static const EdgeID SPECIAL_EDGEID = boost::integer_traits<uint32_t>::const_max;
 
 #endif /* TYPEDEFS_H_ */
