@@ -123,13 +123,6 @@ public:
     bool _backward:1;
 };
 
-struct MinimalEdgeData {
-public:
-    EdgeWeight distance;
-    bool forward;
-    bool backward;
-};
-
 typedef NodeBasedEdge ImportEdge;
 
 #endif // EDGE_H
