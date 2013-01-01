@@ -26,8 +26,8 @@ extern "C" {
 
 #include "ScriptingEnvironment.h"
 #include "../typedefs.h"
-#include "../Util/OpenMPWrapper.h"
 #include "../Util/LuaUtil.h"
+#include "../Util/OpenMPWrapper.h"
 
 ScriptingEnvironment::ScriptingEnvironment() {}
 ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {

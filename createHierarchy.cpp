@@ -44,10 +44,10 @@ extern "C" {
 #include "DataStructures/NNGrid.h"
 #include "DataStructures/QueryEdge.h"
 #include "Util/BaseConfiguration.h"
-#include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
-#include "Util/StringUtil.h"
+#include "Util/InputFileUtil.h"
 #include "Util/LuaUtil.h"
+#include "Util/StringUtil.h"
 
 using namespace std;
 
