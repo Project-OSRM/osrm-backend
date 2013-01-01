@@ -16,7 +16,7 @@ areas = {
   :kbh => { :country => 'denmark', :bbox => 'top=55.6972 left=12.5222 right=12.624 bottom=55.6376' },
   :frd => { :country => 'denmark', :bbox => 'top=55.7007 left=12.4765 bottom=55.6576 right=12.5698' },
   :regh => { :country => 'denmark', :bbox => 'top=56.164 left=11.792 bottom=55.403 right=12.731' },
-  :dk => { :country => 'denmark', :bbox => nil },
+  :denmark => { :country => 'denmark', :bbox => nil },
   :skaane => { :country => 'sweden', :bbox => 'top=56.55 left=12.4 bottom=55.3 right=14.6' }
 }
 
@@ -120,6 +120,20 @@ task :process => :setup do
     puts
     raise "Error while preparing data." unless system "../osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions ../profiles/#{PROFILE}.lua"
     puts
+  end
+end
+
+desc "Extract OSM data."
+task :extract => :setup do
+  Dir.chdir DATA_FOLDER do
+    raise "Error while extracting data." unless system "../osrm-extract #{osm_data_area_name}.osm.pbf ../profiles/#{PROFILE}.lua"
+  end
+end
+
+desc "Prepare OSM data."
+task :prepare => :setup do
+  Dir.chdir DATA_FOLDER do
+    raise "Error while preparing data." unless system "../osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions ../profiles/#{PROFILE}.lua"
   end
 end
 
