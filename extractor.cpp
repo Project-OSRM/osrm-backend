@@ -39,6 +39,8 @@ typedef BaseConfiguration ExtractorConfiguration;
 ExtractorCallbacks * extractCallBacks;
 
 int main (int argc, char *argv[]) {
+    double earliestTime = get_timestamp();
+
     if(argc < 2) {
         ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf> [<profile.lua>]");
     }
@@ -113,7 +115,8 @@ int main (int argc, char *argv[]) {
     stringMap.clear();
     delete parser;
     delete extractCallBacks;
-    INFO("finished");
+    INFO("finished after " << get_timestamp() - earliestTime << "s");
+
     std::cout << "\nRun:\n"
                    "./osrm-prepare " << outputFileName << " " << restrictionsFileName << std::endl;
     return 0;
