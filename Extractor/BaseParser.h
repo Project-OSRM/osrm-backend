@@ -27,10 +27,12 @@ extern "C" {
 #include <lualib.h>
 }
 
+#include <boost/noncopyable.hpp>
+
 #include "ScriptingEnvironment.h"
 
 template<class ExternalMemoryT, typename NodeT, typename RestrictionT, typename WayT>
-class BaseParser {
+class BaseParser : boost::noncopyable {
 public:
     virtual ~BaseParser() {}
     virtual bool Init() = 0;
