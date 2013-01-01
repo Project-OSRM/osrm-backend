@@ -32,6 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
+#include "Util/OpenMPWrapper.h"
 #include "Util/StringUtil.h"
 
 typedef BaseConfiguration ExtractorConfiguration;
