@@ -218,8 +218,8 @@ Feature: Car - Turn restrictions
   		 | type        | way:from | way:to | node:via | restriction   | except   |
   		 | restriction | sj       | aj     | j        | no_left_turn  | motorcar |
   		 | restriction | sj       | bj     | j        | no_left_turn  |          |
-  		 | restriction | sj       | cj     | j        | no_right_turn | motorcar |
-  		 | restriction | sj       | dj     | j        | no_right_turn |          |
+  		 | restriction | sj       | cj     | j        | no_right_turn |          |
+  		 | restriction | sj       | dj     | j        | no_right_turn | motorcar |
 
   		When I route I should get
   		 | from | to | route |

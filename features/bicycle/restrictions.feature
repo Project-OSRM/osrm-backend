@@ -218,8 +218,8 @@ Feature: Bike - Turn restrictions
  		 | type        | way:from | way:to | node:via | restriction   | except  |
  		 | restriction | sj       | aj     | j        | no_left_turn  | bicycle |
  		 | restriction | sj       | bj     | j        | no_left_turn  |         |
- 		 | restriction | sj       | cj     | j        | no_right_turn | bicycle |
- 		 | restriction | sj       | dj     | j        | no_right_turn |         |
+ 		 | restriction | sj       | cj     | j        | no_right_turn |         |
+ 		 | restriction | sj       | dj     | j        | no_right_turn | bicycle |
 
  		When I route I should get
  		 | from | to | route |
