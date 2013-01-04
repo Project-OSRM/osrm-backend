@@ -64,13 +64,14 @@ local function parse_maxspeed(source)
 	if source == nil then
 		return 0
 	end
-	local n = tonumber(source)
+	local n = tonumber(source:match("%d*"))
 	if n == nil then
 		n = 0
 	end
 	if string.match(source, "mph") or string.match(source, "mp/h") then
 		n = (n*1609)/1000;
 	end
+	io.write("speed: "..n.."\n")
 	return math.abs(n)
 end
 
