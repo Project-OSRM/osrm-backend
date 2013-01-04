@@ -71,7 +71,6 @@ local function parse_maxspeed(source)
 	if string.match(source, "mph") or string.match(source, "mp/h") then
 		n = (n*1609)/1000;
 	end
-	io.write("speed: "..n.."\n")
 	return math.abs(n)
 end
 
