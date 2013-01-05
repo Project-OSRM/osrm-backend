@@ -90,11 +90,6 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      .def("Add", &std::vector<std::string>::push_back)
                                      ];
 
-        // Now call our function in a lua script
-//#pragma omp critical
-//        {
-//            INFO("Parsing speedprofile from " << fileName );
-//        }
         if(0 != luaL_dofile(myLuaState, fileName) ) {
             ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
         }
