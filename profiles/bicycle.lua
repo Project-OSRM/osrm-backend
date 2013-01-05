@@ -8,6 +8,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierachy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
+restriction_exception_tags = { "bicycle", "vehicle", "access" }
 
 default_speed = 16
 
@@ -70,7 +71,11 @@ u_turn_penalty 			= 20
 
 -- End of globals
 
---find first tag in access hierachy which is set
+function get_exceptions(vector)
+	for i,v in ipairs(restriction_exception_tags) do 
+		vector:Add(v)
+	end
+end
 
 function node_function (node)
 	local barrier = node.tags:Find ("barrier")

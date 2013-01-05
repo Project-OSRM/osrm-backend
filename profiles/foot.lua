@@ -9,6 +9,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "foot" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
+restriction_exception_tags = { "foot" }
 
 speed_profile = { 
   ["primary"] = 5,
@@ -42,6 +43,12 @@ traffic_signal_penalty 	= 2
 u_turn_penalty 			= 2
 
 -- End of globals
+
+function get_exceptions(vector)
+	for i,v in ipairs(restriction_exception_tags) do 
+		vector:Add(v)
+	end
+end
 
 function node_function (node)
   local barrier = node.tags:Find ("barrier")
