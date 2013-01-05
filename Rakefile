@@ -7,6 +7,7 @@ require 'sys/proctable'
 DATA_FOLDER = 'sandbox'
 PROFILE = 'bicycle'
 OSRM_PORT = 5000
+PROFILES_FOLDER = '../profiles'
 
 Cucumber::Rake::Task.new do |t|
   t.cucumber_opts = %w{--format pretty}
@@ -116,9 +117,9 @@ end
 desc "Reprocess OSM data."
 task :process => :setup do
   Dir.chdir DATA_FOLDER do
-    raise "Error while extracting data." unless system "../osrm-extract #{osm_data_area_name}.osm.pbf ../profiles/#{PROFILE}.lua"
+    raise "Error while extracting data." unless system "../osrm-extract #{osm_data_area_name}.osm.pbf #{PROFILES_FOLDER}/#{PROFILE}.lua"
     puts
-    raise "Error while preparing data." unless system "../osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions ../profiles/#{PROFILE}.lua"
+    raise "Error while preparing data." unless system "../osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions #{PROFILES_FOLDER}/#{PROFILE}.lua"
     puts
   end
 end
