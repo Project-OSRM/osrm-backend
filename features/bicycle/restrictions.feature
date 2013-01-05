@@ -198,7 +198,7 @@ Feature: Bike - Turn restrictions
 		 | s    | n  | sj,nj |
 		 | s    | e  |       |
 
- 	@except @todo
+ 	@except
  	Scenario: Bike - Except tag and on no_ restrictions
  		Given the node map
  		 | b | x | c |
@@ -207,10 +207,10 @@ Feature: Bike - Turn restrictions
 
  		And the ways
  		 | nodes | oneway |
- 		 | sj    | yes    |
+ 		 | sj    | no     |
  		 | xj    | -1     |
  		 | aj    | -1     |
- 		 | bj    | -1     |
+ 		 | bj    | no     |
  		 | cj    | -1     |
  		 | dj    | -1     |
 
@@ -228,7 +228,7 @@ Feature: Bike - Turn restrictions
  		 | s    | c  |       |
  		 | s    | d  | sj,dj |
 
-  	@except @todo
+  	@except
   	Scenario: Bike - Except tag and on only_ restrictions
   		Given the node map
   		 | a |   | b |
@@ -238,8 +238,8 @@ Feature: Bike - Turn restrictions
   		And the ways
   		 | nodes | oneway |
   		 | sj    | yes    |
-  		 | aj    | -1     |
-  		 | bj    | -1     |
+  		 | aj    | no     |
+  		 | bj    | no     |
 
   		And the relations
   		 | type        | way:from | way:to | node:via | restriction      | except  |
