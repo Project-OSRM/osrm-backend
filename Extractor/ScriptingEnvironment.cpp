@@ -26,6 +26,7 @@ extern "C" {
 
 #include "ScriptingEnvironment.h"
 #include "../typedefs.h"
+#include "../Util/LuaUtil.h"
 #include "../Util/OpenMPWrapper.h"
 
 ScriptingEnvironment::ScriptingEnvironment() {}
@@ -51,6 +52,9 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      luabind::def("durationIsValid", durationIsValid),
                                      luabind::def("parseDuration", parseDuration)
         ];
+
+        luaAddScriptFolderToLoadPath( myLuaState, fileName );
+
 //#pragma omp critical
 //        {
 //            if(0 != luaL_dostring(

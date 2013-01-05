@@ -24,12 +24,31 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define LUAUTIL_H_
 
 #include <iostream>
+#include <string>
+#include <boost/filesystem/convenience.hpp>
 
 template<typename T>
 void LUA_print(T number) {
   std::cout << "[LUA] " << number << std::endl;
 }
 
+// Check if the lua function <name> is defined
+bool lua_function_exists(lua_State* lua_state, const char* name)
+{
+    luabind::object g = luabind::globals(lua_state);
+    luabind::object func = g[name];
+    return func && (luabind::type(func) == LUA_TFUNCTION);
+}
 
+// Add the folder contain the script to the lua load path, so script can easily require() other lua scripts inside that folder, or subfolders.
+// See http://lua-users.org/wiki/PackagePath for details on the package.path syntax.
+void luaAddScriptFolderToLoadPath(lua_State* myLuaState, const char* fileName) {
+    const boost::filesystem::path profilePath( fileName );
+    if( !profilePath.parent_path().empty() ) {
+        const std::string folder = profilePath.parent_path().string();
+        const std::string luaCode = "package.path = \"" + folder + "/?.lua;\" .. package.path";
+        luaL_dostring( myLuaState, luaCode.c_str() );
+    }
+}
 
 #endif /* LUAUTIL_H_ */

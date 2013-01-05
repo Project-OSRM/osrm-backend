@@ -30,7 +30,6 @@ extern "C" {
 
 #include "ExtractionHelperFunctions.h"
 #include "ExtractorStructs.h"
-#include "LuaUtil.h"
 
 #include "../DataStructures/ImportNode.h"
 

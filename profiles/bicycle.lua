@@ -1,3 +1,5 @@
+require("lib/access")
+
 -- Begin of globals
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true}
 access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true	}
@@ -58,7 +60,6 @@ amenity_speeds = {
 route_speeds = { 
 	["ferry"] = 5
 }
-
 take_minimum_of_speeds 	= true
 obey_oneway 			= true
 obey_bollards 			= false
@@ -70,19 +71,10 @@ u_turn_penalty 			= 20
 -- End of globals
 
 --find first tag in access hierachy which is set
-function find_access_tag(source)
-	for i,v in ipairs(access_tags_hierachy) do 
-		local tag = source.tags:Find(v)
-		if tag ~= '' then --and tag ~= "" then
-			return tag
-		end
-	end
-	return nil
-end
 
 function node_function (node)
 	local barrier = node.tags:Find ("barrier")
-	local access = find_access_tag(node)
+	local access = Access.find_access_tag(node, access_tags_hierachy)
 	local traffic_signal = node.tags:Find("highway")
 	
 	-- flag node if it carries a traffic light	
@@ -91,7 +83,7 @@ function node_function (node)
 	end
 	
 	-- parse access and barrier tags
-	if access  and access ~= "" then
+	if access and access ~= "" then
 		if access_tag_blacklist[access] then
 			node.bollard = true
 		else
@@ -134,7 +126,7 @@ function way_function (way, numberOfNodesInWay)
 	local service	= way.tags:Find("service")
 	local area = way.tags:Find("area")
 	local amenity = way.tags:Find("amenity")
-	local access = find_access_tag(way)
+	local access = Access.find_access_tag(way, access_tags_hierachy)
 	
 	-- initial routability check, filters out buildings, boundaries, etc
     if (not highway or highway == '') and 
