@@ -45,6 +45,8 @@ private:
     xmlTextReaderPtr inputReader;
     ExtractorCallbacks * externalMemory;
     lua_State *myLuaState;
+
+    std::vector<std::string> restriction_exceptions_vector;
 };
 
 #endif /* XMLPARSER_H_ */

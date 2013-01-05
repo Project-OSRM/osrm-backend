@@ -18,16 +18,7 @@
  or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-}
-
 #include "ScriptingEnvironment.h"
-#include "../typedefs.h"
-#include "../Util/LuaUtil.h"
-#include "../Util/OpenMPWrapper.h"
 
 ScriptingEnvironment::ScriptingEnvironment() {}
 ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
@@ -45,6 +36,8 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
         //open utility libraries string library;
         luaL_openlibs(myLuaState);
 
+        luaAddScriptFolderToLoadPath( myLuaState, fileName );
+
         // Add our function to the state's global scope
         luabind::module(myLuaState) [
                                      luabind::def("print", LUA_print<std::string>),
@@ -53,17 +46,6 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      luabind::def("parseDuration", parseDuration)
         ];
 
-        luaAddScriptFolderToLoadPath( myLuaState, fileName );
-
-//#pragma omp critical
-//        {
-//            if(0 != luaL_dostring(
-//                    myLuaState,
-//                    "print('Initializing LUA engine')\n"
-//            )) {
-//                ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
-//            }
-//        }
         luabind::module(myLuaState) [
                                      luabind::class_<HashTable<std::string, std::string> >("keyVals")
                                      .def("Add", &HashTable<std::string, std::string>::Add)
@@ -96,13 +78,17 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      .def_readwrite("tags", &_Way::keyVals)
                                      .def_readwrite("direction", &_Way::direction)
                                      .enum_("constants")
-                                     [
-                                      luabind::value("notSure", 0),
-                                      luabind::value("oneway", 1),
-                                      luabind::value("bidirectional", 2),
-                                      luabind::value("opposite", 3)
-        ]
-        ];
+										 [
+										  luabind::value("notSure", 0),
+										  luabind::value("oneway", 1),
+										  luabind::value("bidirectional", 2),
+										  luabind::value("opposite", 3)
+										 ]
+        							 ];
+        luabind::module(myLuaState) [
+                                     luabind::class_<std::vector<std::string> >("vector")
+                                     .def("Add", &std::vector<std::string>::push_back)
+                                     ];
 
         // Now call our function in a lua script
 //#pragma omp critical

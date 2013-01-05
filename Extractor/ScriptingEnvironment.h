@@ -31,7 +31,10 @@ extern "C" {
 #include "ExtractionHelperFunctions.h"
 #include "ExtractorStructs.h"
 
+#include "../typedefs.h"
 #include "../DataStructures/ImportNode.h"
+#include "../Util/LuaUtil.h"
+#include "../Util/OpenMPWrapper.h"
 
 class ScriptingEnvironment {
 public:
