@@ -49,8 +49,6 @@ extern "C" {
 #include "Util/LuaUtil.h"
 #include "Util/StringUtil.h"
 
-using namespace std;
-
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
@@ -77,7 +75,7 @@ int main (int argc, char *argv[]) {
     omp_set_num_threads(numberOfThreads);
 
     INFO("Using restrictions from file: " << argv[2]);
-    std::ifstream restrictionsInstream(argv[2], ios::binary);
+    std::ifstream restrictionsInstream(argv[2], std::ios::binary);
     if(!restrictionsInstream.good()) {
         ERR("Could not access <osrm-restrictions> files");
     }
@@ -214,11 +212,11 @@ int main (int argc, char *argv[]) {
      */
 
     INFO("Building Node Array");
-    sort(contractedEdgeList.begin(), contractedEdgeList.end());
+    std::sort(contractedEdgeList.begin(), contractedEdgeList.end());
     unsigned numberOfNodes = 0;
     unsigned numberOfEdges = contractedEdgeList.size();
     INFO("Serializing compacted graph");
-    ofstream edgeOutFile(graphOut, ios::binary);
+    std::ofstream edgeOutFile(graphOut, std::ios::binary);
 
     BOOST_FOREACH(QueryEdge & edge, contractedEdgeList) {
         if(edge.source > numberOfNodes) {
