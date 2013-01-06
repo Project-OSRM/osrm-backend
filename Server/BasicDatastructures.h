@@ -21,7 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASIC_DATASTRUCTURES_H
 #define BASIC_DATASTRUCTURES_H
 #include <string>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include "../Util/StringUtil.h"
 
 namespace http {
 
@@ -70,15 +73,13 @@ struct Reply {
     std::vector<boost::asio::const_buffer> HeaderstoBuffers();
 	std::string content;
 	static Reply stockReply(status_type status);
-	void setSize(unsigned size) {
-	    for (std::size_t i = 0; i < headers.size(); ++i) {
-	            Header& h = headers[i];
-	            if("Content-Length" == h.name) {
-	                std::stringstream sizeString;
-	                sizeString << size;
-	                h.value = sizeString.str();
-	            }
-	    }
+	void setSize(const unsigned size) {
+		BOOST_FOREACH (const Header& h,  headers) {
+			if("Content-Length" == h.name) {
+				std::string sizeString;
+				intToString(size,h.value );
+			}
+		}
 	}
 };
 
