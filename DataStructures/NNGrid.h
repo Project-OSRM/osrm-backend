@@ -179,7 +179,7 @@ public:
         double dist = std::numeric_limits<double>::max();
         double r, tmpDist;
 
-        BOOST_FOREACH(_GridEdge candidate, candidates) {
+        BOOST_FOREACH(const _GridEdge & candidate, candidates) {
             if(candidate.belongsToTinyComponent && ignoreTinyComponents)
                 continue;
             r = 0.;
@@ -266,7 +266,7 @@ public:
         }
         _Coordinate tmp;
         double dist = (std::numeric_limits<double>::max)();
-        BOOST_FOREACH(_GridEdge candidate, candidates) {
+        BOOST_FOREACH(const _GridEdge & candidate, candidates) {
             double r = 0.;
             double tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
             if(tmpDist < dist) {
@@ -312,7 +312,7 @@ private:
         cellMap.insert(insertionVector.begin(), insertionVector.end());
     }
 
-    inline bool DoubleEpsilonCompare(const double d1, const double d2) {
+    inline bool DoubleEpsilonCompare(const double d1, const double d2) const {
         return (std::fabs(d1 - d2) < FLT_EPSILON);
     }
 

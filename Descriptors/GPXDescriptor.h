@@ -46,7 +46,7 @@ public:
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
-            BOOST_FOREACH(_PathData pathData, rawRoute.computedShortestPath) {
+            BOOST_FOREACH(const _PathData & pathData, rawRoute.computedShortestPath) {
                 sEngine.GetCoordinatesForNodeID(pathData.node, current);
 
                 convertInternalLatLonToString(current.lat, tmp);

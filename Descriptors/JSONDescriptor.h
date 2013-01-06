@@ -246,7 +246,7 @@ public:
         reply.content += "}";
     }
 
-    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, SearchEngineT &sEngine, RouteNames & routeNames) {
+    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, const SearchEngineT &sEngine, RouteNames & routeNames) {
         /*** extract names for both alternatives ***/
 
         Segment shortestSegment1, shortestSegment2;
