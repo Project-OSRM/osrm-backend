@@ -74,7 +74,7 @@ struct Reply {
 	std::string content;
 	static Reply stockReply(status_type status);
 	void setSize(const unsigned size) {
-		BOOST_FOREACH (const Header& h,  headers) {
+		BOOST_FOREACH ( Header& h,  headers) {
 			if("Content-Length" == h.name) {
 				std::string sizeString;
 				intToString(size,h.value );
