@@ -34,7 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/NodeCoords.h"
 #include "../DataStructures/Restriction.h"
-#include "../DataStructures/Util.h"
+#include "../DataStructures/TimingUtil.h"
 #include "../typedefs.h"
 
 typedef boost::unordered_map<std::string, NodeID > StringMap;

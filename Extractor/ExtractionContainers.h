@@ -25,7 +25,7 @@
 #include <stxxl.h>
 
 #include "ExtractorStructs.h"
-#include "../DataStructures/Util.h"
+#include "../DataStructures/TimingUtil.h"
 
 class ExtractionContainers {
 public:

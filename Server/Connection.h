@@ -30,7 +30,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-#include "../DataStructures/Util.h"
 #include "BasicDatastructures.h"
 #include "RequestHandler.h"
 #include "RequestParser.h"

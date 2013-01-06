@@ -18,16 +18,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
 */
 
-#ifndef TIMEUTIL_H_
-#define TIMEUTIL_H_
+#ifndef TIMINGUTIL_H_
+#define TIMINGUTIL_H_
 
 #include <climits>
-#include <cmath>
 #include <cstdlib>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 #ifdef _WIN32
  #include <sys/timeb.h>
@@ -43,13 +39,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
  #include <sys/time.h>
 #endif
 
-#ifdef _WIN32
- #include <boost/functional/hash.hpp>
-#else
- #include <tr1/functional_hash.h>
-#endif
-#include <boost/thread.hpp>
-
 /** Returns a timestamp (now) in seconds (incl. a fractional part). */
 static inline double get_timestamp() {
     struct timeval tp;
@@ -57,14 +46,5 @@ static inline double get_timestamp() {
     return double(tp.tv_sec) + tp.tv_usec / 1000000.;
 }
 
-static inline double y2lat(double a) { return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2); }
-static inline double lat2y(double a) { return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2)); }
 
-static inline unsigned boost_thread_id_hash(boost::thread::id const& id) {
-	std::stringstream ostr;
-	ostr << id;
-	std::tr1::hash<std::string> h;
-	return h(ostr.str());
-}
-
-#endif /* TIMEUTIL_H_ */
+#endif /* TIMINGUTIL_H_ */
