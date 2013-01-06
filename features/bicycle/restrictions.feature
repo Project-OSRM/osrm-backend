@@ -249,3 +249,41 @@ Feature: Bike - Turn restrictions
   		 | from | to | route |
   		 | s    | a  | sj,aj |
   		 | s    | b  | sj,bj |
+
+  	@except
+  	Scenario: Bike - Multiple except tag values
+  		Given the node map
+  		 | s | j | a |
+  		 |   |   | b |
+  		 |   |   | c |
+  		 |   |   | d |
+  		 |   |   | e |
+  		 |   |   | f |
+
+  		And the ways
+  		 | nodes | oneway |
+  		 | sj    | yes    |
+  		 | ja    | yes    |
+  		 | jb    | yes    |
+  		 | jc    | yes    |
+  		 | jd    | yes    |
+  		 | je    | yes    |
+  		 | jf    | yes    |
+
+  		And the relations
+  		 | type        | way:from | way:to | node:via | restriction    | except           |
+  		 | restriction | sj       | ja     | j        | no_straight_on |                  |
+  		 | restriction | sj       | jb     | j        | no_straight_on | bicycle          |
+  		 | restriction | sj       | jc     | j        | no_straight_on | bus; bicycle     |
+  		 | restriction | sj       | jd     | j        | no_straight_on | bicycle; motocar |
+  		 | restriction | sj       | je     | j        | no_straight_on | bus, bicycle     |
+  		 | restriction | sj       | jf     | j        | no_straight_on | bicycle, bus     |
+
+  		When I route I should get
+  		 | from | to | route |
+  		 | s    | a  |       |
+  		 | s    | b  | sj,jb |
+  		 | s    | c  | sj,jc |
+  		 | s    | d  | sj,jd |
+  		 | s    | e  |       |
+  		 | s    | f  |       |
