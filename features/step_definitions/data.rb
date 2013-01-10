@@ -90,14 +90,18 @@ Given /^the relations$/ do |table|
     relation = OSM::Relation.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     row.each_pair do |key,value|
       if key =~ /^node:(.*)/
-        raise "***invalid relation node member '#{value}', must be single character" unless value.size == 1
-        node = find_node_by_name(value)
-        raise "*** unknown relation node member '#{value}'" unless node
-        relation << OSM::Member.new( 'node', node.id, $1 )
+        value.split(',').map { |v| v.strip }.each do |node_name|
+          raise "***invalid relation node member '#{node_name}', must be single character" unless node_name.size == 1
+          node = find_node_by_name(node_name)
+          raise "*** unknown relation node member '#{node_name}'" unless node
+          relation << OSM::Member.new( 'node', node.id, $1 )
+        end
       elsif key =~ /^way:(.*)/
-        way = find_way_by_name(value)
-        raise "*** unknown relation way member '#{value}'" unless way
-        relation << OSM::Member.new( 'way', way.id, $1 )
+        value.split(',').map { |v| v.strip }.each do |way_name|
+          way = find_way_by_name(way_name)
+          raise "*** unknown relation way member '#{way_name}'" unless way
+          relation << OSM::Member.new( 'way', way.id, $1 )
+        end
       elsif key =~ /^(.*):(.*)/
         raise "*** unknown relation member type '#{$1}', must be either 'node' or 'way'"
       else
