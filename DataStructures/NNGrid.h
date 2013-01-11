@@ -95,7 +95,7 @@ public:
 
 #ifndef ROUTED
     template<typename EdgeT>
-    inline void ConstructGrid(DeallocatingVector<EdgeT> & edgeList, char * ramIndexOut, char * fileIndexOut) {
+    inline void ConstructGrid(DeallocatingVector<EdgeT> & edgeList, const char * ramIndexOut, const char * fileIndexOut) {
     	//TODO: Implement this using STXXL-Streams
         Percent p(edgeList.size());
         BOOST_FOREACH(EdgeT & edge, edgeList) {
@@ -316,6 +316,7 @@ private:
         return (std::fabs(d1 - d2) < FLT_EPSILON);
     }
 
+#ifndef ROUTED
     inline unsigned FillCell(std::vector<GridEntry>& entriesWithSameRAMIndex, const uint64_t fileOffset, boost::unordered_map< unsigned, unsigned > & cellMap ) {
         std::vector<char> tmpBuffer(32*32*4096,0);
         uint64_t indexIntoTmpBuffer = 0;
@@ -393,6 +394,7 @@ private:
         vectorWithSameFileIndex.clear();
         return counter;
     }
+#endif
 
     inline void GetContentsOfFileBucketEnumerated(const unsigned fileIndex, std::vector<_GridEdge>& result) const {
         unsigned ramIndex = GetRAMIndexFromFileIndex(fileIndex);
@@ -578,9 +580,9 @@ private:
 
     const static uint64_t END_OF_BUCKET_DELIMITER = boost::integer_traits<uint64_t>::const_max;
 
-    std::ofstream indexOutFile;
     std::ifstream ramInFile;
 #ifndef ROUTED
+    std::ofstream indexOutFile;
     stxxl::vector<GridEntry> entries;
 #endif
     std::vector<uint64_t> ramIndexTable; //8 MB for first level index in RAM

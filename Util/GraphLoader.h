@@ -169,14 +169,14 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
                     edgeList[i]._source = UINT_MAX;
                 } else {
                     //edge i-1 is open in both directions, but edge i is smaller in one direction. Close edge i-1 in this direction
-                    edgeList[i-1].forward = ~edgeList[i].isForward();
-                    edgeList[i-1].backward = ~edgeList[i].isBackward();
+                    edgeList[i-1].forward = !edgeList[i].isForward();
+                    edgeList[i-1].backward = !edgeList[i].isBackward();
                 }
             } else if (edgeFlagsAreSuperSet2) {
                 if(edgeList[i-1].weight() <= edgeList[i].weight()) {
                      //edge i-1 is smaller for one direction. edge i is open in both. close edge i in the other direction
-                     edgeList[i].forward = ~edgeList[i-1].isForward();
-                     edgeList[i].backward = ~edgeList[i-1].isBackward();
+                     edgeList[i].forward = !edgeList[i-1].isForward();
+                     edgeList[i].backward = !edgeList[i-1].isBackward();
                  } else {
                      //edge i is smaller and goes in both direction. Throw away edge i-1
                      edgeList[i-1]._source = UINT_MAX;

@@ -92,12 +92,12 @@ int main (int argc, char *argv[]) {
         ERR("Cannot open " << argv[1]);
     }
 
-    char nodeOut[1024];         strcpy(nodeOut, argv[1]);           strcat(nodeOut, ".nodes");
-    char edgeOut[1024];         strcpy(edgeOut, argv[1]);           strcat(edgeOut, ".edges");
-    char graphOut[1024];    	strcpy(graphOut, argv[1]);      	strcat(graphOut, ".hsgr");
-    char ramIndexOut[1024];    	strcpy(ramIndexOut, argv[1]);    	strcat(ramIndexOut, ".ramIndex");
-    char fileIndexOut[1024];    strcpy(fileIndexOut, argv[1]);    	strcat(fileIndexOut, ".fileIndex");
-    char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
+    std::string nodeOut(argv[1]);		nodeOut += ".nodes";
+    std::string edgeOut(argv[1]);		edgeOut += ".edges";
+    std::string graphOut(argv[1]);		graphOut += ".hsgr";
+    std::string ramIndexOut(argv[1]);	ramIndexOut += ".ramIndex";
+    std::string fileIndexOut(argv[1]);	fileIndexOut += ".fileIndex";
+    std::string levelInfoOut(argv[1]);	levelInfoOut += ".levels";
 
     /*** Setup Scripting Environment ***/
     if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
@@ -150,7 +150,7 @@ int main (int argc, char *argv[]) {
     INFO("Generating edge-expanded graph representation");
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
     std::vector<ImportEdge>().swap(edgeList);
-    edgeBasedGraphFactory->Run(edgeOut);
+    edgeBasedGraphFactory->Run(edgeOut.c_str());
     std::vector<_Restriction>().swap(inputRestrictions);
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
@@ -163,7 +163,7 @@ int main (int argc, char *argv[]) {
      */
 
     INFO("writing node map ...");
-    std::ofstream mapOutFile(nodeOut, std::ios::binary);
+    std::ofstream mapOutFile(nodeOut.c_str(), std::ios::binary);
     mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
     mapOutFile.close();
     std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
@@ -186,7 +186,7 @@ int main (int argc, char *argv[]) {
 
     INFO("building grid ...");
     WritableGrid * writeableGrid = new WritableGrid();
-    writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut, fileIndexOut);
+    writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut.c_str(), fileIndexOut.c_str());
     delete writeableGrid;
     IteratorbasedCRC32<DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
     unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
@@ -216,7 +216,7 @@ int main (int argc, char *argv[]) {
     unsigned numberOfNodes = 0;
     unsigned numberOfEdges = contractedEdgeList.size();
     INFO("Serializing compacted graph");
-    std::ofstream edgeOutFile(graphOut, std::ios::binary);
+    std::ofstream edgeOutFile(graphOut.c_str(), std::ios::binary);
 
     BOOST_FOREACH(QueryEdge & edge, contractedEdgeList) {
         if(edge.source > numberOfNodes) {
