@@ -547,7 +547,7 @@ private:
         }
     }
 
-    inline unsigned GetFileIndexForLatLon(const int lt, const int ln) {
+    inline unsigned GetFileIndexForLatLon(const int lt, const int ln) const {
         double lat = lt/100000.;
         double lon = ln/100000.;
 

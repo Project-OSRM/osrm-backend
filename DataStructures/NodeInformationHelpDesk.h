@@ -107,7 +107,7 @@ public:
 		return readOnlyGrid->FindNearestCoordinateOnEdgeInNodeBasedGraph(coord, result);
 	}
 
-	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) const {
+	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
 	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode, zoomLevel);
 	}
 
