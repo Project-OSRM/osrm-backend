@@ -27,7 +27,6 @@
 class CRC32 {
 private:
     unsigned crc;
-    unsigned slowcrc_table[1<<8];
 
     typedef boost::crc_optimal<32, 0x1EDC6F41, 0x0, 0x0, true, true> my_crc_32_type;
     typedef unsigned (CRC32::*CRC32CFunctionPtr)(char *str, unsigned len, unsigned crc);
