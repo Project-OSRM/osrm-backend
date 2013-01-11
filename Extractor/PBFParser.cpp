@@ -281,7 +281,7 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 
 
 		if(isRestriction) {
-			long long lastRef = 0;
+			int64_t lastRef = 0;
 			_RawRestrictionContainer currentRestrictionContainer(isOnlyRestriction);
 			for(int rolesIndex = 0; rolesIndex < inputRelation.roles_sid_size(); ++rolesIndex) {
 				std::string role(threadData->PBFprimitiveBlock.stringtable().s( inputRelation.roles_sid( rolesIndex ) ).data());
