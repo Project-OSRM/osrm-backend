@@ -168,9 +168,9 @@ _RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
 						if(0 == std::string((const char *) value).find("only_"))
 							restriction.restriction.flags.isOnly = true;
 					}
-				}
-				if ( xmlStrEqual(k, (const xmlChar *) "except") ) {
-					exception_of_restriction_tag = (const char*) value;
+					if ( xmlStrEqual(k, (const xmlChar *) "except") ) {
+						exception_of_restriction_tag = (const char*) value;
+					}
 				}
 
 				if ( k != NULL )
