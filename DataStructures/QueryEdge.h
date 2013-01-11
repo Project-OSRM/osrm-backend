@@ -41,8 +41,8 @@ struct QueryEdge {
     NodeID target;
     struct EdgeData {
         NodeID id:31;
-        int distance:30;
         bool shortcut:1;
+        int distance:30;
         bool forward:1;
         bool backward:1;
     } data;
