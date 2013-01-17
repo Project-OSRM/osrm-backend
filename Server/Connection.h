@@ -71,6 +71,11 @@ private:
 			    request.endpoint = TCPsocket.remote_endpoint().address();
 				requestHandler.handle_request(request, reply);
 
+				Header CorsHeader;
+				CorsHeader.name = "Access-Control-Allow-Origin";
+				CorsHeader.value = "*";
+				reply.headers.push_back(CorsHeader);
+				
 				Header compressionHeader;
 				std::vector<unsigned char> compressed;
 				std::vector<boost::asio::const_buffer> outputBuffer;
