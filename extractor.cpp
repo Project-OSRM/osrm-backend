@@ -58,7 +58,6 @@ int main (int argc, char *argv[]) {
     }
     omp_set_num_threads(numberOfThreads);
 
-
     INFO("extracting data from input file " << argv[1]);
     bool isPBF(false);
     std::string outputFileName(argv[1]);
@@ -93,10 +92,9 @@ int main (int argc, char *argv[]) {
     StringMap stringMap;
     ExtractionContainers externalMemory;
 
-
     stringMap[""] = 0;
     extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
-    BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> * parser;
+    BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, ExtractionWay> * parser;
     if(isPBF) {
         parser = new PBFParser(argv[1]);
     } else {

@@ -28,7 +28,7 @@
 #include "ExtractorCallbacks.h"
 #include "ScriptingEnvironment.h"
 
-class XMLParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> {
+class XMLParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, ExtractionWay> {
 public:
     XMLParser(const char * filename);
     virtual ~XMLParser();
@@ -39,7 +39,7 @@ public:
     
 private:
     _RawRestrictionContainer _ReadXMLRestriction();
-    _Way _ReadXMLWay();
+    ExtractionWay _ReadXMLWay();
     ImportNode _ReadXMLNode( );
     /* Input Reader */
     xmlTextReaderPtr inputReader;

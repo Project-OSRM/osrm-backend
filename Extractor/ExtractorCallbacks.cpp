@@ -64,7 +64,7 @@ bool ExtractorCallbacks::restrictionFunction(_RawRestrictionContainer &r) {
 }
 
 /** warning: caller needs to take care of synchronization! */
-bool ExtractorCallbacks::wayFunction(_Way &parsed_way) {
+bool ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
 	if ( parsed_way.speed > 0 ) { //Only true if the way is specified by the speed profile
 		if(parsed_way.id == UINT_MAX){
 			WARN("found bogus way with id: " << parsed_way.id << " of size " << parsed_way.path.size());
@@ -80,20 +80,20 @@ bool ExtractorCallbacks::wayFunction(_Way &parsed_way) {
 			parsed_way.nameID = string_map_iterator->second;
 		}
 
-		if ( parsed_way.direction == _Way::opposite ){
+		if ( parsed_way.direction == ExtractionWay::opposite ){
 			std::reverse( parsed_way.path.begin(), parsed_way.path.end() );
 		}
 
-		if( parsed_way.backward_speed > 0 && parsed_way.direction == _Way::bidirectional) {
-			parsed_way.direction == _Way::oneway;
+		if( parsed_way.backward_speed > 0 && parsed_way.direction == ExtractionWay::bidirectional) {
+			parsed_way.direction = ExtractionWay::oneway;
 		}
 
 		for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
 			externalMemory->allEdges.push_back(
-					_Edge(parsed_way.path[n],
+					InternalExtractorEdge(parsed_way.path[n],
 							parsed_way.path[n+1],
 							parsed_way.type,
-							(_Way::bidirectional == parsed_way.direction && parsed_way.backward_speed > 0 ? _Way::oneway : parsed_way.direction),
+							(ExtractionWay::bidirectional == parsed_way.direction && parsed_way.backward_speed > 0 ? ExtractionWay::oneway : parsed_way.direction),
 							parsed_way.speed,
 							parsed_way.nameID,
 							parsed_way.roundabout,
@@ -113,17 +113,17 @@ bool ExtractorCallbacks::wayFunction(_Way &parsed_way) {
 			std::reverse( parsed_way.path.begin(), parsed_way.path.end() );
 			for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
 				externalMemory->allEdges.push_back(
-						_Edge(parsed_way.path[n],
+						InternalExtractorEdge(parsed_way.path[n],
 								parsed_way.path[n+1],
 								parsed_way.type,
-								_Way::oneway,
+								ExtractionWay::oneway,
 								parsed_way.backward_speed,
 								parsed_way.nameID,
 								parsed_way.roundabout,
 								parsed_way.ignoreInGrid,
 								parsed_way.isDurationSet,
 								parsed_way.isAccessRestricted,
-								(_Way::oneway == parsed_way.direction)
+								(ExtractionWay::oneway == parsed_way.direction)
 							)
 						);
 			}

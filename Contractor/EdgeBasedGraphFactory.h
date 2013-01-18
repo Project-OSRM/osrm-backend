@@ -34,6 +34,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
 
@@ -48,34 +49,7 @@
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/BaseConfiguration.h"
 
-class EdgeBasedGraphFactory {
-private:
-    struct _NodeBasedEdgeData {
-        int distance;
-        unsigned edgeBasedNodeID;
-        unsigned nameID;
-        short type;
-        bool isAccessRestricted;
-        bool shortcut:1;
-        bool forward:1;
-        bool backward:1;
-        bool roundabout:1;
-        bool ignoreInGrid:1;
-    };
-
-    struct _EdgeBasedEdgeData {
-        int distance;
-        unsigned via;
-        unsigned nameID;
-        bool forward;
-        bool backward;
-        TurnInstruction turnInstruction;
-    };
-
-    typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
-    typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
-    std::vector<NodeInfo>               inputNodeInfoList;
-    unsigned numberOfTurnRestrictions;
+class EdgeBasedGraphFactory : boost::noncopyable {
 public:
     struct EdgeBasedNode {
         bool operator<(const EdgeBasedNode & other) const {
@@ -95,13 +69,41 @@ public:
         bool ignoreInGrid:1;
     };
 
-
     struct SpeedProfileProperties{
         SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0) {}
         int trafficSignalPenalty;
         int uTurnPenalty;
     } speedProfile;
+
 private:
+    struct _NodeBasedEdgeData {
+        int distance;
+        unsigned edgeBasedNodeID;
+        unsigned nameID;
+        short type;
+        bool isAccessRestricted;
+        bool shortcut:1;
+        bool forward:1;
+        bool backward:1;
+        bool roundabout:1;
+        bool ignoreInGrid:1;
+        bool contraFlow;
+    };
+
+    struct _EdgeBasedEdgeData {
+        int distance;
+        unsigned via;
+        unsigned nameID;
+        bool forward;
+        bool backward;
+        TurnInstruction turnInstruction;
+    };
+
+    typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
+    typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
+    std::vector<NodeInfo>               inputNodeInfoList;
+    unsigned numberOfTurnRestrictions;
+
     boost::shared_ptr<_NodeBasedDynamicGraph>   _nodeBasedGraph;
     boost::unordered_map<NodeID, bool>          _barrierNodes;
     boost::unordered_map<NodeID, bool>          _trafficLights;
@@ -112,7 +114,6 @@ private:
     typedef boost::unordered_map<RestrictionSource, unsigned > RestrictionMap;
     std::vector<EmanatingRestrictionsVector> _restrictionBucketVector;
     RestrictionMap _restrictionMap;
-
 
     DeallocatingVector<EdgeBasedEdge>   edgeBasedEdges;
     DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
@@ -127,8 +128,6 @@ private:
             bool belongsToTinyComponent);
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
-//    SRTMLookup srtmLookup;
-
 
 public:
     template< class InputEdgeT >
