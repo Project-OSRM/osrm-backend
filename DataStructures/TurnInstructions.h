@@ -44,7 +44,8 @@ struct TurnInstructionsClass : boost::noncopyable {
     const static TurnInstruction StayOnRoundAbout = 13;
     const static TurnInstruction StartAtEndOfStreet = 14;
     const static TurnInstruction ReachedYourDestination = 15;
-    const static TurnInstruction GoAgainstAllowedDirection = 32;
+    const static TurnInstruction EnterAgainstAllowedDirection = 16;
+    const static TurnInstruction LeaveAgainstAllowedDirection = 17;
 
     const static TurnInstruction AccessRestrictionFlag = 128;
     const static TurnInstruction InverseAccessRestrictionFlag = 0x7f; // ~128 does not work without a warning.
