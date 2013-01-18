@@ -100,7 +100,7 @@ bool XMLParser::Parse() {
 		}
 
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
-			_Way way = _ReadXMLWay( );
+			ExtractionWay way = _ReadXMLWay( );
 
 			/** Pass the unpacked way to the LUA call back **/
 			try {
@@ -222,8 +222,8 @@ _RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
 	return restriction;
 }
 
-_Way XMLParser::_ReadXMLWay() {
-	_Way way;
+ExtractionWay XMLParser::_ReadXMLWay() {
+	ExtractionWay way;
 	if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
 		const int depth = xmlTextReaderDepth( inputReader );
 		while ( xmlTextReaderRead( inputReader ) == 1 ) {

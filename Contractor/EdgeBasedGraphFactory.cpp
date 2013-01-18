@@ -79,6 +79,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         edge.data.type = i->type();
         edge.data.isAccessRestricted = i->isAccessRestricted();
         edge.data.edgeBasedNodeID = edges.size();
+        edge.data.contraFlow = i->isContraFlow();
         edges.push_back( edge );
         if( edge.data.backward ) {
             std::swap( edge.source, edge.target );
@@ -342,6 +343,13 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
     _NodeBasedDynamicGraph::EdgeData & data1 = _nodeBasedGraph->GetEdgeData(edge1);
     _NodeBasedDynamicGraph::EdgeData & data2 = _nodeBasedGraph->GetEdgeData(edge2);
 
+    if(!data1.contraFlow && data2.contraFlow) {
+    	return TurnInstructions.EnterAgainstAllowedDirection;
+    }
+    if(data1.contraFlow && !data2.contraFlow) {
+    	return TurnInstructions.LeaveAgainstAllowedDirection;
+    }
+
     //roundabouts need to be handled explicitely
     if(data1.roundabout && data2.roundabout) {
         //Is a turn possible? If yes, we stay on the roundabout!
@@ -363,10 +371,13 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
     }
 
     //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
-    if( (data1.nameID == data2.nameID) && (0 != data1.nameID))
+    if( (data1.nameID == data2.nameID) && (0 != data1.nameID)) {
         return TurnInstructions.NoTurn;
-    if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) <= 2) )
+    }
+    if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) <= 2) ) {
+    	ERR("should not happen");
         return TurnInstructions.NoTurn;
+    }
 
     double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);

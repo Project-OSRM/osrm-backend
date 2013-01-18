@@ -50,7 +50,7 @@ public:
     bool restrictionFunction(_RawRestrictionContainer &r);
 
     /** warning: caller needs to take care of synchronization! */
-    bool wayFunction(_Way &w);
+    bool wayFunction(ExtractionWay &w);
 
 };
 

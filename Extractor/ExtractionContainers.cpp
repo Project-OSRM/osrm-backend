@@ -231,17 +231,17 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                     fout.write((char*)&edgeIT->target, sizeof(unsigned));
                     fout.write((char*)&intDist, sizeof(int));
                     switch(edgeIT->direction) {
-                    case _Way::notSure:
+                    case ExtractionWay::notSure:
                         fout.write((char*)&zero, sizeof(short));
                         break;
-                    case _Way::oneway:
+                    case ExtractionWay::oneway:
                         fout.write((char*)&one, sizeof(short));
                         break;
-                    case _Way::bidirectional:
+                    case ExtractionWay::bidirectional:
                         fout.write((char*)&zero, sizeof(short));
 
                         break;
-                    case _Way::opposite:
+                    case ExtractionWay::opposite:
                         fout.write((char*)&one, sizeof(short));
                         break;
                     default:
@@ -256,6 +256,7 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                     fout.write((char*)&edgeIT->isRoundabout, sizeof(bool));
                     fout.write((char*)&edgeIT->ignoreInGrid, sizeof(bool));
                     fout.write((char*)&edgeIT->isAccessRestricted, sizeof(bool));
+                    fout.write((char*)&edgeIT->isContraFlow, sizeof(bool));
                 }
                 ++usedEdgeCounter;
                 ++edgeIT;

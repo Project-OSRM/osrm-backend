@@ -41,7 +41,7 @@
 #include "ExtractorStructs.h"
 #include "ScriptingEnvironment.h"
 
-class PBFParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> {
+class PBFParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, ExtractionWay> {
     
     enum EntityType {
         TypeNode = 1,

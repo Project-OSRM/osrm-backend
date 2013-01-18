@@ -332,8 +332,8 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 }
 
 inline void PBFParser::parseWay(_ThreadData * threadData) {
-	_Way w;
-	std::vector<_Way> waysToParse(threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size());
+	ExtractionWay w;
+	std::vector<ExtractionWay> waysToParse(threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size());
 	for(int i = 0, ways_size = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size(); i < ways_size; ++i) {
 		w.Clear();
 		const OSMPBF::Way& inputWay = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways( i );
@@ -356,7 +356,7 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 	unsigned endi_ways = waysToParse.size();
 #pragma omp parallel for schedule ( guided )
     		for(unsigned i = 0; i < endi_ways; ++i) {
-    			_Way & w = waysToParse[i];
+    			ExtractionWay & w = waysToParse[i];
     			/** Pass the unpacked way to the LUA call back **/
     			try {
     				luabind::call_function<int>(
@@ -376,7 +376,7 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
     			//                }
     		}
 
-    		BOOST_FOREACH(_Way & w, waysToParse) {
+    		BOOST_FOREACH(ExtractionWay & w, waysToParse) {
     			if(!externalMemory->wayFunction(w)) {
     				std::cerr << "[PBFParser] way not parsed" << std::endl;
     			}
