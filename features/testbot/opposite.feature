@@ -1,4 +1,4 @@
-@routing @opposite @todo
+@routing @opposite
 Feature: Separate settings for forward/backward direction
 	
 	Background:
@@ -7,13 +7,13 @@ Feature: Separate settings for forward/backward direction
 	@smallest
 	Scenario: Going against the flow
 		Given the node map
-		 | a | b |
+		 | a | b | c | d |
 	
 		And the ways
 		 | nodes | highway |
-		 | ab    | river   |
+		 | abcd  | river   |
     
 		When I route I should get
-		 | from | to | route | distance | time |
-		 | a    | b  | ab    | 100m     | 10s  |
-		 | b    | a  | ab    | 100m     | 20s  |
+		 | from | to | route | distance  | time |
+		 | a    | d  | abcd  | 300 +- 1m | 30s  |
+		 | d    | a  | abcd  | 300 +- 1m | 55s  |

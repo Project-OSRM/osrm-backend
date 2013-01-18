@@ -56,6 +56,12 @@ function way_function (way, numberOfNodesInWay)
 		way.speed = speed_profile[highway] or speed_profile['default']
 	end
 	
+	if(highway == "river") then
+		local temp_speed = way.speed;
+		way.speed = temp_speed*3/2
+		way.backward_speed = temp_speed*2/3
+	end
+	
 	if oneway == "no" or oneway == "0" or oneway == "false" then
 		way.direction = Way.bidirectional
 	elseif oneway == "-1" then
