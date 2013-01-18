@@ -53,14 +53,14 @@ private:
     struct _NodeBasedEdgeData {
         int distance;
         unsigned edgeBasedNodeID;
-        unsigned nameID:31;
+        unsigned nameID;
+        short type;
+        bool isAccessRestricted;
         bool shortcut:1;
         bool forward:1;
         bool backward:1;
         bool roundabout:1;
         bool ignoreInGrid:1;
-        short type;
-        bool isAccessRestricted;
     };
 
     struct _EdgeBasedEdgeData {
