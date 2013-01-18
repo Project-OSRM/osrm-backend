@@ -4,8 +4,7 @@ Feature: Separate settings for forward/backward direction
 	Background:
 		Given the profile "testbot"
 	
-	@smallest
-	Scenario: Going against the flow
+	Scenario: Testbot - Going against the flow
 		Given the node map
 		 | a | b | c | d |
 	
