@@ -68,6 +68,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      luabind::class_<_Way>("Way")
                                      .def(luabind::constructor<>())
                                      .def_readwrite("name", &_Way::name)
+                                     .def_readwrite("backward_speed", &_Way::backward_speed)
                                      .def_readwrite("speed", &_Way::speed)
                                      .def_readwrite("type", &_Way::type)
                                      .def_readwrite("access", &_Way::access)
