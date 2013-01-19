@@ -1,4 +1,4 @@
-@routing @opposite
+@routing @testbot @opposite
 Feature: Separate settings for forward/backward direction
 	
 	Background:

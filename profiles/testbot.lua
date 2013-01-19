@@ -23,6 +23,18 @@ ignore_areas 			= true	-- future feature
 traffic_signal_penalty 	= 7		-- seconds
 u_turn_penalty 			= 20
 
+function limit_speed(speed, limits)
+    -- don't use ipairs(), since it stops at the first nil value
+    for i=1, #limits do
+        limit = limits[i]
+        if limit ~= nil and limit > 0 then
+            if limit < speed then
+                return limit        -- stop at first speedlimit that's smaller than speed
+            end
+        end
+    end
+    return speed
+end
 
 function node_function (node)
 	local traffic_signal = node.tags:Find("highway")
@@ -45,6 +57,15 @@ function way_function (way, numberOfNodesInWay)
 	local oneway = way.tags:Find("oneway")
 	local route = way.tags:Find("route")
 	local duration = way.tags:Find("duration")
+    local maxspeed = tonumber(way.tags:Find ( "maxspeed"))
+    local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
+    local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
+	
+	print('---')
+	print(name)
+	print(tostring(maxspeed))
+	print(tostring(maxspeed_forward))
+	print(tostring(maxspeed_backward))
 	
 	way.name = name
 
@@ -54,12 +75,20 @@ function way_function (way, numberOfNodesInWay)
 	 	way.is_duration_set = true
 	else
 		way.speed = speed_profile[highway] or speed_profile['default']
-	end
-	
-	if(highway == "river") then
-		local temp_speed = way.speed;
-		way.speed = temp_speed*3/2
-		way.backward_speed = temp_speed*2/3
+
+    	if highway == "river" then
+    		local temp_speed = way.speed;
+    		way.speed = temp_speed*3/2
+    		way.backward_speed = temp_speed*2/3
+    	else
+    	    way.backward_speed = way.speed
+    	end
+        
+        way.speed = limit_speed( way.speed, {maxspeed_forward, maxspeed} )
+        way.backward_speed = limit_speed( way.backward_speed, {maxspeed_backward, maxspeed} )
+
+    	-- print( 'limit forw: '  .. tostring(way.speed))
+    	-- print( 'limit back: '  .. tostring(way.backward_speed))
 	end
 	
 	if oneway == "no" or oneway == "0" or oneway == "false" then
