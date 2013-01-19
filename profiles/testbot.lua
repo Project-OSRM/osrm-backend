@@ -74,21 +74,25 @@ function way_function (way, numberOfNodesInWay)
 		way.speed = math.max( 1, parseDuration(duration) / math.max(1, numberOfNodesInWay-1) )
 	 	way.is_duration_set = true
 	else
-		way.speed = speed_profile[highway] or speed_profile['default']
+	    local speed_forw = speed_profile[highway] or speed_profile['default']
+	    local speed_back = speed_forw
 
     	if highway == "river" then
     		local temp_speed = way.speed;
-    		way.speed = temp_speed*3/2
-    		way.backward_speed = temp_speed*2/3
-    	else
-    	    way.backward_speed = way.speed
+    		speed_forw = temp_speed*3/2
+    		speed_back = temp_speed*2/3
     	end
+            	
+        speed_forw = limit_speed( speed_forw, {maxspeed_forward, maxspeed} )
+		speed_back = limit_speed( speed_back, {maxspeed_backward, maxspeed} )
         
-        way.speed = limit_speed( way.speed, {maxspeed_forward, maxspeed} )
-        way.backward_speed = limit_speed( way.backward_speed, {maxspeed_backward, maxspeed} )
+        way.speed = speed_forw
+        if speed_back ~= way_forw then
+            way.backward_speed = speed_back
+        end
 
-    	-- print( 'limit forw: '  .. tostring(way.speed))
-    	-- print( 'limit back: '  .. tostring(way.backward_speed))
+    	-- print( 'speed forw: '  .. tostring(way.speed))
+    	-- print( 'speed back: '  .. tostring(way.backward_speed))
 	end
 	
 	if oneway == "no" or oneway == "0" or oneway == "false" then

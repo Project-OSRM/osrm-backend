@@ -34,8 +34,10 @@ Feature: Car - Max speed restrictions
 
 		When I route I should get
 		 | from | to | route | time    |
-		 | a    | b  | ab    | 20s +-1 |
-		 | b    | c  | bc    | 20s +-1 |
+		 | a    | b  | ab    | 10s +-1 |
+		 | b    | a  | ab    | 10s +-1 |
+		 | b    | c  | bc    | 10s +-1 |
+		 | c    | b  | bc    | 10s +-1 |
 
     @opposite
     Scenario: Testbot - Forward/backward maxspeed
