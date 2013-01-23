@@ -108,10 +108,6 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode
     nodes.swap(edgeBasedNodes);
 }
 
-void EdgeBasedGraphFactory::GetOriginalEdgeData( std::vector< OriginalEdgeData> & oed) {
-    oed.swap(originalEdgeData);
-}
-
 NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const {
     std::pair < NodeID, NodeID > restrictionSource = std::make_pair(u, v);
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);

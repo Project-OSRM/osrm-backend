@@ -171,10 +171,6 @@ int main (int argc, char *argv[]) {
     /***
      * Writing info on original (node-based) edges
      */
-    INFO("writing info on original edges");
-    std::vector<OriginalEdgeData> originalEdgeData;
-    edgeBasedGraphFactory->GetOriginalEdgeData(originalEdgeData);
-
     DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
     delete edgeBasedGraphFactory;
@@ -274,5 +270,7 @@ int main (int argc, char *argv[]) {
     //cleanedEdgeList.clear();
     _nodes.clear();
     INFO("finished preprocessing");
+
+    INFO("Edgebased edge list size " << edgeBasedEdgeList.size());
     return 0;
 }
