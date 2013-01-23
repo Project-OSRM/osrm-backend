@@ -270,7 +270,5 @@ int main (int argc, char *argv[]) {
     //cleanedEdgeList.clear();
     _nodes.clear();
     INFO("finished preprocessing");
-
-    INFO("Edgebased edge list size " << edgeBasedEdgeList.size());
     return 0;
 }
