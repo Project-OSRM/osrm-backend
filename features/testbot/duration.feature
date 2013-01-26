@@ -1,5 +1,5 @@
 @routing @testbot @routes @duration
-Feature: OSM Route Relation
+Feature: Durations
 
 	Background:
 		Given the profile "testbot"
