@@ -23,6 +23,19 @@ ignore_areas 			= true	-- future feature
 traffic_signal_penalty 	= 7		-- seconds
 u_turn_penalty 			= 20
 
+function limit_speed(speed, limits)
+    -- don't use ipairs(), since it stops at the first nil value
+    for i=1, #limits do
+        limit = limits[i]
+        if limit ~= nil and limit > 0 then
+            if limit < speed then
+                return limit        -- stop at first speedlimit that's smaller than speed
+            end
+        end
+    end
+    return speed
+end
+
 function node_function (node)
 	local traffic_signal = node.tags:Find("highway")
 
