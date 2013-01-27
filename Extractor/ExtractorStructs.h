@@ -52,10 +52,10 @@ struct _Way {
 		keyVals.EraseAll();
         direction = _Way::notSure;
         speed = -1;
+        duration = -1;
         type = -1;
         access = true;
         roundabout = false;
-        isDurationSet = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
     }
@@ -67,10 +67,10 @@ struct _Way {
     unsigned nameID;
     std::string name;
     double speed;
+    double duration;
     short type;
     bool access;
     bool roundabout;
-    bool isDurationSet;
     bool isAccessRestricted;
     bool ignoreInGrid;
     std::vector< NodeID > path;
