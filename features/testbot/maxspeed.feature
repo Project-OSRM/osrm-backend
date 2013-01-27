@@ -65,8 +65,8 @@ Feature: Car - Max speed restrictions
     	 | d    | e  | de    | 10s +-1 |
     	 | e    | d  | de    | 20s +-1 |
     	 | e    | f  | ef    | 20s +-1 |
-    	 | f    | e  | ef    | 10s +-1 |
-    	 | f    | g  | fg    | 10s +-1 |
+    	 | f    | e  | ef    | 40s +-1 |
+    	 | f    | g  | fg    | 40s +-1 |
     	 | g    | f  | fg    | 20s +-1 |
     	 | g    | h  | gh    | 15s +-1 |
-    	 | h    | g  | gh    | 10s +-1 |
+    	 | h    | g  | gh    | 20s +-1 |
