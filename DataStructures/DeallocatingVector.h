@@ -302,6 +302,18 @@ public:
         size_t _index = index % bucketSizeC;
         return (mBucketList[_bucket][_index]);
     }
+
+    inline ElementT & back() {
+    	size_t _bucket = mCurrentSize / bucketSizeC;
+    	size_t _index = mCurrentSize % bucketSizeC;
+    	return (mBucketList[_bucket][_index]);
+    }
+
+    const inline ElementT & back() const {
+    	size_t _bucket = mCurrentSize / bucketSizeC;
+    	size_t _index = mCurrentSize % bucketSizeC;
+    	return (mBucketList[_bucket][_index]);
+    }
 };
 
 #endif /* DEALLOCATINGVECTOR_H_ */
