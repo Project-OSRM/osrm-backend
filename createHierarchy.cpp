@@ -97,7 +97,6 @@ int main (int argc, char *argv[]) {
     std::string graphOut(argv[1]);		graphOut += ".hsgr";
     std::string ramIndexOut(argv[1]);	ramIndexOut += ".ramIndex";
     std::string fileIndexOut(argv[1]);	fileIndexOut += ".fileIndex";
-    std::string levelInfoOut(argv[1]);	levelInfoOut += ".levels";
 
     /*** Setup Scripting Environment ***/
     if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
