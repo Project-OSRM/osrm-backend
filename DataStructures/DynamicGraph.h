@@ -72,6 +72,7 @@ class DynamicGraph {
                 m_nodes[node].edges = edge - lastEdge;
                 position += m_nodes[node].edges;
             }
+            m_nodes.back().firstEdge = position;
             m_edges.reserve( position * 1.1 );
             m_edges.resize( position );
             edge = 0;
