@@ -18,8 +18,8 @@ Feature: Durations
     	 | de    | primary | 10:00    |
 
  		When I route I should get
- 		 | from | to | route | distance | time     |
- 		 | a    | b  | ab    | 100m +-1 | 1s +-1   |
- 		 | b    | c  | bc    | 200m +-1 | 10s +-1  |
- 		 | c    | d  | cd    | 300m +-1 | 60s +-1  |
- 		 | d    | e  | de    | 144m +-1 | 600s +-1 |
+ 		 | from | to | route | distance | time       |
+ 		 | a    | b  | ab    | 100m +-1 | 60s +-1    |
+ 		 | b    | c  | bc    | 200m +-1 | 600s +-1   |
+ 		 | c    | d  | cd    | 300m +-1 | 3600s +-1  |
+ 		 | d    | e  | de    | 144m +-2 | 36000s +-1 |
