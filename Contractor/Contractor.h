@@ -157,11 +157,13 @@ public:
             forwardEdge.data.distance = backwardEdge.data.distance = std::numeric_limits< int >::max();
             //remove parallel edges
             while ( i < edges.size() && edges[i].source == source && edges[i].target == target ) {
-                if ( edges[i].data.forward )
+            	if ( edges[i].data.forward) {
                     forwardEdge.data.distance = std::min( edges[i].data.distance, forwardEdge.data.distance );
-                if ( edges[i].data.backward )
+                }
+                if ( edges[i].data.backward) {
                     backwardEdge.data.distance = std::min( edges[i].data.distance, backwardEdge.data.distance );
-                i++;
+                }
+                ++i;
             }
             //merge edges (s,t) and (t,s) into bidirectional edge
             if ( forwardEdge.data.distance == backwardEdge.data.distance ) {
@@ -242,7 +244,7 @@ public:
                 nodePriority[x] = _Evaluate( data, &nodeData[x], x );
             }
         }
-        std::cout << "ok" << std::endl << "preprocessing ..." << std::flush;
+        std::cout << "ok" << std::endl << "preprocessing " << numberOfNodes << " nodes ..." << std::flush;
 
         bool flushedContractor = false;
         while ( numberOfContractedNodes < numberOfNodes ) {

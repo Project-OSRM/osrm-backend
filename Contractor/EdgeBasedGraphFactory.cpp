@@ -67,9 +67,9 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
         }
-        if(edge.source == edge.target)
-            continue;
-
+        if(edge.source == edge.target) {
+        	continue;
+        }
         edge.data.distance = (std::max)((int)i->weight(), 1 );
         assert( edge.data.distance > 0 );
         edge.data.shortcut = false;
@@ -118,7 +118,7 @@ NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const 
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);
     if (restrIter != _restrictionMap.end()) {
         unsigned index = restrIter->second;
-        BOOST_FOREACH(RestrictionSource restrictionTarget, _restrictionBucketVector.at(index)) {
+        BOOST_FOREACH(const RestrictionSource & restrictionTarget, _restrictionBucketVector.at(index)) {
             if(restrictionTarget.second) {
                 return restrictionTarget.first;
             }
@@ -250,6 +250,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
         for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
             ++nodeBasedEdgeCounter;
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
+            bool isBollardNode = (_barrierNodes.find(v) != _barrierNodes.end());
             //EdgeWeight heightPenalty = ComputeHeightPenalty(u, v);
             NodeID onlyToNode = CheckForEmanatingIsOnlyTurn(u, v);
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
@@ -259,7 +260,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                     ++numberOfSkippedTurns;
                     continue;
                 }
-                bool isBollardNode = (_barrierNodes.find(v) != _barrierNodes.end());
+
                 if(u == w && 1 != _nodeBasedGraph->GetOutDegree(v) ) {
                     continue;
                 }
@@ -302,7 +303,6 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                             originalEdgeData.clear();
                         }
                         ++numberOfOriginalEdges;
-                        ++nodeBasedEdgeCounter;
                         edgeBasedEdges.push_back(newEdge);
                     } else {
                         ++numberOfSkippedTurns;
@@ -327,6 +327,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
 //    std::vector<EdgeBasedNode>(edgeBasedNodes).swap(edgeBasedNodes);
 //    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
     INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
+    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges");
 //    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << 2*((double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter));
     INFO("Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << numberOfTurnRestrictions << " restrictions.");
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
