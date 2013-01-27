@@ -82,18 +82,17 @@ bool ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
 
 		if ( parsed_way.direction == ExtractionWay::opposite ){
 			std::reverse( parsed_way.path.begin(), parsed_way.path.end() );
-		}
-
-		if( parsed_way.backward_speed > 0 && parsed_way.direction == ExtractionWay::bidirectional) {
 			parsed_way.direction = ExtractionWay::oneway;
 		}
+
+		bool split_bidirectional_edge = (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
 
 		for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
 			externalMemory->allEdges.push_back(
 					InternalExtractorEdge(parsed_way.path[n],
 							parsed_way.path[n+1],
 							parsed_way.type,
-							(ExtractionWay::bidirectional == parsed_way.direction && parsed_way.backward_speed > 0 ? ExtractionWay::oneway : parsed_way.direction),
+							(split_bidirectional_edge ? ExtractionWay::oneway : parsed_way.direction),
 							parsed_way.speed,
 							parsed_way.nameID,
 							parsed_way.roundabout,
@@ -109,7 +108,7 @@ bool ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
 		//The following information is needed to identify start and end segments of restrictions
 		externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(parsed_way.id, parsed_way.path[0], parsed_way.path[1], parsed_way.path[parsed_way.path.size()-2], parsed_way.path.back()));
 
-		if ( parsed_way.backward_speed > 0 ) { //Only true if the way should be split
+		if ( split_bidirectional_edge) { //Only true if the way should be split
 			std::reverse( parsed_way.path.begin(), parsed_way.path.end() );
 			for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
 				externalMemory->allEdges.push_back(
