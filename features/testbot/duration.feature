@@ -23,7 +23,8 @@ Feature: Durations
  		 | b    | c  | bc    | 200m +-1 | 600s +-1   |
  		 | c    | d  | cd    | 300m +-1 | 3600s +-1  |
  		 | d    | e  | de    | 144m +-2 | 36000s +-1 |
-
+    
+    @todo
     Scenario: Partial duration of ways
     	Given the node map
     	 | a | b |  | c |
