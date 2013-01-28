@@ -139,7 +139,6 @@ bool XMLParser::Parse() {
 _RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
 	_RawRestrictionContainer restriction;
 	std::string exception_of_restriction_tag;
-	bool restriction_is_excepted = false;
 
 	if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
 		const int depth = xmlTextReaderDepth( inputReader );while ( xmlTextReaderRead( inputReader ) == 1 ) {

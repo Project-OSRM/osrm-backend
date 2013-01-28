@@ -108,6 +108,9 @@ public:
             int tlon = edge.lon2;
             AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon), edge.belongsToTinyComponent ) );
         }
+        if( 0 == entries.size() ) {
+        	ERR("No viable edges for nearest neighbor index. Aborting");
+        }
         double timestamp = get_timestamp();
         //create index file on disk, old one is over written
         indexOutFile.open(fileIndexOut, std::ios::out | std::ios::binary | std::ios::trunc);
