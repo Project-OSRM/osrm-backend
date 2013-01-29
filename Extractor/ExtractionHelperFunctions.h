@@ -28,12 +28,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/regex.hpp>
 #include <climits>
 
+
 #include "../Util/StringUtil.h"
+
+namespace qi = boost::spirit::qi;
 
 //TODO: Move into LUA
 
 inline bool durationIsValid(const std::string &s) {
-    boost::regex e ("((\\d|\\d\\d):)*(\\d|\\d\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
+    boost::regex e ("((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
 
     std::vector< std::string > result;
     boost::algorithm::split_regex( result, s, boost::regex( ":" ) ) ;
@@ -42,17 +45,28 @@ inline bool durationIsValid(const std::string &s) {
 }
 
 inline unsigned parseDuration(const std::string &s) {
-    int hours = 0;
-    int minutes = 0;
-    boost::regex e ("((\\d|\\d\\d):)*(\\d|\\d\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
+	unsigned hours = 0;
+    unsigned minutes = 0;
+    unsigned seconds = 0;
+    boost::regex e ("((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",boost::regex_constants::icase|boost::regex_constants::perl);
 
     std::vector< std::string > result;
     boost::algorithm::split_regex( result, s, boost::regex( ":" ) ) ;
     bool matched = regex_match(s, e);
     if(matched) {
-        hours = (result.size()== 2) ?  stringToInt(result[0]) : 0;
-        minutes = (result.size()== 2) ?  stringToInt(result[1]) : stringToInt(result[0]);
-        return 600*(hours*60+minutes);
+    	if(1 == result.size()) {
+    		minutes = stringToInt(result[0]);
+    	}
+    	if(2 == result.size()) {
+    		minutes =  stringToInt(result[1]);
+    		hours = stringToInt(result[0]);
+    	}
+    	if(3 == result.size()) {
+            seconds = stringToInt(result[2]);
+            minutes = stringToInt(result[1]);
+            hours   = stringToInt(result[0]);
+    	}
+        return 10*(3600*hours+60*minutes+seconds);
     }
     return UINT_MAX;
 }
@@ -65,6 +79,5 @@ inline int parseMaxspeed(std::string input) { //call-by-value on purpose.
     }
     return n;
 }
-
 
 #endif /* EXTRACTIONHELPERFUNCTIONS_H_ */

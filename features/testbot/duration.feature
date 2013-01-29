@@ -6,9 +6,9 @@ Feature: Durations
 		
     Scenario: Duration of ways
     	Given the node map
-    	 | a | b |  |   |   |
-    	 |   |   |  | e |   |
-    	 |   | c |  |   | d |
+    	 | a | b |  |   |   | f |
+    	 |   |   |  | e |   |   |
+    	 |   | c |  |   | d |   |
 	 
     	And the ways
     	 | nodes | highway | duration |
@@ -16,6 +16,7 @@ Feature: Durations
     	 | bc    | primary | 0:10     |
     	 | cd    | primary | 1:00     |
     	 | de    | primary | 10:00    |
+    	 | ef    | primary | 01:02:03 |
 
  		When I route I should get
  		 | from | to | route | distance | time       |
@@ -23,6 +24,7 @@ Feature: Durations
  		 | b    | c  | bc    | 200m +-1 | 600s +-1   |
  		 | c    | d  | cd    | 300m +-1 | 3600s +-1  |
  		 | d    | e  | de    | 144m +-2 | 36000s +-1 |
+ 		 | e    | f  | ef    | 224m +-2 | 3723s +-1  |
     
     @todo
     Scenario: Partial duration of ways
