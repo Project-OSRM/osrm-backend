@@ -28,6 +28,7 @@ speed_profile = {
   ["service"] = 15,
 --  ["track"] = 5,
   ["ferry"] = 5,
+  ["shuttle_train"] = 10,
   ["default"] = 50
 }
 
