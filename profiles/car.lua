@@ -139,14 +139,13 @@ function way_function (way, numberOfNodesInWay)
     if (speed_profile[route] ~= nil and speed_profile[route] > 0)
     then
       if durationIsValid(duration) then
-	    way.speed = math.max( parseDuration(duration) / math.max(1, numberOfNodesInWay-1) );
-        way.is_duration_set = true
+	    way.duration = math.max( parseDuration(duration), 1 );
       end
       way.direction = Way.bidirectional
       if speed_profile[route] ~= nil then
          highway = route;
       end
-      if not way.is_duration_set then
+      if not way.duration > 0 then
         way.speed = speed_profile[highway]
       end
     end
