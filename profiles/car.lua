@@ -136,8 +136,7 @@ function way_function (way, numberOfNodesInWay)
 	end
 
   -- Handling ferries and piers
-    if (speed_profile[route] ~= nil and speed_profile[route] > 0)
-    then
+    if (speed_profile[route] ~= nil and speed_profile[route] > 0) then
       if durationIsValid(duration) then
 	    way.duration = math.max( parseDuration(duration), 1 );
       end
@@ -145,7 +144,7 @@ function way_function (way, numberOfNodesInWay)
       if speed_profile[route] ~= nil then
          highway = route;
       end
-      if not way.duration > 0 then
+      if tonumber(way.duration) < 0 then
         way.speed = speed_profile[highway]
       end
     end
@@ -165,6 +164,11 @@ function way_function (way, numberOfNodesInWay)
       end
       way.speed = math.min(speed_profile["default"], maxspeed)
     end
+    
+    if durationIsValid(duration) then
+      way.duration = math.max( parseDuration(duration), 1 );
+    end
+
 
   -- Set access restriction flag if access is allowed under certain restrictions only
     if access ~= "" and access_tag_restricted[access] then
