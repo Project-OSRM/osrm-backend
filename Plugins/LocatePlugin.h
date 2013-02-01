@@ -52,12 +52,12 @@ public:
 
         //query to helpdesk
         _Coordinate result;
-        std::string JSONParameter, tmp;
+        std::string tmp;
         //json
 
 //        JSONParameter = routeParameters.options.Find("jsonp");
         if("" != routeParameters.jsonpParameter) {
-            reply.content += JSONParameter;
+            reply.content += routeParameters.jsonpParameter;
             reply.content += "(";
         }
         reply.status = http::Reply::ok;
@@ -82,7 +82,7 @@ public:
         reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
-        if("" != JSONParameter) {
+        if("" != routeParameters.jsonpParameter) {
             reply.content += ")";
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
