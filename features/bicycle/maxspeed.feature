@@ -34,10 +34,7 @@ Feature: Bike - Max speed restrictions
 
      @todo
      Scenario: Bike - Forward/backward maxspeed
-     	Given the node map
-     	 | a | b | c | d | e | f | g | h |
-
-        And the shortcuts
+        Given the shortcuts
  		 | key   | value    |
  		 | bike  | 43s ~10% |
  		 | run   | 73s ~10% |

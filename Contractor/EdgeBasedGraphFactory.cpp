@@ -376,7 +376,6 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
         return TurnInstructions.NoTurn;
     }
     if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) <= 2) ) {
-    	ERR("should not happen");
         return TurnInstructions.NoTurn;
     }
 
