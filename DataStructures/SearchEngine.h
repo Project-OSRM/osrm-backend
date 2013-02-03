@@ -42,32 +42,33 @@ struct _HeapData {
 	_HeapData( NodeID p ) : parent(p) { }
 };
 
-typedef boost::thread_specific_ptr<BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > > SearchEngineHeapPtr;
+typedef BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > QueryHeapType;
+typedef boost::thread_specific_ptr<QueryHeapType> SearchEngineHeapPtr;
 
 template<class EdgeData, class GraphT>
 struct SearchEngineData {
-    typedef SearchEngineHeapPtr HeapPtr;
     typedef GraphT Graph;
+    typedef QueryHeapType QueryHeap;
     SearchEngineData(GraphT * g, NodeInformationHelpDesk * nh, std::vector<std::string> & n) :graph(g), nodeHelpDesk(nh), names(n) {}
     const GraphT * graph;
     NodeInformationHelpDesk * nodeHelpDesk;
     std::vector<std::string> & names;
-    static HeapPtr forwardHeap;
-    static HeapPtr backwardHeap;
-    static HeapPtr forwardHeap2;
-    static HeapPtr backwardHeap2;
-    static HeapPtr forwardHeap3;
-    static HeapPtr backwardHeap3;
+    static SearchEngineHeapPtr forwardHeap;
+    static SearchEngineHeapPtr backwardHeap;
+    static SearchEngineHeapPtr forwardHeap2;
+    static SearchEngineHeapPtr backwardHeap2;
+    static SearchEngineHeapPtr forwardHeap3;
+    static SearchEngineHeapPtr backwardHeap3;
 
     inline void InitializeOrClearFirstThreadLocalStorage() {
         if(!forwardHeap.get()) {
-            forwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            forwardHeap.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             forwardHeap->Clear();
 
         if(!backwardHeap.get()) {
-            backwardHeap.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            backwardHeap.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             backwardHeap->Clear();
@@ -75,13 +76,13 @@ struct SearchEngineData {
 
     inline void InitializeOrClearSecondThreadLocalStorage() {
         if(!forwardHeap2.get()) {
-            forwardHeap2.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            forwardHeap2.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             forwardHeap2->Clear();
 
         if(!backwardHeap2.get()) {
-            backwardHeap2.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            backwardHeap2.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             backwardHeap2->Clear();
@@ -89,13 +90,13 @@ struct SearchEngineData {
 
     inline void InitializeOrClearThirdThreadLocalStorage() {
         if(!forwardHeap3.get()) {
-            forwardHeap3.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            forwardHeap3.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             forwardHeap3->Clear();
 
         if(!backwardHeap3.get()) {
-            backwardHeap3.reset(new BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> >(nodeHelpDesk->getNumberOfNodes()));
+            backwardHeap3.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
         }
         else
             backwardHeap3->Clear();
