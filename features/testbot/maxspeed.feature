@@ -41,32 +41,12 @@ Feature: Car - Max speed restrictions
 
     @opposite
     Scenario: Testbot - Forward/backward maxspeed
-    	Given the node map
-    	 | a | b | c | d | e | f | g | h |
-
-    	And the ways
-    	 | nodes | maxspeed | maxspeed:forward | maxspeed:backward |
-    	 | ab    |          |                  |                   |
-    	 | bc    | 18       |                  |                   |
-    	 | cd    |          | 18               |                   |
-    	 | de    |          |                  | 18                |
-    	 | ef    | 9        | 18               |                   |
-    	 | fg    | 9        |                  | 18                |
-    	 | gh    | 9        | 24               | 18                |
-
-    	When I route I should get
-    	 | from | to | route | time    |
-    	 | a    | b  | ab    | 10s +-1 |
-    	 | b    | a  | ab    | 10s +-1 |
-    	 | b    | c  | bc    | 20s +-1 |
-    	 | c    | b  | bc    | 20s +-1 |
-    	 | c    | d  | cd    | 20s +-1 |
-    	 | d    | c  | cd    | 10s +-1 |
-    	 | d    | e  | de    | 10s +-1 |
-    	 | e    | d  | de    | 20s +-1 |
-    	 | e    | f  | ef    | 20s +-1 |
-    	 | f    | e  | ef    | 40s +-1 |
-    	 | f    | g  | fg    | 40s +-1 |
-    	 | g    | f  | fg    | 20s +-1 |
-    	 | g    | h  | gh    | 15s +-1 |
-    	 | h    | g  | gh    | 20s +-1 |
+     	Then routability should be
+     	 | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
+     	 |          |                  |                   | 20s +-1 | 20s +-1 |
+     	 | 18       |                  |                   | 40s +-1 | 40s +-1 |
+     	 |          | 18               |                   | 40s +-1 | 20s +-1 |
+     	 |          |                  | 18                | 20s +-1 | 40s +-1 |
+     	 | 9        | 18               |                   | 40s +-1 | 80s +-1 |
+     	 | 9        |                  | 18                | 80s +-1 | 40s +-1 |
+     	 | 9        | 24               | 18                | 30s +-1 | 40s +-1 |
