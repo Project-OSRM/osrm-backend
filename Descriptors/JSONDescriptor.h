@@ -264,7 +264,7 @@ public:
             std::set_difference(shortestSegments.begin(), shortestSegments.end(), alternativeSegments.begin(), alternativeSegments.end(), shortestDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
             int size_of_difference = shortestDifference.size();
             if(0 < size_of_difference ) {
-                unsigned i = 0;
+                int i = 0;
                 while( i < size_of_difference && shortestDifference[i].nameID == shortestSegments[0].nameID) {
                     ++i;
                 }
@@ -276,7 +276,7 @@ public:
             std::set_difference(alternativeSegments.begin(), alternativeSegments.end(), shortestSegments.begin(), shortestSegments.end(), alternativeDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
             size_of_difference = alternativeDifference.size();
             if(0 < size_of_difference ) {
-                unsigned i = 0;
+                int i = 0;
                 while( i < size_of_difference && alternativeDifference[i].nameID == alternativeSegments[0].nameID) {
                     ++i;
                 }
