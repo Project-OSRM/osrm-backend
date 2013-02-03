@@ -4,7 +4,6 @@ Feature: Locating Nearest node on a Way - pick closest way
 	Background:
 		Given the profile "testbot"
 	
-	@todo
 	Scenario: Nearest - two ways crossing
 		Given the node map
 		 |   | 0 | c | 1 |   |
@@ -15,7 +14,7 @@ Feature: Locating Nearest node on a Way - pick closest way
 
 		And the ways
 		 | nodes |
-		 | axc   |
+		 | axb   |
 		 | cxd   |
 
 		When I request nearest I should get
