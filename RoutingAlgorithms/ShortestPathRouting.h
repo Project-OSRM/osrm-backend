@@ -81,31 +81,31 @@ public:
             if(phantomNodePair.targetPhantom.isBidirected() ) {
                 backwardHeap2.Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
             }
-            int offset = (phantomNodePair.startPhantom.isBidirected() ? std::max(phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.weight2) : phantomNodePair.startPhantom.weight1) ;
-            offset += (phantomNodePair.targetPhantom.isBidirected() ? std::max(phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.weight2) : phantomNodePair.targetPhantom.weight1) ;
+            const int forward_offset = phantomNodePair.startPhantom.weight1 + (phantomNodePair.startPhantom.isBidirected() ? phantomNodePair.startPhantom.weight2 : 0);
+            const int reverse_offset = phantomNodePair.targetPhantom.weight1 + (phantomNodePair.targetPhantom.isBidirected() ? phantomNodePair.targetPhantom.weight2 : 0);
 
             //run two-Target Dijkstra routing step.
-            while(forwardHeap.Size() + backwardHeap.Size() > 0){
-                if(forwardHeap.Size() > 0){
-                    super::RoutingStep(forwardHeap, backwardHeap, &middle1, &_localUpperbound1, 2*offset, true);
+            while(0 < (forwardHeap.Size() + backwardHeap.Size() )){
+                if(0 < forwardHeap.Size()){
+                    super::RoutingStep(forwardHeap, backwardHeap, &middle1, &_localUpperbound1, forward_offset, true);
                 }
-                if(backwardHeap.Size() > 0){
-                    super::RoutingStep(backwardHeap, forwardHeap, &middle1, &_localUpperbound1, 2*offset, false);
+                if(0 < backwardHeap.Size() ){
+                    super::RoutingStep(backwardHeap, forwardHeap, &middle1, &_localUpperbound1, reverse_offset, false);
                 }
             }
-            if(backwardHeap2.Size() > 0) {
-                while(forwardHeap2.Size() + backwardHeap2.Size() > 0){
-                    if(forwardHeap2.Size() > 0){
-                        super::RoutingStep(forwardHeap2, backwardHeap2, &middle2, &_localUpperbound2, 2*offset, true);
+            if(0 < backwardHeap2.Size()) {
+                while(0 < (forwardHeap2.Size() + backwardHeap2.Size() )){
+                    if(0 < forwardHeap2.Size()){
+                        super::RoutingStep(forwardHeap2, backwardHeap2, &middle2, &_localUpperbound2, forward_offset, true);
                     }
-                    if(backwardHeap2.Size() > 0){
-                        super::RoutingStep(backwardHeap2, forwardHeap2, &middle2, &_localUpperbound2, 2*offset, false);
+                    if(0 < backwardHeap2.Size()){
+                        super::RoutingStep(backwardHeap2, forwardHeap2, &middle2, &_localUpperbound2, reverse_offset, false);
                     }
                 }
             }
 
             //No path found for both target nodes?
-            if(INT_MAX == _localUpperbound1 && INT_MAX == _localUpperbound2) {
+            if((INT_MAX == _localUpperbound1) && (INT_MAX == _localUpperbound2)) {
                 rawRouteData.lengthOfShortestPath = rawRouteData.lengthOfAlternativePath = INT_MAX;
                 return;
             }
