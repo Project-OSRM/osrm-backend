@@ -67,7 +67,7 @@ bool ExtractorCallbacks::restrictionFunction(_RawRestrictionContainer &r) {
 bool ExtractorCallbacks::wayFunction(_Way &w) {
     /*** Store name of way and split it into edge segments ***/
 
-    if ( 0 < w.speed > 0 || 0 < w.duration ) { //Only true if the way is specified by the speed profile
+    if ( (0 < w.speed) || (0 < w.duration) ) { //Only true if the way is specified by the speed profile
         //Get the unique identifier for the street name
         const StringMap::const_iterator strit = stringMap->find(w.name);
         if(strit == stringMap->end()) {
