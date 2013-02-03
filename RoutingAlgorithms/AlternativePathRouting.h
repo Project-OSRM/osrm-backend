@@ -21,23 +21,25 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef ALTERNATIVEROUTES_H_
 #define ALTERNATIVEROUTES_H_
 
+#include <boost/unordered_map.hpp>
+#include <vector>
 #include <cmath>
 
 #include "BasicRoutingInterface.h"
 
-const double VIAPATH_ALPHA   = 0.25;
-const double VIAPATH_EPSILON = 0.25;
-const double VIAPATH_GAMMA   = 0.80;
+const double VIAPATH_ALPHA   = 0.15;
+const double VIAPATH_EPSILON = 0.10; //alternative at most 15% longer
+const double VIAPATH_GAMMA   = 0.75; //alternative shares at most 75% with the shortest.
 
 template<class QueryDataT>
-class AlternativeRouting : private BasicRoutingInterface<QueryDataT>{
+class AlternativeRouting : private BasicRoutingInterface<QueryDataT> {
     typedef BasicRoutingInterface<QueryDataT> super;
-    typedef std::pair<NodeID, int> PreselectedNode;
-    typedef typename QueryDataT::HeapPtr HeapPtr;
-    typedef std::pair<NodeID, NodeID> UnpackEdge;
+    typedef typename QueryDataT::Graph SearchGraph;
+    typedef typename QueryDataT::QueryHeap QueryHeap;
+    typedef std::pair<NodeID, NodeID> SearchSpaceEdge;
 
     struct RankedCandidateNode {
-        RankedCandidateNode(NodeID n, int l, int s) : node(n), length(l), sharing(s) {}
+        RankedCandidateNode(const NodeID n, const int l, const int s) : node(n), length(l), sharing(s) {}
         NodeID node;
         int length;
         int sharing;
@@ -45,9 +47,12 @@ class AlternativeRouting : private BasicRoutingInterface<QueryDataT>{
             return (2*length + sharing) < (2*other.length + other.sharing);
         }
     };
+
+    const SearchGraph * search_graph;
+
 public:
 
-    AlternativeRouting(QueryDataT & qd) : super(qd) { }
+    AlternativeRouting(QueryDataT & qd) : super(qd), search_graph(qd.graph) { }
 
     ~AlternativeRouting() {}
 
@@ -59,81 +64,115 @@ public:
 
         std::vector<NodeID> alternativePath;
         std::vector<NodeID> viaNodeCandidates;
-        std::vector <NodeID> packedShortestPath;
-        std::vector<PreselectedNode> nodesThatPassPreselection;
+        std::vector<SearchSpaceEdge> forward_search_space;
+        std::vector<SearchSpaceEdge> reverse_search_space;
 
-        HeapPtr & forwardHeap = super::_queryData.forwardHeap;
-        HeapPtr & backwardHeap = super::_queryData.backwardHeap;
-        HeapPtr & forwardHeap2 = super::_queryData.forwardHeap2;
-        HeapPtr & backwardHeap2 = super::_queryData.backwardHeap2;
-
-        //Initialize Queues
+        //Initialize Queues, semi-expensive because access to TSS invokes a system call
         super::_queryData.InitializeOrClearFirstThreadLocalStorage();
-        int _upperBound = INT_MAX;
-        NodeID middle = UINT_MAX;
-        forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+        super::_queryData.InitializeOrClearSecondThreadLocalStorage();
+        super::_queryData.InitializeOrClearThirdThreadLocalStorage();
+
+        QueryHeap & forward_heap1 = *(super::_queryData.forwardHeap);
+        QueryHeap & reverse_heap1 = *(super::_queryData.backwardHeap);
+        QueryHeap & forward_heap2 = *(super::_queryData.forwardHeap2);
+        QueryHeap & reverse_heap2 = *(super::_queryData.backwardHeap2);
+
+        int upper_bound_to_shortest_path_distance = INT_MAX;
+        NodeID middle_node = UINT_MAX;
+        forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
         if(phantomNodePair.startPhantom.isBidirected() ) {
-            forwardHeap->Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+            forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
         }
-        backwardHeap->Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
+        reverse_heap1.Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
         if(phantomNodePair.targetPhantom.isBidirected() ) {
-            backwardHeap->Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
+        	reverse_heap1.Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
         }
 
-        const int offset = (phantomNodePair.startPhantom.isBidirected() ? std::max(phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.weight2) : phantomNodePair.startPhantom.weight1)
-            + (phantomNodePair.targetPhantom.isBidirected() ? std::max(phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.weight2) : phantomNodePair.targetPhantom.weight1);
+        const int forward_offset = phantomNodePair.startPhantom.weight1 + (phantomNodePair.startPhantom.isBidirected() ? phantomNodePair.startPhantom.weight2 : 0);
+        const int reverse_offset = phantomNodePair.targetPhantom.weight1 + (phantomNodePair.targetPhantom.isBidirected() ? phantomNodePair.targetPhantom.weight2 : 0);
 
         //exploration dijkstra from nodes s and t until deletemin/(1+epsilon) > _lengthOfShortestPath
-        while(forwardHeap->Size() + backwardHeap->Size() > 0){
-            if(forwardHeap->Size() > 0){
-                AlternativeRoutingStep(forwardHeap, backwardHeap, &middle, &_upperBound, 2*offset, true, viaNodeCandidates);
+        while(0 < (forward_heap1.Size() + reverse_heap1.Size())){
+            if(0 < forward_heap1.Size()){
+                AlternativeRoutingStep<true >(forward_heap1, reverse_heap1, &middle_node, &upper_bound_to_shortest_path_distance, viaNodeCandidates, forward_search_space, forward_offset);
             }
-            if(backwardHeap->Size() > 0){
-                AlternativeRoutingStep(backwardHeap, forwardHeap, &middle, &_upperBound, 2*offset, false, viaNodeCandidates);
+            if(0 < reverse_heap1.Size()){
+                AlternativeRoutingStep<false>(reverse_heap1, forward_heap1, &middle_node, &upper_bound_to_shortest_path_distance, viaNodeCandidates, reverse_search_space, reverse_offset);
             }
         }
-        std::sort(viaNodeCandidates.begin(), viaNodeCandidates.end());
-        int size = std::unique(viaNodeCandidates.begin(), viaNodeCandidates.end())- viaNodeCandidates.begin();
-        viaNodeCandidates.resize(size);
+        sort_unique_resize(viaNodeCandidates);
 
-        //save (packed) shortest path of shortest path and keep it for later use.
-        //we need it during the checks and dont want to recompute it always
-        super::RetrievePackedPathFromHeap(forwardHeap, backwardHeap, middle, packedShortestPath);
+        std::vector<NodeID> packed_forward_path;
+        std::vector<NodeID> packed_reverse_path;
 
-        //ch-pruning of via nodes in both search spaces
+        super::RetrievePackedPathFromSingleHeap(forward_heap1, middle_node, packed_forward_path);
+        super::RetrievePackedPathFromSingleHeap(reverse_heap1, middle_node, packed_reverse_path);
+        boost::unordered_map<NodeID, int> approximated_forward_sharing;
+        boost::unordered_map<NodeID, int> approximated_reverse_sharing;
+
+        unsigned index_into_forward_path = 0;
+        //sweep over search space, compute forward sharing for each current edge (u,v)
+        BOOST_FOREACH(const SearchSpaceEdge & current_edge, forward_search_space) {
+        	const NodeID u = current_edge.first;
+        	const NodeID v = current_edge.second;
+        	if(packed_forward_path.size() < index_into_forward_path && current_edge == forward_search_space[index_into_forward_path]) {
+        		//current_edge is on shortest path => sharing(u):=queue.GetKey(u);
+        		++index_into_forward_path;
+        		approximated_forward_sharing[v] = forward_heap1.GetKey(u);
+        	} else {
+        		//sharing (s) = sharing (t)
+        		approximated_forward_sharing[v] = approximated_forward_sharing[u];
+        	}
+        }
+
+        unsigned index_into_reverse_path = 0;
+        //sweep over search space, compute backward sharing
+        BOOST_FOREACH(const SearchSpaceEdge & current_edge, reverse_search_space) {
+        	const NodeID u = current_edge.first;
+        	const NodeID v = current_edge.second;
+        	if(packed_reverse_path.size() < index_into_reverse_path && current_edge == reverse_search_space[index_into_reverse_path]) {
+        		//current_edge is on shortest path => sharing(u):=queue.GetKey(u);
+        		++index_into_reverse_path;
+        		approximated_reverse_sharing[v] = reverse_heap1.GetKey(u);
+        	} else {
+        		//sharing (s) = sharing (t)
+        		approximated_reverse_sharing[v] = approximated_reverse_sharing[u];
+        	}
+        }
+        std::vector<NodeID> nodes_that_passed_preselection;
         BOOST_FOREACH(const NodeID node, viaNodeCandidates) {
-            if(node == middle) //subpath optimality tells us that this case is just the shortest path
-                continue;
+            int approximated_sharing = approximated_forward_sharing[node] + approximated_reverse_sharing[node];
+            int approximated_length = forward_heap1.GetKey(node)+reverse_heap1.GetKey(node);
+            bool lengthPassed = (approximated_length < upper_bound_to_shortest_path_distance*(1+VIAPATH_EPSILON));
+            bool sharingPassed = (approximated_sharing <= upper_bound_to_shortest_path_distance*VIAPATH_GAMMA);
+            bool stretchPassed = approximated_length - approximated_sharing < (1.+VIAPATH_EPSILON)*(upper_bound_to_shortest_path_distance-approximated_sharing);
 
-            int sharing = approximateAmountOfSharing(node, forwardHeap, backwardHeap, packedShortestPath);
-            int length1 = forwardHeap->GetKey(node);
-            int length2 = backwardHeap->GetKey(node);
-            bool lengthPassed = (length1+length2 < _upperBound*(1+VIAPATH_EPSILON));
-            bool sharingPassed = (sharing <= _upperBound*VIAPATH_GAMMA);
-            bool stretchPassed = length1+length2 - sharing < (1.+VIAPATH_EPSILON)*(_upperBound-sharing);
-
-            if(lengthPassed && sharingPassed && stretchPassed)
-                nodesThatPassPreselection.push_back(std::make_pair(node, length1+length2));
+            if(lengthPassed && sharingPassed && stretchPassed) {
+                nodes_that_passed_preselection.push_back(node);
+            }
         }
 
+        std::vector<NodeID> & packedShortestPath = packed_forward_path;
+        std::reverse(packedShortestPath.begin(), packedShortestPath.end());
+        packedShortestPath.push_back(middle_node);
+        packedShortestPath.insert(packedShortestPath.end(),packed_reverse_path.begin(), packed_reverse_path.end());
         std::vector<RankedCandidateNode > rankedCandidates;
 
         //prioritizing via nodes for deep inspection
-        BOOST_FOREACH(const PreselectedNode node, nodesThatPassPreselection) {
+        BOOST_FOREACH(const NodeID node, nodes_that_passed_preselection) {
             int lengthOfViaPath = 0, sharingOfViaPath = 0;
-
-            computeLengthAndSharingOfViaPath(node, &lengthOfViaPath, &sharingOfViaPath, offset, packedShortestPath);
-            if(sharingOfViaPath <= VIAPATH_GAMMA*_upperBound)
-                rankedCandidates.push_back(RankedCandidateNode(node.first, lengthOfViaPath, sharingOfViaPath));
+            computeLengthAndSharingOfViaPath(node, &lengthOfViaPath, &sharingOfViaPath, forward_offset+reverse_offset, packedShortestPath);
+            if(sharingOfViaPath <= upper_bound_to_shortest_path_distance*VIAPATH_GAMMA) {
+                rankedCandidates.push_back(RankedCandidateNode(node, lengthOfViaPath, sharingOfViaPath));
+            }
         }
-
         std::sort(rankedCandidates.begin(), rankedCandidates.end());
 
         NodeID selectedViaNode = UINT_MAX;
         int lengthOfViaPath = INT_MAX;
         NodeID s_v_middle = UINT_MAX, v_t_middle = UINT_MAX;
-        BOOST_FOREACH(const RankedCandidateNode candidate, rankedCandidates){
-            if(viaNodeCandidatePasses_T_Test(forwardHeap, backwardHeap, forwardHeap2, backwardHeap2, candidate, offset, _upperBound, &lengthOfViaPath, &s_v_middle, &v_t_middle)) {
+        BOOST_FOREACH(const RankedCandidateNode & candidate, rankedCandidates){
+            if(viaNodeCandidatePasses_T_Test(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate, forward_offset+reverse_offset, upper_bound_to_shortest_path_distance, &lengthOfViaPath, &s_v_middle, &v_t_middle)) {
                 // select first admissable
                 selectedViaNode = candidate.node;
                 break;
@@ -141,15 +180,15 @@ public:
         }
 
         //Unpack shortest path and alternative, if they exist
-        if(INT_MAX != _upperBound) {
+        if(INT_MAX != upper_bound_to_shortest_path_distance) {
             super::UnpackPath(packedShortestPath, rawRouteData.computedShortestPath);
-            rawRouteData.lengthOfShortestPath = _upperBound;
+            rawRouteData.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
         } else {
             rawRouteData.lengthOfShortestPath = INT_MAX;
         }
 
         if(selectedViaNode != UINT_MAX) {
-            retrievePackedViaPath(forwardHeap, backwardHeap, forwardHeap2, backwardHeap2, s_v_middle, v_t_middle, rawRouteData.computedAlternativePath);
+            retrievePackedViaPath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, s_v_middle, v_t_middle, rawRouteData.computedAlternativePath);
             rawRouteData.lengthOfAlternativePath = lengthOfViaPath;
         } else {
             rawRouteData.lengthOfAlternativePath = INT_MAX;
@@ -158,7 +197,7 @@ public:
 
 private:
     //unpack <s,..,v,..,t> by exploring search spaces from v
-    inline void retrievePackedViaPath(const HeapPtr & _forwardHeap1, const HeapPtr & _backwardHeap1, const HeapPtr & _forwardHeap2, const HeapPtr & _backwardHeap2,
+    inline void retrievePackedViaPath(QueryHeap & _forwardHeap1, QueryHeap & _backwardHeap1, QueryHeap & _forwardHeap2, QueryHeap & _backwardHeap2,
             const NodeID s_v_middle, const NodeID v_t_middle, std::vector<_PathData> & unpackedPath) {
         //unpack [s,v)
         std::vector<NodeID> packed_s_v_path, packed_v_t_path;
@@ -170,16 +209,16 @@ private:
         super::UnpackPath(packed_s_v_path, unpackedPath);
     }
 
-    inline void computeLengthAndSharingOfViaPath(const PreselectedNode& node, int *lengthOfViaPath, int *sharingOfViaPath,
-            const int offset, const std::vector<NodeID> & packedShortestPath) {
+    inline void computeLengthAndSharingOfViaPath(const NodeID via_node, int *real_length_of_via_path, int *sharing_of_via_path,
+            const int offset, const std::vector<NodeID> & packed_shortest_path) {
         //compute and unpack <s,..,v> and <v,..,t> by exploring search spaces from v and intersecting against queues
         //only half-searches have to be done at this stage
         super::_queryData.InitializeOrClearSecondThreadLocalStorage();
 
-        HeapPtr & existingForwardHeap  = super::_queryData.forwardHeap;
-        HeapPtr & existingBackwardHeap = super::_queryData.backwardHeap;
-        HeapPtr & newForwardHeap       = super::_queryData.forwardHeap2;
-        HeapPtr & newBackwardHeap      = super::_queryData.backwardHeap2;
+        QueryHeap & existingForwardHeap  = *super::_queryData.forwardHeap;
+        QueryHeap & existingBackwardHeap = *super::_queryData.backwardHeap;
+        QueryHeap & newForwardHeap       = *super::_queryData.forwardHeap2;
+        QueryHeap & newBackwardHeap      = *super::_queryData.backwardHeap2;
 
         std::vector < NodeID > packed_s_v_path;
         std::vector < NodeID > packed_v_t_path;
@@ -189,18 +228,18 @@ private:
 
         NodeID s_v_middle = UINT_MAX;
         int upperBoundFor_s_v_Path = INT_MAX;//compute path <s,..,v> by reusing forward search from s
-        newBackwardHeap->Insert(node.first, 0, node.first);
-        while (newBackwardHeap->Size() > 0) {
+        newBackwardHeap.Insert(via_node, 0, via_node);
+        while (0 < newBackwardHeap.Size()) {
             super::RoutingStep(newBackwardHeap, existingForwardHeap, &s_v_middle, &upperBoundFor_s_v_Path, 2 * offset, false);
         }
         //compute path <v,..,t> by reusing backward search from node t
         NodeID v_t_middle = UINT_MAX;
         int upperBoundFor_v_t_Path = INT_MAX;
-        newForwardHeap->Insert(node.first, 0, node.first);
-        while (newForwardHeap->Size() > 0) {
+        newForwardHeap.Insert(via_node, 0, via_node);
+        while (0 < newForwardHeap.Size() ) {
             super::RoutingStep(newForwardHeap, existingBackwardHeap, &v_t_middle, &upperBoundFor_v_t_Path, 2 * offset, true);
         }
-        *lengthOfViaPath = upperBoundFor_s_v_Path + upperBoundFor_v_t_Path;
+        *real_length_of_via_path = upperBoundFor_s_v_Path + upperBoundFor_v_t_Path;
 
         if(UINT_MAX == s_v_middle || UINT_MAX == v_t_middle)
             return;
@@ -211,35 +250,35 @@ private:
 
         //partial unpacking, compute sharing
         //First partially unpack s-->v until paths deviate, note length of common path.
-        for (unsigned i = 0, lengthOfPackedPath = std::min( packed_s_v_path.size(), packedShortestPath.size()) - 1; (i < lengthOfPackedPath); ++i) {
-            if (packed_s_v_path[i] == packedShortestPath[i] && packed_s_v_path[i + 1] == packedShortestPath[i + 1]) {
-                typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection(packed_s_v_path[i], packed_s_v_path[i + 1]);
-                *sharingOfViaPath += super::_queryData.graph->GetEdgeData(edgeID).distance;
+        for (unsigned i = 0, lengthOfPackedPath = std::min( packed_s_v_path.size(), packed_shortest_path.size()) - 1; (i < lengthOfPackedPath); ++i) {
+            if (packed_s_v_path[i] == packed_shortest_path[i] && packed_s_v_path[i + 1] == packed_shortest_path[i + 1]) {
+                typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(packed_s_v_path[i], packed_s_v_path[i + 1]);
+                *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
             } else {
-                if (packed_s_v_path[i] == packedShortestPath[i]) {
+                if (packed_s_v_path[i] == packed_shortest_path[i]) {
                     super::UnpackEdge(packed_s_v_path[i], packed_s_v_path[i+1], partiallyUnpackedViaPath);
-                    super::UnpackEdge(packedShortestPath[i], packedShortestPath[i+1], partiallyUnpackedShortestPath);
+                    super::UnpackEdge(packed_shortest_path[i], packed_shortest_path[i+1], partiallyUnpackedShortestPath);
                     break;
                 }
             }
         }
         //traverse partially unpacked edge and note common prefix
         for (int i = 0, lengthOfPackedPath = std::min( partiallyUnpackedViaPath.size(), partiallyUnpackedShortestPath.size()) - 1; (i < lengthOfPackedPath) && (partiallyUnpackedViaPath[i] == partiallyUnpackedShortestPath[i] && partiallyUnpackedViaPath[i+1] == partiallyUnpackedShortestPath[i+1]); ++i) {
-            typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection(partiallyUnpackedViaPath[i], partiallyUnpackedViaPath[i+1]);
-            *sharingOfViaPath += super::_queryData.graph->GetEdgeData(edgeID).distance;
+            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(partiallyUnpackedViaPath[i], partiallyUnpackedViaPath[i+1]);
+            *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
         }
 
         //Second, partially unpack v-->t in reverse order until paths deviate and note lengths
         int viaPathIndex = packed_v_t_path.size() - 1;
-        int shortestPathIndex = packedShortestPath.size() - 1;
+        int shortestPathIndex = packed_shortest_path.size() - 1;
         for (; viaPathIndex > 0 && shortestPathIndex > 0; --viaPathIndex,--shortestPathIndex ) {
-            if (packed_v_t_path[viaPathIndex - 1] == packedShortestPath[shortestPathIndex - 1] && packed_v_t_path[viaPathIndex] == packedShortestPath[shortestPathIndex]) {
-                typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection( packed_v_t_path[viaPathIndex - 1], packed_v_t_path[viaPathIndex]);
-                *sharingOfViaPath += super::_queryData.graph->GetEdgeData(edgeID).distance;
+            if (packed_v_t_path[viaPathIndex - 1] == packed_shortest_path[shortestPathIndex - 1] && packed_v_t_path[viaPathIndex] == packed_shortest_path[shortestPathIndex]) {
+                typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( packed_v_t_path[viaPathIndex - 1], packed_v_t_path[viaPathIndex]);
+                *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
             } else {
-                if (packed_v_t_path[viaPathIndex] == packedShortestPath[shortestPathIndex]) {
+                if (packed_v_t_path[viaPathIndex] == packed_shortest_path[shortestPathIndex]) {
                     super::UnpackEdge(packed_v_t_path[viaPathIndex-1], packed_v_t_path[viaPathIndex], partiallyUnpackedViaPath);
-                    super::UnpackEdge(packedShortestPath[shortestPathIndex-1] , packedShortestPath[shortestPathIndex], partiallyUnpackedShortestPath);
+                    super::UnpackEdge(packed_shortest_path[shortestPathIndex-1] , packed_shortest_path[shortestPathIndex], partiallyUnpackedShortestPath);
                     break;
                 }
             }
@@ -249,16 +288,16 @@ private:
         shortestPathIndex = partiallyUnpackedShortestPath.size() - 1;
         for (; viaPathIndex > 0 && shortestPathIndex > 0; --viaPathIndex,--shortestPathIndex) {
             if (partiallyUnpackedViaPath[viaPathIndex - 1] == partiallyUnpackedShortestPath[shortestPathIndex - 1] && partiallyUnpackedViaPath[viaPathIndex] == partiallyUnpackedShortestPath[shortestPathIndex]) {
-                typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection( partiallyUnpackedViaPath[viaPathIndex - 1], partiallyUnpackedViaPath[viaPathIndex]);
-                *sharingOfViaPath += super::_queryData.graph->GetEdgeData(edgeID).distance;
+                typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( partiallyUnpackedViaPath[viaPathIndex - 1], partiallyUnpackedViaPath[viaPathIndex]);
+                *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
             } else {
                 break;
             }
         }
-        //finished partial unpacking spree! Amount of sharing is stored to appropriate poiner variable
+        //finished partial unpacking spree! Amount of sharing is stored to appropriate pointer variable
     }
 
-    inline int approximateAmountOfSharing(const NodeID middleNodeIDOfAlternativePath, HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, const std::vector<NodeID> & packedShortestPath) {
+    inline int approximateAmountOfSharing(const NodeID middleNodeIDOfAlternativePath, QueryHeap & _forwardHeap, QueryHeap & _backwardHeap, const std::vector<NodeID> & packedShortestPath) {
         std::vector<NodeID> packedAlternativePath;
         super::RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, middleNodeIDOfAlternativePath, packedAlternativePath);
 
@@ -270,8 +309,8 @@ private:
         //compute forward sharing
         while( (packedAlternativePath[aindex] == packedShortestPath[aindex]) && (packedAlternativePath[aindex+1] == packedShortestPath[aindex+1]) ) {
             //            INFO("retrieving edge (" << packedAlternativePath[aindex] << "," << packedAlternativePath[aindex+1] << ")");
-            typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex+1]);
-            sharing += super::_queryData.graph->GetEdgeData(edgeID).distance;
+            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex+1]);
+            sharing += search_graph->GetEdgeData(edgeID).distance;
             ++aindex;
         }
 
@@ -279,55 +318,65 @@ private:
         int bindex = packedShortestPath.size()-1;
         //compute backward sharing
         while( aindex > 0 && bindex > 0 && (packedAlternativePath[aindex] == packedShortestPath[bindex]) && (packedAlternativePath[aindex-1] == packedShortestPath[bindex-1]) ) {
-            typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex-1]);
-            sharing += super::_queryData.graph->GetEdgeData(edgeID).distance;
+            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex-1]);
+            sharing += search_graph->GetEdgeData(edgeID).distance;
             --aindex; --bindex;
         }
         return sharing;
     }
 
-    inline void AlternativeRoutingStep(HeapPtr & _forwardHeap, HeapPtr & _backwardHeap, NodeID *middle, int *_upperbound, const int edgeBasedOffset, const bool forwardDirection, std::vector<NodeID>& searchSpaceIntersection) const {
-        const NodeID node = _forwardHeap->DeleteMin();
+    template<bool forwardDirection>
+    inline void AlternativeRoutingStep(
+    		QueryHeap & _forward_heap,
+    		QueryHeap & _reverse_heap,
+    		NodeID *middle_node,
+    		int *upper_bound_to_shortest_path_distance,
+    		std::vector<NodeID>& searchSpaceIntersection,
+    		std::vector<SearchSpaceEdge> & search_space,
+    		const int edgeBasedOffset
+    		) const {
+        const NodeID node = _forward_heap.DeleteMin();
+        const int distance = _forward_heap.GetKey(node);
+        int scaledDistance = (distance-edgeBasedOffset)/(1.+VIAPATH_EPSILON);
+        if(scaledDistance > *upper_bound_to_shortest_path_distance){
+            _forward_heap.DeleteAll();
+            return;
+        }
 
-        const int distance = _forwardHeap->GetKey(node);
-        if(_backwardHeap->WasInserted(node) ){
+        search_space.push_back(std::make_pair(_forward_heap.GetData( node ).parent, node));
+
+        if(_reverse_heap.WasInserted(node) ){
             searchSpaceIntersection.push_back(node);
 
-            const int newDistance = _backwardHeap->GetKey(node) + distance;
-            if(newDistance < *_upperbound ){
+            const int newDistance = _reverse_heap.GetKey(node) + distance;
+            if(newDistance < *upper_bound_to_shortest_path_distance ){
                 if(newDistance>=0 ) {
-                    *middle = node;
-                    *_upperbound = newDistance;
+                    *middle_node = node;
+                    *upper_bound_to_shortest_path_distance = newDistance;
                 }
             }
         }
 
-        int scaledDistance = (distance-edgeBasedOffset)/(1.+VIAPATH_EPSILON);
-        if(scaledDistance > *_upperbound){
-            _forwardHeap->DeleteAll();
-            return;
-        }
-
-        for ( typename QueryDataT::Graph::EdgeIterator edge = super::_queryData.graph->BeginEdges( node ); edge < super::_queryData.graph->EndEdges(node); edge++ ) {
-            const typename QueryDataT::Graph::EdgeData & data = super::_queryData.graph->GetEdgeData(edge);
+        for ( typename SearchGraph::EdgeIterator edge = search_graph->BeginEdges( node ); edge < search_graph->EndEdges(node); edge++ ) {
+            const typename SearchGraph::EdgeData & data = search_graph->GetEdgeData(edge);
             bool forwardDirectionFlag = (forwardDirection ? data.forward : data.backward );
             if(forwardDirectionFlag) {
 
-                const NodeID to = super::_queryData.graph->GetTarget(edge);
+                const NodeID to = search_graph->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
                 assert( edgeWeight > 0 );
                 const int toDistance = distance + edgeWeight;
 
                 //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !_forwardHeap->WasInserted( to ) ) {
-                    _forwardHeap->Insert( to, toDistance, node );
+                if ( !_forward_heap.WasInserted( to ) ) {
+                    _forward_heap.Insert( to, toDistance, node );
 
                 }
                 //Found a shorter Path -> Update distance
-                else if ( toDistance < _forwardHeap->GetKey( to ) ) {
-                    _forwardHeap->GetData( to ).parent = node;
-                    _forwardHeap->DecreaseKey( to, toDistance );
+                else if ( toDistance < _forward_heap.GetKey( to ) ) {
+                    _forward_heap.GetData( to ).parent = node;
+                    _forward_heap.DecreaseKey( to, toDistance );
                     //new parent
                 }
             }
@@ -335,16 +384,17 @@ private:
     }
 
     //conduct T-Test
-    inline bool viaNodeCandidatePasses_T_Test( HeapPtr& existingForwardHeap, HeapPtr& existingBackwardHeap, HeapPtr& newForwardHeap, HeapPtr& newBackwardHeap, const RankedCandidateNode& candidate, const int offset, const int lengthOfShortestPath, int * lengthOfViaPath, NodeID * s_v_middle, NodeID * v_t_middle) {
+    inline bool viaNodeCandidatePasses_T_Test( QueryHeap& existingForwardHeap, QueryHeap& existingBackwardHeap, QueryHeap& newForwardHeap, QueryHeap& newBackwardHeap, const RankedCandidateNode& candidate, const int offset, const int lengthOfShortestPath, int * lengthOfViaPath, NodeID * s_v_middle, NodeID * v_t_middle) {
+    	newForwardHeap.Clear();
+    	newBackwardHeap.Clear();
         std::vector < NodeID > packed_s_v_path;
         std::vector < NodeID > packed_v_t_path;
 
-        super::_queryData.InitializeOrClearSecondThreadLocalStorage();
         *s_v_middle = UINT_MAX;
         int upperBoundFor_s_v_Path = INT_MAX;
         //compute path <s,..,v> by reusing forward search from s
-        newBackwardHeap->Insert(candidate.node, 0, candidate.node);
-        while (newBackwardHeap->Size() > 0) {
+        newBackwardHeap.Insert(candidate.node, 0, candidate.node);
+        while (newBackwardHeap.Size() > 0) {
             super::RoutingStep(newBackwardHeap, existingForwardHeap, s_v_middle, &upperBoundFor_s_v_Path, 2*offset, false);
         }
 
@@ -354,8 +404,8 @@ private:
         //compute path <v,..,t> by reusing backward search from t
         *v_t_middle = UINT_MAX;
         int upperBoundFor_v_t_Path = INT_MAX;
-        newForwardHeap->Insert(candidate.node, 0, candidate.node);
-        while (newForwardHeap->Size() > 0) {
+        newForwardHeap.Insert(candidate.node, 0, candidate.node);
+        while (newForwardHeap.Size() > 0) {
             super::RoutingStep(newForwardHeap, existingBackwardHeap, v_t_middle, &upperBoundFor_v_t_Path, 2*offset, true);
         }
 
@@ -372,11 +422,11 @@ private:
         const int T_threshold = VIAPATH_EPSILON * lengthOfShortestPath;
         int unpackedUntilDistance = 0;
 
-        std::stack<UnpackEdge> unpackStack;
+        std::stack<SearchSpaceEdge> unpackStack;
         //Traverse path s-->v
         for (unsigned i = packed_s_v_path.size() - 1; (i > 0) && unpackStack.empty(); --i) {
-            typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection( packed_s_v_path[i - 1], packed_s_v_path[i]);
-            int lengthOfCurrentEdge = super::_queryData.graph->GetEdgeData(edgeID).distance;
+            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( packed_s_v_path[i - 1], packed_s_v_path[i]);
+            int lengthOfCurrentEdge = search_graph->GetEdgeData(edgeID).distance;
             if (lengthOfCurrentEdge + unpackedUntilDistance >= T_threshold) {
                 unpackStack.push(std::make_pair(packed_s_v_path[i - 1], packed_s_v_path[i]));
             } else {
@@ -386,17 +436,17 @@ private:
         }
 
         while (!unpackStack.empty()) {
-            const UnpackEdge viaPathEdge = unpackStack.top();
+            const SearchSpaceEdge viaPathEdge = unpackStack.top();
             unpackStack.pop();
-            typename QueryDataT::Graph::EdgeIterator edgeIDInViaPath = super::_queryData.graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
+            typename SearchGraph::EdgeIterator edgeIDInViaPath = search_graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename QueryDataT::Graph::EdgeData currentEdgeData = super::_queryData.graph->GetEdgeData(edgeIDInViaPath);
+            typename SearchGraph::EdgeData currentEdgeData = search_graph->GetEdgeData(edgeIDInViaPath);
             bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
-                typename QueryDataT::Graph::EdgeIterator edgeIDOfSecondSegment = super::_queryData.graph->FindEdgeInEitherDirection(middleOfViaPath, viaPathEdge.second);
-                int lengthOfSecondSegment = super::_queryData.graph->GetEdgeData(edgeIDOfSecondSegment).distance;
+                typename SearchGraph::EdgeIterator edgeIDOfSecondSegment = search_graph->FindEdgeInEitherDirection(middleOfViaPath, viaPathEdge.second);
+                int lengthOfSecondSegment = search_graph->GetEdgeData(edgeIDOfSecondSegment).distance;
                 //attention: !unpacking in reverse!
                 //Check if second segment is the one to go over treshold? if yes add second segment to stack, else push first segment to stack and add distance of second one.
                 if (unpackedUntilDistance + lengthOfSecondSegment >= T_threshold) {
@@ -416,8 +466,8 @@ private:
         unpackedUntilDistance = 0;
         //Traverse path s-->v
         for (unsigned i = 0, lengthOfPackedPath = packed_v_t_path.size() - 1; (i < lengthOfPackedPath) && unpackStack.empty(); ++i) {
-            typename QueryDataT::Graph::EdgeIterator edgeID = super::_queryData.graph->FindEdgeInEitherDirection( packed_v_t_path[i], packed_v_t_path[i + 1]);
-            int lengthOfCurrentEdge = super::_queryData.graph->GetEdgeData(edgeID).distance;
+            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( packed_v_t_path[i], packed_v_t_path[i + 1]);
+            int lengthOfCurrentEdge = search_graph->GetEdgeData(edgeID).distance;
             if (lengthOfCurrentEdge + unpackedUntilDistance >= T_threshold) {
                 unpackStack.push( std::make_pair(packed_v_t_path[i], packed_v_t_path[i + 1]));
             } else {
@@ -427,17 +477,17 @@ private:
         }
 
         while (!unpackStack.empty()) {
-            const UnpackEdge viaPathEdge = unpackStack.top();
+            const SearchSpaceEdge viaPathEdge = unpackStack.top();
             unpackStack.pop();
-            typename QueryDataT::Graph::EdgeIterator edgeIDInViaPath = super::_queryData.graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
+            typename SearchGraph::EdgeIterator edgeIDInViaPath = search_graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename QueryDataT::Graph::EdgeData currentEdgeData = super::_queryData.graph->GetEdgeData(edgeIDInViaPath);
+            typename SearchGraph::EdgeData currentEdgeData = search_graph->GetEdgeData(edgeIDInViaPath);
             const bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
-                typename QueryDataT::Graph::EdgeIterator edgeIDOfFirstSegment = super::_queryData.graph->FindEdgeInEitherDirection(viaPathEdge.first, middleOfViaPath);
-                int lengthOfFirstSegment = super::_queryData.graph->GetEdgeData( edgeIDOfFirstSegment).distance;
+                typename SearchGraph::EdgeIterator edgeIDOfFirstSegment = search_graph->FindEdgeInEitherDirection(viaPathEdge.first, middleOfViaPath);
+                int lengthOfFirstSegment = search_graph->GetEdgeData( edgeIDOfFirstSegment).distance;
                 //Check if first segment is the one to go over treshold? if yes first segment to stack, else push second segment to stack and add distance of first one.
                 if (unpackedUntilDistance + lengthOfFirstSegment >= T_threshold) {
                     unpackStack.push( std::make_pair(viaPathEdge.first, middleOfViaPath));
@@ -454,19 +504,18 @@ private:
 
         lengthOfPathT_Test_Path += unpackedUntilDistance;
         //Run actual T-Test query and compare if distances equal.
-        HeapPtr& forwardHeap = super::_queryData.forwardHeap3;
-        HeapPtr& backwardHeap = super::_queryData.backwardHeap3;
-        super::_queryData.InitializeOrClearThirdThreadLocalStorage();
+        QueryHeap& forwardHeap = *super::_queryData.forwardHeap3;
+        QueryHeap& backwardHeap = *super::_queryData.backwardHeap3;
         int _upperBound = INT_MAX;
         NodeID middle = UINT_MAX;
-        forwardHeap->Insert(s_P, 0, s_P);
-        backwardHeap->Insert(t_P, 0, t_P);
+        forwardHeap.Insert(s_P, 0, s_P);
+        backwardHeap.Insert(t_P, 0, t_P);
         //exploration from s and t until deletemin/(1+epsilon) > _lengthOfShortestPath
-        while (forwardHeap->Size() + backwardHeap->Size() > 0) {
-            if (forwardHeap->Size() > 0) {
+        while (forwardHeap.Size() + backwardHeap.Size() > 0) {
+            if (forwardHeap.Size() > 0) {
                 super::RoutingStep(forwardHeap, backwardHeap, &middle, &_upperBound, offset, true);
             }
-            if (backwardHeap->Size() > 0) {
+            if (backwardHeap.Size() > 0) {
                 super::RoutingStep(backwardHeap, forwardHeap, &middle, &_upperBound, offset, false);
             }
         }
