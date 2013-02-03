@@ -29,16 +29,16 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
 	 	Then routability should be
 		 | highway | cycleway | cycleway:left | cycleway:right | forw | backw |
 		 | primary |          |               |                | x    | x     |
-		 | pirmary | track    |               |                | x    | x     |
-		 | pirmary | opposite |               |                | x    | x     |
-		 | pirmary |          | track         |                | x    | x     |
-		 | pirmary |          | opposite      |                | x    | x     |
-		 | pirmary |          |               | track          | x    | x     |
-		 | pirmary |          |               | opposite       | x    | x     |
-		 | pirmary |          | track         | track          | x    | x     |
-		 | pirmary |          | opposite      | opposite       | x    | x     |
-		 | pirmary |          | track         | opposite       | x    | x     |
-		 | pirmary |          | opposite      | track          | x    | x     |
+		 | primary | track    |               |                | x    | x     |
+		 | primary | opposite |               |                | x    | x     |
+		 | primary |          | track         |                | x    | x     |
+		 | primary |          | opposite      |                | x    | x     |
+		 | primary |          |               | track          | x    | x     |
+		 | primary |          |               | opposite       | x    | x     |
+		 | primary |          | track         | track          | x    | x     |
+		 | primary |          | opposite      | opposite       | x    | x     |
+		 | primary |          | track         | opposite       | x    | x     |
+		 | primary |          | opposite      | track          | x    | x     |
 
 	Scenario: Bike - Left/right side cycleways on implied oneways   
 	 	Then routability should be
