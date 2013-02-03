@@ -54,20 +54,3 @@ Feature: Locating Nearest node on a Way - pick closest way
  		 | 2  | x   |
  		 | 3  | u   |
  		 | 4  | w   |
-
-  	Scenario: Nearest - only pick routable ways
-  		Given the node map
- 		 |   | a | c | e |   |
- 		 | 0 | z | y | x | 1 |
- 		 |   | b | d | f |   |
-
-  		And the ways
-  		 | nodes | highway | barrier |
-  		 | ab    |         | wall    |
-  		 | cd    | (nil)   |         |
-  		 | ef    | primary |         |
-
-  		When I request nearest I should get
-  		 | in | out |
-  		 | 0  | z   |
-  		 | 1  | x   |
