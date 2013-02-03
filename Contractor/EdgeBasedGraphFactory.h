@@ -35,7 +35,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
-
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
@@ -103,8 +104,8 @@ public:
     } speedProfile;
 private:
     boost::shared_ptr<_NodeBasedDynamicGraph>   _nodeBasedGraph;
-    boost::unordered_map<NodeID, bool>          _barrierNodes;
-    boost::unordered_map<NodeID, bool>          _trafficLights;
+    boost::unordered_set<NodeID>          _barrierNodes;
+    boost::unordered_set<NodeID>          _trafficLights;
 
     typedef std::pair<NodeID, NodeID> RestrictionSource;
     typedef std::pair<NodeID, bool>   RestrictionTarget;

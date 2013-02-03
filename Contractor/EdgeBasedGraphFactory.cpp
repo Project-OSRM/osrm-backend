@@ -44,18 +44,12 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         _restrictionBucketVector.at(index).push_back(std::make_pair(restriction.toNode, restriction.flags.isOnly));
     }
 
-    BOOST_FOREACH(NodeID id, bn) {
-        _barrierNodes[id] = true;
-    }
-    BOOST_FOREACH(NodeID id, tl) {
-        _trafficLights[id] = true;
-    }
+	_barrierNodes.insert(bn.begin(), bn.end());
+	_trafficLights.insert(tl.begin(), tl.end());
 
     DeallocatingVector< _NodeBasedEdge > edges;
-    //    edges.reserve( 2 * inputEdges.size() );
+    _NodeBasedEdge edge;
     for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
-
-        _NodeBasedEdge edge;
         if(!i->isForward()) {
             edge.source = i->target();
             edge.target = i->source();
