@@ -32,3 +32,27 @@ Feature: Car - Max speed restrictions
 		 | from | to | route | time      |
 		 | a    | b  | ab    | 144s ~10% |
 		 | b    | c  | bc    | 144s ~10% |
+
+     @todo
+     Scenario: Car - Forward/backward maxspeed
+     	Given the node map
+     	 | a | b | c | d | e | f | g | h |
+
+ 		And a grid size of 100 meters
+
+        And the shortcuts
+ 		 | key   | value     |
+ 		 | car   | 12s ~10%  |
+ 		 | run   | 73s ~10%  |
+ 		 | walk  | 170s ~10% |
+ 		 | snail | 720s ~10% |
+
+  	 	Then routability should be
+     	 | maxspeed | maxspeed:forward | maxspeed:backward | forw  | backw |
+     	 |          |                  |                   | car   | car   |
+     	 | 10       |                  |                   | run   | run   |
+     	 |          | 10               |                   | run   | car   |
+     	 |          |                  | 10                | car   | run   |
+     	 | 1        | 10               |                   | run   | snail |
+     	 | 1        |                  | 10                | snail | run   |
+     	 | 1        | 5                | 10                | walk  | run   |
