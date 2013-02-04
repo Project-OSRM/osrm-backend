@@ -19,7 +19,7 @@ Feature: Car - Max speed restrictions
 		 | a    | b  | ab    | 42s ~10%  |
 		 | b    | c  | bc    | 360s ~10% |
 
-	Scenario: Car - Ignore maxspeed when higher than way speed
+	Scenario: Car - Do not ignore maxspeed when higher than way speed
 		Given the node map
 		 | a | b | c |
 
