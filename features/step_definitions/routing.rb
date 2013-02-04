@@ -50,30 +50,10 @@ When /^I route I should get$/ do |table|
       
       ok = true
       row.keys.each do |key|
-        if row[key].match /(.*)\s+~(.+)%$/        #percentage range: 100 ~5%
-          margin = 1 - $2.to_f*0.01
-          from = $1.to_f*margin
-          to = $1.to_f/margin
-          if got[key].to_f >= from && got[key].to_f <= to
-            got[key] = row[key]
-          else
-            ok = false
-          end
-        elsif row[key].match /(.*)\s+\+\-(.+)$/   #absolute range: 100 +-5
-            margin = $2.to_f
-            from = $1.to_f-margin
-            to = $1.to_f+margin
-            if got[key].to_f >= from && got[key].to_f <= to
-              got[key] = row[key]
-            else
-              ok = false
-            end
-        elsif row[key] =~ /^\/(.*)\/$/          #regex: /a,b,.*/
-          if got[key] =~ /#{$1}/
-            got[key] = row[key]
-          end
+        if FuzzyMatch.match got[key], row[key]
+          got[key] = row[key]
         else
-          ok = row[key] == got[key]
+          ok = false
         end
       end
       
