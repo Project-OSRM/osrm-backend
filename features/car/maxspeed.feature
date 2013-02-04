@@ -31,4 +31,4 @@ Feature: Car - Max speed restrictions
 		When I route I should get
 		 | from | to | route | time      |
 		 | a    | b  | ab    | 144s ~10% |
-		 | b    | c  | bc    | 144s ~10%  |
+		 | b    | c  | bc    | 63s ~10%  |
