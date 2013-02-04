@@ -221,7 +221,7 @@ public:
         //        }
 
 //        INFO("startCoord: " << smallestEdge.startCoord << "; targetCoord: " << smallestEdge.targetCoord << "; newEndpoint: " << resultNode.location);
-        double ratio = (foundNode ? std::min(1., ApproximateDistance(smallestEdge.startCoord, resultNode.location)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord)) : 0);
+        const double ratio = (foundNode ? std::min(1., ApproximateDistance(smallestEdge.startCoord, resultNode.location)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord)) : 0);
         resultNode.location.lat = round(100000.*(y2lat(static_cast<double>(resultNode.location.lat)/100000.)));
 //        INFO("Length of vector: " << ApproximateDistance(smallestEdge.startCoord, resultNode.location)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
         //Hack to fix rounding errors and wandering via nodes.
@@ -232,12 +232,13 @@ public:
 
         resultNode.weight1 *= ratio;
         if(INT_MAX != resultNode.weight2) {
-            resultNode.weight2 -= resultNode.weight1;
+            resultNode.weight2 *= (1.-ratio);
         }
         resultNode.ratio = ratio;
-//        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
 //        INFO("start: " << edgeStartCoord << ", end: " << edgeEndCoord);
-//        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no") <<  "\n--");
+//        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no"));
+//        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
+ //       INFO("distance to input coordinate: " << ApproximateDistance(location, resultNode.location) <<  "\n--");
 //        double time2 = get_timestamp();
 //        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
         return foundNode;

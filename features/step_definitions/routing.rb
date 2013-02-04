@@ -46,6 +46,9 @@ When /^I route I should get$/ do |table|
         if table.headers.include? 'turns'
           got['turns'] = turns
         end
+        if table.headers.include? '#'   # comment column
+          got['#'] = row['#']           # copy value so it always match
+        end
       end
       
       ok = true

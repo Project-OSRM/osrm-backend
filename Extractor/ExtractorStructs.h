@@ -40,8 +40,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef boost::unordered_map<std::string, NodeID > StringMap;
 typedef boost::unordered_map<std::string, std::pair<int, short> > StringToIntPairMap;
 
-struct _Way {
-    _Way() {
+struct ExtractionWay {
+    ExtractionWay() {
 		Clear();
     }
 	
@@ -50,8 +50,9 @@ struct _Way {
 		nameID = UINT_MAX;
 		path.clear();
 		keyVals.EraseAll();
-        direction = _Way::notSure;
+        direction = ExtractionWay::notSure;
         speed = -1;
+        backward_speed = -1;
         duration = -1;
         type = -1;
         access = true;
@@ -67,6 +68,7 @@ struct _Way {
     unsigned nameID;
     std::string name;
     double speed;
+    double backward_speed;
     double duration;
     short type;
     bool access;
@@ -77,19 +79,22 @@ struct _Way {
     HashTable<std::string, std::string> keyVals;
 };
 
-struct _Relation {
-    _Relation() : type(unknown){}
+struct ExtractorRelation {
+    ExtractorRelation() : type(unknown){}
     enum {
         unknown = 0, ferry, turnRestriction
     } type;
     HashTable<std::string, std::string> keyVals;
 };
 
-struct _Edge {
-    _Edge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false) {};
-    _Edge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false) { }
-    _Edge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar) {
+struct InternalExtractorEdge {
+    InternalExtractorEdge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false), isContraFlow(false) {};
+    InternalExtractorEdge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false), isContraFlow(false) { }
+    InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false), isContraFlow(false) { }
+    InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar), isContraFlow(false) {
+        assert(0 <= type);
+    }
+    InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar, bool icf): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar), isContraFlow(icf) {
         assert(0 <= type);
     }
     NodeID start;
@@ -102,18 +107,20 @@ struct _Edge {
     bool ignoreInGrid;
     bool isDurationSet;
     bool isAccessRestricted;
+    bool isContraFlow;
 
     _Coordinate startCoord;
     _Coordinate targetCoord;
 
-    static _Edge min_value() {
-        return _Edge(0,0);
+    static InternalExtractorEdge min_value() {
+        return InternalExtractorEdge(0,0);
     }
-    static _Edge max_value() {
-        return _Edge((std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)());
+    static InternalExtractorEdge max_value() {
+        return InternalExtractorEdge((std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)());
     }
-
 };
+
+
 
 struct _WayIDStartAndEndEdge {
     unsigned wayID;
@@ -171,34 +178,29 @@ struct CmpNodeByID : public std::binary_function<_Node, _Node, bool> {
     }
 };
 
-struct CmpEdgeByStartID : public std::binary_function<_Edge, _Edge, bool>
-{
-    typedef _Edge value_type;
-    bool operator ()  (const _Edge & a, const _Edge & b) const {
+struct CmpEdgeByStartID : public std::binary_function<InternalExtractorEdge, InternalExtractorEdge, bool> {
+    typedef InternalExtractorEdge value_type;
+    bool operator ()  (const InternalExtractorEdge & a, const InternalExtractorEdge & b) const {
         return a.start < b.start;
     }
     value_type max_value() {
-        return _Edge::max_value();
+        return InternalExtractorEdge::max_value();
     }
     value_type min_value() {
-        return _Edge::min_value();
+        return InternalExtractorEdge::min_value();
     }
 };
 
-struct CmpEdgeByTargetID : public std::binary_function<_Edge, _Edge, bool>
-{
-    typedef _Edge value_type;
-    bool operator ()  (const _Edge & a, const _Edge & b) const
-    {
+struct CmpEdgeByTargetID : public std::binary_function<InternalExtractorEdge, InternalExtractorEdge, bool> {
+    typedef InternalExtractorEdge value_type;
+    bool operator ()  (const InternalExtractorEdge & a, const InternalExtractorEdge & b) const {
         return a.target < b.target;
     }
-    value_type max_value()
-    {
-        return _Edge::max_value();
+    value_type max_value() {
+        return InternalExtractorEdge::max_value();
     }
-    value_type min_value()
-    {
-        return _Edge::min_value();
+    value_type min_value() {
+        return InternalExtractorEdge::min_value();
     }
 };
 

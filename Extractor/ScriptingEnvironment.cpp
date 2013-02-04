@@ -65,18 +65,19 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      ];
 
         luabind::module(myLuaState) [
-                                     luabind::class_<_Way>("Way")
+                                     luabind::class_<ExtractionWay>("Way")
                                      .def(luabind::constructor<>())
-                                     .def_readwrite("name", &_Way::name)
-                                     .def_readwrite("speed", &_Way::speed)
-                                     .def_readwrite("duration", &_Way::duration)
-                                     .def_readwrite("type", &_Way::type)
-                                     .def_readwrite("access", &_Way::access)
-                                     .def_readwrite("roundabout", &_Way::roundabout)
-                                     .def_readwrite("is_access_restricted", &_Way::isAccessRestricted)
-                                     .def_readwrite("ignore_in_grid", &_Way::ignoreInGrid)
-                                     .def_readwrite("tags", &_Way::keyVals)
-                                     .def_readwrite("direction", &_Way::direction)
+                                     .def_readwrite("name", &ExtractionWay::name)
+                                     .def_readwrite("speed", &ExtractionWay::speed)
+                                     .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
+                                     .def_readwrite("duration", &ExtractionWay::duration)
+                                     .def_readwrite("type", &ExtractionWay::type)
+                                     .def_readwrite("access", &ExtractionWay::access)
+                                     .def_readwrite("roundabout", &ExtractionWay::roundabout)
+                                     .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
+                                     .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
+                                     .def_readwrite("tags", &ExtractionWay::keyVals)
+                                     .def_readwrite("direction", &ExtractionWay::direction)
                                      .enum_("constants")
 										 [
 										  luabind::value("notSure", 0),

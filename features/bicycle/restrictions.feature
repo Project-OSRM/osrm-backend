@@ -3,7 +3,7 @@ Feature: Bike - Turn restrictions
 	Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
-	Background: Use car routing
+	Background:
 		Given the profile "bicycle"
 	
 	@no_turning
@@ -14,11 +14,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction  |
@@ -38,11 +38,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction   |
@@ -62,11 +62,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction |
@@ -86,11 +86,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction      |
@@ -110,11 +110,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction    |
@@ -134,11 +134,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction     |
@@ -158,11 +158,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction      |
@@ -182,11 +182,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction        |
@@ -206,13 +206,13 @@ Feature: Bike - Turn restrictions
  		 |   | s |   |
 
  		And the ways
- 		 | nodes | oneway |
- 		 | sj    | no     |
- 		 | xj    | -1     |
- 		 | aj    | -1     |
- 		 | bj    | no     |
- 		 | cj    | -1     |
- 		 | dj    | -1     |
+ 		 | nodes | oneway | foot |
+ 		 | sj    | no     | no   |
+ 		 | xj    | -1     | no   |
+ 		 | aj    | -1     | no   |
+ 		 | bj    | no     | no   |
+ 		 | cj    | -1     | no   |
+ 		 | dj    | -1     | no   |
 
  		And the relations
  		 | type        | way:from | way:to | node:via | restriction   | except  |
@@ -236,10 +236,10 @@ Feature: Bike - Turn restrictions
   		 |   | s |   |
 
   		And the ways
-  		 | nodes | oneway |
-  		 | sj    | yes    |
-  		 | aj    | no     |
-  		 | bj    | no     |
+  		 | nodes | oneway | foot |
+  		 | sj    | yes    | no   |
+  		 | aj    | no     | no   |
+  		 | bj    | no     | no   |
 
   		And the relations
   		 | type        | way:from | way:to | node:via | restriction      | except  |
@@ -261,14 +261,14 @@ Feature: Bike - Turn restrictions
   		 |   |   | f |
 
   		And the ways
-  		 | nodes | oneway |
-  		 | sj    | yes    |
-  		 | ja    | yes    |
-  		 | jb    | yes    |
-  		 | jc    | yes    |
-  		 | jd    | yes    |
-  		 | je    | yes    |
-  		 | jf    | yes    |
+  		 | nodes | oneway | foot |
+  		 | sj    | yes    | no   |
+  		 | ja    | yes    | no   |
+  		 | jb    | yes    | no   |
+  		 | jc    | yes    | no   |
+  		 | jd    | yes    | no   |
+  		 | je    | yes    | no   |
+  		 | jf    | yes    | no   |
 
   		And the relations
   		 | type        | way:from | way:to | node:via | restriction    | except           |

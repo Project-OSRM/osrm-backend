@@ -61,9 +61,9 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
             edge.data.forward = i->isForward();
             edge.data.backward = i->isBackward();
         }
-        if(edge.source == edge.target)
-            continue;
-
+        if(edge.source == edge.target) {
+        	continue;
+        }
         edge.data.distance = (std::max)((int)i->weight(), 1 );
         assert( edge.data.distance > 0 );
         edge.data.shortcut = false;
@@ -73,6 +73,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         edge.data.type = i->type();
         edge.data.isAccessRestricted = i->isAccessRestricted();
         edge.data.edgeBasedNodeID = edges.size();
+        edge.data.contraFlow = i->isContraFlow();
         edges.push_back( edge );
         if( edge.data.backward ) {
             std::swap( edge.source, edge.target );
@@ -107,7 +108,7 @@ NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const 
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);
     if (restrIter != _restrictionMap.end()) {
         unsigned index = restrIter->second;
-        BOOST_FOREACH(RestrictionSource restrictionTarget, _restrictionBucketVector.at(index)) {
+        BOOST_FOREACH(const RestrictionSource & restrictionTarget, _restrictionBucketVector.at(index)) {
             if(restrictionTarget.second) {
                 return restrictionTarget.first;
             }
@@ -239,6 +240,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
         for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
             ++nodeBasedEdgeCounter;
             _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
+            bool isBollardNode = (_barrierNodes.find(v) != _barrierNodes.end());
             //EdgeWeight heightPenalty = ComputeHeightPenalty(u, v);
             NodeID onlyToNode = CheckForEmanatingIsOnlyTurn(u, v);
             for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
@@ -248,7 +250,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                     ++numberOfSkippedTurns;
                     continue;
                 }
-                bool isBollardNode = (_barrierNodes.find(v) != _barrierNodes.end());
+
                 if(u == w && 1 != _nodeBasedGraph->GetOutDegree(v) ) {
                     continue;
                 }
@@ -291,7 +293,6 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                             originalEdgeData.clear();
                         }
                         ++numberOfOriginalEdges;
-                        ++nodeBasedEdgeCounter;
                         edgeBasedEdges.push_back(newEdge);
                     } else {
                         ++numberOfSkippedTurns;
@@ -316,6 +317,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
 //    std::vector<EdgeBasedNode>(edgeBasedNodes).swap(edgeBasedNodes);
 //    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
     INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
+    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges");
 //    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << 2*((double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter));
     INFO("Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << numberOfTurnRestrictions << " restrictions.");
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
@@ -331,6 +333,13 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
 
     _NodeBasedDynamicGraph::EdgeData & data1 = _nodeBasedGraph->GetEdgeData(edge1);
     _NodeBasedDynamicGraph::EdgeData & data2 = _nodeBasedGraph->GetEdgeData(edge2);
+
+    if(!data1.contraFlow && data2.contraFlow) {
+    	return TurnInstructions.EnterAgainstAllowedDirection;
+    }
+    if(data1.contraFlow && !data2.contraFlow) {
+    	return TurnInstructions.LeaveAgainstAllowedDirection;
+    }
 
     //roundabouts need to be handled explicitely
     if(data1.roundabout && data2.roundabout) {
@@ -353,10 +362,12 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
     }
 
     //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
-    if( (data1.nameID == data2.nameID) && (0 != data1.nameID))
+    if( (data1.nameID == data2.nameID) && (0 != data1.nameID)) {
         return TurnInstructions.NoTurn;
-    if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) <= 2) )
+    }
+    if( (data1.nameID == data2.nameID) && (0 == data1.nameID) && (_nodeBasedGraph->GetOutDegree(v) <= 2) ) {
         return TurnInstructions.NoTurn;
+    }
 
     double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);
