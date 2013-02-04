@@ -6,6 +6,12 @@ Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
 
+Given /^the shortcuts$/ do |table|
+  table.hashes.each do |row|
+    shortcuts_hash[ row['key'] ] = row['value']
+  end
+end
+
 Given /^the node map$/ do |table|
   table.raw.each_with_index do |row,ri|
     row.each_with_index do |name,ci|

@@ -152,10 +152,7 @@ function way_function (way, numberOfNodesInWay)
     
   -- Set the avg speed on the way if it is accessible by road class
     if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
-      if (0 < maxspeed and not take_minimum_of_speeds) or (maxspeed == 0) then
-        maxspeed = math.huge
-      end
-      way.speed = math.min(speed_profile[highway], maxspeed)
+      way.speed = speed_profile[highway]
     end
     
   -- Set the avg speed on ways that are marked accessible

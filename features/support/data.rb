@@ -71,8 +71,14 @@ def build_ways_from_table table
     way << node5
     
     tags = row.dup
-    tags.delete 'forw'
-    tags.delete 'backw'
+    #remove tags that describe expected test result
+    tags.reject! do |k,v|
+      k =~ /^forw\b/ || 
+      k =~ /^backw\b/ ||
+      k =~ /^bothw\b/
+    end
+
+    #remove empty tags
     tags.reject! { |k,v| v=='' }
     
     # sort tag keys in the form of 'node/....'
