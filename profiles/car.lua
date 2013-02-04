@@ -102,6 +102,8 @@ function way_function (way, numberOfNodesInWay)
     local junction = way.tags:Find("junction")
     local route = way.tags:Find("route")
     local maxspeed = parse_maxspeed(way.tags:Find ( "maxspeed") )
+    local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
+    local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
     local barrier = way.tags:Find("barrier")
     local oneway = way.tags:Find("oneway")
     local cycleway = way.tags:Find("cycleway")
@@ -157,7 +159,7 @@ function way_function (way, numberOfNodesInWay)
       end
       way.speed = math.min(speed_profile[highway], maxspeed)
     end
-    
+
   -- Set the avg speed on ways that are marked accessible
     if "" ~= highway and access_tag_whitelist[access] and way.speed == -1 then
       if 0 == maxspeed then
@@ -190,7 +192,18 @@ function way_function (way, numberOfNodesInWay)
     else
       way.direction = Way.bidirectional
     end
-    
+
+  -- Override speed settings if explicit forward/backward maxspeeds are given
+    if maxspeed_forward ~= nil and maxspeed_forward > 0 then
+	if Way.bidirectional == way.direction then
+          way.backward_speed = way.speed
+        end
+        way.speed = maxspeed_forward
+    end
+    if maxspeed_backward ~= nil and maxspeed_backward > 0 then
+      way.backward_speed = maxspeed_backward
+    end
+
   -- Override general direction settings of there is a specific one for our mode of travel
   
     if ignore_in_grid[highway] ~= nil and ignore_in_grid[highway] then

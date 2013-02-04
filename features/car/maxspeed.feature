@@ -33,13 +33,12 @@ Feature: Car - Max speed restrictions
 		 | a    | b  | ab    | 144s ~10% |
 		 | b    | c  | bc    | 144s ~10% |
 
-     @todo
      Scenario: Car - Forward/backward maxspeed
         Given the shortcuts
  		 | key   | value     |
  		 | car   | 12s ~10%  |
  		 | run   | 73s ~10%  |
- 		 | walk  | 170s ~10% |
+ 		 | walk  | 146s ~10% |
  		 | snail | 720s ~10% |
   		
   		And a grid size of 100 meters

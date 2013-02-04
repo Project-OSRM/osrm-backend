@@ -32,13 +32,12 @@ Feature: Bike - Max speed restrictions
 		 | a    | b  | ab    | 20s ~5% |
 		 | b    | c  | bc    | 20s ~5% |
 
-     @todo
      Scenario: Bike - Forward/backward maxspeed
         Given the shortcuts
  		 | key   | value    |
  		 | bike  | 43s ~10% |
  		 | run   | 73s ~10% |
- 		 | walk  | 170s ~10% |
+ 		 | walk  | 145s ~10% |
  		 | snail | 720s ~10% |
 
   	 	Then routability should be

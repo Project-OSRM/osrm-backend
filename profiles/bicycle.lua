@@ -143,6 +143,8 @@ function way_function (way, numberOfNodesInWay)
 	local ref = way.tags:Find("ref")
 	local junction = way.tags:Find("junction")
 	local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
+	local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
+	local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
 	local barrier = way.tags:Find("barrier")
 	local oneway = way.tags:Find("oneway")
 	local onewayClass = way.tags:Find("oneway:bicycle")
@@ -287,6 +289,19 @@ function way_function (way, numberOfNodesInWay)
 			way.speed = math.min(way.speed, maxspeed)
 		end
 	end
+
+  -- Override speed settings if explicit forward/backward maxspeeds are given
+    if maxspeed_forward ~= nil and maxspeed_forward > 0 then
+	if Way.bidirectional == way.direction then
+          way.backward_speed = way.speed
+        end
+        way.speed = maxspeed_forward
+    end
+    if maxspeed_backward ~= nil and maxspeed_backward > 0 then
+      way.backward_speed = maxspeed_backward
+    end
+
+
 	
 	way.type = 1
 	return 1
