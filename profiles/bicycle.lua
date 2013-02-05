@@ -64,6 +64,7 @@ man_made_speeds = {
 route_speeds = { 
 	["ferry"] = 5
 }
+
 take_minimum_of_speeds 	= true
 obey_oneway 			= true
 obey_bollards 			= false
@@ -71,6 +72,7 @@ use_restrictions 		= true
 ignore_areas 			= true -- future feature
 traffic_signal_penalty 	= 2
 u_turn_penalty 			= 20
+use_turn_restrictions   = true
 
 -- End of globals
 
