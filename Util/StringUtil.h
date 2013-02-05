@@ -131,7 +131,8 @@ inline void stringSplit(const std::string &s, const char delim, std::vector<std:
 static std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]", "\\"};
 static std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;" };
 
-inline std::string HTMLEntitize( std::string & result) {
+inline std::string HTMLEntitize( const std::string & input) {
+    std::string result(input);
     for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); ++i) {
         replaceAll(result, originals[i], entities[i]);
     }
