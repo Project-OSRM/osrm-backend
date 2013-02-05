@@ -20,7 +20,7 @@
 
 #include "PBFParser.h"
 
-PBFParser::PBFParser(const char * fileName) : externalMemory(NULL){
+PBFParser::PBFParser(const char * fileName) : externalMemory(NULL), use_turn_restrictions(true) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
@@ -43,7 +43,13 @@ void PBFParser::RegisterCallbacks(ExtractorCallbacks * em) {
 
 void PBFParser::RegisterScriptingEnvironment(ScriptingEnvironment & _se) {
 	scriptingEnvironment = _se;
-
+    
+    if(0 != luaL_dostring( scriptingEnvironment.getLuaStateForThreadID(0), "return use_turn_restrictions\n")) {
+        ERR(lua_tostring(scriptingEnvironment.getLuaStateForThreadID(0),-1)<< " occured in scripting block");
+    }
+    use_turn_restrictions = lua_toboolean(scriptingEnvironment.getLuaStateForThreadID(0), -1);
+	INFO("Use turn restrictions:" << use_turn_restrictions);
+	
 	if(lua_function_exists(scriptingEnvironment.getLuaStateForThreadID(0), "get_exceptions" )) {
 		//get list of turn restriction exceptions
 		try {
@@ -241,6 +247,9 @@ inline void PBFParser::parseNode(_ThreadData * ) {
 inline void PBFParser::parseRelation(_ThreadData * threadData) {
 	//TODO: leave early, if relation is not a restriction
 	//TODO: reuse rawRestriction container
+	if( use_turn_restrictions==false )
+        return;
+    
 	const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
 	for(int i = 0; i < group.relations_size(); ++i ) {
 		std::string exception_of_restriction_tag;

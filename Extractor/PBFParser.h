@@ -106,7 +106,8 @@ private:
     /* ThreadData Queue */
     boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;
     ScriptingEnvironment scriptingEnvironment;
-
+    
+    bool use_turn_restrictions;
     std::vector<std::string> restriction_exceptions_vector;
 };
 
