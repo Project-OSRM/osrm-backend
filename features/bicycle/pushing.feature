@@ -70,3 +70,12 @@ Feature: Bike - Accessability of different way types
   		 | motorway |              |               |      |       |
   		 | motorway | yes          |               | foot |       |
   		 | motorway |              | yes           |      | foot  |
+
+    @construction
+ 	Scenario: Bike - Don't allow routing on ways still under construction 
+ 	 	Then routability should be
+ 		 | highway      | foot | bicycle | bothw |
+ 		 | primary      |      |         | x     |
+ 		 | construction |      |         |       |
+ 		 | construction | yes  |         |       |
+ 		 | construction |      | yes     |       |

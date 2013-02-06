@@ -130,7 +130,12 @@ function way_function (way, numberOfNodesInWay)
     	then
     	return 0
     end
-
+    
+    -- don't route on ways or railways that are still under construction
+    if highway=='construction' or railway=='construction' then
+        return 0
+    end
+    
 	-- access
  	local access = Access.find_access_tag(way, access_tags_hierachy)
     if access_tag_blacklist[access] then
