@@ -53,53 +53,57 @@ public:
 
         super::_queryData.InitializeOrClearFirstThreadLocalStorage();
         super::_queryData.InitializeOrClearSecondThreadLocalStorage();
+        super::_queryData.InitializeOrClearThirdThreadLocalStorage();
 
-        QueryHeap & forwardHeap = *super::_queryData.forwardHeap;
-        QueryHeap & backwardHeap = *super::_queryData.backwardHeap;
-        QueryHeap & forwardHeap2 = *super::_queryData.forwardHeap2;
-        QueryHeap & backwardHeap2 = *super::_queryData.backwardHeap2;
+        QueryHeap & forward_heap1 = *(super::_queryData.forwardHeap);
+        QueryHeap & reverse_heap1 = *(super::_queryData.backwardHeap);
+        QueryHeap & forward_heap2 = *(super::_queryData.forwardHeap2);
+        QueryHeap & reverse_heap2 = *(super::_queryData.backwardHeap2);
 
         //Get distance to next pair of target nodes.
         BOOST_FOREACH(const PhantomNodes & phantomNodePair, phantomNodesVector) {
-        	forwardHeap.Clear();	forwardHeap2.Clear();
-        	backwardHeap.Clear();	backwardHeap2.Clear();
+            forward_heap1.Clear();	forward_heap2.Clear();
+            reverse_heap1.Clear();	reverse_heap2.Clear();
             int _localUpperbound1 = INT_MAX;
             int _localUpperbound2 = INT_MAX;
 
+            middle1 = UINT_MAX;
+            middle2 = UINT_MAX;
+
             //insert new starting nodes into forward heap, adjusted by previous distances.
             if(searchFrom1stStartNode) {
-                forwardHeap.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-                forwardHeap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
             }
             if(phantomNodePair.startPhantom.isBidirected() && searchFrom2ndStartNode) {
-                forwardHeap.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-                forwardHeap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
             }
 
             //insert new backward nodes into backward heap, unadjusted.
-            backwardHeap.Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
+            reverse_heap1.Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
             if(phantomNodePair.targetPhantom.isBidirected() ) {
-                backwardHeap2.Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
+                reverse_heap2.Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
             }
             const int forward_offset = phantomNodePair.startPhantom.weight1 + (phantomNodePair.startPhantom.isBidirected() ? phantomNodePair.startPhantom.weight2 : 0);
             const int reverse_offset = phantomNodePair.targetPhantom.weight1 + (phantomNodePair.targetPhantom.isBidirected() ? phantomNodePair.targetPhantom.weight2 : 0);
 
             //run two-Target Dijkstra routing step.
-            while(0 < (forwardHeap.Size() + backwardHeap.Size() )){
-                if(0 < forwardHeap.Size()){
-                    super::RoutingStep(forwardHeap, backwardHeap, &middle1, &_localUpperbound1, forward_offset, true);
+            while(0 < (forward_heap1.Size() + reverse_heap1.Size() )){
+                if(0 < forward_heap1.Size()){
+                    super::RoutingStep(forward_heap1, reverse_heap1, &middle1, &_localUpperbound1, forward_offset, true);
                 }
-                if(0 < backwardHeap.Size() ){
-                    super::RoutingStep(backwardHeap, forwardHeap, &middle1, &_localUpperbound1, reverse_offset, false);
+                if(0 < reverse_heap1.Size() ){
+                    super::RoutingStep(reverse_heap1, forward_heap1, &middle1, &_localUpperbound1, reverse_offset, false);
                 }
             }
-            if(0 < backwardHeap2.Size()) {
-                while(0 < (forwardHeap2.Size() + backwardHeap2.Size() )){
-                    if(0 < forwardHeap2.Size()){
-                        super::RoutingStep(forwardHeap2, backwardHeap2, &middle2, &_localUpperbound2, forward_offset, true);
+            if(0 < reverse_heap2.Size()) {
+                while(0 < (forward_heap2.Size() + reverse_heap2.Size() )){
+                    if(0 < forward_heap2.Size()){
+                        super::RoutingStep(forward_heap2, reverse_heap2, &middle2, &_localUpperbound2, forward_offset, true);
                     }
-                    if(0 < backwardHeap2.Size()){
-                        super::RoutingStep(backwardHeap2, forwardHeap2, &middle2, &_localUpperbound2, reverse_offset, false);
+                    if(0 < reverse_heap2.Size()){
+                        super::RoutingStep(reverse_heap2, forward_heap2, &middle2, &_localUpperbound2, reverse_offset, false);
                     }
                 }
             }
@@ -111,13 +115,9 @@ public:
             }
             if(UINT_MAX == middle1) {
                 searchFrom1stStartNode = false;
-            } else {
-                searchFrom1stStartNode = true;
             }
             if(UINT_MAX == middle2) {
                 searchFrom2ndStartNode = false;
-            } else {
-                searchFrom2ndStartNode = true;
             }
 
             //Was at most one of the two paths not found?
@@ -127,11 +127,11 @@ public:
             std::vector<NodeID> temporaryPackedPath1;
             std::vector<NodeID> temporaryPackedPath2;
             if(INT_MAX != _localUpperbound1) {
-                super::RetrievePackedPathFromHeap(forwardHeap, backwardHeap, middle1, temporaryPackedPath1);
+                super::RetrievePackedPathFromHeap(forward_heap1, reverse_heap1, middle1, temporaryPackedPath1);
             }
 
             if(INT_MAX != _localUpperbound2) {
-                super::RetrievePackedPathFromHeap(forwardHeap2, backwardHeap2, middle2, temporaryPackedPath2);
+                super::RetrievePackedPathFromHeap(forward_heap2, reverse_heap2, middle2, temporaryPackedPath2);
             }
 
             //if one of the paths was not found, replace it with the other one.

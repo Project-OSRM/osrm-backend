@@ -419,6 +419,13 @@ private:
         super::RetrievePackedPathFromHeap(newForwardHeap, existingBackwardHeap, *v_t_middle, packed_v_t_path);
 
         NodeID s_P = *s_v_middle, t_P = *v_t_middle;
+        if(UINT_MAX == s_P) {
+            return false;
+        }
+
+        if(UINT_MAX == t_P) {
+            return false;
+        }
         const int T_threshold = VIAPATH_EPSILON * lengthOfShortestPath;
         int unpackedUntilDistance = 0;
 
@@ -504,19 +511,21 @@ private:
 
         lengthOfPathT_Test_Path += unpackedUntilDistance;
         //Run actual T-Test query and compare if distances equal.
-        QueryHeap& forwardHeap = *super::_queryData.forwardHeap3;
-        QueryHeap& backwardHeap = *super::_queryData.backwardHeap3;
+        super::_queryData.InitializeOrClearThirdThreadLocalStorage();
+
+        QueryHeap& forward_heap3 = *super::_queryData.forwardHeap3;
+        QueryHeap& backward_heap3 = *super::_queryData.backwardHeap3;
         int _upperBound = INT_MAX;
         NodeID middle = UINT_MAX;
-        forwardHeap.Insert(s_P, 0, s_P);
-        backwardHeap.Insert(t_P, 0, t_P);
+        forward_heap3.Insert(s_P, 0, s_P);
+        backward_heap3.Insert(t_P, 0, t_P);
         //exploration from s and t until deletemin/(1+epsilon) > _lengthOfShortestPath
-        while (forwardHeap.Size() + backwardHeap.Size() > 0) {
-            if (forwardHeap.Size() > 0) {
-                super::RoutingStep(forwardHeap, backwardHeap, &middle, &_upperBound, offset, true);
+        while (forward_heap3.Size() + backward_heap3.Size() > 0) {
+            if (forward_heap3.Size() > 0) {
+                super::RoutingStep(forward_heap3, backward_heap3, &middle, &_upperBound, offset, true);
             }
-            if (backwardHeap.Size() > 0) {
-                super::RoutingStep(backwardHeap, forwardHeap, &middle, &_upperBound, offset, false);
+            if (backward_heap3.Size() > 0) {
+                super::RoutingStep(backward_heap3, forward_heap3, &middle, &_upperBound, offset, false);
             }
         }
         return (_upperBound <= lengthOfPathT_Test_Path);
