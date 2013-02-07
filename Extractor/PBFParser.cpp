@@ -47,8 +47,10 @@ void PBFParser::RegisterScriptingEnvironment(ScriptingEnvironment & _se) {
     if(0 != luaL_dostring( scriptingEnvironment.getLuaStateForThreadID(0), "return use_turn_restrictions\n")) {
         ERR(lua_tostring(scriptingEnvironment.getLuaStateForThreadID(0),-1)<< " occured in scripting block");
     }
-    use_turn_restrictions = lua_toboolean(scriptingEnvironment.getLuaStateForThreadID(0), -1);
-	INFO("Use turn restrictions:" << use_turn_restrictions);
+    if( lua_isboolean(scriptingEnvironment.getLuaStateForThreadID(0), -1) ) {
+        use_turn_restrictions = lua_toboolean(scriptingEnvironment.getLuaStateForThreadID(0), -1);
+    }
+	INFO("Use turn restrictions: " << (use_turn_restrictions ? "yes" : "no"));
 	
 	if(lua_function_exists(scriptingEnvironment.getLuaStateForThreadID(0), "get_exceptions" )) {
 		//get list of turn restriction exceptions
