@@ -20,7 +20,7 @@
 
 #include "PBFParser.h"
 
-PBFParser::PBFParser(ExtractorCallbacks* em, ScriptingEnvironment& se, const char * fileName) : BaseParser( em, se ) {
+PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser( ec, se ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
@@ -38,8 +38,9 @@ PBFParser::PBFParser(ExtractorCallbacks* em, ScriptingEnvironment& se, const cha
 }
 
 PBFParser::~PBFParser() {
-	if(input.is_open())
+	if(input.is_open()) {
 		input.close();
+	}
 
 	// Clean up any leftover ThreadData objects in the queue
 	_ThreadData* td;
@@ -69,11 +70,13 @@ inline bool PBFParser::ReadHeader() {
 		for(int i = 0, featureSize = initData.PBFHeaderBlock.required_features_size(); i < featureSize; ++i) {
 			const std::string& feature = initData.PBFHeaderBlock.required_features( i );
 			bool supported = false;
-			if ( "OsmSchema-V0.6" == feature )
+			if ( "OsmSchema-V0.6" == feature ) {
 				supported = true;
-			else if ( "DenseNodes" == feature )
+			}
+			else if ( "DenseNodes" == feature ) {
 				supported = true;
-
+			}
+			
 			if ( !supported ) {
 				std::cerr << "[error] required feature not supported: " << feature.data() << std::endl;
 				return false;
@@ -91,9 +94,9 @@ inline void PBFParser::ReadData() {
 		_ThreadData *threadData = new _ThreadData();
 		keepRunning = readNextBlock(input, threadData);
 
-		if (keepRunning)
+		if (keepRunning) {
 			threadDataQueue->push(threadData);
-		else {
+		} else {
 			threadDataQueue->push(NULL); // No more data to read, parse stops when NULL encountered
 			delete threadData;
 		}
@@ -104,7 +107,7 @@ inline void PBFParser::ParseData() {
 	while (true) {
 		_ThreadData *threadData;
 		threadDataQueue->wait_and_pop(threadData);
-		if (threadData == NULL) {
+		if( NULL==threadData ) {
 			INFO("Parse Data Thread Finished");
 			threadDataQueue->push(NULL); // Signal end of data for other threads
 			break;
@@ -116,14 +119,18 @@ inline void PBFParser::ParseData() {
 			threadData->currentGroupID = i;
 			loadGroup(threadData);
 
-			if(threadData->entityTypeIndicator == TypeNode)
+			if(threadData->entityTypeIndicator == TypeNode) {
 				parseNode(threadData);
-			if(threadData->entityTypeIndicator == TypeWay)
+			}
+			if(threadData->entityTypeIndicator == TypeWay) {
 				parseWay(threadData);
-			if(threadData->entityTypeIndicator == TypeRelation)
+			}
+			if(threadData->entityTypeIndicator == TypeRelation) {
 				parseRelation(threadData);
-			if(threadData->entityTypeIndicator == TypeDenseNode)
+			}
+			if(threadData->entityTypeIndicator == TypeDenseNode) {
 				parseDenseNode(threadData);
+			}
 		}
 
 		delete threadData;
@@ -164,7 +171,7 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 		n.lon = 100000*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
 		while (denseTagIndex < dense.keys_vals_size()) {
 			const int tagValue = dense.keys_vals( denseTagIndex );
-			if(tagValue == 0) {
+			if( 0==tagValue ) {
 				++denseTagIndex;
 				break;
 			}
@@ -197,12 +204,12 @@ inline void PBFParser::parseNode(_ThreadData * ) {
 inline void PBFParser::parseRelation(_ThreadData * threadData) {
 	//TODO: leave early, if relation is not a restriction
 	//TODO: reuse rawRestriction container
-	if( !use_turn_restrictions )
-        return;
-    
+	if( !use_turn_restrictions ) {
+		return;
+	}
 	const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
 	for(int i = 0; i < group.relations_size(); ++i ) {
-		std::string restriction_exceptions;
+		std::string except_tag_string;
 		const OSMPBF::Relation& inputRelation = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).relations(i);
 		bool isRestriction = false;
 		bool isOnlyRestriction = false;
@@ -210,22 +217,25 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(inputRelation.keys(k));
 			const std::string & val = threadData->PBFprimitiveBlock.stringtable().s(inputRelation.vals(k));
 			if ("type" == key) {
-				if( "restriction" == val)
+				if( "restriction" == val) {
 					isRestriction = true;
-				else
+				} else {
 					break;
+				}
 			}
 			if ("restriction" == key) {
-				if(val.find("only_") == 0)
+				if(val.find("only_") == 0) {
 					isOnlyRestriction = true;
+				}
 			}
 			if ("except" == key) {
-				restriction_exceptions = val;
+				except_tag_string = val;
 			}
 		}
 
-		if( isRestriction && ShouldIgnoreRestriction(restriction_exceptions) )
-            isRestriction = false;
+		if( isRestriction && ShouldIgnoreRestriction(except_tag_string) ) {
+			isRestriction = false;
+		}
 
 		if(isRestriction) {
 			int64_t lastRef = 0;
@@ -240,11 +250,13 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 
 				switch(inputRelation.types(rolesIndex)) {
 				case 0: //node
-					if("from" == role || "to" == role) //Only via should be a node
+					if("from" == role || "to" == role) { //Only via should be a node
 						continue;
+					}
 					assert("via" == role);
-					if(UINT_MAX != currentRestrictionContainer.viaNode)
+					if(UINT_MAX != currentRestrictionContainer.viaNode) {
 						currentRestrictionContainer.viaNode = UINT_MAX;
+					}
 					assert(UINT_MAX == currentRestrictionContainer.viaNode);
 					currentRestrictionContainer.restriction.viaNode = lastRef;
 					break;
@@ -272,8 +284,9 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 					break;
 				}
 			}
-			if(!externalMemory->restrictionFunction(currentRestrictionContainer))
+			if(!externalMemory->restrictionFunction(currentRestrictionContainer)) {
 				std::cerr << "[PBFParser] relation not parsed" << std::endl;
+			}
 		}
 	}
 }
@@ -406,9 +419,10 @@ inline bool PBFParser::unpackLZMA(std::fstream &, _ThreadData * ) {
 }
 
 inline bool PBFParser::readBlob(std::fstream& stream, _ThreadData * threadData) {
-	if(stream.eof())
+	if(stream.eof()) {
 		return false;
-
+	}
+	
 	const int size = threadData->PBFBlobHeader.datasize();
 	if ( size < 0 || size > MAX_BLOB_SIZE ) {
 		std::cerr << "[error] invalid Blob size:" << size << std::endl;
@@ -436,8 +450,9 @@ inline bool PBFParser::readBlob(std::fstream& stream, _ThreadData * threadData) 
 			return false;
 		}
 	} else if ( threadData->PBFBlob.has_lzma_data() ) {
-		if ( !unpackLZMA(stream, threadData) )
+		if ( !unpackLZMA(stream, threadData) ) {
 			std::cerr << "[error] lzma data encountered that could not be unpacked" << std::endl;
+		}
 		delete[] data;
 		return false;
 	} else {
