@@ -34,19 +34,19 @@ extern "C" {
 
 class BaseParser : boost::noncopyable {
 public:
-    BaseParser(ExtractorCallbacks* em, ScriptingEnvironment& se);
+    BaseParser(ExtractorCallbacks* ec, ScriptingEnvironment& se);
     virtual ~BaseParser() {}
     virtual bool ReadHeader() = 0;
     virtual bool Parse() = 0;
 
     inline virtual void ParseNodeInLua(ImportNode& n, lua_State* luaStateForThread);
     inline virtual void ParseWayInLua(ExtractionWay& n, lua_State* luaStateForThread);
-    virtual void report_errors(lua_State *L, int status);
+    virtual void report_errors(lua_State *L, const int status) const;
 
 protected:   
     virtual void ReadUseRestrictionsSetting();
     virtual void ReadRestrictionExceptions();
-    inline virtual bool ShouldIgnoreRestriction(std::string& exception_string);
+    inline virtual bool ShouldIgnoreRestriction(const std::string& except_tag_string) const;
     
     ExtractorCallbacks* externalMemory;
     ScriptingEnvironment& scriptingEnvironment;

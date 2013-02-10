@@ -96,13 +96,14 @@ int main (int argc, char *argv[]) {
     extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
     BaseParser* parser;
     if(isPBF) {
-        parser = new PBFParser(extractCallBacks, scriptingEnvironment, argv[1]);
+        parser = new PBFParser(argv[1], extractCallBacks, scriptingEnvironment);
     } else {
-        parser = new XMLParser(extractCallBacks, scriptingEnvironment, argv[1]);
+        parser = new XMLParser(argv[1], extractCallBacks, scriptingEnvironment);
     }
     
-    if(!parser->ReadHeader())
+    if(!parser->ReadHeader()) {
         ERR("Parser not initialized!");
+    }
     INFO("Parsing in progress..");
     double time = get_timestamp();
     parser->Parse();
