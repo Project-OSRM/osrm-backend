@@ -37,11 +37,8 @@
 #include "../Util/OpenMPWrapper.h"
 
 #include "BaseParser.h"
-#include "ExtractorCallbacks.h"
-#include "ExtractorStructs.h"
-#include "ScriptingEnvironment.h"
 
-class PBFParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, ExtractionWay> {
+class PBFParser : public BaseParser {
     
     enum EntityType {
         TypeNode = 1,
@@ -65,13 +62,10 @@ class PBFParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionCo
     };
     
 public:
-    PBFParser(const char * fileName);
+    PBFParser(ExtractorCallbacks* em, ScriptingEnvironment& se, const char * fileName);
     virtual ~PBFParser();
     
-    void RegisterCallbacks(ExtractorCallbacks * em);
-    void RegisterScriptingEnvironment(ScriptingEnvironment & _se);
-    
-    inline bool Init();
+    inline bool ReadHeader();
 	inline bool Parse();
     
 private:
@@ -100,15 +94,8 @@ private:
     unsigned blockCount;
 #endif
 	
-    ExtractorCallbacks * externalMemory;
-    /* the input stream to parse */
-    std::fstream input;
-    /* ThreadData Queue */
-    boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;
-    ScriptingEnvironment scriptingEnvironment;
-    
-    bool use_turn_restrictions;
-    std::vector<std::string> restriction_exceptions_vector;
+    std::fstream input;     // the input stream to parse
+    boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;       // ThreadData Queue
 };
 
 #endif /* PBFPARSER_H_ */

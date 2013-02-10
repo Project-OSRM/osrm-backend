@@ -27,42 +27,12 @@
 #include "../DataStructures/InputReaderFactory.h"
 
 
-XMLParser::XMLParser(const char * filename) : externalMemory(NULL), myLuaState(NULL){
+XMLParser::XMLParser(ExtractorCallbacks* em, ScriptingEnvironment& se, const char * filename) : BaseParser( em, se ) {
 	WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
 	inputReader = inputReaderFactory(filename);
 }
 
-XMLParser::~XMLParser() {}
-
-void XMLParser::RegisterCallbacks(ExtractorCallbacks * em) {
-	externalMemory = em;
-}
-
-void XMLParser::RegisterScriptingEnvironment(ScriptingEnvironment & _se) {
-	myLuaState = _se.getLuaStateForThreadID(0);
-	if(lua_function_exists(myLuaState, "get_exceptions" )) {
-		//get list of turn restriction exceptions
-		try {
-			luabind::call_function<void>(
-					myLuaState,
-					"get_exceptions",
-					boost::ref(restriction_exceptions_vector)
-			);
-			INFO("Found " << restriction_exceptions_vector.size() << " exceptions to turn restriction");
-			BOOST_FOREACH(std::string & str, restriction_exceptions_vector) {
-				INFO("   " << str);
-			}
-		} catch (const luabind::error &er) {
-			lua_State* Ler=er.state();
-			report_errors(Ler, -1);
-			ERR(er.what());
-		}
-	} else {
-		INFO("Found no exceptions to turn restrictions");
-	}
-}
-
-bool XMLParser::Init() {
+bool XMLParser::ReadHeader() {
 	return (xmlTextReaderRead( inputReader ) == 1);
 }
 bool XMLParser::Parse() {
@@ -78,50 +48,18 @@ bool XMLParser::Parse() {
 			continue;
 
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
-			ImportNode n = _ReadXMLNode(  );
-			/** Pass the unpacked node to the LUA call back **/
-			try {
-				luabind::call_function<int>(
-						myLuaState,
-						"node_function",
-						boost::ref(n)
-				);
-				if(!externalMemory->nodeFunction(n))
-					std::cerr << "[XMLParser] dense node not parsed" << std::endl;
-			} catch (const luabind::error &er) {
-				std::cerr << er.what() << std::endl;
-				lua_State* Ler=er.state();
-				report_errors(Ler, -1);
-			} catch (std::exception & e) {
-				ERR(e.what());
-			} catch (...) {
-				ERR("Unknown error occurred during XML node parsing!");
-			}
+			ImportNode n = _ReadXMLNode();
+            ParseNodeInLua( n, luaState );
+			
+			if(!externalMemory->nodeFunction(n))
+				std::cerr << "[XMLParser] dense node not parsed" << std::endl;
 		}
 
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
 			ExtractionWay way = _ReadXMLWay( );
-
-			/** Pass the unpacked way to the LUA call back **/
-			try {
-				luabind::call_function<int>(
-						myLuaState,
-						"way_function",
-						boost::ref(way),
-						way.path.size()
-				);
-				if(!externalMemory->wayFunction(way)) {
-					std::cerr << "[PBFParser] way not parsed" << std::endl;
-				}
-			} catch (const luabind::error &er) {
-				std::cerr << er.what() << std::endl;
-				lua_State* Ler=er.state();
-				report_errors(Ler, -1);
-			} catch (std::exception & e) {
-				ERR(e.what());
-			} catch (...) {
-				ERR("Unknown error occurred during XML way parsing!");
-			}
+            ParseWayInLua( way, luaState );
+			if(!externalMemory->wayFunction(way))
+				std::cerr << "[PBFParser] way not parsed" << std::endl;
 		}
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
 			_RawRestrictionContainer r = _ReadXMLRestriction();
@@ -138,7 +76,7 @@ bool XMLParser::Parse() {
 
 _RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
 	_RawRestrictionContainer restriction;
-	std::string exception_of_restriction_tag;
+	std::string exception_string;
 
 	if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {
 		const int depth = xmlTextReaderDepth( inputReader );while ( xmlTextReaderRead( inputReader ) == 1 ) {
@@ -168,7 +106,7 @@ _RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
 							restriction.restriction.flags.isOnly = true;
 					}
 					if ( xmlStrEqual(k, (const xmlChar *) "except") ) {
-						exception_of_restriction_tag = (const char*) value;
+						exception_string = (const char*) value;
 					}
 				}
 
@@ -204,19 +142,8 @@ _RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
 		}
 	}
 
-	//Check if restriction shall be ignored
-	if( "" != exception_of_restriction_tag ) {
-		//Be warned, this is quadratic work here, but we assume that
-		//only a few exceptions are actually defined.
-		std::vector<std::string> tokenized_exception_tags_of_restriction;
-		boost::algorithm::split_regex(tokenized_exception_tags_of_restriction, exception_of_restriction_tag, boost::regex("[;][ ]*"));
-		BOOST_FOREACH(std::string & str, tokenized_exception_tags_of_restriction) {
-			if(restriction_exceptions_vector.end() != std::find(restriction_exceptions_vector.begin(), restriction_exceptions_vector.end(), str)) {
-				restriction.fromWay = UINT_MAX; //workaround to ignore the restriction
-				break; //BOOST_FOREACH
-			}
-		}
-	}
+    if( ShouldIgnoreRestriction(exception_string) )
+        restriction.fromWay = UINT_MAX;                 //workaround to ignore the restriction
 
 	return restriction;
 }

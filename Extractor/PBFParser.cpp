@@ -20,7 +20,7 @@
 
 #include "PBFParser.h"
 
-PBFParser::PBFParser(const char * fileName) : externalMemory(NULL), use_turn_restrictions(true) {
+PBFParser::PBFParser(ExtractorCallbacks* em, ScriptingEnvironment& se, const char * fileName) : BaseParser( em, se ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
@@ -35,43 +35,6 @@ PBFParser::PBFParser(const char * fileName) : externalMemory(NULL), use_turn_res
 	blockCount = 0;
 	groupCount = 0;
 #endif
-}
-
-void PBFParser::RegisterCallbacks(ExtractorCallbacks * em) {
-	externalMemory = em;
-}
-
-void PBFParser::RegisterScriptingEnvironment(ScriptingEnvironment & _se) {
-	scriptingEnvironment = _se;
-    
-    if(0 != luaL_dostring( scriptingEnvironment.getLuaStateForThreadID(0), "return use_turn_restrictions\n")) {
-        ERR(lua_tostring(scriptingEnvironment.getLuaStateForThreadID(0),-1)<< " occured in scripting block");
-    }
-    if( lua_isboolean(scriptingEnvironment.getLuaStateForThreadID(0), -1) ) {
-        use_turn_restrictions = lua_toboolean(scriptingEnvironment.getLuaStateForThreadID(0), -1);
-    }
-	INFO("Use turn restrictions: " << (use_turn_restrictions ? "yes" : "no"));
-	
-	if(lua_function_exists(scriptingEnvironment.getLuaStateForThreadID(0), "get_exceptions" )) {
-		//get list of turn restriction exceptions
-		try {
-			luabind::call_function<void>(
-					scriptingEnvironment.getLuaStateForThreadID(0),
-					"get_exceptions",
-					boost::ref(restriction_exceptions_vector)
-			);
-			INFO("Found " << restriction_exceptions_vector.size() << " exceptions to turn restriction");
-			BOOST_FOREACH(std::string & str, restriction_exceptions_vector) {
-				INFO("ignoring: " << str);
-			}
-		} catch (const luabind::error &er) {
-			lua_State* Ler=er.state();
-			report_errors(Ler, -1);
-			ERR(er.what());
-		}
-	} else {
-		INFO("Found no exceptions to turn restrictions");
-	}
 }
 
 PBFParser::~PBFParser() {
@@ -90,7 +53,7 @@ PBFParser::~PBFParser() {
 #endif
 }
 
-inline bool PBFParser::Init() {
+inline bool PBFParser::ReadHeader() {
 	_ThreadData initData;
 	/** read Header */
 	if(!readPBFBlobHeader(input, &initData)) {
@@ -218,23 +181,8 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 #pragma omp parallel for schedule ( guided )
     		for(unsigned i = 0; i < endi_nodes; ++i) {
     			ImportNode &n = nodesToParse[i];
-    			/** Pass the unpacked node to the LUA call back **/
-    			try {
-    				luabind::call_function<int>(
-    						scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()),
-    						"node_function",
-    						boost::ref(n)
-    				);
-    			} catch (const luabind::error &er) {
-    				lua_State* Ler=er.state();
-    				report_errors(Ler, -1);
-    				ERR(er.what());
-    			}
-    			//            catch (...) {
-    			//                ERR("Unknown error occurred during PBF dense node parsing!");
-    			//            }
+                ParseNodeInLua( n, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
     		}
-
 
     		BOOST_FOREACH(ImportNode &n, nodesToParse) {
     			if(!externalMemory->nodeFunction(n))
@@ -249,12 +197,12 @@ inline void PBFParser::parseNode(_ThreadData * ) {
 inline void PBFParser::parseRelation(_ThreadData * threadData) {
 	//TODO: leave early, if relation is not a restriction
 	//TODO: reuse rawRestriction container
-	if( use_turn_restrictions==false )
+	if( !use_turn_restrictions )
         return;
     
 	const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
 	for(int i = 0; i < group.relations_size(); ++i ) {
-		std::string exception_of_restriction_tag;
+		std::string restriction_exceptions;
 		const OSMPBF::Relation& inputRelation = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).relations(i);
 		bool isRestriction = false;
 		bool isOnlyRestriction = false;
@@ -272,24 +220,12 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 					isOnlyRestriction = true;
 			}
 			if ("except" == key) {
-				exception_of_restriction_tag = val;
+				restriction_exceptions = val;
 			}
 		}
 
-		//Check if restriction shall be ignored
-		if(isRestriction && ("" != exception_of_restriction_tag) ) {
-			//Be warned, this is quadratic work here, but we assume that
-			//only a few exceptions are actually defined.
-			std::vector<std::string> tokenized_exception_tags_of_restriction;
-			boost::algorithm::split_regex(tokenized_exception_tags_of_restriction, exception_of_restriction_tag, boost::regex("[;][ ]*"));
-			BOOST_FOREACH(std::string & str, tokenized_exception_tags_of_restriction) {
-				if(restriction_exceptions_vector.end() != std::find(restriction_exceptions_vector.begin(), restriction_exceptions_vector.end(), str)) {
-					isRestriction = false;
-					break; //BOOST_FOREACH
-				}
-			}
-		}
-
+		if( isRestriction && ShouldIgnoreRestriction(restriction_exceptions) )
+            isRestriction = false;
 
 		if(isRestriction) {
 			int64_t lastRef = 0;
@@ -368,29 +304,12 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 #pragma omp parallel for schedule ( guided )
     		for(unsigned i = 0; i < endi_ways; ++i) {
     			ExtractionWay & w = waysToParse[i];
-    			/** Pass the unpacked way to the LUA call back **/
-    			try {
-    				luabind::call_function<int>(
-    						scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()),
-    						"way_function",
-    						boost::ref(w),
-    						w.path.size()
-    				);
-
-    			} catch (const luabind::error &er) {
-    				lua_State* Ler=er.state();
-    				report_errors(Ler, -1);
-    				ERR(er.what());
-    			}
-    			//                catch (...) {
-    			//                    ERR("Unknown error!");
-    			//                }
+                ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
     		}
 
     		BOOST_FOREACH(ExtractionWay & w, waysToParse) {
-    			if(!externalMemory->wayFunction(w)) {
+    			if(!externalMemory->wayFunction(w))
     				std::cerr << "[PBFParser] way not parsed" << std::endl;
-    			}
     		}
 }
 
