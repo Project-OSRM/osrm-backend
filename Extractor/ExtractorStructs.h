@@ -61,9 +61,10 @@ struct ExtractionWay {
         ignoreInGrid = false;
     }
 
-    enum {
+    enum Directions {
         notSure = 0, oneway, bidirectional, opposite
-    } direction;
+    };
+    Directions direction;
     unsigned id;
     unsigned nameID;
     std::string name;
