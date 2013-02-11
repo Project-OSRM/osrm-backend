@@ -21,8 +21,8 @@
 #include "EdgeBasedGraphFactory.h"
 
 template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()), speedProfile(sp) {
-	BOOST_FOREACH(_Restriction & restriction, irs) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : speedProfile(sp), inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
+	BOOST_FOREACH(const _Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
         RestrictionMap::iterator restrIter = _restrictionMap.find(restrictionSource);
