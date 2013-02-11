@@ -1,6 +1,6 @@
 @routing @bicycle @restrictions
 Feature: Bike - Turn restrictions
-	Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
+	Ignore turn restrictions on bicycle, since you always become a temporary pedestrian.
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
 	Background:
@@ -26,7 +26,7 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 
@@ -52,7 +52,7 @@ Feature: Bike - Turn restrictions
 		 | from | to | route |
 		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
-		 | s    | e  |       |
+		 | s    | e  | sj,ej |
 
 	@no_turning
 	Scenario: Bike - No u-turn
@@ -74,7 +74,7 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 
@@ -98,7 +98,7 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 
@@ -123,8 +123,8 @@ Feature: Bike - Turn restrictions
 		When I route I should get
 		 | from | to | route |
 		 | s    | w  | sj,wj |
-		 | s    | n  |       |
-		 | s    | e  |       |
+		 | s    | n  | sj,nj |
+		 | s    | e  | sj,ej |
 
 	@only_turning
 	Scenario: Bike - Only right turn
@@ -146,8 +146,8 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
-		 | s    | n  |       |
+		 | s    | w  | sj,wj |
+		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 	
 	@only_turning
@@ -170,9 +170,9 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
-		 | s    | e  |       |
+		 | s    | e  | sj,ej |
 
 	@no_turning
 	Scenario: Bike - Handle any only_* restriction
@@ -194,9 +194,9 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
-		 | s    | e  |       |
+		 | s    | e  | sj,ej |
 
  	@except
  	Scenario: Bike - Except tag and on no_ restrictions
@@ -224,8 +224,8 @@ Feature: Bike - Turn restrictions
  		When I route I should get
  		 | from | to | route |
  		 | s    | a  | sj,aj |
- 		 | s    | b  |       |
- 		 | s    | c  |       |
+ 		 | s    | b  | sj,bj |
+ 		 | s    | c  | sj,cj |
  		 | s    | d  | sj,dj |
 
   	@except
@@ -281,9 +281,9 @@ Feature: Bike - Turn restrictions
 
   		When I route I should get
   		 | from | to | route |
-  		 | s    | a  |       |
+  		 | s    | a  | sj,ja |
   		 | s    | b  | sj,jb |
   		 | s    | c  | sj,jc |
   		 | s    | d  | sj,jd |
-  		 | s    | e  |       |
-  		 | s    | f  |       |
+  		 | s    | e  | sj,je |
+  		 | s    | f  | sj,jf |
