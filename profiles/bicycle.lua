@@ -72,7 +72,7 @@ use_restrictions 		= true
 ignore_areas 			= true -- future feature
 traffic_signal_penalty 	= 2
 u_turn_penalty 			= 20
-
+use_turn_restrictions   = false
 -- End of globals
 
 function get_exceptions(vector)
