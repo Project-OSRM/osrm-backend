@@ -302,7 +302,6 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
         }
         p.printIncrement();
     }
-    numberOfOriginalEdges += originalEdgeData.size();
     originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
     originalEdgeDataOutFile.seekp(std::ios::beg);
     originalEdgeDataOutFile.write((char*)&numberOfOriginalEdges, sizeof(unsigned));
