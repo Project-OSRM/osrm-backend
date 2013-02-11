@@ -10,25 +10,25 @@ cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"
 service_tag_restricted = { ["parking_aisle"] = true }
 restriction_exception_tags = { "bicycle", "vehicle", "access" }
 
-default_speed = 16
+default_speed = 15
 
-walking_speed = 4
+walking_speed = 6
 
 bicycle_speeds = { 
-	["cycleway"] = 18,
-	["primary"] = 17,
-	["primary_link"] = 17,
-	["secondary"] = 18,
-	["secondary_link"] = 18,
-	["tertiary"] = 18,
-	["tertiary_link"] = 18,
-	["residential"] = 18,
-	["unclassified"] = 16,
-	["living_street"] = 16,
-	["road"] = 16,
-	["service"] = 16,
-	["track"] = 13,
-	["path"] = 13
+	["cycleway"] = default_speed,
+	["primary"] = default_speed,
+	["primary_link"] = default_speed,
+	["secondary"] = default_speed,
+	["secondary_link"] = default_speed,
+	["tertiary"] = default_speed,
+	["tertiary_link"] = default_speed,
+	["residential"] = default_speed,
+	["unclassified"] = default_speed,
+	["living_street"] = default_speed,
+	["road"] = default_speed,
+	["service"] = default_speed,
+	["track"] = 12,
+	["path"] = 12
 	--["footway"] = 12,
 	--["pedestrian"] = 12,
 }
@@ -70,7 +70,7 @@ obey_oneway 			= true
 obey_bollards 			= false
 use_restrictions 		= true
 ignore_areas 			= true -- future feature
-traffic_signal_penalty 	= 2
+traffic_signal_penalty 	= 5
 u_turn_penalty 			= 20
 use_turn_restrictions   = false
 -- End of globals
