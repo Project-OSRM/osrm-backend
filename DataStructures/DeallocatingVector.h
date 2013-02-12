@@ -32,7 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 
-template<typename ElementT, size_t bucketSizeC = 10485760/sizeof(ElementT), bool DeallocateC = false>
+template<typename ElementT, size_t bucketSizeC = 8388608/sizeof(ElementT), bool DeallocateC = false>
 class DeallocatingVectorIterator : public std::iterator<std::random_access_iterator_tag, ElementT> {
 protected:
 
@@ -185,7 +185,7 @@ public:
     }
 };
 
-template<typename ElementT, size_t bucketSizeC = 10485760/sizeof(ElementT) >
+template<typename ElementT, size_t bucketSizeC = 8388608/sizeof(ElementT) >
 class DeallocatingVector {
 private:
     size_t mCurrentSize;
