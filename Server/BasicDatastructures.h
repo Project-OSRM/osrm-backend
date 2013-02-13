@@ -139,11 +139,13 @@ Reply Reply::stockReply(Reply::status_type status) {
 	Reply rep;
 	rep.status = status;
 	rep.content = ToString(status);
-	rep.headers.resize(2);
-	rep.headers[0].name = "Content-Length";
-	rep.headers[0].value = boost::lexical_cast<std::string>(rep.content.size());
-	rep.headers[1].name = "Content-Type";
-	rep.headers[1].value = "text/html";
+	rep.headers.resize(3);	
+	rep.headers[0].name = "Access-Control-Allow-Origin";
+	rep.headers[0].value = "*";
+	rep.headers[1].name = "Content-Length";
+	rep.headers[1].value = boost::lexical_cast<std::string>(rep.content.size());
+	rep.headers[2].name = "Content-Type";
+	rep.headers[2].value = "text/html";
 	return rep;
 }
 } // namespace http
