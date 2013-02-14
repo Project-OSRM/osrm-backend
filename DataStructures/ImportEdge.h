@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
-*/
+ */
 
 #ifndef EDGE_H
 #define EDGE_H
@@ -41,7 +41,7 @@ public:
     }
 
     explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty, bool ra, bool ig, bool ar, bool cf) :
-            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _contraFlow(cf) { if(ty < 0) {ERR("Type: " << ty);}; }
+                                            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _contraFlow(cf) { if(ty < 0) {ERR("Type: " << ty);}; }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
@@ -95,43 +95,46 @@ public:
 
     template<class EdgeT>
     EdgeBasedEdge(const EdgeT & myEdge ) :
-        _source(myEdge.source),
-        _target(myEdge.target),
-        _edgeID(myEdge.data.via),
-//        _nameID1(myEdge.data.nameID),
-        _weight(myEdge.data.distance),
-        _forward(myEdge.data.forward),
-        _backward(myEdge.data.backward)//,
-//        _turnInstruction(myEdge.data.turnInstruction)
-                { }
+        m_source(myEdge.source),
+        m_target(myEdge.target),
+        m_edgeID(myEdge.data.via),
+        m_weight(myEdge.data.distance),
+        m_forward(myEdge.data.forward),
+        m_backward(myEdge.data.backward)
+    { }
 
     /** Default constructor. target and weight are set to 0.*/
     EdgeBasedEdge() :
-        _source(0), _target(0), _edgeID(0), _weight(0), _forward(false), _backward(false) { }
+        m_source(0),
+        m_target(0),
+        m_edgeID(0),
+        m_weight(0),
+        m_forward(false),
+        m_backward(false)
+    { }
 
-    explicit EdgeBasedEdge(NodeID s, NodeID t, NodeID v, EdgeWeight w, bool f, bool b) :
-            _source(s), _target(t), _edgeID(v), _weight(w), _forward(f), _backward(b){}
+    explicit EdgeBasedEdge(const NodeID s, const NodeID t, const NodeID v, const EdgeWeight w, const bool f, const bool b) :
+        m_source(s),
+        m_target(t),
+        m_edgeID(v),
+        m_weight(w),
+        m_forward(f),
+        m_backward(b)
+    {}
 
-    NodeID target() const {return _target; }
-    NodeID source() const {return _source; }
-    EdgeWeight weight() const {return _weight; }
-    NodeID id() const { return _edgeID; }
-    bool isBackward() const { return _backward; }
-    bool isForward() const { return _forward; }
-
-    NodeID _source;
-    NodeID _target;
-    NodeID _edgeID;
-    EdgeWeight _weight:30;
-    bool _forward:1;
-    bool _backward:1;
-};
-
-struct MinimalEdgeData {
-public:
-    EdgeWeight distance;
-    bool forward;
-    bool backward;
+    NodeID target() const {return m_target; }
+    NodeID source() const {return m_source; }
+    EdgeWeight weight() const {return m_weight; }
+    NodeID id() const { return m_edgeID; }
+    bool isBackward() const { return m_backward; }
+    bool isForward() const { return m_forward; }
+private:
+    NodeID m_source;
+    NodeID m_target;
+    NodeID m_edgeID;
+    EdgeWeight m_weight:30;
+    bool m_forward:1;
+    bool m_backward:1;
 };
 
 typedef NodeBasedEdge ImportEdge;
