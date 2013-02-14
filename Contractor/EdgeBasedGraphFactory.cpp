@@ -234,6 +234,9 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     std::vector<NodeID>().swap(vectorOfComponentSizes);
     std::vector<NodeID>().swap(componentsIndex);
 
+    std::vector<OriginalEdgeData> original_edge_data_vector;
+    original_edge_data_vector.reserve(10000);
+
     //Loop over all turns and generate new set of edges.
     //Three nested loop look super-linear, but we are dealing with a linear number of turns only.
     for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
@@ -271,8 +274,9 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                             distance += speedProfile.trafficSignalPenalty;
                         }
                         TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
-                        if(turnInstruction == TurnInstructions.UTurn)
+                        if(TurnInstructions.UTurn == turnInstruction) {
                             distance += speedProfile.uTurnPenalty;
+                        }
 //                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
 //                            distance += TurnInstructions.AccessRestrictionPenalty;
 //                            turnInstruction |= TurnInstructions.AccessRestrictionFlag;
@@ -282,17 +286,16 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
                         assert(edgeData1.edgeBasedNodeID != edgeData2.edgeBasedNodeID);
-                        if(originalEdgeData.size() == originalEdgeData.capacity()-3) {
-                            originalEdgeData.reserve(originalEdgeData.size()*1.2);
-                        }
                         OriginalEdgeData oed(v,edgeData2.nameID, turnInstruction);
-                        EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
-                        originalEdgeData.push_back(oed);
-                        if(originalEdgeData.size() > 100000) {
-                            originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
-                            originalEdgeData.clear();
-                        }
+                        original_edge_data_vector.push_back(oed);
                         ++numberOfOriginalEdges;
+
+                        if(original_edge_data_vector.size() > 100000) {
+                            originalEdgeDataOutFile.write((char*)&(original_edge_data_vector[0]), original_edge_data_vector.size()*sizeof(OriginalEdgeData));
+                            original_edge_data_vector.clear();
+                        }
+
+                        EdgeBasedEdge newEdge(edgeData1.edgeBasedNodeID, edgeData2.edgeBasedNodeID, edgeBasedEdges.size(), distance, true, false );
                         edgeBasedEdges.push_back(newEdge);
                     } else {
                         ++numberOfSkippedTurns;
@@ -302,7 +305,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
         }
         p.printIncrement();
     }
-    originalEdgeDataOutFile.write((char*)&(originalEdgeData[0]), originalEdgeData.size()*sizeof(OriginalEdgeData));
+    originalEdgeDataOutFile.write((char*)&(original_edge_data_vector[0]), original_edge_data_vector.size()*sizeof(OriginalEdgeData));
     originalEdgeDataOutFile.seekp(std::ios::beg);
     originalEdgeDataOutFile.write((char*)&numberOfOriginalEdges, sizeof(unsigned));
     originalEdgeDataOutFile.close();

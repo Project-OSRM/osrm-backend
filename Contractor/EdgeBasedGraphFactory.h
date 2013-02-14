@@ -82,13 +82,13 @@ private:
         unsigned edgeBasedNodeID;
         unsigned nameID;
         short type;
-        bool isAccessRestricted;
+        bool isAccessRestricted:1;
         bool shortcut:1;
         bool forward:1;
         bool backward:1;
         bool roundabout:1;
         bool ignoreInGrid:1;
-        bool contraFlow;
+        bool contraFlow:1;
     };
 
     struct _EdgeBasedEdgeData {
@@ -118,7 +118,6 @@ private:
 
     DeallocatingVector<EdgeBasedEdge>   edgeBasedEdges;
     DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
-    std::vector<OriginalEdgeData>       originalEdgeData;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
