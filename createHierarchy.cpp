@@ -58,6 +58,7 @@ std::vector<NodeInfo> internalToExternalNodeMapping;
 std::vector<_Restriction> inputRestrictions;
 std::vector<NodeID> bollardNodes;
 std::vector<NodeID> trafficLightNodes;
+std::vector<ImportEdge> edgeList;
 
 int main (int argc, char *argv[]) {
     if(argc < 3) {
@@ -133,8 +134,6 @@ int main (int argc, char *argv[]) {
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
 
-
-    std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
     INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
@@ -156,6 +155,9 @@ int main (int argc, char *argv[]) {
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
+    DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
+    edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
+    delete edgeBasedGraphFactory;
 
     /***
      * Writing info on original (node-based) nodes
@@ -167,12 +169,6 @@ int main (int argc, char *argv[]) {
     mapOutFile.close();
     std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
 
-    /***
-     * Writing info on original (node-based) edges
-     */
-    DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
-    edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
-    delete edgeBasedGraphFactory;
     double expansionHasFinishedTime = get_timestamp() - startupTime;
 
     /***
@@ -213,7 +209,7 @@ int main (int argc, char *argv[]) {
     INFO("Serializing compacted graph");
     std::ofstream edgeOutFile(graphOut.c_str(), std::ios::binary);
 
-    BOOST_FOREACH(QueryEdge & edge, contractedEdgeList) {
+    BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
         if(edge.source > numberOfNodes) {
             numberOfNodes = edge.source;
         }
