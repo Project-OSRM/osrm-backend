@@ -263,12 +263,14 @@ function way_function (way, numberOfNodesInWay)
 	-- pushing bikes
 	if bicycle_speeds[highway] or pedestrian_speeds[highway] then
 	    if foot ~= 'no' then
-        	if way.direction == Way.oneway then
-        	    way.backward_speed = walking_speed
-            elseif way.direction == Way.opposite then
-                way.backward_speed = walking_speed
-                way.speed = way.speed
-        	end
+	        if junction ~= "roundabout" then
+            	if way.direction == Way.oneway then
+            	    way.backward_speed = walking_speed
+                elseif way.direction == Way.opposite then
+                    way.backward_speed = walking_speed
+                    way.speed = way.speed
+            	end
+            end
         end
         if way.backward_speed == way.speed then
             -- TODO: no way yet to mark a way as pedestrian mode if forward/backward speeds are equal

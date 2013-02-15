@@ -79,3 +79,9 @@ Feature: Bike - Accessability of different way types
  		 | construction |      |         |       |
  		 | construction | yes  |         |       |
  		 | construction |      | yes     |       |
+        
+    @roundabout
+  	Scenario: Bike - Don't push bikes against oneway flow on roundabouts
+  	 	Then routability should be
+  		 | junction   | forw | backw |
+  		 | roundabout | x    |       |
