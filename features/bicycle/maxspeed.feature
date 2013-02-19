@@ -7,35 +7,35 @@ Feature: Bike - Max speed restrictions
 	Scenario: Bicycle - Respect maxspeeds when lower that way type speed
     	Then routability should be
     	 | highway     | maxspeed | bothw    |
-    	 | residential |          | 40s ~10% |
+    	 | residential |          | 49s ~10% |
     	 | residential | 10       | 72s ~10% |
 
 	Scenario: Bicycle - Ignore maxspeed when higher than way speed
     	Then routability should be
     	 | highway     | maxspeed | bothw    |
-    	 | residential |          | 40s ~10% |
-    	 | residential | 80       | 40s ~10% |
+    	 | residential |          | 49s ~10% |
+    	 | residential | 80       | 49s ~10% |
     
     @todo
   	Scenario: Bicycle - Maxspeed formats
  		Then routability should be
  		 | highway     | maxspeed  | bothw     |
- 		 | residential |           | 40s ~10%  |
+ 		 | residential |           | 49s ~10%  |
  		 | residential | 5         | 144s ~10% |
  		 | residential | 5mph      | 90s ~10%  |
  		 | residential | 5 mph     | 90s ~10%  |
  		 | residential | 5MPH      | 90s ~10%  |
  		 | residential | 5 MPH     | 90s ~10%  |
- 		 | trunk       | 5unknown  | 40s ~10%  |
- 		 | trunk       | 5 unknown | 40s ~10%  |
+ 		 | trunk       | 5unknown  | 49s ~10%  |
+ 		 | trunk       | 5 unknown | 49s ~10%  |
 
     @todo
    	Scenario: Bicycle - Maxspeed special tags
   		Then routability should be
   		 | highway     | maxspeed | bothw    |
-  		 | residential |          | 40s ~10% |
-  		 | residential | none     | 40s ~10% |
-  		 | residential | signals  | 40s ~10% |
+  		 | residential |          | 49s ~10% |
+  		 | residential | none     | 49s ~10% |
+  		 | residential | signals  | 49s ~10% |
 
 	Scenario: Bike - Do not use maxspeed when higher that way type speed
 		Given the node map
@@ -48,13 +48,13 @@ Feature: Bike - Max speed restrictions
 
 		When I route I should get
 		 | from | to | route | time    |
-		 | a    | b  | ab    | 20s ~5% |
-		 | b    | c  | bc    | 20s ~5% |
+		 | a    | b  | ab    | 24s ~5% |
+		 | b    | c  | bc    | 24s ~5% |
 
      Scenario: Bike - Forward/backward maxspeed
         Given the shortcuts
  		 | key   | value    |
- 		 | bike  | 43s ~10% |
+ 		 | bike  | 49s ~10% |
  		 | run   | 73s ~10% |
  		 | walk  | 145s ~10% |
  		 | snail | 720s ~10% |

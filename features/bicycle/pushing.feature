@@ -5,8 +5,8 @@ Feature: Bike - Accessability of different way types
 		Given the profile "bicycle"
         Given the shortcuts
 		 | key  | value     |
-		 | bike | 40s ~20%  |
-		 | foot | 180s ~20% |
+		 | bike | 49s ~20%  |
+		 | foot | 121s ~20% |
 
 	Scenario: Bike - Pushing bikes on pedestrian-only ways
 	 	Then routability should be
