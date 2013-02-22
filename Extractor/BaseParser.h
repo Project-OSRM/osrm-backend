@@ -39,14 +39,14 @@ public:
     virtual bool ReadHeader() = 0;
     virtual bool Parse() = 0;
 
-    inline virtual void ParseNodeInLua(ImportNode& n, lua_State* luaStateForThread);
-    inline virtual void ParseWayInLua(ExtractionWay& n, lua_State* luaStateForThread);
+    virtual void ParseNodeInLua(ImportNode& n, lua_State* luaStateForThread);
+    virtual void ParseWayInLua(ExtractionWay& n, lua_State* luaStateForThread);
     virtual void report_errors(lua_State *L, const int status) const;
 
 protected:   
     virtual void ReadUseRestrictionsSetting();
     virtual void ReadRestrictionExceptions();
-    inline virtual bool ShouldIgnoreRestriction(const std::string& except_tag_string) const;
+    virtual bool ShouldIgnoreRestriction(const std::string& except_tag_string) const;
     
     ExtractorCallbacks* externalMemory;
     ScriptingEnvironment& scriptingEnvironment;

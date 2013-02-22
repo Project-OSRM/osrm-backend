@@ -71,7 +71,7 @@ void BaseParser::report_errors(lua_State *L, const int status) const {
     }
 }
 
-inline void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) {
+void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) {
     try {
         luabind::call_function<int>( localLuaState, "node_function", boost::ref(n) );
     } catch (const luabind::error &er) {
@@ -81,7 +81,7 @@ inline void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) 
     }
 }
 
-inline void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* localLuaState) {
+void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* localLuaState) {
     try {
         luabind::call_function<int>( localLuaState, "way_function", boost::ref(w), w.path.size() );
     } catch (const luabind::error &er) {
@@ -91,7 +91,7 @@ inline void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* localLuaState
     }
 }
 
-inline bool BaseParser::ShouldIgnoreRestriction(const std::string& except_tag_string) const {
+bool BaseParser::ShouldIgnoreRestriction(const std::string& except_tag_string) const {
     //should this restriction be ignored? yes if there's an overlap between:
     //a) the list of modes in the except tag of the restriction (except_tag_string), ex: except=bus;bicycle
     //b) the lua profile defines a hierachy of modes, ex: [access, vehicle, bicycle]
