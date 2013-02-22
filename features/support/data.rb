@@ -205,14 +205,15 @@ def write_timestamp
 end
 
 def reprocess
+  use_pbf = true
   Dir.chdir TEST_FOLDER do
     write_osm
     write_timestamp
-    convert_osm_to_pbf
+    convert_osm_to_pbf if use_pbf
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
+      unless system "../osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end

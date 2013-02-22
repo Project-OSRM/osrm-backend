@@ -29,23 +29,30 @@ extern "C" {
 
 #include <boost/noncopyable.hpp>
 
+#include "ExtractorCallbacks.h"
 #include "ScriptingEnvironment.h"
 
-template<class ExternalMemoryT, typename NodeT, typename RestrictionT, typename WayT>
 class BaseParser : boost::noncopyable {
 public:
+    BaseParser(ExtractorCallbacks* ec, ScriptingEnvironment& se);
     virtual ~BaseParser() {}
-    virtual bool Init() = 0;
-    virtual void RegisterCallbacks(ExternalMemoryT * externalMemory) = 0;
-    virtual void RegisterScriptingEnvironment(ScriptingEnvironment & _se) = 0;
+    virtual bool ReadHeader() = 0;
     virtual bool Parse() = 0;
 
-    void report_errors(lua_State *L, int status) {
-        if ( status!=0 ) {
-            std::cerr << "-- " << lua_tostring(L, -1) << std::endl;
-            lua_pop(L, 1); // remove error message
-        }
-    }
+    inline virtual void ParseNodeInLua(ImportNode& n, lua_State* luaStateForThread);
+    inline virtual void ParseWayInLua(ExtractionWay& n, lua_State* luaStateForThread);
+    virtual void report_errors(lua_State *L, const int status) const;
+
+protected:   
+    virtual void ReadUseRestrictionsSetting();
+    virtual void ReadRestrictionExceptions();
+    inline virtual bool ShouldIgnoreRestriction(const std::string& except_tag_string) const;
+    
+    ExtractorCallbacks* externalMemory;
+    ScriptingEnvironment& scriptingEnvironment;
+    lua_State* luaState;
+    std::vector<std::string> restriction_exceptions;
+    bool use_turn_restrictions;
 
 };
 

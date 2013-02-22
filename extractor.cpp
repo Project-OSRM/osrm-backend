@@ -94,20 +94,20 @@ int main (int argc, char *argv[]) {
 
     stringMap[""] = 0;
     extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
-    BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, ExtractionWay> * parser;
+    BaseParser* parser;
     if(isPBF) {
-        parser = new PBFParser(argv[1]);
+        parser = new PBFParser(argv[1], extractCallBacks, scriptingEnvironment);
     } else {
-        parser = new XMLParser(argv[1]);
+        parser = new XMLParser(argv[1], extractCallBacks, scriptingEnvironment);
     }
-    parser->RegisterCallbacks(extractCallBacks);
-    parser->RegisterScriptingEnvironment(scriptingEnvironment);
-
-    if(!parser->Init())
+    
+    if(!parser->ReadHeader()) {
         ERR("Parser not initialized!");
+    }
+    INFO("Parsing in progress..");
     double time = get_timestamp();
     parser->Parse();
-    INFO("parsing finished after " << get_timestamp() - time << " seconds");
+    INFO("Parsing finished after " << get_timestamp() - time << " seconds");
 
     externalMemory.PrepareData(outputFileName, restrictionsFileName, amountOfRAM);
 

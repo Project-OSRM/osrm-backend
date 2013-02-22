@@ -25,28 +25,18 @@
 
 #include "../typedefs.h"
 #include "BaseParser.h"
-#include "ExtractorCallbacks.h"
-#include "ScriptingEnvironment.h"
 
-class XMLParser : public BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, ExtractionWay> {
+class XMLParser : public BaseParser {
 public:
-    XMLParser(const char * filename);
-    virtual ~XMLParser();
-    void RegisterCallbacks(ExtractorCallbacks * em);
-    void RegisterScriptingEnvironment(ScriptingEnvironment & _se);
-    bool Init();
+    XMLParser(const char* filename, ExtractorCallbacks* ec, ScriptingEnvironment& se);
+    bool ReadHeader();
     bool Parse();
     
 private:
     _RawRestrictionContainer _ReadXMLRestriction();
     ExtractionWay _ReadXMLWay();
-    ImportNode _ReadXMLNode( );
-    /* Input Reader */
+    ImportNode _ReadXMLNode();
     xmlTextReaderPtr inputReader;
-    ExtractorCallbacks * externalMemory;
-    lua_State *myLuaState;
-
-    std::vector<std::string> restriction_exceptions_vector;
 };
 
 #endif /* XMLPARSER_H_ */
