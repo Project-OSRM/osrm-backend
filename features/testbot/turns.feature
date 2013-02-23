@@ -97,13 +97,14 @@ Feature: Turn directions/codes
 		 | g | c | xg,xc | head,right,destination        |
 		 | g | e | xg,xe | head,sharp_right,destination  |
 	
+	@todo
 	Scenario: Skadestuevej, København
 	https://github.com/DennisOSRM/Project-OSRM/issues/532
 		Given the node locations
 		 | node | lat      | lon      |
-		 | a    | 55.68679 | 12.52360 |
-		 | b    | 55.68745 | 12.52407 |
-		 | c    | 55.68720 | 12.52509 |
+		 | a    | 55.68740 | 12.52430 |
+		 | b    | 55.68745 | 12.52409 |
+		 | c    | 55.68711 | 12.52383 |
 
 		And the ways
 		 | nodes |
@@ -111,5 +112,5 @@ Feature: Turn directions/codes
 		 | bc    |
 
 		When I route I should get
-		 | from | to | route | turns                  |
-		 | a    | c  | ab,bc | head,right,destination |
+		 | from | to | route | turns                 |
+		 | a    | c  | ab,bc | head,left,destination |
