@@ -161,11 +161,7 @@ function way_function (way, numberOfNodesInWay)
 	local service	= way.tags:Find("service")
 	local area = way.tags:Find("area")
 	local foot = way.tags:Find("foot")
-    
-	if name ~= "Vej 6" and name ~= "Skadestuevejen" then
-        return 0
-    end
-    
+
 	-- name	
 	if "" ~= ref then
 		way.name = ref

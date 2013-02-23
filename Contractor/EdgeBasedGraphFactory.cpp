@@ -387,9 +387,9 @@ double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, cons
     const double v2x = B.lon - C.lon;
     const double v2y = B.lat - C.lat;
     const double latC = (C.lat/100000.)*M_PI/180.;
-    const double scale = cos(latC);                           //scale by length of longitude at latitude latC
+    const double scale = cos(latC);                           //scale by length of longitude at latitude C
     const double a2 = atan2(v2y,v2x*scale)*180/M_PI;
-    const double a1 = atan2(v1y,v1x*scale)*180/M_PI;   
+    const double a1 = atan2(v1y,v1x*scale)*180/M_PI;
     const double angle = a2-a1;
 
     if(angle < 0) {
