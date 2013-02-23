@@ -133,7 +133,10 @@ int main (int argc, char *argv[]) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
-
+    
+    speedProfile.has_turn_function = lua_function_exists( myLuaState, "turn_function" );
+    
+    std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
     INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
@@ -148,7 +151,7 @@ int main (int argc, char *argv[]) {
     INFO("Generating edge-expanded graph representation");
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
     std::vector<ImportEdge>().swap(edgeList);
-    edgeBasedGraphFactory->Run(edgeOut.c_str());
+    edgeBasedGraphFactory->Run(edgeOut.c_str(), myLuaState);
     std::vector<_Restriction>().swap(inputRestrictions);
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);

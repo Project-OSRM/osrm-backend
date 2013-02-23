@@ -150,7 +150,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     edgeBasedNodes.push_back(currentNode);
 }
 
-void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
+void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State *myLuaState) {
     Percent p(_nodeBasedGraph->GetNumberOfNodes());
     int numberOfSkippedTurns(0);
     int nodeBasedEdgeCounter(0);
@@ -273,15 +273,16 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += speedProfile.trafficSignalPenalty;
                         }
-                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
-                        if(TurnInstructions.UTurn == turnInstruction) {
+                        unsigned penalty = 0;
+                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w, penalty, myLuaState);
+                        if(turnInstruction == TurnInstructions.UTurn)
                             distance += speedProfile.uTurnPenalty;
-                        }
 //                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
 //                            distance += TurnInstructions.AccessRestrictionPenalty;
 //                            turnInstruction |= TurnInstructions.AccessRestrictionFlag;
 //                        }
-
+                        distance += penalty;
+						
 
                         //distance += heightPenalty;
                         //distance += ComputeTurnPenalty(u, v, w);
@@ -325,7 +326,21 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename) {
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
 
-TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const {
+TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const {
+    double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+	
+    if( speedProfile.has_turn_function ) {
+    	try {
+            //call lua profile to compute turn penalty
+            penalty = luabind::call_function<int>( myLuaState, "turn_function", 180-angle );
+        } catch (const luabind::error &er) {
+            std::cerr << er.what() << std::endl;
+            //TODO handle lua errors
+        }
+    } else {
+        penalty = 0;
+    }
+    
     if(u == w) {
         return TurnInstructions.UTurn;
     }
@@ -371,7 +386,6 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
         return TurnInstructions.NoTurn;
     }
 
-    double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
     return TurnInstructions.GetTurnDirectionOfInstruction(angle);
 }
 
