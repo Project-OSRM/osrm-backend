@@ -63,11 +63,13 @@ bool XMLParser::Parse() {
 			if(!externalMemory->wayFunction(way))
 				std::cerr << "[PBFParser] way not parsed" << std::endl;
 		}
-		if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
-			_RawRestrictionContainer r = _ReadXMLRestriction();
-			if(r.fromWay != UINT_MAX) {
-				if(!externalMemory->restrictionFunction(r)) {
-					std::cerr << "[XMLParser] restriction not parsed" << std::endl;
+		if( use_turn_restrictions ) {
+			if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
+				_RawRestrictionContainer r = _ReadXMLRestriction();
+				if(r.fromWay != UINT_MAX) {
+					if(!externalMemory->restrictionFunction(r)) {
+						std::cerr << "[XMLParser] restriction not parsed" << std::endl;
+					}
 				}
 			}
 		}
