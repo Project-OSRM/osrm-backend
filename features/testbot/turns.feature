@@ -96,8 +96,8 @@ Feature: Turn directions/codes
 		 | g | a | xg,xa | head,slight_right,destination |
 		 | g | c | xg,xc | head,right,destination        |
 		 | g | e | xg,xe | head,sharp_right,destination  |
-	@xx
-	Scenario: Skadestuevej, København
+	
+	Scenario: Turn instructions at high latitude 
 	https://github.com/DennisOSRM/Project-OSRM/issues/532
 		Given the node locations
 		 | node | lat      | lon      |
@@ -112,4 +112,5 @@ Feature: Turn directions/codes
 
 		When I route I should get
 		 | from | to | route | turns                  |
-		 | a    | c  | ab,bc | head,left,destination |
+		 | a    | c  | ab,bc | head,left,destination  |
+		 | c    | a  | bc,ab | head,right,destination |
