@@ -382,13 +382,32 @@ unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
 template<class CoordinateT>
 double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const {
-    const int v1x = A.lon - C.lon;
-    const int v1y = A.lat - C.lat;
-    const int v2x = B.lon - C.lon;
-    const int v2y = B.lat - C.lat;
-
-    double angle = (atan2((double)v2y,v2x) - atan2((double)v1y,v1x) )*180/M_PI;
-    while(angle < 0)
-        angle += 360;
-    return angle;
+    double deltaLonCA,deltaLonBC,latA,latB,latC,x,y,a1,a2;
+    
+    latA = (A.lat/100000.)*M_PI/180;
+    latB = (B.lat/100000.)*M_PI/180;
+    latC = (C.lat/100000.)*M_PI/180;
+    deltaLonCA = (C.lon/100000. - A.lon/100000.)*M_PI/180;
+    deltaLonBC = (B.lon/100000. - C.lon/100000.)*M_PI/180;
+    
+    y = sin(deltaLonCA) * cos(latC);
+    x = cos(latA)*sin(latC) - sin(latA)*cos(latC)*cos(deltaLonCA);
+    a1 = atan2(y,x)*180/M_PI;
+    
+    y = sin(deltaLonBC) * cos(latB);
+    x = cos(latC)*sin(latB) - sin(latC)*cos(latB)*cos(deltaLonBC);
+    a2 = atan2(y,x)*180/M_PI;
+    const double angle = a2-a1;
+    
+    //const double v1x = A.lon - C.lon;
+    //const double v1y = A.lat - C.lat;
+    //const double v2x = B.lon - C.lon;
+    //const double v2y = B.lat - C.lat;
+    //const double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
+    
+    if(angle < 0) {
+        return angle + 360;
+    } else {
+        return angle;
+    }
 }
