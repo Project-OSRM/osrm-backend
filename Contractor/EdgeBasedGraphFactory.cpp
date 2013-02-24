@@ -19,6 +19,8 @@
  */
 
 #include "EdgeBasedGraphFactory.h"
+#include "../DataStructures/MercatorUtil.h"
+#include "../Util/Geometry.h"
 
 template<>
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : speedProfile(sp), inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
@@ -382,16 +384,30 @@ unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
 // get angle of line segment AC -> CB
 template<class CoordinateT>
 double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const {
-    const double v1x = A.lon - C.lon;
-    const double v1y = A.lat - C.lat;
-    const double v2x = B.lon - C.lon;
-    const double v2y = B.lat - C.lat;
-    const double latC = (C.lat/100000.)*M_PI/180.;
-    const double scale = cos(latC);                           //scale by length of longitude at latitude C
-    const double a2 = atan2(v2y,v2x*scale)*180/M_PI;
-    const double a1 = atan2(v1y,v1x*scale)*180/M_PI;
-    const double angle = a2-a1;
-
+    const double latA = int2rad(A.lat);
+    const double latB = int2rad(B.lat);
+    const double latC = int2rad(C.lat);
+    
+    const double lonA = int2rad(A.lon);
+    const double lonB = int2rad(B.lon);
+    const double lonC = int2rad(C.lon);
+    
+    const double v1x = lonA - lonC;
+    const double v2x = lonB - lonC;
+    
+    // mercator projection: y=log(tan( pi/4 + lat/2 ))
+    // since log(a)-log(b) = log(a/b), it follows that:
+    // log(tan( M_PI/4 + latA/2 )) - log(tan( M_PI/4 + latC/2 )) =>
+    // log(tan( M_PI/4 + latA/2 )) / tan( M_PI/4 + latC/2 ))
+    // note that latC cannot be at a pole, lest we get a division by zero.
+    
+    const double v1y = log(tan(M_PI/4 + latA/2)/tan(M_PI/4 + latC/2)); 
+    const double v2y = log(tan(M_PI/4 + latB/2)/tan(M_PI/4 + latC/2));
+    
+    const double a2 = atan2(v2y,v2x);
+	const double a1 = atan2(v1y,v1x);
+	const double angle = rad2deg(a2-a1);	
+	
     if(angle < 0) {
         return angle + 360;
     } else {
