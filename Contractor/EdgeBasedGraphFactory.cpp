@@ -387,27 +387,27 @@ double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, cons
     const double latA = int2rad(A.lat);
     const double latB = int2rad(B.lat);
     const double latC = int2rad(C.lat);
-    
+
     const double lonA = int2rad(A.lon);
     const double lonB = int2rad(B.lon);
     const double lonC = int2rad(C.lon);
-    
+
     const double v1x = lonA - lonC;
     const double v2x = lonB - lonC;
-    
+
     // mercator projection: y=log(tan( pi/4 + lat/2 ))
     // since log(a)-log(b) = log(a/b), it follows that:
     // log(tan( M_PI/4 + latA/2 )) - log(tan( M_PI/4 + latC/2 )) =>
     // log(tan( M_PI/4 + latA/2 )) / tan( M_PI/4 + latC/2 ))
     // note that latC cannot be at a pole, lest we get a division by zero.
-    
+
     const double v1y = log(tan(M_PI/4 + latA/2)/tan(M_PI/4 + latC/2)); 
     const double v2y = log(tan(M_PI/4 + latB/2)/tan(M_PI/4 + latC/2));
-    
+
     const double a2 = atan2(v2y,v2x);
-	const double a1 = atan2(v1y,v1x);
-	const double angle = rad2deg(a2-a1);	
-	
+    const double a1 = atan2(v1y,v1x);
+    const double angle = rad2deg(a2-a1);
+
     if(angle < 0) {
         return angle + 360;
     } else {
