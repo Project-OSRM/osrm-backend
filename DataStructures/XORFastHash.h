@@ -46,9 +46,9 @@ class XORFastHash { //65k entries
     std::vector<unsigned short> table2;
 public:
     XORFastHash() {
-        table1.resize(1 << 16);
-        table2.resize(1 << 16);
-        for(unsigned i = 0; i < (1 << 16); ++i) {
+        table1.resize(2 << 16);
+        table2.resize(2 << 16);
+        for(unsigned i = 0; i < (2 << 16); ++i) {
             table1[i] = i; table2[i] = i;
         }
         std::random_shuffle(table1.begin(), table1.end());
