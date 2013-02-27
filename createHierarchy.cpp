@@ -134,7 +134,7 @@ int main (int argc, char *argv[]) {
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
     
-    speedProfile.has_turn_function = lua_function_exists( myLuaState, "turn_function" );
+    speedProfile.has_turn_penalty_function = lua_function_exists( myLuaState, "turn_function" );
     
     std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);

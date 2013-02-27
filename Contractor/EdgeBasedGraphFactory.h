@@ -79,10 +79,10 @@ public:
     };
 
     struct SpeedProfileProperties{
-        SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0), has_turn_function(false) {}
+        SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0), has_turn_penalty_function(false) {}
         int trafficSignalPenalty;
         int uTurnPenalty;
-        bool has_turn_function;
+        bool has_turn_penalty_function;
     } speedProfile;
 
 private:

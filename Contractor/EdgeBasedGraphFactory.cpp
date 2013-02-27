@@ -327,9 +327,9 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
 }
 
 TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const {
-    double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+    const double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 	
-    if( speedProfile.has_turn_function ) {
+    if( speedProfile.has_turn_penalty_function ) {
     	try {
             //call lua profile to compute turn penalty
             penalty = luabind::call_function<int>( myLuaState, "turn_function", 180-angle );
@@ -364,18 +364,19 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
         if( 1 == (_nodeBasedGraph->EndEdges(v) - _nodeBasedGraph->BeginEdges(v)) ) {
             //No turn possible.
             return TurnInstructions.NoTurn;
-        } else {
-            return TurnInstructions.StayOnRoundAbout;
         }
+        return TurnInstructions.StayOnRoundAbout;
     }
     //Does turn start or end on roundabout?
     if(data1.roundabout || data2.roundabout) {
         //We are entering the roundabout
-        if( (!data1.roundabout) && data2.roundabout)
+        if( (!data1.roundabout) && data2.roundabout) {
             return TurnInstructions.EnterRoundAbout;
+        }
         //We are leaving the roundabout
-        else if(data1.roundabout && (!data2.roundabout) )
+        if(data1.roundabout && (!data2.roundabout) ) {
             return TurnInstructions.LeaveRoundAbout;
+        }
     }
 
     //If street names stay the same and if we are certain that it is not a roundabout, we skip it.
