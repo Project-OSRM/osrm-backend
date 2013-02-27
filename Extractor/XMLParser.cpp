@@ -52,22 +52,23 @@ bool XMLParser::Parse() {
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
 			ImportNode n = _ReadXMLNode();
 			ParseNodeInLua( n, luaState );
-			
-			if(!externalMemory->nodeFunction(n))
-				std::cerr << "[XMLParser] dense node not parsed" << std::endl;
+			extractor_callbacks->nodeFunction(n);
+//			if(!extractor_callbacks->nodeFunction(n))
+//				std::cerr << "[XMLParser] dense node not parsed" << std::endl;
 		}
 
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
 			ExtractionWay way = _ReadXMLWay( );
 			ParseWayInLua( way, luaState );
-			if(!externalMemory->wayFunction(way))
-				std::cerr << "[PBFParser] way not parsed" << std::endl;
+			extractor_callbacks->wayFunction(way);
+//			if(!extractor_callbacks->wayFunction(way))
+//				std::cerr << "[PBFParser] way not parsed" << std::endl;
 		}
 		if( use_turn_restrictions ) {
 			if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
 				_RawRestrictionContainer r = _ReadXMLRestriction();
 				if(r.fromWay != UINT_MAX) {
-					if(!externalMemory->restrictionFunction(r)) {
+					if(!extractor_callbacks->restrictionFunction(r)) {
 						std::cerr << "[XMLParser] restriction not parsed" << std::endl;
 					}
 				}

@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BaseParser.h"
 
 BaseParser::BaseParser(ExtractorCallbacks* ec, ScriptingEnvironment& se) :
-externalMemory(ec), scriptingEnvironment(se), luaState(NULL), use_turn_restrictions(true) {
+extractor_callbacks(ec), scriptingEnvironment(se), luaState(NULL), use_turn_restrictions(true) {
     luaState = se.getLuaStateForThreadID(0);
     ReadUseRestrictionsSetting();
     ReadRestrictionExceptions();
@@ -73,7 +73,7 @@ void BaseParser::report_errors(lua_State *L, const int status) const {
 
 void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) {
     try {
-        luabind::call_function<int>( localLuaState, "node_function", boost::ref(n) );
+        luabind::call_function<void>( localLuaState, "node_function", boost::ref(n) );
     } catch (const luabind::error &er) {
         lua_State* Ler=er.state();
         report_errors(Ler, -1);
@@ -82,8 +82,11 @@ void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) {
 }
 
 void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* localLuaState) {
+    if(2 > w.path.size()) {
+        return;
+    }
     try {
-        luabind::call_function<int>( localLuaState, "way_function", boost::ref(w), w.path.size() );
+        luabind::call_function<void>( localLuaState, "way_function", boost::ref(w) );
     } catch (const luabind::error &er) {
         lua_State* Ler=er.state();
         report_errors(Ler, -1);

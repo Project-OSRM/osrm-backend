@@ -45,12 +45,12 @@ public:
     ~ExtractorCallbacks();
 
     /** warning: caller needs to take care of synchronization! */
-    bool nodeFunction(_Node &n);
+    void nodeFunction(const _Node &n);
 
-    bool restrictionFunction(_RawRestrictionContainer &r);
+    bool restrictionFunction(const _RawRestrictionContainer &r);
 
     /** warning: caller needs to take care of synchronization! */
-    bool wayFunction(ExtractionWay &w);
+    void wayFunction(ExtractionWay &w);
 
 };
 

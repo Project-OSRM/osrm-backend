@@ -89,13 +89,7 @@ function node_function (node)
 end
 
 
-function way_function (way, numberOfNodesInWay)
-
-  -- A way must have two nodes or more
-  if(numberOfNodesInWay < 2) then
-    return 0;
-  end
-  
+function way_function (way)
   -- First, get the properties of each way that we come across
     local highway = way.tags:Find("highway")
     local name = way.tags:Find("name")

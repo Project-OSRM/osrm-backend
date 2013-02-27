@@ -48,7 +48,7 @@ protected:
     virtual void ReadRestrictionExceptions();
     virtual bool ShouldIgnoreRestriction(const std::string& except_tag_string) const;
     
-    ExtractorCallbacks* externalMemory;
+    ExtractorCallbacks* extractor_callbacks;
     ScriptingEnvironment& scriptingEnvironment;
     lua_State* luaState;
     std::vector<std::string> restriction_exceptions;
