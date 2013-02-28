@@ -97,20 +97,27 @@ Feature: Turn directions/codes
 		 | g | c | xg,xc | head,right,destination        |
 		 | g | e | xg,xe | head,sharp_right,destination  |
 	
-	@todo
-	Scenario: Skadestuevej, København
+	Scenario: Turn instructions at high latitude
 	https://github.com/DennisOSRM/Project-OSRM/issues/532
 		Given the node locations
 		 | node | lat      | lon      |
 		 | a    | 55.68740 | 12.52430 |
 		 | b    | 55.68745 | 12.52409 |
 		 | c    | 55.68711 | 12.52383 |
+		 | x    | -55.68740 | 12.52430 |
+		 | y    | -55.68745 | 12.52409 |
+		 | z    | -55.68711 | 12.52383 |
 
 		And the ways
 		 | nodes |
 		 | ab    |
 		 | bc    |
+		 | xy    |
+		 | yz    |
 
 		When I route I should get
-		 | from | to | route | turns                 |
-		 | a    | c  | ab,bc | head,left,destination |
+		 | from | to | route | turns                  |
+		 | a    | c  | ab,bc | head,left,destination  |
+		 | c    | a  | bc,ab | head,right,destination |
+		 | x    | z  | xy,yz | head,right,destination  |
+		 | z    | x  | yz,xy | head,left,destination |

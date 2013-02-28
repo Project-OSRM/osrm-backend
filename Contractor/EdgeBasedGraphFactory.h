@@ -45,6 +45,7 @@
 #include "../Extractor/ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/MercatorUtil.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
