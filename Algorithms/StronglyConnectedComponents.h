@@ -52,21 +52,12 @@ private:
         unsigned edgeBasedNodeID;
         unsigned nameID:31;
         bool shortcut:1;
+        short type;
+        bool isAccessRestricted:1;
         bool forward:1;
         bool backward:1;
         bool roundabout:1;
         bool ignoreInGrid:1;
-        short type;
-        bool isAccessRestricted;
-    };
-
-    struct _EdgeBasedEdgeData {
-        int distance;
-        unsigned via;
-        unsigned nameID;
-        bool forward;
-        bool backward;
-        TurnInstruction turnInstruction;
     };
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;

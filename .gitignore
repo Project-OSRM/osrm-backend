@@ -54,23 +54,23 @@ stxxl.errlog
 
 # compiled protobuffers #
 #########################
-DataStructures/pbf-proto/*.pb.h
-DataStructures/pbf-proto/*.pb.cc
+/DataStructures/pbf-proto/*.pb.h
+/DataStructures/pbf-proto/*.pb.cc
 
 # External Libs #
 #################
-lib/
-win/lib
+/lib/
+/win/lib
 
 # Visual Studio Temp + build Files #
 ####################################
-win/*.user
-win/*.ncb
-win/*.suo
-win/Debug/
-win/Release/
-win/bin/
-win/bin-debug/
+/win/*.user
+/win/*.ncb
+/win/*.suo
+/win/Debug/
+/win/Release/
+/win/bin/
+/win/bin-debug/
 /osrm-extract
 /osrm-routed
 /osrm-prepare
@@ -78,6 +78,7 @@ win/bin-debug/
 
 # Sandbox folder #
 ###################
-sandbox/
+/sandbox/
 
-test/profile.lua
+/test/profile.lua
+/profile.lua

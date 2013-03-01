@@ -21,7 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASIC_DATASTRUCTURES_H
 #define BASIC_DATASTRUCTURES_H
 #include <string>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include "../Util/StringUtil.h"
 
 namespace http {
 
@@ -70,15 +73,13 @@ struct Reply {
     std::vector<boost::asio::const_buffer> HeaderstoBuffers();
 	std::string content;
 	static Reply stockReply(status_type status);
-	void setSize(unsigned size) {
-	    for (std::size_t i = 0; i < headers.size(); ++i) {
-	            Header& h = headers[i];
-	            if("Content-Length" == h.name) {
-	                std::stringstream sizeString;
-	                sizeString << size;
-	                h.value = sizeString.str();
-	            }
-	    }
+	void setSize(const unsigned size) {
+		BOOST_FOREACH ( Header& h,  headers) {
+			if("Content-Length" == h.name) {
+				std::string sizeString;
+				intToString(size,h.value );
+			}
+		}
 	}
 };
 
@@ -138,11 +139,13 @@ Reply Reply::stockReply(Reply::status_type status) {
 	Reply rep;
 	rep.status = status;
 	rep.content = ToString(status);
-	rep.headers.resize(2);
-	rep.headers[0].name = "Content-Length";
-	rep.headers[0].value = boost::lexical_cast<std::string>(rep.content.size());
-	rep.headers[1].name = "Content-Type";
-	rep.headers[1].value = "text/html";
+	rep.headers.resize(3);	
+	rep.headers[0].name = "Access-Control-Allow-Origin";
+	rep.headers[0].value = "*";
+	rep.headers[1].name = "Content-Length";
+	rep.headers[1].value = boost::lexical_cast<std::string>(rep.content.size());
+	rep.headers[2].name = "Content-Type";
+	rep.headers[2].value = "text/html";
 	return rep;
 }
 } // namespace http

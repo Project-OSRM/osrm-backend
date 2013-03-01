@@ -22,7 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define DEALLOCATINGVECTOR_H_
 
 #include <cassert>
-#include <cstdlib>
 #include <vector>
 
 #if __cplusplus > 199711L
@@ -32,7 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 
-template<typename ElementT, size_t bucketSizeC = 10485760/sizeof(ElementT), bool DeallocateC = false>
+template<typename ElementT, std::size_t bucketSizeC = 8388608/sizeof(ElementT), bool DeallocateC = false>
 class DeallocatingVectorIterator : public std::iterator<std::random_access_iterator_tag, ElementT> {
 protected:
 
@@ -42,12 +41,12 @@ protected:
         DeallocatingVectorIteratorState();
     public:
         explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r) : mData(r.mData), mIndex(r.mIndex), mBucketList(r.mBucketList) {}
-        //explicit DeallocatingVectorIteratorState(const ElementT * ptr, const size_t idx, const std::vector<ElementT *> & input_list) : mData(ptr), mIndex(idx), mBucketList(input_list) {}
-        explicit DeallocatingVectorIteratorState(const size_t idx, std::vector<ElementT *> & input_list) : mData(DEALLOCATION_VECTOR_NULL_PTR), mIndex(idx), mBucketList(input_list) {
+        //explicit DeallocatingVectorIteratorState(const ElementT * ptr, const std::size_t idx, const std::vector<ElementT *> & input_list) : mData(ptr), mIndex(idx), mBucketList(input_list) {}
+        explicit DeallocatingVectorIteratorState(const std::size_t idx, std::vector<ElementT *> & input_list) : mData(DEALLOCATION_VECTOR_NULL_PTR), mIndex(idx), mBucketList(input_list) {
             setPointerForIndex();
         }
         ElementT * mData;
-        size_t mIndex;
+        std::size_t mIndex;
         std::vector<ElementT *> & mBucketList;
 
         inline void setPointerForIndex() {
@@ -55,8 +54,8 @@ protected:
                 mData = DEALLOCATION_VECTOR_NULL_PTR;
                 return;
             }
-            size_t _bucket = mIndex/bucketSizeC;
-            size_t _index = mIndex%bucketSizeC;
+            std::size_t _bucket = mIndex/bucketSizeC;
+            std::size_t _index = mIndex%bucketSizeC;
             mData = &(mBucketList[_bucket][_index]);
 
             if(DeallocateC) {
@@ -104,8 +103,8 @@ public:
     template<typename T2>
     DeallocatingVectorIterator(const DeallocatingVectorIterator<T2> & r) : mState(r.mState) {}
 
-    DeallocatingVectorIterator(size_t idx, std::vector<ElementT *> & input_list) : mState(idx, input_list) {}
-    //DeallocatingVectorIterator(size_t idx, const std::vector<ElementT *> & input_list) : mState(idx, input_list) {}
+    DeallocatingVectorIterator(std::size_t idx, std::vector<ElementT *> & input_list) : mState(idx, input_list) {}
+    //DeallocatingVectorIterator(std::size_t idx, const std::vector<ElementT *> & input_list) : mState(idx, input_list) {}
     DeallocatingVectorIterator(const DeallocatingVectorIteratorState & r) : mState(r) {}
 
     template<typename T2>
@@ -185,10 +184,10 @@ public:
     }
 };
 
-template<typename ElementT, size_t bucketSizeC = 10485760/sizeof(ElementT) >
+template<typename ElementT, std::size_t bucketSizeC = 8388608/sizeof(ElementT) >
 class DeallocatingVector {
 private:
-    size_t mCurrentSize;
+    std::size_t mCurrentSize;
     std::vector<ElementT *> mBucketList;
 
 public:
@@ -227,21 +226,21 @@ public:
     }
 
     inline void push_back(const ElementT & element) {
-        size_t _capacity = capacity();
+        std::size_t _capacity = capacity();
         if(mCurrentSize == _capacity) {
             mBucketList.push_back(new ElementT[bucketSizeC]);
         }
 
-        size_t _index = size()%bucketSizeC;
+        std::size_t _index = size()%bucketSizeC;
         mBucketList.back()[_index] = element;
         ++mCurrentSize;
     }
 
-    inline void reserve(const size_t) const {
+    inline void reserve(const std::size_t) const {
         //don't do anything
     }
 
-    inline void resize(const size_t new_size) {
+    inline void resize(const std::size_t new_size) {
         if(new_size > mCurrentSize) {
             while(capacity() < new_size) {
                 mBucketList.push_back(new ElementT[bucketSizeC]);
@@ -249,7 +248,7 @@ public:
             mCurrentSize = new_size;
         }
         if(new_size < mCurrentSize) {
-            size_t number_of_necessary_buckets = 1+(new_size / bucketSizeC);
+            std::size_t number_of_necessary_buckets = 1+(new_size / bucketSizeC);
 
             for(unsigned i = number_of_necessary_buckets; i < mBucketList.size(); ++i) {
                 delete[] mBucketList[i];
@@ -259,16 +258,16 @@ public:
         }
     }
 
-    inline size_t size() const {
+    inline std::size_t size() const {
         return mCurrentSize;
     }
 
-    inline size_t capacity() const {
+    inline std::size_t capacity() const {
         return mBucketList.size() * bucketSizeC;
     }
 
     inline iterator begin() {
-        return iterator(static_cast<size_t>(0), mBucketList);
+        return iterator(static_cast<std::size_t>(0), mBucketList);
     }
 
     inline iterator end() {
@@ -276,7 +275,7 @@ public:
     }
 
     inline deallocation_iterator dbegin() {
-        return deallocation_iterator(static_cast<size_t>(0), mBucketList);
+        return deallocation_iterator(static_cast<std::size_t>(0), mBucketList);
     }
 
     inline deallocation_iterator dend() {
@@ -284,23 +283,35 @@ public:
     }
 
     inline const_iterator begin() const {
-        return const_iterator(static_cast<size_t>(0), mBucketList);
+        return const_iterator(static_cast<std::size_t>(0), mBucketList);
     }
 
     inline const_iterator end() const {
         return const_iterator(size(), mBucketList);
     }
 
-    inline ElementT & operator[](const size_t index) {
-        size_t _bucket = index / bucketSizeC;
-        size_t _index = index % bucketSizeC;
+    inline ElementT & operator[](const std::size_t index) {
+        std::size_t _bucket = index / bucketSizeC;
+        std::size_t _index = index % bucketSizeC;
         return (mBucketList[_bucket][_index]);
     }
 
-    const inline ElementT & operator[](const size_t index) const {
-        size_t _bucket = index / bucketSizeC;
-        size_t _index = index % bucketSizeC;
+    const inline ElementT & operator[](const std::size_t index) const {
+        std::size_t _bucket = index / bucketSizeC;
+        std::size_t _index = index % bucketSizeC;
         return (mBucketList[_bucket][_index]);
+    }
+
+    inline ElementT & back() {
+        std::size_t _bucket = mCurrentSize / bucketSizeC;
+    	std::size_t _index = mCurrentSize % bucketSizeC;
+    	return (mBucketList[_bucket][_index]);
+    }
+
+    const inline ElementT & back() const {
+        std::size_t _bucket = mCurrentSize / bucketSizeC;
+        std::size_t _index = mCurrentSize % bucketSizeC;
+    	return (mBucketList[_bucket][_index]);
     }
 };
 

@@ -60,7 +60,6 @@ public:
         nodeHelpDesk->FindPhantomNodeForCoordinate(routeParameters.coordinates[0], result, routeParameters.zoomLevel);
 
         std::string tmp;
-        std::string JSONParameter;
         //json
 
         if("" != routeParameters.jsonpParameter) {
@@ -93,7 +92,7 @@ public:
         reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
-        if("" != JSONParameter) {
+        if("" != routeParameters.jsonpParameter) {
             reply.content += ")";
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";

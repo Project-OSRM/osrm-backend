@@ -30,3 +30,10 @@ Bringing bikes on trains and subways
 		 | (nil)   | some_tag   |         |       |
 		 | (nil)   | some_tag   | no      |       |
 		 | (nil)   | some_tag   | yes     | x     |
+
+	@construction
+ 	Scenario: Bike - Don't route on railways under construction
+ 	 	Then routability should be
+ 		 | highway | railway      | bicycle | bothw |
+ 		 | primary |              |         | x     |
+ 		 | (nil)   | construction | yes     |       |

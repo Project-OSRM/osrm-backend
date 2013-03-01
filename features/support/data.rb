@@ -13,7 +13,7 @@ OSM_TIMESTAMP = '2000-00-00T00:00:00Z'
 DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
-
+PROFILES_PATH = '../profiles'
 
 ORIGIN = [1,1]
 
@@ -71,8 +71,15 @@ def build_ways_from_table table
     way << node5
     
     tags = row.dup
-    tags.delete 'forw'
-    tags.delete 'backw'
+    
+    # remove tags that describe expected test result
+    tags.reject! do |k,v|
+      k =~ /^forw\b/ || 
+      k =~ /^backw\b/ ||
+      k =~ /^bothw\b/
+    end
+    
+    ##remove empty tags
     tags.reject! { |k,v| v=='' }
     
     # sort tag keys in the form of 'node/....'
@@ -198,14 +205,15 @@ def write_timestamp
 end
 
 def reprocess
+  use_pbf = true
   Dir.chdir TEST_FOLDER do
     write_osm
     write_timestamp
-    convert_osm_to_pbf
+    convert_osm_to_pbf if use_pbf
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-extract #{@osm_file}.osm.pbf 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
+      unless system "../osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end
@@ -214,7 +222,7 @@ def reprocess
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} ../profiles/#{@profile}.lua"
+      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
       end 

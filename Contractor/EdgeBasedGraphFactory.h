@@ -34,8 +34,10 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
-
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
@@ -43,39 +45,21 @@
 #include "../Extractor/ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/MercatorUtil.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/BaseConfiguration.h"
 
-class EdgeBasedGraphFactory {
-private:
-    struct _NodeBasedEdgeData {
-        int distance;
-        unsigned edgeBasedNodeID;
-        unsigned nameID:31;
-        bool shortcut:1;
-        bool forward:1;
-        bool backward:1;
-        bool roundabout:1;
-        bool ignoreInGrid:1;
-        short type;
-        bool isAccessRestricted;
-    };
+extern "C" {
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+}
+#include <luabind/luabind.hpp>
 
-    struct _EdgeBasedEdgeData {
-        int distance;
-        unsigned via;
-        unsigned nameID;
-        bool forward;
-        bool backward;
-        TurnInstruction turnInstruction;
-    };
 
-    typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
-    typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
-    std::vector<NodeInfo>               inputNodeInfoList;
-    unsigned numberOfTurnRestrictions;
+class EdgeBasedGraphFactory : boost::noncopyable {
 public:
     struct EdgeBasedNode {
         bool operator<(const EdgeBasedNode & other) const {
@@ -95,16 +79,45 @@ public:
         bool ignoreInGrid:1;
     };
 
-
     struct SpeedProfileProperties{
-        SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0) {}
+        SpeedProfileProperties()  : trafficSignalPenalty(0), uTurnPenalty(0), has_turn_penalty_function(false) {}
         int trafficSignalPenalty;
         int uTurnPenalty;
+        bool has_turn_penalty_function;
     } speedProfile;
+
 private:
+    struct _NodeBasedEdgeData {
+        int distance;
+        unsigned edgeBasedNodeID;
+        unsigned nameID;
+        short type;
+        bool isAccessRestricted:1;
+        bool shortcut:1;
+        bool forward:1;
+        bool backward:1;
+        bool roundabout:1;
+        bool ignoreInGrid:1;
+        bool contraFlow:1;
+    };
+
+    struct _EdgeBasedEdgeData {
+        int distance;
+        unsigned via;
+        unsigned nameID;
+        bool forward;
+        bool backward;
+        TurnInstruction turnInstruction;
+    };
+
+    typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
+    typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
+    std::vector<NodeInfo>               inputNodeInfoList;
+    unsigned numberOfTurnRestrictions;
+
     boost::shared_ptr<_NodeBasedDynamicGraph>   _nodeBasedGraph;
-    boost::unordered_map<NodeID, bool>          _barrierNodes;
-    boost::unordered_map<NodeID, bool>          _trafficLights;
+    boost::unordered_set<NodeID>          _barrierNodes;
+    boost::unordered_set<NodeID>          _trafficLights;
 
     typedef std::pair<NodeID, NodeID> RestrictionSource;
     typedef std::pair<NodeID, bool>   RestrictionTarget;
@@ -113,10 +126,8 @@ private:
     std::vector<EmanatingRestrictionsVector> _restrictionBucketVector;
     RestrictionMap _restrictionMap;
 
-
     DeallocatingVector<EdgeBasedEdge>   edgeBasedEdges;
     DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
-    std::vector<OriginalEdgeData>       originalEdgeData;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
@@ -127,18 +138,16 @@ private:
             bool belongsToTinyComponent);
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
-//    SRTMLookup srtmLookup;
-
 
 public:
     template< class InputEdgeT >
     explicit EdgeBasedGraphFactory(int nodes, std::vector<InputEdgeT> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, SpeedProfileProperties speedProfile);
 
-    void Run(const char * originalEdgeDataFilename);
+    void Run(const char * originalEdgeDataFilename, lua_State *myLuaState);
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
     void GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
-    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const;
     unsigned GetNumberOfNodes() const;
 };
 

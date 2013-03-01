@@ -29,7 +29,7 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance |
-		 | a    | d  | abcde | 300m +-8 |
+		 | a    | d  | abcde | 300m +-2 |
 
 	Scenario: Distance should equal sum of segments, rightwinded
 		Given the node map
@@ -43,7 +43,7 @@ Feature: Distance calculation
 
 		When I route I should get
 		 | from | to | route | distance |
-		 | a    | d  | abcde | 300m +-8 |
+		 | a    | d  | abcde | 300m +-2 |
 
 	Scenario: 10m distances
 		Given a grid size of 10 meters

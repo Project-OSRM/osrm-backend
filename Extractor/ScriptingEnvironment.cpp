@@ -18,15 +18,7 @@
  or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-}
-
 #include "ScriptingEnvironment.h"
-#include "../typedefs.h"
-#include "../Util/OpenMPWrapper.h"
 
 ScriptingEnvironment::ScriptingEnvironment() {}
 ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
@@ -44,6 +36,8 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
         //open utility libraries string library;
         luaL_openlibs(myLuaState);
 
+        luaAddScriptFolderToLoadPath( myLuaState, fileName );
+
         // Add our function to the state's global scope
         luabind::module(myLuaState) [
                                      luabind::def("print", LUA_print<std::string>),
@@ -51,15 +45,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      luabind::def("durationIsValid", durationIsValid),
                                      luabind::def("parseDuration", parseDuration)
         ];
-//#pragma omp critical
-//        {
-//            if(0 != luaL_dostring(
-//                    myLuaState,
-//                    "print('Initializing LUA engine')\n"
-//            )) {
-//                ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
-//            }
-//        }
+
         luabind::module(myLuaState) [
                                      luabind::class_<HashTable<std::string, std::string> >("keyVals")
                                      .def("Add", &HashTable<std::string, std::string>::Add)
@@ -79,32 +65,32 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      ];
 
         luabind::module(myLuaState) [
-                                     luabind::class_<_Way>("Way")
+                                     luabind::class_<ExtractionWay>("Way")
                                      .def(luabind::constructor<>())
-                                     .def_readwrite("name", &_Way::name)
-                                     .def_readwrite("speed", &_Way::speed)
-                                     .def_readwrite("type", &_Way::type)
-                                     .def_readwrite("access", &_Way::access)
-                                     .def_readwrite("roundabout", &_Way::roundabout)
-                                     .def_readwrite("is_duration_set", &_Way::isDurationSet)
-                                     .def_readwrite("is_access_restricted", &_Way::isAccessRestricted)
-                                     .def_readwrite("ignore_in_grid", &_Way::ignoreInGrid)
-                                     .def_readwrite("tags", &_Way::keyVals)
-                                     .def_readwrite("direction", &_Way::direction)
+                                     .def_readwrite("name", &ExtractionWay::name)
+                                     .def_readwrite("speed", &ExtractionWay::speed)
+                                     .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
+                                     .def_readwrite("duration", &ExtractionWay::duration)
+                                     .def_readwrite("type", &ExtractionWay::type)
+                                     .def_readwrite("access", &ExtractionWay::access)
+                                     .def_readwrite("roundabout", &ExtractionWay::roundabout)
+                                     .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
+                                     .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
+                                     .def_readwrite("tags", &ExtractionWay::keyVals)
+                                     .def_readwrite("direction", &ExtractionWay::direction)
                                      .enum_("constants")
-                                     [
-                                      luabind::value("notSure", 0),
-                                      luabind::value("oneway", 1),
-                                      luabind::value("bidirectional", 2),
-                                      luabind::value("opposite", 3)
-        ]
-        ];
+										 [
+										  luabind::value("notSure", 0),
+										  luabind::value("oneway", 1),
+										  luabind::value("bidirectional", 2),
+										  luabind::value("opposite", 3)
+										 ]
+        							 ];
+        luabind::module(myLuaState) [
+                                     luabind::class_<std::vector<std::string> >("vector")
+                                     .def("Add", &std::vector<std::string>::push_back)
+                                     ];
 
-        // Now call our function in a lua script
-//#pragma omp critical
-//        {
-//            INFO("Parsing speedprofile from " << fileName );
-//        }
         if(0 != luaL_dofile(myLuaState, fileName) ) {
             ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
         }

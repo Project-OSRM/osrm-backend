@@ -1,1 +1,1 @@
-disk=/tmp/stxxl,1,syscall
+disk=/tmp/stxxl,10,syscall

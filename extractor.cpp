@@ -32,6 +32,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
+#include "Util/OpenMPWrapper.h"
 #include "Util/StringUtil.h"
 
 typedef BaseConfiguration ExtractorConfiguration;
@@ -39,6 +40,8 @@ typedef BaseConfiguration ExtractorConfiguration;
 ExtractorCallbacks * extractCallBacks;
 
 int main (int argc, char *argv[]) {
+    double earliestTime = get_timestamp();
+
     if(argc < 2) {
         ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf> [<profile.lua>]");
     }
@@ -55,7 +58,6 @@ int main (int argc, char *argv[]) {
     }
     omp_set_num_threads(numberOfThreads);
 
-
     INFO("extracting data from input file " << argv[1]);
     bool isPBF(false);
     std::string outputFileName(argv[1]);
@@ -67,12 +69,12 @@ int main (int argc, char *argv[]) {
             isPBF = true;
         }
     }
-    if(pos!=string::npos) {
+    if(pos!=std::string::npos) {
         outputFileName.replace(pos, 8, ".osrm");
         restrictionsFileName.replace(pos, 8, ".osrm.restrictions");
     } else {
         pos=outputFileName.find(".osm");
-        if(pos!=string::npos) {
+        if(pos!=std::string::npos) {
             outputFileName.replace(pos, 5, ".osrm");
             restrictionsFileName.replace(pos, 5, ".osrm.restrictions");
         } else {
@@ -90,30 +92,30 @@ int main (int argc, char *argv[]) {
     StringMap stringMap;
     ExtractionContainers externalMemory;
 
-
     stringMap[""] = 0;
     extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
-    BaseParser<ExtractorCallbacks, _Node, _RawRestrictionContainer, _Way> * parser;
+    BaseParser* parser;
     if(isPBF) {
-        parser = new PBFParser(argv[1]);
+        parser = new PBFParser(argv[1], extractCallBacks, scriptingEnvironment);
     } else {
-        parser = new XMLParser(argv[1]);
+        parser = new XMLParser(argv[1], extractCallBacks, scriptingEnvironment);
     }
-    parser->RegisterCallbacks(extractCallBacks);
-    parser->RegisterScriptingEnvironment(scriptingEnvironment);
-
-    if(!parser->Init())
+    
+    if(!parser->ReadHeader()) {
         ERR("Parser not initialized!");
+    }
+    INFO("Parsing in progress..");
     double time = get_timestamp();
     parser->Parse();
-    INFO("parsing finished after " << get_timestamp() - time << " seconds");
+    INFO("Parsing finished after " << get_timestamp() - time << " seconds");
 
     externalMemory.PrepareData(outputFileName, restrictionsFileName, amountOfRAM);
 
     stringMap.clear();
     delete parser;
     delete extractCallBacks;
-    INFO("finished");
+    INFO("finished after " << get_timestamp() - earliestTime << "s");
+
     std::cout << "\nRun:\n"
                    "./osrm-prepare " << outputFileName << " " << restrictionsFileName << std::endl;
     return 0;

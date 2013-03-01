@@ -44,11 +44,10 @@ extern "C" {
 #include "DataStructures/NNGrid.h"
 #include "DataStructures/QueryEdge.h"
 #include "Util/BaseConfiguration.h"
-#include "Util/InputFileUtil.h"
 #include "Util/GraphLoader.h"
+#include "Util/InputFileUtil.h"
+#include "Util/LuaUtil.h"
 #include "Util/StringUtil.h"
-
-using namespace std;
 
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
@@ -59,6 +58,7 @@ std::vector<NodeInfo> internalToExternalNodeMapping;
 std::vector<_Restriction> inputRestrictions;
 std::vector<NodeID> bollardNodes;
 std::vector<NodeID> trafficLightNodes;
+std::vector<ImportEdge> edgeList;
 
 int main (int argc, char *argv[]) {
     if(argc < 3) {
@@ -76,7 +76,7 @@ int main (int argc, char *argv[]) {
     omp_set_num_threads(numberOfThreads);
 
     INFO("Using restrictions from file: " << argv[2]);
-    std::ifstream restrictionsInstream(argv[2], ios::binary);
+    std::ifstream restrictionsInstream(argv[2], std::ios::binary);
     if(!restrictionsInstream.good()) {
         ERR("Could not access <osrm-restrictions> files");
     }
@@ -93,12 +93,11 @@ int main (int argc, char *argv[]) {
         ERR("Cannot open " << argv[1]);
     }
 
-    char nodeOut[1024];         strcpy(nodeOut, argv[1]);           strcat(nodeOut, ".nodes");
-    char edgeOut[1024];         strcpy(edgeOut, argv[1]);           strcat(edgeOut, ".edges");
-    char graphOut[1024];    	strcpy(graphOut, argv[1]);      	strcat(graphOut, ".hsgr");
-    char ramIndexOut[1024];    	strcpy(ramIndexOut, argv[1]);    	strcat(ramIndexOut, ".ramIndex");
-    char fileIndexOut[1024];    strcpy(fileIndexOut, argv[1]);    	strcat(fileIndexOut, ".fileIndex");
-    char levelInfoOut[1024];    strcpy(levelInfoOut, argv[1]);    	strcat(levelInfoOut, ".levels");
+    std::string nodeOut(argv[1]);		nodeOut += ".nodes";
+    std::string edgeOut(argv[1]);		edgeOut += ".edges";
+    std::string graphOut(argv[1]);		graphOut += ".hsgr";
+    std::string ramIndexOut(argv[1]);	ramIndexOut += ".ramIndex";
+    std::string fileIndexOut(argv[1]);	fileIndexOut += ".fileIndex";
 
     /*** Setup Scripting Environment ***/
     if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
@@ -111,6 +110,11 @@ int main (int argc, char *argv[]) {
     // Connect LuaBind to this lua state
     luabind::open(myLuaState);
 
+    //open utility libraries string library;
+    luaL_openlibs(myLuaState);
+
+    //adjust lua load path
+    luaAddScriptFolderToLoadPath( myLuaState, (argc > 3 ? argv[3] : "profile.lua") );
 
     // Now call our function in a lua script
     INFO("Parsing speedprofile from " << (argc > 3 ? argv[3] : "profile.lua") );
@@ -129,8 +133,9 @@ int main (int argc, char *argv[]) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
-
-
+    
+    speedProfile.has_turn_penalty_function = lua_function_exists( myLuaState, "turn_function" );
+    
     std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
@@ -146,34 +151,27 @@ int main (int argc, char *argv[]) {
     INFO("Generating edge-expanded graph representation");
     EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
     std::vector<ImportEdge>().swap(edgeList);
-    edgeBasedGraphFactory->Run(edgeOut);
+    edgeBasedGraphFactory->Run(edgeOut.c_str(), myLuaState);
     std::vector<_Restriction>().swap(inputRestrictions);
     std::vector<NodeID>().swap(bollardNodes);
     std::vector<NodeID>().swap(trafficLightNodes);
     NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
     DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
     edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
+    DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
+    edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
+    delete edgeBasedGraphFactory;
 
     /***
      * Writing info on original (node-based) nodes
      */
 
     INFO("writing node map ...");
-    std::ofstream mapOutFile(nodeOut, std::ios::binary);
+    std::ofstream mapOutFile(nodeOut.c_str(), std::ios::binary);
     mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
     mapOutFile.close();
     std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
 
-    /***
-     * Writing info on original (node-based) edges
-     */
-    INFO("writing info on original edges");
-    std::vector<OriginalEdgeData> originalEdgeData;
-    edgeBasedGraphFactory->GetOriginalEdgeData(originalEdgeData);
-
-    DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
-    edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
-    delete edgeBasedGraphFactory;
     double expansionHasFinishedTime = get_timestamp() - startupTime;
 
     /***
@@ -182,7 +180,7 @@ int main (int argc, char *argv[]) {
 
     INFO("building grid ...");
     WritableGrid * writeableGrid = new WritableGrid();
-    writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut, fileIndexOut);
+    writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut.c_str(), fileIndexOut.c_str());
     delete writeableGrid;
     IteratorbasedCRC32<DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
     unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
@@ -208,13 +206,13 @@ int main (int argc, char *argv[]) {
      */
 
     INFO("Building Node Array");
-    sort(contractedEdgeList.begin(), contractedEdgeList.end());
+    std::sort(contractedEdgeList.begin(), contractedEdgeList.end());
     unsigned numberOfNodes = 0;
     unsigned numberOfEdges = contractedEdgeList.size();
     INFO("Serializing compacted graph");
-    ofstream edgeOutFile(graphOut, ios::binary);
+    std::ofstream edgeOutFile(graphOut.c_str(), std::ios::binary);
 
-    BOOST_FOREACH(QueryEdge & edge, contractedEdgeList) {
+    BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
         if(edge.source > numberOfNodes) {
             numberOfNodes = edge.source;
         }

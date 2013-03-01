@@ -33,6 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/HashTable.h"
 #include "../Plugins/BasePlugin.h"
 #include "../Plugins/RouteParameters.h"
+#include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
 namespace http {
@@ -71,16 +72,17 @@ public:
             bool result = boost::spirit::qi::parse(it, request.end(), apiParser);    // returns true if successful
             if (!result || (it != request.end()) ) {
                 rep = http::Reply::stockReply(http::Reply::badRequest);
-                std::stringstream content;
                 int position = std::distance(request.begin(), it);
-                content << "Input seems to be malformed close to position " << position << "<br>";
-                content << "<pre>";
-                content << req.uri << "<br>";
+                std::string tmp_position_string;
+                intToString(position, tmp_position_string);
+                rep.content += "Input seems to be malformed close to position ";
+                rep.content += "<br><pre>";
+                rep.content += request;
+                rep.content += tmp_position_string;
+                rep.content += "<br>";
                 for(unsigned i = 0, end = std::distance(request.begin(), it); i < end; ++i)
-                    content << "&nbsp;";
-                content << "^" << "<br>";
-                content << "</pre>";
-                rep.content += content.str();
+                    rep.content += "&nbsp;";
+                rep.content += "^<br></pre>";
             } else {
                 //Finished parsing, lets call the right plugin to handle the request
                 if(pluginMap.Holds(routeParameters.service)) {

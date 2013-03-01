@@ -39,6 +39,7 @@ public:
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                 "\">";
+        reply.content += "<metadata><copyright author=\"Project OSRM\"><license>Data (c) OpenStreetMap contributors (ODbL)</license></copyright></metadata>";
         reply.content += "<rte>";
         if(rawRoute.lengthOfShortestPath != INT_MAX && rawRoute.computedShortestPath.size()) {
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lat, tmp);
@@ -46,7 +47,7 @@ public:
             convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
-            BOOST_FOREACH(_PathData pathData, rawRoute.computedShortestPath) {
+            BOOST_FOREACH(const _PathData & pathData, rawRoute.computedShortestPath) {
                 sEngine.GetCoordinatesForNodeID(pathData.node, current);
 
                 convertInternalLatLonToString(current.lat, tmp);

@@ -53,13 +53,9 @@ public:
         _RouteSummary() : lengthString("0"), durationString("0"), startName(0), destName(0) {}
         void BuildDurationAndLengthStrings(const double distance, const unsigned time) {
             //compute distance/duration for route summary
-            std::ostringstream s;
-            s << round(distance);
-            lengthString = s.str();
+            intToString(round(distance), lengthString);
             int travelTime = time/10 + 1;
-            s.str("");
-            s << travelTime;
-            durationString = s.str();
+            intToString(travelTime, durationString);
         }
     } summary;
 

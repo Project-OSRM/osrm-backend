@@ -21,13 +21,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
-#include <cstdio>
-#include <cstdlib>
 #include <string>
-#include <sstream>
+#include <boost/algorithm/string.hpp>
 
 #include <boost/spirit/include/karma.hpp>
 #include <boost/spirit/include/qi.hpp>
+
+#include <cstdio>
 
 #include "../DataStructures/Coordinate.h"
 #include "../typedefs.h"
@@ -80,6 +80,20 @@ static inline int stringToInt(const std::string& input) {
     return value;
 }
 
+static inline void doubleToString(const double value, std::string & output){
+    output.clear();
+    std::back_insert_iterator<std::string> sink(output);
+    boost::spirit::karma::generate(sink, boost::spirit::karma::double_, value);
+}
+
+static inline void doubleToStringWithTwoDigitsBehindComma(const double value, std::string & output){
+    // The largest 32-bit integer is 4294967295, that is 10 chars
+    // On the safe side, add 1 for sign, and 1 for trailing zero
+    char buffer[12] ;
+    sprintf(buffer, "%g", value) ;
+    output = buffer ;
+}
+
 static inline void convertInternalLatLonToString(const int value, std::string & output) {
     char buffer[100];
     buffer[10] = 0; // Nullterminierung
@@ -106,70 +120,38 @@ static inline void convertInternalReversedCoordinateToString(const _Coordinate &
     output += " ";
 }
 
-static inline void doubleToString(const double value, std::string & output){
-    // The largest 32-bit integer is 4294967295, that is 10 chars
-    // On the safe side, add 1 for sign, and 1 for trailing zero
-    char buffer[12] ;
-    sprintf(buffer, "%f", value) ;
-    output = buffer ;
-}
-
-static inline void doubleToStringWithTwoDigitsBehindComma(const double value, std::string & output){
-    // The largest 32-bit integer is 4294967295, that is 10 chars
-    // On the safe side, add 1 for sign, and 1 for trailing zero
-    char buffer[12] ;
-    sprintf(buffer, "%g", value) ;
-    output = buffer ;
-}
-
-inline std::string & replaceAll(std::string &s, const std::string &sub, const std::string &other) {
-    assert(!sub.empty());
-    size_t b = 0;
-    for (;;) {
-        b = s.find(sub, b);
-        if (b == s.npos) break;
-        s.replace(b, sub.size(), other);
-        b += other.size();
-    }
-    return s;
+inline void replaceAll(std::string &s, const std::string &sub, const std::string &other) {
+	boost::replace_all(s, sub, other);
 }
 
 inline void stringSplit(const std::string &s, const char delim, std::vector<std::string>& result) {
-    std::stringstream ss(s);
-    std::string item;
-    while(std::getline(ss, item, delim)) {
-        if(item.size() > 0)
-            result.push_back(item);
-    }
+	boost::split(result, s, boost::is_any_of(std::string(&delim)));
 }
-
 
 static std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]", "\\"};
 static std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;" };
 
-inline std::string HTMLEntitize( std::string result) {
-    for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); i++) {
-        result = replaceAll(result, originals[i], entities[i]);
+inline std::string HTMLEntitize( const std::string & input) {
+    std::string result(input);
+    for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); ++i) {
+        replaceAll(result, originals[i], entities[i]);
     }
     return result;
 }
 
-inline std::string HTMLDeEntitize( std::string result) {
-    for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); i++) {
-        result = replaceAll(result, entities[i], originals[i]);
+inline std::string HTMLDeEntitize( std::string & result) {
+    for(unsigned i = 0; i < sizeof(originals)/sizeof(std::string); ++i) {
+        replaceAll(result, entities[i], originals[i]);
     }
     return result;
 }
 
-inline bool StringStartsWith(std::string & input, std::string & prefix) {
-    return (input.find(prefix) == 0);
+inline bool StringStartsWith(const std::string & input, const std::string & prefix) {
+    return boost::starts_with(input, prefix);
 }
 
-
-/*
- * Function returns a 'random' filename in temporary directors.
- * May not be platform independent.
- */
+// Function returns a 'random' filename in temporary directors.
+// May not be platform independent.
 inline void GetTemporaryFileName(std::string & filename) {
     char buffer[L_tmpnam];
     char * retPointer = tmpnam (buffer);

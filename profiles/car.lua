@@ -1,6 +1,7 @@
 -- Begin of globals
+require("lib/access")
 
-barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true}
+barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true}
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
@@ -8,6 +9,7 @@ access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
+restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
 speed_profile = { 
   ["motorway"] = 90, 
@@ -26,6 +28,7 @@ speed_profile = {
   ["service"] = 15,
 --  ["track"] = 5,
   ["ferry"] = 5,
+  ["shuttle_train"] = 10,
   ["default"] = 50
 }
 
@@ -39,24 +42,9 @@ u_turn_penalty 			= 20
 
 -- End of globals
 
---find first tag in access hierachy which is set
-local function find_access_tag(source)
-	for i,v in ipairs(access_tags_hierachy) do 
-		if source.tags:Holds(v) then 
-			local tag = source.tags:Find(v)
-			if tag ~= '' then --and tag ~= "" then
-				return tag
-			end
-		end
-	end
-	return nil
-end
-
-local function find_in_keyvals(keyvals, tag)
-	if keyvals:Holds(tag) then
-		return keyvals:Find(tag)
-	else
-		return nil
+function get_exceptions(vector)
+	for i,v in ipairs(restriction_exception_tags) do 
+		vector:Add(v)
 	end
 end
 
@@ -64,7 +52,7 @@ local function parse_maxspeed(source)
 	if source == nil then
 		return 0
 	end
-	local n = tonumber(source)
+	local n = tonumber(source:match("%d*"))
 	if n == nil then
 		n = 0
 	end
@@ -76,7 +64,7 @@ end
 
 function node_function (node)
   local barrier = node.tags:Find ("barrier")
-  local access = find_access_tag(node)
+  local access = Access.find_access_tag(node, access_tags_hierachy)
   local traffic_signal = node.tags:Find("highway")
   
   --flag node if it carries a traffic light
@@ -101,13 +89,7 @@ function node_function (node)
 end
 
 
-function way_function (way, numberOfNodesInWay)
-
-  -- A way must have two nodes or more
-  if(numberOfNodesInWay < 2) then
-    return 0;
-  end
-  
+function way_function (way)
   -- First, get the properties of each way that we come across
     local highway = way.tags:Find("highway")
     local name = way.tags:Find("name")
@@ -115,13 +97,15 @@ function way_function (way, numberOfNodesInWay)
     local junction = way.tags:Find("junction")
     local route = way.tags:Find("route")
     local maxspeed = parse_maxspeed(way.tags:Find ( "maxspeed") )
+    local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
+    local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
     local barrier = way.tags:Find("barrier")
     local oneway = way.tags:Find("oneway")
     local cycleway = way.tags:Find("cycleway")
     local duration  = way.tags:Find("duration")
     local service  = way.tags:Find("service")
     local area = way.tags:Find("area")
-    local access = find_access_tag(way)
+    local access = Access.find_access_tag(way, access_tags_hierachy)
 
   -- Second, parse the way according to these properties
 
@@ -148,29 +132,31 @@ function way_function (way, numberOfNodesInWay)
 	end
 
   -- Handling ferries and piers
-    if (speed_profile[route] ~= nil and speed_profile[route] > 0)
-    then
-      if durationIsValid(duration) then
-	    way.speed = math.max( parseDuration(duration) / math.max(1, numberOfNodesInWay-1) );
-        way.is_duration_set = true
-      end
-      way.direction = Way.bidirectional
-      if speed_profile[route] ~= nil then
-         highway = route;
-      end
-      if not way.is_duration_set then
-        way.speed = speed_profile[highway]
-      end
-    end
+  if (speed_profile[route] ~= nil and speed_profile[route] > 0) then
+   if durationIsValid(duration) then
+    way.duration = math.max( parseDuration(duration), 1 );
+   end
+   way.direction = Way.bidirectional
+   if speed_profile[route] ~= nil then
+    highway = route;
+   end
+   if tonumber(way.duration) < 0 then
+    way.speed = speed_profile[highway]
+   end
+  end
     
   -- Set the avg speed on the way if it is accessible by road class
-    if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
-      if 0 == maxspeed then
-        maxspeed = math.huge
-      end
-      way.speed = math.min(speed_profile[highway], maxspeed)
+  if (speed_profile[highway] ~= nil and way.speed == -1 ) then
+  if maxspeed > speed_profile[highway] then
+   way.speed = maxspeed
+  else
+   if 0 == maxspeed then
+    maxspeed = math.huge
+   end
+   way.speed = math.min(speed_profile[highway], maxspeed)
     end
-    
+  end
+
   -- Set the avg speed on ways that are marked accessible
     if "" ~= highway and access_tag_whitelist[access] and way.speed == -1 then
       if 0 == maxspeed then
@@ -203,7 +189,18 @@ function way_function (way, numberOfNodesInWay)
     else
       way.direction = Way.bidirectional
     end
-    
+
+  -- Override speed settings if explicit forward/backward maxspeeds are given
+    if maxspeed_forward ~= nil and maxspeed_forward > 0 then
+	if Way.bidirectional == way.direction then
+          way.backward_speed = way.speed
+        end
+        way.speed = maxspeed_forward
+    end
+    if maxspeed_backward ~= nil and maxspeed_backward > 0 then
+      way.backward_speed = maxspeed_backward
+    end
+
   -- Override general direction settings of there is a specific one for our mode of travel
   
     if ignore_in_grid[highway] ~= nil and ignore_in_grid[highway] then

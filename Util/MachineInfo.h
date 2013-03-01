@@ -30,8 +30,29 @@ extern "C" {
 #include <windows.h>
 #endif
 
-/* Returns the physical memory size in kilobytes */
-unsigned GetPhysicalmemory(void){
+enum Endianness {
+    LittleEndian = 1,
+    BigEndian = 2
+};
+
+//Function is optimized to a single 'mov eax,1' on GCC, clang and icc using -O3
+inline Endianness getMachineEndianness() {
+    int i(1);
+    char *p = (char *) &i;
+    if (1 == p[0])
+        return LittleEndian;
+    return BigEndian;
+}
+
+// Reverses Network Byte Order into something usable, compiles down to a bswap-mov combination
+inline unsigned swapEndian(unsigned x) {
+    if(getMachineEndianness() == LittleEndian)
+        return ( (x>>24) | ((x<<8) & 0x00FF0000) | ((x>>8) & 0x0000FF00) | (x<<24) );
+    return x;
+}
+
+// Returns the physical memory size in kilobytes
+inline unsigned GetPhysicalmemory(void){
 #if defined(SUN5) || defined(__linux__)
 	return (sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE));
 	
@@ -61,4 +82,5 @@ unsigned GetPhysicalmemory(void){
 
 #endif
 }
-#endif
+#endif // MACHINE_INFO_H
+

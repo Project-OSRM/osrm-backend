@@ -1,5 +1,5 @@
-@routing @weight
-Feature: Choosing route based on length, speed, etc
+@routing @fastest
+Feature: Choosing fastest route
 	
 	Background:
 		Given the profile "testbot"
@@ -22,7 +22,7 @@ Feature: Choosing route based on length, speed, etc
 		 | x    | y  | xa,atb,by |
 		 | y    | x  | by,atb,xa |
 
-	Scenario: Pick  the shortest travel time, even when it's longer
+	Scenario: Pick the fastest route, even when it's longer
 		Given the node map
 		 |   | p |   |
 		 | a | s | b |

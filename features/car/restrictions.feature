@@ -198,8 +198,8 @@ Feature: Car - Turn restrictions
 		 | s    | n  | sj,nj |
 		 | s    | e  |       |
 
-  	@except @todo
-  	Scenario: Bike - Except tag and on no_ restrictions
+  	@except
+  	Scenario: Car - Except tag and on no_ restrictions
   		Given the node map
   		 | b | x | c |
   		 | a | j | d |
@@ -207,19 +207,19 @@ Feature: Car - Turn restrictions
 
   		And the ways
   		 | nodes | oneway |
-  		 | sj    | yes    |
+  		 | sj    | no     |
   		 | xj    | -1     |
   		 | aj    | -1     |
-  		 | bj    | -1     |
-  		 | cj    | -1     |
+  		 | bj    | no     |
+  		 | cj    | no     |
   		 | dj    | -1     |
 
   		And the relations
   		 | type        | way:from | way:to | node:via | restriction   | except   |
   		 | restriction | sj       | aj     | j        | no_left_turn  | motorcar |
   		 | restriction | sj       | bj     | j        | no_left_turn  |          |
-  		 | restriction | sj       | cj     | j        | no_right_turn | motorcar |
-  		 | restriction | sj       | dj     | j        | no_right_turn |          |
+  		 | restriction | sj       | cj     | j        | no_right_turn |          |
+  		 | restriction | sj       | dj     | j        | no_right_turn | motorcar |
 
   		When I route I should get
   		 | from | to | route |
@@ -228,8 +228,8 @@ Feature: Car - Turn restrictions
   		 | s    | c  |       |
   		 | s    | d  | sj,dj |
 
-   	@except @todo
-   	Scenario: Bike - Except tag and on only_ restrictions
+   	@except
+   	Scenario: Car - Except tag and on only_ restrictions
    		Given the node map
    		 | a |   | b |
    		 |   | j |   |
@@ -238,8 +238,8 @@ Feature: Car - Turn restrictions
    		And the ways
    		 | nodes | oneway |
    		 | sj    | yes    |
-   		 | aj    | -1     |
-   		 | bj    | -1     |
+   		 | aj    | no     |
+   		 | bj    | no     |
 
    		And the relations
    		 | type        | way:from | way:to | node:via | restriction      | except   |

@@ -25,13 +25,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iostream>
 #include <vector>
 
+#include <boost/noncopyable.hpp>
+
 #include "../typedefs.h"
 #include "../DataStructures/QueryEdge.h"
 #include "NNGrid.h"
 #include "PhantomNodes.h"
 #include "NodeCoords.h"
 
-class NodeInformationHelpDesk{
+class NodeInformationHelpDesk : boost::noncopyable{
 public:
     NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes, const unsigned crc) : numberOfNodes(_numberOfNodes), checkSum(crc) {
         readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
@@ -59,34 +61,43 @@ public:
         DEBUG("Loading edge data");
         unsigned numberOfOrigEdges(0);
         edgesInStream.read((char*)&numberOfOrigEdges, sizeof(unsigned));
-        origEdgeData.resize(numberOfOrigEdges);
-        edgesInStream.read((char*)&(origEdgeData[0]), numberOfOrigEdges*sizeof(OriginalEdgeData));
+        origEdgeData_viaNode.resize(numberOfOrigEdges);
+        origEdgeData_nameID.resize(numberOfOrigEdges);
+        origEdgeData_turnInstruction.resize(numberOfOrigEdges);
+
+        OriginalEdgeData deserialized_originalEdgeData;
+        for(unsigned i = 0; i < numberOfOrigEdges; ++i) {
+        	edgesInStream.read((char*)&(deserialized_originalEdgeData), sizeof(OriginalEdgeData));
+            origEdgeData_viaNode[i] 		= deserialized_originalEdgeData.viaNode;
+            origEdgeData_nameID[i] 			= deserialized_originalEdgeData.nameID;
+            origEdgeData_turnInstruction[i] = deserialized_originalEdgeData.turnInstruction;
+        }
         edgesInStream.close();
         DEBUG("Loaded " << numberOfOrigEdges << " orig edges");
 	    DEBUG("Opening NN indices");
 	    readOnlyGrid->OpenIndexFiles();
 	}
 
-	void initNNGrid() {
-	    readOnlyGrid->OpenIndexFiles();
-	}
+//	void initNNGrid() {
+//	    readOnlyGrid->OpenIndexFiles();
+//	}
 
 	inline int getLatitudeOfNode(const unsigned id) const {
-	    const NodeID node = origEdgeData.at(id).viaNode;
+	    const NodeID node = origEdgeData_viaNode.at(id);
 	    return coordinateVector.at(node).lat;
 	}
 
 	inline int getLongitudeOfNode(const unsigned id) const {
-        const NodeID node = origEdgeData.at(id).viaNode;
+        const NodeID node = origEdgeData_viaNode.at(id);
 	    return coordinateVector.at(node).lon;
 	}
 
 	inline unsigned getNameIndexFromEdgeID(const unsigned id) const {
-	    return origEdgeData.at(id).nameID;
+	    return origEdgeData_nameID.at(id);
 	}
 
     inline TurnInstruction getTurnInstructionFromEdgeID(const unsigned id) const {
-        return origEdgeData.at(id).turnInstruction;
+        return origEdgeData_turnInstruction.at(id);
     }
 
     inline NodeID getNumberOfNodes() const { return numberOfNodes; }
@@ -96,7 +107,7 @@ public:
 		return readOnlyGrid->FindNearestCoordinateOnEdgeInNodeBasedGraph(coord, result);
 	}
 
-	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) const {
+	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
 	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode, zoomLevel);
 	}
 
@@ -114,7 +125,9 @@ public:
 
 private:
 	std::vector<_Coordinate> coordinateVector;
-    std::vector<OriginalEdgeData> origEdgeData;
+	std::vector<NodeID> origEdgeData_viaNode;
+	std::vector<unsigned> origEdgeData_nameID;
+	std::vector<TurnInstruction> origEdgeData_turnInstruction;
 
 	ReadOnlyGrid * readOnlyGrid;
 	const unsigned numberOfNodes;

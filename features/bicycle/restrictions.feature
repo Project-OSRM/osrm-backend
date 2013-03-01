@@ -1,9 +1,9 @@
 @routing @bicycle @restrictions
 Feature: Bike - Turn restrictions
-	Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
+	Ignore turn restrictions on bicycle, since you always become a temporary pedestrian.
 	Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 	
-	Background: Use car routing
+	Background:
 		Given the profile "bicycle"
 	
 	@no_turning
@@ -14,11 +14,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction  |
@@ -26,7 +26,7 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 
@@ -38,11 +38,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction   |
@@ -52,7 +52,7 @@ Feature: Bike - Turn restrictions
 		 | from | to | route |
 		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
-		 | s    | e  |       |
+		 | s    | e  | sj,ej |
 
 	@no_turning
 	Scenario: Bike - No u-turn
@@ -62,11 +62,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction |
@@ -74,7 +74,7 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 
@@ -86,11 +86,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction      |
@@ -98,7 +98,7 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 
@@ -110,11 +110,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction    |
@@ -123,8 +123,8 @@ Feature: Bike - Turn restrictions
 		When I route I should get
 		 | from | to | route |
 		 | s    | w  | sj,wj |
-		 | s    | n  |       |
-		 | s    | e  |       |
+		 | s    | n  | sj,nj |
+		 | s    | e  | sj,ej |
 
 	@only_turning
 	Scenario: Bike - Only right turn
@@ -134,11 +134,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction     |
@@ -146,8 +146,8 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
-		 | s    | n  |       |
+		 | s    | w  | sj,wj |
+		 | s    | n  | sj,nj |
 		 | s    | e  | sj,ej |
 	
 	@only_turning
@@ -158,11 +158,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction      |
@@ -170,9 +170,9 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
-		 | s    | e  |       |
+		 | s    | e  | sj,ej |
 
 	@no_turning
 	Scenario: Bike - Handle any only_* restriction
@@ -182,11 +182,11 @@ Feature: Bike - Turn restrictions
 		 |   | s |   |
 
 		And the ways
-		 | nodes | oneway |
-		 | sj    | yes    |
-		 | nj    | -1     |
-		 | wj    | -1     |
-		 | ej    | -1     |
+		 | nodes | oneway | foot |
+		 | sj    | yes    | no   |
+		 | nj    | -1     | no   |
+		 | wj    | -1     | no   |
+		 | ej    | -1     | no   |
 
 		And the relations
 		 | type        | way:from | way:to | node:via | restriction        |
@@ -194,11 +194,11 @@ Feature: Bike - Turn restrictions
 
 		When I route I should get
 		 | from | to | route |
-		 | s    | w  |       |
+		 | s    | w  | sj,wj |
 		 | s    | n  | sj,nj |
-		 | s    | e  |       |
+		 | s    | e  | sj,ej |
 
- 	@except @todo
+ 	@except
  	Scenario: Bike - Except tag and on no_ restrictions
  		Given the node map
  		 | b | x | c |
@@ -206,29 +206,29 @@ Feature: Bike - Turn restrictions
  		 |   | s |   |
 
  		And the ways
- 		 | nodes | oneway |
- 		 | sj    | yes    |
- 		 | xj    | -1     |
- 		 | aj    | -1     |
- 		 | bj    | -1     |
- 		 | cj    | -1     |
- 		 | dj    | -1     |
+ 		 | nodes | oneway | foot |
+ 		 | sj    | no     | no   |
+ 		 | xj    | -1     | no   |
+ 		 | aj    | -1     | no   |
+ 		 | bj    | no     | no   |
+ 		 | cj    | -1     | no   |
+ 		 | dj    | -1     | no   |
 
  		And the relations
  		 | type        | way:from | way:to | node:via | restriction   | except  |
  		 | restriction | sj       | aj     | j        | no_left_turn  | bicycle |
  		 | restriction | sj       | bj     | j        | no_left_turn  |         |
- 		 | restriction | sj       | cj     | j        | no_right_turn | bicycle |
- 		 | restriction | sj       | dj     | j        | no_right_turn |         |
+ 		 | restriction | sj       | cj     | j        | no_right_turn |         |
+ 		 | restriction | sj       | dj     | j        | no_right_turn | bicycle |
 
  		When I route I should get
  		 | from | to | route |
  		 | s    | a  | sj,aj |
- 		 | s    | b  |       |
- 		 | s    | c  |       |
+ 		 | s    | b  | sj,bj |
+ 		 | s    | c  | sj,cj |
  		 | s    | d  | sj,dj |
 
-  	@except @todo
+  	@except
   	Scenario: Bike - Except tag and on only_ restrictions
   		Given the node map
   		 | a |   | b |
@@ -236,10 +236,10 @@ Feature: Bike - Turn restrictions
   		 |   | s |   |
 
   		And the ways
-  		 | nodes | oneway |
-  		 | sj    | yes    |
-  		 | aj    | -1     |
-  		 | bj    | -1     |
+  		 | nodes | oneway | foot |
+  		 | sj    | yes    | no   |
+  		 | aj    | no     | no   |
+  		 | bj    | no     | no   |
 
   		And the relations
   		 | type        | way:from | way:to | node:via | restriction      | except  |
@@ -249,3 +249,41 @@ Feature: Bike - Turn restrictions
   		 | from | to | route |
   		 | s    | a  | sj,aj |
   		 | s    | b  | sj,bj |
+
+  	@except
+  	Scenario: Bike - Multiple except tag values
+  		Given the node map
+  		 | s | j | a |
+  		 |   |   | b |
+  		 |   |   | c |
+  		 |   |   | d |
+  		 |   |   | e |
+  		 |   |   | f |
+
+  		And the ways
+  		 | nodes | oneway | foot |
+  		 | sj    | yes    | no   |
+  		 | ja    | yes    | no   |
+  		 | jb    | yes    | no   |
+  		 | jc    | yes    | no   |
+  		 | jd    | yes    | no   |
+  		 | je    | yes    | no   |
+  		 | jf    | yes    | no   |
+
+  		And the relations
+  		 | type        | way:from | way:to | node:via | restriction    | except           |
+  		 | restriction | sj       | ja     | j        | no_straight_on |                  |
+  		 | restriction | sj       | jb     | j        | no_straight_on | bicycle          |
+  		 | restriction | sj       | jc     | j        | no_straight_on | bus; bicycle     |
+  		 | restriction | sj       | jd     | j        | no_straight_on | bicycle; motocar |
+  		 | restriction | sj       | je     | j        | no_straight_on | bus, bicycle     |
+  		 | restriction | sj       | jf     | j        | no_straight_on | bicycle, bus     |
+
+  		When I route I should get
+  		 | from | to | route |
+  		 | s    | a  | sj,ja |
+  		 | s    | b  | sj,jb |
+  		 | s    | c  | sj,jc |
+  		 | s    | d  | sj,jd |
+  		 | s    | e  | sj,je |
+  		 | s    | f  | sj,jf |

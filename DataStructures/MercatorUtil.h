@@ -16,20 +16,23 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
- */
+*/
 
+#ifndef MERCATORUTIL_H_
+#define MERCATORUTIL_H_
 
+#include <cmath>
 
-#ifndef LUAUTIL_H_
-#define LUAUTIL_H_
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-#include <iostream>
-
-template<typename T>
-void LUA_print(T number) {
-  std::cout << "[LUA] " << number << std::endl;
+inline double y2lat(double a) {
+	return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2);
 }
 
+inline double lat2y(double a) {
+	return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2));
+}
 
-
-#endif /* LUAUTIL_H_ */
+#endif /* MERCATORUTIL_H_ */

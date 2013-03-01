@@ -16,18 +16,21 @@ Then /^routability should be$/ do |table|
           elsif direction == 'backw' || direction == 'bothw'
             response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}")
           end
+          want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
           got[direction] = route_status response
           json = JSON.parse(response.body)
           if got[direction].empty? == false
             route = way_list json['route_instructions']
             if route != "w#{i}"
               got[direction] = "testing w#{i}, but got #{route}!?"
-            elsif row[direction] =~ /\d+s/
+            elsif want =~ /^\d+s/
               time = json['route_summary']['total_time']
               got[direction] = "#{time}s"
             end
           end
-          if got[direction] != row[direction]
+          if FuzzyMatch.match got[direction], want
+            got[direction] = row[direction]
+          else
             attempts << { :attempt => direction, :query => @query, :response => response }
           end
         end

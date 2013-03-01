@@ -75,10 +75,13 @@ template< typename NodeID, typename Key >
 class UnorderedMapStorage {
 public:
 
-	UnorderedMapStorage( size_t ) {  }
+	UnorderedMapStorage( size_t ) {
+		//hash table gets 1000 Buckets
+		nodes.rehash(1000);
+	}
 
-    Key &operator[]( NodeID node ) {
-        return nodes[node];
+    Key &operator[]( const NodeID node ) {
+    	return nodes[node];
     }
 
     void Clear() {

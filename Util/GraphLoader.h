@@ -101,7 +101,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
     short type;
     NodeID nameID;
     int length;
-    bool isRoundabout, ignoreInGrid, isAccessRestricted;
+    bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow;
 
     for (EdgeID i=0; i<m; ++i) {
         in.read((char*)&source,             sizeof(unsigned));
@@ -114,6 +114,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         in.read((char*)&isRoundabout,       sizeof(bool));
         in.read((char*)&ignoreInGrid,       sizeof(bool));
         in.read((char*)&isAccessRestricted, sizeof(bool));
+        in.read((char*)&isContraFlow,       sizeof(bool));
 
         GUARANTEE(length > 0, "loaded null length edge" );
         GUARANTEE(weight > 0, "loaded null weight");
@@ -150,7 +151,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
             std::swap(forward, backward);
         }
 
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted );
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow );
         edgeList.push_back(inputEdge);
     }
     std::sort(edgeList.begin(), edgeList.end());
@@ -169,14 +170,14 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
                     edgeList[i]._source = UINT_MAX;
                 } else {
                     //edge i-1 is open in both directions, but edge i is smaller in one direction. Close edge i-1 in this direction
-                    edgeList[i-1].forward = ~edgeList[i].isForward();
-                    edgeList[i-1].backward = ~edgeList[i].isBackward();
+                    edgeList[i-1].forward = !edgeList[i].isForward();
+                    edgeList[i-1].backward = !edgeList[i].isBackward();
                 }
             } else if (edgeFlagsAreSuperSet2) {
                 if(edgeList[i-1].weight() <= edgeList[i].weight()) {
                      //edge i-1 is smaller for one direction. edge i is open in both. close edge i in the other direction
-                     edgeList[i].forward = ~edgeList[i-1].isForward();
-                     edgeList[i].backward = ~edgeList[i-1].isBackward();
+                     edgeList[i].forward = !edgeList[i-1].isForward();
+                     edgeList[i].backward = !edgeList[i-1].isBackward();
                  } else {
                      //edge i is smaller and goes in both direction. Throw away edge i-1
                      edgeList[i-1]._source = UINT_MAX;

@@ -1,39 +1,41 @@
+require("lib/access")
+
 -- Begin of globals
-barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true}
+barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true}
 access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true	}
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierachy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
+restriction_exception_tags = { "bicycle", "vehicle", "access" }
 
-default_speed = 16
+default_speed = 15
 
-main_speeds = { 
-	["cycleway"] = 18,
-	["primary"] = 17,
-	["primary_link"] = 17,
-	["secondary"] = 18,
-	["secondary_link"] = 18,
-	["tertiary"] = 18,
-	["tertiary_link"] = 18,
-	["residential"] = 18,
-	["unclassified"] = 16,
-	["living_street"] = 16,
-	["road"] = 16,
-	["service"] = 16,
-	["track"] = 13,
-	["path"] = 13,
-	["footway"] = 12,
-	["pedestrian"] = 12,
-	["pier"] = 12,
-	["steps"] = 2
+walking_speed = 6
+
+bicycle_speeds = { 
+	["cycleway"] = default_speed,
+	["primary"] = default_speed,
+	["primary_link"] = default_speed,
+	["secondary"] = default_speed,
+	["secondary_link"] = default_speed,
+	["tertiary"] = default_speed,
+	["tertiary_link"] = default_speed,
+	["residential"] = default_speed,
+	["unclassified"] = default_speed,
+	["living_street"] = default_speed,
+	["road"] = default_speed,
+	["service"] = default_speed,
+	["track"] = 12,
+	["path"] = 12
+	--["footway"] = 12,
+	--["pedestrian"] = 12,
 }
 
 pedestrian_speeds = { 
-	["footway"] = 5,
-	["pedestrian"] = 5,
-	["pier"] = 5,
+	["footway"] = walking_speed,
+	["pedestrian"] = walking_speed,
 	["steps"] = 2
 }
 
@@ -47,12 +49,16 @@ railway_speeds = {
 }
 
 platform_speeds = { 
-	["platform"] = 5
+	["platform"] = walking_speed
 }
 
 amenity_speeds = { 
 	["parking"] = 10,
 	["parking_entrance"] = 10
+}
+
+man_made_speeds = { 
+	["pier"] = walking_speed
 }
 
 route_speeds = { 
@@ -64,25 +70,22 @@ obey_oneway 			= true
 obey_bollards 			= false
 use_restrictions 		= true
 ignore_areas 			= true -- future feature
-traffic_signal_penalty 	= 2
+traffic_signal_penalty 	= 5
 u_turn_penalty 			= 20
-
+use_turn_restrictions   = false
+turn_penalty 			= 60
+turn_bias               = 1.4
 -- End of globals
 
---find first tag in access hierachy which is set
-function find_access_tag(source)
-	for i,v in ipairs(access_tags_hierachy) do 
-		local tag = source.tags:Find(v)
-		if tag ~= '' then --and tag ~= "" then
-			return tag
-		end
+function get_exceptions(vector)
+	for i,v in ipairs(restriction_exception_tags) do 
+		vector:Add(v)
 	end
-	return nil
 end
 
 function node_function (node)
 	local barrier = node.tags:Find ("barrier")
-	local access = find_access_tag(node)
+	local access = Access.find_access_tag(node, access_tags_hierachy)
 	local traffic_signal = node.tags:Find("highway")
 	
 	-- flag node if it carries a traffic light	
@@ -91,7 +94,7 @@ function node_function (node)
 	end
 	
 	-- parse access and barrier tags
-	if access  and access ~= "" then
+	if access and access ~= "" then
 		if access_tag_blacklist[access] then
 			node.bollard = true
 		else
@@ -108,22 +111,43 @@ function node_function (node)
 	return 1
 end
 
-function way_function (way, numberOfNodesInWay)
-	-- A way must have two nodes or more
-	if(numberOfNodesInWay < 2) then
-		return 0;
-	end
-	
-	-- First, get the properties of each way that we come across
+function way_function (way)
+	-- initial routability check, filters out buildings, boundaries, etc
 	local highway = way.tags:Find("highway")
+	local route = way.tags:Find("route")
+	local man_made = way.tags:Find("man_made")
+	local railway = way.tags:Find("railway")
+	local amenity = way.tags:Find("amenity")
+	local public_transport = way.tags:Find("public_transport")
+    if (not highway or highway == '') and 
+		(not route or route == '') and 
+		(not railway or railway=='') and 
+		(not amenity or amenity=='') and
+		(not man_made or man_made=='') and
+    	(not public_transport or public_transport=='')
+    	then
+    	return 0
+    end
+    
+    -- don't route on ways or railways that are still under construction
+    if highway=='construction' or railway=='construction' then
+        return 0
+    end
+    
+	-- access
+ 	local access = Access.find_access_tag(way, access_tags_hierachy)
+    if access_tag_blacklist[access] then
+		return 0
+    end
+
+
+	-- other tags
 	local name = way.tags:Find("name")
 	local ref = way.tags:Find("ref")
 	local junction = way.tags:Find("junction")
-	local route = way.tags:Find("route")
-	local railway = way.tags:Find("railway")
-	local public_transport = way.tags:Find("public_transport")
 	local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
-	local man_made = way.tags:Find("man_made")
+	local maxspeed_forward = parseMaxspeed(way.tags:Find( "maxspeed:forward"))
+	local maxspeed_backward = parseMaxspeed(way.tags:Find( "maxspeed:backward"))
 	local barrier = way.tags:Find("barrier")
 	local oneway = way.tags:Find("oneway")
 	local onewayClass = way.tags:Find("oneway:bicycle")
@@ -133,23 +157,7 @@ function way_function (way, numberOfNodesInWay)
 	local duration	= way.tags:Find("duration")
 	local service	= way.tags:Find("service")
 	local area = way.tags:Find("area")
-	local amenity = way.tags:Find("amenity")
-	local access = find_access_tag(way)
-	
-	-- initial routability check, filters out buildings, boundaries, etc
-    if (not highway or highway == '') and 
-		(not route or route == '') and 
-		(not railway or railway=='') and 
-		(not amenity or amenity=='') and
-    	(not public_transport or public_transport=='')
-    	then
-    	return 0
-    end
-		
- 	-- access
-    if access_tag_blacklist[access] then
-		return 0
-    end
+	local foot = way.tags:Find("foot")
 
 	-- name	
 	if "" ~= ref then
@@ -160,13 +168,13 @@ function way_function (way, numberOfNodesInWay)
 		way.name = highway		-- if no name exists, use way type
 	end
 	
+	-- speed
     if route_speeds[route] then
-		-- ferries
+		-- ferries (doesn't cover routes tagged using relations)
 		way.direction = Way.bidirectional
 		way.ignore_in_grid = true
 		if durationIsValid(duration) then
-			way.speed = math.max( parseDuration(duration) / math.max(1, numberOfNodesInWay-1) )
-		 	way.is_duration_set = true
+			way.duration = math.max( 1, parseDuration(duration) )
 		else
 		 	way.speed = route_speeds[route]
 		end
@@ -182,34 +190,32 @@ function way_function (way, numberOfNodesInWay)
 			way.speed = railway_speeds[railway]		
 			way.direction = Way.bidirectional
 		end
-	elseif pedestrian_speeds[highway] and main_speeds[highway] then
-		-- pedestrian areas
-		if access_tag_whitelist[access] then
-			way.speed = main_speeds[highway]		-- biking 
-		else
-			way.speed = pedestrian_speeds[highway]	-- pushing bikes
-		end
 	elseif amenity and amenity_speeds[amenity] then
 		-- parking areas
 		way.speed = amenity_speeds[amenity]
-	else
+	elseif bicycle_speeds[highway] then
 		-- regular ways
-		if main_speeds[highway] then 
-	      	way.speed = main_speeds[highway]
-	    elseif main_speeds[man_made] then 
-			way.speed = main_speeds[man_made]
-		elseif access_tag_whitelist[access] then
-			way.speed = default_speed
-		end
-	end
-	
-	-- maxspeed
-	if take_minimum_of_speeds then
-		if maxspeed and maxspeed>0 then
-			way.speed = math.min(way.speed, maxspeed)
-		end
-	end
-	
+      	way.speed = bicycle_speeds[highway]
+	elseif access and access_tag_whitelist[access] then
+	    -- unknown way, but valid access tag
+		way.speed = default_speed
+	else
+	    -- biking not allowed, maybe we can push our bike?
+	    -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
+        -- TODO: if we can push, the way should be marked as pedestrion mode, but there's no way to do it yet from lua..
+        if foot ~= 'no' then
+	        if pedestrian_speeds[highway] then
+	            -- pedestrian-only ways and areas
+        		way.speed = pedestrian_speeds[highway]
+        	elseif man_made and man_made_speeds[man_made] then
+            	-- man made structures
+            	way.speed = man_made_speeds[man_made]
+            elseif foot == 'yes' then
+                way.speed = walking_speed
+            end
+        end
+    end
+		
 	-- direction
 	way.direction = Way.bidirectional
 	local impliedOneway = false
@@ -252,15 +258,65 @@ function way_function (way, numberOfNodesInWay)
 		way.direction = Way.oneway
 	end
 	
+	-- pushing bikes
+	if bicycle_speeds[highway] or pedestrian_speeds[highway] then
+	    if foot ~= 'no' then
+	        if junction ~= "roundabout" then
+            	if way.direction == Way.oneway then
+            	    way.backward_speed = walking_speed
+                elseif way.direction == Way.opposite then
+                    way.backward_speed = walking_speed
+                    way.speed = way.speed
+            	end
+            end
+        end
+        if way.backward_speed == way.speed then
+            -- TODO: no way yet to mark a way as pedestrian mode if forward/backward speeds are equal
+            way.direction = Way.bidirectional
+        end
+    end
+
+	
 	-- cycleways
 	if cycleway and cycleway_tags[cycleway] then
-		way.speed = main_speeds["cycleway"]
+		way.speed = bicycle_speeds["cycleway"]
 	elseif cycleway_left and cycleway_tags[cycleway_left] then
-		way.speed = main_speeds["cycleway"]
+		way.speed = bicycle_speeds["cycleway"]
 	elseif cycleway_right and cycleway_tags[cycleway_right] then
-		way.speed = main_speeds["cycleway"]
+		way.speed = bicycle_speeds["cycleway"]
 	end
 
+	-- maxspeed
+	-- TODO: maxspeed of backward direction
+	if take_minimum_of_speeds then
+		if maxspeed and maxspeed>0 then
+			way.speed = math.min(way.speed, maxspeed)
+		end
+	end
+
+  -- Override speed settings if explicit forward/backward maxspeeds are given
+    if maxspeed_forward ~= nil and maxspeed_forward > 0 then
+	if Way.bidirectional == way.direction then
+          way.backward_speed = way.speed
+        end
+        way.speed = maxspeed_forward
+    end
+    if maxspeed_backward ~= nil and maxspeed_backward > 0 then
+      way.backward_speed = maxspeed_backward
+    end
+
+
+	
 	way.type = 1
 	return 1
+end
+
+function turn_function (angle)
+    -- compute turn penalty as angle^2, with a left/right bias
+    k = turn_penalty/(90.0*90.0)
+	if angle>=0 then
+	    return angle*angle*k/turn_bias
+	else
+	    return angle*angle*k*turn_bias
+    end
 end

@@ -246,7 +246,7 @@ public:
         reply.content += "}";
     }
 
-    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, SearchEngineT &sEngine, RouteNames & routeNames) {
+    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, const SearchEngineT &sEngine, RouteNames & routeNames) {
         /*** extract names for both alternatives ***/
 
         Segment shortestSegment1, shortestSegment2;
@@ -262,23 +262,25 @@ public:
             std::vector<Segment> shortestDifference(shortestSegments.size());
             std::vector<Segment> alternativeDifference(alternativeSegments.size());
             std::set_difference(shortestSegments.begin(), shortestSegments.end(), alternativeSegments.begin(), alternativeSegments.end(), shortestDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
-            if(0 < shortestDifference.size() ) {
-                unsigned i = 0;
-                while( i < shortestDifference.size() && shortestDifference[i].nameID == shortestSegments[0].nameID) {
+            int size_of_difference = shortestDifference.size();
+            if(0 < size_of_difference ) {
+                int i = 0;
+                while( i < size_of_difference && shortestDifference[i].nameID == shortestSegments[0].nameID) {
                     ++i;
                 }
-                if(i < shortestDifference.size()) {
+                if(i < size_of_difference ) {
                     shortestSegment2 = shortestDifference[i];
                 }
             }
 
             std::set_difference(alternativeSegments.begin(), alternativeSegments.end(), shortestSegments.begin(), shortestSegments.end(), alternativeDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
-            if(0 < alternativeDifference.size() ) {
-                unsigned i = 0;
-                while( i < alternativeDifference.size() && alternativeDifference[i].nameID == alternativeSegments[0].nameID) {
+            size_of_difference = alternativeDifference.size();
+            if(0 < size_of_difference ) {
+                int i = 0;
+                while( i < size_of_difference && alternativeDifference[i].nameID == alternativeSegments[0].nameID) {
                     ++i;
                 }
-                if(i < alternativeDifference.size()) {
+                if(i < size_of_difference ) {
                     alternativeSegment2 = alternativeDifference[i];
                 }
             }
@@ -292,7 +294,7 @@ public:
             routeNames.shortestPathName2 = sEngine.GetEscapedNameForNameID(shortestSegment2.nameID);
 
             routeNames.alternativePathName1 = sEngine.GetEscapedNameForNameID(alternativeSegment1.nameID);
-            routeNames.alternativePathName2 += sEngine.GetEscapedNameForNameID(alternativeSegment2.nameID);
+            routeNames.alternativePathName2 = sEngine.GetEscapedNameForNameID(alternativeSegment2.nameID);
         }
     }
 

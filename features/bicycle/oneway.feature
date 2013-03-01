@@ -1,19 +1,20 @@
 @routing @bicycle @oneway
 Feature: Bike - Oneway streets
 Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
+Usually we can push bikes against oneways, but we use foot=no to prevent this in these tests
 
 	Background:
 		Given the profile "bicycle"
 	
 	Scenario: Bike - Simple oneway
 		Then routability should be
-		 | highway | oneway | forw | backw |
-		 | primary | yes    | x    |       |
+		 | highway | foot | oneway | forw | backw |
+		 | primary | no   | yes    | x    |       |
 
 	Scenario: Simple reverse oneway
 		Then routability should be
-		 | highway | oneway | forw | backw |
-		 | primary | -1     |      | x     |
+		 | highway | foot | oneway | forw | backw |
+		 | primary | no   | -1     |      | x     |
 
 	Scenario: Bike - Around the Block
 		Given the node map
@@ -21,11 +22,11 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | d | c |
 	
 		And the ways
-		 | nodes | oneway |
-		 | ab    | yes    |
-		 | bc    |        |
-		 | cd    |        |
-		 | da    |        |
+		 | nodes | oneway | foot |
+		 | ab    | yes    | no   |
+		 | bc    |        | no   |
+		 | cd    |        | no   |
+		 | da    |        | no   |
     
 		When I route I should get
 		 | from | to | route    |
@@ -34,80 +35,80 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 	
 	Scenario: Bike - Handle various oneway tag values
 	 	Then routability should be
-		 | oneway   | forw | backw |
-		 |          | x    | x     |
-		 | nonsense | x    | x     |
-		 | no       | x    | x     |
-		 | false    | x    | x     |
-		 | 0        | x    | x     |
-		 | yes      | x    |       |
-		 | true     | x    |       |
-		 | 1        | x    |       |
-		 | -1       |      | x     |
+		 | foot | oneway   | forw | backw |
+		 | no   |          | x    | x     |
+		 | no   | nonsense | x    | x     |
+		 | no   | no       | x    | x     |
+		 | no   | false    | x    | x     |
+		 | no   | 0        | x    | x     |
+		 | no   | yes      | x    |       |
+		 | no   | true     | x    |       |
+		 | no   | 1        | x    |       |
+		 | no   | -1       |      | x     |
 	
 	Scenario: Bike - Implied oneways
 	 	Then routability should be
-		 | highway       | bicycle | junction   | forw | backw |
-		 |               |         |            | x    | x     |
-		 |               |         | roundabout | x    |       |
-		 | motorway      | yes     |            | x    |       |
-		 | motorway_link | yes     |            | x    |       |
-		 | motorway      | yes     | roundabout | x    |       |
-		 | motorway_link | yes     | roundabout | x    |       |
+		 | highway       | foot | bicycle | junction   | forw | backw |
+		 |               | no   |         |            | x    | x     |
+		 |               | no   |         | roundabout | x    |       |
+		 | motorway      | no   | yes     |            | x    |       |
+		 | motorway_link | no   | yes     |            | x    |       |
+		 | motorway      | no   | yes     | roundabout | x    |       |
+		 | motorway_link | no   | yes     | roundabout | x    |       |
 
 	Scenario: Bike - Overriding implied oneways
 	 	Then routability should be
-		 | highway       | junction   | oneway | forw | backw |
-		 | primary       | roundabout | no     | x    | x     |
-		 | primary       | roundabout | yes    | x    |       |
-		 | motorway_link |            | -1     |      |       |
-		 | trunk_link    |            | -1     |      |       |
-		 | primary       | roundabout | -1     |      | x     |
+		 | highway       | foot | junction   | oneway | forw | backw |
+		 | primary       | no   | roundabout | no     | x    | x     |
+		 | primary       | no   | roundabout | yes    | x    |       |
+		 | motorway_link | no   |            | -1     |      |       |
+		 | trunk_link    | no   |            | -1     |      |       |
+		 | primary       | no   | roundabout | -1     |      | x     |
 	
 	Scenario: Bike - Oneway:bicycle should override normal oneways tags
 	 	Then routability should be
-		 | oneway:bicycle | oneway | junction   | forw | backw |
-		 | yes            |        |            | x    |       |
-		 | yes            | yes    |            | x    |       |
-		 | yes            | no     |            | x    |       |
-		 | yes            | -1     |            | x    |       |
-		 | yes            |        | roundabout | x    |       |
-		 | no             |        |            | x    | x     |
-		 | no             | yes    |            | x    | x     |
-		 | no             | no     |            | x    | x     |
-		 | no             | -1     |            | x    | x     |
-		 | no             |        | roundabout | x    | x     |
-		 | -1             |        |            |      | x     |
-		 | -1             | yes    |            |      | x     |
-		 | -1             | no     |            |      | x     |
-		 | -1             | -1     |            |      | x     |
-		 | -1             |        | roundabout |      | x     |
+		 | foot | oneway:bicycle | oneway | junction   | forw | backw |
+		 | no   | yes            |        |            | x    |       |
+		 | no   | yes            | yes    |            | x    |       |
+		 | no   | yes            | no     |            | x    |       |
+		 | no   | yes            | -1     |            | x    |       |
+		 | no   | yes            |        | roundabout | x    |       |
+		 | no   | no             |        |            | x    | x     |
+		 | no   | no             | yes    |            | x    | x     |
+		 | no   | no             | no     |            | x    | x     |
+		 | no   | no             | -1     |            | x    | x     |
+		 | no   | no             |        | roundabout | x    | x     |
+		 | no   | -1             |        |            |      | x     |
+		 | no   | -1             | yes    |            |      | x     |
+		 | no   | -1             | no     |            |      | x     |
+		 | no   | -1             | -1     |            |      | x     |
+		 | no   | -1             |        | roundabout |      | x     |
 	
 	Scenario: Bike - Contra flow
 	 	Then routability should be
-		 | oneway | cycleway       | forw | backw |
-		 | yes    | opposite       | x    | x     |
-		 | yes    | opposite_track | x    | x     |
-		 | yes    | opposite_lane  | x    | x     |
-		 | -1     | opposite       | x    | x     |
-		 | -1     | opposite_track | x    | x     |
-		 | -1     | opposite_lane  | x    | x     |
-		 | no     | opposite       | x    | x     |
-		 | no     | opposite_track | x    | x     |
-		 | no     | opposite_lane  | x    | x     |
+		 | foot | oneway | cycleway       | forw | backw |
+		 | no   | yes    | opposite       | x    | x     |
+		 | no   | yes    | opposite_track | x    | x     |
+		 | no   | yes    | opposite_lane  | x    | x     |
+		 | no   | -1     | opposite       | x    | x     |
+		 | no   | -1     | opposite_track | x    | x     |
+		 | no   | -1     | opposite_lane  | x    | x     |
+		 | no   | no     | opposite       | x    | x     |
+		 | no   | no     | opposite_track | x    | x     |
+		 | no   | no     | opposite_lane  | x    | x     |
 
 	Scenario: Bike - Should not be affected by car tags
 		Then routability should be
-		 | junction   | oneway | oneway:car | forw | backw |
-		 |            | yes    | yes        | x    |       |
-		 |            | yes    | no         | x    |       |
-		 |            | yes    | -1         | x    |       |
-		 |            | no     | yes        | x    | x     |
-		 |            | no     | no         | x    | x     |
-		 |            | no     | -1         | x    | x     |
-		 |            | -1     | yes        |      | x     |
-		 |            | -1     | no         |      | x     |
-		 |            | -1     | -1         |      | x     |
-		 | roundabout |        | yes        | x    |       |
-		 | roundabout |        | no         | x    |       |
-		 | roundabout |        | -1         | x    |       |
+		 | foot | junction   | oneway | oneway:car | forw | backw |
+		 | no   |            | yes    | yes        | x    |       |
+		 | no   |            | yes    | no         | x    |       |
+		 | no   |            | yes    | -1         | x    |       |
+		 | no   |            | no     | yes        | x    | x     |
+		 | no   |            | no     | no         | x    | x     |
+		 | no   |            | no     | -1         | x    | x     |
+		 | no   |            | -1     | yes        |      | x     |
+		 | no   |            | -1     | no         |      | x     |
+		 | no   |            | -1     | -1         |      | x     |
+		 | no   | roundabout |        | yes        | x    |       |
+		 | no   | roundabout |        | no         | x    |       |
+		 | no   | roundabout |        | -1         | x    |       |

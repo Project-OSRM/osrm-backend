@@ -59,8 +59,8 @@ class DynamicGraph {
         {
             m_numNodes = nodes;
             m_numEdges = ( EdgeIterator ) graph.size();
-            m_nodes.reserve( m_numNodes );
-            m_nodes.resize( m_numNodes );
+            m_nodes.reserve( m_numNodes +1);
+            m_nodes.resize( m_numNodes +1);
             EdgeIterator edge = 0;
             EdgeIterator position = 0;
             for ( NodeIterator node = 0; node < m_numNodes; ++node ) {
@@ -72,6 +72,7 @@ class DynamicGraph {
                 m_nodes[node].edges = edge - lastEdge;
                 position += m_nodes[node].edges;
             }
+            m_nodes.back().firstEdge = position;
             m_edges.reserve( position * 1.1 );
             m_edges.resize( position );
             edge = 0;
@@ -97,40 +98,33 @@ class DynamicGraph {
             return m_numEdges;
         }
 
-        unsigned GetOutDegree( const NodeIterator &n ) const
-        {
+        unsigned GetOutDegree( const NodeIterator n ) const {
             return m_nodes[n].edges;
         }
 
-        NodeIterator GetTarget( const EdgeIterator &e ) const
-        {
+        NodeIterator GetTarget( const EdgeIterator e ) const {
             return NodeIterator( m_edges[e].target );
         }
 
-        EdgeDataT &GetEdgeData( const EdgeIterator &e )
-        {
+        EdgeDataT &GetEdgeData( const EdgeIterator e ) {
             return m_edges[e].data;
         }
 
-        const EdgeDataT &GetEdgeData( const EdgeIterator &e ) const
-        {
+        const EdgeDataT &GetEdgeData( const EdgeIterator e ) const {
             return m_edges[e].data;
         }
 
-        EdgeIterator BeginEdges( const NodeIterator &n ) const
-        {
+        EdgeIterator BeginEdges( const NodeIterator n ) const {
             //assert( EndEdges( n ) - EdgeIterator( _nodes[n].firstEdge ) <= 100 );
             return EdgeIterator( m_nodes[n].firstEdge );
         }
 
-        EdgeIterator EndEdges( const NodeIterator &n ) const
-        {
+        EdgeIterator EndEdges( const NodeIterator n ) const {
             return EdgeIterator( m_nodes[n].firstEdge + m_nodes[n].edges );
         }
 
         //adds an edge. Invalidates edge iterators for the source node
-        EdgeIterator InsertEdge( const NodeIterator &from, const NodeIterator &to, const EdgeDataT &data )
-        {
+        EdgeIterator InsertEdge( const NodeIterator from, const NodeIterator to, const EdgeDataT &data ) {
             Node &node = m_nodes[from];
             EdgeIterator newFirstEdge = node.edges + node.firstEdge;
             if ( newFirstEdge >= m_edges.size() || !isDummy( newFirstEdge ) ) {
@@ -164,7 +158,7 @@ class DynamicGraph {
         }
 
         //removes an edge. Invalidates edge iterators for the source node
-        void DeleteEdge( const NodeIterator source, const EdgeIterator &e ) {
+        void DeleteEdge( const NodeIterator source, const EdgeIterator e ) {
             Node &node = m_nodes[source];
             --m_numEdges;
             --node.edges;
@@ -175,8 +169,7 @@ class DynamicGraph {
         }
 
         //removes all edges (source,target)
-        int DeleteEdgesTo( const NodeIterator source, const NodeIterator target )
-        {
+        int DeleteEdgesTo( const NodeIterator source, const NodeIterator target ) {
             int deleted = 0;
             for ( EdgeIterator i = BeginEdges( source ), iend = EndEdges( source ); i < iend - deleted; ++i ) {
                 if ( m_edges[i].target == target ) {
@@ -196,8 +189,7 @@ class DynamicGraph {
         }
 
         //searches for a specific edge
-        EdgeIterator FindEdge( const NodeIterator &from, const NodeIterator &to ) const
-        {
+        EdgeIterator FindEdge( const NodeIterator from, const NodeIterator to ) const {
             for ( EdgeIterator i = BeginEdges( from ), iend = EndEdges( from ); i != iend; ++i ) {
                 if ( m_edges[i].target == to ) {
                     return i;
@@ -208,13 +200,11 @@ class DynamicGraph {
 
     protected:
 
-        bool isDummy( EdgeIterator edge ) const
-        {
+        bool isDummy( EdgeIterator edge ) const {
             return m_edges[edge].target == (std::numeric_limits< NodeIterator >::max)();
         }
 
-        void makeDummy( EdgeIterator edge )
-        {
+        void makeDummy( EdgeIterator edge ) {
             m_edges[edge].target = (std::numeric_limits< NodeIterator >::max)();
         }
 
@@ -233,9 +223,8 @@ class DynamicGraph {
         NodeIterator m_numNodes;
         EdgeIterator m_numEdges;
 
-       DeallocatingVector< Node > m_nodes;
-       DeallocatingVector< Edge > m_edges;
-
+        std::vector< Node > m_nodes;
+        DeallocatingVector< Edge > m_edges;
 };
 
 #endif // DYNAMICGRAPH_H_INCLUDED
