@@ -52,19 +52,20 @@ public:
 
     void handle_request(const Request& req, Reply& rep){
         //parse command
-        std::string request(req.uri);
-
-        { //This block logs the current request to std out. should be moved to a logging component
-            time_t ltime;
-            struct tm *Tm;
-
-            ltime=time(NULL);
-            Tm=localtime(&ltime);
-
-            INFO((Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday << "-" << (Tm->tm_mon+1 < 10 ? "0" : "" )  << (Tm->tm_mon+1) << "-" << 1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) << Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) << Tm->tm_sec << " " <<
-                    req.endpoint.to_string() << " " << req.referrer << ( 0 == req.referrer.length() ? "- " :" ") << req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri );
-        }
         try {
+            std::string request(req.uri);
+
+            { //This block logs the current request to std out. should be moved to a logging component
+                time_t ltime;
+                struct tm *Tm;
+
+                ltime=time(NULL);
+                Tm=localtime(&ltime);
+
+                INFO((Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday << "-" << (Tm->tm_mon+1 < 10 ? "0" : "" )  << (Tm->tm_mon+1) << "-" << 1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) << Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) << Tm->tm_sec << " " <<
+                        req.endpoint.to_string() << " " << req.referrer << ( 0 == req.referrer.length() ? "- " :" ") << req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri );
+            }
+
             RouteParameters routeParameters;
             APIGrammar<std::string::iterator, RouteParameters> apiParser(&routeParameters);
 
