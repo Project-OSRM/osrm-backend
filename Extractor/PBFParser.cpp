@@ -155,9 +155,9 @@ inline bool PBFParser::Parse() {
 inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 	const OSMPBF::DenseNodes& dense = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).dense();
 	int denseTagIndex = 0;
-	int m_lastDenseID = 0;
-	int m_lastDenseLatitude = 0;
-	int m_lastDenseLongitude = 0;
+	int64_t m_lastDenseID = 0;
+	int64_t m_lastDenseLatitude = 0;
+	int64_t m_lastDenseLongitude = 0;
 
 	ImportNode n;
 	std::vector<ImportNode> extracted_nodes_vector;
