@@ -312,7 +312,7 @@ public:
         unsigned prefixSumOfNecessarySegments = 0;
         roundAbout.leaveAtExit = 0;
         roundAbout.nameID = 0;
-        std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
+        std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction, tmpMode;
         //Fetch data from Factory and generate a string from it.
         BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
         	TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
@@ -358,6 +358,11 @@ public:
                     reply.content += "\",";
                     intToString(round(segment.bearing), tmpBearing);
                     reply.content += tmpBearing;
+                    
+                    reply.content += ",";
+                    intToString(segment.mode, tmpMode);
+                    reply.content += tmpMode;
+                    
                     reply.content += "]";
 
                     segmentVector.push_back( Segment(segment.nameID, segment.length, segmentVector.size() ));

@@ -22,14 +22,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define PHANTOMNODES_H_
 
 #include "Coordinate.h"
+#include "TravelMode.h"
 
 struct PhantomNode {
-    PhantomNode() : edgeBasedNode(UINT_MAX), nodeBasedEdgeNameID(UINT_MAX), weight1(INT_MAX), weight2(INT_MAX), ratio(0.) {}
+    PhantomNode() : edgeBasedNode(UINT_MAX), nodeBasedEdgeNameID(UINT_MAX), weight1(INT_MAX), weight2(INT_MAX), ratio(0.), mode1(0), mode2(0) {}
     NodeID edgeBasedNode;
     unsigned nodeBasedEdgeNameID;
     int weight1;
     int weight2;
     double ratio;
+    TravelMode mode1;
+    TravelMode mode2;
     _Coordinate location;
     void Reset() {
         edgeBasedNode = UINT_MAX;

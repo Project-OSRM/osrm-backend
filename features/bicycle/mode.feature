@@ -1,10 +1,14 @@
 @routing @bicycle @mode
 Feature: Bike - Mode flag
 
+# bicycle modes:
+# 1 bike
+# 2 ferry
+# 3 push
+
 	Background:
 		Given the profile "bicycle"
     
-    @todo
     Scenario: Bike - Mode when using a ferry
     	Given the node map
     	 | a | b |   |
@@ -17,15 +21,14 @@ Feature: Bike - Mode flag
     	 | cd    | primary |       |          |
 
     	When I route I should get
-    	 | from | to | route    | turns                        | modes           |
-    	 | a    | d  | ab,bc,cd | head,right,left, destination | bike,ferry,bike |
-    	 | d    | a  | cd,bc,ab | head,right,left, destination | bike,ferry,bike |
-    	 | c    | a  | bc,ab    | head,left,destination        | ferry,bike      |
-    	 | d    | b  | cd,bc    | head,right,destination       | bike,ferry      |
-    	 | a    | c  | ab,bc    | head,right,destination       | bike,ferry      |
-    	 | b    | d  | bc,cd    | head,left,destination        | ferry,bike      |
+    	 | from | to | route    | turns                       | modes |
+    	 | a    | d  | ab,bc,cd | head,right,left,destination | 1,2,1 |
+    	 | d    | a  | cd,bc,ab | head,right,left,destination | 1,2,1 |
+    	 | c    | a  | bc,ab    | head,left,destination       | 2,1   |
+    	 | d    | b  | cd,bc    | head,right,destination      | 1,2   |
+    	 | a    | c  | ab,bc    | head,right,destination      | 1,2   |
+    	 | b    | d  | bc,cd    | head,left,destination       | 2,1   |
 
-     @todo
      Scenario: Bike - Mode when pushing bike against oneways
      	Given the node map
      	 | a | b |   |
@@ -38,15 +41,14 @@ Feature: Bike - Mode flag
      	 | cd    | primary |        |
 
      	When I route I should get
-     	 | from | to | route    | turns                       | modes          |
-     	 | a    | d  | ab,bc,cd | head,right,left,destination | bike,push,bike |
-     	 | d    | a  | cd,bc,ab | head,right,left,destination | bike,push,bike |
-     	 | c    | a  | bc,ab    | head,left,destination       | push,bike      |
-     	 | d    | b  | cd,bc    | head,right,destination      | bike,push      |
-     	 | a    | c  | ab,bc    | head,right,destination      | bike,push      |
-     	 | b    | d  | bc,cd    | head,left,destination       | push,bike      |
+     	 | from | to | route    | turns                       | modes |
+     	 | a    | d  | ab,bc,cd | head,right,left,destination | 1,1,1 |
+     	 | d    | a  | cd,bc,ab | head,right,left,destination | 1,3,1 |
+     	 | c    | a  | bc,ab    | head,left,destination       | 3,1   |
+     	 | d    | b  | cd,bc    | head,right,destination      | 1,3   |
+     	 | a    | c  | ab,bc    | head,right,destination      | 1,1   |
+     	 | b    | d  | bc,cd    | head,left,destination       | 1,1   |
 
-     @todo
      Scenario: Bike - Mode when pushing on pedestrain streets
      	Given the node map
      	 | a | b |   |
@@ -59,15 +61,14 @@ Feature: Bike - Mode flag
      	 | cd    | primary    |
 
      	When I route I should get
-     	 | from | to | route    | turns                       | modes          |
-     	 | a    | d  | ab,bc,cd | head,right,left,destination | bike,push,bike |
-     	 | d    | a  | cd,bc,ab | head,right,left,destination | bike,push,bike |
-     	 | c    | a  | bc,ab    | head,left,destination       | push,bike      |
-     	 | d    | b  | cd,bc    | head,right,destination      | bike,push      |
-     	 | a    | c  | ab,bc    | head,right,destination      | bike,push      |
-     	 | b    | d  | bc,cd    | head,left,destination       | push,bike      |
+     	 | from | to | route    | turns                       | modes |
+     	 | a    | d  | ab,bc,cd | head,right,left,destination | 1,3,1 |
+     	 | d    | a  | cd,bc,ab | head,right,left,destination | 1,3,1 |
+     	 | c    | a  | bc,ab    | head,left,destination       | 3,1   |
+     	 | d    | b  | cd,bc    | head,right,destination      | 1,3   |
+     	 | a    | c  | ab,bc    | head,right,destination      | 1,3   |
+     	 | b    | d  | bc,cd    | head,left,destination       | 3,1   |
 
-     @todo
      Scenario: Bike - Mode when pushing on pedestrain areas
      	Given the node map
      	 | a | b |   |   |
@@ -80,10 +81,10 @@ Feature: Bike - Mode flag
      	 | df    | primary    |      |
 
      	When I route I should get
-     	 | from | to | route     | modes          |
-     	 | a    | f  | ab,bcd,df | bike,push,bike |
-     	 | f    | a  | df,bcd,ab | bike,push,bike |
-     	 | d    | a  | bcd,ab    | push,bike      |
-     	 | f    | b  | df,bcd    | bike,push      |
-     	 | a    | d  | ab,bcd    | bike,push      |
-     	 | b    | f  | bcd,df    | push,bike      |
+     	 | from | to | route     | modes |
+     	 | a    | f  | ab,bcd,df | 1,3,1 |
+     	 | f    | a  | df,bcd,ab | 1,3,1 |
+     	 | d    | a  | bcd,ab    | 3,1   |
+     	 | f    | b  | df,bcd    | 1,3   |
+     	 | a    | d  | ab,bcd    | 1,3   |
+     	 | b    | f  | bcd,df    | 3,1   |

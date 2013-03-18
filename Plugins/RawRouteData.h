@@ -24,11 +24,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu) { }
+    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur, const TravelMode _mode) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu), mode(_mode) { }
     NodeID node;
     unsigned nameID;
     unsigned durationOfSegment;
     short turnInstruction;
+    TravelMode mode;
 };
 
 struct RawRouteData {

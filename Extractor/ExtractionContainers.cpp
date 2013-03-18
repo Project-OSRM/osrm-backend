@@ -257,6 +257,7 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                     fout.write((char*)&edgeIT->ignoreInGrid, sizeof(bool));
                     fout.write((char*)&edgeIT->isAccessRestricted, sizeof(bool));
                     fout.write((char*)&edgeIT->isContraFlow, sizeof(bool));
+                    fout.write((char*)&edgeIT->mode, sizeof(unsigned char));
                 }
                 ++usedEdgeCounter;
                 ++edgeIT;
@@ -264,6 +265,8 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         }
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         std::cout << "[extractor] setting number of edges   ... " << std::flush;
+
+        std::cout << "[extractor]  number of edges:    " << usedEdgeCounter << std::flush;
 
         fout.seekp(positionInFile);
         fout.write((char*)&usedEdgeCounter, sizeof(unsigned));

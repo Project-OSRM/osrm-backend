@@ -102,7 +102,8 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
     NodeID nameID;
     int length;
     bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow;
-
+    TravelMode mode;
+    
     for (EdgeID i=0; i<m; ++i) {
         in.read((char*)&source,             sizeof(unsigned));
         in.read((char*)&target,             sizeof(unsigned));
@@ -115,6 +116,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         in.read((char*)&ignoreInGrid,       sizeof(bool));
         in.read((char*)&isAccessRestricted, sizeof(bool));
         in.read((char*)&isContraFlow,       sizeof(bool));
+        in.read((char*)&mode,               sizeof(TravelMode));
 
         GUARANTEE(length > 0, "loaded null length edge" );
         GUARANTEE(weight > 0, "loaded null weight");
@@ -151,7 +153,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
             std::swap(forward, backward);
         }
 
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow );
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, mode );
         edgeList.push_back(inputEdge);
     }
     std::sort(edgeList.begin(), edgeList.end());
@@ -367,7 +369,6 @@ unsigned readHSGRFromStream(std::istream &in, std::vector<NodeT>& nodeList, std:
     in.read((char*) &numberOfEdges, sizeof(unsigned));
     edgeList.resize(numberOfEdges);
     in.read((char*) &(edgeList[0]), numberOfEdges*sizeof(EdgeT));
-
     return numberOfNodes;
 }
 

@@ -78,6 +78,8 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
                                      .def_readwrite("tags", &ExtractionWay::keyVals)
                                      .def_readwrite("direction", &ExtractionWay::direction)
+                                     .def_readwrite("forward_mode", &ExtractionWay::forward_mode)
+                                     .def_readwrite("backward_mode", &ExtractionWay::backward_mode)
                                      .enum_("constants")
 										 [
 										  luabind::value("notSure", 0),

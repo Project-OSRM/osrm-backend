@@ -33,10 +33,11 @@ struct SegmentInformation {
     double bearing;
     TurnInstruction turnInstruction;
     bool necessary;
-    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr, const bool nec) :
-            location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(nec) {}
-    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr) :
-        location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(tInstr != 0) {}
+    char mode;
+    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr, const bool nec, const char mod) :
+            location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(nec), mode(mod) {}
+    SegmentInformation(const _Coordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr, const char mod) :
+        location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(tInstr != 0), mode(mod) {}
 };
 
 #endif /* SEGMENTINFORMATION_H_ */

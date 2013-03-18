@@ -255,6 +255,7 @@ int main (int argc, char *argv[]) {
                 ERR("Failed at edges of node " << node << " of " << numberOfNodes);
             }
             //Serialize edges
+            //INFO( "createHierachy write, i: " << usedEdgeCounter << ", mode: " << (long)currentEdge.data.mode );
             edgeOutFile.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
             ++edge;
             ++usedEdgeCounter;

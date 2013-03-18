@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "QueryObjectsStorage.h"
 #include "../../Util/GraphLoader.h"
+#include "../../DataStructures/QueryEdge.h"
+#include "../../DataStructures/StaticGraph.h"
 
 QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string timestampPath) {
 	INFO("loading graph data");
@@ -55,7 +57,7 @@ QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIn
 	if(!nodesInStream) { ERR(nodesPath <<  " not found"); }
     std::ifstream edgesInStream(edgesPath.c_str(), std::ios::binary);
     if(!edgesInStream) { ERR(edgesPath <<  " not found"); }
-	nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str(), n, checkSum);
+	nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str(), n, checkSum, graph);
 	nodeHelpDesk->initNNGrid(nodesInStream, edgesInStream);
 
 	//deserialize street name list

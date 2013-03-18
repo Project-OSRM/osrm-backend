@@ -23,6 +23,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <cassert>
 
+#include "TravelMode.h"
+
 class NodeBasedEdge {
 public:
 
@@ -40,8 +42,8 @@ public:
         return (source() < e.source());
     }
 
-    explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty, bool ra, bool ig, bool ar, bool cf) :
-                                            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _contraFlow(cf) { if(ty < 0) {ERR("Type: " << ty);}; }
+    explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty, bool ra, bool ig, bool ar, bool cf, TravelMode mode) :
+                                            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _contraFlow(cf), _mode(mode) { if(ty < 0) {ERR("Type: " << ty);}; }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
@@ -56,6 +58,7 @@ public:
     bool ignoreInGrid() const { return _ignoreInGrid; }
     bool isAccessRestricted() const { return _accessRestricted; }
     bool isContraFlow() const { return _contraFlow; }
+    TravelMode mode() const { return _mode; }
 
     NodeID _source;
     NodeID _target;
@@ -68,11 +71,12 @@ public:
     bool _ignoreInGrid;
     bool _accessRestricted;
     bool _contraFlow;
+    TravelMode    _mode;
 
 private:
     /** Default constructor. target and weight are set to 0.*/
     NodeBasedEdge() :
-        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _type(0), _roundabout(false), _ignoreInGrid(false), _accessRestricted(false), _contraFlow(false) { assert(false); } //shall not be used.
+        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _type(0), _roundabout(false), _ignoreInGrid(false), _accessRestricted(false), _contraFlow(false), _mode(0) { assert(false); } //shall not be used.
 
 };
 
@@ -127,7 +131,7 @@ public:
     EdgeWeight weight() const {return m_weight; }
     NodeID id() const { return m_edgeID; }
     bool isBackward() const { return m_backward; }
-    bool isForward() const { return m_forward; }
+    bool isForward() const { return m_forward; }  
 private:
     NodeID m_source;
     NodeID m_target;

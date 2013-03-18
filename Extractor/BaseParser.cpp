@@ -25,6 +25,7 @@ extractor_callbacks(ec), scriptingEnvironment(se), luaState(NULL), use_turn_rest
     luaState = se.getLuaStateForThreadID(0);
     ReadUseRestrictionsSetting();
     ReadRestrictionExceptions();
+    ReadModes();
 }
 
 void BaseParser::ReadUseRestrictionsSetting() {
@@ -61,6 +62,28 @@ void BaseParser::ReadRestrictionExceptions() {
         }
     } else {
         INFO("Found no exceptions to turn restrictions");
+    }
+}
+
+void BaseParser::ReadModes() {
+    if(lua_function_exists(luaState, "get_modes" )) {
+        //get list of modes
+        try {
+            luabind::call_function<void>(
+                luaState,
+                "get_modes",
+                boost::ref(modes)
+                );
+            BOOST_FOREACH(std::string & str, modes) {
+                INFO("mode found: " << str);
+            }
+        } catch (const luabind::error &er) {
+            lua_State* Ler=er.state();
+            report_errors(Ler, -1);
+            ERR(er.what());
+        }
+    } else {
+        INFO("Found no modes");
     }
 }
 

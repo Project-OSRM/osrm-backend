@@ -11,7 +11,7 @@ file(GLOB PrepareGlob Contractor/*.cpp)
 set(PrepareSources createHierarchy.cpp ${PrepareGlob})
 add_executable(osrm-prepare ${PrepareSources})
 
-file(GLOB RoutedGlob Server/DataStructures/*.cpp Descriptors/*.cpp)
+file(GLOB RoutedGlob Server/DataStructures/*.cpp Descriptors/*.cpp DataStructures/*.cpp)
 set(RoutedSources routed.cpp ${RoutedGlob})
 add_executable(osrm-routed ${RoutedSources})
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)

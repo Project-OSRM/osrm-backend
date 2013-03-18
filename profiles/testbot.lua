@@ -6,6 +6,12 @@
 -- Secondary road:	18km/h = 18000m/3600s = 100m/20s
 -- Tertiary road:	12km/h = 12000m/3600s = 100m/30s
 
+-- modes:
+-- 1: normal
+-- 2: route
+-- 3: river downstream
+-- 4: river upstream
+
 speed_profile = { 
 	["primary"] = 36,
 	["secondary"] = 18,
@@ -22,6 +28,14 @@ use_restrictions 		= true
 ignore_areas 			= true	-- future feature
 traffic_signal_penalty 	= 7		-- seconds
 u_turn_penalty 			= 20
+
+modes = { "bot", "ferry", "downstream", "upstream" }
+
+function get_modes(vector)
+	for i,v in ipairs(modes) do 
+		vector:Add(v)
+	end
+end
 
 function limit_speed(speed, limits)
     -- don't use ipairs(), since it stops at the first nil value
@@ -56,10 +70,14 @@ function way_function (way)
     local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
     local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
 	
+	way.forward_mode = 1
+	way.backward_mode = 1
 	way.name = name
 
   	if route ~= nil and durationIsValid(duration) then
 		way.duration = math.max( 1, parseDuration(duration) )
+    	way.forward_mode = 2
+    	way.backward_mode = 2
 	else
 	    local speed_forw = speed_profile[highway] or speed_profile['default']
 	    local speed_back = speed_forw
@@ -68,7 +86,9 @@ function way_function (way)
     		local temp_speed = speed_forw;
     		speed_forw = temp_speed*1.5
     		speed_back = temp_speed/1.5
-   	end
+        	way.forward_mode = 3
+        	way.backward_mode = 4
+   	    end
             	
         if maxspeed_forward ~= nil and maxspeed_forward > 0 then
 			speed_forw = maxspeed_forward

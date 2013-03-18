@@ -77,6 +77,7 @@ public:
         NodeID nameID;
         unsigned weight:31;
         bool ignoreInGrid:1;
+        TravelMode mode;
     };
 
     struct SpeedProfileProperties{
@@ -99,6 +100,7 @@ private:
         bool roundabout:1;
         bool ignoreInGrid:1;
         bool contraFlow:1;
+        TravelMode mode;
     };
 
     struct _EdgeBasedEdgeData {
@@ -108,6 +110,7 @@ private:
         bool forward;
         bool backward;
         TurnInstruction turnInstruction;
+        TravelMode mode;
     };
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
@@ -147,7 +150,7 @@ public:
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
     void GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
-    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, bool& contraflow, unsigned& penalty, lua_State *myLuaState) const;
     unsigned GetNumberOfNodes() const;
 };
 

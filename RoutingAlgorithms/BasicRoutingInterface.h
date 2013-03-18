@@ -101,7 +101,7 @@ public:
         }
     }
 
-    inline void UnpackPath(const std::vector<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
+    inline void UnpackPath(const std::vector<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {        
         const unsigned sizeOfPackedPath = packedPath.size();
         std::stack<std::pair<NodeID, NodeID> > recursionStack;
 
@@ -144,7 +144,7 @@ public:
                 recursionStack.push(std::make_pair(edge.first, middle));
             } else {
                 assert(!ed.shortcut);
-                unpackedPath.push_back(_PathData(ed.id, _queryData.nodeHelpDesk->getNameIndexFromEdgeID(ed.id), _queryData.nodeHelpDesk->getTurnInstructionFromEdgeID(ed.id), ed.distance) );
+                unpackedPath.push_back(_PathData(ed.id, _queryData.nodeHelpDesk->getNameIndexFromEdgeID(ed.id), _queryData.nodeHelpDesk->getTurnInstructionFromEdgeID(ed.id), ed.distance, _queryData.nodeHelpDesk->getModeFromEdgeID(ed.id)) );
             }
         }
     }
@@ -158,9 +158,12 @@ public:
             edge = recursionStack.top();
             recursionStack.pop();
 
+
             typename QueryDataT::Graph::EdgeIterator smallestEdge = SPECIAL_EDGEID;
             int smallestWeight = INT_MAX;
             for(typename QueryDataT::Graph::EdgeIterator eit = _queryData.graph->BeginEdges(edge.first);eit < _queryData.graph->EndEdges(edge.first);++eit){
+                
+                
                 const int weight = _queryData.graph->GetEdgeData(eit).distance;
                 if(_queryData.graph->GetTarget(eit) == edge.second && weight < smallestWeight && _queryData.graph->GetEdgeData(eit).forward){
                     smallestEdge = eit;

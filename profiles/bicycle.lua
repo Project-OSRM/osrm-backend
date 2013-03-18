@@ -177,6 +177,8 @@ function way_function (way)
 	local area = way.tags:Find("area")
 	local foot = way.tags:Find("foot")
 	local surface = way.tags:Find("surface")
+	local foot_forward = way.tags:Find("foot:forward")
+	local foot_backward = way.tags:Find("foot:backward")
 
 	-- name	
 	if "" ~= ref and "" ~= name then
@@ -189,7 +191,10 @@ function way_function (way)
 		way.name = "{highway:"..highway.."}"	-- if no name exists, use way type
 		                                        -- this encoding scheme is excepted to be a temporary solution
 	end
-		
+	
+	way.forward_mode = 1
+	way.backward_mode = 1
+	
 	-- speed
     if route_speeds[route] then
 		-- ferries (doesn't cover routes tagged using relations)
@@ -200,6 +205,8 @@ function way_function (way)
 		else
 		 	way.speed = route_speeds[route]
 		end
+    	way.forward_mode = 2
+    	way.backward_mode = 2
 	elseif railway and platform_speeds[railway] then
 		-- railway platforms (old tagging scheme)
 		way.speed = platform_speeds[railway]
@@ -224,16 +231,30 @@ function way_function (way)
 	else
 	    -- biking not allowed, maybe we can push our bike?
 	    -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
-        -- TODO: if we can push, the way should be marked as pedestrion mode, but there's no way to do it yet from lua..
         if foot ~= 'no' then
 	        if pedestrian_speeds[highway] then
 	            -- pedestrian-only ways and areas
         		way.speed = pedestrian_speeds[highway]
+            	way.forward_mode = 3
+            	way.backward_mode = 3
         	elseif man_made and man_made_speeds[man_made] then
             	-- man made structures
             	way.speed = man_made_speeds[man_made]
+            	way.forward_mode = 3
+            	way.backward_mode = 3
             elseif foot == 'yes' then
                 way.speed = walking_speed
+            	way.forward_mode = 3
+            	way.backward_mode = 3
+            elseif foot_forward == 'yes' then
+                way.speed = walking_speed
+            	way.forward_mode = 3
+            	way.backward_mode = 0
+            elseif foot_backward == 'yes' then
+                way.speed = 0
+                way.backward_speed = walking_speed
+            	way.forward_mode = 0
+            	way.backward_mode = 3
             end
         end
     end
@@ -286,14 +307,15 @@ function way_function (way)
 	        if junction ~= "roundabout" then
             	if way.direction == Way.oneway then
             	    way.backward_speed = walking_speed
+                	way.backward_mode = 3
                 elseif way.direction == Way.opposite then
                     way.backward_speed = walking_speed
+                	way.backward_mode = 3
                     way.speed = way.speed
             	end
             end
         end
         if way.backward_speed == way.speed then
-            -- TODO: no way yet to mark a way as pedestrian mode if forward/backward speeds are equal
             way.direction = Way.bidirectional
         end
     end
@@ -336,8 +358,6 @@ function way_function (way)
       way.backward_speed = maxspeed_backward
     end
 
-
-	
 	way.type = 1
 	return 1
 end

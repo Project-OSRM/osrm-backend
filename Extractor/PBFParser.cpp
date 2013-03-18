@@ -319,7 +319,7 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_ways; ++i) {
 	    ExtractionWay & w = waysToParse[i];
-	    ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
+	    ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );        
 	}
 
 	BOOST_FOREACH(ExtractionWay & w, waysToParse) {

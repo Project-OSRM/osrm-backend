@@ -69,7 +69,7 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
             DEBUG("found bogus way with id: " << parsed_way.id << " of size " << parsed_way.path.size());
             return;
         }
-
+        
         if(0 < parsed_way.duration) {
          //TODO: iterate all way segments and set duration corresponding to the length of each segment
             parsed_way.speed = parsed_way.duration/(parsed_way.path.size()-1);
@@ -108,7 +108,8 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
                             parsed_way.roundabout,
                             parsed_way.ignoreInGrid,
                             (0 < parsed_way.duration),
-                            parsed_way.isAccessRestricted
+                            parsed_way.isAccessRestricted,
+                            parsed_way.forward_mode
                     )
             );
             externalMemory->usedNodeIDs.push_back(parsed_way.path[n]);
@@ -132,7 +133,8 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
                                 parsed_way.ignoreInGrid,
                                 (0 < parsed_way.duration),
                                 parsed_way.isAccessRestricted,
-                                (ExtractionWay::oneway == parsed_way.direction)
+                                (ExtractionWay::oneway == parsed_way.direction),
+                                parsed_way.backward_mode
                         )
                 );
             }

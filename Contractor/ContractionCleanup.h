@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <sys/time.h>
 #endif
 #include "Contractor.h"
+#include "TravelMode.h"
 
 class ContractionCleanup {
 private:
@@ -64,6 +65,7 @@ public:
         	bool shortcut:1;
         	bool forward:1;
         	bool backward:1;
+            TravelMode mode;
         } data;
         bool operator<( const Edge& right ) const {
             if ( source != right.source )

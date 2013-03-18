@@ -51,19 +51,20 @@ double DescriptionFactory::GetBearing(const _Coordinate& A, const _Coordinate& B
 
 void DescriptionFactory::SetStartSegment(const PhantomNode & _startPhantom) {
     startPhantom = _startPhantom;
-    AppendSegment(_startPhantom.location, _PathData(0, _startPhantom.nodeBasedEdgeNameID, 10, _startPhantom.weight1));
+    AppendSegment(_startPhantom.location, _PathData(0, _startPhantom.nodeBasedEdgeNameID, 10, _startPhantom.weight1, _startPhantom.mode1));
 }
 
 void DescriptionFactory::SetEndSegment(const PhantomNode & _targetPhantom) {
     targetPhantom = _targetPhantom;
-    pathDescription.push_back(SegmentInformation(_targetPhantom.location, _targetPhantom.nodeBasedEdgeNameID, 0, _targetPhantom.weight1, 0, true) );
+    pathDescription.push_back(SegmentInformation(_targetPhantom.location, _targetPhantom.nodeBasedEdgeNameID, 0, _targetPhantom.weight1, 0, true, _targetPhantom.mode1) );
 }
 
 void DescriptionFactory::AppendSegment(const _Coordinate & coordinate, const _PathData & data ) {
     if(1 == pathDescription.size() && pathDescription.back().location == coordinate) {
         pathDescription.back().nameID = data.nameID;
+        pathDescription.back().mode = data.mode;
     } else {
-        pathDescription.push_back(SegmentInformation(coordinate, data.nameID, 0, data.durationOfSegment, data.turnInstruction) );
+        pathDescription.push_back(SegmentInformation(coordinate, data.nameID, 0, data.durationOfSegment, data.turnInstruction, data.mode) );
     }
 }
 
@@ -83,7 +84,6 @@ void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
 }
 
 void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLevel) {
-
     if(0 == pathDescription.size())
         return;
 
@@ -170,6 +170,7 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
             pathDescription.back().necessary = true;
             pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
             targetPhantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
+            targetPhantom.mode1 = (pathDescription.end()-2)->mode;
             //            INFO("Deleting last turn instruction");
         }
     } else {
@@ -182,7 +183,8 @@ void DescriptionFactory::Run(const SearchEngineT &sEngine, const unsigned zoomLe
             pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
             pathDescription[0].necessary = true;
             startPhantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
-            //            INFO("Deleting first turn instruction, ratio: " << startPhantom.ratio << ", length: " << pathDescription[0].length);
+            startPhantom.mode1 = pathDescription[0].mode;
+            //           INFO("Deleting first turn instruction, ratio: " << startPhantom.ratio << ", length: " << pathDescription[0].length);
         }
     } else {
         pathDescription[0].duration *= startPhantom.ratio;

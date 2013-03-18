@@ -35,6 +35,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/NodeCoords.h"
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/TimingUtil.h"
+#include "../DataStructures/TravelMode.h"
 #include "../typedefs.h"
 
 typedef boost::unordered_map<std::string, NodeID > StringMap;
@@ -59,8 +60,10 @@ struct ExtractionWay {
         roundabout = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
+        forward_mode = 0;
+        backward_mode = 0;
     }
-
+    
     enum Directions {
         notSure = 0, oneway, bidirectional, opposite
     };
@@ -76,6 +79,8 @@ struct ExtractionWay {
     bool roundabout;
     bool isAccessRestricted;
     bool ignoreInGrid;
+    TravelMode forward_mode;
+    TravelMode backward_mode;
     std::vector< NodeID > path;
     HashTable<std::string, std::string> keyVals;
 };
@@ -89,13 +94,13 @@ struct ExtractorRelation {
 };
 
 struct InternalExtractorEdge {
-    InternalExtractorEdge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false), isContraFlow(false) {};
+    InternalExtractorEdge() : start(0), target(0), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false), isContraFlow(false), mode(0) {};
     InternalExtractorEdge(NodeID s, NodeID t) : start(s), target(t), type(0), direction(0), speed(0), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false), isContraFlow(false) { }
     InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp): start(s), target(t), type(tp), direction(d), speed(sp), nameID(0), isRoundabout(false), ignoreInGrid(false), isDurationSet(false), isAccessRestricted(false), isContraFlow(false) { }
-    InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar), isContraFlow(false) {
+    InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar, TravelMode _mode): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar), isContraFlow(false), mode(_mode) {
         assert(0 <= type);
     }
-    InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar, bool icf): start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar), isContraFlow(icf) {
+    InternalExtractorEdge(NodeID s, NodeID t, short tp, short d, double sp, unsigned nid, bool isra, bool iing, bool ids, bool iar, bool icf, TravelMode _mode) : start(s), target(t), type(tp), direction(d), speed(sp), nameID(nid), isRoundabout(isra), ignoreInGrid(iing), isDurationSet(ids), isAccessRestricted(iar), isContraFlow(false), mode(_mode) {
         assert(0 <= type);
     }
     NodeID start;
@@ -109,7 +114,8 @@ struct InternalExtractorEdge {
     bool isDurationSet;
     bool isAccessRestricted;
     bool isContraFlow;
-
+    TravelMode mode;
+    
     _Coordinate startCoord;
     _Coordinate targetCoord;
 

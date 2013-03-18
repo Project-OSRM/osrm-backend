@@ -24,22 +24,32 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define QUERYEDGE_H_
 
 #include "TurnInstructions.h"
+#include "TravelMode.h"
 #include "../typedefs.h"
 
 #include <climits>
 
 struct OriginalEdgeData{
-    explicit OriginalEdgeData(NodeID v, unsigned n, TurnInstruction t) : viaNode(v), nameID(n), turnInstruction(t) {}
+    explicit OriginalEdgeData(NodeID v, unsigned n, TurnInstruction t, TravelMode _mode) : viaNode(v), nameID(n), turnInstruction(t), mode(_mode) {}
     OriginalEdgeData() : viaNode(UINT_MAX), nameID(UINT_MAX), turnInstruction(UCHAR_MAX) {}
     NodeID viaNode;
     unsigned nameID;
     TurnInstruction turnInstruction;
+    TravelMode mode;
 };
 
 struct QueryEdge {
     NodeID source;
     NodeID target;
     struct EdgeData {
+        EdgeData() : 
+            id(0),
+            shortcut(false),
+            distance(0),
+            forward(false),
+            backward(false)
+            {}
+
         NodeID id:31;
         bool shortcut:1;
         int distance:30;

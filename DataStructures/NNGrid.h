@@ -51,37 +51,31 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "StaticGraph.h"
 #include "TimingUtil.h"
 #include "../Algorithms/Bresenham.h"
+#include "QueryEdge.h"
 
-namespace NNGrid{
+class NodeInformationHelpDesk;
+class QueryGraph;
 
 static boost::thread_specific_ptr<std::ifstream> localStream;
 
-template<bool WriteAccess = false>
+
 class NNGrid {
 public:
-    NNGrid() /*: cellCache(500), fileCache(500)*/ {
-        ramIndexTable.resize((1024*1024), std::numeric_limits<uint64_t>::max());
-    }
-
-    NNGrid(const char* rif, const char* _i) {
-        if(WriteAccess) {
-            ERR("Not available in Write mode");
-        }
+    NNGrid() : nodeHelpDesk(NULL) {}
+    
+    
+    NNGrid(const char* rif, const char* _i, NodeInformationHelpDesk* _nodeHelpDesk, StaticGraph<QueryEdge::EdgeData>* g) : nodeHelpDesk(_nodeHelpDesk), graph(g) {
+        nodeHelpDesk = _nodeHelpDesk;
         iif = std::string(_i);
+        
         ramIndexTable.resize((1024*1024), std::numeric_limits<uint64_t>::max());
         ramInFile.open(rif, std::ios::in | std::ios::binary);
         if(!ramInFile) { ERR(rif <<  " not found"); }
-
     }
-
+    
     ~NNGrid() {
         if(ramInFile.is_open()) ramInFile.close();
 
-#ifndef ROUTED
-        if (WriteAccess) {
-            entries.clear();
-        }
-#endif
         if(localStream.get() && localStream->is_open()) {
             localStream->close();
         }
@@ -106,7 +100,7 @@ public:
             int slon = edge.lon1;
             int tlat = 100000*lat2y(edge.lat2/100000.);
             int tlon = edge.lon2;
-            AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon), edge.belongsToTinyComponent ) );
+            AddEdge( _GridEdge( edge.id, edge.nameID, edge.weight, _Coordinate(slat, slon), _Coordinate(tlat, tlon), edge.belongsToTinyComponent, edge.mode ) );
         }
         if( 0 == entries.size() ) {
         	ERR("No viable edges for nearest neighbor index. Aborting");
@@ -159,90 +153,7 @@ public:
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
     }
 
-    bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
-        bool ignoreTinyComponents = (zoomLevel <= 14);
-//        INFO("Coordinate: " << location << ", zoomLevel: " << zoomLevel << ", ignoring tinyComponentents: " << (ignoreTinyComponents ? "yes" : "no"));
-//        double time1 = get_timestamp();
-        bool foundNode = false;
-        const _Coordinate startCoord(100000*(lat2y(static_cast<double>(location.lat)/100000.)), location.lon);
-        /** search for point on edge close to source */
-        const unsigned fileIndex = GetFileIndexForLatLon(startCoord.lat, startCoord.lon);
-        std::vector<_GridEdge> candidates;
-        const int lowerBoundForLoop = (fileIndex < 32768 ? 0 : -32768);
-        for(int j = lowerBoundForLoop; (j < (32768+1)) && (fileIndex != UINT_MAX); j+=32768) {
-            for(int i = -1; i < 2; ++i){
-//                unsigned oldSize = candidates.size();
-                GetContentsOfFileBucketEnumerated(fileIndex+i+j, candidates);
-//                INFO("Getting fileIndex=" << fileIndex+i+j << " with " << candidates.size() - oldSize << " candidates");
-            }
-        }
-//        INFO("looked up " << candidates.size());
-        _GridEdge smallestEdge;
-        _Coordinate tmp, edgeStartCoord, edgeEndCoord;
-        double dist = std::numeric_limits<double>::max();
-        double r, tmpDist;
-
-        BOOST_FOREACH(const _GridEdge & candidate, candidates) {
-            if(candidate.belongsToTinyComponent && ignoreTinyComponents)
-                continue;
-            r = 0.;
-            tmpDist = ComputeDistance(startCoord, candidate.startCoord, candidate.targetCoord, tmp, &r);
-//            INFO("dist " << startCoord << "->[" << candidate.startCoord << "-" << candidate.targetCoord << "]=" << tmpDist );
-//            INFO("Looking at edge " << candidate.edgeBasedNode << " at distance " << tmpDist);
-            if(tmpDist < dist && !DoubleEpsilonCompare(dist, tmpDist)) {
-//                INFO("a) " << candidate.edgeBasedNode << ", dist: " << tmpDist << ", tinyCC: " << (candidate.belongsToTinyComponent ? "yes" : "no"));
-                dist = tmpDist;
-                resultNode.edgeBasedNode = candidate.edgeBasedNode;
-                resultNode.nodeBasedEdgeNameID = candidate.nameID;
-                resultNode.weight1 = candidate.weight;
-                resultNode.weight2 = INT_MAX;
-                resultNode.location.lat = tmp.lat;
-                resultNode.location.lon = tmp.lon;
-                edgeStartCoord = candidate.startCoord;
-                edgeEndCoord = candidate.targetCoord;
-                foundNode = true;
-                smallestEdge = candidate;
-                //}  else if(tmpDist < dist) {
-                //INFO("a) ignored " << candidate.edgeBasedNode << " at distance " << std::fabs(dist - tmpDist));
-            } else if(DoubleEpsilonCompare(dist, tmpDist) && 1 == std::abs(static_cast<int>(candidate.edgeBasedNode)-static_cast<int>(resultNode.edgeBasedNode) )  && CoordinatesAreEquivalent(edgeStartCoord, candidate.startCoord, edgeEndCoord, candidate.targetCoord)) {
-                resultNode.edgeBasedNode = std::min(candidate.edgeBasedNode, resultNode.edgeBasedNode);
-                resultNode.weight2 = candidate.weight;
-                //INFO("b) " << candidate.edgeBasedNode << ", dist: " << tmpDist);
-            }
-        }
-
-        //        INFO("startcoord: " << smallestEdge.startCoord << ", tgtcoord" <<  smallestEdge.targetCoord << "result: " << newEndpoint);
-        //        INFO("length of old edge: " << ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
-        //        INFO("Length of new edge: " << ApproximateDistance(smallestEdge.startCoord, newEndpoint));
-        //        assert(!resultNode.isBidirected() || (resultNode.weight1 == resultNode.weight2));
-        //        if(resultNode.weight1 != resultNode.weight2) {
-        //            INFO("-> Weight1: " << resultNode.weight1 << ", weight2: " << resultNode.weight2);
-        //            INFO("-> node: " << resultNode.edgeBasedNode << ", bidir: " << (resultNode.isBidirected() ? "yes" : "no"));
-        //        }
-
-//        INFO("startCoord: " << smallestEdge.startCoord << "; targetCoord: " << smallestEdge.targetCoord << "; newEndpoint: " << resultNode.location);
-        const double ratio = (foundNode ? std::min(1., ApproximateDistance(smallestEdge.startCoord, resultNode.location)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord)) : 0);
-        resultNode.location.lat = round(100000.*(y2lat(static_cast<double>(resultNode.location.lat)/100000.)));
-//        INFO("Length of vector: " << ApproximateDistance(smallestEdge.startCoord, resultNode.location)/ApproximateDistance(smallestEdge.startCoord, smallestEdge.targetCoord));
-        //Hack to fix rounding errors and wandering via nodes.
-        if(std::abs(location.lon - resultNode.location.lon) == 1)
-            resultNode.location.lon = location.lon;
-        if(std::abs(location.lat - resultNode.location.lat) == 1)
-            resultNode.location.lat = location.lat;
-
-        resultNode.weight1 *= ratio;
-        if(INT_MAX != resultNode.weight2) {
-            resultNode.weight2 *= (1.-ratio);
-        }
-        resultNode.ratio = ratio;
-//        INFO("start: " << edgeStartCoord << ", end: " << edgeEndCoord);
-//        INFO("selected node: " << resultNode.edgeBasedNode << ", bidirected: " << (resultNode.isBidirected() ? "yes" : "no"));
-//        INFO("New weight1: " << resultNode.weight1 << ", new weight2: " << resultNode.weight2 << ", ratio: " << ratio);
- //       INFO("distance to input coordinate: " << ApproximateDistance(location, resultNode.location) <<  "\n--");
-//        double time2 = get_timestamp();
-//        INFO("NN-Lookup in " << 1000*(time2-time1) << "ms");
-        return foundNode;
-    }
+    bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel);
 
     bool FindRoutingStarts(const _Coordinate& start, const _Coordinate& target, PhantomNodes & routingStarts, unsigned zoomLevel) {
         routingStarts.Reset();
@@ -282,7 +193,7 @@ public:
     }
 
 
-private:
+protected:
     inline unsigned GetCellIndexFromRAMAndFileIndex(const unsigned ramIndex, const unsigned fileIndex) const {
         unsigned lineBase = ramIndex/1024;
         lineBase = lineBase*32*32768;
@@ -589,14 +500,30 @@ private:
     std::ofstream indexOutFile;
     stxxl::vector<GridEntry> entries;
 #endif
+    NodeInformationHelpDesk* nodeHelpDesk;
     std::vector<uint64_t> ramIndexTable; //8 MB for first level index in RAM
     std::string iif;
+    bool writeAccess;
+    StaticGraph<QueryEdge::EdgeData>* graph;
     //    LRUCache<int,std::vector<unsigned> > cellCache;
     //    LRUCache<int,std::vector<_Edge> > fileCache;
 };
-}
 
-typedef NNGrid::NNGrid<false> ReadOnlyGrid;
-typedef NNGrid::NNGrid<true > WritableGrid;
+class ReadOnlyGrid : public NNGrid {
+public:
+    ReadOnlyGrid(const char* rif, const char* _i, NodeInformationHelpDesk* _nodeHelpDesk, StaticGraph<QueryEdge::EdgeData>* g) : NNGrid(rif,_i,_nodeHelpDesk,g) {}
+};
+
+class WritableGrid : public NNGrid {
+public:
+    WritableGrid() {
+        ramIndexTable.resize((1024*1024), std::numeric_limits<uint64_t>::max());
+    }
+    ~WritableGrid() {
+        #ifndef ROUTED
+            entries.clear();
+        #endif
+    }
+};
 
 #endif /* NNGRID_H_ */

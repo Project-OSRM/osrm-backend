@@ -1,6 +1,6 @@
 /*
     open source routing machine
-    Copyright (C) Dennis Luxen, others 2010
+    Copyright (C) Dennis Luxen, 2010
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU AFFERO General Public License as published by
@@ -18,28 +18,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
+#ifndef TRAVELMODE_H_
+#define TRAVELMODE_H_
 
-#ifndef QUERYOBJECTSSTORAGE_H_
-#define QUERYOBJECTSSTORAGE_H_
+typedef unsigned char TravelMode;
 
-#include<vector>
-#include<string>
-
-#include "../../DataStructures/NodeInformationHelpDesk.h"
-
-struct QueryObjectsStorage {
-    typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
-    typedef QueryGraph::InputEdge InputEdge;
-
-    NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<std::string> names;
-    QueryGraph * graph;
-    std::string timestamp;
-    unsigned checkSum;
-
-    QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string timestampPath);
-
-    ~QueryObjectsStorage();
-};
-
-#endif /* QUERYOBJECTSSTORAGE_H_ */
+#endif /* TRAVELMODE_H_ */

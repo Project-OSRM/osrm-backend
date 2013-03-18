@@ -32,11 +32,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "NNGrid.h"
 #include "PhantomNodes.h"
 #include "NodeCoords.h"
+#include "TravelMode.h"
+
+class QueryGraph;
 
 class NodeInformationHelpDesk : boost::noncopyable{
 public:
-    NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes, const unsigned crc) : numberOfNodes(_numberOfNodes), checkSum(crc) {
-        readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
+    NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes, const unsigned crc, StaticGraph<QueryEdge::EdgeData>* graph) : numberOfNodes(_numberOfNodes), checkSum(crc) {
+        readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput, this, graph);
         assert(0 == coordinateVector.size());
     }
 
@@ -64,6 +67,7 @@ public:
         origEdgeData_viaNode.resize(numberOfOrigEdges);
         origEdgeData_nameID.resize(numberOfOrigEdges);
         origEdgeData_turnInstruction.resize(numberOfOrigEdges);
+        origEdgeData_mode.resize(numberOfOrigEdges);
 
         OriginalEdgeData deserialized_originalEdgeData;
         for(unsigned i = 0; i < numberOfOrigEdges; ++i) {
@@ -71,6 +75,7 @@ public:
             origEdgeData_viaNode[i] 		= deserialized_originalEdgeData.viaNode;
             origEdgeData_nameID[i] 			= deserialized_originalEdgeData.nameID;
             origEdgeData_turnInstruction[i] = deserialized_originalEdgeData.turnInstruction;
+            origEdgeData_mode[i]            = deserialized_originalEdgeData.mode;
         }
         edgesInStream.close();
         DEBUG("Loaded " << numberOfOrigEdges << " orig edges");
@@ -98,6 +103,10 @@ public:
 
     inline TurnInstruction getTurnInstructionFromEdgeID(const unsigned id) const {
         return origEdgeData_turnInstruction.at(id);
+    }
+
+    inline TravelMode getModeFromEdgeID(const unsigned id) const {
+        return origEdgeData_mode.at(id);
     }
 
     inline NodeID getNumberOfNodes() const { return numberOfNodes; }
@@ -128,6 +137,7 @@ private:
 	std::vector<NodeID> origEdgeData_viaNode;
 	std::vector<unsigned> origEdgeData_nameID;
 	std::vector<TurnInstruction> origEdgeData_turnInstruction;
+	std::vector<TravelMode> origEdgeData_mode;
 
 	ReadOnlyGrid * readOnlyGrid;
 	const unsigned numberOfNodes;
