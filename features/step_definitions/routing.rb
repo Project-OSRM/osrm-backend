@@ -7,7 +7,22 @@ When /^I route I should get$/ do |table|
       raise "*** unknown from-node '#{row['from']}" unless from_node
       to_node = @name_node_hash[ row['to'] ]
       raise "*** unknown to-node '#{row['to']}" unless to_node
-      response = request_route("#{from_node.lat},#{from_node.lon}", "#{to_node.lat},#{to_node.lon}")
+
+      got = {'from' => row['from'], 'to' => row['to'] }
+      
+      params = {}
+      row.each_pair do |k,v|
+        if k =~ /param:(.*)/
+          if v=='(nil)'
+            params[$1]=nil
+          elsif v!=nil
+            params[$1]=v
+          end
+          got[k]=v
+        end
+      end
+            
+      response = request_route("#{from_node.lat},#{from_node.lon}", "#{to_node.lat},#{to_node.lon}", params)
       if response.code == "200" && response.body.empty? == false
         json = JSON.parse response.body
         if json['status'] == 0
@@ -19,7 +34,6 @@ When /^I route I should get$/ do |table|
         end
       end
       
-      got = {'from' => row['from'], 'to' => row['to'] }
       if table.headers.include? 'start'
         got['start'] = instructions ? json['route_summary']['start_point'] : nil
       end

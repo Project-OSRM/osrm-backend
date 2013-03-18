@@ -4,10 +4,16 @@ HOST = "http://localhost:#{OSRM_PORT}"
 REQUEST_TIMEOUT = 1
 DESTINATION_REACHED = 15      #OSRM instruction code
 
+class Hash
+  def to_param(namespace = nil)
+    collect do |key, value|
+      "#{key}=#{value}"
+    end.sort * '&'
+  end
+end
 
-def request_path path
-  @query = path
-  uri = URI.parse "#{HOST}/#{path}"
+def request_path path, params={}
+  uri = URI.parse ["#{HOST}/#{path}",params.to_param].join('&')
   Timeout.timeout(REQUEST_TIMEOUT) do
     Net::HTTP.get_response uri
   end
@@ -17,8 +23,9 @@ rescue Timeout::Error
   raise "*** osrm-routed did not respond."
 end
 
-def request_route a,b
-  request_path "viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true&alt=true"
+def request_route a,b, params={}
+  defaults = { 'output' => 'json', 'instructions' => true, 'alt' => true }
+  request_path "viaroute?loc=#{a}&loc=#{b}", defaults.merge(params)
 end
 
 def parse_response response
