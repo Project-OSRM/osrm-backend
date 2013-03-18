@@ -108,9 +108,18 @@ def turn_list instructions
     12 => :leave_roundabout,
     13 => :stay_roundabout,
     14 => :start_end_of_street,
-    15 => :destination
+    15 => :destination,
+    16 => :enter_contraflow,
+    17 => :leave_contraflow
   }
   instructions.
   map { |r| types[r[0].to_i].to_s }.
+  join(',')
+end
+
+def mode_list instructions
+  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
+  map { |r| r[8] }.
+  map { |r| (r=="" || r==nil) ? '""' : r }.
   join(',')
 end
