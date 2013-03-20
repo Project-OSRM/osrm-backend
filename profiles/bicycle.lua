@@ -165,7 +165,8 @@ function way_function (way)
 	elseif "" ~= name then
 		way.name = name
 	else
-		way.name = highway		-- if no name exists, use way type
+		way.name = "{highway:"..highway.."}"	-- if no name exists, use way type
+		                                        -- this encoding scheme is excepted to be a temporary solution
 	end
 	
 	-- speed
