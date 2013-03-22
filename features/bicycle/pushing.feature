@@ -103,3 +103,22 @@ Feature: Bike - Accessability of different way types
   		 | d    | a  | cd,bc,ab | head,enter_contraflow,leave_contraflow,destination |
   		 | c    | a  | bc,ab    | head,leave_contraflow,destination                  |
   		 | d    | b  | cd,bc    | head,enter_contraflow,destination                  |
+
+  	@todo
+    Scenario: Bike - Instructions when pushing bike on footway/pedestrian, etc.
+   		Given the node map
+   		 | a | b |   |
+   		 |   | c | d |
+
+   		And the ways
+   		 | nodes | highway |
+   		 | ab    | primary |
+   		 | bc    | footway |
+   		 | cd    | primary |
+
+   		When I route I should get
+   		 | from | to | route    | turns                                              |
+   		 | a    | d  | ab,bc,cd | head,right,left,destination                        |
+   		 | d    | a  | cd,bc,ab | head,enter_contraflow,leave_contraflow,destination |
+   		 | c    | a  | bc,ab    | head,leave_contraflow,destination                  |
+   		 | d    | b  | cd,bc    | head,enter_contraflow,destination                  |

@@ -208,6 +208,7 @@ function way_function (way)
 	        if pedestrian_speeds[highway] then
 	            -- pedestrian-only ways and areas
         		way.speed = pedestrian_speeds[highway]
+        		way.backward_speed = way.speed-1
         	elseif man_made and man_made_speeds[man_made] then
             	-- man made structures
             	way.speed = man_made_speeds[man_made]
