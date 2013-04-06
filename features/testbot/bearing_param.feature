@@ -52,7 +52,6 @@ Feature: Bearing parameter
  		 | 1    | d  | 270           | ab,bc,cd | 270     |
  		 | 1    | d  | 350           | ab,bc,cd | 270     |
 
-	@xx
  	Scenario: Testbot - Initial bearing in all direction
 		Given the node map
          | h |  |   | a |   |  | b |
