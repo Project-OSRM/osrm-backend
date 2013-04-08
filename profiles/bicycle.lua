@@ -167,9 +167,7 @@ function way_function (way)
 	else
 		way.name = highway		-- if no name exists, use way type
 	end
-	
-	way.mode = 0
-	
+		
 	-- speed
     if route_speeds[route] then
 		-- ferries (doesn't cover routes tagged using relations)
