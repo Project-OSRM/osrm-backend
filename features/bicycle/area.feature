@@ -101,3 +101,19 @@ Feature: Bike - Squares and other areas
 		 | d    | c  | abcda       |
 		 | d    | a  | abcda       |
 		 | a    | d  | abcda       |
+
+ 	@area @name
+ 	Scenario: Bike - name on 
+ 		Given the node map
+ 		 | x | a | b | y |
+ 		 |   | d | c |   |
+
+ 		And the ways
+ 		 | nodes | highway     | area |
+ 		 | xaby  | residential |      |
+ 		 | abcda | residential | yes  |
+
+ 		When I route I should get
+ 		 | from | to | route |
+ 		 | x    | y  | xaby  |
+ 		 | y    | x  | xaby  |
