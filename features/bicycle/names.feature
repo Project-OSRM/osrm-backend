@@ -17,7 +17,8 @@ Feature: Bike - Street names in instructions
 		When I route I should get
 		 | from | to | route           |
 		 | a    | c  | My Way,Your Way |
-		
+	
+	@unnamed
 	Scenario: Bike - Use way type to describe unnamed ways
 		Given the node map
 		 | a | b | c | d |
@@ -28,8 +29,8 @@ Feature: Bike - Street names in instructions
 		 | bcd   | track    |      |
 
 		When I route I should get
-		 | from | to | route          |
-		 | a    | d  | cycleway,track |
+		 | from | to | route                              |
+		 | a    | d  | {highway:cycleway},{highway:track} |
 
   	@area @names @todo
   	Scenario: Bike - name on streets overlapping an area
