@@ -165,9 +165,10 @@ function way_function (way)
 	elseif "" ~= name then
 		way.name = name
 	else
-		way.name = "{highway:"..highway.."}"	-- if no name exists, use way type
-		                                        -- this encoding scheme is excepted to be a temporary solution
+		way.name = highway		-- if no name exists, use way type
 	end
+	
+	way.mode = 0
 	
 	-- speed
     if route_speeds[route] then
@@ -208,7 +209,6 @@ function way_function (way)
 	        if pedestrian_speeds[highway] then
 	            -- pedestrian-only ways and areas
         		way.speed = pedestrian_speeds[highway]
-        		way.backward_speed = way.speed-1
         	elseif man_made and man_made_speeds[man_made] then
             	-- man made structures
             	way.speed = man_made_speeds[man_made]

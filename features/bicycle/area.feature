@@ -102,7 +102,7 @@ Feature: Bike - Squares and other areas
 		 | d    | a  | abcda       |
 		 | a    | d  | abcda       |
 
- 	@area @name
+ 	@area @name @todo
  	Scenario: Bike - name on 
  		Given the node map
  		 | x | a | b | y |
