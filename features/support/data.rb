@@ -17,6 +17,15 @@ PROFILES_PATH = '../profiles'
 
 ORIGIN = [1,1]
 
+class Location
+    attr_accessor :lon,:lat
+        
+    def initialize lon,lat
+        @lat = lat
+        @lon = lon
+    end
+end
+
 def sanitized_scenario_title
   @sanitized_scenario_title ||= @scenario_title.gsub /[^0-9A-Za-z.\-]/, '_'
 end
@@ -110,8 +119,30 @@ def build_ways_from_table table
   end
 end
 
+def table_coord_to_lonlat ci,ri
+    [ORIGIN[0]+ci*@zoom, ORIGIN[1]-ri*@zoom]
+end
+
+def add_osm_node name,lon,lat
+    node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
+    node << { :name => name }
+    node.uid = OSM_UID
+    osm_db << node
+    name_node_hash[name] = node
+end
+
+def add_location name,lon,lat
+    location_hash[name] = Location.new(lon,lat)
+end
+
 def find_node_by_name s
-  name_node_hash[s.to_s]
+    raise "***invalid node name '#{s}', must be single characters" unless s.size == 1
+    raise "*** invalid node name '#{s}', must be alphanumeric" unless s.match /[a-z0-9]/
+    if s.match /[a-z]/
+        from_node = name_node_hash[ s.to_s ]
+    else
+        from_node = location_hash[ s.to_s ]
+    end
 end
 
 def find_way_by_name s
@@ -135,6 +166,7 @@ end
 def reset_osm
   osm_db.clear
   name_node_hash.clear
+  location_hash.clear
   name_way_hash.clear
   @osm_str = nil
   @osm_hash = nil
@@ -155,6 +187,10 @@ end
 
 def name_node_hash
   @name_node_hash ||= {}
+end
+
+def location_hash
+  @location_hash ||= {}
 end
 
 def name_way_hash

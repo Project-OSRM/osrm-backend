@@ -3,9 +3,9 @@ When /^I route I should get$/ do |table|
   actual = []
   OSRMLauncher.new do
     table.hashes.each_with_index do |row,ri|
-      from_node = @name_node_hash[ row['from'] ]
+      from_node = find_node_by_name row['from']
       raise "*** unknown from-node '#{row['from']}" unless from_node
-      to_node = @name_node_hash[ row['to'] ]
+      to_node = find_node_by_name row['to']
       raise "*** unknown to-node '#{row['to']}" unless to_node
 
       got = {'from' => row['from'], 'to' => row['to'] }

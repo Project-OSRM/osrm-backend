@@ -3,10 +3,10 @@ When /^I request nearest I should get$/ do |table|
   actual = []
   OSRMLauncher.new do
     table.hashes.each_with_index do |row,ri|
-      in_node = @name_node_hash[ row['in'] ]
+      in_node = find_node_by_name row['in']
       raise "*** unknown in-node '#{row['in']}" unless in_node
 
-      out_node = @name_node_hash[ row['out'] ]
+      out_node = find_node_by_name row['out']
       raise "*** unknown out-node '#{row['out']}" unless out_node
 
       response = request_nearest("#{in_node.lat},#{in_node.lon}")
