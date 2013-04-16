@@ -13,7 +13,11 @@ class Hash
 end
 
 def request_path path, params={}
-  uri = URI.parse ["#{HOST}/#{path}",params.to_param].join('&')
+  if params.any?
+    uri = URI.parse ["#{HOST}/#{path}",params.to_param].join('&')
+  else
+    uri = URI.parse "#{HOST}/#{path}"
+  end
   Timeout.timeout(REQUEST_TIMEOUT) do
     Net::HTTP.get_response uri
   end
