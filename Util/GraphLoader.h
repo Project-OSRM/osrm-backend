@@ -185,9 +185,9 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
             }
         }
     }
-    std::vector<ImportEdge>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
+    typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
     ext2IntNodeMap.clear();
-    std::vector<ImportEdge>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
+    std::vector<EdgeT>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
     INFO("Graph loaded ok and has " << edgeList.size() << " edges");
     return n;
 }
@@ -299,7 +299,7 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();
-    std::vector<ImportEdge>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    std::vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     std::cout << "ok" << std::endl;
     return n;
 }
