@@ -33,11 +33,9 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
-# SCons related files #
+# build related files #
 #######################
-SconsBuilder*
-.scon*
-.build
+/build/
 
 # Eclipse related files #
 #########################
