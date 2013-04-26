@@ -29,15 +29,15 @@ def lua_lib_hash
 end
 
 def bin_extract_hash
-  @@bin_extract_hash ||= hash_of_files '../osrm-extract'
+  @@bin_extract_hash ||= hash_of_files "#{BIN_PATH}/osrm-extract"
 end
 
 def bin_prepare_hash
-  @@bin_prepare_hash ||= hash_of_files '../osrm-prepare'
+  @@bin_prepare_hash ||= hash_of_files "#{BIN_PATH}/osrm-prepare"
 end
 
 def bin_routed_hash
-  @@bin_routed_hash ||= hash_of_files '../osrm-routed'
+  @@bin_routed_hash ||= hash_of_files "#{BIN_PATH}/osrm-routed"
 end
 
 #combine state of data, profile and binaries into a hash that identifies the exact test scenario

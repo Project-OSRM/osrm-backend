@@ -48,7 +48,7 @@ class OSRMLauncher
 
   def osrm_up
     return if osrm_up?
-    @pid = Process.spawn(['../osrm-routed',''],:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+    @pid = Process.spawn(["#{BIN_PATH}/osrm-routed",''],:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
   end
 
   def osrm_down
