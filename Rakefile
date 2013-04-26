@@ -4,6 +4,7 @@ require 'digest/sha1'
 require 'cucumber/rake/task'
 require 'sys/proctable'
 
+BUILD_FOLDER = 'build'
 DATA_FOLDER = 'sandbox'
 PROFILE = 'bicycle'
 OSRM_PORT = 5000
@@ -77,11 +78,13 @@ end
 
 
 desc "Rebuild and run tests."
-task :default => [:build, :cucumber]
+task :default => [:build]
 
-desc "Build using SConsstruct."
+desc "Build using CMake."
 task :build do
-  system "scons"
+  Dir.chdir BUILD_FOLDER do
+    system "make"
+  end
 end
 
 desc "Setup config files."
