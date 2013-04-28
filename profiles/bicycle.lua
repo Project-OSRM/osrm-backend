@@ -179,8 +179,10 @@ function way_function (way)
 	local surface = way.tags:Find("surface")
 
 	-- name	
-	if "" ~= ref then
-		way.name = ref
+	if "" ~= ref and "" ~= name then
+		way.name = name .. ' / ' .. ref
+    elseif "" ~= ref then
+    	way.name = ref
 	elseif "" ~= name then
 		way.name = name
 	else
