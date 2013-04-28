@@ -250,8 +250,6 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                         break;
                     }
                     fout.write((char*)&intWeight, sizeof(int));
-                    assert(edgeIT->type >= 0);
-                    fout.write((char*)&edgeIT->type, sizeof(short));
                     fout.write((char*)&edgeIT->nameID, sizeof(unsigned));
                     fout.write((char*)&edgeIT->isRoundabout, sizeof(bool));
                     fout.write((char*)&edgeIT->ignoreInGrid, sizeof(bool));

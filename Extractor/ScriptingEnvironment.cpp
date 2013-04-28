@@ -71,7 +71,6 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      .def_readwrite("speed", &ExtractionWay::speed)
                                      .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
                                      .def_readwrite("duration", &ExtractionWay::duration)
-                                     .def_readwrite("type", &ExtractionWay::type)
                                      .def_readwrite("access", &ExtractionWay::access)
                                      .def_readwrite("roundabout", &ExtractionWay::roundabout)
                                      .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)

@@ -358,7 +358,6 @@ function way_function (way)
       way.backward_speed = maxspeed_backward
     end
 
-	way.type = 1
 	return 1
 end
 

@@ -188,6 +188,5 @@ function way_function (way)
     if ignore_in_grid[highway] ~= nil and ignore_in_grid[highway] then
 		way.ignore_in_grid = true
   	end
-  	way.type = 1
   return 1
 end

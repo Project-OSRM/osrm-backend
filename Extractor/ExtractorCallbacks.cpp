@@ -101,7 +101,6 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
             externalMemory->allEdges.push_back(
                     InternalExtractorEdge(parsed_way.path[n],
                             parsed_way.path[n+1],
-                            parsed_way.type,
                             (split_bidirectional_edge ? ExtractionWay::oneway : parsed_way.direction),
                             parsed_way.speed,
                             parsed_way.nameID,
@@ -125,7 +124,6 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
                 externalMemory->allEdges.push_back(
                         InternalExtractorEdge(parsed_way.path[n],
                                 parsed_way.path[n+1],
-                                parsed_way.type,
                                 ExtractionWay::oneway,
                                 parsed_way.backward_speed,
                                 parsed_way.nameID,

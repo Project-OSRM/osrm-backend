@@ -52,7 +52,6 @@ private:
         unsigned edgeBasedNodeID;
         unsigned nameID:31;
         bool shortcut:1;
-        short type;
         bool isAccessRestricted:1;
         bool forward:1;
         bool backward:1;
@@ -165,7 +164,6 @@ public:
             edge.data.roundabout = i->isRoundabout();
             edge.data.ignoreInGrid = i->ignoreInGrid();
             edge.data.nameID = i->name();
-            edge.data.type = i->type();
             edge.data.isAccessRestricted = i->isAccessRestricted();
             edge.data.edgeBasedNodeID = edges.size();
             edges.push_back( edge );
@@ -312,27 +310,25 @@ public:
             for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
                 _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
 
-                if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX) {
-                    assert(e1 != UINT_MAX);
-                    assert(u != UINT_MAX);
-                    assert(v != UINT_MAX);
-                    //edges that end on bollard nodes may actually be in two distinct components
-                    if(std::min(vectorOfComponentSizes[componentsIndex[u]], vectorOfComponentSizes[componentsIndex[v]]) < 10) {
+                assert(e1 != UINT_MAX);
+                assert(u != UINT_MAX);
+                assert(v != UINT_MAX);
+                //edges that end on bollard nodes may actually be in two distinct components
+                if(std::min(vectorOfComponentSizes[componentsIndex[u]], vectorOfComponentSizes[componentsIndex[v]]) < 10) {
 
-                        //INFO("(" << inputNodeInfoList[u].lat/100000. << ";" << inputNodeInfoList[u].lon/100000. << ") -> (" << inputNodeInfoList[v].lat/100000. << ";" << inputNodeInfoList[v].lon/100000. << ")");
-                        OGRLineString lineString;
-                        lineString.addPoint(inputNodeInfoList[u].lon/100000., inputNodeInfoList[u].lat/100000.);
-                        lineString.addPoint(inputNodeInfoList[v].lon/100000., inputNodeInfoList[v].lat/100000.);
+                    //INFO("(" << inputNodeInfoList[u].lat/100000. << ";" << inputNodeInfoList[u].lon/100000. << ") -> (" << inputNodeInfoList[v].lat/100000. << ";" << inputNodeInfoList[v].lon/100000. << ")");
+                    OGRLineString lineString;
+                    lineString.addPoint(inputNodeInfoList[u].lon/100000., inputNodeInfoList[u].lat/100000.);
+                    lineString.addPoint(inputNodeInfoList[v].lon/100000., inputNodeInfoList[v].lat/100000.);
 
-                        OGRFeature *poFeature;
-                        poFeature = OGRFeature::CreateFeature( poLayer->GetLayerDefn() );
-                        poFeature->SetGeometry( &lineString );
-                        if( poLayer->CreateFeature( poFeature ) != OGRERR_NONE )
-                        {
-                            ERR( "Failed to create feature in shapefile.\n" );
-                        }
-                        OGRFeature::DestroyFeature( poFeature );
+                    OGRFeature *poFeature;
+                    poFeature = OGRFeature::CreateFeature( poLayer->GetLayerDefn() );
+                    poFeature->SetGeometry( &lineString );
+                    if( poLayer->CreateFeature( poFeature ) != OGRERR_NONE )
+                    {
+                        ERR( "Failed to create feature in shapefile.\n" );
                     }
+                    OGRFeature::DestroyFeature( poFeature );
                 }
             }
         }

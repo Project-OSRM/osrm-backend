@@ -122,6 +122,5 @@ function way_function (way)
 		way.direction = Way.bidirectional
 	end
 	
-	way.type = 1
 	return 1
 end

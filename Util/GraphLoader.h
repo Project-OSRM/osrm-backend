@@ -98,7 +98,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
 
     edgeList.reserve(m);
     EdgeWeight weight;
-    short type;
     NodeID nameID;
     int length;
     bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow;
@@ -110,7 +109,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         in.read((char*)&length,             sizeof(int));
         in.read((char*)&dir,                sizeof(short));
         in.read((char*)&weight,             sizeof(int));
-        in.read((char*)&type,               sizeof(short));
         in.read((char*)&nameID,             sizeof(unsigned));
         in.read((char*)&isRoundabout,       sizeof(bool));
         in.read((char*)&ignoreInGrid,       sizeof(bool));
@@ -152,8 +150,9 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
             std::swap(source, target);
             std::swap(forward, backward);
         }
-
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, mode );
+        
+        INFO( "inputEdge" );
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, mode );
         edgeList.push_back(inputEdge);
     }
     std::sort(edgeList.begin(), edgeList.end());
@@ -213,7 +212,6 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     for (EdgeID i=0; i<m; ++i) {
         EdgeWeight weight;
         unsigned speedType(0);
-        short type(0);
         // NodeID nameID;
         int length;
         in >> source >> target >> length >> dir >> speedType;
@@ -297,7 +295,7 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
         if(source == UINT_MAX || target == UINT_MAX) { ERR("nonexisting source or target" ); }
 
-        EdgeT inputEdge(source, target, 0, weight, forward, backward, type );
+        EdgeT inputEdge(source, target, 0, weight, forward, backward );
         edgeList.push_back(inputEdge);
     }
     ext2IntNodeMap.clear();

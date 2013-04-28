@@ -92,7 +92,6 @@ private:
         int distance;
         unsigned edgeBasedNodeID;
         unsigned nameID;
-        short type;
         bool isAccessRestricted:1;
         bool shortcut:1;
         bool forward:1;
