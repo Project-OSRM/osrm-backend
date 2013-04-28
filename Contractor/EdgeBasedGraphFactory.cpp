@@ -72,7 +72,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
         edge.data.nameID = i->name();
         edge.data.isAccessRestricted = i->isAccessRestricted();
         edge.data.edgeBasedNodeID = edges.size();
-        edge.data.contraFlow = i->isContraFlow();
         edge.data.mode = i->mode();
         edges.push_back( edge );
         if( edge.data.backward ) {
@@ -273,9 +272,8 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
                             distance += speedProfile.trafficSignalPenalty;
                         }
                         unsigned penalty = 0;
-                        bool contraflow;
                         
-                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w, contraflow, penalty, myLuaState);
+                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w, penalty, myLuaState);
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += speedProfile.uTurnPenalty;
 //                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
@@ -326,7 +324,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
     INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
 }
 
-TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, bool& contraflow, unsigned& penalty, lua_State *myLuaState) const {
+TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const {
     const double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 	
     if( speedProfile.has_turn_penalty_function ) {
@@ -350,8 +348,6 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
 
     _NodeBasedDynamicGraph::EdgeData & data1 = _nodeBasedGraph->GetEdgeData(edge1);
     _NodeBasedDynamicGraph::EdgeData & data2 = _nodeBasedGraph->GetEdgeData(edge2);
-
-    contraflow = data2.contraFlow;
 
     //roundabouts need to be handled explicitely
     if(data1.roundabout && data2.roundabout) {

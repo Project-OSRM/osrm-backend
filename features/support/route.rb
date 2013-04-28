@@ -118,9 +118,7 @@ def turn_list instructions
     12 => :leave_roundabout,
     13 => :stay_roundabout,
     14 => :start_end_of_street,
-    15 => :destination,
-    16 => :enter_contraflow,
-    17 => :leave_contraflow
+    15 => :destination
   }
   instructions.
   map { |r| types[r[0].to_i].to_s }.

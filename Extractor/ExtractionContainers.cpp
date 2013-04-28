@@ -254,7 +254,6 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                     fout.write((char*)&edgeIT->isRoundabout, sizeof(bool));
                     fout.write((char*)&edgeIT->ignoreInGrid, sizeof(bool));
                     fout.write((char*)&edgeIT->isAccessRestricted, sizeof(bool));
-                    fout.write((char*)&edgeIT->isContraFlow, sizeof(bool));
                     fout.write((char*)&edgeIT->mode, sizeof(unsigned char));
                 }
                 ++usedEdgeCounter;

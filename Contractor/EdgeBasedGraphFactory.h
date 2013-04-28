@@ -98,7 +98,6 @@ private:
         bool backward:1;
         bool roundabout:1;
         bool ignoreInGrid:1;
-        bool contraFlow:1;
         TravelMode mode;
     };
 
@@ -149,7 +148,7 @@ public:
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
     void GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
-    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, bool& contraflow, unsigned& penalty, lua_State *myLuaState) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const;
     unsigned GetNumberOfNodes() const;
 };
 

@@ -42,8 +42,8 @@ public:
         return (source() < e.source());
     }
 
-    explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, bool ra, bool ig, bool ar, bool cf, TravelMode mode) :
-                                            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _contraFlow(cf), _mode(mode) {}
+    explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, bool ra, bool ig, bool ar, TravelMode mode) :
+                                            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _mode(mode) {}
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }
@@ -55,7 +55,6 @@ public:
     bool isRoundabout() const { return _roundabout; }
     bool ignoreInGrid() const { return _ignoreInGrid; }
     bool isAccessRestricted() const { return _accessRestricted; }
-    bool isContraFlow() const { return _contraFlow; }
     TravelMode mode() const { return _mode; }
 
     NodeID _source;
@@ -67,13 +66,12 @@ public:
     bool _roundabout;
     bool _ignoreInGrid;
     bool _accessRestricted;
-    bool _contraFlow;
     TravelMode    _mode;
 
 private:
     /** Default constructor. target and weight are set to 0.*/
     NodeBasedEdge() :
-        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _roundabout(false), _ignoreInGrid(false), _accessRestricted(false), _contraFlow(false), _mode(0) { assert(false); } //shall not be used.
+        _source(0), _target(0), _name(0), _weight(0), forward(0), backward(0), _roundabout(false), _ignoreInGrid(false), _accessRestricted(false), _mode(0) { assert(false); } //shall not be used.
 
 };
 
