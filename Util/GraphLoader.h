@@ -150,7 +150,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
             std::swap(forward, backward);
         }
         
-        INFO( "inputEdge" );
         EdgeT inputEdge(source, target, nameID, weight, forward, backward, isRoundabout, ignoreInGrid, isAccessRestricted, mode );
         edgeList.push_back(inputEdge);
     }
