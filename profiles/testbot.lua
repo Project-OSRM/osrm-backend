@@ -11,11 +11,14 @@
 -- 2: route
 -- 3: river downstream
 -- 4: river upstream
+-- 5: steps down
+-- 6: steps up
 
 speed_profile = { 
 	["primary"] = 36,
 	["secondary"] = 18,
 	["tertiary"] = 12,
+	["steps"] = 6,
 	["default"] = 24
 }
 
@@ -88,6 +91,11 @@ function way_function (way)
     		speed_back = temp_speed/1.5
         	way.forward_mode = 3
         	way.backward_mode = 4
+   	    end
+            	
+    	if highway == "steps" then
+        	way.forward_mode = 5
+        	way.backward_mode = 6
    	    end
             	
         if maxspeed_forward ~= nil and maxspeed_forward > 0 then

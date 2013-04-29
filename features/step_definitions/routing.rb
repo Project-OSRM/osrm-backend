@@ -64,20 +64,20 @@ When /^I route I should get$/ do |table|
           got['distance'] = instructions ? "#{json['route_summary']['total_distance'].to_s}m" : ''
         end
         if table.headers.include?('time')
-          raise "*** Time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
+          raise "*** Time must be specied in seconds. (ex: 60s)" unless row['time']=='' || row['time'] =~ /\d+s/
           got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : ''
         end
         if table.headers.include? 'bearing'
-          got['bearing'] = bearings
+          got['bearing'] = instructions ? bearings : ''
         end
         if table.headers.include? 'compass'
-          got['compass'] = compasses
+          got['compass'] = instructions ? compasses : ''
         end
         if table.headers.include? 'turns'
-          got['turns'] = turns
+          got['turns'] = instructions ? turns : ''
         end
         if table.headers.include? 'modes'
-          got['modes'] = modes
+          got['modes'] = instructions ? modes : ''
         end
         if table.headers.include? '#'   # comment column
           got['#'] = row['#']           # copy value so it always match

@@ -93,10 +93,13 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
         if(ExtractionWay::opposite == parsed_way.direction) {
             std::reverse( parsed_way.path.begin(), parsed_way.path.end() );
             parsed_way.direction = ExtractionWay::oneway;
+            std::swap( parsed_way.forward_mode, parsed_way.backward_mode );
         }
 
-        const bool split_bidirectional_edge = (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
-
+        bool split_bidirectional_edge =
+                ((parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed)) ||
+                ((ExtractionWay::bidirectional == parsed_way.direction) && (parsed_way.forward_mode != parsed_way.backward_mode));
+    
         for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
             externalMemory->allEdges.push_back(
                     InternalExtractorEdge(parsed_way.path[n],

@@ -6,6 +6,8 @@ Feature: Testbot - Mode flag
 # 2 route
 # 3 river downstream
 # 4 river upstream
+# 5 steps down
+# 6 steps up
 
 	Background:
 		Given the profile "testbot"
@@ -80,3 +82,31 @@ Feature: Testbot - Mode flag
      	 | from | to | route | modes |
      	 | 0    | 1  | ab    | 3     |
      	 | 1    | 0  | ab    | 4     |
+
+     Scenario: Testbot - Modes in each direction (same speed in both direction)
+     	Given the node map
+    	 |   | 0 | 1 |   |
+    	 | a |   |   | b |
+
+     	And the ways
+     	 | nodes | highway |
+     	 | ab    | steps   |
+
+     	When I route I should get
+     	 | from | to | route | modes | time    |
+     	 | 0    | 1  | ab    | 5     | 60s +-1 |
+     	 | 1    | 0  | ab    | 6     | 60s +-1 |
+
+     Scenario: Testbot - Modes for opposite direction
+     	Given the node map
+    	 |   | 0 | 1 |   |
+    	 | a |   |   | b |
+
+     	And the ways
+     	 | nodes | highway | oneway |
+     	 | ab    | steps   | -1     |
+
+     	When I route I should get
+     	 | from | to | route | modes |
+     	 | 0    | 1  |       |       |
+     	 | 1    | 0  | ab    | 6     |
