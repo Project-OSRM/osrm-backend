@@ -124,8 +124,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         if (1 == dir) { backward = false; }
         if (2 == dir) { forward = false; }
 
-        assert(type >= 0);
-
         //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
         if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
