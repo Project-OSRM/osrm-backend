@@ -68,25 +68,22 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      luabind::class_<ExtractionWay>("Way")
                                      .def(luabind::constructor<>())
                                      .def_readwrite("name", &ExtractionWay::name)
-                                     .def_readwrite("speed", &ExtractionWay::speed)
-                                     .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
                                      .def_readwrite("duration", &ExtractionWay::duration)
                                      .def_readwrite("access", &ExtractionWay::access)
                                      .def_readwrite("roundabout", &ExtractionWay::roundabout)
                                      .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
                                      .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
                                      .def_readwrite("tags", &ExtractionWay::keyVals)
-                                     .def_readwrite("direction", &ExtractionWay::direction)
-                                     .def_readwrite("forward_mode", &ExtractionWay::forward_mode)
-                                     .def_readwrite("backward_mode", &ExtractionWay::backward_mode)
-                                     .enum_("constants")
-										 [
-										  luabind::value("notSure", 0),
-										  luabind::value("oneway", 1),
-										  luabind::value("bidirectional", 2),
-										  luabind::value("opposite", 3)
-										 ]
+                                     .def_readwrite("forward", &ExtractionWay::forward)
+                                     .def_readwrite("backward", &ExtractionWay::backward)
         							 ];
+
+         luabind::module(myLuaState) [
+                                      luabind::class_<ExtractionWay::SettingsForDirection>("WaySettingsForDirection")
+                                      .def_readwrite("speed", &ExtractionWay::SettingsForDirection::speed)
+                                      .def_readwrite("mode", &ExtractionWay::SettingsForDirection::mode)
+         							 ];
+
         luabind::module(myLuaState) [
                                      luabind::class_<std::vector<std::string> >("vector")
                                      .def("Add", &std::vector<std::string>::push_back)

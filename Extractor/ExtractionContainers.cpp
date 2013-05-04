@@ -231,9 +231,6 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
                     fout.write((char*)&edgeIT->target, sizeof(unsigned));
                     fout.write((char*)&intDist, sizeof(int));
                     switch(edgeIT->direction) {
-                    case ExtractionWay::notSure:
-                        fout.write((char*)&zero, sizeof(short));
-                        break;
                     case ExtractionWay::oneway:
                         fout.write((char*)&one, sizeof(short));
                         break;

@@ -130,39 +130,46 @@ function way_function (way)
 	if "roundabout" == junction then
 	  way.roundabout = true;
 	end
-
+  
   -- Handling ferries and piers
   if (speed_profile[route] ~= nil and speed_profile[route] > 0) then
    if durationIsValid(duration) then
     way.duration = math.max( parseDuration(duration), 1 );
+    way.forward.mode = 2
+    way.backward.mode = 2
    end
-   way.direction = Way.bidirectional
    if speed_profile[route] ~= nil then
     highway = route;
    end
    if tonumber(way.duration) < 0 then
-    way.speed = speed_profile[highway]
+    way.forward.speed = speed_profile[highway]
+    way.backward.speed = speed_profile[highway]
    end
   end
     
   -- Set the avg speed on the way if it is accessible by road class
-  if (speed_profile[highway] ~= nil and way.speed == -1 ) then
+  if speed_profile[highway] ~= nil then
+      way.forward.mode = 1
+      way.backward.mode = 1
   if maxspeed > speed_profile[highway] then
-   way.speed = maxspeed
+   way.forward.speed = maxspeed
+   way.backward.speed = maxspeed
   else
    if 0 == maxspeed then
     maxspeed = math.huge
    end
-   way.speed = math.min(speed_profile[highway], maxspeed)
+   way.forward.speed = math.min(speed_profile[highway], maxspeed)
+   way.backward.speed = math.min(speed_profile[highway], maxspeed)
     end
   end
 
   -- Set the avg speed on ways that are marked accessible
-    if "" ~= highway and access_tag_whitelist[access] and way.speed == -1 then
+    if "" ~= highway and access_tag_whitelist[access] then
       if 0 == maxspeed then
         maxspeed = math.huge
       end
-      way.speed = math.min(speed_profile["default"], maxspeed)
+      way.forward.speed = math.min(speed_profile["default"], maxspeed)
+      way.backward.speed = math.min(speed_profile["default"], maxspeed)
     end
 
   -- Set access restriction flag if access is allowed under certain restrictions only
@@ -178,27 +185,23 @@ function way_function (way)
   -- Set direction according to tags on way
     if obey_oneway then
       if oneway == "no" or oneway == "0" or oneway == "false" then
-	    way.direction = Way.bidirectional
+          --
 	  elseif oneway == "-1" then
-	    way.direction = Way.opposite
+	    way.forward.mode = 0
       elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
-		way.direction = Way.oneway
-      else
-        way.direction = Way.bidirectional
+		way.backward.mode = 0
       end
-    else
-      way.direction = Way.bidirectional
     end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
     if maxspeed_forward ~= nil and maxspeed_forward > 0 then
-	if Way.bidirectional == way.direction then
-          way.backward_speed = way.speed
+	if way.forward.mode>0 and way.backward.mode>0 then
+          way.backward.speed = way.forward.speed
         end
-        way.speed = maxspeed_forward
+        way.forward.speed = maxspeed_forward
     end
     if maxspeed_backward ~= nil and maxspeed_backward > 0 then
-      way.backward_speed = maxspeed_backward
+      way.backward.speed = maxspeed_backward
     end
 
   -- Override general direction settings of there is a specific one for our mode of travel

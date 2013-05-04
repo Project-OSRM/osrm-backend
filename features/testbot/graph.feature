@@ -5,7 +5,6 @@ Test the input data descibed on https://github.com/DennisOSRM/Project-OSRM/wiki/
 	Background:
 		Given the profile "testbot"
 	
-	@smallest
 	Scenario: Graph transformation
 		Given the node map
         |   |   | d |
