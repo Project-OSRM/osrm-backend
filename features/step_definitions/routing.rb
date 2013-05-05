@@ -3,13 +3,28 @@ When /^I route I should get$/ do |table|
   actual = []
   OSRMLauncher.new do
     table.hashes.each_with_index do |row,ri|
-      from_node = find_node_by_name row['from']
-      raise "*** unknown from-node '#{row['from']}" unless from_node
-      to_node = find_node_by_name row['to']
-      raise "*** unknown to-node '#{row['to']}" unless to_node
-
-      got = {'from' => row['from'], 'to' => row['to'] }
-      
+      waypoints = []
+      if row['from'] and row['to']
+        node = find_node_by_name(row['from'])
+        raise "*** unknown from-node '#{row['from']}" unless node
+        waypoints << node
+        
+        node = find_node_by_name(row['to'])
+        raise "*** unknown to-node '#{row['to']}" unless node
+        waypoints << node
+        
+        got = {'from' => row['from'], 'to' => row['to'] }
+      elsif row['waypoints']
+        row['waypoints'].split(',').each do |n|
+          node = find_node_by_name(n.strip)
+          raise "*** unknown waypoint node '#{n.strip}" unless node
+          waypoints << node
+        end
+        got = {'waypoints' => row['waypoints'] }
+      else
+        raise "*** no waypoints"
+      end
+        
       params = {}
       row.each_pair do |k,v|
         if k =~ /param:(.*)/
@@ -22,7 +37,7 @@ When /^I route I should get$/ do |table|
         end
       end
             
-      response = request_route("#{from_node.lat},#{from_node.lon}", "#{to_node.lat},#{to_node.lon}", params)
+      response = request_route(waypoints, params)
       if response.code == "200" && response.body.empty? == false
         json = JSON.parse response.body
         if json['status'] == 0
