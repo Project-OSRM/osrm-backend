@@ -76,6 +76,8 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
                                      .def_readwrite("tags", &ExtractionWay::keyVals)
                                      .def_readwrite("forward", &ExtractionWay::forward)
                                      .def_readwrite("backward", &ExtractionWay::backward)
+                                     .property("mode", &ExtractionWay::get_mode, &ExtractionWay::set_mode)
+                                     .property("speed", &ExtractionWay::get_speed, &ExtractionWay::set_speed)
         							 ];
 
          luabind::module(myLuaState) [

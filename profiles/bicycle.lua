@@ -1,4 +1,5 @@
 require("lib/access")
+require("lib/maxspeed")
 
 -- Begin of globals
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true}
@@ -95,6 +96,13 @@ turn_penalty 			= 60
 turn_bias               = 1.4
 -- End of globals
 
+--modes
+mode_normal = 1
+mode_pushing = 2
+mode_ferry = 3
+mode_train = 4
+
+    
 function get_exceptions(vector)
 	for i,v in ipairs(restriction_exception_tags) do 
 		vector:Add(v)
@@ -191,76 +199,62 @@ function way_function (way)
 		way.name = "{highway:"..highway.."}"	-- if no name exists, use way type
 		                                        -- this encoding scheme is excepted to be a temporary solution
 	end
-	
-	way.forward.mode = 1
-	way.backward.mode = 1
+		
+	way.mode = mode_normal
 	
 	-- speed
     if route_speeds[route] then
 		-- ferries (doesn't cover routes tagged using relations)
+    	way.mode = mode_ferry
 		way.ignore_in_grid = true
 		if durationIsValid(duration) then
 			way.duration = math.max( 1, parseDuration(duration) )
 		else
-		 	way.forward.speed = route_speeds[route]
-		 	way.backward.speed = route_speeds[route]
+		 	way.speed = route_speeds[route]
 		end
-    	way.forward.mode = 2
-    	way.backward.mode = 2
 	elseif platform_speeds[railway] then
 		-- railway platforms (old tagging scheme)
-		way.forward.speed = platform_speeds[railway]
-		way.backward.speed = platform_speeds[railway]
+		way.speed = platform_speeds[railway]
 	elseif platform_speeds[public_transport] then
 		-- public_transport platforms (new tagging platform)
-		way.forward.speed = platform_speeds[public_transport]
-		way.backward.speed = platform_speeds[public_transport]
+		way.speed = platform_speeds[public_transport]
     elseif railway_speeds[railway] then
 	 	-- railways
 		if access and access_tag_whitelist[access] then
-			way.forward.speed = railway_speeds[railway]		
-			way.backward.speed = railway_speeds[railway]		
+        	way.mode = mode_train
+			way.speed = railway_speeds[railway]		
 		end
 	elseif amenity_speeds[amenity] then
 		-- parking areas
-		way.forward.speed = amenity_speeds[amenity]
-		way.backward.speed = amenity_speeds[amenity]
+		way.speed = amenity_speeds[amenity]
 	elseif bicycle_speeds[highway] then
 		-- regular ways
-      	way.forward.speed = bicycle_speeds[highway]
-      	way.backward.speed = bicycle_speeds[highway]
+      	way.speed = bicycle_speeds[highway]
 	elseif access_tag_whitelist[access] then
 	    -- unknown way, but valid access tag
-		way.forward.speed = default_speed
-		way.backward.speed = default_speed
+		way.speed = default_speed
 	else
 	    -- biking not allowed, maybe we can push our bike?
 	    -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
         if foot ~= 'no' then
 	        if pedestrian_speeds[highway] then
 	            -- pedestrian-only ways and areas
-        		way.forward.speed = pedestrian_speeds[highway]
-        		way.backward.speed = pedestrian_speeds[highway]
-            	way.forward.mode = 3
-            	way.backward.mode = 3
+        		way.speed = pedestrian_speeds[highway]
+            	way.mode = mode_pushing
         	elseif man_made and man_made_speeds[man_made] then
             	-- man made structures
-            	way.forward.speed = man_made_speeds[man_made]
-            	way.backward.speed = man_made_speeds[man_made]
-            	way.forward.mode = 3
-            	way.backward.mode = 3
+            	way.speed = man_made_speeds[man_made]
+            	way.mode = mode_pushing
             elseif foot == 'yes' then
-                way.forward.speed = walking_speed
-                way.backward.speed = walking_speed
-            	way.forward.mode = 3
-            	way.backward.mode = 3
+                way.speed = walking_speed
+            	way.mode = mode_pushing
             elseif foot_forward == 'yes' then
                 way.forward.speed = walking_speed
-            	way.forward.mode = 3
+            	way.forward.mode = mode_pushing
             	way.backward.mode = 0
             elseif foot_backward == 'yes' then
                 way.backward.speed = walking_speed
-            	way.backward.mode = 3
+            	way.backward.mode = mode_pushing
             	way.forward.mode = 0
             end
         end
@@ -283,18 +277,18 @@ function way_function (way)
 	elseif string.find(cycleway, "opposite") == 1 then
 		if impliedOneway then
         	way.forward.mode = 0
-        	way.backward.mode = 1
+        	way.backward.mode = mode_normal
 		end
 	elseif cycleway_tags[cycleway_left] and cycleway_tags[cycleway_right] then
 	    -- prevent implied
 	elseif cycleway_tags[cycleway_left] then
 		if impliedOneway then
         	way.forward.mode = 0
-        	way.backward.mode = 1
+        	way.backward.mode = mode_normal
 		end
 	elseif cycleway_tags[cycleway_right] then
 		if impliedOneway then
-        	way.forward.mode = 1
+        	way.forward.mode = mode_normal
         	way.backward.mode = 0
 		end
 	elseif oneway == "-1" then
@@ -310,10 +304,10 @@ function way_function (way)
 	        if junction ~= "roundabout" then
             	if way.backward.mode == 0 then
             	    way.backward.speed = walking_speed
-                	way.backward.mode = 3
+                	way.backward.mode = mode_pushing
                 elseif way.forward.mode == 0 then
                     way.forward.speed = walking_speed
-                	way.forward.mode = 3
+                	way.forward.mode = mode_pushing
             	end
             end
         end
@@ -332,27 +326,14 @@ function way_function (way)
 	end
     
     -- surfaces
-    if surface then
-        surface_speed = surface_speeds[surface]
-        if surface_speed then
-            way.forward.speed = math.min(way.forward.speed, surface_speed)
-            way.backward.speed  = math.min(way.backward.speed, surface_speed)
-        end
+    if surface_speeds[surface] then
+        way.forward.speed = math.min(way.forward.speed, surface_speeds[surface])
+        way.backward.speed  = math.min(way.backward.speed, surface_speeds[surface])
     end
 
 	-- maxspeed
-    if maxspeed_forward and maxspeed_forward>0 then
-        way.forward.speed = math.min(way.forward.speed, maxspeed_forward)
-	elseif maxspeed and maxspeed>0 then
-		way.forward.speed = math.min(way.forward.speed, maxspeed)
-	end
-	
-    if maxspeed_backward and maxspeed_backward>0 then
-        way.backward.speed = math.min(way.backward.speed, maxspeed_backward)
-	elseif maxspeed and maxspeed>0 then
-		way.backward.speed = math.min(way.backward.speed, maxspeed)
-	end
-		
+    MaxSpeed.limit( way, maxspeed, maxspeed_forward, maxspeed_backward )
+    	
 	return true
 end
 

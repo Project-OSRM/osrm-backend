@@ -81,7 +81,26 @@ struct ExtractionWay {
         }
         return ExtractionWay::bidirectional;
     }
-        
+    
+    inline void set_mode(const TravelMode m) { forward.mode = m; backward.mode = m; }
+    inline const TravelMode get_mode() {
+        if( forward.mode == backward.mode ) {
+            return forward.mode;
+        } else {
+            return -1;
+        }
+    }
+
+    inline void set_speed(const double s) { forward.speed = s; backward.speed = s; }
+    inline const double get_speed() {
+        if( forward.speed == backward.speed ) {
+            return forward.speed;
+        } else {
+            return -1;
+        }
+    }
+    
+    
     unsigned id;
     unsigned nameID;
     std::string name;
