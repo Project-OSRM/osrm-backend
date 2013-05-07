@@ -102,8 +102,8 @@ desc "Download OSM data."
 task :download => :setup do
   Dir.mkdir "#{DATA_FOLDER}" unless File.exist? "#{DATA_FOLDER}"
   puts "Downloading..."
-  puts "curl http://download.geofabrik.de/openstreetmap/europe/#{osm_data_country}.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
-  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/openstreetmap/europe/#{osm_data_country}.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
+  puts "curl http://download.geofabrik.de/europe/#{osm_data_country}-latest.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
+  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/europe/#{osm_data_country}-latest.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
   if osm_data_area_bbox
     puts "Cropping and converting to protobuffer..."
     raise "Error while cropping data." unless system "osmosis --read-pbf file=#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
