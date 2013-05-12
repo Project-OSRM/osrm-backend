@@ -8,16 +8,15 @@ class Hash
   def to_param(namespace = nil)
     collect do |key, value|
       "#{key}=#{value}"
-    end.sort * '&'
+    end.sort
   end
 end
 
-def request_path path, params={}
-  if params.any?
-    uri = URI.parse ["#{HOST}/#{path}",params.to_param].join('&')
-  else
-    uri = URI.parse "#{HOST}/#{path}"
-  end
+def request_path path, waypoints=[], options={}
+  locs = waypoints.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
+  params = (locs + options.to_param).join('&')
+  params = nil if params==""
+  uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
   Timeout.timeout(REQUEST_TIMEOUT) do
     Net::HTTP.get_response uri
   end
@@ -27,9 +26,9 @@ rescue Timeout::Error
   raise "*** osrm-routed did not respond."
 end
 
-def request_route a,b, params={}
-  defaults = { 'output' => 'json', 'instructions' => true, 'alt' => true }
-  request_path "viaroute?loc=#{a}&loc=#{b}", defaults.merge(params)
+def request_route waypoints, params={}
+  defaults = { 'output' => 'json', 'instructions' => true, 'alt' => false }
+  request_path "viaroute", waypoints, defaults.merge(params)
 end
 
 def parse_response response

@@ -41,14 +41,14 @@ Feature: Bike - Squares and other areas
 
 		When I route I should get
 		 | from | to | route |
-		 | a    | b  |       |
-		 | a    | d  |       |
-		 | b    | c  |       |
-		 | c    | b  |       |
-		 | c    | d  |       |
-		 | d    | c  |       |
-		 | d    | a  |       |
-		 | a    | d  |       |
+		 | a    | b  | xa    |
+		 | a    | d  | xa    |
+		 | b    | c  | xa    |
+		 | c    | b  | xa    |
+		 | c    | d  | xa    |
+		 | d    | c  | xa    |
+		 | d    | a  | xa    |
+		 | a    | d  | xa    |
 	
 	@parking
 	Scenario: Bike - parking areas
