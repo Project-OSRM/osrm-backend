@@ -90,8 +90,6 @@ private:
     }
     void abort(boost::filesystem::filesystem_error& e);
 
-    ;
-
     struct StreamData {
         bool writeMode;
         boost::filesystem::path pathToTemporaryFile;
