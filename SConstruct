@@ -150,8 +150,9 @@ if GetOption('buildconfiguration') != 'debug' and sys.platform != 'darwin' and G
 	env.Append(CCFLAGS = ['-march=native'])
 
 if not conf.CheckHeader('omp.h'):
-	print "Compiler does not support OpenMP. Exiting"
-	Exit(-1)
+	if "clang" not in env["CXX"]:
+		print "OpenMP not found, Exiting"
+		Exit(-1)
 if not conf.CheckLibWithHeader('bz2', 'bzlib.h', 'CXX'):
 	print "bz2 library not found. Exiting"
 	Exit(-1)
