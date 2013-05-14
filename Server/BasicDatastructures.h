@@ -21,8 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASIC_DATASTRUCTURES_H
 #define BASIC_DATASTRUCTURES_H
 #include <string>
+#include <sstream>
 #include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include "../Util/StringUtil.h"
 
@@ -143,7 +143,9 @@ Reply Reply::stockReply(Reply::status_type status) {
 	rep.headers[0].name = "Access-Control-Allow-Origin";
 	rep.headers[0].value = "*";
 	rep.headers[1].name = "Content-Length";
-	rep.headers[1].value = boost::lexical_cast<std::string>(rep.content.size());
+	std::ostringstream s;
+	s << rep.content.size();
+	rep.headers[1].value = s.str();
 	rep.headers[2].name = "Content-Type";
 	rep.headers[2].value = "text/html";
 	return rep;

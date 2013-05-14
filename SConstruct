@@ -239,9 +239,6 @@ if not conf.CheckCXXHeader('boost/enable_shared_from_this.hpp'):
 if not conf.CheckCXXHeader('boost/foreach.hpp'):
 	print "boost/foreach.hpp not found. Exiting"
 	Exit(-1)
-if not conf.CheckCXXHeader('boost/lexical_cast.hpp'):
-	print "boost/foreach.hpp not found. Exiting"
-	Exit(-1)
 if not conf.CheckCXXHeader('boost/logic/tribool.hpp'):
 	print "boost/foreach.hpp not found. Exiting"
 	Exit(-1)
