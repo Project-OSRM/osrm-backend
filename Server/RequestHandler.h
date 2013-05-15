@@ -25,7 +25,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cctype> // std::tolower
 #include <string>
 #include <iostream>
-#include <boost/lexical_cast.hpp>
 #include <boost/noncopyable.hpp>
 
 #include "APIGrammar.h"
