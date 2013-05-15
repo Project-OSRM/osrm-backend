@@ -45,7 +45,7 @@ endif()
 
 if(APPLE)
 	SET(CMAKE_OSX_ARCHITECTURES "x86_64")
-	message("Set Archtitecture to x64 on OS X")
+	message("Set Architecture to x64 on OS X")
 endif()
 
 #Check Boost
@@ -54,6 +54,7 @@ find_package( Boost ${BOOST_MIN_VERSION} COMPONENTS ${BOOST_COMPONENTS} REQUIRED
 if (NOT Boost_FOUND)
       message(FATAL_ERROR "Fatal error: Boost (version >= 1.44.0) required.\n")
 endif (NOT Boost_FOUND)
+include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries( osrm-extract ${Boost_LIBRARIES} )
 target_link_libraries( osrm-prepare ${Boost_LIBRARIES} )
 target_link_libraries( osrm-routed ${Boost_LIBRARIES} )
