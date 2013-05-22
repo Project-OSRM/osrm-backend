@@ -143,9 +143,9 @@ Reply Reply::stockReply(Reply::status_type status) {
 	rep.headers[0].name = "Access-Control-Allow-Origin";
 	rep.headers[0].value = "*";
 	rep.headers[1].name = "Content-Length";
-	std::ostringstream s;
-	s << rep.content.size();
-	rep.headers[1].value = s.str();
+    std::string s;
+    intToString(rep.content.size(), s);
+    rep.headers[1].value = s;
 	rep.headers[2].name = "Content-Type";
 	rep.headers[2].value = "text/html";
 	return rep;
