@@ -42,10 +42,10 @@ When /^I request nearest I should get$/ do |table|
   table.routing_diff! actual
 end
 
-When /^I route (\d+) times I should get$/ do |n,table|
+When /^I request nearest (\d+) times I should get$/ do |n,table|
   ok = true
   n.to_i.times do
-    ok = false unless step "I route I should get", table
+    ok = false unless step "I request nearest I should get", table
   end
   ok
 end
