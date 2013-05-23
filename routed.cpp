@@ -65,7 +65,7 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 }
 #endif
 
-int main (int argc, char * argv[0]) {
+int main (int argc, char * argv[]) {
 #ifdef __linux__
     if(!mlockall(MCL_CURRENT | MCL_FUTURE))
         WARN("Process " << argv[0] << "could not be locked to RAM");
