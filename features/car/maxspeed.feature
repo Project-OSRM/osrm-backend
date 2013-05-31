@@ -31,7 +31,7 @@ Feature: Car - Max speed restrictions
 		When I route I should get
 		 | from | to | route | time      |
 		 | a    | b  | ab    | 144s ~10% |
-		 | b    | c  | bc    | 63s ~10%  |
+		 | b    | c  | bc    | 42s ~10%  |
 
      Scenario: Car - Forward/backward maxspeed
         Given the shortcuts
