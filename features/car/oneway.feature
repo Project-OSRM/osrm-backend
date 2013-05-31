@@ -57,3 +57,17 @@ Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tag
 		 | primary | roundabout |        | yes            | x    |       |
 		 | primary | roundabout |        | no             | x    |       |
 		 | primary | roundabout |        | -1             | x    |       |
+
+  	Scenario: Car - Two consecutive oneways
+  		Given the node map
+  		 | a | b | c |
+
+  		And the ways
+  		 | nodes | oneway |
+  		 | ab    | yes    |
+  		 | bc    | yes    |
+
+
+  		When I route I should get
+  		 | from | to | route |
+  		 | a    | c  | ab,bc |
