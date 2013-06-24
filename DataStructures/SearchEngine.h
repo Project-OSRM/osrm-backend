@@ -40,19 +40,27 @@ class SearchEngine {
 private:
     SearchEngineData _queryData;
 
-	inline double absDouble(double input) { if(input < 0) return input*(-1); else return input;}
 public:
     ShortestPathRouting<SearchEngineData> shortestPath;
     AlternativeRouting<SearchEngineData> alternativePaths;
 
-    SearchEngine(QueryGraph * g, NodeInformationHelpDesk * nh, std::vector<std::string> & n);
+    SearchEngine(
+        QueryGraph * g, 
+        NodeInformationHelpDesk * nh, 
+        std::vector<std::string> & n
+    );
 	~SearchEngine();
 
 	void GetCoordinatesForNodeID(NodeID id, _Coordinate& result) const;
 
-    void FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result, unsigned zoomLevel) const;
+    void FindPhantomNodeForCoordinate(
+        const _Coordinate & location, 
+        PhantomNode & result, 
+        unsigned zoomLevel
+    ) const;
 
-    NodeID GetNameIDForOriginDestinationNodeID(const NodeID s, const NodeID t) const;
+    NodeID GetNameIDForOriginDestinationNodeID(
+        const NodeID s, const NodeID t) const;
 
     std::string GetEscapedNameForNameID(const unsigned nameID) const;
 };
