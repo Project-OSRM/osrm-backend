@@ -27,9 +27,10 @@ extern "C" {
     #include <lualib.h>
 }
 
+#include <boost/filesystem/convenience.hpp>
+
 #include <iostream>
 #include <string>
-#include <boost/filesystem/convenience.hpp>
 
 template<typename T>
 void LUA_print(T number) {
