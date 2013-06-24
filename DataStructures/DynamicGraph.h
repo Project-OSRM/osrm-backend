@@ -55,8 +55,7 @@ class DynamicGraph {
             m_edges.resize( m_numNodes );
         }
         template<class ContainerT>
-        DynamicGraph( const int nodes, const ContainerT &graph )
-        {
+        DynamicGraph( const int nodes, const ContainerT &graph ) {
             m_numNodes = nodes;
             m_numEdges = ( EdgeIterator ) graph.size();
             m_nodes.reserve( m_numNodes +1);
@@ -80,7 +79,10 @@ class DynamicGraph {
                 for ( EdgeIterator i = m_nodes[node].firstEdge, e = m_nodes[node].firstEdge + m_nodes[node].edges; i != e; ++i ) {
                     m_edges[i].target = graph[edge].target;
                     m_edges[i].data = graph[edge].data;
-                    GUARANTEE(graph[edge].data.distance > 0, "edge: " << edge << "(" << graph[edge].source << "," << graph[edge].target << ")=" << graph[edge].data.distance);
+                    BOOST_ASSERT_MSG(
+                        graph[edge].data.distance > 0,
+                        "edge distance invalid"
+                    );
                     ++edge;
                 }
             }
@@ -88,13 +90,11 @@ class DynamicGraph {
 
         ~DynamicGraph(){ }
 
-        unsigned GetNumberOfNodes() const
-        {
+        unsigned GetNumberOfNodes() const {
             return m_numNodes;
         }
 
-        unsigned GetNumberOfEdges() const
-        {
+        unsigned GetNumberOfEdges() const {
             return m_numEdges;
         }
 
