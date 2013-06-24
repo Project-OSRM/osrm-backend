@@ -20,17 +20,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #ifndef CONTRACTOR_H_INCLUDED
 #define CONTRACTOR_H_INCLUDED
-#include <algorithm>
-#include <limits>
-#include <vector>
-
-#include <cfloat>
-#include <ctime>
-
-#include <boost/foreach.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "TemporaryStorage.h"
 #include "../DataStructures/BinaryHeap.h"
@@ -41,6 +30,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/XORFastHashStorage.h"
 #include "../Util/OpenMPWrapper.h"
 #include "../Util/StringUtil.h"
+
+#include <boost/assert.hpp>
+#include <boost/foreach.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+
+#include <cfloat>
+#include <ctime>
+
+#include <algorithm>
+#include <limits>
+#include <vector>
 
 class Contractor {
 
@@ -119,7 +121,7 @@ public:
             newEdge.target = diter->target();
             newEdge.data = _ContractorEdgeData( (std::max)((int)diter->weight(), 1 ),  1,  diter->id(),  false,  diter->isForward(),  diter->isBackward());
 
-            assert( newEdge.data.distance > 0 );
+            BOOST_ASSERT_MSG( newEdge.data.distance > 0, "edge distance < 1" );
 #ifndef NDEBUG
             if ( newEdge.data.distance > 24 * 60 * 60 * 10 ) {
                 WARN("Edge weight large -> " << newEdge.data.distance);
@@ -232,8 +234,9 @@ public:
 
         //initialize the variables
 #pragma omp parallel for schedule ( guided )
-        for ( int x = 0; x < ( int ) numberOfNodes; ++x )
+        for ( int x = 0; x < ( int ) numberOfNodes; ++x ) {
             remainingNodes[x].id = x;
+        }
 
         std::cout << "initializing elimination PQ ..." << std::flush;
 #pragma omp parallel
@@ -301,8 +304,14 @@ public:
                             newEdge.target = newNodeIDFromOldNodeIDMap[target];
                             newEdge.data = data;
                             newEdge.data.originalViaNodeID = true;
-                            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[start] );
-                            assert(UINT_MAX != newNodeIDFromOldNodeIDMap[target]);
+                            BOOST_ASSERT_MSG(
+                                UINT_MAX != newNodeIDFromOldNodeIDMap[start],
+                                "new start id not resolveable"
+                            );
+                            BOOST_ASSERT_MSG(
+                                UINT_MAX != newNodeIDFromOldNodeIDMap[target],
+                                "new target id not resolveable"
+                            );
                             newSetOfEdges.push_back(newEdge);
                         }
                     }
@@ -447,8 +456,14 @@ public:
                     Edge newEdge;
                     newEdge.source = oldNodeIDFromNewNodeIDMap[node];
                     newEdge.target = oldNodeIDFromNewNodeIDMap[target];
-                    assert(UINT_MAX != newEdge.source);
-                    assert(UINT_MAX != newEdge.target);
+                    BOOST_ASSERT_MSG(
+                        UINT_MAX != newEdge.source,
+                        "Source id invalid"
+                    );
+                    BOOST_ASSERT_MSG(
+                        UINT_MAX != newEdge.target,
+                        "Target id invalid"
+                    );
 
                     newEdge.data.distance = data.distance;
                     newEdge.data.shortcut = data.shortcut;
@@ -457,7 +472,11 @@ public:
                     else
                         newEdge.data.id = data.id;
 
-                    assert(newEdge.data.id != UINT_MAX);
+                    BOOST_ASSERT_MSG(
+                        newEdge.data.id <= INT_MAX, //2^31
+                        "edge id invalid"
+                    );
+
                     newEdge.data.forward = data.forward;
                     newEdge.data.backward = data.backward;
                     edges.push_back( newEdge );
@@ -517,8 +536,9 @@ private:
 
             if ( heap.GetData( node ).target ) {
                 ++targetsFound;
-                if ( targetsFound >= numTargets )
+                if ( targetsFound >= numTargets ) {
                     return;
+                }
             }
 
             //iterate over all edges of node
@@ -532,9 +552,9 @@ private:
                 const int toDistance = distance + data.distance;
 
                 //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !heap.WasInserted( to ) )
+                if ( !heap.WasInserted( to ) ) {
                     heap.Insert( to, toDistance, _HeapData(currentHop, false) );
-
+                }
                 //Found a shorter Path -> Update distance
                 else if ( toDistance < heap.GetKey( to ) ) {
                     heap.DecreaseKey( to, toDistance );
