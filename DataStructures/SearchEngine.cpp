@@ -20,23 +20,40 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "SearchEngine.h"
 
-SearchEngine::SearchEngine(QueryGraph * g, NodeInformationHelpDesk * nh, std::vector<std::string> & n) :
+SearchEngine::SearchEngine(
+    QueryGraph * g,
+    NodeInformationHelpDesk * nh,
+    std::vector<std::string> & n
+    ) :
         _queryData(g, nh, n),
         shortestPath(_queryData),
         alternativePaths(_queryData)
     {}
     SearchEngine::~SearchEngine() {}
 
-void SearchEngine::GetCoordinatesForNodeID(NodeID id, _Coordinate& result) const {
+void SearchEngine::GetCoordinatesForNodeID(
+    NodeID id,
+    _Coordinate& result
+    ) const {
     result.lat = _queryData.nodeHelpDesk->getLatitudeOfNode(id);
     result.lon = _queryData.nodeHelpDesk->getLongitudeOfNode(id);
 }
 
-void SearchEngine::FindPhantomNodeForCoordinate(const _Coordinate & location, PhantomNode & result, unsigned zoomLevel) const {
-    _queryData.nodeHelpDesk->FindPhantomNodeForCoordinate(location, result, zoomLevel);
+void SearchEngine::FindPhantomNodeForCoordinate(
+    const _Coordinate & location,
+    PhantomNode & result,
+    const unsigned zoomLevel
+    ) const {
+    _queryData.nodeHelpDesk->FindPhantomNodeForCoordinate(
+        location,
+        result, zoomLevel
+    );
 }
 
-NodeID SearchEngine::GetNameIDForOriginDestinationNodeID(const NodeID s, const NodeID t) const {
+NodeID SearchEngine::GetNameIDForOriginDestinationNodeID(
+    const NodeID s,
+    const NodeID t
+    ) const {
     if(s == t){
         return 0;
     }
@@ -53,7 +70,12 @@ NodeID SearchEngine::GetNameIDForOriginDestinationNodeID(const NodeID s, const N
 }
 
 std::string SearchEngine::GetEscapedNameForNameID(const unsigned nameID) const {
-    return ((nameID >= _queryData.names.size() || nameID == 0) ? std::string("") : HTMLEntitize(_queryData.names.at(nameID)));
+    bool is_name_invalid = (nameID >= _queryData.names.size() || nameID == 0);
+    if (is_name_invalid) {
+        return std::string("");
+    }
+
+    return HTMLEntitize(_queryData.names.at(nameID));
 }
 
 SearchEngineHeapPtr SearchEngineData::forwardHeap;
@@ -65,4 +87,3 @@ SearchEngineHeapPtr SearchEngineData::backwardHeap2;
 SearchEngineHeapPtr SearchEngineData::forwardHeap3;
 SearchEngineHeapPtr SearchEngineData::backwardHeap3;
 
- 
