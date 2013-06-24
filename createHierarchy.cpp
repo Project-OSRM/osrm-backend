@@ -18,25 +18,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-}
-#include <luabind/luabind.hpp>
-
-#include <boost/foreach.hpp>
-
-#include <fstream>
-#include <istream>
-#include <iostream>
-#include <cstring>
-#include <string>
-#include <vector>
-
 #include "Algorithms/IteratorBasedCRC32.h"
-#include "Util/OpenMPWrapper.h"
-#include "typedefs.h"
 #include "Contractor/Contractor.h"
 #include "Contractor/EdgeBasedGraphFactory.h"
 #include "DataStructures/BinaryHeap.h"
@@ -47,7 +29,20 @@ extern "C" {
 #include "Util/GraphLoader.h"
 #include "Util/InputFileUtil.h"
 #include "Util/LuaUtil.h"
+#include "Util/OpenMPWrapper.h"
 #include "Util/StringUtil.h"
+#include "typedefs.h"
+
+#include <boost/foreach.hpp>
+
+#include <luabind/luabind.hpp>
+
+#include <fstream>
+#include <istream>
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <vector>
 
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
@@ -133,9 +128,9 @@ int main (int argc, char *argv[]) {
         ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
     }
     speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
-    
+
     speedProfile.has_turn_penalty_function = lua_function_exists( myLuaState, "turn_function" );
-    
+
     std::vector<ImportEdge> edgeList;
     NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
     in.close();
