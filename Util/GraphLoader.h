@@ -21,6 +21,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
+#include "../DataStructures/ImportNode.h"
+#include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/Restriction.h"
+#include "../typedefs.h"
+
+#include <boost/unordered_map.hpp>
+
 #include <cassert>
 #include <cmath>
 
@@ -30,19 +38,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iomanip>
 #include <vector>
 
-#include <boost/unordered_map.hpp>
-
-#include "../DataStructures/ImportNode.h"
-#include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/NodeCoords.h"
-#include "../DataStructures/Restriction.h"
-#include "../typedefs.h"
-
 typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;
 
 template<class EdgeT>
 struct _ExcessRemover {
-    inline bool operator()( EdgeT & edge ) const {
+    inline bool operator()( const EdgeT & edge ) const {
         return edge.source() == UINT_MAX;
     }
 };
