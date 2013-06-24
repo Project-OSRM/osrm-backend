@@ -105,5 +105,4 @@ inline double ApproximateDistanceByEuclid(const _Coordinate &c1, const _Coordina
     return d;
 }
 
-
 #endif /* COORDINATE_H_ */
