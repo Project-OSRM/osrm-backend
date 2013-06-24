@@ -21,7 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef COORDINATE_H_
 #define COORDINATE_H_
 
+#include <cassert>
+#include <cmath>
 #include <climits>
+
 #include <iostream>
 
 struct _Coordinate {
