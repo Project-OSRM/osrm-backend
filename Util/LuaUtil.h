@@ -18,10 +18,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-
-
 #ifndef LUAUTIL_H_
 #define LUAUTIL_H_
+
+extern "C" {
+    #include <lua.h>
+    #include <lauxlib.h>
+    #include <lualib.h>
+}
 
 #include <iostream>
 #include <string>
