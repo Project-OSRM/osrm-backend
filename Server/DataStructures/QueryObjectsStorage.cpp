@@ -22,14 +22,27 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "QueryObjectsStorage.h"
 #include "../../Util/GraphLoader.h"
 
-QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string timestampPath) {
+QueryObjectsStorage::QueryObjectsStorage(
+	std::string hsgrPath,
+	std::string ramIndexPath,
+	std::string fileIndexPath,
+	std::string nodesPath,
+	std::string edgesPath,
+	std::string namesPath,
+	std::string timestampPath
+) {
 	INFO("loading graph data");
 	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
     if(!hsgrInStream) { ERR(hsgrPath <<  " not found"); }
 	//Deserialize road network graph
 	std::vector< QueryGraph::_StrNode> nodeList;
 	std::vector< QueryGraph::_StrEdge> edgeList;
-	const int n = readHSGRFromStream(hsgrInStream, nodeList, edgeList, &checkSum);
+	const int n = readHSGRFromStream(
+		hsgrInStream,
+		nodeList,
+		edgeList,
+		&checkSum
+	);
 
 	INFO("Data checksum is " << checkSum);
 	graph = new QueryGraph(nodeList, edgeList);
@@ -39,7 +52,7 @@ QueryObjectsStorage::QueryObjectsStorage(std::string hsgrPath, std::string ramIn
 	if(timestampPath.length()) {
 	    INFO("Loading Timestamp");
 	    std::ifstream timestampInStream(timestampPath.c_str());
-	    if(!timestampInStream) { ERR(timestampPath <<  " not found"); }
+	    if(!timestampInStream) { WARN(timestampPath <<  " not found"); }
 
 	    getline(timestampInStream, timestamp);
 	    timestampInStream.close();
