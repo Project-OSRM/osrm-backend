@@ -205,7 +205,7 @@ int main (int argc, char *argv[]) {
         std::sort(contractedEdgeList.begin(), contractedEdgeList.end());
         unsigned numberOfNodes = 0;
         unsigned numberOfEdges = contractedEdgeList.size();
-        INFO("Serializing compacted graph");
+        INFO("Serializing compacted graph of " << numberOfEdges << " edges");
         std::ofstream edgeOutFile(graphOut.c_str(), std::ios::binary);
 
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
