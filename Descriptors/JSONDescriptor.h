@@ -34,8 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/Azimuth.h"
 #include "../Util/StringUtil.h"
 
-template<class SearchEngineT>
-class JSONDescriptor : public BaseDescriptor<SearchEngineT>{
+class JSONDescriptor : public BaseDescriptor{
 private:
     _DescriptorConfig config;
     DescriptionFactory descriptionFactory;
@@ -68,7 +67,7 @@ public:
     JSONDescriptor() : numberOfEnteredRestrictedAreas(0) {}
     void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine) {
+    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngine &sEngine) {
 
         WriteHeaderToOutput(reply.content);
 
@@ -246,7 +245,7 @@ public:
         reply.content += "}";
     }
 
-    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, const SearchEngineT &sEngine, RouteNames & routeNames) {
+    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, const SearchEngine &sEngine, RouteNames & routeNames) {
         /*** extract names for both alternatives ***/
 
         Segment shortestSegment1, shortestSegment2;
@@ -304,7 +303,7 @@ public:
                 "\"status\":";
     }
 
-    inline void BuildTextualDescription(DescriptionFactory & descriptionFactory, http::Reply & reply, const int lengthOfRoute, const SearchEngineT &sEngine, std::vector<Segment> & segmentVector) {
+    inline void BuildTextualDescription(DescriptionFactory & descriptionFactory, http::Reply & reply, const int lengthOfRoute, const SearchEngine &sEngine, std::vector<Segment> & segmentVector) {
         //Segment information has following format:
         //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
         //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]

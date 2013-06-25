@@ -18,12 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <string>
-
-#include "typedefs.h"
 #include "Extractor/ExtractorCallbacks.h"
 #include "Extractor/ExtractionContainers.h"
 #include "Extractor/ScriptingEnvironment.h"
@@ -34,6 +28,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/MachineInfo.h"
 #include "Util/OpenMPWrapper.h"
 #include "Util/StringUtil.h"
+#include "typedefs.h"
+
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+
+#include <string>
 
 typedef BaseConfiguration ExtractorConfiguration;
 
@@ -84,11 +85,11 @@ int main (int argc, char *argv[]) {
     }
 
     unsigned amountOfRAM = 1;
-    unsigned installedRAM = GetPhysicalmemory(); 
+    unsigned installedRAM = GetPhysicalmemory();
     if(installedRAM < 2048264) {
         WARN("Machine has less than 2GB RAM.");
     }
-	
+
     StringMap stringMap;
     ExtractionContainers externalMemory;
 
@@ -100,7 +101,7 @@ int main (int argc, char *argv[]) {
     } else {
         parser = new XMLParser(argv[1], extractCallBacks, scriptingEnvironment);
     }
-    
+
     if(!parser->ReadHeader()) {
         ERR("Parser not initialized!");
     }

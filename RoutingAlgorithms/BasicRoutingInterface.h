@@ -23,13 +23,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASICROUTINGINTERFACE_H_
 #define BASICROUTINGINTERFACE_H_
 
+#include "../Plugins/RawRouteData.h"
+#include "../Util/ContainerUtils.h"
+
 #include <boost/noncopyable.hpp>
 
 #include <cassert>
 #include <climits>
 
-#include "../Plugins/RawRouteData.h"
-#include "../Util/ContainerUtils.h"
+#include <stack>
 
 template<class QueryDataT>
 class BasicRoutingInterface : boost::noncopyable{

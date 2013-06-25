@@ -21,6 +21,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
+#include "../DataStructures/ImportNode.h"
+#include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/Restriction.h"
+#include "../typedefs.h"
+
+#include <boost/assert.hpp>
+#include <boost/unordered_map.hpp>
+
 #include <cassert>
 #include <cmath>
 
@@ -30,19 +39,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iomanip>
 #include <vector>
 
-#include <boost/unordered_map.hpp>
-
-#include "../DataStructures/ImportNode.h"
-#include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/NodeCoords.h"
-#include "../DataStructures/Restriction.h"
-#include "../typedefs.h"
-
 typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;
 
 template<class EdgeT>
 struct _ExcessRemover {
-    inline bool operator()( EdgeT & edge ) const {
+    inline bool operator()( const EdgeT & edge ) const {
         return edge.source() == UINT_MAX;
     }
 };
@@ -116,9 +117,9 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
         in.read((char*)&isAccessRestricted, sizeof(bool));
         in.read((char*)&isContraFlow,       sizeof(bool));
 
-        GUARANTEE(length > 0, "loaded null length edge" );
-        GUARANTEE(weight > 0, "loaded null weight");
-        GUARANTEE(0<=dir && dir<=2, "loaded bogus direction");
+        BOOST_ASSERT_MSG(length > 0, "loaded null length edge" );
+        BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
+        BOOST_ASSERT_MSG(0<=dir && dir<=2, "loaded bogus direction");
 
         bool forward = true;
         bool backward = true;
@@ -144,7 +145,9 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
             continue;
         }
         target = intNodeID->second;
-        GUARANTEE(source != UINT_MAX && target != UINT_MAX, "nonexisting source or target");
+        BOOST_ASSERT_MSG(source != UINT_MAX && target != UINT_MAX,
+            "nonexisting source or target"
+        );
 
         if(source > target) {
             std::swap(source, target);

@@ -21,18 +21,20 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef DYNAMICGRAPH_H_INCLUDED
 #define DYNAMICGRAPH_H_INCLUDED
 
-#include <vector>
+#include "../DataStructures/DeallocatingVector.h"
+
+#include <boost/integer.hpp>
+
 #include <algorithm>
 #include <limits>
-
-#include "../DataStructures/DeallocatingVector.h"
+#include <vector>
 
 template< typename EdgeDataT>
 class DynamicGraph {
     public:
         typedef EdgeDataT EdgeData;
-        typedef unsigned NodeIterator;
-        typedef unsigned EdgeIterator;
+        typedef uint32_t NodeIterator;
+        typedef uint32_t EdgeIterator;
 
         class InputEdge {
             public:
@@ -47,16 +49,16 @@ class DynamicGraph {
         };
 
         //Constructs an empty graph with a given number of nodes.
-        DynamicGraph( int nodes ) : m_numNodes(nodes), m_numEdges(0) {
+        DynamicGraph( int32_t nodes ) : m_numNodes(nodes), m_numEdges(0) {
             m_nodes.reserve( m_numNodes );
             m_nodes.resize( m_numNodes );
 
             m_edges.reserve( m_numNodes * 1.1 );
             m_edges.resize( m_numNodes );
         }
+
         template<class ContainerT>
-        DynamicGraph( const int nodes, const ContainerT &graph )
-        {
+        DynamicGraph( const int32_t nodes, const ContainerT &graph ) {
             m_numNodes = nodes;
             m_numEdges = ( EdgeIterator ) graph.size();
             m_nodes.reserve( m_numNodes +1);
@@ -80,7 +82,10 @@ class DynamicGraph {
                 for ( EdgeIterator i = m_nodes[node].firstEdge, e = m_nodes[node].firstEdge + m_nodes[node].edges; i != e; ++i ) {
                     m_edges[i].target = graph[edge].target;
                     m_edges[i].data = graph[edge].data;
-                    GUARANTEE(graph[edge].data.distance > 0, "edge: " << edge << "(" << graph[edge].source << "," << graph[edge].target << ")=" << graph[edge].data.distance);
+                    BOOST_ASSERT_MSG(
+                        graph[edge].data.distance > 0,
+                        "edge distance invalid"
+                    );
                     ++edge;
                 }
             }
@@ -88,17 +93,15 @@ class DynamicGraph {
 
         ~DynamicGraph(){ }
 
-        unsigned GetNumberOfNodes() const
-        {
+        uint32_t GetNumberOfNodes() const {
             return m_numNodes;
         }
 
-        unsigned GetNumberOfEdges() const
-        {
+        uint32_t GetNumberOfEdges() const {
             return m_numEdges;
         }
 
-        unsigned GetOutDegree( const NodeIterator n ) const {
+        uint32_t GetOutDegree( const NodeIterator n ) const {
             return m_nodes[n].edges;
         }
 
@@ -133,7 +136,7 @@ class DynamicGraph {
                     m_edges[node.firstEdge] = m_edges[node.firstEdge + node.edges];
                 } else {
                     EdgeIterator newFirstEdge = ( EdgeIterator ) m_edges.size();
-                    unsigned newSize = node.edges * 1.1 + 2;
+                    uint32_t newSize = node.edges * 1.1 + 2;
                     EdgeIterator requiredCapacity = newSize + m_edges.size();
                     EdgeIterator oldCapacity = m_edges.capacity();
                     if ( requiredCapacity >= oldCapacity ) {
@@ -162,15 +165,15 @@ class DynamicGraph {
             Node &node = m_nodes[source];
             --m_numEdges;
             --node.edges;
-            const unsigned last = node.firstEdge + node.edges;
+            const uint32_t last = node.firstEdge + node.edges;
             //swap with last edge
             m_edges[e] = m_edges[last];
             makeDummy( last );
         }
 
         //removes all edges (source,target)
-        int DeleteEdgesTo( const NodeIterator source, const NodeIterator target ) {
-            int deleted = 0;
+        int32_t DeleteEdgesTo( const NodeIterator source, const NodeIterator target ) {
+            int32_t deleted = 0;
             for ( EdgeIterator i = BeginEdges( source ), iend = EndEdges( source ); i < iend - deleted; ++i ) {
                 if ( m_edges[i].target == target ) {
                     do {
@@ -212,7 +215,7 @@ class DynamicGraph {
             //index of the first edge
             EdgeIterator firstEdge;
             //amount of edges
-            unsigned edges;
+            uint32_t edges;
         };
 
         struct Edge {
