@@ -250,7 +250,7 @@ public:
         std::cout << "ok" << std::endl << "preprocessing " << numberOfNodes << " nodes ..." << std::flush;
 
         bool flushedContractor = false;
-        while ( numberOfContractedNodes < numberOfNodes ) {
+        while ( numberOfNodes > 2 && numberOfContractedNodes < numberOfNodes ) {
             if(!flushedContractor && (numberOfContractedNodes > (numberOfNodes*0.65) ) ){
                 DeallocatingVector<_ContractorEdge> newSetOfEdges; //this one is not explicitely cleared since it goes out of scope anywa
                 std::cout << " [flush " << numberOfContractedNodes << " nodes] " << std::flush;
@@ -285,7 +285,6 @@ public:
 
                 //walk over all nodes
                 for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
-                    //INFO("Restructuring node " << i << "|" << _graph->GetNumberOfNodes());
                     const NodeID start = i;
                     for(_DynamicGraph::EdgeIterator currentEdge = _graph->BeginEdges(start); currentEdge < _graph->EndEdges(start); ++currentEdge) {
                         _DynamicGraph::EdgeData & data = _graph->GetEdgeData(currentEdge);
@@ -319,8 +318,6 @@ public:
                 //Note the number of temporarily stored edges
                 tempStorage.seek(temporaryStorageSlotID, initialFilePosition);
                 tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
-
-                //        		INFO("Flushed " << numberOfTemporaryEdges << " edges to disk");
 
                 //Delete map from old NodeIDs to new ones.
                 std::vector<NodeID>().swap(newNodeIDFromOldNodeIDMap);
@@ -447,15 +444,20 @@ public:
         Percent p (_graph->GetNumberOfNodes());
         INFO("Getting edges of minimized graph");
         NodeID numberOfNodes = _graph->GetNumberOfNodes();
-        if(oldNodeIDFromNewNodeIDMap.size()) {
+        if(_graph->GetNumberOfNodes()) {
             for ( NodeID node = 0; node < numberOfNodes; ++node ) {
                 p.printStatus(node);
                 for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge < endEdges; ++edge ) {
                     const NodeID target = _graph->GetTarget( edge );
                     const _DynamicGraph::EdgeData& data = _graph->GetEdgeData( edge );
                     Edge newEdge;
-                    newEdge.source = oldNodeIDFromNewNodeIDMap[node];
-                    newEdge.target = oldNodeIDFromNewNodeIDMap[target];
+                    if(0 != oldNodeIDFromNewNodeIDMap.size()) {
+                        newEdge.source = oldNodeIDFromNewNodeIDMap[node];
+                        newEdge.target = oldNodeIDFromNewNodeIDMap[target];
+                    } else {
+                        newEdge.source = node;
+                        newEdge.target = target;
+                    }
                     BOOST_ASSERT_MSG(
                         UINT_MAX != newEdge.source,
                         "Source id invalid"
@@ -464,31 +466,26 @@ public:
                         UINT_MAX != newEdge.target,
                         "Target id invalid"
                     );
-
                     newEdge.data.distance = data.distance;
                     newEdge.data.shortcut = data.shortcut;
-                    if(!data.originalViaNodeID)
+                   if(!data.originalViaNodeID && oldNodeIDFromNewNodeIDMap.size()) {
                         newEdge.data.id = oldNodeIDFromNewNodeIDMap[data.id];
-                    else
+                    } else {
                         newEdge.data.id = data.id;
-
+                    }
                     BOOST_ASSERT_MSG(
                         newEdge.data.id <= INT_MAX, //2^31
                         "edge id invalid"
                     );
-
                     newEdge.data.forward = data.forward;
                     newEdge.data.backward = data.backward;
                     edges.push_back( newEdge );
                 }
             }
         }
-        INFO("Renumbered edges of minimized graph, freeing space");
         _graph.reset();
         std::vector<NodeID>().swap(oldNodeIDFromNewNodeIDMap);
-        INFO("Loading temporary edges");
 
-        //        std::ifstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
         TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
         //Also get the edges from temporary storage
         unsigned numberOfTemporaryEdges = 0;
@@ -513,7 +510,6 @@ public:
             edges.push_back( newEdge );
         }
         tempStorage.deallocateSlot(temporaryStorageSlotID);
-        INFO("Hierarchy has " << edges.size() << " edges");
     }
 
 private:
@@ -544,11 +540,13 @@ private:
             //iterate over all edges of node
             for ( _DynamicGraph::EdgeIterator edge = _graph->BeginEdges( node ), endEdges = _graph->EndEdges( node ); edge != endEdges; ++edge ) {
                 const _ContractorEdgeData& data = _graph->GetEdgeData( edge );
-                if ( !data.forward )
+                if ( !data.forward ){
                     continue;
+                }
                 const NodeID to = _graph->GetTarget( edge );
-                if(middleNode == to)
+                if(middleNode == to) {
                     continue;
+                }
                 const int toDistance = distance + data.distance;
 
                 //New Node discovered -> Add to Heap + Node Info Storage
@@ -604,8 +602,9 @@ private:
 
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _ContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
-                if ( !outData.forward )
+                if ( !outData.forward ) {
                     continue;
+                }
                 const NodeID target = _graph->GetTarget( outEdge );
                 const int pathDistance = inData.distance + outData.distance;
                 maxDistance = std::max( maxDistance, pathDistance );
@@ -615,15 +614,16 @@ private:
                 }
             }
 
-            if( Simulate )
+            if( Simulate ) {
                 _Dijkstra( maxDistance, numTargets, 1000, data, node );
-            else
+            } else {
                 _Dijkstra( maxDistance, numTargets, 2000, data, node );
-
+            }
             for ( _DynamicGraph::EdgeIterator outEdge = _graph->BeginEdges( node ), endOutEdges = _graph->EndEdges( node ); outEdge != endOutEdges; ++outEdge ) {
                 const _ContractorEdgeData& outData = _graph->GetEdgeData( outEdge );
-                if ( !outData.forward )
+                if ( !outData.forward ) {
                     continue;
+                }
                 const NodeID target = _graph->GetTarget( outEdge );
                 const int pathDistance = inData.distance + outData.distance;
                 const int distance = heap.GetKey( target );
@@ -663,8 +663,9 @@ private:
                     found = true;
                     break;
                 }
-                if ( !found )
+                if ( !found ) {
                     insertedEdges[insertedEdgesSize++] = insertedEdges[i];
+                }
             }
             insertedEdges.resize( insertedEdgesSize );
         }
