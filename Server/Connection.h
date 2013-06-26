@@ -21,7 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <vector>
+#include "BasicDatastructures.h"
+#include "RequestHandler.h"
+#include "RequestParser.h"
 
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -30,11 +32,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-#include "BasicDatastructures.h"
-#include "RequestHandler.h"
-#include "RequestParser.h"
+#include <zlib.h>
 
-#include "zlib.h"
+#include <vector>
 
 namespace http {
 

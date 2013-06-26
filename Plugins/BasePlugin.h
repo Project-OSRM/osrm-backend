@@ -21,12 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASEPLUGIN_H_
 #define BASEPLUGIN_H_
 
-#include <cassert>
-#include <string>
-#include <vector>
-
 #include "RouteParameters.h"
 #include "../Server/BasicDatastructures.h"
+
+#include <string>
+#include <vector>
 
 class BasePlugin {
 public:

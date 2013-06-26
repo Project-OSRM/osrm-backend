@@ -18,14 +18,13 @@
  or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#include <boost/ref.hpp>
-
 #include "XMLParser.h"
 
 #include "ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/InputReaderFactory.h"
 
+#include <boost/ref.hpp>
 
 XMLParser::XMLParser(const char * filename, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser(ec, se) {
 	WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
@@ -43,12 +42,12 @@ bool XMLParser::Parse() {
 		if ( type != 1 ) {
 			continue;
 		}
-		
+
 		xmlChar* currentName = xmlTextReaderName( inputReader );
 		if ( currentName == NULL ) {
 			continue;
 		}
-		
+
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
 			ImportNode n = _ReadXMLNode();
 			ParseNodeInLua( n, luaState );

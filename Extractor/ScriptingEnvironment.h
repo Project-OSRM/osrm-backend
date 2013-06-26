@@ -21,20 +21,14 @@
 #ifndef SCRIPTINGENVIRONMENT_H_
 #define SCRIPTINGENVIRONMENT_H_
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-}
-#include <luabind/luabind.hpp>
-
 #include "ExtractionHelperFunctions.h"
 #include "ExtractorStructs.h"
-
-#include "../typedefs.h"
 #include "../DataStructures/ImportNode.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/OpenMPWrapper.h"
+#include "../typedefs.h"
+
+#include <vector>
 
 class ScriptingEnvironment {
 public:

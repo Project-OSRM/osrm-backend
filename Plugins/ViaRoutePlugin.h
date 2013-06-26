@@ -21,29 +21,26 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef VIAROUTEPLUGIN_H_
 #define VIAROUTEPLUGIN_H_
 
-#include <cstdlib>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-
 #include "BasePlugin.h"
 #include "RouteParameters.h"
 
 #include "../Algorithms/ObjectToBase64.h"
-
-#include "../Descriptors/BaseDescriptor.h"
-#include "../Descriptors/GPXDescriptor.h"
-#include "../Descriptors/JSONDescriptor.h"
-
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/SearchEngine.h"
-
+#include "../Descriptors/BaseDescriptor.h"
+#include "../Descriptors/GPXDescriptor.h"
+#include "../Descriptors/JSONDescriptor.h"
+#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
 
-#include "../Server/DataStructures/QueryObjectsStorage.h"
+#include <cstdlib>
+
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 class ViaRoutePlugin : public BasePlugin {
 private:

@@ -25,21 +25,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef SERVERFACTORY_H_
 #define SERVERFACTORY_H_
 
-#include <zlib.h>
-
 #include "Server.h"
-#include "ServerConfiguration.h"
 
+#include "../Util/BaseConfiguration.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OpenMPWrapper.h"
 #include "../Util/StringUtil.h"
 
 #include "../typedefs.h"
 
-typedef http::Server Server;
+#include <zlib.h>
 
 struct ServerFactory {
-	static Server * CreateServer(ServerConfiguration& serverConfig) {
+	static Server * CreateServer(BaseConfiguration& serverConfig) {
 
 		if(!testDataFile(serverConfig.GetParameter("nodesData"))) {
 			ERR("nodes file not found");
@@ -76,7 +74,7 @@ struct ServerFactory {
 	}
 
 	static Server * CreateServer(const char * iniFile) {
-		ServerConfiguration serverConfig(iniFile);
+		BaseConfiguration serverConfig(iniFile);
 		return CreateServer(serverConfig);
 	}
 };

@@ -21,16 +21,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASEPARSER_H_
 #define BASEPARSER_H_
 
+#include "ExtractorCallbacks.h"
+#include "ScriptingEnvironment.h"
+
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+    #include <lua.h>
+    #include <lauxlib.h>
+    #include <lualib.h>
 }
 
 #include <boost/noncopyable.hpp>
-
-#include "ExtractorCallbacks.h"
-#include "ScriptingEnvironment.h"
 
 class BaseParser : boost::noncopyable {
 public:
@@ -43,11 +43,11 @@ public:
     virtual void ParseWayInLua(ExtractionWay& n, lua_State* luaStateForThread);
     virtual void report_errors(lua_State *L, const int status) const;
 
-protected:   
+protected:
     virtual void ReadUseRestrictionsSetting();
     virtual void ReadRestrictionExceptions();
     virtual bool ShouldIgnoreRestriction(const std::string& except_tag_string) const;
-    
+
     ExtractorCallbacks* extractor_callbacks;
     ScriptingEnvironment& scriptingEnvironment;
     lua_State* luaState;
