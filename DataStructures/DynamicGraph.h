@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../DataStructures/DeallocatingVector.h"
 
+#include <boost/assert.hpp>
 #include <boost/integer.hpp>
 
 #include <algorithm>
