@@ -21,11 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef XORFASTHASHSTORAGE_H_
 #define XORFASTHASHSTORAGE_H_
 
+#include "XORFastHash.h"
+
 #include <climits>
 #include <vector>
 #include <bitset>
-
-#include "XORFastHash.h"
 
 template< typename NodeID, typename Key >
 class XORFastHashStorage {
