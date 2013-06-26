@@ -21,34 +21,49 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef NODEINFORMATIONHELPDESK_H_
 #define NODEINFORMATIONHELPDESK_H_
 
+#include "NodeCoords.h"
+#include "PhantomNodes.h"
+#include "QueryEdge.h"
+#include "StaticRTree.h"
+#include "../Contractor/EdgeBasedGraphFactory.h"
+#include "../typedefs.h"
+
+#include <boost/assert.hpp>
+#include <boost/noncopyable.hpp>
+
 #include <fstream>
+
 #include <iostream>
 #include <vector>
 
-#include <boost/noncopyable.hpp>
-
-#include "../typedefs.h"
-#include "../DataStructures/QueryEdge.h"
-#include "NNGrid.h"
-#include "PhantomNodes.h"
-#include "NodeCoords.h"
+typedef EdgeBasedGraphFactory::EdgeBasedNode RTreeLeaf;
 
 class NodeInformationHelpDesk : boost::noncopyable{
 public:
-    NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned _numberOfNodes, const unsigned crc) : numberOfNodes(_numberOfNodes), checkSum(crc) {
-        readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
-        assert(0 == coordinateVector.size());
+    NodeInformationHelpDesk(
+        const char* ramIndexInput,
+        const char* fileIndexInput,
+        const unsigned number_of_nodes,
+        const unsigned crc) : number_of_nodes(number_of_nodes), checkSum(crc) {
+        read_only_rtree = new StaticRTree<RTreeLeaf>(
+            ramIndexInput,
+            fileIndexInput
+        );
+        BOOST_ASSERT_MSG(
+            0 == coordinateVector.size(),
+            "Coordinate vector not empty"
+        );
     }
 
     //Todo: Shared memory mechanism
-//    NodeInformationHelpDesk(const char* ramIndexInput, const char* fileIndexInput, const unsigned crc) : checkSum(crc) {
-//        readOnlyGrid = new ReadOnlyGrid(ramIndexInput,fileIndexInput);
-//    }
-
 	~NodeInformationHelpDesk() {
-		delete readOnlyGrid;
+		delete read_only_rtree;
 	}
-	void initNNGrid(std::ifstream& nodesInstream, std::ifstream& edgesInStream) {
+
+	void initNNGrid(
+        std::ifstream& nodesInstream,
+        std::ifstream& edgesInStream
+    ) {
 	    DEBUG("Loading node data");
 		NodeInfo b;
 	    while(!nodesInstream.eof()) {
@@ -68,19 +83,14 @@ public:
         OriginalEdgeData deserialized_originalEdgeData;
         for(unsigned i = 0; i < numberOfOrigEdges; ++i) {
         	edgesInStream.read((char*)&(deserialized_originalEdgeData), sizeof(OriginalEdgeData));
-            origEdgeData_viaNode[i] 		= deserialized_originalEdgeData.viaNode;
-            origEdgeData_nameID[i] 			= deserialized_originalEdgeData.nameID;
+            origEdgeData_viaNode[i] = deserialized_originalEdgeData.viaNode;
+            origEdgeData_nameID[i] 	= deserialized_originalEdgeData.nameID;
             origEdgeData_turnInstruction[i] = deserialized_originalEdgeData.turnInstruction;
         }
         edgesInStream.close();
         DEBUG("Loaded " << numberOfOrigEdges << " orig edges");
 	    DEBUG("Opening NN indices");
-	    readOnlyGrid->OpenIndexFiles();
 	}
-
-//	void initNNGrid() {
-//	    readOnlyGrid->OpenIndexFiles();
-//	}
 
 	inline int getLatitudeOfNode(const unsigned id) const {
 	    const NodeID node = origEdgeData_viaNode.at(id);
@@ -100,24 +110,36 @@ public:
         return origEdgeData_turnInstruction.at(id);
     }
 
-    inline NodeID getNumberOfNodes() const { return numberOfNodes; }
-	inline NodeID getNumberOfNodes2() const { return coordinateVector.size(); }
+    inline NodeID getNumberOfNodes() const {
+        return number_of_nodes;
+    }
 
-	inline bool FindNearestNodeCoordForLatLon(const _Coordinate& coord, _Coordinate& result) const {
-		return readOnlyGrid->FindNearestCoordinateOnEdgeInNodeBasedGraph(coord, result);
-	}
+	inline NodeID getNumberOfNodes2() const {
+        return coordinateVector.size();
+    }
 
-	inline bool FindPhantomNodeForCoordinate( const _Coordinate & location, PhantomNode & resultNode, const unsigned zoomLevel) {
-	    return readOnlyGrid->FindPhantomNodeForCoordinate(location, resultNode, zoomLevel);
-	}
+    inline bool FindNearestNodeCoordForLatLon(
+            const _Coordinate& input_coordinate,
+            _Coordinate& result,
+            const unsigned zoom_level = 18
+    ) const {
+        PhantomNode resulting_phantom_node;
+        bool foundNode = FindPhantomNodeForCoordinate(input_coordinate, resulting_phantom_node, zoom_level);
+        result = resulting_phantom_node.location;
+        return foundNode;
+    }
 
-	inline void FindRoutingStarts(const _Coordinate &start, const _Coordinate &target, PhantomNodes & phantomNodes, const unsigned zoomLevel) const {
-		readOnlyGrid->FindRoutingStarts(start, target, phantomNodes, zoomLevel);
-	}
-
-	inline void FindNearestPointOnEdge(const _Coordinate & input, _Coordinate& output){
-	    readOnlyGrid->FindNearestPointOnEdge(input, output);
-	}
+    inline bool FindPhantomNodeForCoordinate(
+            const _Coordinate & input_coordinate,
+            PhantomNode & resulting_phantom_node,
+            const unsigned zoom_level
+    ) const {
+        return read_only_rtree->FindPhantomNodeForCoordinate(
+                input_coordinate,
+                resulting_phantom_node,
+                zoom_level
+        );
+    }
 
 	inline unsigned GetCheckSum() const {
 	    return checkSum;
@@ -129,8 +151,8 @@ private:
 	std::vector<unsigned> origEdgeData_nameID;
 	std::vector<TurnInstruction> origEdgeData_turnInstruction;
 
-	ReadOnlyGrid * readOnlyGrid;
-	const unsigned numberOfNodes;
+	StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * read_only_rtree;
+	const unsigned number_of_nodes;
 	const unsigned checkSum;
 };
 
