@@ -16,16 +16,15 @@ Feature: Handle bad data in a graceful manner
 
 	Scenario: Only dead-end oneways
 		Given the node map
-		 | a | b | c |
+		 | a | b | c | d | e |
 
 		Given the ways
 		 | nodes | oneway |
-		 | ab    | yes    |
-		 | cb    | yes    |
+		 | abcde | yes    |
 
 		When I route I should get
 		 | from | to | route |
-		 | a    | b  | ab    |
+		 | b    | d  | abcde |
     
     @todo
 	Scenario: Start/end point at the same location
@@ -59,27 +58,29 @@ Feature: Handle bad data in a graceful manner
 		 | k    | -78 | 0   |
 		 | l    | -80 | 0   |
 		 | m    | -82 | 0   |
-		 | n    | -87 | 0   |
-		 | o    | -89 | 0   |
+#		 | n    | -87 | 0   |
+#		 | o    | -89 | 0   |
 
 		And the ways
 		 | nodes |
-		 | ab    |
+#		 | ab    |
 		 | bc    |
 		 | cd    |
 		 | de    |
 		 | kl    |
 		 | lm    |
-		 | mn    |
-		 | no    |
+#		 | mn    |
+#		 | no    |
 
 		When I route I should get
 		 | from | to | route |
-		 | a    | b  |       |
-		 | b    | c  |       |
-		 | a    | d  |       |
-		 | c    | d  | cd    |
-		 | l    | m  | lm    |
-		 | o    | l  |       |
-		 | n    | m  |       |
-		 | o    | n  |       |
+#		 | a    | b  | cd    |
+#		 | b    | c  | cd    |
+#		 | a    | d  | cd    |
+#		 | c    | d  | cd    |
+		 | d    | e  | de    |
+#		 | k    | l  | kl    |
+#		 | l    | m  | lm    |
+#		 | o    | l  | lm    |
+#		 | n    | m  | lm    |
+#		 | o    | n  | lm    |

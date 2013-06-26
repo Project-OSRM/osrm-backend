@@ -98,7 +98,7 @@ Feature: Snap start/end point to the nearest way
 		 | b    | x  | xb    |
 		 | c    | x  | xc    |
 	
-	Scenario: Find edges within 1km, but not 10km
+	Scenario: Find edges within 1km, and the same from 10km
 		Given a grid size of 1000 meters
 		Given the node map
 		 | p |   |   |   |   |   |   |   |   |   |   | i |   |   |   |   |   |   |   |   |   |   | j |
@@ -144,11 +144,11 @@ Feature: Snap start/end point to the nearest way
 		 | x    | 6  | xf    |
 		 | x    | 7  | xg    |
 		 | x    | 8  | xh    |
-		 | x    | i  |       |
-		 | x    | j  |       |
-		 | x    | k  |       |
-		 | x    | l  |       |
-		 | x    | m  |       |
-		 | x    | n  |       |
-		 | x    | o  |       |
-		 | x    | p  |       |
+		 | x    | i  | xa    |
+		 | x    | j  | xb    |
+		 | x    | k  | xc    |
+		 | x    | l  | xd    |
+		 | x    | m  | xe    |
+		 | x    | n  | xf    |
+		 | x    | o  | xg    |
+		 | x    | p  | xh    |

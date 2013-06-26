@@ -4,7 +4,7 @@ Testbot uses a signal penalty of 7s.
 
 	Background:
 		Given the profile "testbot"
-			
+
 	Scenario: Traffic signals should incur a delay, without changing distance
 		Given the node map
 		 | a | b | c |
@@ -44,11 +44,8 @@ Testbot uses a signal penalty of 7s.
 
 		When I route I should get
 		 | from | to | route | time    |
-		 | a    | b  | abc   | 10s +-1 |
 		 | a    | c  | abc   | 27s +-1 |
-		 | d    | e  | def   | 20s +-1 |
 		 | d    | f  | def   | 47s +-1 |
-		 | g    | h  | ghi   | 30s +-1 |
 		 | g    | i  | ghi   | 67s +-1 |
 
 	Scenario: Passing multiple traffic signals should incur a accumulated delay
@@ -69,6 +66,7 @@ Testbot uses a signal penalty of 7s.
 		 | from | to | route | time    |
 		 | a    | e  | abcde | 61s +-1 |
 
+		@todo
 		Scenario: Signal penalty should not depend on way type
 			Given the node map
 			 | a | b | c |
@@ -114,6 +112,7 @@ Testbot uses a signal penalty of 7s.
 			 | from | to | route | time    |
 			 | a    | e  | abcde | 61s +-1 |
 
+	@todo
 	Scenario: Starting or ending at a traffic signal should not incur a delay
 		Given the node map
 		 | a | b | c |
@@ -154,7 +153,7 @@ Testbot uses a signal penalty of 7s.
 		And the node map
 		 | a |  | b |  | c |
 		 |   |  | d |  |   |
-	
+
 		And the nodes
 		 | node | highway         |
 		 | b    | traffic_signals |
@@ -163,7 +162,7 @@ Testbot uses a signal penalty of 7s.
 		 | nodes | highway |
 		 | abc   | primary |
 		 | adc   | primary |
-    
+
 		When I route I should get
-		 | from | to | route | 
+		 | from | to | route |
 		 | a    | c  | adc   |
