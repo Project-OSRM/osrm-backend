@@ -23,11 +23,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "MercatorUtil.h"
 #include "TimingUtil.h"
-#include "../typedefs.h"
 #include "Coordinate.h"
 #include "PhantomNodes.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
+#include "../typedefs.h"
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
@@ -41,7 +41,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <cassert>
 #include <cfloat>
 #include <climits>
-//#include <cmath>
+
 #include <algorithm>
 #include <fstream>
 #include <queue>
@@ -396,8 +396,8 @@ public:
         //close tree node file.
         tree_node_file.close();
         double time2 = get_timestamp();
-        INFO("written " << processed_objects_count << " leafs in " << sizeof(LeafNode)*(1+(unsigned)std::ceil(processed_objects_count/RTREE_LEAF_NODE_SIZE) )+sizeof(uint64_t) << " bytes");
-        INFO("written search tree of " << size_of_tree << " tree nodes in " << sizeof(TreeNode)*size_of_tree+sizeof(uint32_t) << " bytes");
+//        INFO("written " << processed_objects_count << " leafs in " << sizeof(LeafNode)*(1+(unsigned)std::ceil(processed_objects_count/RTREE_LEAF_NODE_SIZE) )+sizeof(uint64_t) << " bytes");
+//        INFO("written search tree of " << size_of_tree << " tree nodes in " << sizeof(TreeNode)*size_of_tree+sizeof(uint32_t) << " bytes");
         INFO("finished r-tree construction in " << (time2-time1) << " seconds");
 
         //todo: test queries
@@ -424,13 +424,13 @@ public:
             const char * node_filename,
             const char * leaf_filename
     ) : m_leaf_node_filename(leaf_filename) {
-        INFO("Loading nodes: " << node_filename);
-        INFO("opening leafs: " << leaf_filename);
+        //INFO("Loading nodes: " << node_filename);
+        //INFO("opening leafs: " << leaf_filename);
         //open tree node file and load into RAM.
         std::ifstream tree_node_file(node_filename, std::ios::binary);
         uint32_t tree_size = 0;
         tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
-        INFO("reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes");
+        //INFO("reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes");
         m_search_tree.resize(tree_size);
         tree_node_file.read((char*)&m_search_tree[0], sizeof(TreeNode)*tree_size);
         tree_node_file.close();
@@ -440,8 +440,8 @@ public:
         leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
         leaf_node_file.close();
 
-        INFO( tree_size << " nodes in search tree");
-        INFO( m_element_count << " elements in leafs");
+        //INFO( tree_size << " nodes in search tree");
+        //INFO( m_element_count << " elements in leafs");
     }
 /*
     inline void FindKNearestPhantomNodesForCoordinate(
@@ -737,11 +737,11 @@ public:
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-        INFO("start: (" << nearest_edge.lat1 << "," << nearest_edge.lon1 << "), end: (" << nearest_edge.lat2 << "," << nearest_edge.lon2 << ")" );
-        INFO("mindist: " << min_dist << ", io's: " << io_count << ", nodes: " << explored_tree_nodes_count << ", loc: " << result_phantom_node.location << ", ratio: " << ratio << ", id: " << result_phantom_node.edgeBasedNode);
-        INFO("weight1: " << result_phantom_node.weight1 << ", weight2: " << result_phantom_node.weight2);
-        INFO("bidirected: " << (result_phantom_node.isBidirected() ? "yes" : "no") );
-        INFO("NameID: " << result_phantom_node.nodeBasedEdgeNameID);
+//        INFO("start: (" << nearest_edge.lat1 << "," << nearest_edge.lon1 << "), end: (" << nearest_edge.lat2 << "," << nearest_edge.lon2 << ")" );
+//        INFO("mindist: " << min_dist << ", io's: " << io_count << ", nodes: " << explored_tree_nodes_count << ", loc: " << result_phantom_node.location << ", ratio: " << ratio << ", id: " << result_phantom_node.edgeBasedNode);
+//        INFO("weight1: " << result_phantom_node.weight1 << ", weight2: " << result_phantom_node.weight2);
+//        INFO("bidirected: " << (result_phantom_node.isBidirected() ? "yes" : "no") );
+//        INFO("NameID: " << result_phantom_node.nodeBasedEdgeNameID);
         return found_a_nearest_edge;
 
     }
