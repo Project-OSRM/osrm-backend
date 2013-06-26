@@ -25,19 +25,6 @@
 #ifndef EDGEBASEDGRAPHFACTORY_H_
 #define EDGEBASEDGRAPHFACTORY_H_
 
-#include <algorithm>
-#include <queue>
-#include <vector>
-#include <stxxl.h>
-#include <cstdlib>
-
-#include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
@@ -49,14 +36,22 @@
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/BaseConfiguration.h"
+#include "../Util/LuaUtil.h"
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-}
-#include <luabind/luabind.hpp>
+#include <stxxl.h>
 
+#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
+
+#include <cstdlib>
+
+#include <algorithm>
+#include <queue>
+#include <vector>
 
 class EdgeBasedGraphFactory : boost::noncopyable {
 public:
