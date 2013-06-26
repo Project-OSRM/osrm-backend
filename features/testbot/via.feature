@@ -1,9 +1,9 @@
 @routing @testbot @via
 Feature: Via points
-    
+
     Background:
         Given the profile "testbot"
-    
+
         Scenario: Simple via point
             Given the node map
              | a | b | c |
@@ -21,12 +21,12 @@ Feature: Via points
         Given the node map
          | a | b | c |
          |   | d |   |
-    
+
         And the ways
          | nodes |
          | abc   |
          | bd    |
-    
+
         When I route I should get
          | waypoints | route         |
          | a,d,c     | abc,bd,bd,abc |
@@ -34,19 +34,19 @@ Feature: Via points
 
      Scenario: Multiple via points
          Given the node map
-          | a |   | c |   | e |   |
-          |   | b |   | d |   | f |
+          | a |   |   |   | e | f | g |   |
+          |   | b | c | d |   |   |   | h |
 
          And the ways
           | nodes |
-          | ace   |
-          | bdf   |
+          | ae    |
           | ab    |
-          | bc    |
-          | cd    |
+          | bcd   |
           | de    |
-          | ef    |
+          | efg   |
+          | gh    |
+          | dh    |
 
          When I route I should get
-          | waypoints   | route          |
-          | a,b,c,d,e,f | ab,bc,cd,de,ef |
+          | waypoints   | route     |
+          | a,c,f,h | ab,bcd,de,efg,gh |
