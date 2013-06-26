@@ -21,9 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef INPUTFILEUTIL_H_
 #define INPUTFILEUTIL_H_
 
-#include <boost/filesystem.hpp>
-
 #include "../typedefs.h"
+
+#include <boost/filesystem.hpp>
 
 // Check if file exists and if it can be opened for reading with ifstream an object
 inline bool testDataFile(const std::string & filename){

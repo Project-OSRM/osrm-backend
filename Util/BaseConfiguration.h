@@ -21,12 +21,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASECONFIGURATION_H_
 #define BASECONFIGURATION_H_
 
-#include <iostream>
-#include <string>
+#include "../DataStructures/HashTable.h"
+
 #include <exception>
 #include <fstream>
-
-#include "../DataStructures/HashTable.h"
+#include <iostream>
+#include <string>
 
 class BaseConfiguration {
 public:
@@ -73,7 +73,11 @@ public:
     }
 
 private:
-    void Tokenize(const std::string& str, std::vector<std::string>& tokens,  const std::string& delimiters = "=") {
+    void Tokenize(
+        const std::string& str,
+        std::vector<std::string>& tokens,
+        const std::string& delimiters = "="
+    ) {
         std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
         std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
 
@@ -86,6 +90,7 @@ private:
             pos = str.find_first_of(delimiters, lastPos);
         }
     }
+
     void TrimStringRight(std::string& str) {
         std::string::size_type pos = str.find_last_not_of(" ");
         if (pos != std::string::npos)
@@ -93,6 +98,7 @@ private:
         else
             str.erase( str.begin() , str.end() );
     }
+
     void TrimStringLeft(std::string& str) {
         std::string::size_type pos = str.find_first_not_of(" ");
         if (pos != std::string::npos)

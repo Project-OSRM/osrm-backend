@@ -17,34 +17,28 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
+
+
+#include "Library/OSRM.h"
+
+#include "Server/ServerFactory.h"
+
+#include "Util/BaseConfiguration.h"
+#include "Util/InputFileUtil.h"
+#include "Util/OpenMPWrapper.h"
+
 #ifdef __linux__
+#include "Util/LinuxStackTrace.h"
 #include <sys/mman.h>
 #endif
-#include <iostream>
+
 #include <signal.h>
 
 #include <boost/bind.hpp>
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
 
-#include "Server/DataStructures/QueryObjectsStorage.h"
-#include "Server/ServerConfiguration.h"
-#include "Server/ServerFactory.h"
-
-#include "Plugins/HelloWorldPlugin.h"
-#include "Plugins/LocatePlugin.h"
-#include "Plugins/NearestPlugin.h"
-#include "Plugins/TimestampPlugin.h"
-#include "Plugins/ViaRoutePlugin.h"
-
-#include "Util/InputFileUtil.h"
-#include "Util/OpenMPWrapper.h"
-
-#ifndef _WIN32
-#include "Util/LinuxStackTrace.h"
-#endif
-
-typedef http::RequestHandler RequestHandler;
+#include <iostream>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
@@ -70,7 +64,7 @@ int main (int argc, char * argv[]) {
     if(!mlockall(MCL_CURRENT | MCL_FUTURE))
         WARN("Process " << argv[0] << "could not be locked to RAM");
 #endif
-#ifndef _WIN32
+#ifdef __linux__
 
     installCrashHandler(argv[0]);
 #endif
@@ -83,7 +77,8 @@ int main (int argc, char * argv[]) {
     //}
 
     try {
-        std::cout << std::endl << "[server] starting up engines, saved at " << __TIMESTAMP__ << std::endl;
+        std::cout << "\n starting up engines, compile at " <<
+                                        __DATE__ << ", " __TIME__ << std::endl;
 
 #ifndef _WIN32
         int sig = 0;
@@ -93,28 +88,11 @@ int main (int argc, char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        ServerConfiguration serverConfig((argc > 1 ? argv[1] : "server.ini"));
+        BaseConfiguration serverConfig((argc > 1 ? argv[1] : "server.ini"));
+        OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
+
         Server * s = ServerFactory::CreateServer(serverConfig);
-        RequestHandler & h = s->GetRequestHandlerPtr();
-
-        QueryObjectsStorage * objects = new QueryObjectsStorage(serverConfig.GetParameter("hsgrData"),
-                serverConfig.GetParameter("ramIndex"),
-                serverConfig.GetParameter("fileIndex"),
-                serverConfig.GetParameter("nodesData"),
-                serverConfig.GetParameter("edgesData"),
-                serverConfig.GetParameter("namesData"),
-                serverConfig.GetParameter("timestamp")
-                );
-
-        h.RegisterPlugin(new HelloWorldPlugin());
-
-        h.RegisterPlugin(new LocatePlugin(objects));
-
-        h.RegisterPlugin(new NearestPlugin(objects));
-
-        h.RegisterPlugin(new TimestampPlugin(objects));
-
-        h.RegisterPlugin(new ViaRoutePlugin(objects));
+        s->GetRequestHandlerPtr().RegisterRoutingMachine(&routing_machine);
 
         boost::thread t(boost::bind(&Server::Run, s));
 
@@ -146,7 +124,6 @@ int main (int argc, char * argv[]) {
 
         std::cout << "[server] freeing objects" << std::endl;
         delete s;
-        delete objects;
         std::cout << "[server] shutdown completed" << std::endl;
     } catch (std::exception& e) {
         std::cerr << "[fatal error] exception: " << e.what() << std::endl;

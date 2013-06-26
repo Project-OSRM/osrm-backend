@@ -21,6 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
+
+#include "../DataStructures/Coordinate.h"
+#include "../typedefs.h"
+
 #include <string>
 #include <boost/algorithm/string.hpp>
 
@@ -28,9 +32,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/spirit/include/qi.hpp>
 
 #include <cstdio>
-
-#include "../DataStructures/Coordinate.h"
-#include "../typedefs.h"
 
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
