@@ -215,8 +215,14 @@ private:
             return lats_contained && lons_contained;
         }
 
-        inline friend std::ostream & operator<< ( std::ostream & out, const RectangleInt2D & rect ) {
-            out << rect.min_lat/100000. << "," << rect.min_lon/100000. << " " << rect.max_lat/100000. << "," << rect.max_lon/100000.;
+        inline friend std::ostream & operator<< (
+            std::ostream & out,
+            const RectangleInt2D & rect
+        ) {
+            out << rect.min_lat/100000. << ","
+                << rect.min_lon/100000. << " "
+                << rect.max_lat/100000. << ","
+                << rect.max_lon/100000.;
             return out;
         }
     };
@@ -224,8 +230,11 @@ private:
     typedef RectangleInt2D RectangleT;
 
     struct WrappedInputElement {
-        explicit WrappedInputElement(const uint32_t _array_index, const uint64_t _hilbert_value) :
-			        m_array_index(_array_index), m_hilbert_value(_hilbert_value) {}
+        explicit WrappedInputElement(
+            const uint32_t _array_index,
+            const uint64_t _hilbert_value
+            ) : m_array_index(_array_index), m_hilbert_value(_hilbert_value) {}
+
         WrappedInputElement() : m_array_index(UINT_MAX), m_hilbert_value(0) {}
 
         uint32_t m_array_index;
@@ -251,11 +260,13 @@ private:
     };
 
     struct QueryCandidate {
-        explicit QueryCandidate(const uint32_t n_id, const double dist) : node_id(n_id), min_dist(dist)/*, minmax_dist(DBL_MAX)*/ {}
-        QueryCandidate() : node_id(UINT_MAX), min_dist(DBL_MAX)/*, minmax_dist(DBL_MAX)*/ {}
+        explicit QueryCandidate(
+            const uint32_t n_id,
+            const double dist
+        ) : node_id(n_id), min_dist(dist) {}
+        QueryCandidate() : node_id(UINT_MAX), min_dist(DBL_MAX) {}
         uint32_t node_id;
         double min_dist;
-        //		double minmax_dist;
         inline bool operator<(const QueryCandidate & other) const {
             return min_dist < other.min_dist;
         }
@@ -266,24 +277,23 @@ private:
 
     std::string m_leaf_node_filename;
 public:
-    //Construct a pack R-Tree from the input-list with Kamel-Faloutsos algorithm [1]
-    explicit StaticRTree(std::vector<DataT> & input_data_vector, const char * tree_node_filename, const char * leaf_node_filename) :
-    m_leaf_node_filename(leaf_node_filename) {
-        m_element_count = input_data_vector.size();
-        //remove elements that are flagged to be ignored
-//        boost::remove_erase_if(input_data_vector, boost::bind(&DataT::isIgnored, _1 ));
+    //Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
+    explicit StaticRTree(
+        std::vector<DataT> & input_data_vector,
+        const char * tree_node_filename,
+        const char * leaf_node_filename
+    ) :
+        m_element_count(input_data_vector.size()),
+        m_leaf_node_filename(leaf_node_filename)
 
+    {
         INFO("constructing r-tree of " << m_element_count << " elements");
-//        INFO("sizeof(LeafNode)=" << sizeof(LeafNode));
-//        INFO("sizeof(TreeNode)=" << sizeof(TreeNode));
-//        INFO("sizeof(WrappedInputElement)=" << sizeof(WrappedInputElement));
         double time1 = get_timestamp();
-        std::vector<WrappedInputElement> input_wrapper_vector(input_data_vector.size());
+        std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
         //generate auxiliary vector of hilbert-values
 #pragma omp parallel for schedule(guided)
         for(uint64_t element_counter = 0; element_counter < m_element_count; ++element_counter) {
-            //INFO("ID: " << input_data_vector[element_counter].id);
             input_wrapper_vector[element_counter].m_array_index = element_counter;
             //Get Hilbert-Value for centroid in mercartor projection
             DataT & current_element = input_data_vector[element_counter];
@@ -294,15 +304,12 @@ public:
             input_wrapper_vector[element_counter].m_hilbert_value = current_hilbert_value;
 
         }
-        //INFO("finished wrapper setup");
-
         //open leaf file
         std::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
         leaf_node_file.write((char*) &m_element_count, sizeof(uint64_t));
 
         //sort the hilbert-value representatives
         std::sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
-        //		INFO("finished sorting");
         std::vector<TreeNode> tree_nodes_in_level;
 
         //pack M elements into leaf node and write to leaf file
@@ -313,16 +320,9 @@ public:
             TreeNode current_node;
             for(uint32_t current_element_index = 0; RTREE_LEAF_NODE_SIZE > current_element_index; ++current_element_index) {
                 if(m_element_count > (processed_objects_count + current_element_index)) {
-                    //					INFO("Checking element " << (processed_objects_count + current_element_index));
                     uint32_t index_of_next_object = input_wrapper_vector[processed_objects_count + current_element_index].m_array_index;
                     current_leaf.objects[current_element_index] = input_data_vector[index_of_next_object];
                     ++current_leaf.object_count;
-                }
-            }
-
-            if(0 == processed_objects_count) {
-                for(uint32_t i = 0; i < current_leaf.object_count; ++i) {
-                    					//INFO("[" << i << "] id: " << current_leaf.objects[i].id << ", weight: " << current_leaf.objects[i].weight << ", " << current_leaf.objects[i].lat1/100000. << "," << current_leaf.objects[i].lon1/100000. << ";" << current_leaf.objects[i].lat2/100000. << "," << current_leaf.objects[i].lon2/100000.);
                 }
             }
 
@@ -337,20 +337,21 @@ public:
             processed_objects_count += current_leaf.object_count;
         }
 
-        //		INFO("wrote " << processed_objects_count << " leaf objects");
-
         //close leaf file
         leaf_node_file.close();
 
         uint32_t processing_level = 0;
         while(1 < tree_nodes_in_level.size()) {
-            //			INFO("processing " << (uint32_t)tree_nodes_in_level.size() << " tree nodes in level " << processing_level);
             std::vector<TreeNode> tree_nodes_in_next_level;
             uint32_t processed_tree_nodes_in_level = 0;
             while(processed_tree_nodes_in_level < tree_nodes_in_level.size()) {
                 TreeNode parent_node;
                 //pack RTREE_BRANCHING_FACTOR elements into tree_nodes each
-                for(uint32_t current_child_node_index = 0; RTREE_BRANCHING_FACTOR > current_child_node_index; ++current_child_node_index) {
+                for(
+                    uint32_t current_child_node_index = 0;
+                    RTREE_BRANCHING_FACTOR > current_child_node_index;
+                    ++current_child_node_index
+                ) {
                     if(processed_tree_nodes_in_level < tree_nodes_in_level.size()) {
                         TreeNode & current_child_node = tree_nodes_in_level[processed_tree_nodes_in_level];
                         //add tree node to parent entry
@@ -364,15 +365,12 @@ public:
                     }
                 }
                 tree_nodes_in_next_level.push_back(parent_node);
-                //				INFO("processed: " << processed_tree_nodes_in_level << ", generating " << (uint32_t)tree_nodes_in_next_level.size() << " parents");
             }
             tree_nodes_in_level.swap(tree_nodes_in_next_level);
             ++processing_level;
         }
         BOOST_ASSERT_MSG(1 == tree_nodes_in_level.size(), "tree broken, more than one root node");
-        //last remaining entry is the root node;
-        //		INFO("root node has " << (uint32_t)tree_nodes_in_level[0].child_count << " children");
-        //store root node
+        //last remaining entry is the root node, store it
         m_search_tree.push_back(tree_nodes_in_level[0]);
 
         //reverse and renumber tree to have root at index 0
@@ -396,27 +394,7 @@ public:
         //close tree node file.
         tree_node_file.close();
         double time2 = get_timestamp();
-//        INFO("written " << processed_objects_count << " leafs in " << sizeof(LeafNode)*(1+(unsigned)std::ceil(processed_objects_count/RTREE_LEAF_NODE_SIZE) )+sizeof(uint64_t) << " bytes");
-//        INFO("written search tree of " << size_of_tree << " tree nodes in " << sizeof(TreeNode)*size_of_tree+sizeof(uint32_t) << " bytes");
         INFO("finished r-tree construction in " << (time2-time1) << " seconds");
-
-        //todo: test queries
-/*        INFO("first MBR:" << m_search_tree[0].minimum_bounding_rectangle);
-
-        DataT result;
-        time1 = get_timestamp();
-        bool found_nearest = NearestNeighbor(_Coordinate(50.191085,8.466479), result);
-        time2 = get_timestamp();
-        INFO("found nearest element to (50.191085,8.466479): " << (found_nearest ? "yes" : "no")  << " in " << (time2-time1) << "s at (" << result.lat1/100000. << "," << result.lon1/100000. << " " << result.lat2/100000. << "," << result.lon2/100000. << ")");
-        time1 = get_timestamp();
-        found_nearest = NearestNeighbor(_Coordinate(50.23979, 8.51882), result);
-        time2 = get_timestamp();
-        INFO("found nearest element to (50.23979, 8.51882): " << (found_nearest ? "yes" : "no")  << " in " << (time2-time1) << "s at (" << result.lat1/100000. << "," << result.lon1/100000. << " " << result.lat2/100000. << "," << result.lon2/100000. << ")");
-        time1 = get_timestamp();
-        found_nearest = NearestNeighbor(_Coordinate(49.0316,2.6937), result);
-        time2 = get_timestamp();
-        INFO("found nearest element to (49.0316,2.6937): " << (found_nearest ? "yes" : "no")  << " in " << (time2-time1) << "s at (" << result.lat1/100000. << "," << result.lon1/100000. << " " << result.lat2/100000. << "," << result.lon2/100000. << ")");
-*/
     }
 
     //Read-only operation for queries
@@ -557,11 +535,20 @@ public:
             }
         }
 
+        const double distance_to_edge =
+        ApproximateDistance (
+            _Coordinate(nearest_edge.lat1, nearest_edge.lon1),
+            result_phantom_node.location
+        );
+
+        const double length_of_edge =
+        ApproximateDistance(
+            _Coordinate(nearest_edge.lat1, nearest_edge.lon1),
+            _Coordinate(nearest_edge.lat2, nearest_edge.lon2)
+        );
+
         const double ratio = (found_a_nearest_edge ?
-                              std::min(1., ApproximateDistance(_Coordinate(nearest_edge.lat1, nearest_edge.lon1),
-                                                               result_phantom_node.location)/ApproximateDistance(_Coordinate(nearest_edge.lat1, nearest_edge.lon1), _Coordinate(nearest_edge.lat2, nearest_edge.lon2))
-                                       ) : 0
-                              );
+          std::min(1., distance_to_edge/ length_of_edge ) : 0 );
         result_phantom_node.weight1 *= ratio;
         if(INT_MAX != result_phantom_node.weight2) {
             result_phantom_node.weight2 *= (1.-ratio);
@@ -576,8 +563,7 @@ public:
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-        INFO("mindist: " << min_dist << ", io's: " << io_count << ", nodes: " << explored_tree_nodes_count << ", loc: " << result_phantom_node.location << ", ratio: " << ratio << ", id: " << result_phantom_node.edgeBasedNode);
-        INFO("bidirected: " << (result_phantom_node.isBidirected() ? "yes" : "no") );
+        INFO("mindist: " << min_distphantom_node.isBidirected() ? "yes" : "no") );
         return found_a_nearest_edge;
 
     }
@@ -643,10 +629,6 @@ public:
                                 nearest,
                                 &current_ratio
                         );
-
-                        //INFO("[" << current_edge.id << "] (" << current_edge.lat1/100000. << "," << current_edge.lon1/100000. << ")==(" << current_edge.lat2/100000. << "," << current_edge.lon2/100000. << ") at distance " << current_perpendicular_distance << " min dist: " << min_dist
-                        //     << ", ratio " << current_ratio
-                        //     );
 
                         if(
                                 current_perpendicular_distance < min_dist
@@ -737,94 +719,9 @@ public:
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-//        INFO("start: (" << nearest_edge.lat1 << "," << nearest_edge.lon1 << "), end: (" << nearest_edge.lat2 << "," << nearest_edge.lon2 << ")" );
-//        INFO("mindist: " << min_dist << ", io's: " << io_count << ", nodes: " << explored_tree_nodes_count << ", loc: " << result_phantom_node.location << ", ratio: " << ratio << ", id: " << result_phantom_node.edgeBasedNode);
-//        INFO("weight1: " << result_phantom_node.weight1 << ", weight2: " << result_phantom_node.weight2);
-//        INFO("bidirected: " << (result_phantom_node.isBidirected() ? "yes" : "no") );
-//        INFO("NameID: " << result_phantom_node.nodeBasedEdgeNameID);
         return found_a_nearest_edge;
 
     }
-/*
-    //Nearest-Neighbor query with the Roussopoulos et al. algorithm [2]
-    inline bool NearestNeighbor(const _Coordinate & input_coordinate, DataT & result_element) {
-        uint32_t io_count = 0;
-        uint32_t explored_tree_nodes_count = 0;
-        INFO("searching for coordinate " << input_coordinate);
-        double min_dist = DBL_MAX;
-        double min_max_dist = DBL_MAX;
-        bool found_return_value = false;
-
-        //initialize queue with root element
-        std::priority_queue<QueryCandidate> traversal_queue;
-        traversal_queue.push(QueryCandidate(0, m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate)));
-        BOOST_ASSERT_MSG(FLT_EPSILON > (0. - traversal_queue.top().min_dist), "Root element in NN Search has min dist != 0.");
-
-        while(!traversal_queue.empty()) {
-            const QueryCandidate current_query_node = traversal_queue.top(); traversal_queue.pop();
-
-            ++explored_tree_nodes_count;
-
-            //			INFO("popped node " << current_query_node.node_id << " at distance " << current_query_node.min_dist);
-            bool prune_downward = (current_query_node.min_dist >= min_max_dist);
-            bool prune_upward    = (current_query_node.min_dist >= min_dist);
-            //			INFO(" up prune:   " << (prune_upward ? "y" : "n" ));
-            //			INFO(" down prune: " << (prune_downward ? "y" : "n" ));
-            if( prune_downward || prune_upward ) { //downward pruning
-                //				INFO("  pruned node " << current_query_node.node_id << " because " << current_query_node.min_dist << "<" << min_max_dist);
-            } else {
-                TreeNode & current_tree_node = m_search_tree[current_query_node.node_id];
-                if (current_tree_node.child_is_on_disk) {
-                    //					INFO("  Fetching child from disk for id: " << current_query_node.node_id);
-                    LeafNode current_leaf_node;
-                    LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
-                    ++io_count;
-                    double ratio = 0.;
-                    _Coordinate nearest;
-                    for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
-                        DataT & current_object = current_leaf_node.objects[i];
-                        double current_perpendicular_distance = ComputePerpendicularDistance(
-                                input_coordinate,
-                                _Coordinate(current_object.lat1, current_object.lon1),
-                                _Coordinate(current_object.lat2, current_object.lon2),
-                                nearest,
-                                &ratio
-                        );
-
-                        if(current_perpendicular_distance < min_dist && !DoubleEpsilonCompare(current_perpendicular_distance, min_dist)) { //found a new minimum
-                            min_dist = current_perpendicular_distance;
-                            result_element = current_object;
-                            found_return_value = true;
-                        }
-                    }
-                } else {
-                    //traverse children, prune if global mindist is smaller than local one
-                    //					INFO("  Checking " << current_tree_node.child_count << " children of node " << current_query_node.node_id);
-                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i) {
-                        const int32_t child_id = current_tree_node.children[i];
-                        TreeNode & child_tree_node = m_search_tree[child_id];
-                        RectangleT & child_rectangle = child_tree_node.minimum_bounding_rectangle;
-                        const double current_min_dist = child_rectangle.GetMinDist(input_coordinate);
-                        const double current_min_max_dist = child_rectangle.GetMinMaxDist(input_coordinate);
-                        if( current_min_max_dist < min_max_dist ) {
-                            min_max_dist = current_min_max_dist;
-                        }
-                        if (current_min_dist > min_max_dist) {
-                            continue;
-                        }
-                        if (current_min_dist > min_dist) { //upward pruning
-                            continue;
-                        }
-                        //						INFO("   pushing node " << child_id << " at distance " << current_min_dist);
-                        traversal_queue.push(QueryCandidate(child_id, current_min_dist));
-                    }
-                }
-            }
-        }
-        INFO("mindist: " << min_dist << ", io's: " << io_count << ",  touched nodes: " << explored_tree_nodes_count);
-        return found_return_value;
-    }
- */
 private:
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode& result_node) {
         if(!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open()) {
