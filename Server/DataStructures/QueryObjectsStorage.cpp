@@ -23,13 +23,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../Util/GraphLoader.h"
 
 QueryObjectsStorage::QueryObjectsStorage(
-	std::string hsgrPath,
-	std::string ramIndexPath,
-	std::string fileIndexPath,
-	std::string nodesPath,
-	std::string edgesPath,
-	std::string namesPath,
-	std::string timestampPath
+	const std::string & hsgrPath,
+	const std::string & ramIndexPath,
+	const std::string & fileIndexPath,
+	const std::string & nodesPath,
+	const std::string & edgesPath,
+	const std::string & namesPath,
+	const std::string & timestampPath
 ) {
 	INFO("loading graph data");
 	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
@@ -43,6 +43,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 		edgeList,
 		&checkSum
 	);
+	hsgrInStream.close();
 
 	INFO("Data checksum is " << checkSum);
 	graph = new QueryGraph(nodeList, edgeList);
@@ -68,7 +69,12 @@ QueryObjectsStorage::QueryObjectsStorage(
 	if(!nodesInStream) { ERR(nodesPath <<  " not found"); }
     std::ifstream edgesInStream(edgesPath.c_str(), std::ios::binary);
     if(!edgesInStream) { ERR(edgesPath <<  " not found"); }
-	nodeHelpDesk = new NodeInformationHelpDesk(ramIndexPath.c_str(), fileIndexPath.c_str(), n, checkSum);
+	nodeHelpDesk = new NodeInformationHelpDesk(
+		ramIndexPath.c_str(),
+		fileIndexPath.c_str(),
+		n,
+		checkSum
+	);
 	nodeHelpDesk->initNNGrid(nodesInStream, edgesInStream);
 
 	//deserialize street name list
@@ -77,7 +83,6 @@ QueryObjectsStorage::QueryObjectsStorage(
     if(!namesInStream) { ERR(namesPath <<  " not found"); }
 	unsigned size(0);
 	namesInStream.read((char *)&size, sizeof(unsigned));
-	//        names = new std::vector<std::string>();
 
 	char buf[1024];
 	for(unsigned i = 0; i < size; ++i) {
@@ -88,7 +93,6 @@ QueryObjectsStorage::QueryObjectsStorage(
 		names.push_back(buf);
 	}
 	std::vector<std::string>(names).swap(names);
-	hsgrInStream.close();
 	namesInStream.close();
 	INFO("All query data structures loaded");
 }

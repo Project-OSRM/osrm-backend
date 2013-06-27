@@ -30,8 +30,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../DataStructures/StaticGraph.h"
 
 struct QueryObjectsStorage {
-    typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
-    typedef QueryGraph::InputEdge InputEdge;
+    typedef StaticGraph<QueryEdge::EdgeData>    QueryGraph;
+    typedef QueryGraph::InputEdge               InputEdge;
 
     NodeInformationHelpDesk * nodeHelpDesk;
     std::vector<std::string> names;
@@ -39,7 +39,15 @@ struct QueryObjectsStorage {
     std::string timestamp;
     unsigned checkSum;
 
-    QueryObjectsStorage(std::string hsgrPath, std::string ramIndexPath, std::string fileIndexPath, std::string nodesPath, std::string edgesPath, std::string namesPath, std::string timestampPath);
+    QueryObjectsStorage(
+        const std::string & hsgrPath,
+        const std::string & ramIndexPath,
+        const std::string & fileIndexPath,
+        const std::string & nodesPath,
+        const std::string & edgesPath,
+        const std::string & namesPath,
+        const std::string & timestampPath
+    );
 
     ~QueryObjectsStorage();
 };
