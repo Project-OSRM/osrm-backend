@@ -21,8 +21,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STRINGUTIL_H_
 #define STRINGUTIL_H_
 
-
-#include "../DataStructures/Coordinate.h"
 #include "../typedefs.h"
 
 #include <string>
@@ -93,32 +91,6 @@ static inline void doubleToStringWithTwoDigitsBehindComma(const double value, st
     char buffer[12] ;
     sprintf(buffer, "%g", value) ;
     output = buffer ;
-}
-
-static inline void convertInternalLatLonToString(const int value, std::string & output) {
-    char buffer[100];
-    buffer[10] = 0; // Nullterminierung
-    char* string = printInt< 10, 5 >( buffer, value );
-    output = string;
-}
-
-static inline void convertInternalCoordinateToString(const _Coordinate & coord, std::string & output) {
-    std::string tmp;
-    convertInternalLatLonToString(coord.lon, tmp);
-    output = tmp;
-    output += ",";
-    convertInternalLatLonToString(coord.lat, tmp);
-    output += tmp;
-    output += " ";
-}
-static inline void convertInternalReversedCoordinateToString(const _Coordinate & coord, std::string & output) {
-    std::string tmp;
-    convertInternalLatLonToString(coord.lat, tmp);
-    output = tmp;
-    output += ",";
-    convertInternalLatLonToString(coord.lon, tmp);
-    output += tmp;
-    output += " ";
 }
 
 inline void replaceAll(std::string &s, const std::string &sub, const std::string &other) {
