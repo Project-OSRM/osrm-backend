@@ -474,7 +474,7 @@ public:
                         newEdge.data.id = data.id;
                     }
                     BOOST_ASSERT_MSG(
-                        newEdge.data.id <= INT_MAX, //2^31
+                        newEdge.data.id != INT_MAX, //2^31
                         "edge id invalid"
                     );
                     newEdge.data.forward = data.forward;

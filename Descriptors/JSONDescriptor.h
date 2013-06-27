@@ -41,7 +41,12 @@ private:
     DescriptionFactory alternateDescriptionFactory;
     _Coordinate current;
     unsigned numberOfEnteredRestrictedAreas;
-    struct {
+    struct RoundAbout{
+        RoundAbout() :
+            startIndex(INT_MAX),
+            nameID(INT_MAX),
+            leaveAtExit(INT_MAX)
+        {}
         int startIndex;
         int nameID;
         int leaveAtExit;
