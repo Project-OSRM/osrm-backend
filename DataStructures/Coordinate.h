@@ -33,7 +33,8 @@ struct _Coordinate {
     int lat;
     int lon;
     _Coordinate () : lat(INT_MIN), lon(INT_MIN) {}
-    _Coordinate (int t, int n) : lat(t) , lon(n) {}
+    explicit _Coordinate (int t, int n) : lat(t) , lon(n) {}
+
     void Reset() {
         lat = INT_MIN;
         lon = INT_MIN;

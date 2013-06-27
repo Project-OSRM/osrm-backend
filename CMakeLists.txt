@@ -67,6 +67,9 @@ target_link_libraries( osrm-extract ${Boost_LIBRARIES} )
 target_link_libraries( osrm-prepare ${Boost_LIBRARIES} )
 target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM)
 
+add_executable ( osrm-cli simpleclient.cpp)
+target_link_libraries( osrm-cli ${Boost_LIBRARIES} OSRM)
+
 find_package ( BZip2 REQUIRED )
 include_directories(${BZIP_INCLUDE_DIRS})
 target_link_libraries (osrm-extract ${BZIP2_LIBRARIES})

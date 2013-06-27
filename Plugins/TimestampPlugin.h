@@ -30,13 +30,9 @@ class TimestampPlugin : public BasePlugin {
 public:
     TimestampPlugin(QueryObjectsStorage * o) : objects(o) {
     }
-    ~TimestampPlugin() {
-        std::cout << "shutdown time stamp" << std::endl;
-    }
     std::string GetDescriptor() const { return std::string("timestamp"); }
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
-        std::cout << "handling request" << std::endl;
         std::string tmp;
 
         //json
