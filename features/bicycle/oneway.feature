@@ -112,3 +112,17 @@ Usually we can push bikes against oneways, but we use foot=no to prevent this in
 		 | no   | roundabout |        | yes        | x    |       |
 		 | no   | roundabout |        | no         | x    |       |
 		 | no   | roundabout |        | -1         | x    |       |
+
+   	Scenario: Bike - Two consecutive oneways
+   		Given the node map
+   		 | a | b | c |
+
+   		And the ways
+   		 | nodes | oneway |
+   		 | ab    | yes    |
+   		 | bc    | yes    |
+
+
+   		When I route I should get
+   		 | from | to | route |
+   		 | a    | c  | ab,bc |

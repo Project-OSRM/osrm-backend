@@ -4,6 +4,7 @@ require 'digest/sha1'
 require 'cucumber/rake/task'
 require 'sys/proctable'
 
+BUILD_FOLDER = 'build'
 DATA_FOLDER = 'sandbox'
 PROFILE = 'bicycle'
 OSRM_PORT = 5000
@@ -77,11 +78,13 @@ end
 
 
 desc "Rebuild and run tests."
-task :default => [:build, :cucumber]
+task :default => [:build]
 
-desc "Build using SConsstruct."
+desc "Build using CMake."
 task :build do
-  system "scons"
+  Dir.chdir BUILD_FOLDER do
+    system "make"
+  end
 end
 
 desc "Setup config files."
@@ -99,8 +102,8 @@ desc "Download OSM data."
 task :download => :setup do
   Dir.mkdir "#{DATA_FOLDER}" unless File.exist? "#{DATA_FOLDER}"
   puts "Downloading..."
-  puts "curl http://download.geofabrik.de/openstreetmap/europe/#{osm_data_country}.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
-  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/openstreetmap/europe/#{osm_data_country}.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
+  puts "curl http://download.geofabrik.de/europe/#{osm_data_country}-latest.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
+  raise "Error while downloading data." unless system "curl http://download.geofabrik.de/europe/#{osm_data_country}-latest.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
   if osm_data_area_bbox
     puts "Cropping and converting to protobuffer..."
     raise "Error while cropping data." unless system "osmosis --read-pbf file=#{DATA_FOLDER}/#{osm_data_country}.osm.pbf --bounding-box #{osm_data_area_bbox} --write-pbf file=#{DATA_FOLDER}/#{osm_data_area_name}.osm.pbf omitmetadata=true"
@@ -117,9 +120,9 @@ end
 desc "Reprocess OSM data."
 task :process => :setup do
   Dir.chdir DATA_FOLDER do
-    raise "Error while extracting data." unless system "../osrm-extract #{osm_data_area_name}.osm.pbf #{PROFILES_FOLDER}/#{PROFILE}.lua"
+    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf #{PROFILES_FOLDER}/#{PROFILE}.lua"
     puts
-    raise "Error while preparing data." unless system "../osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions #{PROFILES_FOLDER}/#{PROFILE}.lua"
+    raise "Error while preparing data." unless system "../#{BUILD_FOLDER}/osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions #{PROFILES_FOLDER}/#{PROFILE}.lua"
     puts
   end
 end
@@ -127,14 +130,14 @@ end
 desc "Extract OSM data."
 task :extract => :setup do
   Dir.chdir DATA_FOLDER do
-    raise "Error while extracting data." unless system "../osrm-extract #{osm_data_area_name}.osm.pbf ../profiles/#{PROFILE}.lua"
+    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf ../profiles/#{PROFILE}.lua"
   end
 end
 
 desc "Prepare OSM data."
 task :prepare => :setup do
   Dir.chdir DATA_FOLDER do
-    raise "Error while preparing data." unless system "../osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions ../profiles/#{PROFILE}.lua"
+    raise "Error while preparing data." unless system "../#{BUILD_FOLDER}/osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions ../profiles/#{PROFILE}.lua"
   end
 end
 
@@ -154,7 +157,7 @@ desc "Run the routing server in the terminal. Press Ctrl-C to stop."
 task :run => :setup do
   Dir.chdir DATA_FOLDER do
     write_server_ini osm_data_area_name
-    system "../osrm-routed"
+    system "../#{BUILD_FOLDER}/osrm-routed"
   end
 end
 
@@ -163,7 +166,7 @@ task :up => :setup do
   Dir.chdir DATA_FOLDER do
     abort("Already up.") if up?
     write_server_ini osm_data_area_name
-    pipe = IO.popen('../osrm-routed 1>>osrm-routed.log 2>>osrm-routed.log')
+    pipe = IO.popen("../#{BUILD_FOLDER}/osrm-routed 1>>osrm-routed.log 2>>osrm-routed.log")
     timeout = 5
     (timeout*10).times do
       begin

@@ -4,10 +4,19 @@ HOST = "http://localhost:#{OSRM_PORT}"
 REQUEST_TIMEOUT = 1
 DESTINATION_REACHED = 15      #OSRM instruction code
 
+class Hash
+  def to_param(namespace = nil)
+    collect do |key, value|
+      "#{key}=#{value}"
+    end.sort
+  end
+end
 
-def request_path path
-  @query = path
-  uri = URI.parse "#{HOST}/#{path}"
+def request_path path, waypoints=[], options={}
+  locs = waypoints.compact.map { |w| "loc=#{w.lat},#{w.lon}" }
+  params = (locs + options.to_param).join('&')
+  params = nil if params==""
+  uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
   Timeout.timeout(REQUEST_TIMEOUT) do
     Net::HTTP.get_response uri
   end
@@ -17,8 +26,9 @@ rescue Timeout::Error
   raise "*** osrm-routed did not respond."
 end
 
-def request_route a,b
-  request_path "viaroute?loc=#{a}&loc=#{b}&output=json&instructions=true&alt=true"
+def request_route waypoints, params={}
+  defaults = { 'output' => 'json', 'instructions' => true, 'alt' => false }
+  request_path "viaroute", waypoints, defaults.merge(params)
 end
 
 def parse_response response
@@ -108,9 +118,18 @@ def turn_list instructions
     12 => :leave_roundabout,
     13 => :stay_roundabout,
     14 => :start_end_of_street,
-    15 => :destination
+    15 => :destination,
+    16 => :enter_contraflow,
+    17 => :leave_contraflow
   }
   instructions.
   map { |r| types[r[0].to_i].to_s }.
+  join(',')
+end
+
+def mode_list instructions
+  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
+  map { |r| r[8] }.
+  map { |r| (r=="" || r==nil) ? '""' : r }.
   join(',')
 end

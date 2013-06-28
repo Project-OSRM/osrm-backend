@@ -23,8 +23,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iostream>
 #include <signal.h>
 
-#include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <boost/date_time.hpp>
+#include <boost/thread.hpp>
 
 #include "Server/DataStructures/QueryObjectsStorage.h"
 #include "Server/ServerConfiguration.h"
@@ -64,7 +65,7 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 }
 #endif
 
-int main (int argc, char * argv[0]) {
+int main (int argc, char * argv[]) {
 #ifdef __linux__
     if(!mlockall(MCL_CURRENT | MCL_FUTURE))
         WARN("Process " << argv[0] << "could not be locked to RAM");
@@ -138,7 +139,11 @@ int main (int argc, char * argv[0]) {
         std::cout << "[server] initiating shutdown" << std::endl;
         s->Stop();
         std::cout << "[server] stopping threads" << std::endl;
-        t.join();
+
+        if(!t.timed_join(boost::posix_time::seconds(2))) {
+//        	INFO("Threads did not finish within 2 seconds. Hard abort!");
+        }
+
         std::cout << "[server] freeing objects" << std::endl;
         delete s;
         delete objects;

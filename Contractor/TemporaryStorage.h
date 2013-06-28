@@ -33,8 +33,8 @@
 
 //This is one big workaround for latest boost renaming woes.
 
-#ifndef BOOST_FILESYSTEM_VERSION
-#warning Boost Installation with Filesystem3 (>=1.44) is required, activating workaround
+#if BOOST_FILESYSTEM_VERSION < 3
+#warning Boost Installation with Filesystem3 missing, activating workaround
 #include <cstdio>
 namespace boost {
 namespace filesystem {
@@ -54,8 +54,9 @@ inline path unique_path(const path&) {
 
 #endif
 
+#ifndef BOOST_FILESYSTEM_VERSION
 #define BOOST_FILESYSTEM_VERSION 3
-
+#endif
 /**
  * This class implements a singleton file storage for temporary data.
  * temporary slots can be accessed by other objects through an int
@@ -88,8 +89,6 @@ private:
         return *this;
     }
     void abort(boost::filesystem::filesystem_error& e);
-
-    ;
 
     struct StreamData {
         bool writeMode;

@@ -24,8 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/foreach.hpp>
 #include "BaseDescriptor.h"
 
-template<class SearchEngineT>
-class GPXDescriptor : public BaseDescriptor<SearchEngineT>{
+class GPXDescriptor : public BaseDescriptor{
 private:
     _DescriptorConfig config;
     _Coordinate current;
@@ -33,7 +32,7 @@ private:
     std::string tmp;
 public:
     void SetConfig(const _DescriptorConfig& c) { config = c; }
-    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine) {
+    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngine &sEngine) {
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         reply.content += "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" xmlns=\"http://www.topografix.com/GPX/1/1\" "
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "

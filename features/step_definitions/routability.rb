@@ -12,9 +12,13 @@ Then /^routability should be$/ do |table|
       ['forw','backw','bothw'].each do |direction|
         if table.headers.include? direction
           if direction == 'forw' || direction == 'bothw'
-            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}")
+            a = Location.new ORIGIN[0]+(1+WAY_SPACING*i)*@zoom, ORIGIN[1]
+            b = Location.new ORIGIN[0]+(3+WAY_SPACING*i)*@zoom, ORIGIN[1]
+            response = request_route [a,b]
           elsif direction == 'backw' || direction == 'bothw'
-            response = request_route("#{ORIGIN[1]},#{ORIGIN[0]+(3+WAY_SPACING*i)*@zoom}","#{ORIGIN[1]},#{ORIGIN[0]+(1+WAY_SPACING*i)*@zoom}")
+            a = Location.new ORIGIN[0]+(3+WAY_SPACING*i)*@zoom, ORIGIN[1]
+            b = Location.new ORIGIN[0]+(1+WAY_SPACING*i)*@zoom, ORIGIN[1]
+            response = request_route [a,b]
           end
           want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
           got[direction] = route_status response
@@ -22,7 +26,11 @@ Then /^routability should be$/ do |table|
           if got[direction].empty? == false
             route = way_list json['route_instructions']
             if route != "w#{i}"
-              got[direction] = "testing w#{i}, but got #{route}!?"
+              if row[direction].empty? == true
+                got[direction] = want
+              else
+                got[direction] = "testing w#{i}, but got #{route}!?"
+              end
             elsif want =~ /^\d+s/
               time = json['route_summary']['total_time']
               got[direction] = "#{time}s"

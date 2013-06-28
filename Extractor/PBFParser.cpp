@@ -76,7 +76,7 @@ inline bool PBFParser::ReadHeader() {
 			else if ( "DenseNodes" == feature ) {
 				supported = true;
 			}
-			
+
 			if ( !supported ) {
 				std::cerr << "[error] required feature not supported: " << feature.data() << std::endl;
 				return false;
@@ -155,22 +155,19 @@ inline bool PBFParser::Parse() {
 inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 	const OSMPBF::DenseNodes& dense = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).dense();
 	int denseTagIndex = 0;
-	int m_lastDenseID = 0;
-	int m_lastDenseLatitude = 0;
-	int m_lastDenseLongitude = 0;
+	int64_t m_lastDenseID = 0;
+	int64_t m_lastDenseLatitude = 0;
+	int64_t m_lastDenseLongitude = 0;
 
-	ImportNode n;
-	std::vector<ImportNode> extracted_nodes_vector;
 	const int number_of_nodes = dense.id_size();
-	extracted_nodes_vector.reserve(number_of_nodes);
+	std::vector<ImportNode> extracted_nodes_vector(number_of_nodes);
 	for(int i = 0; i < number_of_nodes; ++i) {
-		n.Clear();
 		m_lastDenseID += dense.id( i );
 		m_lastDenseLatitude += dense.lat( i );
 		m_lastDenseLongitude += dense.lon( i );
-		n.id = m_lastDenseID;
-		n.lat = 100000*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lat_offset() ) / NANO;
-		n.lon = 100000*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
+		extracted_nodes_vector[i].id = m_lastDenseID;
+		extracted_nodes_vector[i].lat = 100000*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lat_offset() ) / NANO;
+		extracted_nodes_vector[i].lon = 100000*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
 		while (denseTagIndex < dense.keys_vals_size()) {
 			const int tagValue = dense.keys_vals( denseTagIndex );
 			if( 0==tagValue ) {
@@ -180,10 +177,9 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 			const int keyValue = dense.keys_vals ( denseTagIndex+1 );
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
 			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
-			n.keyVals.Add(key, value);
+			extracted_nodes_vector[i].keyVals.Add(key, value);
 			denseTagIndex += 2;
 		}
-		extracted_nodes_vector.push_back(n);
 	}
 
 #pragma omp parallel for schedule ( guided )
@@ -292,37 +288,33 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 }
 
 inline void PBFParser::parseWay(_ThreadData * threadData) {
-	ExtractionWay w;
-	std::vector<ExtractionWay> waysToParse;
 	const int number_of_ways = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways_size();
-	waysToParse.reserve(number_of_ways);
+	std::vector<ExtractionWay> parsed_way_vector(number_of_ways);
 	for(int i = 0; i < number_of_ways; ++i) {
-		w.Clear();
 		const OSMPBF::Way& inputWay = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).ways( i );
-		w.id = inputWay.id();
+		parsed_way_vector[i].id = inputWay.id();
 		unsigned pathNode(0);
 		const int number_of_referenced_nodes = inputWay.refs_size();
-		for(int i = 0; i < number_of_referenced_nodes; ++i) {
-			pathNode += inputWay.refs(i);
-			w.path.push_back(pathNode);
+		for(int j = 0; j < number_of_referenced_nodes; ++j) {
+			pathNode += inputWay.refs(j);
+			parsed_way_vector[i].path.push_back(pathNode);
 		}
 		assert(inputWay.keys_size() == inputWay.vals_size());
 		const int number_of_keys = inputWay.keys_size();
-		for(int i = 0; i < number_of_keys; ++i) {
-			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(inputWay.keys(i));
-			const std::string & val = threadData->PBFprimitiveBlock.stringtable().s(inputWay.vals(i));
-			w.keyVals.Add(key, val);
+		for(int j = 0; j < number_of_keys; ++j) {
+			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(inputWay.keys(j));
+			const std::string & val = threadData->PBFprimitiveBlock.stringtable().s(inputWay.vals(j));
+			parsed_way_vector[i].keyVals.Add(key, val);
 		}
-		waysToParse.push_back(w);
 	}
 
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_ways; ++i) {
-	    ExtractionWay & w = waysToParse[i];
+	    ExtractionWay & w = parsed_way_vector[i];
 	    ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
 	}
 
-	BOOST_FOREACH(ExtractionWay & w, waysToParse) {
+	BOOST_FOREACH(ExtractionWay & w, parsed_way_vector) {
 	    extractor_callbacks->wayFunction(w);
 	}
 }
@@ -423,7 +415,7 @@ inline bool PBFParser::readBlob(std::fstream& stream, _ThreadData * threadData) 
 	if(stream.eof()) {
 		return false;
 	}
-	
+
 	const int size = threadData->PBFBlobHeader.datasize();
 	if ( size < 0 || size > MAX_BLOB_SIZE ) {
 		std::cerr << "[error] invalid Blob size:" << size << std::endl;

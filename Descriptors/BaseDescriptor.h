@@ -28,8 +28,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 #include "../typedefs.h"
-#include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/SearchEngine.h"
 #include "../Util/StringUtil.h"
 
 #include "../Plugins/RawRouteData.h"
@@ -42,13 +43,12 @@ struct _DescriptorConfig {
     unsigned short z;
 };
 
-template<class SearchEngineT>
 class BaseDescriptor {
 public:
     BaseDescriptor() { }
     //Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() { }
-    virtual void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngineT &sEngine) = 0;
+    virtual void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngine &sEngine) = 0;
     virtual void SetConfig(const _DescriptorConfig & config) = 0;
 };
 

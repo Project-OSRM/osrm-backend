@@ -25,20 +25,6 @@
 #ifndef EDGEBASEDGRAPHFACTORY_H_
 #define EDGEBASEDGRAPHFACTORY_H_
 
-#include <algorithm>
-#include <queue>
-#include <vector>
-#include <stxxl.h>
-#include <cstdlib>
-
-#include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
@@ -50,14 +36,22 @@
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/BaseConfiguration.h"
+#include "../Util/LuaUtil.h"
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-}
-#include <luabind/luabind.hpp>
+#include <stxxl.h>
 
+#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
+
+#include <cstdlib>
+
+#include <algorithm>
+#include <queue>
+#include <vector>
 
 class EdgeBasedGraphFactory : boost::noncopyable {
 public:
@@ -65,8 +59,22 @@ public:
         bool operator<(const EdgeBasedNode & other) const {
             return other.id < id;
         }
+
         bool operator==(const EdgeBasedNode & other) const {
             return id == other.id;
+        }
+
+        inline _Coordinate Centroid() const {
+            _Coordinate centroid;
+            //The coordinates of the midpoint are given by:
+            //x = (x1 + x2) /2 and y = (y1 + y2) /2.
+            centroid.lon = (std::min(lon1, lon2) + std::max(lon1, lon2))/2;
+            centroid.lat = (std::min(lat1, lat2) + std::max(lat1, lat2))/2;
+            return centroid;
+        }
+
+        inline bool isIgnored() const {
+            return ignoreInGrid;
         }
         NodeID id;
         int lat1;
@@ -127,7 +135,7 @@ private:
     RestrictionMap _restrictionMap;
 
     DeallocatingVector<EdgeBasedEdge>   edgeBasedEdges;
-    DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
+    std::vector<EdgeBasedNode>   edgeBasedNodes;
 
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
@@ -145,7 +153,7 @@ public:
 
     void Run(const char * originalEdgeDataFilename, lua_State *myLuaState);
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
-    void GetEdgeBasedNodes( DeallocatingVector< EdgeBasedNode> & nodes);
+    void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
     void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
     TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const;
     unsigned GetNumberOfNodes() const;

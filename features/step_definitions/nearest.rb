@@ -3,10 +3,10 @@ When /^I request nearest I should get$/ do |table|
   actual = []
   OSRMLauncher.new do
     table.hashes.each_with_index do |row,ri|
-      in_node = @name_node_hash[ row['in'] ]
+      in_node = find_node_by_name row['in']
       raise "*** unknown in-node '#{row['in']}" unless in_node
 
-      out_node = @name_node_hash[ row['out'] ]
+      out_node = find_node_by_name row['out']
       raise "*** unknown out-node '#{row['out']}" unless out_node
 
       response = request_nearest("#{in_node.lat},#{in_node.lon}")
@@ -42,10 +42,10 @@ When /^I request nearest I should get$/ do |table|
   table.routing_diff! actual
 end
 
-When /^I route (\d+) times I should get$/ do |n,table|
+When /^I request nearest (\d+) times I should get$/ do |n,table|
   ok = true
   n.to_i.times do
-    ok = false unless step "I route I should get", table
+    ok = false unless step "I request nearest I should get", table
   end
   ok
 end

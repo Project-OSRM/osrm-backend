@@ -18,12 +18,13 @@ Given /^the node map$/ do |table|
       unless name.empty?
         raise "*** node invalid name '#{name}', must be single characters" unless name.size == 1
         raise "*** invalid node name '#{name}', must me alphanumeric" unless name.match /[a-z0-9]/
-        raise "*** duplicate node '#{name}'" if name_node_hash[name]
-        node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+ci*@zoom, ORIGIN[1]-ri*@zoom 
-        node << { :name => name }
-        node.uid = OSM_UID
-        osm_db << node
-        name_node_hash[name] = node
+        if name.match /[a-z]/
+            raise "*** duplicate node '#{name}'" if name_node_hash[name]
+            add_osm_node name, *table_coord_to_lonlat(ci,ri)
+        else
+            raise "*** duplicate node '#{name}'" if location_hash[name]
+            add_location name, *table_coord_to_lonlat(ci,ri)
+        end
       end
     end
   end
@@ -32,21 +33,18 @@ end
 Given /^the node locations$/ do |table|
   table.hashes.each do |row|
     name = row['node']
-    raise "*** node invalid name '#{name}', must be single characters" unless name.size == 1
-    raise "*** invalid node name '#{name}', must me alphanumeric" unless name.match /[a-z0-9]/
-    raise "*** duplicate node '#{name}'" if name_node_hash[name]
-    node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, row['lon'].to_f, row['lat'].to_f 
-    node << { :name => name }
-    node.uid = OSM_UID
-    osm_db << node
-    name_node_hash[name] = node
+    raise "*** duplicate node '#{name}'" if find_node_by_name name
+    if name.match /[a-z]/
+        add_osm_node name, row['lon'].to_f, row['lat'].to_f 
+    else
+        add_location name, row['lon'].to_f, row['lat'].to_f 
+    end
   end
 end
 
 Given /^the nodes$/ do |table|
   table.hashes.each do |row|
     name = row.delete 'node'
-    raise "***invalid node name '#{c}', must be single characters" unless name.size == 1
     node = find_node_by_name(name)
     raise "*** unknown node '#{c}'" unless node
     node << row
@@ -61,8 +59,7 @@ Given /^the ways$/ do |table|
     nodes = row.delete 'nodes'
     raise "*** duplicate way '#{nodes}'" if name_way_hash[nodes]
     nodes.each_char do |c|
-      raise "***invalid node name '#{c}', must be single characters" unless c.size == 1
-      raise "*** ways cannot use numbered nodes, '#{name}'" unless c.match /[a-z]/
+      raise "*** ways can only use names a-z, '#{name}'" unless c.match /[a-z]/
       node = find_node_by_name(c)
       raise "*** unknown node '#{c}'" unless node
       way << node

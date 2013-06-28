@@ -21,7 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef COORDINATE_H_
 #define COORDINATE_H_
 
+#include <cassert>
+#include <cmath>
 #include <climits>
+
 #include <iostream>
 
 struct _Coordinate {
@@ -101,6 +104,5 @@ inline double ApproximateDistanceByEuclid(const _Coordinate &c1, const _Coordina
     const double d = sqrt(x*x + y*y) * earthRadius;
     return d;
 }
-
 
 #endif /* COORDINATE_H_ */

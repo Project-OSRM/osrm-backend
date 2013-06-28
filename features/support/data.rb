@@ -14,8 +14,18 @@ DEFAULT_SPEEDPROFILE = 'bicycle'
 WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
 PROFILES_PATH = '../profiles'
+BIN_PATH = '../build'
 
 ORIGIN = [1,1]
+
+class Location
+    attr_accessor :lon,:lat
+        
+    def initialize lon,lat
+        @lat = lat
+        @lon = lon
+    end
+end
 
 def sanitized_scenario_title
   @sanitized_scenario_title ||= @scenario_title.gsub /[^0-9A-Za-z.\-]/, '_'
@@ -32,10 +42,10 @@ def build_ways_from_table table
   #add one unconnected way for each row
   table.hashes.each_with_index do |row,ri|
     #NOTE:
-    #currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4
-    #this is relatated to the fact that a oneway deadend doesn't make a lot of sense
+    #currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4 edges
+    #this is relatated to the fact that a oneway dead-end street doesn't make a lot of sense
     
-    #if we stack ways on different x coordinates, outability tests get messed up, because osrm might pick a neighboring way if the one test can't be used.
+    #if we stack ways on different x coordinates, routability tests get messed up, because osrm might pick a neighboring way if the one test can't be used.
     #instead we place all lines as a string on the same y coordinate. this prevents using neightboring ways.
     
     #a few nodes...
@@ -110,8 +120,30 @@ def build_ways_from_table table
   end
 end
 
+def table_coord_to_lonlat ci,ri
+    [ORIGIN[0]+ci*@zoom, ORIGIN[1]-ri*@zoom]
+end
+
+def add_osm_node name,lon,lat
+    node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
+    node << { :name => name }
+    node.uid = OSM_UID
+    osm_db << node
+    name_node_hash[name] = node
+end
+
+def add_location name,lon,lat
+    location_hash[name] = Location.new(lon,lat)
+end
+
 def find_node_by_name s
-  name_node_hash[s.to_s]
+    raise "***invalid node name '#{s}', must be single characters" unless s.size == 1
+    raise "*** invalid node name '#{s}', must be alphanumeric" unless s.match /[a-z0-9]/
+    if s.match /[a-z]/
+        from_node = name_node_hash[ s.to_s ]
+    else
+        from_node = location_hash[ s.to_s ]
+    end
 end
 
 def find_way_by_name s
@@ -135,6 +167,7 @@ end
 def reset_osm
   osm_db.clear
   name_node_hash.clear
+  location_hash.clear
   name_way_hash.clear
   @osm_str = nil
   @osm_hash = nil
@@ -155,6 +188,10 @@ end
 
 def name_node_hash
   @name_node_hash ||= {}
+end
+
+def location_hash
+  @location_hash ||= {}
 end
 
 def name_way_hash
@@ -213,7 +250,7 @@ def reprocess
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
+      unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end
@@ -222,7 +259,7 @@ def reprocess
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "../osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
+      unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
       end 
