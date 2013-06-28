@@ -19,16 +19,17 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 */
 
-#ifndef _OPENMPREPLACEMENTY_H
-#define _OPENMPREPLACEMENTY_H
+#ifndef _OPENMWRAPPER_H
+#define _OPENMWRAPPER_H
 
 #ifdef _OPENMP
-    #include <omp.h>
+   // extern "C" {
+       #include <omp.h>
+   // }
 #else
-    inline const int omp_get_num_procs() { return 1; }
-    inline const int omp_get_max_threads() { return 1; }
-    inline const int omp_get_thread_num() { return 0; }
-    inline const void omp_set_num_threads(int i) {}
-#endif
-
-#endif
+    inline int  omp_get_num_procs   () { return 1; }
+    inline int  omp_get_max_threads () { return 1; }
+    inline int  omp_get_thread_num  () { return 0; }
+    inline void omp_set_num_threads (int i) {}
+#endif /* _OPENMP */
+#endif /* _OPENMWRAPPER_H */
