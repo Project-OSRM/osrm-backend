@@ -23,9 +23,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define _OPENMWRAPPER_H
 
 #ifdef _OPENMP
-   // extern "C" {
+    extern "C" {
        #include <omp.h>
-   // }
+    }
 #else
     inline int  omp_get_num_procs   () { return 1; }
     inline int  omp_get_max_threads () { return 1; }
