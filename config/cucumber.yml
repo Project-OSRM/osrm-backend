@@ -1,5 +1,5 @@
 # config/cucumber.yml
 ##YAML Template
 ---
-default: --require features
+default: --require features --tags ~@todo --tag ~@stress
 verify: --require features --tags ~@todo --tag ~@stress -f progress
