@@ -82,8 +82,12 @@ task :default => [:build]
 
 desc "Build using CMake."
 task :build do
-  Dir.chdir BUILD_FOLDER do
-    system "make"
+  if Dir.exists? BUILD_FOLDER
+    Dir.chdir BUILD_FOLDER do
+      system "make"
+    end
+  else
+    system "mkdir build; cd build; cmake ..; make"
   end
 end
 
