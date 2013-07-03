@@ -43,6 +43,7 @@ OSRM::~OSRM() {
     BOOST_FOREACH(PluginMap::value_type plugin_pointer, pluginMap) {
         delete plugin_pointer.second;
     }
+    delete objects;
 }
 
 void OSRM::RegisterPlugin(BasePlugin * plugin) {
