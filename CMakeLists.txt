@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 2.6)
 project(OSRM)
 include(FindPackageHandleStandardArgs)
+
+TRY_RUN(SHARED_LIBRARY_PATH_TYPE SHARED_LIBRARY_PATH_INFO_COMPILED ${PROJECT_BINARY_DIR}/CMakeTmp ${PROJECT_SOURCE_DIR}/cmake/size.cpp OUTPUT_VARIABLE IS_64_SYSTEM)
+if(IS_64_SYSTEM)
+	message(STATUS "System supports 64 bits.")
+else(IS_64_SYSTEM)
+	MESSAGE(WARNING "Compiling on a 32 bit system is unsupported!")
+endif(IS_64_SYSTEM)
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(BOOST_COMPONENTS filesystem regex system thread)
 
