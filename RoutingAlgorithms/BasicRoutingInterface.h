@@ -44,6 +44,7 @@ public:
     inline void RoutingStep(typename QueryDataT::QueryHeap & _forwardHeap, typename QueryDataT::QueryHeap & _backwardHeap, NodeID *middle, int *_upperbound, const int edgeBasedOffset, const bool forwardDirection) const {
         const NodeID node = _forwardHeap.DeleteMin();
         const int distance = _forwardHeap.GetKey(node);
+        //INFO("Settled (" << _forwardHeap.GetData( node ).parent << "," << node << ")=" << distance);
         if(_backwardHeap.WasInserted(node) ){
             const int newDistance = _backwardHeap.GetKey(node) + distance;
             if(newDistance < *_upperbound ){

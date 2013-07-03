@@ -23,8 +23,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Contractor/EdgeBasedGraphFactory.h"
 #include "DataStructures/BinaryHeap.h"
 #include "DataStructures/DeallocatingVector.h"
-#include "DataStructures/NNGrid.h"
 #include "DataStructures/QueryEdge.h"
+#include "DataStructures/StaticGraph.h"
+#include "DataStructures/StaticRTree.h"
 #include "Util/BaseConfiguration.h"
 #include "Util/GraphLoader.h"
 #include "Util/InputFileUtil.h"
@@ -92,8 +93,8 @@ int main (int argc, char *argv[]) {
         std::string nodeOut(argv[1]);		nodeOut += ".nodes";
         std::string edgeOut(argv[1]);		edgeOut += ".edges";
         std::string graphOut(argv[1]);		graphOut += ".hsgr";
-        std::string ramIndexOut(argv[1]);	ramIndexOut += ".ramIndex";
-        std::string fileIndexOut(argv[1]);	fileIndexOut += ".fileIndex";
+        std::string rtree_nodes_path(argv[1]);  rtree_nodes_path += ".ramIndex";
+        std::string rtree_leafs_path(argv[1]);  rtree_leafs_path += ".fileIndex";
 
         /*** Setup Scripting Environment ***/
         if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
@@ -154,7 +155,7 @@ int main (int argc, char *argv[]) {
         NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
         DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
         edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
-        DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
+        std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
         edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
         delete edgeBasedGraphFactory;
 
@@ -174,11 +175,15 @@ int main (int argc, char *argv[]) {
          * Building grid-like nearest-neighbor data structure
          */
 
-        INFO("building grid ...");
-        WritableGrid * writeableGrid = new WritableGrid();
-        writeableGrid->ConstructGrid(nodeBasedEdgeList, ramIndexOut.c_str(), fileIndexOut.c_str());
-        delete writeableGrid;
-        IteratorbasedCRC32<DeallocatingVector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
+        INFO("building r-tree ...");
+        StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * rtree =
+                new StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode>(
+                        nodeBasedEdgeList,
+                        rtree_nodes_path.c_str(),
+                        rtree_leafs_path.c_str()
+                );
+        delete rtree;
+        IteratorbasedCRC32<std::vector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
         unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
         nodeBasedEdgeList.clear();
         INFO("CRC32 based checksum is " << crc32OfNodeBasedEdgeList);

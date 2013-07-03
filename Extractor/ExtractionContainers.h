@@ -21,11 +21,11 @@
 #ifndef EXTRACTIONCONTAINERS_H_
 #define EXTRACTIONCONTAINERS_H_
 
-#include <boost/foreach.hpp>
-#include <stxxl.h>
-
 #include "ExtractorStructs.h"
 #include "../DataStructures/TimingUtil.h"
+
+#include <boost/foreach.hpp>
+#include <stxxl.h>
 
 class ExtractionContainers {
 public:

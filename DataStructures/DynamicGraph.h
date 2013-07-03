@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../DataStructures/DeallocatingVector.h"
 
+#include <boost/assert.hpp>
 #include <boost/integer.hpp>
 
 #include <algorithm>
@@ -118,7 +119,6 @@ class DynamicGraph {
         }
 
         EdgeIterator BeginEdges( const NodeIterator n ) const {
-            //assert( EndEdges( n ) - EdgeIterator( _nodes[n].firstEdge ) <= 100 );
             return EdgeIterator( m_nodes[n].firstEdge );
         }
 
@@ -203,11 +203,11 @@ class DynamicGraph {
 
     protected:
 
-        bool isDummy( EdgeIterator edge ) const {
+        bool isDummy( const EdgeIterator edge ) const {
             return m_edges[edge].target == (std::numeric_limits< NodeIterator >::max)();
         }
 
-        void makeDummy( EdgeIterator edge ) {
+        void makeDummy( const EdgeIterator edge ) {
             m_edges[edge].target = (std::numeric_limits< NodeIterator >::max)();
         }
 

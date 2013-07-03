@@ -42,10 +42,10 @@ def build_ways_from_table table
   #add one unconnected way for each row
   table.hashes.each_with_index do |row,ri|
     #NOTE:
-    #currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4
-    #this is relatated to the fact that a oneway deadend doesn't make a lot of sense
+    #currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4 edges
+    #this is relatated to the fact that a oneway dead-end street doesn't make a lot of sense
     
-    #if we stack ways on different x coordinates, outability tests get messed up, because osrm might pick a neighboring way if the one test can't be used.
+    #if we stack ways on different x coordinates, routability tests get messed up, because osrm might pick a neighboring way if the one test can't be used.
     #instead we place all lines as a string on the same y coordinate. this prevents using neightboring ways.
     
     #a few nodes...

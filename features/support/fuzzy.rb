@@ -22,8 +22,8 @@ class FuzzyMatch
   end
   
   def self.match_location got, want
-    match( got[0], "#{want.lat} ~0.002%" ) &&
-    match( got[1], "#{want.lon} ~0.002%" )
+    match( got[0], "#{want.lat} ~0.0025%" ) &&
+    match( got[1], "#{want.lon} ~0.0025%" )
   end
   
 end

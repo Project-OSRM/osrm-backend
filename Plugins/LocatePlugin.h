@@ -21,13 +21,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef LOCATEPLUGIN_H_
 #define LOCATEPLUGIN_H_
 
-#include <fstream>
-
-#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "BasePlugin.h"
 #include "RouteParameters.h"
-#include "../Util/StringUtil.h"
 #include "../DataStructures/NodeInformationHelpDesk.h"
+#include "../Server/DataStructures/QueryObjectsStorage.h"
+#include "../Util/StringUtil.h"
+
+#include <fstream>
 
 /*
  * This Plugin locates the nearest node in the road network for a given coordinate.

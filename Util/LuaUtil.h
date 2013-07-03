@@ -28,7 +28,7 @@ extern "C" {
 }
 
 #include <boost/filesystem/convenience.hpp>
-
+#include <luabind/luabind.hpp>
 #include <iostream>
 #include <string>
 
