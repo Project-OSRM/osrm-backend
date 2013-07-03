@@ -42,7 +42,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 class OSRM : boost::noncopyable {
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
-
+    QueryObjectsStorage * objects;
 public:
     OSRM(const char * server_ini_path);
     ~OSRM();

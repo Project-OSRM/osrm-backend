@@ -22,7 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM::OSRM(const char * server_ini_path) {
     BaseConfiguration serverConfig(server_ini_path);
-    QueryObjectsStorage * objects = new QueryObjectsStorage(
+    objects = new QueryObjectsStorage(
         serverConfig.GetParameter("hsgrData"),
         serverConfig.GetParameter("ramIndex"),
         serverConfig.GetParameter("fileIndex"),
