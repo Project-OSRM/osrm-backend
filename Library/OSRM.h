@@ -31,7 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Plugins/ViaRoutePlugin.h"
 #include "../Plugins/RouteParameters.h"
 #include "../Util/BaseConfiguration.h"
-#include "../Server/BasicDataStructures.h"
+#include "../Server/BasicDatastructures.h"
 
 
 #include <boost/assert.hpp>
