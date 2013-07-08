@@ -31,14 +31,14 @@ struct _Restriction {
     NodeID toNode;
     struct Bits { //mostly unused
         Bits() : isOnly(false), unused1(false), unused2(false), unused3(false), unused4(false), unused5(false), unused6(false), unused7(false) {}
-        char isOnly:1;
-        char unused1:1;
-        char unused2:1;
-        char unused3:1;
-        char unused4:1;
-        char unused5:1;
-        char unused6:1;
-        char unused7:1;
+        bool isOnly:1;
+        bool unused1:1;
+        bool unused2:1;
+        bool unused3:1;
+        bool unused4:1;
+        bool unused5:1;
+        bool unused6:1;
+        bool unused7:1;
     } flags;
 
     _Restriction(NodeID vn) : viaNode(vn), fromNode(UINT_MAX), toNode(UINT_MAX) { }
