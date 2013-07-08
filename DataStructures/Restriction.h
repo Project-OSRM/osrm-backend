@@ -30,7 +30,18 @@ struct _Restriction {
     NodeID fromNode;
     NodeID toNode;
     struct Bits { //mostly unused
-        Bits() : isOnly(false), unused1(false), unused2(false), unused3(false), unused4(false), unused5(false), unused6(false), unused7(false) {}
+        Bits() :
+            isOnly(false),
+            unused1(false),
+            unused2(false),
+            unused3(false),
+            unused4(false),
+            unused5(false),
+            unused6(false),
+            unused7(false) {
+
+        }
+
         bool isOnly:1;
         bool unused1:1;
         bool unused2:1;
@@ -41,13 +52,20 @@ struct _Restriction {
         bool unused7:1;
     } flags;
 
-    _Restriction(NodeID vn) : viaNode(vn), fromNode(UINT_MAX), toNode(UINT_MAX) { }
-    _Restriction(bool isOnly = false) : viaNode(UINT_MAX), fromNode(UINT_MAX), toNode(UINT_MAX) {
+    _Restriction(NodeID vn) :
+        viaNode(vn),
+        fromNode(UINT_MAX),
+        toNode(UINT_MAX) {
+
+    }
+
+    _Restriction(const bool isOnly = false) :
+        viaNode(UINT_MAX),
+        fromNode(UINT_MAX),
+        toNode(UINT_MAX) {
         flags.isOnly = isOnly;
     }
 };
-
-inline bool CmpRestrictionByFrom ( _Restriction a, _Restriction b) { return (a.fromNode < b.fromNode);  }
 
 struct _RawRestrictionContainer {
     _Restriction restriction;
@@ -66,7 +84,7 @@ struct _RawRestrictionContainer {
     }
 };
 
-struct CmpRestrictionContainerByFrom: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
+struct CmpRestrictionContainerByFrom : public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
     typedef _RawRestrictionContainer value_type;
     bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
         return a.fromWay < b.fromWay;
@@ -91,7 +109,5 @@ struct CmpRestrictionContainerByTo: public std::binary_function<_RawRestrictionC
         return _RawRestrictionContainer::min_value();
     }
 };
-
-
 
 #endif /* RESTRICTION_H_ */
