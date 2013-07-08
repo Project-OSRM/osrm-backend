@@ -40,7 +40,7 @@ OSRM::OSRM(const char * server_ini_path) {
 }
 
 OSRM::~OSRM() {
-    BOOST_FOREACH(PluginMap::value_type plugin_pointer, pluginMap) {
+    BOOST_FOREACH(PluginMap::value_type & plugin_pointer, pluginMap) {
         delete plugin_pointer.second;
     }
     delete objects;
@@ -52,7 +52,7 @@ void OSRM::RegisterPlugin(BasePlugin * plugin) {
 }
 
 void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
-    PluginMap::const_iterator iter = pluginMap.find(route_parameters.service);
+    const PluginMap::const_iterator & iter = pluginMap.find(route_parameters.service);
     if(pluginMap.end() != iter) {
         reply.status = http::Reply::ok;
         iter->second->HandleRequest(route_parameters, reply );
