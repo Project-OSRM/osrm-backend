@@ -91,7 +91,7 @@ public:
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
 //                INFO("Decoding hint: " << routeParameters.hints[i] << " for location index " << i);
-                DecodeObjectFromBase64(phantomNodeVector[i], routeParameters.hints[i]);
+                DecodeObjectFromBase64(routeParameters.hints[i], phantomNodeVector[i]);
                 if(phantomNodeVector[i].isValid(nodeHelpDesk->getNumberOfNodes())) {
 //                    INFO("Decoded hint " << i << " successfully");
                     continue;
