@@ -30,38 +30,63 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 typedef
         boost::archive::iterators::base64_from_binary<
-        boost::archive::iterators::transform_width<std::string::const_iterator, 6, 8>
-> base64_t;
+            boost::archive::iterators::transform_width<const char *, 6, 8>
+        > base64_t;
 
 typedef
         boost::archive::iterators::transform_width<
-        boost::archive::iterators::binary_from_base64<std::string::const_iterator>, 8, 6
+            boost::archive::iterators::binary_from_base64<
+            std::string::const_iterator>, 8, 6
         > binary_t;
 
-template<class ToEncodeT>
-static void EncodeObjectToBase64(const ToEncodeT & object, std::string& encoded) {
-    encoded.clear();
-    char * pointerToOriginalObject = (char *)&object;
-    encoded = std::string(base64_t(pointerToOriginalObject), base64_t(pointerToOriginalObject+sizeof(ToEncodeT)));
-    //replace "+" with "-" and "/" with "_"
+template<class ObjectT>
+static void EncodeObjectToBase64(const ObjectT & object, std::string& encoded) {
+    const char * char_ptr_to_object = (const char *)&object;
+    std::vector<unsigned char> data(sizeof(object));
+    std::copy(
+        char_ptr_to_object,
+        char_ptr_to_object + sizeof(ObjectT),
+        data.begin()
+    );
+
+    unsigned char number_of_padded_chars = 0; // is in {0,1,2};
+    while(data.size() % 3 != 0)  {
+      ++number_of_padded_chars;
+      data.push_back(0x00);
+    }
+
+    BOOST_ASSERT_MSG(
+        0 == data.size() % 3,
+        "base64 input data size is not a multiple of 3!"
+    );
+    encoded.resize(sizeof(ObjectT));
+    encoded.assign(
+        base64_t( &data[0] ),
+        base64_t( &data[0] + (data.size() - number_of_padded_chars) )
+    );
     replaceAll(encoded, "+", "-");
     replaceAll(encoded, "/", "_");
 }
 
-template<class ToEncodeT>
-static void DecodeObjectFromBase64(ToEncodeT & object, const std::string& _encoded) {
+template<class ObjectT>
+static void DecodeObjectFromBase64(const std::string& input, ObjectT & object) {
     try {
-    	std::string encoded(_encoded);
+    	std::string encoded(input);
         //replace "-" with "+" and "_" with "/"
         replaceAll(encoded, "-", "+");
         replaceAll(encoded, "_", "/");
-        char * pointerToDecodedObject = (char *)&object;
-        std::string dec(binary_t(encoded.begin()), binary_t(encoded.begin() + encoded.length() - 1));
-        std::copy ( dec.begin(), dec.end(), pointerToDecodedObject );
-    } catch(...) {}
+
+        std::copy (
+            binary_t( encoded.begin() ),
+            binary_t( encoded.begin() + encoded.length() - 1),
+            (char *)&object
+        );
+
+    } catch(...) { }
 }
 
 #endif /* OBJECTTOBASE64_H_ */
