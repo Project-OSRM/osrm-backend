@@ -21,6 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "OSRM.h"
 
 OSRM::OSRM(const char * server_ini_path) {
+    if( !testDataFile(server_ini_path) ){
+        throw OSRMException("server.ini not found");
+    }
+
     BaseConfiguration serverConfig(server_ini_path);
     objects = new QueryObjectsStorage(
         serverConfig.GetParameter("hsgrData"),

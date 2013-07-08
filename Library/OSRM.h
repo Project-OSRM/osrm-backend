@@ -31,14 +31,25 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Plugins/ViaRoutePlugin.h"
 #include "../Plugins/RouteParameters.h"
 #include "../Util/BaseConfiguration.h"
+#include "../Util/InputFileUtil.h"
 #include "../Server/BasicDatastructures.h"
-
 
 #include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
+#include <exception>
 #include <vector>
+
+class OSRMException: public std::exception {
+public:
+    OSRMException(const char * message) : message(message) {}
+private:
+    virtual const char* what() const throw() {
+        return message;
+    }
+    const char * message;
+};
 
 class OSRM : boost::noncopyable {
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
