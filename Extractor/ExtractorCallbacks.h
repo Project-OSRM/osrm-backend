@@ -31,6 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/regex.hpp>
 
 #include "ExtractionContainers.h"
+#include "ExtractionHelperFunctions.h"
 #include "ExtractorStructs.h"
 
 class ExtractorCallbacks{

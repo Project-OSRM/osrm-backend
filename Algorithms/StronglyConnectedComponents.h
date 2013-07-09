@@ -16,25 +16,15 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
+
+Strongly connected components using Tarjan's Algorithm
+
  */
-
-
 
 #ifndef STRONGLYCONNECTEDCOMPONENTS_H_
 #define STRONGLYCONNECTEDCOMPONENTS_H_
 
-#include <cassert>
-
-#include <stack>
-#include <vector>
-
-#include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/unordered_map.hpp>
-
-#include <gdal/gdal.h>
-#include <gdal/ogrsf_frmts.h>
-
+#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/ImportEdge.h"
@@ -43,11 +33,34 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/TurnInstructions.h"
 
-// Strongly connected components using Tarjan's Algorithm
+#include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
+#include <boost/integer.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/unordered_map.hpp>
+
+#ifdef __APPLE__
+    #include <gdal.h>
+    #include <ogrsf_frmts.h>
+#else
+    #include <gdal/gdal.h>
+    #include <gdal/ogrsf_frmts.h>
+#endif
+#include <cassert>
+#include <stack>
+#include <vector>
 
 class TarjanSCC {
 private:
-    struct _NodeBasedEdgeData {
+
+    struct TarjanNode {
+        TarjanNode() : index(UINT_MAX), lowlink(UINT_MAX), onStack(false) {}
+        unsigned index;
+        unsigned lowlink;
+        bool onStack;
+    };
+
+    struct TarjanEdgeData {
         int distance;
         unsigned edgeBasedNodeID;
         unsigned nameID:31;
@@ -58,25 +71,31 @@ private:
         bool backward:1;
         bool roundabout:1;
         bool ignoreInGrid:1;
+        bool reversedEdge:1;
     };
 
-    typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
-    typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
-    std::vector<NodeInfo>               inputNodeInfoList;
-    unsigned numberOfTurnRestrictions;
-    boost::shared_ptr<_NodeBasedDynamicGraph>   _nodeBasedGraph;
-    boost::unordered_map<NodeID, bool>          _barrierNodes;
-    boost::unordered_map<NodeID, bool>          _trafficLights;
+    struct TarjanStackFrame {
+        explicit TarjanStackFrame(NodeID _v, NodeID p) : v(_v), parent(p) {}
+        NodeID v;
+        NodeID parent;
+    };
 
+    typedef DynamicGraph<TarjanEdgeData> TarjanDynamicGraph;
+    typedef TarjanDynamicGraph::InputEdge TarjanEdge;
     typedef std::pair<NodeID, NodeID> RestrictionSource;
     typedef std::pair<NodeID, bool>   RestrictionTarget;
     typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
     typedef boost::unordered_map<RestrictionSource, unsigned > RestrictionMap;
+
+    std::vector<NodeInfo>               inputNodeInfoList;
+    unsigned numberOfTurnRestrictions;
+    boost::shared_ptr<TarjanDynamicGraph>   _nodeBasedGraph;
+    boost::unordered_map<NodeID, bool>          _barrierNodes;
+    boost::unordered_map<NodeID, bool>          _trafficLights;
+
     std::vector<EmanatingRestrictionsVector> _restrictionBucketVector;
     RestrictionMap _restrictionMap;
 
-
-public:
     struct EdgeBasedNode {
         bool operator<(const EdgeBasedNode & other) const {
             return other.id < id;
@@ -95,21 +114,7 @@ public:
         bool ignoreInGrid:1;
     };
 
-private:
     DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
-
-    struct TarjanNode {
-        TarjanNode() : index(UINT_MAX), lowlink(UINT_MAX), onStack(false) {}
-        unsigned index;
-        unsigned lowlink;
-        bool onStack;
-    };
-
-    struct TarjanStackFrame {
-        explicit TarjanStackFrame(NodeID _v, NodeID p) : v(_v), parent(p) {}
-        NodeID v;
-        NodeID parent;
-    };
 public:
     TarjanSCC(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
         BOOST_FOREACH(_Restriction & restriction, irs) {
@@ -141,10 +146,10 @@ public:
             _trafficLights[id] = true;
         }
 
-        DeallocatingVector< _NodeBasedEdge > edges;
+        DeallocatingVector< TarjanEdge > edges;
         for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
 
-            _NodeBasedEdge edge;
+            TarjanEdge edge;
             if(!i->isForward()) {
                 edge.source = i->target();
                 edge.target = i->source();
@@ -168,21 +173,28 @@ public:
             edge.data.type = i->type();
             edge.data.isAccessRestricted = i->isAccessRestricted();
             edge.data.edgeBasedNodeID = edges.size();
+            edge.data.reversedEdge = false;
             edges.push_back( edge );
             if( edge.data.backward ) {
                 std::swap( edge.source, edge.target );
                 edge.data.forward = i->isBackward();
                 edge.data.backward = i->isForward();
                 edge.data.edgeBasedNodeID = edges.size();
+                edge.data.reversedEdge = true;
                 edges.push_back( edge );
             }
         }
         std::vector<NodeBasedEdge>().swap(inputEdges);
         std::sort( edges.begin(), edges.end() );
-        _nodeBasedGraph = boost::make_shared<_NodeBasedDynamicGraph>( nodes, edges );
+        _nodeBasedGraph = boost::make_shared<TarjanDynamicGraph>( nodes, edges );
     }
 
     void Run() {
+        //remove files from previous run if exist
+        DeleteFileIfExists("component.dbf");
+        DeleteFileIfExists("component.shx");
+        DeleteFileIfExists("component.shp");
+
         Percent p(_nodeBasedGraph->GetNumberOfNodes());
 
         const char *pszDriverName = "ESRI Shapefile";
@@ -247,8 +259,8 @@ public:
 //                    INFO("pushing " << v << " onto tarjan stack, idx[" << v << "]=" << tarjanNodes[v].index << ", lowlink["<< v << "]=" << tarjanNodes[v].lowlink);
 
                     //Traverse outgoing edges
-                    for(_NodeBasedDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
-                        _NodeBasedDynamicGraph::NodeIterator vprime = _nodeBasedGraph->GetTarget(e2);
+                    for(TarjanDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
+                        TarjanDynamicGraph::NodeIterator vprime = _nodeBasedGraph->GetTarget(e2);
 //                        INFO("traversing edge (" << v << "," << vprime << ")");
                         if(UINT_MAX == tarjanNodes[vprime].index) {
 
@@ -306,16 +318,28 @@ public:
                 ++singleCounter;
         }
         INFO("identified " << singleCounter << " SCCs of size 1");
-
+        uint64_t total_network_distance = 0;
         p.reinit(_nodeBasedGraph->GetNumberOfNodes());
-        for(_NodeBasedDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
-            for(_NodeBasedDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
-                _NodeBasedDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
+        for(TarjanDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
+            p.printIncrement();
+            for(TarjanDynamicGraph::EdgeIterator e1 = _nodeBasedGraph->BeginEdges(u); e1 < _nodeBasedGraph->EndEdges(u); ++e1) {
+                if(_nodeBasedGraph->GetEdgeData(e1).reversedEdge) {
+                    continue;
+                }
+                TarjanDynamicGraph::NodeIterator v = _nodeBasedGraph->GetTarget(e1);
+
+                total_network_distance += 100*ApproximateDistance(
+                        inputNodeInfoList[u].lat,
+                        inputNodeInfoList[u].lon,
+                        inputNodeInfoList[v].lat,
+                        inputNodeInfoList[v].lon
+                );
 
                 if(_nodeBasedGraph->GetEdgeData(e1).type != SHRT_MAX) {
                     assert(e1 != UINT_MAX);
                     assert(u != UINT_MAX);
                     assert(v != UINT_MAX);
+
                     //edges that end on bollard nodes may actually be in two distinct components
                     if(std::min(vectorOfComponentSizes[componentsIndex[u]], vectorOfComponentSizes[componentsIndex[v]]) < 10) {
 
@@ -323,7 +347,6 @@ public:
                         OGRLineString lineString;
                         lineString.addPoint(inputNodeInfoList[u].lon/100000., inputNodeInfoList[u].lat/100000.);
                         lineString.addPoint(inputNodeInfoList[v].lon/100000., inputNodeInfoList[v].lat/100000.);
-
                         OGRFeature *poFeature;
                         poFeature = OGRFeature::CreateFeature( poLayer->GetLayerDefn() );
                         poFeature->SetGeometry( &lineString );
@@ -339,7 +362,7 @@ public:
         OGRDataSource::DestroyDataSource( poDS );
         std::vector<NodeID>().swap(vectorOfComponentSizes);
         std::vector<NodeID>().swap(componentsIndex);
-
+        INFO("total network distance: " << total_network_distance/100/1000. << " km");
     }
 private:
     unsigned CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const {
@@ -367,6 +390,12 @@ private:
             }
         }
         return false;
+    }
+
+    void DeleteFileIfExists(const std::string file_name) const {
+        if (boost::filesystem::exists(file_name) ) {
+            boost::filesystem::remove(file_name);
+        }
     }
 };
 

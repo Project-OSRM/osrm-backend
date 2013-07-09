@@ -21,13 +21,14 @@
 #ifndef PBFPARSER_H_
 #define PBFPARSER_H_
 
+#include "BaseParser.h"
+
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ConcurrentQueue.h"
 #include "../Util/MachineInfo.h"
 #include "../Util/OpenMPWrapper.h"
 #include "../typedefs.h"
 
-#include "BaseParser.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/ref.hpp>
@@ -36,8 +37,6 @@
 #include <osmpbf/osmformat.pb.h>
 
 #include <zlib.h>
-
-
 
 class PBFParser : public BaseParser {
 

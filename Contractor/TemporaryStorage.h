@@ -24,6 +24,7 @@
 #include <vector>
 #include <fstream>
 
+#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/shared_ptr.hpp>

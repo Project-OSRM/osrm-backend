@@ -21,11 +21,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef JSON_DESCRIPTOR_H_
 #define JSON_DESCRIPTOR_H_
 
-#include <algorithm>
-
-#include <boost/lambda/lambda.hpp>
-#include <boost/bind.hpp>
-
 #include "BaseDescriptor.h"
 #include "DescriptionFactory.h"
 #include "../Algorithms/ObjectToBase64.h"
@@ -34,6 +29,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/Azimuth.h"
 #include "../Util/StringUtil.h"
 
+#include <boost/bind.hpp>
+#include <boost/lambda/lambda.hpp>
+
+#include <algorithm>
+
 class JSONDescriptor : public BaseDescriptor{
 private:
     _DescriptorConfig config;
@@ -41,7 +41,12 @@ private:
     DescriptionFactory alternateDescriptionFactory;
     _Coordinate current;
     unsigned numberOfEnteredRestrictedAreas;
-    struct {
+    struct RoundAbout{
+        RoundAbout() :
+            startIndex(INT_MAX),
+            nameID(INT_MAX),
+            leaveAtExit(INT_MAX)
+        {}
         int startIndex;
         int nameID;
         int leaveAtExit;

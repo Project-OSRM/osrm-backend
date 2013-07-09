@@ -18,8 +18,6 @@
  or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#include <boost/foreach.hpp>
-
 #include "TemporaryStorage.h"
 
 TemporaryStorage::TemporaryStorage() {

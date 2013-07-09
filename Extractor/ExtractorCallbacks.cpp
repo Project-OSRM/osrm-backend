@@ -40,7 +40,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 #include "ExtractorCallbacks.h"
-#include "ExtractionHelperFunctions.h"
 
 ExtractorCallbacks::ExtractorCallbacks() {externalMemory = NULL; stringMap = NULL; }
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers * ext, StringMap * strMap) {

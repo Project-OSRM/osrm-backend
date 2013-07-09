@@ -21,8 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef PERCENT_H
 #define PERCENT_H
 
+#include "../Util/OpenMPWrapper.h"
 #include <iostream>
-
 
 class Percent
 {

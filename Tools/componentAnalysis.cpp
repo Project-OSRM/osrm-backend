@@ -18,23 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#define VERBOSE(x) x
-#define VERBOSE2(x)
-
-#ifdef NDEBUG
-#undef VERBOSE
-#undef VERBOSE2
-#endif
-
-#include <boost/foreach.hpp>
-
-#include <fstream>
-#include <istream>
-#include <iostream>
-#include <cstring>
-#include <string>
-#include <vector>
-
 #include "../typedefs.h"
 #include "../Algorithms/StronglyConnectedComponents.h"
 #include "../DataStructures/BinaryHeap.h"
@@ -46,57 +29,93 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/InputFileUtil.h"
 #include "../Util/GraphLoader.h"
 
-using namespace std;
+#include <boost/foreach.hpp>
+#include <fstream>
+#include <istream>
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <vector>
 
-typedef QueryEdge::EdgeData EdgeData;
+typedef QueryEdge::EdgeData               EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
-typedef BaseConfiguration ContractorConfiguration;
+typedef BaseConfiguration                 ContractorConfiguration;
 
-std::vector<NodeInfo> internalToExternalNodeMapping;
-std::vector<_Restriction> inputRestrictions;
-std::vector<NodeID> bollardNodes;
-std::vector<NodeID> trafficLightNodes;
+std::vector<NodeInfo>       internal_to_external_node_map;
+std::vector<_Restriction>   restrictions_vector;
+std::vector<NodeID>         bollard_node_IDs_vector;
+std::vector<NodeID>         traffic_light_node_IDs_vector;
 
-int main (int argc, char *argv[]) {
-    if(argc < 3) {
-        ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions>");
+int main (int argument_count, char *argument_values[]) {
+    if(argument_count < 3) {
+        ERR("usage:\n" << argument_values[0] << " <osrm> <osrm.restrictions>");
     }
-    std::string SRTM_ROOT;
 
-    INFO("Using restrictions from file: " << argv[2]);
-    std::ifstream restrictionsInstream(argv[2], ios::binary);
-    if(!restrictionsInstream.good()) {
+    INFO("Using restrictions from file: " << argument_values[2]);
+    std::ifstream restriction_ifstream(argument_values[2], std::ios::binary);
+    if(!restriction_ifstream.good()) {
         ERR("Could not access <osrm-restrictions> files");
     }
-    _Restriction restriction;
-    unsigned usableRestrictionsCounter(0);
-    restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
-    inputRestrictions.resize(usableRestrictionsCounter);
-    restrictionsInstream.read((char *)&(inputRestrictions[0]), usableRestrictionsCounter*sizeof(_Restriction));
-    restrictionsInstream.close();
+    uint32_t usable_restriction_count = 0;
+    restriction_ifstream.read(
+            (char*)&usable_restriction_count,
+            sizeof(uint32_t)
+    );
+    restrictions_vector.resize(usable_restriction_count);
 
-    std::ifstream in;
-    in.open (argv[1], std::ifstream::in | std::ifstream::binary);
-    if (!in.is_open()) {
-        ERR("Cannot open " << argv[1]);
+    restriction_ifstream.read(
+            (char *)&(restrictions_vector[0]),
+            usable_restriction_count*sizeof(_Restriction)
+    );
+    restriction_ifstream.close();
+
+    std::ifstream input_stream;
+    input_stream.open(
+            argument_values[1],
+            std::ifstream::in | std::ifstream::binary
+    );
+
+    if (!input_stream.is_open()) {
+        ERR("Cannot open " << argument_values[1]);
     }
 
-    std::vector<ImportEdge> edgeList;
-    NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
-    in.close();
-    INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
+    std::vector<ImportEdge> edge_list;
+    NodeID node_based_node_count = readBinaryOSRMGraphFromStream(
+            input_stream,
+            edge_list,
+            bollard_node_IDs_vector,
+            traffic_light_node_IDs_vector,
+            &internal_to_external_node_map,
+            restrictions_vector
+    );
+    input_stream.close();
+
+    INFO(
+            restrictions_vector.size() << " restrictions, " <<
+            bollard_node_IDs_vector.size() << " bollard nodes, " <<
+            traffic_light_node_IDs_vector.size() << " traffic lights"
+    );
 
     /***
      * Building an edge-expanded graph from node-based input an turn restrictions
      */
 
     INFO("Starting SCC graph traversal");
-    TarjanSCC * tarjan = new TarjanSCC (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping);
-    std::vector<ImportEdge>().swap(edgeList);
+    TarjanSCC * tarjan = new TarjanSCC (
+            node_based_node_count,
+            edge_list,
+            bollard_node_IDs_vector,
+            traffic_light_node_IDs_vector,
+            restrictions_vector,
+            internal_to_external_node_map
+    );
+    std::vector<ImportEdge>().swap(edge_list);
+
     tarjan->Run();
-    std::vector<_Restriction>().swap(inputRestrictions);
-    std::vector<NodeID>().swap(bollardNodes);
-    std::vector<NodeID>().swap(trafficLightNodes);
+
+    std::vector<_Restriction>().swap(restrictions_vector);
+    std::vector<NodeID>().swap(bollard_node_IDs_vector);
+    std::vector<NodeID>().swap(traffic_light_node_IDs_vector);
     INFO("finished component analysis");
     return 0;
 }

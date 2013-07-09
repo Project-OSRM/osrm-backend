@@ -21,15 +21,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef NearestPlugin_H_
 #define NearestPlugin_H_
 
-#include <fstream>
-
 #include "BasePlugin.h"
 #include "RouteParameters.h"
 
-#include "../Server/DataStructures/QueryObjectsStorage.h"
-
 #include "../DataStructures/NodeInformationHelpDesk.h"
+#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
+
+#include <fstream>
 
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.

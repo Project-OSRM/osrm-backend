@@ -23,7 +23,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "NodeCoords.h"
 #include "PhantomNodes.h"
-#include "QueryEdge.h"
 #include "StaticRTree.h"
 #include "../Contractor/EdgeBasedGraphFactory.h"
 #include "../typedefs.h"
@@ -82,7 +81,10 @@ public:
 
         OriginalEdgeData deserialized_originalEdgeData;
         for(unsigned i = 0; i < numberOfOrigEdges; ++i) {
-        	edgesInStream.read((char*)&(deserialized_originalEdgeData), sizeof(OriginalEdgeData));
+        	edgesInStream.read(
+                (char*)&(deserialized_originalEdgeData),
+                sizeof(OriginalEdgeData)
+            );
             origEdgeData_viaNode[i] = deserialized_originalEdgeData.viaNode;
             origEdgeData_nameID[i] 	= deserialized_originalEdgeData.nameID;
             origEdgeData_turnInstruction[i] = deserialized_originalEdgeData.turnInstruction;
@@ -124,7 +126,10 @@ public:
             const unsigned zoom_level = 18
     ) const {
         PhantomNode resulting_phantom_node;
-        bool foundNode = FindPhantomNodeForCoordinate(input_coordinate, resulting_phantom_node, zoom_level);
+        bool foundNode = FindPhantomNodeForCoordinate(
+            input_coordinate,
+            resulting_phantom_node, zoom_level
+        );
         result = resulting_phantom_node.location;
         return foundNode;
     }

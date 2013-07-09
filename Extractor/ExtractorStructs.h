@@ -21,13 +21,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EXTRACTORSTRUCTS_H_
 #define EXTRACTORSTRUCTS_H_
 
-#include <climits>
-#include <string>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
-#include <boost/regex.hpp>
-#include <boost/unordered_map.hpp>
 
 #include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
@@ -37,6 +30,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/TimingUtil.h"
 #include "../typedefs.h"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
+#include <boost/unordered_map.hpp>
+
+#include <climits>
+#include <string>
+
 typedef boost::unordered_map<std::string, NodeID > StringMap;
 typedef boost::unordered_map<std::string, std::pair<int, short> > StringToIntPairMap;
 
@@ -44,7 +45,7 @@ struct ExtractionWay {
     ExtractionWay() {
 		Clear();
     }
-	
+
 	inline void Clear(){
 		id = UINT_MAX;
 		nameID = UINT_MAX;

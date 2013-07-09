@@ -21,9 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef SEGMENTINFORMATION_H_
 #define SEGMENTINFORMATION_H_
 
-#include <climits>
-
 #include "TurnInstructions.h"
+#include "../typedefs.h"
+
+#include <climits>
 
 struct SegmentInformation {
     _Coordinate location;

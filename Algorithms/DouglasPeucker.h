@@ -21,12 +21,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef DOUGLASPEUCKER_H_
 #define DOUGLASPEUCKER_H_
 
+#include "../DataStructures/Coordinate.h"
+
 #include <cassert>
 #include <cmath>
 #include <cfloat>
 #include <stack>
-
-#include "../DataStructures/Coordinate.h"
+#include <vector>
 
 /*This class object computes the bitvector of indicating generalized input points
  * according to the (Ramer-)Douglas-Peucker algorithm.

@@ -18,18 +18,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-
-
 #ifndef EXTRACTIONHELPERFUNCTIONS_H_
 #define EXTRACTIONHELPERFUNCTIONS_H_
+
+#include "../Util/StringUtil.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string_regex.hpp>
 #include <boost/regex.hpp>
 #include <climits>
-
-
-#include "../Util/StringUtil.h"
 
 namespace qi = boost::spirit::qi;
 

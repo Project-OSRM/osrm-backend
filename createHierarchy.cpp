@@ -63,14 +63,14 @@ int main (int argc, char *argv[]) {
         }
 
         double startupTime = get_timestamp();
-        unsigned numberOfThreads = omp_get_num_procs();
+        unsigned number_of_threads = omp_get_num_procs();
         if(testDataFile("contractor.ini")) {
             ContractorConfiguration contractorConfig("contractor.ini");
             unsigned rawNumber = stringToInt(contractorConfig.GetParameter("Threads"));
-            if(rawNumber != 0 && rawNumber <= numberOfThreads)
-                numberOfThreads = rawNumber;
+            if(rawNumber != 0 && rawNumber <= number_of_threads)
+                number_of_threads = rawNumber;
         }
-        omp_set_num_threads(numberOfThreads);
+        omp_set_num_threads(number_of_threads);
 
         INFO("Using restrictions from file: " << argv[2]);
         std::ifstream restrictionsInstream(argv[2], std::ios::binary);

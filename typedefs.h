@@ -21,7 +21,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 
-#include <cmath>
 #include <climits>
 #include <cstdlib>
 
