@@ -62,22 +62,62 @@ static inline char* printInt( char* buffer, int value ) {
 }
 
 static inline void intToString(const int value, std::string & output) {
-    // The largest 32-bit integer is 4294967295, that is 10 chars
-    // On the safe side, add 1 for sign, and 1 for trailing zero
     output.clear();
     std::back_insert_iterator<std::string> sink(output);
     boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
 }
 
+static inline void int64ToString(const int64_t value, std::string & output) {
+    output.clear();
+    std::back_insert_iterator<std::string> sink(output);
+    boost::spirit::karma::generate(sink, boost::spirit::karma::long_long, value);
+}
+
 static inline int stringToInt(const std::string& input) {
-    std::string::const_iterator realBeginOfNumber = input.begin();
+    std::string::const_iterator first_digit = input.begin();
     //Delete any trailing white-spaces
-    while(realBeginOfNumber != input.end() && std::isspace(*realBeginOfNumber))
-        ++realBeginOfNumber;
-    int value = 0; // 2
-    boost::spirit::qi::parse(realBeginOfNumber, input.end(), boost::spirit::int_, value); // 3
+    while(first_digit != input.end() && std::isspace(*first_digit)) {
+        ++first_digit;
+    }
+    int value = 0;
+    boost::spirit::qi::parse(
+        first_digit,
+        input.end(),
+        boost::spirit::int_, value
+    );
     return value;
 }
+
+static inline unsigned stringToUint(const std::string& input) {
+    std::string::const_iterator first_digit = input.begin();
+    //Delete any trailing white-spaces
+    while(first_digit != input.end() && std::isspace(*first_digit)) {
+        ++first_digit;
+    }
+    int value = 0;
+    boost::spirit::qi::parse(
+        first_digit,
+        input.end(),
+        boost::spirit::uint_, value
+    );
+    return value;
+}
+
+static inline uint64_t stringToInt64(const std::string& input) {
+    std::string::const_iterator first_digit = input.begin();
+    //Delete any trailing white-spaces
+    while(first_digit != input.end() && std::isspace(*first_digit)) {
+        ++first_digit;
+    }
+    uint64_t value = 0;
+    boost::spirit::qi::parse(
+        first_digit,
+        input.end(),
+        boost::spirit::long_long, value
+    );
+    return value;
+}
+
 
 static inline void doubleToString(const double value, std::string & output){
     output.clear();

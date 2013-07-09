@@ -129,13 +129,13 @@ _RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
 					xmlChar * type = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "type" );
 
 					if(xmlStrEqual(role, (const xmlChar *) "to") && xmlStrEqual(type, (const xmlChar *) "way")) {
-						restriction.toWay = atoi((const char*) ref);
+						restriction.toWay = stringToUint((const char*) ref);
 					}
 					if(xmlStrEqual(role, (const xmlChar *) "from") && xmlStrEqual(type, (const xmlChar *) "way")) {
-						restriction.fromWay = atoi((const char*) ref);
+						restriction.fromWay = stringToUint((const char*) ref);
 					}
 					if(xmlStrEqual(role, (const xmlChar *) "via") && xmlStrEqual(type, (const xmlChar *) "node")) {
-						restriction.restriction.viaNode = atoi((const char*) ref);
+						restriction.restriction.viaNode = stringToUint((const char*) ref);
 					}
 
 					if(NULL != type) {
@@ -176,7 +176,7 @@ ExtractionWay XMLParser::_ReadXMLWay() {
 
 			if ( depth == childDepth && childType == 15 && xmlStrEqual( childName, ( const xmlChar* ) "way" ) == 1 ) {
 				xmlChar* id = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "id" );
-				way.id = atoi((char*)id);
+				way.id = stringToUint((char*)id);
 				xmlFree(id);
 				xmlFree( childName );
 				break;
@@ -202,7 +202,7 @@ ExtractionWay XMLParser::_ReadXMLWay() {
 			} else if ( xmlStrEqual( childName, ( const xmlChar* ) "nd" ) == 1 ) {
 				xmlChar* ref = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "ref" );
 				if ( ref != NULL ) {
-					way.path.push_back( atoi(( const char* ) ref ) );
+					way.path.push_back( stringToUint(( const char* ) ref ) );
 					xmlFree( ref );
 				}
 			}
@@ -227,7 +227,7 @@ ImportNode XMLParser::_ReadXMLNode() {
 	}
 	attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "id" );
 	if ( attribute != NULL ) {
-		node.id =  atoi(( const char* ) attribute );
+		node.id =  stringToUint(( const char* ) attribute );
 		xmlFree( attribute );
 	}
 
