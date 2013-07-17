@@ -1,0 +1,6 @@
+#ifndef UUID_CONFIG_H_
+#define UUID_CONFIG_H_
+
+#cmakedefine01 HAS64BITS
+
+#endif /* UUID_CONFIG_H_ */
