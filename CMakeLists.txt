@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(OSRM)
 include(FindPackageHandleStandardArgs)
 
@@ -9,13 +9,14 @@ else(IS_64_SYSTEM)
 	MESSAGE(WARNING "Compiling on a 32 bit system is unsupported!")
 endif(IS_64_SYSTEM)
 
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(BOOST_COMPONENTS filesystem regex system thread)
 
+add_library(uuid OBJECT Util/UUID.cpp)
+
 file(GLOB ExtractorGlob Extractor/*.cpp)
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
-add_executable(osrm-extract ${ExtractorSources})
+add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:uuid>)
 
 file(GLOB PrepareGlob Contractor/*.cpp)
 set(PrepareSources createHierarchy.cpp ${PrepareGlob})
@@ -71,10 +72,10 @@ if (NOT Boost_FOUND)
 endif (NOT Boost_FOUND)
 include_directories(${Boost_INCLUDE_DIRS})
 
-target_link_libraries( OSRM ${Boost_LIBRARIES})
+target_link_libraries( OSRM ${Boost_LIBRARIES} )
 target_link_libraries( osrm-extract ${Boost_LIBRARIES} )
 target_link_libraries( osrm-prepare ${Boost_LIBRARIES} )
-target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM)
+target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM )
 
 find_package ( BZip2 REQUIRED )
 include_directories(${BZIP_INCLUDE_DIRS})
