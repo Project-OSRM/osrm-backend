@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef UUID_H
 #define UUID_H
 
+#include "UUID.config.h"
+
 #include <boost/noncopyable.hpp>
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -42,6 +44,7 @@ private:
     UUID();
 	// initialize to {6ba7b810-9dad-11d1-80b4-00c04fd430c8}
     boost::uuids::uuid named_uuid;
+    bool has_64_bits;
 };
 
 #endif /* UUID_H */

@@ -23,6 +23,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 UUID::UUID() {
  	boost::uuids::name_generator gen(named_uuid);
 	named_uuid = gen(std::string(__DATE__).append(__TIME__));
+
+	has_64_bits = HAS64BITS;
 }
 
 UUID::~UUID() {
