@@ -70,6 +70,12 @@ int main (int argc, char *argv[]) {
                 file_has_pbf_format = true;
             }
         }
+        if(pos==std::string::npos) {
+            pos = output_file_name.find(".pbf");
+            if(pos!=std::string::npos) {
+                file_has_pbf_format = true;
+            }
+        }
         if(pos!=std::string::npos) {
             output_file_name.replace(pos, 8, ".osrm");
             restrictionsFileName.replace(pos, 8, ".osrm.restrictions");
