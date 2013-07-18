@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 project(OSRM)
 include(FindPackageHandleStandardArgs)
 
@@ -10,22 +10,29 @@ else(IS_64_SYSTEM)
 	MESSAGE(WARNING "Compiling on a 32 bit system is unsupported!")
 	set( HAS64BITS 0 )
 endif(IS_64_SYSTEM)
+
+file(MD5 ${CMAKE_SOURCE_DIR}/createHierarchy.cpp MD5PREPARE)
+file(MD5 ${CMAKE_SOURCE_DIR}/DataStructures/StaticRTree.h MD5RTREE)
+file(MD5 ${CMAKE_SOURCE_DIR}/DataStructures/NodeInformationHelpDesk.h MD5NODEINFO)
+file(MD5 ${CMAKE_SOURCE_DIR}/Util/GraphLoader.h MD5GRAPH)
+file(MD5 ${CMAKE_SOURCE_DIR}/Server/DataStructures/QueryObjectsStorage.cpp MD5OBJECTS)
+
 CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/Util/UUID.config.h.in ${CMAKE_SOURCE_DIR}/Util/UUID.config.h )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(BOOST_COMPONENTS filesystem regex system thread)
 
-add_library(uuid OBJECT Util/UUID.cpp)
+#add_library(uuid OBJECT Util/UUID.cpp)
 
 file(GLOB ExtractorGlob Extractor/*.cpp)
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
-add_executable(osrm-extract ${ExtractorSources} $<TARGET_OBJECTS:uuid>)
+add_executable(osrm-extract ${ExtractorSources} )
 
 file(GLOB PrepareGlob Contractor/*.cpp)
 set(PrepareSources createHierarchy.cpp ${PrepareGlob})
-add_executable(osrm-prepare ${PrepareSources} $<TARGET_OBJECTS:uuid>)
+add_executable(osrm-prepare ${PrepareSources} )
 
-add_executable(osrm-routed routed.cpp $<TARGET_OBJECTS:uuid>)
+add_executable(osrm-routed routed.cpp )
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
@@ -85,6 +92,7 @@ include_directories(${BZIP_INCLUDE_DIRS})
 target_link_libraries (osrm-extract ${BZIP2_LIBRARIES})
 
 find_package( ZLIB REQUIRED )
+include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (osrm-extract ${ZLIB_LIBRARY})
 target_link_libraries (osrm-routed ${ZLIB_LIBRARY})
 
@@ -119,6 +127,7 @@ target_link_libraries (osrm-prepare ${PROTOBUF_LIBRARY})
 
 find_package( STXXL REQUIRED )
 include_directories(${STXXL_INCLUDE_DIR})
+target_link_libraries (OSRM ${STXXL_LIBRARY})
 target_link_libraries (osrm-extract ${STXXL_LIBRARY})
 target_link_libraries (osrm-prepare ${STXXL_LIBRARY})
 
