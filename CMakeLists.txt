@@ -13,17 +13,16 @@ endif(IS_64_SYSTEM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.h
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp
   COMMAND ${CMAKE_COMMAND} -P
     ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
   DEPENDS
     ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
-    ${CMAKE_SOURCE_DIR}/Util/UUID.cpp
+    ${CMAKE_SOURCE_DIR}/Util/UUID.cpp.in
   COMMENT "Configuring UUID.cpp"
   VERBATIM)
 
-add_custom_target(UUIDConfigure ALL
-  DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.h ${CMAKE_SOURCE_DIR}/Util/GraphLoader.h)
+add_custom_target(UUIDConfigure ALL DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp )
 
 set(BOOST_COMPONENTS filesystem regex system thread)
 

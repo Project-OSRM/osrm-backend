@@ -9,4 +9,4 @@ file(MD5 ${CMAKE_SOURCE_DIR}/../DataStructures/NodeInformationHelpDesk.h MD5NODE
 file(MD5 ${CMAKE_SOURCE_DIR}/../Util/GraphLoader.h MD5GRAPH)
 file(MD5 ${CMAKE_SOURCE_DIR}/../Server/DataStructures/QueryObjectsStorage.cpp MD5OBJECTS)
 
-CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/../Util/UUID.cpp.in ${CMAKE_SOURCE_DIR}/../Util/UUID.cpp )
+CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/../Util/UUID.cpp.in ${CMAKE_SOURCE_DIR}/../Util/UUID.cpp @ONLY)
