@@ -202,7 +202,7 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     ExternalNodeMap ext2IntNodeMap;
     in >> n;
     DEBUG("Importing n = " << n << " nodes ");
-    for (NodeID i=0; i<n;++i) {
+    for (NodeID i=0; i<n; ++i) {
         in >> id >> ycoord >> xcoord;
         int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
         ext2IntNodeMap.insert(std::make_pair(id, i));
@@ -219,9 +219,9 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         int length;
         in >> source >> target >> length >> dir >> speedType;
 
-        if(dir == 3)
+        if(dir == 3) {
             dir = 0;
-
+        }
         switch(speedType) {
         case 1:
             weight = 130;
@@ -271,8 +271,9 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         }
 
         weight = length*weight/3.6;
-        if(speedType == 13)
+        if(speedType == 13) {
             weight = length;
+        }
         assert(length > 0);
         assert(weight > 0);
         if(dir <0 || dir > 2)
@@ -281,8 +282,12 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
         bool forward = true;
         bool backward = true;
-        if (dir == 1) backward = false;
-        if (dir == 2) forward = false;
+        if (dir == 1) {
+            backward = false;
+        }
+        if (dir == 2) {
+            forward = false;
+        }
 
         if(length == 0) { ERR("loaded null length edge"); }
 
