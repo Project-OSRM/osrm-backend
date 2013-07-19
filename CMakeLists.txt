@@ -13,16 +13,16 @@ endif(IS_64_SYSTEM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -P
     ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
     ${CMAKE_SOURCE_DIR}/Util/UUID.cpp.in
+  	${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
   COMMENT "Configuring UUID.cpp"
   VERBATIM)
 
-add_custom_target(UUIDConfigure ALL DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp )
+add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp )
 
 set(BOOST_COMPONENTS filesystem regex system thread)
 
