@@ -18,7 +18,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.h
     ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
   DEPENDS
     ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
-    ${CMAKE_SOURCE_DIR}/Util/UUID.h
+    ${CMAKE_SOURCE_DIR}/Util/UUID.cpp
   COMMENT "Configuring UUID.cpp"
   VERBATIM)
 

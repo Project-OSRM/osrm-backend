@@ -1,0 +1,56 @@
+/*
+    open source routing machine
+    Copyright (C) Dennis Luxen, others 2010
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
+ */
+
+#include "UUID.h"
+
+#cmakedefine01 HAS64BITS
+#cmakedefine MD5PREPARE "${MD5PREPARE}"
+#cmakedefine MD5RTREE "${MD5RTREE}"
+#cmakedefine MD5NODEINFO "${MD5NODEINFO}"
+#cmakedefine MD5GRAPH "${MD5GRAPH}"
+#cmakedefine MD5OBJECTS "${MD5OBJECTS}"
+
+UUID::UUID() : magic_number(1297240911) {
+ 	boost::uuids::name_generator gen(named_uuid);
+ 	std::string temp_string(__DATE__);
+ 	temp_string += __TIME__;
+
+ 	std::copy(MD5PREPARE, MD5PREPARE+strlen(MD5PREPARE), md5_prepare);
+ 	temp_string += md5_prepare;
+ 	std::copy(MD5RTREE, MD5RTREE+32, md5_tree);
+ 	temp_string += md5_tree;
+ 	std::copy(MD5NODEINFO, MD5NODEINFO+32, md5_nodeinfo);
+ 	temp_string += md5_nodeinfo;
+ 	std::copy(MD5GRAPH, MD5GRAPH+32, md5_graph);
+ 	temp_string += md5_graph;
+ 	std::copy(MD5OBJECTS, MD5OBJECTS+32, md5_objects);
+ 	temp_string += md5_objects;
+
+	named_uuid = gen(temp_string);
+	has_64_bits = HAS64BITS;
+}
+
+UUID::~UUID() {
+
+}
+
+const boost::uuids::uuid & UUID::GetUUID() const {
+	return named_uuid;
+}
