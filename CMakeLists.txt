@@ -88,8 +88,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 target_link_libraries( OSRM ${Boost_LIBRARIES} )
 target_link_libraries( osrm-extract ${Boost_LIBRARIES} UUID )
-target_link_libraries( osrm-prepare ${Boost_LIBRARIES} )
-target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM )
+target_link_libraries( osrm-prepare ${Boost_LIBRARIES} UUID )
+target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM UUID )
 
 find_package ( BZip2 REQUIRED )
 include_directories(${BZIP_INCLUDE_DIRS})
