@@ -11,18 +11,21 @@ else(IS_64_SYSTEM)
 	set( HAS64BITS 0 )
 endif(IS_64_SYSTEM)
 
-file(MD5 ${CMAKE_SOURCE_DIR}/createHierarchy.cpp MD5PREPARE)
-file(MD5 ${CMAKE_SOURCE_DIR}/DataStructures/StaticRTree.h MD5RTREE)
-file(MD5 ${CMAKE_SOURCE_DIR}/DataStructures/NodeInformationHelpDesk.h MD5NODEINFO)
-file(MD5 ${CMAKE_SOURCE_DIR}/Util/GraphLoader.h MD5GRAPH)
-file(MD5 ${CMAKE_SOURCE_DIR}/Server/DataStructures/QueryObjectsStorage.cpp MD5OBJECTS)
-
-CONFIGURE_FILE( ${CMAKE_SOURCE_DIR}/Util/UUID.config.h.in ${CMAKE_SOURCE_DIR}/Util/UUID.config.h )
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(BOOST_COMPONENTS filesystem regex system thread)
 
-#add_library(uuid OBJECT Util/UUID.cpp)
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.config.h
+  COMMAND ${CMAKE_COMMAND} -P
+    ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
+  DEPENDS
+    ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
+    ${CMAKE_SOURCE_DIR}/Util/UUID.config.h.in
+  COMMENT "Configuring UUID.config.h"
+  VERBATIM)
+
+add_custom_target(UUIDConfigure ALL
+  DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.config.h ${CMAKE_SOURCE_DIR}/Util/GraphLoader.h)
+
+set(BOOST_COMPONENTS filesystem regex system thread)
 
 file(GLOB ExtractorGlob Extractor/*.cpp)
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
@@ -42,6 +45,8 @@ file(GLOB ServerStructureGlob Server/DataStructures/*.cpp)
 
 set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${SearchEngineSource} ${ServerStructureGlob})
 add_library(OSRM SHARED ${OSRMSources})
+add_library(UUID STATIC Util/UUID.cpp)
+add_dependencies( UUID UUIDConfigure )
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -83,7 +88,7 @@ endif (NOT Boost_FOUND)
 include_directories(${Boost_INCLUDE_DIRS})
 
 target_link_libraries( OSRM ${Boost_LIBRARIES} )
-target_link_libraries( osrm-extract ${Boost_LIBRARIES} )
+target_link_libraries( osrm-extract ${Boost_LIBRARIES} UUID )
 target_link_libraries( osrm-prepare ${Boost_LIBRARIES} )
 target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM )
 

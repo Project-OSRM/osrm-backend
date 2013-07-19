@@ -21,13 +21,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef UUID_H
 #define UUID_H
 
-#include "UUID.config.h"
-
 #include <boost/noncopyable.hpp>
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 
+#include <cstring>
+
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -42,6 +43,13 @@ public:
 	const boost::uuids::uuid & GetUUID() const;
 private:
     UUID();
+    const unsigned magic_number;
+    char md5_prepare[33];
+    char md5_tree[33];
+	char md5_nodeinfo[33];
+	char md5_graph[33];
+	char md5_objects[33];
+
 	// initialize to {6ba7b810-9dad-11d1-80b4-00c04fd430c8}
     boost::uuids::uuid named_uuid;
     bool has_64_bits;

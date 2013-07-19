@@ -36,7 +36,7 @@ Thumbs.db
 # build related files #
 #######################
 /build/
-/Util/UUID.config.h
+/Util/UUID.cpp
 
 # Eclipse related files #
 #########################
