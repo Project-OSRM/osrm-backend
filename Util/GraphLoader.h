@@ -25,6 +25,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/NodeCoords.h"
 #include "../DataStructures/Restriction.h"
+#include "../Util/UUID.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
@@ -50,6 +51,21 @@ struct _ExcessRemover {
 
 template<typename EdgeT>
 NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> &bollardNodes, std::vector<NodeID> &trafficLightNodes, std::vector<NodeInfo> * int2ExtNodeMap, std::vector<_Restriction> & inputRestrictions) {
+    const UUID uuid_orig;
+    UUID uuid_loaded;
+    in.read((char *) &uuid_loaded, sizeof(UUID));
+    if(!uuid_loaded.IsMagicNumberOK()) {
+        ERR("hsgr input file misses magic number. Check or reprocess the file");
+    }
+
+    if( uuid_loaded.TestHSGR(uuid_orig) ) {
+        WARN(
+            ".hsgr was prepared with different build.\n"
+            "Reprocess to get rid of this warning."
+            )
+    }
+
+
     NodeID n, source, target;
     EdgeID m;
     short dir;// direction (0 = open, 1 = forward, 2+ = open)

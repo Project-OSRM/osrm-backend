@@ -35,14 +35,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 //implements a singleton, i.e. there is one and only one conviguration object
 class UUID : boost::noncopyable {
 public:
-	static UUID & GetInstance() {
-		static UUID instance;
-		return instance;
-	}
+    UUID();
 	~UUID();
 	const boost::uuids::uuid & GetUUID() const;
+	const bool IsMagicNumberOK() const;
+	const bool TestHSGR(const UUID & other) const;
 private:
-    UUID();
     const unsigned magic_number;
     char md5_prepare[33];
     char md5_tree[33];

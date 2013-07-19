@@ -54,3 +54,11 @@ UUID::~UUID() {
 const boost::uuids::uuid & UUID::GetUUID() const {
 	return named_uuid;
 }
+
+const bool UUID::IsMagicNumberOK() const {
+	return 1297240911 == magic_number;
+}
+
+const bool UUID::TestHSGR(const UUID & other) const {
+	return std::equal(md5_graph, md5_graph+32, other.md5_graph);
+}
