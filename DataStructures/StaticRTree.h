@@ -45,6 +45,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <algorithm>
 #include <fstream>
 #include <queue>
+#include <string>
 #include <vector>
 
 //tuning parameters
@@ -275,17 +276,16 @@ private:
     std::vector<TreeNode> m_search_tree;
     uint64_t m_element_count;
 
-    std::string m_leaf_node_filename;
+    const std::string m_leaf_node_filename;
 public:
     //Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(
         std::vector<DataT> & input_data_vector,
-        const char * tree_node_filename,
-        const char * leaf_node_filename
-    ) :
-        m_element_count(input_data_vector.size()),
+        const std::string tree_node_filename,
+        const std::string leaf_node_filename
+    )
+     :  m_element_count(input_data_vector.size()),
         m_leaf_node_filename(leaf_node_filename)
-
     {
         INFO("constructing r-tree of " << m_element_count << " elements");
         double time1 = get_timestamp();
@@ -305,7 +305,7 @@ public:
 
         }
         //open leaf file
-        std::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
+        std::ofstream leaf_node_file(leaf_node_filename.c_str(), std::ios::binary);
         leaf_node_file.write((char*) &m_element_count, sizeof(uint64_t));
 
         //sort the hilbert-value representatives
@@ -386,7 +386,7 @@ public:
         }
 
         //open tree file
-        std::ofstream tree_node_file(tree_node_filename, std::ios::binary);
+        std::ofstream tree_node_file(tree_node_filename.c_str(), std::ios::binary);
         uint32_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
         tree_node_file.write((char *)&size_of_tree, sizeof(uint32_t));
@@ -399,13 +399,11 @@ public:
 
     //Read-only operation for queries
     explicit StaticRTree(
-            const char * node_filename,
-            const char * leaf_filename
+            const std::string & node_filename,
+            const std::string & leaf_filename
     ) : m_leaf_node_filename(leaf_filename) {
-        //INFO("Loading nodes: " << node_filename);
-        //INFO("opening leafs: " << leaf_filename);
         //open tree node file and load into RAM.
-        std::ifstream tree_node_file(node_filename, std::ios::binary);
+        std::ifstream tree_node_file(node_filename.c_str(), std::ios::binary);
         uint32_t tree_size = 0;
         tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
         //INFO("reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes");
@@ -414,7 +412,7 @@ public:
         tree_node_file.close();
 
         //open leaf node file and store thread specific pointer
-        std::ifstream leaf_node_file(leaf_filename, std::ios::binary);
+        std::ifstream leaf_node_file(leaf_filename.c_str(), std::ios::binary);
         leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
         leaf_node_file.close();
 
