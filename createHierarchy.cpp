@@ -78,7 +78,16 @@ int main (int argc, char *argv[]) {
             ERR("Could not access <osrm-restrictions> files");
         }
         _Restriction restriction;
+        UUID uuid_loaded, uuid_orig;
         unsigned usableRestrictionsCounter(0);
+        restrictionsInstream.read((char*)&uuid_loaded, sizeof(UUID));
+        if( !uuid_loaded.TestPrepare(uuid_orig) ) {
+        WARN(
+            ".restrictions was prepared with different build.\n"
+            "Reprocess to get rid of this warning."
+            )
+        }
+
         restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
         inputRestrictions.resize(usableRestrictionsCounter);
         restrictionsInstream.read((char *)&(inputRestrictions[0]), usableRestrictionsCounter*sizeof(_Restriction));
@@ -211,8 +220,8 @@ int main (int argc, char *argv[]) {
         unsigned numberOfNodes = 0;
         unsigned numberOfEdges = contractedEdgeList.size();
         INFO("Serializing compacted graph of " << numberOfEdges << " edges");
-        std::ofstream edgeOutFile(graphOut.c_str(), std::ios::binary);
-
+        std::ofstream hsgr_output_stream(graphOut.c_str(), std::ios::binary);
+        hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
             if(edge.source > numberOfNodes) {
                 numberOfNodes = edge.source;
@@ -237,11 +246,11 @@ int main (int argc, char *argv[]) {
         }
         ++numberOfNodes;
         //Serialize numberOfNodes, nodes
-        edgeOutFile.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
-        edgeOutFile.write((char*) &numberOfNodes, sizeof(unsigned));
-        edgeOutFile.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
+        hsgr_output_stream.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
+        hsgr_output_stream.write((char*) &numberOfNodes, sizeof(unsigned));
+        hsgr_output_stream.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
         //Serialize number of Edges
-        edgeOutFile.write((char*) &position, sizeof(unsigned));
+        hsgr_output_stream.write((char*) &position, sizeof(unsigned));
         --numberOfNodes;
         edge = 0;
         int usedEdgeCounter = 0;
@@ -256,7 +265,7 @@ int main (int argc, char *argv[]) {
                     ERR("Failed at edges of node " << node << " of " << numberOfNodes);
                 }
                 //Serialize edges
-                edgeOutFile.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
+                hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
                 ++edge;
                 ++usedEdgeCounter;
             }
@@ -265,7 +274,7 @@ int main (int argc, char *argv[]) {
         INFO("Expansion  : " << (nodeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and "<< (edgeBasedNodeNumber/expansionHasFinishedTime) << " edges/sec");
         INFO("Contraction: " << (edgeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and "<< usedEdgeCounter/endTime << " edges/sec");
 
-        edgeOutFile.close();
+        hsgr_output_stream.close();
         //cleanedEdgeList.clear();
         _nodes.clear();
         INFO("finished preprocessing");

@@ -58,24 +58,23 @@ QueryObjectsStorage::QueryObjectsStorage(
 	    getline(timestampInStream, timestamp);
 	    timestampInStream.close();
 	}
-	if(!timestamp.length())
+	if(!timestamp.length()) {
 	    timestamp = "n/a";
-	if(25 < timestamp.length())
+	}
+	if(25 < timestamp.length()) {
 	    timestamp.resize(25);
+	}
 
     INFO("Loading auxiliary information");
     //Init nearest neighbor data structure
-	std::ifstream nodesInStream(nodesPath.c_str(), std::ios::binary);
-	if(!nodesInStream) { ERR(nodesPath <<  " not found"); }
-    std::ifstream edgesInStream(edgesPath.c_str(), std::ios::binary);
-    if(!edgesInStream) { ERR(edgesPath <<  " not found"); }
 	nodeHelpDesk = new NodeInformationHelpDesk(
-		ramIndexPath.c_str(),
-		fileIndexPath.c_str(),
+		ramIndexPath,
+		fileIndexPath,
+		nodesPath,
+		edgesPath,
 		n,
 		checkSum
 	);
-	nodeHelpDesk->initNNGrid(nodesInStream, edgesInStream);
 
 	//deserialize street name list
 	INFO("Loading names index");

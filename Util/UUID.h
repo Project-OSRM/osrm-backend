@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef UUID_H
 #define UUID_H
 
+#include "../typedefs.h"
+
 #include <boost/noncopyable.hpp>
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -39,7 +41,11 @@ public:
 	~UUID();
 	const boost::uuids::uuid & GetUUID() const;
 	const bool IsMagicNumberOK() const;
-	const bool TestHSGR(const UUID & other) const;
+	const bool TestGraphUtil(const UUID & other) const;
+	const bool TestPrepare(const UUID & other) const;
+	const bool TestRTree(const UUID & other) const;
+	const bool TestNodeInfo(const UUID & other) const;
+	const bool TestQueryObjects(const UUID & other) const;
 private:
     const unsigned magic_number;
     char md5_prepare[33];

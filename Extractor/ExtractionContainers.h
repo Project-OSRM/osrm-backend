@@ -23,6 +23,7 @@
 
 #include "ExtractorStructs.h"
 #include "../DataStructures/TimingUtil.h"
+#include "../Util/UUID.h"
 
 #include <boost/foreach.hpp>
 #include <stxxl.h>
@@ -63,7 +64,7 @@ public:
     STXXLStringVector           nameVector;
     STXXLRestrictionsVector     restrictionsVector;
     STXXLWayIDStartEndVector    wayStartEndVector;
-
+    const UUID uuid;
 };
 
 #endif /* EXTRACTIONCONTAINERS_H_ */

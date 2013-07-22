@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/MachineInfo.h"
 #include "Util/OpenMPWrapper.h"
 #include "Util/StringUtil.h"
+#include "Util/UUID.h"
 #include "typedefs.h"
 
 #include <cstdlib>
@@ -37,6 +38,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 
 ExtractorCallbacks * extractCallBacks;
+UUID uuid;
 
 int main (int argc, char *argv[]) {
     try {

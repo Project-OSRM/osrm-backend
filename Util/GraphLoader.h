@@ -50,28 +50,31 @@ struct _ExcessRemover {
 };
 
 template<typename EdgeT>
-NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> &bollardNodes, std::vector<NodeID> &trafficLightNodes, std::vector<NodeInfo> * int2ExtNodeMap, std::vector<_Restriction> & inputRestrictions) {
+NodeID readBinaryOSRMGraphFromStream(
+    std::istream &in,
+    std::vector<EdgeT>& edgeList,
+    std::vector<NodeID> &bollardNodes,
+    std::vector<NodeID> &trafficLightNodes,
+    std::vector<NodeInfo> * int2ExtNodeMap,
+    std::vector<_Restriction> & inputRestrictions
+) {
     const UUID uuid_orig;
     UUID uuid_loaded;
     in.read((char *) &uuid_loaded, sizeof(UUID));
-    if(!uuid_loaded.IsMagicNumberOK()) {
-        ERR("hsgr input file misses magic number. Check or reprocess the file");
-    }
 
-    if( uuid_loaded.TestHSGR(uuid_orig) ) {
+    if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
         WARN(
-            ".hsgr was prepared with different build.\n"
+            ".osrm was prepared with different build.\n"
             "Reprocess to get rid of this warning."
             )
     }
-
 
     NodeID n, source, target;
     EdgeID m;
     short dir;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     in.read((char*)&n, sizeof(NodeID));
-    DEBUG("Importing n = " << n << " nodes ");
+    INFO("Importing n = " << n << " nodes ");
     _Node node;
     for (NodeID i=0; i<n; ++i) {
         in.read((char*)&node, sizeof(_Node));
@@ -88,7 +91,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeL
     std::vector<NodeID>(trafficLightNodes).swap(trafficLightNodes);
 
     in.read((char*)&m, sizeof(unsigned));
-    DEBUG(" and " << m << " edges ");
+    INFO(" and " << m << " edges ");
     for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(inputRestrictions[i].fromNode);
         if( intNodeID == ext2IntNodeMap.end()) {
@@ -380,19 +383,43 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 }
 
 template<typename NodeT, typename EdgeT>
-unsigned readHSGRFromStream(std::istream &in, std::vector<NodeT>& nodeList, std::vector<EdgeT> & edgeList, unsigned * checkSum) {
-    unsigned numberOfNodes = 0;
-    in.read((char*) checkSum, sizeof(unsigned));
-    in.read((char*) & numberOfNodes, sizeof(unsigned));
-    nodeList.resize(numberOfNodes + 1);
-    in.read((char*) &(nodeList[0]), numberOfNodes*sizeof(NodeT));
+unsigned readHSGRFromStream(
+    std::istream &hsgr_input_stream,
+    std::vector<NodeT> & node_list,
+    std::vector<EdgeT> & edge_list,
+    unsigned * check_sum
+) {
+    UUID uuid_loaded, uuid_orig;
+    hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
+    if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
+        WARN(
+            ".hsgr was prepared with different build.\n"
+            "Reprocess to get rid of this warning."
+            )
+    }
 
-    unsigned numberOfEdges = 0;
-    in.read((char*) &numberOfEdges, sizeof(unsigned));
-    edgeList.resize(numberOfEdges);
-    in.read((char*) &(edgeList[0]), numberOfEdges*sizeof(EdgeT));
+    unsigned number_of_nodes = 0;
+    hsgr_input_stream.read((char*) check_sum, sizeof(unsigned));
+    hsgr_input_stream.read((char*) & number_of_nodes, sizeof(unsigned));
+    node_list.resize(number_of_nodes + 1);
+    hsgr_input_stream.read(
+        (char*) &(node_list[0]),
+        number_of_nodes*sizeof(NodeT)
+    );
 
-    return numberOfNodes;
+    unsigned number_of_edges = 0;
+    hsgr_input_stream.read(
+        (char*) &number_of_edges,
+        sizeof(unsigned)
+    );
+
+    edge_list.resize(number_of_edges);
+    hsgr_input_stream.read(
+        (char*) &(edge_list[0]),
+        number_of_edges*sizeof(EdgeT)
+    );
+
+    return number_of_nodes;
 }
 
 #endif // GRAPHLOADER_H

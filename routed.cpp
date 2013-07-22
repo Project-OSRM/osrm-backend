@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/BaseConfiguration.h"
 #include "Util/InputFileUtil.h"
 #include "Util/OpenMPWrapper.h"
+#include "Util/UUID.h"
 
 #ifdef __linux__
 #include "Util/LinuxStackTrace.h"
@@ -77,7 +78,9 @@ int main (int argc, char * argv[]) {
     //}
 
     try {
-        std::cout << "\n starting up engines, compile at " <<
+        //std::cout << "fingerprint: " << UUID::GetInstance().GetUUID() << std::endl;
+
+        std::cout << "starting up engines, compiled at " <<
                                         __DATE__ << ", " __TIME__ << std::endl;
 
 #ifndef _WIN32
