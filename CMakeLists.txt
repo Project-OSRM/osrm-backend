@@ -86,7 +86,7 @@ if (NOT Boost_FOUND)
 endif (NOT Boost_FOUND)
 include_directories(${Boost_INCLUDE_DIRS})
 
-target_link_libraries( OSRM ${Boost_LIBRARIES} )
+target_link_libraries( OSRM ${Boost_LIBRARIES} UUID )
 target_link_libraries( osrm-extract ${Boost_LIBRARIES} UUID )
 target_link_libraries( osrm-prepare ${Boost_LIBRARIES} UUID )
 target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM UUID )
