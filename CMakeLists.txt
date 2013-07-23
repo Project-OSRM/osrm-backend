@@ -104,7 +104,7 @@ find_package( Threads REQUIRED )
 target_link_libraries (osrm-extract ${Threads_LIBRARY})
 
 find_package( LuaJIT )
-IF( LUAJIT_INCLUDE_DIR AND LUAJIT_LIBRARIES )
+IF( LUAJIT_INCLUDE_DIR AND LUAJIT_LIBRARIES AND NOT APPLE)
 	include_directories(${LUAJIT_INCLUDE_DIR})
 	target_link_libraries( osrm-extract ${LUAJIT_LIBRARIES} )
 	target_link_libraries( osrm-prepare ${LUAJIT_LIBRARIES} )
