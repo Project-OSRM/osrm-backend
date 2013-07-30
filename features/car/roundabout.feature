@@ -6,11 +6,11 @@ Feature: Roundabout Instructions
 	
 	Scenario: Car - Roundabout instructions
 		Given the node map
-		 |   |   | t |   |   |
-		 |   |   | b |   |   |
-		 | s | a |   | c | u |
-		 |   |   | d |   |   |
 		 |   |   | v |   |   |
+		 |   |   | d |   |   |
+		 | s | a |   | c | u |
+		 |   |   | b |   |   |
+		 |   |   | t |   |   |
 
 		And the ways
 		 | nodes | junction   |
