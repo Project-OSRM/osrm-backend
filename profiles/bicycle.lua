@@ -189,6 +189,12 @@ function way_function (way)
 		way.name = "{highway:"..highway.."}"	-- if no name exists, use way type
 		                                        -- this encoding scheme is excepted to be a temporary solution
 	end
+    
+    -- roundabout handling
+	if "roundabout" == junction then
+	  way.roundabout = true;
+	end
+    
 		
 	-- speed
     if route_speeds[route] then
