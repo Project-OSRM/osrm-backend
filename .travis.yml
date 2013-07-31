@@ -20,6 +20,9 @@ branches:
   only:
     - master
     - develop
+env:
+ - OPTIONS="-DCMAKE_BUILD_TYPE=Release"
+ - OPTIONS="-DCMAKE_BUILD_TYPE=Debug"
 notifications:
  irc:
   channels:
