@@ -30,7 +30,7 @@ OSRM::OSRM(const char * server_ini_path) {
     boost::system::error_code ec;
 
     boost::filesystem::path base_path =
-                boost::filesystem::complete(server_ini_path).parent_path();
+                boost::filesystem::absolute(server_ini_path).parent_path();
 
     objects = new QueryObjectsStorage(
         boost::filesystem::canonical(
