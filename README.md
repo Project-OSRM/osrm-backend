@@ -12,6 +12,7 @@ http://map.project-osrm.org
 
 When using the code in a (scientific) publication, please cite
 
+```
 @inproceedings{luxen-vetter-2011,
  author = {Luxen, Dennis and Vetter, Christian},
  title = {Real-time routing with OpenStreetMap data},
@@ -28,6 +29,7 @@ When using the code in a (scientific) publication, please cite
  publisher = {ACM},
  address = {New York, NY, USA},
 }
+```
 
 ## Current build status
 
