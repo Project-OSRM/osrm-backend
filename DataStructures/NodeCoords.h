@@ -21,12 +21,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef _NODE_COORDS_H
 #define _NODE_COORDS_H
 
+#include "../typedefs.h"
+
 #include <cassert>
 #include <cstddef>
 #include <climits>
-#include <limits>
 
-#include "../typedefs.h"
+#include <limits>
 
 template<typename NodeT>
 struct NodeCoords {

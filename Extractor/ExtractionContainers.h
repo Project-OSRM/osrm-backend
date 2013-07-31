@@ -23,6 +23,7 @@
 
 #include "ExtractorStructs.h"
 #include "../DataStructures/TimingUtil.h"
+#include "../Util/UUID.h"
 
 #include <boost/foreach.hpp>
 #include <stxxl.h>
@@ -55,7 +56,7 @@ public:
         wayStartEndVector.clear();
     }
 
-    void PrepareData( const std::string & outputFileName, const std::string restrictionsFileName, const unsigned amountOfRAM);
+    void PrepareData( const std::string & output_file_name, const std::string restrictionsFileName, const unsigned amountOfRAM);
 
     STXXLNodeIDVector           usedNodeIDs;
     STXXLNodeVector             allNodes;
@@ -63,7 +64,7 @@ public:
     STXXLStringVector           nameVector;
     STXXLRestrictionsVector     restrictionsVector;
     STXXLWayIDStartEndVector    wayStartEndVector;
-
+    const UUID uuid;
 };
 
 #endif /* EXTRACTIONCONTAINERS_H_ */

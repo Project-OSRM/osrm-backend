@@ -23,12 +23,14 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 //Not compatible with non contiguous node ids
 
-#include <cassert>
-#include <limits>
-#include <vector>
-#include <algorithm>
-#include <map>
 #include <boost/unordered_map.hpp>
+
+#include <cassert>
+
+#include <algorithm>
+#include <limits>
+#include <map>
+#include <vector>
 
 template< typename NodeID, typename Key >
 class ArrayStorage {
@@ -184,8 +186,8 @@ public:
 
     void DecreaseKey( NodeID node, Weight weight ) {
         assert( UINT_MAX != node );
-        const Key index = nodeIndex[node];
-        Key key = insertedNodes[index].key;
+        const Key & index = nodeIndex[node];
+        Key & key = insertedNodes[index].key;
         assert ( key >= 0 );
 
         insertedNodes[index].weight = weight;

@@ -8,15 +8,15 @@
 #ifndef HELLOWORLDPLUGIN_H_
 #define HELLOWORLDPLUGIN_H_
 
-#include <sstream>
-
 #include "BasePlugin.h"
 #include "RouteParameters.h"
+
+#include <sstream>
 
 class HelloWorldPlugin : public BasePlugin {
 public:
 	HelloWorldPlugin() {}
-	virtual ~HelloWorldPlugin() { /*std::cout << GetDescriptor() << " destructor" << std::endl;*/ }
+	virtual ~HelloWorldPlugin() { }
 	std::string GetDescriptor() const { return std::string("hello"); }
 	std::string GetVersionString() const { return std::string("0.1a"); }
 

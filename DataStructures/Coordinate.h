@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef COORDINATE_H_
 #define COORDINATE_H_
 
+#include "../Util/StringUtil.h"
+
 #include <cassert>
 #include <cmath>
 #include <climits>
@@ -31,7 +33,8 @@ struct _Coordinate {
     int lat;
     int lon;
     _Coordinate () : lat(INT_MIN), lon(INT_MIN) {}
-    _Coordinate (int t, int n) : lat(t) , lon(n) {}
+    explicit _Coordinate (int t, int n) : lat(t) , lon(n) {}
+
     void Reset() {
         lat = INT_MIN;
         lon = INT_MIN;
@@ -87,7 +90,7 @@ inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) 
     return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
 }
 
-inline double ApproximateDistanceByEuclid(const _Coordinate &c1, const _Coordinate &c2) {
+inline double ApproximateEuclideanDistance(const _Coordinate &c1, const _Coordinate &c2) {
     assert(c1.lat != INT_MIN);
     assert(c1.lon != INT_MIN);
     assert(c2.lat != INT_MIN);
@@ -103,6 +106,32 @@ inline double ApproximateDistanceByEuclid(const _Coordinate &c1, const _Coordina
     const double earthRadius = 6372797.560856;
     const double d = sqrt(x*x + y*y) * earthRadius;
     return d;
+}
+
+static inline void convertInternalLatLonToString(const int value, std::string & output) {
+    char buffer[100];
+    buffer[10] = 0; // Nullterminierung
+    char* string = printInt< 10, 5 >( buffer, value );
+    output = string;
+}
+
+static inline void convertInternalCoordinateToString(const _Coordinate & coord, std::string & output) {
+    std::string tmp;
+    convertInternalLatLonToString(coord.lon, tmp);
+    output = tmp;
+    output += ",";
+    convertInternalLatLonToString(coord.lat, tmp);
+    output += tmp;
+    output += " ";
+}
+static inline void convertInternalReversedCoordinateToString(const _Coordinate & coord, std::string & output) {
+    std::string tmp;
+    convertInternalLatLonToString(coord.lat, tmp);
+    output = tmp;
+    output += ",";
+    convertInternalLatLonToString(coord.lon, tmp);
+    output += tmp;
+    output += " ";
 }
 
 #endif /* COORDINATE_H_ */

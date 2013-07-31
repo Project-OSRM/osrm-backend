@@ -56,6 +56,17 @@
 class EdgeBasedGraphFactory : boost::noncopyable {
 public:
     struct EdgeBasedNode {
+        EdgeBasedNode() :
+            id(INT_MAX),
+            lat1(INT_MAX),
+            lat2(INT_MAX),
+            lon1(INT_MAX),
+            lon2(INT_MAX >> 1),
+            belongsToTinyComponent(false),
+            nameID(UINT_MAX),
+            weight(UINT_MAX >> 1),
+            ignoreInGrid(false)
+        { }
         bool operator<(const EdgeBasedNode & other) const {
             return other.id < id;
         }

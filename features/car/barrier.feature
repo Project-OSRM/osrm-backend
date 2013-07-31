@@ -4,7 +4,7 @@ Feature: Car - Barriers
 	Background:
 		Given the profile "car"
 
-	Scenario: Car - Barriers 
+	Scenario: Car - Barriers
 		Then routability should be
 		 | node/barrier   | bothw |
 		 |                | x     |
@@ -14,7 +14,7 @@ Feature: Car - Barriers
 		 | border_control | x     |
 		 | toll_booth     | x     |
 		 | sally_port     | x     |
-		 | entrance       |       |
+		 | entrance       | x     |
 		 | wall           |       |
 		 | fence          |       |
 		 | some_tag       |       |

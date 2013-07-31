@@ -23,9 +23,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <cmath>
 #include <vector>
+
 typedef std::pair<unsigned, unsigned> BresenhamPixel;
 
-inline void Bresenham (int x0, int y0, int x1, int y1, std::vector<BresenhamPixel> &resultList) {
+inline void Bresenham (int x0, int y0, const int x1, int const y1, std::vector<BresenhamPixel> &resultList) {
     int dx = std::abs(x1-x0);
     int dy = std::abs(y1-y0);
     int sx = (x0 < x1 ? 1 : -1);

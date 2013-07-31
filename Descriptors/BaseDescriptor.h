@@ -21,19 +21,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASE_DESCRIPTOR_H_
 #define BASE_DESCRIPTOR_H_
 
-#include <cassert>
-#include <cmath>
-#include <cstdio>
-#include <string>
-#include <vector>
-
-#include "../typedefs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/SearchEngine.h"
-#include "../Util/StringUtil.h"
-
 #include "../Plugins/RawRouteData.h"
+#include "../Util/StringUtil.h"
+#include "../typedefs.h"
+
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+
+#include <string>
+#include <vector>
 
 struct _DescriptorConfig {
     _DescriptorConfig() : instructions(true), geometry(true), encodeGeometry(true), z(18) {}

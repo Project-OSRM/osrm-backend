@@ -36,6 +36,7 @@ Thumbs.db
 # build related files #
 #######################
 /build/
+/Util/UUID.cpp
 
 # Eclipse related files #
 #########################
@@ -72,6 +73,7 @@ stxxl.errlog
 /osrm-extract
 /osrm-routed
 /osrm-prepare
+/osrm-cli
 /nohup.out
 
 # Sandbox folder #

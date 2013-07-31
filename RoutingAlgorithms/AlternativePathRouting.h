@@ -21,11 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef ALTERNATIVEROUTES_H_
 #define ALTERNATIVEROUTES_H_
 
-#include <boost/unordered_map.hpp>
-#include <vector>
-#include <cmath>
-
 #include "BasicRoutingInterface.h"
+#include <boost/unordered_map.hpp>
+#include <cmath>
+#include <vector>
 
 const double VIAPATH_ALPHA   = 0.15;
 const double VIAPATH_EPSILON = 0.10; //alternative at most 15% longer

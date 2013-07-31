@@ -21,11 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STATICGRAPH_H_INCLUDED
 #define STATICGRAPH_H_INCLUDED
 
-#include <vector>
-#include <algorithm>
-
 #include "../typedefs.h"
-#include "ImportEdge.h"
+
+#include <algorithm>
+#include <vector>
 
 template< typename EdgeDataT>
 class StaticGraph {

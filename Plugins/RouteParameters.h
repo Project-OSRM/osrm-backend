@@ -21,15 +21,25 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef ROUTE_PARAMETERS_H
 #define ROUTE_PARAMETERS_H
 
+#include "../DataStructures/Coordinate.h"
+#include "../DataStructures/HashTable.h"
+
+#include <boost/fusion/container/vector.hpp>
+#include <boost/fusion/sequence/intrinsic.hpp>
+#include <boost/fusion/include/at_c.hpp>
+
 #include <string>
 #include <vector>
 
-#include <boost/fusion/sequence/intrinsic.hpp>
-
-#include "../DataStructures/Coordinate.h"
-
 struct RouteParameters {
-    RouteParameters() : zoomLevel(18), printInstructions(false), alternateRoute(true), geometry(true), compression(true), deprecatedAPI(false), checkSum(-1) {}
+    RouteParameters() :
+        zoomLevel(18),
+        printInstructions(false),
+        alternateRoute(true),
+        geometry(true),
+        compression(true),
+        deprecatedAPI(false),
+        checkSum(-1) {}
     short zoomLevel;
     bool printInstructions;
     bool alternateRoute;

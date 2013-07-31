@@ -73,23 +73,23 @@ public:
             //insert new starting nodes into forward heap, adjusted by previous distances.
             if(searchFrom1stStartNode) {
                 forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-                INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
+                // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
                 forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-                INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
+                // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
            }
             if(phantomNodePair.startPhantom.isBidirected() && searchFrom2ndStartNode) {
                 forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-                INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
+                // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
                 forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-                INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
+                // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
             }
 
             //insert new backward nodes into backward heap, unadjusted.
             reverse_heap1.Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
-            INFO("rv1: " << phantomNodePair.targetPhantom.edgeBasedNode << ", w;" << phantomNodePair.targetPhantom.weight1 );
+            // INFO("rv1: " << phantomNodePair.targetPhantom.edgeBasedNode << ", w;" << phantomNodePair.targetPhantom.weight1 );
             if(phantomNodePair.targetPhantom.isBidirected() ) {
                 reverse_heap2.Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
-                INFO("rv2: " << phantomNodePair.targetPhantom.edgeBasedNode+1 << ", w;" << phantomNodePair.targetPhantom.weight2 );
+                // INFO("rv2: " << phantomNodePair.targetPhantom.edgeBasedNode+1 << ", w;" << phantomNodePair.targetPhantom.weight2 );
            }
             const int forward_offset = phantomNodePair.startPhantom.weight1 + (phantomNodePair.startPhantom.isBidirected() ? phantomNodePair.startPhantom.weight2 : 0);
             const int reverse_offset = phantomNodePair.targetPhantom.weight1 + (phantomNodePair.targetPhantom.isBidirected() ? phantomNodePair.targetPhantom.weight2 : 0);

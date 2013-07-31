@@ -91,7 +91,7 @@ void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLev
     /** starts at index 1 */
     pathDescription[0].length = 0;
     for(unsigned i = 1; i < pathDescription.size(); ++i) {
-        pathDescription[i].length = ApproximateDistanceByEuclid(pathDescription[i-1].location, pathDescription[i].location);
+        pathDescription[i].length = ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
     }
 
     double lengthOfSegment = 0;

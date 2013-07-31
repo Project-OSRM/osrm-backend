@@ -20,7 +20,7 @@
 
 #include "ExtractionContainers.h"
 
-void ExtractionContainers::PrepareData(const std::string & outputFileName, const std::string restrictionsFileName, const unsigned amountOfRAM) {
+void ExtractionContainers::PrepareData(const std::string & output_file_name, const std::string restrictionsFileName, const unsigned amountOfRAM) {
     try {
         unsigned usedNodeCounter = 0;
         unsigned usedEdgeCounter = 0;
@@ -121,6 +121,7 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         //serialize restrictions
         std::ofstream restrictionsOutstream;
         restrictionsOutstream.open(restrictionsFileName.c_str(), std::ios::binary);
+        restrictionsOutstream.write((char*)&uuid, sizeof(UUID));
         restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
         for(restrictionsIT = restrictionsVector.begin(); restrictionsIT != restrictionsVector.end(); ++restrictionsIT) {
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
@@ -130,7 +131,8 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         restrictionsOutstream.close();
 
         std::ofstream fout;
-        fout.open(outputFileName.c_str(), std::ios::binary);
+        fout.open(output_file_name.c_str(), std::ios::binary);
+        fout.write((char*)&uuid, sizeof(UUID));
         fout.write((char*)&usedNodeCounter, sizeof(unsigned));
         time = get_timestamp();
         std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
@@ -158,7 +160,7 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
 
         std::cout << "[extractor] setting number of nodes   ... " << std::flush;
         std::ios::pos_type positionInFile = fout.tellp();
-        fout.seekp(std::ios::beg);
+        fout.seekp(std::ios::beg+sizeof(UUID));
         fout.write((char*)&usedNodeCounter, sizeof(unsigned));
         fout.seekp(positionInFile);
 
@@ -271,7 +273,7 @@ void ExtractionContainers::PrepareData(const std::string & outputFileName, const
         std::cout << "ok" << std::endl;
         time = get_timestamp();
         std::cout << "[extractor] writing street name index ... " << std::flush;
-        std::string nameOutFileName = (outputFileName + ".names");
+        std::string nameOutFileName = (output_file_name + ".names");
         std::ofstream nameOutFile(nameOutFileName.c_str(), std::ios::binary);
         unsigned sizeOfNameIndex = nameVector.size();
         nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));

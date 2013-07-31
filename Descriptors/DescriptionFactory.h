@@ -21,15 +21,15 @@
 #ifndef DESCRIPTIONFACTORY_H_
 #define DESCRIPTIONFACTORY_H_
 
-#include <vector>
-
-#include "../typedefs.h"
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/Coordinate.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
+#include "../typedefs.h"
+
+#include <vector>
 
 /* This class is fed with all way segments in consecutive order
  *  and produces the description plus the encoded polyline */

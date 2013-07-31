@@ -21,8 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GPX_DESCRIPTOR_H_
 #define GPX_DESCRIPTOR_H_
 
-#include <boost/foreach.hpp>
 #include "BaseDescriptor.h"
+
+#include <boost/foreach.hpp>
 
 class GPXDescriptor : public BaseDescriptor{
 private:

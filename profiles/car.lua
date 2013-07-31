@@ -1,7 +1,7 @@
 -- Begin of globals
 require("lib/access")
 
-barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true}
+barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["entrance"] = true}
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
@@ -32,13 +32,13 @@ speed_profile = {
   ["default"] = 50
 }
 
-take_minimum_of_speeds 	= false
-obey_oneway 			= true
-obey_bollards 			= true
-use_restrictions 		= true
-ignore_areas 			= true -- future feature
-traffic_signal_penalty 	= 2
-u_turn_penalty 			= 20
+take_minimum_of_speeds  = false
+obey_oneway 			      = true
+obey_bollards           =  true
+use_restrictions 		    = true
+ignore_areas 			      = true -- future feature
+traffic_signal_penalty  = 2
+u_turn_penalty 			    = 20
 
 -- End of globals
 
@@ -182,11 +182,17 @@ function way_function (way)
 
   -- Set direction according to tags on way
   way.direction = Way.bidirectional
-  if obey_oneway then
+  if obey_oneway  then
 	  if oneway == "-1" then
 	    way.direction = Way.opposite
-    elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
-	    way.direction = Way.oneway
+    elseif oneway == "yes" or
+      oneway == "1" or
+      oneway == "true" or
+      junction == "roundabout" or
+      (highway == "motorway_link" and oneway ~="no") or
+      (highway == "motorway" and oneway ~= "no")
+      then
+	     way.direction = Way.oneway
     end
   end
 

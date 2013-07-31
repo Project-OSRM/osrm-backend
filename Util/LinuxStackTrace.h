@@ -25,7 +25,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <string>
 
-
 #ifdef __linux__
 #include <cxxabi.h>
 #include <execinfo.h>
