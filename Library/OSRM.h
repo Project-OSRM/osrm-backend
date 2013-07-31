@@ -35,6 +35,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Server/BasicDatastructures.h"
 
 #include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 

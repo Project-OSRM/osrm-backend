@@ -26,14 +26,45 @@ OSRM::OSRM(const char * server_ini_path) {
     }
 
     BaseConfiguration serverConfig(server_ini_path);
+
+    boost::system::error_code ec;
+
+    boost::filesystem::path base_path =
+                boost::filesystem::complete(server_ini_path).parent_path();
+
     objects = new QueryObjectsStorage(
-        serverConfig.GetParameter("hsgrData"),
-        serverConfig.GetParameter("ramIndex"),
-        serverConfig.GetParameter("fileIndex"),
-        serverConfig.GetParameter("nodesData"),
-        serverConfig.GetParameter("edgesData"),
-        serverConfig.GetParameter("namesData"),
-        serverConfig.GetParameter("timestamp")
+        boost::filesystem::canonical(
+            serverConfig.GetParameter("hsgrData"),
+            base_path, ec ).string(),
+        boost::filesystem::canonical(
+            serverConfig.GetParameter("ramIndex"),
+            base_path,
+            ec
+        ).string(),
+        boost::filesystem::canonical(
+            serverConfig.GetParameter("fileIndex"),
+            base_path,
+            ec
+        ).string(),
+        boost::filesystem::canonical(
+            serverConfig.GetParameter("nodesData"),
+            base_path,
+        ec ).string(),
+        boost::filesystem::canonical(
+            serverConfig.GetParameter("edgesData"),
+            base_path,
+            ec
+        ).string(),
+        boost::filesystem::canonical(
+            serverConfig.GetParameter("namesData"),
+            base_path,
+            ec
+        ).string(),
+        boost::filesystem::canonical(
+            serverConfig.GetParameter("timestamp"),
+            base_path,
+            ec
+        ).string()
     );
 
     RegisterPlugin(new HelloWorldPlugin());
