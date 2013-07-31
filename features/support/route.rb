@@ -122,9 +122,13 @@ def turn_list instructions
     16 => :enter_contraflow,
     17 => :leave_contraflow
   }
-  instructions.
-  map { |r| types[r[0].to_i].to_s }.
-  join(',')
+  # replace instructions codes with strings
+  # "11-3" (enter roundabout and leave a 3rd exit) gets converted to "enter_roundabout-3"
+  instructions.map do |r|
+    r[0].to_s.gsub!(/^\d*/) do |match|
+      types[match.to_i].to_s
+    end
+  end.join(',')    
 end
 
 def mode_list instructions
