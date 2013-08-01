@@ -27,44 +27,49 @@ OSRM::OSRM(const char * server_ini_path) {
 
     BaseConfiguration serverConfig(server_ini_path);
 
-    boost::system::error_code ec;
-
     boost::filesystem::path base_path =
-                boost::filesystem::absolute(server_ini_path).parent_path();
+               boost::filesystem::absolute(server_ini_path).parent_path();
+
+    boost::filesystem::path hsgr_path = boost::filesystem::absolute(
+            serverConfig.GetParameter("hsgrData"),
+            base_path
+    );
+
+    boost::filesystem::path ram_index_path = boost::filesystem::absolute(
+            serverConfig.GetParameter("ramIndex"),
+            base_path
+    );
+
+    boost::filesystem::path file_index_path = boost::filesystem::absolute(
+            serverConfig.GetParameter("fileIndex"),
+            base_path
+    );
+
+    boost::filesystem::path node_data_path = boost::filesystem::absolute(
+            serverConfig.GetParameter("nodesData"),
+            base_path
+    );
+    boost::filesystem::path edge_data_path = boost::filesystem::absolute(
+            serverConfig.GetParameter("edgesData"),
+            base_path
+    );
+    boost::filesystem::path name_data_path = boost::filesystem::absolute(
+            serverConfig.GetParameter("namesData"),
+            base_path
+    );
+    boost::filesystem::path timestamp_path = boost::filesystem::absolute(
+            serverConfig.GetParameter("timestamp"),
+            base_path
+    );
 
     objects = new QueryObjectsStorage(
-        boost::filesystem::canonical(
-            serverConfig.GetParameter("hsgrData"),
-            base_path, ec ).string(),
-        boost::filesystem::canonical(
-            serverConfig.GetParameter("ramIndex"),
-            base_path,
-            ec
-        ).string(),
-        boost::filesystem::canonical(
-            serverConfig.GetParameter("fileIndex"),
-            base_path,
-            ec
-        ).string(),
-        boost::filesystem::canonical(
-            serverConfig.GetParameter("nodesData"),
-            base_path,
-        ec ).string(),
-        boost::filesystem::canonical(
-            serverConfig.GetParameter("edgesData"),
-            base_path,
-            ec
-        ).string(),
-        boost::filesystem::canonical(
-            serverConfig.GetParameter("namesData"),
-            base_path,
-            ec
-        ).string(),
-        boost::filesystem::canonical(
-            serverConfig.GetParameter("timestamp"),
-            base_path,
-            ec
-        ).string()
+        hsgr_path.string(),
+        ram_index_path.string(),
+        file_index_path.string(),
+        node_data_path.string(),
+        edge_data_path.string(),
+        name_data_path.string(),
+        timestamp_path.string()
     );
 
     RegisterPlugin(new HelloWorldPlugin());
