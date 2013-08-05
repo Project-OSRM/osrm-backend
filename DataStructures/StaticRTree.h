@@ -220,10 +220,10 @@ private:
             std::ostream & out,
             const RectangleInt2D & rect
         ) {
-            out << rect.min_lat/100000. << ","
-                << rect.min_lon/100000. << " "
-                << rect.max_lat/100000. << ","
-                << rect.max_lon/100000.;
+            out << rect.min_lat/COORDINATE_PRECISION << ","
+                << rect.min_lon/COORDINATE_PRECISION << " "
+                << rect.max_lat/COORDINATE_PRECISION << ","
+                << rect.max_lon/COORDINATE_PRECISION;
             return out;
         }
     };
@@ -298,7 +298,7 @@ public:
             //Get Hilbert-Value for centroid in mercartor projection
             DataT & current_element = input_data_vector[element_counter];
             _Coordinate current_centroid = current_element.Centroid();
-            current_centroid.lat = 100000*lat2y(current_centroid.lat/100000.);
+            current_centroid.lat = COORDINATE_PRECISION*lat2y(current_centroid.lat/COORDINATE_PRECISION);
 
             uint64_t current_hilbert_value = HilbertCode::GetHilbertNumberForCoordinate(current_centroid);
             input_wrapper_vector[element_counter].m_hilbert_value = current_hilbert_value;

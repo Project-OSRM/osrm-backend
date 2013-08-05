@@ -29,6 +29,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <iostream>
 
+static const double COORDINATE_PRECISION = 1000000.;
+
 struct _Coordinate {
     int lat;
     int lon;
@@ -43,7 +45,12 @@ struct _Coordinate {
         return (INT_MIN != lat) && (INT_MIN != lon);
     }
     inline bool isValid() const {
-        if(lat > 90*100000 || lat < -90*100000 || lon > 180*100000 || lon <-180*100000) {
+        if(
+            lat >   90*COORDINATE_PRECISION ||
+            lat <  -90*COORDINATE_PRECISION ||
+            lon >  180*COORDINATE_PRECISION ||
+            lon < -180*COORDINATE_PRECISION
+        ) {
             return false;
         }
         return true;
@@ -64,10 +71,10 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     assert(lat2 != INT_MIN);
     assert(lon2 != INT_MIN);
     double RAD = 0.017453292519943295769236907684886;
-    double lt1 = lat1/100000.;
-    double ln1 = lon1/100000.;
-    double lt2 = lat2/100000.;
-    double ln2 = lon2/100000.;
+    double lt1 = lat1/COORDINATE_PRECISION;
+    double ln1 = lon1/COORDINATE_PRECISION;
+    double lt2 = lat2/COORDINATE_PRECISION;
+    double ln2 = lon2/COORDINATE_PRECISION;
     double dlat1=lt1*(RAD);
 
     double dlong1=ln1*(RAD);
@@ -96,10 +103,10 @@ inline double ApproximateEuclideanDistance(const _Coordinate &c1, const _Coordin
     assert(c2.lat != INT_MIN);
     assert(c2.lon != INT_MIN);
     const double RAD = 0.017453292519943295769236907684886;
-    const double lat1 = (c1.lat/100000.)*RAD;
-    const double lon1 = (c1.lon/100000.)*RAD;
-    const double lat2 = (c2.lat/100000.)*RAD;
-    const double lon2 = (c2.lon/100000.)*RAD;
+    const double lat1 = (c1.lat/COORDINATE_PRECISION)*RAD;
+    const double lon1 = (c1.lon/COORDINATE_PRECISION)*RAD;
+    const double lat2 = (c2.lat/COORDINATE_PRECISION)*RAD;
+    const double lon2 = (c2.lon/COORDINATE_PRECISION)*RAD;
 
     const double x = (lon2-lon1) * cos((lat1+lat2)/2.);
     const double y = (lat2-lat1);
@@ -111,7 +118,7 @@ inline double ApproximateEuclideanDistance(const _Coordinate &c1, const _Coordin
 static inline void convertInternalLatLonToString(const int value, std::string & output) {
     char buffer[100];
     buffer[10] = 0; // Nullterminierung
-    char* string = printInt< 10, 5 >( buffer, value );
+    char* string = printInt< 10, 6 >( buffer, value );
     output = string;
 }
 

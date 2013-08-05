@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define BASEPLUGIN_H_
 
 #include "RouteParameters.h"
+#include "../DataStructures/Coordinate.h"
 #include "../Server/BasicDatastructures.h"
 
 #include <string>

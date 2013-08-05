@@ -35,7 +35,7 @@ public:
         content << "language: " << routeParameters.language << "<br>";
         content << "Number of locations: " << routeParameters.coordinates.size() << "\n";
         for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
-            content << "  [" << i << "] " << routeParameters.coordinates[i].lat/100000. << "," << routeParameters.coordinates[i].lon/100000. << "\n";
+            content << "  [" << i << "] " << routeParameters.coordinates[i].lat/COORDINATE_PRECISION << "," << routeParameters.coordinates[i].lon/COORDINATE_PRECISION << "\n";
         }
         content << "Number of hints: " << routeParameters.hints.size() << "\n";
         for(unsigned i = 0; i < routeParameters.hints.size(); ++i) {

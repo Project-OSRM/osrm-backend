@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef _NODE_COORDS_H
 #define _NODE_COORDS_H
 
+#include "Coordinate.h"
 #include "../typedefs.h"
 
 #include <cassert>
@@ -41,10 +42,10 @@ struct NodeCoords {
 	NodeT id;
 
 	static NodeCoords<NodeT> min_value() {
-		return NodeCoords<NodeT>(-90*100000,-180*100000,std::numeric_limits<NodeT>::min());
+		return NodeCoords<NodeT>(-90*COORDINATE_PRECISION,-180*COORDINATE_PRECISION,std::numeric_limits<NodeT>::min());
 	}
 	static NodeCoords<NodeT> max_value() {
-		return NodeCoords<NodeT>(90*100000, 180*100000, std::numeric_limits<NodeT>::max());
+		return NodeCoords<NodeT>(90*COORDINATE_PRECISION, 180*COORDINATE_PRECISION, std::numeric_limits<NodeT>::max());
 	}
 
 	value_type operator[](std::size_t n) const {

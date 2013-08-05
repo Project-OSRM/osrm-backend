@@ -34,6 +34,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "ExtractionHelperFunctions.h"
 #include "ExtractorStructs.h"
 
+#include "../DataStructures/Coordinate.h"
+
 class ExtractorCallbacks{
 private:
     StringMap * stringMap;

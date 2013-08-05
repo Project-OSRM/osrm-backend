@@ -217,12 +217,12 @@ ImportNode XMLParser::_ReadXMLNode() {
 
 	xmlChar* attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "lat" );
 	if ( attribute != NULL ) {
-		node.lat =  static_cast<NodeID>(100000.*atof(( const char* ) attribute ) );
+		node.lat =  static_cast<NodeID>(COORDINATE_PRECISION*atof(( const char* ) attribute ) );
 		xmlFree( attribute );
 	}
 	attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "lon" );
 	if ( attribute != NULL ) {
-		node.lon =  static_cast<NodeID>(100000.*atof(( const char* ) attribute ));
+		node.lon =  static_cast<NodeID>(COORDINATE_PRECISION*atof(( const char* ) attribute ));
 		xmlFree( attribute );
 	}
 	attribute = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "id" );

@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef HILBERTVALUE_H_
 #define HILBERTVALUE_H_
 
+#include "Coordinate.h"
+
 #include <boost/integer.hpp>
 #include <boost/noncopyable.hpp>
 
@@ -31,8 +33,8 @@ public:
 	static uint64_t GetHilbertNumberForCoordinate(
 			const _Coordinate & current_coordinate) {
 		unsigned location[2];
-		location[0] = current_coordinate.lat+( 90*100000);
-		location[1] = current_coordinate.lon+(180*100000);
+		location[0] = current_coordinate.lat+( 90*COORDINATE_PRECISION);
+		location[1] = current_coordinate.lon+(180*COORDINATE_PRECISION);
 
 		TransposeCoordinate(location);
 		const uint64_t result = BitInterleaving(location[0], location[1]);

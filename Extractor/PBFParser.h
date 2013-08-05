@@ -23,6 +23,7 @@
 
 #include "BaseParser.h"
 
+#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ConcurrentQueue.h"
 #include "../Util/MachineInfo.h"

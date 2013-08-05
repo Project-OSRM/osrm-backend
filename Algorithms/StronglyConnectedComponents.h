@@ -343,10 +343,10 @@ public:
                     //edges that end on bollard nodes may actually be in two distinct components
                     if(std::min(vectorOfComponentSizes[componentsIndex[u]], vectorOfComponentSizes[componentsIndex[v]]) < 10) {
 
-                        //INFO("(" << inputNodeInfoList[u].lat/100000. << ";" << inputNodeInfoList[u].lon/100000. << ") -> (" << inputNodeInfoList[v].lat/100000. << ";" << inputNodeInfoList[v].lon/100000. << ")");
+                        //INFO("(" << inputNodeInfoList[u].lat/COORDINATE_PRECISION << ";" << inputNodeInfoList[u].lon/COORDINATE_PRECISION << ") -> (" << inputNodeInfoList[v].lat/COORDINATE_PRECISION << ";" << inputNodeInfoList[v].lon/COORDINATE_PRECISION << ")");
                         OGRLineString lineString;
-                        lineString.addPoint(inputNodeInfoList[u].lon/100000., inputNodeInfoList[u].lat/100000.);
-                        lineString.addPoint(inputNodeInfoList[v].lon/100000., inputNodeInfoList[v].lat/100000.);
+                        lineString.addPoint(inputNodeInfoList[u].lon/COORDINATE_PRECISION, inputNodeInfoList[u].lat/COORDINATE_PRECISION);
+                        lineString.addPoint(inputNodeInfoList[v].lon/COORDINATE_PRECISION, inputNodeInfoList[v].lat/COORDINATE_PRECISION);
                         OGRFeature *poFeature;
                         poFeature = OGRFeature::CreateFeature( poLayer->GetLayerDefn() );
                         poFeature->SetGeometry( &lineString );

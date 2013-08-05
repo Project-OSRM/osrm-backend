@@ -166,8 +166,8 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 		m_lastDenseLatitude += dense.lat( i );
 		m_lastDenseLongitude += dense.lon( i );
 		extracted_nodes_vector[i].id = m_lastDenseID;
-		extracted_nodes_vector[i].lat = 100000*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lat_offset() ) / NANO;
-		extracted_nodes_vector[i].lon = 100000*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
+		extracted_nodes_vector[i].lat = COORDINATE_PRECISION*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lat_offset() ) / NANO;
+		extracted_nodes_vector[i].lon = COORDINATE_PRECISION*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
 		while (denseTagIndex < dense.keys_vals_size()) {
 			const int tagValue = dense.keys_vals( denseTagIndex );
 			if( 0==tagValue ) {

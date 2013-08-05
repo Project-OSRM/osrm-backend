@@ -62,8 +62,8 @@ int main (int argc, char * argv[]) {
     route_parameters.language = ""; //unused atm
     //route_parameters.hints.push_back(); // see wiki, saves I/O if done properly
 
-    _Coordinate start_coordinate(52.519930*100000,13.438640*100000);
-    _Coordinate target_coordinate(52.513191*100000,13.415852*100000);
+    _Coordinate start_coordinate(52.519930*1000000,13.438640*1000000);
+    _Coordinate target_coordinate(52.513191*1000000,13.415852*1000000);
     route_parameters.coordinates.push_back(start_coordinate);
     route_parameters.coordinates.push_back(target_coordinate);
 

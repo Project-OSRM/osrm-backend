@@ -400,10 +400,10 @@ unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
 template<class CoordinateT>
 double EdgeBasedGraphFactory::GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const {
-    const double v1x = (A.lon - C.lon)/100000.;
-    const double v1y = lat2y(A.lat/100000.) - lat2y(C.lat/100000.);
-    const double v2x = (B.lon - C.lon)/100000.;
-    const double v2y = lat2y(B.lat/100000.) - lat2y(C.lat/100000.);
+    const double v1x = (A.lon - C.lon)/COORDINATE_PRECISION;
+    const double v1y = lat2y(A.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
+    const double v2x = (B.lon - C.lon)/COORDINATE_PRECISION;
+    const double v2y = lat2y(B.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
 
     double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
     while(angle < 0)

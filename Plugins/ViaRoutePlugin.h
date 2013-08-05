@@ -201,7 +201,6 @@ public:
                 reply.headers[2].name = "Content-Disposition";
                 reply.headers[2].value = "attachment; filename=\"route.json\"";
             }
-
             break;
         }
 
@@ -210,7 +209,12 @@ public:
     }
 private:
     inline bool checkCoord(const _Coordinate & c) {
-        if(c.lat > 90*100000 || c.lat < -90*100000 || c.lon > 180*100000 || c.lon <-180*100000) {
+        if(
+            c.lat >   90*COORDINATE_PRECISION ||
+            c.lat <  -90*COORDINATE_PRECISION ||
+            c.lon >  180*COORDINATE_PRECISION ||
+            c.lon < -180*COORDINATE_PRECISION
+        ) {
             return false;
         }
         return true;
