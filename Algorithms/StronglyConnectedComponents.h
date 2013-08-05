@@ -28,7 +28,7 @@ Strongly connected components using Tarjan's Algorithm
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/TurnInstructions.h"

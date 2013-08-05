@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef NODEINFORMATIONHELPDESK_H_
 #define NODEINFORMATIONHELPDESK_H_
 
-#include "NodeCoords.h"
+#include "QueryNode.h"
 #include "PhantomNodes.h"
 #include "StaticRTree.h"
 #include "../Contractor/EdgeBasedGraphFactory.h"

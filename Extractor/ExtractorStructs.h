@@ -25,7 +25,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportNode.h"
-#include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/TimingUtil.h"
 #include "../typedefs.h"

@@ -24,7 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "OSRMException.h"
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../Util/UUID.h"
 #include "../typedefs.h"
