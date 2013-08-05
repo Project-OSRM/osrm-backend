@@ -35,7 +35,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iostream>
 
 #define INFO(x) do {std::cout << "[i " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
-#define ERR(x) do {std::cerr << "[! " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl; std::exit(-1);} while(0);
 #define WARN(x) do {std::cerr << "[? " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
 
 #ifdef NDEBUG
