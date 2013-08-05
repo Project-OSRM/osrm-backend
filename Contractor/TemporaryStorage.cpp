@@ -21,11 +21,7 @@
 #include "TemporaryStorage.h"
 
 TemporaryStorage::TemporaryStorage() {
-    try {
-        tempDirectory = boost::filesystem::temp_directory_path();
-    } catch(boost::filesystem::filesystem_error & e) {
-        ERR("could not retrieve location of temporary path: " << e.what());
-    }
+    tempDirectory = boost::filesystem::temp_directory_path();
 }
 
 TemporaryStorage & TemporaryStorage::GetInstance(){
@@ -39,12 +35,8 @@ TemporaryStorage::~TemporaryStorage() {
 
 void TemporaryStorage::removeAll() {
     boost::mutex::scoped_lock lock(mutex);
-    try {
-        for(unsigned slotID = 0; slotID < vectorOfStreamDatas.size(); ++slotID)
-            deallocateSlot(slotID);
-
-    } catch(boost::filesystem::filesystem_error & e) {
-        ERR("could not retrieve location of temporary path: " << e.what());
+    for(unsigned slot_id = 0; slot_id < vectorOfStreamDatas.size(); ++slot_id) {
+        deallocateSlot(slot_id);
     }
     vectorOfStreamDatas.clear();
 }
@@ -64,13 +56,13 @@ void TemporaryStorage::deallocateSlot(int slotID) {
     try {
         StreamData & data = vectorOfStreamDatas[slotID];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
-                if(!boost::filesystem::exists(data.pathToTemporaryFile)) {
+        if(!boost::filesystem::exists(data.pathToTemporaryFile)) {
             return;
         }
-        if(data.streamToTemporaryFile->is_open())
+        if(data.streamToTemporaryFile->is_open()) {
             data.streamToTemporaryFile->close();
+        }
 
-        //INFO("deallocating slot " << slotID << " and its file: " << data.pathToTemporaryFile);
         boost::filesystem::remove(data.pathToTemporaryFile);
     } catch(boost::filesystem::filesystem_error & e) {
         abort(e);
@@ -81,8 +73,10 @@ void TemporaryStorage::writeToSlot(int slotID, char * pointer, std::streamsize s
     try {
         StreamData & data = vectorOfStreamDatas[slotID];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
-        if(!data.writeMode)
-            ERR("Writing after first read is not allowed");
+        BOOST_ASSERT_MSG(
+            data.writeMode,
+            "Writing after first read is not allowed"
+        );
         data.streamToTemporaryFile->write(pointer, size);
     } catch(boost::filesystem::filesystem_error & e) {
         abort(e);
@@ -121,13 +115,11 @@ boost::filesystem::fstream::pos_type TemporaryStorage::tell(int slotID) {
     } catch(boost::filesystem::filesystem_error & e) {
         abort(e);
    }
-//    INFO("telling position: " << position);
     return position;
 }
 
 void TemporaryStorage::abort(boost::filesystem::filesystem_error& ) {
     removeAll();
-//    ERR("I/O Error occured: " << e.what());
 }
 
 void TemporaryStorage::seek(int slotID, boost::filesystem::fstream::pos_type position) {
@@ -135,7 +127,6 @@ void TemporaryStorage::seek(int slotID, boost::filesystem::fstream::pos_type pos
         StreamData & data = vectorOfStreamDatas[slotID];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
         data.streamToTemporaryFile->seekg(position);
-//        INFO("seeking to position: " << position);
     } catch(boost::filesystem::filesystem_error & e) {
         abort(e);
     }

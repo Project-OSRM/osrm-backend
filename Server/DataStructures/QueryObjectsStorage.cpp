@@ -33,7 +33,9 @@ QueryObjectsStorage::QueryObjectsStorage(
 ) {
 	INFO("loading graph data");
 	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
-    if(!hsgrInStream) { ERR(hsgrPath <<  " not found"); }
+    if(!hsgrInStream) {
+    	throw OSRMException("hsgr not found");
+    }
 	//Deserialize road network graph
 	std::vector< QueryGraph::_StrNode> nodeList;
 	std::vector< QueryGraph::_StrEdge> edgeList;
@@ -79,7 +81,9 @@ QueryObjectsStorage::QueryObjectsStorage(
 	//deserialize street name list
 	INFO("Loading names index");
 	std::ifstream namesInStream(namesPath.c_str(), std::ios::binary);
-    if(!namesInStream) { ERR(namesPath <<  " not found"); }
+    if(!namesInStream) {
+    	throw OSRMException("names file not found");
+    }
 	unsigned size(0);
 	namesInStream.read((char *)&size, sizeof(unsigned));
 

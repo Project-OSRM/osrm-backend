@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASECONFIGURATION_H_
 #define BASECONFIGURATION_H_
 
+#include "OSRMException.h"
 #include "../DataStructures/HashTable.h"
 
 #include <exception>
@@ -33,26 +34,19 @@ public:
     BaseConfiguration(const char * configFile) {
         std::ifstream config( configFile );
         if(!config) {
-            std::cerr << "[config] .ini not found" << std::endl;
-            return;
+            throw OSRMException("[config] .ini not found");
         }
 
         std::string line;
-        try {
-            if (config.is_open()) {
-                while ( config.good() )  {
-                    getline (config,line);
-                    std::vector<std::string> tokens;
-                    Tokenize(line, tokens);
-                    if(2 == tokens.size() )
-                        parameters.Add(tokens[0], tokens[1]);
-                }
-                config.close();
+        if (config.is_open()) {
+            while ( config.good() )  {
+                getline (config,line);
+                std::vector<std::string> tokens;
+                Tokenize(line, tokens);
+                if(2 == tokens.size() )
+                    parameters.Add(tokens[0], tokens[1]);
             }
-        } catch(std::exception& e) {
-            ERR("[config] " << configFile << " not found -> Exception: " <<e.what());
-            if(config.is_open())
-                config.close();
+            config.close();
         }
     }
 
@@ -93,18 +87,20 @@ private:
 
     void TrimStringRight(std::string& str) {
         std::string::size_type pos = str.find_last_not_of(" ");
-        if (pos != std::string::npos)
+        if (pos != std::string::npos) {
             str.erase(pos+1);
-        else
+        } else {
             str.erase( str.begin() , str.end() );
+        }
     }
 
     void TrimStringLeft(std::string& str) {
         std::string::size_type pos = str.find_first_not_of(" ");
-        if (pos != std::string::npos)
+        if (pos != std::string::npos) {
             str.erase(0, pos);
-        else
+        } else {
             str.erase( str.begin() , str.end() );
+        }
     }
 
     HashTable<std::string, std::string> parameters;

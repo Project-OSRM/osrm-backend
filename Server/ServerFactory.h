@@ -30,6 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/BaseConfiguration.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OpenMPWrapper.h"
+#include "../Util/OSRMException.h"
 #include "../Util/StringUtil.h"
 
 #include "../typedefs.h"
@@ -40,31 +41,32 @@ struct ServerFactory {
 	static Server * CreateServer(BaseConfiguration& serverConfig) {
 
 		if(!testDataFile(serverConfig.GetParameter("nodesData"))) {
-			ERR("nodes file not found");
+			throw OSRMException("nodes file not found");
 		}
 
 		if(!testDataFile(serverConfig.GetParameter("hsgrData"))) {
-		    ERR("hsgr file not found");
+		    throw OSRMException("hsgr file not found");
 		}
 
 		if(!testDataFile(serverConfig.GetParameter("namesData"))) {
-		    ERR("names file not found");
+		    throw OSRMException("names file not found");
 		}
 
 		if(!testDataFile(serverConfig.GetParameter("ramIndex"))) {
-		    ERR("ram index file not found");
+		    throw OSRMException("ram index file not found");
 		}
 
 		if(!testDataFile(serverConfig.GetParameter("fileIndex"))) {
-		    ERR("file index file not found");
+		    throw OSRMException("file index file not found");
 		}
 
 		int threads = omp_get_num_procs();
-		if(serverConfig.GetParameter("IP") == "")
+		if(serverConfig.GetParameter("IP") == "") {
 			serverConfig.SetParameter("IP", "0.0.0.0");
-		if(serverConfig.GetParameter("Port") == "")
+		}
+		if(serverConfig.GetParameter("Port") == "") {
 			serverConfig.SetParameter("Port", "5000");
-
+		}
 		if(stringToInt(serverConfig.GetParameter("Threads")) != 0 && stringToInt(serverConfig.GetParameter("Threads")) <= threads)
 			threads = stringToInt( serverConfig.GetParameter("Threads") );
 

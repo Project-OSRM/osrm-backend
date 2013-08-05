@@ -21,6 +21,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EDGE_H
 #define EDGE_H
 
+
+#include "../Util/OSRMException.h"
 #include <cassert>
 
 class NodeBasedEdge {
@@ -40,8 +42,34 @@ public:
         return (source() < e.source());
     }
 
-    explicit NodeBasedEdge(NodeID s, NodeID t, NodeID n, EdgeWeight w, bool f, bool b, short ty, bool ra, bool ig, bool ar, bool cf) :
-                                            _source(s), _target(t), _name(n), _weight(w), forward(f), backward(b), _type(ty), _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _contraFlow(cf) { if(ty < 0) {ERR("Type: " << ty);}; }
+    explicit NodeBasedEdge(
+        NodeID s,
+        NodeID t,
+        NodeID n,
+        EdgeWeight w,
+        bool f,
+        bool b,
+        short ty,
+        bool ra,
+        bool ig,
+        bool ar,
+        bool cf
+    ) : _source(s),
+        _target(t),
+        _name(n),
+        _weight(w),
+        forward(f),
+        backward(b),
+        _type(ty),
+        _roundabout(ra),
+        _ignoreInGrid(ig),
+        _accessRestricted(ar),
+        _contraFlow(cf)
+    {
+        if(ty < 0) {
+            throw OSRMException("negative edge type");
+        }
+    }
 
     NodeID target() const {return _target; }
     NodeID source() const {return _source; }

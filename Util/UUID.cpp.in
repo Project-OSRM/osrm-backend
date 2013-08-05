@@ -61,35 +61,35 @@ const bool UUID::IsMagicNumberOK() const {
 
 const bool UUID::TestGraphUtil(const UUID & other) const {
     if(!other.IsMagicNumberOK()) {
-        ERR("hsgr input file misses magic number. Check or reprocess the file");
+        throw OSRMException("hsgr input file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_graph, md5_graph+32, other.md5_graph);
 }
 
 const bool UUID::TestPrepare(const UUID & other) const {
     if(!other.IsMagicNumberOK()) {
-        ERR("extracted input file misses magic number. Check or reprocess the file");
+        throw OSRMException("extracted input file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_prepare, md5_prepare+32, other.md5_prepare);
 }
 
 const bool UUID::TestRTree(const UUID & other) const {
     if(!other.IsMagicNumberOK()) {
-        ERR("r-tree input file misses magic number. Check or reprocess the file");
+        throw OSRMException("r-tree input file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_tree, md5_tree+32, other.md5_tree);
 }
 
 const bool UUID::TestNodeInfo(const UUID & other) const {
     if(!other.IsMagicNumberOK()) {
-        ERR("nodes file misses magic number. Check or reprocess the file");
+        throw OSRMException("nodes file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_nodeinfo, md5_nodeinfo+32, other.md5_nodeinfo);
 }
 
 const bool UUID::TestQueryObjects(const UUID & other) const {
     if(!other.IsMagicNumberOK()) {
-        ERR("missing magic number. Check or reprocess the file");
+        throw OSRMException("missing magic number. Check or reprocess the file");
     }
 	return std::equal(md5_objects, md5_objects+32, other.md5_objects);
 }

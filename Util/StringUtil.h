@@ -165,12 +165,12 @@ inline bool StringStartsWith(const std::string & input, const std::string & pref
 
 // Function returns a 'random' filename in temporary directors.
 // May not be platform independent.
-inline void GetTemporaryFileName(std::string & filename) {
-    char buffer[L_tmpnam];
-    char * retPointer = tmpnam (buffer);
-    if(0 == retPointer)
-        ERR("Could not create temporary file name");
-    filename = buffer;
-}
+// inline void GetTemporaryFileName(std::string & filename) {
+//     char buffer[L_tmpnam];
+//     char * retPointer = tmpnam (buffer);
+//     if(0 == retPointer) {
+//         ERR("Could not create temporary file name");
+//     filename = buffer;
+// }
 
 #endif /* STRINGUTIL_H_ */

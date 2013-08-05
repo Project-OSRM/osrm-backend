@@ -25,6 +25,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "PhantomNodes.h"
 #include "StaticRTree.h"
 #include "../Contractor/EdgeBasedGraphFactory.h"
+#include "../Util/OSRMException.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
@@ -126,10 +127,14 @@ private:
         const std::string & nodes_file,
         const std::string & edges_file
     ) {
-    std::ifstream nodes_input_stream(nodes_file.c_str(), std::ios::binary);
-    if(!nodes_input_stream) { ERR(nodes_file <<  " not found"); }
-    std::ifstream edges_input_stream(edges_file.c_str(), std::ios::binary);
-    if(!edges_input_stream) { ERR(edges_file <<  " not found"); }
+        std::ifstream nodes_input_stream(nodes_file.c_str(), std::ios::binary);
+        if(!nodes_input_stream) {
+            throw OSRMException("nodes file not found");
+        }
+        std::ifstream edges_input_stream(edges_file.c_str(), std::ios::binary);
+        if(!edges_input_stream) {
+            throw OSRMException("edges file not found");
+        }
 
         DEBUG("Loading node data");
         NodeInfo b;

@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef UUID_H
 #define UUID_H
 
+#include "OSRMException.h"
 #include "../typedefs.h"
 
 #include <boost/noncopyable.hpp>

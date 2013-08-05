@@ -27,6 +27,7 @@
 #include "../DataStructures/ConcurrentQueue.h"
 #include "../Util/MachineInfo.h"
 #include "../Util/OpenMPWrapper.h"
+#include "../Util/OSRMException.h"
 #include "../typedefs.h"
 
 #include <boost/shared_ptr.hpp>

@@ -434,8 +434,9 @@ public:
 
             p.printStatus(numberOfContractedNodes);
         }
-        BOOST_FOREACH(_ThreadData * data, threadData)
+        BOOST_FOREACH(_ThreadData * data, threadData) {
         	delete data;
+        }
         threadData.clear();
     }
 

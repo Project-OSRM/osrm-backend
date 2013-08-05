@@ -40,59 +40,58 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
 
         // Add our function to the state's global scope
         luabind::module(myLuaState) [
-                                     luabind::def("print", LUA_print<std::string>),
-                                     luabind::def("parseMaxspeed", parseMaxspeed),
-                                     luabind::def("durationIsValid", durationIsValid),
-                                     luabind::def("parseDuration", parseDuration)
+            luabind::def("print", LUA_print<std::string>),
+            luabind::def("parseMaxspeed", parseMaxspeed),
+            luabind::def("durationIsValid", durationIsValid),
+            luabind::def("parseDuration", parseDuration)
         ];
 
         luabind::module(myLuaState) [
-                                     luabind::class_<HashTable<std::string, std::string> >("keyVals")
-                                     .def("Add", &HashTable<std::string, std::string>::Add)
-                                     .def("Find", &HashTable<std::string, std::string>::Find)
-                                     .def("Holds", &HashTable<std::string, std::string>::Holds)
-                                     ];
+            luabind::class_<HashTable<std::string, std::string> >("keyVals")
+            .def("Add", &HashTable<std::string, std::string>::Add)
+            .def("Find", &HashTable<std::string, std::string>::Find)
+            .def("Holds", &HashTable<std::string, std::string>::Holds)
+        ];
 
         luabind::module(myLuaState) [
-                                     luabind::class_<ImportNode>("Node")
-                                     .def(luabind::constructor<>())
-                                     .def_readwrite("lat", &ImportNode::lat)
-                                     .def_readwrite("lon", &ImportNode::lon)
-                                     .def_readwrite("id", &ImportNode::id)
-                                     .def_readwrite("bollard", &ImportNode::bollard)
-                                     .def_readwrite("traffic_light", &ImportNode::trafficLight)
-                                     .def_readwrite("tags", &ImportNode::keyVals)
-                                     ];
+            luabind::class_<ImportNode>("Node")
+            .def(luabind::constructor<>())
+            .def_readwrite("lat", &ImportNode::lat)
+            .def_readwrite("lon", &ImportNode::lon)
+            .def_readwrite("id", &ImportNode::id)
+            .def_readwrite("bollard", &ImportNode::bollard)
+            .def_readwrite("traffic_light", &ImportNode::trafficLight)
+            .def_readwrite("tags", &ImportNode::keyVals)
+        ];
 
         luabind::module(myLuaState) [
-                                     luabind::class_<ExtractionWay>("Way")
-                                     .def(luabind::constructor<>())
-                                     .def_readwrite("name", &ExtractionWay::name)
-                                     .def_readwrite("speed", &ExtractionWay::speed)
-                                     .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
-                                     .def_readwrite("duration", &ExtractionWay::duration)
-                                     .def_readwrite("type", &ExtractionWay::type)
-                                     .def_readwrite("access", &ExtractionWay::access)
-                                     .def_readwrite("roundabout", &ExtractionWay::roundabout)
-                                     .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
-                                     .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
-                                     .def_readwrite("tags", &ExtractionWay::keyVals)
-                                     .def_readwrite("direction", &ExtractionWay::direction)
-                                     .enum_("constants")
-										 [
-										  luabind::value("notSure", 0),
-										  luabind::value("oneway", 1),
-										  luabind::value("bidirectional", 2),
-										  luabind::value("opposite", 3)
-										 ]
-        							 ];
+            luabind::class_<ExtractionWay>("Way")
+            .def(luabind::constructor<>())
+            .def_readwrite("name", &ExtractionWay::name)
+            .def_readwrite("speed", &ExtractionWay::speed)
+            .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
+            .def_readwrite("duration", &ExtractionWay::duration)
+            .def_readwrite("type", &ExtractionWay::type)
+            .def_readwrite("access", &ExtractionWay::access)
+            .def_readwrite("roundabout", &ExtractionWay::roundabout)
+            .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
+            .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
+            .def_readwrite("tags", &ExtractionWay::keyVals)
+            .def_readwrite("direction", &ExtractionWay::direction)
+            .enum_("constants") [
+				  luabind::value("notSure", 0),
+				  luabind::value("oneway", 1),
+				  luabind::value("bidirectional", 2),
+				  luabind::value("opposite", 3)
+			]
+    	];
         luabind::module(myLuaState) [
-                                     luabind::class_<std::vector<std::string> >("vector")
-                                     .def("Add", &std::vector<std::string>::push_back)
-                                     ];
+            luabind::class_<std::vector<std::string> >("vector")
+            .def("Add", &std::vector<std::string>::push_back)
+        ];
 
         if(0 != luaL_dofile(myLuaState, fileName) ) {
-            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+            throw OSRMException("ERROR occured in scripting block");
         }
     }
 }

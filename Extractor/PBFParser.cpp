@@ -28,7 +28,7 @@ PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnv
 	input.open(fileName, std::ios::in | std::ios::binary);
 
 	if (!input) {
-		std::cerr << fileName << ": File not found." << std::endl;
+		throw OSRMException("pbf file not found.");
 	}
 
 #ifndef NDEBUG
@@ -194,7 +194,9 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 }
 
 inline void PBFParser::parseNode(_ThreadData * ) {
-	ERR("Parsing of simple nodes not supported. PBF should use dense nodes");
+	throw OSRMException(
+		"Parsing of simple nodes not supported. PBF should use dense nodes"
+	);
 }
 
 inline void PBFParser::parseRelation(_ThreadData * threadData) {
@@ -475,7 +477,7 @@ bool PBFParser::readNextBlock(std::fstream& stream, _ThreadData * threadData) {
 	}
 
 	if ( !threadData->PBFprimitiveBlock.ParseFromArray( &(threadData->charBuffer[0]), threadData-> charBuffer.size() ) ) {
-		ERR("failed to parse PrimitiveBlock");
+		std::cerr << "failed to parse PrimitiveBlock" << std::endl;
 		return false;
 	}
 	return true;

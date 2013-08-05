@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
+#include "OSRMException.h"
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/NodeCoords.h"
@@ -308,19 +309,25 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
             forward = false;
         }
 
-        if(length == 0) { ERR("loaded null length edge"); }
+        if(length == 0) {
+            throw OSRMException("loaded null length edge");
+        }
 
         //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
         if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
-            ERR("after " << edgeList.size() << " edges" << "\n->" << source << "," << target << "," << length << "," << dir << "," << weight << "\n->unresolved source NodeID: " << source);
+            throw OSRMException("unresolvable source Node ID");
         }
         source = intNodeID->second;
         intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) { ERR("unresolved target NodeID : " << target); }
+        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
+            throw OSRMException("unresolvable target Node ID");
+        }
         target = intNodeID->second;
 
-        if(source == UINT_MAX || target == UINT_MAX) { ERR("nonexisting source or target" ); }
+        if(source == UINT_MAX || target == UINT_MAX) {
+            throw OSRMException("nonexisting source or target" );
+        }
 
         EdgeT inputEdge(source, target, 0, weight, forward, backward, type );
         edgeList.push_back(inputEdge);
@@ -351,8 +358,9 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         in >> source >> target >> weight >> dir;
 
         assert(weight > 0);
-        if(dir <0 || dir > 3)
-            ERR( "[error] direction bogus: " << dir );
+        if(dir <0 || dir > 3) {
+            throw OSRMException( "[error] direction bogus");
+        }
         assert(0<=dir && dir<=3);
 
         bool forward = true;
@@ -361,7 +369,9 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         if (dir == 2) forward = false;
         if (dir == 3) {backward = true; forward = true;}
 
-        if(weight == 0) { ERR("loaded null length edge"); }
+        if(weight == 0) {
+            throw OSRMException("loaded null length edge");
+        }
 
         if( nodeMap.find(source) == nodeMap.end()) {
             nodeMap.insert(std::make_pair(source, numberOfNodes ));
@@ -395,7 +405,7 @@ unsigned readHSGRFromStream(
         WARN(
             ".hsgr was prepared with different build.\n"
             "Reprocess to get rid of this warning."
-            )
+        );
     }
 
     unsigned number_of_nodes = 0;

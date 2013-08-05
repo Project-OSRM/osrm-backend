@@ -31,6 +31,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/InputFileUtil.h"
 #include "Util/LuaUtil.h"
 #include "Util/OpenMPWrapper.h"
+#include "Util/OSRMException.h"
 #include "Util/StringUtil.h"
 #include "typedefs.h"
 
@@ -59,7 +60,10 @@ std::vector<ImportEdge> edgeList;
 int main (int argc, char *argv[]) {
     try {
         if(argc < 3) {
-            ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions> [<profile>]");
+            std::cerr <<
+            "usage: \n" <<
+            argv[0] << " <osrm-data> <osrm-restrictions> [<profile>]" << std::endl;
+            return -1;
         }
 
         double startupTime = get_timestamp();
@@ -75,7 +79,9 @@ int main (int argc, char *argv[]) {
         INFO("Using restrictions from file: " << argv[2]);
         std::ifstream restrictionsInstream(argv[2], std::ios::binary);
         if(!restrictionsInstream.good()) {
-            ERR("Could not access <osrm-restrictions> files");
+            std::cerr <<
+                "Could not access <osrm-restrictions> files" << std::endl;
+
         }
         _Restriction restriction;
         UUID uuid_loaded, uuid_orig;
@@ -85,7 +91,7 @@ int main (int argc, char *argv[]) {
         WARN(
             ".restrictions was prepared with different build.\n"
             "Reprocess to get rid of this warning."
-            )
+            );
         }
 
         restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
@@ -96,7 +102,7 @@ int main (int argc, char *argv[]) {
         std::ifstream in;
         in.open (argv[1], std::ifstream::in | std::ifstream::binary);
         if (!in.is_open()) {
-            ERR("Cannot open " << argv[1]);
+            throw OSRMException("Cannot open osrm input file");
         }
 
         std::string nodeOut(argv[1]);		nodeOut += ".nodes";
@@ -107,7 +113,7 @@ int main (int argc, char *argv[]) {
 
         /*** Setup Scripting Environment ***/
         if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
-            ERR("Need profile.lua to apply traffic signal penalty");
+            throw OSRMException("Cannot open profile.lua ");
         }
 
         // Create a new lua state
@@ -125,18 +131,29 @@ int main (int argc, char *argv[]) {
         // Now call our function in a lua script
         INFO("Parsing speedprofile from " << (argc > 3 ? argv[3] : "profile.lua") );
         if(0 != luaL_dofile(myLuaState, (argc > 3 ? argv[3] : "profile.lua") )) {
-            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+            std::cerr <<
+                lua_tostring(myLuaState,-1)   <<
+                " occured in scripting block" <<
+                std::endl;
         }
 
         EdgeBasedGraphFactory::SpeedProfileProperties speedProfile;
 
         if(0 != luaL_dostring( myLuaState, "return traffic_signal_penalty\n")) {
-            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+            std::cerr <<
+                lua_tostring(myLuaState,-1) <<
+                " occured in scripting block" <<
+                std::endl;
+                return -1;
         }
         speedProfile.trafficSignalPenalty = 10*lua_tointeger(myLuaState, -1);
 
         if(0 != luaL_dostring( myLuaState, "return u_turn_penalty\n")) {
-            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+            std::cerr <<
+                lua_tostring(myLuaState,-1)   <<
+                " occured in scripting block" <<
+                std::endl;
+            return -1;
         }
         speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
 
@@ -146,9 +163,13 @@ int main (int argc, char *argv[]) {
         NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
         in.close();
         INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
-        if(0 == edgeList.size())
-            ERR("The input data is broken. It is impossible to do any turns in this graph");
-
+        if(0 == edgeList.size()) {
+            std::cerr <<
+                "The input data is broken. "
+                "It is impossible to do any turns in this graph" <<
+                std::endl;
+            return -1;
+        }
 
         /***
          * Building an edge-expanded graph from node-based input an turn restrictions
@@ -262,7 +283,13 @@ int main (int argc, char *argv[]) {
                 currentEdge.data = contractedEdgeList[edge].data;
                 if(currentEdge.data.distance <= 0) {
                     INFO("Edge: " << i << ",source: " << contractedEdgeList[edge].source << ", target: " << contractedEdgeList[edge].target << ", dist: " << currentEdge.data.distance);
-                    ERR("Failed at edges of node " << node << " of " << numberOfNodes);
+                    std::cerr <<
+                        "Failed at edges of node " <<
+                        node <<
+                        " of " <<
+                        numberOfNodes <<
+                        std::endl;
+                        return -1;
                 }
                 //Serialize edges
                 hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
@@ -278,8 +305,9 @@ int main (int argc, char *argv[]) {
         //cleanedEdgeList.clear();
         _nodes.clear();
         INFO("finished preprocessing");
-    } catch (std::exception &e) {
-        ERR("Exception occured: " << e.what());
+    } catch ( const std::exception &e ) {
+        std::cerr << "Exception occured: " << e.what() << std::endl;
+        return -1;
     }
     return 0;
 }

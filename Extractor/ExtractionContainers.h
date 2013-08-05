@@ -39,14 +39,10 @@ public:
 
     ExtractionContainers() {
         //Check if another instance of stxxl is already running or if there is a general problem
-        try {
-            stxxl::vector<unsigned> testForRunningInstance;
-        } catch(std::exception & e) {
-            ERR("Could not instantiate STXXL layer." << std::endl << e.what());
-        }
-
+        stxxl::vector<unsigned> testForRunningInstance;
         nameVector.push_back("");
     }
+
     virtual ~ExtractionContainers() {
         usedNodeIDs.clear();
         allNodes.clear();

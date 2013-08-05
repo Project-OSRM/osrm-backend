@@ -27,6 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
 #include "Util/OpenMPWrapper.h"
+#include "Util/OSRMException.h"
 #include "Util/StringUtil.h"
 #include "Util/UUID.h"
 #include "typedefs.h"
@@ -45,7 +46,12 @@ int main (int argc, char *argv[]) {
         double startup_time = get_timestamp();
 
         if(argc < 2) {
-            ERR("usage: \n" << argv[0] << " <file.osm/.osm.bz2/.osm.pbf> [<profile.lua>]");
+            std::cerr <<
+                "usage: \n" <<
+                argv[0] <<
+                " <file.osm/.osm.bz2/.osm.pbf> [<profile.lua>]" <<
+                std::endl;
+            return -1;
         }
 
         /*** Setup Scripting Environment ***/
@@ -111,7 +117,7 @@ int main (int argc, char *argv[]) {
         }
 
         if(!parser->ReadHeader()) {
-            ERR("Parser not initialized!");
+            throw OSRMException("Parser not initialized!");
         }
         INFO("Parsing in progress..");
         double parsing_start_time = get_timestamp();
@@ -128,11 +134,16 @@ int main (int argc, char *argv[]) {
 
         INFO("extraction finished after " << get_timestamp() - startup_time << "s");
 
-        std::cout << "\nRun:\n"
-            << "./osrm-prepare " << output_file_name << " " << restrictionsFileName
-            << std::endl;
-        return 0;
+        std::cout <<
+            "\nRun:\n" <<
+            "./osrm-prepare " <<
+            output_file_name <<
+            " " <<
+            restrictionsFileName <<
+            std::endl;
     } catch(std::exception & e) {
-        WARN("unhandled exception: " << e.what());
+        INFO("unhandled exception: " << e.what());
+        return -1;
     }
+    return 0;
 }

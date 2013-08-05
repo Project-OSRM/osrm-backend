@@ -24,12 +24,14 @@
 #include <vector>
 #include <fstream>
 
+#include <boost/assert.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include "../Util/OSRMException.h"
 #include "../typedefs.h"
 
 //This is one big workaround for latest boost renaming woes.
@@ -102,8 +104,9 @@ private:
             streamToTemporaryFile(new boost::filesystem::fstream(pathToTemporaryFile, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary)),
             readWriteMutex(new boost::mutex)
         {
-            if(streamToTemporaryFile->fail())
-                ERR("Aborting, because temporary file at " << pathToTemporaryFile << " could not be created");
+            if(streamToTemporaryFile->fail()) {
+                throw OSRMException("temporary file could not be created");
+            }
         }
     };
     //vector of file streams that is used to store temporary data

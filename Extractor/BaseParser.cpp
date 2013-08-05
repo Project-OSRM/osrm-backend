@@ -29,7 +29,9 @@ extractor_callbacks(ec), scriptingEnvironment(se), luaState(NULL), use_turn_rest
 
 void BaseParser::ReadUseRestrictionsSetting() {
     if( 0 != luaL_dostring( luaState, "return use_turn_restrictions\n") ) {
-        ERR(lua_tostring( luaState,-1)<< " occured in scripting block");
+        throw OSRMException(
+            /*lua_tostring( luaState, -1 ) + */"ERROR occured in scripting block"
+        );
     }
     if( lua_isboolean( luaState, -1) ) {
         use_turn_restrictions = lua_toboolean(luaState, -1);
@@ -44,20 +46,14 @@ void BaseParser::ReadUseRestrictionsSetting() {
 void BaseParser::ReadRestrictionExceptions() {
     if(lua_function_exists(luaState, "get_exceptions" )) {
         //get list of turn restriction exceptions
-        try {
-            luabind::call_function<void>(
-                luaState,
-                "get_exceptions",
-                boost::ref(restriction_exceptions)
-                );
-            INFO("Found " << restriction_exceptions.size() << " exceptions to turn restriction");
-            BOOST_FOREACH(std::string & str, restriction_exceptions) {
-                INFO("   " << str);
-            }
-        } catch (const luabind::error &er) {
-            lua_State* Ler=er.state();
-            report_errors(Ler, -1);
-            ERR(er.what());
+        luabind::call_function<void>(
+            luaState,
+            "get_exceptions",
+            boost::ref(restriction_exceptions)
+        );
+        INFO("Found " << restriction_exceptions.size() << " exceptions to turn restriction");
+        BOOST_FOREACH(const std::string & str, restriction_exceptions) {
+            INFO("   " << str);
         }
     } else {
         INFO("Found no exceptions to turn restrictions");
@@ -72,37 +68,25 @@ void BaseParser::report_errors(lua_State *L, const int status) const {
 }
 
 void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) {
-    try {
-        luabind::call_function<void>( localLuaState, "node_function", boost::ref(n) );
-    } catch (const luabind::error &er) {
-        lua_State* Ler=er.state();
-        report_errors(Ler, -1);
-        ERR(er.what());
-    }
+    luabind::call_function<void>( localLuaState, "node_function", boost::ref(n) );
 }
 
 void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* localLuaState) {
     if(2 > w.path.size()) {
         return;
     }
-    try {
-        luabind::call_function<void>( localLuaState, "way_function", boost::ref(w) );
-    } catch (const luabind::error &er) {
-        lua_State* Ler=er.state();
-        report_errors(Ler, -1);
-        ERR(er.what());
-    }
+    luabind::call_function<void>( localLuaState, "way_function", boost::ref(w) );
 }
 
 bool BaseParser::ShouldIgnoreRestriction(const std::string& except_tag_string) const {
     //should this restriction be ignored? yes if there's an overlap between:
     //a) the list of modes in the except tag of the restriction (except_tag_string), ex: except=bus;bicycle
     //b) the lua profile defines a hierachy of modes, ex: [access, vehicle, bicycle]
-    
+
     if( "" == except_tag_string ) {
         return false;
     }
-    
+
     //Be warned, this is quadratic work here, but we assume that
     //only a few exceptions are actually defined.
     std::vector<std::string> exceptions;
