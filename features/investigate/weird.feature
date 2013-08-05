@@ -1,9 +1,9 @@
 @routing @weird
 Feature: Weird routings discovered
-	
+
 	Background:
 		Given the profile "testbot"
-	
+
 	Scenario: Routing on a oneway roundabout
 		Given the node map
 		 |   | d | c |   |
@@ -36,7 +36,7 @@ Feature: Weird routings discovered
 		 | c    | b  | cd,de,ef,fg,gh,ha,ab |
 		 | d    | c  | de,ef,fg,gh,ha,ab,bc |
 		 | e    | d  | ef,fg,gh,ha,ab,bc,cd |
-		 | f    | e  | fg,gh,ha,ab,bc,cd,de |
+		 | f    | e  |               		|
 		 | g    | f  | gh,ha,ab,bc,cd,de,ef |
 		 | h    | g  | ha,ab,bc,cd,de,ef,fg |
 		 | a    | h  | ab,bc,cd,de,ef,fg,gh |

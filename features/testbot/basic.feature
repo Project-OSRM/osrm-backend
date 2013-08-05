@@ -1,27 +1,27 @@
 @routing @basic
 Feature: Basic Routing
-	
+
 	Background:
 		Given the profile "testbot"
-	
+
 	@smallest
 	Scenario: A single way with two nodes
 		Given the node map
 		 | a | b |
-	
+
 		And the ways
 		 | nodes |
 		 | ab    |
-    
+
 		When I route I should get
 		 | from | to | route |
 		 | a    | b  | ab    |
 		 | b    | a  | ab    |
-		
+
 	Scenario: Routing in between two nodes of way
 		Given the node map
 		 | a | b | 1 | 2 | c | d |
-		
+
 		And the ways
 		 | nodes |
 		 | abcd  |
@@ -57,12 +57,12 @@ Feature: Basic Routing
 	Scenario: Two ways connected in a straight line
 		Given the node map
 		 | a | b | c |
-	
+
 		And the ways
 		 | nodes |
 		 | ab    |
 		 | bc    |
-    
+
 		When I route I should get
 		 | from | to | route |
 		 | a    | c  | ab,bc |
@@ -71,17 +71,17 @@ Feature: Basic Routing
 		 | b    | a  | ab    |
 		 | b    | c  | bc    |
 		 | c    | b  | bc    |
-		
+
 	Scenario: 2 unconnected parallel ways
 		Given the node map
 		 | a | b | c |
 		 | d | e | f |
-		
+
 		And the ways
 		 | nodes |
 		 | abc   |
 		 | def   |
-	    
+
 		When I route I should get
 		 | from | to | route |
 		 | a    | b  | abc   |
@@ -122,7 +122,7 @@ Feature: Basic Routing
 		 | ab    |
 		 | bc    |
 		 | ca    |
-		
+
 		When I route I should get
 		 | from | to | route |
 		 | a    | b  | ab    |
@@ -154,7 +154,7 @@ Feature: Basic Routing
 		 | cv    |
 		 | vw    |
 		 | wc    |
-		
+
 		When I route I should get
 		 | from | to | route |
 		 | a    | b  | ab    |
@@ -183,7 +183,7 @@ Feature: Basic Routing
 		 | c    | a  | abc     |
 		 | c    | e  | cde     |
 		 | e    | c  | cde     |
-		
+
 	Scenario: Grid city center
 		Given the node map
 		 | a | b | c | d |
@@ -266,7 +266,7 @@ Feature: Basic Routing
 		 | c    | b  | cd,de,ef,fg,gh,ha,ab |
 		 | d    | c  | de,ef,fg,gh,ha,ab,bc |
 		 | e    | d  | ef,fg,gh,ha,ab,bc,cd |
-		 | f    | e  | fg,gh,ha,ab,bc,cd,de |
+		 | f    | e  |  					|
 		 | g    | f  | gh,ha,ab,bc,cd,de,ef |
 		 | h    | g  | ha,ab,bc,cd,de,ef,fg |
 		 | a    | h  | ab,bc,cd,de,ef,fg,gh |
