@@ -4,7 +4,7 @@ DEFAULT_PORT = 5000
 
 
 puts "Ruby version #{RUBY_VERSION}"
-unless RUBY_VERSION =~ /^1.9/
+unless RUBY_VERSION.to_f >= 1.9
   raise "*** Please upgrade to Ruby 1.9.x to run the OSRM cucumber tests"
 end
 
