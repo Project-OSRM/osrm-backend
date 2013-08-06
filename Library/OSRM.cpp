@@ -25,7 +25,7 @@ OSRM::OSRM(const char * server_ini_path) {
         throw OSRMException("server.ini not found");
     }
 
-    BaseConfiguration serverConfig(server_ini_path);
+    IniFile serverConfig(server_ini_path);
 
     boost::filesystem::path base_path =
                boost::filesystem::absolute(server_ini_path).parent_path();

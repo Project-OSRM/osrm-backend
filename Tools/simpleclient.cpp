@@ -46,7 +46,7 @@ void print_tree(boost::property_tree::ptree const& pt, const unsigned recursion_
 int main (int argc, char * argv[]) {
     std::cout   << "\n starting up engines, compile at "
                 << __DATE__ << ", " __TIME__ << std::endl;
-    BaseConfiguration serverConfig((argc > 1 ? argv[1] : "server.ini"));
+    IniFile serverConfig((argc > 1 ? argv[1] : "server.ini"));
     OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
 
     RouteParameters route_parameters;

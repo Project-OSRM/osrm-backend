@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "Server/ServerFactory.h"
 
-#include "Util/BaseConfiguration.h"
+#include "Util/IniFile.h"
 #include "Util/InputFileUtil.h"
 #include "Util/OpenMPWrapper.h"
 #include "Util/UUID.h"
@@ -91,7 +91,7 @@ int main (int argc, char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        BaseConfiguration serverConfig((argc > 1 ? argv[1] : "server.ini"));
+        IniFile serverConfig((argc > 1 ? argv[1] : "server.ini"));
         OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
 
         Server * s = ServerFactory::CreateServer(serverConfig);

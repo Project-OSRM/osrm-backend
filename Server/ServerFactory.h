@@ -27,7 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "Server.h"
 
-#include "../Util/BaseConfiguration.h"
+#include "../Util/IniFile.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OpenMPWrapper.h"
 #include "../Util/OSRMException.h"
@@ -38,7 +38,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <zlib.h>
 
 struct ServerFactory {
-	static Server * CreateServer(BaseConfiguration& serverConfig) {
+	static Server * CreateServer(IniFile& serverConfig) {
 
 		if(!testDataFile(serverConfig.GetParameter("nodesData"))) {
 			throw OSRMException("nodes file not found");
@@ -76,7 +76,7 @@ struct ServerFactory {
 	}
 
 	static Server * CreateServer(const char * iniFile) {
-		BaseConfiguration serverConfig(iniFile);
+		IniFile serverConfig(iniFile);
 		return CreateServer(serverConfig);
 	}
 };

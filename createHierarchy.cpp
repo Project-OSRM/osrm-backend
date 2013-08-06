@@ -26,7 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DataStructures/QueryEdge.h"
 #include "DataStructures/StaticGraph.h"
 #include "DataStructures/StaticRTree.h"
-#include "Util/BaseConfiguration.h"
+#include "Util/IniFile.h"
 #include "Util/GraphLoader.h"
 #include "Util/InputFileUtil.h"
 #include "Util/LuaUtil.h"
@@ -49,7 +49,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
-typedef BaseConfiguration ContractorConfiguration;
+typedef IniFile ContractorConfiguration;
 
 std::vector<NodeInfo> internalToExternalNodeMapping;
 std::vector<_Restriction> inputRestrictions;

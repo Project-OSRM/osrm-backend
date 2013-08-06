@@ -35,7 +35,6 @@
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../Util/BaseConfiguration.h"
 #include "../Util/LuaUtil.h"
 
 #include <stxxl.h>

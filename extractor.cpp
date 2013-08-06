@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Extractor/ScriptingEnvironment.h"
 #include "Extractor/PBFParser.h"
 #include "Extractor/XMLParser.h"
-#include "Util/BaseConfiguration.h"
+#include "Util/IniFile.h"
 #include "Util/InputFileUtil.h"
 #include "Util/MachineInfo.h"
 #include "Util/OpenMPWrapper.h"
@@ -59,7 +59,7 @@ int main (int argc, char *argv[]) {
 
         unsigned number_of_threads = omp_get_num_procs();
         if(testDataFile("extractor.ini")) {
-            BaseConfiguration extractorConfig("extractor.ini");
+            IniFile extractorConfig("extractor.ini");
             INFO("2");
             unsigned rawNumber = stringToInt(extractorConfig.GetParameter("Threads"));
             INFO("3");
