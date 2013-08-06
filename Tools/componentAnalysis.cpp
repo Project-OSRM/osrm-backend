@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/BaseConfiguration.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/GraphLoader.h"
+#include "../Util/OSRMException.h"
 
 #include <boost/foreach.hpp>
 #include <fstream>
@@ -48,13 +49,14 @@ std::vector<NodeID>         traffic_light_node_IDs_vector;
 
 int main (int argument_count, char *argument_values[]) {
     if(argument_count < 3) {
-        ERR("usage:\n" << argument_values[0] << " <osrm> <osrm.restrictions>");
+        std::cerr << "usage:\n" << argument_values[0] << " <osrm> <osrm.restrictions>" << std::endl;
+        return -1;
     }
 
     INFO("Using restrictions from file: " << argument_values[2]);
     std::ifstream restriction_ifstream(argument_values[2], std::ios::binary);
     if(!restriction_ifstream.good()) {
-        ERR("Could not access <osrm-restrictions> files");
+        throw OSRMException("Could not access <osrm-restrictions> files");
     }
     uint32_t usable_restriction_count = 0;
     restriction_ifstream.read(
@@ -76,7 +78,7 @@ int main (int argument_count, char *argument_values[]) {
     );
 
     if (!input_stream.is_open()) {
-        ERR("Cannot open " << argument_values[1]);
+        throw OSRMException("Cannot open osrm file");
     }
 
     std::vector<ImportEdge> edge_list;

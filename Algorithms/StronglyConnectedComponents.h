@@ -350,9 +350,10 @@ public:
                         OGRFeature *poFeature;
                         poFeature = OGRFeature::CreateFeature( poLayer->GetLayerDefn() );
                         poFeature->SetGeometry( &lineString );
-                        if( poLayer->CreateFeature( poFeature ) != OGRERR_NONE )
-                        {
-                            ERR( "Failed to create feature in shapefile.\n" );
+                        if( poLayer->CreateFeature( poFeature ) != OGRERR_NONE ) {
+                            throw OSRMException(
+                                "Failed to create feature in shapefile."
+                            );
                         }
                         OGRFeature::DestroyFeature( poFeature );
                     }
