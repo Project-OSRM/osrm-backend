@@ -36,7 +36,7 @@ Feature: Weird routings discovered
 		 | c    | b  | cd,de,ef,fg,gh,ha,ab |
 		 | d    | c  | de,ef,fg,gh,ha,ab,bc |
 		 | e    | d  | ef,fg,gh,ha,ab,bc,cd |
-		 | f    | e  |               		|
+		 | f    | e  | fg,gh,ha,ab,bc,cd,de |
 		 | g    | f  | gh,ha,ab,bc,cd,de,ef |
 		 | h    | g  | ha,ab,bc,cd,de,ef,fg |
 		 | a    | h  | ab,bc,cd,de,ef,fg,gh |
