@@ -24,6 +24,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "OSRMException.h"
 #include "../DataStructures/HashTable.h"
 
+#include <boost/algorithm/string.hpp>
+
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -44,26 +46,22 @@ public:
                 std::vector<std::string> tokens;
                 Tokenize(line, tokens);
                 if(2 == tokens.size() )
-                    parameters.Add(tokens[0], tokens[1]);
+                    parameters.insert(std::make_pair(tokens[0], tokens[1]));
             }
             config.close();
         }
     }
 
-    std::string GetParameter(const char * key){
-        return GetParameter(std::string(key));
-    }
-
-    std::string GetParameter(std::string key) {
-        return parameters.Find(key);
+    std::string GetParameter(const std::string & key){
+         return parameters.Find(key);
     }
 
     void SetParameter(const char* key, const char* value) {
         SetParameter(std::string(key), std::string(value));
     }
 
-    void SetParameter(std::string key, std::string value) {
-        parameters.Set(key, value);
+    void SetParameter(const std::string key, std::string value) {
+        parameters[key] = value;
     }
 
 private:
@@ -77,29 +75,10 @@ private:
 
         while (std::string::npos != pos || std::string::npos != lastPos) {
             std::string temp = str.substr(lastPos, pos - lastPos);
-            TrimStringRight(temp);
-            TrimStringLeft(temp);
+            boost::trim(temp);
             tokens.push_back( temp );
             lastPos = str.find_first_not_of(delimiters, pos);
             pos = str.find_first_of(delimiters, lastPos);
-        }
-    }
-
-    void TrimStringRight(std::string& str) {
-        std::string::size_type pos = str.find_last_not_of(" ");
-        if (pos != std::string::npos) {
-            str.erase(pos+1);
-        } else {
-            str.erase( str.begin() , str.end() );
-        }
-    }
-
-    void TrimStringLeft(std::string& str) {
-        std::string::size_type pos = str.find_first_not_of(" ");
-        if (pos != std::string::npos) {
-            str.erase(0, pos);
-        } else {
-            str.erase( str.begin() , str.end() );
         }
     }
 
