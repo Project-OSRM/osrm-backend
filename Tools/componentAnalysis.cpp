@@ -25,8 +25,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../Util/InputFileUtil.h"
 #include "../Util/GraphLoader.h"
+#include "../Util/IniFile.h"
+#include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
 
 #include <boost/foreach.hpp>
