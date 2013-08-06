@@ -24,56 +24,35 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef HASHTABLE_H_
 #define HASHTABLE_H_
 
+#include <boost/ref.hpp>
 #include <boost/unordered_map.hpp>
 
 template<typename keyT, typename valueT>
-class HashTable {
-    typedef boost::unordered_map<keyT, valueT> MyHashTable;
+class HashTable : public boost::unordered_map<keyT, valueT> {
+private:
+    typedef boost::unordered_map<keyT, valueT> super;
 public:
-    typedef typename boost::unordered_map<keyT, valueT>::const_iterator MyIterator;
-    typedef MyIterator iterator;
-    HashTable() { }
-    HashTable(const unsigned size) {
-        table.resize(size);
-    }
+    HashTable() : super() { }
+
+    HashTable(const unsigned size) : super(size) { }
+
     inline void Add(const keyT& key, const valueT& value){
-        table[key] = value;
+        super::insert(std::make_pair(key, value));
     }
-    inline void Set(const keyT& key, const valueT& value){
-        table[key] = value;
-    }
+
     inline valueT Find(const keyT& key) const {
-        if(table.find(key) == table.end())
+        if(super::find(key) == super::end()) {
             return valueT();
-        return table.find(key)->second;
+        }
+        return boost::ref(super::find(key)->second);
     }
 
     inline bool Holds(const keyT& key) const {
-        if(table.find(key) == table.end())
+        if(super::find(key) == super::end()) {
             return false;
+        }
         return true;
     }
-    void EraseAll() {
-        if(table.size() > 0)
-            table.clear();
-    }
-
-    inline valueT operator[] (keyT key) const {
-    	if(table.find(key) == table.end())
-    		return valueT();
-    	return table.find(key)->second;
-    }
-    inline unsigned Size() const {
-        return table.size();
-    }
-    MyIterator begin() const {
-        return table.begin();
-    }
-    MyIterator end() const {
-        return table.end();
-    }
-private:
-    MyHashTable table;
 };
 
 #endif /* HASHTABLE_H_ */

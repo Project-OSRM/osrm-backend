@@ -60,7 +60,9 @@ int main (int argc, char *argv[]) {
         unsigned number_of_threads = omp_get_num_procs();
         if(testDataFile("extractor.ini")) {
             BaseConfiguration extractorConfig("extractor.ini");
+            INFO("2");
             unsigned rawNumber = stringToInt(extractorConfig.GetParameter("Threads"));
+            INFO("3");
             if( rawNumber != 0 && rawNumber <= number_of_threads) {
                 number_of_threads = rawNumber;
             }

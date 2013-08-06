@@ -53,7 +53,7 @@ struct RouteParameters {
     std::string language;
     std::vector<std::string> hints;
     std::vector<_Coordinate> coordinates;
-    typedef HashTable<std::string, std::string>::MyIterator OptionsIterator;
+    typedef HashTable<std::string, std::string>::const_iterator OptionsIterator;
 
     void setZoomLevel(const short i) {
         if (18 > i && 0 < i)

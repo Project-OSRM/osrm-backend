@@ -177,7 +177,7 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 			const int keyValue = dense.keys_vals ( denseTagIndex+1 );
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
 			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
-			extracted_nodes_vector[i].keyVals.Add(key, value);
+			extracted_nodes_vector[i].keyVals.insert(std::make_pair(key, value));
 			denseTagIndex += 2;
 		}
 	}
@@ -306,7 +306,7 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 		for(int j = 0; j < number_of_keys; ++j) {
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(inputWay.keys(j));
 			const std::string & val = threadData->PBFprimitiveBlock.stringtable().s(inputWay.vals(j));
-			parsed_way_vector[i].keyVals.Add(key, val);
+			parsed_way_vector[i].keyVals.insert(std::make_pair(key, val));
 		}
 	}
 

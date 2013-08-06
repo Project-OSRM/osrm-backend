@@ -49,7 +49,7 @@ struct ExtractionWay {
 		id = UINT_MAX;
 		nameID = UINT_MAX;
 		path.clear();
-		keyVals.EraseAll();
+		keyVals.clear();
         direction = ExtractionWay::notSure;
         speed = -1;
         backward_speed = -1;

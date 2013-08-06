@@ -58,9 +58,9 @@ public:
 
         searchEnginePtr = new SearchEngine(graph, nodeHelpDesk, names);
 
-        descriptorTable.Set("", 0); //default descriptor
-        descriptorTable.Set("json", 0);
-        descriptorTable.Set("gpx", 1);
+        descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
+        descriptorTable.insert(std::make_pair("json", 0));
+        descriptorTable.insert(std::make_pair("gpx" , 1));
     }
 
     virtual ~ViaRoutePlugin() {

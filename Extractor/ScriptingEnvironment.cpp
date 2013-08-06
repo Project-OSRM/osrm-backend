@@ -25,8 +25,9 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
 	INFO("Using script " << fileName);
 
     // Create a new lua state
-    for(int i = 0; i < omp_get_max_threads(); ++i)
+    for(int i = 0; i < omp_get_max_threads(); ++i) {
         luaStateVector.push_back(luaL_newstate());
+    }
 
     // Connect LuaBind to this lua state for all threads
 #pragma omp parallel
@@ -85,6 +86,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
 				  luabind::value("opposite", 3)
 			]
     	];
+
         luabind::module(myLuaState) [
             luabind::class_<std::vector<std::string> >("vector")
             .def("Add", &std::vector<std::string>::push_back)

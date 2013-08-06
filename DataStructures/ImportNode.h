@@ -46,7 +46,7 @@ struct ImportNode : public _Node {
     HashTable<std::string, std::string> keyVals;
 
 	inline void Clear() {
-		keyVals.EraseAll();
+		keyVals.clear();
 		lat = 0; lon = 0; id = 0; bollard = false; trafficLight = false;
 	}
 };

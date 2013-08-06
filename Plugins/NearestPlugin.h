@@ -38,8 +38,8 @@ public:
     NearestPlugin(QueryObjectsStorage * objects) : names(objects->names) {
         nodeHelpDesk = objects->nodeHelpDesk;
 
-        descriptorTable.Set("", 0); //default descriptor
-        descriptorTable.Set("json", 1);
+        descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
+        descriptorTable.insert(std::make_pair("json", 1));
     }
     std::string GetDescriptor() const { return std::string("nearest"); }
     std::string GetVersionString() const { return std::string("0.3 (DL)"); }
