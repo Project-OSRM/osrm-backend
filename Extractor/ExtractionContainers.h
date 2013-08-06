@@ -22,7 +22,7 @@
 #define EXTRACTIONCONTAINERS_H_
 
 #include "ExtractorStructs.h"
-#include "../DataStructures/TimingUtil.h"
+#include "../Util/TimingUtil.h"
 #include "../Util/UUID.h"
 
 #include <boost/foreach.hpp>

@@ -27,7 +27,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
-#include "../DataStructures/TimingUtil.h"
 #include "../typedefs.h"
 
 #include <boost/algorithm/string.hpp>

@@ -24,7 +24,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp )
 
-set(BOOST_COMPONENTS filesystem regex system thread)
+set(BOOST_COMPONENTS filesystem regex system thread timer)
 
 file(GLOB ExtractorGlob Extractor/*.cpp)
 set(ExtractorSources extractor.cpp ${ExtractorGlob})

@@ -22,11 +22,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define STATICRTREE_H_
 
 #include "MercatorUtil.h"
-#include "TimingUtil.h"
 #include "Coordinate.h"
 #include "PhantomNodes.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
+#include "../Util/TimingUtil.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
