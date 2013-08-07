@@ -56,8 +56,9 @@ struct RouteParameters {
     typedef HashTable<std::string, std::string>::const_iterator OptionsIterator;
 
     void setZoomLevel(const short i) {
-        if (18 > i && 0 < i)
+        if (18 > i && 0 < i) {
             zoomLevel = i;
+        }
     }
 
     void setAlternateRouteFlag(const bool b) {
@@ -105,12 +106,11 @@ struct RouteParameters {
         compression = b;
     }
 
-    void addCoordinate(boost::fusion::vector < double, double > arg_) {
+    void addCoordinate(const boost::fusion::vector < double, double > & arg_) {
         int lat = COORDINATE_PRECISION*boost::fusion::at_c < 0 > (arg_);
         int lon = COORDINATE_PRECISION*boost::fusion::at_c < 1 > (arg_);
         coordinates.push_back(_Coordinate(lat, lon));
     }
 };
-
 
 #endif /*ROUTE_PARAMETERS_H*/
