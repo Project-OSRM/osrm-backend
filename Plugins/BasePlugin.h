@@ -36,6 +36,19 @@ public:
 	virtual std::string GetDescriptor() const = 0;
 	virtual std::string GetVersionString() const = 0 ;
 	virtual void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) = 0;
+
+	inline bool checkCoord(const _Coordinate & c) {
+        if(
+            c.lat >   90*COORDINATE_PRECISION ||
+            c.lat <  -90*COORDINATE_PRECISION ||
+            c.lon >  180*COORDINATE_PRECISION ||
+            c.lon < -180*COORDINATE_PRECISION
+        ) {
+            return false;
+        }
+        return true;
+    }
+
 };
 
 #endif /* BASEPLUGIN_H_ */

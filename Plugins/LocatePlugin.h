@@ -99,19 +99,8 @@ public:
         reply.headers[0].value = tmp;
         return;
     }
-private:
-    inline bool checkCoord(const _Coordinate & c) {
-        if(
-            c.lat >   90*COORDINATE_PRECISION ||
-            c.lat <  -90*COORDINATE_PRECISION ||
-            c.lon >  180*COORDINATE_PRECISION ||
-            c.lon < -180*COORDINATE_PRECISION
-        ) {
-            return false;
-        }
-        return true;
-    }
 
+private:
     NodeInformationHelpDesk * nodeHelpDesk;
 };
 
