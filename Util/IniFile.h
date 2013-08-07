@@ -36,7 +36,8 @@ public:
     IniFile(const char * configFile) {
         std::ifstream config( configFile );
         if(!config) {
-            throw OSRMException("[config] .ini not found");
+            std::string str = "[config] " + std::string(configFile) + " not found";
+            throw OSRMException(str.c_str());
         }
 
         std::string line;
