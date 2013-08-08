@@ -62,6 +62,7 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 #endif
 
 int main (int argc, char * argv[]) {
+    LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
     if(!mlockall(MCL_CURRENT | MCL_FUTURE))
         SimpleLogger().Write(logWARNING) << "Process " << argv[0] << "could not be locked to RAM";
