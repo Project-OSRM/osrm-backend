@@ -11,7 +11,7 @@ before_script:
  - bundle install
  - mkdir build
  - cd build
- - cmake .. $OPTIONS
+ - cmake .. $CMAKEOPTIONS
 script: make
 after_script:
  - cd ..
