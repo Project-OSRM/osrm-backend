@@ -87,7 +87,7 @@ OSRM::~OSRM() {
 }
 
 void OSRM::RegisterPlugin(BasePlugin * plugin) {
-    SimpleLogger().Write() << "[plugin] " << plugin->GetDescriptor() << std::endl;
+    SimpleLogger().Write()  << "loaded plugin: " << plugin->GetDescriptor();
     pluginMap[plugin->GetDescriptor()] = plugin;
 }
 
