@@ -117,7 +117,7 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
             ++restrictionsIT;
         }
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        INFO("usable restrictions: " << usableRestrictionsCounter );
+        SimpleLogger().Write() << "usable restrictions: " << usableRestrictionsCounter;
         //serialize restrictions
         std::ofstream restrictionsOutstream;
         restrictionsOutstream.open(restrictionsFileName.c_str(), std::ios::binary);
@@ -298,7 +298,7 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
         //        addressOutFile.close();
         //        cout << "ok, after " << get_timestamp() - time << "s" << endl;
 
-        INFO("Processed " << usedNodeCounter << " nodes and " << usedEdgeCounter << " edges");
+        SimpleLogger().Write() << "Processed " << usedNodeCounter << " nodes and " << usedEdgeCounter << " edges";
 
 
     } catch ( const std::exception& e ) {

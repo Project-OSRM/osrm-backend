@@ -33,6 +33,8 @@ Strongly connected components using Tarjan's Algorithm
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/TurnInstructions.h"
 
+#include "../Util/SimpleLogger.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/integer.hpp>
@@ -243,7 +245,7 @@ public:
                 bool beforeRecursion = recursionStack.top().first;
                 TarjanStackFrame currentFrame = recursionStack.top().second;
                 NodeID v = currentFrame.v;
-//                INFO("popping node " << v << (beforeRecursion ? " before " : " after ") << "recursion");
+//                SimpleLogger().Write() << "popping node " << v << (beforeRecursion ? " before " : " after ") << "recursion";
                 recursionStack.pop();
 
                 if(beforeRecursion) {
@@ -256,45 +258,45 @@ public:
                     tarjanStack.push(v);
                     tarjanNodes[v].onStack = true;
                     ++index;
-//                    INFO("pushing " << v << " onto tarjan stack, idx[" << v << "]=" << tarjanNodes[v].index << ", lowlink["<< v << "]=" << tarjanNodes[v].lowlink);
+//                    SimpleLogger().Write() << "pushing " << v << " onto tarjan stack, idx[" << v << "]=" << tarjanNodes[v].index << ", lowlink["<< v << "]=" << tarjanNodes[v].lowlink;
 
                     //Traverse outgoing edges
                     for(TarjanDynamicGraph::EdgeIterator e2 = _nodeBasedGraph->BeginEdges(v); e2 < _nodeBasedGraph->EndEdges(v); ++e2) {
                         TarjanDynamicGraph::NodeIterator vprime = _nodeBasedGraph->GetTarget(e2);
-//                        INFO("traversing edge (" << v << "," << vprime << ")");
+//                        SimpleLogger().Write() << "traversing edge (" << v << "," << vprime << ")";
                         if(UINT_MAX == tarjanNodes[vprime].index) {
 
                             recursionStack.push(std::make_pair(true,TarjanStackFrame(vprime, v)));
                         } else {
-//                            INFO("Node " << vprime << " is already explored");
+//                            SimpleLogger().Write() << "Node " << vprime << " is already explored";
                             if(tarjanNodes[vprime].onStack) {
                                 unsigned newLowlink = std::min(tarjanNodes[v].lowlink, tarjanNodes[vprime].index);
-//                                INFO("Setting lowlink[" << v << "] from " << tarjanNodes[v].lowlink << " to " << newLowlink);
+//                                SimpleLogger().Write() << "Setting lowlink[" << v << "] from " << tarjanNodes[v].lowlink << " to " << newLowlink;
                                 tarjanNodes[v].lowlink = newLowlink;
 //                            } else {
-//                                INFO("But node " << vprime << " is not on stack");
+//                                SimpleLogger().Write() << "But node " << vprime << " is not on stack";
                             }
                         }
                     }
                 } else {
 
-//                    INFO("we are at the end of recursion and checking node " << v);
+//                    SimpleLogger().Write() << "we are at the end of recursion and checking node " << v;
                     { // setting lowlink in its own scope so it does not pollute namespace
                         //                        NodeID parent = (UINT_MAX == tarjanNodes[v].parent ? v : tarjanNodes[v].parent );
-//                        INFO("parent=" << currentFrame.parent);
-//                        INFO("tarjanNodes[" << v  << "].lowlink=" << tarjanNodes[v].lowlink << ", tarjanNodes[" << currentFrame.parent << "].lowlink=" << tarjanNodes[currentFrame.parent].lowlink);
+//                        SimpleLogger().Write() << "parent=" << currentFrame.parent;
+//                        SimpleLogger().Write() << "tarjanNodes[" << v  << "].lowlink=" << tarjanNodes[v].lowlink << ", tarjanNodes[" << currentFrame.parent << "].lowlink=" << tarjanNodes[currentFrame.parent].lowlink;
                         //Note the index shift by 1 compared to the recursive version
                         tarjanNodes[currentFrame.parent].lowlink = std::min(tarjanNodes[currentFrame.parent].lowlink, tarjanNodes[v].lowlink);
-//                        INFO("Setting tarjanNodes[" << currentFrame.parent  <<"].lowlink=" << tarjanNodes[currentFrame.parent].lowlink);
+//                        SimpleLogger().Write() << "Setting tarjanNodes[" << currentFrame.parent  <<"].lowlink=" << tarjanNodes[currentFrame.parent].lowlink;
                     }
-//                    INFO("tarjanNodes[" << v  << "].lowlink=" << tarjanNodes[v].lowlink << ", tarjanNodes[" << v  << "].index=" << tarjanNodes[v].index);
+//                    SimpleLogger().Write() << "tarjanNodes[" << v  << "].lowlink=" << tarjanNodes[v].lowlink << ", tarjanNodes[" << v  << "].index=" << tarjanNodes[v].index;
 
                     //after recursion, lets do cycle checking
                     //Check if we found a cycle. This is the bottom part of the recursion
                     if(tarjanNodes[v].lowlink == tarjanNodes[v].index) {
                         NodeID vprime;
                         do {
-//                            INFO("identified component " << currentComponent << ": " << tarjanStack.top());
+//                            SimpleLogger().Write() << "identified component " << currentComponent << ": " << tarjanStack.top();
                             vprime = tarjanStack.top(); tarjanStack.pop();
                             tarjanNodes[vprime].onStack = false;
                             componentsIndex[vprime] = currentComponent;
@@ -302,7 +304,7 @@ public:
                         } while( v != vprime);
                         vectorOfComponentSizes.push_back(sizeOfCurrentComponent);
                         if(sizeOfCurrentComponent > 1000)
-                            INFO("large component [" << currentComponent << "]=" << sizeOfCurrentComponent);
+                            SimpleLogger().Write() << "large component [" << currentComponent << "]=" << sizeOfCurrentComponent;
                         ++currentComponent;
                         sizeOfCurrentComponent = 0;
                     }
@@ -310,14 +312,14 @@ public:
             }
         }
 
-        INFO("identified: " << vectorOfComponentSizes.size() << " many components, marking small components");
+        SimpleLogger().Write() << "identified: " << vectorOfComponentSizes.size() << " many components, marking small components";
 
         int singleCounter = 0;
         for(unsigned i = 0; i < vectorOfComponentSizes.size(); ++i){
             if(1 == vectorOfComponentSizes[i])
                 ++singleCounter;
         }
-        INFO("identified " << singleCounter << " SCCs of size 1");
+        SimpleLogger().Write() << "identified " << singleCounter << " SCCs of size 1";
         uint64_t total_network_distance = 0;
         p.reinit(_nodeBasedGraph->GetNumberOfNodes());
         for(TarjanDynamicGraph::NodeIterator u = 0; u < _nodeBasedGraph->GetNumberOfNodes(); ++u ) {
@@ -363,7 +365,7 @@ public:
         OGRDataSource::DestroyDataSource( poDS );
         std::vector<NodeID>().swap(vectorOfComponentSizes);
         std::vector<NodeID>().swap(componentsIndex);
-        INFO("total network distance: " << total_network_distance/100/1000. << " km");
+        SimpleLogger().Write() << "total network distance: " << (uint64_t)total_network_distance/100/1000. << " km";
     }
 private:
     unsigned CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const {

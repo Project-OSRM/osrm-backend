@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/UUID.h"
 #include "../typedefs.h"
 
@@ -64,10 +65,9 @@ NodeID readBinaryOSRMGraphFromStream(
     in.read((char *) &uuid_loaded, sizeof(UUID));
 
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-        WARN(
+        SimpleLogger().Write(logWARNING) <<
             ".osrm was prepared with different build.\n"
-            "Reprocess to get rid of this warning."
-            )
+            "Reprocess to get rid of this warning.";
     }
 
     NodeID n, source, target;
@@ -75,7 +75,7 @@ NodeID readBinaryOSRMGraphFromStream(
     short dir;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     in.read((char*)&n, sizeof(NodeID));
-    INFO("Importing n = " << n << " nodes ");
+    SimpleLogger().Write() << "Importing n = " << n << " nodes ";
     _Node node;
     for (NodeID i=0; i<n; ++i) {
         in.read((char*)&node, sizeof(_Node));
@@ -92,11 +92,11 @@ NodeID readBinaryOSRMGraphFromStream(
     std::vector<NodeID>(trafficLightNodes).swap(trafficLightNodes);
 
     in.read((char*)&m, sizeof(unsigned));
-    INFO(" and " << m << " edges ");
+    SimpleLogger().Write() << " and " << m << " edges ";
     for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(inputRestrictions[i].fromNode);
         if( intNodeID == ext2IntNodeMap.end()) {
-            DEBUG("Unmapped from Node of restriction");
+            SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
             continue;
 
         }
@@ -104,14 +104,14 @@ NodeID readBinaryOSRMGraphFromStream(
 
         intNodeID = ext2IntNodeMap.find(inputRestrictions[i].viaNode);
         if( intNodeID == ext2IntNodeMap.end()) {
-            DEBUG("Unmapped via node of restriction");
+            SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
             continue;
         }
         inputRestrictions[i].viaNode = intNodeID->second;
 
         intNodeID = ext2IntNodeMap.find(inputRestrictions[i].toNode);
         if( intNodeID == ext2IntNodeMap.end()) {
-            DEBUG("Unmapped to node of restriction");
+            SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
             continue;
         }
         inputRestrictions[i].toNode = intNodeID->second;
@@ -152,7 +152,8 @@ NodeID readBinaryOSRMGraphFromStream(
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
         if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
 #ifndef NDEBUG
-            WARN(" unresolved source NodeID: " << source );
+            SimpleLogger().Write(logWARNING) <<
+                " unresolved source NodeID: " << source;
 #endif
             continue;
         }
@@ -160,7 +161,8 @@ NodeID readBinaryOSRMGraphFromStream(
         intNodeID = ext2IntNodeMap.find(target);
         if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
 #ifndef NDEBUG
-            WARN("unresolved target NodeID : " << target );
+            SimpleLogger().Write(logWARNING) <<
+            "unresolved target NodeID : " << target;
 #endif
             continue;
         }
@@ -211,7 +213,7 @@ NodeID readBinaryOSRMGraphFromStream(
     typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
     ext2IntNodeMap.clear();
     std::vector<EdgeT>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
-    INFO("Graph loaded ok and has " << edgeList.size() << " edges");
+    SimpleLogger().Write() << "Graph loaded ok and has " << edgeList.size() << " edges";
     return n;
 }
 template<typename EdgeT>
@@ -221,14 +223,14 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     in >> n;
-    DEBUG("Importing n = " << n << " nodes ");
+    SimpleLogger().Write(logDEBUG) << "Importing n = " << n << " nodes ";
     for (NodeID i=0; i<n; ++i) {
         in >> id >> ycoord >> xcoord;
         int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
         ext2IntNodeMap.insert(std::make_pair(id, i));
     }
     in >> m;
-    DEBUG(" and " << m << " edges");
+    SimpleLogger().Write(logDEBUG) << " and " << m << " edges";
 
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; ++i) {
@@ -296,8 +298,9 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         }
         assert(length > 0);
         assert(weight > 0);
-        if(dir <0 || dir > 2)
-            WARN("direction bogus: " << dir);
+        if(dir <0 || dir > 2) {
+            SimpleLogger().Write(logWARNING) << "direction bogus: " << dir;
+        }
         assert(0<=dir && dir<=2);
 
         bool forward = true;
@@ -349,9 +352,10 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     in >> d;
     in >> n;
     in >> m;
-#ifndef DEBUG
-    std::cout << "expecting " << n << " nodes and " << m << " edges ..." << flush;
-#endif
+
+    SimpleLogger().Write(logDEBUG) <<
+        "expecting " << n << " nodes and " << m << " edges ...";
+
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; i++) {
         EdgeWeight weight;
@@ -402,10 +406,9 @@ unsigned readHSGRFromStream(
     UUID uuid_loaded, uuid_orig;
     hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-        WARN(
+        SimpleLogger().Write(logWARNING) <<
             ".hsgr was prepared with different build.\n"
-            "Reprocess to get rid of this warning."
-        );
+            "Reprocess to get rid of this warning.";
     }
 
     unsigned number_of_nodes = 0;

@@ -29,6 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/IniFile.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 
 #include <boost/foreach.hpp>
 #include <fstream>
@@ -52,7 +53,7 @@ int main (int argument_count, char *argument_values[]) {
         return -1;
     }
 
-    INFO("Using restrictions from file: " << argument_values[2]);
+    SimpleLogger().Write() << "Using restrictions from file: " << argument_values[2];
     std::ifstream restriction_ifstream(argument_values[2], std::ios::binary);
     if(!restriction_ifstream.good()) {
         throw OSRMException("Could not access <osrm-restrictions> files");
@@ -91,17 +92,16 @@ int main (int argument_count, char *argument_values[]) {
     );
     input_stream.close();
 
-    INFO(
+    SimpleLogger().Write() <<
             restrictions_vector.size() << " restrictions, " <<
             bollard_node_IDs_vector.size() << " bollard nodes, " <<
-            traffic_light_node_IDs_vector.size() << " traffic lights"
-    );
+            traffic_light_node_IDs_vector.size() << " traffic lights";
 
     /***
      * Building an edge-expanded graph from node-based input an turn restrictions
      */
 
-    INFO("Starting SCC graph traversal");
+    SimpleLogger().Write() << "Starting SCC graph traversal";
     TarjanSCC * tarjan = new TarjanSCC (
             node_based_node_count,
             edge_list,
@@ -117,6 +117,6 @@ int main (int argument_count, char *argument_values[]) {
     std::vector<_Restriction>().swap(restrictions_vector);
     std::vector<NodeID>().swap(bollard_node_IDs_vector);
     std::vector<NodeID>().swap(traffic_light_node_IDs_vector);
-    INFO("finished component analysis");
+    SimpleLogger().Write() << "finished component analysis";
     return 0;
 }

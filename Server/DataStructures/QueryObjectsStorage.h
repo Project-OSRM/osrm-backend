@@ -24,8 +24,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include<vector>
 #include<string>
-
+#include "../../Util/GraphLoader.h"
 #include "../../Util/OSRMException.h"
+#include "../../Util/SimpleLogger.h"
 #include "../../DataStructures/NodeInformationHelpDesk.h"
 #include "../../DataStructures/QueryEdge.h"
 #include "../../DataStructures/StaticGraph.h"

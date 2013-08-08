@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "PhantomNodes.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
 
@@ -287,7 +288,10 @@ public:
      :  m_element_count(input_data_vector.size()),
         m_leaf_node_filename(leaf_node_filename)
     {
-        INFO("constructing r-tree of " << m_element_count << " elements");
+        SimpleLogger().Write() <<
+            "constructing r-tree of " << m_element_count <<
+            " elements";
+
         double time1 = get_timestamp();
         std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
@@ -394,7 +398,8 @@ public:
         //close tree node file.
         tree_node_file.close();
         double time2 = get_timestamp();
-        INFO("finished r-tree construction in " << (time2-time1) << " seconds");
+        SimpleLogger().Write() <<
+            "finished r-tree construction in " << (time2-time1) << " seconds";
     }
 
     //Read-only operation for queries
@@ -406,7 +411,7 @@ public:
         std::ifstream tree_node_file(node_filename.c_str(), std::ios::binary);
         uint32_t tree_size = 0;
         tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
-        //INFO("reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes");
+        //SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes";
         m_search_tree.resize(tree_size);
         tree_node_file.read((char*)&m_search_tree[0], sizeof(TreeNode)*tree_size);
         tree_node_file.close();
@@ -416,8 +421,8 @@ public:
         leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
         leaf_node_file.close();
 
-        //INFO( tree_size << " nodes in search tree");
-        //INFO( m_element_count << " elements in leafs");
+        //SimpleLogger().Write() << tree_size << " nodes in search tree";
+        //SimpleLogger().Write() << m_element_count << " elements in leafs";
     }
 /*
     inline void FindKNearestPhantomNodesForCoordinate(
@@ -432,7 +437,7 @@ public:
 
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
-        INFO("searching for coordinate " << input_coordinate);
+        SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
         double min_dist = DBL_MAX;
         double min_max_dist = DBL_MAX;
         bool found_a_nearest_edge = false;
@@ -561,7 +566,7 @@ public:
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-        INFO("mindist: " << min_distphantom_node.isBidirected() ? "yes" : "no") );
+        SimpleLogger().Write() << "mindist: " << min_distphantom_node.isBidirected() ? "yes" : "no");
         return found_a_nearest_edge;
 
     }
@@ -578,7 +583,7 @@ public:
 
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
-        //INFO("searching for coordinate " << input_coordinate);
+        //SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
         double min_dist = DBL_MAX;
         double min_max_dist = DBL_MAX;
         bool found_a_nearest_edge = false;
@@ -609,7 +614,7 @@ public:
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     ++io_count;
-                    //INFO("checking " << current_leaf_node.object_count << " elements");
+                    //SimpleLogger().Write() << "checking " << current_leaf_node.object_count << " elements";
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
                         DataT & current_edge = current_leaf_node.objects[i];
                         if(ignore_tiny_components && current_edge.belongsToTinyComponent) {
@@ -664,15 +669,15 @@ public:
                             )
                         ) {
                             BOOST_ASSERT_MSG(current_edge.id != result_phantom_node.edgeBasedNode, "IDs not different");
-                            //INFO("found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode);
+                            //SimpleLogger().Write() << "found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode;
                             result_phantom_node.weight2 = current_edge.weight;
                             if(current_edge.id < result_phantom_node.edgeBasedNode) {
                                 result_phantom_node.edgeBasedNode = current_edge.id;
                                 std::swap(result_phantom_node.weight1, result_phantom_node.weight2);
                                 std::swap(current_end_coordinate, current_start_coordinate);
-                            //    INFO("case 2");
+                            //    SimpleLogger().Write() <<"case 2";
                             }
-                            //INFO("w1: " << result_phantom_node.weight1 << ", w2: " << result_phantom_node.weight2);
+                            //SimpleLogger().Write() << "w1: " << result_phantom_node.weight1 << ", w2: " << result_phantom_node.weight2;
                         }
                     }
                 } else {
@@ -732,7 +737,7 @@ private:
         }
         if(!thread_local_rtree_stream->good()) {
             thread_local_rtree_stream->clear(std::ios::goodbit);
-            DEBUG("Resetting stale filestream");
+            SimpleLogger().Write(logDEBUG) << "Resetting stale filestream";
         }
         uint64_t seek_pos = sizeof(uint64_t) + leaf_id*sizeof(LeafNode);
         thread_local_rtree_stream->seekg(seek_pos);

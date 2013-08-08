@@ -33,15 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #endif
 
 #include <iostream>
-
-#define INFO(x) do {std::cout << "[i " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
-#define WARN(x) do {std::cerr << "[? " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
-
-#ifdef NDEBUG
-#define DEBUG(x)
-#else
-#define DEBUG(x) do {std::cout << "[d " << __FILE__ << ":" << __LINE__ << "] " << x << std::endl;} while(0);
-#endif
+#include <ostream>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -54,7 +46,6 @@ digitT round(digitT x) {
     return std::floor(x + 0.5);
 }
 #endif
-
 
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;

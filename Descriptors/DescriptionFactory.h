@@ -27,6 +27,7 @@
 #include "../DataStructures/SearchEngine.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <vector>

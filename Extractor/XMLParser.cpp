@@ -27,7 +27,9 @@
 #include <boost/ref.hpp>
 
 XMLParser::XMLParser(const char * filename, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser(ec, se) {
-	WARN("Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf");
+	SimpleLogger().Write(logWARNING) <<
+		"Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf";
+
 	inputReader = inputReaderFactory(filename);
 }
 

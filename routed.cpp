@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Util/IniFile.h"
 #include "Util/InputFileUtil.h"
 #include "Util/OpenMPWrapper.h"
+#include "Util/SimpleLogger.h"
 #include "Util/UUID.h"
 
 #ifdef __linux__
@@ -63,7 +64,7 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 int main (int argc, char * argv[]) {
 #ifdef __linux__
     if(!mlockall(MCL_CURRENT | MCL_FUTURE))
-        WARN("Process " << argv[0] << "could not be locked to RAM");
+        SimpleLogger().Write(logWARNING) << "Process " << argv[0] << "could not be locked to RAM";
 #endif
 #ifdef __linux__
 
@@ -122,7 +123,7 @@ int main (int argc, char * argv[]) {
         std::cout << "[server] stopping threads" << std::endl;
 
         if(!t.timed_join(boost::posix_time::seconds(2))) {
-//        	INFO("Threads did not finish within 2 seconds. Hard abort!");
+       	    SimpleLogger().Write(logDEBUG) << "Threads did not finish within 2 seconds. Hard abort!";
         }
 
         std::cout << "[server] freeing objects" << std::endl;

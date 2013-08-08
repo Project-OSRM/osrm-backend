@@ -23,6 +23,7 @@
 
 #include "BaseParser.h"
 #include "../DataStructures/Coordinate.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 

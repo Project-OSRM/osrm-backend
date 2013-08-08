@@ -36,6 +36,7 @@
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/LuaUtil.h"
+#include "../Util/SimpleLogger.h"
 
 #include <stxxl.h>
 

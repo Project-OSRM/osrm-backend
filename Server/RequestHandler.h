@@ -25,6 +25,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BasicDatastructures.h"
 #include "../Library/OSRM.h"
 #include "../Plugins/RouteParameters.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
@@ -53,8 +54,8 @@ public:
                 ltime=time(NULL);
                 Tm=localtime(&ltime);
 
-                INFO((Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday << "-" << (Tm->tm_mon+1 < 10 ? "0" : "" )  << (Tm->tm_mon+1) << "-" << 1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) << Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) << Tm->tm_sec << " " <<
-                        req.endpoint.to_string() << " " << req.referrer << ( 0 == req.referrer.length() ? "- " :" ") << req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri );
+                SimpleLogger().Write() << (Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday << "-" << (Tm->tm_mon+1 < 10 ? "0" : "" )  << (Tm->tm_mon+1) << "-" << 1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) << Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) << Tm->tm_sec << " " <<
+                        req.endpoint.to_string() << " " << req.referrer << ( 0 == req.referrer.length() ? "- " :" ") << req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri;
             }
 
             RouteParameters routeParameters;
@@ -84,7 +85,8 @@ public:
             }
         } catch(std::exception& e) {
             rep = http::Reply::stockReply(http::Reply::internalServerError);
-            WARN("[server error] code: " << e.what() << ", uri: " << req.uri);
+            SimpleLogger().Write(logWARNING) <<
+                "[server error] code: " << e.what() << ", uri: " << req.uri;
             return;
         }
     };

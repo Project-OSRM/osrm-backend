@@ -33,6 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
 #include "../Server/DataStructures/QueryObjectsStorage.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
 #include <cstdlib>
@@ -90,14 +91,14 @@ public:
         std::vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
-//                INFO("Decoding hint: " << routeParameters.hints[i] << " for location index " << i);
+//                SimpleLogger().Write() <<"Decoding hint: " << routeParameters.hints[i] << " for location index " << i;
                 DecodeObjectFromBase64(routeParameters.hints[i], phantomNodeVector[i]);
                 if(phantomNodeVector[i].isValid(nodeHelpDesk->getNumberOfNodes())) {
-//                    INFO("Decoded hint " << i << " successfully");
+//                    SimpleLogger().Write() << "Decoded hint " << i << " successfully";
                     continue;
                 }
             }
-//            INFO("Brute force lookup of coordinate " << i);
+//            SimpleLogger().Write() << "Brute force lookup of coordinate " << i;
             searchEnginePtr->FindPhantomNodeForCoordinate( rawRoute.rawViaNodeCoordinates[i], phantomNodeVector[i], routeParameters.zoomLevel);
         }
 
@@ -108,7 +109,7 @@ public:
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         }
         if( ( routeParameters.alternateRoute ) && (1 == rawRoute.segmentEndCoordinates.size()) ) {
-//            INFO("Checking for alternative paths");
+//            SimpleLogger().Write() << "Checking for alternative paths";
             searchEnginePtr->alternativePaths(rawRoute.segmentEndCoordinates[0],  rawRoute);
 
         } else {
@@ -117,7 +118,7 @@ public:
 
 
         if(INT_MAX == rawRoute.lengthOfShortestPath ) {
-            DEBUG( "Error occurred, single path not found" );
+            SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
         }
         reply.status = http::Reply::ok;
 
@@ -152,10 +153,10 @@ public:
 
         PhantomNodes phantomNodes;
         phantomNodes.startPhantom = rawRoute.segmentEndCoordinates[0].startPhantom;
-//        INFO("Start location: " << phantomNodes.startPhantom.location)
+//        SimpleLogger().Write() << "Start location: " << phantomNodes.startPhantom.location;
         phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
-//        INFO("TargetLocation: " << phantomNodes.targetPhantom.location);
-//        INFO("Number of segments: " << rawRoute.segmentEndCoordinates.size());
+//        SimpleLogger().Write() << "TargetLocation: " << phantomNodes.targetPhantom.location;
+//        SimpleLogger().Write() << "Number of segments: " << rawRoute.segmentEndCoordinates.size();
         desc->SetConfig(descriptorConfig);
 
         desc->Run(reply, rawRoute, phantomNodes, *searchEnginePtr);

@@ -20,7 +20,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 #include "QueryObjectsStorage.h"
-#include "../../Util/GraphLoader.h"
 
 QueryObjectsStorage::QueryObjectsStorage(
 	const std::string & hsgrPath,
@@ -31,7 +30,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 	const std::string & namesPath,
 	const std::string & timestampPath
 ) {
-	INFO("loading graph data");
+	SimpleLogger().Write() << "loading graph data";
 	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
     if(!hsgrInStream) {
     	throw OSRMException("hsgr not found");
@@ -47,15 +46,17 @@ QueryObjectsStorage::QueryObjectsStorage(
 	);
 	hsgrInStream.close();
 
-	INFO("Data checksum is " << checkSum);
+	SimpleLogger().Write() << "Data checksum is " << checkSum;
 	graph = new QueryGraph(nodeList, edgeList);
 	assert(0 == nodeList.size());
 	assert(0 == edgeList.size());
 
 	if(timestampPath.length()) {
-	    INFO("Loading Timestamp");
+	    SimpleLogger().Write() << "Loading Timestamp";
 	    std::ifstream timestampInStream(timestampPath.c_str());
-	    if(!timestampInStream) { WARN(timestampPath <<  " not found"); }
+	    if(!timestampInStream) {
+	    	SimpleLogger().Write(logWARNING) <<  timestampPath <<  " not found";
+	    }
 
 	    getline(timestampInStream, timestamp);
 	    timestampInStream.close();
@@ -67,7 +68,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 	    timestamp.resize(25);
 	}
 
-    INFO("Loading auxiliary information");
+    SimpleLogger().Write() << "Loading auxiliary information";
     //Init nearest neighbor data structure
 	nodeHelpDesk = new NodeInformationHelpDesk(
 		ramIndexPath,
@@ -79,7 +80,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 	);
 
 	//deserialize street name list
-	INFO("Loading names index");
+	SimpleLogger().Write() << "Loading names index";
 	std::ifstream namesInStream(namesPath.c_str(), std::ios::binary);
     if(!namesInStream) {
     	throw OSRMException("names file not found");
@@ -97,7 +98,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 	}
 	std::vector<std::string>(names).swap(names);
 	namesInStream.close();
-	INFO("All query data structures loaded");
+	SimpleLogger().Write() << "All query data structures loaded";
 }
 
 QueryObjectsStorage::~QueryObjectsStorage() {

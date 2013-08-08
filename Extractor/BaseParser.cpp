@@ -37,9 +37,9 @@ void BaseParser::ReadUseRestrictionsSetting() {
         use_turn_restrictions = lua_toboolean(luaState, -1);
     }
     if( use_turn_restrictions ) {
-        INFO("Using turn restrictions" );
+        SimpleLogger().Write() << "Using turn restrictions";
     } else {
-        INFO("Ignoring turn restrictions" );
+        SimpleLogger().Write() << "Ignoring turn restrictions";
     }
 }
 
@@ -51,12 +51,12 @@ void BaseParser::ReadRestrictionExceptions() {
             "get_exceptions",
             boost::ref(restriction_exceptions)
         );
-        INFO("Found " << restriction_exceptions.size() << " exceptions to turn restriction");
+        SimpleLogger().Write() << "Found " << restriction_exceptions.size() << " exceptions to turn restriction";
         BOOST_FOREACH(const std::string & str, restriction_exceptions) {
-            INFO("   " << str);
+            SimpleLogger().Write() << "   " << str;
         }
     } else {
-        INFO("Found no exceptions to turn restrictions");
+        SimpleLogger().Write() << "Found no exceptions to turn restrictions";
     }
 }
 

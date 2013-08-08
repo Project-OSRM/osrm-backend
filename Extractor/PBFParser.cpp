@@ -49,9 +49,10 @@ PBFParser::~PBFParser() {
 	}
 	google::protobuf::ShutdownProtobufLibrary();
 
-#ifndef NDEBUG
-	DEBUG("parsed " << blockCount << " blocks from pbf with " << groupCount << " groups");
-#endif
+	SimpleLogger().Write(logDEBUG) <<
+		"parsed " << blockCount <<
+		" blocks from pbf with " << groupCount <<
+		" groups";
 }
 
 inline bool PBFParser::ReadHeader() {
@@ -108,7 +109,7 @@ inline void PBFParser::ParseData() {
 		_ThreadData *threadData;
 		threadDataQueue->wait_and_pop(threadData);
 		if( NULL==threadData ) {
-			INFO("Parse Data Thread Finished");
+			SimpleLogger().Write() << "Parse Data Thread Finished";
 			threadDataQueue->push(NULL); // Signal end of data for other threads
 			break;
 		}

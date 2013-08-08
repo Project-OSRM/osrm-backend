@@ -162,7 +162,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
     originalEdgeDataOutFile.write((char*)&numberOfOriginalEdges, sizeof(unsigned));
 
 
-    INFO("Identifying small components");
+    SimpleLogger().Write() << "Identifying small components";
     //Run a BFS on the undirected graph and identify small components
     std::queue<std::pair<NodeID, NodeID> > bfsQueue;
     std::vector<unsigned> componentsIndex(_nodeBasedGraph->GetNumberOfNodes(), UINT_MAX);
@@ -179,7 +179,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
                 //fetch element from BFS queue
                 std::pair<NodeID, NodeID> currentQueueItem = bfsQueue.front();
                 bfsQueue.pop();
-                //                INFO("sizeof queue: " << bfsQueue.size() <<  ", sizeOfCurrentComponents: " <<  sizeOfCurrentComponent << ", settled nodes: " << settledNodes++ << ", max: " << endNodes);
+                // SimpleLogger().Write() << "sizeof queue: " << bfsQueue.size() <<  ", sizeOfCurrentComponents: " <<  sizeOfCurrentComponent << ", settled nodes: " << settledNodes++ << ", max: " << endNodes;
                 const NodeID v = currentQueueItem.first;  //current node
                 const NodeID u = currentQueueItem.second; //parent
                 //increment size counter of current component
@@ -216,7 +216,7 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
             ++currentComponent;
         }
     }
-    INFO("identified: " << vectorOfComponentSizes.size() << " many components");
+    SimpleLogger().Write() << "identified: " << vectorOfComponentSizes.size() << " many components";
 
     p.reinit(_nodeBasedGraph->GetNumberOfNodes());
     //loop over all edges and generate new set of nodes.
@@ -314,19 +314,19 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
     originalEdgeDataOutFile.write((char*)&numberOfOriginalEdges, sizeof(unsigned));
     originalEdgeDataOutFile.close();
 
-//    INFO("Sorting edge-based Nodes");
-//    std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end());
-//    INFO("Removing duplicate nodes (if any)");
+//    SimpleLogger().Write() <<"Sorting edge-based Nodes";
+//    std::sort(edgeBasedNodes.begin(), edgeBasedNodes.end();
+//    SimpleLogger().Write() <<"Removing duplicate nodes (if any)";
 //    edgeBasedNodes.erase( std::unique(edgeBasedNodes.begin(), edgeBasedNodes.end()), edgeBasedNodes.end() );
-//    INFO("Applying vector self-swap trick to free up memory");
-//    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
+//    SimpleLogger().Write() <<"Applying vector self-swap trick to free up memory";
+//    SimpleLogger().Write() <<"size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity();
 //    std::vector<EdgeBasedNode>(edgeBasedNodes).swap(edgeBasedNodes);
-//    INFO("size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity());
-    INFO("Node-based graph contains " << nodeBasedEdgeCounter     << " edges");
-    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges");
-//    INFO("Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << 2*((double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter));
-    INFO("Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << numberOfTurnRestrictions << " restrictions.");
-    INFO("Generated " << edgeBasedNodes.size() << " edge based nodes");
+//    SimpleLogger().Write() <<"size: " << edgeBasedNodes.size() << ", cap: " << edgeBasedNodes.capacity();
+    SimpleLogger().Write() <<"Node-based graph contains " << nodeBasedEdgeCounter     << " edges";
+    SimpleLogger().Write() <<"Edge-based graph contains " << edgeBasedEdges.size()    << " edges";
+//    SimpleLogger().Write() << "Edge-based graph contains " << edgeBasedEdges.size()    << " edges, blowup is " << 2*((double)edgeBasedEdges.size()/(double)nodeBasedEdgeCounter;
+    SimpleLogger().Write() <<"Edge-based graph skipped "  << numberOfSkippedTurns     << " turns, defined by " << numberOfTurnRestrictions << " restrictions.";
+    SimpleLogger().Write() <<"Generated " << edgeBasedNodes.size() << " edge based nodes";
 }
 
 TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const {

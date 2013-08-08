@@ -22,6 +22,7 @@
 #define EXTRACTIONCONTAINERS_H_
 
 #include "ExtractorStructs.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
 #include "../Util/UUID.h"
 

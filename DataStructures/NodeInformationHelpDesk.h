@@ -136,7 +136,7 @@ private:
             throw OSRMException("edges file not found");
         }
 
-        DEBUG("Loading node data");
+        SimpleLogger().Write(logDEBUG) << "Loading node data";
         NodeInfo b;
         while(!nodes_input_stream.eof()) {
             nodes_input_stream.read((char *)&b, sizeof(NodeInfo));
@@ -145,7 +145,7 @@ private:
         std::vector<_Coordinate>(coordinateVector).swap(coordinateVector);
         nodes_input_stream.close();
 
-        DEBUG("Loading edge data");
+        SimpleLogger().Write(logDEBUG) << "Loading edge data";
         unsigned numberOfOrigEdges(0);
         edges_input_stream.read((char*)&numberOfOrigEdges, sizeof(unsigned));
         origEdgeData_viaNode.resize(numberOfOrigEdges);
@@ -163,8 +163,8 @@ private:
             origEdgeData_turnInstruction[i] = deserialized_originalEdgeData.turnInstruction;
         }
         edges_input_stream.close();
-        DEBUG("Loaded " << numberOfOrigEdges << " orig edges");
-        DEBUG("Opening NN indices");
+        SimpleLogger().Write(logDEBUG) << "Loaded " << numberOfOrigEdges << " orig edges";
+        SimpleLogger().Write(logDEBUG) << "Opening NN indices";
     }
 
 	std::vector<_Coordinate> coordinateVector;

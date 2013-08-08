@@ -22,7 +22,7 @@
 
 ScriptingEnvironment::ScriptingEnvironment() {}
 ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
-	INFO("Using script " << fileName);
+	SimpleLogger().Write() << "Using script " << fileName;
 
     // Create a new lua state
     for(int i = 0; i < omp_get_max_threads(); ++i) {

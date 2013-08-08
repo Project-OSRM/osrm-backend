@@ -32,6 +32,7 @@
 #include <boost/thread/mutex.hpp>
 
 #include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 //This is one big workaround for latest boost renaming woes.

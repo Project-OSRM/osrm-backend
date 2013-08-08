@@ -29,7 +29,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 inline bool testDataFile(const std::string & filename){
     boost::filesystem::path fileToTest(filename);
 	if(!boost::filesystem::exists(fileToTest))       {
-		WARN("Failed to open file " << filename << " for reading.");
+		SimpleLogger().Write(logWARNING) <<
+			"Failed to open file " << filename << " for reading.";
+
 		return false;
 	}
 	return true;

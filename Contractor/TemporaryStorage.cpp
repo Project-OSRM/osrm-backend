@@ -45,7 +45,7 @@ int TemporaryStorage::allocateSlot() {
     boost::mutex::scoped_lock lock(mutex);
     try {
         vectorOfStreamDatas.push_back(StreamData());
-        //INFO("created new temporary file: " << vectorOfStreamDatas.back().pathToTemporaryFile);
+        //SimpleLogger().Write() << "created new temporary file: " << vectorOfStreamDatas.back().pathToTemporaryFile;
     } catch(boost::filesystem::filesystem_error & e) {
         abort(e);
     }

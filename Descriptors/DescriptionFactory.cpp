@@ -123,7 +123,7 @@ void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLev
 //            		|| std::string::npos != string0.find(string1+" ;")
 //                    || std::string::npos != string0.find("; "+string1)
 //                    ){
-//                INFO("->next correct: " << string0 << " contains " << string1);
+//                SimpleLogger().Write() << "->next correct: " << string0 << " contains " << string1;
 //                for(; lastTurn != i; ++lastTurn)
 //                    pathDescription[lastTurn].nameID = pathDescription[i].nameID;
 //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
@@ -132,7 +132,7 @@ void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLev
 //                    || std::string::npos != string1.find(string0+" ;")
 //                    || std::string::npos != string1.find("; "+string0)
 //                    ){
-//                INFO("->prev correct: " << string1 << " contains " << string0);
+//                SimpleLogger().Write() << "->prev correct: " << string1 << " contains " << string0;
 //                pathDescription[i].nameID = pathDescription[i-1].nameID;
 //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
 //            }
@@ -153,24 +153,24 @@ void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLev
 
 
         if(TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
-            //INFO("Turn after " << lengthOfSegment << "m into way with name id " << segment.nameID);
+            //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << segment.nameID;
             assert(pathDescription[i].necessary);
             lengthOfSegment = 0;
             durationOfSegment = 0;
             indexOfSegmentBegin = i;
         }
     }
-    //    INFO("#segs: " << pathDescription.size());
+    //    SimpleLogger().Write() << "#segs: " << pathDescription.size();
 
     //Post-processing to remove empty or nearly empty path segments
     if(FLT_EPSILON > pathDescription.back().length) {
-        //        INFO("#segs: " << pathDescription.size() << ", last ratio: " << targetPhantom.ratio << ", length: " << pathDescription.back().length);
+        //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << targetPhantom.ratio << ", length: " << pathDescription.back().length;
         if(pathDescription.size() > 2){
             pathDescription.pop_back();
             pathDescription.back().necessary = true;
             pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
             targetPhantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
-            //            INFO("Deleting last turn instruction");
+            //            SimpleLogger().Write() << "Deleting last turn instruction";
         }
     } else {
         pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
@@ -182,7 +182,7 @@ void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLev
             pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
             pathDescription[0].necessary = true;
             startPhantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
-            //            INFO("Deleting first turn instruction, ratio: " << startPhantom.ratio << ", length: " << pathDescription[0].length);
+            //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << startPhantom.ratio << ", length: " << pathDescription[0].length;
         }
     } else {
         pathDescription[0].duration *= startPhantom.ratio;

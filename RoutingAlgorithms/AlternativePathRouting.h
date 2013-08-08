@@ -307,7 +307,7 @@ private:
         int aindex = 0;
         //compute forward sharing
         while( (packedAlternativePath[aindex] == packedShortestPath[aindex]) && (packedAlternativePath[aindex+1] == packedShortestPath[aindex+1]) ) {
-            //            INFO("retrieving edge (" << packedAlternativePath[aindex] << "," << packedAlternativePath[aindex+1] << ")");
+            //            SimpleLogger().Write() << "retrieving edge (" << packedAlternativePath[aindex] << "," << packedAlternativePath[aindex+1] << ")";
             typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex+1]);
             sharing += search_graph->GetEdgeData(edgeID).distance;
             ++aindex;
