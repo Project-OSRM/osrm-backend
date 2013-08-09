@@ -60,24 +60,26 @@ private:
 class SimpleLogger {
 public:
     std::ostringstream& Write(LogLevel l = logINFO) {
-		boost::mutex::scoped_lock lock(logger_mutex);
-		level = l;
-    	os << "[";
-   	   	switch(level) {
-    		case logINFO:
-	    		os << "info";
-	    		break;
-    		case logWARNING:
-	    		os << "warn";
-	    		break;
-    		case logDEBUG:
-	    		os << "debug";
-	    		break;
-    		default:
-	    		BOOST_ASSERT_MSG(false, "should not happen");
-	    		break;
-    	}
-		os << "] ";
+    	try {
+			boost::mutex::scoped_lock lock(logger_mutex);
+			level = l;
+			os << "[";
+			   	switch(level) {
+				case logINFO:
+		    		os << "info";
+		    		break;
+				case logWARNING:
+		    		os << "warn";
+		    		break;
+				case logDEBUG:
+		    		os << "debug";
+		    		break;
+				default:
+		    		BOOST_ASSERT_MSG(false, "should not happen");
+		    		break;
+			}
+			os << "] ";
+		} catch (...) { }
 	   	return os;
    }
 
