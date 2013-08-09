@@ -50,16 +50,16 @@ public:
         const unsigned check_sum
     ) : number_of_nodes(number_of_nodes), check_sum(check_sum)
     {
-        if ( "" == ramIndexInput ) {
+        if ( ramIndexInput.empty() ) {
             throw OSRMException("no ram index file name in server ini");
         }
-        if ( "" == fileIndexInput ) {
+        if ( fileIndexInput.empty() ) {
             throw OSRMException("no mem index file name in server ini");
         }
-        if ( "" == nodes_filename ) {
+        if ( nodes_filename.empty() ) {
             throw OSRMException("no nodes file name in server ini");
         }
-        if ( "" == edges_filename ) {
+        if ( edges_filename.empty() ) {
             throw OSRMException("no edges file name in server ini");
         }
 
