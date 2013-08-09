@@ -62,10 +62,12 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 #endif
 
 int main (int argc, char * argv[]) {
-    LogPolicy::GetInstance().Unmute();
+    try {
+        LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
-    if(!mlockall(MCL_CURRENT | MCL_FUTURE))
-        SimpleLogger().Write(logWARNING) << "Process " << argv[0] << "could not be locked to RAM";
+        if(!mlockall(MCL_CURRENT | MCL_FUTURE)) {
+            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << "could not be locked to RAM";
+        }
 #endif
 #ifdef __linux__
 
@@ -79,11 +81,10 @@ int main (int argc, char * argv[]) {
         //exit(-1);
     //}
 
-    try {
         //std::cout << "fingerprint: " << UUID::GetInstance().GetUUID() << std::endl;
 
-        std::cout << "starting up engines, compiled at " <<
-                                        __DATE__ << ", " __TIME__ << std::endl;
+        SimpleLogger().Write(logWARNING) <<
+            "starting up engines, compiled at " << __DATE__ << ", " __TIME__;
 
 #ifndef _WIN32
         int sig = 0;
