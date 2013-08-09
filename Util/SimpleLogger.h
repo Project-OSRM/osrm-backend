@@ -104,7 +104,6 @@ public:
 private:
 	LogLevel level;
 	std::ostringstream os;
-	bool m_is_mute;
 };
 
 #endif /* SIMPLE_LOGGER_H_ */
