@@ -147,13 +147,13 @@ public:
         return insertedNodes[index].weight;
     }
 
-    bool WasRemoved( NodeID node ) {
+    bool WasRemoved( const NodeID node ) {
         assert( WasInserted( node ) );
         const Key index = nodeIndex[node];
         return insertedNodes[index].key == 0;
     }
 
-    bool WasInserted( NodeID node ) {
+    bool WasInserted( const NodeID node ) {
         const Key index = nodeIndex[node];
         if ( index >= static_cast<Key> (insertedNodes.size()) )
             return false;
