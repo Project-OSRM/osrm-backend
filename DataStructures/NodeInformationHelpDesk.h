@@ -38,7 +38,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 typedef EdgeBasedGraphFactory::EdgeBasedNode RTreeLeaf;
 
-class NodeInformationHelpDesk : boost::noncopyable{
+class NodeInformationHelpDesk : boost::noncopyable {
 public:
     NodeInformationHelpDesk(
         const std::string & ramIndexInput,
@@ -47,8 +47,21 @@ public:
         const std::string & edges_filename,
         const unsigned number_of_nodes,
         const unsigned check_sum
-        ) : number_of_nodes(number_of_nodes), check_sum(check_sum)
+    ) : number_of_nodes(number_of_nodes), check_sum(check_sum)
     {
+        if ( "" == ramIndexInput ) {
+            throw OSRMException("no ram index file name in server ini");
+        }
+        if ( "" == fileIndexInput ) {
+            throw OSRMException("no mem index file name in server ini");
+        }
+        if ( "" == nodes_filename ) {
+            throw OSRMException("no nodes file name in server ini");
+        }
+        if ( "" == edges_filename ) {
+            throw OSRMException("no edges file name in server ini");
+        }
+
         read_only_rtree = new StaticRTree<RTreeLeaf>(
             ramIndexInput,
             fileIndexInput
@@ -136,7 +149,7 @@ private:
             throw OSRMException("edges file not found");
         }
 
-        SimpleLogger().Write(logDEBUG) << "Loading node data";
+        SimpleLogger().Write(logDEBUG) << "Loading node data" << nodes_file.length() << " ->" << nodes_file << "<-";
         NodeInfo b;
         while(!nodes_input_stream.eof()) {
             nodes_input_stream.read((char *)&b, sizeof(NodeInfo));

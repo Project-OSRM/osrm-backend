@@ -30,6 +30,25 @@ QueryObjectsStorage::QueryObjectsStorage(
 	const std::string & namesPath,
 	const std::string & timestampPath
 ) {
+	if("" == hsgrPath) {
+		throw OSRMException("no hsgr file given in ini file");
+	}
+	if("" == ramIndexPath) {
+		throw OSRMException("no ram index file given in ini file");
+	}
+	if("" == fileIndexPath) {
+		throw OSRMException("no mem index file given in ini file");
+	}
+	if("" == nodesPath) {
+		throw OSRMException("no nodes file given in ini file");
+	}
+	if("" == edgesPath) {
+		throw OSRMException("no edges file given in ini file");
+	}
+	if("" == namesPath) {
+		throw OSRMException("no names file given in ini file");
+	}
+
 	SimpleLogger().Write() << "loading graph data";
 	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
     if(!hsgrInStream) {

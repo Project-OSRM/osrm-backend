@@ -54,7 +54,11 @@ public:
     }
 
     std::string GetParameter(const std::string & key){
-         return parameters.Find(key);
+        return parameters.Find(key);
+    }
+
+    bool Holds(const std::string & key) const {
+        return parameters.Holds(key);
     }
 
     void SetParameter(const char* key, const char* value) {

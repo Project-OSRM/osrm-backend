@@ -30,6 +30,22 @@ OSRM::OSRM(const char * server_ini_path) {
     boost::filesystem::path base_path =
                boost::filesystem::absolute(server_ini_path).parent_path();
 
+    if ( !serverConfig.Holds("hsgrData")) {
+        throw OSRMException("no ram index file name in server ini");
+    }
+    if ( !serverConfig.Holds("ramIndex") ) {
+        throw OSRMException("no mem index file name in server ini");
+    }
+    if ( !serverConfig.Holds("fileIndex") ) {
+        throw OSRMException("no nodes file name in server ini");
+    }
+    if ( !serverConfig.Holds("nodesData") ) {
+        throw OSRMException("no nodes file name in server ini");
+    }
+    if ( !serverConfig.Holds("edgesData") ) {
+        throw OSRMException("no edges file name in server ini");
+    }
+
     boost::filesystem::path hsgr_path = boost::filesystem::absolute(
             serverConfig.GetParameter("hsgrData"),
             base_path
