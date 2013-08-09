@@ -50,20 +50,15 @@ QueryObjectsStorage::QueryObjectsStorage(
 	}
 
 	SimpleLogger().Write() << "loading graph data";
-	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
-    if(!hsgrInStream) {
-    	throw OSRMException("hsgr not found");
-    }
 	//Deserialize road network graph
 	std::vector< QueryGraph::_StrNode> nodeList;
 	std::vector< QueryGraph::_StrEdge> edgeList;
 	const int n = readHSGRFromStream(
-		hsgrInStream,
+		hsgrPath,
 		nodeList,
 		edgeList,
 		&checkSum
 	);
-	hsgrInStream.close();
 
 	SimpleLogger().Write() << "Data checksum is " << checkSum;
 	graph = new QueryGraph(nodeList, edgeList);
@@ -100,23 +95,31 @@ QueryObjectsStorage::QueryObjectsStorage(
 
 	//deserialize street name list
 	SimpleLogger().Write() << "Loading names index";
-	std::ifstream namesInStream(namesPath.c_str(), std::ios::binary);
-    if(!namesInStream) {
-    	throw OSRMException("names file not found");
+	boost::filesystem::path names_file(namesPath);
+
+    if ( !boost::filesystem::exists( names_file ) ) {
+        throw OSRMException("names file does not exist");
     }
-	unsigned size(0);
-	namesInStream.read((char *)&size, sizeof(unsigned));
+    if ( 0 == boost::filesystem::file_size( names_file ) ) {
+        throw OSRMException("names file is empty");
+    }
+
+	boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
+	unsigned size = 0;
+	name_stream.read((char *)&size, sizeof(unsigned));
+	BOOST_ASSERT_MSG(0 != size, "name file empty");
 
 	char buf[1024];
-	for(unsigned i = 0; i < size; ++i) {
-		unsigned sizeOfString = 0;
-		namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
-		buf[sizeOfString] = '\0'; // instead of memset
-		namesInStream.read(buf, sizeOfString);
+	for( unsigned i = 0; i < size; ++i ) {
+		unsigned size_of_string = 0;
+		name_stream.read((char *)&size_of_string, sizeof(unsigned));
+		buf[size_of_string] = '\0'; // instead of memset
+		name_stream.read(buf, size_of_string);
 		names.push_back(buf);
 	}
 	std::vector<std::string>(names).swap(names);
-	namesInStream.close();
+	BOOST_ASSERT_MSG(0 != names.size(), "could not load any names");
+	name_stream.close();
 	SimpleLogger().Write() << "All query data structures loaded";
 }
 

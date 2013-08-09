@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "PhantomNodes.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
+#include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
@@ -33,6 +34,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/minmax.hpp>
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -44,7 +47,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 
 #include <algorithm>
-#include <fstream>
 #include <queue>
 #include <string>
 #include <vector>
@@ -55,7 +57,7 @@ const static uint32_t RTREE_LEAF_NODE_SIZE = 1170;
 
 // Implements a static, i.e. packed, R-tree
 
-static boost::thread_specific_ptr<std::ifstream> thread_local_rtree_stream;
+static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtree_stream;
 
 template<class DataT>
 class StaticRTree : boost::noncopyable {
@@ -309,7 +311,7 @@ public:
 
         }
         //open leaf file
-        std::ofstream leaf_node_file(leaf_node_filename.c_str(), std::ios::binary);
+        boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
         leaf_node_file.write((char*) &m_element_count, sizeof(uint64_t));
 
         //sort the hilbert-value representatives
@@ -390,7 +392,11 @@ public:
         }
 
         //open tree file
-        std::ofstream tree_node_file(tree_node_filename.c_str(), std::ios::binary);
+        boost::filesystem::ofstream tree_node_file(
+            tree_node_filename,
+            std::ios::binary
+        );
+
         uint32_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
         tree_node_file.write((char *)&size_of_tree, sizeof(uint32_t));
@@ -408,7 +414,16 @@ public:
             const std::string & leaf_filename
     ) : m_leaf_node_filename(leaf_filename) {
         //open tree node file and load into RAM.
-        std::ifstream tree_node_file(node_filename.c_str(), std::ios::binary);
+        boost::filesystem::path node_file(node_filename);
+
+        if ( !boost::filesystem::exists( node_file ) ) {
+            throw OSRMException("ram index file does not exist");
+        }
+        if ( 0 == boost::filesystem::file_size( node_file ) ) {
+            throw OSRMException("ram index file is empty");
+        }
+        boost::filesystem::ifstream tree_node_file( node_file, std::ios::binary );
+
         uint32_t tree_size = 0;
         tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
         //SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes";
@@ -417,7 +432,15 @@ public:
         tree_node_file.close();
 
         //open leaf node file and store thread specific pointer
-        std::ifstream leaf_node_file(leaf_filename.c_str(), std::ios::binary);
+        boost::filesystem::path leaf_file(leaf_filename);
+        if ( !boost::filesystem::exists( leaf_file ) ) {
+            throw OSRMException("mem index file does not exist");
+        }
+        if ( 0 == boost::filesystem::file_size( leaf_file ) ) {
+            throw OSRMException("mem index file is empty");
+        }
+
+        boost::filesystem::ifstream leaf_node_file( leaf_file, std::ios::binary );
         leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
         leaf_node_file.close();
 
@@ -729,8 +752,8 @@ private:
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode& result_node) {
         if(!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open()) {
             thread_local_rtree_stream.reset(
-                new std::ifstream(
-                        m_leaf_node_filename.c_str(),
+                new boost::filesystem::ifstream(
+                        m_leaf_node_filename,
                         std::ios::in | std::ios::binary
                 )
             );

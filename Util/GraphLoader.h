@@ -31,6 +31,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/unordered_map.hpp>
 
 #include <cassert>
@@ -398,40 +400,51 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
 template<typename NodeT, typename EdgeT>
 unsigned readHSGRFromStream(
-    std::istream &hsgr_input_stream,
+    const std::string & hsgr_filename,
     std::vector<NodeT> & node_list,
     std::vector<EdgeT> & edge_list,
     unsigned * check_sum
 ) {
+    boost::filesystem::path hsgr_file(hsgr_filename);
+    if ( !boost::filesystem::exists( hsgr_file ) ) {
+        throw OSRMException("hsgr file does not exist");
+    }
+    if ( 0 == boost::filesystem::file_size( hsgr_file ) ) {
+        throw OSRMException("hsgr file is empty");
+    }
+
+    boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);
+
     UUID uuid_loaded, uuid_orig;
     hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
         SimpleLogger().Write(logWARNING) <<
-            ".hsgr was prepared with different build.\n"
+            ".hsgr was prepared with different build. "
             "Reprocess to get rid of this warning.";
     }
 
     unsigned number_of_nodes = 0;
     hsgr_input_stream.read((char*) check_sum, sizeof(unsigned));
     hsgr_input_stream.read((char*) & number_of_nodes, sizeof(unsigned));
+    BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
     node_list.resize(number_of_nodes + 1);
     hsgr_input_stream.read(
         (char*) &(node_list[0]),
         number_of_nodes*sizeof(NodeT)
     );
-
     unsigned number_of_edges = 0;
     hsgr_input_stream.read(
         (char*) &number_of_edges,
         sizeof(unsigned)
     );
+    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
 
     edge_list.resize(number_of_edges);
     hsgr_input_stream.read(
         (char*) &(edge_list[0]),
         number_of_edges*sizeof(EdgeT)
     );
-
+    hsgr_input_stream.close();
     return number_of_nodes;
 }
 

@@ -29,10 +29,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/noncopyable.hpp>
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 
@@ -137,19 +138,29 @@ public:
 
 private:
     void LoadNodesAndEdges(
-        const std::string & nodes_file,
-        const std::string & edges_file
+        const std::string & nodes_filename,
+        const std::string & edges_filename
     ) {
-        std::ifstream nodes_input_stream(nodes_file.c_str(), std::ios::binary);
-        if(!nodes_input_stream) {
-            throw OSRMException("nodes file not found");
+        boost::filesystem::path nodes_file(nodes_filename);
+        if ( !boost::filesystem::exists( nodes_file ) ) {
+            throw OSRMException("nodes file does not exist");
         }
-        std::ifstream edges_input_stream(edges_file.c_str(), std::ios::binary);
-        if(!edges_input_stream) {
-            throw OSRMException("edges file not found");
+        if ( 0 == boost::filesystem::file_size( nodes_file ) ) {
+            throw OSRMException("nodes file is empty");
         }
 
-        SimpleLogger().Write(logDEBUG) << "Loading node data" << nodes_file.length() << " ->" << nodes_file << "<-";
+        boost::filesystem::path edges_file(edges_filename);
+        if ( !boost::filesystem::exists( edges_file ) ) {
+            throw OSRMException("edges file does not exist");
+        }
+        if ( 0 == boost::filesystem::file_size( edges_file ) ) {
+            throw OSRMException("edges file is empty");
+        }
+
+        boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
+        boost::filesystem::ifstream edges_input_stream(edges_file, std::ios::binary);
+
+        SimpleLogger().Write(logDEBUG) << "Loading node data";
         NodeInfo b;
         while(!nodes_input_stream.eof()) {
             nodes_input_stream.read((char *)&b, sizeof(NodeInfo));
