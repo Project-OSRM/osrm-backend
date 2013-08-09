@@ -25,29 +25,36 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/HashTable.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <exception>
-#include <fstream>
 #include <iostream>
 #include <string>
 
 class IniFile {
 public:
-    IniFile(const char * configFile) {
-        std::ifstream config( configFile );
-        if(!config) {
-            std::string str = "[config] " + std::string(configFile) + " not found";
-            throw OSRMException(str.c_str());
+    IniFile(const char * config_filename) {
+        boost::filesystem::path config_file(config_filename);
+        if ( !boost::filesystem::exists( config_file ) ) {
+            std::string error = std::string(config_filename) + " not found";
+            throw OSRMException(error);
+       }
+        if ( 0 == boost::filesystem::file_size( config_file ) ) {
+            std::string error = std::string(config_filename) + " is empty";
+            throw OSRMException(error);
         }
 
+        boost::filesystem::ifstream config( config_file );
         std::string line;
         if (config.is_open()) {
             while ( config.good() )  {
                 getline (config,line);
                 std::vector<std::string> tokens;
                 Tokenize(line, tokens);
-                if(2 == tokens.size() )
+                if(2 == tokens.size() ) {
                     parameters.insert(std::make_pair(tokens[0], tokens[1]));
+                }
             }
             config.close();
         }

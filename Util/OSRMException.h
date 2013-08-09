@@ -22,15 +22,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define OSRM_EXCEPTION_H
 
 #include <exception>
+#include <string>
 
 class OSRMException: public std::exception {
 public:
     OSRMException(const char * message) : message(message) {}
+    OSRMException(const std::string & message) : message(message) {}
+    virtual ~OSRMException() throw() {}
 private:
     virtual const char* what() const throw() {
-        return message;
+        return message.c_str();
     }
-    const char * message;
+    const std::string message;
 };
 
 #endif /* OSRM_EXCEPTION_H */

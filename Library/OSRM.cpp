@@ -22,7 +22,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 OSRM::OSRM(const char * server_ini_path) {
     if( !testDataFile(server_ini_path) ){
-        throw OSRMException("server.ini not found");
+        std::string error_message = std::string(server_ini_path) + " not found";
+        throw OSRMException(error_message.c_str());
     }
 
     IniFile serverConfig(server_ini_path);
