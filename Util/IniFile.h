@@ -61,8 +61,8 @@ public:
         SetParameter(std::string(key), std::string(value));
     }
 
-    void SetParameter(const std::string key, std::string value) {
-        parameters[key] = value;
+    void SetParameter(const std::string & key, const std::string & value) {
+        parameters.insert(std::make_pair(key, value));
     }
 
 private:
