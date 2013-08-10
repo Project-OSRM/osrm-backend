@@ -5,7 +5,7 @@ compiler:
 # Make sure CMake is installed
 install:
  - sudo apt-get update >/dev/null
- - sudo apt-get -q install build-essential git cmake pkg-config libprotoc-dev libprotobuf7 protobuf-compiler libprotobuf-dev libosmpbf-dev libpng12-dev libbz2-dev libstxxl-dev libstxxl-doc libstxxl1 libxml2-dev libzip-dev libboost-thread-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems osmosis
+ - sudo apt-get -q install build-essential git cmake pkg-config libprotoc-dev libprotobuf7 protobuf-compiler libprotobuf-dev libosmpbf-dev libpng12-dev libbz2-dev libstxxl-dev libstxxl-doc libstxxl1 libxml2-dev libzip-dev libboost-thread-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-program-options-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems osmosis
 before_script:
  - sudo gem install bundler
  - bundle install
