@@ -48,6 +48,7 @@ std::vector<NodeID>         bollard_node_IDs_vector;
 std::vector<NodeID>         traffic_light_node_IDs_vector;
 
 int main (int argument_count, char *argument_values[]) {
+    LogPolicy::GetInstance().Unmute();
     if(argument_count < 3) {
         std::cerr << "usage:\n" << argument_values[0] << " <osrm> <osrm.restrictions>" << std::endl;
         return -1;
