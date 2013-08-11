@@ -83,7 +83,7 @@ int main (int argc, char * argv[]) {
 
         //std::cout << "fingerprint: " << UUID::GetInstance().GetUUID() << std::endl;
 
-        SimpleLogger().Write(logWARNING) <<
+        SimpleLogger().Write() <<
             "starting up engines, compiled at " << __DATE__ << ", " __TIME__;
 
 #ifndef _WIN32
