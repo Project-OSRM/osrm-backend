@@ -25,53 +25,38 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef SERVERFACTORY_H_
 #define SERVERFACTORY_H_
 
+#include <zlib.h>
 #include "Server.h"
 
 #include "../Util/IniFile.h"
-#include "../Util/InputFileUtil.h"
 #include "../Util/OpenMPWrapper.h"
 #include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
-#include "../typedefs.h"
-
-#include <zlib.h>
-
 struct ServerFactory {
-	static Server * CreateServer(IniFile& serverConfig) {
-
-		if(!testDataFile(serverConfig.GetParameter("nodesData"))) {
-			throw OSRMException("nodes file not found");
-		}
-
-		if(!testDataFile(serverConfig.GetParameter("hsgrData"))) {
-		    throw OSRMException("hsgr file not found");
-		}
-
-		if(!testDataFile(serverConfig.GetParameter("namesData"))) {
-		    throw OSRMException("names file not found");
-		}
-
-		if(!testDataFile(serverConfig.GetParameter("ramIndex"))) {
-		    throw OSRMException("ram index file not found");
-		}
-
-		if(!testDataFile(serverConfig.GetParameter("fileIndex"))) {
-		    throw OSRMException("file index file not found");
-		}
-
+	static Server * CreateServer( IniFile & serverConfig ) {
 		int threads = omp_get_num_procs();
-		if(serverConfig.GetParameter("IP") == "") {
+		if( serverConfig.GetParameter("IP").empty() ) {
 			serverConfig.SetParameter("IP", "0.0.0.0");
 		}
-		if(serverConfig.GetParameter("Port") == "") {
+		if( serverConfig.GetParameter("Port").empty() ) {
 			serverConfig.SetParameter("Port", "5000");
 		}
-		if(stringToInt(serverConfig.GetParameter("Threads")) != 0 && stringToInt(serverConfig.GetParameter("Threads")) <= threads)
+		if(
+			stringToInt(serverConfig.GetParameter("Threads")) >= 1 &&
+			stringToInt(serverConfig.GetParameter("Threads")) <= threads
+		) {
 			threads = stringToInt( serverConfig.GetParameter("Threads") );
+		}
 
-		std::cout << "[server] http 1.1 compression handled by zlib version " << zlibVersion() << std::endl;
-		Server * server = new Server(serverConfig.GetParameter("IP"), serverConfig.GetParameter("Port"), threads);
+		SimpleLogger().Write() <<
+			"http 1.1 compression handled by zlib version " << zlibVersion();
+		Server * server = new Server(
+			serverConfig.GetParameter("IP"),
+			serverConfig.GetParameter("Port"),
+			threads
+		);
 		return server;
 	}
 
