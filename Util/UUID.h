@@ -41,12 +41,12 @@ public:
     UUID();
 	~UUID();
 	const boost::uuids::uuid & GetUUID() const;
-	const bool IsMagicNumberOK() const;
-	const bool TestGraphUtil(const UUID & other) const;
-	const bool TestPrepare(const UUID & other) const;
-	const bool TestRTree(const UUID & other) const;
-	const bool TestNodeInfo(const UUID & other) const;
-	const bool TestQueryObjects(const UUID & other) const;
+	bool IsMagicNumberOK() const;
+	bool TestGraphUtil(const UUID & other) const;
+	bool TestPrepare(const UUID & other) const;
+	bool TestRTree(const UUID & other) const;
+	bool TestNodeInfo(const UUID & other) const;
+	bool TestQueryObjects(const UUID & other) const;
 private:
     const unsigned magic_number;
     char md5_prepare[33];
