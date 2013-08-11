@@ -21,8 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EXTRACTORCALLBACKS_H_
 #define EXTRACTORCALLBACKS_H_
 
-#include <string>
-#include <vector>
+#include "ExtractionContainers.h"
+#include "ExtractionHelperFunctions.h"
+#include "ExtractorStructs.h"
+
+#include "../DataStructures/Coordinate.h"
 
 #include <cfloat>
 
@@ -30,11 +33,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/regex.hpp>
 
-#include "ExtractionContainers.h"
-#include "ExtractionHelperFunctions.h"
-#include "ExtractorStructs.h"
-
-#include "../DataStructures/Coordinate.h"
+#include <string>
+#include <vector>
 
 class ExtractorCallbacks{
 private:
