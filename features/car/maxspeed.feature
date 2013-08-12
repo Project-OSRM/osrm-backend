@@ -52,3 +52,20 @@ Feature: Car - Max speed restrictions
      	 | 1        | 10               |                   | run   | snail |
      	 | 1        |                  | 10                | snail | run   |
      	 | 1        | 5                | 10                | walk  | run   |
+	
+	Scenario: Car - Maxspeed should not allow routing on unroutable ways
+	 	Then routability should be
+		 | highway   | railway | access | maxspeed | maxspeed:forward | maxspeed:backward | bothw |
+		 | primary   |         |        |          |                  |                   | x     |
+		 | secondary |         | no     |          |                  |                   |       |
+		 | secondary |         | no     | 100      |                  |                   |       |
+		 | secondary |         | no     |          | 100              |                   |       |
+		 | secondary |         | no     |          |                  | 100               |       |
+		 | (nil)     | train   |        |          |                  |                   |       |
+		 | (nil)     | train   |        | 100      |                  |                   |       |
+		 | (nil)     | train   |        |          | 100              |                   |       |
+		 | (nil)     | train   |        |          |                  | 100               |       |
+		 | runway    |         |        |          |                  |                   |       |
+		 | runway    |         |        | 100      |                  |                   |       |
+		 | runway    |         |        |          | 100              |                   |       |
+		 | runway    |         |        |          |                  | 100               |       |
