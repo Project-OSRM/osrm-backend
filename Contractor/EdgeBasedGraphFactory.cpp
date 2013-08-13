@@ -20,8 +20,7 @@
 
 #include "EdgeBasedGraphFactory.h"
 
-template<>
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : speedProfile(sp), inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<ImportEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : speedProfile(sp), inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
 	BOOST_FOREACH(const _Restriction & restriction, irs) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
@@ -49,7 +48,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
 
     DeallocatingVector< _NodeBasedEdge > edges;
     _NodeBasedEdge edge;
-    for ( std::vector< NodeBasedEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
+    for ( std::vector< ImportEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
         if(!i->isForward()) {
             edge.source = i->target();
             edge.target = i->source();
@@ -83,7 +82,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<NodeBasedEdg
             edges.push_back( edge );
         }
     }
-    std::vector<NodeBasedEdge>().swap(inputEdges);
+    std::vector<ImportEdge>().swap(inputEdges);
     std::sort( edges.begin(), edges.end() );
     _nodeBasedGraph = boost::make_shared<_NodeBasedDynamicGraph>( nodes, edges );
 }
@@ -107,10 +106,10 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector<EdgeBasedNode> & node
 }
 
 NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const {
-    std::pair < NodeID, NodeID > restrictionSource = std::make_pair(u, v);
+    const std::pair < NodeID, NodeID > restrictionSource = std::make_pair(u, v);
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);
     if (restrIter != _restrictionMap.end()) {
-        unsigned index = restrIter->second;
+        const unsigned index = restrIter->second;
         BOOST_FOREACH(const RestrictionSource & restrictionTarget, _restrictionBucketVector.at(index)) {
             if(restrictionTarget.second) {
                 return restrictionTarget.first;
@@ -122,11 +121,11 @@ NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const 
 
 bool EdgeBasedGraphFactory::CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const {
     //only add an edge if turn is not a U-turn except it is the end of dead-end street.
-    std::pair < NodeID, NodeID > restrictionSource = std::make_pair(u, v);
+   const std::pair < NodeID, NodeID > restrictionSource = std::make_pair(u, v);
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);
     if (restrIter != _restrictionMap.end()) {
-        unsigned index = restrIter->second;
-        BOOST_FOREACH(RestrictionTarget restrictionTarget, _restrictionBucketVector.at(index)) {
+        const unsigned index = restrIter->second;
+        BOOST_FOREACH(const RestrictionTarget & restrictionTarget, _restrictionBucketVector.at(index)) {
             if(w == restrictionTarget.first)
                 return true;
         }
@@ -276,8 +275,8 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
                         if(_trafficLights.find(v) != _trafficLights.end()) {
                             distance += speedProfile.trafficSignalPenalty;
                         }
-                        unsigned penalty = 0;
-                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w, penalty, myLuaState);
+                        unsigned penalty = GetTurnPenalty(u, v, w, myLuaState);
+                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
                         if(turnInstruction == TurnInstructions.UTurn)
                             distance += speedProfile.uTurnPenalty;
 //                        if(!edgeData1.isAccessRestricted && edgeData2.isAccessRestricted) {
@@ -329,20 +328,39 @@ void EdgeBasedGraphFactory::Run(const char * originalEdgeDataFilename, lua_State
     SimpleLogger().Write() <<"Generated " << edgeBasedNodes.size() << " edge based nodes";
 }
 
-TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, unsigned& penalty, lua_State *myLuaState) const {
-    const double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
+int EdgeBasedGraphFactory::GetTurnPenalty(
+    const NodeID u,
+    const NodeID v,
+    const NodeID w,
+    lua_State *myLuaState
+) const {
+    const double angle = GetAngleBetweenTwoEdges(
+        inputNodeInfoList[u],
+        inputNodeInfoList[v],
+        inputNodeInfoList[w]
+    );
 
     if( speedProfile.has_turn_penalty_function ) {
-    	try {
+        try {
             //call lua profile to compute turn penalty
-            penalty = luabind::call_function<int>( myLuaState, "turn_function", 180-angle );
+            return luabind::call_function<int>(
+                myLuaState,
+                "turn_function",
+                180.-angle
+            );
         } catch (const luabind::error &er) {
-            std::cerr << er.what() << std::endl;
-            //TODO handle lua errors
+            SimpleLogger().Write(logWARNING) << er.what();
         }
-    } else {
-        penalty = 0;
     }
+    return 0;
+}
+
+TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
+    const NodeID u,
+    const NodeID v,
+    const NodeID w
+) const {
+    const double angle = GetAngleBetweenTwoEdges(inputNodeInfoList[u], inputNodeInfoList[v], inputNodeInfoList[w]);
 
     if(u == w) {
         return TurnInstructions.UTurn;
