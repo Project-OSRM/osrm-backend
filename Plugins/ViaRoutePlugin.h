@@ -38,8 +38,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <cstdlib>
 
-#include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -49,17 +47,20 @@ private:
     std::vector<std::string> & names;
     StaticGraph<QueryEdge::EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
-    std::string pluginDescriptorString;
     SearchEngine * searchEnginePtr;
 public:
 
-    ViaRoutePlugin(QueryObjectsStorage * objects, std::string psd = "viaroute") : names(objects->names), pluginDescriptorString(psd) {
+    ViaRoutePlugin(QueryObjectsStorage * objects)
+     :
+        names(objects->names),
+        descriptor_string("viaroute")
+    {
         nodeHelpDesk = objects->nodeHelpDesk;
         graph = objects->graph;
 
         searchEnginePtr = new SearchEngine(graph, nodeHelpDesk, names);
 
-        descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
+        descriptorTable.insert(std::make_pair(""    , 0));
         descriptorTable.insert(std::make_pair("json", 0));
         descriptorTable.insert(std::make_pair("gpx" , 1));
     }
@@ -68,8 +69,8 @@ public:
         delete searchEnginePtr;
     }
 
-    std::string GetDescriptor() const { return pluginDescriptorString; }
-    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
+    const std::string & GetDescriptor() const { return descriptor_string; }
+
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if( 2 > routeParameters.coordinates.size() ) {
@@ -209,17 +210,7 @@ public:
         return;
     }
 private:
-    inline bool checkCoord(const _Coordinate & c) {
-        if(
-            c.lat >   90*COORDINATE_PRECISION ||
-            c.lat <  -90*COORDINATE_PRECISION ||
-            c.lon >  180*COORDINATE_PRECISION ||
-            c.lon < -180*COORDINATE_PRECISION
-        ) {
-            return false;
-        }
-        return true;
-    }
+    std::string descriptor_string;
 };
 
 

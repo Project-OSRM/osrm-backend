@@ -28,21 +28,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
 
-#include <fstream>
-
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(QueryObjectsStorage * objects) : names(objects->names) {
+    NearestPlugin(QueryObjectsStorage * objects )
+     :
+        names(objects->names),
+        descriptor_string("nearest")
+    {
         nodeHelpDesk = objects->nodeHelpDesk;
 
         descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
         descriptorTable.insert(std::make_pair("json", 1));
     }
-    std::string GetDescriptor() const { return std::string("nearest"); }
-    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
+    const std::string & GetDescriptor() const { return descriptor_string; }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
@@ -112,6 +113,7 @@ private:
     NodeInformationHelpDesk * nodeHelpDesk;
     HashTable<std::string, unsigned> descriptorTable;
     std::vector<std::string> & names;
+    std::string descriptor_string;
 };
 
 #endif /* NearestPlugin_H_ */

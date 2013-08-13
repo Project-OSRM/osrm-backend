@@ -1,8 +1,21 @@
 /*
- * LocatePlugin.h
- *
- *  Created on: 01.01.2011
- *      Author: dennis
+    open source routing machine
+    Copyright (C) Dennis Luxen, 2010
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU AFFERO General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or see http://www.gnu.org/licenses/agpl.txt.
  */
 
 #ifndef HELLOWORLDPLUGIN_H_
@@ -15,10 +28,9 @@
 
 class HelloWorldPlugin : public BasePlugin {
 public:
-	HelloWorldPlugin() {}
+	HelloWorldPlugin() : descriptor_string("hello"){}
 	virtual ~HelloWorldPlugin() { }
-	std::string GetDescriptor() const { return std::string("hello"); }
-	std::string GetVersionString() const { return std::string("0.1a"); }
+	const std::string & GetDescriptor()    const { return descriptor_string; }
 
 	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
 		reply.status = http::Reply::ok;
@@ -45,6 +57,8 @@ public:
 		reply.content.append(content.str());
 		reply.content.append("</body></html>");
 	}
+private:
+    std::string descriptor_string;
 };
 
 #endif /* HELLOWORLDPLUGIN_H_ */

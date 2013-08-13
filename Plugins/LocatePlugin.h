@@ -27,18 +27,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
 
-#include <fstream>
-
 /*
  * This Plugin locates the nearest node in the road network for a given coordinate.
  */
 class LocatePlugin : public BasePlugin {
 public:
-    LocatePlugin(QueryObjectsStorage * objects) {
+    LocatePlugin(QueryObjectsStorage * objects) : descriptor_string("locate") {
         nodeHelpDesk = objects->nodeHelpDesk;
     }
-    std::string GetDescriptor() const { return std::string("locate"); }
-    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
+    const std::string & GetDescriptor() const { return descriptor_string; }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
@@ -102,6 +99,7 @@ public:
 
 private:
     NodeInformationHelpDesk * nodeHelpDesk;
+    std::string descriptor_string;
 };
 
 #endif /* LOCATEPLUGIN_H_ */
