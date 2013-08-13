@@ -237,9 +237,10 @@ int main (int argc, char *argv[]) {
         Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
         double contractionStartedTimestamp(get_timestamp());
         contractor->Run();
+        const double contraction_duration = (get_timestamp() - contractionStartedTimestamp);
         SimpleLogger().Write() <<
             "Contraction took " <<
-            (get_timestamp() - contractionStartedTimestamp) <<
+            contraction_duration <<
             " sec";
 
         DeallocatingVector< QueryEdge > contractedEdgeList;
@@ -317,14 +318,15 @@ int main (int argc, char *argv[]) {
                 ++usedEdgeCounter;
             }
         }
-        double endTime = (get_timestamp() - startupTime);
+        SimpleLogger().Write() << "Preprocessing : " <<
+            (get_timestamp() - startupTime) << " seconds";
         SimpleLogger().Write() << "Expansion  : " <<
             (nodeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and " <<
             (edgeBasedNodeNumber/expansionHasFinishedTime) << " edges/sec";
 
         SimpleLogger().Write() << "Contraction: " <<
-            (edgeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and " <<
-            usedEdgeCounter/endTime << " edges/sec";
+            (edgeBasedNodeNumber/contraction_duration) << " nodes/sec and " <<
+            usedEdgeCounter/contraction_duration << " edges/sec";
 
         hsgr_output_stream.close();
         //cleanedEdgeList.clear();
@@ -333,7 +335,6 @@ int main (int argc, char *argv[]) {
     } catch ( const std::exception &e ) {
         SimpleLogger().Write(logWARNING) <<
             "Exception occured: " << e.what() << std::endl;
-
         return -1;
     }
     return 0;
