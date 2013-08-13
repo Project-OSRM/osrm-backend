@@ -72,7 +72,9 @@ public:
 		    		os << "warn";
 		    		break;
 				case logDEBUG:
+#ifndef NDEBUG
 		    		os << "debug";
+#endif
 		    		break;
 				default:
 		    		BOOST_ASSERT_MSG(false, "should not happen");
@@ -85,16 +87,17 @@ public:
 
 	virtual ~SimpleLogger() {
 		   	if(!LogPolicy::GetInstance().IsMute()) {
-			os << std::endl;
 		   	switch(level) {
 				case logINFO:
-					std::cout << os.str();
+					std::cout << os.str() << std::endl;
 					break;
 				case logWARNING:
-					std::cerr << os.str();
+					std::cerr << os.str() << std::endl;
 					break;
 				case logDEBUG:
-					std::cout << os.str();
+#ifndef NDEBUG
+					std::cout << os.str() << std::endl;
+#endif
 					break;
 				default:
 					BOOST_ASSERT_MSG(false, "should not happen");
