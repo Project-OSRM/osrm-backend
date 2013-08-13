@@ -83,10 +83,12 @@ NodeID readBinaryOSRMGraphFromStream(
         in.read((char*)&node, sizeof(_Node));
         int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
         ext2IntNodeMap.insert(std::make_pair(node.id, i));
-        if(node.bollard)
+        if(node.bollard) {
         	bollardNodes.push_back(i);
-        if(node.trafficLight)
+        }
+        if(node.trafficLight) {
         	trafficLightNodes.push_back(i);
+        }
     }
 
     //tighten vector sizes
