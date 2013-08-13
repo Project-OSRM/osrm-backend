@@ -97,7 +97,7 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(DeallocatingVector< EdgeBasedEdge 
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector<EdgeBasedNode> & nodes) {
 #ifndef NDEBUG
-    BOOST_FOREACH(EdgeBasedNode & node, edgeBasedNodes){
+    BOOST_FOREACH(const EdgeBasedNode & node, edgeBasedNodes){
         assert(node.lat1 != INT_MAX); assert(node.lon1 != INT_MAX);
         assert(node.lat2 != INT_MAX); assert(node.lon2 != INT_MAX);
     }
