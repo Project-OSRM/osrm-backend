@@ -30,22 +30,22 @@ QueryObjectsStorage::QueryObjectsStorage(
 	const std::string & namesPath,
 	const std::string & timestampPath
 ) {
-	if("" == hsgrPath) {
+	if( hsgrPath.empty() ) {
 		throw OSRMException("no hsgr file given in ini file");
 	}
-	if("" == ramIndexPath) {
+	if( ramIndexPath.empty() ) {
 		throw OSRMException("no ram index file given in ini file");
 	}
-	if("" == fileIndexPath) {
+	if( fileIndexPath.empty() ) {
 		throw OSRMException("no mem index file given in ini file");
 	}
-	if("" == nodesPath) {
+	if( nodesPath.empty() ) {
 		throw OSRMException("no nodes file given in ini file");
 	}
-	if("" == edgesPath) {
+	if( edgesPath.empty() ) {
 		throw OSRMException("no edges file given in ini file");
 	}
-	if("" == namesPath) {
+	if( namesPath.empty() ) {
 		throw OSRMException("no names file given in ini file");
 	}
 
