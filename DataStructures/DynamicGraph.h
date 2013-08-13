@@ -194,7 +194,7 @@ class DynamicGraph {
         //searches for a specific edge
         EdgeIterator FindEdge( const NodeIterator from, const NodeIterator to ) const {
             for ( EdgeIterator i = BeginEdges( from ), iend = EndEdges( from ); i != iend; ++i ) {
-                if ( m_edges[i].target == to ) {
+                if ( to == m_edges[i].target ) {
                     return i;
                 }
             }
