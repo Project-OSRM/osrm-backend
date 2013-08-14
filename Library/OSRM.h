@@ -29,7 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Plugins/NearestPlugin.h"
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
-#include "../Plugins/RouteParameters.h"
+#include "../Server/DataStructures/RouteParameters.h"
 #include "../Util/IniFile.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
