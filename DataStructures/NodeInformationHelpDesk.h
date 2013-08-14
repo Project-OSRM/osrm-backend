@@ -107,8 +107,8 @@ public:
     }
 
     inline bool FindNearestNodeCoordForLatLon(
-            const _Coordinate& input_coordinate,
-            _Coordinate& result,
+            const FixedPointCoordinate& input_coordinate,
+            FixedPointCoordinate& result,
             const unsigned zoom_level = 18
     ) const {
         PhantomNode resulting_phantom_node;
@@ -121,7 +121,7 @@ public:
     }
 
     inline bool FindPhantomNodeForCoordinate(
-            const _Coordinate & input_coordinate,
+            const FixedPointCoordinate & input_coordinate,
             PhantomNode & resulting_phantom_node,
             const unsigned zoom_level
     ) const {
@@ -164,9 +164,9 @@ private:
         NodeInfo b;
         while(!nodes_input_stream.eof()) {
             nodes_input_stream.read((char *)&b, sizeof(NodeInfo));
-            coordinateVector.push_back(_Coordinate(b.lat, b.lon));
+            coordinateVector.push_back(FixedPointCoordinate(b.lat, b.lon));
         }
-        std::vector<_Coordinate>(coordinateVector).swap(coordinateVector);
+        std::vector<FixedPointCoordinate>(coordinateVector).swap(coordinateVector);
         nodes_input_stream.close();
 
         SimpleLogger().Write(logDEBUG) << "Loading edge data";
@@ -191,7 +191,7 @@ private:
         SimpleLogger().Write(logDEBUG) << "Opening NN indices";
     }
 
-	std::vector<_Coordinate> coordinateVector;
+	std::vector<FixedPointCoordinate> coordinateVector;
 	std::vector<NodeID> origEdgeData_viaNode;
 	std::vector<unsigned> origEdgeData_nameID;
 	std::vector<TurnInstruction> origEdgeData_turnInstruction;

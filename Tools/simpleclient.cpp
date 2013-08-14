@@ -65,8 +65,8 @@ int main (int argc, char * argv[]) {
         route_parameters.language = ""; //unused atm
         //route_parameters.hints.push_back(); // see wiki, saves I/O if done properly
 
-        _Coordinate start_coordinate(52.519930*COORDINATE_PRECISION,13.438640*COORDINATE_PRECISION);
-        _Coordinate target_coordinate(52.513191*COORDINATE_PRECISION,13.415852*COORDINATE_PRECISION);
+        FixedPointCoordinate start_coordinate(52.519930*COORDINATE_PRECISION,13.438640*COORDINATE_PRECISION);
+        FixedPointCoordinate target_coordinate(52.513191*COORDINATE_PRECISION,13.415852*COORDINATE_PRECISION);
         route_parameters.coordinates.push_back(start_coordinate);
         route_parameters.coordinates.push_back(target_coordinate);
 

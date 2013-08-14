@@ -75,8 +75,8 @@ public:
             return id == other.id;
         }
 
-        inline _Coordinate Centroid() const {
-            _Coordinate centroid;
+        inline FixedPointCoordinate Centroid() const {
+            FixedPointCoordinate centroid;
             //The coordinates of the midpoint are given by:
             //x = (x1 + x2) /2 and y = (y1 + y2) /2.
             centroid.lon = (std::min(lon1, lon2) + std::max(lon1, lon2))/2;
@@ -87,6 +87,7 @@ public:
         inline bool isIgnored() const {
             return ignoreInGrid;
         }
+
         NodeID id;
         int lat1;
         int lat2;

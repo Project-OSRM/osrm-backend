@@ -31,7 +31,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 class HilbertCode : boost::noncopyable {
 public:
 	static uint64_t GetHilbertNumberForCoordinate(
-			const _Coordinate & current_coordinate) {
+		const FixedPointCoordinate & current_coordinate
+	) {
 		unsigned location[2];
 		location[0] = current_coordinate.lat+( 90*COORDINATE_PRECISION);
 		location[1] = current_coordinate.lon+(180*COORDINATE_PRECISION);

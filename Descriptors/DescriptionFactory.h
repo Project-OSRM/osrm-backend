@@ -63,10 +63,10 @@ public:
     std::vector <SegmentInformation> pathDescription;
     DescriptionFactory();
     virtual ~DescriptionFactory();
-    double GetBearing(const _Coordinate& C, const _Coordinate& B) const;
+    double GetBearing(const FixedPointCoordinate& C, const FixedPointCoordinate& B) const;
     void AppendEncodedPolylineString(std::string &output);
     void AppendUnencodedPolylineString(std::string &output);
-    void AppendSegment(const _Coordinate & coordinate, const _PathData & data);
+    void AppendSegment(const FixedPointCoordinate & coordinate, const _PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & startPhantom);
     void SetEndSegment(const PhantomNode & startPhantom);

@@ -24,13 +24,20 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Coordinate.h"
 
 struct PhantomNode {
-    PhantomNode() : edgeBasedNode(UINT_MAX), nodeBasedEdgeNameID(UINT_MAX), weight1(INT_MAX), weight2(INT_MAX), ratio(0.) {}
+    PhantomNode() :
+        edgeBasedNode(UINT_MAX),
+        nodeBasedEdgeNameID(UINT_MAX),
+        weight1(INT_MAX),
+        weight2(INT_MAX),
+        ratio(0.)
+    { }
+
     NodeID edgeBasedNode;
     unsigned nodeBasedEdgeNameID;
     int weight1;
     int weight2;
     double ratio;
-    _Coordinate location;
+    FixedPointCoordinate location;
     void Reset() {
         edgeBasedNode = UINT_MAX;
         nodeBasedEdgeNameID = UINT_MAX;
@@ -88,7 +95,7 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn){
 struct NodesOfEdge {
     NodeID edgeBasedNode;
     double ratio;
-    _Coordinate projectedPoint;
+    FixedPointCoordinate projectedPoint;
 };
 
 #endif /* PHANTOMNODES_H_ */

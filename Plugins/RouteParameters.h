@@ -52,7 +52,7 @@ struct RouteParameters {
     std::string jsonpParameter;
     std::string language;
     std::vector<std::string> hints;
-    std::vector<_Coordinate> coordinates;
+    std::vector<FixedPointCoordinate> coordinates;
     typedef HashTable<std::string, std::string>::const_iterator OptionsIterator;
 
     void setZoomLevel(const short i) {
@@ -109,7 +109,7 @@ struct RouteParameters {
     void addCoordinate(const boost::fusion::vector < double, double > & arg_) {
         int lat = COORDINATE_PRECISION*boost::fusion::at_c < 0 > (arg_);
         int lon = COORDINATE_PRECISION*boost::fusion::at_c < 1 > (arg_);
-        coordinates.push_back(_Coordinate(lat, lon));
+        coordinates.push_back(FixedPointCoordinate(lat, lon));
     }
 };
 

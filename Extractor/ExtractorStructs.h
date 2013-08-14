@@ -21,7 +21,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EXTRACTORSTRUCTS_H_
 #define EXTRACTORSTRUCTS_H_
 
-
 #include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportNode.h"
@@ -110,8 +109,8 @@ struct InternalExtractorEdge {
     bool isAccessRestricted;
     bool isContraFlow;
 
-    _Coordinate startCoord;
-    _Coordinate targetCoord;
+    FixedPointCoordinate startCoord;
+    FixedPointCoordinate targetCoord;
 
     static InternalExtractorEdge min_value() {
         return InternalExtractorEdge(0,0);

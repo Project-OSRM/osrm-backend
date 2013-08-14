@@ -48,7 +48,7 @@ public:
         }
 
         //query to helpdesk
-        _Coordinate result;
+        FixedPointCoordinate result;
         std::string tmp;
         //json
 

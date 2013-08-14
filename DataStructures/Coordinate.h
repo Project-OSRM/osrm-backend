@@ -18,8 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef COORDINATE_H_
-#define COORDINATE_H_
+#ifndef FIXED_POINT_COORDINATE_H_
+#define FIXED_POINT_COORDINATE_H_
 
 #include "../Util/StringUtil.h"
 
@@ -31,11 +31,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 static const double COORDINATE_PRECISION = 1000000.;
 
-struct _Coordinate {
+struct FixedPointCoordinate {
     int lat;
     int lon;
-    _Coordinate () : lat(INT_MIN), lon(INT_MIN) {}
-    explicit _Coordinate (int t, int n) : lat(t) , lon(n) {}
+    FixedPointCoordinate () : lat(INT_MIN), lon(INT_MIN) {}
+    explicit FixedPointCoordinate (int t, int n) : lat(t) , lon(n) {}
 
     void Reset() {
         lat = INT_MIN;
@@ -55,12 +55,12 @@ struct _Coordinate {
         }
         return true;
     }
-    bool operator==(const _Coordinate & other) const {
+    bool operator==(const FixedPointCoordinate & other) const {
         return lat == other.lat && lon == other.lon;
     }
 };
 
-inline std::ostream & operator<<(std::ostream & out, const _Coordinate & c){
+inline std::ostream & operator<<(std::ostream & out, const FixedPointCoordinate & c){
     out << "(" << c.lat << "," << c.lon << ")";
     return out;
 }
@@ -93,11 +93,11 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     return distance;
 }
 
-inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
+inline double ApproximateDistance(const FixedPointCoordinate &c1, const FixedPointCoordinate &c2) {
     return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
 }
 
-inline double ApproximateEuclideanDistance(const _Coordinate &c1, const _Coordinate &c2) {
+inline double ApproximateEuclideanDistance(const FixedPointCoordinate &c1, const FixedPointCoordinate &c2) {
     assert(c1.lat != INT_MIN);
     assert(c1.lon != INT_MIN);
     assert(c2.lat != INT_MIN);
@@ -122,7 +122,7 @@ static inline void convertInternalLatLonToString(const int value, std::string & 
     output = string;
 }
 
-static inline void convertInternalCoordinateToString(const _Coordinate & coord, std::string & output) {
+static inline void convertInternalCoordinateToString(const FixedPointCoordinate & coord, std::string & output) {
     std::string tmp;
     convertInternalLatLonToString(coord.lon, tmp);
     output = tmp;
@@ -131,7 +131,7 @@ static inline void convertInternalCoordinateToString(const _Coordinate & coord, 
     output += tmp;
     output += " ";
 }
-static inline void convertInternalReversedCoordinateToString(const _Coordinate & coord, std::string & output) {
+static inline void convertInternalReversedCoordinateToString(const FixedPointCoordinate & coord, std::string & output) {
     std::string tmp;
     convertInternalLatLonToString(coord.lat, tmp);
     output = tmp;
@@ -141,4 +141,4 @@ static inline void convertInternalReversedCoordinateToString(const _Coordinate &
     output += " ";
 }
 
-#endif /* COORDINATE_H_ */
+#endif /* FIXED_POINT_COORDINATE_H_ */

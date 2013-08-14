@@ -22,8 +22,8 @@
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     int nodes, std::vector<ImportEdge> & inputEdges,
-    std::vector<NodeID> & bn,
-    std::vector<NodeID> & tl,
+    std::vector<NodeID> & barrier_node_list,
+    std::vector<NodeID> & traffic_light_node_list,
     std::vector<TurnRestriction> & input_restrictions_list,
     std::vector<NodeInfo> & inputNodeInfoList,
     SpeedProfileProperties speedProfile
@@ -54,8 +54,15 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
         _restrictionBucketVector.at(index).push_back(std::make_pair(restriction.toNode, restriction.flags.isOnly));
     }
 
-	_barrierNodes.insert(bn.begin(), bn.end());
-	_trafficLights.insert(tl.begin(), tl.end());
+	_barrierNodes.insert(
+        barrier_node_list.begin(),
+        barrier_node_list.end()
+    );
+
+    _trafficLights.insert(
+        traffic_light_node_list.begin(),
+        traffic_light_node_list.end()
+    );
 
     DeallocatingVector< _NodeBasedEdge > edges;
     _NodeBasedEdge edge;

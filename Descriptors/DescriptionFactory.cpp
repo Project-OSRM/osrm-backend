@@ -32,7 +32,10 @@ inline double DescriptionFactory::RadianToDegree(const double radian) const {
         return radian * (180/M_PI);
 }
 
-double DescriptionFactory::GetBearing(const _Coordinate& A, const _Coordinate& B) const {
+double DescriptionFactory::GetBearing(
+    const FixedPointCoordinate & A,
+    const FixedPointCoordinate & B
+) const {
     double deltaLong = DegreeToRadian(B.lon/COORDINATE_PRECISION - A.lon/COORDINATE_PRECISION);
 
     double lat1 = DegreeToRadian(A.lat/COORDINATE_PRECISION);
@@ -59,7 +62,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & _targetPhantom) {
     pathDescription.push_back(SegmentInformation(_targetPhantom.location, _targetPhantom.nodeBasedEdgeNameID, 0, _targetPhantom.weight1, 0, true) );
 }
 
-void DescriptionFactory::AppendSegment(const _Coordinate & coordinate, const _PathData & data ) {
+void DescriptionFactory::AppendSegment(const FixedPointCoordinate & coordinate, const _PathData & data ) {
     if(1 == pathDescription.size() && pathDescription.back().location == coordinate) {
         pathDescription.back().nameID = data.nameID;
     } else {

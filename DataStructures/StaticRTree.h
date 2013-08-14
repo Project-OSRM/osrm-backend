@@ -100,8 +100,8 @@ private:
             max_lat = std::max(max_lat, other.max_lat);
         }
 
-        inline _Coordinate Centroid() const {
-            _Coordinate centroid;
+        inline FixedPointCoordinate Centroid() const {
+            FixedPointCoordinate centroid;
             //The coordinates of the midpoints are given by:
             //x = (x1 + x2) /2 and y = (y1 + y2) /2.
             centroid.lon = (min_lon + max_lon)/2;
@@ -110,10 +110,10 @@ private:
         }
 
         inline bool Intersects(const RectangleInt2D & other) const {
-            _Coordinate upper_left (other.max_lat, other.min_lon);
-            _Coordinate upper_right(other.max_lat, other.max_lon);
-            _Coordinate lower_right(other.min_lat, other.max_lon);
-            _Coordinate lower_left (other.min_lat, other.min_lon);
+            FixedPointCoordinate upper_left (other.max_lat, other.min_lon);
+            FixedPointCoordinate upper_right(other.max_lat, other.max_lon);
+            FixedPointCoordinate lower_right(other.min_lat, other.max_lon);
+            FixedPointCoordinate lower_left (other.min_lat, other.min_lon);
 
             return (
                     Contains(upper_left)
@@ -123,7 +123,7 @@ private:
             );
         }
 
-        inline double GetMinDist(const _Coordinate & location) const {
+        inline double GetMinDist(const FixedPointCoordinate & location) const {
             bool is_contained = Contains(location);
             if (is_contained) {
                 return 0.0;
@@ -169,13 +169,13 @@ private:
             return min_dist;
         }
 
-        inline double GetMinMaxDist(const _Coordinate & location) const {
+        inline double GetMinMaxDist(const FixedPointCoordinate & location) const {
             double min_max_dist = DBL_MAX;
             //Get minmax distance to each of the four sides
-            _Coordinate upper_left (max_lat, min_lon);
-            _Coordinate upper_right(max_lat, max_lon);
-            _Coordinate lower_right(min_lat, max_lon);
-            _Coordinate lower_left (min_lat, min_lon);
+            FixedPointCoordinate upper_left (max_lat, min_lon);
+            FixedPointCoordinate upper_right(max_lat, max_lon);
+            FixedPointCoordinate lower_right(min_lat, max_lon);
+            FixedPointCoordinate lower_left (min_lat, min_lon);
 
             min_max_dist = std::min(
                     min_max_dist,
@@ -211,7 +211,7 @@ private:
             return min_max_dist;
         }
 
-        inline bool Contains(const _Coordinate & location) const {
+        inline bool Contains(const FixedPointCoordinate & location) const {
             bool lats_contained =
                     (location.lat > min_lat) && (location.lat < max_lat);
             bool lons_contained =
@@ -303,7 +303,7 @@ public:
             input_wrapper_vector[element_counter].m_array_index = element_counter;
             //Get Hilbert-Value for centroid in mercartor projection
             DataT & current_element = input_data_vector[element_counter];
-            _Coordinate current_centroid = current_element.Centroid();
+            FixedPointCoordinate current_centroid = current_element.Centroid();
             current_centroid.lat = COORDINATE_PRECISION*lat2y(current_centroid.lat/COORDINATE_PRECISION);
 
             uint64_t current_hilbert_value = HilbertCode::GetHilbertNumberForCoordinate(current_centroid);
@@ -449,7 +449,7 @@ public:
     }
 /*
     inline void FindKNearestPhantomNodesForCoordinate(
-        const _Coordinate & location,
+        const FixedPointCoordinate & location,
         const unsigned zoom_level,
         const unsigned candidate_count,
         std::vector<std::pair<PhantomNode, double> > & result_vector
@@ -465,7 +465,7 @@ public:
         double min_max_dist = DBL_MAX;
         bool found_a_nearest_edge = false;
 
-        _Coordinate nearest, current_start_coordinate, current_end_coordinate;
+        FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
 
         //initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
@@ -493,8 +493,8 @@ public:
                         double current_ratio = 0.;
                         double current_perpendicular_distance = ComputePerpendicularDistance(
                                                                                              input_coordinate,
-                                                                                             _Coordinate(current_edge.lat1, current_edge.lon1),
-                                                                                             _Coordinate(current_edge.lat2, current_edge.lon2),
+                                                                                             FixedPointCoordinate(current_edge.lat1, current_edge.lon1),
+                                                                                             FixedPointCoordinate(current_edge.lat2, current_edge.lon2),
                                                                                              nearest,
                                                                                              &current_ratio
                                                                                              );
@@ -523,11 +523,11 @@ public:
                                   1 == abs(current_edge.id - result_phantom_node.edgeBasedNode )
                                   && CoordinatesAreEquivalent(
                                                               current_start_coordinate,
-                                                              _Coordinate(
+                                                              FixedPointCoordinate(
                                                                           current_edge.lat1,
                                                                           current_edge.lon1
                                                                           ),
-                                                              _Coordinate(
+                                                              FixedPointCoordinate(
                                                                           current_edge.lat2,
                                                                           current_edge.lon2
                                                                           ),
@@ -563,14 +563,14 @@ public:
 
         const double distance_to_edge =
         ApproximateDistance (
-            _Coordinate(nearest_edge.lat1, nearest_edge.lon1),
+            FixedPointCoordinate(nearest_edge.lat1, nearest_edge.lon1),
             result_phantom_node.location
         );
 
         const double length_of_edge =
         ApproximateDistance(
-            _Coordinate(nearest_edge.lat1, nearest_edge.lon1),
-            _Coordinate(nearest_edge.lat2, nearest_edge.lon2)
+            FixedPointCoordinate(nearest_edge.lat1, nearest_edge.lon1),
+            FixedPointCoordinate(nearest_edge.lat2, nearest_edge.lon2)
         );
 
         const double ratio = (found_a_nearest_edge ?
@@ -596,7 +596,7 @@ public:
 
   */
     bool FindPhantomNodeForCoordinate(
-            const _Coordinate & input_coordinate,
+            const FixedPointCoordinate & input_coordinate,
             PhantomNode & result_phantom_node,
             const unsigned zoom_level
     ) {
@@ -611,7 +611,7 @@ public:
         double min_max_dist = DBL_MAX;
         bool found_a_nearest_edge = false;
 
-        _Coordinate nearest, current_start_coordinate, current_end_coordinate;
+        FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
 
         //initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
@@ -650,8 +650,8 @@ public:
                        double current_ratio = 0.;
                        double current_perpendicular_distance = ComputePerpendicularDistance(
                                 input_coordinate,
-                                _Coordinate(current_edge.lat1, current_edge.lon1),
-                                _Coordinate(current_edge.lat2, current_edge.lon2),
+                                FixedPointCoordinate(current_edge.lat1, current_edge.lon1),
+                                FixedPointCoordinate(current_edge.lat2, current_edge.lon2),
                                 nearest,
                                 &current_ratio
                         );
@@ -680,11 +680,11 @@ public:
                                 1 == abs(current_edge.id - result_phantom_node.edgeBasedNode )
                         && CoordinatesAreEquivalent(
                                 current_start_coordinate,
-                                _Coordinate(
+                                FixedPointCoordinate(
                                         current_edge.lat1,
                                         current_edge.lon1
                                 ),
-                                _Coordinate(
+                                FixedPointCoordinate(
                                         current_edge.lat2,
                                         current_edge.lon2
                                 ),
@@ -768,10 +768,10 @@ private:
     }
 
     inline double ComputePerpendicularDistance(
-            const _Coordinate& inputPoint,
-            const _Coordinate& source,
-            const _Coordinate& target,
-            _Coordinate& nearest, double *r) const {
+            const FixedPointCoordinate& inputPoint,
+            const FixedPointCoordinate& source,
+            const FixedPointCoordinate& target,
+            FixedPointCoordinate& nearest, double *r) const {
         const double x = static_cast<double>(inputPoint.lat);
         const double y = static_cast<double>(inputPoint.lon);
         const double a = static_cast<double>(source.lat);
@@ -815,7 +815,7 @@ private:
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
-    inline bool CoordinatesAreEquivalent(const _Coordinate & a, const _Coordinate & b, const _Coordinate & c, const _Coordinate & d) const {
+    inline bool CoordinatesAreEquivalent(const FixedPointCoordinate & a, const FixedPointCoordinate & b, const FixedPointCoordinate & c, const FixedPointCoordinate & d) const {
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
     }
 

@@ -33,14 +33,14 @@ SearchEngine::SearchEngine(
 
 void SearchEngine::GetCoordinatesForNodeID(
     NodeID id,
-    _Coordinate& result
+    FixedPointCoordinate& result
     ) const {
     result.lat = _queryData.nodeHelpDesk->getLatitudeOfNode(id);
     result.lon = _queryData.nodeHelpDesk->getLongitudeOfNode(id);
 }
 
 void SearchEngine::FindPhantomNodeForCoordinate(
-    const _Coordinate & location,
+    const FixedPointCoordinate & location,
     PhantomNode & result,
     const unsigned zoomLevel
     ) const {
