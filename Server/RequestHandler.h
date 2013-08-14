@@ -23,8 +23,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "APIGrammar.h"
 #include "BasicDatastructures.h"
+#include "DataStructures/RouteParameters.h"
 #include "../Library/OSRM.h"
-#include "../Plugins/RouteParameters.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
