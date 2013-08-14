@@ -82,7 +82,7 @@ private:
         unsigned ecx = cpuid(1);
         bool hasSSE42 = ecx & (1 << SSE42_BIT);
         if (hasSSE42) {
-            SimpleLogger().Write() << "using hardware base CRC32 computation";
+            SimpleLogger().Write() << "using hardware based CRC32 computation";
             return &IteratorbasedCRC32::SSEBasedCRC32; //crc32 hardware accelarated;
         } else {
             SimpleLogger().Write() << "using software based CRC32 computation";
@@ -95,7 +95,7 @@ public:
         crcFunction = detectBestCRC32C();
     }
 
-    virtual ~IteratorbasedCRC32() {};
+    virtual ~IteratorbasedCRC32() { }
 
     unsigned operator()( ContainerT_iterator iter, const ContainerT_iterator end) {
         unsigned crc = 0;
