@@ -53,7 +53,7 @@ typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 typedef IniFile ContractorConfiguration;
 
 std::vector<NodeInfo> internalToExternalNodeMapping;
-std::vector<_Restriction> inputRestrictions;
+std::vector<TurnRestriction> inputRestrictions;
 std::vector<NodeID> bollardNodes;
 std::vector<NodeID> trafficLightNodes;
 std::vector<ImportEdge> edgeList;
@@ -85,7 +85,7 @@ int main (int argc, char *argv[]) {
                 "Could not access <osrm-restrictions> files" << std::endl;
 
         }
-        _Restriction restriction;
+        TurnRestriction restriction;
         UUID uuid_loaded, uuid_orig;
         unsigned usableRestrictionsCounter(0);
         restrictionsInstream.read((char*)&uuid_loaded, sizeof(UUID));
@@ -95,9 +95,15 @@ int main (int argc, char *argv[]) {
                 "Reprocess to get rid of this warning.";
         }
 
-        restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
+        restrictionsInstream.read(
+            (char*)&usableRestrictionsCounter,
+            sizeof(unsigned)
+        );
         inputRestrictions.resize(usableRestrictionsCounter);
-        restrictionsInstream.read((char *)&(inputRestrictions[0]), usableRestrictionsCounter*sizeof(_Restriction));
+        restrictionsInstream.read(
+            (char *)&(inputRestrictions[0]),
+            usableRestrictionsCounter*sizeof(TurnRestriction)
+        );
         restrictionsInstream.close();
 
         std::ifstream in;
@@ -190,7 +196,7 @@ int main (int argc, char *argv[]) {
         EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
         std::vector<ImportEdge>().swap(edgeList);
         edgeBasedGraphFactory->Run(edgeOut.c_str(), myLuaState);
-        std::vector<_Restriction>().swap(inputRestrictions);
+        std::vector<TurnRestriction>().swap(inputRestrictions);
         std::vector<NodeID>().swap(bollardNodes);
         std::vector<NodeID>().swap(trafficLightNodes);
         NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();

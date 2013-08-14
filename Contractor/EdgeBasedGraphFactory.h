@@ -105,6 +105,25 @@ public:
         bool has_turn_penalty_function;
     } speedProfile;
 
+    explicit EdgeBasedGraphFactory(
+        int nodes,
+        std::vector<ImportEdge> & inputEdges,
+        std::vector<NodeID> & _bollardNodes,
+        std::vector<NodeID> & trafficLights,
+        std::vector<TurnRestriction> & inputRestrictions,
+        std::vector<NodeInfo> & nI,
+        SpeedProfileProperties speedProfile
+    );
+
+    void Run(const char * originalEdgeDataFilename, lua_State *myLuaState);
+    void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
+    void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
+    void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
+    int GetTurnPenalty(const NodeID u, const NodeID v, const NodeID w, lua_State *myLuaState) const;
+
+    unsigned GetNumberOfNodes() const;
+
 private:
     struct _NodeBasedEdgeData {
         int distance;
@@ -128,6 +147,8 @@ private:
         bool backward;
         TurnInstruction turnInstruction;
     };
+
+    unsigned m_turn_restrictions_count;
 
     typedef DynamicGraph< _NodeBasedEdgeData > _NodeBasedDynamicGraph;
     typedef _NodeBasedDynamicGraph::InputEdge _NodeBasedEdge;
@@ -158,17 +179,6 @@ private:
     template<class CoordinateT>
     double GetAngleBetweenTwoEdges(const CoordinateT& A, const CoordinateT& C, const CoordinateT& B) const;
 
-public:
-    explicit EdgeBasedGraphFactory(int nodes, std::vector<ImportEdge> & inputEdges, std::vector<NodeID> & _bollardNodes, std::vector<NodeID> & trafficLights, std::vector<_Restriction> & inputRestrictions, std::vector<NodeInfo> & nI, SpeedProfileProperties speedProfile);
-
-    void Run(const char * originalEdgeDataFilename, lua_State *myLuaState);
-    void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
-    void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
-    void GetOriginalEdgeData( std::vector< OriginalEdgeData> & originalEdgeData);
-    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
-    int GetTurnPenalty(const NodeID u, const NodeID v, const NodeID w, lua_State *myLuaState) const;
-
-    unsigned GetNumberOfNodes() const;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */

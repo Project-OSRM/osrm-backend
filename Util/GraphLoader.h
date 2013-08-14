@@ -60,7 +60,7 @@ NodeID readBinaryOSRMGraphFromStream(
     std::vector<NodeID> &bollardNodes,
     std::vector<NodeID> &trafficLightNodes,
     std::vector<NodeInfo> * int2ExtNodeMap,
-    std::vector<_Restriction> & inputRestrictions
+    std::vector<TurnRestriction> & inputRestrictions
 ) {
     const UUID uuid_orig;
     UUID uuid_loaded;

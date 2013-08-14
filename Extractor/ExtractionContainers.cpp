@@ -125,7 +125,7 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
         restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
         for(restrictionsIT = restrictionsVector.begin(); restrictionsIT != restrictionsVector.end(); ++restrictionsIT) {
             if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
-                restrictionsOutstream.write((char *)&(restrictionsIT->restriction), sizeof(_Restriction));
+                restrictionsOutstream.write((char *)&(restrictionsIT->restriction), sizeof(TurnRestriction));
             }
         }
         restrictionsOutstream.close();

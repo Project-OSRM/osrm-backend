@@ -20,8 +20,18 @@
 
 #include "EdgeBasedGraphFactory.h"
 
-EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<ImportEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI, SpeedProfileProperties sp) : speedProfile(sp), inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
-	BOOST_FOREACH(const _Restriction & restriction, irs) {
+EdgeBasedGraphFactory::EdgeBasedGraphFactory(
+    int nodes, std::vector<ImportEdge> & inputEdges,
+    std::vector<NodeID> & bn,
+    std::vector<NodeID> & tl,
+    std::vector<TurnRestriction> & input_restrictions_list,
+    std::vector<NodeInfo> & inputNodeInfoList,
+    SpeedProfileProperties speedProfile
+) : speedProfile(speedProfile),
+    m_turn_restrictions_count(0),
+    inputNodeInfoList(inputNodeInfoList)
+{
+	BOOST_FOREACH(const TurnRestriction & restriction, input_restrictions_list) {
         std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
         RestrictionMap::iterator restrIter = _restrictionMap.find(restrictionSource);
@@ -36,10 +46,11 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<ImportEdge> 
                 continue;
             else if(restriction.flags.isOnly){
                 //We are going to insert an is_only_*-restriction. There can be only one.
+                m_turn_restrictions_count -= _restrictionBucketVector.at(index).size();
                 _restrictionBucketVector.at(index).clear();
             }
         }
-
+        ++m_turn_restrictions_count;
         _restrictionBucketVector.at(index).push_back(std::make_pair(restriction.toNode, restriction.flags.isOnly));
     }
 
@@ -48,36 +59,36 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(int nodes, std::vector<ImportEdge> 
 
     DeallocatingVector< _NodeBasedEdge > edges;
     _NodeBasedEdge edge;
-    for ( std::vector< ImportEdge >::const_iterator i = inputEdges.begin(); i != inputEdges.end(); ++i ) {
-        if(!i->isForward()) {
-            edge.source = i->target();
-            edge.target = i->source();
-            edge.data.backward = i->isForward();
-            edge.data.forward = i->isBackward();
+    BOOST_FOREACH(const ImportEdge & import_edge, inputEdges) {
+        if(!import_edge.isForward()) {
+            edge.source = import_edge.target();
+            edge.target = import_edge.source();
+            edge.data.backward = import_edge.isForward();
+            edge.data.forward = import_edge.isBackward();
         } else {
-            edge.source = i->source();
-            edge.target = i->target();
-            edge.data.forward = i->isForward();
-            edge.data.backward = i->isBackward();
+            edge.source = import_edge.source();
+            edge.target = import_edge.target();
+            edge.data.forward = import_edge.isForward();
+            edge.data.backward = import_edge.isBackward();
         }
         if(edge.source == edge.target) {
         	continue;
         }
-        edge.data.distance = (std::max)((int)i->weight(), 1 );
+        edge.data.distance = (std::max)((int)import_edge.weight(), 1 );
         assert( edge.data.distance > 0 );
         edge.data.shortcut = false;
-        edge.data.roundabout = i->isRoundabout();
-        edge.data.ignoreInGrid = i->ignoreInGrid();
-        edge.data.nameID = i->name();
-        edge.data.type = i->type();
-        edge.data.isAccessRestricted = i->isAccessRestricted();
+        edge.data.roundabout = import_edge.isRoundabout();
+        edge.data.ignoreInGrid = import_edge.ignoreInGrid();
+        edge.data.nameID = import_edge.name();
+        edge.data.type = import_edge.type();
+        edge.data.isAccessRestricted = import_edge.isAccessRestricted();
         edge.data.edgeBasedNodeID = edges.size();
-        edge.data.contraFlow = i->isContraFlow();
+        edge.data.contraFlow = import_edge.isContraFlow();
         edges.push_back( edge );
         if( edge.data.backward ) {
             std::swap( edge.source, edge.target );
-            edge.data.forward = i->isBackward();
-            edge.data.backward = i->isForward();
+            edge.data.forward = import_edge.isBackward();
+            edge.data.backward = import_edge.isForward();
             edge.data.edgeBasedNodeID = edges.size();
             edges.push_back( edge );
         }
@@ -105,7 +116,10 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector<EdgeBasedNode> & node
     nodes.swap(edgeBasedNodes);
 }
 
-NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const {
+NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(
+    const NodeID u,
+    const NodeID v
+) const {
     const std::pair < NodeID, NodeID > restrictionSource = std::make_pair(u, v);
     RestrictionMap::const_iterator restrIter = _restrictionMap.find(restrictionSource);
     if (restrIter != _restrictionMap.end()) {

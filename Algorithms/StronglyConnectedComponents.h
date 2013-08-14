@@ -118,9 +118,21 @@ private:
 
     DeallocatingVector<EdgeBasedNode>   edgeBasedNodes;
 public:
-    TarjanSCC(int nodes, std::vector<NodeBasedEdge> & inputEdges, std::vector<NodeID> & bn, std::vector<NodeID> & tl, std::vector<_Restriction> & irs, std::vector<NodeInfo> & nI) : inputNodeInfoList(nI), numberOfTurnRestrictions(irs.size()) {
-        BOOST_FOREACH(_Restriction & restriction, irs) {
-            std::pair<NodeID, NodeID> restrictionSource = std::make_pair(restriction.fromNode, restriction.viaNode);
+    TarjanSCC(
+        int nodes,
+        std::vector<NodeBasedEdge> & inputEdges,
+        std::vector<NodeID> & bn,
+        std::vector<NodeID> & tl,
+        std::vector<TurnRestriction> & irs,
+        std::vector<NodeInfo> & nI
+    ) :
+        inputNodeInfoList(nI),
+        numberOfTurnRestrictions(irs.size())
+    {
+        BOOST_FOREACH(const TurnRestriction & restriction, irs) {
+            std::pair<NodeID, NodeID> restrictionSource = std::make_pair(
+                restriction.fromNode, restriction.viaNode
+            );
             unsigned index;
             RestrictionMap::iterator restrIter = _restrictionMap.find(restrictionSource);
             if(restrIter == _restrictionMap.end()) {
@@ -138,7 +150,9 @@ public:
                 }
             }
 
-            _restrictionBucketVector.at(index).push_back(std::make_pair(restriction.toNode, restriction.flags.isOnly));
+            _restrictionBucketVector.at(index).push_back(
+                std::make_pair(restriction.toNode, restriction.flags.isOnly)
+            );
         }
 
         BOOST_FOREACH(NodeID id, bn) {

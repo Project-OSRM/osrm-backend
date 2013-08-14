@@ -43,19 +43,21 @@ typedef QueryEdge::EdgeData               EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 
 std::vector<NodeInfo>       internal_to_external_node_map;
-std::vector<_Restriction>   restrictions_vector;
+std::vector<TurnRestriction>   restrictions_vector;
 std::vector<NodeID>         bollard_node_IDs_vector;
 std::vector<NodeID>         traffic_light_node_IDs_vector;
 
-int main (int argument_count, char *argument_values[]) {
+int main (int argc, char * argv[]) {
     LogPolicy::GetInstance().Unmute();
-    if(argument_count < 3) {
-        std::cerr << "usage:\n" << argument_values[0] << " <osrm> <osrm.restrictions>" << std::endl;
+    if(argc < 3) {
+        SimpleLogger().Write(logWARNING) <<
+            "usage:\n" << argv[0] << " <osrm> <osrm.restrictions>";
         return -1;
     }
 
-    SimpleLogger().Write() << "Using restrictions from file: " << argument_values[2];
-    std::ifstream restriction_ifstream(argument_values[2], std::ios::binary);
+    SimpleLogger().Write() <<
+        "Using restrictions from file: " << argv[2];
+    std::ifstream restriction_ifstream(argv[2], std::ios::binary);
     if(!restriction_ifstream.good()) {
         throw OSRMException("Could not access <osrm-restrictions> files");
     }
@@ -68,15 +70,12 @@ int main (int argument_count, char *argument_values[]) {
 
     restriction_ifstream.read(
             (char *)&(restrictions_vector[0]),
-            usable_restriction_count*sizeof(_Restriction)
+            usable_restriction_count*sizeof(TurnRestriction)
     );
     restriction_ifstream.close();
 
     std::ifstream input_stream;
-    input_stream.open(
-            argument_values[1],
-            std::ifstream::in | std::ifstream::binary
-    );
+    input_stream.open( argv[1], std::ifstream::in | std::ifstream::binary );
 
     if (!input_stream.is_open()) {
         throw OSRMException("Cannot open osrm file");
@@ -115,7 +114,7 @@ int main (int argument_count, char *argument_values[]) {
 
     tarjan->Run();
 
-    std::vector<_Restriction>().swap(restrictions_vector);
+    std::vector<TurnRestriction>().swap(restrictions_vector);
     std::vector<NodeID>().swap(bollard_node_IDs_vector);
     std::vector<NodeID>().swap(traffic_light_node_IDs_vector);
     SimpleLogger().Write() << "finished component analysis";

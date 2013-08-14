@@ -46,7 +46,6 @@ int main (int argc, char *argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
         double startup_time = get_timestamp();
-
         if(argc < 2) {
             SimpleLogger().Write(logWARNING) <<
                 "usage: \n" <<
@@ -59,6 +58,7 @@ int main (int argc, char *argv[]) {
         ScriptingEnvironment scriptingEnvironment((argc > 2 ? argv[2] : "profile.lua"));
 
         unsigned number_of_threads = omp_get_num_procs();
+
         if(testDataFile("extractor.ini")) {
             IniFile extractorConfig("extractor.ini");
             unsigned rawNumber = stringToInt(extractorConfig.GetParameter("Threads"));
