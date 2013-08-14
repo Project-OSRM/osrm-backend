@@ -35,12 +35,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <iostream>
 #include <ostream>
 
+// Necessary workaround for Windows as VS doesn't implement C99
+#ifdef _MSC_VER
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-// Necessary workaround for Windows as VS doesn't implement C99
-#ifdef _MSC_VER
 template<typename digitT>
 digitT round(digitT x) {
     return std::floor(x + 0.5);
