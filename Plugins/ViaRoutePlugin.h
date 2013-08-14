@@ -22,7 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define VIAROUTEPLUGIN_H_
 
 #include "BasePlugin.h"
-#include "RouteParameters.h"
 
 #include "../Algorithms/ObjectToBase64.h"
 #include "../DataStructures/HashTable.h"

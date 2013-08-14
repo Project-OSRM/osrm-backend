@@ -22,7 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define NearestPlugin_H_
 
 #include "BasePlugin.h"
-#include "RouteParameters.h"
 
 #include "../DataStructures/NodeInformationHelpDesk.h"
 #include "../Server/DataStructures/QueryObjectsStorage.h"

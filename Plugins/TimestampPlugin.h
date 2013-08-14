@@ -22,7 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define TIMESTAMPPLUGIN_H_
 
 #include "BasePlugin.h"
-#include "RouteParameters.h"
 
 class TimestampPlugin : public BasePlugin {
 public:

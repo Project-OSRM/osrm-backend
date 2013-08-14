@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASICROUTINGINTERFACE_H_
 #define BASICROUTINGINTERFACE_H_
 
-#include "../Plugins/RawRouteData.h"
+#include "../DataStructures/RawRouteData.h"
 #include "../Util/ContainerUtils.h"
 #include "../Util/SimpleLogger.h"
 
