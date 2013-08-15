@@ -23,13 +23,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../typedefs.h"
 
-#include <string>
 #include <boost/algorithm/string.hpp>
 
 #include <boost/spirit/include/karma.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 #include <cstdio>
+#include <string>
 
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
@@ -161,16 +161,6 @@ inline std::string HTMLDeEntitize( std::string & result) {
 
 inline bool StringStartsWith(const std::string & input, const std::string & prefix) {
     return boost::starts_with(input, prefix);
-}
-
-// Function returns a 'random' filename in temporary directors.
-// May not be platform independent.
-inline void GetTemporaryFileName(std::string & filename) {
-    char buffer[L_tmpnam];
-    char * retPointer = tmpnam (buffer);
-    if(0 == retPointer)
-        ERR("Could not create temporary file name");
-    filename = buffer;
 }
 
 #endif /* STRINGUTIL_H_ */

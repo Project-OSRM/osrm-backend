@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STATICGRAPH_H_INCLUDED
 #define STATICGRAPH_H_INCLUDED
 
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <algorithm>
@@ -99,12 +100,17 @@ public:
                 if(data.shortcut) {
                     unsigned eid2 = FindEdgeInEitherDirection(u, data.id);
                     if(eid2 == UINT_MAX) {
-                        DEBUG("cannot find first segment of edge (" << u << "," << data.id << "," << v << ")");
+                        SimpleLogger().Write(logWARNING) <<
+                            "cannot find first segment of edge (" <<
+                                u << "," << data.id << "," << v << ")";
+
                         data.shortcut = false;
                     }
                     eid2 = FindEdgeInEitherDirection(data.id, v);
                     if(eid2 == UINT_MAX) {
-                        DEBUG("cannot find second segment of edge (" << u << "," << data.id << "," << v << ")");
+                        SimpleLogger().Write(logWARNING) <<
+                            "cannot find second segment of edge (" <<
+                                u << "," << data.id << "," << v << ")";
                         data.shortcut = false;
                     }
                 }

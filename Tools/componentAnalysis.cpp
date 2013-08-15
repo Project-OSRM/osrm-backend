@@ -25,9 +25,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../Util/BaseConfiguration.h"
-#include "../Util/InputFileUtil.h"
 #include "../Util/GraphLoader.h"
+#include "../Util/IniFile.h"
+#include "../Util/InputFileUtil.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 
 #include <boost/foreach.hpp>
 #include <fstream>
@@ -39,22 +41,25 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 typedef QueryEdge::EdgeData               EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
-typedef BaseConfiguration                 ContractorConfiguration;
 
 std::vector<NodeInfo>       internal_to_external_node_map;
-std::vector<_Restriction>   restrictions_vector;
+std::vector<TurnRestriction>   restrictions_vector;
 std::vector<NodeID>         bollard_node_IDs_vector;
 std::vector<NodeID>         traffic_light_node_IDs_vector;
 
-int main (int argument_count, char *argument_values[]) {
-    if(argument_count < 3) {
-        ERR("usage:\n" << argument_values[0] << " <osrm> <osrm.restrictions>");
+int main (int argc, char * argv[]) {
+    LogPolicy::GetInstance().Unmute();
+    if(argc < 3) {
+        SimpleLogger().Write(logWARNING) <<
+            "usage:\n" << argv[0] << " <osrm> <osrm.restrictions>";
+        return -1;
     }
 
-    INFO("Using restrictions from file: " << argument_values[2]);
-    std::ifstream restriction_ifstream(argument_values[2], std::ios::binary);
+    SimpleLogger().Write() <<
+        "Using restrictions from file: " << argv[2];
+    std::ifstream restriction_ifstream(argv[2], std::ios::binary);
     if(!restriction_ifstream.good()) {
-        ERR("Could not access <osrm-restrictions> files");
+        throw OSRMException("Could not access <osrm-restrictions> files");
     }
     uint32_t usable_restriction_count = 0;
     restriction_ifstream.read(
@@ -65,18 +70,15 @@ int main (int argument_count, char *argument_values[]) {
 
     restriction_ifstream.read(
             (char *)&(restrictions_vector[0]),
-            usable_restriction_count*sizeof(_Restriction)
+            usable_restriction_count*sizeof(TurnRestriction)
     );
     restriction_ifstream.close();
 
     std::ifstream input_stream;
-    input_stream.open(
-            argument_values[1],
-            std::ifstream::in | std::ifstream::binary
-    );
+    input_stream.open( argv[1], std::ifstream::in | std::ifstream::binary );
 
     if (!input_stream.is_open()) {
-        ERR("Cannot open " << argument_values[1]);
+        throw OSRMException("Cannot open osrm file");
     }
 
     std::vector<ImportEdge> edge_list;
@@ -90,17 +92,16 @@ int main (int argument_count, char *argument_values[]) {
     );
     input_stream.close();
 
-    INFO(
+    SimpleLogger().Write() <<
             restrictions_vector.size() << " restrictions, " <<
             bollard_node_IDs_vector.size() << " bollard nodes, " <<
-            traffic_light_node_IDs_vector.size() << " traffic lights"
-    );
+            traffic_light_node_IDs_vector.size() << " traffic lights";
 
     /***
      * Building an edge-expanded graph from node-based input an turn restrictions
      */
 
-    INFO("Starting SCC graph traversal");
+    SimpleLogger().Write() << "Starting SCC graph traversal";
     TarjanSCC * tarjan = new TarjanSCC (
             node_based_node_count,
             edge_list,
@@ -113,9 +114,9 @@ int main (int argument_count, char *argument_values[]) {
 
     tarjan->Run();
 
-    std::vector<_Restriction>().swap(restrictions_vector);
+    std::vector<TurnRestriction>().swap(restrictions_vector);
     std::vector<NodeID>().swap(bollard_node_IDs_vector);
     std::vector<NodeID>().swap(traffic_light_node_IDs_vector);
-    INFO("finished component analysis");
+    SimpleLogger().Write() << "finished component analysis";
     return 0;
 }

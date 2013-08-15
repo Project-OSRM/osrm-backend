@@ -26,6 +26,8 @@
 #include "../DataStructures/ImportNode.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/OpenMPWrapper.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <vector>

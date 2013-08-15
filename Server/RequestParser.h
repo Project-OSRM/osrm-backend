@@ -21,9 +21,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef REQUEST_PARSER_H
 #define REQUEST_PARSER_H
 
+#include "BasicDatastructures.h"
+
 #include <boost/logic/tribool.hpp>
 #include <boost/tuple/tuple.hpp>
-#include "BasicDatastructures.h"
 
 namespace http {
 

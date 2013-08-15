@@ -197,7 +197,7 @@ function way_function (way)
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
-  if maxspeed_forward ~= nil and maxspeed_forward > 0 then
+  if way.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
     if Way.bidirectional == way.direction then
       way.backward_speed = way.speed
     end
@@ -211,7 +211,6 @@ function way_function (way)
   if ignore_in_grid[highway] ~= nil and ignore_in_grid[highway] then
 		way.ignore_in_grid = true
 	end
-
 	way.type = 1
   return 1
 end

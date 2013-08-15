@@ -23,14 +23,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef RESTRICTION_H_
 #define RESTRICTION_H_
 
+#include "../typedefs.h"
 #include <climits>
 
-struct _Restriction {
+struct TurnRestriction {
     NodeID viaNode;
     NodeID fromNode;
     NodeID toNode;
     struct Bits { //mostly unused
-        Bits() :
+        Bits()
+         :
             isOnly(false),
             unused1(false),
             unused2(false),
@@ -38,9 +40,8 @@ struct _Restriction {
             unused4(false),
             unused5(false),
             unused6(false),
-            unused7(false) {
-
-        }
+            unused7(false)
+        { }
 
         bool isOnly:1;
         bool unused1:1;
@@ -52,14 +53,14 @@ struct _Restriction {
         bool unused7:1;
     } flags;
 
-    _Restriction(NodeID vn) :
-        viaNode(vn),
+    TurnRestriction(NodeID viaNode) :
+        viaNode(viaNode),
         fromNode(UINT_MAX),
         toNode(UINT_MAX) {
 
     }
 
-    _Restriction(const bool isOnly = false) :
+    TurnRestriction(const bool isOnly = false) :
         viaNode(UINT_MAX),
         fromNode(UINT_MAX),
         toNode(UINT_MAX) {
@@ -68,13 +69,32 @@ struct _Restriction {
 };
 
 struct _RawRestrictionContainer {
-    _Restriction restriction;
+    TurnRestriction restriction;
     EdgeID fromWay;
     EdgeID toWay;
     unsigned viaNode;
 
-    _RawRestrictionContainer(EdgeID f, EdgeID t, NodeID vn, unsigned vw) : fromWay(f), toWay(t), viaNode(vw) { restriction.viaNode = vn;}
-    _RawRestrictionContainer(bool isOnly = false) : fromWay(UINT_MAX), toWay(UINT_MAX), viaNode(UINT_MAX) { restriction.flags.isOnly = isOnly;}
+    _RawRestrictionContainer(
+        EdgeID fromWay,
+        EdgeID toWay,
+        NodeID vn,
+        unsigned vw
+    ) :
+        fromWay(fromWay),
+        toWay(toWay),
+        viaNode(vw)
+    {
+        restriction.viaNode = vn;
+    }
+    _RawRestrictionContainer(
+        bool isOnly = false
+    ) :
+        fromWay(UINT_MAX),
+        toWay(UINT_MAX),
+        viaNode(UINT_MAX)
+    {
+        restriction.flags.isOnly = isOnly;
+    }
 
     static _RawRestrictionContainer min_value() {
         return _RawRestrictionContainer(0, 0, 0, 0);

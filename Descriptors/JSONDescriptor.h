@@ -39,7 +39,7 @@ private:
     _DescriptorConfig config;
     DescriptionFactory descriptionFactory;
     DescriptionFactory alternateDescriptionFactory;
-    _Coordinate current;
+    FixedPointCoordinate current;
     unsigned numberOfEnteredRestrictedAreas;
     struct RoundAbout{
         RoundAbout() :

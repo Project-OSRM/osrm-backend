@@ -21,13 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef EXTRACTORSTRUCTS_H_
 #define EXTRACTORSTRUCTS_H_
 
-
 #include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportNode.h"
-#include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
-#include "../DataStructures/TimingUtil.h"
 #include "../typedefs.h"
 
 #include <boost/algorithm/string.hpp>
@@ -50,7 +48,7 @@ struct ExtractionWay {
 		id = UINT_MAX;
 		nameID = UINT_MAX;
 		path.clear();
-		keyVals.EraseAll();
+		keyVals.clear();
         direction = ExtractionWay::notSure;
         speed = -1;
         backward_speed = -1;
@@ -111,8 +109,8 @@ struct InternalExtractorEdge {
     bool isAccessRestricted;
     bool isContraFlow;
 
-    _Coordinate startCoord;
-    _Coordinate targetCoord;
+    FixedPointCoordinate startCoord;
+    FixedPointCoordinate targetCoord;
 
     static InternalExtractorEdge min_value() {
         return InternalExtractorEdge(0,0);

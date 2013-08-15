@@ -28,7 +28,7 @@ PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnv
 	input.open(fileName, std::ios::in | std::ios::binary);
 
 	if (!input) {
-		std::cerr << fileName << ": File not found." << std::endl;
+		throw OSRMException("pbf file not found.");
 	}
 
 #ifndef NDEBUG
@@ -50,7 +50,10 @@ PBFParser::~PBFParser() {
 	google::protobuf::ShutdownProtobufLibrary();
 
 #ifndef NDEBUG
-	DEBUG("parsed " << blockCount << " blocks from pbf with " << groupCount << " groups");
+	SimpleLogger().Write(logDEBUG) <<
+		"parsed " << blockCount <<
+		" blocks from pbf with " << groupCount <<
+		" groups";
 #endif
 }
 
@@ -108,7 +111,7 @@ inline void PBFParser::ParseData() {
 		_ThreadData *threadData;
 		threadDataQueue->wait_and_pop(threadData);
 		if( NULL==threadData ) {
-			INFO("Parse Data Thread Finished");
+			SimpleLogger().Write() << "Parse Data Thread Finished";
 			threadDataQueue->push(NULL); // Signal end of data for other threads
 			break;
 		}
@@ -166,8 +169,8 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 		m_lastDenseLatitude += dense.lat( i );
 		m_lastDenseLongitude += dense.lon( i );
 		extracted_nodes_vector[i].id = m_lastDenseID;
-		extracted_nodes_vector[i].lat = 100000*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lat_offset() ) / NANO;
-		extracted_nodes_vector[i].lon = 100000*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
+		extracted_nodes_vector[i].lat = COORDINATE_PRECISION*( ( double ) m_lastDenseLatitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lat_offset() ) / NANO;
+		extracted_nodes_vector[i].lon = COORDINATE_PRECISION*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
 		while (denseTagIndex < dense.keys_vals_size()) {
 			const int tagValue = dense.keys_vals( denseTagIndex );
 			if( 0==tagValue ) {
@@ -177,7 +180,7 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 			const int keyValue = dense.keys_vals ( denseTagIndex+1 );
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
 			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
-			extracted_nodes_vector[i].keyVals.Add(key, value);
+			extracted_nodes_vector[i].keyVals.insert(std::make_pair(key, value));
 			denseTagIndex += 2;
 		}
 	}
@@ -194,7 +197,9 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 }
 
 inline void PBFParser::parseNode(_ThreadData * ) {
-	ERR("Parsing of simple nodes not supported. PBF should use dense nodes");
+	throw OSRMException(
+		"Parsing of simple nodes not supported. PBF should use dense nodes"
+	);
 }
 
 inline void PBFParser::parseRelation(_ThreadData * threadData) {
@@ -304,7 +309,7 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 		for(int j = 0; j < number_of_keys; ++j) {
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(inputWay.keys(j));
 			const std::string & val = threadData->PBFprimitiveBlock.stringtable().s(inputWay.vals(j));
-			parsed_way_vector[i].keyVals.Add(key, val);
+			parsed_way_vector[i].keyVals.insert(std::make_pair(key, val));
 		}
 	}
 
@@ -475,7 +480,7 @@ bool PBFParser::readNextBlock(std::fstream& stream, _ThreadData * threadData) {
 	}
 
 	if ( !threadData->PBFprimitiveBlock.ParseFromArray( &(threadData->charBuffer[0]), threadData-> charBuffer.size() ) ) {
-		ERR("failed to parse PrimitiveBlock");
+		std::cerr << "failed to parse PrimitiveBlock" << std::endl;
 		return false;
 	}
 	return true;

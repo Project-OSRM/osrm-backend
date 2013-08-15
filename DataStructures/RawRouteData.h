@@ -21,7 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef RAWROUTEDATA_H_
 #define RAWROUTEDATA_H_
 
+#include "../DataStructures/Coordinate.h"
+#include "../DataStructures/PhantomNodes.h"
 #include "../typedefs.h"
+
+#include <vector>
 
 struct _PathData {
     _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu) { }
@@ -35,7 +39,7 @@ struct RawRouteData {
     std::vector< _PathData > computedShortestPath;
     std::vector< _PathData > computedAlternativePath;
     std::vector< PhantomNodes > segmentEndCoordinates;
-    std::vector< _Coordinate > rawViaNodeCoordinates;
+    std::vector< FixedPointCoordinate > rawViaNodeCoordinates;
     unsigned checkSum;
     int lengthOfShortestPath;
     int lengthOfAlternativePath;

@@ -29,6 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/XORFastHash.h"
 #include "../DataStructures/XORFastHashStorage.h"
 #include "../Util/OpenMPWrapper.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
 #include <boost/assert.hpp>
@@ -124,7 +125,8 @@ public:
             BOOST_ASSERT_MSG( newEdge.data.distance > 0, "edge distance < 1" );
 #ifndef NDEBUG
             if ( newEdge.data.distance > 24 * 60 * 60 * 10 ) {
-                WARN("Edge weight large -> " << newEdge.data.distance);
+                SimpleLogger().Write(logWARNING) <<
+                    "Edge weight large -> " << newEdge.data.distance;
             }
 #endif
             edges.push_back( newEdge );
@@ -198,9 +200,9 @@ public:
         //            }
         //        }
         //
-        //        INFO("edges at node with id " << highestNode << " has degree " << maxdegree);
+        //        SimpleLogger().Write() << "edges at node with id " << highestNode << " has degree " << maxdegree;
         //        for(unsigned i = _graph->BeginEdges(highestNode); i < _graph->EndEdges(highestNode); ++i) {
-        //            INFO(" ->(" << highestNode << "," << _graph->GetTarget(i) << "); via: " << _graph->GetEdgeData(i).via);
+        //            SimpleLogger().Write() << " ->(" << highestNode << "," << _graph->GetTarget(i) << "); via: " << _graph->GetEdgeData(i).via;
         //        }
 
         //Create temporary file
@@ -430,19 +432,20 @@ public:
             //            avgdegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
             //            quaddegree /= std::max((unsigned)1,(unsigned)remainingNodes.size() );
             //
-            //            INFO("rest: " << remainingNodes.size() << ", max: " << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ", quad: " << quaddegree);
+            //            SimpleLogger().Write() << "rest: " << remainingNodes.size() << ", max: " << maxdegree << ", min: " << mindegree << ", avg: " << avgdegree << ", quad: " << quaddegree;
 
             p.printStatus(numberOfContractedNodes);
         }
-        BOOST_FOREACH(_ThreadData * data, threadData)
+        BOOST_FOREACH(_ThreadData * data, threadData) {
         	delete data;
+        }
         threadData.clear();
     }
 
     template< class Edge >
     inline void GetEdges( DeallocatingVector< Edge >& edges ) {
         Percent p (_graph->GetNumberOfNodes());
-        INFO("Getting edges of minimized graph");
+        SimpleLogger().Write() << "Getting edges of minimized graph";
         NodeID numberOfNodes = _graph->GetNumberOfNodes();
         if(_graph->GetNumberOfNodes()) {
             for ( NodeID node = 0; node < numberOfNodes; ++node ) {

@@ -21,6 +21,8 @@
 #ifndef CRC32_H_
 #define CRC32_H_
 
+#include "../Util/SimpleLogger.h"
+
 #include <boost/crc.hpp>  // for boost::crc_32_type
 #include <iostream>
 

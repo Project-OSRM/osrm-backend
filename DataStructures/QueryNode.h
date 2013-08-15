@@ -21,33 +21,43 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef _NODE_COORDS_H
 #define _NODE_COORDS_H
 
+#include "Coordinate.h"
 #include "../typedefs.h"
 
-#include <cassert>
+#include <boost/assert.hpp>
+
 #include <cstddef>
 #include <climits>
 
 #include <limits>
 
-template<typename NodeT>
-struct NodeCoords {
-	typedef unsigned key_type; 	//type of NodeID
+struct NodeInfo {
+	typedef NodeID key_type; 	//type of NodeID
 	typedef int value_type;		//type of lat,lons
 
-	NodeCoords(int _lat, int _lon, NodeT _id) : lat(_lat), lon(_lon), id(_id) {}
-	NodeCoords() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
+	NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), id(_id) {}
+	NodeInfo() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
 	int lat;
 	int lon;
-	NodeT id;
+	NodeID id;
 
-	static NodeCoords<NodeT> min_value() {
-		return NodeCoords<NodeT>(-90*100000,-180*100000,std::numeric_limits<NodeT>::min());
-	}
-	static NodeCoords<NodeT> max_value() {
-		return NodeCoords<NodeT>(90*100000, 180*100000, std::numeric_limits<NodeT>::max());
+	static NodeInfo min_value() {
+		return NodeInfo(
+			 -90*COORDINATE_PRECISION,
+			-180*COORDINATE_PRECISION,
+			std::numeric_limits<NodeID>::min()
+		);
 	}
 
-	value_type operator[](std::size_t n) const {
+	static NodeInfo max_value() {
+		return NodeInfo(
+			 90*COORDINATE_PRECISION,
+			180*COORDINATE_PRECISION,
+			std::numeric_limits<NodeID>::max()
+			);
+	}
+
+	value_type operator[](const std::size_t n) const {
 		switch(n) {
 		case 1:
 			return lat;
@@ -56,15 +66,13 @@ struct NodeCoords {
 			return lon;
 			break;
 		default:
-			assert(false);
+			BOOST_ASSERT_MSG(false, "should not happen");
 			return UINT_MAX;
 			break;
 		}
-		assert(false);
+		BOOST_ASSERT_MSG(false, "should not happen");
 		return UINT_MAX;
 	}
 };
-
-typedef NodeCoords<NodeID> NodeInfo;
 
 #endif //_NODE_COORDS_H

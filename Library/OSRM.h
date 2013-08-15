@@ -29,27 +29,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Plugins/NearestPlugin.h"
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
-#include "../Plugins/RouteParameters.h"
-#include "../Util/BaseConfiguration.h"
+#include "../Server/DataStructures/RouteParameters.h"
+#include "../Util/IniFile.h"
 #include "../Util/InputFileUtil.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 #include "../Server/BasicDatastructures.h"
 
 #include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
-#include <exception>
 #include <vector>
-
-class OSRMException: public std::exception {
-public:
-    OSRMException(const char * message) : message(message) {}
-private:
-    virtual const char* what() const throw() {
-        return message;
-    }
-    const char * message;
-};
 
 class OSRM : boost::noncopyable {
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;

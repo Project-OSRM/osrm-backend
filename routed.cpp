@@ -23,9 +23,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "Server/ServerFactory.h"
 
-#include "Util/BaseConfiguration.h"
+#include "Util/IniFile.h"
 #include "Util/InputFileUtil.h"
 #include "Util/OpenMPWrapper.h"
+#include "Util/SimpleLogger.h"
 #include "Util/UUID.h"
 
 #ifdef __linux__
@@ -61,9 +62,12 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 #endif
 
 int main (int argc, char * argv[]) {
+    try {
+        LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
-    if(!mlockall(MCL_CURRENT | MCL_FUTURE))
-        WARN("Process " << argv[0] << "could not be locked to RAM");
+        if(!mlockall(MCL_CURRENT | MCL_FUTURE)) {
+            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << "could not be locked to RAM";
+        }
 #endif
 #ifdef __linux__
 
@@ -77,11 +81,10 @@ int main (int argc, char * argv[]) {
         //exit(-1);
     //}
 
-    try {
         //std::cout << "fingerprint: " << UUID::GetInstance().GetUUID() << std::endl;
 
-        std::cout << "starting up engines, compiled at " <<
-                                        __DATE__ << ", " __TIME__ << std::endl;
+        SimpleLogger().Write() <<
+            "starting up engines, compiled at " << __DATE__ << ", " __TIME__;
 
 #ifndef _WIN32
         int sig = 0;
@@ -91,7 +94,7 @@ int main (int argc, char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        BaseConfiguration serverConfig((argc > 1 ? argv[1] : "server.ini"));
+        IniFile serverConfig((argc > 1 ? argv[1] : "server.ini"));
         OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
 
         Server * s = ServerFactory::CreateServer(serverConfig);
@@ -122,7 +125,7 @@ int main (int argc, char * argv[]) {
         std::cout << "[server] stopping threads" << std::endl;
 
         if(!t.timed_join(boost::posix_time::seconds(2))) {
-//        	INFO("Threads did not finish within 2 seconds. Hard abort!");
+       	    SimpleLogger().Write(logDEBUG) << "Threads did not finish within 2 seconds. Hard abort!";
         }
 
         std::cout << "[server] freeing objects" << std::endl;

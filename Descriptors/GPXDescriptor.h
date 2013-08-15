@@ -28,7 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 class GPXDescriptor : public BaseDescriptor{
 private:
     _DescriptorConfig config;
-    _Coordinate current;
+    FixedPointCoordinate current;
 
     std::string tmp;
 public:

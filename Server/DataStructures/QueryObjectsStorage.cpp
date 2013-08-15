@@ -20,7 +20,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 #include "QueryObjectsStorage.h"
-#include "../../Util/GraphLoader.h"
 
 QueryObjectsStorage::QueryObjectsStorage(
 	const std::string & hsgrPath,
@@ -31,29 +30,47 @@ QueryObjectsStorage::QueryObjectsStorage(
 	const std::string & namesPath,
 	const std::string & timestampPath
 ) {
-	INFO("loading graph data");
-	std::ifstream hsgrInStream(hsgrPath.c_str(), std::ios::binary);
-    if(!hsgrInStream) { ERR(hsgrPath <<  " not found"); }
+	if( hsgrPath.empty() ) {
+		throw OSRMException("no hsgr file given in ini file");
+	}
+	if( ramIndexPath.empty() ) {
+		throw OSRMException("no ram index file given in ini file");
+	}
+	if( fileIndexPath.empty() ) {
+		throw OSRMException("no mem index file given in ini file");
+	}
+	if( nodesPath.empty() ) {
+		throw OSRMException("no nodes file given in ini file");
+	}
+	if( edgesPath.empty() ) {
+		throw OSRMException("no edges file given in ini file");
+	}
+	if( namesPath.empty() ) {
+		throw OSRMException("no names file given in ini file");
+	}
+
+	SimpleLogger().Write() << "loading graph data";
 	//Deserialize road network graph
 	std::vector< QueryGraph::_StrNode> nodeList;
 	std::vector< QueryGraph::_StrEdge> edgeList;
 	const int n = readHSGRFromStream(
-		hsgrInStream,
+		hsgrPath,
 		nodeList,
 		edgeList,
 		&checkSum
 	);
-	hsgrInStream.close();
 
-	INFO("Data checksum is " << checkSum);
+	SimpleLogger().Write() << "Data checksum is " << checkSum;
 	graph = new QueryGraph(nodeList, edgeList);
 	assert(0 == nodeList.size());
 	assert(0 == edgeList.size());
 
 	if(timestampPath.length()) {
-	    INFO("Loading Timestamp");
+	    SimpleLogger().Write() << "Loading Timestamp";
 	    std::ifstream timestampInStream(timestampPath.c_str());
-	    if(!timestampInStream) { WARN(timestampPath <<  " not found"); }
+	    if(!timestampInStream) {
+	    	SimpleLogger().Write(logWARNING) <<  timestampPath <<  " not found";
+	    }
 
 	    getline(timestampInStream, timestamp);
 	    timestampInStream.close();
@@ -65,7 +82,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 	    timestamp.resize(25);
 	}
 
-    INFO("Loading auxiliary information");
+    SimpleLogger().Write() << "Loading auxiliary information";
     //Init nearest neighbor data structure
 	nodeHelpDesk = new NodeInformationHelpDesk(
 		ramIndexPath,
@@ -77,23 +94,33 @@ QueryObjectsStorage::QueryObjectsStorage(
 	);
 
 	//deserialize street name list
-	INFO("Loading names index");
-	std::ifstream namesInStream(namesPath.c_str(), std::ios::binary);
-    if(!namesInStream) { ERR(namesPath <<  " not found"); }
-	unsigned size(0);
-	namesInStream.read((char *)&size, sizeof(unsigned));
+	SimpleLogger().Write() << "Loading names index";
+	boost::filesystem::path names_file(namesPath);
+
+    if ( !boost::filesystem::exists( names_file ) ) {
+        throw OSRMException("names file does not exist");
+    }
+    if ( 0 == boost::filesystem::file_size( names_file ) ) {
+        throw OSRMException("names file is empty");
+    }
+
+	boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
+	unsigned size = 0;
+	name_stream.read((char *)&size, sizeof(unsigned));
+	BOOST_ASSERT_MSG(0 != size, "name file empty");
 
 	char buf[1024];
-	for(unsigned i = 0; i < size; ++i) {
-		unsigned sizeOfString = 0;
-		namesInStream.read((char *)&sizeOfString, sizeof(unsigned));
-		buf[sizeOfString] = '\0'; // instead of memset
-		namesInStream.read(buf, sizeOfString);
+	for( unsigned i = 0; i < size; ++i ) {
+		unsigned size_of_string = 0;
+		name_stream.read((char *)&size_of_string, sizeof(unsigned));
+		buf[size_of_string] = '\0'; // instead of memset
+		name_stream.read(buf, size_of_string);
 		names.push_back(buf);
 	}
 	std::vector<std::string>(names).swap(names);
-	namesInStream.close();
-	INFO("All query data structures loaded");
+	BOOST_ASSERT_MSG(0 != names.size(), "could not load any names");
+	name_stream.close();
+	SimpleLogger().Write() << "All query data structures loaded";
 }
 
 QueryObjectsStorage::~QueryObjectsStorage() {

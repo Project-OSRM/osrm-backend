@@ -22,16 +22,20 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define STATICRTREE_H_
 
 #include "MercatorUtil.h"
-#include "TimingUtil.h"
 #include "Coordinate.h"
 #include "PhantomNodes.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
+#include "../Util/TimingUtil.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/minmax.hpp>
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -43,7 +47,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 
 #include <algorithm>
-#include <fstream>
 #include <queue>
 #include <string>
 #include <vector>
@@ -54,7 +57,7 @@ const static uint32_t RTREE_LEAF_NODE_SIZE = 1170;
 
 // Implements a static, i.e. packed, R-tree
 
-static boost::thread_specific_ptr<std::ifstream> thread_local_rtree_stream;
+static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtree_stream;
 
 template<class DataT>
 class StaticRTree : boost::noncopyable {
@@ -97,8 +100,8 @@ private:
             max_lat = std::max(max_lat, other.max_lat);
         }
 
-        inline _Coordinate Centroid() const {
-            _Coordinate centroid;
+        inline FixedPointCoordinate Centroid() const {
+            FixedPointCoordinate centroid;
             //The coordinates of the midpoints are given by:
             //x = (x1 + x2) /2 and y = (y1 + y2) /2.
             centroid.lon = (min_lon + max_lon)/2;
@@ -107,10 +110,10 @@ private:
         }
 
         inline bool Intersects(const RectangleInt2D & other) const {
-            _Coordinate upper_left (other.max_lat, other.min_lon);
-            _Coordinate upper_right(other.max_lat, other.max_lon);
-            _Coordinate lower_right(other.min_lat, other.max_lon);
-            _Coordinate lower_left (other.min_lat, other.min_lon);
+            FixedPointCoordinate upper_left (other.max_lat, other.min_lon);
+            FixedPointCoordinate upper_right(other.max_lat, other.max_lon);
+            FixedPointCoordinate lower_right(other.min_lat, other.max_lon);
+            FixedPointCoordinate lower_left (other.min_lat, other.min_lon);
 
             return (
                     Contains(upper_left)
@@ -120,7 +123,7 @@ private:
             );
         }
 
-        inline double GetMinDist(const _Coordinate & location) const {
+        inline double GetMinDist(const FixedPointCoordinate & location) const {
             bool is_contained = Contains(location);
             if (is_contained) {
                 return 0.0;
@@ -166,13 +169,13 @@ private:
             return min_dist;
         }
 
-        inline double GetMinMaxDist(const _Coordinate & location) const {
+        inline double GetMinMaxDist(const FixedPointCoordinate & location) const {
             double min_max_dist = DBL_MAX;
             //Get minmax distance to each of the four sides
-            _Coordinate upper_left (max_lat, min_lon);
-            _Coordinate upper_right(max_lat, max_lon);
-            _Coordinate lower_right(min_lat, max_lon);
-            _Coordinate lower_left (min_lat, min_lon);
+            FixedPointCoordinate upper_left (max_lat, min_lon);
+            FixedPointCoordinate upper_right(max_lat, max_lon);
+            FixedPointCoordinate lower_right(min_lat, max_lon);
+            FixedPointCoordinate lower_left (min_lat, min_lon);
 
             min_max_dist = std::min(
                     min_max_dist,
@@ -208,7 +211,7 @@ private:
             return min_max_dist;
         }
 
-        inline bool Contains(const _Coordinate & location) const {
+        inline bool Contains(const FixedPointCoordinate & location) const {
             bool lats_contained =
                     (location.lat > min_lat) && (location.lat < max_lat);
             bool lons_contained =
@@ -220,10 +223,10 @@ private:
             std::ostream & out,
             const RectangleInt2D & rect
         ) {
-            out << rect.min_lat/100000. << ","
-                << rect.min_lon/100000. << " "
-                << rect.max_lat/100000. << ","
-                << rect.max_lon/100000.;
+            out << rect.min_lat/COORDINATE_PRECISION << ","
+                << rect.min_lon/COORDINATE_PRECISION << " "
+                << rect.max_lat/COORDINATE_PRECISION << ","
+                << rect.max_lon/COORDINATE_PRECISION;
             return out;
         }
     };
@@ -287,7 +290,10 @@ public:
      :  m_element_count(input_data_vector.size()),
         m_leaf_node_filename(leaf_node_filename)
     {
-        INFO("constructing r-tree of " << m_element_count << " elements");
+        SimpleLogger().Write() <<
+            "constructing r-tree of " << m_element_count <<
+            " elements";
+
         double time1 = get_timestamp();
         std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
@@ -297,15 +303,15 @@ public:
             input_wrapper_vector[element_counter].m_array_index = element_counter;
             //Get Hilbert-Value for centroid in mercartor projection
             DataT & current_element = input_data_vector[element_counter];
-            _Coordinate current_centroid = current_element.Centroid();
-            current_centroid.lat = 100000*lat2y(current_centroid.lat/100000.);
+            FixedPointCoordinate current_centroid = current_element.Centroid();
+            current_centroid.lat = COORDINATE_PRECISION*lat2y(current_centroid.lat/COORDINATE_PRECISION);
 
             uint64_t current_hilbert_value = HilbertCode::GetHilbertNumberForCoordinate(current_centroid);
             input_wrapper_vector[element_counter].m_hilbert_value = current_hilbert_value;
 
         }
         //open leaf file
-        std::ofstream leaf_node_file(leaf_node_filename.c_str(), std::ios::binary);
+        boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
         leaf_node_file.write((char*) &m_element_count, sizeof(uint64_t));
 
         //sort the hilbert-value representatives
@@ -386,7 +392,11 @@ public:
         }
 
         //open tree file
-        std::ofstream tree_node_file(tree_node_filename.c_str(), std::ios::binary);
+        boost::filesystem::ofstream tree_node_file(
+            tree_node_filename,
+            std::ios::binary
+        );
+
         uint32_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
         tree_node_file.write((char *)&size_of_tree, sizeof(uint32_t));
@@ -394,7 +404,8 @@ public:
         //close tree node file.
         tree_node_file.close();
         double time2 = get_timestamp();
-        INFO("finished r-tree construction in " << (time2-time1) << " seconds");
+        SimpleLogger().Write() <<
+            "finished r-tree construction in " << (time2-time1) << " seconds";
     }
 
     //Read-only operation for queries
@@ -403,25 +414,42 @@ public:
             const std::string & leaf_filename
     ) : m_leaf_node_filename(leaf_filename) {
         //open tree node file and load into RAM.
-        std::ifstream tree_node_file(node_filename.c_str(), std::ios::binary);
+        boost::filesystem::path node_file(node_filename);
+
+        if ( !boost::filesystem::exists( node_file ) ) {
+            throw OSRMException("ram index file does not exist");
+        }
+        if ( 0 == boost::filesystem::file_size( node_file ) ) {
+            throw OSRMException("ram index file is empty");
+        }
+        boost::filesystem::ifstream tree_node_file( node_file, std::ios::binary );
+
         uint32_t tree_size = 0;
         tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
-        //INFO("reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes");
+        //SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes";
         m_search_tree.resize(tree_size);
         tree_node_file.read((char*)&m_search_tree[0], sizeof(TreeNode)*tree_size);
         tree_node_file.close();
 
         //open leaf node file and store thread specific pointer
-        std::ifstream leaf_node_file(leaf_filename.c_str(), std::ios::binary);
+        boost::filesystem::path leaf_file(leaf_filename);
+        if ( !boost::filesystem::exists( leaf_file ) ) {
+            throw OSRMException("mem index file does not exist");
+        }
+        if ( 0 == boost::filesystem::file_size( leaf_file ) ) {
+            throw OSRMException("mem index file is empty");
+        }
+
+        boost::filesystem::ifstream leaf_node_file( leaf_file, std::ios::binary );
         leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
         leaf_node_file.close();
 
-        //INFO( tree_size << " nodes in search tree");
-        //INFO( m_element_count << " elements in leafs");
+        //SimpleLogger().Write() << tree_size << " nodes in search tree";
+        //SimpleLogger().Write() << m_element_count << " elements in leafs";
     }
 /*
     inline void FindKNearestPhantomNodesForCoordinate(
-        const _Coordinate & location,
+        const FixedPointCoordinate & location,
         const unsigned zoom_level,
         const unsigned candidate_count,
         std::vector<std::pair<PhantomNode, double> > & result_vector
@@ -432,12 +460,12 @@ public:
 
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
-        INFO("searching for coordinate " << input_coordinate);
+        SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
         double min_dist = DBL_MAX;
         double min_max_dist = DBL_MAX;
         bool found_a_nearest_edge = false;
 
-        _Coordinate nearest, current_start_coordinate, current_end_coordinate;
+        FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
 
         //initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
@@ -465,8 +493,8 @@ public:
                         double current_ratio = 0.;
                         double current_perpendicular_distance = ComputePerpendicularDistance(
                                                                                              input_coordinate,
-                                                                                             _Coordinate(current_edge.lat1, current_edge.lon1),
-                                                                                             _Coordinate(current_edge.lat2, current_edge.lon2),
+                                                                                             FixedPointCoordinate(current_edge.lat1, current_edge.lon1),
+                                                                                             FixedPointCoordinate(current_edge.lat2, current_edge.lon2),
                                                                                              nearest,
                                                                                              &current_ratio
                                                                                              );
@@ -495,11 +523,11 @@ public:
                                   1 == abs(current_edge.id - result_phantom_node.edgeBasedNode )
                                   && CoordinatesAreEquivalent(
                                                               current_start_coordinate,
-                                                              _Coordinate(
+                                                              FixedPointCoordinate(
                                                                           current_edge.lat1,
                                                                           current_edge.lon1
                                                                           ),
-                                                              _Coordinate(
+                                                              FixedPointCoordinate(
                                                                           current_edge.lat2,
                                                                           current_edge.lon2
                                                                           ),
@@ -535,14 +563,14 @@ public:
 
         const double distance_to_edge =
         ApproximateDistance (
-            _Coordinate(nearest_edge.lat1, nearest_edge.lon1),
+            FixedPointCoordinate(nearest_edge.lat1, nearest_edge.lon1),
             result_phantom_node.location
         );
 
         const double length_of_edge =
         ApproximateDistance(
-            _Coordinate(nearest_edge.lat1, nearest_edge.lon1),
-            _Coordinate(nearest_edge.lat2, nearest_edge.lon2)
+            FixedPointCoordinate(nearest_edge.lat1, nearest_edge.lon1),
+            FixedPointCoordinate(nearest_edge.lat2, nearest_edge.lon2)
         );
 
         const double ratio = (found_a_nearest_edge ?
@@ -561,14 +589,14 @@ public:
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-        INFO("mindist: " << min_distphantom_node.isBidirected() ? "yes" : "no") );
+        SimpleLogger().Write() << "mindist: " << min_distphantom_node.isBidirected() ? "yes" : "no");
         return found_a_nearest_edge;
 
     }
 
   */
     bool FindPhantomNodeForCoordinate(
-            const _Coordinate & input_coordinate,
+            const FixedPointCoordinate & input_coordinate,
             PhantomNode & result_phantom_node,
             const unsigned zoom_level
     ) {
@@ -578,12 +606,12 @@ public:
 
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
-        //INFO("searching for coordinate " << input_coordinate);
+        //SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
         double min_dist = DBL_MAX;
         double min_max_dist = DBL_MAX;
         bool found_a_nearest_edge = false;
 
-        _Coordinate nearest, current_start_coordinate, current_end_coordinate;
+        FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
 
         //initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
@@ -609,7 +637,7 @@ public:
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     ++io_count;
-                    //INFO("checking " << current_leaf_node.object_count << " elements");
+                    //SimpleLogger().Write() << "checking " << current_leaf_node.object_count << " elements";
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
                         DataT & current_edge = current_leaf_node.objects[i];
                         if(ignore_tiny_components && current_edge.belongsToTinyComponent) {
@@ -622,8 +650,8 @@ public:
                        double current_ratio = 0.;
                        double current_perpendicular_distance = ComputePerpendicularDistance(
                                 input_coordinate,
-                                _Coordinate(current_edge.lat1, current_edge.lon1),
-                                _Coordinate(current_edge.lat2, current_edge.lon2),
+                                FixedPointCoordinate(current_edge.lat1, current_edge.lon1),
+                                FixedPointCoordinate(current_edge.lat2, current_edge.lon2),
                                 nearest,
                                 &current_ratio
                         );
@@ -652,11 +680,11 @@ public:
                                 1 == abs(current_edge.id - result_phantom_node.edgeBasedNode )
                         && CoordinatesAreEquivalent(
                                 current_start_coordinate,
-                                _Coordinate(
+                                FixedPointCoordinate(
                                         current_edge.lat1,
                                         current_edge.lon1
                                 ),
-                                _Coordinate(
+                                FixedPointCoordinate(
                                         current_edge.lat2,
                                         current_edge.lon2
                                 ),
@@ -664,15 +692,15 @@ public:
                             )
                         ) {
                             BOOST_ASSERT_MSG(current_edge.id != result_phantom_node.edgeBasedNode, "IDs not different");
-                            //INFO("found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode);
+                            //SimpleLogger().Write() << "found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode;
                             result_phantom_node.weight2 = current_edge.weight;
                             if(current_edge.id < result_phantom_node.edgeBasedNode) {
                                 result_phantom_node.edgeBasedNode = current_edge.id;
                                 std::swap(result_phantom_node.weight1, result_phantom_node.weight2);
                                 std::swap(current_end_coordinate, current_start_coordinate);
-                            //    INFO("case 2");
+                            //    SimpleLogger().Write() <<"case 2";
                             }
-                            //INFO("w1: " << result_phantom_node.weight1 << ", w2: " << result_phantom_node.weight2);
+                            //SimpleLogger().Write() << "w1: " << result_phantom_node.weight1 << ", w2: " << result_phantom_node.weight2;
                         }
                     }
                 } else {
@@ -724,15 +752,15 @@ private:
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode& result_node) {
         if(!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open()) {
             thread_local_rtree_stream.reset(
-                new std::ifstream(
-                        m_leaf_node_filename.c_str(),
+                new boost::filesystem::ifstream(
+                        m_leaf_node_filename,
                         std::ios::in | std::ios::binary
                 )
             );
         }
         if(!thread_local_rtree_stream->good()) {
             thread_local_rtree_stream->clear(std::ios::goodbit);
-            DEBUG("Resetting stale filestream");
+            SimpleLogger().Write(logDEBUG) << "Resetting stale filestream";
         }
         uint64_t seek_pos = sizeof(uint64_t) + leaf_id*sizeof(LeafNode);
         thread_local_rtree_stream->seekg(seek_pos);
@@ -740,10 +768,10 @@ private:
     }
 
     inline double ComputePerpendicularDistance(
-            const _Coordinate& inputPoint,
-            const _Coordinate& source,
-            const _Coordinate& target,
-            _Coordinate& nearest, double *r) const {
+            const FixedPointCoordinate& inputPoint,
+            const FixedPointCoordinate& source,
+            const FixedPointCoordinate& target,
+            FixedPointCoordinate& nearest, double *r) const {
         const double x = static_cast<double>(inputPoint.lat);
         const double y = static_cast<double>(inputPoint.lon);
         const double a = static_cast<double>(source.lat);
@@ -787,7 +815,7 @@ private:
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
 
-    inline bool CoordinatesAreEquivalent(const _Coordinate & a, const _Coordinate & b, const _Coordinate & c, const _Coordinate & d) const {
+    inline bool CoordinatesAreEquivalent(const FixedPointCoordinate & a, const FixedPointCoordinate & b, const FixedPointCoordinate & c, const FixedPointCoordinate & d) const {
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
     }
 

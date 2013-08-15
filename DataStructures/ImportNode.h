@@ -21,7 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef IMPORTNODE_H_
 #define IMPORTNODE_H_
 
-#include "NodeCoords.h"
+#include "QueryNode.h"
 #include "../DataStructures/HashTable.h"
 
 
@@ -44,9 +44,9 @@ struct _Node : NodeInfo{
 
 struct ImportNode : public _Node {
     HashTable<std::string, std::string> keyVals;
-	
+
 	inline void Clear() {
-		keyVals.EraseAll();
+		keyVals.clear();
 		lat = 0; lon = 0; id = 0; bollard = false; trafficLight = false;
 	}
 };

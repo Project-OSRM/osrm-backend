@@ -26,11 +26,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DataStructures/QueryEdge.h"
 #include "DataStructures/StaticGraph.h"
 #include "DataStructures/StaticRTree.h"
-#include "Util/BaseConfiguration.h"
+#include "Util/IniFile.h"
 #include "Util/GraphLoader.h"
 #include "Util/InputFileUtil.h"
 #include "Util/LuaUtil.h"
 #include "Util/OpenMPWrapper.h"
+#include "Util/OSRMException.h"
+#include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
 #include "typedefs.h"
 
@@ -48,18 +50,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
-typedef BaseConfiguration ContractorConfiguration;
+typedef IniFile ContractorConfiguration;
 
 std::vector<NodeInfo> internalToExternalNodeMapping;
-std::vector<_Restriction> inputRestrictions;
+std::vector<TurnRestriction> inputRestrictions;
 std::vector<NodeID> bollardNodes;
 std::vector<NodeID> trafficLightNodes;
 std::vector<ImportEdge> edgeList;
 
 int main (int argc, char *argv[]) {
     try {
+        LogPolicy::GetInstance().Unmute();
         if(argc < 3) {
-            ERR("usage: " << std::endl << argv[0] << " <osrm-data> <osrm-restrictions> [<profile>]");
+            SimpleLogger().Write(logWARNING) <<
+                "usage: \n" <<
+                argv[0] << " <osrm-data> <osrm-restrictions> [<profile>]";
+            return -1;
         }
 
         double startupTime = get_timestamp();
@@ -71,32 +77,39 @@ int main (int argc, char *argv[]) {
                 number_of_threads = rawNumber;
         }
         omp_set_num_threads(number_of_threads);
-
-        INFO("Using restrictions from file: " << argv[2]);
+        LogPolicy::GetInstance().Unmute();
+        SimpleLogger().Write() << "Using restrictions from file: " << argv[2];
         std::ifstream restrictionsInstream(argv[2], std::ios::binary);
         if(!restrictionsInstream.good()) {
-            ERR("Could not access <osrm-restrictions> files");
+            std::cerr <<
+                "Could not access <osrm-restrictions> files" << std::endl;
+
         }
-        _Restriction restriction;
+        TurnRestriction restriction;
         UUID uuid_loaded, uuid_orig;
         unsigned usableRestrictionsCounter(0);
         restrictionsInstream.read((char*)&uuid_loaded, sizeof(UUID));
         if( !uuid_loaded.TestPrepare(uuid_orig) ) {
-        WARN(
-            ".restrictions was prepared with different build.\n"
-            "Reprocess to get rid of this warning."
-            )
+            SimpleLogger().Write(logWARNING) <<
+                ".restrictions was prepared with different build.\n"
+                "Reprocess to get rid of this warning.";
         }
 
-        restrictionsInstream.read((char*)&usableRestrictionsCounter, sizeof(unsigned));
+        restrictionsInstream.read(
+            (char*)&usableRestrictionsCounter,
+            sizeof(unsigned)
+        );
         inputRestrictions.resize(usableRestrictionsCounter);
-        restrictionsInstream.read((char *)&(inputRestrictions[0]), usableRestrictionsCounter*sizeof(_Restriction));
+        restrictionsInstream.read(
+            (char *)&(inputRestrictions[0]),
+            usableRestrictionsCounter*sizeof(TurnRestriction)
+        );
         restrictionsInstream.close();
 
         std::ifstream in;
         in.open (argv[1], std::ifstream::in | std::ifstream::binary);
         if (!in.is_open()) {
-            ERR("Cannot open " << argv[1]);
+            throw OSRMException("Cannot open osrm input file");
         }
 
         std::string nodeOut(argv[1]);		nodeOut += ".nodes";
@@ -107,7 +120,7 @@ int main (int argc, char *argv[]) {
 
         /*** Setup Scripting Environment ***/
         if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
-            ERR("Need profile.lua to apply traffic signal penalty");
+            throw OSRMException("Cannot open profile.lua ");
         }
 
         // Create a new lua state
@@ -123,20 +136,34 @@ int main (int argc, char *argv[]) {
         luaAddScriptFolderToLoadPath( myLuaState, (argc > 3 ? argv[3] : "profile.lua") );
 
         // Now call our function in a lua script
-        INFO("Parsing speedprofile from " << (argc > 3 ? argv[3] : "profile.lua") );
+        SimpleLogger().Write() <<
+            "Parsing speedprofile from " <<
+            (argc > 3 ? argv[3] : "profile.lua");
+
         if(0 != luaL_dofile(myLuaState, (argc > 3 ? argv[3] : "profile.lua") )) {
-            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+            std::cerr <<
+                lua_tostring(myLuaState,-1)   <<
+                " occured in scripting block" <<
+                std::endl;
         }
 
         EdgeBasedGraphFactory::SpeedProfileProperties speedProfile;
 
         if(0 != luaL_dostring( myLuaState, "return traffic_signal_penalty\n")) {
-            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+            std::cerr <<
+                lua_tostring(myLuaState,-1) <<
+                " occured in scripting block" <<
+                std::endl;
+                return -1;
         }
         speedProfile.trafficSignalPenalty = 10*lua_tointeger(myLuaState, -1);
 
         if(0 != luaL_dostring( myLuaState, "return u_turn_penalty\n")) {
-            ERR(lua_tostring(myLuaState,-1)<< " occured in scripting block");
+            std::cerr <<
+                lua_tostring(myLuaState,-1)   <<
+                " occured in scripting block" <<
+                std::endl;
+            return -1;
         }
         speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
 
@@ -145,20 +172,31 @@ int main (int argc, char *argv[]) {
         std::vector<ImportEdge> edgeList;
         NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
         in.close();
-        INFO(inputRestrictions.size() << " restrictions, " << bollardNodes.size() << " bollard nodes, " << trafficLightNodes.size() << " traffic lights");
-        if(0 == edgeList.size())
-            ERR("The input data is broken. It is impossible to do any turns in this graph");
+        SimpleLogger().Write() <<
+            inputRestrictions.size() <<
+            " restrictions, " <<
+            bollardNodes.size() <<
+            " bollard nodes, " <<
+            trafficLightNodes.size() <<
+            " traffic lights";
 
+        if(0 == edgeList.size()) {
+            std::cerr <<
+                "The input data is broken. "
+                "It is impossible to do any turns in this graph" <<
+                std::endl;
+            return -1;
+        }
 
         /***
          * Building an edge-expanded graph from node-based input an turn restrictions
          */
 
-        INFO("Generating edge-expanded graph representation");
+        SimpleLogger().Write() << "Generating edge-expanded graph representation";
         EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
         std::vector<ImportEdge>().swap(edgeList);
         edgeBasedGraphFactory->Run(edgeOut.c_str(), myLuaState);
-        std::vector<_Restriction>().swap(inputRestrictions);
+        std::vector<TurnRestriction>().swap(inputRestrictions);
         std::vector<NodeID>().swap(bollardNodes);
         std::vector<NodeID>().swap(trafficLightNodes);
         NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
@@ -172,7 +210,7 @@ int main (int argc, char *argv[]) {
          * Writing info on original (node-based) nodes
          */
 
-        INFO("writing node map ...");
+        SimpleLogger().Write() << "writing node map ...";
         std::ofstream mapOutFile(nodeOut.c_str(), std::ios::binary);
         mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
         mapOutFile.close();
@@ -184,7 +222,7 @@ int main (int argc, char *argv[]) {
          * Building grid-like nearest-neighbor data structure
          */
 
-        INFO("building r-tree ...");
+        SimpleLogger().Write() << "building r-tree ...";
         StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * rtree =
                 new StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode>(
                         nodeBasedEdgeList,
@@ -195,17 +233,21 @@ int main (int argc, char *argv[]) {
         IteratorbasedCRC32<std::vector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
         unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
         nodeBasedEdgeList.clear();
-        INFO("CRC32 based checksum is " << crc32OfNodeBasedEdgeList);
+        SimpleLogger().Write() << "CRC32: " << crc32OfNodeBasedEdgeList;
 
         /***
          * Contracting the edge-expanded graph
          */
 
-        INFO("initializing contractor");
+        SimpleLogger().Write() << "initializing contractor";
         Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
         double contractionStartedTimestamp(get_timestamp());
         contractor->Run();
-        INFO("Contraction took " << get_timestamp() - contractionStartedTimestamp << " sec");
+        const double contraction_duration = (get_timestamp() - contractionStartedTimestamp);
+        SimpleLogger().Write() <<
+            "Contraction took " <<
+            contraction_duration <<
+            " sec";
 
         DeallocatingVector< QueryEdge > contractedEdgeList;
         contractor->GetEdges( contractedEdgeList );
@@ -215,11 +257,15 @@ int main (int argc, char *argv[]) {
          * Sorting contracted edges in a way that the static query graph can read some in in-place.
          */
 
-        INFO("Building Node Array");
+        SimpleLogger().Write() << "Building Node Array";
         std::sort(contractedEdgeList.begin(), contractedEdgeList.end());
         unsigned numberOfNodes = 0;
         unsigned numberOfEdges = contractedEdgeList.size();
-        INFO("Serializing compacted graph of " << numberOfEdges << " edges");
+        SimpleLogger().Write() <<
+            "Serializing compacted graph of " <<
+            numberOfEdges <<
+            " edges";
+
         std::ofstream hsgr_output_stream(graphOut.c_str(), std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
@@ -261,8 +307,16 @@ int main (int argc, char *argv[]) {
                 currentEdge.target = contractedEdgeList[edge].target;
                 currentEdge.data = contractedEdgeList[edge].data;
                 if(currentEdge.data.distance <= 0) {
-                    INFO("Edge: " << i << ",source: " << contractedEdgeList[edge].source << ", target: " << contractedEdgeList[edge].target << ", dist: " << currentEdge.data.distance);
-                    ERR("Failed at edges of node " << node << " of " << numberOfNodes);
+                    SimpleLogger().Write(logWARNING) <<
+                        "Edge: "     << i <<
+                        ",source: "  << contractedEdgeList[edge].source <<
+                        ", target: " << contractedEdgeList[edge].target <<
+                        ", dist: "   << currentEdge.data.distance;
+
+                    SimpleLogger().Write(logWARNING) <<
+                        "Failed at edges of node " << node <<
+                        " of " << numberOfNodes;
+                        return -1;
                 }
                 //Serialize edges
                 hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
@@ -270,16 +324,24 @@ int main (int argc, char *argv[]) {
                 ++usedEdgeCounter;
             }
         }
-        double endTime = (get_timestamp() - startupTime);
-        INFO("Expansion  : " << (nodeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and "<< (edgeBasedNodeNumber/expansionHasFinishedTime) << " edges/sec");
-        INFO("Contraction: " << (edgeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and "<< usedEdgeCounter/endTime << " edges/sec");
+        SimpleLogger().Write() << "Preprocessing : " <<
+            (get_timestamp() - startupTime) << " seconds";
+        SimpleLogger().Write() << "Expansion  : " <<
+            (nodeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and " <<
+            (edgeBasedNodeNumber/expansionHasFinishedTime) << " edges/sec";
+
+        SimpleLogger().Write() << "Contraction: " <<
+            (edgeBasedNodeNumber/contraction_duration) << " nodes/sec and " <<
+            usedEdgeCounter/contraction_duration << " edges/sec";
 
         hsgr_output_stream.close();
         //cleanedEdgeList.clear();
         _nodes.clear();
-        INFO("finished preprocessing");
-    } catch (std::exception &e) {
-        ERR("Exception occured: " << e.what());
+        SimpleLogger().Write() << "finished preprocessing";
+    } catch ( const std::exception &e ) {
+        SimpleLogger().Write(logWARNING) <<
+            "Exception occured: " << e.what() << std::endl;
+        return -1;
     }
     return 0;
 }

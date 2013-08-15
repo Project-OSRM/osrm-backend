@@ -56,11 +56,14 @@ private:
 	}
 
 public:
-    inline void printEncodedString(const std::vector<SegmentInformation>& polyline, std::string &output) const {
+    inline void printEncodedString(
+        const std::vector<SegmentInformation> & polyline,
+        std::string & output
+    ) const {
     	std::vector<int> deltaNumbers;
         output += "\"";
         if(!polyline.empty()) {
-            _Coordinate lastCoordinate = polyline[0].location;
+            FixedPointCoordinate lastCoordinate = polyline[0].location;
             deltaNumbers.push_back( lastCoordinate.lat );
             deltaNumbers.push_back( lastCoordinate.lon );
             for(unsigned i = 1; i < polyline.size(); ++i) {
@@ -76,7 +79,7 @@ public:
 
     }
 
-	inline void printEncodedString(const std::vector<_Coordinate>& polyline, std::string &output) const {
+	inline void printEncodedString(const std::vector<FixedPointCoordinate>& polyline, std::string &output) const {
 		std::vector<int> deltaNumbers(2*polyline.size());
 		output += "\"";
 		if(!polyline.empty()) {
@@ -91,7 +94,7 @@ public:
 		output += "\"";
 	}
 
-    inline void printUnencodedString(std::vector<_Coordinate> & polyline, std::string & output) const {
+    inline void printUnencodedString(std::vector<FixedPointCoordinate> & polyline, std::string & output) const {
         output += "[";
         std::string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {

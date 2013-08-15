@@ -18,9 +18,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef COORDINATE_H_
-#define COORDINATE_H_
+#ifndef FIXED_POINT_COORDINATE_H_
+#define FIXED_POINT_COORDINATE_H_
 
+#include "../DataStructures/MercatorUtil.h"
 #include "../Util/StringUtil.h"
 
 #include <cassert>
@@ -29,11 +30,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <iostream>
 
-struct _Coordinate {
+static const double COORDINATE_PRECISION = 1000000.;
+
+struct FixedPointCoordinate {
     int lat;
     int lon;
-    _Coordinate () : lat(INT_MIN), lon(INT_MIN) {}
-    explicit _Coordinate (int t, int n) : lat(t) , lon(n) {}
+    FixedPointCoordinate () : lat(INT_MIN), lon(INT_MIN) {}
+    explicit FixedPointCoordinate (int lat, int lon) : lat(lat) , lon(lon) {}
 
     void Reset() {
         lat = INT_MIN;
@@ -43,17 +46,22 @@ struct _Coordinate {
         return (INT_MIN != lat) && (INT_MIN != lon);
     }
     inline bool isValid() const {
-        if(lat > 90*100000 || lat < -90*100000 || lon > 180*100000 || lon <-180*100000) {
+        if(
+            lat >   90*COORDINATE_PRECISION ||
+            lat <  -90*COORDINATE_PRECISION ||
+            lon >  180*COORDINATE_PRECISION ||
+            lon < -180*COORDINATE_PRECISION
+        ) {
             return false;
         }
         return true;
     }
-    bool operator==(const _Coordinate & other) const {
+    bool operator==(const FixedPointCoordinate & other) const {
         return lat == other.lat && lon == other.lon;
     }
 };
 
-inline std::ostream & operator<<(std::ostream & out, const _Coordinate & c){
+inline std::ostream & operator<<(std::ostream & out, const FixedPointCoordinate & c){
     out << "(" << c.lat << "," << c.lon << ")";
     return out;
 }
@@ -64,10 +72,10 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     assert(lat2 != INT_MIN);
     assert(lon2 != INT_MIN);
     double RAD = 0.017453292519943295769236907684886;
-    double lt1 = lat1/100000.;
-    double ln1 = lon1/100000.;
-    double lt2 = lat2/100000.;
-    double ln2 = lon2/100000.;
+    double lt1 = lat1/COORDINATE_PRECISION;
+    double ln1 = lon1/COORDINATE_PRECISION;
+    double lt2 = lat2/COORDINATE_PRECISION;
+    double ln2 = lon2/COORDINATE_PRECISION;
     double dlat1=lt1*(RAD);
 
     double dlong1=ln1*(RAD);
@@ -86,20 +94,20 @@ inline double ApproximateDistance( const int lat1, const int lon1, const int lat
     return distance;
 }
 
-inline double ApproximateDistance(const _Coordinate &c1, const _Coordinate &c2) {
+inline double ApproximateDistance(const FixedPointCoordinate &c1, const FixedPointCoordinate &c2) {
     return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
 }
 
-inline double ApproximateEuclideanDistance(const _Coordinate &c1, const _Coordinate &c2) {
+inline double ApproximateEuclideanDistance(const FixedPointCoordinate &c1, const FixedPointCoordinate &c2) {
     assert(c1.lat != INT_MIN);
     assert(c1.lon != INT_MIN);
     assert(c2.lat != INT_MIN);
     assert(c2.lon != INT_MIN);
     const double RAD = 0.017453292519943295769236907684886;
-    const double lat1 = (c1.lat/100000.)*RAD;
-    const double lon1 = (c1.lon/100000.)*RAD;
-    const double lat2 = (c2.lat/100000.)*RAD;
-    const double lon2 = (c2.lon/100000.)*RAD;
+    const double lat1 = (c1.lat/COORDINATE_PRECISION)*RAD;
+    const double lon1 = (c1.lon/COORDINATE_PRECISION)*RAD;
+    const double lat2 = (c2.lat/COORDINATE_PRECISION)*RAD;
+    const double lon2 = (c2.lon/COORDINATE_PRECISION)*RAD;
 
     const double x = (lon2-lon1) * cos((lat1+lat2)/2.);
     const double y = (lat2-lat1);
@@ -111,11 +119,11 @@ inline double ApproximateEuclideanDistance(const _Coordinate &c1, const _Coordin
 static inline void convertInternalLatLonToString(const int value, std::string & output) {
     char buffer[100];
     buffer[10] = 0; // Nullterminierung
-    char* string = printInt< 10, 5 >( buffer, value );
+    char* string = printInt< 10, 6 >( buffer, value );
     output = string;
 }
 
-static inline void convertInternalCoordinateToString(const _Coordinate & coord, std::string & output) {
+static inline void convertInternalCoordinateToString(const FixedPointCoordinate & coord, std::string & output) {
     std::string tmp;
     convertInternalLatLonToString(coord.lon, tmp);
     output = tmp;
@@ -124,7 +132,7 @@ static inline void convertInternalCoordinateToString(const _Coordinate & coord, 
     output += tmp;
     output += " ";
 }
-static inline void convertInternalReversedCoordinateToString(const _Coordinate & coord, std::string & output) {
+static inline void convertInternalReversedCoordinateToString(const FixedPointCoordinate & coord, std::string & output) {
     std::string tmp;
     convertInternalLatLonToString(coord.lat, tmp);
     output = tmp;
@@ -134,4 +142,22 @@ static inline void convertInternalReversedCoordinateToString(const _Coordinate &
     output += " ";
 }
 
-#endif /* COORDINATE_H_ */
+
+/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
+template<class CoordinateT>
+static inline double GetAngleBetweenThreeFixedPointCoordinates (
+    const CoordinateT & A,
+    const CoordinateT & C,
+    const CoordinateT & B
+) {
+    const double v1x = (A.lon - C.lon)/COORDINATE_PRECISION;
+    const double v1y = lat2y(A.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
+    const double v2x = (B.lon - C.lon)/COORDINATE_PRECISION;
+    const double v2y = lat2y(B.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
+
+    double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
+    while(angle < 0)
+        angle += 360;
+    return angle;
+}
+#endif /* FIXED_POINT_COORDINATE_H_ */

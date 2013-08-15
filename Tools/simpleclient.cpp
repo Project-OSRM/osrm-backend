@@ -20,6 +20,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 
 #include "../Library/OSRM.h"
+#include "../Util/SimpleLogger.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -44,43 +45,49 @@ void print_tree(boost::property_tree::ptree const& pt, const unsigned recursion_
 
 
 int main (int argc, char * argv[]) {
-    std::cout   << "\n starting up engines, compile at "
-                << __DATE__ << ", " __TIME__ << std::endl;
-    BaseConfiguration serverConfig((argc > 1 ? argv[1] : "server.ini"));
-    OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
+    LogPolicy::GetInstance().Unmute();
+    try {
+        std::cout   << "\n starting up engines, compile at "
+                    << __DATE__ << ", " __TIME__ << std::endl;
+        IniFile serverConfig((argc > 1 ? argv[1] : "server.ini"));
+        OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
 
-    RouteParameters route_parameters;
-    route_parameters.zoomLevel = 18; //no generalization
-    route_parameters.printInstructions = true; //turn by turn instructions
-    route_parameters.alternateRoute = true; //get an alternate route, too
-    route_parameters.geometry = true; //retrieve geometry of route
-    route_parameters.compression = true; //polyline encoding
-    route_parameters.checkSum = UINT_MAX; //see wiki
-    route_parameters.service = "viaroute"; //that's routing
-    route_parameters.outputFormat = "json";
-    route_parameters.jsonpParameter = ""; //set for jsonp wrapping
-    route_parameters.language = ""; //unused atm
-    //route_parameters.hints.push_back(); // see wiki, saves I/O if done properly
+        RouteParameters route_parameters;
+        route_parameters.zoomLevel = 18; //no generalization
+        route_parameters.printInstructions = true; //turn by turn instructions
+        route_parameters.alternateRoute = true; //get an alternate route, too
+        route_parameters.geometry = true; //retrieve geometry of route
+        route_parameters.compression = true; //polyline encoding
+        route_parameters.checkSum = UINT_MAX; //see wiki
+        route_parameters.service = "viaroute"; //that's routing
+        route_parameters.outputFormat = "json";
+        route_parameters.jsonpParameter = ""; //set for jsonp wrapping
+        route_parameters.language = ""; //unused atm
+        //route_parameters.hints.push_back(); // see wiki, saves I/O if done properly
 
-    _Coordinate start_coordinate(52.519930*100000,13.438640*100000);
-    _Coordinate target_coordinate(52.513191*100000,13.415852*100000);
-    route_parameters.coordinates.push_back(start_coordinate);
-    route_parameters.coordinates.push_back(target_coordinate);
+        FixedPointCoordinate start_coordinate(52.519930*COORDINATE_PRECISION,13.438640*COORDINATE_PRECISION);
+        FixedPointCoordinate target_coordinate(52.513191*COORDINATE_PRECISION,13.415852*COORDINATE_PRECISION);
+        route_parameters.coordinates.push_back(start_coordinate);
+        route_parameters.coordinates.push_back(target_coordinate);
 
-    http::Reply osrm_reply;
+        http::Reply osrm_reply;
 
-    routing_machine.RunQuery(route_parameters, osrm_reply);
+        routing_machine.RunQuery(route_parameters, osrm_reply);
 
-    std::cout << osrm_reply.content << std::endl;
+        std::cout << osrm_reply.content << std::endl;
 
-    //attention: super-inefficient hack below:
+        //attention: super-inefficient hack below:
 
-    std::stringstream ss;
-    ss << osrm_reply.content;
+        std::stringstream ss;
+        ss << osrm_reply.content;
 
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_json(ss, pt);
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_json(ss, pt);
 
-    print_tree(pt, 0);
+        print_tree(pt, 0);
+    } catch (std::exception & e) {
+        SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
+        return -1;
+    }
     return 0;
 }

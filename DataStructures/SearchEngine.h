@@ -45,17 +45,17 @@ public:
     AlternativeRouting<SearchEngineData> alternativePaths;
 
     SearchEngine(
-        QueryGraph * g, 
-        NodeInformationHelpDesk * nh, 
+        QueryGraph * g,
+        NodeInformationHelpDesk * nh,
         std::vector<std::string> & n
     );
 	~SearchEngine();
 
-	void GetCoordinatesForNodeID(NodeID id, _Coordinate& result) const;
+	void GetCoordinatesForNodeID(NodeID id, FixedPointCoordinate& result) const;
 
     void FindPhantomNodeForCoordinate(
-        const _Coordinate & location, 
-        PhantomNode & result, 
+        const FixedPointCoordinate & location,
+        PhantomNode & result,
         unsigned zoomLevel
     ) const;
 

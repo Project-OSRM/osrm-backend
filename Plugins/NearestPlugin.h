@@ -22,27 +22,27 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define NearestPlugin_H_
 
 #include "BasePlugin.h"
-#include "RouteParameters.h"
 
 #include "../DataStructures/NodeInformationHelpDesk.h"
 #include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
-
-#include <fstream>
 
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(QueryObjectsStorage * objects) : names(objects->names) {
+    NearestPlugin(QueryObjectsStorage * objects )
+     :
+        names(objects->names),
+        descriptor_string("nearest")
+    {
         nodeHelpDesk = objects->nodeHelpDesk;
 
-        descriptorTable.Set("", 0); //default descriptor
-        descriptorTable.Set("json", 1);
+        descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
+        descriptorTable.insert(std::make_pair("json", 1));
     }
-    std::string GetDescriptor() const { return std::string("nearest"); }
-    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
+    const std::string & GetDescriptor() const { return descriptor_string; }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
@@ -107,17 +107,12 @@ public:
         intToString(reply.content.size(), tmp);
         reply.headers[0].value = tmp;
     }
-private:
-    inline bool checkCoord(const _Coordinate & c) {
-        if(c.lat > 90*100000 || c.lat < -90*100000 || c.lon > 180*100000 || c.lon <-180*100000) {
-            return false;
-        }
-        return true;
-    }
 
+private:
     NodeInformationHelpDesk * nodeHelpDesk;
     HashTable<std::string, unsigned> descriptorTable;
     std::vector<std::string> & names;
+    std::string descriptor_string;
 };
 
 #endif /* NearestPlugin_H_ */

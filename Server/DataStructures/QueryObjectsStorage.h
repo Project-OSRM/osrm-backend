@@ -22,12 +22,20 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef QUERYOBJECTSSTORAGE_H_
 #define QUERYOBJECTSSTORAGE_H_
 
-#include<vector>
-#include<string>
-
+#include "../../Util/GraphLoader.h"
+#include "../../Util/OSRMException.h"
+#include "../../Util/SimpleLogger.h"
 #include "../../DataStructures/NodeInformationHelpDesk.h"
 #include "../../DataStructures/QueryEdge.h"
 #include "../../DataStructures/StaticGraph.h"
+
+#include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
+#include <vector>
+#include <string>
+
 
 struct QueryObjectsStorage {
     typedef StaticGraph<QueryEdge::EdgeData>    QueryGraph;

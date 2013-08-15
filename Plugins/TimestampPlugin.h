@@ -22,16 +22,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define TIMESTAMPPLUGIN_H_
 
 #include "BasePlugin.h"
-#include "RouteParameters.h"
-
-#include <cassert>
 
 class TimestampPlugin : public BasePlugin {
 public:
-    TimestampPlugin(QueryObjectsStorage * o) : objects(o) {
-    }
-    std::string GetDescriptor() const { return std::string("timestamp"); }
-    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
+    TimestampPlugin(QueryObjectsStorage * o)
+     : objects(o), descriptor_string("timestamp")
+    { }
+    const std::string & GetDescriptor() const { return descriptor_string; }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         std::string tmp;
 
@@ -70,6 +67,7 @@ public:
     }
 private:
     QueryObjectsStorage * objects;
+    std::string descriptor_string;
 };
 
 #endif /* TIMESTAMPPLUGIN_H_ */

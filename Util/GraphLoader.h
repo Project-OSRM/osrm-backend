@@ -21,14 +21,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
+#include "OSRMException.h"
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/NodeCoords.h"
+#include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
+#include "../Util/SimpleLogger.h"
 #include "../Util/UUID.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/unordered_map.hpp>
 
 #include <cassert>
@@ -56,17 +60,16 @@ NodeID readBinaryOSRMGraphFromStream(
     std::vector<NodeID> &bollardNodes,
     std::vector<NodeID> &trafficLightNodes,
     std::vector<NodeInfo> * int2ExtNodeMap,
-    std::vector<_Restriction> & inputRestrictions
+    std::vector<TurnRestriction> & inputRestrictions
 ) {
     const UUID uuid_orig;
     UUID uuid_loaded;
     in.read((char *) &uuid_loaded, sizeof(UUID));
 
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-        WARN(
+        SimpleLogger().Write(logWARNING) <<
             ".osrm was prepared with different build.\n"
-            "Reprocess to get rid of this warning."
-            )
+            "Reprocess to get rid of this warning.";
     }
 
     NodeID n, source, target;
@@ -74,16 +77,18 @@ NodeID readBinaryOSRMGraphFromStream(
     short dir;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     in.read((char*)&n, sizeof(NodeID));
-    INFO("Importing n = " << n << " nodes ");
+    SimpleLogger().Write() << "Importing n = " << n << " nodes ";
     _Node node;
     for (NodeID i=0; i<n; ++i) {
         in.read((char*)&node, sizeof(_Node));
         int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
         ext2IntNodeMap.insert(std::make_pair(node.id, i));
-        if(node.bollard)
+        if(node.bollard) {
         	bollardNodes.push_back(i);
-        if(node.trafficLight)
+        }
+        if(node.trafficLight) {
         	trafficLightNodes.push_back(i);
+        }
     }
 
     //tighten vector sizes
@@ -91,11 +96,11 @@ NodeID readBinaryOSRMGraphFromStream(
     std::vector<NodeID>(trafficLightNodes).swap(trafficLightNodes);
 
     in.read((char*)&m, sizeof(unsigned));
-    INFO(" and " << m << " edges ");
+    SimpleLogger().Write() << " and " << m << " edges ";
     for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(inputRestrictions[i].fromNode);
         if( intNodeID == ext2IntNodeMap.end()) {
-            DEBUG("Unmapped from Node of restriction");
+            SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
             continue;
 
         }
@@ -103,14 +108,14 @@ NodeID readBinaryOSRMGraphFromStream(
 
         intNodeID = ext2IntNodeMap.find(inputRestrictions[i].viaNode);
         if( intNodeID == ext2IntNodeMap.end()) {
-            DEBUG("Unmapped via node of restriction");
+            SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
             continue;
         }
         inputRestrictions[i].viaNode = intNodeID->second;
 
         intNodeID = ext2IntNodeMap.find(inputRestrictions[i].toNode);
         if( intNodeID == ext2IntNodeMap.end()) {
-            DEBUG("Unmapped to node of restriction");
+            SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
             continue;
         }
         inputRestrictions[i].toNode = intNodeID->second;
@@ -151,7 +156,8 @@ NodeID readBinaryOSRMGraphFromStream(
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
         if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
 #ifndef NDEBUG
-            WARN(" unresolved source NodeID: " << source );
+            SimpleLogger().Write(logWARNING) <<
+                " unresolved source NodeID: " << source;
 #endif
             continue;
         }
@@ -159,7 +165,8 @@ NodeID readBinaryOSRMGraphFromStream(
         intNodeID = ext2IntNodeMap.find(target);
         if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
 #ifndef NDEBUG
-            WARN("unresolved target NodeID : " << target );
+            SimpleLogger().Write(logWARNING) <<
+            "unresolved target NodeID : " << target;
 #endif
             continue;
         }
@@ -210,7 +217,7 @@ NodeID readBinaryOSRMGraphFromStream(
     typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
     ext2IntNodeMap.clear();
     std::vector<EdgeT>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
-    INFO("Graph loaded ok and has " << edgeList.size() << " edges");
+    SimpleLogger().Write() << "Graph loaded ok and has " << edgeList.size() << " edges";
     return n;
 }
 template<typename EdgeT>
@@ -220,14 +227,14 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext2IntNodeMap;
     in >> n;
-    DEBUG("Importing n = " << n << " nodes ");
+    SimpleLogger().Write(logDEBUG) << "Importing n = " << n << " nodes ";
     for (NodeID i=0; i<n; ++i) {
         in >> id >> ycoord >> xcoord;
         int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
         ext2IntNodeMap.insert(std::make_pair(id, i));
     }
     in >> m;
-    DEBUG(" and " << m << " edges");
+    SimpleLogger().Write(logDEBUG) << " and " << m << " edges";
 
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; ++i) {
@@ -295,8 +302,9 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         }
         assert(length > 0);
         assert(weight > 0);
-        if(dir <0 || dir > 2)
-            WARN("direction bogus: " << dir);
+        if(dir <0 || dir > 2) {
+            SimpleLogger().Write(logWARNING) << "direction bogus: " << dir;
+        }
         assert(0<=dir && dir<=2);
 
         bool forward = true;
@@ -308,19 +316,25 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
             forward = false;
         }
 
-        if(length == 0) { ERR("loaded null length edge"); }
+        if(length == 0) {
+            throw OSRMException("loaded null length edge");
+        }
 
         //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
         if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
-            ERR("after " << edgeList.size() << " edges" << "\n->" << source << "," << target << "," << length << "," << dir << "," << weight << "\n->unresolved source NodeID: " << source);
+            throw OSRMException("unresolvable source Node ID");
         }
         source = intNodeID->second;
         intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) { ERR("unresolved target NodeID : " << target); }
+        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
+            throw OSRMException("unresolvable target Node ID");
+        }
         target = intNodeID->second;
 
-        if(source == UINT_MAX || target == UINT_MAX) { ERR("nonexisting source or target" ); }
+        if(source == UINT_MAX || target == UINT_MAX) {
+            throw OSRMException("nonexisting source or target" );
+        }
 
         EdgeT inputEdge(source, target, 0, weight, forward, backward, type );
         edgeList.push_back(inputEdge);
@@ -342,17 +356,19 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     in >> d;
     in >> n;
     in >> m;
-#ifndef DEBUG
-    std::cout << "expecting " << n << " nodes and " << m << " edges ..." << flush;
-#endif
+
+    SimpleLogger().Write(logDEBUG) <<
+        "expecting " << n << " nodes and " << m << " edges ...";
+
     edgeList.reserve(m);
     for (EdgeID i=0; i<m; i++) {
         EdgeWeight weight;
         in >> source >> target >> weight >> dir;
 
         assert(weight > 0);
-        if(dir <0 || dir > 3)
-            ERR( "[error] direction bogus: " << dir );
+        if(dir <0 || dir > 3) {
+            throw OSRMException( "[error] direction bogus");
+        }
         assert(0<=dir && dir<=3);
 
         bool forward = true;
@@ -361,7 +377,9 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         if (dir == 2) forward = false;
         if (dir == 3) {backward = true; forward = true;}
 
-        if(weight == 0) { ERR("loaded null length edge"); }
+        if(weight == 0) {
+            throw OSRMException("loaded null length edge");
+        }
 
         if( nodeMap.find(source) == nodeMap.end()) {
             nodeMap.insert(std::make_pair(source, numberOfNodes ));
@@ -384,41 +402,51 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
 template<typename NodeT, typename EdgeT>
 unsigned readHSGRFromStream(
-    std::istream &hsgr_input_stream,
+    const std::string & hsgr_filename,
     std::vector<NodeT> & node_list,
     std::vector<EdgeT> & edge_list,
     unsigned * check_sum
 ) {
+    boost::filesystem::path hsgr_file(hsgr_filename);
+    if ( !boost::filesystem::exists( hsgr_file ) ) {
+        throw OSRMException("hsgr file does not exist");
+    }
+    if ( 0 == boost::filesystem::file_size( hsgr_file ) ) {
+        throw OSRMException("hsgr file is empty");
+    }
+
+    boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);
+
     UUID uuid_loaded, uuid_orig;
     hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-        WARN(
-            ".hsgr was prepared with different build.\n"
-            "Reprocess to get rid of this warning."
-            )
+        SimpleLogger().Write(logWARNING) <<
+            ".hsgr was prepared with different build. "
+            "Reprocess to get rid of this warning.";
     }
 
     unsigned number_of_nodes = 0;
     hsgr_input_stream.read((char*) check_sum, sizeof(unsigned));
     hsgr_input_stream.read((char*) & number_of_nodes, sizeof(unsigned));
+    BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
     node_list.resize(number_of_nodes + 1);
     hsgr_input_stream.read(
         (char*) &(node_list[0]),
         number_of_nodes*sizeof(NodeT)
     );
-
     unsigned number_of_edges = 0;
     hsgr_input_stream.read(
         (char*) &number_of_edges,
         sizeof(unsigned)
     );
+    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
 
     edge_list.resize(number_of_edges);
     hsgr_input_stream.read(
         (char*) &(edge_list[0]),
         number_of_edges*sizeof(EdgeT)
     );
-
+    hsgr_input_stream.close();
     return number_of_nodes;
 }
 

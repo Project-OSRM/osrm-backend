@@ -16,33 +16,18 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
- */
+*/
 
-#ifndef INPUTFILEUTIL_H_
-#define INPUTFILEUTIL_H_
+#ifndef TIMINGUTIL_H_
+#define TIMINGUTIL_H_
 
-#include "../typedefs.h"
+#include <boost/timer.hpp>
 
-#include <boost/filesystem.hpp>
+static boost::timer my_timer;
 
-// Check if file exists and if it can be opened for reading with ifstream an object
-inline bool testDataFile(const std::string & filename){
-    boost::filesystem::path fileToTest(filename);
-	if(!boost::filesystem::exists(fileToTest))       {
-		SimpleLogger().Write(logWARNING) <<
-			"Failed to open file " << filename << " for reading.";
-
-		return false;
-	}
-	return true;
+/** Returns a timestamp (now) in seconds (incl. a fractional part). */
+static inline double get_timestamp() {
+    return my_timer.elapsed();
 }
 
-inline bool testDataFiles(int argc, char *argv[]){
-	for(int i = 0; i < argc; ++i) {
-		if(!testDataFile(argv[i]))
-			return false;
-	}
-	return true;
-}
-
-#endif /* INPUTFILEUTIL_H_ */
+#endif /* TIMINGUTIL_H_ */

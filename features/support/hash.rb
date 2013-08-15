@@ -1,5 +1,8 @@
 require 'digest/sha1'
 
+bin_extract_hash = nil
+profile_hashes = nil
+
 def hash_of_files paths
   paths = [paths] unless paths.is_a? Array
   hash = Digest::SHA1.new
@@ -16,8 +19,8 @@ end
 
 
 def profile_hash
-  @@profile_hashes ||= {}
-  @@profile_hashes[@profile] ||= hash_of_files "#{PROFILES_PATH}/#{@profile}.lua"
+  profile_hashes ||= {}
+  profile_hashes[@profile] ||= hash_of_files "#{PROFILES_PATH}/#{@profile}.lua"
 end
 
 def osm_hash
@@ -29,15 +32,15 @@ def lua_lib_hash
 end
 
 def bin_extract_hash
-  @@bin_extract_hash ||= hash_of_files "#{BIN_PATH}/osrm-extract"
+  bin_extract_hash ||= hash_of_files "#{BIN_PATH}/osrm-extract"
 end
 
 def bin_prepare_hash
-  @@bin_prepare_hash ||= hash_of_files "#{BIN_PATH}/osrm-prepare"
+  bin_prepare_hash ||= hash_of_files "#{BIN_PATH}/osrm-prepare"
 end
 
 def bin_routed_hash
-  @@bin_routed_hash ||= hash_of_files "#{BIN_PATH}/osrm-routed"
+  bin_routed_hash ||= hash_of_files "#{BIN_PATH}/osrm-routed"
 end
 
 #combine state of data, profile and binaries into a hash that identifies the exact test scenario

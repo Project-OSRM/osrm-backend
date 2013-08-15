@@ -10,7 +10,7 @@ before_script:
  - bundle install
  - mkdir build
  - cd build
- - cmake ..
+ - cmake .. $CMAKEOPTIONS
 script: make
 after_script:
  - cd ..
@@ -20,8 +20,8 @@ branches:
     - master
     - develop
 env:
- - OPTIONS="-DCMAKE_BUILD_TYPE=Release"
- - OPTIONS="-DCMAKE_BUILD_TYPE=Debug"
+ - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release"
+ - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug"
 notifications:
  irc:
   channels:

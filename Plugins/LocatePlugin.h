@@ -22,23 +22,19 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define LOCATEPLUGIN_H_
 
 #include "BasePlugin.h"
-#include "RouteParameters.h"
 #include "../DataStructures/NodeInformationHelpDesk.h"
 #include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
-
-#include <fstream>
 
 /*
  * This Plugin locates the nearest node in the road network for a given coordinate.
  */
 class LocatePlugin : public BasePlugin {
 public:
-    LocatePlugin(QueryObjectsStorage * objects) {
+    LocatePlugin(QueryObjectsStorage * objects) : descriptor_string("locate") {
         nodeHelpDesk = objects->nodeHelpDesk;
     }
-    std::string GetDescriptor() const { return std::string("locate"); }
-    std::string GetVersionString() const { return std::string("0.3 (DL)"); }
+    const std::string & GetDescriptor() const { return descriptor_string; }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
@@ -51,7 +47,7 @@ public:
         }
 
         //query to helpdesk
-        _Coordinate result;
+        FixedPointCoordinate result;
         std::string tmp;
         //json
 
@@ -99,15 +95,10 @@ public:
         reply.headers[0].value = tmp;
         return;
     }
-private:
-    inline bool checkCoord(const _Coordinate & c) {
-        if(c.lat > 90*100000 || c.lat < -90*100000 || c.lon > 180*100000 || c.lon <-180*100000) {
-            return false;
-        }
-        return true;
-    }
 
+private:
     NodeInformationHelpDesk * nodeHelpDesk;
+    std::string descriptor_string;
 };
 
 #endif /* LOCATEPLUGIN_H_ */

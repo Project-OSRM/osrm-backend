@@ -18,58 +18,62 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef BASECONFIGURATION_H_
-#define BASECONFIGURATION_H_
+#ifndef INI_FILE_H_
+#define INI_FILE_H_
 
+#include "OSRMException.h"
 #include "../DataStructures/HashTable.h"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
 #include <exception>
-#include <fstream>
 #include <iostream>
 #include <string>
 
-class BaseConfiguration {
+class IniFile {
 public:
-    BaseConfiguration(const char * configFile) {
-        std::ifstream config( configFile );
-        if(!config) {
-            std::cerr << "[config] .ini not found" << std::endl;
-            return;
+    IniFile(const char * config_filename) {
+        boost::filesystem::path config_file(config_filename);
+        if ( !boost::filesystem::exists( config_file ) ) {
+            std::string error = std::string(config_filename) + " not found";
+            throw OSRMException(error);
+       }
+        if ( 0 == boost::filesystem::file_size( config_file ) ) {
+            std::string error = std::string(config_filename) + " is empty";
+            throw OSRMException(error);
         }
 
+        boost::filesystem::ifstream config( config_file );
         std::string line;
-        try {
-            if (config.is_open()) {
-                while ( config.good() )  {
-                    getline (config,line);
-                    std::vector<std::string> tokens;
-                    Tokenize(line, tokens);
-                    if(2 == tokens.size() )
-                        parameters.Add(tokens[0], tokens[1]);
+        if (config.is_open()) {
+            while ( config.good() )  {
+                getline (config,line);
+                std::vector<std::string> tokens;
+                Tokenize(line, tokens);
+                if(2 == tokens.size() ) {
+                    parameters.insert(std::make_pair(tokens[0], tokens[1]));
                 }
-                config.close();
             }
-        } catch(std::exception& e) {
-            ERR("[config] " << configFile << " not found -> Exception: " <<e.what());
-            if(config.is_open())
-                config.close();
+            config.close();
         }
     }
 
-    std::string GetParameter(const char * key){
-        return GetParameter(std::string(key));
+    std::string GetParameter(const std::string & key){
+        return parameters.Find(key);
     }
 
-    std::string GetParameter(std::string key) {
-        return parameters.Find(key);
+    bool Holds(const std::string & key) const {
+        return parameters.Holds(key);
     }
 
     void SetParameter(const char* key, const char* value) {
         SetParameter(std::string(key), std::string(value));
     }
 
-    void SetParameter(std::string key, std::string value) {
-        parameters.Set(key, value);
+    void SetParameter(const std::string & key, const std::string & value) {
+        parameters.insert(std::make_pair(key, value));
     }
 
 private:
@@ -83,31 +87,14 @@ private:
 
         while (std::string::npos != pos || std::string::npos != lastPos) {
             std::string temp = str.substr(lastPos, pos - lastPos);
-            TrimStringRight(temp);
-            TrimStringLeft(temp);
+            boost::trim(temp);
             tokens.push_back( temp );
             lastPos = str.find_first_not_of(delimiters, pos);
             pos = str.find_first_of(delimiters, lastPos);
         }
     }
 
-    void TrimStringRight(std::string& str) {
-        std::string::size_type pos = str.find_last_not_of(" ");
-        if (pos != std::string::npos)
-            str.erase(pos+1);
-        else
-            str.erase( str.begin() , str.end() );
-    }
-
-    void TrimStringLeft(std::string& str) {
-        std::string::size_type pos = str.find_first_not_of(" ");
-        if (pos != std::string::npos)
-            str.erase(0, pos);
-        else
-            str.erase( str.begin() , str.end() );
-    }
-
     HashTable<std::string, std::string> parameters;
 };
 
-#endif /* BASECONFIGURATION_H_ */
+#endif /* INI_FILE_H_ */

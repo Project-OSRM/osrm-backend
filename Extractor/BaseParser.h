@@ -23,6 +23,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "ExtractorCallbacks.h"
 #include "ScriptingEnvironment.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 
 extern "C" {
     #include <lua.h>

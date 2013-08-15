@@ -18,8 +18,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-
-
 #ifndef QUERYEDGE_H_
 #define QUERYEDGE_H_
 
@@ -29,7 +27,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <climits>
 
 struct OriginalEdgeData{
-    explicit OriginalEdgeData(NodeID v, unsigned n, TurnInstruction t) : viaNode(v), nameID(n), turnInstruction(t) {}
+    explicit OriginalEdgeData(
+        NodeID viaNode,
+        unsigned nameID,
+        TurnInstruction turnInstruction
+    ) : viaNode(viaNode), nameID(nameID), turnInstruction(turnInstruction) {}
     OriginalEdgeData() : viaNode(UINT_MAX), nameID(UINT_MAX), turnInstruction(UCHAR_MAX) {}
     NodeID viaNode;
     unsigned nameID;
@@ -46,23 +48,12 @@ struct QueryEdge {
         bool forward:1;
         bool backward:1;
     } data;
-    bool operator<( const QueryEdge& right ) const {
-        if ( source != right.source )
-            return source < right.source;
-        return target < right.target;
-    }
 
-    //sorts by source and other attributes
-    static bool CompareBySource( const QueryEdge& left, const QueryEdge& right ) {
-        if ( left.source != right.source )
-            return left.source < right.source;
-        int l = ( left.data.forward ? -1 : 0 ) + ( left.data.backward ? -1 : 0 );
-        int r = ( right.data.forward ? -1 : 0 ) + ( right.data.backward ? -1 : 0 );
-        if ( l != r )
-            return l < r;
-        if ( left.target != right.target )
-            return left.target < right.target;
-        return left.data.distance < right.data.distance;
+    bool operator<( const QueryEdge& right ) const {
+        if ( source != right.source ) {
+            return source < right.source;
+        }
+        return target < right.target;
     }
 
     bool operator== ( const QueryEdge& right ) const {
