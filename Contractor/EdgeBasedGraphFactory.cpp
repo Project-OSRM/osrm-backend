@@ -405,8 +405,6 @@ void EdgeBasedGraphFactory::Run(
                         }
                         distance += penalty;
 
-                        //distance += heightPenalty;
-                        //distance += ComputeTurnPenalty(u, v, w);
                         assert(edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID);
                         original_edge_data_vector.push_back(
                             OriginalEdgeData(
@@ -561,4 +559,3 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
 unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
     return m_node_based_graph->GetNumberOfEdges();
 }
-
