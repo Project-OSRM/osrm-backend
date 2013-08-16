@@ -44,16 +44,17 @@
 class PBFParser : public BaseParser {
 
     enum EntityType {
-        TypeNode = 1,
-        TypeWay = 2,
-        TypeRelation = 4,
+        TypeDummy     = 0,
+        TypeNode      = 1,
+        TypeWay       = 2,
+        TypeRelation  = 4,
         TypeDenseNode = 8
-    } ;
+    };
 
     struct _ThreadData {
         int currentGroupID;
         int currentEntityID;
-        short entityTypeIndicator;
+        EntityType entityTypeIndicator;
 
         OSMPBF::BlobHeader PBFBlobHeader;
         OSMPBF::Blob PBFBlob;
@@ -74,18 +75,18 @@ public:
 private:
     inline void ReadData();
     inline void ParseData();
-    inline void parseDenseNode(_ThreadData * threadData);
-    inline void parseNode(_ThreadData * );
-    inline void parseRelation(_ThreadData * threadData);
-    inline void parseWay(_ThreadData * threadData);
+    inline void parseDenseNode  (_ThreadData * threadData);
+    inline void parseNode       (_ThreadData * threadData);
+    inline void parseRelation   (_ThreadData * threadData);
+    inline void parseWay        (_ThreadData * threadData);
 
-    inline void loadGroup(_ThreadData * threadData);
-    inline void loadBlock(_ThreadData * threadData);
-    inline bool readPBFBlobHeader(std::fstream& stream, _ThreadData * threadData);
-    inline bool unpackZLIB(std::fstream &, _ThreadData * threadData);
-    inline bool unpackLZMA(std::fstream &, _ThreadData * );
-    inline bool readBlob(std::fstream& stream, _ThreadData * threadData) ;
-    inline bool readNextBlock(std::fstream& stream, _ThreadData * threadData);
+    inline void loadGroup       (_ThreadData * threadData);
+    inline void loadBlock       (_ThreadData * threadData);
+    inline bool readPBFBlobHeader(std::fstream & stream, _ThreadData * threadData);
+    inline bool unpackZLIB       (std::fstream & stream, _ThreadData * threadData);
+    inline bool unpackLZMA       (std::fstream & stream, _ThreadData * threadData);
+    inline bool readBlob         (std::fstream & stream, _ThreadData * threadData);
+    inline bool readNextBlock    (std::fstream & stream, _ThreadData * threadData);
 
     static const int NANO = 1000 * 1000 * 1000;
     static const int MAX_BLOB_HEADER_SIZE = 64 * 1024;

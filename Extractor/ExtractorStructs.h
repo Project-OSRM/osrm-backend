@@ -154,7 +154,7 @@ struct CmpWayByID : public std::binary_function<_WayIDStartAndEndEdge, _WayIDSta
 
 struct Cmp : public std::binary_function<NodeID, NodeID, bool> {
     typedef NodeID value_type;
-    bool operator ()  (const NodeID & a, const NodeID & b) const {
+    bool operator ()  (const NodeID a, const NodeID b) const {
         return a < b;
     }
     value_type max_value() {

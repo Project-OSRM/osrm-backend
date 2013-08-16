@@ -72,13 +72,10 @@ void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) {
 }
 
 void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* localLuaState) {
-    if(2 > w.path.size()) {
-        return;
-    }
     luabind::call_function<void>( localLuaState, "way_function", boost::ref(w) );
 }
 
-bool BaseParser::ShouldIgnoreRestriction(const std::string& except_tag_string) const {
+bool BaseParser::ShouldIgnoreRestriction(const std::string & except_tag_string) const {
     //should this restriction be ignored? yes if there's an overlap between:
     //a) the list of modes in the except tag of the restriction (except_tag_string), ex: except=bus;bicycle
     //b) the lua profile defines a hierachy of modes, ex: [access, vehicle, bicycle]

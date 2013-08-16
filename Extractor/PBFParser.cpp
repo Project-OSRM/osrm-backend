@@ -173,14 +173,14 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 		extracted_nodes_vector[i].lon = COORDINATE_PRECISION*( ( double ) m_lastDenseLongitude * threadData->PBFprimitiveBlock.granularity() + threadData->PBFprimitiveBlock.lon_offset() ) / NANO;
 		while (denseTagIndex < dense.keys_vals_size()) {
 			const int tagValue = dense.keys_vals( denseTagIndex );
-			if( 0==tagValue ) {
+			if( 0 == tagValue ) {
 				++denseTagIndex;
 				break;
 			}
 			const int keyValue = dense.keys_vals ( denseTagIndex+1 );
-			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(tagValue).data();
-			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue).data();
-			extracted_nodes_vector[i].keyVals.insert(std::make_pair(key, value));
+			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(tagValue);
+			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue);
+			extracted_nodes_vector[i].keyVals.emplace(key, value);
 			denseTagIndex += 2;
 		}
 	}
@@ -191,7 +191,7 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 	    ParseNodeInLua( n, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
 	}
 
-	BOOST_FOREACH(ImportNode &n, extracted_nodes_vector) {
+	BOOST_FOREACH(const ImportNode &n, extracted_nodes_vector) {
 	    extractor_callbacks->nodeFunction(n);
 	}
 }
@@ -209,7 +209,8 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 		return;
 	}
 	const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
-	for(int i = 0; i < group.relations_size(); ++i ) {
+
+	for(int i = 0, relation_size = group.relations_size(); i < relation_size; ++i ) {
 		std::string except_tag_string;
 		const OSMPBF::Relation& inputRelation = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID ).relations(i);
 		bool isRestriction = false;
@@ -241,8 +242,12 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 		if(isRestriction) {
 			int64_t lastRef = 0;
 			_RawRestrictionContainer currentRestrictionContainer(isOnlyRestriction);
-			for(int rolesIndex = 0; rolesIndex < inputRelation.roles_sid_size(); ++rolesIndex) {
-				std::string role(threadData->PBFprimitiveBlock.stringtable().s( inputRelation.roles_sid( rolesIndex ) ).data());
+			for(
+				int rolesIndex = 0, last_role =  inputRelation.roles_sid_size();
+				rolesIndex < last_role;
+				++rolesIndex
+			) {
+				const std::string & role = threadData->PBFprimitiveBlock.stringtable().s( inputRelation.roles_sid( rolesIndex ) );
 				lastRef += inputRelation.memids(rolesIndex);
 
 				if(!("from" == role || "to" == role || "via" == role)) {
@@ -280,7 +285,6 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 					break;
 
 				default: //should not happen
-					//cout << "unknown";
 					assert(false);
 					break;
 				}
@@ -309,17 +313,23 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 		for(int j = 0; j < number_of_keys; ++j) {
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(inputWay.keys(j));
 			const std::string & val = threadData->PBFprimitiveBlock.stringtable().s(inputWay.vals(j));
-			parsed_way_vector[i].keyVals.insert(std::make_pair(key, val));
+			parsed_way_vector[i].keyVals.emplace(key, val);
 		}
 	}
 
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_ways; ++i) {
 	    ExtractionWay & w = parsed_way_vector[i];
-	    ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
+		if(2 > w.path.size()) {
+        	continue;
+    	}
+	    ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID( omp_get_thread_num()) );
 	}
 
 	BOOST_FOREACH(ExtractionWay & w, parsed_way_vector) {
+		if(2 > w.path.size()) {
+        	continue;
+    	}
 	    extractor_callbacks->wayFunction(w);
 	}
 }
@@ -330,21 +340,21 @@ inline void PBFParser::loadGroup(_ThreadData * threadData) {
 #endif
 
 	const OSMPBF::PrimitiveGroup& group = threadData->PBFprimitiveBlock.primitivegroup( threadData->currentGroupID );
-	threadData->entityTypeIndicator = 0;
-	if ( group.nodes_size() != 0 ) {
+	threadData->entityTypeIndicator = TypeDummy;
+	if ( 0 != group.nodes_size() ) {
 		threadData->entityTypeIndicator = TypeNode;
 	}
-	if ( group.ways_size() != 0 ) {
+	if ( 0 != group.ways_size() ) {
 		threadData->entityTypeIndicator = TypeWay;
 	}
-	if ( group.relations_size() != 0 ) {
+	if ( 0 != group.relations_size() ) {
 		threadData->entityTypeIndicator = TypeRelation;
 	}
 	if ( group.has_dense() )  {
 		threadData->entityTypeIndicator = TypeDenseNode;
-		assert( group.dense().id_size() != 0 );
+		assert( 0 != group.dense().id_size() );
 	}
-	assert( threadData->entityTypeIndicator != 0 );
+	assert( threadData->entityTypeIndicator != TypeDummy );
 }
 
 inline void PBFParser::loadBlock(_ThreadData * threadData) {
