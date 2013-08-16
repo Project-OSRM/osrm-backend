@@ -85,7 +85,6 @@ function node_function (node)
 			node.bollard = true
 		end
 	end
-	return 1
 end
 
 
@@ -93,19 +92,19 @@ function way_function (way)
   -- we dont route over areas
   local area = way.tags:Find("area")
   if ignore_areas and ("yes" == area) then
-    return 0
+    return
   end
 
   -- check if oneway tag is unsupported
   local oneway = way.tags:Find("oneway")
   if "reversible" == oneway then
-    return 0
+    return
   end
 
   -- Check if we are allowed to access the way
   local access = Access.find_access_tag(way, access_tags_hierachy)
   if access_tag_blacklist[access] then
-    return 0
+    return
   end
 
   -- Second, parse the way according to these properties
@@ -212,7 +211,7 @@ function way_function (way)
 		way.ignore_in_grid = true
 	end
 	way.type = 1
-  return 1
+  return
 end
 
 -- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT
