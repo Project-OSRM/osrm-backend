@@ -148,7 +148,14 @@ public:
                 recursionStack.push(std::make_pair(edge.first, middle));
             } else {
                 assert(!ed.shortcut);
-                unpackedPath.push_back(_PathData(ed.id, _queryData.nodeHelpDesk->getNameIndexFromEdgeID(ed.id), _queryData.nodeHelpDesk->getTurnInstructionFromEdgeID(ed.id), ed.distance) );
+                unpackedPath.push_back(
+                    _PathData(
+                        ed.id,
+                        _queryData.nodeHelpDesk->GetNameIndexFromEdgeID(ed.id),
+                        _queryData.nodeHelpDesk->GetTurnInstructionForEdgeID(ed.id),
+                        ed.distance
+                    )
+                );
             }
         }
     }

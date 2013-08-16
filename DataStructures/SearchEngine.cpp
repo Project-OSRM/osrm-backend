@@ -24,26 +24,26 @@ SearchEngine::SearchEngine(
     QueryGraph * g,
     NodeInformationHelpDesk * nh,
     std::vector<std::string> & n
-    ) :
+) :
         _queryData(g, nh, n),
         shortestPath(_queryData),
         alternativePaths(_queryData)
-    {}
-    SearchEngine::~SearchEngine() {}
+{}
+
+SearchEngine::~SearchEngine() {}
 
 void SearchEngine::GetCoordinatesForNodeID(
     NodeID id,
     FixedPointCoordinate& result
-    ) const {
-    result.lat = _queryData.nodeHelpDesk->getLatitudeOfNode(id);
-    result.lon = _queryData.nodeHelpDesk->getLongitudeOfNode(id);
+) const {
+        result = _queryData.nodeHelpDesk->GetCoordinateOfNode(id);
 }
 
 void SearchEngine::FindPhantomNodeForCoordinate(
     const FixedPointCoordinate & location,
     PhantomNode & result,
     const unsigned zoomLevel
-    ) const {
+) const {
     _queryData.nodeHelpDesk->FindPhantomNodeForCoordinate(
         location,
         result, zoomLevel
@@ -53,17 +53,20 @@ void SearchEngine::FindPhantomNodeForCoordinate(
 NodeID SearchEngine::GetNameIDForOriginDestinationNodeID(
     const NodeID s,
     const NodeID t
-    ) const {
-    if(s == t){
+) const {
+    if(s == t) {
         return 0;
     }
+
     EdgeID e = _queryData.graph->FindEdge(s, t);
     if(e == UINT_MAX) {
         e = _queryData.graph->FindEdge( t, s );
     }
+
     if(UINT_MAX == e) {
         return 0;
     }
+
     assert(e != UINT_MAX);
     const QueryEdge::EdgeData ed = _queryData.graph->GetEdgeData(e);
     return ed.id;
@@ -86,4 +89,3 @@ SearchEngineHeapPtr SearchEngineData::backwardHeap2;
 
 SearchEngineHeapPtr SearchEngineData::forwardHeap3;
 SearchEngineHeapPtr SearchEngineData::backwardHeap3;
-

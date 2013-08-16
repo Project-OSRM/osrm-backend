@@ -22,12 +22,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage() {
     if(!forwardHeap.get()) {
-        forwardHeap.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
+        forwardHeap.reset(new QueryHeap(nodeHelpDesk->GetNumberOfNodes()));
     } else {
         forwardHeap->Clear();
     }
     if(!backwardHeap.get()) {
-        backwardHeap.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
+        backwardHeap.reset(new QueryHeap(nodeHelpDesk->GetNumberOfNodes()));
     } else {
         backwardHeap->Clear();
     }
@@ -35,12 +35,12 @@ void SearchEngineData::InitializeOrClearFirstThreadLocalStorage() {
 
 void SearchEngineData::InitializeOrClearSecondThreadLocalStorage() {
     if(!forwardHeap2.get()) {
-        forwardHeap2.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
+        forwardHeap2.reset(new QueryHeap(nodeHelpDesk->GetNumberOfNodes()));
     } else {
         forwardHeap2->Clear();
     }
     if(!backwardHeap2.get()) {
-        backwardHeap2.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
+        backwardHeap2.reset(new QueryHeap(nodeHelpDesk->GetNumberOfNodes()));
      } else {
         backwardHeap2->Clear();
     }
@@ -48,12 +48,12 @@ void SearchEngineData::InitializeOrClearSecondThreadLocalStorage() {
 
 void SearchEngineData::InitializeOrClearThirdThreadLocalStorage() {
     if(!forwardHeap3.get()) {
-        forwardHeap3.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
+        forwardHeap3.reset(new QueryHeap(nodeHelpDesk->GetNumberOfNodes()));
     } else {
         forwardHeap3->Clear();
     }
     if(!backwardHeap3.get()) {
-        backwardHeap3.reset(new QueryHeap(nodeHelpDesk->getNumberOfNodes()));
+        backwardHeap3.reset(new QueryHeap(nodeHelpDesk->GetNumberOfNodes()));
     } else {
         backwardHeap3->Clear();
     }
