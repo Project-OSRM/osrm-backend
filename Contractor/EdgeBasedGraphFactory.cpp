@@ -292,6 +292,8 @@ void EdgeBasedGraphFactory::Run(
     }
     SimpleLogger().Write() <<
         "identified: " << component_size_list.size() << " many components";
+    SimpleLogger().Write() <<
+        "generating edge-expanded nodes";
 
     p.reinit(m_node_based_graph->GetNumberOfNodes());
     //loop over all edges and generate new set of nodes.
@@ -301,6 +303,7 @@ void EdgeBasedGraphFactory::Run(
         u < number_of_nodes;
         ++u
      ) {
+        p.printIncrement();
         for(
             EdgeIterator e1 = m_node_based_graph->BeginEdges(u),
                 last_edge = m_node_based_graph->EndEdges(u);
@@ -325,6 +328,12 @@ void EdgeBasedGraphFactory::Run(
         }
     }
 
+    SimpleLogger().Write()
+        << "Generated " << m_edge_based_node_list.size() << " nodes in " <<
+        "edge-expanded graph";
+    SimpleLogger().Write() <<
+        "generating edge-expanded edges";
+
     std::vector<NodeID>().swap(component_size_list);
     BOOST_ASSERT_MSG(
         0 == component_size_list.capacity(),
@@ -341,6 +350,7 @@ void EdgeBasedGraphFactory::Run(
     //Loop over all turns and generate new set of edges.
     //Three nested loop look super-linear, but we are dealing with a (kind of)
     //linear number of turns only.
+    p.reinit(m_node_based_graph->GetNumberOfNodes());
     for(
         NodeIterator u = 0,
             last_node = m_node_based_graph->GetNumberOfNodes();
