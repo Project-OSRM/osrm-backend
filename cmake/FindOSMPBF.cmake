@@ -24,6 +24,7 @@ FIND_PATH(OSMPBF_INCLUDE_DIR osmpbf.h
   /usr
   /opt/local # DarwinPorts
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 FIND_LIBRARY(OSMPBF_LIBRARY
@@ -38,6 +39,7 @@ FIND_LIBRARY(OSMPBF_LIBRARY
   /usr
   /opt/local
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 INCLUDE(FindPackageHandleStandardArgs)

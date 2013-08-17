@@ -24,6 +24,7 @@ FIND_PATH(LUABIND_INCLUDE_DIR luabind.hpp
   /usr
   /opt/local # DarwinPorts
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 FIND_LIBRARY(LUABIND_LIBRARY
@@ -38,6 +39,7 @@ FIND_LIBRARY(LUABIND_LIBRARY
   /usr
   /opt/local
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 FIND_LIBRARY(LUABIND_LIBRARY_DBG
@@ -52,6 +54,7 @@ FIND_LIBRARY(LUABIND_LIBRARY_DBG
   /usr
   /opt/local
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 IF(LUABIND_LIBRARY)

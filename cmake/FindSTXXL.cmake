@@ -21,6 +21,7 @@ FIND_PATH(STXXL_INCLUDE_DIR stxxl.h
   /usr
   /opt/local # DarwinPorts
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 FIND_LIBRARY(STXXL_LIBRARY
@@ -35,6 +36,7 @@ FIND_LIBRARY(STXXL_LIBRARY
   /usr
   /opt/local
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 INCLUDE(FindPackageHandleStandardArgs)
