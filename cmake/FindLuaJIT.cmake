@@ -45,6 +45,7 @@ FIND_PATH(LUAJIT_INCLUDE_DIR lua.h
   /opt/local # DarwinPorts
   /opt/csw # Blastwave
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
 FIND_LIBRARY(LUAJIT_LIBRARY 
@@ -61,6 +62,7 @@ FIND_LIBRARY(LUAJIT_LIBRARY
   /opt/local
   /opt/csw
   /opt
+  /opt/boxen/homebrew # Boxen
 )
 
   # include the math library for Unix
