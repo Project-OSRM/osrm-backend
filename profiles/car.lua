@@ -29,7 +29,7 @@ speed_profile = {
 --  ["track"] = 5,
   ["ferry"] = 5,
   ["shuttle_train"] = 10,
-  ["default"] = 50
+  ["default"] = 10
 }
 
 take_minimum_of_speeds  = false
