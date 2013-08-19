@@ -37,6 +37,7 @@ Thumbs.db
 #######################
 /build/
 /Util/UUID.cpp
+/Util/GitDescription.cpp
 
 # Eclipse related files #
 #########################

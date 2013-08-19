@@ -250,7 +250,7 @@ def reprocess
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
+      unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end

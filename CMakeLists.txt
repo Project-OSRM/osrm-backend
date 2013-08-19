@@ -4,6 +4,10 @@ project(OSRM)
 include(FindPackageHandleStandardArgs)
 set(HUGO "${CMAKE_CURRENT_SOURCE_DIR}")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(GetGitRevisionDescription)
+git_describe(GIT_DESCRIPTION)
+
 TRY_RUN(SHARED_LIBRARY_PATH_TYPE SHARED_LIBRARY_PATH_INFO_COMPILED ${PROJECT_BINARY_DIR}/CMakeTmp ${PROJECT_SOURCE_DIR}/cmake/size.cpp OUTPUT_VARIABLE IS_64_SYSTEM)
 if(IS_64_SYSTEM)
 	message(STATUS "System supports 64 bits.")
@@ -26,10 +30,11 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp )
 
-set(BOOST_COMPONENTS filesystem regex system thread)
+set(BOOST_COMPONENTS filesystem regex system thread program_options)
 
+configure_file(Util/GitDescription.cpp.in ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp)
 file(GLOB ExtractorGlob Extractor/*.cpp)
-set(ExtractorSources extractor.cpp ${ExtractorGlob})
+set(ExtractorSources extractor.cpp ${ExtractorGlob} Util/GitDescription.cpp)
 add_executable(osrm-extract ${ExtractorSources} )
 
 file(GLOB PrepareGlob Contractor/*.cpp)
