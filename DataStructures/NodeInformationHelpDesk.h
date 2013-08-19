@@ -40,70 +40,63 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef EdgeBasedGraphFactory::EdgeBasedNode RTreeLeaf;
 
 class NodeInformationHelpDesk : boost::noncopyable {
+
 public:
     NodeInformationHelpDesk(
-        const std::string & ramIndexInput,
-        const std::string & fileIndexInput,
+        const std::string & ram_index_filename,
+        const std::string & mem_index_filename,
         const std::string & nodes_filename,
         const std::string & edges_filename,
-        const unsigned number_of_nodes,
-        const unsigned check_sum
-    ) : number_of_nodes(number_of_nodes), check_sum(check_sum)
+        const unsigned m_number_of_nodes,
+        const unsigned m_check_sum
+    ) :
+        m_number_of_nodes(m_number_of_nodes),
+        m_check_sum(m_check_sum)
     {
-        if ( ramIndexInput.empty() ) {
+        if ( ram_index_filename.empty() ) {
             throw OSRMException("no ram index file name in server ini");
         }
-        if ( fileIndexInput.empty() ) {
+        if ( mem_index_filename.empty() ) {
             throw OSRMException("no mem index file name in server ini");
         }
-        if ( nodes_filename.empty() ) {
+        if ( nodes_filename.empty()     ) {
             throw OSRMException("no nodes file name in server ini");
         }
-        if ( edges_filename.empty() ) {
+        if ( edges_filename.empty()     ) {
             throw OSRMException("no edges file name in server ini");
         }
 
-        read_only_rtree = new StaticRTree<RTreeLeaf>(
-            ramIndexInput,
-            fileIndexInput
+        m_ro_rtree_ptr = new StaticRTree<RTreeLeaf>(
+            ram_index_filename,
+            mem_index_filename
         );
         BOOST_ASSERT_MSG(
-            0 == coordinateVector.size(),
+            0 == m_coordinate_list.size(),
             "Coordinate vector not empty"
         );
 
         LoadNodesAndEdges(nodes_filename, edges_filename);
     }
 
-    //Todo: Shared memory mechanism
 	~NodeInformationHelpDesk() {
-		delete read_only_rtree;
+		delete m_ro_rtree_ptr;
 	}
 
-	inline int getLatitudeOfNode(const unsigned id) const {
-	    const NodeID node = origEdgeData_viaNode.at(id);
-	    return coordinateVector.at(node).lat;
-	}
-
-	inline int getLongitudeOfNode(const unsigned id) const {
-        const NodeID node = origEdgeData_viaNode.at(id);
-	    return coordinateVector.at(node).lon;
-	}
-
-	inline unsigned getNameIndexFromEdgeID(const unsigned id) const {
-	    return origEdgeData_nameID.at(id);
-	}
-
-    inline TurnInstruction getTurnInstructionFromEdgeID(const unsigned id) const {
-        return origEdgeData_turnInstruction.at(id);
+    inline FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const {
+        const NodeID node = m_via_node_list.at(id);
+        return m_coordinate_list.at(node);
     }
 
-    inline NodeID getNumberOfNodes() const {
-        return number_of_nodes;
+	inline unsigned GetNameIndexFromEdgeID(const unsigned id) const {
+	    return m_name_ID_list.at(id);
+	}
+
+    inline TurnInstruction GetTurnInstructionForEdgeID(const unsigned id) const {
+        return m_turn_instruction_list.at(id);
     }
 
-	inline NodeID getNumberOfNodes2() const {
-        return coordinateVector.size();
+    inline NodeID GetNumberOfNodes() const {
+        return m_number_of_nodes;
     }
 
     inline bool FindNearestNodeCoordForLatLon(
@@ -112,12 +105,12 @@ public:
             const unsigned zoom_level = 18
     ) const {
         PhantomNode resulting_phantom_node;
-        bool foundNode = FindPhantomNodeForCoordinate(
-            input_coordinate,
-            resulting_phantom_node, zoom_level
-        );
+        bool found_node = FindPhantomNodeForCoordinate(
+                            input_coordinate,
+                            resulting_phantom_node, zoom_level
+                          );
         result = resulting_phantom_node.location;
-        return foundNode;
+        return found_node;
     }
 
     inline bool FindPhantomNodeForCoordinate(
@@ -125,7 +118,7 @@ public:
             PhantomNode & resulting_phantom_node,
             const unsigned zoom_level
     ) const {
-        return read_only_rtree->FindPhantomNodeForCoordinate(
+        return m_ro_rtree_ptr->FindPhantomNodeForCoordinate(
                 input_coordinate,
                 resulting_phantom_node,
                 zoom_level
@@ -133,7 +126,7 @@ public:
     }
 
 	inline unsigned GetCheckSum() const {
-	    return check_sum;
+	    return m_check_sum;
 	}
 
 private:
@@ -157,48 +150,63 @@ private:
             throw OSRMException("edges file is empty");
         }
 
-        boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
-        boost::filesystem::ifstream edges_input_stream(edges_file, std::ios::binary);
+        boost::filesystem::ifstream nodes_input_stream(
+            nodes_file,
+            std::ios::binary
+        );
 
-        SimpleLogger().Write(logDEBUG) << "Loading node data";
-        NodeInfo b;
+        boost::filesystem::ifstream edges_input_stream(
+            edges_file, std::ios::binary
+        );
+
+        SimpleLogger().Write(logDEBUG)
+            << "Loading node data";
+        NodeInfo current_node;
         while(!nodes_input_stream.eof()) {
-            nodes_input_stream.read((char *)&b, sizeof(NodeInfo));
-            coordinateVector.push_back(FixedPointCoordinate(b.lat, b.lon));
+            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
+            m_coordinate_list.push_back(
+                FixedPointCoordinate(
+                    current_node.lat,
+                    current_node.lon
+                )
+            );
         }
-        std::vector<FixedPointCoordinate>(coordinateVector).swap(coordinateVector);
+        std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
         nodes_input_stream.close();
 
-        SimpleLogger().Write(logDEBUG) << "Loading edge data";
-        unsigned numberOfOrigEdges(0);
-        edges_input_stream.read((char*)&numberOfOrigEdges, sizeof(unsigned));
-        origEdgeData_viaNode.resize(numberOfOrigEdges);
-        origEdgeData_nameID.resize(numberOfOrigEdges);
-        origEdgeData_turnInstruction.resize(numberOfOrigEdges);
+        SimpleLogger().Write(logDEBUG)
+            << "Loading edge data";
+        unsigned number_of_edges = 0;
+        edges_input_stream.read((char*)&number_of_edges, sizeof(unsigned));
+        m_via_node_list.resize(number_of_edges);
+        m_name_ID_list.resize(number_of_edges);
+        m_turn_instruction_list.resize(number_of_edges);
 
-        OriginalEdgeData deserialized_originalEdgeData;
-        for(unsigned i = 0; i < numberOfOrigEdges; ++i) {
+        OriginalEdgeData current_edge_data;
+        for(unsigned i = 0; i < number_of_edges; ++i) {
             edges_input_stream.read(
-                (char*)&(deserialized_originalEdgeData),
+                (char*)&(current_edge_data),
                 sizeof(OriginalEdgeData)
             );
-            origEdgeData_viaNode[i] = deserialized_originalEdgeData.viaNode;
-            origEdgeData_nameID[i]  = deserialized_originalEdgeData.nameID;
-            origEdgeData_turnInstruction[i] = deserialized_originalEdgeData.turnInstruction;
+            m_via_node_list[i] = current_edge_data.viaNode;
+            m_name_ID_list[i]  = current_edge_data.nameID;
+            m_turn_instruction_list[i] = current_edge_data.turnInstruction;
         }
         edges_input_stream.close();
-        SimpleLogger().Write(logDEBUG) << "Loaded " << numberOfOrigEdges << " orig edges";
-        SimpleLogger().Write(logDEBUG) << "Opening NN indices";
+        SimpleLogger().Write(logDEBUG)
+            << "Loaded " << number_of_edges << " orig edges";
+        SimpleLogger().Write(logDEBUG)
+            << "Opening NN indices";
     }
 
-	std::vector<FixedPointCoordinate> coordinateVector;
-	std::vector<NodeID> origEdgeData_viaNode;
-	std::vector<unsigned> origEdgeData_nameID;
-	std::vector<TurnInstruction> origEdgeData_turnInstruction;
+	std::vector<FixedPointCoordinate>  m_coordinate_list;
+	std::vector<NodeID>                m_via_node_list;
+	std::vector<unsigned>              m_name_ID_list;
+	std::vector<TurnInstruction>       m_turn_instruction_list;
 
-	StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * read_only_rtree;
-	const unsigned number_of_nodes;
-	const unsigned check_sum;
+	StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * m_ro_rtree_ptr;
+	const unsigned m_number_of_nodes;
+	const unsigned m_check_sum;
 };
 
 #endif /*NODEINFORMATIONHELPDESK_H_*/

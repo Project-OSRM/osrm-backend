@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef STATICGRAPH_H_INCLUDED
 #define STATICGRAPH_H_INCLUDED
 
+#include "../DataStructures/Percent.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 

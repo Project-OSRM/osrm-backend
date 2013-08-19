@@ -30,6 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
+#include "../Util/UUID.h"
 
 #include <boost/foreach.hpp>
 #include <fstream>
@@ -58,6 +59,16 @@ int main (int argc, char * argv[]) {
     SimpleLogger().Write() <<
         "Using restrictions from file: " << argv[2];
     std::ifstream restriction_ifstream(argv[2], std::ios::binary);
+    const UUID uuid_orig;
+    UUID uuid_loaded;
+    restriction_ifstream.read((char *) &uuid_loaded, sizeof(UUID));
+
+    if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
+        SimpleLogger().Write(logWARNING) <<
+            argv[2] << " was prepared with a different build. "
+            "Reprocess to get rid of this warning.";
+    }
+
     if(!restriction_ifstream.good()) {
         throw OSRMException("Could not access <osrm-restrictions> files");
     }
@@ -91,6 +102,11 @@ int main (int argc, char * argv[]) {
             restrictions_vector
     );
     input_stream.close();
+
+    BOOST_ASSERT_MSG(
+        restrictions_vector.size() == usable_restriction_count,
+        "size of restrictions_vector changed"
+    );
 
     SimpleLogger().Write() <<
             restrictions_vector.size() << " restrictions, " <<

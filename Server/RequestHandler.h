@@ -23,8 +23,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "APIGrammar.h"
 #include "BasicDatastructures.h"
+#include "DataStructures/RouteParameters.h"
 #include "../Library/OSRM.h"
-#include "../Plugins/RouteParameters.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
@@ -47,25 +47,35 @@ public:
         try {
             std::string request(req.uri);
 
-            { //This block logs the current request to std out. should be moved to a logging component
-                time_t ltime;
-                struct tm *Tm;
+            time_t ltime;
+            struct tm *Tm;
 
-                ltime=time(NULL);
-                Tm=localtime(&ltime);
+            ltime=time(NULL);
+            Tm=localtime(&ltime);
 
-                SimpleLogger().Write() << (Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday << "-" << (Tm->tm_mon+1 < 10 ? "0" : "" )  << (Tm->tm_mon+1) << "-" << 1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) << Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) << Tm->tm_sec << " " <<
-                        req.endpoint.to_string() << " " << req.referrer << ( 0 == req.referrer.length() ? "- " :" ") << req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri;
-            }
+            SimpleLogger().Write() <<
+                (Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday    << "-" <<
+                (Tm->tm_mon+1 < 10 ? "0" : "" ) << (Tm->tm_mon+1) << "-" <<
+                1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) <<
+                Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) <<
+                Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) <<
+                Tm->tm_sec << " " << req.endpoint.to_string() << " " <<
+                req.referrer << ( 0 == req.referrer.length() ? "- " :" ") <<
+                req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri;
 
             RouteParameters routeParameters;
             APIGrammarParser apiParser(&routeParameters);
 
             std::string::iterator it = request.begin();
-            bool result = boost::spirit::qi::parse(it, request.end(), apiParser);
-            if (!result || (it != request.end()) ) {
+            const bool result = boost::spirit::qi::parse(
+                it,
+                request.end(),
+                apiParser
+            );
+
+            if ( !result || (it != request.end()) ) {
                 rep = http::Reply::stockReply(http::Reply::badRequest);
-                int position = std::distance(request.begin(), it);
+                const int position = std::distance(request.begin(), it);
                 std::string tmp_position_string;
                 intToString(position, tmp_position_string);
                 rep.content += "Input seems to be malformed close to position ";
@@ -73,7 +83,7 @@ public:
                 rep.content += request;
                 rep.content += tmp_position_string;
                 rep.content += "<br>";
-                unsigned end = std::distance(request.begin(), it);
+                const unsigned end = std::distance(request.begin(), it);
                 for(unsigned i = 0; i < end; ++i) {
                     rep.content += "&nbsp;";
                 }

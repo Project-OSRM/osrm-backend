@@ -21,6 +21,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef FIXED_POINT_COORDINATE_H_
 #define FIXED_POINT_COORDINATE_H_
 
+#include "../DataStructures/MercatorUtil.h"
 #include "../Util/StringUtil.h"
 
 #include <cassert>
@@ -35,7 +36,7 @@ struct FixedPointCoordinate {
     int lat;
     int lon;
     FixedPointCoordinate () : lat(INT_MIN), lon(INT_MIN) {}
-    explicit FixedPointCoordinate (int t, int n) : lat(t) , lon(n) {}
+    explicit FixedPointCoordinate (int lat, int lon) : lat(lat) , lon(lon) {}
 
     void Reset() {
         lat = INT_MIN;
@@ -141,4 +142,22 @@ static inline void convertInternalReversedCoordinateToString(const FixedPointCoo
     output += " ";
 }
 
+
+/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
+template<class CoordinateT>
+static inline double GetAngleBetweenThreeFixedPointCoordinates (
+    const CoordinateT & A,
+    const CoordinateT & C,
+    const CoordinateT & B
+) {
+    const double v1x = (A.lon - C.lon)/COORDINATE_PRECISION;
+    const double v1y = lat2y(A.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
+    const double v2x = (B.lon - C.lon)/COORDINATE_PRECISION;
+    const double v2y = lat2y(B.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
+
+    double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
+    while(angle < 0)
+        angle += 360;
+    return angle;
+}
 #endif /* FIXED_POINT_COORDINATE_H_ */

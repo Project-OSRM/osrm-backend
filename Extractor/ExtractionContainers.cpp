@@ -111,7 +111,10 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
                 restrictionsIT->restriction.toNode = wayStartAndEndEdgeIT->firstStart;
             }
 
-            if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
+            if(
+                UINT_MAX != restrictionsIT->restriction.fromNode &&
+                UINT_MAX != restrictionsIT->restriction.toNode
+            ) {
                 ++usableRestrictionsCounter;
             }
             ++restrictionsIT;
@@ -123,8 +126,15 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
         restrictionsOutstream.open(restrictionsFileName.c_str(), std::ios::binary);
         restrictionsOutstream.write((char*)&uuid, sizeof(UUID));
         restrictionsOutstream.write((char*)&usableRestrictionsCounter, sizeof(unsigned));
-        for(restrictionsIT = restrictionsVector.begin(); restrictionsIT != restrictionsVector.end(); ++restrictionsIT) {
-            if(UINT_MAX != restrictionsIT->restriction.fromNode && UINT_MAX != restrictionsIT->restriction.toNode) {
+        for(
+            restrictionsIT = restrictionsVector.begin();
+            restrictionsIT != restrictionsVector.end();
+            ++restrictionsIT
+        ) {
+            if(
+                UINT_MAX != restrictionsIT->restriction.fromNode &&
+                UINT_MAX != restrictionsIT->restriction.toNode
+            ) {
                 restrictionsOutstream.write((char *)&(restrictionsIT->restriction), sizeof(TurnRestriction));
             }
         }

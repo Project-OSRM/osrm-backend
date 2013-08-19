@@ -68,21 +68,21 @@ NodeID readBinaryOSRMGraphFromStream(
 
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
         SimpleLogger().Write(logWARNING) <<
-            ".osrm was prepared with different build.\n"
+            ".osrm was prepared with different build."
             "Reprocess to get rid of this warning.";
     }
 
     NodeID n, source, target;
     EdgeID m;
     short dir;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext2IntNodeMap;
+    ExternalNodeMap ext_to_int_id_map;
     in.read((char*)&n, sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
     _Node node;
     for (NodeID i=0; i<n; ++i) {
         in.read((char*)&node, sizeof(_Node));
         int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
-        ext2IntNodeMap.insert(std::make_pair(node.id, i));
+        ext_to_int_id_map.emplace(node.id, i);
         if(node.bollard) {
         	bollardNodes.push_back(i);
         }
@@ -97,28 +97,29 @@ NodeID readBinaryOSRMGraphFromStream(
 
     in.read((char*)&m, sizeof(unsigned));
     SimpleLogger().Write() << " and " << m << " edges ";
-    for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
-        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(inputRestrictions[i].fromNode);
-        if( intNodeID == ext2IntNodeMap.end()) {
+    // for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
+    BOOST_FOREACH(TurnRestriction & current_restriction, inputRestrictions) {
+        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(current_restriction.fromNode);
+        if( intNodeID == ext_to_int_id_map.end()) {
             SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
             continue;
 
         }
-        inputRestrictions[i].fromNode = intNodeID->second;
+        current_restriction.fromNode = intNodeID->second;
 
-        intNodeID = ext2IntNodeMap.find(inputRestrictions[i].viaNode);
-        if( intNodeID == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(current_restriction.viaNode);
+        if( intNodeID == ext_to_int_id_map.end()) {
             SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
             continue;
         }
-        inputRestrictions[i].viaNode = intNodeID->second;
+        current_restriction.viaNode = intNodeID->second;
 
-        intNodeID = ext2IntNodeMap.find(inputRestrictions[i].toNode);
-        if( intNodeID == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(current_restriction.toNode);
+        if( intNodeID == ext_to_int_id_map.end()) {
             SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
             continue;
         }
-        inputRestrictions[i].toNode = intNodeID->second;
+        current_restriction.toNode = intNodeID->second;
     }
 
     edgeList.reserve(m);
@@ -153,8 +154,8 @@ NodeID readBinaryOSRMGraphFromStream(
         assert(type >= 0);
 
         //         translate the external NodeIDs to internal IDs
-        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
-        if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
+        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
+        if( ext_to_int_id_map.find(source) == ext_to_int_id_map.end()) {
 #ifndef NDEBUG
             SimpleLogger().Write(logWARNING) <<
                 " unresolved source NodeID: " << source;
@@ -162,8 +163,8 @@ NodeID readBinaryOSRMGraphFromStream(
             continue;
         }
         source = intNodeID->second;
-        intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(target);
+        if(ext_to_int_id_map.find(target) == ext_to_int_id_map.end()) {
 #ifndef NDEBUG
             SimpleLogger().Write(logWARNING) <<
             "unresolved target NodeID : " << target;
@@ -215,7 +216,7 @@ NodeID readBinaryOSRMGraphFromStream(
         }
     }
     typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
-    ext2IntNodeMap.clear();
+    ext_to_int_id_map.clear();
     std::vector<EdgeT>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
     SimpleLogger().Write() << "Graph loaded ok and has " << edgeList.size() << " edges";
     return n;
@@ -225,13 +226,13 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     NodeID n, source, target, id;
     EdgeID m;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext2IntNodeMap;
+    ExternalNodeMap ext_to_int_id_map;
     in >> n;
     SimpleLogger().Write(logDEBUG) << "Importing n = " << n << " nodes ";
     for (NodeID i=0; i<n; ++i) {
         in >> id >> ycoord >> xcoord;
         int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
-        ext2IntNodeMap.insert(std::make_pair(id, i));
+        ext_to_int_id_map.insert(std::make_pair(id, i));
     }
     in >> m;
     SimpleLogger().Write(logDEBUG) << " and " << m << " edges";
@@ -321,13 +322,13 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         }
 
         //         translate the external NodeIDs to internal IDs
-        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
-        if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
+        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
+        if( ext_to_int_id_map.find(source) == ext_to_int_id_map.end()) {
             throw OSRMException("unresolvable source Node ID");
         }
         source = intNodeID->second;
-        intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(target);
+        if(ext_to_int_id_map.find(target) == ext_to_int_id_map.end()) {
             throw OSRMException("unresolvable target Node ID");
         }
         target = intNodeID->second;
@@ -339,7 +340,7 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         EdgeT inputEdge(source, target, 0, weight, forward, backward, type );
         edgeList.push_back(inputEdge);
     }
-    ext2IntNodeMap.clear();
+    ext_to_int_id_map.clear();
     std::vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     std::cout << "ok" << std::endl;
     return n;

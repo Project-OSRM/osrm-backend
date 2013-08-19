@@ -22,7 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define VIAROUTEPLUGIN_H_
 
 #include "BasePlugin.h"
-#include "RouteParameters.h"
 
 #include "../Algorithms/ObjectToBase64.h"
 #include "../DataStructures/HashTable.h"
@@ -94,7 +93,7 @@ public:
             if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
 //                SimpleLogger().Write() <<"Decoding hint: " << routeParameters.hints[i] << " for location index " << i;
                 DecodeObjectFromBase64(routeParameters.hints[i], phantomNodeVector[i]);
-                if(phantomNodeVector[i].isValid(nodeHelpDesk->getNumberOfNodes())) {
+                if(phantomNodeVector[i].isValid(nodeHelpDesk->GetNumberOfNodes())) {
 //                    SimpleLogger().Write() << "Decoded hint " << i << " successfully";
                     continue;
                 }

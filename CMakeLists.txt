@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(OSRM)
 include(FindPackageHandleStandardArgs)
+set(HUGO "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
@@ -19,8 +20,8 @@ endif(IS_64_SYSTEM)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
-  COMMAND ${CMAKE_COMMAND} -P
-    ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
+  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+    -P ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
   DEPENDS
     ${CMAKE_SOURCE_DIR}/Util/UUID.cpp.in
   	${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake

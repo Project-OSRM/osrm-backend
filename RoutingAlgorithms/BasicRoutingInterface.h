@@ -23,7 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef BASICROUTINGINTERFACE_H_
 #define BASICROUTINGINTERFACE_H_
 
-#include "../Plugins/RawRouteData.h"
+#include "../DataStructures/RawRouteData.h"
 #include "../Util/ContainerUtils.h"
 #include "../Util/SimpleLogger.h"
 
@@ -148,7 +148,14 @@ public:
                 recursionStack.push(std::make_pair(edge.first, middle));
             } else {
                 assert(!ed.shortcut);
-                unpackedPath.push_back(_PathData(ed.id, _queryData.nodeHelpDesk->getNameIndexFromEdgeID(ed.id), _queryData.nodeHelpDesk->getTurnInstructionFromEdgeID(ed.id), ed.distance) );
+                unpackedPath.push_back(
+                    _PathData(
+                        ed.id,
+                        _queryData.nodeHelpDesk->GetNameIndexFromEdgeID(ed.id),
+                        _queryData.nodeHelpDesk->GetTurnInstructionForEdgeID(ed.id),
+                        ed.distance
+                    )
+                );
             }
         }
     }
