@@ -21,6 +21,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 Custom validators for use with boost::program_options.
 */
 
+#ifndef PROGAM_OPTIONS_H
+#define PROGAM_OPTIONS_H
+
 #include "OSRMException.h"
 
 #include <boost/any.hpp>
@@ -53,3 +56,5 @@ namespace boost {
         }
     }
 }
+
+#endif /* PROGRAM_OPTIONS_H */

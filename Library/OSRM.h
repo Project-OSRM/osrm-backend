@@ -30,9 +30,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
 #include "../Server/DataStructures/RouteParameters.h"
-#include "../Util/IniFile.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
+#include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
 #include "../Server/BasicDatastructures.h"
 
@@ -47,7 +47,7 @@ class OSRM : boost::noncopyable {
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
     QueryObjectsStorage * objects;
 public:
-    OSRM(const char * server_ini_path);
+    OSRM(boost::unordered_map<const std::string,boost::filesystem::path>& paths);
     ~OSRM();
     void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
 private:

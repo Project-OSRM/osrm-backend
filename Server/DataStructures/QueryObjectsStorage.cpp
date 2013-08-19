@@ -21,31 +21,23 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "QueryObjectsStorage.h"
 
-QueryObjectsStorage::QueryObjectsStorage(
-	const std::string & hsgr_path,
-	const std::string & ram_index_path,
-	const std::string & file_index_path,
-	const std::string & nodes_path,
-	const std::string & edges_path,
-	const std::string & names_path,
-	const std::string & timestamp_path
-) {
-	if( hsgr_path.empty() ) {
+QueryObjectsStorage::QueryObjectsStorage(boost::unordered_map<const std::string,boost::filesystem::path>& paths) {
+	if( paths["hsgr"].empty() ) {
 		throw OSRMException("no hsgr file given in ini file");
 	}
-	if( ram_index_path.empty() ) {
+	if( paths["ramIndex"].empty() ) {
 		throw OSRMException("no ram index file given in ini file");
 	}
-	if( file_index_path.empty() ) {
+	if( paths["fileIndex"].empty() ) {
 		throw OSRMException("no mem index file given in ini file");
 	}
-	if( nodes_path.empty() ) {
+	if( paths["nodes"].empty() ) {
 		throw OSRMException("no nodes file given in ini file");
 	}
-	if( edges_path.empty() ) {
+	if( paths["edges"].empty() ) {
 		throw OSRMException("no edges file given in ini file");
 	}
-	if( names_path.empty() ) {
+	if( paths["names"].empty() ) {
 		throw OSRMException("no names file given in ini file");
 	}
 
@@ -54,7 +46,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 	std::vector< QueryGraph::_StrNode> node_list;
 	std::vector< QueryGraph::_StrEdge> edge_list;
 	const int number_of_nodes = readHSGRFromStream(
-		hsgr_path,
+		paths["hsgr"].c_str(),
 		node_list,
 		edge_list,
 		&check_sum
@@ -65,11 +57,11 @@ QueryObjectsStorage::QueryObjectsStorage(
 	assert(0 == node_list.size());
 	assert(0 == edge_list.size());
 
-	if(timestamp_path.length()) {
+	if(!paths["timestamp"].empty()) {
 	    SimpleLogger().Write() << "Loading Timestamp";
-	    std::ifstream timestampInStream(timestamp_path.c_str());
+	    std::ifstream timestampInStream(paths["timestamp"].c_str());
 	    if(!timestampInStream) {
-	    	SimpleLogger().Write(logWARNING) <<  timestamp_path <<  " not found";
+	        SimpleLogger().Write(logWARNING) <<  paths["timestamp"].c_str() <<  " not found";
 	    }
 
 	    getline(timestampInStream, timestamp);
@@ -85,26 +77,25 @@ QueryObjectsStorage::QueryObjectsStorage(
     SimpleLogger().Write() << "Loading auxiliary information";
     //Init nearest neighbor data structure
 	nodeHelpDesk = new NodeInformationHelpDesk(
-		ram_index_path,
-		file_index_path,
-		nodes_path,
-		edges_path,
+		paths["ramIndex"].c_str(),
+		paths["fileIndex"].c_str(),
+		paths["nodes"].c_str(),
+		paths["edges"].c_str(),
 		number_of_nodes,
 		check_sum
 	);
 
 	//deserialize street name list
 	SimpleLogger().Write() << "Loading names index";
-	boost::filesystem::path names_file(names_path);
 
-    if ( !boost::filesystem::exists( names_file ) ) {
+    if ( !boost::filesystem::exists( paths["names"] ) ) {
         throw OSRMException("names file does not exist");
     }
-    if ( 0 == boost::filesystem::file_size( names_file ) ) {
+    if ( 0 == boost::filesystem::file_size( paths["names"] ) ) {
         throw OSRMException("names file is empty");
     }
 
-	boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
+	boost::filesystem::ifstream name_stream(paths["names"], std::ios::binary);
 	unsigned size = 0;
 	name_stream.read((char *)&size, sizeof(unsigned));
 	BOOST_ASSERT_MSG(0 != size, "name file broken");

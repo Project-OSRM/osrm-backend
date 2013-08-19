@@ -197,11 +197,9 @@ int main (int argc, char *argv[]) {
             "extraction finished after " << get_timestamp() - startup_time <<
             "s";
 
-         SimpleLogger().Write() << "\nRun:\n./osrm-prepare " <<
-            output_file_name <<
-            " " <<
-            restrictionsFileName <<
-            std::endl;
+         SimpleLogger().Write() << "To prepare the data for routing, run: "
+            << "osrm-prepare " << output_file_name << std::endl;
+
     } catch(boost::program_options::too_many_positional_options_error& e) {
         SimpleLogger().Write(logWARNING) << "Only one input file can be specified";
         return -1;

@@ -19,76 +19,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
  */
 
 #include "OSRM.h"
+#include <boost/foreach.hpp>
 
-OSRM::OSRM(const char * server_ini_path) {
-    if( !testDataFile(server_ini_path) ){
-        std::string error_message = std::string(server_ini_path) + " not found";
-        throw OSRMException(error_message.c_str());
-    }
 
-    IniFile serverConfig(server_ini_path);
-
-    boost::filesystem::path base_path =
-               boost::filesystem::absolute(server_ini_path).parent_path();
-
-    if ( !serverConfig.Holds("hsgrData")) {
-        throw OSRMException("no ram index file name in server ini");
-    }
-    if ( !serverConfig.Holds("ramIndex") ) {
-        throw OSRMException("no mem index file name in server ini");
-    }
-    if ( !serverConfig.Holds("fileIndex") ) {
-        throw OSRMException("no nodes file name in server ini");
-    }
-    if ( !serverConfig.Holds("nodesData") ) {
-        throw OSRMException("no nodes file name in server ini");
-    }
-    if ( !serverConfig.Holds("edgesData") ) {
-        throw OSRMException("no edges file name in server ini");
-    }
-
-    boost::filesystem::path hsgr_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("hsgrData"),
-            base_path
-    );
-
-    boost::filesystem::path ram_index_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("ramIndex"),
-            base_path
-    );
-
-    boost::filesystem::path file_index_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("fileIndex"),
-            base_path
-    );
-
-    boost::filesystem::path node_data_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("nodesData"),
-            base_path
-    );
-    boost::filesystem::path edge_data_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("edgesData"),
-            base_path
-    );
-    boost::filesystem::path name_data_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("namesData"),
-            base_path
-    );
-    boost::filesystem::path timestamp_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("timestamp"),
-            base_path
-    );
-
-    objects = new QueryObjectsStorage(
-        hsgr_path.string(),
-        ram_index_path.string(),
-        file_index_path.string(),
-        node_data_path.string(),
-        edge_data_path.string(),
-        name_data_path.string(),
-        timestamp_path.string()
-    );
-
+OSRM::OSRM(boost::unordered_map<const std::string,boost::filesystem::path>& paths) {
+    objects = new QueryObjectsStorage( paths );
     RegisterPlugin(new HelloWorldPlugin());
     RegisterPlugin(new LocatePlugin(objects));
     RegisterPlugin(new NearestPlugin(objects));

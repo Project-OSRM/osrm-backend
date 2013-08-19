@@ -26,12 +26,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DataStructures/QueryEdge.h"
 #include "DataStructures/StaticGraph.h"
 #include "DataStructures/StaticRTree.h"
-#include "Util/IniFile.h"
+#include "Util/GitDescription.h"
 #include "Util/GraphLoader.h"
 #include "Util/InputFileUtil.h"
 #include "Util/LuaUtil.h"
 #include "Util/OpenMPWrapper.h"
 #include "Util/OSRMException.h"
+#include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
 #include "typedefs.h"
@@ -50,7 +51,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
-typedef IniFile ContractorConfiguration;
 
 std::vector<NodeInfo> internalToExternalNodeMapping;
 std::vector<TurnRestriction> inputRestrictions;
@@ -61,30 +61,95 @@ std::vector<ImportEdge> edgeList;
 int main (int argc, char *argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
-        if(argc < 3) {
-            SimpleLogger().Write(logWARNING) <<
-                "usage: \n" <<
-                argv[0] << " <osrm-data> <osrm-restrictions> [<profile>]";
+        double startupTime = get_timestamp();
+        boost::filesystem::path config_file_path, input_path, restrictions_path, profile_path;
+        int requested_num_threads;
+
+        // declare a group of options that will be allowed only on command line
+        boost::program_options::options_description generic_options("Options");
+        generic_options.add_options()
+            ("version,v", "Show version")
+            ("help,h", "Show this help message")
+            ("config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path)->default_value("contractor.ini"),
+                  "Path to a configuration file.");
+
+        // declare a group of options that will be allowed both on command line and in config file
+        boost::program_options::options_description config_options("Configuration");
+        config_options.add_options()
+            ("restrictions,r", boost::program_options::value<boost::filesystem::path>(&restrictions_path),
+                "Restrictions file in .osrm.restrictions format")
+            ("profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)->default_value("profile.lua"),
+                "Path to LUA routing profile")
+            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(10),
+                "Number of threads to use");
+
+        // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
+        boost::program_options::options_description hidden_options("Hidden options");
+        hidden_options.add_options()
+            ("input,i", boost::program_options::value<boost::filesystem::path>(&input_path),
+                "Input file in .osm, .osm.bz2 or .osm.pbf format");
+
+        // positional option
+        boost::program_options::positional_options_description positional_options;
+        positional_options.add("input", 1);
+
+        // combine above options for parsing
+        boost::program_options::options_description cmdline_options;
+        cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+
+        boost::program_options::options_description config_file_options;
+        config_file_options.add(config_options).add(hidden_options);
+
+        boost::program_options::options_description visible_options("Usage: " + boost::filesystem::basename(argv[0]) + " <input.osrm> [options]");
+        visible_options.add(generic_options).add(config_options);
+
+        // parse command line options
+        boost::program_options::variables_map option_variables;
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).
+            options(cmdline_options).positional(positional_options).run(), option_variables);
+
+        if(option_variables.count("version")) {
+            SimpleLogger().Write() << g_GIT_DESCRIPTION;
+            return 0;
+        }
+
+        if(option_variables.count("help")) {
+            SimpleLogger().Write() << std::endl << visible_options;
+            return 0;
+        }
+
+        boost::program_options::notify(option_variables);
+
+        // parse config file
+        if(boost::filesystem::is_regular_file(config_file_path)) {
+            std::ifstream ifs(config_file_path.c_str());
+            SimpleLogger().Write() << "Reading options from: " << config_file_path.filename().string();
+            boost::program_options::store(parse_config_file(ifs, config_file_options), option_variables);
+            boost::program_options::notify(option_variables);
+        }
+
+        if(!option_variables.count("restrictions")) {
+            restrictions_path = std::string( input_path.c_str()) + ".restrictions";
+        }
+
+        if(!option_variables.count("input")) {
+            SimpleLogger().Write(logWARNING) << "No input file specified";
             return -1;
         }
 
-        double startupTime = get_timestamp();
-        unsigned number_of_threads = omp_get_num_procs();
-        if(testDataFile("contractor.ini")) {
-            ContractorConfiguration contractorConfig("contractor.ini");
-            unsigned rawNumber = stringToInt(contractorConfig.GetParameter("Threads"));
-            if(rawNumber != 0 && rawNumber <= number_of_threads)
-                number_of_threads = rawNumber;
+        if(1 > requested_num_threads) {
+            SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
+            return -1;
         }
-        omp_set_num_threads(number_of_threads);
-        LogPolicy::GetInstance().Unmute();
-        SimpleLogger().Write() << "Using restrictions from file: " << argv[2];
-        std::ifstream restrictionsInstream(argv[2], std::ios::binary);
-        if(!restrictionsInstream.good()) {
-            std::cerr <<
-                "Could not access <osrm-restrictions> files" << std::endl;
 
-        }
+        SimpleLogger().Write() << "Input file: " << input_path.filename().string();
+        SimpleLogger().Write() << "Restrictions file: " << restrictions_path.filename().string();
+        SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
+        SimpleLogger().Write() << "Threads: " << requested_num_threads;
+
+        omp_set_num_threads( std::min( omp_get_num_procs(), requested_num_threads) );
+        LogPolicy::GetInstance().Unmute();
+        std::ifstream restrictionsInstream( restrictions_path.c_str(), std::ios::binary);
         TurnRestriction restriction;
         UUID uuid_loaded, uuid_orig;
         unsigned usableRestrictionsCounter(0);
@@ -107,21 +172,15 @@ int main (int argc, char *argv[]) {
         restrictionsInstream.close();
 
         std::ifstream in;
-        in.open (argv[1], std::ifstream::in | std::ifstream::binary);
-        if (!in.is_open()) {
-            throw OSRMException("Cannot open osrm input file");
-        }
+        in.open (input_path.c_str(), std::ifstream::in | std::ifstream::binary);
 
-        std::string nodeOut(argv[1]);		nodeOut += ".nodes";
-        std::string edgeOut(argv[1]);		edgeOut += ".edges";
-        std::string graphOut(argv[1]);		graphOut += ".hsgr";
-        std::string rtree_nodes_path(argv[1]);  rtree_nodes_path += ".ramIndex";
-        std::string rtree_leafs_path(argv[1]);  rtree_leafs_path += ".fileIndex";
+        std::string nodeOut(input_path.c_str());		nodeOut += ".nodes";
+        std::string edgeOut(input_path.c_str());		edgeOut += ".edges";
+        std::string graphOut(input_path.c_str());		graphOut += ".hsgr";
+        std::string rtree_nodes_path(input_path.c_str());  rtree_nodes_path += ".ramIndex";
+        std::string rtree_leafs_path(input_path.c_str());  rtree_leafs_path += ".fileIndex";
 
         /*** Setup Scripting Environment ***/
-        if(!testDataFile( (argc > 3 ? argv[3] : "profile.lua") )) {
-            throw OSRMException("Cannot open profile.lua ");
-        }
 
         // Create a new lua state
         lua_State *myLuaState = luaL_newstate();
@@ -133,14 +192,10 @@ int main (int argc, char *argv[]) {
         luaL_openlibs(myLuaState);
 
         //adjust lua load path
-        luaAddScriptFolderToLoadPath( myLuaState, (argc > 3 ? argv[3] : "profile.lua") );
+        luaAddScriptFolderToLoadPath( myLuaState, profile_path.c_str() );
 
         // Now call our function in a lua script
-        SimpleLogger().Write() <<
-            "Parsing speedprofile from " <<
-            (argc > 3 ? argv[3] : "profile.lua");
-
-        if(0 != luaL_dofile(myLuaState, (argc > 3 ? argv[3] : "profile.lua") )) {
+        if(0 != luaL_dofile(myLuaState, profile_path.c_str() )) {
             std::cerr <<
                 lua_tostring(myLuaState,-1)   <<
                 " occured in scripting block" <<
@@ -338,6 +393,12 @@ int main (int argc, char *argv[]) {
         //cleanedEdgeList.clear();
         _nodes.clear();
         SimpleLogger().Write() << "finished preprocessing";
+    } catch(boost::program_options::too_many_positional_options_error& e) {
+        SimpleLogger().Write(logWARNING) << "Only one file can be specified";
+        return -1;
+    } catch(boost::program_options::error& e) {
+        SimpleLogger().Write(logWARNING) << e.what();
+        return -1;
     } catch ( const std::exception &e ) {
         SimpleLogger().Write(logWARNING) <<
             "Exception occured: " << e.what() << std::endl;

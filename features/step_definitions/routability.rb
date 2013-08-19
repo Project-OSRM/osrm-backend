@@ -5,7 +5,7 @@ Then /^routability should be$/ do |table|
   if table.headers&["forw","backw","bothw"] == []
     raise "*** routability tabel must contain either 'forw', 'backw' or 'bothw' column"
   end
-  OSRMLauncher.new do
+  OSRMLauncher.new("#{@osm_file}.osrm") do
     table.hashes.each_with_index do |row,i|
       got = row.dup
       attempts = []

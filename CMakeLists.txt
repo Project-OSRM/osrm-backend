@@ -38,10 +38,10 @@ set(ExtractorSources extractor.cpp ${ExtractorGlob} Util/GitDescription.cpp)
 add_executable(osrm-extract ${ExtractorSources} )
 
 file(GLOB PrepareGlob Contractor/*.cpp)
-set(PrepareSources createHierarchy.cpp ${PrepareGlob})
+set(PrepareSources createHierarchy.cpp ${PrepareGlob} Util/GitDescription.cpp)
 add_executable(osrm-prepare ${PrepareSources} )
 
-add_executable(osrm-routed routed.cpp )
+add_executable(osrm-routed routed.cpp Util/GitDescription.cpp)
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
