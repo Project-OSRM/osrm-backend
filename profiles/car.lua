@@ -63,7 +63,7 @@ local function parse_maxspeed(source)
 end
 
 function node_function (node)
-  local barrier = node.tags:Find ("barrier")
+  local barrier = node.tags:Find("barrier")
   local access = Access.find_access_tag(node, access_tags_hierachy)
   local traffic_signal = node.tags:Find("highway")
 
