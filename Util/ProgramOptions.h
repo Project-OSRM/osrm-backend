@@ -21,35 +21,34 @@ or see http://www.gnu.org/licenses/agpl.txt.
 Custom validators for use with boost::program_options.
 */
 
+#include "OSRMException.h"
+
+#include <boost/any.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-namespace boost {
-    namespace program_options {
-        // Class for reporting missing files
-        class missing_file_error : public boost::program_options::invalid_option_value {
-        public:
-            missing_file_error(const std::string& path) : invalid_option_value(path), path(path) {};
-            ~missing_file_error() throw() {};
-            const char* what() const throw() {
-                std::string err = get_option_name() + " file not found: " + path;
-                return err.c_str();
-            };
-        protected:
-            std::string path;
-        };
-    }
+#include <string>
+#include <vector>
 
+namespace boost {
     namespace filesystem {
-        // Validator for boost::filesystem::path, that verifies that the file exists.
-        // The validate() function must be defined in the same namespace as the target type,
-        // (boost::filesystem::path in this case), otherwise it will not be called
-        void validate(boost::any& v, const std::vector<std::string>& values, boost::filesystem::path*, int) {
-            boost::program_options::validators::check_first_occurrence(v);  // avoid previous assignments
-            const std::string& input_string = boost::program_options::validators::get_single_string(values); // avoid multiple assignments
+        // Validator for boost::filesystem::path, that verifies that the file
+        // exists. The validate() function must be defined in the same namespace
+        // as the target type, (boost::filesystem::path in this case), otherwise
+        // it is not be called
+        void validate(
+            boost::any & v,
+            const std::vector<std::string> & values,
+            boost::filesystem::path *,
+            int
+        ) {
+            boost::program_options::validators::check_first_occurrence(v);
+            const std::string & input_string =
+                boost::program_options::validators::get_single_string(values);
             if(boost::filesystem::is_regular_file(input_string)) {
                 v = boost::any(boost::filesystem::path(input_string));
             } else {
-                throw boost::program_options::missing_file_error(input_string);
+                throw OSRMException(input_string);
             }
         }
     }
