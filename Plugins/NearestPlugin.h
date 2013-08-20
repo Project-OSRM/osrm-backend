@@ -34,11 +34,9 @@ class NearestPlugin : public BasePlugin {
 public:
     NearestPlugin(QueryObjectsStorage * objects )
      :
-        names(objects->names),
+        m_query_objects(objects),
         descriptor_string("nearest")
     {
-        nodeHelpDesk = objects->nodeHelpDesk;
-
         descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
         descriptorTable.insert(std::make_pair("json", 1));
     }
@@ -53,12 +51,16 @@ public:
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
-
+        NodeInformationHelpDesk * nodeHelpDesk = m_query_objects->nodeHelpDesk;
         //query to helpdesk
         PhantomNode result;
-        nodeHelpDesk->FindPhantomNodeForCoordinate(routeParameters.coordinates[0], result, routeParameters.zoomLevel);
+        nodeHelpDesk->FindPhantomNodeForCoordinate(
+            routeParameters.coordinates[0],
+            result,
+            routeParameters.zoomLevel
+        );
 
-        std::string tmp;
+        std::string temp_string;
         //json
 
         if("" != routeParameters.jsonpParameter) {
@@ -70,23 +72,26 @@ public:
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
         reply.content += ("\"status\":");
-        if(UINT_MAX != result.edgeBasedNode)
+        if(UINT_MAX != result.edgeBasedNode) {
             reply.content += "0,";
-        else
+        } else {
             reply.content += "207,";
+        }
         reply.content += ("\"mapped_coordinate\":");
         reply.content += "[";
         if(UINT_MAX != result.edgeBasedNode) {
-            convertInternalLatLonToString(result.location.lat, tmp);
-            reply.content += tmp;
-            convertInternalLatLonToString(result.location.lon, tmp);
+            convertInternalLatLonToString(result.location.lat, temp_string);
+            reply.content += temp_string;
+            convertInternalLatLonToString(result.location.lon, temp_string);
             reply.content += ",";
-            reply.content += tmp;
+            reply.content += temp_string;
         }
         reply.content += "],";
         reply.content += "\"name\":\"";
-        if(UINT_MAX != result.edgeBasedNode)
-            reply.content += names[result.nodeBasedEdgeNameID];
+        if(UINT_MAX != result.edgeBasedNode) {
+            m_query_objects->GetName(result.nodeBasedEdgeNameID, temp_string);
+            reply.content += temp_string;
+        }
         reply.content += "\"";
         reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"";
         reply.content += ("}");
@@ -104,14 +109,13 @@ public:
             reply.headers[2].value = "attachment; filename=\"location.json\"";
         }
         reply.headers[0].name = "Content-Length";
-        intToString(reply.content.size(), tmp);
-        reply.headers[0].value = tmp;
+        intToString(reply.content.size(), temp_string);
+        reply.headers[0].value = temp_string;
     }
 
 private:
-    NodeInformationHelpDesk * nodeHelpDesk;
+    QueryObjectsStorage * m_query_objects;
     HashTable<std::string, unsigned> descriptorTable;
-    std::vector<std::string> & names;
     std::string descriptor_string;
 };
 

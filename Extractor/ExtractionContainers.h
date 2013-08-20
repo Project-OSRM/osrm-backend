@@ -27,41 +27,48 @@
 #include "../Util/UUID.h"
 
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <stxxl.h>
 
 class ExtractionContainers {
 public:
-    typedef stxxl::vector<NodeID> STXXLNodeIDVector;
-    typedef stxxl::vector<_Node> STXXLNodeVector;
-    typedef stxxl::vector<InternalExtractorEdge> STXXLEdgeVector;
-    typedef stxxl::vector<std::string> STXXLStringVector;
+    typedef stxxl::vector<NodeID>                   STXXLNodeIDVector;
+    typedef stxxl::vector<_Node>                    STXXLNodeVector;
+    typedef stxxl::vector<InternalExtractorEdge>    STXXLEdgeVector;
+    typedef stxxl::vector<std::string>              STXXLStringVector;
     typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
-    typedef stxxl::vector<_WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
+    typedef stxxl::vector<_WayIDStartAndEndEdge>    STXXLWayIDStartEndVector;
+
+
+    STXXLNodeIDVector                               usedNodeIDs;
+    STXXLNodeVector                                 allNodes;
+    STXXLEdgeVector                                 allEdges;
+    STXXLStringVector                               name_list;
+    STXXLRestrictionsVector                         restrictionsVector;
+    STXXLWayIDStartEndVector                        wayStartEndVector;
+    const UUID uuid;
 
     ExtractionContainers() {
         //Check if another instance of stxxl is already running or if there is a general problem
         stxxl::vector<unsigned> testForRunningInstance;
-        nameVector.push_back("");
+        name_list.push_back("");
     }
 
     virtual ~ExtractionContainers() {
         usedNodeIDs.clear();
         allNodes.clear();
         allEdges.clear();
-        nameVector.clear();
+        name_list.clear();
         restrictionsVector.clear();
         wayStartEndVector.clear();
     }
 
-    void PrepareData( const std::string & output_file_name, const std::string restrictionsFileName, const unsigned amountOfRAM);
-
-    STXXLNodeIDVector           usedNodeIDs;
-    STXXLNodeVector             allNodes;
-    STXXLEdgeVector             allEdges;
-    STXXLStringVector           nameVector;
-    STXXLRestrictionsVector     restrictionsVector;
-    STXXLWayIDStartEndVector    wayStartEndVector;
-    const UUID uuid;
+    void PrepareData(
+        const std::string & output_file_name,
+        const std::string restrictionsFileName,
+        const unsigned amountOfRAM
+    );
 };
 
 #endif /* EXTRACTIONCONTAINERS_H_ */

@@ -41,11 +41,14 @@ struct QueryObjectsStorage {
     typedef StaticGraph<QueryEdge::EdgeData>    QueryGraph;
     typedef QueryGraph::InputEdge               InputEdge;
 
-    NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<std::string> names;
-    QueryGraph * graph;
-    std::string timestamp;
-    unsigned checkSum;
+    NodeInformationHelpDesk                   * nodeHelpDesk;
+    std::vector<char>                           m_names_char_list;
+    std::vector<unsigned>                       m_name_begin_indices;
+    QueryGraph                                * graph;
+    std::string                                 timestamp;
+    unsigned                                    check_sum;
+
+    void GetName(const unsigned name_id, std::string & result) const;
 
     QueryObjectsStorage(
         const std::string & hsgrPath,

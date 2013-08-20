@@ -22,54 +22,54 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "QueryObjectsStorage.h"
 
 QueryObjectsStorage::QueryObjectsStorage(
-	const std::string & hsgrPath,
-	const std::string & ramIndexPath,
-	const std::string & fileIndexPath,
-	const std::string & nodesPath,
-	const std::string & edgesPath,
-	const std::string & namesPath,
-	const std::string & timestampPath
+	const std::string & hsgr_path,
+	const std::string & ram_index_path,
+	const std::string & file_index_path,
+	const std::string & nodes_path,
+	const std::string & edges_path,
+	const std::string & names_path,
+	const std::string & timestamp_path
 ) {
-	if( hsgrPath.empty() ) {
+	if( hsgr_path.empty() ) {
 		throw OSRMException("no hsgr file given in ini file");
 	}
-	if( ramIndexPath.empty() ) {
+	if( ram_index_path.empty() ) {
 		throw OSRMException("no ram index file given in ini file");
 	}
-	if( fileIndexPath.empty() ) {
+	if( file_index_path.empty() ) {
 		throw OSRMException("no mem index file given in ini file");
 	}
-	if( nodesPath.empty() ) {
+	if( nodes_path.empty() ) {
 		throw OSRMException("no nodes file given in ini file");
 	}
-	if( edgesPath.empty() ) {
+	if( edges_path.empty() ) {
 		throw OSRMException("no edges file given in ini file");
 	}
-	if( namesPath.empty() ) {
+	if( names_path.empty() ) {
 		throw OSRMException("no names file given in ini file");
 	}
 
 	SimpleLogger().Write() << "loading graph data";
 	//Deserialize road network graph
-	std::vector< QueryGraph::_StrNode> nodeList;
-	std::vector< QueryGraph::_StrEdge> edgeList;
-	const int n = readHSGRFromStream(
-		hsgrPath,
-		nodeList,
-		edgeList,
-		&checkSum
+	std::vector< QueryGraph::_StrNode> node_list;
+	std::vector< QueryGraph::_StrEdge> edge_list;
+	const int number_of_nodes = readHSGRFromStream(
+		hsgr_path,
+		node_list,
+		edge_list,
+		&check_sum
 	);
 
-	SimpleLogger().Write() << "Data checksum is " << checkSum;
-	graph = new QueryGraph(nodeList, edgeList);
-	assert(0 == nodeList.size());
-	assert(0 == edgeList.size());
+	SimpleLogger().Write() << "Data checksum is " << check_sum;
+	graph = new QueryGraph(node_list, edge_list);
+	assert(0 == node_list.size());
+	assert(0 == edge_list.size());
 
-	if(timestampPath.length()) {
+	if(timestamp_path.length()) {
 	    SimpleLogger().Write() << "Loading Timestamp";
-	    std::ifstream timestampInStream(timestampPath.c_str());
+	    std::ifstream timestampInStream(timestamp_path.c_str());
 	    if(!timestampInStream) {
-	    	SimpleLogger().Write(logWARNING) <<  timestampPath <<  " not found";
+	    	SimpleLogger().Write(logWARNING) <<  timestamp_path <<  " not found";
 	    }
 
 	    getline(timestampInStream, timestamp);
@@ -85,17 +85,17 @@ QueryObjectsStorage::QueryObjectsStorage(
     SimpleLogger().Write() << "Loading auxiliary information";
     //Init nearest neighbor data structure
 	nodeHelpDesk = new NodeInformationHelpDesk(
-		ramIndexPath,
-		fileIndexPath,
-		nodesPath,
-		edgesPath,
-		n,
-		checkSum
+		ram_index_path,
+		file_index_path,
+		nodes_path,
+		edges_path,
+		number_of_nodes,
+		check_sum
 	);
 
 	//deserialize street name list
 	SimpleLogger().Write() << "Loading names index";
-	boost::filesystem::path names_file(namesPath);
+	boost::filesystem::path names_file(names_path);
 
     if ( !boost::filesystem::exists( names_file ) ) {
         throw OSRMException("names file does not exist");
@@ -107,24 +107,55 @@ QueryObjectsStorage::QueryObjectsStorage(
 	boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
 	unsigned size = 0;
 	name_stream.read((char *)&size, sizeof(unsigned));
-	BOOST_ASSERT_MSG(0 != size, "name file empty");
+	BOOST_ASSERT_MSG(0 != size, "name file broken");
 
-	char buf[1024];
-	for( unsigned i = 0; i < size; ++i ) {
-		unsigned size_of_string = 0;
-		name_stream.read((char *)&size_of_string, sizeof(unsigned));
-		buf[size_of_string] = '\0'; // instead of memset
-		name_stream.read(buf, size_of_string);
-		names.push_back(buf);
-	}
-	std::vector<std::string>(names).swap(names);
-	BOOST_ASSERT_MSG(0 != names.size(), "could not load any names");
+	m_name_begin_indices.resize(size);
+	name_stream.read((char*)&m_name_begin_indices[0], size*sizeof(unsigned));
+	name_stream.read((char *)&size, sizeof(unsigned));
+	BOOST_ASSERT_MSG(0 != size, "name file broken");
+
+	m_names_char_list.resize(size+1); //+1 is sentinel/dummy element
+	name_stream.read((char *)&m_names_char_list[0], size*sizeof(char));
+	BOOST_ASSERT_MSG(0 != m_names_char_list.size(), "could not load any names");
+
 	name_stream.close();
 	SimpleLogger().Write() << "All query data structures loaded";
 }
 
+void QueryObjectsStorage::GetName(
+	const unsigned name_id,
+	std::string & result
+) const {
+	if(UINT_MAX == name_id) {
+		result = "";
+		return;
+	}
+	BOOST_ASSERT_MSG(
+		name_id < m_name_begin_indices.size(),
+		"name id too high"
+	);
+	unsigned begin_index = m_name_begin_indices[name_id];
+	unsigned end_index = m_name_begin_indices[name_id+1];
+	BOOST_ASSERT_MSG(
+		begin_index < m_names_char_list.size(),
+		"begin index of name too high"
+	);
+	BOOST_ASSERT_MSG(
+		end_index < m_names_char_list.size(),
+		"end index of name too high"
+	);
+
+	BOOST_ASSERT_MSG(begin_index <= end_index, "string ends before begin");
+	result.clear();
+	result.resize(end_index - begin_index);
+	std::copy(
+		m_names_char_list.begin() + begin_index,
+		m_names_char_list.begin() + end_index,
+		result.begin()
+	);
+}
+
 QueryObjectsStorage::~QueryObjectsStorage() {
-	//        delete names;
 	delete graph;
 	delete nodeHelpDesk;
 }

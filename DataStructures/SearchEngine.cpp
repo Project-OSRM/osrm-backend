@@ -20,14 +20,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "SearchEngine.h"
 
-SearchEngine::SearchEngine(
-    QueryGraph * g,
-    NodeInformationHelpDesk * nh,
-    std::vector<std::string> & n
-) :
-        _queryData(g, nh, n),
-        shortestPath(_queryData),
-        alternativePaths(_queryData)
+SearchEngine::SearchEngine( QueryObjectsStorage * query_objects ) :
+    _queryData(query_objects),
+    shortestPath(_queryData),
+    alternativePaths(_queryData)
 {}
 
 SearchEngine::~SearchEngine() {}
@@ -73,12 +69,9 @@ NodeID SearchEngine::GetNameIDForOriginDestinationNodeID(
 }
 
 std::string SearchEngine::GetEscapedNameForNameID(const unsigned nameID) const {
-    bool is_name_invalid = (nameID >= _queryData.names.size() || nameID == 0);
-    if (is_name_invalid) {
-        return std::string("");
-    }
-
-    return HTMLEntitize(_queryData.names.at(nameID));
+    std::string result;
+    _queryData.query_objects->GetName(nameID, result);
+    return HTMLEntitize(result);
 }
 
 SearchEngineHeapPtr SearchEngineData::forwardHeap;

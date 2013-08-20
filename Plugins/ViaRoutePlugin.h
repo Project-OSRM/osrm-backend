@@ -43,7 +43,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 class ViaRoutePlugin : public BasePlugin {
 private:
     NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<std::string> & names;
     StaticGraph<QueryEdge::EdgeData> * graph;
     HashTable<std::string, unsigned> descriptorTable;
     SearchEngine * searchEnginePtr;
@@ -51,13 +50,13 @@ public:
 
     ViaRoutePlugin(QueryObjectsStorage * objects)
      :
-        names(objects->names),
+        // objects(objects),
         descriptor_string("viaroute")
     {
         nodeHelpDesk = objects->nodeHelpDesk;
         graph = objects->graph;
 
-        searchEnginePtr = new SearchEngine(graph, nodeHelpDesk, names);
+        searchEnginePtr = new SearchEngine(objects);
 
         descriptorTable.insert(std::make_pair(""    , 0));
         descriptorTable.insert(std::make_pair("json", 0));

@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "SearchEngineData.h"
 #include "../RoutingAlgorithms/AlternativePathRouting.h"
 #include "../RoutingAlgorithms/ShortestPathRouting.h"
+#include "../Server/DataStructures/QueryObjectsStorage.h"
 
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
@@ -44,11 +45,7 @@ public:
     ShortestPathRouting<SearchEngineData> shortestPath;
     AlternativeRouting<SearchEngineData> alternativePaths;
 
-    SearchEngine(
-        QueryGraph * g,
-        NodeInformationHelpDesk * nh,
-        std::vector<std::string> & n
-    );
+    SearchEngine( QueryObjectsStorage * query_objects );
 	~SearchEngine();
 
 	void GetCoordinatesForNodeID(NodeID id, FixedPointCoordinate& result) const;

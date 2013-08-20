@@ -20,8 +20,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "BinaryHeap.h"
 #include "QueryEdge.h"
-#include "NodeInformationHelpDesk.h"
 #include "StaticGraph.h"
+#include "../Server/DataStructures/QueryObjectsStorage.h"
 
 #include "../typedefs.h"
 
@@ -41,10 +41,17 @@ typedef boost::thread_specific_ptr<QueryHeapType> SearchEngineHeapPtr;
 struct SearchEngineData {
     typedef QueryGraph Graph;
     typedef QueryHeapType QueryHeap;
-    SearchEngineData(QueryGraph * g, NodeInformationHelpDesk * nh, std::vector<std::string> & n) :graph(g), nodeHelpDesk(nh), names(n) {}
-    const QueryGraph * graph;
-    NodeInformationHelpDesk * nodeHelpDesk;
-    std::vector<std::string> & names;
+    SearchEngineData(QueryObjectsStorage * query_objects)
+     :
+        query_objects(query_objects),
+        graph(query_objects->graph),
+        nodeHelpDesk(query_objects->nodeHelpDesk)
+    {}
+
+    const QueryObjectsStorage       * query_objects;
+    const QueryGraph                * graph;
+    const NodeInformationHelpDesk   * nodeHelpDesk;
+
     static SearchEngineHeapPtr forwardHeap;
     static SearchEngineHeapPtr backwardHeap;
     static SearchEngineHeapPtr forwardHeap2;

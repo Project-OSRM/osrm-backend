@@ -282,37 +282,43 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
         fout.close();
         std::cout << "ok" << std::endl;
         time = get_timestamp();
-        std::cout << "[extractor] writing street name index ... " << std::flush;
-        std::string nameOutFileName = (output_file_name + ".names");
-        std::ofstream nameOutFile(nameOutFileName.c_str(), std::ios::binary);
-        unsigned sizeOfNameIndex = nameVector.size();
-        nameOutFile.write((char *)&(sizeOfNameIndex), sizeof(unsigned));
 
-        BOOST_FOREACH(const std::string & str, nameVector) {
-            unsigned lengthOfRawString = strlen(str.c_str());
-            nameOutFile.write((char *)&(lengthOfRawString), sizeof(unsigned));
-            nameOutFile.write(str.c_str(), lengthOfRawString);
+        std::cout << "[extractor] writing street name index ... " << std::flush;
+        std::string name_file_streamName = (output_file_name + ".names");
+        boost::filesystem::ofstream name_file_stream(
+            name_file_streamName,
+            std::ios::binary
+        );
+
+        const unsigned number_of_ways = name_list.size()+1;
+        name_file_stream.write((char *)&(number_of_ways), sizeof(unsigned));
+        unsigned name_lengths_prefix_sum = 0;
+        BOOST_FOREACH(const std::string & str, name_list) {
+            name_file_stream.write(
+                (char *)&(name_lengths_prefix_sum),
+                sizeof(unsigned)
+            );
+            name_lengths_prefix_sum += strlen(str.c_str());
+        }
+        name_file_stream.write(
+            (char *)&(name_lengths_prefix_sum),
+            sizeof(unsigned)
+        );
+        //duplicate on purpose!
+        name_file_stream.write((char *)&(name_lengths_prefix_sum), sizeof(unsigned));
+        BOOST_FOREACH(const std::string & str, name_list) {
+            const unsigned lengthOfRawString = strlen(str.c_str());
+            name_file_stream.write(str.c_str(), lengthOfRawString);
         }
 
-        nameOutFile.close();
+        name_file_stream.close();
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-
-        //        time = get_timestamp();
-        //        cout << "[extractor] writing address list      ... " << flush;
-        //
-        //        adressFileName.append(".address");
-        //        ofstream addressOutFile(adressFileName.c_str());
-        //        for(STXXLAddressVector::iterator it = adressVector.begin(); it != adressVector.end(); it++) {
-        //            addressOutFile << it->node.id << "|" << it->node.lat << "|" << it->node.lon << "|" << it->city << "|" << it->street << "|" << it->housenumber << "|" << it->state << "|" << it->country << "\n";
-        //        }
-        //        addressOutFile.close();
-        //        cout << "ok, after " << get_timestamp() - time << "s" << endl;
-
-        SimpleLogger().Write() << "Processed " << usedNodeCounter << " nodes and " << usedEdgeCounter << " edges";
+        SimpleLogger().Write() <<
+            "Processed " << usedNodeCounter << " nodes and " << usedEdgeCounter << " edges";
 
 
     } catch ( const std::exception& e ) {
-      std::cerr <<  "Caught Execption:" << e.what() << std::endl;
+        std::cerr <<  "Caught Execption:" << e.what() << std::endl;
     }
 }
 
