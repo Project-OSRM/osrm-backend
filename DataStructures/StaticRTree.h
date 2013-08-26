@@ -595,6 +595,113 @@ public:
     }
 
   */
+    bool LocateClosestEndPointForCoordinate(
+            const FixedPointCoordinate & input_coordinate,
+            FixedPointCoordinate & result_coordinate,
+            const unsigned zoom_level
+    ) {
+        bool ignore_tiny_components = (zoom_level <= 14);
+        DataT nearest_edge;
+        double min_dist = DBL_MAX;
+        double min_max_dist = DBL_MAX;
+        bool found_a_nearest_edge = false;
+
+        //initialize queue with root element
+        std::priority_queue<QueryCandidate> traversal_queue;
+        double current_min_dist = m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
+        traversal_queue.push(
+            QueryCandidate(0, current_min_dist)
+        );
+
+        BOOST_ASSERT_MSG(
+            FLT_EPSILON > (0. - traversal_queue.top().min_dist),
+            "Root element in NN Search has min dist != 0."
+        );
+
+        while(!traversal_queue.empty()) {
+            const QueryCandidate current_query_node = traversal_queue.top();
+            traversal_queue.pop();
+
+            const bool prune_downward = (current_query_node.min_dist >= min_max_dist);
+            const bool prune_upward = (current_query_node.min_dist >= min_dist);
+            if( !prune_downward && !prune_upward ) { //downward pruning
+                TreeNode & current_tree_node = m_search_tree[current_query_node.node_id];
+                if (current_tree_node.child_is_on_disk) {
+                    LeafNode current_leaf_node;
+                    LoadLeafFromDisk(
+                        current_tree_node.children[0],
+                        current_leaf_node
+                    );
+                    for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
+                        const DataT & current_edge = current_leaf_node.objects[i];
+                        if(
+                            ignore_tiny_components &&
+                            current_edge.belongsToTinyComponent
+                        ) {
+                            continue;
+                        }
+                        if(current_edge.isIgnored()) {
+                            continue;
+                        }
+
+                        double current_minimum_distance = ApproximateDistance(
+                                input_coordinate.lat,
+                                input_coordinate.lon,
+                                current_edge.lat1,
+                                current_edge.lon1
+                            );
+                        if( current_minimum_distance < min_dist ) {
+                            //found a new minimum
+                            min_dist = current_minimum_distance;
+                            result_coordinate.lat = current_edge.lat1;
+                            result_coordinate.lon = current_edge.lon1;
+                            found_a_nearest_edge = true;
+                        }
+
+                        current_minimum_distance = ApproximateDistance(
+                                input_coordinate.lat,
+                                input_coordinate.lon,
+                                current_edge.lat2,
+                                current_edge.lon2
+                            );
+
+                        if( current_minimum_distance < min_dist ) {
+                            //found a new minimum
+                            min_dist = current_minimum_distance;
+                            result_coordinate.lat = current_edge.lat2;
+                            result_coordinate.lon = current_edge.lon2;
+                            found_a_nearest_edge = true;
+                        }
+                    }
+                } else {
+                    //traverse children, prune if global mindist is smaller than local one
+                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i) {
+                        const int32_t child_id = current_tree_node.children[i];
+                        const TreeNode & child_tree_node = m_search_tree[child_id];
+                        const RectangleT & child_rectangle = child_tree_node.minimum_bounding_rectangle;
+                        const double current_min_dist = child_rectangle.GetMinDist(input_coordinate);
+                        const double current_min_max_dist = child_rectangle.GetMinMaxDist(input_coordinate);
+                        if( current_min_max_dist < min_max_dist ) {
+                            min_max_dist = current_min_max_dist;
+                        }
+                        if (current_min_dist > min_max_dist) {
+                            continue;
+                        }
+                        if (current_min_dist > min_dist) { //upward pruning
+                            continue;
+                        }
+                        traversal_queue.push(
+                            QueryCandidate(child_id, current_min_dist)
+                        );
+                    }
+                }
+            }
+        }
+
+        return found_a_nearest_edge;
+    }
+
+
     bool FindPhantomNodeForCoordinate(
             const FixedPointCoordinate & input_coordinate,
             PhantomNode & result_phantom_node,
@@ -748,9 +855,13 @@ public:
         return found_a_nearest_edge;
 
     }
+
 private:
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode& result_node) {
-        if(!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open()) {
+        if(
+            !thread_local_rtree_stream.get() ||
+            !thread_local_rtree_stream->is_open()
+        ) {
             thread_local_rtree_stream.reset(
                 new boost::filesystem::ifstream(
                         m_leaf_node_filename,

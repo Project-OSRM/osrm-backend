@@ -99,17 +99,15 @@ public:
         return m_number_of_nodes;
     }
 
-    inline bool FindNearestNodeCoordForLatLon(
+    inline bool LocateClosestEndPointForCoordinate(
             const FixedPointCoordinate& input_coordinate,
             FixedPointCoordinate& result,
             const unsigned zoom_level = 18
     ) const {
-        PhantomNode resulting_phantom_node;
-        bool found_node = FindPhantomNodeForCoordinate(
+        bool found_node = m_ro_rtree_ptr->LocateClosestEndPointForCoordinate(
                             input_coordinate,
-                            resulting_phantom_node, zoom_level
+                            result, zoom_level
                           );
-        result = resulting_phantom_node.location;
         return found_node;
     }
 

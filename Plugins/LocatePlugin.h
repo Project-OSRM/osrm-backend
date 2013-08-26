@@ -59,7 +59,7 @@ public:
         reply.status = http::Reply::ok;
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
-        if(!nodeHelpDesk->FindNearestNodeCoordForLatLon(routeParameters.coordinates[0], result)) {
+        if(!nodeHelpDesk->LocateClosestEndPointForCoordinate(routeParameters.coordinates[0], result)) {
             reply.content += ("\"status\":207,");
             reply.content += ("\"mapped_coordinate\":[]");
         } else {
