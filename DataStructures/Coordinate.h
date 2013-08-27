@@ -118,8 +118,8 @@ inline double ApproximateEuclideanDistance(const FixedPointCoordinate &c1, const
 
 static inline void convertInternalLatLonToString(const int value, std::string & output) {
     char buffer[100];
-    buffer[10] = 0; // Nullterminierung
-    char* string = printInt< 10, 6 >( buffer, value );
+    buffer[11] = 0; // zero termination
+    char* string = printInt< 11, 6 >( buffer, value );
     output = string;
 }
 
