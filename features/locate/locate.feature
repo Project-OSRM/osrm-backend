@@ -80,7 +80,7 @@ Feature: Locate - return nearest node
          | nodes |
          | ab    |
 
-        When I request nearest I should get
+        When I request locate I should get
          | in | out |
          | 0  | a   |
          | 1  | a   |
@@ -105,7 +105,7 @@ Feature: Locate - return nearest node
          | nodes |
          | ab    |
 
-        When I request nearest I should get
+        When I request locate I should get
          | in | out |
          | 0  | a   |
          | 1  | a   |
@@ -131,7 +131,7 @@ Feature: Locate - return nearest node
          | nodes |
          | axyb  |
 
-        When I request nearest I should get
+        When I request locate I should get
          | in | out |
          | 0  | x   |
          | 1  | a   |
@@ -177,3 +177,21 @@ Feature: Locate - return nearest node
          | b  | b   |
          | x  | x   |
          | y  | y   |
+
+     Scenario: Locate - High lat/lon
+        Given the node locations
+         | node | lat | lon  |
+         | a    | -85 | -180 |
+         | b    | 0   | 0    |
+         | c    | 85  | 180  |
+         | x    | -84 | -180 |
+         | y    | 84  | 180  |
+
+        And the ways
+         | nodes |
+         | abc   |
+
+        When I request locate I should get
+         | in | out |
+         | x  | a   |
+         | y  | c   |

@@ -5,10 +5,14 @@ class FuzzyMatch
     if got == want
       return true
     elsif want.match /(.*)\s+~(.+)%$/       #percentage range: 100 ~5%
-      margin = 1 - $2.to_f*0.01
-      from = $1.to_f*margin
-      to = $1.to_f/margin
-      return got.to_f >= from && got.to_f <= to
+      target = $1.to_f
+      percentage = $2.to_f
+      if target==0
+        return true
+      else
+        ratio = (1-(got.to_f / target)).abs;
+        return 100*ratio < percentage;
+      end
     elsif want.match /(.*)\s+\+\-(.+)$/    #absolute range: 100 +-5
       margin = $2.to_f
       from = $1.to_f-margin

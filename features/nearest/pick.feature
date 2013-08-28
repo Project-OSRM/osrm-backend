@@ -54,3 +54,25 @@ Feature: Locating Nearest node on a Way - pick closest way
  		 | 2  | x   |
  		 | 3  | u   |
  		 | 4  | w   |
+ 
+     Scenario: Nearest - High lat/lon
+        Given the node locations
+         | node | lat | lon  |
+         | a    | -85 | -180 |
+         | b    | 0   | 0    |
+         | c    | 85  | 180  |
+         | x    | -70 | -100 |
+         | y    | 70  | 100  |
+         | v    | 1   | 1    |
+         | w    | -1  | -1   |
+
+        And the ways
+         | nodes |
+         | abc   |
+
+        When I request nearest I should get
+         | in | out |
+         | x  | a   |
+         | y  | c   |
+         | v  | b   |
+         | w  | b   |
