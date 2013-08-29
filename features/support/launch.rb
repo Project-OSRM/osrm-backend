@@ -18,7 +18,7 @@ class OSRMLauncher
   end
 
   private
-  
+
   def launch
     Timeout.timeout(LAUNCH_TIMEOUT) do
       osrm_up
@@ -27,7 +27,7 @@ class OSRMLauncher
   rescue Timeout::Error
     raise RoutedError.new "Launching osrm-routed timed out."
   end
-  
+
   def shutdown
     Timeout.timeout(SHUTDOWN_TIMEOUT) do
       osrm_down
@@ -36,8 +36,8 @@ class OSRMLauncher
     kill
     raise RoutedError.new "Shutting down osrm-routed timed out."
   end
-  
-  
+
+
   def osrm_up?
     if @pid
       `ps -o state -p #{@pid}`.split[1].to_s =~ /^[DRST]/

@@ -20,7 +20,7 @@ ORIGIN = [1,1]
 
 class Location
     attr_accessor :lon,:lat
-        
+
     def initialize lon,lat
         @lat = lat
         @lon = lon
@@ -44,16 +44,16 @@ def build_ways_from_table table
     #NOTE:
     #currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4 edges
     #this is relatated to the fact that a oneway dead-end street doesn't make a lot of sense
-    
+
     #if we stack ways on different x coordinates, routability tests get messed up, because osrm might pick a neighboring way if the one test can't be used.
     #instead we place all lines as a string on the same y coordinate. this prevents using neightboring ways.
-    
+
     #a few nodes...
-    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(0+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(1+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(2+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(3+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node5 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(4+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
+    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(0+WAY_SPACING*ri)*@zoom, ORIGIN[1]
+    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(1+WAY_SPACING*ri)*@zoom, ORIGIN[1]
+    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(2+WAY_SPACING*ri)*@zoom, ORIGIN[1]
+    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(3+WAY_SPACING*ri)*@zoom, ORIGIN[1]
+    node5 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(4+WAY_SPACING*ri)*@zoom, ORIGIN[1]
     node1.uid = OSM_UID
     node2.uid = OSM_UID
     node3.uid = OSM_UID
@@ -70,7 +70,7 @@ def build_ways_from_table table
     osm_db << node3
     osm_db << node4
     osm_db << node5
-    
+
     #...with a way between them
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     way.uid = OSM_UID
@@ -79,22 +79,22 @@ def build_ways_from_table table
     way << node3
     way << node4
     way << node5
-    
+
     tags = row.dup
-    
+
     # remove tags that describe expected test result
     tags.reject! do |k,v|
-      k =~ /^forw\b/ || 
+      k =~ /^forw\b/ ||
       k =~ /^backw\b/ ||
       k =~ /^bothw\b/
     end
-    
+
     ##remove empty tags
     tags.reject! { |k,v| v=='' }
-    
+
     # sort tag keys in the form of 'node/....'
     way_tags = { 'highway' => 'primary' }
-    
+
     node_tags = {}
     tags.each_pair do |k,v|
       if k =~ /node\/(.*)/
@@ -111,11 +111,11 @@ def build_ways_from_table table
         end
       end
     end
-    
+
     way_tags['name'] = "w#{ri}"
     way << way_tags
     node3 << node_tags
-    
+
     osm_db << way
   end
 end
@@ -207,7 +207,7 @@ def osm_str
   @osm_str
 end
 
-def write_osm 
+def write_osm
   #write .oms file if needed
   Dir.mkdir DATA_FOLDER unless File.exist? DATA_FOLDER
   @osm_file = "#{DATA_FOLDER}/#{sanitized_scenario_title}_#{fingerprint}"
@@ -262,7 +262,7 @@ def reprocess
       unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
-      end 
+      end
       log '', :preprocess
     end
     log_preprocess_done

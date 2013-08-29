@@ -4,12 +4,12 @@ locations = nil
 
 class OSMTestParserCallbacks < OSM::Callbacks
   locations = nil
-  
+
   def self.locations
     if locations
       locations
     else
-      #parse the test file, so we can later reference nodes and ways by name in tests 
+      #parse the test file, so we can later reference nodes and ways by name in tests
       locations = {}
       file = 'test/data/test.osm'
       callbacks = OSMTestParserCallbacks.new

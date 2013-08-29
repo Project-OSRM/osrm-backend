@@ -35,9 +35,9 @@ Given /^the node locations$/ do |table|
     name = row['node']
     raise "*** duplicate node '#{name}'" if find_node_by_name name
     if name.match /[a-z]/
-        add_osm_node name, row['lon'].to_f, row['lat'].to_f 
+        add_osm_node name, row['lon'].to_f, row['lat'].to_f
     else
-        add_location name, row['lon'].to_f, row['lat'].to_f 
+        add_location name, row['lon'].to_f, row['lat'].to_f
     end
   end
 end
@@ -55,7 +55,7 @@ Given /^the ways$/ do |table|
   table.hashes.each do |row|
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     way.uid = OSM_UID
-    
+
     nodes = row.delete 'nodes'
     raise "*** duplicate way '#{nodes}'" if name_way_hash[nodes]
     nodes.each_char do |c|
@@ -64,14 +64,14 @@ Given /^the ways$/ do |table|
       raise "*** unknown node '#{c}'" unless node
       way << node
     end
-    
+
     defaults = { 'highway' => 'primary' }
     tags = defaults.merge(row)
 
     if row['highway'] == '(nil)'
       tags.delete 'highway'
     end
-    
+
     if row['name'] == nil
       tags['name'] = nodes
     elsif (row['name'] == '""') || (row['name'] == "''")
@@ -81,7 +81,7 @@ Given /^the ways$/ do |table|
     else
       tags['name'] = row['name']
     end
-    
+
     way << tags
     osm_db << way
     name_way_hash[nodes] = way

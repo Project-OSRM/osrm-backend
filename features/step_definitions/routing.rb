@@ -8,11 +8,11 @@ When /^I route I should get$/ do |table|
         node = find_node_by_name(row['from'])
         raise "*** unknown from-node '#{row['from']}" unless node
         waypoints << node
-        
+
         node = find_node_by_name(row['to'])
         raise "*** unknown to-node '#{row['to']}" unless node
         waypoints << node
-        
+
         got = {'from' => row['from'], 'to' => row['to'] }
       elsif row['waypoints']
         row['waypoints'].split(',').each do |n|
@@ -24,7 +24,7 @@ When /^I route I should get$/ do |table|
       else
         raise "*** no waypoints"
       end
-        
+
       params = {}
       row.each_pair do |k,v|
         if k =~ /param:(.*)/
@@ -36,7 +36,7 @@ When /^I route I should get$/ do |table|
           got[k]=v
         end
       end
-            
+
       response = request_route(waypoints, params)
       if response.code == "200" && response.body.empty? == false
         json = JSON.parse response.body
@@ -48,7 +48,7 @@ When /^I route I should get$/ do |table|
           modes = mode_list json['route_instructions']
         end
       end
-      
+
       if table.headers.include? 'start'
         got['start'] = instructions ? json['route_summary']['start_point'] : nil
       end
@@ -83,7 +83,7 @@ When /^I route I should get$/ do |table|
           got['#'] = row['#']           # copy value so it always match
         end
       end
-      
+
       ok = true
       row.keys.each do |key|
         if FuzzyMatch.match got[key], row[key]
@@ -92,12 +92,12 @@ When /^I route I should get$/ do |table|
           ok = false
         end
       end
-      
+
       unless ok
         failed = { :attempt => 'route', :query => @query, :response => response }
         log_fail row,got,[failed]
       end
-      
+
       actual << got
     end
   end

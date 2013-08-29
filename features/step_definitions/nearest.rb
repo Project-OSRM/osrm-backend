@@ -16,9 +16,9 @@ When /^I request nearest I should get$/ do |table|
           coord =  json['mapped_coordinate']
         end
       end
-      
+
       got = {'in' => row['in'], 'out' => coord }
-      
+
       ok = true
       row.keys.each do |key|
         if key=='out'
@@ -30,12 +30,12 @@ When /^I request nearest I should get$/ do |table|
           end
         end
       end
-      
+
       unless ok
         failed = { :attempt => 'nearest', :query => @query, :response => response }
         log_fail row,got,[failed]
       end
-      
+
       actual << got
     end
   end
