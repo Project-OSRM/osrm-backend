@@ -3,3 +3,4 @@
 ---
 default: --require features --tags ~@todo --tag ~@stress
 verify: --require features --tags ~@todo --tag ~@stress -f progress
+all: --require features
