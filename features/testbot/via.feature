@@ -50,3 +50,21 @@ Feature: Via points
          When I route I should get
           | waypoints   | route     |
           | a,c,f,h | ab,bcd,de,efg,gh |
+
+    @bug @todo
+    Scenario: U-turn should be allowed at via point
+      Given the node map
+          | a | b | c |
+          |   | d |   |
+          |   | e |   |
+
+      And the ways
+          | nodes |
+          | abc   |
+          | bd    |
+          | de    |
+
+      When I route I should get
+          | waypoints | route         |
+          | a,d,c     | abc,bd,bd,abc |
+
