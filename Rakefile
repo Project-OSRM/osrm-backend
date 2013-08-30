@@ -124,7 +124,7 @@ end
 desc "Reprocess OSM data."
 task :process => :setup do
   Dir.chdir DATA_FOLDER do
-    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf #{PROFILES_FOLDER}/#{PROFILE}.lua"
+    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf --profile #{PROFILES_FOLDER}/#{PROFILE}.lua"
     puts
     raise "Error while preparing data." unless system "../#{BUILD_FOLDER}/osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions #{PROFILES_FOLDER}/#{PROFILE}.lua"
     puts
@@ -134,7 +134,7 @@ end
 desc "Extract OSM data."
 task :extract => :setup do
   Dir.chdir DATA_FOLDER do
-    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf ../profiles/#{PROFILE}.lua"
+    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf --profile ../profiles/#{PROFILE}.lua"
   end
 end
 
