@@ -52,6 +52,7 @@ Given /^the nodes$/ do |table|
 end
 
 Given /^the ways$/ do |table|
+  raise "*** Map data already defined - did you pass an input file in this scenaria?" if @osm_str
   table.hashes.each do |row|
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     way.uid = OSM_UID
@@ -89,6 +90,7 @@ Given /^the ways$/ do |table|
 end
 
 Given /^the relations$/ do |table|
+  raise "*** Map data already defined - did you pass an input file in this scenaria?" if @osm_str
   table.hashes.each do |row|
     relation = OSM::Relation.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     row.each_pair do |key,value|
@@ -119,3 +121,7 @@ end
 Given /^the defaults$/ do
 end
 
+Given /^the input file ([^"]*)$/ do |file|
+  raise "*** Input file must in .osm format" unless File.extname(file)=='.osm'
+  @osm_str = File.read file
+end
