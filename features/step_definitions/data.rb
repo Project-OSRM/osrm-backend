@@ -6,6 +6,10 @@ Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
 
+Given /^the origin lat\/lon (\d+),(\d+)$/ do |lat,lon|
+  set_origin [lon.to_f,lat.to_f]
+end
+
 Given /^the shortcuts$/ do |table|
   table.hashes.each do |row|
     shortcuts_hash[ row['key'] ] = row['value']

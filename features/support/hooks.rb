@@ -8,6 +8,7 @@ Before do |scenario|
   @has_logged_preprocess_info = false
   @has_logged_scenario_info = false
   set_grid_size DEFAULT_GRID_SIZE
+  set_origin DEFAULT_ORIGIN
 end
 
 Around('@stress') do |scenario, block|

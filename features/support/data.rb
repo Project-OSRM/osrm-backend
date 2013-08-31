@@ -16,7 +16,7 @@ DEFAULT_GRID_SIZE = 100   #meters
 PROFILES_PATH = '../profiles'
 BIN_PATH = '../build'
 
-ORIGIN = [1,1]
+DEFAULT_ORIGIN = [1,1]
 
 class Location
     attr_accessor :lon,:lat
@@ -38,6 +38,10 @@ def set_grid_size meters
   @zoom = meters.to_f*0.8990679362704610899694577444566908445396483347536032203503E-5
 end
 
+def set_origin origin
+  @origin = origin
+end
+
 def build_ways_from_table table
   #add one unconnected way for each row
   table.hashes.each_with_index do |row,ri|
@@ -49,11 +53,11 @@ def build_ways_from_table table
     #instead we place all lines as a string on the same y coordinate. this prevents using neightboring ways.
 
     #a few nodes...
-    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(0+WAY_SPACING*ri)*@zoom, ORIGIN[1]
-    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(1+WAY_SPACING*ri)*@zoom, ORIGIN[1]
-    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(2+WAY_SPACING*ri)*@zoom, ORIGIN[1]
-    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(3+WAY_SPACING*ri)*@zoom, ORIGIN[1]
-    node5 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(4+WAY_SPACING*ri)*@zoom, ORIGIN[1]
+    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(0+WAY_SPACING*ri)*@zoom, @origin[1]
+    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(1+WAY_SPACING*ri)*@zoom, @origin[1]
+    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(2+WAY_SPACING*ri)*@zoom, @origin[1]
+    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(3+WAY_SPACING*ri)*@zoom, @origin[1]
+    node5 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(4+WAY_SPACING*ri)*@zoom, @origin[1]
     node1.uid = OSM_UID
     node2.uid = OSM_UID
     node3.uid = OSM_UID
@@ -121,7 +125,7 @@ def build_ways_from_table table
 end
 
 def table_coord_to_lonlat ci,ri
-    [ORIGIN[0]+ci*@zoom, ORIGIN[1]-ri*@zoom]
+    [@origin[0]+ci*@zoom, @origin[1]-ri*@zoom]
 end
 
 def add_osm_node name,lon,lat

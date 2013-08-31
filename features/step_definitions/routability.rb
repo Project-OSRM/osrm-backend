@@ -12,12 +12,12 @@ Then /^routability should be$/ do |table|
       ['forw','backw','bothw'].each do |direction|
         if table.headers.include? direction
           if direction == 'forw' || direction == 'bothw'
-            a = Location.new ORIGIN[0]+(1+WAY_SPACING*i)*@zoom, ORIGIN[1]
-            b = Location.new ORIGIN[0]+(3+WAY_SPACING*i)*@zoom, ORIGIN[1]
+            a = Location.new @origin[0]+(1+WAY_SPACING*i)*@zoom, @origin[1]
+            b = Location.new @origin[0]+(3+WAY_SPACING*i)*@zoom, @origin[1]
             response = request_route [a,b]
           elsif direction == 'backw' || direction == 'bothw'
-            a = Location.new ORIGIN[0]+(3+WAY_SPACING*i)*@zoom, ORIGIN[1]
-            b = Location.new ORIGIN[0]+(1+WAY_SPACING*i)*@zoom, ORIGIN[1]
+            a = Location.new @origin[0]+(3+WAY_SPACING*i)*@zoom, @origin[1]
+            b = Location.new @origin[0]+(1+WAY_SPACING*i)*@zoom, @origin[1]
             response = request_route [a,b]
           end
           want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
