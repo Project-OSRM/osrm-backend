@@ -139,3 +139,73 @@ Feature: Compass bearing
             | f    | c  | abcdef | W       | 270     |
             | f    | d  | abcdef | W       | 270     |
             | f    | e  | abcdef | W       | 270     |
+
+    Scenario: Bearings at high latitudes
+    The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
+    to form square with sides of 1 km.
+
+        Given the node locations
+            | node | lat       | lon      |
+            | a    | 80        | 0        |
+            | b    | 80.006389 | 0        |
+            | c    | 80.006389 | 0.036667 |
+            | d    | 80        | 0.036667 |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+            | da    |
+            | ac    |
+            | bd    |
+
+        When I route I should get
+            | from | to | route | compass | bearing |
+            | a    | b  | ab    | N       | 0       |
+            | b    | c  | bc    | E       | 90      |
+            | c    | d  | cd    | S       | 180     |
+            | d    | a  | da    | W       | 270     |
+            | b    | a  | ab    | S       | 180     |
+            | c    | b  | bc    | W       | 270     |
+            | d    | c  | cd    | N       | 0       |
+            | a    | d  | da    | E       | 90      |
+            | a    | c  | ac    | NE      | 45      |
+            | c    | a  | ac    | SW      | 225     |
+            | b    | d  | bd    | SE      | 135     |
+            | d    | b  | bd    | NW      | 315     |
+
+    Scenario: Bearings at high negative latitudes
+    The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
+    to form square with sides of 1 km.
+
+        Given the node locations
+            | node | lat        | lon      |
+            | a    | -80        | 0        |
+            | b    | -80.006389 | 0        |
+            | c    | -80.006389 | 0.036667 |
+            | d    | -80        | 0.036667 |
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+            | da    |
+            | ac    |
+            | bd    |
+
+        When I route I should get
+            | from | to | route | compass | bearing |
+            | a    | b  | ab    | S       | 180     |
+            | b    | c  | bc    | E       | 90      |
+            | c    | d  | cd    | N       | 0       |
+            | d    | a  | da    | W       | 270     |
+            | b    | a  | ab    | N       | 0       |
+            | c    | b  | bc    | W       | 270     |
+            | d    | c  | cd    | S       | 180     |
+            | a    | d  | da    | E       | 90      |
+            | a    | c  | ac    | SE      | 135     |
+            | c    | a  | ac    | NW      | 315     |
+            | b    | d  | bd    | NE      | 45      |
+            | d    | b  | bd    | SW      | 225     |
