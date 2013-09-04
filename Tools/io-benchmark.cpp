@@ -111,11 +111,10 @@ int main (int argc, char * argv[]) {
         std::vector<unsigned>().swap(primary_vector);
         std::vector<unsigned>().swap(secondary_vector);
 
-        //TODO: make striped reads of various sizes, log stuff to make plot
-        SimpleLogger().Write(logDEBUG) << "performing 1000 gapped I/Os";
+        SimpleLogger().Write(logDEBUG) << "performing 1000+/-1 gapped I/Os";
         unsigned single_element = 0;
         //read every 268435'th byte, time each I/O seperately
-        for(unsigned i = 0; i < number_of_elements; i+=268435) {
+        for(unsigned i = 0; i < number_of_elements; i+=(number_of_elements/1000)) {
             time1 = get_timestamp();
             read_stream.seekg(i*sizeof(unsigned));
             read_stream.read( (char*)&single_element, sizeof(unsigned));
@@ -145,8 +144,9 @@ int main (int argc, char * argv[]) {
 
         SimpleLogger().Write() << "gapped I/O: " <<
             "min: "  << timing_results_1013.front()*1000 << ", " <<
-            "max: "  << timing_results_1013.back()*1000  << ", " <<
             "mean: " << primary_mean*1000           << ", " <<
+            "med: "  << timing_results_1013[timing_results_1013.size()/2]*1000 << ", " <<
+            "max: "  << timing_results_1013.back()*1000  << ", " <<
             "dev: "  << primary_stdev*1000;
 
         SimpleLogger().Write(logDEBUG) << "performing 1000 random I/Os";
@@ -185,8 +185,9 @@ int main (int argc, char * argv[]) {
 
         SimpleLogger().Write() << "random I/O: " <<
             "min: "  << timing_results_random.front()*1000 << ", " <<
-            "max: "  << timing_results_random.back()*1000  << ", " <<
             "mean: " << secondary_mean*1000           << ", " <<
+            "med: "  << timing_results_random[timing_results_random.size()/2]*1000 << ", " <<
+            "max: "  << timing_results_random.back()*1000  << ", " <<
             "dev: "  << secondary_stdev*1000;
         if( boost::filesystem::exists(test_path) ) {
             boost::filesystem::remove(test_path);
