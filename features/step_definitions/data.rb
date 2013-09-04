@@ -6,7 +6,7 @@ Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
 
-Given /^the origin lat\/lon (\d+),(\d+)$/ do |lat,lon|
+Given /^the origin ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)$/ do |lat,lon|
   set_origin [lon.to_f,lat.to_f]
 end
 
