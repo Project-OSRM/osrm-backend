@@ -21,18 +21,26 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef TIMINGUTIL_H_
 #define TIMINGUTIL_H_
 
-#include <boost/chrono.hpp>
-#include <boost/timer/timer.hpp>
+// excluded as this requires boost 1.47 (for now)
+// #include <boost/chrono.hpp>
+// #include <boost/timer/timer.hpp>
 
-static boost::timer::cpu_timer my_timer;
+// static boost::timer::cpu_timer my_timer;
 
-/** Returns a timestamp (now) in seconds (incl. a fractional part). */
-static inline double get_timestamp() {
-    boost::chrono::duration<double> duration = boost::chrono::nanoseconds(
-        my_timer.elapsed().user + my_timer.elapsed().system +
-        my_timer.elapsed().wall
-    );
-    return duration.count();
+// /** Returns a timestamp (now) in seconds (incl. a fractional part). */
+// static inline double get_timestamp() {
+//     boost::chrono::duration<double> duration = boost::chrono::nanoseconds(
+//         my_timer.elapsed().user + my_timer.elapsed().system +
+//         my_timer.elapsed().wall
+//     );
+//     return duration.count();
+// }
+
+#include <sys/time.h>
+inline double get_timestamp() {
+    timeval local_time;
+    gettimeofday(&local_time, NULL);
+    return local_time.tv_sec+(local_time.tv_usec/1000000.0);
 }
 
 #endif /* TIMINGUTIL_H_ */
