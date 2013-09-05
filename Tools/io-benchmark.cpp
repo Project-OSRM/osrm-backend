@@ -84,7 +84,9 @@ int main (int argc, char * argv[]) {
         test_stream.close();
         double time2 = get_timestamp();
         SimpleLogger().Write(logDEBUG) <<
-            "writing 1GB took " << (time2-time1)*1000 << "ms, " <<
+            "writing 1GB took " << (time2-time1)*1000 << "ms";
+
+        SimpleLogger().Write() << "Write performance: " <<
             1024*1024/((time2-time1)*1000) << "MB/sec";
 
         SimpleLogger().Write(logDEBUG) <<
@@ -98,7 +100,8 @@ int main (int argc, char * argv[]) {
         );
         time2 = get_timestamp();
         SimpleLogger().Write(logDEBUG) <<
-            "reading 1GB took " << (time2-time1)*1000 << "ms, " <<
+            "reading 1GB took " << (time2-time1)*1000 << "ms";
+        SimpleLogger().Write() << "Read performance: " <<
             1024*1024/((time2-time1)*1000) << "MB/sec";
 
         SimpleLogger().Write(logDEBUG) << "checking data for correctness";
@@ -124,15 +127,6 @@ int main (int argc, char * argv[]) {
             read_stream.read( (char*)&single_element, sizeof(unsigned));
             time2 = get_timestamp();
             timing_results_1013.push_back((time2-time1));
-#ifndef NDEBUG
-            if((time2-time1)) {
-                SimpleLogger().Write() << "logged zero at index " << i;
-            }
-            if((time2-time1) >= 1) {
-                SimpleLogger().Write() << "logged large time at index " << i <<
-                    ": " << timing_results_1013.back();
-            }
-#endif
         }
 
         //Do statistics
@@ -179,15 +173,6 @@ int main (int argc, char * argv[]) {
             read_stream.read( (char*)&temp_array[0], 1024*sizeof(unsigned));
             time2 = get_timestamp();
             timing_results_random.push_back((time2-time1));
-#ifndef NDEBUG
-            if(0. == (time2-time1)) {
-                SimpleLogger().Write() << "logged zero at index " << i;
-            }
-            if((time2-time1) >= 1) {
-                SimpleLogger().Write() << "logged large time at index " << i <<
-                    ": " << timing_results_random.back();
-            }
-#endif
         }
         read_stream.close();
 
