@@ -1,10 +1,9 @@
-@routing @maxspeed @foot
+@routing @foot @maxspeed
 Feature: Foot - Ignore max speed restrictions
 
 Background: Use specific speeds
     Given the profile "foot"
 
-    @todo
     Scenario: Foot - Ignore maxspeed
         Then routability should be
             | highway     | maxspeed  | bothw     |

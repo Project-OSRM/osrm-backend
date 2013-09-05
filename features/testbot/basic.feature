@@ -233,3 +233,21 @@ Feature: Basic Routing
             | d    | a  | abcd  |
             | a    | m  | aeim  |
             | m    | a  | aeim  |
+    
+    Scenario: Testbot - Triangle challenge
+        Given the node map
+            |   |   |   | d |
+            | a | b | c |   |
+            |   |   |   | e |
+
+        And the ways
+            | nodes | highway | oneway |
+            | abc   | primary |        |
+            | cd    | primary | yes    |
+            | ce    | river   |        |
+            | de    | primary |        |
+
+        When I route I should get
+            | from | to | route |
+            | d    | c  | de,ce |
+            | e    | d  | de    |
