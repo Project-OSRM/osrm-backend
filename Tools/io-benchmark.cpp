@@ -25,6 +25,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
+
 #include <boost/ref.hpp>
 
 #include <cmath>
@@ -55,7 +58,7 @@ int main (int argc, char * argv[]) {
             "temporary file: " << test_path.string();
         if( boost::filesystem::exists(test_path) ) {
             boost::filesystem::remove(test_path);
-            SimpleLogger().Write() << "removing temporary files";
+            SimpleLogger().Write() << "removing previous files";
         }
 
         SimpleLogger().Write(logDEBUG) << "Allocating 2GB in RAM";
@@ -66,7 +69,7 @@ int main (int argc, char * argv[]) {
         std::srand ( 37337 );
         std::generate (primary_vector.begin(), primary_vector.end(), std::rand);
 
-        std::vector<double> timing_results_1013, timing_results_random;
+        std::vector<double> timing_results_1013;
 
         SimpleLogger().Write(logDEBUG) <<
             "writing " << number_of_elements*sizeof(unsigned) << " bytes";
@@ -77,8 +80,9 @@ int main (int argc, char * argv[]) {
             (char *)&primary_vector[0],
             number_of_elements*sizeof(unsigned)
         );
-        double time2 = get_timestamp();
+        test_stream.flush();
         test_stream.close();
+        double time2 = get_timestamp();
         SimpleLogger().Write(logDEBUG) <<
             "writing 1GB took " << (time2-time1)*1000 << "ms, " <<
             1024*1024/((time2-time1)*1000) << "MB/sec";
@@ -120,10 +124,24 @@ int main (int argc, char * argv[]) {
             read_stream.read( (char*)&single_element, sizeof(unsigned));
             time2 = get_timestamp();
             timing_results_1013.push_back((time2-time1));
+#ifndef NDEBUG
+            if((time2-time1)) {
+                SimpleLogger().Write() << "logged zero at index " << i;
+            }
+            if((time2-time1) >= 1) {
+                SimpleLogger().Write() << "logged large time at index " << i <<
+                    ": " << timing_results_1013.back();
+            }
+#endif
         }
-        SimpleLogger().Write(logDEBUG) << "Performing gapped statistics";
+
+        //Do statistics
+        SimpleLogger().Write(logDEBUG) << "Performing gapped I/O statistics";
         //print simple statistics: min, max, median, variance
         std::sort(timing_results_1013.begin(), timing_results_1013.end());
+        double primary_min = timing_results_1013.front();
+        double primary_max = timing_results_1013.back();
+        double primary_med = timing_results_1013[timing_results_1013.size()/2];
         double primary_sum =    std::accumulate(
                                     timing_results_1013.begin(),
                                     timing_results_1013.end(),
@@ -137,34 +155,48 @@ int main (int argc, char * argv[]) {
                                     timing_results_1013.begin(),
                                     0.0
                                 );
-        double primary_stdev = std::sqrt(
+        double primary_dev = std::sqrt(
             primary_sq_sum / timing_results_1013.size() -
             (primary_mean * primary_mean)
         );
 
         SimpleLogger().Write() << "gapped I/O: " <<
-            "min: "  << timing_results_1013.front()*1000 << ", " <<
-            "mean: " << primary_mean*1000           << ", " <<
-            "med: "  << timing_results_1013[timing_results_1013.size()/2]*1000 << ", " <<
-            "max: "  << timing_results_1013.back()*1000  << ", " <<
-            "dev: "  << primary_stdev*1000;
+            "min: "  << primary_min*1000  << "ms, " <<
+            "mean: " << primary_mean*1000 << "ms, " <<
+            "med: "  << primary_med*1000  << "ms, " <<
+            "max: "  << primary_max*1000  << "ms, " <<
+            "dev: "  << primary_dev*1000  << "ms";
 
+        std::vector<double> timing_results_random;
+        volatile unsigned temp_array[1024]; //compilers dont optimize volatiles
         SimpleLogger().Write(logDEBUG) << "performing 1000 random I/Os";
         //make 1000 random access, time each I/O seperately
+
         for(unsigned i = 0; i < 1000; ++i) {
-            unsigned element_to_read = std::rand()%number_of_elements;
+            unsigned element_to_read = std::rand()%(number_of_elements-1024);
             time1 = get_timestamp();
             read_stream.seekg(element_to_read*sizeof(unsigned));
-            read_stream.read( (char*)&single_element, sizeof(unsigned));
+            read_stream.read( (char*)&temp_array[0], 1024*sizeof(unsigned));
             time2 = get_timestamp();
             timing_results_random.push_back((time2-time1));
-            if(0. == timing_results_random.back()) {
-                // SimpleLogger().Write() << "logged zero time at I/O " << i;
+#ifndef NDEBUG
+            if(0. == (time2-time1)) {
+                SimpleLogger().Write() << "logged zero at index " << i;
             }
+            if((time2-time1) >= 1) {
+                SimpleLogger().Write() << "logged large time at index " << i <<
+                    ": " << timing_results_random.back();
+            }
+#endif
         }
+        read_stream.close();
 
-        SimpleLogger().Write(logDEBUG) << "Performing random statistics";
+        // Do statistics
+        SimpleLogger().Write(logDEBUG) << "Performing random I/O statistics";
         std::sort(timing_results_random.begin(), timing_results_random.end());
+        double secondary_min = timing_results_random.front();
+        double secondary_max = timing_results_random.back();
+        double secondary_med = timing_results_random[timing_results_random.size()/2];
         double secondary_sum =  std::accumulate(
                                     timing_results_random.begin(),
                                     timing_results_random.end(),
@@ -184,11 +216,11 @@ int main (int argc, char * argv[]) {
         );
 
         SimpleLogger().Write() << "random I/O: " <<
-            "min: "  << timing_results_random.front()*1000 << ", " <<
-            "mean: " << secondary_mean*1000           << ", " <<
-            "med: "  << timing_results_random[timing_results_random.size()/2]*1000 << ", " <<
-            "max: "  << timing_results_random.back()*1000  << ", " <<
-            "dev: "  << secondary_stdev*1000;
+            "min: "  << secondary_min*1000 << "ms, " <<
+            "mean: " << secondary_mean*1000           << "ms, " <<
+            "med: "  << secondary_med*1000 << "ms, " <<
+            "max: "  << secondary_max*1000  << "ms, " <<
+            "dev: "  << secondary_stdev*1000 << "ms";
         if( boost::filesystem::exists(test_path) ) {
             boost::filesystem::remove(test_path);
             SimpleLogger().Write(logDEBUG) << "removing temporary files";
