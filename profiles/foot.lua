@@ -11,7 +11,7 @@ service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 restriction_exception_tags = { "foot" }
 
-speed_profile = { 
+speed_profile = {
   ["primary"] = 5,
   ["primary_link"] = 5,
   ["secondary"] = 5,
@@ -45,7 +45,7 @@ use_turn_restrictions   = false
 -- End of globals
 
 function get_exceptions(vector)
-	for i,v in ipairs(restriction_exception_tags) do 
+	for i,v in ipairs(restriction_exception_tags) do
 		vector:Add(v)
 	end
 end
@@ -54,19 +54,19 @@ function node_function (node)
   local barrier = node.tags:Find ("barrier")
   local access = node.tags:Find ("access")
   local traffic_signal = node.tags:Find("highway")
-  
+
   --flag node if it carries a traffic light
-  
+
   if traffic_signal == "traffic_signals" then
 	node.traffic_light = true;
   end
-  
+
   if obey_bollards then
 	  --flag node as unpassable if it black listed as unpassable
 	  if access_tag_blacklist[barrier] then
 		node.bollard = true;
 	  end
-	  
+
 	  --reverse the previous flag if there is an access tag specifying entrance
 	  if node.bollard and not bollards_whitelist[barrier] and not access_tag_whitelist[barrier] then
 		node.bollard = false;
@@ -98,28 +98,28 @@ function way_function (way)
 	if ignore_areas and ("yes" == area) then
 		return 0
 	end
-		
+
   -- Check if we are allowed to access the way
     if access_tag_blacklist[access] ~=nil and access_tag_blacklist[access] then
 		return 0;
     end
-    
+
   -- Check if our vehicle types are forbidden
-    for i,v in ipairs(access_tags) do 
+    for i,v in ipairs(access_tags) do
       local mode_value = way.tags:Find(v)
       if nil ~= mode_value and "no" == mode_value then
 	    return 0;
       end
     end
-  
-    
-  -- Set the name that will be used for instructions  
+
+
+  -- Set the name that will be used for instructions
 	if "" ~= ref then
 	  way.name = ref
 	elseif "" ~= name then
 	  way.name = name
 	end
-	
+
 	if "roundabout" == junction then
 	  way.roundabout = true;
 	end
@@ -127,11 +127,10 @@ function way_function (way)
   -- Handling ferries and piers
 
     if (speed_profile[route] ~= nil and speed_profile[route] > 0) or
-       (speed_profile[man_made] ~= nil and speed_profile[man_made] > 0) 
+       (speed_profile[man_made] ~= nil and speed_profile[man_made] > 0)
     then
       if durationIsValid(duration) then
-	    way.speed = parseDuration(duration) / math.max(1, numberOfNodesInWay-1);
-        way.is_duration_set = true;
+        way.duration = math.max( parseDuration(duration), 1 );
       end
       way.direction = Way.bidirectional;
       if speed_profile[route] ~= nil then
@@ -142,14 +141,14 @@ function way_function (way)
       if not way.is_duration_set then
         way.speed = speed_profile[highway]
       end
-      
+
     end
-    
+
   -- Set the avg speed on the way if it is accessible by road class
-    if (speed_profile[highway] ~= nil and way.speed == -1 ) then 
+    if (speed_profile[highway] ~= nil and way.speed == -1 ) then
       way.speed = speed_profile[highway]
     end
-    
+
   -- Set the avg speed on ways that are marked accessible
     if access_tag_whitelist[access]  and way.speed == -1 then
       if (0 < maxspeed and not take_minimum_of_speeds) or maxspeed == 0 then
@@ -167,7 +166,7 @@ function way_function (way)
     if service ~= "" and service_tag_restricted[service] then
 	  way.is_access_restricted = true
     end
-    
+
   -- Set direction according to tags on way
     if obey_oneway then
 		if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
@@ -182,9 +181,9 @@ function way_function (way)
     else
       way.direction = Way.bidirectional
     end
-    
+
   -- Override general direction settings of there is a specific one for our mode of travel
-  
+
     if ignore_in_grid[highway] ~= nil and ignore_in_grid[highway] then
 		way.ignore_in_grid = true
   	end
