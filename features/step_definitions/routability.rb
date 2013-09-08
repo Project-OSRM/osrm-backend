@@ -26,11 +26,7 @@ Then /^routability should be$/ do |table|
           if got[direction].empty? == false
             route = way_list json['route_instructions']
             if route != "w#{i}"
-              if row[direction].empty? == true
-                got[direction] = want
-              else
-                got[direction] = "testing w#{i}, but got #{route}!?"
-              end
+              got[direction] = ''
             elsif want =~ /^\d+s/
               time = json['route_summary']['total_time']
               got[direction] = "#{time}s"
