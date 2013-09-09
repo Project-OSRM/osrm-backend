@@ -36,11 +36,29 @@ or see http://www.gnu.org/licenses/agpl.txt.
 //     return duration.count();
 // }
 
+#include <climits>
+#include <cstdlib>
+
+
+#ifdef _WIN32
+#include <sys/timeb.h>
+#include <sys/types.h>
+#include <winsock.h>
+void gettimeofday(struct timeval* t,void* timezone) {
+    struct _timeb timebuffer;
+    _ftime( &timebuffer );
+    t->tv_sec=timebuffer.time;
+    t->tv_usec=1000*timebuffer.millitm;
+}
+#else
 #include <sys/time.h>
-inline double get_timestamp() {
-    timeval local_time;
-    gettimeofday(&local_time, NULL);
-    return local_time.tv_sec+(local_time.tv_usec/1000000.0);
+#endif
+
+/** Returns a timestamp (now) in seconds (incl. a fractional part). */
+static inline double get_timestamp() {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    return double(tp.tv_sec) + tp.tv_usec / 1000000.;
 }
 
 #endif /* TIMINGUTIL_H_ */
