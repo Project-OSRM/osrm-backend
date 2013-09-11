@@ -90,13 +90,21 @@ int main (int argc, char * argv[]) {
 
             double time1, time2;
             int * random_array = new int[number_of_elements];
-            std::generate (random_array, random_array+number_of_elements, std::rand);
+            std::generate (
+                random_array,
+                random_array+number_of_elements,
+                std::rand
+            );
 #ifdef __APPLE__
             FILE * fd = fopen(test_path.string().c_str(), "w");
             fcntl(fileno(fd), F_NOCACHE, 1);
             fcntl(fileno(fd), F_RDAHEAD, 0);
             time1 = get_timestamp();
-            write(fileno(fd), (char*)random_array, number_of_elements*sizeof(unsigned));
+            write(
+                fileno(fd),
+                (char*)random_array,
+                number_of_elements*sizeof(unsigned)
+            );
             time2 = get_timestamp();
             fclose(fd);
 #endif
@@ -143,25 +151,21 @@ int main (int argc, char * argv[]) {
             Statistics stats;
 
 #ifdef __APPLE__
-            volatile unsigned temp_array[1024];
-            volatile unsigned single_element = 0;
+            volatile unsigned single_block[1024];
             char * raw_array = new char[number_of_elements*sizeof(unsigned)];
             FILE * fd = fopen(test_path.string().c_str(), "r");
             fcntl(fileno(fd), F_NOCACHE, 1);
             fcntl(fileno(fd), F_RDAHEAD, 0);
 #endif
 #ifdef __linux__
-            char * temp_array = (char*) memalign(
+            char * single_block = (char*) memalign(
                 512,
                 1024*sizeof(unsigned)
             );
-            char * single_block = (char*) memalign(
-                512,
-                512
-            );
 
             int f = open(test_path.string().c_str(), O_RDONLY|O_DIRECT|O_SYNC);
-            SimpleLogger().Write(logDEBUG) << "opened, error: " << strerror(errno);
+            SimpleLogger().Write(logDEBUG) <<
+                "opened, error: " << strerror(errno);
             char * raw_array = (char*) memalign(
                 512,
                 number_of_elements*sizeof(unsigned)
@@ -200,18 +204,18 @@ int main (int argc, char * argv[]) {
             lseek(f, 0, SEEK_SET);
 #endif
             //make 1000 random access, time each I/O seperately
-            unsigned number_of_blocks = ((number_of_elements*sizeof(unsigned))-4096)/512;
+            unsigned number_of_blocks = (number_of_elements*sizeof(unsigned)-1)/4096;
             for(unsigned i = 0; i < 1000; ++i) {
                 unsigned block_to_read = std::rand()%number_of_blocks;
-                off_t current_offset = block_to_read*512;
+                off_t current_offset = block_to_read*4096;
                 time1 = get_timestamp();
 #ifdef __APPLE__
                 int ret1 = fseek(fd, current_offset, SEEK_SET);
-                int ret2 = read(fileno(fd), (char*)&temp_array[0], 1024*sizeof(unsigned));
+                int ret2 = read(fileno(fd), (char*)&single_block[0], 4096);
 #endif
 #ifdef __linux__
                 int ret1 = lseek(f, current_offset, SEEK_SET);
-                int ret2 = read(f, (char*)temp_array, 1024*sizeof(unsigned));
+                int ret2 = read(f, (char*)single_block, 4096);
 #endif
                 time2 = get_timestamp();
                 if( ((off_t)-1) == ret1) {
@@ -228,22 +232,27 @@ int main (int argc, char * argv[]) {
                         << "read error " << strerror(errno);
                     throw OSRMException("read error");
                 }
-               timing_results_raw_random.push_back((time2-time1));
+               timing_results_raw_random.push_back((time2-time1)*1000.);
             }
 
             // Do statistics
             SimpleLogger().Write(logDEBUG) << "running raw random I/O statistics";
+            std::ofstream random_csv("random.csv", std::ios::trunc);
+            for(unsigned i = 0; i < timing_results_raw_random.size(); ++i) {
+                random_csv << i << ", " << timing_results_raw_random[i] << std::endl;
+            }
+            random_csv.close();
             RunStatistics(timing_results_raw_random, stats);
 
             SimpleLogger().Write() << "raw random I/O: "  <<
                 std::setprecision(5) << std::fixed <<
-                "min: "  << stats.min*1000.  << "ms, " <<
-                "mean: " << stats.mean*1000. << "ms, " <<
-                "med: "  << stats.med*1000.  << "ms, " <<
-                "max: "  << stats.max*1000.  << "ms, " <<
-                "dev: "  << stats.dev*1000.  << "ms";
+                "min: "  << stats.min  << "ms, " <<
+                "mean: " << stats.mean << "ms, " <<
+                "med: "  << stats.med  << "ms, " <<
+                "max: "  << stats.max  << "ms, " <<
+                "dev: "  << stats.dev  << "ms";
 
-            std::vector<double> timing_results_raw_gapped;
+            std::vector<double> timing_results_raw_seq;
 #ifdef __APPLE__
             fseek(fd, 0, SEEK_SET);
 #endif
@@ -254,19 +263,19 @@ int main (int argc, char * argv[]) {
             //read every 100th block
             for(
                 unsigned i = 0;
-                i < number_of_blocks;
-                i += 1024
+                i < 1000;
+                ++i
             ) {
-                off_t current_offset = i*512;
+                off_t current_offset = i*4096;
                 time1 = get_timestamp();
     #ifdef __APPLE__
                 int ret1 = fseek(fd, current_offset, SEEK_SET);
-                int ret2 = read(fileno(fd), (char*)&single_element, 512);
+                int ret2 = read(fileno(fd), (char*)&single_block, 4096);
     #endif
     #ifdef __linux__
                 int ret1 = lseek(f, current_offset, SEEK_SET);
 
-                int ret2 = read(f, (char*)single_block, 512);
+                int ret2 = read(f, (char*)single_block, 4096);
     #endif
                 time2 = get_timestamp();
                 if( ((off_t)-1) == ret1) {
@@ -283,28 +292,33 @@ int main (int argc, char * argv[]) {
                         << "read error " << strerror(errno);
                     throw OSRMException("read error");
                 }
-               timing_results_raw_gapped.push_back((time2-time1));
+               timing_results_raw_seq.push_back((time2-time1)*1000.);
             }
     #ifdef __APPLE__
             fclose(fd);
             // free(single_element);
             free(raw_array);
-            // free(temp_array);
+            // free(single_block);
     #endif
     #ifdef __linux__
             close(f);
     #endif
             //Do statistics
-            SimpleLogger().Write(logDEBUG) << "running gapped I/O statistics";
+            SimpleLogger().Write(logDEBUG) << "running sequential I/O statistics";
             //print simple statistics: min, max, median, variance
-            RunStatistics(timing_results_raw_gapped, stats);
-            SimpleLogger().Write() << "raw gapped I/O: " <<
+            std::ofstream seq_csv("sequential.csv", std::ios::trunc);
+            for(unsigned i = 0; i < timing_results_raw_seq.size(); ++i) {
+                seq_csv << i << ", " << timing_results_raw_seq[i] << std::endl;
+            }
+            seq_csv.close();
+            RunStatistics(timing_results_raw_seq, stats);
+            SimpleLogger().Write() << "raw sequential I/O: " <<
                 std::setprecision(5) << std::fixed <<
-                "min: "  << stats.min*1000.  << "ms, " <<
-                "mean: " << stats.mean*1000. << "ms, " <<
-                "med: "  << stats.med*1000.  << "ms, " <<
-                "max: "  << stats.max*1000.  << "ms, " <<
-                "dev: "  << stats.dev*1000.  << "ms";
+                "min: "  << stats.min  << "ms, " <<
+                "mean: " << stats.mean << "ms, " <<
+                "med: "  << stats.med  << "ms, " <<
+                "max: "  << stats.max  << "ms, " <<
+                "dev: "  << stats.dev  << "ms";
 
             if( boost::filesystem::exists(test_path) ) {
                 boost::filesystem::remove(test_path);
