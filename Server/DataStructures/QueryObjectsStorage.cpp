@@ -69,7 +69,7 @@ QueryObjectsStorage::QueryObjectsStorage(
 	    SimpleLogger().Write() << "Loading Timestamp";
 	    std::ifstream timestampInStream(timestamp_path.c_str());
 	    if(!timestampInStream) {
-	    	SimpleLogger().Write(logWARNING) <<  timestamp_path <<  " not found";
+	    	SimpleLogger().Write(logWARNING) << timestamp_path <<  " not found";
 	    }
 
 	    getline(timestampInStream, timestamp);
