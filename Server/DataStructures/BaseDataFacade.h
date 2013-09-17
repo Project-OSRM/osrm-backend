@@ -30,13 +30,43 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <string>
 
+template<class EdgeDataT>
 class QueryDataFacade {
 public:
     QueryDataFacade() { }
     virtual ~QueryDataFacade() { }
 
     //search graph access
-    //TODO
+    virtual unsigned GetNumberOfNodes() const = 0;
+
+    virtual unsigned GetNumberOfEdges() const = 0;
+
+    virtual unsigned GetOutDegree( const NodeID n ) const = 0;
+
+    virtual NodeID GetTarget( const EdgeID e ) const = 0;
+
+    virtual EdgeDataT &GetEdgeData( const EdgeID e ) = 0;
+
+    virtual const EdgeDataT &GetEdgeData( const EdgeID e ) const = 0;
+
+    virtual EdgeID BeginEdges( const NodeID n ) const = 0;
+
+    virtual EdgeID EndEdges( const NodeID n ) const = 0;
+
+    //searches for a specific edge
+    virtual EdgeID FindEdge( const NodeID from, const NodeID to ) const = 0;
+
+    virtual EdgeID FindEdgeInEitherDirection(
+        const NodeID from,
+        const NodeID to
+    ) const = 0;
+
+    virtual EdgeID FindEdgeIndicateIfReverse(
+        const NodeID from,
+        const NodeID to,
+        bool & result
+    ) const = 0;
+
 
     //node and edge information access
     virtual FixedPointCoordinate GetCoordinateOfNode(
@@ -46,8 +76,6 @@ public:
     virtual TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id
     ) const  = 0;
-
-    virtual NodeID GetNumberOfNodes( ) const  = 0;
 
     virtual bool LocateClosestEndPointForCoordinate(
         const FixedPointCoordinate& input_coordinate,
