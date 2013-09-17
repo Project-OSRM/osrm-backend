@@ -43,7 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <string>
 
-
 struct QueryObjectsStorage {
     typedef StaticGraph<QueryEdge::EdgeData>    QueryGraph;
     typedef QueryGraph::InputEdge               InputEdge;
