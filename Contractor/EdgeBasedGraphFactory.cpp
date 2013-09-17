@@ -40,7 +40,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
         if(restriction_iter == m_restriction_map.end()) {
             index = m_restriction_bucket_list.size();
             m_restriction_bucket_list.resize(index+1);
-            m_restriction_map[restriction_source] = index;
+            m_restriction_map.emplace(restriction_source, index);
         } else {
             index = restriction_iter->second;
             //Map already contains an is_only_*-restriction
