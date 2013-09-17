@@ -47,12 +47,13 @@ class OSRM : boost::noncopyable {
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
     QueryObjectsStorage * objects;
 public:
-    OSRM(const char * server_ini_path);
+    OSRM(const char * server_ini_path, const bool use_shared_memory = false);
     ~OSRM();
     void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
 private:
     void RegisterPlugin(BasePlugin * plugin);
     PluginMap pluginMap;
+    const bool use_shared_memory;
 };
 
 #endif //OSRM_H
