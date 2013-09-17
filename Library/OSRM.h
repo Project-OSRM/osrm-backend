@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Plugins/NearestPlugin.h"
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
+#include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Server/DataStructures/RouteParameters.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
@@ -51,8 +52,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 class OSRM : boost::noncopyable {
+private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
     QueryObjectsStorage * objects;
+    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
+
 public:
     OSRM(
         boost::unordered_map<const std::string,

@@ -31,10 +31,10 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 
 template<class EdgeDataT>
-class QueryDataFacade {
+class BaseDataFacade {
 public:
-    QueryDataFacade() { }
-    virtual ~QueryDataFacade() { }
+    BaseDataFacade() { }
+    virtual ~BaseDataFacade() { }
 
     //search graph access
     virtual unsigned GetNumberOfNodes() const = 0;
@@ -67,7 +67,6 @@ public:
         bool & result
     ) const = 0;
 
-
     //node and edge information access
     virtual FixedPointCoordinate GetCoordinateOfNode(
         const unsigned id
@@ -96,7 +95,6 @@ public:
         const unsigned name_id,
         std::string & result
     ) const = 0;
-
 };
 
 
