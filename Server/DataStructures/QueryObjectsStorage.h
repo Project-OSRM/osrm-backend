@@ -36,7 +36,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 #include <string>
 
-
 struct QueryObjectsStorage {
     typedef StaticGraph<QueryEdge::EdgeData>    QueryGraph;
     typedef QueryGraph::InputEdge               InputEdge;
