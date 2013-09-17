@@ -68,34 +68,6 @@ public:
         bool & result
     ) const = 0;
 
-    //node and edge information access
-    virtual FixedPointCoordinate GetCoordinateOfNode(
-        const unsigned id
-    ) const = 0;
-
-    virtual TurnInstruction GetTurnInstructionForEdgeID(
-        const unsigned id
-    ) const  = 0;
-
-    virtual bool LocateClosestEndPointForCoordinate(
-        const FixedPointCoordinate& input_coordinate,
-        FixedPointCoordinate& result,
-        const unsigned zoom_level = 18
-    ) const  = 0;
-
-    virtual bool FindPhantomNodeForCoordinate(
-        const FixedPointCoordinate & input_coordinate,
-        PhantomNode & resulting_phantom_node,
-        const unsigned zoom_level
-    ) const  = 0;
-
-    virtual unsigned GetCheckSum() const  = 0;
-
-    virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const  = 0;
-    virtual void GetName(
-        const unsigned name_id,
-        std::string & result
-    ) const = 0;
 };
 
 #endif // QUERY_DATA_FACADE_H
