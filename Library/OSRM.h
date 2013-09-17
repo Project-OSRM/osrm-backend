@@ -29,6 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Plugins/NearestPlugin.h"
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
+#include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Server/DataStructures/RouteParameters.h"
 #include "../Util/IniFile.h"
 #include "../Util/InputFileUtil.h"
@@ -44,8 +45,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 class OSRM : boost::noncopyable {
+private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
     QueryObjectsStorage * objects;
+    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
+
 public:
     OSRM(const char * server_ini_path, const bool use_shared_memory = false);
     ~OSRM();
