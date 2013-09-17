@@ -68,9 +68,16 @@ public:
         bool & result
     ) const = 0;
 
+<<<<<<< HEAD
 >>>>>>> added graph data access
 
     virtual unsigned GetNumberOfEdges() const = 0;
+=======
+    //node and edge information access
+    virtual FixedPointCoordinate GetCoordinateOfNode(
+        const unsigned id
+    ) const = 0;
+>>>>>>> plugging in base facade ptr
 
     virtual unsigned GetOutDegree( const NodeID n ) const = 0;
 
@@ -99,12 +106,16 @@ public:
         const NodeID from,
         const NodeID to
     ) const = 0;
+<<<<<<< HEAD
 
     virtual EdgeID FindEdgeIndicateIfReverse(
         const NodeID from,
         const NodeID to,
         bool & result
     ) const = 0;
+=======
+};
+>>>>>>> plugging in base facade ptr
 
 };
 
