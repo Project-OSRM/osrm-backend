@@ -98,5 +98,4 @@ public:
     ) const = 0;
 };
 
-
 #endif // QUERY_DATA_FACADE_H
