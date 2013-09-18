@@ -102,6 +102,7 @@ OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory)
         //TODO: fetch pointers from shared memory
 
         //TODO: objects = new QueryObjectsStorage()
+        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
 
         //TODO: generate shared memory plugins
         RegisterPlugin(new HelloWorldPlugin());

@@ -18,6 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
+//TODO: Umbauen in Private Data Facade
+
 #ifndef NODEINFORMATIONHELPDESK_H_
 #define NODEINFORMATIONHELPDESK_H_
 
