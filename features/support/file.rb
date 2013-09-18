@@ -1,5 +1,5 @@
 class File
-  
+
   #read last n lines of a file. useful for getting last part of a big log file.
   def tail(n)
     buffer = 1024

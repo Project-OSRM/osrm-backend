@@ -47,4 +47,3 @@ end
 def fingerprint
   @fingerprint ||= Digest::SHA1.hexdigest "#{bin_extract_hash}-#{bin_prepare_hash}-#{bin_routed_hash}-#{profile_hash}-#{lua_lib_hash}-#{osm_hash}"
 end
-

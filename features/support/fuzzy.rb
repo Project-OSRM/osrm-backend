@@ -1,4 +1,3 @@
-
 class FuzzyMatch
 
   def self.match got, want
@@ -31,4 +30,3 @@ class FuzzyMatch
   end
 
 end
-

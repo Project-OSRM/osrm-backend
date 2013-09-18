@@ -63,5 +63,3 @@ end
 
 def log_preprocess_done
 end
-
-
