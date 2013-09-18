@@ -37,6 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
 #include "../Server/DataStructures/BaseDataFacade.h"
+#include "../Server/DataStructures/InternalDataFacade.h"
+#include "../Server/DataStructures/SharedDataFacade.h"
 #include "../Server/DataStructures/RouteParameters.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
@@ -47,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
 #include <vector>

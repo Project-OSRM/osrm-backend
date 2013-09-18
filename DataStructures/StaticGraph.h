@@ -29,13 +29,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STATICGRAPH_H_INCLUDED
 
 #include "../DataStructures/Percent.h"
+#include "../DataStructures/SharedMemoryVectorWrapper.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <algorithm>
 #include <vector>
 
-template< typename EdgeDataT>
+template< typename EdgeDataT, bool UseSharedMemory = false>
 class StaticGraph {
 public:
     typedef NodeID NodeIterator;
@@ -47,8 +48,9 @@ public:
         NodeIterator source;
         NodeIterator target;
         bool operator<( const InputEdge& right ) const {
-            if ( source != right.source )
+            if ( source != right.source ) {
                 return source < right.source;
+            }
             return target < right.target;
         }
     };
@@ -89,16 +91,22 @@ public:
         }
     }
 
-    StaticGraph( std::vector<_StrNode> & nodes, std::vector<_StrEdge> & edges) {
+    StaticGraph(
+        ShMemVector<_StrNode, UseSharedMemory> & nodes,
+        ShMemVector<_StrEdge, UseSharedMemory> & edges
+    ) {
         _numNodes = nodes.size();
         _numEdges = edges.size();
 
         _nodes.swap(nodes);
         _edges.swap(edges);
 
-        //Add dummy node to end of _nodes array;
-        _nodes.push_back(_nodes.back());
-
+        if( !UseSharedMemory ) {
+            //Add dummy node to end of _nodes array;
+            _nodes.push_back(_nodes.back());
+        } else {
+            //TODO: Move to graph array construction
+        }
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
         for(unsigned u = 0; u < GetNumberOfNodes(); ++u) {
@@ -183,8 +191,9 @@ public:
         EdgeIterator tmp =  FindEdge( from, to );
         if(UINT_MAX == tmp) {
             tmp =  FindEdge( to, from );
-            if(UINT_MAX != tmp)
+            if(UINT_MAX != tmp) {
                 result = true;
+            }
         }
         return tmp;
     }
@@ -194,8 +203,8 @@ private:
     NodeIterator _numNodes;
     EdgeIterator _numEdges;
 
-    std::vector< _StrNode > _nodes;
-    std::vector< _StrEdge > _edges;
+    ShMemVector< _StrNode, UseSharedMemory > _nodes;
+    ShMemVector< _StrEdge, UseSharedMemory > _edges;
 };
 
 #endif // STATICGRAPH_H_INCLUDED

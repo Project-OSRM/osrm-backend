@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OSRM.h"
 #include <boost/foreach.hpp>
 
-
 OSRM::OSRM(boost::unordered_map<const std::string,boost::filesystem::path>& paths) {
     objects = new QueryObjectsStorage( paths );
     RegisterPlugin(new HelloWorldPlugin());
