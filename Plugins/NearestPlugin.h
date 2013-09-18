@@ -24,15 +24,18 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BasePlugin.h"
 
 #include "../DataStructures/NodeInformationHelpDesk.h"
-#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
 
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
+
+//TODO: Rework data access to go through facade
+
+template<class DataFacadeT>
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(QueryObjectsStorage * objects )
+    NearestPlugin(DataFacadeT * objects )
      :
         m_query_objects(objects),
         descriptor_string("nearest")
@@ -114,7 +117,7 @@ public:
     }
 
 private:
-    QueryObjectsStorage * m_query_objects;
+    DataFacadeT * m_query_objects;
     HashTable<std::string, unsigned> descriptorTable;
     std::string descriptor_string;
 };
