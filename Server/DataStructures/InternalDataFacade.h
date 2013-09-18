@@ -21,7 +21,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef INTERNAL_DATA_FACADE
 #define INTERNAL_DATA_FACADE
 
+//implements all data storage when shared memory is _NOT_ used
+
 #include "BaseDataFacade.h"
+
+#include "../../DataStructures/StaticGraph.h"
 
 template<class EdgeDataT>
 class InternalDataFacade : public BaseDataFacade<EdgeDataT> {
