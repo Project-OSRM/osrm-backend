@@ -22,10 +22,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define TIMESTAMPPLUGIN_H_
 
 #include "BasePlugin.h"
+//TODO: Rework data access to go through facade
 
+template<class DataFacadeT>
 class TimestampPlugin : public BasePlugin {
 public:
-    TimestampPlugin(QueryObjectsStorage * o)
+    TimestampPlugin(DataFacadeT * o)
      : objects(o), descriptor_string("timestamp")
     { }
     const std::string & GetDescriptor() const { return descriptor_string; }
@@ -66,7 +68,7 @@ public:
         reply.headers[0].value = tmp;
     }
 private:
-    QueryObjectsStorage * objects;
+    DataFacadeT * objects;
     std::string descriptor_string;
 };
 
