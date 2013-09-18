@@ -36,9 +36,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*
  * This Plugin locates the nearest node in the road network for a given coordinate.
  */
+//TODO: Rework data access to go through facade
+
+template<class DataFacadeT>
 class LocatePlugin : public BasePlugin {
 public:
-    LocatePlugin(QueryObjectsStorage * objects) : descriptor_string("locate") {
+    LocatePlugin(DataFacadeT * objects) : descriptor_string("locate") {
         nodeHelpDesk = objects->nodeHelpDesk;
     }
     const std::string & GetDescriptor() const { return descriptor_string; }

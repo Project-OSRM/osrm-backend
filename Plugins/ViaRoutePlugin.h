@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/BaseDescriptor.h"
 #include "../Descriptors/GPXDescriptor.h"
 #include "../Descriptors/JSONDescriptor.h"
-#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
@@ -48,6 +47,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
+//TODO: Rework data access to go through facade
+template<class DataFacadeT>
 class ViaRoutePlugin : public BasePlugin {
 private:
     NodeInformationHelpDesk * nodeHelpDesk;
@@ -56,7 +57,7 @@ private:
     SearchEngine * searchEnginePtr;
 public:
 
-    ViaRoutePlugin(QueryObjectsStorage * objects)
+    ViaRoutePlugin(DataFacadeT * objects)
      :
         // objects(objects),
         descriptor_string("viaroute")
