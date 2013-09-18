@@ -68,16 +68,10 @@ public:
         bool & result
     ) const = 0;
 
-<<<<<<< HEAD
->>>>>>> added graph data access
-
-    virtual unsigned GetNumberOfEdges() const = 0;
-=======
     //node and edge information access
     virtual FixedPointCoordinate GetCoordinateOfNode(
         const unsigned id
     ) const = 0;
->>>>>>> plugging in base facade ptr
 
     virtual unsigned GetOutDegree( const NodeID n ) const = 0;
 
@@ -85,38 +79,23 @@ public:
 
     virtual EdgeDataT &GetEdgeData( const EdgeID e ) = 0;
 
-<<<<<<< HEAD
-    virtual const EdgeDataT &GetEdgeData( const EdgeID e ) const = 0;
-
-    virtual EdgeID BeginEdges( const NodeID n ) const = 0;
-=======
     virtual bool LocateClosestEndPointForCoordinate(
         const FixedPointCoordinate& input_coordinate,
         FixedPointCoordinate& result,
         const unsigned zoom_level = 18
     ) const  = 0;
->>>>>>> added graph data access
 
     virtual EdgeID EndEdges( const NodeID n ) const = 0;
 
     //searches for a specific edge
     virtual EdgeID FindEdge( const NodeID from, const NodeID to ) const = 0;
 
-    virtual EdgeID FindEdgeInEitherDirection(
-        const NodeID from,
-        const NodeID to
-    ) const = 0;
-<<<<<<< HEAD
 
     virtual EdgeID FindEdgeIndicateIfReverse(
         const NodeID from,
         const NodeID to,
         bool & result
     ) const = 0;
-=======
-};
->>>>>>> plugging in base facade ptr
-
 };
 
 #endif // QUERY_DATA_FACADE_H
