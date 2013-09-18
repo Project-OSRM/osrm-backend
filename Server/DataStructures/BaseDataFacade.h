@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../DataStructures/Coordinate.h"
 #include "../../DataStructures/PhantomNodes.h"
 #include "../../DataStructures/TurnInstructions.h"
+#include "../../Util/OSRMException.h"
 #include "../../typedefs.h"
 
 #include <string>

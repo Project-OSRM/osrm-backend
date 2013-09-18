@@ -30,6 +30,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
 #include "../Server/DataStructures/BaseDataFacade.h"
+#include "../Server/DataStructures/InternalDataFacade.h"
+#include "../Server/DataStructures/SharedDataFacade.h"
 #include "../Server/DataStructures/RouteParameters.h"
 #include "../Util/IniFile.h"
 #include "../Util/InputFileUtil.h"
@@ -40,6 +42,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
 #include <vector>
