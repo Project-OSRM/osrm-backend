@@ -57,8 +57,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class OSRM : boost::noncopyable {
 private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
-    QueryObjectsStorage * objects;
-    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
 
 public:
     OSRM(
@@ -68,10 +66,15 @@ public:
     );
     ~OSRM();
     void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
+
 private:
     void RegisterPlugin(BasePlugin * plugin);
-    PluginMap pluginMap;
+    //base class pointer to the objects
+    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
+
+    PluginMap plugin_map;
     const bool use_shared_memory;
+
 };
 
 #endif //OSRM_H
