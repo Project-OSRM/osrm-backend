@@ -129,7 +129,6 @@ std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
     buffers.push_back(ToBuffer(status));
     for (std::size_t i = 0; i < headers.size(); ++i) {
         Header& h = headers[i];
-//        std::cout << h.name << ": " << h.value << std::endl;
         buffers.push_back(boost::asio::buffer(h.name));
         buffers.push_back(boost::asio::buffer(seperators));
         buffers.push_back(boost::asio::buffer(h.value));

@@ -12,7 +12,7 @@ Before do |scenario|
 end
 
 Around('@stress') do |scenario, block|
- Timeout.timeout(STRESS_TIMEOUT) do
+  Timeout.timeout(STRESS_TIMEOUT) do
     block.call
   end
 end

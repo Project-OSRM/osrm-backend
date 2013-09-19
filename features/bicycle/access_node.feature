@@ -22,7 +22,7 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
             |             | no           | yes          | x     |
             |             | yes          | no           |       |
 
-    Scenario: Bike - Overwriting implied acccess on nodes
+    Scenario: Bike - Overwriting implied acccess on nodes doesn't overwrite way
         Then routability should be
             | highway  | node/access | node/vehicle | node/bicycle | bothw |
             | cycleway |             |              |              | x     |

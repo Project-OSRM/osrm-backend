@@ -73,16 +73,6 @@ int main (int argc, char * argv[]) {
 
     installCrashHandler(argv[0]);
 #endif
-
-	// Bug - testing not necessary.  testDataFiles also tries to open the first
-	// argv, which is the name of exec file
-    //if(testDataFiles(argc, argv)==false) {
-        //std::cerr << "[error] at least one data file name seems to be bogus!" << std::endl;
-        //exit(-1);
-    //}
-
-        //std::cout << "fingerprint: " << UUID::GetInstance().GetUUID() << std::endl;
-
         SimpleLogger().Write() <<
             "starting up engines, compiled at " << __DATE__ << ", " __TIME__;
 

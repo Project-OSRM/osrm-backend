@@ -23,11 +23,11 @@ Given /^the node map$/ do |table|
         raise "*** node invalid name '#{name}', must be single characters" unless name.size == 1
         raise "*** invalid node name '#{name}', must me alphanumeric" unless name.match /[a-z0-9]/
         if name.match /[a-z]/
-            raise "*** duplicate node '#{name}'" if name_node_hash[name]
-            add_osm_node name, *table_coord_to_lonlat(ci,ri)
+          raise "*** duplicate node '#{name}'" if name_node_hash[name]
+          add_osm_node name, *table_coord_to_lonlat(ci,ri)
         else
-            raise "*** duplicate node '#{name}'" if location_hash[name]
-            add_location name, *table_coord_to_lonlat(ci,ri)
+          raise "*** duplicate node '#{name}'" if location_hash[name]
+          add_location name, *table_coord_to_lonlat(ci,ri)
         end
       end
     end
@@ -39,9 +39,9 @@ Given /^the node locations$/ do |table|
     name = row['node']
     raise "*** duplicate node '#{name}'" if find_node_by_name name
     if name.match /[a-z]/
-        add_osm_node name, row['lon'].to_f, row['lat'].to_f
+      add_osm_node name, row['lon'].to_f, row['lat'].to_f
     else
-        add_location name, row['lon'].to_f, row['lat'].to_f
+      add_location name, row['lon'].to_f, row['lat'].to_f
     end
   end
 end

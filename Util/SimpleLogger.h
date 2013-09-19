@@ -59,6 +59,8 @@ private:
 
 class SimpleLogger {
 public:
+	SimpleLogger() : level(logINFO) { }
+
     std::ostringstream& Write(LogLevel l = logINFO) {
     	try {
 			boost::mutex::scoped_lock lock(logger_mutex);

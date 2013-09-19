@@ -19,12 +19,12 @@ BIN_PATH = '../build'
 DEFAULT_ORIGIN = [1,1]
 
 class Location
-    attr_accessor :lon,:lat
+  attr_accessor :lon,:lat
 
-    def initialize lon,lat
-        @lat = lat
-        @lon = lon
-    end
+  def initialize lon,lat
+    @lat = lat
+    @lon = lon
+  end
 end
 
 def sanitized_scenario_title
@@ -125,29 +125,29 @@ def build_ways_from_table table
 end
 
 def table_coord_to_lonlat ci,ri
-    [@origin[0]+ci*@zoom, @origin[1]-ri*@zoom]
+  [@origin[0]+ci*@zoom, @origin[1]-ri*@zoom]
 end
 
 def add_osm_node name,lon,lat
-    node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
-    node << { :name => name }
-    node.uid = OSM_UID
-    osm_db << node
-    name_node_hash[name] = node
+  node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
+  node << { :name => name }
+  node.uid = OSM_UID
+  osm_db << node
+  name_node_hash[name] = node
 end
 
 def add_location name,lon,lat
-    location_hash[name] = Location.new(lon,lat)
+  location_hash[name] = Location.new(lon,lat)
 end
 
 def find_node_by_name s
-    raise "***invalid node name '#{s}', must be single characters" unless s.size == 1
-    raise "*** invalid node name '#{s}', must be alphanumeric" unless s.match /[a-z0-9]/
-    if s.match /[a-z]/
-        from_node = name_node_hash[ s.to_s ]
-    else
-        from_node = location_hash[ s.to_s ]
-    end
+  raise "***invalid node name '#{s}', must be single characters" unless s.size == 1
+  raise "*** invalid node name '#{s}', must be alphanumeric" unless s.match /[a-z0-9]/
+  if s.match /[a-z]/
+    from_node = name_node_hash[ s.to_s ]
+  else
+    from_node = location_hash[ s.to_s ]
+  end
 end
 
 def find_way_by_name s

@@ -24,7 +24,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BasePlugin.h"
 
 #include "../Algorithms/ObjectToBase64.h"
-#include "../DataStructures/HashTable.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/SearchEngine.h"
@@ -34,6 +33,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+
+#include <boost/unordered_map.hpp>
 
 #include <cstdlib>
 
@@ -58,9 +59,9 @@ public:
 
         searchEnginePtr = new SearchEngine(objects);
 
-        descriptorTable.insert(std::make_pair(""    , 0));
-        descriptorTable.insert(std::make_pair("json", 0));
-        descriptorTable.insert(std::make_pair("gpx" , 1));
+        // descriptorTable.emplace(""    , 0);
+        descriptorTable.emplace("json", 0);
+        descriptorTable.emplace("gpx" , 1);
     }
 
     virtual ~ViaRoutePlugin() {
@@ -129,7 +130,11 @@ public:
         }
 
         _DescriptorConfig descriptorConfig;
-        unsigned descriptorType = descriptorTable[routeParameters.outputFormat];
+
+        unsigned descriptorType = 0;
+        if(descriptorTable.find(routeParameters.outputFormat) != descriptorTable.end() ) {
+            descriptorType = descriptorTable.find(routeParameters.outputFormat)->second;
+        }
         descriptorConfig.z = routeParameters.zoomLevel;
         descriptorConfig.instructions = routeParameters.printInstructions;
         descriptorConfig.geometry = routeParameters.geometry;

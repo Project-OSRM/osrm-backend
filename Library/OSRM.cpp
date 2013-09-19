@@ -106,9 +106,9 @@ OSRM::~OSRM() {
 void OSRM::RegisterPlugin(BasePlugin * plugin) {
     SimpleLogger().Write()  << "loaded plugin: " << plugin->GetDescriptor();
     if( pluginMap.find(plugin->GetDescriptor()) != pluginMap.end() ) {
-        delete pluginMap[plugin->GetDescriptor()];
+        delete pluginMap.find(plugin->GetDescriptor())->second;
     }
-    pluginMap.insert(std::make_pair(plugin->GetDescriptor(), plugin));
+    pluginMap.emplace(plugin->GetDescriptor(), plugin);
 }
 
 void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
