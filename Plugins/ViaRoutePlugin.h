@@ -135,7 +135,6 @@ public:
         if(descriptorTable.find(routeParameters.outputFormat) != descriptorTable.end() ) {
             descriptorType = descriptorTable.find(routeParameters.outputFormat)->second;
         }
-        descriptorTable[routeParameters.outputFormat];
         descriptorConfig.z = routeParameters.zoomLevel;
         descriptorConfig.instructions = routeParameters.printInstructions;
         descriptorConfig.geometry = routeParameters.geometry;
