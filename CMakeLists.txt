@@ -46,10 +46,8 @@ set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
-file(GLOB SearchEngineSource DataStructures/SearchEngine*.cpp)
-file(GLOB ServerStructureGlob Server/DataStructures/*.cpp)
 
-set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${SearchEngineSource} ${ServerStructureGlob})
+set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob})
 add_library(OSRM SHARED ${OSRMSources})
 add_library(UUID STATIC Util/UUID.cpp)
 add_dependencies( UUID UUIDConfigure )
