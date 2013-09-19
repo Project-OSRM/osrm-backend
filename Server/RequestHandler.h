@@ -40,7 +40,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 class RequestHandler : private boost::noncopyable {
 public:
     typedef APIGrammar<std::string::iterator, RouteParameters> APIGrammarParser;
-    explicit RequestHandler() { }
+    explicit RequestHandler() : routing_machine(NULL) { }
 
     void handle_request(const http::Request& req, http::Reply& rep){
         //parse command
@@ -90,6 +90,10 @@ public:
                 rep.content += "^<br></pre>";
             } else {
                 //parsing done, lets call the right plugin to handle the request
+                BOOST_ASSERT_MSG(
+                    routing_machine != NULL,
+                    "pointer not init'ed"
+                );
                 routing_machine->RunQuery(routeParameters, rep);
                 return;
             }
