@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define ALTERNATIVEROUTES_H_
 
 #include "BasicRoutingInterface.h"
+#include "../DataStructures/SearchEngineData.h"
 #include <boost/unordered_map.hpp>
 #include <cmath>
 #include <vector>
@@ -30,11 +31,11 @@ const double VIAPATH_ALPHA   = 0.15;
 const double VIAPATH_EPSILON = 0.10; //alternative at most 15% longer
 const double VIAPATH_GAMMA   = 0.75; //alternative shares at most 75% with the shortest.
 
-template<class QueryDataT>
-class AlternativeRouting : private BasicRoutingInterface<QueryDataT> {
-    typedef BasicRoutingInterface<QueryDataT> super;
-    typedef typename QueryDataT::Graph SearchGraph;
-    typedef typename QueryDataT::QueryHeap QueryHeap;
+template<class DataFacadeT>
+class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
+    typedef BasicRoutingInterface<DataFacadeT> super;
+    typedef SearchEngineData::QueryGraph SearchGraph;
+    typedef SearchEngineData::QueryHeap QueryHeap;
     typedef std::pair<NodeID, NodeID> SearchSpaceEdge;
 
     struct RankedCandidateNode {
@@ -48,10 +49,10 @@ class AlternativeRouting : private BasicRoutingInterface<QueryDataT> {
     };
 
     const SearchGraph * search_graph;
-
+    SearchEngineData & engine_working_data;
 public:
 
-    AlternativeRouting(QueryDataT & qd) : super(qd), search_graph(qd.graph) { }
+    AlternativeRouting(DataFacadeT & qd, SearchEngineData & engine_working_data) : super(qd), search_graph(qd.graph), engine_working_data(engine_working_data) { }
 
     ~AlternativeRouting() {}
 
