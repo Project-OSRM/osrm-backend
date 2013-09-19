@@ -100,10 +100,13 @@ public:
                     "\"status_message\": \"Cannot find route between points\",";
         }
 
-        description_factory.Run(facade, config.z);
+        description_factory.Run(facade, config.zoom_level);
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
-            description_factory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
+            description_factory.AppendEncodedPolylineString(
+                reply.content,
+                config.encode_geometry
+            );
         } else {
             reply.content += "[]";
         }
@@ -166,13 +169,16 @@ public:
             }
             alternateDescriptionFactory.SetEndSegment(phantom_nodes.targetPhantom);
         }
-        alternateDescriptionFactory.Run(facade, config.z);
+        alternateDescriptionFactory.Run(facade, config.zoom_level);
 
         //give an array of alternative routes
         reply.content += "\"alternative_geometries\": [";
         if(config.geometry && INT_MAX != raw_route_information.lengthOfAlternativePath) {
             //Generate the linestrings for each alternative
-            alternateDescriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
+            alternateDescriptionFactory.AppendEncodedPolylineString(
+                reply.content,
+                config.encode_geometry
+            );
         }
         reply.content += "],";
         reply.content += "\"alternative_instructions\":[";

@@ -37,11 +37,16 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 struct DescriptorConfig {
-    DescriptorConfig() : instructions(true), geometry(true), encodeGeometry(true), z(18) {}
+    DescriptorConfig() :
+        instructions(true),
+        geometry(true),
+        encode_geometry(true),
+        zoom_level(18)
+    { }
     bool instructions;
     bool geometry;
-    bool encodeGeometry;
-    unsigned short z;
+    bool encode_geometry;
+    unsigned short zoom_level;
 };
 
 template<class DataFacadeT>
@@ -50,7 +55,12 @@ public:
     BaseDescriptor() { }
     //Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() { }
-    virtual void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, const DataFacadeT * facade) = 0;
+    virtual void Run(
+        http::Reply & reply,
+        const RawRouteData &rawRoute,
+        PhantomNodes &phantomNodes,
+        const DataFacadeT * facade
+    ) = 0;
     virtual void SetConfig(const DescriptorConfig & config) = 0;
 };
 
