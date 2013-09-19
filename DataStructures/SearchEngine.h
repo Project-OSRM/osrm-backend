@@ -25,48 +25,54 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SEARCHENGINE_H_
-#define SEARCHENGINE_H_
+#ifndef SEARCHENGINE_H
+#define SEARCHENGINE_H
 
 #include "Coordinate.h"
 #include "NodeInformationHelpDesk.h"
+#include "SearchEngineData.h"
 #include "PhantomNodes.h"
 #include "QueryEdge.h"
-#include "SearchEngineData.h"
 #include "../RoutingAlgorithms/AlternativePathRouting.h"
 #include "../RoutingAlgorithms/ShortestPathRouting.h"
-#include "../Server/DataStructures/QueryObjectsStorage.h"
 
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
+
+#include <boost/assert.hpp>
 
 #include <climits>
 #include <string>
 #include <vector>
 
+template<class DataFacadeT>
 class SearchEngine {
 private:
-    SearchEngineData _queryData;
-
+    DataFacadeT * facade;
+    SearchEngineData engine_working_data;
 public:
-    ShortestPathRouting<SearchEngineData> shortestPath;
-    AlternativeRouting<SearchEngineData> alternativePaths;
+    ShortestPathRouting<DataFacadeT> shortest_path;
+    AlternativeRouting <DataFacadeT> alternative_path;
 
-    SearchEngine( QueryObjectsStorage * query_objects );
-	~SearchEngine();
+    SearchEngine( DataFacadeT * facade )
+     :
+        facade             (facade),
+        engine_working_data(facade),
+        shortest_path      (facade, engine_working_data),
+        alternative_path   (facade, engine_working_data)
+    {}
 
-	void GetCoordinatesForNodeID(NodeID id, FixedPointCoordinate& result) const;
+    ~SearchEngine() {}
 
-    void FindPhantomNodeForCoordinate(
-        const FixedPointCoordinate & location,
-        PhantomNode & result,
-        unsigned zoomLevel
-    ) const;
-
-    NodeID GetNameIDForOriginDestinationNodeID(
-        const NodeID s, const NodeID t) const;
-
-    std::string GetEscapedNameForNameID(const unsigned nameID) const;
 };
 
-#endif /* SEARCHENGINE_H_ */
+SearchEngineHeapPtr SearchEngineData::forwardHeap;
+SearchEngineHeapPtr SearchEngineData::backwardHeap;
+
+SearchEngineHeapPtr SearchEngineData::forwardHeap2;
+SearchEngineHeapPtr SearchEngineData::backwardHeap2;
+
+SearchEngineHeapPtr SearchEngineData::forwardHeap3;
+SearchEngineHeapPtr SearchEngineData::backwardHeap3;
+
+#endif // SEARCHENGINE_H

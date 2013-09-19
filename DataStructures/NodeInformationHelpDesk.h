@@ -205,8 +205,7 @@ private:
         edges_input_stream.close();
         SimpleLogger().Write(logDEBUG)
             << "Loaded " << number_of_edges << " orig edges";
-        SimpleLogger().Write(logDEBUG)
-            << "Opening NN indices";
+        SimpleLogger().Write(logDEBUG) << "Opening NN indices";
     }
 
 	std::vector<FixedPointCoordinate>  m_coordinate_list;
