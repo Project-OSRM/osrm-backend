@@ -55,7 +55,7 @@ public:
         //json
 
 //        JSONParameter = routeParameters.options.Find("jsonp");
-        if("" != routeParameters.jsonpParameter) {
+        if(!routeParameters.jsonpParameter.empty()) {
             reply.content += routeParameters.jsonpParameter;
             reply.content += "(";
         }
@@ -81,7 +81,7 @@ public:
         reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
-        if("" != routeParameters.jsonpParameter) {
+        if(!routeParameters.jsonpParameter.empty()) {
             reply.content += ")";
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
