@@ -18,8 +18,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 or see http://www.gnu.org/licenses/agpl.txt.
  */
 
-#ifndef INTERNAL_DATA_FACADE
-#define INTERNAL_DATA_FACADE
+#ifndef SHARED_DATA_FACADE
+#define SHARED_DATA_FACADE
 
 //implements all data storage when shared memory is _NOT_ used
 
@@ -96,4 +96,4 @@ public:
     ) const { return; };
 };
 
-#endif  // INTERNAL_DATA_FACADE
+#endif  // SHARED_DATA_FACADE
