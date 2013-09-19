@@ -30,14 +30,12 @@ or see http://www.gnu.org/licenses/agpl.txt.
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
 
-//TODO: Rework data access to go through facade
-
 template<class DataFacadeT>
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(DataFacadeT * objects )
+    NearestPlugin(DataFacadeT * facade )
      :
-        m_query_objects(objects),
+        facade(facade),
         descriptor_string("nearest")
     {
         descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
@@ -50,14 +48,13 @@ public:
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
-        if(false == checkCoord(routeParameters.coordinates[0])) {
+        if( !checkCoord(routeParameters.coordinates[0]) ) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
-        NodeInformationHelpDesk * nodeHelpDesk = m_query_objects->nodeHelpDesk;
-        //query to helpdesk
+
         PhantomNode result;
-        nodeHelpDesk->FindPhantomNodeForCoordinate(
+        facade->FindPhantomNodeForCoordinate(
             routeParameters.coordinates[0],
             result,
             routeParameters.zoomLevel
@@ -92,14 +89,14 @@ public:
         reply.content += "],";
         reply.content += "\"name\":\"";
         if(UINT_MAX != result.edgeBasedNode) {
-            m_query_objects->GetName(result.nodeBasedEdgeNameID, temp_string);
+            facade->GetName(result.nodeBasedEdgeNameID, temp_string);
             reply.content += temp_string;
         }
         reply.content += "\"";
         reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
-        if("" != routeParameters.jsonpParameter) {
+        if( !routeParameters.jsonpParameter.empty() ) {
             reply.content += ")";
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
@@ -117,7 +114,7 @@ public:
     }
 
 private:
-    DataFacadeT * m_query_objects;
+    DataFacadeT * facade;
     HashTable<std::string, unsigned> descriptorTable;
     std::string descriptor_string;
 };
