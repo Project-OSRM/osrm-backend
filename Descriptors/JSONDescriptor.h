@@ -34,7 +34,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <algorithm>
 
-class JSONDescriptor : public BaseDescriptor{
+template<class DataFacadeT>
+class JSONDescriptor : public BaseDescriptor<DataFacadeT> {
 private:
     _DescriptorConfig config;
     DescriptionFactory descriptionFactory;
@@ -72,7 +73,12 @@ public:
     JSONDescriptor() : numberOfEnteredRestrictedAreas(0) {}
     void SetConfig(const _DescriptorConfig & c) { config = c; }
 
-    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngine &sEngine) {
+    void Run(
+        http::Reply & reply,
+        const RawRouteData &rawRoute,
+        PhantomNodes &phantomNodes,
+        const DataFacadeT * facade
+    ) {
 
         WriteHeaderToOutput(reply.content);
 
@@ -83,7 +89,7 @@ public:
 
             //Get all the coordinates for the computed route
             BOOST_FOREACH(const _PathData & pathData, rawRoute.computedShortestPath) {
-                sEngine.GetCoordinatesForNodeID(pathData.node, current);
+                current = facade->GetCoordinateOfNode(pathData.node);
                 descriptionFactory.AppendSegment(current, pathData );
             }
             descriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
@@ -93,7 +99,7 @@ public:
                     "\"status_message\": \"Cannot find route between points\",";
         }
 
-        descriptionFactory.Run(sEngine, config.z);
+        descriptionFactory.Run(facade, config.z);
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
             descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
@@ -105,7 +111,7 @@ public:
                 "\"route_instructions\": [";
         numberOfEnteredRestrictedAreas = 0;
         if(config.instructions) {
-            BuildTextualDescription(descriptionFactory, reply, rawRoute.lengthOfShortestPath, sEngine, shortestSegments);
+            BuildTextualDescription(descriptionFactory, reply, rawRoute.lengthOfShortestPath, facade, shortestSegments);
         } else {
             BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
                 TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
@@ -124,10 +130,10 @@ public:
         reply.content += descriptionFactory.summary.durationString;
         reply.content += ","
                 "\"start_point\":\"";
-        reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.startName);
+        reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.startName);
         reply.content += "\","
                 "\"end_point\":\"";
-        reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
+        reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.destName);
         reply.content += "\"";
         reply.content += "}";
         reply.content +=",";
@@ -138,12 +144,12 @@ public:
             alternateDescriptionFactory.SetStartSegment(phantomNodes.startPhantom);
             //Get all the coordinates for the computed route
             BOOST_FOREACH(const _PathData & pathData, rawRoute.computedAlternativePath) {
-                sEngine.GetCoordinatesForNodeID(pathData.node, current);
+                current = facade->GetCoordinateOfNode(pathData.node);
                 alternateDescriptionFactory.AppendSegment(current, pathData );
             }
             alternateDescriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
         }
-        alternateDescriptionFactory.Run(sEngine, config.z);
+        alternateDescriptionFactory.Run(facade, config.z);
 
         //give an array of alternative routes
         reply.content += "\"alternative_geometries\": [";
@@ -158,7 +164,13 @@ public:
             reply.content += "[";
             //Generate instructions for each alternative
             if(config.instructions) {
-                BuildTextualDescription(alternateDescriptionFactory, reply, rawRoute.lengthOfAlternativePath, sEngine, alternativeSegments);
+                BuildTextualDescription(
+                    alternateDescriptionFactory,
+                    reply,
+                    rawRoute.lengthOfAlternativePath,
+                    facade,
+                    alternativeSegments
+                );
             } else {
                 BOOST_FOREACH(const SegmentInformation & segment, alternateDescriptionFactory.pathDescription) {
                 	TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
@@ -180,10 +192,10 @@ public:
             reply.content += alternateDescriptionFactory.summary.durationString;
             reply.content += ","
                     "\"start_point\":\"";
-            reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.startName);
+            reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.startName);
             reply.content += "\","
                     "\"end_point\":\"";
-            reply.content += sEngine.GetEscapedNameForNameID(descriptionFactory.summary.destName);
+            reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.destName);
             reply.content += "\"";
             reply.content += "}";
         }
@@ -191,7 +203,7 @@ public:
 
         //Get Names for both routes
         RouteNames routeNames;
-        GetRouteNames(shortestSegments, alternativeSegments, sEngine, routeNames);
+        GetRouteNames(shortestSegments, alternativeSegments, facade, routeNames);
 
         reply.content += "\"route_name\":[\"";
         reply.content += routeNames.shortestPathName1;
@@ -250,8 +262,13 @@ public:
         reply.content += "}";
     }
 
-    void GetRouteNames(std::vector<Segment> & shortestSegments, std::vector<Segment> & alternativeSegments, const SearchEngine &sEngine, RouteNames & routeNames) {
-        /*** extract names for both alternatives ***/
+    // construct routes names
+    void GetRouteNames(
+        std::vector<Segment> & shortestSegments,
+        std::vector<Segment> & alternativeSegments,
+        const DataFacadeT * facade,
+        RouteNames & routeNames
+    ) {
 
         Segment shortestSegment1, shortestSegment2;
         Segment alternativeSegment1, alternativeSegment2;
@@ -294,11 +311,19 @@ public:
             if(alternativeSegment1.position >  alternativeSegment2.position)
                 std::swap(alternativeSegment1, alternativeSegment2);
 
-            routeNames.shortestPathName1 = sEngine.GetEscapedNameForNameID(shortestSegment1.nameID);
-            routeNames.shortestPathName2 = sEngine.GetEscapedNameForNameID(shortestSegment2.nameID);
+            routeNames.shortestPathName1 = facade->GetEscapedNameForNameID(
+                shortestSegment1.nameID
+            );
+            routeNames.shortestPathName2 = facade->GetEscapedNameForNameID(
+                shortestSegment2.nameID
+            );
 
-            routeNames.alternativePathName1 = sEngine.GetEscapedNameForNameID(alternativeSegment1.nameID);
-            routeNames.alternativePathName2 = sEngine.GetEscapedNameForNameID(alternativeSegment2.nameID);
+            routeNames.alternativePathName1 = facade->GetEscapedNameForNameID(
+                alternativeSegment1.nameID
+            );
+            routeNames.alternativePathName2 = facade->GetEscapedNameForNameID(
+                alternativeSegment2.nameID
+            );
         }
     }
 
@@ -308,7 +333,14 @@ public:
                 "\"status\":";
     }
 
-    inline void BuildTextualDescription(DescriptionFactory & descriptionFactory, http::Reply & reply, const int lengthOfRoute, const SearchEngine &sEngine, std::vector<Segment> & segmentVector) {
+    //TODO: reorder parameters
+    inline void BuildTextualDescription(
+        DescriptionFactory & descriptionFactory,
+        http::Reply & reply,
+        const int lengthOfRoute,
+        const DataFacadeT * facade,
+        std::vector<Segment> & segmentVector
+    ) {
         //Segment information has following format:
         //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
         //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
@@ -344,7 +376,7 @@ public:
 
 
                     reply.content += "\",\"";
-                    reply.content += sEngine.GetEscapedNameForNameID(segment.nameID);
+                    reply.content += facade->GetEscapedNameForNameID(segment.nameID);
                     reply.content += "\",";
                     intToString(segment.length, tmpDist);
                     reply.content += tmpDist;
