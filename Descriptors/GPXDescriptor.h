@@ -35,12 +35,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class DataFacadeT>
 class GPXDescriptor : public BaseDescriptor<DataFacadeT> {
 private:
-    _DescriptorConfig config;
+    DescriptorConfig config;
     FixedPointCoordinate current;
 
     std::string tmp;
 public:
-    void SetConfig(const _DescriptorConfig& c) { config = c; }
+    void SetConfig(const DescriptorConfig& c) { config = c; }
 
     //TODO: reorder parameters
     void Run(

@@ -43,8 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-struct _DescriptorConfig {
-    _DescriptorConfig() : instructions(true), geometry(true), encodeGeometry(true), z(18) {}
+struct DescriptorConfig {
+    DescriptorConfig() : instructions(true), geometry(true), encodeGeometry(true), z(18) {}
     bool instructions;
     bool geometry;
     bool encodeGeometry;
@@ -58,7 +58,7 @@ public:
     //Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() { }
     virtual void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, const DataFacadeT * facade) = 0;
-    virtual void SetConfig(const _DescriptorConfig & config) = 0;
+    virtual void SetConfig(const DescriptorConfig & config) = 0;
 };
 
 #endif /* BASE_DESCRIPTOR_H_ */

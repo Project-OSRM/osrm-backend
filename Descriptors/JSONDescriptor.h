@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class DataFacadeT>
 class JSONDescriptor : public BaseDescriptor<DataFacadeT> {
 private:
-    _DescriptorConfig config;
+    DescriptorConfig config;
     DescriptionFactory description_factory;
     DescriptionFactory alternateDescriptionFactory;
     FixedPointCoordinate current;
@@ -78,7 +78,7 @@ private:
 
 public:
     JSONDescriptor() : entered_restricted_area_count(0) {}
-    void SetConfig(const _DescriptorConfig & c) { config = c; }
+    void SetConfig(const DescriptorConfig & c) { config = c; }
 
     //TODO: reorder
     void Run(
