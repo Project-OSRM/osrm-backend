@@ -93,6 +93,11 @@ public:
         const unsigned name_id,
         std::string & result
     ) const { return; };
+
+    std::string GetTimestamp() const {
+        return "";
+    };
+
 };
 
 #endif  // INTERNAL_DATA_FACADE

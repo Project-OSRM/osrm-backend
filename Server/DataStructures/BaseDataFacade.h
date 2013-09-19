@@ -27,6 +27,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../DataStructures/PhantomNodes.h"
 #include "../../DataStructures/TurnInstructions.h"
 #include "../../Util/OSRMException.h"
+#include "../../Util/StringUtil.h"
 #include "../../typedefs.h"
 
 #include <string>
@@ -34,6 +35,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 template<class EdgeDataT>
 class BaseDataFacade {
 public:
+    typedef EdgeDataT EdgeData;
     BaseDataFacade() { }
     virtual ~BaseDataFacade() { }
 
@@ -92,10 +94,19 @@ public:
     virtual unsigned GetCheckSum() const  = 0;
 
     virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const  = 0;
+
     virtual void GetName(
         const unsigned name_id,
         std::string & result
     ) const = 0;
+
+    std::string GetEscapedNameForNameID(const unsigned name_id) const {
+        std::string temporary_string;
+        GetName(name_id, temporary_string);
+        return HTMLEntitize(temporary_string);
+    }
+
+    virtual std::string GetTimestamp() const = 0;
 };
 
 #endif // QUERY_DATA_FACADE_H
