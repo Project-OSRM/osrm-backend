@@ -40,7 +40,7 @@ private:
 
     std::string tmp;
 public:
-    void SetConfig(const DescriptorConfig& c) { config = c; }
+    void SetConfig(const DescriptorConfig & c) { config = c; }
 
     //TODO: reorder parameters
     void Run(
