@@ -38,3 +38,21 @@ When using the code in a (scientific) publication, please cite
 | Project OSRM | master  | [![Build Status](https://travis-ci.org/DennisOSRM/Project-OSRM.png?branch=master)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
 | Project OSRM | develop | [![Build Status](https://travis-ci.org/DennisOSRM/Project-OSRM.png?branch=develop)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
 | LUAbind fork | master  | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |
+
+
+## Deployment
+
+### Chef
+
+You can use chr4's [osrm cookbook](http://community.opscode.com/cookbooks/osrm) to automatically download, extract and prepare OSRM maps.
+For example, to download, extract and prepare the OSRM map for Europe, use this in your recipe
+
+```ruby
+include_recipe 'osrm::install_git'
+
+osrm_map 'europe' do
+  action :create_if_missing
+end
+```
+
+Have a look at the [cookbooks readme](https://github.com/chr4-cookbooks/osrm) for more details.
