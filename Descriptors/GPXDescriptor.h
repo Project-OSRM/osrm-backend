@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/foreach.hpp>
 
-class GPXDescriptor : public BaseDescriptor{
+template<class DataFacadeT>
+class GPXDescriptor : public BaseDescriptor<DataFacadeT> {
 private:
     _DescriptorConfig config;
     FixedPointCoordinate current;
@@ -40,34 +41,63 @@ private:
     std::string tmp;
 public:
     void SetConfig(const _DescriptorConfig& c) { config = c; }
-    void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngine &sEngine) {
+
+    //TODO: reorder parameters
+    void Run(
+        http::Reply & reply,
+        const RawRouteData &rawRoute,
+        PhantomNodes &phantomNodes,
+        const DataFacadeT * facade
+    ) {
         reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        reply.content += "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" xmlns=\"http://www.topografix.com/GPX/1/1\" "
+        reply.content +=
+                "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
+                "xmlns=\"http://www.topografix.com/GPX/1/1\" "
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                 "\">";
-        reply.content += "<metadata><copyright author=\"Project OSRM\"><license>Data (c) OpenStreetMap contributors (ODbL)</license></copyright></metadata>";
+        reply.content +=
+                "<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
+                " OpenStreetMap contributors (ODbL)</license></copyright>"
+                "</metadata>";
         reply.content += "<rte>";
-        if(rawRoute.lengthOfShortestPath != INT_MAX && rawRoute.computedShortestPath.size()) {
-            convertInternalLatLonToString(phantomNodes.startPhantom.location.lat, tmp);
+        bool found_route =  (rawRoute.lengthOfShortestPath != INT_MAX) &&
+                            (rawRoute.computedShortestPath.size()         );
+        if( found_route ) {
+            convertInternalLatLonToString(
+                phantomNodes.startPhantom.location.lat,
+                tmp
+            );
             reply.content += "<rtept lat=\"" + tmp + "\" ";
-            convertInternalLatLonToString(phantomNodes.startPhantom.location.lon, tmp);
+            convertInternalLatLonToString(
+                phantomNodes.startPhantom.location.lon,
+                tmp
+            );
             reply.content += "lon=\"" + tmp + "\"></rtept>";
 
-            BOOST_FOREACH(const _PathData & pathData, rawRoute.computedShortestPath) {
-                sEngine.GetCoordinatesForNodeID(pathData.node, current);
+            BOOST_FOREACH(
+                const _PathData & pathData,
+                rawRoute.computedShortestPath
+            ) {
+                current = facade->GetCoordinateOfNode(pathData.node);
 
                 convertInternalLatLonToString(current.lat, tmp);
                 reply.content += "<rtept lat=\"" + tmp + "\" ";
                 convertInternalLatLonToString(current.lon, tmp);
                 reply.content += "lon=\"" + tmp + "\"></rtept>";
             }
-            convertInternalLatLonToString(phantomNodes.targetPhantom.location.lat, tmp);
+            convertInternalLatLonToString(
+                phantomNodes.targetPhantom.location.lat,
+                tmp
+            );
             reply.content += "<rtept lat=\"" + tmp + "\" ";
-            convertInternalLatLonToString(phantomNodes.targetPhantom.location.lon, tmp);
+            convertInternalLatLonToString(
+                phantomNodes.targetPhantom.location.lon,
+                tmp
+            );
             reply.content += "lon=\"" + tmp + "\"></rtept>";
         }
         reply.content += "</rte></gpx>";
     }
 };
-#endif /* GPX_DESCRIPTOR_H_ */
+#endif // GPX_DESCRIPTOR_H_

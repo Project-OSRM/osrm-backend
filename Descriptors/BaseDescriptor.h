@@ -51,12 +51,13 @@ struct _DescriptorConfig {
     unsigned short z;
 };
 
+template<class DataFacadeT>
 class BaseDescriptor {
 public:
     BaseDescriptor() { }
     //Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() { }
-    virtual void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, SearchEngine &sEngine) = 0;
+    virtual void Run(http::Reply & reply, const RawRouteData &rawRoute, PhantomNodes &phantomNodes, const DataFacadeT * facade) = 0;
     virtual void SetConfig(const _DescriptorConfig & config) = 0;
 };
 
