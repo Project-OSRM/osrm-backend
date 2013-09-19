@@ -45,29 +45,29 @@ template<class DataFacadeT>
 class JSONDescriptor : public BaseDescriptor<DataFacadeT> {
 private:
     _DescriptorConfig config;
-    DescriptionFactory descriptionFactory;
+    DescriptionFactory description_factory;
     DescriptionFactory alternateDescriptionFactory;
     FixedPointCoordinate current;
-    unsigned numberOfEnteredRestrictedAreas;
+    unsigned entered_restricted_area_count;
     struct RoundAbout{
         RoundAbout() :
-            startIndex(INT_MAX),
-            nameID(INT_MAX),
-            leaveAtExit(INT_MAX)
+            start_index(INT_MAX),
+            name_id(INT_MAX),
+            leave_at_exit(INT_MAX)
         {}
-        int startIndex;
-        int nameID;
-        int leaveAtExit;
+        int start_index;
+        int name_id;
+        int leave_at_exit;
     } roundAbout;
 
     struct Segment {
-        Segment() : nameID(-1), length(-1), position(-1) {}
-        Segment(int n, int l, int p) : nameID(n), length(l), position(p) {}
-        int nameID;
+        Segment() : name_id(-1), length(-1), position(-1) {}
+        Segment(int n, int l, int p) : name_id(n), length(l), position(p) {}
+        int name_id;
         int length;
         int position;
     };
-    std::vector<Segment> shortestSegments, alternativeSegments;
+    std::vector<Segment> shortest_path_segments, alternative_path_segments;
 
     struct RouteNames {
         std::string shortestPathName1;
@@ -77,120 +77,137 @@ private:
     };
 
 public:
-    JSONDescriptor() : numberOfEnteredRestrictedAreas(0) {}
+    JSONDescriptor() : entered_restricted_area_count(0) {}
     void SetConfig(const _DescriptorConfig & c) { config = c; }
 
+    //TODO: reorder
     void Run(
         http::Reply & reply,
-        const RawRouteData &rawRoute,
-        PhantomNodes &phantomNodes,
+        const RawRouteData & raw_route_information,
+        PhantomNodes & phantom_nodes,
         const DataFacadeT * facade
     ) {
 
         WriteHeaderToOutput(reply.content);
 
-        if(rawRoute.lengthOfShortestPath != INT_MAX) {
-            descriptionFactory.SetStartSegment(phantomNodes.startPhantom);
+        if(raw_route_information.lengthOfShortestPath != INT_MAX) {
+            description_factory.SetStartSegment(phantom_nodes.startPhantom);
             reply.content += "0,"
                     "\"status_message\": \"Found route between points\",";
 
             //Get all the coordinates for the computed route
-            BOOST_FOREACH(const _PathData & pathData, rawRoute.computedShortestPath) {
-                current = facade->GetCoordinateOfNode(pathData.node);
-                descriptionFactory.AppendSegment(current, pathData );
+            BOOST_FOREACH(const _PathData & path_data, raw_route_information.computedShortestPath) {
+                current = facade->GetCoordinateOfNode(path_data.node);
+                description_factory.AppendSegment(current, path_data );
             }
-            descriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
+            description_factory.SetEndSegment(phantom_nodes.targetPhantom);
         } else {
             //We do not need to do much, if there is no route ;-)
             reply.content += "207,"
                     "\"status_message\": \"Cannot find route between points\",";
         }
 
-        descriptionFactory.Run(facade, config.z);
+        description_factory.Run(facade, config.z);
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
-            descriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
+            description_factory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
         } else {
             reply.content += "[]";
         }
 
         reply.content += ","
                 "\"route_instructions\": [";
-        numberOfEnteredRestrictedAreas = 0;
+        entered_restricted_area_count = 0;
         if(config.instructions) {
-            BuildTextualDescription(descriptionFactory, reply, rawRoute.lengthOfShortestPath, facade, shortestSegments);
+            BuildTextualDescription(
+                description_factory,
+                reply,
+                raw_route_information.lengthOfShortestPath,
+                facade,
+                shortest_path_segments
+            );
         } else {
-            BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
-                TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
-                numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
+            BOOST_FOREACH(
+                const SegmentInformation & segment,
+                description_factory.pathDescription
+            ) {
+                TurnInstruction current_instruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+                entered_restricted_area_count += (current_instruction != segment.turnInstruction);
             }
         }
         reply.content += "],";
-        descriptionFactory.BuildRouteSummary(descriptionFactory.entireLength, rawRoute.lengthOfShortestPath - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenalty));
+        description_factory.BuildRouteSummary(
+            description_factory.entireLength,
+            raw_route_information.lengthOfShortestPath - ( entered_restricted_area_count*TurnInstructions.AccessRestrictionPenalty)
+        );
 
         reply.content += "\"route_summary\":";
         reply.content += "{";
         reply.content += "\"total_distance\":";
-        reply.content += descriptionFactory.summary.lengthString;
+        reply.content += description_factory.summary.lengthString;
         reply.content += ","
                 "\"total_time\":";
-        reply.content += descriptionFactory.summary.durationString;
+        reply.content += description_factory.summary.durationString;
         reply.content += ","
                 "\"start_point\":\"";
-        reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.startName);
+        reply.content += facade->GetEscapedNameForNameID(
+            description_factory.summary.startName
+        );
         reply.content += "\","
                 "\"end_point\":\"";
-        reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.destName);
+        reply.content += facade->GetEscapedNameForNameID(
+            description_factory.summary.destName
+        );
         reply.content += "\"";
         reply.content += "}";
         reply.content +=",";
 
         //only one alternative route is computed at this time, so this is hardcoded
 
-        if(rawRoute.lengthOfAlternativePath != INT_MAX) {
-            alternateDescriptionFactory.SetStartSegment(phantomNodes.startPhantom);
+        if(raw_route_information.lengthOfAlternativePath != INT_MAX) {
+            alternateDescriptionFactory.SetStartSegment(phantom_nodes.startPhantom);
             //Get all the coordinates for the computed route
-            BOOST_FOREACH(const _PathData & pathData, rawRoute.computedAlternativePath) {
-                current = facade->GetCoordinateOfNode(pathData.node);
-                alternateDescriptionFactory.AppendSegment(current, pathData );
+            BOOST_FOREACH(const _PathData & path_data, raw_route_information.computedAlternativePath) {
+                current = facade->GetCoordinateOfNode(path_data.node);
+                alternateDescriptionFactory.AppendSegment(current, path_data );
             }
-            alternateDescriptionFactory.SetEndSegment(phantomNodes.targetPhantom);
+            alternateDescriptionFactory.SetEndSegment(phantom_nodes.targetPhantom);
         }
         alternateDescriptionFactory.Run(facade, config.z);
 
         //give an array of alternative routes
         reply.content += "\"alternative_geometries\": [";
-        if(config.geometry && INT_MAX != rawRoute.lengthOfAlternativePath) {
+        if(config.geometry && INT_MAX != raw_route_information.lengthOfAlternativePath) {
             //Generate the linestrings for each alternative
             alternateDescriptionFactory.AppendEncodedPolylineString(reply.content, config.encodeGeometry);
         }
         reply.content += "],";
         reply.content += "\"alternative_instructions\":[";
-        numberOfEnteredRestrictedAreas = 0;
-        if(INT_MAX != rawRoute.lengthOfAlternativePath) {
+        entered_restricted_area_count = 0;
+        if(INT_MAX != raw_route_information.lengthOfAlternativePath) {
             reply.content += "[";
             //Generate instructions for each alternative
             if(config.instructions) {
                 BuildTextualDescription(
                     alternateDescriptionFactory,
                     reply,
-                    rawRoute.lengthOfAlternativePath,
+                    raw_route_information.lengthOfAlternativePath,
                     facade,
-                    alternativeSegments
+                    alternative_path_segments
                 );
             } else {
                 BOOST_FOREACH(const SegmentInformation & segment, alternateDescriptionFactory.pathDescription) {
-                	TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
-                    numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
+                	TurnInstruction current_instruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+                    entered_restricted_area_count += (current_instruction != segment.turnInstruction);
                 }
             }
             reply.content += "]";
         }
         reply.content += "],";
         reply.content += "\"alternative_summaries\":[";
-        if(INT_MAX != rawRoute.lengthOfAlternativePath) {
+        if(INT_MAX != raw_route_information.lengthOfAlternativePath) {
             //Generate route summary (length, duration) for each alternative
-            alternateDescriptionFactory.BuildRouteSummary(alternateDescriptionFactory.entireLength, rawRoute.lengthOfAlternativePath - ( numberOfEnteredRestrictedAreas*TurnInstructions.AccessRestrictionPenalty));
+            alternateDescriptionFactory.BuildRouteSummary(alternateDescriptionFactory.entireLength, raw_route_information.lengthOfAlternativePath - ( entered_restricted_area_count*TurnInstructions.AccessRestrictionPenalty));
             reply.content += "{";
             reply.content += "\"total_distance\":";
             reply.content += alternateDescriptionFactory.summary.lengthString;
@@ -199,10 +216,10 @@ public:
             reply.content += alternateDescriptionFactory.summary.durationString;
             reply.content += ","
                     "\"start_point\":\"";
-            reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.startName);
+            reply.content += facade->GetEscapedNameForNameID(description_factory.summary.startName);
             reply.content += "\","
                     "\"end_point\":\"";
-            reply.content += facade->GetEscapedNameForNameID(descriptionFactory.summary.destName);
+            reply.content += facade->GetEscapedNameForNameID(description_factory.summary.destName);
             reply.content += "\"";
             reply.content += "}";
         }
@@ -210,7 +227,7 @@ public:
 
         //Get Names for both routes
         RouteNames routeNames;
-        GetRouteNames(shortestSegments, alternativeSegments, facade, routeNames);
+        GetRouteNames(shortest_path_segments, alternative_path_segments, facade, routeNames);
 
         reply.content += "\"route_name\":[\"";
         reply.content += routeNames.shortestPathName1;
@@ -227,40 +244,40 @@ public:
         //list all viapoints so that the client may display it
         reply.content += "\"via_points\":[";
         std::string tmp;
-        if(config.geometry && INT_MAX != rawRoute.lengthOfShortestPath) {
-            for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
+        if(config.geometry && INT_MAX != raw_route_information.lengthOfShortestPath) {
+            for(unsigned i = 0; i < raw_route_information.segmentEndCoordinates.size(); ++i) {
                 reply.content += "[";
-                if(rawRoute.segmentEndCoordinates[i].startPhantom.location.isSet())
-                    convertInternalReversedCoordinateToString(rawRoute.segmentEndCoordinates[i].startPhantom.location, tmp);
+                if(raw_route_information.segmentEndCoordinates[i].startPhantom.location.isSet())
+                    convertInternalReversedCoordinateToString(raw_route_information.segmentEndCoordinates[i].startPhantom.location, tmp);
                 else
-                    convertInternalReversedCoordinateToString(rawRoute.rawViaNodeCoordinates[i], tmp);
+                    convertInternalReversedCoordinateToString(raw_route_information.rawViaNodeCoordinates[i], tmp);
 
                 reply.content += tmp;
                 reply.content += "],";
             }
             reply.content += "[";
-            if(rawRoute.segmentEndCoordinates.back().startPhantom.location.isSet())
-                convertInternalReversedCoordinateToString(rawRoute.segmentEndCoordinates.back().targetPhantom.location, tmp);
+            if(raw_route_information.segmentEndCoordinates.back().startPhantom.location.isSet())
+                convertInternalReversedCoordinateToString(raw_route_information.segmentEndCoordinates.back().targetPhantom.location, tmp);
             else
-                convertInternalReversedCoordinateToString(rawRoute.rawViaNodeCoordinates.back(), tmp);
+                convertInternalReversedCoordinateToString(raw_route_information.rawViaNodeCoordinates.back(), tmp);
             reply.content += tmp;
             reply.content += "]";
         }
         reply.content += "],";
         reply.content += "\"hint_data\": {";
         reply.content += "\"checksum\":";
-        intToString(rawRoute.checkSum, tmp);
+        intToString(raw_route_information.checkSum, tmp);
         reply.content += tmp;
         reply.content += ", \"locations\": [";
 
         std::string hint;
-        for(unsigned i = 0; i < rawRoute.segmentEndCoordinates.size(); ++i) {
+        for(unsigned i = 0; i < raw_route_information.segmentEndCoordinates.size(); ++i) {
             reply.content += "\"";
-            EncodeObjectToBase64(rawRoute.segmentEndCoordinates[i].startPhantom, hint);
+            EncodeObjectToBase64(raw_route_information.segmentEndCoordinates[i].startPhantom, hint);
             reply.content += hint;
             reply.content += "\", ";
         }
-        EncodeObjectToBase64(rawRoute.segmentEndCoordinates.back().targetPhantom, hint);
+        EncodeObjectToBase64(raw_route_information.segmentEndCoordinates.back().targetPhantom, hint);
         reply.content += "\"";
         reply.content += hint;
         reply.content += "\"]";
@@ -271,8 +288,8 @@ public:
 
     // construct routes names
     void GetRouteNames(
-        std::vector<Segment> & shortestSegments,
-        std::vector<Segment> & alternativeSegments,
+        std::vector<Segment> & shortest_path_segments,
+        std::vector<Segment> & alternative_path_segments,
         const DataFacadeT * facade,
         RouteNames & routeNames
     ) {
@@ -280,20 +297,20 @@ public:
         Segment shortestSegment1, shortestSegment2;
         Segment alternativeSegment1, alternativeSegment2;
 
-        if(0 < shortestSegments.size()) {
-            sort(shortestSegments.begin(), shortestSegments.end(), boost::bind(&Segment::length, _1) > boost::bind(&Segment::length, _2) );
-            shortestSegment1 = shortestSegments[0];
-            if(0 < alternativeSegments.size()) {
-                sort(alternativeSegments.begin(), alternativeSegments.end(), boost::bind(&Segment::length, _1) > boost::bind(&Segment::length, _2) );
-                alternativeSegment1 = alternativeSegments[0];
+        if(0 < shortest_path_segments.size()) {
+            sort(shortest_path_segments.begin(), shortest_path_segments.end(), boost::bind(&Segment::length, _1) > boost::bind(&Segment::length, _2) );
+            shortestSegment1 = shortest_path_segments[0];
+            if(0 < alternative_path_segments.size()) {
+                sort(alternative_path_segments.begin(), alternative_path_segments.end(), boost::bind(&Segment::length, _1) > boost::bind(&Segment::length, _2) );
+                alternativeSegment1 = alternative_path_segments[0];
             }
-            std::vector<Segment> shortestDifference(shortestSegments.size());
-            std::vector<Segment> alternativeDifference(alternativeSegments.size());
-            std::set_difference(shortestSegments.begin(), shortestSegments.end(), alternativeSegments.begin(), alternativeSegments.end(), shortestDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
+            std::vector<Segment> shortestDifference(shortest_path_segments.size());
+            std::vector<Segment> alternativeDifference(alternative_path_segments.size());
+            std::set_difference(shortest_path_segments.begin(), shortest_path_segments.end(), alternative_path_segments.begin(), alternative_path_segments.end(), shortestDifference.begin(), boost::bind(&Segment::name_id, _1) < boost::bind(&Segment::name_id, _2) );
             int size_of_difference = shortestDifference.size();
             if(0 < size_of_difference ) {
                 int i = 0;
-                while( i < size_of_difference && shortestDifference[i].nameID == shortestSegments[0].nameID) {
+                while( i < size_of_difference && shortestDifference[i].name_id == shortest_path_segments[0].name_id) {
                     ++i;
                 }
                 if(i < size_of_difference ) {
@@ -301,11 +318,11 @@ public:
                 }
             }
 
-            std::set_difference(alternativeSegments.begin(), alternativeSegments.end(), shortestSegments.begin(), shortestSegments.end(), alternativeDifference.begin(), boost::bind(&Segment::nameID, _1) < boost::bind(&Segment::nameID, _2) );
+            std::set_difference(alternative_path_segments.begin(), alternative_path_segments.end(), shortest_path_segments.begin(), shortest_path_segments.end(), alternativeDifference.begin(), boost::bind(&Segment::name_id, _1) < boost::bind(&Segment::name_id, _2) );
             size_of_difference = alternativeDifference.size();
             if(0 < size_of_difference ) {
                 int i = 0;
-                while( i < size_of_difference && alternativeDifference[i].nameID == alternativeSegments[0].nameID) {
+                while( i < size_of_difference && alternativeDifference[i].name_id == alternative_path_segments[0].name_id) {
                     ++i;
                 }
                 if(i < size_of_difference ) {
@@ -319,17 +336,17 @@ public:
                 std::swap(alternativeSegment1, alternativeSegment2);
 
             routeNames.shortestPathName1 = facade->GetEscapedNameForNameID(
-                shortestSegment1.nameID
+                shortestSegment1.name_id
             );
             routeNames.shortestPathName2 = facade->GetEscapedNameForNameID(
-                shortestSegment2.nameID
+                shortestSegment2.name_id
             );
 
             routeNames.alternativePathName1 = facade->GetEscapedNameForNameID(
-                alternativeSegment1.nameID
+                alternativeSegment1.name_id
             );
             routeNames.alternativePathName2 = facade->GetEscapedNameForNameID(
-                alternativeSegment2.nameID
+                alternativeSegment2.name_id
             );
         }
     }
@@ -342,45 +359,44 @@ public:
 
     //TODO: reorder parameters
     inline void BuildTextualDescription(
-        DescriptionFactory & descriptionFactory,
+        DescriptionFactory & description_factory,
         http::Reply & reply,
-        const int lengthOfRoute,
+        const int route_length,
         const DataFacadeT * facade,
-        std::vector<Segment> & segmentVector
+        std::vector<Segment> & route_segments_list
     ) {
         //Segment information has following format:
         //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
         //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
         //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
         unsigned prefixSumOfNecessarySegments = 0;
-        roundAbout.leaveAtExit = 0;
-        roundAbout.nameID = 0;
+        roundAbout.leave_at_exit = 0;
+        roundAbout.name_id = 0;
         std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
         //Fetch data from Factory and generate a string from it.
-        BOOST_FOREACH(const SegmentInformation & segment, descriptionFactory.pathDescription) {
-        	TurnInstruction currentInstruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
-            numberOfEnteredRestrictedAreas += (currentInstruction != segment.turnInstruction);
-            if(TurnInstructions.TurnIsNecessary( currentInstruction) ) {
-                if(TurnInstructions.EnterRoundAbout == currentInstruction) {
-                    roundAbout.nameID = segment.nameID;
-                    roundAbout.startIndex = prefixSumOfNecessarySegments;
+        BOOST_FOREACH(const SegmentInformation & segment, description_factory.pathDescription) {
+        	TurnInstruction current_instruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
+            entered_restricted_area_count += (current_instruction != segment.turnInstruction);
+            if(TurnInstructions.TurnIsNecessary( current_instruction) ) {
+                if(TurnInstructions.EnterRoundAbout == current_instruction) {
+                    roundAbout.name_id = segment.nameID;
+                    roundAbout.start_index = prefixSumOfNecessarySegments;
                 } else {
                     if(0 != prefixSumOfNecessarySegments){
                         reply.content += ",";
                     }
                     reply.content += "[\"";
-                    if(TurnInstructions.LeaveRoundAbout == currentInstruction) {
+                    if(TurnInstructions.LeaveRoundAbout == current_instruction) {
                         intToString(TurnInstructions.EnterRoundAbout, tmpInstruction);
                         reply.content += tmpInstruction;
                         reply.content += "-";
-                        intToString(roundAbout.leaveAtExit+1, tmpInstruction);
+                        intToString(roundAbout.leave_at_exit+1, tmpInstruction);
                         reply.content += tmpInstruction;
-                        roundAbout.leaveAtExit = 0;
+                        roundAbout.leave_at_exit = 0;
                     } else {
-                        intToString(currentInstruction, tmpInstruction);
+                        intToString(current_instruction, tmpInstruction);
                         reply.content += tmpInstruction;
                     }
-
 
                     reply.content += "\",\"";
                     reply.content += facade->GetEscapedNameForNameID(segment.nameID);
@@ -403,15 +419,21 @@ public:
                     reply.content += tmpBearing;
                     reply.content += "]";
 
-                    segmentVector.push_back( Segment(segment.nameID, segment.length, segmentVector.size() ));
+                    route_segments_list.push_back(
+                        Segment(
+                            segment.nameID,
+                            segment.length,
+                            route_segments_list.size()
+                        )
+                    );
                 }
-            } else if(TurnInstructions.StayOnRoundAbout == currentInstruction) {
-                ++roundAbout.leaveAtExit;
+            } else if(TurnInstructions.StayOnRoundAbout == current_instruction) {
+                ++roundAbout.leave_at_exit;
             }
             if(segment.necessary)
                 ++prefixSumOfNecessarySegments;
         }
-        if(INT_MAX != lengthOfRoute) {
+        if(INT_MAX != route_length) {
             reply.content += ",[\"";
             intToString(TurnInstructions.ReachedYourDestination, tmpInstruction);
             reply.content += tmpInstruction;
