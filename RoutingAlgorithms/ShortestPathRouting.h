@@ -30,12 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasicRoutingInterface.h"
 
+#include "../DataStructures/SearchEngineData.h"
+
 template<class QueryDataT>
 class ShortestPathRouting : public BasicRoutingInterface<QueryDataT>{
     typedef BasicRoutingInterface<QueryDataT> super;
     typedef typename QueryDataT::QueryHeap QueryHeap;
+    SearchEngineData & engine_working_data;
 public:
-    ShortestPathRouting( QueryDataT & qd) : super(qd) {}
+    ShortestPathRouting( QueryDataT & qd, SearchEngineData & engine_working_data) : super(qd), engine_working_data(engine_working_data) {}
 
     ~ShortestPathRouting() {}
 

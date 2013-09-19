@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BASICROUTINGINTERFACE_H_
 
 #include "../DataStructures/RawRouteData.h"
+#include "../DataStructures/SearchEngineData.h"
 #include "../Util/ContainerUtils.h"
 #include "../Util/SimpleLogger.h"
 
@@ -39,15 +40,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stack>
 
-template<class QueryDataT>
+template<class SearchEngineDataT>
 class BasicRoutingInterface : boost::noncopyable{
 protected:
-    QueryDataT & _queryData;
+    SearchEngineDataT * engine_working_data;
 public:
-    BasicRoutingInterface(QueryDataT & qd) : _queryData(qd) { }
+    BasicRoutingInterface(SearchEngineDataT * engine_working_data) : engine_working_data(engine_working_data) { }
     virtual ~BasicRoutingInterface(){ };
 
-    inline void RoutingStep(typename QueryDataT::QueryHeap & _forwardHeap, typename QueryDataT::QueryHeap & _backwardHeap, NodeID *middle, int *_upperbound, const int edgeBasedOffset, const bool forwardDirection) const {
+    inline void RoutingStep(
+        SearchEngineData::QueryHeap & _forwardHeap,
+        SearchEngineData::QueryHeap & _backwardHeap,
+        NodeID *middle,
+        int *_upperbound,
+        const int edgeBasedOffset,
+        const bool forwardDirection
+    ) const {
         const NodeID node = _forwardHeap.DeleteMin();
         const int distance = _forwardHeap.GetKey(node);
         //SimpleLogger().Write() << "Settled (" << _forwardHeap.GetData( node ).parent << "," << node << ")=" << distance;
@@ -68,11 +76,15 @@ public:
         }
 
         //Stalling
-        for ( typename QueryDataT::Graph::EdgeIterator edge = _queryData.graph->BeginEdges( node ); edge < _queryData.graph->EndEdges(node); ++edge ) {
-            const typename QueryDataT::Graph::EdgeData & data = _queryData.graph->GetEdgeData(edge);
+        for(
+            EdgeID edge = engine_working_data->BeginEdges( node );
+            edge < engine_working_data->EndEdges(node);
+            ++edge
+         ) {
+            const typename SearchEngineDataT::EdgeData & data = engine_working_data->GetEdgeData(edge);
             bool backwardDirectionFlag = (!forwardDirection) ? data.forward : data.backward;
             if(backwardDirectionFlag) {
-                const NodeID to = _queryData.graph->GetTarget(edge);
+                const NodeID to = engine_working_data->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
                 assert( edgeWeight > 0 );
@@ -85,12 +97,12 @@ public:
             }
         }
 
-        for ( typename QueryDataT::Graph::EdgeIterator edge = _queryData.graph->BeginEdges( node ); edge < _queryData.graph->EndEdges(node); ++edge ) {
-            const typename QueryDataT::Graph::EdgeData & data = _queryData.graph->GetEdgeData(edge);
+        for ( EdgeID edge = engine_working_data->BeginEdges( node ); edge < engine_working_data->EndEdges(node); ++edge ) {
+            const typename SearchEngineDataT::EdgeData & data = engine_working_data->GetEdgeData(edge);
             bool forwardDirectionFlag = (forwardDirection ? data.forward : data.backward );
             if(forwardDirectionFlag) {
 
-                const NodeID to = _queryData.graph->GetTarget(edge);
+                const NodeID to = engine_working_data->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
                 assert( edgeWeight > 0 );
@@ -124,20 +136,20 @@ public:
             edge = recursionStack.top();
             recursionStack.pop();
 
-            typename QueryDataT::Graph::EdgeIterator smallestEdge = SPECIAL_EDGEID;
+            EdgeID smallestEdge = SPECIAL_EDGEID;
             int smallestWeight = INT_MAX;
-            for(typename QueryDataT::Graph::EdgeIterator eit = _queryData.graph->BeginEdges(edge.first);eit < _queryData.graph->EndEdges(edge.first);++eit){
-                const int weight = _queryData.graph->GetEdgeData(eit).distance;
-                if(_queryData.graph->GetTarget(eit) == edge.second && weight < smallestWeight && _queryData.graph->GetEdgeData(eit).forward){
+            for(EdgeID eit = engine_working_data->BeginEdges(edge.first);eit < engine_working_data->EndEdges(edge.first);++eit){
+                const int weight = engine_working_data->GetEdgeData(eit).distance;
+                if(engine_working_data->GetTarget(eit) == edge.second && weight < smallestWeight && engine_working_data->GetEdgeData(eit).forward){
                     smallestEdge = eit;
                     smallestWeight = weight;
                 }
             }
 
             if(smallestEdge == SPECIAL_EDGEID){
-                for(typename QueryDataT::Graph::EdgeIterator eit = _queryData.graph->BeginEdges(edge.second);eit < _queryData.graph->EndEdges(edge.second);++eit){
-                    const int weight = _queryData.graph->GetEdgeData(eit).distance;
-                    if(_queryData.graph->GetTarget(eit) == edge.first && weight < smallestWeight && _queryData.graph->GetEdgeData(eit).backward){
+                for(EdgeID eit = engine_working_data->BeginEdges(edge.second);eit < engine_working_data->EndEdges(edge.second);++eit){
+                    const int weight = engine_working_data->GetEdgeData(eit).distance;
+                    if(engine_working_data->GetTarget(eit) == edge.first && weight < smallestWeight && engine_working_data->GetEdgeData(eit).backward){
                         smallestEdge = eit;
                         smallestWeight = weight;
                     }
@@ -145,7 +157,7 @@ public:
             }
             assert(smallestWeight != INT_MAX);
 
-            const typename QueryDataT::Graph::EdgeData& ed = _queryData.graph->GetEdgeData(smallestEdge);
+            const typename SearchEngineDataT::EdgeData& ed = engine_working_data->GetEdgeData(smallestEdge);
             if(ed.shortcut) {//unpack
                 const NodeID middle = ed.id;
                 //again, we need to this in reversed order
@@ -156,8 +168,8 @@ public:
                 unpackedPath.push_back(
                     _PathData(
                         ed.id,
-                        _queryData.nodeHelpDesk->GetNameIndexFromEdgeID(ed.id),
-                        _queryData.nodeHelpDesk->GetTurnInstructionForEdgeID(ed.id),
+                        engine_working_data->GetNameIndexFromEdgeID(ed.id),
+                        engine_working_data->GetTurnInstructionForEdgeID(ed.id),
                         ed.distance
                     )
                 );
@@ -174,20 +186,20 @@ public:
             edge = recursionStack.top();
             recursionStack.pop();
 
-            typename QueryDataT::Graph::EdgeIterator smallestEdge = SPECIAL_EDGEID;
+            EdgeID smallestEdge = SPECIAL_EDGEID;
             int smallestWeight = INT_MAX;
-            for(typename QueryDataT::Graph::EdgeIterator eit = _queryData.graph->BeginEdges(edge.first);eit < _queryData.graph->EndEdges(edge.first);++eit){
-                const int weight = _queryData.graph->GetEdgeData(eit).distance;
-                if(_queryData.graph->GetTarget(eit) == edge.second && weight < smallestWeight && _queryData.graph->GetEdgeData(eit).forward){
+            for(EdgeID eit = engine_working_data->BeginEdges(edge.first);eit < engine_working_data->EndEdges(edge.first);++eit){
+                const int weight = engine_working_data->GetEdgeData(eit).distance;
+                if(engine_working_data->GetTarget(eit) == edge.second && weight < smallestWeight && engine_working_data->GetEdgeData(eit).forward){
                     smallestEdge = eit;
                     smallestWeight = weight;
                 }
             }
 
             if(smallestEdge == SPECIAL_EDGEID){
-                for(typename QueryDataT::Graph::EdgeIterator eit = _queryData.graph->BeginEdges(edge.second);eit < _queryData.graph->EndEdges(edge.second);++eit){
-                    const int weight = _queryData.graph->GetEdgeData(eit).distance;
-                    if(_queryData.graph->GetTarget(eit) == edge.first && weight < smallestWeight && _queryData.graph->GetEdgeData(eit).backward){
+                for(EdgeID eit = engine_working_data->BeginEdges(edge.second);eit < engine_working_data->EndEdges(edge.second);++eit){
+                    const int weight = engine_working_data->GetEdgeData(eit).distance;
+                    if(engine_working_data->GetTarget(eit) == edge.first && weight < smallestWeight && engine_working_data->GetEdgeData(eit).backward){
                         smallestEdge = eit;
                         smallestWeight = weight;
                     }
@@ -195,7 +207,7 @@ public:
             }
             assert(smallestWeight != INT_MAX);
 
-            const typename QueryDataT::Graph::EdgeData& ed = _queryData.graph->GetEdgeData(smallestEdge);
+            const typename SearchEngineDataT::EdgeData& ed = engine_working_data->GetEdgeData(smallestEdge);
             if(ed.shortcut) {//unpack
                 const NodeID middle = ed.id;
                 //again, we need to this in reversed order
@@ -209,7 +221,12 @@ public:
         unpackedPath.push_back(t);
     }
 
-    inline void RetrievePackedPathFromHeap(typename QueryDataT::QueryHeap & _fHeap, typename QueryDataT::QueryHeap & _bHeap, const NodeID middle, std::vector<NodeID>& packedPath) const {
+    inline void RetrievePackedPathFromHeap(
+        SearchEngineData::QueryHeap & _fHeap,
+        SearchEngineData::QueryHeap & _bHeap,
+        const NodeID middle,
+        std::vector<NodeID> & packedPath
+    ) const {
         NodeID pathNode = middle;
         while(pathNode != _fHeap.GetData(pathNode).parent) {
             pathNode = _fHeap.GetData(pathNode).parent;
@@ -225,7 +242,7 @@ public:
     	}
     }
 
-    inline void RetrievePackedPathFromSingleHeap(typename QueryDataT::QueryHeap & search_heap, const NodeID middle, std::vector<NodeID>& packed_path) const {
+    inline void RetrievePackedPathFromSingleHeap(SearchEngineData::QueryHeap & search_heap, const NodeID middle, std::vector<NodeID>& packed_path) const {
         NodeID pathNode = middle;
         while(pathNode != search_heap.GetData(pathNode).parent) {
             pathNode = search_heap.GetData(pathNode).parent;
