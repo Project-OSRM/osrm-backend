@@ -25,8 +25,9 @@ OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory)
 {
     if( !use_shared_memory ) {
         if( !testDataFile(server_ini_path) ){
-            std::string error_message = std::string(server_ini_path) + " not found";
-            throw OSRMException(error_message.c_str());
+            std::string error_message(server_ini_path);
+            error_message += " not found";
+            throw OSRMException(error_message);
         }
 
         IniFile serverConfig(server_ini_path);
@@ -82,56 +83,59 @@ OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory)
                 base_path
         );
 
-        objects = new QueryObjectsStorage(
-            hsgr_path.string(),
-            ram_index_path.string(),
-            file_index_path.string(),
-            node_data_path.string(),
-            edge_data_path.string(),
-            name_data_path.string(),
-            timestamp_path.string()
-        );
-
-        RegisterPlugin(new HelloWorldPlugin());
-        RegisterPlugin(new LocatePlugin(objects));
-        RegisterPlugin(new NearestPlugin(objects));
-        RegisterPlugin(new TimestampPlugin(objects));
-        RegisterPlugin(new ViaRoutePlugin(objects));
+        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>();
 
     } else {
         //TODO: fetch pointers from shared memory
-
-        //TODO: objects = new QueryObjectsStorage()
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
-
-        //TODO: generate shared memory plugins
-        RegisterPlugin(new HelloWorldPlugin());
-        RegisterPlugin(new LocatePlugin(objects));
-        RegisterPlugin(new NearestPlugin(objects));
-        RegisterPlugin(new TimestampPlugin(objects));
-        RegisterPlugin(new ViaRoutePlugin(objects));
-
     }
+
+    //The following plugins handle all requests.
+    RegisterPlugin(
+        new HelloWorldPlugin()
+    );
+    RegisterPlugin(
+        new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
+    RegisterPlugin(
+        new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
+    RegisterPlugin(
+        new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
+    RegisterPlugin(
+        new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
 }
 
 OSRM::~OSRM() {
-    BOOST_FOREACH(PluginMap::value_type & plugin_pointer, pluginMap) {
+    BOOST_FOREACH(PluginMap::value_type & plugin_pointer, plugin_map) {
         delete plugin_pointer.second;
     }
-    delete objects;
 }
 
 void OSRM::RegisterPlugin(BasePlugin * plugin) {
     SimpleLogger().Write()  << "loaded plugin: " << plugin->GetDescriptor();
-    if( pluginMap.find(plugin->GetDescriptor()) != pluginMap.end() ) {
-        delete pluginMap.find(plugin->GetDescriptor())->second;
+    if( plugin_map.find(plugin->GetDescriptor()) != plugin_map.end() ) {
+        delete plugin_map.find(plugin->GetDescriptor())->second;
     }
-    pluginMap.emplace(plugin->GetDescriptor(), plugin);
+    plugin_map.emplace(plugin->GetDescriptor(), plugin);
 }
 
 void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
-    const PluginMap::const_iterator & iter = pluginMap.find(route_parameters.service);
-    if(pluginMap.end() != iter) {
+    const PluginMap::const_iterator & iter = plugin_map.find(
+        route_parameters.service
+    );
+
+    if(plugin_map.end() != iter) {
         reply.status = http::Reply::ok;
         iter->second->HandleRequest(route_parameters, reply );
     } else {
