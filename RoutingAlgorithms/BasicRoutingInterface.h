@@ -41,37 +41,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stack>
 
 template<class DataFacadeT>
-class BasicRoutingInterface : boost::noncopyable{
+class BasicRoutingInterface : boost::noncopyable {
 protected:
     DataFacadeT * facade;
 public:
-    BasicRoutingInterface(DataFacadeT * facade) : facade(facade) { }
+    BasicRoutingInterface( DataFacadeT * facade ) : facade(facade) { }
     virtual ~BasicRoutingInterface(){ };
 
     inline void RoutingStep(
-        SearchEngineData::QueryHeap & _forwardHeap,
-        SearchEngineData::QueryHeap & _backwardHeap,
-        NodeID *middle,
-        int *_upperbound,
-        const int edgeBasedOffset,
-        const bool forwardDirection
+        SearchEngineData::QueryHeap & forward_heap,
+        SearchEngineData::QueryHeap & reverse_heap,
+        NodeID * middle_node_id,
+        int * upper_bound,
+        const int edge_expansion_offset,
+        const bool forward_direction
     ) const {
-        const NodeID node = _forwardHeap.DeleteMin();
-        const int distance = _forwardHeap.GetKey(node);
-        //SimpleLogger().Write() << "Settled (" << _forwardHeap.GetData( node ).parent << "," << node << ")=" << distance;
-        if(_backwardHeap.WasInserted(node) ){
-            const int newDistance = _backwardHeap.GetKey(node) + distance;
-            if(newDistance < *_upperbound ){
-                if(newDistance>=0 ) {
-                    *middle = node;
-                    *_upperbound = newDistance;
-                } else {
+        const NodeID node = forward_heap.DeleteMin();
+        const int distance = forward_heap.GetKey(node);
+        //SimpleLogger().Write() << "Settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
+        if(reverse_heap.WasInserted(node) ){
+            const int new_distance = reverse_heap.GetKey(node) + distance;
+            if(new_distance < *upper_bound ){
+                if( new_distance >= 0 ) {
+                    *middle_node_id = node;
+                    *upper_bound = new_distance;
                 }
             }
         }
 
-        if(distance-edgeBasedOffset > *_upperbound){
-            _forwardHeap.DeleteAll();
+        if( (distance-edge_expansion_offset) > *upper_bound){
+            forward_heap.DeleteAll();
             return;
         }
 
@@ -82,15 +81,15 @@ public:
             ++edge
          ) {
             const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
-            bool backwardDirectionFlag = (!forwardDirection) ? data.forward : data.backward;
+            bool backwardDirectionFlag = (!forward_direction) ? data.forward : data.backward;
             if(backwardDirectionFlag) {
                 const NodeID to = facade->GetTarget(edge);
-                const int edgeWeight = data.distance;
+                const int edge_weight = data.distance;
 
-                BOOST_ASSERT_MSG( edgeWeight > 0, "edgeWeight invalid" );
+                BOOST_ASSERT_MSG( edge_weight > 0, "edge_weight invalid" );
 
-                if(_forwardHeap.WasInserted( to )) {
-                    if(_forwardHeap.GetKey( to ) + edgeWeight < distance) {
+                if(forward_heap.WasInserted( to )) {
+                    if(forward_heap.GetKey( to ) + edge_weight < distance) {
                         return;
                     }
                 }
@@ -99,73 +98,84 @@ public:
 
         for ( EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); ++edge ) {
             const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
-            bool forwardDirectionFlag = (forwardDirection ? data.forward : data.backward );
-            if(forwardDirectionFlag) {
+            bool forward_directionFlag = (forward_direction ? data.forward : data.backward );
+            if(forward_directionFlag) {
 
                 const NodeID to = facade->GetTarget(edge);
-                const int edgeWeight = data.distance;
+                const int edge_weight = data.distance;
 
-                BOOST_ASSERT_MSG( edgeWeight > 0, "edgeWeight invalid" );
-                const int toDistance = distance + edgeWeight;
+                BOOST_ASSERT_MSG( edge_weight > 0, "edge_weight invalid" );
+                const int to_distance = distance + edge_weight;
 
                 //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !_forwardHeap.WasInserted( to ) ) {
-                    _forwardHeap.Insert( to, toDistance, node );
+                if ( !forward_heap.WasInserted( to ) ) {
+                    forward_heap.Insert( to, to_distance, node );
                 }
                 //Found a shorter Path -> Update distance
-                else if ( toDistance < _forwardHeap.GetKey( to ) ) {
-                    _forwardHeap.GetData( to ).parent = node;
-                    _forwardHeap.DecreaseKey( to, toDistance );
+                else if ( to_distance < forward_heap.GetKey( to ) ) {
+                    forward_heap.GetData( to ).parent = node;
+                    forward_heap.DecreaseKey( to, to_distance );
                     //new parent
                 }
             }
         }
     }
 
-    inline void UnpackPath(const std::vector<NodeID> & packedPath, std::vector<_PathData> & unpackedPath) const {
-        const unsigned sizeOfPackedPath = packedPath.size();
-        std::stack<std::pair<NodeID, NodeID> > recursionStack;
+    inline void UnpackPath(
+        const std::vector<NodeID> & packed_path,
+        std::vector<_PathData> & unpacked_path
+    ) const {
+        const unsigned packed_path_size = packed_path.size();
+        std::stack<std::pair<NodeID, NodeID> > recursion_stack;
 
         //We have to push the path in reverse order onto the stack because it's LIFO.
-        for(unsigned i = sizeOfPackedPath-1; i > 0; --i){
-            recursionStack.push(std::make_pair(packedPath[i-1], packedPath[i]));
+        for(unsigned i = packed_path_size-1; i > 0; --i){
+            recursion_stack.push(std::make_pair(packed_path[i-1], packed_path[i]));
         }
 
         std::pair<NodeID, NodeID> edge;
-        while(!recursionStack.empty()) {
-            edge = recursionStack.top();
-            recursionStack.pop();
+        while(!recursion_stack.empty()) {
+            edge = recursion_stack.top();
+            recursion_stack.pop();
 
-            EdgeID smallestEdge = SPECIAL_EDGEID;
-            int smallestWeight = INT_MAX;
+            EdgeID smaller_edge_id = SPECIAL_EDGEID;
+            int edge_weight = INT_MAX;
             for(EdgeID eit = facade->BeginEdges(edge.first);eit < facade->EndEdges(edge.first);++eit){
                 const int weight = facade->GetEdgeData(eit).distance;
-                if(facade->GetTarget(eit) == edge.second && weight < smallestWeight && facade->GetEdgeData(eit).forward){
-                    smallestEdge = eit;
-                    smallestWeight = weight;
+                if(
+                    (facade->GetTarget(eit) == edge.second) &&
+                    (weight < edge_weight)               &&
+                    facade->GetEdgeData(eit).forward
+                ){
+                    smaller_edge_id = eit;
+                    edge_weight = weight;
                 }
             }
 
-            if(smallestEdge == SPECIAL_EDGEID){
-                for(EdgeID eit = facade->BeginEdges(edge.second);eit < facade->EndEdges(edge.second);++eit){
+            if(smaller_edge_id == SPECIAL_EDGEID){
+                for(EdgeID eit = facade->BeginEdges(edge.second); eit < facade->EndEdges(edge.second); ++eit){
                     const int weight = facade->GetEdgeData(eit).distance;
-                    if(facade->GetTarget(eit) == edge.first && weight < smallestWeight && facade->GetEdgeData(eit).backward){
-                        smallestEdge = eit;
-                        smallestWeight = weight;
+                    if(
+                        (facade->GetTarget(eit) == edge.first) &&
+                        (weight < edge_weight)              &&
+                        facade->GetEdgeData(eit).backward
+                    ){
+                        smaller_edge_id = eit;
+                        edge_weight = weight;
                     }
                 }
             }
-            BOOST_ASSERT_MSG(smallestWeight != INT_MAX, "edge id invalid");
+            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge id invalid");
 
-            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smallestEdge);
+            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
             if(ed.shortcut) {//unpack
-                const NodeID middle = ed.id;
+                const NodeID middle_node_id = ed.id;
                 //again, we need to this in reversed order
-                recursionStack.push(std::make_pair(middle, edge.second));
-                recursionStack.push(std::make_pair(edge.first, middle));
+                recursion_stack.push(std::make_pair(middle_node_id, edge.second));
+                recursion_stack.push(std::make_pair(edge.first, middle_node_id));
             } else {
                 BOOST_ASSERT_MSG(!ed.shortcut, "edge must be a shortcut");
-                unpackedPath.push_back(
+                unpacked_path.push_back(
                     _PathData(
                         ed.id,
                         facade->GetNameIndexFromEdgeID(ed.id),
@@ -177,79 +187,95 @@ public:
         }
     }
 
-    inline void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> & unpackedPath) const {
-        std::stack<std::pair<NodeID, NodeID> > recursionStack;
-        recursionStack.push(std::make_pair(s,t));
+    inline void UnpackEdge(
+        const NodeID s,
+        const NodeID t,
+        std::vector<NodeID> & unpacked_path
+    ) const {
+        std::stack<std::pair<NodeID, NodeID> > recursion_stack;
+        recursion_stack.push(std::make_pair(s,t));
 
         std::pair<NodeID, NodeID> edge;
-        while(!recursionStack.empty()) {
-            edge = recursionStack.top();
-            recursionStack.pop();
+        while(!recursion_stack.empty()) {
+            edge = recursion_stack.top();
+            recursion_stack.pop();
 
-            EdgeID smallestEdge = SPECIAL_EDGEID;
-            int smallestWeight = INT_MAX;
+            EdgeID smaller_edge_id = SPECIAL_EDGEID;
+            int edge_weight = INT_MAX;
             for(EdgeID eit = facade->BeginEdges(edge.first);eit < facade->EndEdges(edge.first);++eit){
                 const int weight = facade->GetEdgeData(eit).distance;
-                if(facade->GetTarget(eit) == edge.second && weight < smallestWeight && facade->GetEdgeData(eit).forward){
-                    smallestEdge = eit;
-                    smallestWeight = weight;
+                if(
+                    (facade->GetTarget(eit) == edge.second) &&
+                    (weight < edge_weight)               &&
+                    facade->GetEdgeData(eit).forward
+                ){
+                    smaller_edge_id = eit;
+                    edge_weight = weight;
                 }
             }
 
-            if(smallestEdge == SPECIAL_EDGEID){
+            if(smaller_edge_id == SPECIAL_EDGEID){
                 for(EdgeID eit = facade->BeginEdges(edge.second);eit < facade->EndEdges(edge.second);++eit){
                     const int weight = facade->GetEdgeData(eit).distance;
-                    if(facade->GetTarget(eit) == edge.first && weight < smallestWeight && facade->GetEdgeData(eit).backward){
-                        smallestEdge = eit;
-                        smallestWeight = weight;
+                    if(
+                        (facade->GetTarget(eit) == edge.first) &&
+                        (weight < edge_weight)              &&
+                        facade->GetEdgeData(eit).backward
+                    ){
+                        smaller_edge_id = eit;
+                        edge_weight = weight;
                     }
                 }
             }
-            BOOST_ASSERT_MSG(smallestWeight != INT_MAX, "edge weight invalid");
+            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge weight invalid");
 
-            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smallestEdge);
+            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
             if(ed.shortcut) {//unpack
-                const NodeID middle = ed.id;
+                const NodeID middle_node_id = ed.id;
                 //again, we need to this in reversed order
-                recursionStack.push(std::make_pair(middle, edge.second));
-                recursionStack.push(std::make_pair(edge.first, middle));
+                recursion_stack.push(std::make_pair(middle_node_id, edge.second));
+                recursion_stack.push(std::make_pair(edge.first, middle_node_id));
             } else {
                 BOOST_ASSERT_MSG(!ed.shortcut, "edge must be shortcut");
-                unpackedPath.push_back(edge.first );
+                unpacked_path.push_back(edge.first );
             }
         }
-        unpackedPath.push_back(t);
+        unpacked_path.push_back(t);
     }
 
     inline void RetrievePackedPathFromHeap(
-        SearchEngineData::QueryHeap & _fHeap,
-        SearchEngineData::QueryHeap & _bHeap,
-        const NodeID middle,
-        std::vector<NodeID> & packedPath
+        SearchEngineData::QueryHeap & forward_heap,
+        SearchEngineData::QueryHeap & reverse_heap,
+        const NodeID middle_node_id,
+        std::vector<NodeID> & packed_path
     ) const {
-        NodeID pathNode = middle;
-        while(pathNode != _fHeap.GetData(pathNode).parent) {
-            pathNode = _fHeap.GetData(pathNode).parent;
-            packedPath.push_back(pathNode);
+        NodeID current_node_id = middle_node_id;
+        while(current_node_id != forward_heap.GetData(current_node_id).parent) {
+            current_node_id = forward_heap.GetData(current_node_id).parent;
+            packed_path.push_back(current_node_id);
         }
 
-        std::reverse(packedPath.begin(), packedPath.end());
-        packedPath.push_back(middle);
-        pathNode = middle;
-        while (pathNode != _bHeap.GetData(pathNode).parent){
-            pathNode = _bHeap.GetData(pathNode).parent;
-            packedPath.push_back(pathNode);
+        std::reverse(packed_path.begin(), packed_path.end());
+        packed_path.push_back(middle_node_id);
+        current_node_id = middle_node_id;
+        while (current_node_id != reverse_heap.GetData(current_node_id).parent){
+            current_node_id = reverse_heap.GetData(current_node_id).parent;
+            packed_path.push_back(current_node_id);
     	}
     }
 
-    inline void RetrievePackedPathFromSingleHeap(SearchEngineData::QueryHeap & search_heap, const NodeID middle, std::vector<NodeID>& packed_path) const {
-        NodeID pathNode = middle;
-        while(pathNode != search_heap.GetData(pathNode).parent) {
-            pathNode = search_heap.GetData(pathNode).parent;
-            packed_path.push_back(pathNode);
+//TODO: reorder parameters
+    inline void RetrievePackedPathFromSingleHeap(
+        SearchEngineData::QueryHeap & search_heap,
+        const NodeID middle_node_id,
+        std::vector<NodeID>& packed_path
+    ) const {
+        NodeID current_node_id = middle_node_id;
+        while(current_node_id != search_heap.GetData(current_node_id).parent) {
+            current_node_id = search_heap.GetData(current_node_id).parent;
+            packed_path.push_back(current_node_id);
         }
     }
 };
-
 
 #endif /* BASICROUTINGINTERFACE_H_ */
