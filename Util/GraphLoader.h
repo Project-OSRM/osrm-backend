@@ -403,12 +403,11 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
 template<typename NodeT, typename EdgeT>
 unsigned readHSGRFromStream(
-    const std::string & hsgr_filename,
+    const boost::filesystem::path & hsgr_file,
     std::vector<NodeT> & node_list,
     std::vector<EdgeT> & edge_list,
     unsigned * check_sum
 ) {
-    boost::filesystem::path hsgr_file(hsgr_filename);
     if ( !boost::filesystem::exists( hsgr_file ) ) {
         throw OSRMException("hsgr file does not exist");
     }

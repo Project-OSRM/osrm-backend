@@ -115,7 +115,7 @@ public:
             ( routeParameters.alternateRoute ) &&
             (1 == rawRoute.segmentEndCoordinates.size())
         ) {
-            search_engine_ptr->alternative_paths(
+            search_engine_ptr->alternative_path(
                 rawRoute.segmentEndCoordinates[0],
                 rawRoute
             );

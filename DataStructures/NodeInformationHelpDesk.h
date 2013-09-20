@@ -203,7 +203,7 @@ private:
 	std::vector<unsigned>              m_name_ID_list;
 	std::vector<TurnInstruction>       m_turn_instruction_list;
 
-	StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * m_ro_rtree_ptr;
+	StaticRTree<EdgeBasedGraphFactorRTreeLeafRTreeLeafy::EdgeBasedNode> * m_ro_rtree_ptr;
 	const unsigned m_number_of_nodes;
 	const unsigned m_check_sum;
 };

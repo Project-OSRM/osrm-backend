@@ -26,13 +26,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BaseDataFacade.h"
 
 #include "../../DataStructures/StaticGraph.h"
+#include "../../Util/BoostFilesystemFix.h"
+#include "../../Util/IniFile.h"
+#include "../../Util/SimpleLogger.h"
 
 template<class EdgeDataT>
 class SharedDataFacade : public BaseDataFacade<EdgeDataT> {
 
 private:
-
+    SharedDataFacade() { }
 public:
+    SharedDataFacade(
+        const IniFile & configuration,
+        const boost::filesystem::path base_path
+     ) {
+        //TODO: load data
+    }
 
     //search graph access
     unsigned GetNumberOfNodes() const { return 0; }

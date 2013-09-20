@@ -22,7 +22,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define SEARCHENGINE_H
 
 #include "Coordinate.h"
-#include "NodeInformationHelpDesk.h"
 #include "SearchEngineData.h"
 #include "PhantomNodes.h"
 #include "QueryEdge.h"

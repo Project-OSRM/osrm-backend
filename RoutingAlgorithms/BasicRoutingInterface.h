@@ -125,7 +125,9 @@ public:
 
         //We have to push the path in reverse order onto the stack because it's LIFO.
         for(unsigned i = packed_path_size-1; i > 0; --i){
-            recursion_stack.push(std::make_pair(packed_path[i-1], packed_path[i]));
+            recursion_stack.push(
+                std::make_pair(packed_path[i-1], packed_path[i])
+            );
         }
 
         std::pair<NodeID, NodeID> edge;

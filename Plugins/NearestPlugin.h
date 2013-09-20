@@ -22,8 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define NearestPlugin_H_
 
 #include "BasePlugin.h"
-
-#include "../DataStructures/NodeInformationHelpDesk.h"
+#include "../DataStructures/PhantomNodes.h"
 #include "../Util/StringUtil.h"
 
 /*

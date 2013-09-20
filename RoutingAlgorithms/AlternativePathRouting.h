@@ -74,14 +74,20 @@ public:
         std::vector<SearchSpaceEdge> reverse_search_space;
 
         //Initialize Queues, semi-expensive because access to TSS invokes a system call
-        super::_queryData.InitializeOrClearFirstThreadLocalStorage();
-        super::_queryData.InitializeOrClearSecondThreadLocalStorage();
-        super::_queryData.InitializeOrClearThirdThreadLocalStorage();
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
+        engine_working_data.InitializeOrClearThirdThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
 
-        QueryHeap & forward_heap1 = *(super::_queryData.forwardHeap);
-        QueryHeap & reverse_heap1 = *(super::_queryData.backwardHeap);
-        QueryHeap & forward_heap2 = *(super::_queryData.forwardHeap2);
-        QueryHeap & reverse_heap2 = *(super::_queryData.backwardHeap2);
+        QueryHeap & forward_heap1 = *(engine_working_data.forwardHeap);
+        QueryHeap & reverse_heap1 = *(engine_working_data.backwardHeap);
+        QueryHeap & forward_heap2 = *(engine_working_data.forwardHeap2);
+        QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
         int upper_bound_to_shortest_path_distance = INT_MAX;
         NodeID middle_node = UINT_MAX;
@@ -219,12 +225,14 @@ private:
             const int offset, const std::vector<NodeID> & packed_shortest_path) {
         //compute and unpack <s,..,v> and <v,..,t> by exploring search spaces from v and intersecting against queues
         //only half-searches have to be done at this stage
-        super::_queryData.InitializeOrClearSecondThreadLocalStorage();
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
 
-        QueryHeap & existingForwardHeap  = *super::_queryData.forwardHeap;
-        QueryHeap & existingBackwardHeap = *super::_queryData.backwardHeap;
-        QueryHeap & newForwardHeap       = *super::_queryData.forwardHeap2;
-        QueryHeap & newBackwardHeap      = *super::_queryData.backwardHeap2;
+        QueryHeap & existingForwardHeap  = *engine_working_data.forwardHeap;
+        QueryHeap & existingBackwardHeap = *engine_working_data.backwardHeap;
+        QueryHeap & newForwardHeap       = *engine_working_data.forwardHeap2;
+        QueryHeap & newBackwardHeap      = *engine_working_data.backwardHeap2;
 
         std::vector < NodeID > packed_s_v_path;
         std::vector < NodeID > packed_v_t_path;
@@ -517,10 +525,12 @@ private:
 
         lengthOfPathT_Test_Path += unpackedUntilDistance;
         //Run actual T-Test query and compare if distances equal.
-        super::_queryData.InitializeOrClearThirdThreadLocalStorage();
+        engine_working_data.InitializeOrClearThirdThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
 
-        QueryHeap& forward_heap3 = *super::_queryData.forwardHeap3;
-        QueryHeap& backward_heap3 = *super::_queryData.backwardHeap3;
+        QueryHeap& forward_heap3 = *engine_working_data.forwardHeap3;
+        QueryHeap& backward_heap3 = *engine_working_data.backwardHeap3;
         int _upperBound = INT_MAX;
         NodeID middle = UINT_MAX;
         forward_heap3.Insert(s_P, 0, s_P);
