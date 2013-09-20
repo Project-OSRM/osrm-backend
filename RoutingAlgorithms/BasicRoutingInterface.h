@@ -233,8 +233,12 @@ public:
             if(ed.shortcut) {//unpack
                 const NodeID middle_node_id = ed.id;
                 //again, we need to this in reversed order
-                recursion_stack.push(std::make_pair(middle_node_id, edge.second));
-                recursion_stack.push(std::make_pair(edge.first, middle_node_id));
+                recursion_stack.push(
+                    std::make_pair(middle_node_id, edge.second)
+                );
+                recursion_stack.push(
+                    std::make_pair(edge.first, middle_node_id)
+                );
             } else {
                 BOOST_ASSERT_MSG(!ed.shortcut, "edge must be shortcut");
                 unpacked_path.push_back(edge.first );
