@@ -69,7 +69,7 @@ public:
             }
         }
 
-        if( (distance-edge_expansion_offset) > *upper_bound){
+        if( (distance-edge_expansion_offset) > *upper_bound ){
             forward_heap.DeleteAll();
             return;
         }
@@ -81,8 +81,8 @@ public:
             ++edge
          ) {
             const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
-            bool backwardDirectionFlag = (!forward_direction) ? data.forward : data.backward;
-            if(backwardDirectionFlag) {
+            bool reverse_flag = (!forward_direction) ? data.forward : data.backward;
+            if( reverse_flag ) {
                 const NodeID to = facade->GetTarget(edge);
                 const int edge_weight = data.distance;
 
@@ -99,7 +99,7 @@ public:
         for ( EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); ++edge ) {
             const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
             bool forward_directionFlag = (forward_direction ? data.forward : data.backward );
-            if(forward_directionFlag) {
+            if( forward_directionFlag ) {
 
                 const NodeID to = facade->GetTarget(edge);
                 const int edge_weight = data.distance;
@@ -152,7 +152,7 @@ public:
                 }
             }
 
-            if(smaller_edge_id == SPECIAL_EDGEID){
+            if( SPECIAL_EDGEID == smaller_edge_id ){
                 for(EdgeID eit = facade->BeginEdges(edge.second); eit < facade->EndEdges(edge.second); ++eit){
                     const int weight = facade->GetEdgeData(eit).distance;
                     if(
@@ -214,7 +214,7 @@ public:
                 }
             }
 
-            if(smaller_edge_id == SPECIAL_EDGEID){
+            if( SPECIAL_EDGEID == smaller_edge_id ){
                 for(EdgeID eit = facade->BeginEdges(edge.second);eit < facade->EndEdges(edge.second);++eit){
                     const int weight = facade->GetEdgeData(eit).distance;
                     if(
