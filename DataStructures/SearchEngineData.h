@@ -44,12 +44,12 @@ struct _HeapData {
     _HeapData( NodeID p ) : parent(p) { }
 };
 
-typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
+// typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
 typedef BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > QueryHeapType;
 typedef boost::thread_specific_ptr<QueryHeapType> SearchEngineHeapPtr;
 
 struct SearchEngineData {
-    typedef QueryGraph      QueryGraph;
+    typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
     typedef QueryHeapType   QueryHeap;
 
     SearchEngineData() { }
