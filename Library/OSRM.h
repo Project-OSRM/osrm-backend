@@ -74,7 +74,6 @@ private:
 
     PluginMap plugin_map;
     const bool use_shared_memory;
-
 };
 
 #endif //OSRM_H

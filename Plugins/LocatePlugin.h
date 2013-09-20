@@ -29,8 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOCATEPLUGIN_H_
 
 #include "BasePlugin.h"
-#include "../DataStructures/NodeInformationHelpDesk.h"
-#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
 
 //locates the nearest node in the road network for a given coordinate.

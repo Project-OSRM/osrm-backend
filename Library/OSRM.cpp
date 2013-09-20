@@ -29,74 +29,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OSRM.h"
 #include <boost/foreach.hpp>
 
-OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory)
- :  use_shared_memory(use_shared_memory)
+OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory) :
+    use_shared_memory(use_shared_memory)
 {
+
+    if( !testDataFile(server_ini_path) ){
+        std::string error_message(server_ini_path);
+        error_message += " not found";
+        throw OSRMException(error_message);
+    }
+    boost::filesystem::path base_path = boost::filesystem::absolute(server_ini_path).parent_path();
+    IniFile server_config(server_ini_path);
+
     if( !use_shared_memory ) {
-        if( !testDataFile(server_ini_path) ){
-            std::string error_message(server_ini_path);
-            error_message += " not found";
-            throw OSRMException(error_message);
-        }
-
-        IniFile serverConfig(server_ini_path);
-
-        boost::filesystem::path base_path =
-                   boost::filesystem::absolute(server_ini_path).parent_path();
-
-        if ( !serverConfig.Holds("hsgrData")) {
-            throw OSRMException("no ram index file name in server ini");
-        }
-        if ( !serverConfig.Holds("ramIndex") ) {
-            throw OSRMException("no mem index file name in server ini");
-        }
-        if ( !serverConfig.Holds("fileIndex") ) {
-            throw OSRMException("no nodes file name in server ini");
-        }
-        if ( !serverConfig.Holds("nodesData") ) {
-            throw OSRMException("no nodes file name in server ini");
-        }
-        if ( !serverConfig.Holds("edgesData") ) {
-            throw OSRMException("no edges file name in server ini");
-        }
-
-        boost::filesystem::path hsgr_path = boost::filesystem::absolute(
-                serverConfig.GetParameter("hsgrData"),
-                base_path
+        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
+            server_config, base_path
         );
-
-        boost::filesystem::path ram_index_path = boost::filesystem::absolute(
-                serverConfig.GetParameter("ramIndex"),
-                base_path
-        );
-
-        boost::filesystem::path file_index_path = boost::filesystem::absolute(
-                serverConfig.GetParameter("fileIndex"),
-                base_path
-        );
-
-        boost::filesystem::path node_data_path = boost::filesystem::absolute(
-                serverConfig.GetParameter("nodesData"),
-                base_path
-        );
-        boost::filesystem::path edge_data_path = boost::filesystem::absolute(
-                serverConfig.GetParameter("edgesData"),
-                base_path
-        );
-        boost::filesystem::path name_data_path = boost::filesystem::absolute(
-                serverConfig.GetParameter("namesData"),
-                base_path
-        );
-        boost::filesystem::path timestamp_path = boost::filesystem::absolute(
-                serverConfig.GetParameter("timestamp"),
-                base_path
-        );
-
-        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>();
-
     } else {
-        //TODO: fetch pointers from shared memory
-        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
+        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>(
+            server_config, base_path
+        );
     }
 
     //The following plugins handle all requests.

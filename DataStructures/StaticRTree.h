@@ -414,11 +414,10 @@ public:
 
     //Read-only operation for queries
     explicit StaticRTree(
-            const std::string & node_filename,
-            const std::string & leaf_filename
-    ) : m_leaf_node_filename(leaf_filename) {
+            const boost::filesystem::path & node_file,
+            const boost::filesystem::path & leaf_file
+    ) : m_leaf_node_filename(leaf_file.string()) {
         //open tree node file and load into RAM.
-        boost::filesystem::path node_file(node_filename);
 
         if ( !boost::filesystem::exists( node_file ) ) {
             throw OSRMException("ram index file does not exist");
@@ -436,7 +435,6 @@ public:
         tree_node_file.close();
 
         //open leaf node file and store thread specific pointer
-        boost::filesystem::path leaf_file(leaf_filename);
         if ( !boost::filesystem::exists( leaf_file ) ) {
             throw OSRMException("mem index file does not exist");
         }

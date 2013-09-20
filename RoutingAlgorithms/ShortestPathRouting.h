@@ -59,14 +59,20 @@ public:
         std::vector<NodeID> packedPath1;
         std::vector<NodeID> packedPath2;
 
-        super::_queryData.InitializeOrClearFirstThreadLocalStorage();
-        super::_queryData.InitializeOrClearSecondThreadLocalStorage();
-        super::_queryData.InitializeOrClearThirdThreadLocalStorage();
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
+        engine_working_data.InitializeOrClearThirdThreadLocalStorage(
+            super::facade->GetNumberOfNodes()
+        );
 
-        QueryHeap & forward_heap1 = *(super::_queryData.forwardHeap);
-        QueryHeap & reverse_heap1 = *(super::_queryData.backwardHeap);
-        QueryHeap & forward_heap2 = *(super::_queryData.forwardHeap2);
-        QueryHeap & reverse_heap2 = *(super::_queryData.backwardHeap2);
+        QueryHeap & forward_heap1 = *(engine_working_data.forwardHeap);
+        QueryHeap & reverse_heap1 = *(engine_working_data.backwardHeap);
+        QueryHeap & forward_heap2 = *(engine_working_data.forwardHeap2);
+        QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
         //Get distance to next pair of target nodes.
         BOOST_FOREACH(const PhantomNodes & phantomNodePair, phantomNodesVector) {

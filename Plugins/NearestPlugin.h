@@ -29,8 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NearestPlugin_H_
 
 #include "BasePlugin.h"
-
-#include "../DataStructures/NodeInformationHelpDesk.h"
+#include "../DataStructures/PhantomNodes.h"
 #include "../Util/StringUtil.h"
 
 /*

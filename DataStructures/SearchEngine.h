@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SEARCHENGINE_H
 
 #include "Coordinate.h"
-#include "NodeInformationHelpDesk.h"
 #include "SearchEngineData.h"
 #include "PhantomNodes.h"
 #include "QueryEdge.h"

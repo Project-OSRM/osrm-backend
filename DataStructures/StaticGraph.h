@@ -144,32 +144,32 @@ public:
         return _numEdges;
     }
 
-    unsigned GetOutDegree( const NodeIterator &n ) const {
+    unsigned GetOutDegree( const NodeIterator n ) const {
         return BeginEdges(n)-EndEdges(n) - 1;
     }
 
-    inline NodeIterator GetTarget( const EdgeIterator &e ) const {
+    inline NodeIterator GetTarget( const EdgeIterator e ) const {
         return NodeIterator( _edges[e].target );
     }
 
-    inline EdgeDataT &GetEdgeData( const EdgeIterator &e ) {
+    inline EdgeDataT &GetEdgeData( const EdgeIterator e ) {
         return _edges[e].data;
     }
 
-    const EdgeDataT &GetEdgeData( const EdgeIterator &e ) const {
+    const EdgeDataT &GetEdgeData( const EdgeIterator e ) const {
         return _edges[e].data;
     }
 
-    EdgeIterator BeginEdges( const NodeIterator &n ) const {
+    EdgeIterator BeginEdges( const NodeIterator n ) const {
         return EdgeIterator( _nodes[n].firstEdge );
     }
 
-    EdgeIterator EndEdges( const NodeIterator &n ) const {
+    EdgeIterator EndEdges( const NodeIterator n ) const {
         return EdgeIterator( _nodes[n+1].firstEdge );
     }
 
     //searches for a specific edge
-    EdgeIterator FindEdge( const NodeIterator &from, const NodeIterator &to ) const {
+    EdgeIterator FindEdge( const NodeIterator from, const NodeIterator to ) const {
         EdgeIterator smallestEdge = SPECIAL_EDGEID;
         EdgeWeight smallestWeight = UINT_MAX;
         for ( EdgeIterator edge = BeginEdges( from ); edge < EndEdges(from); edge++ ) {
@@ -182,12 +182,12 @@ public:
         return smallestEdge;
     }
 
-    EdgeIterator FindEdgeInEitherDirection( const NodeIterator &from, const NodeIterator &to ) const {
+    EdgeIterator FindEdgeInEitherDirection( const NodeIterator from, const NodeIterator to ) const {
         EdgeIterator tmp =  FindEdge( from, to );
         return (UINT_MAX != tmp ? tmp : FindEdge( to, from ));
     }
 
-    EdgeIterator FindEdgeIndicateIfReverse( const NodeIterator &from, const NodeIterator &to, bool & result ) const {
+    EdgeIterator FindEdgeIndicateIfReverse( const NodeIterator from, const NodeIterator to, bool & result ) const {
         EdgeIterator tmp =  FindEdge( from, to );
         if(UINT_MAX == tmp) {
             tmp =  FindEdge( to, from );
