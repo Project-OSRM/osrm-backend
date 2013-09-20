@@ -27,13 +27,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../DataStructures/SearchEngineData.h"
 
-template<class QueryDataT>
-class ShortestPathRouting : public BasicRoutingInterface<QueryDataT>{
-    typedef BasicRoutingInterface<QueryDataT> super;
-    typedef typename QueryDataT::QueryHeap QueryHeap;
+template<class DataFacadeT>
+class ShortestPathRouting : public BasicRoutingInterface<DataFacadeT>{
+    typedef BasicRoutingInterface<DataFacadeT> super;
+    typedef SearchEngineData::QueryHeap QueryHeap;
     SearchEngineData & engine_working_data;
 public:
-    ShortestPathRouting( QueryDataT & qd, SearchEngineData & engine_working_data) : super(qd), engine_working_data(engine_working_data) {}
+    ShortestPathRouting( DataFacadeT * facade, SearchEngineData & engine_working_data) : super(facade), engine_working_data(engine_working_data) {}
 
     ~ShortestPathRouting() {}
 

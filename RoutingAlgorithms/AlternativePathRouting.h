@@ -47,12 +47,18 @@ class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
             return (2*length + sharing) < (2*other.length + other.sharing);
         }
     };
-
-    const SearchGraph * search_graph;
+    DataFacadeT * facade;
     SearchEngineData & engine_working_data;
 public:
 
-    AlternativeRouting(DataFacadeT & qd, SearchEngineData & engine_working_data) : super(qd), search_graph(qd.graph), engine_working_data(engine_working_data) { }
+    AlternativeRouting(
+        DataFacadeT * facade,
+        SearchEngineData & engine_working_data
+    ) :
+        super(facade),
+        facade(facade),
+        engine_working_data(engine_working_data)
+    { }
 
     ~AlternativeRouting() {}
 
@@ -252,8 +258,8 @@ private:
         //First partially unpack s-->v until paths deviate, note length of common path.
         for (unsigned i = 0, lengthOfPackedPath = std::min( packed_s_v_path.size(), packed_shortest_path.size()) - 1; (i < lengthOfPackedPath); ++i) {
             if (packed_s_v_path[i] == packed_shortest_path[i] && packed_s_v_path[i + 1] == packed_shortest_path[i + 1]) {
-                typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(packed_s_v_path[i], packed_s_v_path[i + 1]);
-                *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
+                EdgeID edgeID = facade->FindEdgeInEitherDirection(packed_s_v_path[i], packed_s_v_path[i + 1]);
+                *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             } else {
                 if (packed_s_v_path[i] == packed_shortest_path[i]) {
                     super::UnpackEdge(packed_s_v_path[i], packed_s_v_path[i+1], partiallyUnpackedViaPath);
@@ -264,8 +270,8 @@ private:
         }
         //traverse partially unpacked edge and note common prefix
         for (int i = 0, lengthOfPackedPath = std::min( partiallyUnpackedViaPath.size(), partiallyUnpackedShortestPath.size()) - 1; (i < lengthOfPackedPath) && (partiallyUnpackedViaPath[i] == partiallyUnpackedShortestPath[i] && partiallyUnpackedViaPath[i+1] == partiallyUnpackedShortestPath[i+1]); ++i) {
-            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(partiallyUnpackedViaPath[i], partiallyUnpackedViaPath[i+1]);
-            *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
+            EdgeID edgeID = facade->FindEdgeInEitherDirection(partiallyUnpackedViaPath[i], partiallyUnpackedViaPath[i+1]);
+            *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
         }
 
         //Second, partially unpack v-->t in reverse order until paths deviate and note lengths
@@ -273,8 +279,8 @@ private:
         int shortestPathIndex = packed_shortest_path.size() - 1;
         for (; viaPathIndex > 0 && shortestPathIndex > 0; --viaPathIndex,--shortestPathIndex ) {
             if (packed_v_t_path[viaPathIndex - 1] == packed_shortest_path[shortestPathIndex - 1] && packed_v_t_path[viaPathIndex] == packed_shortest_path[shortestPathIndex]) {
-                typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( packed_v_t_path[viaPathIndex - 1], packed_v_t_path[viaPathIndex]);
-                *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
+                EdgeID edgeID = facade->FindEdgeInEitherDirection( packed_v_t_path[viaPathIndex - 1], packed_v_t_path[viaPathIndex]);
+                *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             } else {
                 if (packed_v_t_path[viaPathIndex] == packed_shortest_path[shortestPathIndex]) {
                     super::UnpackEdge(packed_v_t_path[viaPathIndex-1], packed_v_t_path[viaPathIndex], partiallyUnpackedViaPath);
@@ -288,8 +294,8 @@ private:
         shortestPathIndex = partiallyUnpackedShortestPath.size() - 1;
         for (; viaPathIndex > 0 && shortestPathIndex > 0; --viaPathIndex,--shortestPathIndex) {
             if (partiallyUnpackedViaPath[viaPathIndex - 1] == partiallyUnpackedShortestPath[shortestPathIndex - 1] && partiallyUnpackedViaPath[viaPathIndex] == partiallyUnpackedShortestPath[shortestPathIndex]) {
-                typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( partiallyUnpackedViaPath[viaPathIndex - 1], partiallyUnpackedViaPath[viaPathIndex]);
-                *sharing_of_via_path += search_graph->GetEdgeData(edgeID).distance;
+                EdgeID edgeID = facade->FindEdgeInEitherDirection( partiallyUnpackedViaPath[viaPathIndex - 1], partiallyUnpackedViaPath[viaPathIndex]);
+                *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             } else {
                 break;
             }
@@ -309,8 +315,8 @@ private:
         //compute forward sharing
         while( (packedAlternativePath[aindex] == packedShortestPath[aindex]) && (packedAlternativePath[aindex+1] == packedShortestPath[aindex+1]) ) {
             //            SimpleLogger().Write() << "retrieving edge (" << packedAlternativePath[aindex] << "," << packedAlternativePath[aindex+1] << ")";
-            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex+1]);
-            sharing += search_graph->GetEdgeData(edgeID).distance;
+            EdgeID edgeID = facade->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex+1]);
+            sharing += facade->GetEdgeData(edgeID).distance;
             ++aindex;
         }
 
@@ -318,8 +324,8 @@ private:
         int bindex = packedShortestPath.size()-1;
         //compute backward sharing
         while( aindex > 0 && bindex > 0 && (packedAlternativePath[aindex] == packedShortestPath[bindex]) && (packedAlternativePath[aindex-1] == packedShortestPath[bindex-1]) ) {
-            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex-1]);
-            sharing += search_graph->GetEdgeData(edgeID).distance;
+            EdgeID edgeID = facade->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex-1]);
+            sharing += facade->GetEdgeData(edgeID).distance;
             --aindex; --bindex;
         }
         return sharing;
@@ -357,12 +363,12 @@ private:
             }
         }
 
-        for ( typename SearchGraph::EdgeIterator edge = search_graph->BeginEdges( node ); edge < search_graph->EndEdges(node); edge++ ) {
-            const typename SearchGraph::EdgeData & data = search_graph->GetEdgeData(edge);
+        for ( EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); edge++ ) {
+            const typename SearchGraph::EdgeData & data = facade->GetEdgeData(edge);
             bool forwardDirectionFlag = (forwardDirection ? data.forward : data.backward );
             if(forwardDirectionFlag) {
 
-                const NodeID to = search_graph->GetTarget(edge);
+                const NodeID to = facade->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
                 assert( edgeWeight > 0 );
@@ -432,8 +438,8 @@ private:
         std::stack<SearchSpaceEdge> unpackStack;
         //Traverse path s-->v
         for (unsigned i = packed_s_v_path.size() - 1; (i > 0) && unpackStack.empty(); --i) {
-            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( packed_s_v_path[i - 1], packed_s_v_path[i]);
-            int lengthOfCurrentEdge = search_graph->GetEdgeData(edgeID).distance;
+            EdgeID edgeID = facade->FindEdgeInEitherDirection( packed_s_v_path[i - 1], packed_s_v_path[i]);
+            int lengthOfCurrentEdge = facade->GetEdgeData(edgeID).distance;
             if (lengthOfCurrentEdge + unpackedUntilDistance >= T_threshold) {
                 unpackStack.push(std::make_pair(packed_s_v_path[i - 1], packed_s_v_path[i]));
             } else {
@@ -445,15 +451,15 @@ private:
         while (!unpackStack.empty()) {
             const SearchSpaceEdge viaPathEdge = unpackStack.top();
             unpackStack.pop();
-            typename SearchGraph::EdgeIterator edgeIDInViaPath = search_graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
+            EdgeID edgeIDInViaPath = facade->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename SearchGraph::EdgeData currentEdgeData = search_graph->GetEdgeData(edgeIDInViaPath);
+            typename SearchGraph::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
             bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
-                typename SearchGraph::EdgeIterator edgeIDOfSecondSegment = search_graph->FindEdgeInEitherDirection(middleOfViaPath, viaPathEdge.second);
-                int lengthOfSecondSegment = search_graph->GetEdgeData(edgeIDOfSecondSegment).distance;
+                EdgeID edgeIDOfSecondSegment = facade->FindEdgeInEitherDirection(middleOfViaPath, viaPathEdge.second);
+                int lengthOfSecondSegment = facade->GetEdgeData(edgeIDOfSecondSegment).distance;
                 //attention: !unpacking in reverse!
                 //Check if second segment is the one to go over treshold? if yes add second segment to stack, else push first segment to stack and add distance of second one.
                 if (unpackedUntilDistance + lengthOfSecondSegment >= T_threshold) {
@@ -473,8 +479,8 @@ private:
         unpackedUntilDistance = 0;
         //Traverse path s-->v
         for (unsigned i = 0, lengthOfPackedPath = packed_v_t_path.size() - 1; (i < lengthOfPackedPath) && unpackStack.empty(); ++i) {
-            typename SearchGraph::EdgeIterator edgeID = search_graph->FindEdgeInEitherDirection( packed_v_t_path[i], packed_v_t_path[i + 1]);
-            int lengthOfCurrentEdge = search_graph->GetEdgeData(edgeID).distance;
+            EdgeID edgeID = facade->FindEdgeInEitherDirection( packed_v_t_path[i], packed_v_t_path[i + 1]);
+            int lengthOfCurrentEdge = facade->GetEdgeData(edgeID).distance;
             if (lengthOfCurrentEdge + unpackedUntilDistance >= T_threshold) {
                 unpackStack.push( std::make_pair(packed_v_t_path[i], packed_v_t_path[i + 1]));
             } else {
@@ -486,15 +492,15 @@ private:
         while (!unpackStack.empty()) {
             const SearchSpaceEdge viaPathEdge = unpackStack.top();
             unpackStack.pop();
-            typename SearchGraph::EdgeIterator edgeIDInViaPath = search_graph->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
+            EdgeID edgeIDInViaPath = facade->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename SearchGraph::EdgeData currentEdgeData = search_graph->GetEdgeData(edgeIDInViaPath);
+            typename SearchGraph::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
             const bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
-                typename SearchGraph::EdgeIterator edgeIDOfFirstSegment = search_graph->FindEdgeInEitherDirection(viaPathEdge.first, middleOfViaPath);
-                int lengthOfFirstSegment = search_graph->GetEdgeData( edgeIDOfFirstSegment).distance;
+                EdgeID edgeIDOfFirstSegment = facade->FindEdgeInEitherDirection(viaPathEdge.first, middleOfViaPath);
+                int lengthOfFirstSegment = facade->GetEdgeData( edgeIDOfFirstSegment).distance;
                 //Check if first segment is the one to go over treshold? if yes first segment to stack, else push second segment to stack and add distance of first one.
                 if (unpackedUntilDistance + lengthOfFirstSegment >= T_threshold) {
                     unpackStack.push( std::make_pair(viaPathEdge.first, middleOfViaPath));

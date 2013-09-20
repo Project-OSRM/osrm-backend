@@ -73,7 +73,7 @@ public:
     JSONDescriptor() : entered_restricted_area_count(0) {}
     void SetConfig(const DescriptorConfig & c) { config = c; }
 
-    //TODO: reorder
+    //TODO: reorder parameters
     void Run(
         http::Reply & reply,
         const RawRouteData & raw_route_information,
