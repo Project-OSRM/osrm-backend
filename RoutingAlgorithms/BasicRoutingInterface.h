@@ -163,7 +163,7 @@ public:
             BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge id invalid");
 
             const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
-            if(ed.shortcut) {//unpack
+            if( ed.shortcut ) {//unpack
                 const NodeID middle_node_id = ed.id;
                 //again, we need to this in reversed order
                 recursion_stack.push(std::make_pair(middle_node_id, edge.second));
