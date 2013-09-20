@@ -30,7 +30,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../DataStructures/QueryEdge.h"
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
-#include "../../Util/BoostFilesystemFix.h"
+#include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
 #include "../../Util/IniFile.h"
 #include "../../Util/SimpleLogger.h"

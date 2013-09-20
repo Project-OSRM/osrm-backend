@@ -26,7 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BaseDataFacade.h"
 
 #include "../../DataStructures/StaticGraph.h"
-#include "../../Util/BoostFilesystemFix.h"
+#include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/IniFile.h"
 #include "../../Util/SimpleLogger.h"
 
