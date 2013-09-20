@@ -125,7 +125,10 @@ static inline void doubleToString(const double value, std::string & output){
     boost::spirit::karma::generate(sink, boost::spirit::karma::double_, value);
 }
 
-static inline void doubleToStringWithTwoDigitsBehindComma(const double value, std::string & output){
+static inline void doubleToStringWithTwoDigitsBehindComma(
+    const double value,
+    std::string & output
+){
     // The largest 32-bit integer is 4294967295, that is 10 chars
     // On the safe side, add 1 for sign, and 1 for trailing zero
     char buffer[12] ;
@@ -133,11 +136,19 @@ static inline void doubleToStringWithTwoDigitsBehindComma(const double value, st
     output = buffer ;
 }
 
-inline void replaceAll(std::string &s, const std::string &sub, const std::string &other) {
+inline void replaceAll(
+    std::string & s,
+    const std::string & sub,
+    const std::string & other
+) {
 	boost::replace_all(s, sub, other);
 }
 
-inline void stringSplit(const std::string &s, const char delim, std::vector<std::string>& result) {
+inline void stringSplit(
+    const std::string &s,
+    const char delim,
+    std::vector<std::string>& result
+) {
 	boost::split(result, s, boost::is_any_of(std::string(&delim)));
 }
 
@@ -159,7 +170,10 @@ inline std::string HTMLDeEntitize( std::string & result) {
     return result;
 }
 
-inline bool StringStartsWith(const std::string & input, const std::string & prefix) {
+inline bool StringStartsWith(
+    const std::string & input,
+    const std::string & prefix
+) {
     return boost::starts_with(input, prefix);
 }
 
