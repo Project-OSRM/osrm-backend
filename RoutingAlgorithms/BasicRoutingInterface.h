@@ -33,9 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/ContainerUtils.h"
 #include "../Util/SimpleLogger.h"
 
+#include <boost/assert.hpp>
 #include <boost/noncopyable.hpp>
 
-#include <cassert>
 #include <climits>
 
 #include <stack>
@@ -87,7 +87,7 @@ public:
                 const NodeID to = facade->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
-                assert( edgeWeight > 0 );
+                BOOST_ASSERT_MSG( edgeWeight > 0, "edgeWeight invalid" );
 
                 if(_forwardHeap.WasInserted( to )) {
                     if(_forwardHeap.GetKey( to ) + edgeWeight < distance) {
@@ -105,7 +105,7 @@ public:
                 const NodeID to = facade->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
-                assert( edgeWeight > 0 );
+                BOOST_ASSERT_MSG( edgeWeight > 0, "edgeWeight invalid" );
                 const int toDistance = distance + edgeWeight;
 
                 //New Node discovered -> Add to Heap + Node Info Storage
@@ -155,7 +155,7 @@ public:
                     }
                 }
             }
-            assert(smallestWeight != INT_MAX);
+            BOOST_ASSERT_MSG(smallestWeight != INT_MAX, "edge id invalid");
 
             const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smallestEdge);
             if(ed.shortcut) {//unpack
@@ -164,7 +164,7 @@ public:
                 recursionStack.push(std::make_pair(middle, edge.second));
                 recursionStack.push(std::make_pair(edge.first, middle));
             } else {
-                assert(!ed.shortcut);
+                BOOST_ASSERT_MSG(!ed.shortcut, "edge must be a shortcut");
                 unpackedPath.push_back(
                     _PathData(
                         ed.id,
@@ -205,7 +205,7 @@ public:
                     }
                 }
             }
-            assert(smallestWeight != INT_MAX);
+            BOOST_ASSERT_MSG(smallestWeight != INT_MAX, "edge weight invalid");
 
             const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smallestEdge);
             if(ed.shortcut) {//unpack
@@ -214,7 +214,7 @@ public:
                 recursionStack.push(std::make_pair(middle, edge.second));
                 recursionStack.push(std::make_pair(edge.first, middle));
             } else {
-                assert(!ed.shortcut);
+                BOOST_ASSERT_MSG(!ed.shortcut, "edge must be shortcut");
                 unpackedPath.push_back(edge.first );
             }
         }
