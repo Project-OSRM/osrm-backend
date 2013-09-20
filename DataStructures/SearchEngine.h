@@ -57,7 +57,6 @@ public:
     SearchEngine( DataFacadeT * facade )
      :
         facade             (facade),
-        engine_working_data(facade),
         shortest_path      (facade, engine_working_data),
         alternative_path   (facade, engine_working_data)
     {}

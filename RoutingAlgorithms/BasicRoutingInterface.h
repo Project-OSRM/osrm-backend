@@ -40,12 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stack>
 
-template<class SearchEngineDataT>
+template<class DataFacadeT>
 class BasicRoutingInterface : boost::noncopyable{
 protected:
-    SearchEngineDataT * engine_working_data;
+    DataFacadeT * facade;
 public:
-    BasicRoutingInterface(SearchEngineDataT * engine_working_data) : engine_working_data(engine_working_data) { }
+    BasicRoutingInterface(DataFacadeT * facade) : facade(facade) { }
     virtual ~BasicRoutingInterface(){ };
 
     inline void RoutingStep(
@@ -77,14 +77,14 @@ public:
 
         //Stalling
         for(
-            EdgeID edge = engine_working_data->BeginEdges( node );
-            edge < engine_working_data->EndEdges(node);
+            EdgeID edge = facade->BeginEdges( node );
+            edge < facade->EndEdges(node);
             ++edge
          ) {
-            const typename SearchEngineDataT::EdgeData & data = engine_working_data->GetEdgeData(edge);
+            const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
             bool backwardDirectionFlag = (!forwardDirection) ? data.forward : data.backward;
             if(backwardDirectionFlag) {
-                const NodeID to = engine_working_data->GetTarget(edge);
+                const NodeID to = facade->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
                 assert( edgeWeight > 0 );
@@ -97,12 +97,12 @@ public:
             }
         }
 
-        for ( EdgeID edge = engine_working_data->BeginEdges( node ); edge < engine_working_data->EndEdges(node); ++edge ) {
-            const typename SearchEngineDataT::EdgeData & data = engine_working_data->GetEdgeData(edge);
+        for ( EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); ++edge ) {
+            const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
             bool forwardDirectionFlag = (forwardDirection ? data.forward : data.backward );
             if(forwardDirectionFlag) {
 
-                const NodeID to = engine_working_data->GetTarget(edge);
+                const NodeID to = facade->GetTarget(edge);
                 const int edgeWeight = data.distance;
 
                 assert( edgeWeight > 0 );
@@ -138,18 +138,18 @@ public:
 
             EdgeID smallestEdge = SPECIAL_EDGEID;
             int smallestWeight = INT_MAX;
-            for(EdgeID eit = engine_working_data->BeginEdges(edge.first);eit < engine_working_data->EndEdges(edge.first);++eit){
-                const int weight = engine_working_data->GetEdgeData(eit).distance;
-                if(engine_working_data->GetTarget(eit) == edge.second && weight < smallestWeight && engine_working_data->GetEdgeData(eit).forward){
+            for(EdgeID eit = facade->BeginEdges(edge.first);eit < facade->EndEdges(edge.first);++eit){
+                const int weight = facade->GetEdgeData(eit).distance;
+                if(facade->GetTarget(eit) == edge.second && weight < smallestWeight && facade->GetEdgeData(eit).forward){
                     smallestEdge = eit;
                     smallestWeight = weight;
                 }
             }
 
             if(smallestEdge == SPECIAL_EDGEID){
-                for(EdgeID eit = engine_working_data->BeginEdges(edge.second);eit < engine_working_data->EndEdges(edge.second);++eit){
-                    const int weight = engine_working_data->GetEdgeData(eit).distance;
-                    if(engine_working_data->GetTarget(eit) == edge.first && weight < smallestWeight && engine_working_data->GetEdgeData(eit).backward){
+                for(EdgeID eit = facade->BeginEdges(edge.second);eit < facade->EndEdges(edge.second);++eit){
+                    const int weight = facade->GetEdgeData(eit).distance;
+                    if(facade->GetTarget(eit) == edge.first && weight < smallestWeight && facade->GetEdgeData(eit).backward){
                         smallestEdge = eit;
                         smallestWeight = weight;
                     }
@@ -157,7 +157,7 @@ public:
             }
             assert(smallestWeight != INT_MAX);
 
-            const typename SearchEngineDataT::EdgeData& ed = engine_working_data->GetEdgeData(smallestEdge);
+            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smallestEdge);
             if(ed.shortcut) {//unpack
                 const NodeID middle = ed.id;
                 //again, we need to this in reversed order
@@ -168,8 +168,8 @@ public:
                 unpackedPath.push_back(
                     _PathData(
                         ed.id,
-                        engine_working_data->GetNameIndexFromEdgeID(ed.id),
-                        engine_working_data->GetTurnInstructionForEdgeID(ed.id),
+                        facade->GetNameIndexFromEdgeID(ed.id),
+                        facade->GetTurnInstructionForEdgeID(ed.id),
                         ed.distance
                     )
                 );
@@ -188,18 +188,18 @@ public:
 
             EdgeID smallestEdge = SPECIAL_EDGEID;
             int smallestWeight = INT_MAX;
-            for(EdgeID eit = engine_working_data->BeginEdges(edge.first);eit < engine_working_data->EndEdges(edge.first);++eit){
-                const int weight = engine_working_data->GetEdgeData(eit).distance;
-                if(engine_working_data->GetTarget(eit) == edge.second && weight < smallestWeight && engine_working_data->GetEdgeData(eit).forward){
+            for(EdgeID eit = facade->BeginEdges(edge.first);eit < facade->EndEdges(edge.first);++eit){
+                const int weight = facade->GetEdgeData(eit).distance;
+                if(facade->GetTarget(eit) == edge.second && weight < smallestWeight && facade->GetEdgeData(eit).forward){
                     smallestEdge = eit;
                     smallestWeight = weight;
                 }
             }
 
             if(smallestEdge == SPECIAL_EDGEID){
-                for(EdgeID eit = engine_working_data->BeginEdges(edge.second);eit < engine_working_data->EndEdges(edge.second);++eit){
-                    const int weight = engine_working_data->GetEdgeData(eit).distance;
-                    if(engine_working_data->GetTarget(eit) == edge.first && weight < smallestWeight && engine_working_data->GetEdgeData(eit).backward){
+                for(EdgeID eit = facade->BeginEdges(edge.second);eit < facade->EndEdges(edge.second);++eit){
+                    const int weight = facade->GetEdgeData(eit).distance;
+                    if(facade->GetTarget(eit) == edge.first && weight < smallestWeight && facade->GetEdgeData(eit).backward){
                         smallestEdge = eit;
                         smallestWeight = weight;
                     }
@@ -207,7 +207,7 @@ public:
             }
             assert(smallestWeight != INT_MAX);
 
-            const typename SearchEngineDataT::EdgeData& ed = engine_working_data->GetEdgeData(smallestEdge);
+            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smallestEdge);
             if(ed.shortcut) {//unpack
                 const NodeID middle = ed.id;
                 //again, we need to this in reversed order

@@ -122,12 +122,12 @@ public:
             ( routeParameters.alternateRoute ) &&
             (1 == rawRoute.segmentEndCoordinates.size())
         ) {
-            search_engine_ptr->alternativePaths(
+            search_engine_ptr->alternative_paths(
                 rawRoute.segmentEndCoordinates[0],
                 rawRoute
             );
         } else {
-            search_engine_ptr->shortestPath(
+            search_engine_ptr->shortest_path(
                 rawRoute.segmentEndCoordinates,
                 rawRoute
             );
@@ -146,16 +146,16 @@ public:
             reply.content += "(";
         }
 
-        _DescriptorConfig descriptorConfig;
+        DescriptorConfig descriptorConfig;
 
         unsigned descriptorType = 0;
         if(descriptorTable.find(routeParameters.outputFormat) != descriptorTable.end() ) {
             descriptorType = descriptorTable.find(routeParameters.outputFormat)->second;
         }
-        descriptorConfig.z = routeParameters.zoomLevel;
+        descriptorConfig.zoom_level = routeParameters.zoomLevel;
         descriptorConfig.instructions = routeParameters.printInstructions;
         descriptorConfig.geometry = routeParameters.geometry;
-        descriptorConfig.encodeGeometry = routeParameters.compression;
+        descriptorConfig.encode_geometry = routeParameters.compression;
 
         switch(descriptorType){
         case 0:
