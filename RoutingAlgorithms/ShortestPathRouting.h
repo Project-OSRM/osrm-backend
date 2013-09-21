@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHORTESTPATHROUTING_H_
 #define SHORTESTPATHROUTING_H_
 
-#include "BasicRoutingInterface.h"
+#include <boost/assert.hpp>
 
+#include "BasicRoutingInterface.h"
 #include "../DataStructures/SearchEngineData.h"
 
 template<class DataFacadeT>
@@ -195,7 +196,10 @@ public:
             }
 
             //Was at most one of the two paths not found?
-            assert(INT_MAX != distance1 || INT_MAX != distance2);
+            BOOST_ASSERT_MSG(
+                (INT_MAX != distance1 || INT_MAX != distance2),
+                "no path found"
+            );
 
             //Unpack paths if they exist
             std::vector<NodeID> temporary_packed_path1;
@@ -236,7 +240,11 @@ public:
                 local_upper_bound2 = local_upper_bound1;
             }
 
-            assert(temporary_packed_path1.empty() && temporary_packed_path2.empty());
+            BOOST_ASSERT_MSG(
+                temporary_packed_path1.empty() &&
+                temporary_packed_path2.empty(),
+                "tempory packed paths not empty"
+            );
 
             //Plug paths together, s.t. end of packed path is begin of temporary packed path
             if( !packed_path1.empty() && !packed_path2.empty() ) {
