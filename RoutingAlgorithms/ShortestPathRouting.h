@@ -37,27 +37,41 @@ class ShortestPathRouting : public BasicRoutingInterface<DataFacadeT>{
     typedef BasicRoutingInterface<DataFacadeT> super;
     typedef SearchEngineData::QueryHeap QueryHeap;
     SearchEngineData & engine_working_data;
+
 public:
-    ShortestPathRouting( DataFacadeT * facade, SearchEngineData & engine_working_data) : super(facade), engine_working_data(engine_working_data) {}
+    ShortestPathRouting(
+        DataFacadeT * facade,
+        SearchEngineData & engine_working_data
+    ) :
+        super(facade),
+        engine_working_data(engine_working_data)
+    {}
 
     ~ShortestPathRouting() {}
 
-    void operator()(std::vector<PhantomNodes> & phantomNodesVector,  RawRouteData & rawRouteData) const {
-        BOOST_FOREACH(const PhantomNodes & phantomNodePair, phantomNodesVector) {
-            if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX()) {
-                rawRouteData.lengthOfShortestPath = rawRouteData.lengthOfAlternativePath = INT_MAX;
+    void operator()(
+        std::vector<PhantomNodes> & phantom_nodes_vector,
+        RawRouteData & raw_route_data
+    ) const {
+        BOOST_FOREACH(
+            const PhantomNodes & phantom_node_pair,
+            phantom_nodes_vector
+        ){
+            if(!phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX()) {
+                raw_route_data.lengthOfShortestPath = INT_MAX;
+                raw_route_data.lengthOfAlternativePath = INT_MAX;
                 return;
             }
         }
         int distance1 = 0;
         int distance2 = 0;
 
-        bool searchFrom1stStartNode = true;
-        bool searchFrom2ndStartNode = true;
+        bool search_from_1st_node = true;
+        bool search_from_2nd_node = true;
         NodeID middle1 = UINT_MAX;
         NodeID middle2 = UINT_MAX;
-        std::vector<NodeID> packedPath1;
-        std::vector<NodeID> packedPath2;
+        std::vector<NodeID> packed_path1;
+        std::vector<NodeID> packed_path2;
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes()
@@ -75,11 +89,11 @@ public:
         QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
         //Get distance to next pair of target nodes.
-        BOOST_FOREACH(const PhantomNodes & phantomNodePair, phantomNodesVector) {
+        BOOST_FOREACH(const PhantomNodes & phantom_node_pair, phantom_nodes_vector){
             forward_heap1.Clear();	forward_heap2.Clear();
             reverse_heap1.Clear();	reverse_heap2.Clear();
-            int _localUpperbound1 = INT_MAX;
-            int _localUpperbound2 = INT_MAX;
+            int local_upper_bound1 = INT_MAX;
+            int local_upper_bound2 = INT_MAX;
 
             middle1 = UINT_MAX;
             middle2 = UINT_MAX;
@@ -99,76 +113,134 @@ public:
             }
 
             //insert new backward nodes into backward heap, unadjusted.
-            reverse_heap1.Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
-            // INFO("rv1: " << phantomNodePair.targetPhantom.edgeBasedNode << ", w;" << phantomNodePair.targetPhantom.weight1 );
-            if(phantomNodePair.targetPhantom.isBidirected() ) {
-                reverse_heap2.Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
-                // INFO("rv2: " << phantomNodePair.targetPhantom.edgeBasedNode+1 << ", w;" << phantomNodePair.targetPhantom.weight2 );
+            reverse_heap1.Insert(
+                phantom_node_pair.targetPhantom.edgeBasedNode,
+                phantom_node_pair.targetPhantom.weight1,
+                phantom_node_pair.targetPhantom.edgeBasedNode
+            );
+            // INFO("rv1: " << phantom_node_pair.targetPhantom.edgeBasedNode << ", w;" << phantom_node_pair.targetPhantom.weight1 );
+            if(phantom_node_pair.targetPhantom.isBidirected() ) {
+                reverse_heap2.Insert(
+                    phantom_node_pair.targetPhantom.edgeBasedNode+1,
+                    phantom_node_pair.targetPhantom.weight2,
+                    phantom_node_pair.targetPhantom.edgeBasedNode+1
+                );
+                // INFO("rv2: " << phantom_node_pair.targetPhantom.edgeBasedNode+1 << ", w;" << phantom_node_pair.targetPhantom.weight2 );
            }
-            const int forward_offset = phantomNodePair.startPhantom.weight1 + (phantomNodePair.startPhantom.isBidirected() ? phantomNodePair.startPhantom.weight2 : 0);
-            const int reverse_offset = phantomNodePair.targetPhantom.weight1 + (phantomNodePair.targetPhantom.isBidirected() ? phantomNodePair.targetPhantom.weight2 : 0);
+            const int forward_offset = phantom_node_pair.startPhantom.weight1 + (phantom_node_pair.startPhantom.isBidirected() ? phantom_node_pair.startPhantom.weight2 : 0);
+            const int reverse_offset = phantom_node_pair.targetPhantom.weight1 + (phantom_node_pair.targetPhantom.isBidirected() ? phantom_node_pair.targetPhantom.weight2 : 0);
 
             //run two-Target Dijkstra routing step.
             while(0 < (forward_heap1.Size() + reverse_heap1.Size() )){
-                if(0 < forward_heap1.Size()){
-                    super::RoutingStep(forward_heap1, reverse_heap1, &middle1, &_localUpperbound1, forward_offset, true);
+                if( !forward_heap1.Empty()){
+                    super::RoutingStep(
+                        forward_heap1,
+                        reverse_heap1,
+                        &middle1,
+                        &local_upper_bound1,
+                        forward_offset,
+                        true
+                    );
                 }
-                if(0 < reverse_heap1.Size() ){
-                    super::RoutingStep(reverse_heap1, forward_heap1, &middle1, &_localUpperbound1, reverse_offset, false);
+                if( !reverse_heap1.Empty() ){
+                    super::RoutingStep(
+                        reverse_heap1,
+                        forward_heap1,
+                        &middle1,
+                        &local_upper_bound1,
+                        reverse_offset,
+                        false
+                    );
                 }
             }
-            if(0 < reverse_heap2.Size()) {
+            if( !reverse_heap2.Empty() ) {
                 while(0 < (forward_heap2.Size() + reverse_heap2.Size() )){
-                    if(0 < forward_heap2.Size()){
-                        super::RoutingStep(forward_heap2, reverse_heap2, &middle2, &_localUpperbound2, forward_offset, true);
+                    if( !forward_heap2.Empty() ){
+                        super::RoutingStep(
+                            forward_heap2,
+                            reverse_heap2,
+                            &middle2,
+                            &local_upper_bound2,
+                            forward_offset,
+                            true
+                        );
                     }
-                    if(0 < reverse_heap2.Size()){
-                        super::RoutingStep(reverse_heap2, forward_heap2, &middle2, &_localUpperbound2, reverse_offset, false);
+                    if( !reverse_heap2.Empty() ){
+                        super::RoutingStep(
+                            reverse_heap2,
+                            forward_heap2,
+                            &middle2,
+                            &local_upper_bound2,
+                            reverse_offset,
+                            false
+                        );
                     }
                 }
             }
 
             //No path found for both target nodes?
-            if((INT_MAX == _localUpperbound1) && (INT_MAX == _localUpperbound2)) {
-                rawRouteData.lengthOfShortestPath = rawRouteData.lengthOfAlternativePath = INT_MAX;
+            if(
+                (INT_MAX == local_upper_bound1) &&
+                (INT_MAX == local_upper_bound2)
+            ) {
+                raw_route_data.lengthOfShortestPath = INT_MAX;
+                raw_route_data.lengthOfAlternativePath = INT_MAX;
                 return;
             }
             if(UINT_MAX == middle1) {
-                searchFrom1stStartNode = false;
+                search_from_1st_node = false;
             }
             if(UINT_MAX == middle2) {
-                searchFrom2ndStartNode = false;
+                search_from_2nd_node = false;
             }
 
             //Was at most one of the two paths not found?
-            assert(!(INT_MAX == distance1 && INT_MAX == distance2));
+            assert(INT_MAX != distance1 || INT_MAX != distance2);
 
             //Unpack paths if they exist
-            std::vector<NodeID> temporaryPackedPath1;
-            std::vector<NodeID> temporaryPackedPath2;
-            if(INT_MAX != _localUpperbound1) {
-                super::RetrievePackedPathFromHeap(forward_heap1, reverse_heap1, middle1, temporaryPackedPath1);
+            std::vector<NodeID> temporary_packed_path1;
+            std::vector<NodeID> temporary_packed_path2;
+            if(INT_MAX != local_upper_bound1) {
+                super::RetrievePackedPathFromHeap(
+                    forward_heap1,
+                    reverse_heap1,
+                    middle1,
+                    temporary_packed_path1
+                );
             }
 
-            if(INT_MAX != _localUpperbound2) {
-                super::RetrievePackedPathFromHeap(forward_heap2, reverse_heap2, middle2, temporaryPackedPath2);
+            if(INT_MAX != local_upper_bound2) {
+                super::RetrievePackedPathFromHeap(
+                    forward_heap2,
+                    reverse_heap2,
+                    middle2,
+                    temporary_packed_path2
+                );
             }
 
             //if one of the paths was not found, replace it with the other one.
-            if(0 == temporaryPackedPath1.size()) {
-                temporaryPackedPath1.insert(temporaryPackedPath1.end(), temporaryPackedPath2.begin(), temporaryPackedPath2.end());
-                _localUpperbound1 = _localUpperbound2;
+            if( temporary_packed_path1.empty() ) {
+                temporary_packed_path1.insert(
+                    temporary_packed_path1.end(),
+                    temporary_packed_path2.begin(),
+                    temporary_packed_path2.end()
+                );
+                local_upper_bound1 = local_upper_bound2;
             }
-            if(0 == temporaryPackedPath2.size()) {
-                temporaryPackedPath2.insert(temporaryPackedPath2.end(), temporaryPackedPath1.begin(), temporaryPackedPath1.end());
-                _localUpperbound2 = _localUpperbound1;
+            if( temporary_packed_path2.empty() ) {
+                temporary_packed_path2.insert(
+                    temporary_packed_path2.end(),
+                    temporary_packed_path1.begin(),
+                    temporary_packed_path1.end()
+                );
+                local_upper_bound2 = local_upper_bound1;
             }
 
-            assert(0 < temporaryPackedPath1.size() && 0 < temporaryPackedPath2.size());
+            assert(temporary_packed_path1.empty() && temporary_packed_path2.empty());
 
             //Plug paths together, s.t. end of packed path is begin of temporary packed path
-            if(0 < packedPath1.size() && 0 < packedPath2.size() ) {
-                if( *(temporaryPackedPath1.begin()) == *(temporaryPackedPath2.begin())) {
+            if( !packed_path1.empty() && !packed_path2.empty() ) {
+                if( temporary_packed_path1.front() == temporary_packed_path2.front() ) {
                     //both new route segments start with the same node, thus one of the packedPath must go.
                     assert( (packedPath1.size() == packedPath2.size() ) || (*(packedPath1.end()-1) != *(packedPath2.end()-1)) );
                     if( *(packedPath1.end()-1) == *(temporaryPackedPath1.begin())) {
@@ -180,32 +252,42 @@ public:
                     }
                 } else  {
                     //packed paths 1 and 2 may need to switch.
-                    if(*(packedPath1.end()-1) != *(temporaryPackedPath1.begin())) {
-                        packedPath1.swap(packedPath2);
+                    if(packed_path1.back() != temporary_packed_path1.front()) {
+                        packed_path1.swap(packed_path2);
                         std::swap(distance1, distance2);
                     }
                 }
             }
-            packedPath1.insert(packedPath1.end(), temporaryPackedPath1.begin(), temporaryPackedPath1.end());
-            packedPath2.insert(packedPath2.end(), temporaryPackedPath2.begin(), temporaryPackedPath2.end());
+            packed_path1.insert(
+                packed_path1.end(),
+                temporary_packed_path1.begin(),
+                temporary_packed_path1.end()
+            );
+            packed_path2.insert(
+                packed_path2.end(),
+                temporary_packed_path2.begin(),
+                temporary_packed_path2.end()
+            );
 
-            if( (packedPath1.back() == packedPath2.back()) && phantomNodePair.targetPhantom.isBidirected() ) {
-
-                NodeID lastNodeID = packedPath2.back();
-                searchFrom1stStartNode &= !(lastNodeID == phantomNodePair.targetPhantom.edgeBasedNode+1);
-                searchFrom2ndStartNode &= !(lastNodeID == phantomNodePair.targetPhantom.edgeBasedNode);
+            if(
+                (packed_path1.back() == packed_path2.back()) &&
+                phantom_node_pair.targetPhantom.isBidirected()
+            ) {
+                NodeID last_node_id = packed_path2.back();
+                search_from_1st_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode+1);
+                search_from_2nd_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode);
             }
 
             distance1 = _localUpperbound1;
             distance2 = _localUpperbound2;
         }
 
-        if(distance1 > distance2){
-            std::swap(packedPath1, packedPath2);
+        if( distance1 > distance2 ){
+            std::swap( packed_path1, packed_path2 );
         }
-        remove_consecutive_duplicates_from_vector(packedPath1);
-        super::UnpackPath(packedPath1, rawRouteData.computedShortestPath);
-        rawRouteData.lengthOfShortestPath = std::min(distance1, distance2);
+        remove_consecutive_duplicates_from_vector(packed_path1);
+        super::UnpackPath(packed_path1, raw_route_data.computedShortestPath);
+        raw_route_data.lengthOfShortestPath = std::min(distance1, distance2);
         return;
     }
 };
