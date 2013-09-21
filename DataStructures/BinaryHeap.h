@@ -125,6 +125,10 @@ public:
         return static_cast<Key>( heap.size() - 1 );
     }
 
+    bool Empty() const {
+        return 0 == Size();
+    }
+
     void Insert( NodeID node, Weight weight, const Data &data ) {
         HeapElement element;
         element.index = static_cast<NodeID>(insertedNodes.size());
