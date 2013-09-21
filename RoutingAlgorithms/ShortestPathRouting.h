@@ -90,7 +90,10 @@ public:
         QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
         //Get distance to next pair of target nodes.
-        BOOST_FOREACH(const PhantomNodes & phantom_node_pair, phantom_nodes_vector){
+        BOOST_FOREACH(
+            const PhantomNodes & phantom_node_pair,
+            phantom_nodes_vector
+        ){
             forward_heap1.Clear();	forward_heap2.Clear();
             reverse_heap1.Clear();	reverse_heap2.Clear();
             int local_upper_bound1 = INT_MAX;
@@ -100,17 +103,33 @@ public:
             middle2 = UINT_MAX;
 
             //insert new starting nodes into forward heap, adjusted by previous distances.
-            if(searchFrom1stStartNode) {
-                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-                // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
-                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-                // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
+            if(search_from_1st_node) {
+                forward_heap1.Insert(
+                    phantom_node_pair.startPhantom.edgeBasedNode,
+                    distance1-phantom_node_pair.startPhantom.weight1,
+                    phantom_node_pair.startPhantom.edgeBasedNode
+                );
+                // INFO("fw1: " << phantom_node_pair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
+                forward_heap2.Insert(
+                    phantom_node_pair.startPhantom.edgeBasedNode,
+                    distance1-phantom_node_pair.startPhantom.weight1,
+                    phantom_node_pair.startPhantom.edgeBasedNode
+                );
+                // INFO("fw2: " << phantom_node_pair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
            }
-            if(phantomNodePair.startPhantom.isBidirected() && searchFrom2ndStartNode) {
-                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance2-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-                // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
-                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance2-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-                // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
+            if(phantom_node_pair.startPhantom.isBidirected() && search_from_2nd_node) {
+                forward_heap1.Insert(
+                    phantom_node_pair.startPhantom.edgeBasedNode+1,
+                    distance2-phantom_node_pair.startPhantom.weight2,
+                    phantom_node_pair.startPhantom.edgeBasedNode+1
+                );
+                // INFO("fw1: " << phantom_node_pair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
+                forward_heap2.Insert(
+                    phantom_node_pair.startPhantom.edgeBasedNode+1,
+                    distance2-phantom_node_pair.startPhantom.weight2,
+                    phantom_node_pair.startPhantom.edgeBasedNode+1
+                );
+                // INFO("fw2: " << phantom_node_pair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
             }
 
             //insert new backward nodes into backward heap, unadjusted.
@@ -249,18 +268,32 @@ public:
             //Plug paths together, s.t. end of packed path is begin of temporary packed path
             if( !packed_path1.empty() && !packed_path2.empty() ) {
                 if( temporary_packed_path1.front() == temporary_packed_path2.front() ) {
-                    //both new route segments start with the same node, thus one of the packedPath must go.
-                    assert( (packedPath1.size() == packedPath2.size() ) || (*(packedPath1.end()-1) != *(packedPath2.end()-1)) );
-                    if( *(packedPath1.end()-1) == *(temporaryPackedPath1.begin())) {
-                        packedPath2.clear();
-                        packedPath2.insert(packedPath2.end(), packedPath1.begin(), packedPath1.end());
+                    //both new route segments start with the same node
+                    //thus, one of the packedPath must go.
+                    BOOST_ASSERT_MSG(
+                        (packed_path1.size() == packed_path2.size() ) ||
+                        (packed_path1.back() != packed_path2.back() ),
+                        "packed paths must be different"
+                    );
+
+                    if( packed_path1.back() == temporary_packed_path1.front()) {
+                        packed_path2.clear();
+                        packed_path2.insert(
+                            packed_path2.end(),
+                            packed_path1.begin(),
+                            packed_path1.end()
+                        );
                     } else {
-                        packedPath1.clear();
-                        packedPath1.insert(packedPath1.end(), packedPath2.begin(), packedPath2.end());
+                        packed_path1.clear();
+                        packed_path1.insert(
+                            packed_path1.end(),
+                            packed_path2.begin(),
+                            packed_path2.end()
+                        );
                     }
                 } else  {
                     //packed paths 1 and 2 may need to switch.
-                    if(packed_path1.back() != temporary_packed_path1.front()) {
+                    if( packed_path1.back() != temporary_packed_path1.front()) {
                         packed_path1.swap(packed_path2);
                         std::swap(distance1, distance2);
                     }
@@ -281,13 +314,13 @@ public:
                 (packed_path1.back() == packed_path2.back()) &&
                 phantom_node_pair.targetPhantom.isBidirected()
             ) {
-                NodeID last_node_id = packed_path2.back();
+                const NodeID last_node_id = packed_path2.back();
                 search_from_1st_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode+1);
                 search_from_2nd_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode);
             }
 
-            distance1 = _localUpperbound1;
-            distance2 = _localUpperbound2;
+            distance1 = local_upper_bound1;
+            distance2 = local_upper_bound2;
         }
 
         if( distance1 > distance2 ){
