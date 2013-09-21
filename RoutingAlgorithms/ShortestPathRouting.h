@@ -85,7 +85,10 @@ public:
         QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
         //Get distance to next pair of target nodes.
-        BOOST_FOREACH(const PhantomNodes & phantom_node_pair, phantom_nodes_vector){
+        BOOST_FOREACH(
+            const PhantomNodes & phantom_node_pair,
+            phantom_nodes_vector
+        ){
             forward_heap1.Clear();	forward_heap2.Clear();
             reverse_heap1.Clear();	reverse_heap2.Clear();
             int local_upper_bound1 = INT_MAX;
@@ -260,7 +263,8 @@ public:
             //Plug paths together, s.t. end of packed path is begin of temporary packed path
             if( !packed_path1.empty() && !packed_path2.empty() ) {
                 if( temporary_packed_path1.front() == temporary_packed_path2.front() ) {
-                    //both new route segments start with the same node, thus one of the packedPath must go.
+                    //both new route segments start with the same node
+                    //thus, one of the packedPath must go.
                     BOOST_ASSERT_MSG(
                         (packed_path1.size() == packed_path2.size() ) ||
                         (packed_path1.back() != packed_path2.back() ),
@@ -286,7 +290,7 @@ public:
                     }
                 } else  {
                     //packed paths 1 and 2 may need to switch.
-                    if(packed_path1.back() != temporary_packed_path1.front()) {
+                    if( packed_path1.back() != temporary_packed_path1.front()) {
                         packed_path1.swap(packed_path2);
                         std::swap(distance1, distance2);
                     }
@@ -307,7 +311,7 @@ public:
                 (packed_path1.back() == packed_path2.back()) &&
                 phantom_node_pair.targetPhantom.isBidirected()
             ) {
-                NodeID last_node_id = packed_path2.back();
+                const NodeID last_node_id = packed_path2.back();
                 search_from_1st_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode+1);
                 search_from_2nd_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode);
             }
