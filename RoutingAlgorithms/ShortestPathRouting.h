@@ -39,6 +39,10 @@ class ShortestPathRouting : public BasicRoutingInterface<DataFacadeT>{
     typedef SearchEngineData::QueryHeap QueryHeap;
     SearchEngineData & engine_working_data;
 
+    int ComputeEdgeOffset(const PhantomNode & phantom) {
+        return phantom.weight1 + (phantom.isBidirected() ? phantom.weight2 : 0);
+    }
+
 public:
     ShortestPathRouting(
         DataFacadeT * facade,
@@ -147,8 +151,12 @@ public:
                 );
                 // INFO("rv2: " << phantom_node_pair.targetPhantom.edgeBasedNode+1 << ", w;" << phantom_node_pair.targetPhantom.weight2 );
            }
-            const int forward_offset = phantom_node_pair.startPhantom.weight1 + (phantom_node_pair.startPhantom.isBidirected() ? phantom_node_pair.startPhantom.weight2 : 0);
-            const int reverse_offset = phantom_node_pair.targetPhantom.weight1 + (phantom_node_pair.targetPhantom.isBidirected() ? phantom_node_pair.targetPhantom.weight2 : 0);
+            const int forward_offset =  ComputeEdgeOffset(
+                                            phantom_node_pair.startPhantom
+                                        );
+            const int reverse_offset =  ComputeEdgeOffset(
+                                            phantom_node_pair.targetPhantom
+                                        );
 
             //run two-Target Dijkstra routing step.
             while(0 < (forward_heap1.Size() + reverse_heap1.Size() )){
