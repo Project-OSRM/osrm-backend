@@ -39,7 +39,7 @@ class ShortestPathRouting : public BasicRoutingInterface<DataFacadeT>{
     typedef SearchEngineData::QueryHeap QueryHeap;
     SearchEngineData & engine_working_data;
 
-    int ComputeEdgeOffset(const PhantomNode & phantom) {
+    int ComputeEdgeOffset(const PhantomNode & phantom) const {
         return phantom.weight1 + (phantom.isBidirected() ? phantom.weight2 : 0);
     }
 
@@ -275,7 +275,10 @@ public:
 
             //Plug paths together, s.t. end of packed path is begin of temporary packed path
             if( !packed_path1.empty() && !packed_path2.empty() ) {
-                if( temporary_packed_path1.front() == temporary_packed_path2.front() ) {
+                if(
+                    temporary_packed_path1.front() ==
+                    temporary_packed_path2.front()
+                ) {
                     //both new route segments start with the same node
                     //thus, one of the packedPath must go.
                     BOOST_ASSERT_MSG(
@@ -331,13 +334,12 @@ public:
             distance2 = local_upper_bound2;
         }
 
-        if( distance1 > distance2 ){
+        if( distance1 > distance2 ) {
             std::swap( packed_path1, packed_path2 );
         }
         remove_consecutive_duplicates_from_vector(packed_path1);
         super::UnpackPath(packed_path1, raw_route_data.computedShortestPath);
         raw_route_data.lengthOfShortestPath = std::min(distance1, distance2);
-        return;
     }
 };
 
