@@ -51,7 +51,6 @@ private:
     const unsigned magic_number;
     char md5_prepare[33];
     char md5_tree[33];
-	char md5_nodeinfo[33];
 	char md5_graph[33];
 	char md5_objects[33];
 
