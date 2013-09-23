@@ -159,9 +159,9 @@ public:
         return m_query_graph->GetEdgeData(e);
     }
 
-    const EdgeDataT &GetEdgeData( const EdgeID e ) const {
-        return m_query_graph->GetEdgeData(e);
-    }
+    // const EdgeDataT &GetEdgeData( const EdgeID e ) const {
+    //     return m_query_graph->GetEdgeData(e);
+    // }
 
     EdgeID BeginEdges( const NodeID n ) const {
         return m_query_graph->BeginEdges(n);

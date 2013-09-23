@@ -52,7 +52,7 @@ public:
 
     virtual EdgeDataT &GetEdgeData( const EdgeID e ) = 0;
 
-    virtual const EdgeDataT &GetEdgeData( const EdgeID e ) const = 0;
+    // virtual const EdgeDataT &GetEdgeData( const EdgeID e ) const = 0;
 
     virtual EdgeID BeginEdges( const NodeID n ) const = 0;
 
