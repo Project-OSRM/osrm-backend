@@ -21,10 +21,13 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef SHARED_MEMORY_VECTOR_WRAPPER_H
 #define SHARED_MEMORY_VECTOR_WRAPPER_H
 
+#include "../Util/SimpleLogger.h"
+
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/type_traits.hpp>
 
+#include <algorithm>
 #include <iterator>
 #include <vector>
 
@@ -60,14 +63,33 @@ private:
     boost::shared_ptr<DataT> m_ptr;
     std::size_t m_size;
 
-    SharedMemoryWrapper() {};
 public:
-    SharedMemoryWrapper(const DataT * ptr, std::size_t size) :
+    SharedMemoryWrapper() :
+        m_size(0)
+    { }
+
+    SharedMemoryWrapper(DataT * ptr, std::size_t size) :
         m_ptr(ptr),
         m_size(size)
     { }
 
+    void swap(const SharedMemoryWrapper<DataT> & other) {
+        std::swap( m_size, other.m_size);
+        std::swap( m_ptr , other.m_ptr );
+    }
+
+    // void SetData(const DataT * ptr, const std::size_t size) {
+    //     BOOST_ASSERT_MSG( 0 == m_size, "vector not empty");
+    //     BOOST_ASSERT_MSG( 0 < size   , "new vector empty");
+    //     m_ptr.reset(ptr);
+    //     m_size = size;
+    // }
+
     DataT & at(const std::size_t index) {
+        return m_ptr[index];
+    }
+
+    const DataT & at(const std::size_t index) const {
         return m_ptr[index];
     }
 
@@ -85,16 +107,21 @@ public:
         BOOST_ASSERT_MSG(index < m_size, "invalid size");
         return m_ptr[index];
     }
+
+    const DataT & operator[](const int index) const {
+        BOOST_ASSERT_MSG(index < m_size, "invalid size");
+        return m_ptr[index];
+    }
 };
 
-template<typename DataT, bool SharedMemory = false>
-class ShMemVector : public
-    boost::conditional<
-        SharedMemory,
-        SharedMemoryWrapper<DataT>,
-        std::vector<DataT>
-    >::type
-{ };
+template<typename DataT, bool UseSharedMemory>
+struct ShM {
+    typedef typename boost::conditional<
+                     UseSharedMemory,
+                     SharedMemoryWrapper<DataT>,
+                     std::vector<DataT>
+                 >::type vector;
+ };
 
 
 #endif //SHARED_MEMORY_VECTOR_WRAPPER_H
