@@ -30,13 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #cmakedefine01 HAS64BITS
 #cmakedefine MD5PREPARE "${MD5PREPARE}"
 #cmakedefine MD5RTREE "${MD5RTREE}"
-#cmakedefine MD5NODEINFO "${MD5NODEINFO}"
 #cmakedefine MD5GRAPH "${MD5GRAPH}"
 #cmakedefine MD5OBJECTS "${MD5OBJECTS}"
 
 UUID::UUID() : magic_number(1297240911) {
-    md5_prepare[32] = md5_tree[32] = md5_nodeinfo[32] = md5_graph[32] =
-        md5_objects[32] = '\0';
+    md5_prepare[32] =
+    md5_tree[32]    =
+    md5_graph[32]   =
+    md5_objects[32] = '\0';
 
  	boost::uuids::name_generator gen(named_uuid);
  	std::string temp_string(__DATE__);
@@ -46,8 +47,6 @@ UUID::UUID() : magic_number(1297240911) {
  	temp_string += md5_prepare;
  	std::copy(MD5RTREE, MD5RTREE+32, md5_tree);
  	temp_string += md5_tree;
- 	std::copy(MD5NODEINFO, MD5NODEINFO+32, md5_nodeinfo);
- 	temp_string += md5_nodeinfo;
  	std::copy(MD5GRAPH, MD5GRAPH+32, md5_graph);
  	temp_string += md5_graph;
  	std::copy(MD5OBJECTS, MD5OBJECTS+32, md5_objects);
@@ -88,13 +87,6 @@ bool UUID::TestRTree(const UUID & other) const {
         throw OSRMException("r-tree input file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_tree, md5_tree+32, other.md5_tree);
-}
-
-bool UUID::TestNodeInfo(const UUID & other) const {
-    if(!other.IsMagicNumberOK()) {
-        throw OSRMException("nodes file misses magic number. Check or reprocess the file");
-    }
-	return std::equal(md5_nodeinfo, md5_nodeinfo+32, other.md5_nodeinfo);
 }
 
 bool UUID::TestQueryObjects(const UUID & other) const {
