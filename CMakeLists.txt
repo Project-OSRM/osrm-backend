@@ -45,9 +45,10 @@ add_executable(osrm-routed routed.cpp Util/GitDescription.cpp)
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
+file(GLOB DatastructureGlob Datastructures/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
 
-set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob})
+set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob})
 add_library(OSRM SHARED ${OSRMSources})
 add_library(UUID STATIC Util/UUID.cpp)
 add_dependencies( UUID UUIDConfigure )
