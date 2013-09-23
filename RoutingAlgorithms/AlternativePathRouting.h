@@ -34,7 +34,7 @@ const double VIAPATH_GAMMA   = 0.75; //alternative shares at most 75% with the s
 template<class DataFacadeT>
 class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
     typedef BasicRoutingInterface<DataFacadeT> super;
-    typedef SearchEngineData::QueryGraph SearchGraph;
+    // typedef SearchEngineData::QueryGraph SearchGraph;
     typedef SearchEngineData::QueryHeap QueryHeap;
     typedef std::pair<NodeID, NodeID> SearchSpaceEdge;
 
@@ -372,7 +372,7 @@ private:
         }
 
         for ( EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); edge++ ) {
-            const typename SearchGraph::EdgeData & data = facade->GetEdgeData(edge);
+            const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
             bool forwardDirectionFlag = (forwardDirection ? data.forward : data.backward );
             if(forwardDirectionFlag) {
 
@@ -462,7 +462,7 @@ private:
             EdgeID edgeIDInViaPath = facade->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename SearchGraph::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
+            typename DataFacadeT::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
             bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
@@ -503,7 +503,7 @@ private:
             EdgeID edgeIDInViaPath = facade->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename SearchGraph::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
+            typename DataFacadeT::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
             const bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
