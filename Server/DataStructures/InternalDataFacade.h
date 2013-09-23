@@ -28,6 +28,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../DataStructures/Coordinate.h"
 #include "../../DataStructures/QueryNode.h"
 #include "../../DataStructures/QueryEdge.h"
+#include "../../DataStructures/SharedMemoryVectorWrapper.h"
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
@@ -51,11 +52,11 @@ private:
     QueryGraph                      * m_query_graph;
     std::string                       m_timestamp;
 
-    std::vector<FixedPointCoordinate> m_coordinate_list;
-    std::vector<NodeID>               m_via_node_list;
-    std::vector<unsigned>             m_name_ID_list;
-    std::vector<TurnInstruction>      m_turn_instruction_list;
-    StaticRTree<RTreeLeaf>          * m_static_rtree;
+    typename ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
+    typename ShM<NodeID, false>::vector               m_via_node_list;
+    typename ShM<unsigned, false>::vector             m_name_ID_list;
+    typename ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
+    StaticRTree<RTreeLeaf, false>          * m_static_rtree;
 
 
     void LoadTimestamp(const boost::filesystem::path & timestamp_path) {
@@ -77,8 +78,8 @@ private:
     }
 
     void LoadGraph(const boost::filesystem::path & hsgr_path) {
-        ShMemVector<typename QueryGraph::_StrNode> node_list;
-        ShMemVector< typename QueryGraph::_StrEdge> edge_list;
+        typename ShM<typename QueryGraph::_StrNode, false>::vector node_list;
+        typename ShM< typename QueryGraph::_StrEdge, false>::vector edge_list;
 
         m_number_of_nodes = readHSGRFromStream(
             hsgr_path,
@@ -219,7 +220,6 @@ public:
             throw OSRMException("edges file is empty");
         }
 
-
         //load data
         SimpleLogger().Write() << "loading graph data";
         LoadGraph(hsgr_path);
@@ -329,7 +329,7 @@ public:
 
     std::string GetTimestamp() const {
         return m_timestamp;
-    };
+    }
 
 };
 

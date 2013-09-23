@@ -26,76 +26,210 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "BaseDataFacade.h"
 
 #include "../../DataStructures/StaticGraph.h"
+#include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/IniFile.h"
 #include "../../Util/SimpleLogger.h"
+
+#include <algorithm>
 
 template<class EdgeDataT>
 class SharedDataFacade : public BaseDataFacade<EdgeDataT> {
 
 private:
+    typedef BaseDataFacade<EdgeDataT>                   super;
+    typedef StaticGraph<typename super::EdgeData, true> QueryGraph;
+    typedef typename StaticGraph<typename super::EdgeData, true>::_StrNode GraphNode;
+    typedef typename StaticGraph<typename super::EdgeData, true>::_StrEdge GraphEdge;
+    typedef typename QueryGraph::InputEdge              InputEdge;
+    typedef typename super::RTreeLeaf                   RTreeLeaf;
+
+    unsigned                                m_check_sum;
+    unsigned                                m_number_of_nodes;
+    QueryGraph                            * m_query_graph;
+    std::string                             m_timestamp;
+
+    ShM<FixedPointCoordinate, true>::vector m_coordinate_list;
+    ShM<NodeID, true>::vector               m_via_node_list;
+    ShM<unsigned, true>::vector             m_name_ID_list;
+    ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
+    StaticRTree<RTreeLeaf, true>          * m_static_rtree;
+
     SharedDataFacade() { }
+
+    void LoadTimestamp() {
+        uint32_t timestamp_size = *static_cast<unsigned *>(
+            SharedMemoryFactory::Get(TIMESTAMP_SIZE)->Ptr()
+        );
+        timestamp_size = std::min(timestamp_size, 25u);
+        SharedMemory * search_tree = SharedMemoryFactory::Get(TIMESTAMP);
+        char * tree_ptr = static_cast<char *>( search_tree->Ptr() );
+        m_timestamp.resize(timestamp_size);
+        std::copy(tree_ptr, tree_ptr+timestamp_size, m_timestamp.begin());
+    }
+
+    void LoadRTree(
+        const boost::filesystem::path & file_index_path
+    ) {
+        uint32_t tree_size = *static_cast<unsigned *>(
+            SharedMemoryFactory::Get(R_SEARCH_TREE_SIZE)->Ptr()
+        );
+        SharedMemory * search_tree = SharedMemoryFactory::Get(R_SEARCH_TREE);
+        typedef StaticRTree<RTreeLeaf, true> TreeNode;
+        TreeNode * tree_ptr = static_cast<TreeNode *>( search_tree->Ptr() );
+        // m_static_rtree = new StaticRTree<RTreeLeaf, true>(
+        //     tree_ptr,
+        //     tree_size,
+        //     file_index_path
+        // );
+    }
+
+    void LoadGraph() {
+        uint32_t number_of_nodes = *static_cast<unsigned *>(
+            SharedMemoryFactory::Get(GRAPH_NODE_LIST_SIZE)->Ptr()
+        );
+        SharedMemory * graph_nodes = SharedMemoryFactory::Get(GRAPH_NODE_LIST);
+        GraphNode * graph_nodes_ptr = static_cast<GraphNode *>( graph_nodes->Ptr() );
+
+        uint32_t number_of_edges = *static_cast<unsigned *>(
+            SharedMemoryFactory::Get(GRAPH_EDGE_LIST_SIZE)->Ptr()
+        );
+        SharedMemory * graph_edges = SharedMemoryFactory::Get(GRAPH_EDGE_LIST);
+        GraphEdge * graph_edges_ptr = static_cast<GraphEdge *>( graph_edges->Ptr() );
+
+        typename ShM<GraphNode, true>::vector node_list(graph_nodes_ptr, number_of_nodes);
+        typename ShM<GraphEdge, true>::vector edge_list(graph_edges_ptr, number_of_edges);
+        m_query_graph = new QueryGraph(
+            node_list ,
+            edge_list
+        );
+
+    }
+
+    void LoadNodeAndEdgeInformation() {
+        uint32_t number_of_coordinates = *static_cast<unsigned *>(
+            SharedMemoryFactory::Get(COORDINATE_LIST_SIZE)->Ptr()
+        );
+        FixedPointCoordinate * graph_edges_ptr = static_cast<FixedPointCoordinate *>(
+            SharedMemoryFactory::Get(COORDINATE_LIST)->Ptr()
+        );
+
+    }
 public:
     SharedDataFacade(
-        const IniFile & configuration,
+        const IniFile & server_config,
         const boost::filesystem::path base_path
      ) {
-        //TODO: load data
+        //check contents of config file
+        if ( !server_config.Holds("ramIndex") ) {
+            throw OSRMException("no nodes file name in server ini");
+        }
+
+        //generate paths of data files
+        boost::filesystem::path ram_index_path = boost::filesystem::absolute(
+                server_config.GetParameter("ramIndex"),
+                base_path
+        );
+
+        //load data
+        SimpleLogger().Write() << "loading graph data";
+        LoadGraph();
+        LoadNodeAndEdgeInformation();
+        LoadRTree(ram_index_path);
+        LoadTimestamp();
     }
 
     //search graph access
-    unsigned GetNumberOfNodes() const { return 0; }
+    unsigned GetNumberOfNodes() const {
+        return m_query_graph->GetNumberOfNodes();
+    }
 
-    unsigned GetNumberOfEdges() const { return 0; }
+    unsigned GetNumberOfEdges() const {
+        return m_query_graph->GetNumberOfEdges();
+    }
 
-    unsigned GetOutDegree( const NodeID n ) const { return 0; }
+    unsigned GetOutDegree( const NodeID n ) const {
+        return m_query_graph->GetOutDegree(n);
+    }
 
-    NodeID GetTarget( const EdgeID e ) const { return 0; }
+    NodeID GetTarget( const EdgeID e ) const {
+        return m_query_graph->GetTarget(e); }
 
-    EdgeDataT &GetEdgeData( const EdgeID e ) { return EdgeDataT(); }
+    EdgeDataT &GetEdgeData( const EdgeID e ) {
+        return m_query_graph->GetEdgeData(e);
+    }
 
-    const EdgeDataT &GetEdgeData( const EdgeID e ) const { return EdgeDataT(); }
+    const EdgeDataT &GetEdgeData( const EdgeID e ) const {
+        return m_query_graph->GetEdgeData(e);
+    }
 
-    EdgeID BeginEdges( const NodeID n ) const { return 0; }
+    EdgeID BeginEdges( const NodeID n ) const {
+        return m_query_graph->BeginEdges(n);
+    }
 
-    EdgeID EndEdges( const NodeID n ) const { return 0; }
+    EdgeID EndEdges( const NodeID n ) const {
+        return m_query_graph->EndEdges(n);
+    }
 
     //searches for a specific edge
-    EdgeID FindEdge( const NodeID from, const NodeID to ) const { return 0; }
+    EdgeID FindEdge( const NodeID from, const NodeID to ) const {
+        return m_query_graph->FindEdge(from, to);
+    }
 
     EdgeID FindEdgeInEitherDirection(
         const NodeID from,
         const NodeID to
-    ) const { return 0; }
+    ) const {
+        return m_query_graph->FindEdgeInEitherDirection(from, to);
+    }
 
     EdgeID FindEdgeIndicateIfReverse(
         const NodeID from,
         const NodeID to,
         bool & result
-    ) const { return 0; }
+    ) const {
+        return m_query_graph->FindEdgeIndicateIfReverse(from, to, result);
+    }
 
     //node and edge information access
     FixedPointCoordinate GetCoordinateOfNode(
         const unsigned id
-    ) const { return FixedPointCoordinate(); };
+    ) const {
+        const NodeID node = m_via_node_list.at(id);
+        return m_coordinate_list.at(node);
+    };
 
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id
-    ) const { return 0; }
+    ) const {
+        return m_turn_instruction_list.at(id);
+    }
 
     bool LocateClosestEndPointForCoordinate(
         const FixedPointCoordinate& input_coordinate,
         FixedPointCoordinate& result,
         const unsigned zoom_level = 18
-    ) const { return false; }
+    ) const {
+        return  m_static_rtree->LocateClosestEndPointForCoordinate(
+                    input_coordinate,
+                    result,
+                    zoom_level
+                );
+    }
 
     bool FindPhantomNodeForCoordinate(
         const FixedPointCoordinate & input_coordinate,
         PhantomNode & resulting_phantom_node,
         const unsigned zoom_level
-    ) const { return false; }
+    ) const {
+        return  m_static_rtree->FindPhantomNodeForCoordinate(
+                    input_coordinate,
+                    resulting_phantom_node,
+                    zoom_level
+                );
+    }
 
-    unsigned GetCheckSum() const { return 0; }
+    unsigned GetCheckSum() const { return m_check_sum; }
 
     unsigned GetNameIndexFromEdgeID(const unsigned id) const { return 0; };
 
@@ -105,9 +239,8 @@ public:
     ) const { return; };
 
     std::string GetTimestamp() const {
-        return "";
-    };
-
+        return m_timestamp;
+    }
 };
 
 #endif  // SHARED_DATA_FACADE
