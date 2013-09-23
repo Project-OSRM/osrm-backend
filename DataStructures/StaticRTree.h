@@ -28,11 +28,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATICRTREE_H_
 #define STATICRTREE_H_
 
-#include "MercatorUtil.h"
 #include "Coordinate.h"
-#include "PhantomNodes.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
+#include "MercatorUtil.h"
+#include "PhantomNodes.h"
+#include "SharedMemoryFactory.h"
+#include "SharedMemoryVectorWrapper.h"
+
+#include "../Server/DataStructures/SharedDataType.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
@@ -48,6 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
+#include <boost/type_traits.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -63,7 +68,7 @@ const static uint32_t RTREE_LEAF_NODE_SIZE = 1170;
 
 static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtree_stream;
 
-template<class DataT>
+template<class DataT, bool UseSharedMemory = false>
 class StaticRTree : boost::noncopyable {
 private:
     struct RectangleInt2D {
@@ -280,7 +285,7 @@ private:
         }
     };
 
-    std::vector<TreeNode> m_search_tree;
+    typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
     uint64_t m_element_count;
 
     const std::string m_leaf_node_filename;
@@ -433,7 +438,30 @@ public:
         m_search_tree.resize(tree_size);
         tree_node_file.read((char*)&m_search_tree[0], sizeof(TreeNode)*tree_size);
         tree_node_file.close();
+        //open leaf node file and store thread specific pointer
+        if ( !boost::filesystem::exists( leaf_file ) ) {
+            throw OSRMException("mem index file does not exist");
+        }
+        if ( 0 == boost::filesystem::file_size( leaf_file ) ) {
+            throw OSRMException("mem index file is empty");
+        }
 
+        boost::filesystem::ifstream leaf_node_file( leaf_file, std::ios::binary );
+        leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
+        leaf_node_file.close();
+
+        //SimpleLogger().Write() << tree_size << " nodes in search tree";
+        //SimpleLogger().Write() << m_element_count << " elements in leafs";
+    }
+
+        //Read-only operation for queries
+    explicit StaticRTree(
+            const TreeNode * tree_node_ptr,
+            const uint32_t number_of_nodes,
+            const boost::filesystem::path & leaf_file
+    ) : m_leaf_node_filename(leaf_file.string()),
+        m_search_tree(tree_node_ptr, number_of_nodes)
+     {
         //open leaf node file and store thread specific pointer
         if ( !boost::filesystem::exists( leaf_file ) ) {
             throw OSRMException("mem index file does not exist");

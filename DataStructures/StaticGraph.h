@@ -92,8 +92,8 @@ public:
     }
 
     StaticGraph(
-        ShMemVector<_StrNode, UseSharedMemory> & nodes,
-        ShMemVector<_StrEdge, UseSharedMemory> & edges
+        typename ShM<_StrNode, UseSharedMemory>::vector & nodes,
+        typename ShM<_StrEdge, UseSharedMemory>::vector & edges
     ) {
         _numNodes = nodes.size();
         _numEdges = edges.size();
@@ -203,8 +203,8 @@ private:
     NodeIterator _numNodes;
     EdgeIterator _numEdges;
 
-    ShMemVector< _StrNode, UseSharedMemory > _nodes;
-    ShMemVector< _StrEdge, UseSharedMemory > _edges;
+    typename ShM< _StrNode, UseSharedMemory >::vector _nodes;
+    typename ShM< _StrEdge, UseSharedMemory >::vector _edges;
 };
 
 #endif // STATICGRAPH_H_INCLUDED
