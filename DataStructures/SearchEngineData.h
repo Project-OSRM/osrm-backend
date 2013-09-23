@@ -45,14 +45,10 @@ struct _HeapData {
 };
 
 // typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
-typedef BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > QueryHeapType;
-typedef boost::thread_specific_ptr<QueryHeapType> SearchEngineHeapPtr;
 
 struct SearchEngineData {
-    typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
-    typedef QueryHeapType   QueryHeap;
-
-    SearchEngineData() { }
+    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > QueryHeap;
+    typedef boost::thread_specific_ptr<QueryHeap> SearchEngineHeapPtr;
 
     static SearchEngineHeapPtr forwardHeap;
     static SearchEngineHeapPtr backwardHeap;
@@ -67,5 +63,12 @@ struct SearchEngineData {
 
     void InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes);
 };
+
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap3;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap3;
 
 #endif // SEARCH_ENGINE_DATA_H

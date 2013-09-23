@@ -24,7 +24,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/type_traits.hpp>
 
 #include <algorithm>
@@ -33,9 +32,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 template<typename DataT>
 class ShMemIterator : public std::iterator<std::input_iterator_tag, DataT> {
-    boost::shared_ptr<DataT> p;
+    DataT * p;
 public:
-    ShMemIterator(boost::shared_ptr<DataT> & x) :p(x) {}
+    ShMemIterator(DataT * x) : p(x) {}
     ShMemIterator(const ShMemIterator & mit) : p(mit.p) {}
     ShMemIterator& operator++() {
         ++p;
@@ -60,7 +59,7 @@ public:
 template<typename DataT>
 class SharedMemoryWrapper {
 private:
-    boost::shared_ptr<DataT> m_ptr;
+    DataT * m_ptr;
     std::size_t m_size;
 
 public:
@@ -73,7 +72,7 @@ public:
         m_size(size)
     { }
 
-    void swap(const SharedMemoryWrapper<DataT> & other) {
+    void swap( SharedMemoryWrapper<DataT> & other ) {
         std::swap( m_size, other.m_size);
         std::swap( m_ptr , other.m_ptr );
     }

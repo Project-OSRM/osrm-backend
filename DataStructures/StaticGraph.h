@@ -101,12 +101,6 @@ public:
         _nodes.swap(nodes);
         _edges.swap(edges);
 
-        if( !UseSharedMemory ) {
-            //Add dummy node to end of _nodes array;
-            _nodes.push_back(_nodes.back());
-        } else {
-            //TODO: Move to graph array construction
-        }
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
         for(unsigned u = 0; u < GetNumberOfNodes(); ++u) {
