@@ -67,6 +67,10 @@ public:
         m_size(size)
     { }
 
+    DataT & at(const std::size_t index) {
+        return m_ptr[index];
+    }
+
     ShMemIterator<DataT> begin() const {
         return ShMemIterator<DataT>(m_ptr);
     }
