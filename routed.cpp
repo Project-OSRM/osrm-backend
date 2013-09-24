@@ -40,7 +40,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/bind.hpp>
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
-#include <boost/regex.hpp>
 
 #include <iostream>
 
@@ -109,7 +108,7 @@ int main (int argc, char * argv[]) {
                 "IP address")
             ("port,p", boost::program_options::value<int>(&ip_port)->default_value(5000),
                 "IP Port")
-            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8), 
+            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
                 "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
@@ -152,16 +151,10 @@ int main (int argc, char * argv[]) {
         // parse config file
         if(boost::filesystem::is_regular_file(paths["config"])) {
             SimpleLogger().Write() << "Reading options from: " << paths["config"].c_str();
-            std::ifstream config_stream(paths["config"].c_str());
-            std::string config_str( (std::istreambuf_iterator<char>(config_stream)), std::istreambuf_iterator<char>() );
-
-            //support old capitalized option names by downcasing them with a regex replace
-            boost::regex option_name_regex( "^([^=]*)" );    //match from start of line to '='
-            std::string option_name_format( "\\L$1\\E" );    //replace with downcased substring
-            std::string modified_config_str = boost::regex_replace( config_str, option_name_regex, option_name_format );
-            std::stringstream modified_stream(modified_config_str);
-
-            boost::program_options::store(parse_config_file(modified_stream, config_file_options), option_variables);
+            std::string config_str;
+            PrepareConfigFile( paths["config"], config_str );
+            std::stringstream config_stream( config_str );
+            boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
             boost::program_options::notify(option_variables);
         }
 

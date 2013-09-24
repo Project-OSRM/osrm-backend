@@ -63,7 +63,7 @@ int main (int argc, char *argv[]) {
         config_options.add_options()
             ("profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)->default_value("profile.lua"),
                 "Path to LUA routing profile")
-            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(10), 
+            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8), 
                 "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
@@ -105,9 +105,11 @@ int main (int argc, char *argv[]) {
 
         // parse config file
         if(boost::filesystem::is_regular_file(config_file_path)) {
-            std::ifstream ifs(config_file_path.c_str());
-            SimpleLogger().Write() << "Reading options from: " << config_file_path.filename().string();
-            boost::program_options::store(parse_config_file(ifs, config_file_options), option_variables);
+            SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
+            std::string config_str;
+            PrepareConfigFile( config_file_path.c_str(), config_str );
+            std::stringstream config_stream( config_str );
+            boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
             boost::program_options::notify(option_variables);
         }
 
