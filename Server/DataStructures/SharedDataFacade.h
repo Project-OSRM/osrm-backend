@@ -55,6 +55,8 @@ private:
     ShM<NodeID, true>::vector               m_via_node_list;
     ShM<unsigned, true>::vector             m_name_ID_list;
     ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
+    ShM<char, false>::vector                m_names_char_list;
+    ShM<unsigned, false>::vector            m_name_begin_indices;
     StaticRTree<RTreeLeaf, true>          * m_static_rtree;
 
     SharedDataFacade() { }
@@ -148,6 +150,10 @@ private:
             number_of_via_nodes
         );
         m_via_node_list.swap(via_node_list);
+    }
+
+    void LoadNames() {
+
     }
 
 public:
