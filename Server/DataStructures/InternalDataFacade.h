@@ -52,10 +52,13 @@ private:
     QueryGraph                      * m_query_graph;
     std::string                       m_timestamp;
 
-    typename ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
-    typename ShM<NodeID, false>::vector               m_via_node_list;
-    typename ShM<unsigned, false>::vector             m_name_ID_list;
-    typename ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
+    ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
+    ShM<NodeID, false>::vector               m_via_node_list;
+    ShM<unsigned, false>::vector             m_name_ID_list;
+    ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
+    ShM<char, false>::vector                 m_names_char_list;
+    ShM<unsigned, false>::vector             m_name_begin_indices;
+
     StaticRTree<RTreeLeaf, false>                   * m_static_rtree;
 
 
@@ -155,6 +158,25 @@ private:
         );
     }
 
+    void LoadStreetNames(
+        const boost::filesystem::path & names_file
+    ) {
+        boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
+        unsigned size = 0;
+        name_stream.read((char *)&size, sizeof(unsigned));
+        BOOST_ASSERT_MSG(0 != size, "name file broken");
+
+        m_name_begin_indices.resize(size);
+        name_stream.read((char*)&m_name_begin_indices[0], size*sizeof(unsigned));
+        name_stream.read((char *)&size, sizeof(unsigned));
+        BOOST_ASSERT_MSG(0 != size, "name file broken");
+
+        m_names_char_list.resize(size+1); //+1 is sentinel/dummy element
+        name_stream.read((char *)&m_names_char_list[0], size*sizeof(char));
+        BOOST_ASSERT_MSG(0 != m_names_char_list.size(), "could not load any names");
+
+        name_stream.close();
+    }
 public:
     ~InternalDataFacade() {
         delete m_query_graph;
@@ -226,6 +248,7 @@ public:
         LoadNodeAndEdgeInformation(node_data_path, edge_data_path);
         LoadRTree(ram_index_path, file_index_path);
         LoadTimestamp(hsgr_path);
+        LoadStreetNames(name_data_path);
     }
 
     //search graph access
