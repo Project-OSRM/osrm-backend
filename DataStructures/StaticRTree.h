@@ -66,7 +66,7 @@ static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtre
 
 template<class DataT, bool UseSharedMemory = false>
 class StaticRTree : boost::noncopyable {
-private:
+public:
     struct RectangleInt2D {
         RectangleInt2D() :
             min_lon(INT_MAX),
@@ -238,6 +238,16 @@ private:
 
     typedef RectangleInt2D RectangleT;
 
+    struct TreeNode {
+        TreeNode() : child_count(0), child_is_on_disk(false) {}
+        RectangleT minimum_bounding_rectangle;
+        uint32_t child_count:31;
+        bool child_is_on_disk:1;
+        uint32_t children[RTREE_BRANCHING_FACTOR];
+    };
+
+private:
+
     struct WrappedInputElement {
         explicit WrappedInputElement(
             const uint32_t _array_index,
@@ -258,14 +268,6 @@ private:
         LeafNode() : object_count(0) {}
         uint32_t object_count;
         DataT objects[RTREE_LEAF_NODE_SIZE];
-    };
-
-    struct TreeNode {
-        TreeNode() : child_count(0), child_is_on_disk(false) {}
-        RectangleT minimum_bounding_rectangle;
-        uint32_t child_count:31;
-        bool child_is_on_disk:1;
-        uint32_t children[RTREE_BRANCHING_FACTOR];
     };
 
     struct QueryCandidate {
@@ -450,14 +452,13 @@ public:
         //SimpleLogger().Write() << m_element_count << " elements in leafs";
     }
 
-        //Read-only operation for queries
     explicit StaticRTree(
-            const TreeNode * tree_node_ptr,
+            TreeNode * tree_node_ptr,
             const uint32_t number_of_nodes,
             const boost::filesystem::path & leaf_file
-    ) : m_leaf_node_filename(leaf_file.string()),
-        m_search_tree(tree_node_ptr, number_of_nodes)
-     {
+    ) : m_search_tree(tree_node_ptr, number_of_nodes),
+        m_leaf_node_filename(leaf_file.string())
+    {
         //open leaf node file and store thread specific pointer
         if ( !boost::filesystem::exists( leaf_file ) ) {
             throw OSRMException("mem index file does not exist");
@@ -473,6 +474,7 @@ public:
         //SimpleLogger().Write() << tree_size << " nodes in search tree";
         //SimpleLogger().Write() << m_element_count << " elements in leafs";
     }
+    //Read-only operation for queries
 /*
     inline void FindKNearestPhantomNodesForCoordinate(
         const FixedPointCoordinate & location,

@@ -37,12 +37,14 @@ template<class EdgeDataT>
 class SharedDataFacade : public BaseDataFacade<EdgeDataT> {
 
 private:
-    typedef BaseDataFacade<EdgeDataT>                   super;
-    typedef StaticGraph<typename super::EdgeData, true> QueryGraph;
-    typedef typename StaticGraph<typename super::EdgeData, true>::_StrNode GraphNode;
-    typedef typename StaticGraph<typename super::EdgeData, true>::_StrEdge GraphEdge;
-    typedef typename QueryGraph::InputEdge              InputEdge;
-    typedef typename super::RTreeLeaf                   RTreeLeaf;
+    typedef EdgeDataT EdgeData;
+    typedef BaseDataFacade<EdgeData>                        super;
+    typedef StaticGraph<EdgeData, true>                     QueryGraph;
+    typedef typename StaticGraph<EdgeData, true>::_StrNode  GraphNode;
+    typedef typename StaticGraph<EdgeData, true>::_StrEdge  GraphEdge;
+    typedef typename QueryGraph::InputEdge                  InputEdge;
+    typedef typename super::RTreeLeaf                       RTreeLeaf;
+    typedef typename StaticRTree<RTreeLeaf, true>::TreeNode RTreeNode;
 
     unsigned                                m_check_sum;
     unsigned                                m_number_of_nodes;
@@ -75,17 +77,16 @@ private:
             SharedMemoryFactory::Get(R_SEARCH_TREE_SIZE)->Ptr()
         );
         SharedMemory * search_tree = SharedMemoryFactory::Get(R_SEARCH_TREE);
-        typedef StaticRTree<RTreeLeaf, true> TreeNode;
-        TreeNode * tree_ptr = static_cast<TreeNode *>( search_tree->Ptr() );
-        // m_static_rtree = new StaticRTree<RTreeLeaf, true>(
-        //     tree_ptr,
-        //     tree_size,
-        //     file_index_path
-        // );
+        RTreeNode * tree_ptr = static_cast<RTreeNode *>( search_tree->Ptr() );
+        m_static_rtree = new StaticRTree<RTreeLeaf, true>(
+            tree_ptr,
+            tree_size,
+            file_index_path
+        );
     }
 
     void LoadGraph() {
-        uint32_t number_of_nodes = *static_cast<unsigned *>(
+        m_number_of_nodes = *static_cast<unsigned *>(
             SharedMemoryFactory::Get(GRAPH_NODE_LIST_SIZE)->Ptr()
         );
         SharedMemory * graph_nodes = SharedMemoryFactory::Get(GRAPH_NODE_LIST);
@@ -97,7 +98,7 @@ private:
         SharedMemory * graph_edges = SharedMemoryFactory::Get(GRAPH_EDGE_LIST);
         GraphEdge * graph_edges_ptr = static_cast<GraphEdge *>( graph_edges->Ptr() );
 
-        typename ShM<GraphNode, true>::vector node_list(graph_nodes_ptr, number_of_nodes);
+        typename ShM<GraphNode, true>::vector node_list(graph_nodes_ptr, m_number_of_nodes);
         typename ShM<GraphEdge, true>::vector edge_list(graph_edges_ptr, number_of_edges);
         m_query_graph = new QueryGraph(
             node_list ,
@@ -110,10 +111,29 @@ private:
         uint32_t number_of_coordinates = *static_cast<unsigned *>(
             SharedMemoryFactory::Get(COORDINATE_LIST_SIZE)->Ptr()
         );
-        FixedPointCoordinate * graph_edges_ptr = static_cast<FixedPointCoordinate *>(
+        FixedPointCoordinate * coordinate_list_ptr = static_cast<FixedPointCoordinate *>(
             SharedMemoryFactory::Get(COORDINATE_LIST)->Ptr()
         );
+        typename ShM<FixedPointCoordinate, true>::vector coordinate_list(
+                coordinate_list_ptr,
+                number_of_coordinates
+        );
+        m_coordinate_list.swap( coordinate_list );
 
+        uint32_t number_of_turn_instructions = *static_cast<unsigned *>(
+            SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST_SIZE)->Ptr()
+        );
+
+        TurnInstruction * turn_instruction_list_ptr = static_cast<TurnInstruction * >(
+            SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST)->Ptr()
+        );
+
+        typename ShM<TurnInstruction, true>::vector turn_instruction_list(
+            turn_instruction_list_ptr,
+            number_of_turn_instructions
+        );
+
+        m_turn_instruction_list.swap(turn_instruction_list);
     }
 public:
     SharedDataFacade(
