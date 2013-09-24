@@ -45,6 +45,10 @@ public:
         operator++();
         return tmp;
     }
+    ShMemIterator operator+(std::ptrdiff_t diff) {
+        ShMemIterator tmp(p+diff);
+        return tmp;
+    }
     bool operator==(const ShMemIterator& rhs) {
         return p==rhs.p;
     }
