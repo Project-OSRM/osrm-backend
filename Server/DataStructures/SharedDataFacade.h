@@ -55,8 +55,8 @@ private:
     ShM<NodeID, true>::vector               m_via_node_list;
     ShM<unsigned, true>::vector             m_name_ID_list;
     ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
-    ShM<char, false>::vector                m_names_char_list;
-    ShM<unsigned, false>::vector            m_name_begin_indices;
+    ShM<char, true>::vector                 m_names_char_list;
+    ShM<unsigned, true>::vector             m_name_begin_indices;
     StaticRTree<RTreeLeaf, true>          * m_static_rtree;
 
     SharedDataFacade() { }
@@ -88,13 +88,13 @@ private:
     }
 
     void LoadGraph() {
-        m_number_of_nodes = *static_cast<unsigned *>(
+        m_number_of_nodes = *static_cast<uint32_t *>(
             SharedMemoryFactory::Get(GRAPH_NODE_LIST_SIZE)->Ptr()
         );
         SharedMemory * graph_nodes = SharedMemoryFactory::Get(GRAPH_NODE_LIST);
         GraphNode * graph_nodes_ptr = static_cast<GraphNode *>( graph_nodes->Ptr() );
 
-        uint32_t number_of_edges = *static_cast<unsigned *>(
+        uint32_t number_of_edges = *static_cast<uint32_t *>(
             SharedMemoryFactory::Get(GRAPH_EDGE_LIST_SIZE)->Ptr()
         );
         SharedMemory * graph_edges = SharedMemoryFactory::Get(GRAPH_EDGE_LIST);
@@ -110,7 +110,7 @@ private:
     }
 
     void LoadNodeAndEdgeInformation() {
-        uint32_t number_of_coordinates = *static_cast<unsigned *>(
+        uint32_t number_of_coordinates = *static_cast<uint32_t *>(
             SharedMemoryFactory::Get(COORDINATE_LIST_SIZE)->Ptr()
         );
         FixedPointCoordinate * coordinate_list_ptr = static_cast<FixedPointCoordinate *>(
@@ -122,7 +122,7 @@ private:
         );
         m_coordinate_list.swap( coordinate_list );
 
-        uint32_t number_of_turn_instructions = *static_cast<unsigned *>(
+        uint32_t number_of_turn_instructions = *static_cast<uint32_t *>(
             SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST_SIZE)->Ptr()
         );
 
@@ -139,7 +139,7 @@ private:
     }
 
     void LoadViaNodeList() {
-        uint32_t number_of_via_nodes = * static_cast<unsigned *> (
+        uint32_t number_of_via_nodes = * static_cast<uint32_t *> (
             SharedMemoryFactory::Get(VIA_NODE_LIST_SIZE)->Ptr()
         );
         NodeID * via_node_list_ptr = static_cast<NodeID *>(
@@ -153,7 +153,29 @@ private:
     }
 
     void LoadNames() {
+        uint32_t street_names_index_size = * static_cast<uint32_t *> (
+            SharedMemoryFactory::Get(NAME_INDEX_SIZE)->Ptr()
+        );
+        unsigned * street_names_index_ptr = static_cast<unsigned *>(
+            SharedMemoryFactory::Get(NAMES_INDEX)->Ptr()
+        );
+        typename ShM<unsigned, true>::vector name_begin_indices(
+            street_names_index_ptr,
+            street_names_index_size
+        );
+        m_name_begin_indices.swap(m_name_begin_indices);
 
+        uint32_t names_list_size = * static_cast<uint32_t *>(
+            SharedMemoryFactory::Get(NAMES_LIST_SIZE)->Ptr()
+        );
+        char * names_list_ptr = static_cast<char *>(
+            SharedMemoryFactory::Get(NAMES_LIST)->Ptr()
+        );
+        typename ShM<char, true>::vector names_char_list(
+            names_list_ptr,
+            names_list_size
+        );
+        m_names_char_list.swap(names_char_list);
     }
 
 public:
@@ -276,10 +298,35 @@ public:
 
     unsigned GetNameIndexFromEdgeID(const unsigned id) const { return 0; };
 
-    void GetName(
-        const unsigned name_id,
-        std::string & result
-    ) const { return; };
+    void GetName( const unsigned name_id, std::string & result ) const {
+        if(UINT_MAX == name_id) {
+            result = "";
+            return;
+        }
+        BOOST_ASSERT_MSG(
+            name_id < m_name_begin_indices.size(),
+            "name id too high"
+        );
+        unsigned begin_index = m_name_begin_indices[name_id];
+        unsigned end_index = m_name_begin_indices[name_id+1];
+        BOOST_ASSERT_MSG(
+            begin_index < m_names_char_list.size(),
+            "begin index of name too high"
+        );
+        BOOST_ASSERT_MSG(
+            end_index < m_names_char_list.size(),
+            "end index of name too high"
+        );
+
+        BOOST_ASSERT_MSG(begin_index <= end_index, "string ends before begin");
+        result.clear();
+        result.resize(end_index - begin_index);
+        std::copy(
+            m_names_char_list.begin() + begin_index,
+            m_names_char_list.begin() + end_index,
+            result.begin()
+        );
+    }
 
     std::string GetTimestamp() const {
         return m_timestamp;
