@@ -22,22 +22,22 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "QueryObjectsStorage.h"
 
 QueryObjectsStorage::QueryObjectsStorage(boost::unordered_map<const std::string,boost::filesystem::path>& paths) {
-	if( paths["hsgr"].empty() ) {
+	if( paths["hsgrdata"].empty() ) {
 		throw OSRMException("no hsgr file given in ini file");
 	}
-	if( paths["ramIndex"].empty() ) {
+	if( paths["ramindex"].empty() ) {
 		throw OSRMException("no ram index file given in ini file");
 	}
-	if( paths["fileIndex"].empty() ) {
+	if( paths["fileindex"].empty() ) {
 		throw OSRMException("no mem index file given in ini file");
 	}
-	if( paths["nodes"].empty() ) {
+	if( paths["nodesdata"].empty() ) {
 		throw OSRMException("no nodes file given in ini file");
 	}
-	if( paths["edges"].empty() ) {
+	if( paths["edgesdata"].empty() ) {
 		throw OSRMException("no edges file given in ini file");
 	}
-	if( paths["names"].empty() ) {
+	if( paths["namesdata"].empty() ) {
 		throw OSRMException("no names file given in ini file");
 	}
 
@@ -46,7 +46,7 @@ QueryObjectsStorage::QueryObjectsStorage(boost::unordered_map<const std::string,
 	std::vector< QueryGraph::_StrNode> node_list;
 	std::vector< QueryGraph::_StrEdge> edge_list;
 	const int number_of_nodes = readHSGRFromStream(
-		paths["hsgr"].c_str(),
+		paths["hsgrdata"].c_str(),
 		node_list,
 		edge_list,
 		&check_sum
@@ -77,10 +77,10 @@ QueryObjectsStorage::QueryObjectsStorage(boost::unordered_map<const std::string,
     SimpleLogger().Write() << "Loading auxiliary information";
     //Init nearest neighbor data structure
 	nodeHelpDesk = new NodeInformationHelpDesk(
-		paths["ramIndex"].c_str(),
-		paths["fileIndex"].c_str(),
-		paths["nodes"].c_str(),
-		paths["edges"].c_str(),
+		paths["ramindex"].c_str(),
+		paths["fileindex"].c_str(),
+		paths["nodesdata"].c_str(),
+		paths["edgesdata"].c_str(),
 		number_of_nodes,
 		check_sum
 	);
@@ -88,14 +88,14 @@ QueryObjectsStorage::QueryObjectsStorage(boost::unordered_map<const std::string,
 	//deserialize street name list
 	SimpleLogger().Write() << "Loading names index";
 
-    if ( !boost::filesystem::exists( paths["names"] ) ) {
+    if ( !boost::filesystem::exists( paths["namesdata"] ) ) {
         throw OSRMException("names file does not exist");
     }
-    if ( 0 == boost::filesystem::file_size( paths["names"] ) ) {
+    if ( 0 == boost::filesystem::file_size( paths["namesdata"] ) ) {
         throw OSRMException("names file is empty");
     }
 
-	boost::filesystem::ifstream name_stream(paths["names"], std::ios::binary);
+	boost::filesystem::ifstream name_stream(paths["namesdata"], std::ios::binary);
 	unsigned size = 0;
 	name_stream.read((char *)&size, sizeof(unsigned));
 	BOOST_ASSERT_MSG(0 != size, "name file broken");

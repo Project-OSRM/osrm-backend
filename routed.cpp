@@ -40,6 +40,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/bind.hpp>
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
+#include <boost/regex.hpp>
 
 #include <iostream>
 
@@ -85,22 +86,22 @@ int main (int argc, char * argv[]) {
             ("version,v", "Show version")
             ("help,h", "Show this help message")
             ("config,c", boost::program_options::value<boost::filesystem::path>(&paths["config"])->default_value("server.ini"),
-                  "Path to a configuration file.");
+                  "Path to a configuration file");
 
         // declare a group of options that will be allowed both on command line and in config file
         boost::program_options::options_description config_options("Configuration");
         config_options.add_options()
-            ("hsgr", boost::program_options::value<boost::filesystem::path>(&paths["hsgr"]),
+            ("hsgrdata", boost::program_options::value<boost::filesystem::path>(&paths["hsgrdata"]),
                 "HSGR file")
-            ("nodes", boost::program_options::value<boost::filesystem::path>(&paths["nodes"]),
+            ("nodesdata", boost::program_options::value<boost::filesystem::path>(&paths["nodesdata"]),
                 "Nodes file")
-            ("edges", boost::program_options::value<boost::filesystem::path>(&paths["edges"]),
+            ("edgesdata", boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
                 "Edges file")
-            ("ram-index", boost::program_options::value<boost::filesystem::path>(&paths["ramIndex"]),
+            ("ramindex", boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
                 "RAM index file")
-            ("file-index", boost::program_options::value<boost::filesystem::path>(&paths["fileIndex"]),
+            ("fileindex", boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
                 "File index file")
-            ("names", boost::program_options::value<boost::filesystem::path>(&paths["names"]),
+            ("namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
                 "Names file")
             ("timestamp", boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
                 "Timestamp file")
@@ -108,18 +109,18 @@ int main (int argc, char * argv[]) {
                 "IP address")
             ("port,p", boost::program_options::value<int>(&ip_port)->default_value(5000),
                 "IP Port")
-            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(10), 
+            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8), 
                 "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
         boost::program_options::options_description hidden_options("Hidden options");
         hidden_options.add_options()
-            ("input,i", boost::program_options::value<boost::filesystem::path>(&paths["input"]),
-                "Input file in .osrm format");
+            ("base,b", boost::program_options::value<boost::filesystem::path>(&paths["base"]),
+                "base path to .osrm file, other wil be located in the same folder");
 
         // positional option
         boost::program_options::positional_options_description positional_options;
-        positional_options.add("input", 1);
+        positional_options.add("base", 1);
 
         // combine above options for parsing
         boost::program_options::options_description cmdline_options;
@@ -128,7 +129,7 @@ int main (int argc, char * argv[]) {
         boost::program_options::options_description config_file_options;
         config_file_options.add(config_options).add(hidden_options);
 
-        boost::program_options::options_description visible_options(boost::filesystem::basename(argv[0]) + " <input.osrm> [<options>]");
+        boost::program_options::options_description visible_options(boost::filesystem::basename(argv[0]) + " <base.osrm> [<options>]");
         visible_options.add(generic_options).add(config_options);
 
         // parse command line options
@@ -150,43 +151,74 @@ int main (int argc, char * argv[]) {
 
         // parse config file
         if(boost::filesystem::is_regular_file(paths["config"])) {
-            std::ifstream ifs(paths["config"].c_str());
             SimpleLogger().Write() << "Reading options from: " << paths["config"].c_str();
-            boost::program_options::store(parse_config_file(ifs, config_file_options), option_variables);
+            std::ifstream config_stream(paths["config"].c_str());
+            std::string config_str( (std::istreambuf_iterator<char>(config_stream)), std::istreambuf_iterator<char>() );
+
+            //support old capitalized option names by downcasing them with a regex replace
+            boost::regex option_name_regex( "^([^=]*)" );    //match from start of line to '='
+            std::string option_name_format( "\\L$1\\E" );    //replace with downcased substring
+            std::string modified_config_str = boost::regex_replace( config_str, option_name_regex, option_name_format );
+            std::stringstream modified_stream(modified_config_str);
+
+            boost::program_options::store(parse_config_file(modified_stream, config_file_options), option_variables);
             boost::program_options::notify(option_variables);
         }
 
-        if(!option_variables.count("hsgr")) {
-            paths["hsgr"] = std::string( paths["input"].c_str()) + ".hsgr";
+        if(!option_variables.count("hsgrdata")) {
+            if(!option_variables.count("base")) {
+                SimpleLogger().Write(logWARNING) << "hsgrdata (or base) must be specified";
+                return -1;
+            }
+            paths["hsgrdata"] = std::string( paths["base"].c_str()) + ".hsgr";
         }
 
-        if(!option_variables.count("nodes")) {
-            paths["nodes"] = std::string( paths["input"].c_str()) + ".nodes";
+        if(!option_variables.count("nodesdata")) {
+            if(!option_variables.count("base")) {
+                SimpleLogger().Write(logWARNING) << "nodesdata (or base) must be specified";
+                return -1;
+            }
+            paths["nodesdata"] = std::string( paths["base"].c_str()) + ".nodes";
         }
 
-        if(!option_variables.count("edges")) {
-            paths["edges"] = std::string( paths["input"].c_str()) + ".edges";
+        if(!option_variables.count("edgesdata")) {
+            if(!option_variables.count("base")) {
+                SimpleLogger().Write(logWARNING) << "edgesdata (or base) must be specified";
+                return -1;
+            }
+            paths["edgesdata"] = std::string( paths["base"].c_str()) + ".edges";
         }
 
-        if(!option_variables.count("ram")) {
-            paths["ramIndex"] = std::string( paths["input"].c_str()) + ".ramIndex";
+        if(!option_variables.count("ramindex")) {
+            if(!option_variables.count("base")) {
+                SimpleLogger().Write(logWARNING) << "ramindex (or base) must be specified";
+                return -1;
+            }
+            paths["ramindex"] = std::string( paths["base"].c_str()) + ".ramIndex";
         }
 
-        if(!option_variables.count("index")) {
-            paths["fileIndex"] = std::string( paths["input"].c_str()) + ".fileIndex";
+        if(!option_variables.count("fileindex")) {
+            if(!option_variables.count("base")) {
+                SimpleLogger().Write(logWARNING) << "fileindex (or base) must be specified";
+                return -1;
+            }
+            paths["fileindex"] = std::string( paths["base"].c_str()) + ".fileIndex";
         }
 
-        if(!option_variables.count("names")) {
-            paths["names"] = std::string( paths["input"].c_str()) + ".names";
+        if(!option_variables.count("namesdata")) {
+            if(!option_variables.count("base")) {
+                SimpleLogger().Write(logWARNING) << "namesdata (or base) must be specified";
+                return -1;
+            }
+            paths["namesdata"] = std::string( paths["base"].c_str()) + ".names";
         }
 
         if(!option_variables.count("timestamp")) {
-            paths["timestamp"] = std::string( paths["input"].c_str()) + ".timestamp";
-        }
-
-        if(!option_variables.count("input")) {
-            SimpleLogger().Write(logWARNING) << "No input file specified";
-            return -1;
+            if(!option_variables.count("base")) {
+                SimpleLogger().Write(logWARNING) << "timestamp (or base) must be specified";
+                return -1;
+            }
+            paths["timestamp"] = std::string( paths["base"].c_str()) + ".timestamp";
         }
 
         if(1 > requested_num_threads) {
@@ -197,13 +229,12 @@ int main (int argc, char * argv[]) {
         SimpleLogger().Write() <<
             "starting up engines, " << g_GIT_DESCRIPTION << ", compiled at " << __DATE__ << ", " __TIME__;
         
-        SimpleLogger().Write() << "Input file:\t" << paths["input"].c_str();
-        SimpleLogger().Write() << "HSGR file:\t" << paths["hsgr"].c_str();
-        SimpleLogger().Write() << "Nodes file:\t" << paths["nodes"].c_str();
-        SimpleLogger().Write() << "Edges file:\t" << paths["edges"].c_str();
-        SimpleLogger().Write() << "RAM file:\t" << paths["ramIndex"].c_str();
-        SimpleLogger().Write() << "Index file:\t" << paths["fileIndex"].c_str();
-        SimpleLogger().Write() << "Names file:\t" << paths["names"].c_str();
+        SimpleLogger().Write() << "HSGR file:\t" << paths["hsgrdata"].c_str();
+        SimpleLogger().Write() << "Nodes file:\t" << paths["nodesdata"].c_str();
+        SimpleLogger().Write() << "Edges file:\t" << paths["edgesdata"].c_str();
+        SimpleLogger().Write() << "RAM file:\t" << paths["ramindex"].c_str();
+        SimpleLogger().Write() << "Index file:\t" << paths["fileindex"].c_str();
+        SimpleLogger().Write() << "Names file:\t" << paths["namesdata"].c_str();
         SimpleLogger().Write() << "Timestamp file:\t" << paths["timestamp"].c_str();
         SimpleLogger().Write() << "Threads:\t" << requested_num_threads;
         SimpleLogger().Write() << "IP address:\t" << ip_address;
