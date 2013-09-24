@@ -90,10 +90,13 @@ private:
             edge_list,
             &m_check_sum
         );
-        BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
-        BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
+        BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
+        BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
 
         m_query_graph = new QueryGraph(node_list, edge_list);
+
+        BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
+        BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
         SimpleLogger().Write() << "Data checksum is " << m_check_sum;
     }
 
