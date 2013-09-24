@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
-#include "../DataStructures/SearchEngine.h"
 #include "../Server/BasicDatastructures.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
