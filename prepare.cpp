@@ -332,7 +332,6 @@ int main (int argc, char *argv[]) {
         std::ofstream hsgr_output_stream(graphOut.c_str(), std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
-            SimpleLogger().Write() << "edge (" << edge.source << "," << edge.target << ")";
             if(edge.source > numberOfNodes) {
                 numberOfNodes = edge.source;
             }
@@ -353,17 +352,9 @@ int main (int argc, char *argv[]) {
                 ++edge;
             _nodes[node].firstEdge = position; //=edge
             position += edge - lastEdge; //remove
-            SimpleLogger().Write() << "_nodes[" << node << "].firstEdge = " << _nodes[node].firstEdge;
         }
         _nodes[_nodes.size()-1].firstEdge = _nodes[_nodes.size()-2].firstEdge;
-        SimpleLogger().Write() << "position: " << position;
         ++numberOfNodes;
-
-        SimpleLogger().Write() << "no. of nodes: " << numberOfNodes << ", edges: " << edge;
-        SimpleLogger().Write() << "_nodes.size(): " << _nodes.size();
-        for(unsigned i = 0; i < _nodes.size(); ++i) {
-            SimpleLogger().Write() << _nodes[i].firstEdge;
-        }
 
         BOOST_ASSERT_MSG(_nodes.size() == numberOfNodes, "no. of nodes dont match");
 
