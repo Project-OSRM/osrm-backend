@@ -24,7 +24,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
-#include "../DataStructures/SearchEngine.h"
 #include "../Server/BasicDatastructures.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
