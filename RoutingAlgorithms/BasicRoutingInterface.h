@@ -311,6 +311,11 @@ public:
             packed_path.push_back(current_node_id);
         }
     }
+
+    int ComputeEdgeOffset(const PhantomNode & phantom) const {
+        return phantom.weight1 + (phantom.isBidirected() ? phantom.weight2 : 0);
+    }
+
 };
 
 #endif /* BASICROUTINGINTERFACE_H_ */
