@@ -343,17 +343,43 @@ public:
 
     unsigned GetCheckSum() const { return m_check_sum; }
 
-    unsigned GetNameIndexFromEdgeID(const unsigned id) const { return 0; };
+    unsigned GetNameIndexFromEdgeID(const unsigned id) const {
+        return m_name_ID_list.at(id);
+    };
 
-    void GetName(
-        const unsigned name_id,
-        std::string & result
-    ) const { return; };
+    void GetName( const unsigned name_id, std::string & result ) const {
+        if(UINT_MAX == name_id) {
+            result = "";
+            return;
+        }
+        BOOST_ASSERT_MSG(
+            name_id < m_name_begin_indices.size(),
+            "name id too high"
+        );
+        unsigned begin_index = m_name_begin_indices[name_id];
+        unsigned end_index = m_name_begin_indices[name_id+1];
+        BOOST_ASSERT_MSG(
+            begin_index < m_names_char_list.size(),
+            "begin index of name too high"
+        );
+        BOOST_ASSERT_MSG(
+            end_index < m_names_char_list.size(),
+            "end index of name too high"
+        );
+
+        BOOST_ASSERT_MSG(begin_index <= end_index, "string ends before begin");
+        result.clear();
+        result.resize(end_index - begin_index);
+        std::copy(
+            m_names_char_list.begin() + begin_index,
+            m_names_char_list.begin() + end_index,
+            result.begin()
+        );
+    }
 
     std::string GetTimestamp() const {
         return m_timestamp;
     }
-
 };
 
 #endif  // INTERNAL_DATA_FACADE
