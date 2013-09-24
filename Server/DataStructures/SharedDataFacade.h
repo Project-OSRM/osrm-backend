@@ -124,7 +124,7 @@ private:
             SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST_SIZE)->Ptr()
         );
 
-        TurnInstruction * turn_instruction_list_ptr = static_cast<TurnInstruction * >(
+        TurnInstruction * turn_instruction_list_ptr = static_cast<TurnInstruction *>(
             SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST)->Ptr()
         );
 
@@ -135,6 +135,21 @@ private:
 
         m_turn_instruction_list.swap(turn_instruction_list);
     }
+
+    void LoadViaNodeList() {
+        uint32_t number_of_via_nodes = * static_cast<unsigned *> (
+            SharedMemoryFactory::Get(VIA_NODE_LIST_SIZE)->Ptr()
+        );
+        NodeID * via_node_list_ptr = static_cast<NodeID *>(
+            SharedMemoryFactory::Get(VIA_NODE_LIST)->Ptr()
+        );
+        typename ShM<NodeID, true>::vector via_node_list(
+            via_node_list_ptr,
+            number_of_via_nodes
+        );
+        m_via_node_list.swap(via_node_list);
+    }
+
 public:
     SharedDataFacade(
         const IniFile & server_config,
@@ -157,6 +172,8 @@ public:
         LoadNodeAndEdgeInformation();
         LoadRTree(ram_index_path);
         LoadTimestamp();
+        LoadViaNodeList();
+        LoadNames();
     }
 
     //search graph access
