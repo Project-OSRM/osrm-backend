@@ -23,6 +23,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "BasicRoutingInterface.h"
 #include "../DataStructures/SearchEngineData.h"
+
 #include <boost/unordered_map.hpp>
 #include <cmath>
 #include <vector>
@@ -34,7 +35,7 @@ const double VIAPATH_GAMMA   = 0.75; //alternative shares at most 75% with the s
 template<class DataFacadeT>
 class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
     typedef BasicRoutingInterface<DataFacadeT> super;
-    // typedef SearchEngineData::QueryGraph SearchGraph;
+    typedef typename super::EdgeData EdgeData;
     typedef SearchEngineData::QueryHeap QueryHeap;
     typedef std::pair<NodeID, NodeID> SearchSpaceEdge;
 
