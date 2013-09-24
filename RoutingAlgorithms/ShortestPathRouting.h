@@ -264,9 +264,9 @@ public:
             }
 
             BOOST_ASSERT_MSG(
-                temporary_packed_path1.empty() &&
-                temporary_packed_path2.empty(),
-                "tempory packed paths not empty"
+                !temporary_packed_path1.empty() ||
+                !temporary_packed_path2.empty(),
+                "tempory packed paths empty"
             );
 
             //Plug paths together, s.t. end of packed path is begin of temporary packed path
