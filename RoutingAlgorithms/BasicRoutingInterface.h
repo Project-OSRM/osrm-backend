@@ -4,7 +4,7 @@
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
+the Free Software Foundation; edge_idher version 3 of the License, or
 any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -44,6 +44,8 @@ SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap3;
 
 template<class DataFacadeT>
 class BasicRoutingInterface : boost::noncopyable {
+private:
+    typedef typename DataFacadeT::EdgeData EdgeData;
 protected:
     DataFacadeT * facade;
 public:
@@ -82,8 +84,8 @@ public:
             edge < facade->EndEdges(node);
             ++edge
          ) {
-            const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
-            bool reverse_flag = (!forward_direction) ? data.forward : data.backward;
+            const EdgeData & data = facade->GetEdgeData(edge);
+            const bool reverse_flag = (!forward_direction) ? data.forward : data.backward;
             if( reverse_flag ) {
                 const NodeID to = facade->GetTarget(edge);
                 const int edge_weight = data.distance;
@@ -98,8 +100,12 @@ public:
             }
         }
 
-        for ( EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); ++edge ) {
-            const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
+        for(
+            EdgeID edge = facade->BeginEdges(node), end_edge = facade->EndEdges(node);
+            edge < end_edge;
+            ++edge
+        ) {
+            const EdgeData & data = facade->GetEdgeData(edge);
             bool forward_directionFlag = (forward_direction ? data.forward : data.backward );
             if( forward_directionFlag ) {
 
@@ -144,34 +150,42 @@ public:
 
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
             int edge_weight = INT_MAX;
-            for(EdgeID eit = facade->BeginEdges(edge.first);eit < facade->EndEdges(edge.first);++eit){
-                const int weight = facade->GetEdgeData(eit).distance;
+            for(
+                EdgeID edge_id = facade->BeginEdges(edge.first);
+                edge_id < facade->EndEdges(edge.first);
+                ++edge_id
+            ){
+                const int weight = facade->GetEdgeData(edge_id).distance;
                 if(
-                    (facade->GetTarget(eit) == edge.second) &&
-                    (weight < edge_weight)               &&
-                    facade->GetEdgeData(eit).forward
+                    (facade->GetTarget(edge_id) == edge.second) &&
+                    (weight < edge_weight)                      &&
+                    facade->GetEdgeData(edge_id).forward
                 ){
-                    smaller_edge_id = eit;
+                    smaller_edge_id = edge_id;
                     edge_weight = weight;
                 }
             }
 
             if( SPECIAL_EDGEID == smaller_edge_id ){
-                for(EdgeID eit = facade->BeginEdges(edge.second); eit < facade->EndEdges(edge.second); ++eit){
-                    const int weight = facade->GetEdgeData(eit).distance;
+                for(
+                    EdgeID edge_id = facade->BeginEdges(edge.second);
+                    edge_id < facade->EndEdges(edge.second);
+                    ++edge_id
+                ){
+                    const int weight = facade->GetEdgeData(edge_id).distance;
                     if(
-                        (facade->GetTarget(eit) == edge.first) &&
+                        (facade->GetTarget(edge_id) == edge.first) &&
                         (weight < edge_weight)              &&
-                        facade->GetEdgeData(eit).backward
+                        facade->GetEdgeData(edge_id).backward
                     ){
-                        smaller_edge_id = eit;
+                        smaller_edge_id = edge_id;
                         edge_weight = weight;
                     }
                 }
             }
             BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge id invalid");
 
-            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
+            const EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
             if( ed.shortcut ) {//unpack
                 const NodeID middle_node_id = ed.id;
                 //again, we need to this in reversed order
@@ -206,34 +220,42 @@ public:
 
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
             int edge_weight = INT_MAX;
-            for(EdgeID eit = facade->BeginEdges(edge.first);eit < facade->EndEdges(edge.first);++eit){
-                const int weight = facade->GetEdgeData(eit).distance;
+            for(
+                EdgeID edge_id = facade->BeginEdges(edge.first);
+                edge_id < facade->EndEdges(edge.first);
+                ++edge_id
+            ){
+                const int weight = facade->GetEdgeData(edge_id).distance;
                 if(
-                    (facade->GetTarget(eit) == edge.second) &&
+                    (facade->GetTarget(edge_id) == edge.second) &&
                     (weight < edge_weight)               &&
-                    facade->GetEdgeData(eit).forward
+                    facade->GetEdgeData(edge_id).forward
                 ){
-                    smaller_edge_id = eit;
+                    smaller_edge_id = edge_id;
                     edge_weight = weight;
                 }
             }
 
             if( SPECIAL_EDGEID == smaller_edge_id ){
-                for(EdgeID eit = facade->BeginEdges(edge.second);eit < facade->EndEdges(edge.second);++eit){
-                    const int weight = facade->GetEdgeData(eit).distance;
+                for(
+                    EdgeID edge_id = facade->BeginEdges(edge.second);
+                    edge_id < facade->EndEdges(edge.second);
+                    ++edge_id
+                ){
+                    const int weight = facade->GetEdgeData(edge_id).distance;
                     if(
-                        (facade->GetTarget(eit) == edge.first) &&
+                        (facade->GetTarget(edge_id) == edge.first) &&
                         (weight < edge_weight)              &&
-                        facade->GetEdgeData(eit).backward
+                        facade->GetEdgeData(edge_id).backward
                     ){
-                        smaller_edge_id = eit;
+                        smaller_edge_id = edge_id;
                         edge_weight = weight;
                     }
                 }
             }
             BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge weight invalid");
 
-            const typename DataFacadeT::EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
+            const EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
             if(ed.shortcut) {//unpack
                 const NodeID middle_node_id = ed.id;
                 //again, we need to this in reversed order

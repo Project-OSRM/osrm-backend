@@ -372,7 +372,7 @@ private:
         }
 
         for ( EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); edge++ ) {
-            const typename DataFacadeT::EdgeData & data = facade->GetEdgeData(edge);
+            const EdgeData & data = facade->GetEdgeData(edge);
             bool forwardDirectionFlag = (forwardDirection ? data.forward : data.backward );
             if(forwardDirectionFlag) {
 
@@ -462,7 +462,7 @@ private:
             EdgeID edgeIDInViaPath = facade->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename DataFacadeT::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
+            EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
             bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
@@ -503,7 +503,7 @@ private:
             EdgeID edgeIDInViaPath = facade->FindEdgeInEitherDirection(viaPathEdge.first, viaPathEdge.second);
             if(UINT_MAX == edgeIDInViaPath)
                 return false;
-            typename DataFacadeT::EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
+            EdgeData currentEdgeData = facade->GetEdgeData(edgeIDInViaPath);
             const bool IsViaEdgeShortCut = currentEdgeData.shortcut;
             if (IsViaEdgeShortCut) {
                 const NodeID middleOfViaPath = currentEdgeData.id;
