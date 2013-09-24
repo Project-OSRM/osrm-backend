@@ -82,7 +82,9 @@ private:
 
     void LoadGraph(const boost::filesystem::path & hsgr_path) {
         typename ShM<typename QueryGraph::_StrNode, false>::vector node_list;
-        typename ShM< typename QueryGraph::_StrEdge, false>::vector edge_list;
+        typename ShM<typename QueryGraph::_StrEdge, false>::vector edge_list;
+
+        SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 
         m_number_of_nodes = readHSGRFromStream(
             hsgr_path,
@@ -90,9 +92,10 @@ private:
             edge_list,
             &m_check_sum
         );
+
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
         BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
-
+        SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size() << " edges";
         m_query_graph = new QueryGraph(node_list, edge_list);
 
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
@@ -248,9 +251,13 @@ public:
         //load data
         SimpleLogger().Write() << "loading graph data";
         LoadGraph(hsgr_path);
+        SimpleLogger().Write() << "loading egde information";
         LoadNodeAndEdgeInformation(node_data_path, edge_data_path);
+        SimpleLogger().Write() << "loading r-tree";
         LoadRTree(ram_index_path, file_index_path);
-        LoadTimestamp(hsgr_path);
+        SimpleLogger().Write() << "loading timestamp";
+        LoadTimestamp(timestamp_path);
+        SimpleLogger().Write() << "loading street names";
         LoadStreetNames(name_data_path);
     }
 

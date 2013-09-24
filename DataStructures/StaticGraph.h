@@ -88,7 +88,7 @@ public:
         typename ShM<_StrNode, UseSharedMemory>::vector & nodes,
         typename ShM<_StrEdge, UseSharedMemory>::vector & edges
     ) {
-        _numNodes = nodes.size();
+        _numNodes = nodes.size()-1;
         _numEdges = edges.size();
 
         _nodes.swap(nodes);
@@ -97,8 +97,10 @@ public:
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
         for(unsigned u = 0; u < GetNumberOfNodes(); ++u) {
+            SimpleLogger().Write() << "[" << u << "], 1st: " << BeginEdges(u) << ", last: " << EndEdges(u);
             for(unsigned eid = BeginEdges(u); eid < EndEdges(u); ++eid) {
                 unsigned v = GetTarget(eid);
+                SimpleLogger().Write() << "Edge (" << u << "," << v << ")";
                 EdgeData & data = GetEdgeData(eid);
                 if(data.shortcut) {
                     unsigned eid2 = FindEdgeInEitherDirection(u, data.id);
