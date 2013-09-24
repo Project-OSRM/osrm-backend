@@ -128,16 +128,36 @@ public:
             );
         }
 
-        const int forward_offset = super::ComputeEdgeOffset(phantom_node_pair.startPhantom);// phantom_node_pair.startPhantom.weight1 + (phantom_node_pair.startPhantom.isBidirected() ? phantom_node_pair.startPhantom.weight2 : 0);
-        const int reverse_offset = super::ComputeEdgeOffset(phantom_node_pair.targetPhantom);//phantom_node_pair.targetPhantom.weight1 + (phantom_node_pair.targetPhantom.isBidirected() ? phantom_node_pair.targetPhantom.weight2 : 0);
+        const int forward_offset =  super::ComputeEdgeOffset(
+                                        phantom_node_pair.startPhantom
+                                    );
+        const int reverse_offset =  super::ComputeEdgeOffset(
+                                        phantom_node_pair.targetPhantom
+                                    );
 
-        //exploration dijkstra from nodes s and t until deletemin/(1+epsilon) > _lengthOfShortestPath
+        //search from s and t till new_min/(1+epsilon) > length_of_shortest_path
         while(0 < (forward_heap1.Size() + reverse_heap1.Size())){
             if(0 < forward_heap1.Size()){
-                AlternativeRoutingStep<true >(forward_heap1, reverse_heap1, &middle_node, &upper_bound_to_shortest_path_distance, via_node_candidate_list, forward_search_space, forward_offset);
+                AlternativeRoutingStep<true>(
+                    forward_heap1,
+                    reverse_heap1,
+                    &middle_node,
+                    &upper_bound_to_shortest_path_distance,
+                    via_node_candidate_list,
+                    forward_search_space,
+                    forward_offset
+                );
             }
             if(0 < reverse_heap1.Size()){
-                AlternativeRoutingStep<false>(reverse_heap1, forward_heap1, &middle_node, &upper_bound_to_shortest_path_distance, via_node_candidate_list, reverse_search_space, reverse_offset);
+                AlternativeRoutingStep<false>(
+                    reverse_heap1,
+                    forward_heap1,
+                    &middle_node,
+                    &upper_bound_to_shortest_path_distance,
+                    via_node_candidate_list,
+                    reverse_search_space,
+                    reverse_offset
+                );
             }
         }
         sort_unique_resize(via_node_candidate_list);
@@ -145,8 +165,17 @@ public:
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;
 
-        super::RetrievePackedPathFromSingleHeap(forward_heap1, middle_node, packed_forward_path);
-        super::RetrievePackedPathFromSingleHeap(reverse_heap1, middle_node, packed_reverse_path);
+        super::RetrievePackedPathFromSingleHeap(
+            forward_heap1,
+            middle_node,
+            packed_forward_path
+        );
+        super::RetrievePackedPathFromSingleHeap(
+            reverse_heap1,
+            middle_node,
+            packed_reverse_path
+        );
+
         boost::unordered_map<NodeID, int> approximated_forward_sharing;
         boost::unordered_map<NodeID, int> approximated_reverse_sharing;
 
