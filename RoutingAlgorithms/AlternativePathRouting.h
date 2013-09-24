@@ -35,12 +35,17 @@ const double VIAPATH_GAMMA   = 0.75; //alternative shares at most 75% with the s
 template<class DataFacadeT>
 class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
     typedef BasicRoutingInterface<DataFacadeT> super;
-    typedef typename super::EdgeData EdgeData;
+    typedef typename DataFacadeT::EdgeData EdgeData;
     typedef SearchEngineData::QueryHeap QueryHeap;
     typedef std::pair<NodeID, NodeID> SearchSpaceEdge;
 
     struct RankedCandidateNode {
-        RankedCandidateNode(const NodeID n, const int l, const int s) : node(n), length(l), sharing(s) {}
+        RankedCandidateNode(const NodeID n, const int l, const int s) :
+            node(n),
+            length(l),
+            sharing(s)
+        { }
+
         NodeID node;
         int length;
         int sharing;
@@ -63,18 +68,23 @@ public:
 
     ~AlternativeRouting() {}
 
-    void operator()(const PhantomNodes & phantomNodePair, RawRouteData & rawRouteData) {
-        if(!phantomNodePair.AtLeastOnePhantomNodeIsUINTMAX() || phantomNodePair.PhantomNodesHaveEqualLocation()) {
-            rawRouteData.lengthOfShortestPath = rawRouteData.lengthOfAlternativePath = INT_MAX;
+    void operator()(
+        const PhantomNodes & phantom_node_pair,
+        RawRouteData & raw_route_data) {
+        if( (!phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX()) ||
+              phantom_node_pair.PhantomNodesHaveEqualLocation()
+        ) {
+            raw_route_data.lengthOfShortestPath = INT_MAX;
+            raw_route_data.lengthOfAlternativePath = INT_MAX;
             return;
         }
 
-        std::vector<NodeID> alternativePath;
-        std::vector<NodeID> viaNodeCandidates;
+        std::vector<NodeID>          alternative_path;
+        std::vector<NodeID>          via_node_candidate_list;
         std::vector<SearchSpaceEdge> forward_search_space;
         std::vector<SearchSpaceEdge> reverse_search_space;
 
-        //Initialize Queues, semi-expensive because access to TSS invokes a system call
+        //Init queues, semi-expensive because access to TSS invokes a sys-call
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes()
         );
@@ -92,28 +102,45 @@ public:
 
         int upper_bound_to_shortest_path_distance = INT_MAX;
         NodeID middle_node = UINT_MAX;
-        forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
-        if(phantomNodePair.startPhantom.isBidirected() ) {
-            forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
-        }
-        reverse_heap1.Insert(phantomNodePair.targetPhantom.edgeBasedNode, phantomNodePair.targetPhantom.weight1, phantomNodePair.targetPhantom.edgeBasedNode);
-        if(phantomNodePair.targetPhantom.isBidirected() ) {
-        	reverse_heap1.Insert(phantomNodePair.targetPhantom.edgeBasedNode+1, phantomNodePair.targetPhantom.weight2, phantomNodePair.targetPhantom.edgeBasedNode+1);
+        forward_heap1.Insert(
+            phantom_node_pair.startPhantom.edgeBasedNode,
+            -phantom_node_pair.startPhantom.weight1,
+            phantom_node_pair.startPhantom.edgeBasedNode
+        );
+        if(phantom_node_pair.startPhantom.isBidirected() ) {
+            forward_heap1.Insert(
+                phantom_node_pair.startPhantom.edgeBasedNode+1,
+                -phantom_node_pair.startPhantom.weight2,
+                phantom_node_pair.startPhantom.edgeBasedNode+1
+            );
         }
 
-        const int forward_offset = phantomNodePair.startPhantom.weight1 + (phantomNodePair.startPhantom.isBidirected() ? phantomNodePair.startPhantom.weight2 : 0);
-        const int reverse_offset = phantomNodePair.targetPhantom.weight1 + (phantomNodePair.targetPhantom.isBidirected() ? phantomNodePair.targetPhantom.weight2 : 0);
+        reverse_heap1.Insert(
+            phantom_node_pair.targetPhantom.edgeBasedNode,
+            phantom_node_pair.targetPhantom.weight1,
+            phantom_node_pair.targetPhantom.edgeBasedNode
+        );
+        if(phantom_node_pair.targetPhantom.isBidirected() ) {
+        	reverse_heap1.Insert(
+                phantom_node_pair.targetPhantom.edgeBasedNode+1,
+                phantom_node_pair.targetPhantom.weight2,
+                phantom_node_pair.targetPhantom.edgeBasedNode+1
+            );
+        }
+
+        const int forward_offset = super::ComputeEdgeOffset(phantom_node_pair.startPhantom);// phantom_node_pair.startPhantom.weight1 + (phantom_node_pair.startPhantom.isBidirected() ? phantom_node_pair.startPhantom.weight2 : 0);
+        const int reverse_offset = super::ComputeEdgeOffset(phantom_node_pair.targetPhantom);//phantom_node_pair.targetPhantom.weight1 + (phantom_node_pair.targetPhantom.isBidirected() ? phantom_node_pair.targetPhantom.weight2 : 0);
 
         //exploration dijkstra from nodes s and t until deletemin/(1+epsilon) > _lengthOfShortestPath
         while(0 < (forward_heap1.Size() + reverse_heap1.Size())){
             if(0 < forward_heap1.Size()){
-                AlternativeRoutingStep<true >(forward_heap1, reverse_heap1, &middle_node, &upper_bound_to_shortest_path_distance, viaNodeCandidates, forward_search_space, forward_offset);
+                AlternativeRoutingStep<true >(forward_heap1, reverse_heap1, &middle_node, &upper_bound_to_shortest_path_distance, via_node_candidate_list, forward_search_space, forward_offset);
             }
             if(0 < reverse_heap1.Size()){
-                AlternativeRoutingStep<false>(reverse_heap1, forward_heap1, &middle_node, &upper_bound_to_shortest_path_distance, viaNodeCandidates, reverse_search_space, reverse_offset);
+                AlternativeRoutingStep<false>(reverse_heap1, forward_heap1, &middle_node, &upper_bound_to_shortest_path_distance, via_node_candidate_list, reverse_search_space, reverse_offset);
             }
         }
-        sort_unique_resize(viaNodeCandidates);
+        sort_unique_resize(via_node_candidate_list);
 
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;
@@ -153,7 +180,7 @@ public:
         	}
         }
         std::vector<NodeID> nodes_that_passed_preselection;
-        BOOST_FOREACH(const NodeID node, viaNodeCandidates) {
+        BOOST_FOREACH(const NodeID node, via_node_candidate_list) {
             int approximated_sharing = approximated_forward_sharing[node] + approximated_reverse_sharing[node];
             int approximated_length = forward_heap1.GetKey(node)+reverse_heap1.GetKey(node);
             bool lengthPassed = (approximated_length < upper_bound_to_shortest_path_distance*(1+VIAPATH_EPSILON));
@@ -194,17 +221,17 @@ public:
 
         //Unpack shortest path and alternative, if they exist
         if(INT_MAX != upper_bound_to_shortest_path_distance) {
-            super::UnpackPath(packedShortestPath, rawRouteData.computedShortestPath);
-            rawRouteData.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
+            super::UnpackPath(packedShortestPath, raw_route_data.computedShortestPath);
+            raw_route_data.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
         } else {
-            rawRouteData.lengthOfShortestPath = INT_MAX;
+            raw_route_data.lengthOfShortestPath = INT_MAX;
         }
 
         if(selectedViaNode != UINT_MAX) {
-            retrievePackedViaPath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, s_v_middle, v_t_middle, rawRouteData.computedAlternativePath);
-            rawRouteData.lengthOfAlternativePath = lengthOfViaPath;
+            retrievePackedViaPath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, s_v_middle, v_t_middle, raw_route_data.computedAlternativePath);
+            raw_route_data.lengthOfAlternativePath = lengthOfViaPath;
         } else {
-            rawRouteData.lengthOfAlternativePath = INT_MAX;
+            raw_route_data.lengthOfAlternativePath = INT_MAX;
         }
     }
 

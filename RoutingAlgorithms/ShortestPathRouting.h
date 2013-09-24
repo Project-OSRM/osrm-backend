@@ -34,10 +34,6 @@ class ShortestPathRouting : public BasicRoutingInterface<DataFacadeT>{
     typedef SearchEngineData::QueryHeap QueryHeap;
     SearchEngineData & engine_working_data;
 
-    int ComputeEdgeOffset(const PhantomNode & phantom) const {
-        return phantom.weight1 + (phantom.isBidirected() ? phantom.weight2 : 0);
-    }
-
 public:
     ShortestPathRouting(
         DataFacadeT * facade,
@@ -146,10 +142,10 @@ public:
                 );
                 // INFO("rv2: " << phantom_node_pair.targetPhantom.edgeBasedNode+1 << ", w;" << phantom_node_pair.targetPhantom.weight2 );
            }
-            const int forward_offset =  ComputeEdgeOffset(
+            const int forward_offset =  super::ComputeEdgeOffset(
                                             phantom_node_pair.startPhantom
                                         );
-            const int reverse_offset =  ComputeEdgeOffset(
+            const int reverse_offset =  super::ComputeEdgeOffset(
                                             phantom_node_pair.targetPhantom
                                         );
 
