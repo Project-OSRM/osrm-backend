@@ -56,7 +56,7 @@ private:
     typename ShM<NodeID, false>::vector               m_via_node_list;
     typename ShM<unsigned, false>::vector             m_name_ID_list;
     typename ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
-    StaticRTree<RTreeLeaf, false>          * m_static_rtree;
+    StaticRTree<RTreeLeaf, false>                   * m_static_rtree;
 
 
     void LoadTimestamp(const boost::filesystem::path & timestamp_path) {
