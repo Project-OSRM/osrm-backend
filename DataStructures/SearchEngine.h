@@ -57,13 +57,4 @@ public:
 
 };
 
-// SearchEngineHeapPtr SearchEngineData::forwardHeap;
-// SearchEngineHeapPtr SearchEngineData::backwardHeap;
-
-// SearchEngineHeapPtr SearchEngineData::forwardHeap2;
-// SearchEngineHeapPtr SearchEngineData::backwardHeap2;
-
-// SearchEngineHeapPtr SearchEngineData::forwardHeap3;
-// SearchEngineHeapPtr SearchEngineData::backwardHeap3;
-
 #endif // SEARCHENGINE_H
