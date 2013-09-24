@@ -57,11 +57,4 @@ struct SearchEngineData {
     void InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes);
 };
 
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap2;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap3;
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap3;
-
 #endif // SEARCH_ENGINE_DATA_H
