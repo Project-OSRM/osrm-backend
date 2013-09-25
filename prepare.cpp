@@ -353,10 +353,14 @@ int main (int argc, char *argv[]) {
             _nodes[node].firstEdge = position; //=edge
             position += edge - lastEdge; //remove
         }
-        _nodes[_nodes.size()-1].firstEdge = _nodes[_nodes.size()-2].firstEdge;
+
+        _nodes.back().firstEdge = numberOfEdges; //sentinel element
         ++numberOfNodes;
 
-        BOOST_ASSERT_MSG(_nodes.size() == numberOfNodes, "no. of nodes dont match");
+        BOOST_ASSERT_MSG(
+            _nodes.size() == numberOfNodes,
+            "no. of nodes dont match"
+        );
 
         //Serialize numberOfNodes, nodes
         hsgr_output_stream.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
