@@ -111,10 +111,6 @@ private:
             nodes_file,
             std::ios::binary
         );
-        boost::filesystem::ifstream edges_input_stream(
-            edges_file,
-            std::ios::binary
-        );
 
         SimpleLogger().Write(logDEBUG) << "Loading node data";
         NodeInfo current_node;
@@ -130,8 +126,11 @@ private:
         std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
         nodes_input_stream.close();
 
-        SimpleLogger().Write(logDEBUG)
-            << "Loading edge data";
+        SimpleLogger().Write(logDEBUG) << "Loading edge data";
+        boost::filesystem::ifstream edges_input_stream(
+            edges_file,
+            std::ios::binary
+        );
         unsigned number_of_edges = 0;
         edges_input_stream.read((char*)&number_of_edges, sizeof(unsigned));
         m_via_node_list.resize(number_of_edges);
