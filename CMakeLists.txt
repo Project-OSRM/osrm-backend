@@ -44,6 +44,8 @@ add_executable(osrm-prepare ${PrepareSources} )
 add_executable(osrm-routed routed.cpp Util/GitDescription.cpp)
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 
+add_executable(osrm-datastore datastore.cpp)
+
 file(GLOB DescriptorGlob Descriptors/*.cpp)
 file(GLOB DatastructureGlob Datastructures/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
@@ -106,6 +108,7 @@ ENDIF( APPLE )
 target_link_libraries( osrm-extract ${Boost_LIBRARIES} UUID )
 target_link_libraries( osrm-prepare ${Boost_LIBRARIES} UUID )
 target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM UUID )
+target_link_libraries( osrm-datastore ${Boost_LIBRARIES} UUID )
 
 find_package ( BZip2 REQUIRED )
 include_directories(${BZIP_INCLUDE_DIRS})
