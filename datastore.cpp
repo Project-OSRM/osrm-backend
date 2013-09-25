@@ -22,6 +22,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "DataStructures/SharedMemoryFactory.h"
 #include "DataStructures/SharedMemoryVectorWrapper.h"
 #include "DataStructures/StaticGraph.h"
+#include "DataStructures/StaticRTree.h"
+#include "Server/DataStructures/BaseDataFacade.h"
 #include "Server/DataStructures/SharedDataType.h"
 #include "Util/BoostFilesystemFix.h"
 #include "Util/GraphLoader.h"
@@ -36,6 +38,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <vector>
 
 typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
+typedef StaticRTree<BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf, true>::TreeNode RTreeNode;
 
 
 void StoreIntegerInSharedMemory(
@@ -144,7 +147,8 @@ int main(int argc, char * argv[]) {
         std::vector<QueryGraph::_StrEdge> edge_list;
 
 
-        //TODO: Read directly into shared memory
+        //TODO BEGIN:
+        //Read directly into shared memory
         unsigned m_check_sum = 0;
         SimpleLogger().Write() << "Loading graph node list";
         uint64_t m_number_of_nodes = readHSGRFromStream(
@@ -153,6 +157,7 @@ int main(int argc, char * argv[]) {
             edge_list,
             &m_check_sum
         );
+        //TODO END
 
         StoreIntegerInSharedMemory(node_list.size(), GRAPH_NODE_LIST_SIZE);
         SharedMemory * graph_node_memory  = SharedMemoryFactory::Get(
@@ -285,11 +290,11 @@ int main(int argc, char * argv[]) {
         //SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes";
         SharedMemory * rtree_memory  = SharedMemoryFactory::Get(
             R_SEARCH_TREE,
-            tree_size*sizeof(TreeNode);
+            tree_size*sizeof(RTreeNode)
         );
         char * rtree_ptr = static_cast<char *>( rtree_memory->Ptr() );
 
-        tree_node_file.read(rtree_ptr, sizeof(TreeNode)*tree_size);
+        tree_node_file.read(rtree_ptr, sizeof(RTreeNode)*tree_size);
         tree_node_file.close();
 
     } catch(const std::exception & e) {
