@@ -62,10 +62,10 @@ private:
     SharedDataFacade() { }
 
     void LoadTimestamp() {
-        uint32_t timestamp_size = *static_cast<unsigned *>(
+        uint64_t timestamp_size = *static_cast<uint64_t *>(
             SharedMemoryFactory::Get(TIMESTAMP_SIZE)->Ptr()
         );
-        timestamp_size = std::min(timestamp_size, 25u);
+        timestamp_size = std::min(timestamp_size, (uint64_t)25);
         SharedMemory * search_tree = SharedMemoryFactory::Get(TIMESTAMP);
         char * tree_ptr = static_cast<char *>( search_tree->Ptr() );
         m_timestamp.resize(timestamp_size);
@@ -75,7 +75,7 @@ private:
     void LoadRTree(
         const boost::filesystem::path & file_index_path
     ) {
-        uint32_t tree_size = *static_cast<unsigned *>(
+        uint64_t tree_size = *static_cast<uint64_t *>(
             SharedMemoryFactory::Get(R_SEARCH_TREE_SIZE)->Ptr()
         );
         SharedMemory * search_tree = SharedMemoryFactory::Get(R_SEARCH_TREE);
@@ -88,13 +88,13 @@ private:
     }
 
     void LoadGraph() {
-        m_number_of_nodes = *static_cast<uint32_t *>(
+        m_number_of_nodes = *static_cast<uint64_t *>(
             SharedMemoryFactory::Get(GRAPH_NODE_LIST_SIZE)->Ptr()
         );
         SharedMemory * graph_nodes = SharedMemoryFactory::Get(GRAPH_NODE_LIST);
         GraphNode * graph_nodes_ptr = static_cast<GraphNode *>( graph_nodes->Ptr() );
 
-        uint32_t number_of_edges = *static_cast<uint32_t *>(
+        uint64_t number_of_edges = *static_cast<uint64_t *>(
             SharedMemoryFactory::Get(GRAPH_EDGE_LIST_SIZE)->Ptr()
         );
         SharedMemory * graph_edges = SharedMemoryFactory::Get(GRAPH_EDGE_LIST);
@@ -110,7 +110,7 @@ private:
     }
 
     void LoadNodeAndEdgeInformation() {
-        uint32_t number_of_coordinates = *static_cast<uint32_t *>(
+        uint64_t number_of_coordinates = *static_cast<uint64_t *>(
             SharedMemoryFactory::Get(COORDINATE_LIST_SIZE)->Ptr()
         );
         FixedPointCoordinate * coordinate_list_ptr = static_cast<FixedPointCoordinate *>(
@@ -122,7 +122,7 @@ private:
         );
         m_coordinate_list.swap( coordinate_list );
 
-        uint32_t number_of_turn_instructions = *static_cast<uint32_t *>(
+        uint64_t number_of_turn_instructions = *static_cast<uint64_t *>(
             SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST_SIZE)->Ptr()
         );
 
@@ -139,7 +139,7 @@ private:
     }
 
     void LoadViaNodeList() {
-        uint32_t number_of_via_nodes = * static_cast<uint32_t *> (
+        uint64_t number_of_via_nodes = * static_cast<uint64_t *> (
             SharedMemoryFactory::Get(VIA_NODE_LIST_SIZE)->Ptr()
         );
         NodeID * via_node_list_ptr = static_cast<NodeID *>(
@@ -153,7 +153,7 @@ private:
     }
 
     void LoadNames() {
-        uint32_t street_names_index_size = * static_cast<uint32_t *> (
+        uint64_t street_names_index_size = * static_cast<uint64_t *> (
             SharedMemoryFactory::Get(NAME_INDEX_SIZE)->Ptr()
         );
         unsigned * street_names_index_ptr = static_cast<unsigned *>(
@@ -165,7 +165,7 @@ private:
         );
         m_name_begin_indices.swap(m_name_begin_indices);
 
-        uint32_t names_list_size = * static_cast<uint32_t *>(
+        uint64_t names_list_size = * static_cast<uint64_t *>(
             SharedMemoryFactory::Get(NAMES_LIST_SIZE)->Ptr()
         );
         char * names_list_ptr = static_cast<char *>(
