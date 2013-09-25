@@ -149,9 +149,6 @@ private:
             m_turn_instruction_list[i] = current_edge_data.turnInstruction;
         }
         edges_input_stream.close();
-        SimpleLogger().Write(logDEBUG)
-            << "Loaded " << number_of_edges << " orig edges";
-        SimpleLogger().Write(logDEBUG) << "Opening NN indices";
     }
 
     void LoadRTree(
