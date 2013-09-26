@@ -114,13 +114,17 @@ private:
 
         SimpleLogger().Write(logDEBUG) << "Loading node data";
         NodeInfo current_node;
-        while(!nodes_input_stream.eof()) {
+        unsigned number_of_coordinates = 0;
+        nodes_input_stream.read(
+            (char *)&number_of_coordinates,
+            sizeof(unsigned)
+        );
+        m_coordinate_list.resize(number_of_coordinates);
+        for(unsigned i = 0; i < number_of_coordinates; ++i) {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
-            m_coordinate_list.push_back(
-                FixedPointCoordinate(
+            m_coordinate_list[i] = FixedPointCoordinate(
                     current_node.lat,
                     current_node.lon
-                )
             );
         }
         std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
