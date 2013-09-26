@@ -26,6 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/noncopyable.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/xsi_shared_memory.hpp>
 
@@ -36,9 +37,9 @@ struct OSRMLockFile {
 	boost::filesystem::path operator()() {
 		boost::filesystem::path temp_dir =
 			boost::filesystem::temp_directory_path();
-	    SimpleLogger().Write(logDEBUG) << "creating lock file in " << temp_dir;
+	    // SimpleLogger().Write(logDEBUG) << "creating lock file in " << temp_dir;
 	    boost::filesystem::path lock_file = temp_dir / "osrm.lock";
-	    SimpleLogger().Write(logDEBUG) << "locking at " << lock_file;
+	    // SimpleLogger().Write(logDEBUG) << "locking at " << lock_file;
 	    return lock_file;
 	}
 };
@@ -144,8 +145,13 @@ public:
 	) {
 		try {
 			LockFileT lock_file;
-		    if(0 == size && !boost::filesystem::exists(lock_file()) ) {
-	      		throw OSRMException("lock file does not exist, exiting");
+		    if(!boost::filesystem::exists(lock_file()) ) {
+		    	if( 0 == size ) {
+	      			throw OSRMException("lock file does not exist, exiting");
+	      		} else {
+	      			boost::filesystem::ofstream ofs(lock_file());
+	      			ofs.close();
+	      		}
 	      	}
 			return new SharedMemory(lock_file(), id, size);
 	   	} catch(const boost::interprocess::interprocess_exception &e){
