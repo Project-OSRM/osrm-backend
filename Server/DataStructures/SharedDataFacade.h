@@ -24,6 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 //implements all data storage when shared memory is _NOT_ used
 
 #include "BaseDataFacade.h"
+#include "SharedDataType.h"
 
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
@@ -46,6 +47,9 @@ private:
     typedef typename super::RTreeLeaf                       RTreeLeaf;
     typedef typename StaticRTree<RTreeLeaf, true>::TreeNode RTreeNode;
 
+    SharedDataLayout * data_layout;
+    char             * shared_memory;
+
     unsigned                                m_check_sum;
     unsigned                                m_number_of_nodes;
     QueryGraph                            * m_query_graph;
@@ -62,46 +66,46 @@ private:
     SharedDataFacade() { }
 
     void LoadTimestamp() {
-        uint64_t timestamp_size = *static_cast<uint64_t *>(
-            SharedMemoryFactory::Get(TIMESTAMP_SIZE)->Ptr()
+        char * timestamp_ptr = shared_memory + data_layout->GetTimeStampOffset();
+        m_timestamp.resize(data_layout->timestamp_length);
+        std::copy(
+            timestamp_ptr,
+            timestamp_ptr+data_layout->timestamp_length,
+            m_timestamp.begin()
         );
-        timestamp_size = std::min(timestamp_size, (uint64_t)25);
-        SharedMemory * search_tree = SharedMemoryFactory::Get(TIMESTAMP);
-        char * tree_ptr = static_cast<char *>( search_tree->Ptr() );
-        m_timestamp.resize(timestamp_size);
-        std::copy(tree_ptr, tree_ptr+timestamp_size, m_timestamp.begin());
     }
 
     void LoadRTree(
         const boost::filesystem::path & file_index_path
     ) {
-        uint64_t tree_size = *static_cast<uint64_t *>(
-            SharedMemoryFactory::Get(R_SEARCH_TREE_SIZE)->Ptr()
+        RTreeNode * tree_ptr = (RTreeNode *)(
+            shared_memory + data_layout->GetRSearchTreeOffset()
         );
-        SharedMemory * search_tree = SharedMemoryFactory::Get(R_SEARCH_TREE);
-        RTreeNode * tree_ptr = static_cast<RTreeNode *>( search_tree->Ptr() );
         m_static_rtree = new StaticRTree<RTreeLeaf, true>(
             tree_ptr,
-            tree_size,
+            data_layout->r_search_tree_size,
             file_index_path
         );
     }
 
     void LoadGraph() {
-        m_number_of_nodes = *static_cast<uint64_t *>(
-            SharedMemoryFactory::Get(GRAPH_NODE_LIST_SIZE)->Ptr()
+        m_number_of_nodes = data_layout->graph_node_list_size;
+        GraphNode * graph_nodes_ptr = (GraphNode *)(
+            shared_memory + data_layout->GetGraphNodeListOffset()
         );
-        SharedMemory * graph_nodes = SharedMemoryFactory::Get(GRAPH_NODE_LIST);
-        GraphNode * graph_nodes_ptr = static_cast<GraphNode *>( graph_nodes->Ptr() );
 
-        uint64_t number_of_edges = *static_cast<uint64_t *>(
-            SharedMemoryFactory::Get(GRAPH_EDGE_LIST_SIZE)->Ptr()
+        GraphEdge * graph_edges_ptr = (GraphEdge *)(
+            shared_memory + data_layout->GetGraphEdgeListOffsett()
         );
-        SharedMemory * graph_edges = SharedMemoryFactory::Get(GRAPH_EDGE_LIST);
-        GraphEdge * graph_edges_ptr = static_cast<GraphEdge *>( graph_edges->Ptr() );
 
-        typename ShM<GraphNode, true>::vector node_list(graph_nodes_ptr, m_number_of_nodes);
-        typename ShM<GraphEdge, true>::vector edge_list(graph_edges_ptr, number_of_edges);
+        typename ShM<GraphNode, true>::vector node_list(
+            graph_nodes_ptr,
+            data_layout->graph_node_list_size
+        );
+        typename ShM<GraphEdge, true>::vector edge_list(
+            graph_edges_ptr,
+            data_layout->graph_edge_list_size
+        );
         m_query_graph = new QueryGraph(
             node_list ,
             edge_list
@@ -110,70 +114,62 @@ private:
     }
 
     void LoadNodeAndEdgeInformation() {
-        uint64_t number_of_coordinates = *static_cast<uint64_t *>(
-            SharedMemoryFactory::Get(COORDINATE_LIST_SIZE)->Ptr()
-        );
-        FixedPointCoordinate * coordinate_list_ptr = static_cast<FixedPointCoordinate *>(
-            SharedMemoryFactory::Get(COORDINATE_LIST)->Ptr()
+
+        FixedPointCoordinate * coordinate_list_ptr = (FixedPointCoordinate *)(
+            shared_memory + data_layout->GetCoordinateListOffset()
         );
         typename ShM<FixedPointCoordinate, true>::vector coordinate_list(
                 coordinate_list_ptr,
-                number_of_coordinates
+                data_layout->coordinate_list_size
         );
         m_coordinate_list.swap( coordinate_list );
 
-        uint64_t number_of_turn_instructions = *static_cast<uint64_t *>(
-            SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST_SIZE)->Ptr()
+        TurnInstruction * turn_instruction_list_ptr = (TurnInstruction *)(
+            shared_memory + data_layout->GetTurnInstructionListOffset()
         );
-
-        TurnInstruction * turn_instruction_list_ptr = static_cast<TurnInstruction *>(
-            SharedMemoryFactory::Get(TURN_INSTRUCTION_LIST)->Ptr()
-        );
-
         typename ShM<TurnInstruction, true>::vector turn_instruction_list(
             turn_instruction_list_ptr,
-            number_of_turn_instructions
+            data_layout->turn_instruction_list_size
         );
-
         m_turn_instruction_list.swap(turn_instruction_list);
+
+        unsigned * name_id_list_ptr = (unsigned *)(
+            shared_memory + data_layout->GetNameIDListOffset()
+        );
+        typename ShM<unsigned, true>::vector name_id_list(
+            name_id_list_ptr,
+            data_layout->name_id_list_size
+        );
+        m_name_ID_list.swap(name_id_list);
     }
 
     void LoadViaNodeList() {
-        uint64_t number_of_via_nodes = * static_cast<uint64_t *> (
-            SharedMemoryFactory::Get(VIA_NODE_LIST_SIZE)->Ptr()
-        );
-        NodeID * via_node_list_ptr = static_cast<NodeID *>(
-            SharedMemoryFactory::Get(VIA_NODE_LIST)->Ptr()
+        NodeID * via_node_list_ptr = (NodeID *)(
+            shared_memory + data_layout->GetViaNodeListOffset()
         );
         typename ShM<NodeID, true>::vector via_node_list(
             via_node_list_ptr,
-            number_of_via_nodes
+            data_layout->via_node_list_size
         );
         m_via_node_list.swap(via_node_list);
     }
 
     void LoadNames() {
-        uint64_t street_names_index_size = * static_cast<uint64_t *> (
-            SharedMemoryFactory::Get(NAME_INDEX_SIZE)->Ptr()
-        );
-        unsigned * street_names_index_ptr = static_cast<unsigned *>(
-            SharedMemoryFactory::Get(NAMES_INDEX)->Ptr()
+        unsigned * street_names_index_ptr = (unsigned *)(
+            shared_memory + data_layout->GetNameIndexOffset()
         );
         typename ShM<unsigned, true>::vector name_begin_indices(
             street_names_index_ptr,
-            street_names_index_size
+            data_layout->names_index_size
         );
         m_name_begin_indices.swap(m_name_begin_indices);
 
-        uint64_t names_list_size = * static_cast<uint64_t *>(
-            SharedMemoryFactory::Get(NAMES_LIST_SIZE)->Ptr()
-        );
-        char * names_list_ptr = static_cast<char *>(
-            SharedMemoryFactory::Get(NAMES_LIST)->Ptr()
+        char * names_list_ptr = (char *)(
+            shared_memory + data_layout->GetNameListOffset()
         );
         typename ShM<char, true>::vector names_char_list(
             names_list_ptr,
-            names_list_size
+            data_layout->names_list_size
         );
         m_names_char_list.swap(names_char_list);
     }
@@ -192,6 +188,14 @@ public:
         boost::filesystem::path ram_index_path = boost::filesystem::absolute(
                 server_config.GetParameter("ramIndex"),
                 base_path
+        );
+
+        data_layout = (SharedDataLayout *)(
+            SharedMemoryFactory::Get(LAYOUT_1)->Ptr()
+        );
+
+        shared_memory = (char *)(
+            SharedMemoryFactory::Get(DATA_1)->Ptr()
         );
 
         //load data

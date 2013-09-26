@@ -29,7 +29,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
-#include "../Server/DataStructures/SharedDataType.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"

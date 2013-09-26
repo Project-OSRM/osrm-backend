@@ -47,10 +47,10 @@ private:
 
     InternalDataFacade() { }
 
-    unsigned                          m_check_sum;
-    unsigned                          m_number_of_nodes;
-    QueryGraph                      * m_query_graph;
-    std::string                       m_timestamp;
+    unsigned                                 m_check_sum;
+    unsigned                                 m_number_of_nodes;
+    QueryGraph                             * m_query_graph;
+    std::string                              m_timestamp;
 
     ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
     ShM<NodeID, false>::vector               m_via_node_list;
@@ -59,7 +59,7 @@ private:
     ShM<char, false>::vector                 m_names_char_list;
     ShM<unsigned, false>::vector             m_name_begin_indices;
 
-    StaticRTree<RTreeLeaf, false>                   * m_static_rtree;
+    StaticRTree<RTreeLeaf, false>          * m_static_rtree;
 
 
     void LoadTimestamp(const boost::filesystem::path & timestamp_path) {
@@ -168,19 +168,28 @@ private:
         const boost::filesystem::path & names_file
     ) {
         boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
-        unsigned size = 0;
-        name_stream.read((char *)&size, sizeof(unsigned));
-        BOOST_ASSERT_MSG(0 != size, "name file broken");
+        unsigned number_of_names = 0;
+        unsigned number_of_chars = 0;
+        name_stream.read((char *)&number_of_names, sizeof(unsigned));
+        name_stream.read((char *)&number_of_chars, sizeof(unsigned));
+        BOOST_ASSERT_MSG(0 != number_of_names, "name file broken");
+        BOOST_ASSERT_MSG(0 != number_of_chars, "name file broken");
 
-        m_name_begin_indices.resize(size);
-        name_stream.read((char*)&m_name_begin_indices[0], size*sizeof(unsigned));
-        name_stream.read((char *)&size, sizeof(unsigned));
-        BOOST_ASSERT_MSG(0 != size, "name file broken");
+        m_name_begin_indices.resize(number_of_names);
+        name_stream.read(
+            (char*)&m_name_begin_indices[0],
+            number_of_names*sizeof(unsigned)
+        );
 
-        m_names_char_list.resize(size+1); //+1 is sentinel/dummy element
-        name_stream.read((char *)&m_names_char_list[0], size*sizeof(char));
-        BOOST_ASSERT_MSG(0 != m_names_char_list.size(), "could not load any names");
-
+        m_names_char_list.resize(number_of_chars+1); //+1 gives sentinel element
+        name_stream.read(
+            (char *)&m_names_char_list[0],
+            number_of_chars*sizeof(char)
+        );
+        BOOST_ASSERT_MSG(
+            0 != m_names_char_list.size(),
+            "could not load any names"
+        );
         name_stream.close();
     }
 public:

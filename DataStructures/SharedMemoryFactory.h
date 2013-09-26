@@ -37,9 +37,7 @@ struct OSRMLockFile {
 	boost::filesystem::path operator()() {
 		boost::filesystem::path temp_dir =
 			boost::filesystem::temp_directory_path();
-	    // SimpleLogger().Write(logDEBUG) << "creating lock file in " << temp_dir;
 	    boost::filesystem::path lock_file = temp_dir / "osrm.lock";
-	    // SimpleLogger().Write(logDEBUG) << "locking at " << lock_file;
 	    return lock_file;
 	}
 };
@@ -66,7 +64,6 @@ class SharedMemory : boost::noncopyable {
 				boost::interprocess::xsi_shared_memory::remove(m_shmid);
 			}
 		}
-
 	};
 
 public:
