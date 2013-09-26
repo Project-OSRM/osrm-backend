@@ -21,28 +21,197 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #ifndef SHARED_DATA_TYPE_H_
 #define SHARED_DATA_TYPE_H_
 
+#include "BaseDataFacade.h"
+
+#include "../../DataStructures/Coordinate.h"
+#include "../../DataStructures/QueryEdge.h"
+#include "../../DataStructures/StaticGraph.h"
+#include "../../DataStructures/StaticRTree.h"
+#include "../../DataStructures/TurnInstructions.h"
+
+#include "../../typedefs.h"
+
+#include <boost/integer.hpp>
+
+typedef BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf RTreeLeaf;
+typedef StaticRTree<RTreeLeaf, true>::TreeNode RTreeNode;
+typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
+
+struct SharedDataLayout {
+    uint64_t names_index_size;
+    uint64_t names_list_size;
+    uint64_t name_id_list_size;
+    uint64_t via_node_list_size;
+    uint64_t graph_node_list_size;
+    uint64_t graph_edge_list_size;
+    uint64_t coordinate_list_size;
+    uint64_t turn_instruction_list_size;
+    uint64_t r_search_tree_size;
+
+    unsigned checksum;
+    unsigned timestamp_length;
+
+    SharedDataLayout() :
+        names_index_size(0),
+        names_list_size(0),
+        name_id_list_size(0),
+        via_node_list_size(0),
+        graph_node_list_size(0),
+        graph_edge_list_size(0),
+        coordinate_list_size(0),
+        turn_instruction_list_size(0),
+        r_search_tree_size(0),
+        checksum(0),
+        timestamp_length(0)
+    { }
+
+    uint64_t GetSizeOfLayout() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
+            (timestamp_length           * sizeof(char)                ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
+            (turn_instruction_list_size * sizeof(TurnInstructions)    ) +
+            (r_search_tree_size         * sizeof(RTreeNode)           ) +
+            sizeof(checksum);
+        return result;
+    }
+
+    uint64_t GetNameIndexOffset() const {
+        return 0;
+    }
+    uint64_t GetNameListOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            );
+        return result;
+    }
+    uint64_t GetNameIDListOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                );
+        return result;
+    }
+    uint64_t GetViaNodeListOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            );
+        return result;
+    }
+    uint64_t GetGraphNodeListOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              );
+        return result;
+    }
+    uint64_t GetGraphEdgeListOffsett() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) ;
+        return result;
+    }
+    uint64_t GetTimeStampOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge));
+        return result;
+    }
+    uint64_t GetCoordinateListOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
+            (timestamp_length           * sizeof(char)                );
+        return result;
+    }
+    uint64_t GetTurnInstructionListOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
+            (timestamp_length           * sizeof(char)                ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate));
+        return result;
+    }
+    uint64_t GetRSearchTreeOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
+            (timestamp_length           * sizeof(char)                ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
+            (turn_instruction_list_size * sizeof(TurnInstructions)    );
+        return result;
+    }
+    uint64_t GetChecksumOffset() const {
+        uint64_t result =
+            (names_index_size           * sizeof(unsigned)            ) +
+            (names_list_size            * sizeof(char)                ) +
+            (name_id_list_size          * sizeof(unsigned)            ) +
+            (via_node_list_size         * sizeof(NodeID)              ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
+            (timestamp_length           * sizeof(char)                ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
+            (turn_instruction_list_size * sizeof(TurnInstructions)    ) +
+            (r_search_tree_size         * sizeof(RTreeNode)           );
+        return result;
+    }
+};
+
 enum SharedDataType {
-    NAMES_INDEX = 0,
-    NAME_INDEX_SIZE,
-    NAMES_LIST,
-    NAMES_LIST_SIZE,
-    NAME_ID_LIST,
-    NAME_ID_LIST_SIZE,
-    VIA_NODE_LIST,
-    VIA_NODE_LIST_SIZE,
-    GRAPH_NODE_LIST,
-    GRAPH_NODE_LIST_SIZE,
-    GRAPH_EDGE_LIST,
-    GRAPH_EDGE_LIST_SIZE,
-    CHECK_SUM,
-    TIMESTAMP,
-    TIMESTAMP_SIZE,
-    COORDINATE_LIST,
-    COORDINATE_LIST_SIZE,
-    TURN_INSTRUCTION_LIST,
-    TURN_INSTRUCTION_LIST_SIZE,
-    R_SEARCH_TREE,
-    R_SEARCH_TREE_SIZE
+    // NAMES_INDEX = 0,
+    // NAME_INDEX_SIZE,
+    // NAMES_LIST,
+    // NAMES_LIST_SIZE,
+    // NAME_ID_LIST,
+    // NAME_ID_LIST_SIZE,
+    // VIA_NODE_LIST,
+    // VIA_NODE_LIST_SIZE,
+    // GRAPH_NODE_LIST,
+    // GRAPH_NODE_LIST_SIZE,
+    // GRAPH_EDGE_LIST,
+    // GRAPH_EDGE_LIST_SIZE,
+    // CHECK_SUM,
+    // TIMESTAMP,
+    // TIMESTAMP_SIZE,
+    // COORDINATE_LIST,
+    // COORDINATE_LIST_SIZE,
+    // TURN_INSTRUCTION_LIST,
+    // TURN_INSTRUCTION_LIST_SIZE,
+    // R_SEARCH_TREE,
+    // R_SEARCH_TREE_SIZE
+
+    LAYOUT_1,
+    DATA_1,
+    LAYOUT_2,
+    DATA_2,
+    LAYOUT_3,
+    DATA_3,
+    LAYOUT_4,
+    DATA_5
 };
 
 #endif /* SHARED_DATA_TYPE_H_ */
