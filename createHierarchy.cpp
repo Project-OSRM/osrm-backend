@@ -212,7 +212,12 @@ int main (int argc, char *argv[]) {
 
         SimpleLogger().Write() << "writing node map ...";
         std::ofstream mapOutFile(nodeOut.c_str(), std::ios::binary);
-        mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
+        const unsigned size_of_mapping = internalToExternalNodeMapping.size();
+        mapOutFile.write((char *)&size_of_mapping, sizeof(unsigned));
+        mapOutFile.write(
+            (char *)&(internalToExternalNodeMapping[0]),
+            size_of_mapping*sizeof(NodeInfo)
+        );
         mapOutFile.close();
         std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
 
