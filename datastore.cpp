@@ -136,6 +136,20 @@ int main(int argc, char * argv[]) {
         //TODO load graph node size
         //TODO load graph edge size
         //TODO load search tree size
+        //TODO load checksum
+        //TODO load rsearch tree size
+        //TODO load timestamp size
+
+        //load coordinate size
+        SimpleLogger().Write(logDEBUG) << "Loading coordinates list";
+        boost::filesystem::ifstream nodes_input_stream(
+            node_data_path,
+            std::ios::binary
+        );
+        unsigned coordinate_list_size = 0;
+        nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
+        shared_layout_ptr->coordinate_list_size = coordinate_list_size;
+
 
         // allocate shared memory block
         SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout() << " bytes";
@@ -195,6 +209,17 @@ int main(int argc, char * argv[]) {
         }
         edges_input_stream.close();
 
+        // Loading list of coordinates
+        FixedPointCoordinate * coordinates_ptr = (FixedPointCoordinate *)(
+            shared_memory_ptr + shared_layout_ptr->GetCoordinateListOffset()
+        );
+
+        NodeInfo current_node;
+        for(unsigned i = 0; i < coordinate_list_size; ++i) {
+            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
+            coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon);
+        }
+        nodes_input_stream.close();
 
 
 
@@ -286,29 +311,6 @@ int main(int argc, char * argv[]) {
         unsigned number_of_edges = 0;
         edges_input_stream.read((char*)&number_of_edges, sizeof(unsigned));
         SimpleLogger().Write() << "number of edges: " << number_of_edges;
-
-        // Loading list of coordinates
-        SimpleLogger().Write(logDEBUG) << "Loading coordinates list";
-        boost::filesystem::ifstream nodes_input_stream(
-            node_data_path,
-            std::ios::binary
-        );
-        unsigned number_of_nodes = 0;
-        nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
-        StoreIntegerInSharedMemory(number_of_nodes, COORDINATE_LIST_SIZE);
-
-        SharedMemory *coordinates_memory  = SharedMemoryFactory::Get(
-            COORDINATE_LIST,
-            number_of_nodes*sizeof(FixedPointCoordinate)
-        );
-        FixedPointCoordinate * coordinates_ptr = static_cast<FixedPointCoordinate *>( coordinates_memory->Ptr() );
-
-        NodeInfo current_node;
-        for(unsigned i = 0; i < number_of_nodes; ++i) {
-            nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
-            coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon);
-        }
-        nodes_input_stream.close();
 
         // Loading r-tree search data structure
         SimpleLogger().Write() << "loading r-tree search list";
