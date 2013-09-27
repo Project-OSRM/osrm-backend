@@ -160,7 +160,7 @@ private:
         );
         typename ShM<unsigned, true>::vector name_begin_indices(
             street_names_index_ptr,
-            data_layout->names_index_size
+            data_layout->name_index_list_size
         );
         m_name_begin_indices.swap(m_name_begin_indices);
 
@@ -169,7 +169,7 @@ private:
         );
         typename ShM<char, true>::vector names_char_list(
             names_list_ptr,
-            data_layout->names_list_size
+            data_layout->name_char_list_size
         );
         m_names_char_list.swap(names_char_list);
     }
