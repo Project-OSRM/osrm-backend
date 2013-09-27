@@ -138,7 +138,24 @@ int main(int argc, char * argv[]) {
         //TODO load search tree size
         //TODO load checksum
         //TODO load rsearch tree size
-        //TODO load timestamp size
+        //load timestamp size
+        SimpleLogger().Write() << "Loading timestamp";
+        std::string m_timestamp;
+        if( boost::filesystem::exists(timestamp_path) ) {
+            boost::filesystem::ifstream timestampInStream( timestamp_path );
+            if(!timestampInStream) {
+                SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
+            }
+            getline(timestampInStream, m_timestamp);
+            timestampInStream.close();
+        }
+        if(m_timestamp.empty()) {
+            m_timestamp = "n/a";
+        }
+        if(25 < m_timestamp.length()) {
+            m_timestamp.resize(25);
+        }
+        shared_layout_ptr->timestamp_length = m_timestamp.length();
 
         //load coordinate size
         SimpleLogger().Write(logDEBUG) << "Loading coordinates list";
@@ -221,6 +238,15 @@ int main(int argc, char * argv[]) {
         }
         nodes_input_stream.close();
 
+        //store timestamp
+        char * timestamp_ptr = static_cast<char *>(
+            shared_memory_ptr + shared_layout_ptr->GetTimeStampOffset()
+        );
+        std::copy(
+            m_timestamp.c_str(),
+            m_timestamp.c_str()+m_timestamp.length(),
+            timestamp_ptr
+        );
 
 
 
@@ -273,35 +299,6 @@ int main(int argc, char * argv[]) {
             graph_edge_memory->Ptr()
         );
         std::copy(edge_list.begin(), edge_list.end(), graph_edge_ptr);
-
-        // load checksum
-        SimpleLogger().Write() << "Loading check sum";
-
-        SimpleLogger().Write() << "Loading timestamp";
-        std::string m_timestamp;
-        if( boost::filesystem::exists(timestamp_path) ) {
-            boost::filesystem::ifstream timestampInStream( timestamp_path );
-            if(!timestampInStream) {
-                SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
-            }
-            getline(timestampInStream, m_timestamp);
-            timestampInStream.close();
-        }
-        if(m_timestamp.empty()) {
-            m_timestamp = "n/a";
-        }
-        if(25 < m_timestamp.length()) {
-            m_timestamp.resize(25);
-        }
-        SharedMemory * timestamp_memory  = SharedMemoryFactory::Get(
-            TIMESTAMP, m_timestamp.length()
-        );
-        char * timestamp_ptr = static_cast<char *>( timestamp_memory->Ptr() );
-        std::copy(
-            m_timestamp.c_str(),
-            m_timestamp.c_str()+m_timestamp.length(),
-            timestamp_ptr
-        );
 
         //Loading information for original edges
         boost::filesystem::ifstream edges_input_stream(
