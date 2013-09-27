@@ -72,7 +72,10 @@ stxxl.errlog
 /win/bin/
 /win/bin-debug/
 /osrm-extract
+/osrm-io-benchmark
+/osrm-components
 /osrm-routed
+/osrm-datastore
 /osrm-prepare
 /osrm-cli
 /nohup.out
