@@ -26,9 +26,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Server/DataStructures/BaseDataFacade.h"
 #include "Server/DataStructures/SharedDataType.h"
 #include "Util/BoostFilesystemFix.h"
-#include "Util/GraphLoader.h"
 #include "Util/IniFile.h"
 #include "Util/SimpleLogger.h"
+#include "Util/UUID.h"
 #include "typedefs.h"
 
 #include <boost/integer.hpp>
@@ -133,11 +133,46 @@ int main(int argc, char * argv[]) {
         shared_layout_ptr->name_id_list_size = number_of_edges;
         shared_layout_ptr->turn_instruction_list_size = number_of_edges;
 
-        //TODO load graph node size
-        //TODO load graph edge size
-        //TODO load search tree size
-        //TODO load checksum
-        //TODO load rsearch tree size
+
+        boost::filesystem::ifstream hsgr_input_stream(
+            hsgr_path,
+            std::ios::binary
+        );
+
+        // load checksum
+        unsigned checksum = 0;
+        hsgr_input_stream.read((char*) checksum, sizeof(unsigned) );
+        shared_layout_ptr->checksum = checksum;
+
+        // load graph node size
+        unsigned number_of_graph_nodes = 0;
+        hsgr_input_stream.read(
+            (char*) &number_of_graph_nodes,
+            sizeof(unsigned)
+        );
+        BOOST_ASSERT_MSG(
+            (0 != number_of_graph_nodes),
+            "number of nodes is zero"
+        );
+        shared_layout_ptr->graph_node_list_size = number_of_graph_nodes;
+
+        // load graph edge size
+        unsigned number_of_graph_edges = 0;
+        hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
+        BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
+        shared_layout_ptr->graph_edge_list_size = number_of_graph_edges;
+
+        // load rsearch tree size
+        SimpleLogger().Write() << "loading r-tree search list size";
+        boost::filesystem::ifstream tree_node_file(
+            ram_index_path,
+            std::ios::binary
+        );
+
+        uint32_t tree_size = 0;
+        tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
+        shared_layout_ptr->r_search_tree_size = tree_size;
+
         //load timestamp size
         SimpleLogger().Write() << "Loading timestamp";
         std::string m_timestamp;
@@ -248,86 +283,41 @@ int main(int argc, char * argv[]) {
             timestamp_ptr
         );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        std::vector<QueryGraph::_StrNode> node_list;
-        std::vector<QueryGraph::_StrEdge> edge_list;
-
-
-        //TODO BEGIN:
-        //Read directly into shared memory
-        unsigned m_check_sum = 0;
-        SimpleLogger().Write() << "Loading graph node list";
-        uint64_t m_number_of_nodes = readHSGRFromStream(
-            hsgr_path,
-            node_list,
-            edge_list,
-            &m_check_sum
+        // store search tree portion of rtree
+        char * rtree_ptr = static_cast<char *>(
+            shared_memory_ptr + shared_layout_ptr->GetRSearchTreeOffset()
         );
-        SimpleLogger().Write() << "number of nodes: " << m_number_of_nodes;
-        //TODO END
-
-        SharedMemory * graph_node_memory  = SharedMemoryFactory::Get(
-            GRAPH_NODE_LIST,
-            sizeof(QueryGraph::_StrNode)*node_list.size()
-        );
-        QueryGraph::_StrNode * graph_node_ptr = static_cast<QueryGraph::_StrNode *>(
-            graph_node_memory->Ptr()
-        );
-
-        std::copy(node_list.begin(), node_list.end(), graph_node_ptr);
-
-        SimpleLogger().Write() << "Loading graph edge list";
-        SharedMemory * graph_edge_memory  = SharedMemoryFactory::Get(
-            GRAPH_EDGE_LIST,
-            sizeof(QueryGraph::_StrEdge)*edge_list.size()
-        );
-        QueryGraph::_StrEdge * graph_edge_ptr = static_cast<QueryGraph::_StrEdge *>(
-            graph_edge_memory->Ptr()
-        );
-        std::copy(edge_list.begin(), edge_list.end(), graph_edge_ptr);
-
-        //Loading information for original edges
-        boost::filesystem::ifstream edges_input_stream(
-            edge_data_path,
-            std::ios::binary
-        );
-        unsigned number_of_edges = 0;
-        edges_input_stream.read((char*)&number_of_edges, sizeof(unsigned));
-        SimpleLogger().Write() << "number of edges: " << number_of_edges;
-
-        // Loading r-tree search data structure
-        SimpleLogger().Write() << "loading r-tree search list";
-        boost::filesystem::ifstream tree_node_file(
-            ram_index_path,
-            std::ios::binary
-        );
-
-        uint32_t tree_size = 0;
-        tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
-        StoreIntegerInSharedMemory(tree_size, R_SEARCH_TREE_SIZE);
-        //SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes";
-        SharedMemory * rtree_memory  = SharedMemoryFactory::Get(
-            R_SEARCH_TREE,
-            tree_size*sizeof(RTreeNode)
-        );
-        char * rtree_ptr = static_cast<char *>( rtree_memory->Ptr() );
 
         tree_node_file.read(rtree_ptr, sizeof(RTreeNode)*tree_size);
         tree_node_file.close();
+
+        UUID uuid_loaded, uuid_orig;
+        hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
+        if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
+            SimpleLogger().Write(logWARNING) <<
+                ".hsgr was prepared with different build. "
+                "Reprocess to get rid of this warning.";
+        }
+
+        // load the nodes of the search graph
+        QueryGraph::_StrNode * graph_node_list_ptr = (QueryGraph::_StrNode*)(
+            shared_memory_ptr + shared_layout_ptr->GetGraphNodeListOffset()
+        );
+        hsgr_input_stream.read(
+            (char*) graph_node_list_ptr,
+            shared_layout_ptr->graph_node_list_size*sizeof(QueryGraph::_StrNode)
+        );
+
+
+        // load the edges of the search graph
+        QueryGraph::_StrEdge * graph_edge_list_ptr = (QueryGraph::_StrEdge *)(
+            shared_memory_ptr + shared_layout_ptr->GetGraphEdgeListOffsett()
+        );
+        hsgr_input_stream.read(
+            (char*) graph_edge_list_ptr,
+            shared_layout_ptr->graph_edge_list_size*sizeof(QueryGraph::_StrEdge)
+        );
+        hsgr_input_stream.close();
 
     } catch(const std::exception & e) {
         SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
