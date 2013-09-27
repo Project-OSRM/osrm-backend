@@ -304,12 +304,15 @@ int main (int argc, char *argv[]) {
             "no. of nodes dont match"
         );
 
-        //Serialize numberOfNodes, nodes
+        //serialize crc32, aka checksum
         hsgr_output_stream.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
+        //serialize number f nodes
         hsgr_output_stream.write((char*) &numberOfNodes, sizeof(unsigned));
-        hsgr_output_stream.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
-        //Serialize number of Edges
+        //serialize number of edges
         hsgr_output_stream.write((char*) &position, sizeof(unsigned));
+        //serialize all nodes
+        hsgr_output_stream.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
+        //serialize all edges
         --numberOfNodes;
         edge = 0;
         int usedEdgeCounter = 0;
