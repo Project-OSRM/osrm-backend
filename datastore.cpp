@@ -37,22 +37,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
-typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
-typedef StaticRTree<BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf, true>::TreeNode RTreeNode;
-
-
-void StoreIntegerInSharedMemory(
-    const uint64_t value,
-    const SharedDataType data_type)
-{
-        SharedMemory * memory = SharedMemoryFactory::Get(
-            data_type,
-            sizeof(uint64_t)
-        );
-        uint64_t * ptr = static_cast<uint64_t *>( memory->Ptr() );
-        *ptr = value;
-}
-
 int main(int argc, char * argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
@@ -110,37 +94,122 @@ int main(int argc, char * argv[]) {
             throw OSRMException("edges file is empty");
         }
 
-        //TODO: remove any previous data
+        // Allocate a memory layout in shared memory //
+          SharedMemory * layout_memory = SharedMemoryFactory::Get(
+            LAYOUT_1,
+            sizeof(SharedDataLayout)
+        );
+        SharedDataLayout * shared_layout_ptr = static_cast<SharedDataLayout *>(
+            layout_memory->Ptr()
+        );
 
-
-        // Loading street names
-        SimpleLogger().Write() << "Loading names index";
-        uint64_t number_of_bytes = 0;
+        //                                                             //
+        // collect number of elements to store in shared memory object //
+        //                                                             //
+        SimpleLogger().Write() << "Collecting files sizes";
+        // number of entries in name index
         boost::filesystem::ifstream name_stream(
             name_data_path, std::ios::binary
         );
-        unsigned number_of_elements = 0;
-        name_stream.read((char *)&number_of_elements, sizeof(unsigned));
-        BOOST_ASSERT_MSG(0 != number_of_elements, "name file broken");
-        StoreIntegerInSharedMemory(number_of_elements, NAME_INDEX_SIZE);
-        number_of_bytes = sizeof(unsigned)*number_of_elements;
+        unsigned name_index_size = 0;
+        name_stream.read((char *)&name_index_size, sizeof(unsigned));
+        shared_layout_ptr->name_index_list_size = name_index_size;
+        BOOST_ASSERT_MSG(0 != shared_layout_ptr->name_index_list_size, "name file broken");
 
-        SharedMemory * index_memory = SharedMemoryFactory::Get(
-            NAMES_INDEX,
-            number_of_bytes
-        );
-        unsigned * index_ptr = static_cast<unsigned *>( index_memory->Ptr() );
-        name_stream.read((char*)index_ptr, number_of_bytes);
+        unsigned number_of_chars = 0;
+        name_stream.read((char *)&number_of_chars, sizeof(unsigned));
+        shared_layout_ptr->name_char_list_size = number_of_chars;
 
-        SimpleLogger().Write() << "Loading names list";
-        name_stream.read((char *)&number_of_bytes, sizeof(unsigned));
-        StoreIntegerInSharedMemory(number_of_bytes, NAME_INDEX_SIZE);
-        SharedMemory * char_memory  = SharedMemoryFactory::Get(
-            NAMES_LIST, number_of_bytes+1
+        //Loading information for original edges
+        boost::filesystem::ifstream edges_input_stream(
+            edge_data_path,
+            std::ios::binary
         );
-        char * char_ptr = static_cast<char *>( char_memory->Ptr() );
-        name_stream.read(char_ptr, number_of_bytes);
+        unsigned number_of_edges = 0;
+        edges_input_stream.read((char*)&number_of_edges, sizeof(unsigned));
+        SimpleLogger().Write() << "number of edges: " << number_of_edges;
+
+        shared_layout_ptr->via_node_list_size = number_of_edges;
+        shared_layout_ptr->name_id_list_size = number_of_edges;
+        shared_layout_ptr->turn_instruction_list_size = number_of_edges;
+
+        //TODO load graph node size
+        //TODO load graph edge size
+        //TODO load search tree size
+
+        // allocate shared memory block
+        SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout() << " bytes";
+        SharedMemory * shared_memory = SharedMemoryFactory::Get(
+            DATA_1,
+            shared_layout_ptr->GetSizeOfLayout()
+        );
+        char * shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
+
+        // read actual data into shared memory object //
+        // Loading street names
+        SimpleLogger().Write() << "Loading names index and chars from: " << name_data_path.string();
+        unsigned * name_index_ptr = (unsigned*)(
+            shared_memory_ptr + shared_layout_ptr->GetNameIndexOffset()
+        );
+        SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_index_list_size*sizeof(unsigned);
+
+        name_stream.read(
+            (char*)name_index_ptr,
+            shared_layout_ptr->name_index_list_size*sizeof(unsigned)
+        );
+
+        SimpleLogger().Write() << "Loading names char list";
+        SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_char_list_size*sizeof(char);
+        char * name_char_ptr = shared_memory_ptr + shared_layout_ptr->GetNameListOffset();
+        name_stream.read(
+            name_char_ptr,
+            shared_layout_ptr->name_char_list_size*sizeof(char)
+        );
         name_stream.close();
+
+        //load original edge information
+        SimpleLogger().Write() << "Loading via node, coordinates and turn instruction list";
+
+        NodeID * via_node_ptr = (NodeID *)(
+            shared_memory_ptr + shared_layout_ptr->GetViaNodeListOffset()
+        );
+
+        unsigned * name_id_ptr = (unsigned *)(
+            shared_memory_ptr + shared_layout_ptr->GetNameIDListOffset()
+        );
+
+        TurnInstruction * turn_instructions_ptr = (TurnInstruction *)(
+            shared_memory_ptr + shared_layout_ptr->GetTurnInstructionListOffset()
+        );
+
+        OriginalEdgeData current_edge_data;
+        for(unsigned i = 0; i < number_of_edges; ++i) {
+            SimpleLogger().Write() << i << "/" << number_of_edges;
+            edges_input_stream.read(
+                (char*)&(current_edge_data),
+                sizeof(OriginalEdgeData)
+            );
+            via_node_ptr[i] = current_edge_data.viaNode;
+            name_id_ptr[i]  = current_edge_data.nameID;
+            turn_instructions_ptr[i] = current_edge_data.turnInstruction;
+        }
+        edges_input_stream.close();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         std::vector<QueryGraph::_StrNode> node_list;
@@ -157,9 +226,9 @@ int main(int argc, char * argv[]) {
             edge_list,
             &m_check_sum
         );
+        SimpleLogger().Write() << "number of nodes: " << m_number_of_nodes;
         //TODO END
 
-        StoreIntegerInSharedMemory(node_list.size(), GRAPH_NODE_LIST_SIZE);
         SharedMemory * graph_node_memory  = SharedMemoryFactory::Get(
             GRAPH_NODE_LIST,
             sizeof(QueryGraph::_StrNode)*node_list.size()
@@ -171,7 +240,6 @@ int main(int argc, char * argv[]) {
         std::copy(node_list.begin(), node_list.end(), graph_node_ptr);
 
         SimpleLogger().Write() << "Loading graph edge list";
-        StoreIntegerInSharedMemory(edge_list.size(), GRAPH_EDGE_LIST_SIZE);
         SharedMemory * graph_edge_memory  = SharedMemoryFactory::Get(
             GRAPH_EDGE_LIST,
             sizeof(QueryGraph::_StrEdge)*edge_list.size()
@@ -183,7 +251,6 @@ int main(int argc, char * argv[]) {
 
         // load checksum
         SimpleLogger().Write() << "Loading check sum";
-        StoreIntegerInSharedMemory(m_check_sum, CHECK_SUM);
 
         SimpleLogger().Write() << "Loading timestamp";
         std::string m_timestamp;
@@ -201,7 +268,6 @@ int main(int argc, char * argv[]) {
         if(25 < m_timestamp.length()) {
             m_timestamp.resize(25);
         }
-        StoreIntegerInSharedMemory(m_timestamp.length(), TIMESTAMP_SIZE);
         SharedMemory * timestamp_memory  = SharedMemoryFactory::Get(
             TIMESTAMP, m_timestamp.length()
         );
@@ -219,40 +285,7 @@ int main(int argc, char * argv[]) {
         );
         unsigned number_of_edges = 0;
         edges_input_stream.read((char*)&number_of_edges, sizeof(unsigned));
-        SimpleLogger().Write() << "Loading via node, coordinates and turn instruction list";
-        StoreIntegerInSharedMemory(number_of_edges, NAME_ID_LIST_SIZE);
-        StoreIntegerInSharedMemory(number_of_edges, TURN_INSTRUCTION_LIST_SIZE);
-        StoreIntegerInSharedMemory(number_of_edges, VIA_NODE_LIST_SIZE);
-
-        SharedMemory * name_id_memory  = SharedMemoryFactory::Get(
-            NAME_ID_LIST,
-            number_of_edges*sizeof(unsigned)
-        );
-        unsigned * name_id_ptr = static_cast<unsigned *>( name_id_memory->Ptr() );
-
-        SharedMemory *via_node_memory  = SharedMemoryFactory::Get(
-            VIA_NODE_LIST,
-            number_of_edges*sizeof(unsigned)
-        );
-        unsigned * via_node_ptr = static_cast<unsigned *>( via_node_memory->Ptr() );
-
-        SharedMemory *turn_instruction_memory  = SharedMemoryFactory::Get(
-            TURN_INSTRUCTION_LIST,
-            number_of_edges*sizeof(TurnInstruction)
-        );
-        unsigned * turn_instructions_ptr = static_cast<unsigned *>( turn_instruction_memory->Ptr() );
-
-        OriginalEdgeData current_edge_data;
-        for(unsigned i = 0; i < number_of_edges; ++i) {
-            edges_input_stream.read(
-                (char*)&(current_edge_data),
-                sizeof(OriginalEdgeData)
-            );
-            via_node_ptr[i] = current_edge_data.viaNode;
-            name_id_ptr[i]  = current_edge_data.nameID;
-            turn_instructions_ptr[i] = current_edge_data.turnInstruction;
-        }
-        edges_input_stream.close();
+        SimpleLogger().Write() << "number of edges: " << number_of_edges;
 
         // Loading list of coordinates
         SimpleLogger().Write(logDEBUG) << "Loading coordinates list";
@@ -300,8 +333,6 @@ int main(int argc, char * argv[]) {
     } catch(const std::exception & e) {
         SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
     }
-
-    //
 
     return 0;
 }
