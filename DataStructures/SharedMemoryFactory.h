@@ -157,7 +157,7 @@ public:
     			", code " << e.get_error_code();
     		throw OSRMException(e.what());
     	}
-	};
+	}
 
 private:
 	SharedMemoryFactory_tmpl() {}
