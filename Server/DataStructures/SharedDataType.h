@@ -65,6 +65,21 @@ struct SharedDataLayout {
         timestamp_length(0)
     { }
 
+    void PrintInformation() const {
+        SimpleLogger().Write(logDEBUG) << "-";
+        SimpleLogger().Write(logDEBUG) << "name_index_list_size:       " << name_index_list_size;
+        SimpleLogger().Write(logDEBUG) << "name_char_list_size:        " << name_char_list_size;
+        SimpleLogger().Write(logDEBUG) << "name_id_list_size:          " << name_id_list_size;
+        SimpleLogger().Write(logDEBUG) << "via_node_list_size:         " << via_node_list_size;
+        SimpleLogger().Write(logDEBUG) << "graph_node_list_size:       " << graph_node_list_size;
+        SimpleLogger().Write(logDEBUG) << "graph_edge_list_size:       " << graph_edge_list_size;
+        SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << timestamp_length;
+        SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << coordinate_list_size;
+        SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << turn_instruction_list_size;
+        SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
+        SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
+    }
+
     uint64_t GetSizeOfLayout() const {
         uint64_t result =
             (name_index_list_size       * sizeof(unsigned)            ) +
