@@ -102,6 +102,7 @@ int main(int argc, char * argv[]) {
         SharedDataLayout * shared_layout_ptr = static_cast<SharedDataLayout *>(
             layout_memory->Ptr()
         );
+        shared_layout_ptr = new SharedDataLayout();
 
         //                                                             //
         // collect number of elements to store in shared memory object //
@@ -114,11 +115,13 @@ int main(int argc, char * argv[]) {
         unsigned name_index_size = 0;
         name_stream.read((char *)&name_index_size, sizeof(unsigned));
         shared_layout_ptr->name_index_list_size = name_index_size;
+        SimpleLogger().Write() << "name index size: " << shared_layout_ptr->name_index_list_size;
         BOOST_ASSERT_MSG(0 != shared_layout_ptr->name_index_list_size, "name file broken");
 
         unsigned number_of_chars = 0;
         name_stream.read((char *)&number_of_chars, sizeof(unsigned));
         shared_layout_ptr->name_char_list_size = number_of_chars;
+        SimpleLogger().Write() << "name char size: " << shared_layout_ptr->name_char_list_size;
 
         //Loading information for original edges
         boost::filesystem::ifstream edges_input_stream(
@@ -307,7 +310,6 @@ int main(int argc, char * argv[]) {
             (char*) graph_node_list_ptr,
             shared_layout_ptr->graph_node_list_size*sizeof(QueryGraph::_StrNode)
         );
-
 
         // load the edges of the search graph
         QueryGraph::_StrEdge * graph_edge_list_ptr = (QueryGraph::_StrEdge *)(
