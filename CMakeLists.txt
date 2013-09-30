@@ -47,7 +47,7 @@ set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 add_executable(osrm-datastore datastore.cpp)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
-file(GLOB DatastructureGlob Datastructures/*.cpp)
+file(GLOB DatastructureGlob DataStructures/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
 
 set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob})
