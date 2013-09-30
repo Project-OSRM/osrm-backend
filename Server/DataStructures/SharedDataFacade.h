@@ -162,7 +162,7 @@ private:
             street_names_index_ptr,
             data_layout->name_index_list_size
         );
-        m_name_begin_indices.swap(m_name_begin_indices);
+        m_name_begin_indices.swap(name_begin_indices);
 
         char * names_list_ptr = (char *)(
             shared_memory + data_layout->GetNameListOffset()
@@ -180,13 +180,13 @@ public:
         const boost::filesystem::path base_path
      ) {
         //check contents of config file
-        if ( !server_config.Holds("ramIndex") ) {
+        if ( !server_config.Holds("fileIndex") ) {
             throw OSRMException("no nodes file name in server ini");
         }
 
         //generate paths of data files
         boost::filesystem::path ram_index_path = boost::filesystem::absolute(
-                server_config.GetParameter("ramIndex"),
+                server_config.GetParameter("fileIndex"),
                 base_path
         );
 
@@ -197,6 +197,8 @@ public:
         shared_memory = (char *)(
             SharedMemoryFactory::Get(DATA_1)->Ptr()
         );
+
+        data_layout->PrintInformation();
 
         //load data
         SimpleLogger().Write() << "loading graph data";
