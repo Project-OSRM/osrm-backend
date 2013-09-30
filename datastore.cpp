@@ -102,7 +102,7 @@ int main(int argc, char * argv[]) {
         SharedDataLayout * shared_layout_ptr = static_cast<SharedDataLayout *>(
             layout_memory->Ptr()
         );
-        shared_layout_ptr = new SharedDataLayout();
+        shared_layout_ptr = new(layout_memory->Ptr()) SharedDataLayout();
 
         //                                                             //
         // collect number of elements to store in shared memory object //
@@ -115,44 +115,60 @@ int main(int argc, char * argv[]) {
         unsigned name_index_size = 0;
         name_stream.read((char *)&name_index_size, sizeof(unsigned));
         shared_layout_ptr->name_index_list_size = name_index_size;
-        SimpleLogger().Write() << "name index size: " << shared_layout_ptr->name_index_list_size;
+        // SimpleLogger().Write() << "name index size: " << shared_layout_ptr->name_index_list_size;
         BOOST_ASSERT_MSG(0 != shared_layout_ptr->name_index_list_size, "name file broken");
 
         unsigned number_of_chars = 0;
         name_stream.read((char *)&number_of_chars, sizeof(unsigned));
         shared_layout_ptr->name_char_list_size = number_of_chars;
-        SimpleLogger().Write() << "name char size: " << shared_layout_ptr->name_char_list_size;
+        // SimpleLogger().Write() << "name char size: " << shared_layout_ptr->name_char_list_size;
 
         //Loading information for original edges
         boost::filesystem::ifstream edges_input_stream(
             edge_data_path,
             std::ios::binary
         );
-        unsigned number_of_edges = 0;
-        edges_input_stream.read((char*)&number_of_edges, sizeof(unsigned));
-        SimpleLogger().Write() << "number of edges: " << number_of_edges;
+        unsigned number_of_original_edges = 0;
+        edges_input_stream.read((char*)&number_of_original_edges, sizeof(unsigned));
+        SimpleLogger().Write() << "number of edges: " << number_of_original_edges;
 
-        shared_layout_ptr->via_node_list_size = number_of_edges;
-        shared_layout_ptr->name_id_list_size = number_of_edges;
-        shared_layout_ptr->turn_instruction_list_size = number_of_edges;
+        shared_layout_ptr->via_node_list_size = number_of_original_edges;
+        shared_layout_ptr->name_id_list_size = number_of_original_edges;
+        shared_layout_ptr->turn_instruction_list_size = number_of_original_edges;
 
 
+        SimpleLogger().Write() << "noted number of edges";
+
+        SimpleLogger().Write() << "loading hsgr from " << hsgr_path.string();
         boost::filesystem::ifstream hsgr_input_stream(
             hsgr_path,
             std::ios::binary
         );
 
+        UUID uuid_loaded, uuid_orig;
+        hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
+        if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
+            SimpleLogger().Write(logWARNING) <<
+                ".hsgr was prepared with different build. "
+                "Reprocess to get rid of this warning.";
+        } else {
+            SimpleLogger().Write() << "UUID checked out ok";
+        }
+
+        SimpleLogger().Write() << "loaded file";
         // load checksum
         unsigned checksum = 0;
-        hsgr_input_stream.read((char*) checksum, sizeof(unsigned) );
+        hsgr_input_stream.read((char*)&checksum, sizeof(unsigned) );
+        SimpleLogger().Write() << "checksum: " << checksum;
         shared_layout_ptr->checksum = checksum;
-
+        SimpleLogger().Write() << "noted checksum";
         // load graph node size
         unsigned number_of_graph_nodes = 0;
         hsgr_input_stream.read(
             (char*) &number_of_graph_nodes,
             sizeof(unsigned)
         );
+        SimpleLogger().Write() << "number of nodes: " << number_of_graph_nodes;
         BOOST_ASSERT_MSG(
             (0 != number_of_graph_nodes),
             "number of nodes is zero"
@@ -161,8 +177,9 @@ int main(int argc, char * argv[]) {
 
         // load graph edge size
         unsigned number_of_graph_edges = 0;
-        hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
-        BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
+        hsgr_input_stream.read( (char*) &number_of_graph_edges, sizeof(unsigned) );
+        SimpleLogger().Write() << "number of graph edges: " << number_of_graph_edges;
+        BOOST_ASSERT_MSG( 0 != number_of_graph_edges, "number of graph edges is zero");
         shared_layout_ptr->graph_edge_list_size = number_of_graph_edges;
 
         // load rsearch tree size
@@ -252,8 +269,8 @@ int main(int argc, char * argv[]) {
         );
 
         OriginalEdgeData current_edge_data;
-        for(unsigned i = 0; i < number_of_edges; ++i) {
-            SimpleLogger().Write() << i << "/" << number_of_edges;
+        for(unsigned i = 0; i < number_of_original_edges; ++i) {
+            // SimpleLogger().Write() << i << "/" << number_of_edges;
             edges_input_stream.read(
                 (char*)&(current_edge_data),
                 sizeof(OriginalEdgeData)
@@ -294,14 +311,6 @@ int main(int argc, char * argv[]) {
         tree_node_file.read(rtree_ptr, sizeof(RTreeNode)*tree_size);
         tree_node_file.close();
 
-        UUID uuid_loaded, uuid_orig;
-        hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
-        if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-            SimpleLogger().Write(logWARNING) <<
-                ".hsgr was prepared with different build. "
-                "Reprocess to get rid of this warning.";
-        }
-
         // load the nodes of the search graph
         QueryGraph::_StrNode * graph_node_list_ptr = (QueryGraph::_StrNode*)(
             shared_memory_ptr + shared_layout_ptr->GetGraphNodeListOffset()
@@ -324,6 +333,7 @@ int main(int argc, char * argv[]) {
     } catch(const std::exception & e) {
         SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
     }
-
+    SimpleLogger().Write() << "all done. pressing a key deallocates memory";
+    std::cin.get();
     return 0;
 }
