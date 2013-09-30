@@ -77,6 +77,7 @@ public:
     { }
 
     void swap( SharedMemoryWrapper<DataT> & other ) {
+        BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
         std::swap( m_size, other.m_size);
         std::swap( m_ptr , other.m_ptr );
     }
