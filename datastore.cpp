@@ -86,6 +86,24 @@ int main(int argc, char * argv[]) {
                 base_path
         );
 
+        //check if data files actually exist
+        if ( !boost::filesystem::exists(hsgr_path) ) {
+            throw(".hsgr not found");
+        }
+        if ( !boost::filesystem::exists(ram_index_path) ) {
+            throw(".ramIndex not found");
+        }
+        if ( !boost::filesystem::exists(node_data_path) ) {
+            throw(".nodes not found");
+        }
+        if ( !boost::filesystem::exists(edge_data_path) ) {
+            throw(".edges not found");
+        }
+        if ( !boost::filesystem::exists(name_data_path) ) {
+            throw(".names not found");
+        }
+
+
         // check if data files empty
         if ( 0 == boost::filesystem::file_size( node_data_path ) ) {
             throw OSRMException("nodes file is empty");
