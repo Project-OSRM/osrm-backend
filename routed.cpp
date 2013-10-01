@@ -65,13 +65,11 @@ int main (int argc, char * argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
-        if(!mlockall(MCL_CURRENT | MCL_FUTURE)) {
-            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << "could not be locked to RAM";
+        if( !mlockall(MCL_CURRENT | MCL_FUTURE) ) {
+            SimpleLogger().Write(logWARNING) <<
+                "Process " << argv[0] << "could not be locked to RAM";
         }
-#endif
-#ifdef __linux__
-
-    installCrashHandler(argv[0]);
+        installCrashHandler(argv[0]);
 #endif
         SimpleLogger().Write() <<
             "starting up engines, compiled at " << __DATE__ << ", " __TIME__;
@@ -84,10 +82,23 @@ int main (int argc, char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        IniFile serverConfig((argc > 1 ? argv[1] : "server.ini"));
-        OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
+        IniFile server_config((argc > 1 ? argv[1] : "server.ini"));
 
-        Server * s = ServerFactory::CreateServer(serverConfig);
+        bool use_shared_memory = false;
+        if(
+            server_config.Holds("SharedMemory") &&
+            "yes" == server_config.GetParameter("SharedMemory")
+        ) {
+            use_shared_memory = true;
+            SimpleLogger().Write() << "Using data stored in shared memory";
+        }
+
+        OSRM routing_machine(
+            (argc > 1 ? argv[1] : "server.ini"),
+            use_shared_memory
+        );
+
+        Server * s = ServerFactory::CreateServer(server_config);
         s->GetRequestHandlerPtr().RegisterRoutingMachine(&routing_machine);
 
         boost::thread t(boost::bind(&Server::Run, s));
@@ -115,7 +126,8 @@ int main (int argc, char * argv[]) {
         std::cout << "[server] stopping threads" << std::endl;
 
         if(!t.timed_join(boost::posix_time::seconds(2))) {
-       	    SimpleLogger().Write(logDEBUG) << "Threads did not finish within 2 seconds. Hard abort!";
+       	    SimpleLogger().Write(logDEBUG) <<
+                "Threads did not finish within 2 seconds. Hard abort!";
         }
 
         std::cout << "[server] freeing objects" << std::endl;
