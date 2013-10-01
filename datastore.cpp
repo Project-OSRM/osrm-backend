@@ -148,16 +148,17 @@ int main(int argc, char * argv[]) {
         );
         unsigned number_of_original_edges = 0;
         edges_input_stream.read((char*)&number_of_original_edges, sizeof(unsigned));
-        SimpleLogger().Write() << "number of edges: " << number_of_original_edges;
+        SimpleLogger().Write(logDEBUG) <<
+            "number of edges: " << number_of_original_edges;
 
         shared_layout_ptr->via_node_list_size = number_of_original_edges;
         shared_layout_ptr->name_id_list_size = number_of_original_edges;
         shared_layout_ptr->turn_instruction_list_size = number_of_original_edges;
 
 
-        SimpleLogger().Write() << "noted number of edges";
+        SimpleLogger().Write(logDEBUG) << "noted number of edges";
 
-        SimpleLogger().Write() << "loading hsgr from " << hsgr_path.string();
+        SimpleLogger().Write(logDEBUG) << "loading hsgr from " << hsgr_path.string();
         boost::filesystem::ifstream hsgr_input_stream(
             hsgr_path,
             std::ios::binary
@@ -173,20 +174,19 @@ int main(int argc, char * argv[]) {
             SimpleLogger().Write() << "UUID checked out ok";
         }
 
-        SimpleLogger().Write() << "loaded file";
         // load checksum
         unsigned checksum = 0;
         hsgr_input_stream.read((char*)&checksum, sizeof(unsigned) );
         SimpleLogger().Write() << "checksum: " << checksum;
         shared_layout_ptr->checksum = checksum;
-        SimpleLogger().Write() << "noted checksum";
+        SimpleLogger().Write(logDEBUG) << "noted checksum";
         // load graph node size
         unsigned number_of_graph_nodes = 0;
         hsgr_input_stream.read(
             (char*) &number_of_graph_nodes,
             sizeof(unsigned)
         );
-        SimpleLogger().Write() << "number of nodes: " << number_of_graph_nodes;
+        SimpleLogger().Write(logDEBUG) << "number of nodes: " << number_of_graph_nodes;
         BOOST_ASSERT_MSG(
             (0 != number_of_graph_nodes),
             "number of nodes is zero"
@@ -201,7 +201,7 @@ int main(int argc, char * argv[]) {
         shared_layout_ptr->graph_edge_list_size = number_of_graph_edges;
 
         // load rsearch tree size
-        SimpleLogger().Write() << "loading r-tree search list size";
+        SimpleLogger().Write(logDEBUG) << "loading r-tree search list size";
         boost::filesystem::ifstream tree_node_file(
             ram_index_path,
             std::ios::binary
@@ -212,7 +212,7 @@ int main(int argc, char * argv[]) {
         shared_layout_ptr->r_search_tree_size = tree_size;
 
         //load timestamp size
-        SimpleLogger().Write() << "Loading timestamp";
+        SimpleLogger().Write(logDEBUG) << "Loading timestamp";
         std::string m_timestamp;
         if( boost::filesystem::exists(timestamp_path) ) {
             boost::filesystem::ifstream timestampInStream( timestamp_path );
@@ -231,7 +231,8 @@ int main(int argc, char * argv[]) {
         shared_layout_ptr->timestamp_length = m_timestamp.length();
 
         //load coordinate size
-        SimpleLogger().Write(logDEBUG) << "Loading coordinates list";
+        SimpleLogger().Write() <<
+            "Loading coordinates list from " << node_data_path.string();
         boost::filesystem::ifstream nodes_input_stream(
             node_data_path,
             std::ios::binary
@@ -262,7 +263,7 @@ int main(int argc, char * argv[]) {
             shared_layout_ptr->name_index_list_size*sizeof(unsigned)
         );
 
-        SimpleLogger().Write() << "Loading names char list";
+        SimpleLogger().Write(logDEBUG) << "Loading names char list";
         SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_char_list_size*sizeof(char);
         char * name_char_ptr = shared_memory_ptr + shared_layout_ptr->GetNameListOffset();
         name_stream.read(
@@ -272,7 +273,9 @@ int main(int argc, char * argv[]) {
         name_stream.close();
 
         //load original edge information
-        SimpleLogger().Write() << "Loading via node, coordinates and turn instruction list";
+        SimpleLogger().Write() <<
+            "Loading via node, coordinates and turn instruction lists from: " <<
+            edge_data_path.string();
 
         NodeID * via_node_ptr = (NodeID *)(
             shared_memory_ptr + shared_layout_ptr->GetViaNodeListOffset()
@@ -348,10 +351,12 @@ int main(int argc, char * argv[]) {
         );
         hsgr_input_stream.close();
 
+        SimpleLogger().Write() << "all data loaded. pressing a key deallocates memory";
+        std::cin.get();
+
     } catch(const std::exception & e) {
         SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
     }
-    SimpleLogger().Write() << "all done. pressing a key deallocates memory";
-    std::cin.get();
+
     return 0;
 }
