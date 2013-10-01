@@ -302,7 +302,9 @@ public:
 
     unsigned GetCheckSum() const { return m_check_sum; }
 
-    unsigned GetNameIndexFromEdgeID(const unsigned id) const { return 0; };
+    unsigned GetNameIndexFromEdgeID(const unsigned id) const {
+        return m_name_ID_list.at(id);
+    };
 
     void GetName( const unsigned name_id, std::string & result ) const {
         if(UINT_MAX == name_id) {
