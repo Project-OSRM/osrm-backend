@@ -72,7 +72,7 @@ int main (int argc, const char * argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
-        if(!mlockall(MCL_CURRENT | MCL_FUTURE)) {
+        if( !mlockall(MCL_CURRENT | MCL_FUTURE) ) {
             SimpleLogger().Write(logWARNING) <<
                 "Process " << argv[0] << "could not be locked to RAM";
         }
@@ -127,12 +127,14 @@ int main (int argc, const char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        OSRM routing_machine(server_paths);
+        bool use_shared_memory = false;
+        OSRM routing_machine(server_paths, use_shared_memory);
         Server * s = ServerFactory::CreateServer(
                         ip_address,
                         ip_port,
                         requested_num_threads
                      );
+
         s->GetRequestHandlerPtr().RegisterRoutingMachine(&routing_machine);
 
         boost::thread t(boost::bind(&Server::Run, s));
@@ -159,7 +161,8 @@ int main (int argc, const char * argv[]) {
         std::cout << "[server] stopping threads" << std::endl;
 
         if(!t.timed_join(boost::posix_time::seconds(2))) {
-       	    SimpleLogger().Write(logDEBUG) << "Threads did not finish within 2 seconds. Hard abort!";
+       	    SimpleLogger().Write(logDEBUG) <<
+                "Threads did not finish within 2 seconds. Hard abort!";
         }
 
         std::cout << "[server] freeing objects" << std::endl;
