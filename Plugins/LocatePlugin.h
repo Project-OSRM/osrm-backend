@@ -25,7 +25,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../Util/StringUtil.h"
 
 //locates the nearest node in the road network for a given coordinate.
-//TODO: Rework data access to go through facade
 
 template<class DataFacadeT>
 class LocatePlugin : public BasePlugin {
@@ -63,7 +62,12 @@ public:
         reply.status = http::Reply::ok;
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
-        if(!facade->LocateClosestEndPointForCoordinate(routeParameters.coordinates[0], result)) {
+        if(
+            !facade->LocateClosestEndPointForCoordinate(
+                routeParameters.coordinates[0],
+                result
+             )
+        ) {
             reply.content += ("\"status\":207,");
             reply.content += ("\"mapped_coordinate\":[]");
         } else {
