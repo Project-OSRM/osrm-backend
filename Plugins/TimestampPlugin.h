@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMESTAMPPLUGIN_H_
 
 #include "BasePlugin.h"
-//TODO: Rework data access to go through facade
 
 template<class DataFacadeT>
 class TimestampPlugin : public BasePlugin {

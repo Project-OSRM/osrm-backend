@@ -46,7 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-//TODO: Rework data access to go through facade
 template<class DataFacadeT>
 class ViaRoutePlugin : public BasePlugin {
 private:
