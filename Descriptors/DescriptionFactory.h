@@ -97,8 +97,8 @@ public:
         unsigned durationOfSegment = 0;
         unsigned indexOfSegmentBegin = 0;
 
-        std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].nameID);
-        std::string string1;
+        // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].nameID);
+        // std::string string1;
 
 
         /*Simplify turn instructions
@@ -152,7 +152,7 @@ public:
 
 
             if(TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
-                //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << segment.nameID;
+                //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << pathDescription[i].nameID;
                 assert(pathDescription[i].necessary);
                 lengthOfSegment = 0;
                 durationOfSegment = 0;
