@@ -171,5 +171,5 @@ Feature: Testbot - Handle ferry routes
 
         When I route I should get
             | from | to | route   | time       |
-            | a    | g  | abcdefg | 23400s +-1 |
-            | g    | a  | abcdefg | 23400s +-1 |
+            | a    | g  | abcdefg | 23400s +-2 |
+            | g    | a  | abcdefg | 23400s +-2 |
