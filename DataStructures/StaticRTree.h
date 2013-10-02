@@ -878,12 +878,12 @@ private:
             const FixedPointCoordinate& source,
             const FixedPointCoordinate& target,
             FixedPointCoordinate& nearest, double *r) const {
-        const double x = inputPoint.lat/100000.;
-        const double y = inputPoint.lon/100000.;
-        const double a = source.lat/100000.;
-        const double b = source.lon/100000.;
-        const double c = target.lat/100000.;
-        const double d = target.lon/100000.;
+        const double x = inputPoint.lat/COORDINATE_PRECISION;
+        const double y = inputPoint.lon/COORDINATE_PRECISION;
+        const double a = source.lat/COORDINATE_PRECISION;
+        const double b = source.lon/COORDINATE_PRECISION;
+        const double c = target.lat/COORDINATE_PRECISION;
+        const double d = target.lon/COORDINATE_PRECISION;
         double p,q,mX,nY;
         if(std::fabs(a-c) > std::numeric_limits<double>::epsilon() ){
             const double m = (d-b)/(c-a); // slope
@@ -915,8 +915,8 @@ private:
 //            return std::sqrt(((d - y)*(d - y) + (c - x)*(c - x)));
         }
         // point lies in between
-        nearest.lat = p*100000.;
-        nearest.lon = q*100000.;
+        nearest.lat = p*COORDINATE_PRECISION;
+        nearest.lon = q*COORDINATE_PRECISION;
 //        return std::sqrt((p-x)*(p-x) + (q-y)*(q-y));
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
