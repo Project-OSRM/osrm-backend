@@ -126,7 +126,7 @@ private:
                 return 0.0;
             }
 
-            double min_dist = DBL_MAX;
+            double min_dist = std::numeric_limits<double>::max();
             min_dist = std::min(
                     min_dist,
                     ApproximateDistance(
@@ -167,7 +167,7 @@ private:
         }
 
         inline double GetMinMaxDist(const FixedPointCoordinate & location) const {
-            double min_max_dist = DBL_MAX;
+            double min_max_dist = std::numeric_limits<double>::max();
             //Get minmax distance to each of the four sides
             FixedPointCoordinate upper_left (max_lat, min_lon);
             FixedPointCoordinate upper_right(max_lat, max_lon);
@@ -265,7 +265,7 @@ private:
             const uint32_t n_id,
             const double dist
         ) : node_id(n_id), min_dist(dist) {}
-        QueryCandidate() : node_id(UINT_MAX), min_dist(DBL_MAX) {}
+        QueryCandidate() : node_id(UINT_MAX), min_dist(std::numeric_limits<double>::max()) {}
         uint32_t node_id;
         double min_dist;
         inline bool operator<(const QueryCandidate & other) const {
@@ -458,8 +458,8 @@ public:
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
         SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
-        double min_dist = DBL_MAX;
-        double min_max_dist = DBL_MAX;
+        double min_dist = std::numeric_limits<double>::max();
+        double min_max_dist = std::numeric_limits<double>::max();
         bool found_a_nearest_edge = false;
 
         FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
