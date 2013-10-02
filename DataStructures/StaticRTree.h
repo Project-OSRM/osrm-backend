@@ -599,8 +599,8 @@ public:
     ) {
         bool ignore_tiny_components = (zoom_level <= 14);
         DataT nearest_edge;
-        double min_dist = DBL_MAX;
-        double min_max_dist = DBL_MAX;
+        double min_dist = std::numeric_limits<double>::max();
+        double min_max_dist = std::numeric_limits<double>::max();
         bool found_a_nearest_edge = false;
 
         //initialize queue with root element
@@ -711,8 +711,8 @@ public:
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
         //SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
-        double min_dist = DBL_MAX;
-        double min_max_dist = DBL_MAX;
+        double min_dist = std::numeric_limits<double>::max();
+        double min_max_dist = std::numeric_limits<double>::max();
         bool found_a_nearest_edge = false;
 
         FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
