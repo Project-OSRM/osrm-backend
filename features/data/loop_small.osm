@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' upload='true' generator='JOSM'>
+  <bounds minlat='55.65825' minlon='12.56879' maxlat='55.66252' maxlon='12.57783' origin='0.42-6-gf39a160-dirty' />
+  <node id='8088602' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.6602463' lon='12.5717242' />
+  <node id='8088603' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.660027' lon='12.5723008' />
+  <node id='8088604' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.660184' lon='12.5725037' />
+  <node id='8088605' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.6604146' lon='12.5719299' />
+  <node id='8088608' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.659941' lon='12.5727592' />
+  <node id='8088609' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.6606727' lon='12.5736932' />
+  <node id='8088610' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.6603422' lon='12.5732619' />
+  <node id='456042970' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.6607785' lon='12.5739097' />
+  <node id='1374722566' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1' lat='55.6600566' lon='12.572507' />
+  <way id='1881363' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1'>
+    <nd ref='8088602' />
+    <nd ref='8088603' />
+    <nd ref='1374722566' />
+    <tag k='highway' v='residential' />
+    <tag k='name' v='Axel Heides Gade' />
+  </way>
+  <way id='26178031' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1'>
+    <nd ref='456042970' />
+    <nd ref='8088609' />
+    <nd ref='8088610' />
+    <nd ref='8088608' />
+    <tag k='highway' v='residential' />
+    <tag k='name' v='Artillerivej' />
+  </way>
+  <way id='123206850' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1'>
+    <nd ref='1374722566' />
+    <nd ref='8088604' />
+    <nd ref='8088605' />
+    <tag k='highway' v='residential' />
+    <tag k='name' v='Axel Heides Gade' />
+  </way>
+  <way id='123206853' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1'>
+    <nd ref='8088602' />
+    <nd ref='8088605' />
+    <tag k='highway' v='residential' />
+    <tag k='name' v='' />
+  </way>
+  <way id='157510551' timestamp='1969-12-31T23:59:59Z' version='1' changeset='1'>
+    <nd ref='1374722566' />
+    <nd ref='8088608' />
+    <tag k='highway' v='residential' />
+    <tag k='name' v='Axel Heides Gade' />
+  </way>
+</osm>
