@@ -1,5 +1,6 @@
-@routing @projection
+@routing @projection @todo
 Feature: Projection to nearest point on road
+Waypoints should be projected perpendicular onto the closest road, also at high latitudes.
 
     Background:
         The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html
