@@ -42,11 +42,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
-#include <cassert>
-#include <cfloat>
-#include <climits>
-
 #include <algorithm>
+#include <limits>
 #include <queue>
 #include <string>
 #include <vector>
@@ -614,7 +611,7 @@ public:
         );
 
         BOOST_ASSERT_MSG(
-            FLT_EPSILON > (0. - traversal_queue.top().min_dist),
+            std::numeric_limits<double>::epsilon() > (0. - traversal_queue.top().min_dist),
             "Root element in NN Search has min dist != 0."
         );
 
@@ -728,8 +725,8 @@ public:
         );
 
         BOOST_ASSERT_MSG(
-                         FLT_EPSILON > (0. - traversal_queue.top().min_dist),
-                         "Root element in NN Search has min dist != 0."
+            std::numeric_limits<double>::epsilon() > (0. - traversal_queue.top().min_dist),
+            "Root element in NN Search has min dist != 0."
         );
 
         while(!traversal_queue.empty()) {
@@ -744,7 +741,7 @@ public:
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     ++io_count;
-                    //SimpleLogger().Write() << "checking " << current_leaf_node.object_count << " elements";
+                    SimpleLogger().Write() << "checking " << current_leaf_node.object_count << " elements";
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
                         DataT & current_edge = current_leaf_node.objects[i];
                         if(ignore_tiny_components && current_edge.belongsToTinyComponent) {
@@ -763,6 +760,8 @@ public:
                                 &current_ratio
                         );
 
+                        SimpleLogger().Write() << "Checking edge " << current_edge.id << " at dist: " << current_perpendicular_distance;
+
                         if(
                                 current_perpendicular_distance < min_dist
                                 && !DoubleEpsilonCompare(
@@ -770,6 +769,9 @@ public:
                                         min_dist
                                 )
                         ) { //found a new minimum
+                            SimpleLogger().Write() << "diff: " << std::setprecision(10) << std::fabs(current_perpendicular_distance - min_dist);
+                            SimpleLogger().Write() << (DoubleEpsilonCompare(current_perpendicular_distance, min_dist) ? "same" : "different");
+                            SimpleLogger().Write() << std::setprecision(6) << "old min: " << min_dist << ", new min: " << current_perpendicular_distance;
                             min_dist = current_perpendicular_distance;
                             result_phantom_node.edgeBasedNode = current_edge.id;
                             result_phantom_node.nodeBasedEdgeNameID = current_edge.nameID;
@@ -798,8 +800,9 @@ public:
                                 current_end_coordinate
                             )
                         ) {
+
                             BOOST_ASSERT_MSG(current_edge.id != result_phantom_node.edgeBasedNode, "IDs not different");
-                            //SimpleLogger().Write() << "found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode;
+                            SimpleLogger().Write() << "found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode;
                             result_phantom_node.weight2 = current_edge.weight;
                             if(current_edge.id < result_phantom_node.edgeBasedNode) {
                                 result_phantom_node.edgeBasedNode = current_edge.id;
@@ -830,6 +833,7 @@ public:
                         traversal_queue.push(QueryCandidate(child_id, current_min_dist));
                     }
                 }
+                SimpleLogger().Write() << result_phantom_node;
             }
         }
 
@@ -883,14 +887,14 @@ private:
             const FixedPointCoordinate& source,
             const FixedPointCoordinate& target,
             FixedPointCoordinate& nearest, double *r) const {
-        const double x = static_cast<double>(inputPoint.lat);
-        const double y = static_cast<double>(inputPoint.lon);
-        const double a = static_cast<double>(source.lat);
-        const double b = static_cast<double>(source.lon);
-        const double c = static_cast<double>(target.lat);
-        const double d = static_cast<double>(target.lon);
+        const double x = inputPoint.lat/100000.;
+        const double y = inputPoint.lon/100000.;
+        const double a = source.lat/100000.;
+        const double b = source.lon/100000.;
+        const double c = target.lat/100000.;
+        const double d = target.lon/100000.;
         double p,q,mX,nY;
-        if(fabs(a-c) > FLT_EPSILON){
+        if(std::fabs(a-c) > std::numeric_limits<double>::epsilon() ){
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
             p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
@@ -920,8 +924,8 @@ private:
 //            return std::sqrt(((d - y)*(d - y) + (c - x)*(c - x)));
         }
         // point lies in between
-        nearest.lat = p;
-        nearest.lon = q;
+        nearest.lat = p*100000.;
+        nearest.lon = q*100000.;
 //        return std::sqrt((p-x)*(p-x) + (q-y)*(q-y));
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
@@ -931,7 +935,7 @@ private:
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) const {
-        return (std::fabs(d1 - d2) < FLT_EPSILON);
+        return (std::fabs(d1 - d2) < std::numeric_limits<double>::epsilon() );
     }
 
 };
