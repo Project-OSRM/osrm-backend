@@ -1,10 +1,10 @@
-@routing @loop
-Feature: Weird routings discovered
+@routing @726
+Feature: Avoid weird loops caused by rounding errors
 
     Background:
-        Given the profile "car"
+        Given the profile "testbot"
 
-    Scenario: Weird looping, small input file
+    Scenario: Avoid weird loops, small input file
         Given the input file features/data/loop_small.osm
 
         And the node locations
@@ -16,8 +16,7 @@ Feature: Weird routings discovered
             | from | to | route        | turns            |
             | a    | b  | Artillerivej | head,destination |
 
-    @a
-    Scenario: Weird looping, manual input
+    Scenario: Avoid weird loops, manual input
         Given the node locations
             | node | lat       | lon       |
             | a    | 55.660778 | 12.573909 |
