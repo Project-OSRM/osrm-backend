@@ -23,9 +23,11 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../DataStructures/Coordinate.h"
 
-#include <cassert>
+#include <boost/assert.hpp>
+
 #include <cmath>
-#include <cfloat>
+
+#include <limits>
 #include <stack>
 #include <vector>
 
@@ -45,7 +47,7 @@ class DouglasPeucker {
 private:
     typedef std::pair<std::size_t, std::size_t> PairOfPoints;
     //Stack to simulate the recursion
-    std::stack<PairOfPoints > recursionStack;
+    std::stack<PairOfPoints > recursion_stack;
 
     /**
      * This distance computation does integer arithmetic only and is about twice as fast as
@@ -56,12 +58,13 @@ private:
         const int p2x = (segB.lon - segA.lat);
         const int p2y = (segB.lon - segA.lat);
         const int something = p2x*p2x + p2y*p2y;
-        int u = (something < FLT_EPSILON ? 0 : ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something);
+        int u = ( 0 == something  ? 0 : ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something);
 
-        if (u > 1)
+        if (u > 1) {
             u = 1;
-        else if (u < 0)
+        } else if (u < 0) {
             u = 0;
+        }
 
         const int x = segA.lon + u * p2x;
         const int y = segA.lat + u * p2y;
@@ -76,52 +79,82 @@ private:
 
 
 public:
-    void Run(std::vector<PointT> & inputVector, const unsigned zoomLevel) {
+    void Run(std::vector<PointT> & input_geometry, const unsigned zoom_level) {
         {
-            assert(zoomLevel < 19);
-            assert(1 < inputVector.size());
-            std::size_t leftBorderOfRange = 0;
-            std::size_t rightBorderOfRange = 1;
+            BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
+            BOOST_ASSERT_MSG(1 < input_geometry.size(), "geometry invalid");
+            std::size_t left_border = 0;
+            std::size_t right_border = 1;
             //Sweep linerarily over array and identify those ranges that need to be checked
-//            recursionStack.hint(inputVector.size());
             do {
-                assert(inputVector[leftBorderOfRange].necessary);
-                assert(inputVector.back().necessary);
+                BOOST_ASSERT_MSG(
+                    input_geometry[left_border].necessary,
+                    "left border must be necessary"
+                );
+                BOOST_ASSERT_MSG(
+                    input_geometry.back().necessary,
+                    "right border must be necessary"
+                );
 
-                if(inputVector[rightBorderOfRange].necessary) {
-                    recursionStack.push(std::make_pair(leftBorderOfRange, rightBorderOfRange));
-                    leftBorderOfRange = rightBorderOfRange;
+                if(input_geometry[right_border].necessary) {
+                    recursion_stack.push(std::make_pair(left_border, right_border));
+                    left_border = right_border;
                 }
-                ++rightBorderOfRange;
-            } while( rightBorderOfRange < inputVector.size());
+                ++right_border;
+            } while( right_border < input_geometry.size());
         }
-        while(!recursionStack.empty()) {
+        while(!recursion_stack.empty()) {
             //pop next element
-            const PairOfPoints pair = recursionStack.top();
-            recursionStack.pop();
-            assert(inputVector[pair.first].necessary);
-            assert(inputVector[pair.second].necessary);
-            assert(pair.second < inputVector.size());
-            assert(pair.first < pair.second);
-            int maxDistance = INT_MIN;
+            const PairOfPoints pair = recursion_stack.top();
+            recursion_stack.pop();
+            BOOST_ASSERT_MSG(
+                input_geometry[pair.first].necessary,
+                "left border mus be necessary"
+            );
+            BOOST_ASSERT_MSG(
+                input_geometry[pair.second].necessary,
+                "right border must be necessary"
+            );
+            BOOST_ASSERT_MSG(
+                pair.second < input_geometry.size(),
+                "right border outside of geometry"
+            );
+            BOOST_ASSERT_MSG(
+                pair.first < pair.second,
+                "left border on the wrong side"
+            );
+            int max_distance = INT_MIN;
 
-            std::size_t indexOfFarthestElement = pair.second;
-            //find index idx of element with maxDistance
+            std::size_t farthest_element_index = pair.second;
+            //find index idx of element with max_distance
             for(std::size_t i = pair.first+1; i < pair.second; ++i){
-                const double distance = std::fabs(fastDistance(inputVector[i].location, inputVector[pair.first].location, inputVector[pair.second].location));
-                if(distance > DouglasPeuckerThresholds[zoomLevel] && distance > maxDistance) {
-                    indexOfFarthestElement = i;
-                    maxDistance = distance;
+                const int temp_dist = fastDistance(
+                                        input_geometry[i].location,
+                                        input_geometry[pair.first].location,
+                                        input_geometry[pair.second].location
+                                    );
+                const double distance = std::fabs(temp_dist);
+                if(
+                    distance > DouglasPeuckerThresholds[zoom_level] &&
+                    distance > max_distance
+                ) {
+                    farthest_element_index = i;
+                    max_distance = distance;
                 }
             }
-            if (maxDistance > DouglasPeuckerThresholds[zoomLevel]) {
+            if (max_distance > DouglasPeuckerThresholds[zoom_level]) {
                 //  mark idx as necessary
-                inputVector[indexOfFarthestElement].necessary = true;
-                if (1 < indexOfFarthestElement - pair.first) {
-                    recursionStack.push(std::make_pair(pair.first, indexOfFarthestElement) );
+                input_geometry[farthest_element_index].necessary = true;
+                if (1 < (farthest_element_index - pair.first) ) {
+                    recursion_stack.push(
+                        std::make_pair(pair.first, farthest_element_index)
+                    );
                 }
-                if (1 < pair.second - indexOfFarthestElement)
-                    recursionStack.push(std::make_pair(indexOfFarthestElement, pair.second) );
+                if (1 < (pair.second - farthest_element_index) ) {
+                    recursion_stack.push(
+                        std::make_pair(farthest_element_index, pair.second)
+                    );
+                }
             }
         }
     }
