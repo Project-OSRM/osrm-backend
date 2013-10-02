@@ -741,7 +741,6 @@ public:
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     ++io_count;
-                    SimpleLogger().Write() << "checking " << current_leaf_node.object_count << " elements";
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
                         DataT & current_edge = current_leaf_node.objects[i];
                         if(ignore_tiny_components && current_edge.belongsToTinyComponent) {
@@ -760,8 +759,6 @@ public:
                                 &current_ratio
                         );
 
-                        SimpleLogger().Write() << "Checking edge " << current_edge.id << " at dist: " << current_perpendicular_distance;
-
                         if(
                                 current_perpendicular_distance < min_dist
                                 && !DoubleEpsilonCompare(
@@ -769,9 +766,6 @@ public:
                                         min_dist
                                 )
                         ) { //found a new minimum
-                            SimpleLogger().Write() << "diff: " << std::setprecision(10) << std::fabs(current_perpendicular_distance - min_dist);
-                            SimpleLogger().Write() << (DoubleEpsilonCompare(current_perpendicular_distance, min_dist) ? "same" : "different");
-                            SimpleLogger().Write() << std::setprecision(6) << "old min: " << min_dist << ", new min: " << current_perpendicular_distance;
                             min_dist = current_perpendicular_distance;
                             result_phantom_node.edgeBasedNode = current_edge.id;
                             result_phantom_node.nodeBasedEdgeNameID = current_edge.nameID;
@@ -802,15 +796,12 @@ public:
                         ) {
 
                             BOOST_ASSERT_MSG(current_edge.id != result_phantom_node.edgeBasedNode, "IDs not different");
-                            SimpleLogger().Write() << "found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode;
                             result_phantom_node.weight2 = current_edge.weight;
                             if(current_edge.id < result_phantom_node.edgeBasedNode) {
                                 result_phantom_node.edgeBasedNode = current_edge.id;
                                 std::swap(result_phantom_node.weight1, result_phantom_node.weight2);
                                 std::swap(current_end_coordinate, current_start_coordinate);
-                            //    SimpleLogger().Write() <<"case 2";
                             }
-                            //SimpleLogger().Write() << "w1: " << result_phantom_node.weight1 << ", w2: " << result_phantom_node.weight2;
                         }
                     }
                 } else {
