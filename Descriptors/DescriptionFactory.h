@@ -30,6 +30,7 @@
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <limits>
 #include <vector>
 
 /* This class is fed with all way segments in consecutive order

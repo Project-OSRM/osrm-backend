@@ -467,7 +467,7 @@ public:
         //initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
         traversal_queue.push(QueryCandidate(0, m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate)));
-        BOOST_ASSERT_MSG(FLT_EPSILON > (0. - traversal_queue.top().min_dist), "Root element in NN Search has min dist != 0.");
+        BOOST_ASSERT_MSG(std::numberic_limits<double>::epsilon() > (0. - traversal_queue.top().min_dist), "Root element in NN Search has min dist != 0.");
 
         while(!traversal_queue.empty()) {
             const QueryCandidate current_query_node = traversal_queue.top(); traversal_queue.pop();

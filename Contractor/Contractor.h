@@ -38,7 +38,6 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <cfloat>
 #include <ctime>
 
 #include <algorithm>
@@ -732,7 +731,7 @@ private:
             if ( priority > targetPriority )
                 return false;
             //tie breaking
-            if ( fabs(priority - targetPriority) < FLT_EPSILON && bias(node, target) ) {
+            if ( fabs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
                 return false;
             }
             neighbours.push_back( target );
@@ -754,7 +753,7 @@ private:
                 if ( priority > targetPriority)
                     return false;
                 //tie breaking
-                if ( fabs(priority - targetPriority) < FLT_EPSILON && bias(node, target) ) {
+                if ( fabs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
                     return false;
                 }
             }
