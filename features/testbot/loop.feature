@@ -50,3 +50,29 @@ Feature: Avoid weird loops caused by rounding errors
         When I route I should get
             | from | to | route | turns            |
             | x    | y  | abc   | head,destination |
+
+    @bug @412
+    Scenario: Avoid weird loops 3
+        And the node map
+            | a |   |   |
+            | b | e |   |
+            |   |   | 1 |
+            |   |   |   |
+            |   |   | 2 |
+            |   |   |   |
+            |   | c | f |
+            |   | d |   |
+
+        And the ways
+            | nodes | highway   |
+            | ab    | primary   |
+            | bc    | primary   |
+            | cd    | primary   |
+            | be    | secondary |
+            | ef    | secondary |
+            | cf    | secondary |
+
+        When I route I should get
+            | waypoints | route          | turns                                  |
+            | a,2,d     | ab,be,ef,cf,cd | head,left,right,right,left,destination |
+            | a,1,d     | ab,be,ef,cf,cd | head,left,right,right,left,destination |
