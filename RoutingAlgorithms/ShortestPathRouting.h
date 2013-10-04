@@ -72,15 +72,15 @@ public:
 
             //insert new starting nodes into forward heap, adjusted by previous distances.
             if(searchFrom1stStartNode) {
-                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
                 // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
-                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
                 // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
            }
             if(phantomNodePair.startPhantom.isBidirected() && searchFrom2ndStartNode) {
-                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance2-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
                 // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
-                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance2-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
                 // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
             }
 
