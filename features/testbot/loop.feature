@@ -51,7 +51,7 @@ Feature: Avoid weird loops caused by rounding errors
             | from | to | route | turns            |
             | x    | y  | abc   | head,destination |
 
-    @bug @412
+    @412
     Scenario: Avoid weird loops 3
         And the node map
             | a |   |   |
