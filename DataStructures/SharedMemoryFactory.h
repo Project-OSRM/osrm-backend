@@ -108,7 +108,29 @@ public:
 	    	}
 		}
 
+	template<typename IdentifierT >
+	static bool RegionExists(
+		const boost::filesystem::path & lock_file,
+		const IdentifierT id
+	) {
+		boost::interprocess::xsi_key key( lock_file.string().c_str(), id );
+		return RegionExists(key);
+	}
+
 private:
+	static bool RegionExists( const boost::interprocess::xsi_key &key ) {
+		bool result = true;
+	    try {
+		    boost::interprocess::xsi_shared_memory shm(
+		        boost::interprocess::open_only,
+		        key
+		    );
+	    } catch(...) {
+	    	result = false;
+	    }
+	    return result;
+	}
+
 	static void RemoveSharedMemory(
 		const boost::interprocess::xsi_key &key
 	) {
