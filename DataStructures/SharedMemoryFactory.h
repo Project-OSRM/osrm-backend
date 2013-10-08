@@ -137,6 +137,15 @@ public:
 		return RegionExists(key);
 	}
 
+	template<typename IdentifierT >
+	static void RemoveSharedMemory(
+		const IdentifierT id
+	) {
+		OSRMLockFile lock_file;
+		boost::interprocess::xsi_key key( lock_file().string().c_str(), id );
+		RemoveSharedMemory(key);
+	}
+
 private:
 	static bool RegionExists( const boost::interprocess::xsi_key &key ) {
 		bool result = true;
