@@ -132,9 +132,15 @@ public:
 	static bool RegionExists(
 		const IdentifierT id
 	) {
-		OSRMLockFile lock_file;
-		boost::interprocess::xsi_key key( lock_file().string().c_str(), id );
-		return RegionExists(key);
+		bool result = true;
+		try {
+			OSRMLockFile lock_file;
+			boost::interprocess::xsi_key key( lock_file().string().c_str(), id );
+			result = RegionExists(key);
+		} catch(...) {
+			result = false;
+		}
+		return result;
 	}
 
 	template<typename IdentifierT >
