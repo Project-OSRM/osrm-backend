@@ -197,36 +197,14 @@ struct SharedDataLayout {
 };
 
 enum SharedDataType {
-    // NAMES_INDEX = 0,
-    // NAME_INDEX_SIZE,
-    // NAMES_LIST,
-    // name_char_list_size,
-    // NAME_ID_LIST,
-    // NAME_ID_LIST_SIZE,
-    // VIA_NODE_LIST,
-    // VIA_NODE_LIST_SIZE,
-    // GRAPH_NODE_LIST,
-    // GRAPH_NODE_LIST_SIZE,
-    // GRAPH_EDGE_LIST,
-    // GRAPH_EDGE_LIST_SIZE,
-    // CHECK_SUM,
-    // TIMESTAMP,
-    // TIMESTAMP_SIZE,
-    // COORDINATE_LIST,
-    // COORDINATE_LIST_SIZE,
-    // TURN_INSTRUCTION_LIST,
-    // TURN_INSTRUCTION_LIST_SIZE,
-    // R_SEARCH_TREE,
-    // R_SEARCH_TREE_SIZE
-
     LAYOUT_1,
     DATA_1,
     LAYOUT_2,
     DATA_2,
     LAYOUT_3,
     DATA_3,
-    LAYOUT_4,
-    DATA_5
+    LAYOUT_LOAD,
+    DATA_LOAD
 };
 
 #endif /* SHARED_DATA_TYPE_H_ */
