@@ -67,53 +67,73 @@ class SharedMemory : boost::noncopyable {
 	};
 
 public:
-		void * Ptr() const {
-			return region.get_address();
-		}
+	void * Ptr() const {
+		return region.get_address();
+	}
 
-		template<typename IdentifierT >
-		SharedMemory(
-			const boost::filesystem::path & lock_file,
-			const IdentifierT id,
-			const unsigned size = 0
-		) : key(
-				lock_file.string().c_str(),
-				id
-		) {
-	    	if( 0 == size ){ //read_only
-	    		shm = boost::interprocess::xsi_shared_memory (
-	    			boost::interprocess::open_only,
-	    			key
-				);
-	    		region = boost::interprocess::mapped_region (
-	    			shm,
-	    			boost::interprocess::read_only
-				);
-	    	} else { //writeable pointer
-	    		//remove previously allocated mem
-	    		RemoveSharedMemory(key);
-	    		shm = boost::interprocess::xsi_shared_memory (
-	    			boost::interprocess::create_only,
-	    			key,
-	    			size
-	    		);
-			    region = boost::interprocess::mapped_region (
-			    	shm,
-			    	boost::interprocess::read_write
-		    	);
+	template<typename IdentifierT >
+	SharedMemory(
+		const boost::filesystem::path & lock_file,
+		const IdentifierT id,
+		const unsigned size = 0
+	) : key(
+			lock_file.string().c_str(),
+			id
+	) {
+    	if( 0 == size ){ //read_only
+    		shm = boost::interprocess::xsi_shared_memory (
+    			boost::interprocess::open_only,
+    			key
+			);
+    		region = boost::interprocess::mapped_region (
+    			shm,
+    			boost::interprocess::read_only
+			);
+    	} else { //writeable pointer
+    		//remove previously allocated mem
+    		RemoveSharedMemory(key);
+    		shm = boost::interprocess::xsi_shared_memory (
+    			boost::interprocess::create_only,
+    			key,
+    			size
+    		);
+		    region = boost::interprocess::mapped_region (
+		    	shm,
+		    	boost::interprocess::read_write
+	    	);
 
-     			remover.SetID( shm.get_shmid() );
-     			SimpleLogger().Write(logDEBUG) <<
-     				"writeable memory allocated " << size << " bytes";
-	    	}
-		}
+ 			remover.SetID( shm.get_shmid() );
+ 			SimpleLogger().Write(logDEBUG) <<
+ 				"writeable memory allocated " << size << " bytes";
+    	}
+	}
+
+	void Swap(SharedMemory & other) {
+		SimpleLogger().Write() << "prev: " << shm.get_shmid();
+		shm.swap(other.shm);
+		region.swap(other.region);
+		boost::interprocess::xsi_key temp_key = other.key;
+		other.key = key;
+		key = temp_key;
+		SimpleLogger().Write() << "after: " << shm.get_shmid();
+	}
+
+	void Swap(SharedMemory * other) {
+		SimpleLogger().Write() << "prev: " << shm.get_shmid();
+		shm.swap(other->shm);
+		region.swap(other->region);
+		boost::interprocess::xsi_key temp_key = other->key;
+		other->key = key;
+		key = temp_key;
+		SimpleLogger().Write() << "after: " << shm.get_shmid();
+	}
 
 	template<typename IdentifierT >
 	static bool RegionExists(
-		const boost::filesystem::path & lock_file,
 		const IdentifierT id
 	) {
-		boost::interprocess::xsi_key key( lock_file.string().c_str(), id );
+		OSRMLockFile lock_file;
+		boost::interprocess::xsi_key key( lock_file().string().c_str(), id );
 		return RegionExists(key);
 	}
 
