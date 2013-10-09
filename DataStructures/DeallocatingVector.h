@@ -75,8 +75,16 @@ protected:
             return (mData == other.mData) && (mIndex == other.mIndex) && (mBucketList == other.mBucketList);
         }
 
-        inline bool operator<(const DeallocatingVectorIteratorState &other) {
+        bool operator<(const DeallocatingVectorIteratorState &other) const {
             return mIndex < other.mIndex;
+        }
+
+        bool operator>(const DeallocatingVectorIteratorState &other) const {
+            return mIndex > other.mIndex;
+        }
+
+        bool operator>=(const DeallocatingVectorIteratorState &other) const {
+            return mIndex >= other.mIndex;
         }
 
         //This is a hack to make assignment operator possible with reference member
@@ -128,7 +136,7 @@ public:
         mState.mIndex++; mState.setPointerForIndex();
         return DeallocatingVectorIterator(_myState);
     }
-    inline DeallocatingVectorIterator operator --(int) { //postfix
+    inline DeallocatingVectorIterator operator--(int) { //postfix
         if(DeallocateC) assert(false);
         DeallocatingVectorIteratorState _myState(mState);
         mState.mIndex--; mState.setPointerForIndex();
@@ -141,7 +149,7 @@ public:
         return DeallocatingVectorIterator(_myState);
     }
 
-    inline DeallocatingVectorIterator& operator+=(const difference_type& n) const {
+    inline DeallocatingVectorIterator& operator+=(const difference_type& n) {
         mState.mIndex+=n; return *this;
     }
 
@@ -174,8 +182,16 @@ public:
         return mState == other.mState;
     }
 
-    bool operator<(const DeallocatingVectorIterator & other) {
+    inline bool operator<(const DeallocatingVectorIterator & other) const {
         return mState < other.mState;
+    }
+
+    inline bool operator>(const DeallocatingVectorIterator & other) const {
+        return mState > other.mState;
+    }
+
+    inline bool operator>=(const DeallocatingVectorIterator & other) const {
+        return mState >= other.mState;
     }
 
     difference_type operator-(const DeallocatingVectorIterator & other) {
