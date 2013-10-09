@@ -29,9 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OSRM.h"
 #include <boost/foreach.hpp>
 
-OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory) :
-    use_shared_memory(use_shared_memory)
-{
+OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory) {
 
     if( !testDataFile(server_ini_path) ){
         std::string error_message(server_ini_path);

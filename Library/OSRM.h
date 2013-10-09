@@ -73,7 +73,6 @@ private:
     BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
 
     PluginMap plugin_map;
-    const bool use_shared_memory;
 };
 
 #endif //OSRM_H
