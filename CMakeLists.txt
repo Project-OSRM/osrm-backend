@@ -43,7 +43,6 @@ add_executable(osrm-prepare ${PrepareSources} )
 
 add_executable(osrm-routed routed.cpp )
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
-
 add_executable(osrm-datastore datastore.cpp)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
@@ -69,7 +68,7 @@ endif(CMAKE_BUILD_TYPE MATCHES Release)
 #Configuring compilers
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	# using Clang
-	set(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-unneeded-internal-declaration")
+	set(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-unneeded-internal-declaration -std=c++11")
 	message(STATUS "OpenMP parallelization not available using clang++")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	# using GCC
