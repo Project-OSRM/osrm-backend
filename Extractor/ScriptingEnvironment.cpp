@@ -95,10 +95,11 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
     	];
 
         // fails on c++11/OS X 10.9
-        // luabind::module(myLuaState) [
-        //     luabind::class_<std::vector<std::string> >("vector")
-        //     .def("Add", &std::vector<std::string>::push_back)
-        // ];
+        luabind::module(myLuaState) [
+             luabind::class_<std::vector<std::string> >("vector")
+             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string&)>(&std::vector<std::string>::push_back)
+             )
+        ];
 
         if(0 != luaL_dofile(myLuaState, fileName) ) {
             throw OSRMException("ERROR occured in scripting block");
