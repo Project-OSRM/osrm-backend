@@ -824,7 +824,6 @@ public:
                         traversal_queue.push(QueryCandidate(child_id, current_min_dist));
                     }
                 }
-                SimpleLogger().Write() << result_phantom_node;
             }
         }
 
