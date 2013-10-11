@@ -160,11 +160,9 @@ public:
                     if( *(packedPath1.end()-1) == *(temporaryPackedPath1.begin())) {
                         packedPath2.clear();
                         packedPath2.insert(packedPath2.end(), packedPath1.begin(), packedPath1.end());
-                        distance2 = distance1;
                     } else {
                         packedPath1.clear();
                         packedPath1.insert(packedPath1.end(), packedPath2.begin(), packedPath2.end());
-                        distance1 = distance2;
                     }
                 } else  {
                     //packed paths 1 and 2 may need to switch.
@@ -184,8 +182,8 @@ public:
                 searchFrom2ndStartNode &= !(lastNodeID == phantomNodePair.targetPhantom.edgeBasedNode);
             }
 
-            distance1 += _localUpperbound1;
-            distance2 += _localUpperbound2;
+            distance1 = _localUpperbound1;
+            distance2 = _localUpperbound2;
         }
 
         if(distance1 > distance2){
