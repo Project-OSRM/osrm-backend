@@ -23,8 +23,9 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 //Exposes all data access interfaces to the algorithms via base class ptr
 
-#include "../../Contractor/EdgeBasedGraphFactory.h"
 #include "../../DataStructures/Coordinate.h"
+#include "../../DataStructures/EdgeBasedNode.h"
+#include "../../DataStructures/ImportNode.h"
 #include "../../DataStructures/PhantomNodes.h"
 #include "../../DataStructures/TurnInstructions.h"
 #include "../../Util/OSRMException.h"
@@ -36,7 +37,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 template<class EdgeDataT>
 class BaseDataFacade {
 public:
-    typedef EdgeBasedGraphFactory::EdgeBasedNode RTreeLeaf;
+    typedef EdgeBasedNode RTreeLeaf;
     typedef EdgeDataT EdgeData;
     BaseDataFacade( ) { }
     virtual ~BaseDataFacade() { }
