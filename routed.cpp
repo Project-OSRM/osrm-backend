@@ -62,176 +62,56 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 }
 #endif
 
-int main (int argc, char * argv[]) {
+int main (int argc, const char * argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
         if(!mlockall(MCL_CURRENT | MCL_FUTURE)) {
-            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << "could not be locked to RAM";
+            SimpleLogger().Write(logWARNING) <<
+                "Process " << argv[0] << "could not be locked to RAM";
         }
+        installCrashHandler(argv[0]);
 #endif
-#ifdef __linux__
-
-    installCrashHandler(argv[0]);
-#endif
-
-        boost::unordered_map<const std::string,boost::filesystem::path> paths;
         std::string ip_address;
         int ip_port, requested_num_threads;
 
-        // declare a group of options that will be allowed only on command line
-        boost::program_options::options_description generic_options("Options");
-        generic_options.add_options()
-            ("version,v", "Show version")
-            ("help,h", "Show this help message")
-            ("config,c", boost::program_options::value<boost::filesystem::path>(&paths["config"])->default_value("server.ini"),
-                  "Path to a configuration file");
-
-        // declare a group of options that will be allowed both on command line and in config file
-        boost::program_options::options_description config_options("Configuration");
-        config_options.add_options()
-            ("hsgrdata", boost::program_options::value<boost::filesystem::path>(&paths["hsgrdata"]),
-                "HSGR file")
-            ("nodesdata", boost::program_options::value<boost::filesystem::path>(&paths["nodesdata"]),
-                "Nodes file")
-            ("edgesdata", boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
-                "Edges file")
-            ("ramindex", boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
-                "RAM index file")
-            ("fileindex", boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
-                "File index file")
-            ("namesdata", boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
-                "Names file")
-            ("timestamp", boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
-                "Timestamp file")
-            ("ip,i", boost::program_options::value<std::string>(&ip_address)->default_value("0.0.0.0"),
-                "IP address")
-            ("port,p", boost::program_options::value<int>(&ip_port)->default_value(5000),
-                "IP Port")
-            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
-                "Number of threads to use");
-
-        // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
-        boost::program_options::options_description hidden_options("Hidden options");
-        hidden_options.add_options()
-            ("base,b", boost::program_options::value<boost::filesystem::path>(&paths["base"]),
-                "base path to .osrm file, other wil be located in the same folder");
-
-        // positional option
-        boost::program_options::positional_options_description positional_options;
-        positional_options.add("base", 1);
-
-        // combine above options for parsing
-        boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic_options).add(config_options).add(hidden_options);
-
-        boost::program_options::options_description config_file_options;
-        config_file_options.add(config_options).add(hidden_options);
-
-        boost::program_options::options_description visible_options(boost::filesystem::basename(argv[0]) + " <base.osrm> [<options>]");
-        visible_options.add(generic_options).add(config_options);
-
-        // parse command line options
-        boost::program_options::variables_map option_variables;
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).
-            options(cmdline_options).positional(positional_options).run(), option_variables);
-
-        if(option_variables.count("version")) {
-            SimpleLogger().Write() << g_GIT_DESCRIPTION;
+        ServerPaths server_paths;
+        if( !GenerateServerProgramOptions(
+                argc,
+                argv,
+                server_paths,
+                ip_address,
+                ip_port,
+                requested_num_threads
+             )
+        ) {
             return 0;
-        }
-
-        if(option_variables.count("help")) {
-            SimpleLogger().Write() << visible_options;
-            return 0;
-        }
-
-        boost::program_options::notify(option_variables);
-
-        // parse config file
-        if(boost::filesystem::is_regular_file(paths["config"])) {
-            SimpleLogger().Write() << "Reading options from: " << paths["config"].c_str();
-            std::string config_str;
-            PrepareConfigFile( paths["config"], config_str );
-            std::stringstream config_stream( config_str );
-            boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
-            boost::program_options::notify(option_variables);
-        }
-
-        if(!option_variables.count("hsgrdata")) {
-            if(!option_variables.count("base")) {
-                SimpleLogger().Write(logWARNING) << "hsgrdata (or base) must be specified";
-                return -1;
-            }
-            paths["hsgrdata"] = std::string( paths["base"].c_str()) + ".hsgr";
-        }
-
-        if(!option_variables.count("nodesdata")) {
-            if(!option_variables.count("base")) {
-                SimpleLogger().Write(logWARNING) << "nodesdata (or base) must be specified";
-                return -1;
-            }
-            paths["nodesdata"] = std::string( paths["base"].c_str()) + ".nodes";
-        }
-
-        if(!option_variables.count("edgesdata")) {
-            if(!option_variables.count("base")) {
-                SimpleLogger().Write(logWARNING) << "edgesdata (or base) must be specified";
-                return -1;
-            }
-            paths["edgesdata"] = std::string( paths["base"].c_str()) + ".edges";
-        }
-
-        if(!option_variables.count("ramindex")) {
-            if(!option_variables.count("base")) {
-                SimpleLogger().Write(logWARNING) << "ramindex (or base) must be specified";
-                return -1;
-            }
-            paths["ramindex"] = std::string( paths["base"].c_str()) + ".ramIndex";
-        }
-
-        if(!option_variables.count("fileindex")) {
-            if(!option_variables.count("base")) {
-                SimpleLogger().Write(logWARNING) << "fileindex (or base) must be specified";
-                return -1;
-            }
-            paths["fileindex"] = std::string( paths["base"].c_str()) + ".fileIndex";
-        }
-
-        if(!option_variables.count("namesdata")) {
-            if(!option_variables.count("base")) {
-                SimpleLogger().Write(logWARNING) << "namesdata (or base) must be specified";
-                return -1;
-            }
-            paths["namesdata"] = std::string( paths["base"].c_str()) + ".names";
-        }
-
-        if(!option_variables.count("timestamp")) {
-            if(!option_variables.count("base")) {
-                SimpleLogger().Write(logWARNING) << "timestamp (or base) must be specified";
-                return -1;
-            }
-            paths["timestamp"] = std::string( paths["base"].c_str()) + ".timestamp";
-        }
-
-        if(1 > requested_num_threads) {
-            SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
-            return -1;
         }
 
         SimpleLogger().Write() <<
-            "starting up engines, " << g_GIT_DESCRIPTION << ", compiled at " << __DATE__ << ", " __TIME__;
-        
-        SimpleLogger().Write() << "HSGR file:\t" << paths["hsgrdata"].c_str();
-        SimpleLogger().Write() << "Nodes file:\t" << paths["nodesdata"].c_str();
-        SimpleLogger().Write() << "Edges file:\t" << paths["edgesdata"].c_str();
-        SimpleLogger().Write() << "RAM file:\t" << paths["ramindex"].c_str();
-        SimpleLogger().Write() << "Index file:\t" << paths["fileindex"].c_str();
-        SimpleLogger().Write() << "Names file:\t" << paths["namesdata"].c_str();
-        SimpleLogger().Write() << "Timestamp file:\t" << paths["timestamp"].c_str();
-        SimpleLogger().Write() << "Threads:\t" << requested_num_threads;
-        SimpleLogger().Write() << "IP address:\t" << ip_address;
-        SimpleLogger().Write() << "IP port:\t" << ip_port;
+            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
+            "compiled at " << __DATE__ << ", " __TIME__;
+
+        SimpleLogger().Write() <<
+            "HSGR file:\t" << server_paths["hsgrdata"];
+        SimpleLogger().Write() <<
+            "Nodes file:\t" << server_paths["nodesdata"];
+        SimpleLogger().Write() <<
+            "Edges file:\t" << server_paths["edgesdata"];
+        SimpleLogger().Write() <<
+            "RAM file:\t" << server_paths["ramindex"];
+        SimpleLogger().Write() <<
+            "Index file:\t" << server_paths["fileindex"];
+        SimpleLogger().Write() <<
+            "Names file:\t" << server_paths["namesdata"];
+        SimpleLogger().Write() <<
+            "Timestamp file:\t" << server_paths["timestamp"];
+        SimpleLogger().Write() <<
+            "Threads:\t" << requested_num_threads;
+        SimpleLogger().Write() <<
+            "IP address:\t" << ip_address;
+        SimpleLogger().Write() <<
+            "IP port:\t" << ip_port;
 
 #ifndef _WIN32
         int sig = 0;
@@ -241,8 +121,12 @@ int main (int argc, char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        OSRM routing_machine(paths);
-        Server * s = ServerFactory::CreateServer(ip_address,ip_port,requested_num_threads);
+        OSRM routing_machine(server_paths);
+        Server * s = ServerFactory::CreateServer(
+                        ip_address,
+                        ip_port,
+                        requested_num_threads
+                     );
         s->GetRequestHandlerPtr().RegisterRoutingMachine(&routing_machine);
 
         boost::thread t(boost::bind(&Server::Run, s));
@@ -264,7 +148,6 @@ int main (int argc, char * argv[]) {
         std::cout << "[server] running and waiting for requests" << std::endl;
         s->Run();
 #endif
-
         std::cout << "[server] initiating shutdown" << std::endl;
         s->Stop();
         std::cout << "[server] stopping threads" << std::endl;
