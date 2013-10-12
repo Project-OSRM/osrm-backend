@@ -18,5 +18,7 @@ class File
     tail_of_file = chunks.join('')
     ary = tail_of_file.split(/\n/)
     lines_to_return = ary[ ary.size - n, ary.size - 1 ]
+  rescue
+    ["Cannot read log file!"]
   end
 end

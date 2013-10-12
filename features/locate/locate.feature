@@ -178,8 +178,8 @@ Feature: Locate - return nearest node
             | x  | x   |
             | y  | y   |
 
-    Scenario: Locate - High lat/lon
-        Given the node locations
+        Scenario: Locate - High lat/lon
+           Given the node locations
             | node | lat | lon  |
             | a    | -85 | -180 |
             | b    | 0   | 0    |
@@ -187,11 +187,11 @@ Feature: Locate - return nearest node
             | x    | -84 | -180 |
             | y    | 84  | 180  |
 
-        And the ways
+           And the ways
             | nodes |
             | abc   |
 
-        When I request locate I should get
+           When I request locate I should get
             | in | out |
             | x  | a   |
             | y  | c   |

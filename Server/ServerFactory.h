@@ -22,46 +22,23 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define SERVERFACTORY_H_
 
 #include "Server.h"
-#include "../Util/IniFile.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
 #include <zlib.h>
 
 #include <boost/noncopyable.hpp>
+#include <sstream>
 
 struct ServerFactory : boost::noncopyable {
-	static Server * CreateServer( IniFile & serverConfig ) {
-		int threads = omp_get_num_procs();
-		if( serverConfig.GetParameter("IP").empty() ) {
-			serverConfig.SetParameter("IP", "0.0.0.0");
-		}
-
-		if( serverConfig.GetParameter("Port").empty() ) {
-			serverConfig.SetParameter("Port", "5000");
-		}
-
-		if(
-			stringToInt(serverConfig.GetParameter("Threads")) >= 1 &&
-			stringToInt(serverConfig.GetParameter("Threads")) <= threads
-		) {
-			threads = stringToInt( serverConfig.GetParameter("Threads") );
-		}
+	static Server * CreateServer(std::string& ip_address, int ip_port, int threads) {
 
 		SimpleLogger().Write() <<
 			"http 1.1 compression handled by zlib version " << zlibVersion();
 
-		Server * server = new Server(
-			serverConfig.GetParameter("IP"),
-			serverConfig.GetParameter("Port"),
-			threads
-		);
-		return server;
-	}
-
-	static Server * CreateServer(const char * iniFile) {
-		IniFile serverConfig(iniFile);
-		return CreateServer(serverConfig);
+        std::stringstream   port_stream;
+        port_stream << ip_port;
+        return new Server( ip_address, port_stream.str(), std::min( omp_get_num_procs(), threads) );
 	}
 };
 

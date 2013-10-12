@@ -50,16 +50,7 @@ struct QueryObjectsStorage {
 
     void GetName(const unsigned name_id, std::string & result) const;
 
-    QueryObjectsStorage(
-        const std::string & hsgrPath,
-        const std::string & ramIndexPath,
-        const std::string & fileIndexPath,
-        const std::string & nodesPath,
-        const std::string & edgesPath,
-        const std::string & namesPath,
-        const std::string & timestampPath
-    );
-
+    QueryObjectsStorage(boost::unordered_map<const std::string,boost::filesystem::path>& paths);
     ~QueryObjectsStorage();
 };
 

@@ -21,11 +21,15 @@ or see http://www.gnu.org/licenses/agpl.txt.
 Custom validators for use with boost::program_options.
 */
 
+#ifndef PROGAM_OPTIONS_H
+#define PROGAM_OPTIONS_H
+
 #include "OSRMException.h"
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/regex.hpp>
 
 #include <string>
 #include <vector>
@@ -53,3 +57,15 @@ namespace boost {
         }
     }
 }
+
+//support old capitalized option names by downcasing them with a regex replace
+//read from file and store in a stringstream that can be passed to boost::program_options
+inline void PrepareConfigFile(const boost::filesystem::path& path, std::string& output ) {
+    std::ifstream config_stream(path.c_str());
+    std::string input_str( (std::istreambuf_iterator<char>(config_stream)), std::istreambuf_iterator<char>() );
+    boost::regex regex( "^([^=]*)" );    //match from start of line to '='
+    std::string format( "\\L$1\\E" );    //replace with downcased substring
+    output = boost::regex_replace( input_str, regex, format );
+}
+
+#endif /* PROGRAM_OPTIONS_H */
