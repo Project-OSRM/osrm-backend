@@ -82,3 +82,7 @@ stxxl.errlog
 /sandbox/
 
 /test/profile.lua
+
+# Deprecated config file #
+##########################
+/server.ini
