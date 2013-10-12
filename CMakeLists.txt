@@ -161,7 +161,7 @@ if(WITH_TOOLS)
 			osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID
 		)
 	endif(GDAL_FOUND)
-	add_executable ( osrm-cli Tools/simpleclient.cpp )
+	add_executable ( osrm-cli Tools/simpleclient.cpp Util/GitDescription.cpp)
 	target_link_libraries( osrm-cli ${Boost_LIBRARIES} OSRM UUID )
     add_executable ( osrm-io-benchmark Tools/io-benchmark.cpp )
     target_link_libraries( osrm-io-benchmark ${Boost_LIBRARIES} )
