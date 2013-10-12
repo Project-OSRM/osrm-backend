@@ -63,7 +63,7 @@ int main (int argc, char *argv[]) {
         config_options.add_options()
             ("profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)->default_value("profile.lua"),
                 "Path to LUA routing profile")
-            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8), 
+            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
                 "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
@@ -200,7 +200,7 @@ int main (int argc, char *argv[]) {
             "s";
 
          SimpleLogger().Write() << "To prepare the data for routing, run: "
-            << "osrm-prepare " << output_file_name << std::endl;
+            << "./osrm-prepare " << output_file_name << std::endl;
 
     } catch(boost::program_options::too_many_positional_options_error& e) {
         SimpleLogger().Write(logWARNING) << "Only one input file can be specified";
