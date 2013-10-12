@@ -44,13 +44,30 @@ void print_tree(boost::property_tree::ptree const& pt, const unsigned recursion_
 }
 
 
-int main (int argc, char * argv[]) {
+int main (int argc, const char * argv[]) {
     LogPolicy::GetInstance().Unmute();
     try {
-        std::cout   << "\n starting up engines, compile at "
-                    << __DATE__ << ", " __TIME__ << std::endl;
-        IniFile serverConfig((argc > 1 ? argv[1] : "server.ini"));
-        OSRM routing_machine((argc > 1 ? argv[1] : "server.ini"));
+        std::string ip_address;
+        int ip_port, requested_num_threads;
+
+        ServerPaths server_paths;
+        if( !GenerateServerProgramOptions(
+                argc,
+                argv,
+                server_paths,
+                ip_address,
+                ip_port,
+                requested_num_threads
+             )
+        ) {
+            return 0;
+        }
+
+        SimpleLogger().Write() <<
+            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
+            "compiled at " << __DATE__ << ", " __TIME__;
+
+        OSRM routing_machine(server_paths);
 
         RouteParameters route_parameters;
         route_parameters.zoomLevel = 18; //no generalization
