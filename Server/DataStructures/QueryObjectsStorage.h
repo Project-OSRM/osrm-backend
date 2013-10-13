@@ -24,6 +24,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include "../../Util/GraphLoader.h"
 #include "../../Util/OSRMException.h"
+#include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
 #include "../../DataStructures/NodeInformationHelpDesk.h"
 #include "../../DataStructures/QueryEdge.h"
@@ -48,9 +49,9 @@ struct QueryObjectsStorage {
     std::string                                 timestamp;
     unsigned                                    check_sum;
 
-    void GetName(const unsigned name_id, std::string & result) const;
+    void GetName( const unsigned name_id, std::string & result ) const;
 
-    QueryObjectsStorage(boost::unordered_map<const std::string,boost::filesystem::path>& paths);
+    QueryObjectsStorage( const ServerPaths & paths );
     ~QueryObjectsStorage();
 };
 

@@ -49,7 +49,7 @@ namespace boost {
         // exists. The validate() function must be defined in the same namespace
         // as the target type, (boost::filesystem::path in this case), otherwise
         // it is not be called
-        void validate(
+        inline void validate(
             boost::any & v,
             const std::vector<std::string> & values,
             boost::filesystem::path *,
@@ -86,7 +86,7 @@ inline void PrepareConfigFile(
 
 
 // generate boost::program_options object for the routing part
-bool GenerateServerProgramOptions(
+inline bool GenerateServerProgramOptions(
     const int argc,
     const char * argv[],
     ServerPaths & paths,
@@ -204,13 +204,18 @@ bool GenerateServerProgramOptions(
     boost::program_options::notify(option_variables);
 
     // parse config file
-    if(boost::filesystem::is_regular_file(paths["config"])) {
+    ServerPaths::const_iterator path_iterator = paths.find("config");
+    if( path_iterator != paths.end() &&
+        boost::filesystem::is_regular_file(path_iterator->second)) {
         SimpleLogger().Write() <<
-            "Reading options from: " << paths["config"].c_str();
+            "Reading options from: " << path_iterator->second.string();
         std::string config_str;
         PrepareConfigFile( paths["config"], config_str );
         std::stringstream config_stream( config_str );
-        boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
+        boost::program_options::store(
+            parse_config_file(config_stream, config_file_options),
+            option_variables
+        );
         boost::program_options::notify(option_variables);
     }
 
@@ -218,7 +223,7 @@ bool GenerateServerProgramOptions(
         if(!option_variables.count("base")) {
             throw OSRMException("hsgrdata (or base) must be specified");
         }
-        paths["hsgrdata"] = std::string( paths["base"].c_str()) + ".hsgr";
+        paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
     }
 
     if(!option_variables.count("nodesdata")) {
