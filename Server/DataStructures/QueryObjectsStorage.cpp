@@ -62,7 +62,7 @@ QueryObjectsStorage::QueryObjectsStorage( const ServerPaths & paths ) {
 	BOOST_ASSERT(0 == node_list.size());
 	BOOST_ASSERT(0 == edge_list.size());
 
-	paths_iterator = paths.find("hsgrdata");
+	paths_iterator = paths.find("timestamp");
 
 	if(paths.end() != paths_iterator) {
 	    SimpleLogger().Write() << "Loading Timestamp";
@@ -82,7 +82,6 @@ QueryObjectsStorage::QueryObjectsStorage( const ServerPaths & paths ) {
 	if(25 < timestamp.length()) {
 	    timestamp.resize(25);
 	}
-
     SimpleLogger().Write() << "Loading auxiliary information";
 
     paths_iterator = paths.find("ramindex");
