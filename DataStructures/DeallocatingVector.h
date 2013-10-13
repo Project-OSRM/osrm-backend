@@ -22,6 +22,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #define DEALLOCATINGVECTOR_H_
 
 #include <cassert>
+#include <cstring>
 #include <vector>
 
 #if __cplusplus > 199711L
