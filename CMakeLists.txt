@@ -38,7 +38,7 @@ set(ExtractorSources extractor.cpp ${ExtractorGlob} Util/GitDescription.cpp)
 add_executable(osrm-extract ${ExtractorSources} )
 
 file(GLOB PrepareGlob Contractor/*.cpp)
-set(PrepareSources createHierarchy.cpp ${PrepareGlob} Util/GitDescription.cpp)
+set(PrepareSources prepare.cpp ${PrepareGlob} Util/GitDescription.cpp)
 add_executable(osrm-prepare ${PrepareSources} )
 
 add_executable(osrm-routed routed.cpp Util/GitDescription.cpp)
