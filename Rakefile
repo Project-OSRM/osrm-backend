@@ -59,23 +59,6 @@ def wait_for_shutdown name
   raise "*** Could not terminate #{name}."
 end
 
-def write_server_ini osm_file
-  s=<<-EOF
-  Threads = 1
-  IP = 0.0.0.0
-  Port = #{OSRM_PORT}
-
-  hsgrData=#{osm_file}.osrm.hsgr
-  nodesData=#{osm_file}.osrm.nodes
-  edgesData=#{osm_file}.osrm.edges
-  ramIndex=#{osm_file}.osrm.ramIndex
-  fileIndex=#{osm_file}.osrm.fileIndex
-  namesData=#{osm_file}.osrm.names
-  timestamp=#{osm_file}.osrm.timestamp
-  EOF
-  File.open( 'server.ini', 'w') {|f| f.write( s ) }
-end
-
 
 desc "Rebuild and run tests."
 task :default => [:build]
@@ -93,17 +76,10 @@ end
 
 desc "Setup config files."
 task :setup do
-  Dir.mkdir "#{DATA_FOLDER}" unless File.exist? "#{DATA_FOLDER}"
-  ['server.ini','extractor.ini','contractor.ini'].each do |file|
-    unless File.exist? "#{DATA_FOLDER}/#{file}"
-      puts "Copying #{file} template to #{DATA_FOLDER}/#{file}" 
-      FileUtils.cp file, "#{DATA_FOLDER}/#{file}"
-    end
-  end
 end
 
 desc "Download OSM data."
-task :download => :setup do
+task :download do
   Dir.mkdir "#{DATA_FOLDER}" unless File.exist? "#{DATA_FOLDER}"
   puts "Downloading..."
   puts "curl http://download.geofabrik.de/europe/#{osm_data_country}-latest.osm.pbf -o #{DATA_FOLDER}/#{osm_data_country}.osm.pbf"
@@ -122,26 +98,20 @@ task :crop do
 end
 
 desc "Reprocess OSM data."
-task :process => :setup do
-  Dir.chdir DATA_FOLDER do
-    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf #{PROFILES_FOLDER}/#{PROFILE}.lua"
-    puts
-    raise "Error while preparing data." unless system "../#{BUILD_FOLDER}/osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions #{PROFILES_FOLDER}/#{PROFILE}.lua"
-    puts
-  end
+task :process => [:extract,:prepare] do
 end
 
 desc "Extract OSM data."
-task :extract => :setup do
+task :extract do
   Dir.chdir DATA_FOLDER do
-    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf ../profiles/#{PROFILE}.lua"
+    raise "Error while extracting data." unless system "../#{BUILD_FOLDER}/osrm-extract #{osm_data_area_name}.osm.pbf --profile ../profiles/#{PROFILE}.lua"
   end
 end
 
 desc "Prepare OSM data."
-task :prepare => :setup do
+task :prepare do
   Dir.chdir DATA_FOLDER do
-    raise "Error while preparing data." unless system "../#{BUILD_FOLDER}/osrm-prepare #{osm_data_area_name}.osrm #{osm_data_area_name}.osrm.restrictions ../profiles/#{PROFILE}.lua"
+    raise "Error while preparing data." unless system "../#{BUILD_FOLDER}/osrm-prepare #{osm_data_area_name}.osrm --profile ../profiles/#{PROFILE}.lua"
   end
 end
 
@@ -158,19 +128,17 @@ task :test do
 end
 
 desc "Run the routing server in the terminal. Press Ctrl-C to stop."
-task :run => :setup do
+task :run do
   Dir.chdir DATA_FOLDER do
-    write_server_ini osm_data_area_name
-    system "../#{BUILD_FOLDER}/osrm-routed"
+    system "../#{BUILD_FOLDER}/osrm-routed #{osm_data_area_name}.osrm --port #{OSRM_PORT}"
   end
 end
 
 desc "Launch the routing server in the background. Use rake:down to stop it."
-task :up => :setup do
+task :up do
   Dir.chdir DATA_FOLDER do
     abort("Already up.") if up?
-    write_server_ini osm_data_area_name
-    pipe = IO.popen("../#{BUILD_FOLDER}/osrm-routed 1>>osrm-routed.log 2>>osrm-routed.log")
+    pipe = IO.popen("../#{BUILD_FOLDER}/osrm-routed #{osm_data_area_name}.osrm --port #{OSRM_PORT} 1>>osrm-routed.log 2>>osrm-routed.log")
     timeout = 5
     (timeout*10).times do
       begin

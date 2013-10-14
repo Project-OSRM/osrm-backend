@@ -23,7 +23,7 @@ class Cucumber::Ast::Table
     require_diff_lcs
     cell_matrix.extend(Diff::LCS)
     changes = cell_matrix.diff(other_table_cell_matrix).flatten
-    
+
     inserted = 0
     missing  = 0
 
@@ -43,7 +43,7 @@ class Cucumber::Ast::Table
         #change index so we interleave instead
         insert_row_pos = change.position + inserted + 1
         #insert_row_pos = change.position + missing     #original
-        
+
         inserted_row = change.element
         inserted_row.each{|cell| cell.status = :comment}
         cell_matrix.insert(insert_row_pos, inserted_row)
@@ -66,7 +66,7 @@ class Cucumber::Ast::Table
     end
 
     clear_cache!
-    should_raise = 
+    should_raise =
     missing_row_pos && options[:missing_row] ||
     insert_row_pos  && options[:surplus_row] ||
     missing_col     && options[:missing_col] ||

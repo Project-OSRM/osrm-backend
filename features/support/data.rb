@@ -16,15 +16,15 @@ DEFAULT_GRID_SIZE = 100   #meters
 PROFILES_PATH = '../profiles'
 BIN_PATH = '../build'
 
-ORIGIN = [1,1]
+DEFAULT_ORIGIN = [1,1]
 
 class Location
-    attr_accessor :lon,:lat
-        
-    def initialize lon,lat
-        @lat = lat
-        @lon = lon
-    end
+  attr_accessor :lon,:lat
+
+  def initialize lon,lat
+    @lat = lat
+    @lon = lon
+  end
 end
 
 def sanitized_scenario_title
@@ -38,22 +38,26 @@ def set_grid_size meters
   @zoom = meters.to_f*0.8990679362704610899694577444566908445396483347536032203503E-5
 end
 
+def set_origin origin
+  @origin = origin
+end
+
 def build_ways_from_table table
   #add one unconnected way for each row
   table.hashes.each_with_index do |row,ri|
     #NOTE:
     #currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4 edges
     #this is relatated to the fact that a oneway dead-end street doesn't make a lot of sense
-    
+
     #if we stack ways on different x coordinates, routability tests get messed up, because osrm might pick a neighboring way if the one test can't be used.
     #instead we place all lines as a string on the same y coordinate. this prevents using neightboring ways.
-    
+
     #a few nodes...
-    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(0+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(1+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(2+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(3+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
-    node5 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, ORIGIN[0]+(4+WAY_SPACING*ri)*@zoom, ORIGIN[1] 
+    node1 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(0+WAY_SPACING*ri)*@zoom, @origin[1]
+    node2 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(1+WAY_SPACING*ri)*@zoom, @origin[1]
+    node3 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(2+WAY_SPACING*ri)*@zoom, @origin[1]
+    node4 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(3+WAY_SPACING*ri)*@zoom, @origin[1]
+    node5 = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, @origin[0]+(4+WAY_SPACING*ri)*@zoom, @origin[1]
     node1.uid = OSM_UID
     node2.uid = OSM_UID
     node3.uid = OSM_UID
@@ -70,7 +74,7 @@ def build_ways_from_table table
     osm_db << node3
     osm_db << node4
     osm_db << node5
-    
+
     #...with a way between them
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     way.uid = OSM_UID
@@ -79,22 +83,22 @@ def build_ways_from_table table
     way << node3
     way << node4
     way << node5
-    
+
     tags = row.dup
-    
+
     # remove tags that describe expected test result
     tags.reject! do |k,v|
-      k =~ /^forw\b/ || 
+      k =~ /^forw\b/ ||
       k =~ /^backw\b/ ||
       k =~ /^bothw\b/
     end
-    
+
     ##remove empty tags
     tags.reject! { |k,v| v=='' }
-    
+
     # sort tag keys in the form of 'node/....'
     way_tags = { 'highway' => 'primary' }
-    
+
     node_tags = {}
     tags.each_pair do |k,v|
       if k =~ /node\/(.*)/
@@ -111,39 +115,39 @@ def build_ways_from_table table
         end
       end
     end
-    
+
     way_tags['name'] = "w#{ri}"
     way << way_tags
     node3 << node_tags
-    
+
     osm_db << way
   end
 end
 
 def table_coord_to_lonlat ci,ri
-    [ORIGIN[0]+ci*@zoom, ORIGIN[1]-ri*@zoom]
+  [@origin[0]+ci*@zoom, @origin[1]-ri*@zoom]
 end
 
 def add_osm_node name,lon,lat
-    node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
-    node << { :name => name }
-    node.uid = OSM_UID
-    osm_db << node
-    name_node_hash[name] = node
+  node = OSM::Node.new make_osm_id, OSM_USER, OSM_TIMESTAMP, lon, lat
+  node << { :name => name }
+  node.uid = OSM_UID
+  osm_db << node
+  name_node_hash[name] = node
 end
 
 def add_location name,lon,lat
-    location_hash[name] = Location.new(lon,lat)
+  location_hash[name] = Location.new(lon,lat)
 end
 
 def find_node_by_name s
-    raise "***invalid node name '#{s}', must be single characters" unless s.size == 1
-    raise "*** invalid node name '#{s}', must be alphanumeric" unless s.match /[a-z0-9]/
-    if s.match /[a-z]/
-        from_node = name_node_hash[ s.to_s ]
-    else
-        from_node = location_hash[ s.to_s ]
-    end
+  raise "***invalid node name '#{s}', must be single characters" unless s.size == 1
+  raise "*** invalid node name '#{s}', must be alphanumeric" unless s.match /[a-z0-9]/
+  if s.match /[a-z]/
+    from_node = name_node_hash[ s.to_s ]
+  else
+    from_node = location_hash[ s.to_s ]
+  end
 end
 
 def find_way_by_name s
@@ -207,7 +211,7 @@ def osm_str
   @osm_str
 end
 
-def write_osm 
+def write_osm
   #write .oms file if needed
   Dir.mkdir DATA_FOLDER unless File.exist? DATA_FOLDER
   @osm_file = "#{DATA_FOLDER}/#{sanitized_scenario_title}_#{fingerprint}"
@@ -250,7 +254,7 @@ def reprocess
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
+      unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end
@@ -259,13 +263,12 @@ def reprocess
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
+      unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
-      end 
+      end
       log '', :preprocess
     end
     log_preprocess_done
-    write_server_ini
   end
 end

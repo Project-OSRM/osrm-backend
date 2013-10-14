@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(OSRM)
 include(FindPackageHandleStandardArgs)
+set(HUGO "${CMAKE_CURRENT_SOURCE_DIR}")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(GetGitRevisionDescription)
+git_describe(GIT_DESCRIPTION)
 
 TRY_RUN(SHARED_LIBRARY_PATH_TYPE SHARED_LIBRARY_PATH_INFO_COMPILED ${PROJECT_BINARY_DIR}/CMakeTmp ${PROJECT_SOURCE_DIR}/cmake/size.cpp OUTPUT_VARIABLE IS_64_SYSTEM)
 if(IS_64_SYSTEM)
@@ -15,8 +20,8 @@ endif(IS_64_SYSTEM)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
-  COMMAND ${CMAKE_COMMAND} -P
-    ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
+  COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/UUID-Config.cmake
   DEPENDS
     ${CMAKE_SOURCE_DIR}/Util/UUID.cpp.in
   	${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
@@ -25,17 +30,18 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp )
 
-set(BOOST_COMPONENTS filesystem regex system thread)
+set(BOOST_COMPONENTS filesystem program_options regex system thread)
 
+configure_file(Util/GitDescription.cpp.in ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp)
 file(GLOB ExtractorGlob Extractor/*.cpp)
-set(ExtractorSources extractor.cpp ${ExtractorGlob})
+set(ExtractorSources extractor.cpp ${ExtractorGlob} Util/GitDescription.cpp)
 add_executable(osrm-extract ${ExtractorSources} )
 
 file(GLOB PrepareGlob Contractor/*.cpp)
-set(PrepareSources createHierarchy.cpp ${PrepareGlob})
+set(PrepareSources createHierarchy.cpp ${PrepareGlob} Util/GitDescription.cpp)
 add_executable(osrm-prepare ${PrepareSources} )
 
-add_executable(osrm-routed routed.cpp )
+add_executable(osrm-routed routed.cpp Util/GitDescription.cpp)
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
@@ -155,6 +161,8 @@ if(WITH_TOOLS)
 			osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID
 		)
 	endif(GDAL_FOUND)
-	add_executable ( osrm-cli Tools/simpleclient.cpp )
+	add_executable ( osrm-cli Tools/simpleclient.cpp Util/GitDescription.cpp)
 	target_link_libraries( osrm-cli ${Boost_LIBRARIES} OSRM UUID )
+    add_executable ( osrm-io-benchmark Tools/io-benchmark.cpp )
+    target_link_libraries( osrm-io-benchmark ${Boost_LIBRARIES} )
 endif(WITH_TOOLS)

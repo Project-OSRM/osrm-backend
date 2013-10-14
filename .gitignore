@@ -37,6 +37,7 @@ Thumbs.db
 #######################
 /build/
 /Util/UUID.cpp
+/Util/GitDescription.cpp
 
 # Eclipse related files #
 #########################
@@ -81,3 +82,7 @@ stxxl.errlog
 /sandbox/
 
 /test/profile.lua
+
+# Deprecated config file #
+##########################
+/server.ini

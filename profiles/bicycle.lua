@@ -66,6 +66,7 @@ route_speeds = {
 }
 
 surface_speeds = {
+	["asphalt"] = default_speed,
 	["cobblestone:flattened"] = 10,
 	["paving_stones"] = 10,
 	["compacted"] = 10,
@@ -317,8 +318,12 @@ function way_function (way)
     if surface then
         surface_speed = surface_speeds[surface]
         if surface_speed then
-            way.speed = math.min(way.speed, surface_speed)
-            way.backward_speed  = math.min(way.backward_speed, surface_speed)
+            if way.speed > 0 then
+                way.speed = surface_speed
+            end
+            if way.backward_speed > 0 then
+              way.backward_speed  = surface_speed
+            end
         end
     end
 

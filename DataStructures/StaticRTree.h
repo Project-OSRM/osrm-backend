@@ -1,22 +1,29 @@
 /*
-    open source routing machine
-    Copyright (C) Dennis Luxen, others 2010
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-any later version.
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-You should have received a copy of the GNU Affero General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-or see http://www.gnu.org/licenses/agpl.txt.
- */
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
 
 #ifndef STATICRTREE_H_
 #define STATICRTREE_H_
@@ -42,11 +49,8 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
-#include <cassert>
-#include <cfloat>
-#include <climits>
-
 #include <algorithm>
+#include <limits>
 #include <queue>
 #include <string>
 #include <vector>
@@ -129,7 +133,7 @@ private:
                 return 0.0;
             }
 
-            double min_dist = DBL_MAX;
+            double min_dist = std::numeric_limits<double>::max();
             min_dist = std::min(
                     min_dist,
                     ApproximateDistance(
@@ -170,7 +174,7 @@ private:
         }
 
         inline double GetMinMaxDist(const FixedPointCoordinate & location) const {
-            double min_max_dist = DBL_MAX;
+            double min_max_dist = std::numeric_limits<double>::max();
             //Get minmax distance to each of the four sides
             FixedPointCoordinate upper_left (max_lat, min_lon);
             FixedPointCoordinate upper_right(max_lat, max_lon);
@@ -268,7 +272,7 @@ private:
             const uint32_t n_id,
             const double dist
         ) : node_id(n_id), min_dist(dist) {}
-        QueryCandidate() : node_id(UINT_MAX), min_dist(DBL_MAX) {}
+        QueryCandidate() : node_id(UINT_MAX), min_dist(std::numeric_limits<double>::max()) {}
         uint32_t node_id;
         double min_dist;
         inline bool operator<(const QueryCandidate & other) const {
@@ -461,8 +465,8 @@ public:
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
         SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
-        double min_dist = DBL_MAX;
-        double min_max_dist = DBL_MAX;
+        double min_dist = std::numeric_limits<double>::max();
+        double min_max_dist = std::numeric_limits<double>::max();
         bool found_a_nearest_edge = false;
 
         FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
@@ -470,7 +474,7 @@ public:
         //initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
         traversal_queue.push(QueryCandidate(0, m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate)));
-        BOOST_ASSERT_MSG(FLT_EPSILON > (0. - traversal_queue.top().min_dist), "Root element in NN Search has min dist != 0.");
+        BOOST_ASSERT_MSG(std::numberic_limits<double>::epsilon() > (0. - traversal_queue.top().min_dist), "Root element in NN Search has min dist != 0.");
 
         while(!traversal_queue.empty()) {
             const QueryCandidate current_query_node = traversal_queue.top(); traversal_queue.pop();
@@ -595,6 +599,113 @@ public:
     }
 
   */
+    bool LocateClosestEndPointForCoordinate(
+            const FixedPointCoordinate & input_coordinate,
+            FixedPointCoordinate & result_coordinate,
+            const unsigned zoom_level
+    ) {
+        bool ignore_tiny_components = (zoom_level <= 14);
+        DataT nearest_edge;
+        double min_dist = std::numeric_limits<double>::max();
+        double min_max_dist = std::numeric_limits<double>::max();
+        bool found_a_nearest_edge = false;
+
+        //initialize queue with root element
+        std::priority_queue<QueryCandidate> traversal_queue;
+        double current_min_dist = m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
+        traversal_queue.push(
+            QueryCandidate(0, current_min_dist)
+        );
+
+        BOOST_ASSERT_MSG(
+            std::numeric_limits<double>::epsilon() > (0. - traversal_queue.top().min_dist),
+            "Root element in NN Search has min dist != 0."
+        );
+
+        while(!traversal_queue.empty()) {
+            const QueryCandidate current_query_node = traversal_queue.top();
+            traversal_queue.pop();
+
+            const bool prune_downward = (current_query_node.min_dist >= min_max_dist);
+            const bool prune_upward = (current_query_node.min_dist >= min_dist);
+            if( !prune_downward && !prune_upward ) { //downward pruning
+                TreeNode & current_tree_node = m_search_tree[current_query_node.node_id];
+                if (current_tree_node.child_is_on_disk) {
+                    LeafNode current_leaf_node;
+                    LoadLeafFromDisk(
+                        current_tree_node.children[0],
+                        current_leaf_node
+                    );
+                    for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
+                        const DataT & current_edge = current_leaf_node.objects[i];
+                        if(
+                            ignore_tiny_components &&
+                            current_edge.belongsToTinyComponent
+                        ) {
+                            continue;
+                        }
+                        if(current_edge.isIgnored()) {
+                            continue;
+                        }
+
+                        double current_minimum_distance = ApproximateDistance(
+                                input_coordinate.lat,
+                                input_coordinate.lon,
+                                current_edge.lat1,
+                                current_edge.lon1
+                            );
+                        if( current_minimum_distance < min_dist ) {
+                            //found a new minimum
+                            min_dist = current_minimum_distance;
+                            result_coordinate.lat = current_edge.lat1;
+                            result_coordinate.lon = current_edge.lon1;
+                            found_a_nearest_edge = true;
+                        }
+
+                        current_minimum_distance = ApproximateDistance(
+                                input_coordinate.lat,
+                                input_coordinate.lon,
+                                current_edge.lat2,
+                                current_edge.lon2
+                            );
+
+                        if( current_minimum_distance < min_dist ) {
+                            //found a new minimum
+                            min_dist = current_minimum_distance;
+                            result_coordinate.lat = current_edge.lat2;
+                            result_coordinate.lon = current_edge.lon2;
+                            found_a_nearest_edge = true;
+                        }
+                    }
+                } else {
+                    //traverse children, prune if global mindist is smaller than local one
+                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i) {
+                        const int32_t child_id = current_tree_node.children[i];
+                        const TreeNode & child_tree_node = m_search_tree[child_id];
+                        const RectangleT & child_rectangle = child_tree_node.minimum_bounding_rectangle;
+                        const double current_min_dist = child_rectangle.GetMinDist(input_coordinate);
+                        const double current_min_max_dist = child_rectangle.GetMinMaxDist(input_coordinate);
+                        if( current_min_max_dist < min_max_dist ) {
+                            min_max_dist = current_min_max_dist;
+                        }
+                        if (current_min_dist > min_max_dist) {
+                            continue;
+                        }
+                        if (current_min_dist > min_dist) { //upward pruning
+                            continue;
+                        }
+                        traversal_queue.push(
+                            QueryCandidate(child_id, current_min_dist)
+                        );
+                    }
+                }
+            }
+        }
+
+        return found_a_nearest_edge;
+    }
+
+
     bool FindPhantomNodeForCoordinate(
             const FixedPointCoordinate & input_coordinate,
             PhantomNode & result_phantom_node,
@@ -607,8 +718,8 @@ public:
         uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
         //SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
-        double min_dist = DBL_MAX;
-        double min_max_dist = DBL_MAX;
+        double min_dist = std::numeric_limits<double>::max();
+        double min_max_dist = std::numeric_limits<double>::max();
         bool found_a_nearest_edge = false;
 
         FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
@@ -621,8 +732,8 @@ public:
         );
 
         BOOST_ASSERT_MSG(
-                         FLT_EPSILON > (0. - traversal_queue.top().min_dist),
-                         "Root element in NN Search has min dist != 0."
+            std::numeric_limits<double>::epsilon() > (0. - traversal_queue.top().min_dist),
+            "Root element in NN Search has min dist != 0."
         );
 
         while(!traversal_queue.empty()) {
@@ -637,7 +748,6 @@ public:
                     LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     ++io_count;
-                    //SimpleLogger().Write() << "checking " << current_leaf_node.object_count << " elements";
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
                         DataT & current_edge = current_leaf_node.objects[i];
                         if(ignore_tiny_components && current_edge.belongsToTinyComponent) {
@@ -691,16 +801,14 @@ public:
                                 current_end_coordinate
                             )
                         ) {
+
                             BOOST_ASSERT_MSG(current_edge.id != result_phantom_node.edgeBasedNode, "IDs not different");
-                            //SimpleLogger().Write() << "found bidirected edge on nodes " << current_edge.id << " and " << result_phantom_node.edgeBasedNode;
                             result_phantom_node.weight2 = current_edge.weight;
                             if(current_edge.id < result_phantom_node.edgeBasedNode) {
                                 result_phantom_node.edgeBasedNode = current_edge.id;
                                 std::swap(result_phantom_node.weight1, result_phantom_node.weight2);
                                 std::swap(current_end_coordinate, current_start_coordinate);
-                            //    SimpleLogger().Write() <<"case 2";
                             }
-                            //SimpleLogger().Write() << "w1: " << result_phantom_node.weight1 << ", w2: " << result_phantom_node.weight2;
                         }
                     }
                 } else {
@@ -748,9 +856,13 @@ public:
         return found_a_nearest_edge;
 
     }
+
 private:
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode& result_node) {
-        if(!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open()) {
+        if(
+            !thread_local_rtree_stream.get() ||
+            !thread_local_rtree_stream->is_open()
+        ) {
             thread_local_rtree_stream.reset(
                 new boost::filesystem::ifstream(
                         m_leaf_node_filename,
@@ -772,14 +884,14 @@ private:
             const FixedPointCoordinate& source,
             const FixedPointCoordinate& target,
             FixedPointCoordinate& nearest, double *r) const {
-        const double x = static_cast<double>(inputPoint.lat);
-        const double y = static_cast<double>(inputPoint.lon);
-        const double a = static_cast<double>(source.lat);
-        const double b = static_cast<double>(source.lon);
-        const double c = static_cast<double>(target.lat);
-        const double d = static_cast<double>(target.lon);
+        const double x = inputPoint.lat/COORDINATE_PRECISION;
+        const double y = inputPoint.lon/COORDINATE_PRECISION;
+        const double a = source.lat/COORDINATE_PRECISION;
+        const double b = source.lon/COORDINATE_PRECISION;
+        const double c = target.lat/COORDINATE_PRECISION;
+        const double d = target.lon/COORDINATE_PRECISION;
         double p,q,mX,nY;
-        if(fabs(a-c) > FLT_EPSILON){
+        if(std::fabs(a-c) > std::numeric_limits<double>::epsilon() ){
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
             p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
@@ -809,8 +921,8 @@ private:
 //            return std::sqrt(((d - y)*(d - y) + (c - x)*(c - x)));
         }
         // point lies in between
-        nearest.lat = p;
-        nearest.lon = q;
+        nearest.lat = p*COORDINATE_PRECISION;
+        nearest.lon = q*COORDINATE_PRECISION;
 //        return std::sqrt((p-x)*(p-x) + (q-y)*(q-y));
         return (p-x)*(p-x) + (q-y)*(q-y);
     }
@@ -820,7 +932,7 @@ private:
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) const {
-        return (std::fabs(d1 - d2) < FLT_EPSILON);
+        return (std::fabs(d1 - d2) < std::numeric_limits<double>::epsilon() );
     }
 
 };

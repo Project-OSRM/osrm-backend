@@ -128,7 +128,7 @@ def turn_list instructions
     r[0].to_s.gsub!(/^\d*/) do |match|
       types[match.to_i].to_s
     end
-  end.join(',')    
+  end.join(',')
 end
 
 def mode_list instructions

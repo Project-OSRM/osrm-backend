@@ -10,13 +10,13 @@ class OSRMError < StandardError
     @log = log
     @extract = log_tail @log, @lines
   end
-  
+
   def to_s
     "*** #{@msg}\nLast #{@lines} lines from #{@log}:\n#{@extract}\n"
   end
-  
+
   private
-  
+
   def log_tail path, n
     File.open(path) do |f|
       return f.tail(n).map { |line| "  > #{line}" }.join "\n"

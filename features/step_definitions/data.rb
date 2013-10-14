@@ -6,6 +6,10 @@ Given /^a grid size of (\d+) meters$/ do |meters|
   set_grid_size meters
 end
 
+Given /^the origin ([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)$/ do |lat,lon|
+  set_origin [lon.to_f,lat.to_f]
+end
+
 Given /^the shortcuts$/ do |table|
   table.hashes.each do |row|
     shortcuts_hash[ row['key'] ] = row['value']
@@ -19,11 +23,11 @@ Given /^the node map$/ do |table|
         raise "*** node invalid name '#{name}', must be single characters" unless name.size == 1
         raise "*** invalid node name '#{name}', must me alphanumeric" unless name.match /[a-z0-9]/
         if name.match /[a-z]/
-            raise "*** duplicate node '#{name}'" if name_node_hash[name]
-            add_osm_node name, *table_coord_to_lonlat(ci,ri)
+          raise "*** duplicate node '#{name}'" if name_node_hash[name]
+          add_osm_node name, *table_coord_to_lonlat(ci,ri)
         else
-            raise "*** duplicate node '#{name}'" if location_hash[name]
-            add_location name, *table_coord_to_lonlat(ci,ri)
+          raise "*** duplicate node '#{name}'" if location_hash[name]
+          add_location name, *table_coord_to_lonlat(ci,ri)
         end
       end
     end
@@ -35,9 +39,9 @@ Given /^the node locations$/ do |table|
     name = row['node']
     raise "*** duplicate node '#{name}'" if find_node_by_name name
     if name.match /[a-z]/
-        add_osm_node name, row['lon'].to_f, row['lat'].to_f 
+      add_osm_node name, row['lon'].to_f, row['lat'].to_f
     else
-        add_location name, row['lon'].to_f, row['lat'].to_f 
+      add_location name, row['lon'].to_f, row['lat'].to_f
     end
   end
 end
@@ -52,10 +56,11 @@ Given /^the nodes$/ do |table|
 end
 
 Given /^the ways$/ do |table|
+  raise "*** Map data already defined - did you pass an input file in this scenaria?" if @osm_str
   table.hashes.each do |row|
     way = OSM::Way.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     way.uid = OSM_UID
-    
+
     nodes = row.delete 'nodes'
     raise "*** duplicate way '#{nodes}'" if name_way_hash[nodes]
     nodes.each_char do |c|
@@ -64,14 +69,14 @@ Given /^the ways$/ do |table|
       raise "*** unknown node '#{c}'" unless node
       way << node
     end
-    
+
     defaults = { 'highway' => 'primary' }
     tags = defaults.merge(row)
 
     if row['highway'] == '(nil)'
       tags.delete 'highway'
     end
-    
+
     if row['name'] == nil
       tags['name'] = nodes
     elsif (row['name'] == '""') || (row['name'] == "''")
@@ -81,7 +86,7 @@ Given /^the ways$/ do |table|
     else
       tags['name'] = row['name']
     end
-    
+
     way << tags
     osm_db << way
     name_way_hash[nodes] = way
@@ -89,6 +94,7 @@ Given /^the ways$/ do |table|
 end
 
 Given /^the relations$/ do |table|
+  raise "*** Map data already defined - did you pass an input file in this scenaria?" if @osm_str
   table.hashes.each do |row|
     relation = OSM::Relation.new make_osm_id, OSM_USER, OSM_TIMESTAMP
     row.each_pair do |key,value|
@@ -119,3 +125,7 @@ end
 Given /^the defaults$/ do
 end
 
+Given /^the input file ([^"]*)$/ do |file|
+  raise "*** Input file must in .osm format" unless File.extname(file)=='.osm'
+  @osm_str = File.read file
+end

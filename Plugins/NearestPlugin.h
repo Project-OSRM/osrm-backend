@@ -1,22 +1,29 @@
 /*
-    open source routing machine
-    Copyright (C) Dennis Luxen, 2010
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-any later version.
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-You should have received a copy of the GNU Affero General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-or see http://www.gnu.org/licenses/agpl.txt.
- */
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
 
 #ifndef NearestPlugin_H_
 #define NearestPlugin_H_
@@ -34,11 +41,9 @@ class NearestPlugin : public BasePlugin {
 public:
     NearestPlugin(QueryObjectsStorage * objects )
      :
-        names(objects->names),
+        m_query_objects(objects),
         descriptor_string("nearest")
     {
-        nodeHelpDesk = objects->nodeHelpDesk;
-
         descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
         descriptorTable.insert(std::make_pair("json", 1));
     }
@@ -53,12 +58,16 @@ public:
             reply = http::Reply::stockReply(http::Reply::badRequest);
             return;
         }
-
+        NodeInformationHelpDesk * nodeHelpDesk = m_query_objects->nodeHelpDesk;
         //query to helpdesk
         PhantomNode result;
-        nodeHelpDesk->FindPhantomNodeForCoordinate(routeParameters.coordinates[0], result, routeParameters.zoomLevel);
+        nodeHelpDesk->FindPhantomNodeForCoordinate(
+            routeParameters.coordinates[0],
+            result,
+            routeParameters.zoomLevel
+        );
 
-        std::string tmp;
+        std::string temp_string;
         //json
 
         if("" != routeParameters.jsonpParameter) {
@@ -70,23 +79,26 @@ public:
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
         reply.content += ("\"status\":");
-        if(UINT_MAX != result.edgeBasedNode)
+        if(UINT_MAX != result.edgeBasedNode) {
             reply.content += "0,";
-        else
+        } else {
             reply.content += "207,";
+        }
         reply.content += ("\"mapped_coordinate\":");
         reply.content += "[";
         if(UINT_MAX != result.edgeBasedNode) {
-            convertInternalLatLonToString(result.location.lat, tmp);
-            reply.content += tmp;
-            convertInternalLatLonToString(result.location.lon, tmp);
+            convertInternalLatLonToString(result.location.lat, temp_string);
+            reply.content += temp_string;
+            convertInternalLatLonToString(result.location.lon, temp_string);
             reply.content += ",";
-            reply.content += tmp;
+            reply.content += temp_string;
         }
         reply.content += "],";
         reply.content += "\"name\":\"";
-        if(UINT_MAX != result.edgeBasedNode)
-            reply.content += names[result.nodeBasedEdgeNameID];
+        if(UINT_MAX != result.edgeBasedNode) {
+            m_query_objects->GetName(result.nodeBasedEdgeNameID, temp_string);
+            reply.content += temp_string;
+        }
         reply.content += "\"";
         reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"";
         reply.content += ("}");
@@ -104,14 +116,13 @@ public:
             reply.headers[2].value = "attachment; filename=\"location.json\"";
         }
         reply.headers[0].name = "Content-Length";
-        intToString(reply.content.size(), tmp);
-        reply.headers[0].value = tmp;
+        intToString(reply.content.size(), temp_string);
+        reply.headers[0].value = temp_string;
     }
 
 private:
-    NodeInformationHelpDesk * nodeHelpDesk;
+    QueryObjectsStorage * m_query_objects;
     HashTable<std::string, unsigned> descriptorTable;
-    std::vector<std::string> & names;
     std::string descriptor_string;
 };
 

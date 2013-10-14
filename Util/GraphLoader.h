@@ -1,22 +1,29 @@
 /*
-    open source routing machine
-    Copyright (C) Dennis Luxen, others 2010
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-any later version.
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-You should have received a copy of the GNU Affero General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-or see http://www.gnu.org/licenses/agpl.txt.
- */
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
 
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
@@ -68,21 +75,21 @@ NodeID readBinaryOSRMGraphFromStream(
 
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
         SimpleLogger().Write(logWARNING) <<
-            ".osrm was prepared with different build.\n"
+            ".osrm was prepared with different build."
             "Reprocess to get rid of this warning.";
     }
 
     NodeID n, source, target;
     EdgeID m;
     short dir;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext2IntNodeMap;
+    ExternalNodeMap ext_to_int_id_map;
     in.read((char*)&n, sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
     _Node node;
     for (NodeID i=0; i<n; ++i) {
         in.read((char*)&node, sizeof(_Node));
         int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
-        ext2IntNodeMap.insert(std::make_pair(node.id, i));
+        ext_to_int_id_map.emplace(node.id, i);
         if(node.bollard) {
         	bollardNodes.push_back(i);
         }
@@ -97,28 +104,29 @@ NodeID readBinaryOSRMGraphFromStream(
 
     in.read((char*)&m, sizeof(unsigned));
     SimpleLogger().Write() << " and " << m << " edges ";
-    for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
-        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(inputRestrictions[i].fromNode);
-        if( intNodeID == ext2IntNodeMap.end()) {
+    // for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
+    BOOST_FOREACH(TurnRestriction & current_restriction, inputRestrictions) {
+        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(current_restriction.fromNode);
+        if( intNodeID == ext_to_int_id_map.end()) {
             SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
             continue;
 
         }
-        inputRestrictions[i].fromNode = intNodeID->second;
+        current_restriction.fromNode = intNodeID->second;
 
-        intNodeID = ext2IntNodeMap.find(inputRestrictions[i].viaNode);
-        if( intNodeID == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(current_restriction.viaNode);
+        if( intNodeID == ext_to_int_id_map.end()) {
             SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
             continue;
         }
-        inputRestrictions[i].viaNode = intNodeID->second;
+        current_restriction.viaNode = intNodeID->second;
 
-        intNodeID = ext2IntNodeMap.find(inputRestrictions[i].toNode);
-        if( intNodeID == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(current_restriction.toNode);
+        if( intNodeID == ext_to_int_id_map.end()) {
             SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
             continue;
         }
-        inputRestrictions[i].toNode = intNodeID->second;
+        current_restriction.toNode = intNodeID->second;
     }
 
     edgeList.reserve(m);
@@ -153,8 +161,8 @@ NodeID readBinaryOSRMGraphFromStream(
         assert(type >= 0);
 
         //         translate the external NodeIDs to internal IDs
-        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
-        if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
+        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
+        if( ext_to_int_id_map.find(source) == ext_to_int_id_map.end()) {
 #ifndef NDEBUG
             SimpleLogger().Write(logWARNING) <<
                 " unresolved source NodeID: " << source;
@@ -162,8 +170,8 @@ NodeID readBinaryOSRMGraphFromStream(
             continue;
         }
         source = intNodeID->second;
-        intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(target);
+        if(ext_to_int_id_map.find(target) == ext_to_int_id_map.end()) {
 #ifndef NDEBUG
             SimpleLogger().Write(logWARNING) <<
             "unresolved target NodeID : " << target;
@@ -215,7 +223,7 @@ NodeID readBinaryOSRMGraphFromStream(
         }
     }
     typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
-    ext2IntNodeMap.clear();
+    ext_to_int_id_map.clear();
     std::vector<EdgeT>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
     SimpleLogger().Write() << "Graph loaded ok and has " << edgeList.size() << " edges";
     return n;
@@ -225,13 +233,13 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     NodeID n, source, target, id;
     EdgeID m;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext2IntNodeMap;
+    ExternalNodeMap ext_to_int_id_map;
     in >> n;
     SimpleLogger().Write(logDEBUG) << "Importing n = " << n << " nodes ";
     for (NodeID i=0; i<n; ++i) {
         in >> id >> ycoord >> xcoord;
         int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
-        ext2IntNodeMap.insert(std::make_pair(id, i));
+        ext_to_int_id_map.insert(std::make_pair(id, i));
     }
     in >> m;
     SimpleLogger().Write(logDEBUG) << " and " << m << " edges";
@@ -321,13 +329,13 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         }
 
         //         translate the external NodeIDs to internal IDs
-        ExternalNodeMap::iterator intNodeID = ext2IntNodeMap.find(source);
-        if( ext2IntNodeMap.find(source) == ext2IntNodeMap.end()) {
+        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
+        if( ext_to_int_id_map.find(source) == ext_to_int_id_map.end()) {
             throw OSRMException("unresolvable source Node ID");
         }
         source = intNodeID->second;
-        intNodeID = ext2IntNodeMap.find(target);
-        if(ext2IntNodeMap.find(target) == ext2IntNodeMap.end()) {
+        intNodeID = ext_to_int_id_map.find(target);
+        if(ext_to_int_id_map.find(target) == ext_to_int_id_map.end()) {
             throw OSRMException("unresolvable target Node ID");
         }
         target = intNodeID->second;
@@ -339,7 +347,7 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         EdgeT inputEdge(source, target, 0, weight, forward, backward, type );
         edgeList.push_back(inputEdge);
     }
-    ext2IntNodeMap.clear();
+    ext_to_int_id_map.clear();
     std::vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
     std::cout << "ok" << std::endl;
     return n;

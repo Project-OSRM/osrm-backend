@@ -1,49 +1,33 @@
 @routing @bicycle @names
 Feature: Bike - Street names in instructions
 
-	Background:
-		Given the profile "bicycle"
-	
-	Scenario: Bike - A named street
-		Given the node map
-		 | a | b |
-		 |   | c |
-	
-		And the ways
-		 | nodes | name     |
-		 | ab    | My Way   |
-		 | bc    | Your Way |
-    
-		When I route I should get
-		 | from | to | route           |
-		 | a    | c  | My Way,Your Way |
-	
-	@unnamed
-	Scenario: Bike - Use way type to describe unnamed ways
-		Given the node map
-		 | a | b | c | d |
+    Background:
+        Given the profile "bicycle"
 
-		And the ways
-		 | nodes | highway  | name |
-		 | ab    | cycleway |      |
-		 | bcd   | track    |      |
+    Scenario: Bike - A named street
+        Given the node map
+            | a | b |
+            |   | c |
 
-		When I route I should get
-		 | from | to | route                              |
-		 | a    | d  | {highway:cycleway},{highway:track} |
+        And the ways
+            | nodes | name     |
+            | ab    | My Way   |
+            | bc    | Your Way |
 
-  	@area @names @todo
-  	Scenario: Bike - name on streets overlapping an area
-  		Given the node map
-  		 | x | a | b | y |
-  		 |   | d | c |   |
+        When I route I should get
+            | from | to | route           |
+            | a    | c  | My Way,Your Way |
 
-  		And the ways
-  		 | nodes | highway     | area |
-  		 | xaby  | residential |      |
-  		 | abcda | residential | yes  |
+    @unnamed
+    Scenario: Bike - Use way type to describe unnamed ways
+        Given the node map
+            | a | b | c | d |
 
-  		When I route I should get
-  		 | from | to | route |
-  		 | x    | y  | xaby  |
-  		 | y    | x  | xaby  |
+        And the ways
+            | nodes | highway  | name |
+            | ab    | cycleway |      |
+            | bcd   | track    |      |
+
+        When I route I should get
+            | from | to | route                              |
+            | a    | d  | {highway:cycleway},{highway:track} |

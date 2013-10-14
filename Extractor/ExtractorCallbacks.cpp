@@ -1,23 +1,29 @@
 /*
-    open source routing machine
-    Copyright (C) Dennis Luxen, others 2010
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-any later version.
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-You should have received a copy of the GNU Affero General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-or see http://www.gnu.org/licenses/agpl.txt.
- */
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
 
 #include "ExtractorCallbacks.h"
 
@@ -56,7 +62,7 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
             parsed_way.speed = parsed_way.duration/(parsed_way.path.size()-1);
         }
 
-        if(FLT_EPSILON >= fabs(-1. - parsed_way.speed)){
+        if(std::numeric_limits<double>::epsilon() >= fabs(-1. - parsed_way.speed)){
             SimpleLogger().Write(logDEBUG) <<
                 "found way with bogus speed, id: " << parsed_way.id;
             return;
@@ -65,8 +71,8 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
         //Get the unique identifier for the street name
         const StringMap::const_iterator string_map_iterator = stringMap->find(parsed_way.name);
         if(stringMap->end() == string_map_iterator) {
-            parsed_way.nameID = externalMemory->nameVector.size();
-            externalMemory->nameVector.push_back(parsed_way.name);
+            parsed_way.nameID = externalMemory->name_list.size();
+            externalMemory->name_list.push_back(parsed_way.name);
             stringMap->insert(std::make_pair(parsed_way.name, parsed_way.nameID));
         } else {
             parsed_way.nameID = string_map_iterator->second;

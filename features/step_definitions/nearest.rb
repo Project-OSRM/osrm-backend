@@ -1,7 +1,7 @@
 When /^I request nearest I should get$/ do |table|
   reprocess
   actual = []
-  OSRMLauncher.new do
+  OSRMLauncher.new("#{@osm_file}.osrm") do
     table.hashes.each_with_index do |row,ri|
       in_node = find_node_by_name row['in']
       raise "*** unknown in-node '#{row['in']}" unless in_node
@@ -16,9 +16,9 @@ When /^I request nearest I should get$/ do |table|
           coord =  json['mapped_coordinate']
         end
       end
-      
+
       got = {'in' => row['in'], 'out' => coord }
-      
+
       ok = true
       row.keys.each do |key|
         if key=='out'
@@ -30,12 +30,12 @@ When /^I request nearest I should get$/ do |table|
           end
         end
       end
-      
+
       unless ok
         failed = { :attempt => 'nearest', :query => @query, :response => response }
         log_fail row,got,[failed]
       end
-      
+
       actual << got
     end
   end
