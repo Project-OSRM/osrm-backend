@@ -100,7 +100,6 @@ public:
     }
 
     inline DeallocatingVectorIterator& operator++() { //prefix
-        if(DeallocateC) assert(false);
         ++mState.mIndex;
         return *this;
     }
