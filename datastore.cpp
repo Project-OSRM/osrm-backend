@@ -26,7 +26,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "Server/DataStructures/BaseDataFacade.h"
 #include "Server/DataStructures/SharedDataType.h"
 #include "Util/BoostFileSystemFix.h"
-#include "Util/IniFile.h"
+#include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/UUID.h"
 #include "typedefs.h"
@@ -37,80 +37,69 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include <string>
 #include <vector>
 
-int main(int argc, char * argv[]) {
+int main( const int argc, const char * argv[] ) {
     try {
         LogPolicy::GetInstance().Unmute();
         SimpleLogger().Write() << "Checking input parameters";
 
-        boost::filesystem::path base_path = boost::filesystem::absolute(
-            (argc > 1 ? argv[1] : "server.ini")
-        ).parent_path();
-        IniFile server_config((argc > 1 ? argv[1] : "server.ini"));
-        //check contents of config file
-        if ( !server_config.Holds("hsgrData")) {
-            throw OSRMException("no ram index file name in server ini");
+        bool use_shared_memory = false;
+        std::string ip_address;
+        int ip_port, requested_num_threads;
+
+        ServerPaths server_paths;
+        if( !GenerateServerProgramOptions(
+                argc,
+                argv,
+                server_paths,
+                ip_address,
+                ip_port,
+                requested_num_threads,
+                use_shared_memory
+             )
+        ) {
+            return 0;
         }
-        if ( !server_config.Holds("ramIndex") ) {
-            throw OSRMException("no mem index file name in server ini");
+        if( server_paths.find("hsgrdata") == server_paths.end() ) {
+            throw OSRMException("no hsgr file given in ini file");
         }
-        if ( !server_config.Holds("nodesData") ) {
-            throw OSRMException("no nodes file name in server ini");
+        if( server_paths.find("ramindex") == server_paths.end() ) {
+            throw OSRMException("no ram index file given in ini file");
         }
-        if ( !server_config.Holds("edgesData") ) {
-            throw OSRMException("no edges file name in server ini");
+        if( server_paths.find("fileindex") == server_paths.end() ) {
+            throw OSRMException("no leaf index file given in ini file");
+        }
+        if( server_paths.find("nodesdata") == server_paths.end() ) {
+            throw OSRMException("no nodes file given in ini file");
+        }
+        if( server_paths.find("edgesdata") == server_paths.end() ) {
+            throw OSRMException("no edges file given in ini file");
+        }
+        if( server_paths.find("namesdata") == server_paths.end() ) {
+            throw OSRMException("no names file given in ini file");
         }
 
-        //generate paths of data files
-        boost::filesystem::path hsgr_path = boost::filesystem::absolute(
-                server_config.GetParameter("hsgrData"),
-                base_path
-        );
-        boost::filesystem::path ram_index_path = boost::filesystem::absolute(
-                server_config.GetParameter("ramIndex"),
-                base_path
-        );
-        boost::filesystem::path node_data_path = boost::filesystem::absolute(
-                server_config.GetParameter("nodesData"),
-                base_path
-        );
-        boost::filesystem::path edge_data_path = boost::filesystem::absolute(
-                server_config.GetParameter("edgesData"),
-                base_path
-        );
-        boost::filesystem::path name_data_path = boost::filesystem::absolute(
-                server_config.GetParameter("namesData"),
-                base_path
-        );
-        boost::filesystem::path timestamp_path = boost::filesystem::absolute(
-                server_config.GetParameter("timestamp"),
-                base_path
-        );
+        ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & hsgr_path = paths_iterator->second;
+        paths_iterator = server_paths.find("timestamp");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & timestamp_path = paths_iterator->second;
+        paths_iterator = server_paths.find("ramindex");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & ram_index_path = paths_iterator->second;
+        // paths_iterator = server_paths.find("fileindex");
+        // BOOST_ASSERT(server_paths.end() != paths_iterator);
+        // const boost::filesystem::path & file_index_path = paths_iterator->second;
+        paths_iterator = server_paths.find("nodesdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & nodes_data_path = paths_iterator->second;
+        paths_iterator = server_paths.find("edgesdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & edges_data_path = paths_iterator->second;
+        paths_iterator = server_paths.find("namesdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & names_data_path = paths_iterator->second;
 
-        //check if data files actually exist
-        if ( !boost::filesystem::exists(hsgr_path) ) {
-            throw(".hsgr not found");
-        }
-        if ( !boost::filesystem::exists(ram_index_path) ) {
-            throw(".ramIndex not found");
-        }
-        if ( !boost::filesystem::exists(node_data_path) ) {
-            throw(".nodes not found");
-        }
-        if ( !boost::filesystem::exists(edge_data_path) ) {
-            throw(".edges not found");
-        }
-        if ( !boost::filesystem::exists(name_data_path) ) {
-            throw(".names not found");
-        }
-
-
-        // check if data files empty
-        if ( 0 == boost::filesystem::file_size( node_data_path ) ) {
-            throw OSRMException("nodes file is empty");
-        }
-        if ( 0 == boost::filesystem::file_size( edge_data_path ) ) {
-            throw OSRMException("edges file is empty");
-        }
 
         // Allocate a memory layout in shared memory //
           SharedMemory * layout_memory = SharedMemoryFactory::Get(
@@ -128,7 +117,7 @@ int main(int argc, char * argv[]) {
         SimpleLogger().Write() << "Collecting files sizes";
         // number of entries in name index
         boost::filesystem::ifstream name_stream(
-            name_data_path, std::ios::binary
+            names_data_path, std::ios::binary
         );
         unsigned name_index_size = 0;
         name_stream.read((char *)&name_index_size, sizeof(unsigned));
@@ -143,7 +132,7 @@ int main(int argc, char * argv[]) {
 
         //Loading information for original edges
         boost::filesystem::ifstream edges_input_stream(
-            edge_data_path,
+            edges_data_path,
             std::ios::binary
         );
         unsigned number_of_original_edges = 0;
@@ -232,9 +221,9 @@ int main(int argc, char * argv[]) {
 
         //load coordinate size
         SimpleLogger().Write() <<
-            "Loading coordinates list from " << node_data_path.string();
+            "Loading coordinates list from " << nodes_data_path.string();
         boost::filesystem::ifstream nodes_input_stream(
-            node_data_path,
+            nodes_data_path,
             std::ios::binary
         );
         unsigned coordinate_list_size = 0;
@@ -252,7 +241,7 @@ int main(int argc, char * argv[]) {
 
         // read actual data into shared memory object //
         // Loading street names
-        SimpleLogger().Write() << "Loading names index and chars from: " << name_data_path.string();
+        SimpleLogger().Write() << "Loading names index and chars from: " << names_data_path.string();
         unsigned * name_index_ptr = (unsigned*)(
             shared_memory_ptr + shared_layout_ptr->GetNameIndexOffset()
         );
@@ -275,7 +264,7 @@ int main(int argc, char * argv[]) {
         //load original edge information
         SimpleLogger().Write() <<
             "Loading via node, coordinates and turn instruction lists from: " <<
-            edge_data_path.string();
+            edges_data_path.string();
 
         NodeID * via_node_ptr = (NodeID *)(
             shared_memory_ptr + shared_layout_ptr->GetViaNodeListOffset()
