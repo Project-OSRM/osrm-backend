@@ -29,7 +29,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
-#include "../../Util/IniFile.h"
+#include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
 
 #include <algorithm>
@@ -175,20 +175,16 @@ private:
     }
 
 public:
-    SharedDataFacade(
-        const IniFile & server_config,
-        const boost::filesystem::path base_path
-     ) {
+    SharedDataFacade( const ServerPaths & server_paths ) {
         //check contents of config file
-        if ( !server_config.Holds("fileIndex") ) {
-            throw OSRMException("no nodes file name in server ini");
+        if( server_paths.find("fileindex") == server_paths.end() ) {
+            throw OSRMException("no leaf index file given in ini file");
         }
 
         //generate paths of data files
-        boost::filesystem::path ram_index_path = boost::filesystem::absolute(
-                server_config.GetParameter("fileIndex"),
-                base_path
-        );
+        ServerPaths::const_iterator paths_iterator = server_paths.find("fileindex");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        boost::filesystem::path ram_index_path = paths_iterator->second;
 
         data_layout = (SharedDataLayout *)(
             SharedMemoryFactory::Get(LAYOUT_1)->Ptr()

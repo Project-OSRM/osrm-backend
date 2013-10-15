@@ -78,11 +78,9 @@ public:
         const unsigned id
     ) const = 0;
 
-    virtual unsigned GetOutDegree( const NodeID n ) const = 0;
-
-    virtual NodeID GetTarget( const EdgeID e ) const = 0;
-
-    virtual EdgeDataT &GetEdgeData( const EdgeID e ) = 0;
+    virtual TurnInstruction GetTurnInstructionForEdgeID(
+        const unsigned id
+    ) const  = 0;
 
     virtual bool LocateClosestEndPointForCoordinate(
         const FixedPointCoordinate& input_coordinate,
@@ -90,13 +88,20 @@ public:
         const unsigned zoom_level = 18
     ) const  = 0;
 
-    virtual EdgeID EndEdges( const NodeID n ) const = 0;
+    virtual bool FindPhantomNodeForCoordinate(
+        const FixedPointCoordinate & input_coordinate,
+        PhantomNode & resulting_phantom_node,
+        const unsigned zoom_level
+    ) const  = 0;
 
-    //searches for a specific edge
-    virtual EdgeID FindEdge( const NodeID from, const NodeID to ) const = 0;
-
+    virtual unsigned GetCheckSum() const = 0;
 
     virtual unsigned GetNameIndexFromEdgeID(const unsigned id) const  = 0;
+
+    virtual void GetName(
+        const unsigned name_id,
+        std::string & result
+    ) const = 0;
 
     std::string GetEscapedNameForNameID(const unsigned name_id) const {
         std::string temporary_string;

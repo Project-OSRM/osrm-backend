@@ -34,6 +34,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
 #include "../../Util/IniFile.h"
+#include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
 
 template<class EdgeDataT>
@@ -198,95 +199,60 @@ public:
         delete m_static_rtree;
     }
 
-    InternalDataFacade(
-        const IniFile & server_config,
-        const boost::filesystem::path & base_path
-    ) {
-        //check contents of config file
-        if ( !server_config.Holds("hsgrData")) {
-            throw OSRMException("no ram index file name in server ini");
-        }
-        if ( !server_config.Holds("ramIndex") ) {
-            throw OSRMException("no mem index file name in server ini");
-        }
-        if ( !server_config.Holds("fileIndex") ) {
-            throw OSRMException("no nodes file name in server ini");
-        }
-        if ( !server_config.Holds("nodesData") ) {
-            throw OSRMException("no nodes file name in server ini");
-        }
-        if ( !server_config.Holds("edgesData") ) {
-            throw OSRMException("no edges file name in server ini");
-        }
-
+    InternalDataFacade( const ServerPaths & server_paths ) {
         //generate paths of data files
-        boost::filesystem::path hsgr_path = boost::filesystem::absolute(
-                server_config.GetParameter("hsgrData"),
-                base_path
-        );
-        boost::filesystem::path ram_index_path = boost::filesystem::absolute(
-                server_config.GetParameter("ramIndex"),
-                base_path
-        );
-        boost::filesystem::path file_index_path = boost::filesystem::absolute(
-                server_config.GetParameter("fileIndex"),
-                base_path
-        );
-        boost::filesystem::path node_data_path = boost::filesystem::absolute(
-                server_config.GetParameter("nodesData"),
-                base_path
-        );
-        boost::filesystem::path edge_data_path = boost::filesystem::absolute(
-                server_config.GetParameter("edgesData"),
-                base_path
-        );
-        boost::filesystem::path name_data_path = boost::filesystem::absolute(
-                server_config.GetParameter("namesData"),
-                base_path
-        );
-        boost::filesystem::path timestamp_path = boost::filesystem::absolute(
-                server_config.GetParameter("timestamp"),
-                base_path
-        );
-
-        if ( !boost::filesystem::exists(hsgr_path) ) {
-            throw(".hsgr not found");
+        if( server_paths.find("hsgrdata") == server_paths.end() ) {
+            throw OSRMException("no hsgr file given in ini file");
         }
-        if ( !boost::filesystem::exists(ram_index_path) ) {
-            throw(".ramIndex not found");
+        if( server_paths.find("ramindex") == server_paths.end() ) {
+            throw OSRMException("no ram index file given in ini file");
         }
-        if ( !boost::filesystem::exists(file_index_path) ) {
-            throw(".fileIndex not found");
+        if( server_paths.find("fileindex") == server_paths.end() ) {
+            throw OSRMException("no leaf index file given in ini file");
         }
-        if ( !boost::filesystem::exists(node_data_path) ) {
-            throw(".nodes not found");
+        if( server_paths.find("nodesdata") == server_paths.end() ) {
+            throw OSRMException("no nodes file given in ini file");
         }
-        if ( !boost::filesystem::exists(edge_data_path) ) {
-            throw(".edges not found");
+        if( server_paths.find("edgesdata") == server_paths.end() ) {
+            throw OSRMException("no edges file given in ini file");
         }
-        if ( !boost::filesystem::exists(name_data_path) ) {
-            throw(".names not found");
+        if( server_paths.find("namesdata") == server_paths.end() ) {
+            throw OSRMException("no names file given in ini file");
         }
 
-        // check if data files empty
-        if ( 0 == boost::filesystem::file_size( node_data_path ) ) {
-            throw OSRMException("nodes file is empty");
-        }
-        if ( 0 == boost::filesystem::file_size( edge_data_path ) ) {
-            throw OSRMException("edges file is empty");
-        }
+        ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & hsgr_path = paths_iterator->second;
+        paths_iterator = server_paths.find("timestamp");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & timestamp_path = paths_iterator->second;
+        paths_iterator = server_paths.find("ramindex");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & ram_index_path = paths_iterator->second;
+        paths_iterator = server_paths.find("fileindex");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & file_index_path = paths_iterator->second;
+        paths_iterator = server_paths.find("nodesdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & nodes_data_path = paths_iterator->second;
+        paths_iterator = server_paths.find("edgesdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & edges_data_path = paths_iterator->second;
+        paths_iterator = server_paths.find("namesdata");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & names_data_path = paths_iterator->second;
 
         //load data
         SimpleLogger().Write() << "loading graph data";
         LoadGraph(hsgr_path);
         SimpleLogger().Write() << "loading egde information";
-        LoadNodeAndEdgeInformation(node_data_path, edge_data_path);
+        LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
         SimpleLogger().Write() << "loading r-tree";
         LoadRTree(ram_index_path, file_index_path);
         SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(timestamp_path);
         SimpleLogger().Write() << "loading street names";
-        LoadStreetNames(name_data_path);
+        LoadStreetNames(names_data_path);
     }
 
     //search graph access
