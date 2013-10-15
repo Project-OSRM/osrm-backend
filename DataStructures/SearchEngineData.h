@@ -28,6 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SEARCH_ENGINE_DATA_H
 #define SEARCH_ENGINE_DATA_H
 
+#ifndef SEARCH_ENGINE_DATA_H
+#define SEARCH_ENGINE_DATA_H
+
 #include "BinaryHeap.h"
 #include "QueryEdge.h"
 #include "StaticGraph.h"

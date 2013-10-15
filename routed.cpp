@@ -78,6 +78,7 @@ int main (int argc, const char * argv[]) {
         }
         installCrashHandler(argv[0]);
 #endif
+        bool use_shared_memory = false;
         std::string ip_address;
         int ip_port, requested_num_threads;
 
@@ -88,7 +89,8 @@ int main (int argc, const char * argv[]) {
                 server_paths,
                 ip_address,
                 ip_port,
-                requested_num_threads
+                requested_num_threads,
+                use_shared_memory
              )
         ) {
             return 0;
@@ -127,7 +129,6 @@ int main (int argc, const char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        bool use_shared_memory = false;
         OSRM routing_machine(server_paths, use_shared_memory);
         Server * s = ServerFactory::CreateServer(
                         ip_address,

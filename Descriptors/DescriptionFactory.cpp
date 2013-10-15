@@ -92,7 +92,6 @@ void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
     pc.printUnencodedString(pathDescription, output);
 }
 
-
 // void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLevel) {
 
 //     if(0 == pathDescription.size())
