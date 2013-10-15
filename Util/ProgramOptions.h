@@ -96,7 +96,8 @@ inline bool GenerateServerProgramOptions(
     ServerPaths & paths,
     std::string & ip_address,
     int & ip_port,
-    int & requested_num_threads
+    int & requested_num_threads,
+    bool & use_shared_memory
 ) {
 
     // declare a group of options that will be allowed only on command line
@@ -160,6 +161,11 @@ inline bool GenerateServerProgramOptions(
             "threads,t",
             boost::program_options::value<int>(&requested_num_threads)->default_value(8),
             "Number of threads to use"
+        )
+        (
+            "sharedmemory,s",
+            boost::program_options::value<bool>(&use_shared_memory)->default_value(false),
+            "Load data from shared memory"
         );
 
     // hidden options, will be allowed both on command line and in config
