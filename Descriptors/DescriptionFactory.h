@@ -170,7 +170,7 @@ public:
         //    SimpleLogger().Write() << "#segs: " << pathDescription.size();
 
         //Post-processing to remove empty or nearly empty path segments
-        if(FLT_EPSILON > pathDescription.back().length) {
+        if(std::numeric_limits<double>::epsilon() > pathDescription.back().length) {
             //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << targetPhantom.ratio << ", length: " << pathDescription.back().length;
             if(pathDescription.size() > 2){
                 pathDescription.pop_back();
@@ -182,7 +182,7 @@ public:
         } else {
             pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
         }
-        if(FLT_EPSILON > pathDescription[0].length) {
+        if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
             //TODO: this is never called actually?
             if(pathDescription.size() > 2) {
                 pathDescription.erase(pathDescription.begin());
