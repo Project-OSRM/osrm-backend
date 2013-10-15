@@ -29,23 +29,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OSRM.h"
 #include <boost/foreach.hpp>
 
-OSRM::OSRM(const char * server_ini_path, const bool use_shared_memory) {
-
-    if( !testDataFile(server_ini_path) ){
-        std::string error_message(server_ini_path);
-        error_message += " not found";
-        throw OSRMException(error_message);
-    }
-    boost::filesystem::path base_path = boost::filesystem::absolute(server_ini_path).parent_path();
-    IniFile server_config(server_ini_path);
-
+OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory ) {
     if( !use_shared_memory ) {
         query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
-            server_config, base_path
+            server_paths
         );
     } else {
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>(
-            server_config, base_path
+            server_paths
         );
     }
 

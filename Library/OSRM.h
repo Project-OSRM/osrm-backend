@@ -60,8 +60,7 @@ private:
 
 public:
     OSRM(
-        boost::unordered_map<const std::string,
-        boost::filesystem::path>& paths,
+        const ServerPaths & paths,
         const bool use_shared_memory = false
     );
     ~OSRM();
