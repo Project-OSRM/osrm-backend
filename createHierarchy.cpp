@@ -202,7 +202,7 @@ int main (int argc, char *argv[]) {
         NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
         DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
         edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
-        std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
+        std::vector<EdgeBasedNode> nodeBasedEdgeList;
         edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
         delete edgeBasedGraphFactory;
 
@@ -228,14 +228,14 @@ int main (int argc, char *argv[]) {
          */
 
         SimpleLogger().Write() << "building r-tree ...";
-        StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * rtree =
-                new StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode>(
+        StaticRTree<EdgeBasedNode> * rtree =
+                new StaticRTree<EdgeBasedNode>(
                         nodeBasedEdgeList,
                         rtree_nodes_path.c_str(),
                         rtree_leafs_path.c_str()
                 );
         delete rtree;
-        IteratorbasedCRC32<std::vector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
+        IteratorbasedCRC32<std::vector<EdgeBasedNode> > crc32;
         unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
         nodeBasedEdgeList.clear();
         SimpleLogger().Write() << "CRC32: " << crc32OfNodeBasedEdgeList;
