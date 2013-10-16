@@ -215,8 +215,11 @@ inline bool GenerateServerProgramOptions(
 
     // parse config file
     ServerPaths::const_iterator path_iterator = paths.find("config");
-    if( path_iterator != paths.end() &&
-        boost::filesystem::is_regular_file(path_iterator->second)) {
+    if(
+        path_iterator != paths.end() &&
+        boost::filesystem::is_regular_file(path_iterator->second) &&
+        !option_variables.count("base")
+    ) {
         SimpleLogger().Write() <<
             "Reading options from: " << path_iterator->second.string();
         std::string config_str;
@@ -229,8 +232,8 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
-    if(!option_variables.count("hsgrdata")) {
-        if(!option_variables.count("base")) {
+    if( !option_variables.count("hsgrdata") ) {
+        if( !option_variables.count("base") ) {
             throw OSRMException("hsgrdata (or base) must be specified");
         }
         paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
