@@ -72,9 +72,9 @@ int main (int argc, const char * argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
-        if(!mlockall(MCL_CURRENT | MCL_FUTURE)) {
+        if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
             SimpleLogger().Write(logWARNING) <<
-                "Process " << argv[0] << "could not be locked to RAM";
+                "Process " << argv[0] << " could not be locked to RAM";
         }
         installCrashHandler(argv[0]);
 #endif
