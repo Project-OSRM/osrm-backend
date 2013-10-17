@@ -26,20 +26,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "OSRM.h"
-#include <boost/foreach.hpp>
 
-OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory ) {
+OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
+ :
+    shm(
+        boost::interprocess::open_or_create,
+        "SharedBarriers",
+        boost::interprocess::read_write
+    ),
+    use_shared_memory(use_shared_memory)
+{
     if( !use_shared_memory ) {
         SimpleLogger().Write() << "loading data into internal memory";
         query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
             server_paths
         );
     } else {
+        region = boost::interprocess::mapped_region(
+            shm,                             //What to map
+            boost::interprocess::read_write  //Map it as read-write
+        );
+        shm.truncate( sizeof(SharedBarriers) );
+        barrier = static_cast<SharedBarriers *>( region.get_address() );
+
         SimpleLogger().Write() << "loading data from shared memory";
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>(
             server_paths
         );
     }
+
 
     //The following plugins handle all requests.
     RegisterPlugin(
@@ -88,6 +103,13 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
 
     if(plugin_map.end() != iter) {
         reply.status = http::Reply::ok;
+        if( use_shared_memory && barrier->update_ongoing ) {
+            //wait until we get the mutex and free it immediately
+            //TODO: increment semaphore of querying processes
+            boost::interprocess::scoped_lock<
+                boost::interprocess::interprocess_mutex
+            > lock(barrier->update_mutex);
+        }
         iter->second->HandleRequest(route_parameters, reply );
     } else {
         reply = http::Reply::stockReply(http::Reply::badRequest);

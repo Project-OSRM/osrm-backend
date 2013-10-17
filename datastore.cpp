@@ -33,6 +33,7 @@ or see http://www.gnu.org/licenses/agpl.txt.
 
 #include <boost/integer.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 
 #include <string>
 #include <vector>

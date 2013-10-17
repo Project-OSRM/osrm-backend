@@ -45,9 +45,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
 #include "../Server/BasicDatastructures.h"
+#include "../Server/DataStructures/SharedBarriers.h"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
@@ -57,7 +62,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class OSRM : boost::noncopyable {
 private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
+    boost::interprocess::shared_memory_object shm;
+    boost::interprocess::mapped_region region;
+    SharedBarriers * barrier;
 
+    bool use_shared_memory;
 public:
     OSRM(
         const ServerPaths & paths,
