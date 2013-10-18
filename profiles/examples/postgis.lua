@@ -31,13 +31,13 @@ sql_con = assert( sql_env:connect("imposm") ) -- you can add db user/password he
 print("PostGIS connection opened")
 
 -- these settings are read directly by osrm
-take_minimum_of_speeds 	= true
-obey_oneway 			      = true
-obey_bollards 			    = true
-use_restrictions 		    = true
-ignore_areas 			      = true	-- future feature
-traffic_signal_penalty 	= 7		  -- seconds
-u_turn_penalty 			    = 20
+take_minimum_of_speeds   = true
+obey_oneway             = true
+obey_bollards           = true
+use_restrictions         = true
+ignore_areas             = true  -- future feature
+traffic_signal_penalty   = 7      -- seconds
+u_turn_penalty           = 20
 
 -- nodes processing, called from OSRM
 function node_function(node)
@@ -47,22 +47,22 @@ end
 -- ways processing, called from OSRM
 function way_function (way)
   -- only route on ways with highway=*
-	local highway = way.tags:Find("highway")
-	if (not highway or highway=='') then
-	  return 0
+  local highway = way.tags:Find("highway")
+  if (not highway or highway=='') then
+    return 0
   end
 
-	-- Query PostGIS for industrial areas close to the way, then groups by way and sums the areas.
+  -- Query PostGIS for industrial areas close to the way, then group by way and sum the areas.
   -- We take the square root of the area to get a estimate of the length of the side of the area, 
   -- and thus a rough guess of how far we might be travelling along the area. 
-	
-	local sql_query = " " ..
+
+  local sql_query = " " ..
     "SELECT SUM(SQRT(area.area)) AS val " ..
     "FROM osm_ways way " ..
     "LEFT JOIN osm_landusages area ON ST_DWithin(way.geometry, area.geometry, 100) " ..
     "WHERE area.type IN ('industrial') AND way.osm_id=" .. way.id .. " " ..
     "GROUP BY way.id"
-  
+
   local cursor = assert( sql_con:execute(sql_query) )   -- execute querty
   local row = cursor:fetch( {}, "a" )                   -- fetch first (and only) row
   way.speed = 20.0                                      -- default speed
@@ -73,10 +73,10 @@ function way_function (way)
     end
   end
   cursor:close()                                        -- done with this query
-  
+
   -- set other required info for this way
- 	way.name = way.tags:Find("name")
-	way.direction = Way.bidirectional 
-	way.type = 1
-	return 1
+  way.name = way.tags:Find("name")
+  way.direction = Way.bidirectional 
+  way.type = 1
+  return 1
 end
