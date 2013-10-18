@@ -12,7 +12,8 @@ struct SharedBarriers {
    // Condition that no update is running
    boost::interprocess::interprocess_condition  update_finished_condition;
 
-   // Is there any message?
+   // Is there an ongoing update?
    bool update_ongoing;
+   // Is there any query?
    int number_of_queries;
 };
