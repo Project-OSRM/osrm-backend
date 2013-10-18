@@ -66,7 +66,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
             .def(luabind::constructor<>())
             .def_readwrite("lat", &ImportNode::lat)
             .def_readwrite("lon", &ImportNode::lon)
-            .def_readwrite("id", &ImportNode::id)
+            .def_readonly("id", &ImportNode::id)
             .def_readwrite("bollard", &ImportNode::bollard)
             .def_readwrite("traffic_light", &ImportNode::trafficLight)
             .def_readwrite("tags", &ImportNode::keyVals)
@@ -75,6 +75,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
         luabind::module(myLuaState) [
             luabind::class_<ExtractionWay>("Way")
             .def(luabind::constructor<>())
+            .def_readonly("id", &ExtractionWay::id)
             .def_readwrite("name", &ExtractionWay::name)
             .def_readwrite("speed", &ExtractionWay::speed)
             .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
