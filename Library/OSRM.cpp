@@ -103,7 +103,17 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
 
     if(plugin_map.end() != iter) {
         reply.status = http::Reply::ok;
-        if( use_shared_memory && barrier->update_ongoing ) {
+        if( use_shared_memory ) {
+            //TODO lock update pending
+
+            //TODO lock query
+
+            //TODO unlock update pending
+
+            //TODO ++query_count
+
+            //TODO unlock query
+
             //wait until we get the mutex and free it immediately
             //TODO: increment semaphore of querying processes
             boost::interprocess::scoped_lock<
@@ -111,6 +121,16 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
             > lock(barrier->update_mutex);
         }
         iter->second->HandleRequest(route_parameters, reply );
+        if( use_shared_memory ) {
+            //TODO unlock update pending
+            //TODO --query_count
+            //if (0 == query_count) {
+                //TODO notify.all query_count 0
+            //}
+            //TODO unlock query
+
+
+        }
     } else {
         reply = http::Reply::stockReply(http::Reply::badRequest);
     }
