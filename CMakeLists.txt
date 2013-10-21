@@ -169,11 +169,11 @@ if(WITH_TOOLS)
 		add_executable(osrm-components Tools/componentAnalysis.cpp)
 		include_directories(${GDAL_INCLUDE_DIR})
 		target_link_libraries(
-			osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID
+			osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID  GITDESCRIPTION
 		)
 	endif(GDAL_FOUND)
 	add_executable ( osrm-cli Tools/simpleclient.cpp)
-	target_link_libraries( osrm-cli ${Boost_LIBRARIES} OSRM UUID )
+	target_link_libraries( osrm-cli ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION )
     add_executable ( osrm-io-benchmark Tools/io-benchmark.cpp )
-    target_link_libraries( osrm-io-benchmark ${Boost_LIBRARIES} )
+    target_link_libraries( osrm-io-benchmark ${Boost_LIBRARIES} GITDESCRIPTION)
 endif(WITH_TOOLS)
