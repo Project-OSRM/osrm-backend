@@ -35,11 +35,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 inline double y2lat(double a) {
-	return 180/M_PI * (2 * atan(exp(a*M_PI/180)) - M_PI/2);
+	return 180./M_PI * (2. * atan(exp(a*M_PI/180.)) - M_PI/2.);
 }
 
 inline double lat2y(double a) {
-	return 180/M_PI * log(tan(M_PI/4+a*(M_PI/180)/2));
+	return 180./M_PI * log(tan(M_PI/4.+a*(M_PI/180.)/2.));
 }
 
 #endif /* MERCATORUTIL_H_ */
