@@ -76,22 +76,14 @@ inline void PrepareConfigFile(
     const boost::filesystem::path& path,
     std::string& output
 ) {
-    BOOST_ASSERT_MSG( output.empty(), "output string not empty");
     std::ifstream config_stream( path.string().c_str() );
-    std::string input_string(
+    std::string input_str(
         (std::istreambuf_iterator<char>(config_stream)),
         std::istreambuf_iterator<char>()
     );
     boost::regex regex( "^([^=]*)" );    //match from start of line to '='
     std::string format( "\\L$1\\E" );    //replace with downcased substring
-
-    boost::regex_replace(
-        output.begin(),
-        input_string.begin(),
-        input_string.end(),
-        regex,
-        format
-    );
+    output = boost::regex_replace( input_str, regex, format );
 }
 
 
