@@ -52,7 +52,7 @@ namespace boost {
         // Validator for boost::filesystem::path, that verifies that the file
         // exists. The validate() function must be defined in the same namespace
         // as the target type, (boost::filesystem::path in this case), otherwise
-        // it is not be called
+        // it is not called
         inline void validate(
             boost::any & v,
             const std::vector<std::string> & values,
@@ -71,21 +71,27 @@ namespace boost {
     }
 }
 
-// support old capitalized option names by downcasing them with a regex replace
-// read from file and store in a stringstream that can be passed to
-// boost::program_options
+// support old capitalized option names by down-casing them with a regex replace
 inline void PrepareConfigFile(
     const boost::filesystem::path& path,
     std::string& output
 ) {
-    std::ifstream config_stream(path.string().c_str());
-    std::string input_str(
+    BOOST_ASSERT_MSG( output.empty(), "output string not empty");
+    std::ifstream config_stream( path.string().c_str() );
+    std::string input_string(
         (std::istreambuf_iterator<char>(config_stream)),
         std::istreambuf_iterator<char>()
     );
     boost::regex regex( "^([^=]*)" );    //match from start of line to '='
     std::string format( "\\L$1\\E" );    //replace with downcased substring
-    output = boost::regex_replace( input_str, regex, format );
+
+    boost::regex_replace(
+        output.begin(),
+        input_string.begin(),
+        input_string.end(),
+        regex,
+        format
+    );
 }
 
 
