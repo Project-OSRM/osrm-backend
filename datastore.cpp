@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/integer.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 
 #include <string>
 #include <vector>
