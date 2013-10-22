@@ -347,6 +347,9 @@ int main( const int argc, const char * argv[] ) {
         );
         hsgr_input_stream.close();
 
+        //TODO swap load region and shared region1
+
+
         SimpleLogger().Write() << "all data loaded. pressing a key deallocates memory";
         std::cin.get();
 
