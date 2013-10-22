@@ -104,32 +104,40 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
     if(plugin_map.end() != iter) {
         reply.status = http::Reply::ok;
         if( use_shared_memory ) {
-            //TODO lock update pending
-
-            //TODO lock query
-
-            //TODO unlock update pending
-
-            //TODO ++query_count
-
-            //TODO unlock query
-
-            //wait until we get the mutex and free it immediately
-            //TODO: increment semaphore of querying processes
+            // lock update pending
             boost::interprocess::scoped_lock<
-                boost::interprocess::interprocess_mutex
-            > lock(barrier->update_mutex);
+                boost::interprocess::named_mutex
+            > pending_lock(barrier->pending_update_mutex);
+
+            // lock query
+            boost::interprocess::scoped_lock<
+                boost::interprocess::named_mutex
+            > query_lock(barrier->query_mutex);
+
+            // unlock update pending
+            pending_lock.unlock();
+
+            // increment query count
+            ++(barrier->number_of_queries);
         }
         iter->second->HandleRequest(route_parameters, reply );
         if( use_shared_memory ) {
-            //TODO unlock update pending
-            //TODO --query_count
-            //if (0 == query_count) {
-                //TODO notify.all query_count 0
-            //}
-            //TODO unlock query
+            // lock query
+            boost::interprocess::scoped_lock<
+                boost::interprocess::named_mutex
+            > query_lock(barrier->query_mutex);
 
+            // decrement query count
+            --(barrier->number_of_queries);
+            BOOST_ASSERT_MSG(
+                0 <= barrier->number_of_queries,
+                "invalid number of queries"
+            );
 
+            if (0 == barrier->number_of_queries) {
+                // notify all processes that were waiting for this condition
+                barrier->no_running_queries_condition.notify_all();
+            }
         }
     } else {
         reply = http::Reply::stockReply(http::Reply::badRequest);
