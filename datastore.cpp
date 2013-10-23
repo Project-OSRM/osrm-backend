@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DataStructures/StaticRTree.h"
 #include "Server/DataStructures/BaseDataFacade.h"
 #include "Server/DataStructures/SharedDataType.h"
+#include "Server/DataStructures/SharedBarriers.h"
 #include "Util/BoostFileSystemFix.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
@@ -46,6 +47,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int main( const int argc, const char * argv[] ) {
     try {
+        SharedBarriers barrier;
+
+        boost::interprocess::scoped_lock<
+            boost::interprocess::named_mutex
+        > pending_lock(barrier.pending_update_mutex);
+
+
         LogPolicy::GetInstance().Unmute();
         SimpleLogger().Write() << "Checking input parameters";
 
@@ -110,7 +118,7 @@ int main( const int argc, const char * argv[] ) {
 
         // Allocate a memory layout in shared memory //
           SharedMemory * layout_memory = SharedMemoryFactory::Get(
-            LAYOUT_1,
+            LAYOUT_LOAD,
             sizeof(SharedDataLayout)
         );
         SharedDataLayout * shared_layout_ptr = static_cast<SharedDataLayout *>(
@@ -241,7 +249,7 @@ int main( const int argc, const char * argv[] ) {
         // allocate shared memory block
         SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout() << " bytes";
         SharedMemory * shared_memory = SharedMemoryFactory::Get(
-            DATA_1,
+            DATA_LOAD,
             shared_layout_ptr->GetSizeOfLayout()
         );
         char * shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
@@ -347,10 +355,17 @@ int main( const int argc, const char * argv[] ) {
         );
         hsgr_input_stream.close();
 
-        //TODO swap load region and shared region1
+        //TODO swap *_LOAD and *_1 segments
+        //TODO SharedMemoryFactory::Swap(LAYOUT_LOAD, LAYOUT_1);
+        //TODO SharedMemoryFactory::Swap(DATA_LOAD, DATA_1);
+        //TODO send message to load new fileIndex
+
+        SharedMemoryFactory::Remoce(LAYOUT_LOAD);
+        SharedMemoryFactory::Remove(DATA_LOAD);
 
 
         SimpleLogger().Write() << "all data loaded. pressing a key deallocates memory";
+
         std::cin.get();
 
     } catch(const std::exception & e) {
