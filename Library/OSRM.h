@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Plugins/ViaRoutePlugin.h"
 #include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Server/DataStructures/InternalDataFacade.h"
+#include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
 #include "../Server/DataStructures/RouteParameters.h"
 #include "../Util/InputFileUtil.h"
@@ -45,7 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
 #include "../Server/BasicDatastructures.h"
-#include "../Server/DataStructures/SharedBarriers.h"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -62,11 +62,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class OSRM : boost::noncopyable {
 private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
-    boost::interprocess::shared_memory_object shm;
-    boost::interprocess::mapped_region region;
-    SharedBarriers * barrier;
-
-    bool use_shared_memory;
 public:
     OSRM(
         const ServerPaths & paths,
@@ -77,10 +72,11 @@ public:
 
 private:
     void RegisterPlugin(BasePlugin * plugin);
+    PluginMap plugin_map;
+    bool use_shared_memory;
+    SharedBarriers barrier;
     //base class pointer to the objects
     BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
-
-    PluginMap plugin_map;
 };
 
 #endif //OSRM_H

@@ -189,6 +189,8 @@ public:
             throw OSRMException("no leaf index file given in ini file");
         }
 
+        SimpleLogger().Write() << "1";
+
         //generate paths of data files
         ServerPaths::const_iterator paths_iterator = server_paths.find("fileindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);

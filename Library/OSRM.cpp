@@ -29,11 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
  :
-    shm(
-        boost::interprocess::open_or_create,
-        "SharedBarriers",
-        boost::interprocess::read_write
-    ),
     use_shared_memory(use_shared_memory)
 {
     if( !use_shared_memory ) {
@@ -42,13 +37,6 @@ OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
             server_paths
         );
     } else {
-        region = boost::interprocess::mapped_region(
-            shm,                             //What to map
-            boost::interprocess::read_write  //Map it as read-write
-        );
-        shm.truncate( sizeof(SharedBarriers) );
-        barrier = static_cast<SharedBarriers *>( region.get_address() );
-
         SimpleLogger().Write() << "loading data from shared memory";
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>(
             server_paths
@@ -97,6 +85,7 @@ void OSRM::RegisterPlugin(BasePlugin * plugin) {
 }
 
 void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
+    SimpleLogger().Write() << "running query";
     const PluginMap::const_iterator & iter = plugin_map.find(
         route_parameters.service
     );
@@ -104,39 +93,50 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
     if(plugin_map.end() != iter) {
         reply.status = http::Reply::ok;
         if( use_shared_memory ) {
+            SimpleLogger().Write() << "shared memory handling";
             // lock update pending
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
-            > pending_lock(barrier->pending_update_mutex);
+            > pending_lock(barrier.pending_update_mutex);
+
+            SimpleLogger().Write() << "got pending lock";
 
             // lock query
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
-            > query_lock(barrier->query_mutex);
+            > query_lock(barrier.query_mutex);
+
+            SimpleLogger().Write() << "got query lock";
 
             // unlock update pending
             pending_lock.unlock();
+            SimpleLogger().Write() << "released pending lock";
 
             // increment query count
-            ++(barrier->number_of_queries);
+            ++(barrier.number_of_queries);
         }
+
         iter->second->HandleRequest(route_parameters, reply );
+        SimpleLogger().Write() << "finished request";
         if( use_shared_memory ) {
             // lock query
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
-            > query_lock(barrier->query_mutex);
+            > query_lock(barrier.query_mutex);
+
+            SimpleLogger().Write() << "got query lock";
 
             // decrement query count
-            --(barrier->number_of_queries);
+            --(barrier.number_of_queries);
             BOOST_ASSERT_MSG(
-                0 <= barrier->number_of_queries,
+                0 <= barrier.number_of_queries,
                 "invalid number of queries"
             );
 
-            if (0 == barrier->number_of_queries) {
+            if (0 == barrier.number_of_queries) {
                 // notify all processes that were waiting for this condition
-                barrier->no_running_queries_condition.notify_all();
+                barrier.no_running_queries_condition.notify_all();
+                SimpleLogger().Write() << "sent notification";
             }
         }
     } else {
