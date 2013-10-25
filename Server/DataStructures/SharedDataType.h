@@ -59,6 +59,8 @@ struct SharedDataLayout {
     unsigned checksum;
     unsigned timestamp_length;
 
+    char ram_index_file_name[1024];
+
     SharedDataLayout() :
         name_index_list_size(0),
         name_char_list_size(0),
@@ -71,7 +73,9 @@ struct SharedDataLayout {
         r_search_tree_size(0),
         checksum(0),
         timestamp_length(0)
-    { }
+    {
+        ram_index_file_name[0] = '\0';
+    }
 
     void PrintInformation() const {
         SimpleLogger().Write(logDEBUG) << "-";
@@ -86,6 +90,7 @@ struct SharedDataLayout {
         SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << turn_instruction_list_size;
         SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
         SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
+        SimpleLogger().Write(logDEBUG) << "ram index file name:        " << ram_index_file_name;
     }
 
     uint64_t GetSizeOfLayout() const {
@@ -100,7 +105,8 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
             (turn_instruction_list_size * sizeof(TurnInstructions)    ) +
             (r_search_tree_size         * sizeof(RTreeNode)           ) +
-            sizeof(checksum);
+            sizeof(checksum)                                            +
+            1024*sizeof(char);
         return result;
     }
 
@@ -205,15 +211,13 @@ struct SharedDataLayout {
 };
 
 enum SharedDataType {
-    CURRENT_DATA,
+    CURRENT_REGIONS,
     LAYOUT_1,
     DATA_1,
     LAYOUT_2,
     DATA_2,
-    LAYOUT_3,
-    DATA_3,
-    LAYOUT_LOAD,
-    DATA_LOAD
+    LAYOUT_NONE,
+    DATA_NONE,
 };
 
 #endif /* SHARED_DATA_TYPE_H_ */
