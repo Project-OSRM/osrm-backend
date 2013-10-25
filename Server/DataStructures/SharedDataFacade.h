@@ -215,7 +215,7 @@ public:
             CURRENT_DATA   = data_type_ptr[1];
 
             data_layout = (SharedDataLayout *)(
-                SharedMemoryFactory::Get(LAYOUT_1)->Ptr()
+                SharedMemoryFactory::Get(CURRENT_LAYOUT)->Ptr()
             );
             boost::filesystem::path ram_index_path(data_layout->ram_index_file_name);
             if( !boost::filesystem::exists(ram_index_path) ) {
@@ -224,22 +224,16 @@ public:
             SimpleLogger().Write() << "0";
 
             shared_memory = (char *)(
-                SharedMemoryFactory::Get(DATA_1)->Ptr()
+                SharedMemoryFactory::Get(CURRENT_DATA)->Ptr()
             );
 
             SimpleLogger().Write(logDEBUG) << "(re-)loading data from shared memory";
             LoadGraph();
-            SimpleLogger().Write() << "1";
             LoadNodeAndEdgeInformation();
-            SimpleLogger().Write() << "2";
             LoadRTree(ram_index_path);
-            SimpleLogger().Write() << "3";
             LoadTimestamp();
-            SimpleLogger().Write() << "4";
             LoadViaNodeList();
-            SimpleLogger().Write() << "5";
             LoadNames();
-            SimpleLogger().Write() << "6";
         } else {
             SimpleLogger().Write(logDEBUG) << "using previously loaded data";
         }
