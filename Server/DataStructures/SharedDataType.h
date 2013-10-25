@@ -109,26 +109,26 @@ struct SharedDataLayout {
     }
     uint64_t GetNameListOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            );
+            (name_index_list_size       * sizeof(unsigned)            );
         return result;
     }
     uint64_t GetNameIDListOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                );
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                );
         return result;
     }
     uint64_t GetViaNodeListOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            );
         return result;
     }
     uint64_t GetGraphNodeListOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              );
         return result;
@@ -144,8 +144,8 @@ struct SharedDataLayout {
     }
     uint64_t GetTimeStampOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
@@ -154,8 +154,8 @@ struct SharedDataLayout {
     }
     uint64_t GetCoordinateListOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
@@ -165,8 +165,8 @@ struct SharedDataLayout {
     }
     uint64_t GetTurnInstructionListOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
@@ -177,8 +177,8 @@ struct SharedDataLayout {
     }
     uint64_t GetRSearchTreeOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
@@ -190,8 +190,8 @@ struct SharedDataLayout {
     }
     uint64_t GetChecksumOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
