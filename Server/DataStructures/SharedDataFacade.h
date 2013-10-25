@@ -25,11 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-
-#ifndef SHARED_DATA_FACADE
-#define SHARED_DATA_FACADE
+#ifndef SHARED_DATA_FACADE_H
+#define SHARED_DATA_FACADE_H
 
 //implements all data storage when shared memory is _NOT_ used
+
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "BaseDataFacade.h"
 #include "SharedDataType.h"
@@ -57,6 +59,11 @@ private:
 
     SharedDataLayout * data_layout;
     char             * shared_memory;
+    SharedDataType   * data_type;
+    SharedDataType * data_type_ptr;
+
+    SharedDataType     CURRENT_LAYOUT;
+    SharedDataType     CURRENT_DATA;
 
     unsigned                                m_check_sum;
     unsigned                                m_number_of_nodes;
@@ -69,9 +76,9 @@ private:
     ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
     ShM<char, true>::vector                 m_names_char_list;
     ShM<unsigned, true>::vector             m_name_begin_indices;
-    StaticRTree<RTreeLeaf, true>          * m_static_rtree;
+    boost::shared_ptr<StaticRTree<RTreeLeaf, true> > m_static_rtree;
 
-    SharedDataFacade() { }
+    // SharedDataFacade() { }
 
     void LoadTimestamp() {
         char * timestamp_ptr = shared_memory + data_layout->GetTimeStampOffset();
@@ -86,10 +93,11 @@ private:
     void LoadRTree(
         const boost::filesystem::path & file_index_path
     ) {
+        SimpleLogger().Write() << "loading fileindex from " << file_index_path;
         RTreeNode * tree_ptr = (RTreeNode *)(
             shared_memory + data_layout->GetRSearchTreeOffset()
         );
-        m_static_rtree = new StaticRTree<RTreeLeaf, true>(
+        m_static_rtree = boost::make_shared<StaticRTree<RTreeLeaf, true> >(
             tree_ptr,
             data_layout->r_search_tree_size,
             file_index_path
@@ -183,38 +191,61 @@ private:
     }
 
 public:
-    SharedDataFacade( const ServerPaths & server_paths ) {
-        //check contents of config file
-        if( server_paths.find("fileindex") == server_paths.end() ) {
-            throw OSRMException("no leaf index file given in ini file");
-        }
+    SharedDataFacade( ) {
+        data_type_ptr = (SharedDataType *)SharedMemoryFactory::Get(
+            CURRENT_REGIONS,
+            2*sizeof(SharedDataType),
+            false,
+            false
+        )->Ptr();
 
-        SimpleLogger().Write() << "1";
-
-        //generate paths of data files
-        ServerPaths::const_iterator paths_iterator = server_paths.find("fileindex");
-        BOOST_ASSERT(server_paths.end() != paths_iterator);
-        boost::filesystem::path ram_index_path = paths_iterator->second;
-
-        data_layout = (SharedDataLayout *)(
-            SharedMemoryFactory::Get(LAYOUT_1)->Ptr()
-        );
-
-        shared_memory = (char *)(
-            SharedMemoryFactory::Get(DATA_1)->Ptr()
-        );
-
-        data_layout->PrintInformation();
+        CURRENT_LAYOUT = LAYOUT_NONE;
+        CURRENT_DATA = DATA_NONE;
 
         //load data
-        SimpleLogger().Write() << "loading graph data";
-        LoadGraph();
-        LoadNodeAndEdgeInformation();
-        LoadRTree(ram_index_path);
-        LoadTimestamp();
-        LoadViaNodeList();
-        LoadNames();
+        CheckAndReloadFacade();
     }
+
+    void CheckAndReloadFacade() {
+        if(
+            CURRENT_LAYOUT != data_type_ptr[0] ||
+            CURRENT_DATA   != data_type_ptr[1]
+        ) {
+            CURRENT_LAYOUT = data_type_ptr[0];
+            CURRENT_DATA   = data_type_ptr[1];
+
+            data_layout = (SharedDataLayout *)(
+                SharedMemoryFactory::Get(LAYOUT_1)->Ptr()
+            );
+            boost::filesystem::path ram_index_path(data_layout->ram_index_file_name);
+            if( !boost::filesystem::exists(ram_index_path) ) {
+                throw OSRMException("no leaf index file given in ini file");
+            }
+            SimpleLogger().Write() << "0";
+
+            shared_memory = (char *)(
+                SharedMemoryFactory::Get(DATA_1)->Ptr()
+            );
+
+            SimpleLogger().Write(logDEBUG) << "(re-)loading data from shared memory";
+            LoadGraph();
+            SimpleLogger().Write() << "1";
+            LoadNodeAndEdgeInformation();
+            SimpleLogger().Write() << "2";
+            LoadRTree(ram_index_path);
+            SimpleLogger().Write() << "3";
+            LoadTimestamp();
+            SimpleLogger().Write() << "4";
+            LoadViaNodeList();
+            SimpleLogger().Write() << "5";
+            LoadNames();
+            SimpleLogger().Write() << "6";
+        } else {
+            SimpleLogger().Write(logDEBUG) << "using previously loaded data";
+        }
+        data_layout->PrintInformation();
+    }
+
 
     //search graph access
     unsigned GetNumberOfNodes() const {
@@ -347,4 +378,4 @@ public:
     }
 };
 
-#endif  // SHARED_DATA_FACADE
+#endif  // SHARED_DATA_FACADE_H
