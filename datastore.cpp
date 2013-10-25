@@ -62,7 +62,8 @@ int main( const int argc, const char * argv[] ) {
         int ip_port, requested_num_threads;
 
         ServerPaths server_paths;
-        if( !GenerateServerProgramOptions(
+        if(
+            !GenerateServerProgramOptions(
                 argc,
                 argv,
                 server_paths,
@@ -70,7 +71,7 @@ int main( const int argc, const char * argv[] ) {
                 ip_port,
                 requested_num_threads,
                 use_shared_memory
-             )
+            )
         ) {
             return 0;
         }
@@ -102,9 +103,9 @@ int main( const int argc, const char * argv[] ) {
         paths_iterator = server_paths.find("ramindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path & ram_index_path = paths_iterator->second;
-        // paths_iterator = server_paths.find("fileindex");
-        // BOOST_ASSERT(server_paths.end() != paths_iterator);
-        // const boost::filesystem::path & file_index_path = paths_iterator->second;
+        paths_iterator = server_paths.find("fileindex");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const std::string & file_index_file_name = paths_iterator->second.string();
         paths_iterator = server_paths.find("nodesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path & nodes_data_path = paths_iterator->second;
@@ -116,9 +117,14 @@ int main( const int argc, const char * argv[] ) {
         const boost::filesystem::path & names_data_path = paths_iterator->second;
 
 
-        // Allocate a memory layout in shared memory //
-          SharedMemory * layout_memory = SharedMemoryFactory::Get(
-            LAYOUT_LOAD,
+        // get the shared memory segment to use
+        bool use_first_segment = SharedMemory::RegionExists( LAYOUT_2 );
+        SharedDataType LAYOUT = ( use_first_segment ? LAYOUT_1 : LAYOUT_2 );
+        SharedDataType DATA   = ( use_first_segment ? DATA_1 : DATA_2 );
+
+        // Allocate a memory layout in shared memory, deallocate previous
+        SharedMemory * layout_memory = SharedMemoryFactory::Get(
+            LAYOUT,
             sizeof(SharedDataLayout)
         );
         SharedDataLayout * shared_layout_ptr = static_cast<SharedDataLayout *>(
@@ -126,9 +132,16 @@ int main( const int argc, const char * argv[] ) {
         );
         shared_layout_ptr = new(layout_memory->Ptr()) SharedDataLayout();
 
-        //                                                             //
-        // collect number of elements to store in shared memory object //
-        //                                                             //
+        std::copy(
+            file_index_file_name.begin(),
+            (file_index_file_name.length() <= 1024 ? file_index_file_name.end() : file_index_file_name.begin()+1023),
+            shared_layout_ptr->ram_index_file_name
+        );
+        // add zero termination
+        unsigned end_of_string_index = std::min(1023ul, file_index_file_name.length());
+        shared_layout_ptr->ram_index_file_name[end_of_string_index] = '\0';
+
+        // collect number of elements to store in shared memory object
         SimpleLogger().Write() << "Collecting files sizes";
         // number of entries in name index
         boost::filesystem::ifstream name_stream(
@@ -158,7 +171,6 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->via_node_list_size = number_of_original_edges;
         shared_layout_ptr->name_id_list_size = number_of_original_edges;
         shared_layout_ptr->turn_instruction_list_size = number_of_original_edges;
-
 
         SimpleLogger().Write(logDEBUG) << "noted number of edges";
 
@@ -249,7 +261,7 @@ int main( const int argc, const char * argv[] ) {
         // allocate shared memory block
         SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout() << " bytes";
         SharedMemory * shared_memory = SharedMemoryFactory::Get(
-            DATA_LOAD,
+            DATA,
             shared_layout_ptr->GetSizeOfLayout()
         );
         char * shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
@@ -355,18 +367,36 @@ int main( const int argc, const char * argv[] ) {
         );
         hsgr_input_stream.close();
 
-        //TODO swap *_LOAD and *_1 segments
-        //TODO SharedMemoryFactory::Swap(LAYOUT_LOAD, LAYOUT_1);
-        //TODO SharedMemoryFactory::Swap(DATA_LOAD, DATA_1);
-        //TODO send message to load new fileIndex
+        //TODO acquire lock
+        SharedMemory * data_type_memory = SharedMemoryFactory::Get(
+            CURRENT_REGIONS,
+            2*sizeof(SharedDataType),
+            true,
+            false
+        );
+        SharedDataType * data_type_ptr = static_cast<SharedDataType *>(
+            data_type_memory->Ptr()
+        );
 
-        SharedMemoryFactory::Remoce(LAYOUT_LOAD);
-        SharedMemoryFactory::Remove(DATA_LOAD);
-
+        if(use_first_segment) {
+            SimpleLogger().Write() << "data loaded into first segment";
+            data_type_ptr[0] = LAYOUT_1;
+            data_type_ptr[1] = DATA_1;
+            SimpleLogger().Write() << "remove second segment";
+            SharedMemory::Remove(DATA_2);
+            SharedMemory::Remove(LAYOUT_2);
+        } else {
+            SimpleLogger().Write() << "data loaded into second segment";
+            data_type_ptr[0] = LAYOUT_2;
+            data_type_ptr[1] = DATA_2;
+            SimpleLogger().Write() << "remove first segment";
+            SharedMemory::Remove(DATA_1);
+            SharedMemory::Remove(LAYOUT_1);
+        }
 
         SimpleLogger().Write() << "all data loaded. pressing a key deallocates memory";
-
-        std::cin.get();
+        SimpleLogger().Write() << "sizeof(SharedDataLayout)=" << sizeof(SharedDataLayout);
+        SimpleLogger().Write() << "file index: " << shared_layout_ptr->ram_index_file_name;
 
     } catch(const std::exception & e) {
         SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
