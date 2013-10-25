@@ -38,9 +38,7 @@ OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
         );
     } else {
         SimpleLogger().Write() << "loading data from shared memory";
-        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>(
-            server_paths
-        );
+        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>( );
     }
 
 
@@ -114,6 +112,8 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
 
             // increment query count
             ++(barrier.number_of_queries);
+
+            (static_cast<SharedDataFacade<QueryEdge::EdgeData>* >(query_data_facade))->CheckAndReloadFacade();
         }
 
         iter->second->HandleRequest(route_parameters, reply );
