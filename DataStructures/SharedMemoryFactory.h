@@ -123,30 +123,6 @@ public:
     	}
 	}
 
-	// void Swap(SharedMemory & other) {
-	// 	SimpleLogger().Write() << "&prev: " << shm.get_shmid();
-	// 	shm.swap(other.shm);
-	// 	region.swap(other.region);
-	// 	boost::interprocess::xsi_key temp_key = other.key;
-	// 	other.key = key;
-	// 	key = temp_key;
-	// 	SimpleLogger().Write() << "&after: " << shm.get_shmid();
-	// }
-
-	void Swap(SharedMemory * other) {
-		SimpleLogger().Write() << "this key: " << key.get_key() << ", other: " << other->key.get_key();
-		SimpleLogger().Write() << "this id: " << shm.get_shmid() << ", other: " << other->shm.get_shmid();
-		shm.swap(other->shm);
-		region.swap(other->region);
-		boost::interprocess::xsi_key temp_key = other->key;
-		other->key = key;
-		key = temp_key;
-		SimpleLogger().Write() << "swap done";
-		SimpleLogger().Write() << "this key: " << key.get_key() << ", other: " << other->key.get_key();
-		SimpleLogger().Write() << "this id: " << shm.get_shmid() << ", other: " << other->shm.get_shmid();
-
-	}
-
 	template<typename IdentifierT >
 	static bool RegionExists(
 		const IdentifierT id
@@ -213,14 +189,6 @@ class SharedMemoryFactory_tmpl : boost::noncopyable {
 public:
 
 	template<typename IdentifierT >
-	static void Swap(const IdentifierT & id1, const IdentifierT & id2) {
-		SharedMemory * memory_1 = Get(id1);
-		SharedMemory * memory_2 = Get(id2);
-
-		memory_1->Swap(memory_2);
-	}
-
-	template<typename IdentifierT >
 	static SharedMemory * Get(
 		const IdentifierT & id,
 		const unsigned size = 0,
@@ -237,7 +205,13 @@ public:
 	      			ofs.close();
 	      		}
 	      	}
-			return new SharedMemory(lock_file(), id, size, read_write, remove_prev);
+			return new SharedMemory(
+				lock_file(),
+				id,
+				size,
+				read_write,
+				remove_prev
+			);
 	   	} catch(const boost::interprocess::interprocess_exception &e){
     		SimpleLogger().Write(logWARNING) <<
     			"caught exception: " << e.what() <<
