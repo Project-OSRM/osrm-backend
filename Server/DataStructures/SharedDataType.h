@@ -205,6 +205,7 @@ struct SharedDataLayout {
 };
 
 enum SharedDataType {
+    CURRENT_DATA,
     LAYOUT_1,
     DATA_1,
     LAYOUT_2,
