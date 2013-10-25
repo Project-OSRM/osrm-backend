@@ -82,7 +82,9 @@ public:
 	SharedMemory(
 		const boost::filesystem::path & lock_file,
 		const IdentifierT id,
-		const unsigned size = 0
+		const unsigned size = 0,
+		bool read_write = false,
+		bool remove_prev = true
 	) : key(
 			lock_file.string().c_str(),
 			id
@@ -94,13 +96,19 @@ public:
 			);
     		region = boost::interprocess::mapped_region (
     			shm,
-    			boost::interprocess::read_only
+    			(
+    				read_write ?
+    					boost::interprocess::read_write :
+    					boost::interprocess::read_only
+    			)
 			);
     	} else { //writeable pointer
     		//remove previously allocated mem
-    		RemoveSharedMemory(key);
+    		if( remove_prev ) {
+	    		Remove(key);
+	    	}
     		shm = boost::interprocess::xsi_shared_memory (
-    			boost::interprocess::create_only,
+    			boost::interprocess::open_or_create,
     			key,
     			size
     		);
@@ -115,24 +123,28 @@ public:
     	}
 	}
 
-	void Swap(SharedMemory & other) {
-		SimpleLogger().Write() << "prev: " << shm.get_shmid();
-		shm.swap(other.shm);
-		region.swap(other.region);
-		boost::interprocess::xsi_key temp_key = other.key;
-		other.key = key;
-		key = temp_key;
-		SimpleLogger().Write() << "after: " << shm.get_shmid();
-	}
+	// void Swap(SharedMemory & other) {
+	// 	SimpleLogger().Write() << "&prev: " << shm.get_shmid();
+	// 	shm.swap(other.shm);
+	// 	region.swap(other.region);
+	// 	boost::interprocess::xsi_key temp_key = other.key;
+	// 	other.key = key;
+	// 	key = temp_key;
+	// 	SimpleLogger().Write() << "&after: " << shm.get_shmid();
+	// }
 
 	void Swap(SharedMemory * other) {
-		SimpleLogger().Write() << "prev: " << shm.get_shmid();
+		SimpleLogger().Write() << "this key: " << key.get_key() << ", other: " << other->key.get_key();
+		SimpleLogger().Write() << "this id: " << shm.get_shmid() << ", other: " << other->shm.get_shmid();
 		shm.swap(other->shm);
 		region.swap(other->region);
 		boost::interprocess::xsi_key temp_key = other->key;
 		other->key = key;
 		key = temp_key;
-		SimpleLogger().Write() << "after: " << shm.get_shmid();
+		SimpleLogger().Write() << "swap done";
+		SimpleLogger().Write() << "this key: " << key.get_key() << ", other: " << other->key.get_key();
+		SimpleLogger().Write() << "this id: " << shm.get_shmid() << ", other: " << other->shm.get_shmid();
+
 	}
 
 	template<typename IdentifierT >
@@ -151,12 +163,12 @@ public:
 	}
 
 	template<typename IdentifierT >
-	static void RemoveSharedMemory(
+	static void Remove(
 		const IdentifierT id
 	) {
 		OSRMLockFile lock_file;
 		boost::interprocess::xsi_key key( lock_file().string().c_str(), id );
-		RemoveSharedMemory(key);
+		Remove(key);
 	}
 
 private:
@@ -173,7 +185,7 @@ private:
 	    return result;
 	}
 
-	static void RemoveSharedMemory(
+	static void Remove(
 		const boost::interprocess::xsi_key &key
 	) {
 		try{
@@ -199,10 +211,21 @@ private:
 template<class LockFileT = OSRMLockFile>
 class SharedMemoryFactory_tmpl : boost::noncopyable {
 public:
+
+	template<typename IdentifierT >
+	static void Swap(const IdentifierT & id1, const IdentifierT & id2) {
+		SharedMemory * memory_1 = Get(id1);
+		SharedMemory * memory_2 = Get(id2);
+
+		memory_1->Swap(memory_2);
+	}
+
 	template<typename IdentifierT >
 	static SharedMemory * Get(
 		const IdentifierT & id,
-		const unsigned size = 0
+		const unsigned size = 0,
+		bool read_write = false,
+		bool remove_prev = true
 	) {
 		try {
 			LockFileT lock_file;
@@ -214,7 +237,7 @@ public:
 	      			ofs.close();
 	      		}
 	      	}
-			return new SharedMemory(lock_file(), id, size);
+			return new SharedMemory(lock_file(), id, size, read_write, remove_prev);
 	   	} catch(const boost::interprocess::interprocess_exception &e){
     		SimpleLogger().Write(logWARNING) <<
     			"caught exception: " << e.what() <<
