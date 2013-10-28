@@ -66,7 +66,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
     message(STATUS "Configuring OSRM in release mode")
 endif(CMAKE_BUILD_TYPE MATCHES Release)
 
-#Configuring compilers
+# Configuring compilers
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	# using Clang
 	set(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-unneeded-internal-declaration")
@@ -84,6 +84,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	# using Visual Studio C++
 endif()
 
+# Configuring other platform dependencies
 if(APPLE)
 	SET(CMAKE_OSX_ARCHITECTURES "x86_64")
 	message(STATUS "Set Architecture to x64 on OS X")
@@ -94,6 +95,10 @@ if(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     ENDIF (DARWIN_VERSION GREATER 12)
 endif()
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(osrm-datastore rt)
+endif(UNIX AND NOT APPLE)
 
 #Check Boost
 set(BOOST_MIN_VERSION "1.44.0")
