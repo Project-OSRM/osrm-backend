@@ -227,17 +227,19 @@ public:
                 SharedMemoryFactory::Get(CURRENT_DATA)->Ptr()
             );
 
-            SimpleLogger().Write(logDEBUG) << "(re-)loading data from shared memory";
+            SimpleLogger().Write(logDEBUG) << "(re-)getting data from shared memory";
             LoadGraph();
             LoadNodeAndEdgeInformation();
             LoadRTree(ram_index_path);
             LoadTimestamp();
             LoadViaNodeList();
             LoadNames();
+
+            data_layout->PrintInformation();
+
         } else {
             SimpleLogger().Write(logDEBUG) << "using previously loaded data";
         }
-        data_layout->PrintInformation();
     }
 
 
