@@ -46,16 +46,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 int main( const int argc, const char * argv[] ) {
+    SharedBarriers barrier;
+
+    boost::interprocess::scoped_lock<
+        boost::interprocess::named_mutex
+    > pending_lock(barrier.pending_update_mutex);
+
     try {
-        SharedBarriers barrier;
-
-        boost::interprocess::scoped_lock<
-            boost::interprocess::named_mutex
-        > pending_lock(barrier.pending_update_mutex);
-
-
         LogPolicy::GetInstance().Unmute();
-        SimpleLogger().Write() << "Checking input parameters";
+        SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
         bool use_shared_memory = false;
         std::string ip_address;
@@ -142,7 +141,7 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->ram_index_file_name[end_of_string_index] = '\0';
 
         // collect number of elements to store in shared memory object
-        SimpleLogger().Write() << "Collecting files sizes";
+        SimpleLogger().Write(logDEBUG) << "Collecting files sizes";
         // number of entries in name index
         boost::filesystem::ifstream name_stream(
             names_data_path, std::ios::binary
@@ -165,16 +164,11 @@ int main( const int argc, const char * argv[] ) {
         );
         unsigned number_of_original_edges = 0;
         edges_input_stream.read((char*)&number_of_original_edges, sizeof(unsigned));
-        SimpleLogger().Write(logDEBUG) <<
-            "number of edges: " << number_of_original_edges;
 
         shared_layout_ptr->via_node_list_size = number_of_original_edges;
         shared_layout_ptr->name_id_list_size = number_of_original_edges;
         shared_layout_ptr->turn_instruction_list_size = number_of_original_edges;
 
-        SimpleLogger().Write(logDEBUG) << "noted number of edges";
-
-        SimpleLogger().Write(logDEBUG) << "loading hsgr from " << hsgr_path.string();
         boost::filesystem::ifstream hsgr_input_stream(
             hsgr_path,
             std::ios::binary
@@ -193,16 +187,14 @@ int main( const int argc, const char * argv[] ) {
         // load checksum
         unsigned checksum = 0;
         hsgr_input_stream.read((char*)&checksum, sizeof(unsigned) );
-        SimpleLogger().Write() << "checksum: " << checksum;
         shared_layout_ptr->checksum = checksum;
-        SimpleLogger().Write(logDEBUG) << "noted checksum";
         // load graph node size
         unsigned number_of_graph_nodes = 0;
         hsgr_input_stream.read(
             (char*) &number_of_graph_nodes,
             sizeof(unsigned)
         );
-        SimpleLogger().Write(logDEBUG) << "number of nodes: " << number_of_graph_nodes;
+
         BOOST_ASSERT_MSG(
             (0 != number_of_graph_nodes),
             "number of nodes is zero"
@@ -212,12 +204,13 @@ int main( const int argc, const char * argv[] ) {
         // load graph edge size
         unsigned number_of_graph_edges = 0;
         hsgr_input_stream.read( (char*) &number_of_graph_edges, sizeof(unsigned) );
-        SimpleLogger().Write() << "number of graph edges: " << number_of_graph_edges;
-        BOOST_ASSERT_MSG( 0 != number_of_graph_edges, "number of graph edges is zero");
+        BOOST_ASSERT_MSG(
+            0 != number_of_graph_edges,
+            "number of graph edges is zero"
+        );
         shared_layout_ptr->graph_edge_list_size = number_of_graph_edges;
 
         // load rsearch tree size
-        SimpleLogger().Write(logDEBUG) << "loading r-tree search list size";
         boost::filesystem::ifstream tree_node_file(
             ram_index_path,
             std::ios::binary
@@ -228,15 +221,16 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->r_search_tree_size = tree_size;
 
         //load timestamp size
-        SimpleLogger().Write(logDEBUG) << "Loading timestamp";
         std::string m_timestamp;
         if( boost::filesystem::exists(timestamp_path) ) {
             boost::filesystem::ifstream timestampInStream( timestamp_path );
             if(!timestampInStream) {
-                SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
+                SimpleLogger().Write(logWARNING) <<
+                    timestamp_path << " not found. setting to default";
+            } else {
+                getline(timestampInStream, m_timestamp);
+                timestampInStream.close();
             }
-            getline(timestampInStream, m_timestamp);
-            timestampInStream.close();
         }
         if(m_timestamp.empty()) {
             m_timestamp = "n/a";
@@ -259,6 +253,7 @@ int main( const int argc, const char * argv[] ) {
 
 
         // allocate shared memory block
+
         SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout() << " bytes";
         SharedMemory * shared_memory = SharedMemoryFactory::Get(
             DATA,
@@ -268,19 +263,17 @@ int main( const int argc, const char * argv[] ) {
 
         // read actual data into shared memory object //
         // Loading street names
-        SimpleLogger().Write() << "Loading names index and chars from: " << names_data_path.string();
+        // SimpleLogger().Write() << "Loading names index and chars from: " << names_data_path.string();
         unsigned * name_index_ptr = (unsigned*)(
             shared_memory_ptr + shared_layout_ptr->GetNameIndexOffset()
         );
-        SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_index_list_size*sizeof(unsigned);
+        // SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_index_list_size*sizeof(unsigned);
 
         name_stream.read(
             (char*)name_index_ptr,
             shared_layout_ptr->name_index_list_size*sizeof(unsigned)
         );
 
-        SimpleLogger().Write(logDEBUG) << "Loading names char list";
-        SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_char_list_size*sizeof(char);
         char * name_char_ptr = shared_memory_ptr + shared_layout_ptr->GetNameListOffset();
         name_stream.read(
             name_char_ptr,
@@ -378,26 +371,20 @@ int main( const int argc, const char * argv[] ) {
             data_type_memory->Ptr()
         );
 
+        data_type_ptr[0] = LAYOUT;
+        data_type_ptr[1] = DATA;
         if(use_first_segment) {
-            SimpleLogger().Write() << "data loaded into first segment";
-            data_type_ptr[0] = LAYOUT_1;
-            data_type_ptr[1] = DATA_1;
-            SimpleLogger().Write() << "remove second segment";
+            BOOST_ASSERT( DATA   == DATA_1   );
+            BOOST_ASSERT( LAYOUT == LAYOUT_1 );
             SharedMemory::Remove(DATA_2);
             SharedMemory::Remove(LAYOUT_2);
         } else {
-            SimpleLogger().Write() << "data loaded into second segment";
-            data_type_ptr[0] = LAYOUT_2;
-            data_type_ptr[1] = DATA_2;
-            SimpleLogger().Write() << "remove first segment";
+            BOOST_ASSERT(   DATA == DATA_2   );
+            BOOST_ASSERT( LAYOUT == LAYOUT_2 );
             SharedMemory::Remove(DATA_1);
             SharedMemory::Remove(LAYOUT_1);
         }
-
-        SimpleLogger().Write() << "all data loaded. pressing a key deallocates memory";
-        SimpleLogger().Write() << "sizeof(SharedDataLayout)=" << sizeof(SharedDataLayout);
-        SimpleLogger().Write() << "file index: " << shared_layout_ptr->ram_index_file_name;
-
+        SimpleLogger().Write() << "all data loaded";
     } catch(const std::exception & e) {
         SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
     }
