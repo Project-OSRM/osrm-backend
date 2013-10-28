@@ -474,6 +474,10 @@ public:
         leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
         leaf_node_file.close();
 
+        if( thread_local_rtree_stream.get() ) {
+            thread_local_rtree_stream->close();
+        }
+
         //SimpleLogger().Write() << tree_size << " nodes in search tree";
         //SimpleLogger().Write() << m_element_count << " elements in leafs";
     }
