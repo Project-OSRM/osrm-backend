@@ -83,7 +83,6 @@ void OSRM::RegisterPlugin(BasePlugin * plugin) {
 }
 
 void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
-    SimpleLogger().Write() << "running query";
     const PluginMap::const_iterator & iter = plugin_map.find(
         route_parameters.service
     );
@@ -91,24 +90,18 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
     if(plugin_map.end() != iter) {
         reply.status = http::Reply::ok;
         if( use_shared_memory ) {
-            SimpleLogger().Write() << "shared memory handling";
             // lock update pending
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
             > pending_lock(barrier.pending_update_mutex);
-
-            SimpleLogger().Write() << "got pending lock";
 
             // lock query
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
             > query_lock(barrier.query_mutex);
 
-            SimpleLogger().Write() << "got query lock";
-
             // unlock update pending
             pending_lock.unlock();
-            SimpleLogger().Write() << "released pending lock";
 
             // increment query count
             ++(barrier.number_of_queries);
@@ -117,14 +110,11 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
         }
 
         iter->second->HandleRequest(route_parameters, reply );
-        SimpleLogger().Write() << "finished request";
         if( use_shared_memory ) {
             // lock query
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
             > query_lock(barrier.query_mutex);
-
-            SimpleLogger().Write() << "got query lock";
 
             // decrement query count
             --(barrier.number_of_queries);
@@ -133,10 +123,9 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
                 "invalid number of queries"
             );
 
+            // notify all processes that were waiting for this condition
             if (0 == barrier.number_of_queries) {
-                // notify all processes that were waiting for this condition
                 barrier.no_running_queries_condition.notify_all();
-                SimpleLogger().Write() << "sent notification";
             }
         }
     } else {
