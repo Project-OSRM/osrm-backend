@@ -181,7 +181,7 @@ int main( const int argc, const char * argv[] ) {
                 ".hsgr was prepared with different build. "
                 "Reprocess to get rid of this warning.";
         } else {
-            SimpleLogger().Write() << "UUID checked out ok";
+            SimpleLogger().Write(logDEBUG) << "UUID checked out ok";
         }
 
         // load checksum
@@ -241,8 +241,6 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->timestamp_length = m_timestamp.length();
 
         //load coordinate size
-        SimpleLogger().Write() <<
-            "Loading coordinates list from " << nodes_data_path.string();
         boost::filesystem::ifstream nodes_input_stream(
             nodes_data_path,
             std::ios::binary
@@ -282,10 +280,6 @@ int main( const int argc, const char * argv[] ) {
         name_stream.close();
 
         //load original edge information
-        SimpleLogger().Write() <<
-            "Loading via node, coordinates and turn instruction lists from: " <<
-            edges_data_path.string();
-
         NodeID * via_node_ptr = (NodeID *)(
             shared_memory_ptr + shared_layout_ptr->GetViaNodeListOffset()
         );
