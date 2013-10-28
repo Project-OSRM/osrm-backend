@@ -217,7 +217,7 @@ enum SharedDataType {
     LAYOUT_2,
     DATA_2,
     LAYOUT_NONE,
-    DATA_NONE,
+    DATA_NONE
 };
 
 #endif /* SHARED_DATA_TYPE_H_ */
