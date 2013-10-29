@@ -59,15 +59,16 @@ private:
 
     SharedDataLayout * data_layout;
     char             * shared_memory;
-    SharedDataType   * data_type;
-    SharedDataType * data_type_ptr;
+    SharedDataType   * data_type_ptr;
 
     SharedDataType     CURRENT_LAYOUT;
     SharedDataType     CURRENT_DATA;
 
     unsigned                                m_check_sum;
     unsigned                                m_number_of_nodes;
-    QueryGraph                            * m_query_graph;
+    boost::shared_ptr<QueryGraph>           m_query_graph;
+    boost::shared_ptr<SharedMemory>         m_layout_memory;
+    boost::shared_ptr<SharedMemory>         m_large_memory;
     std::string                             m_timestamp;
 
     ShM<FixedPointCoordinate, true>::vector m_coordinate_list;
@@ -122,9 +123,8 @@ private:
             graph_edges_ptr,
             data_layout->graph_edge_list_size
         );
-        m_query_graph = new QueryGraph(
-            node_list ,
-            edge_list
+        m_query_graph.reset(
+            new QueryGraph(node_list, edge_list)
         );
 
     }
@@ -202,6 +202,8 @@ public:
         CURRENT_LAYOUT = LAYOUT_NONE;
         CURRENT_DATA = DATA_NONE;
 
+        SimpleLogger().Write() << "new shared facade";
+
         //load data
         CheckAndReloadFacade();
     }
@@ -211,20 +213,26 @@ public:
             CURRENT_LAYOUT != data_type_ptr[0] ||
             CURRENT_DATA   != data_type_ptr[1]
         ) {
+            // release the previous shared memory segments
+            SharedMemory::Remove(CURRENT_LAYOUT);
+            SharedMemory::Remove(CURRENT_DATA);
+
             CURRENT_LAYOUT = data_type_ptr[0];
             CURRENT_DATA   = data_type_ptr[1];
 
+            m_layout_memory.reset( SharedMemoryFactory::Get(CURRENT_LAYOUT) );
+
             data_layout = (SharedDataLayout *)(
-                SharedMemoryFactory::Get(CURRENT_LAYOUT)->Ptr()
+                m_layout_memory->Ptr()
             );
             boost::filesystem::path ram_index_path(data_layout->ram_index_file_name);
             if( !boost::filesystem::exists(ram_index_path) ) {
                 throw OSRMException("no leaf index file given in ini file");
             }
-            SimpleLogger().Write() << "0";
 
+            m_large_memory.reset( SharedMemoryFactory::Get(CURRENT_DATA) );
             shared_memory = (char *)(
-                SharedMemoryFactory::Get(CURRENT_DATA)->Ptr()
+                m_large_memory->Ptr()
             );
 
             SimpleLogger().Write(logDEBUG) << "(re-)getting data from shared memory";
