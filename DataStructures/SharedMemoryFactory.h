@@ -68,7 +68,9 @@ class SharedMemory : boost::noncopyable {
 			if(m_initialized) {
 				SimpleLogger().Write(logDEBUG) <<
 					"automatic memory deallocation";
-				boost::interprocess::xsi_shared_memory::remove(m_shmid);
+				if(!boost::interprocess::xsi_shared_memory::remove(m_shmid)) {
+					SimpleLogger().Write(logDEBUG) << "could not deallocate id " << m_shmid;
+				}
 			}
 		}
 	};
@@ -139,12 +141,12 @@ public:
 	}
 
 	template<typename IdentifierT >
-	static void Remove(
+	static bool Remove(
 		const IdentifierT id
 	) {
 		OSRMLockFile lock_file;
 		boost::interprocess::xsi_key key( lock_file().string().c_str(), id );
-		Remove(key);
+		return Remove(key);
 	}
 
 private:
@@ -161,21 +163,23 @@ private:
 	    return result;
 	}
 
-	static void Remove(
+	static bool Remove(
 		const boost::interprocess::xsi_key &key
 	) {
+		bool ret = false;
 		try{
 			SimpleLogger().Write(logDEBUG) << "deallocating prev memory";
 			boost::interprocess::xsi_shared_memory xsi(
 				boost::interprocess::open_only,
 				key
 			);
-			boost::interprocess::xsi_shared_memory::remove(xsi.get_shmid());
-		} catch(boost::interprocess::interprocess_exception &e){
+			ret = boost::interprocess::xsi_shared_memory::remove(xsi.get_shmid());
+		} catch(const boost::interprocess::interprocess_exception &e){
 			if(e.get_error_code() != boost::interprocess::not_found_error) {
 				throw;
 			}
 		}
+		return ret;
 	}
 
 	boost::interprocess::xsi_key key;
