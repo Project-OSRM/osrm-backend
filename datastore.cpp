@@ -370,13 +370,21 @@ int main( const int argc, const char * argv[] ) {
         if(use_first_segment) {
             BOOST_ASSERT( DATA   == DATA_1   );
             BOOST_ASSERT( LAYOUT == LAYOUT_1 );
-            SharedMemory::Remove(DATA_2);
-            SharedMemory::Remove(LAYOUT_2);
+            if( !SharedMemory::Remove(DATA_2) ) {
+                SimpleLogger().Write(logWARNING) << "could not delete DATA_2";
+            }
+            if( !SharedMemory::Remove(LAYOUT_2) ) {
+                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_2";
+            }
         } else {
             BOOST_ASSERT(   DATA == DATA_2   );
             BOOST_ASSERT( LAYOUT == LAYOUT_2 );
-            SharedMemory::Remove(DATA_1);
-            SharedMemory::Remove(LAYOUT_1);
+            if( !SharedMemory::Remove(DATA_1) ) {
+                SimpleLogger().Write(logWARNING) << "could not delete DATA_1";
+            }
+            if( !SharedMemory::Remove(LAYOUT_1) ) {
+                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_1";
+            }
         }
         SimpleLogger().Write() << "all data loaded";
     } catch(const std::exception & e) {
