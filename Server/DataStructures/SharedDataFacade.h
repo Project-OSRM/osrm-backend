@@ -57,12 +57,13 @@ private:
     typedef typename super::RTreeLeaf                       RTreeLeaf;
     typedef typename StaticRTree<RTreeLeaf, true>::TreeNode RTreeNode;
 
-    SharedDataLayout * data_layout;
-    char             * shared_memory;
-    SharedDataType   * data_type_ptr;
+    SharedDataLayout    * data_layout;
+    char                * shared_memory;
+    SharedDataTimestamp * data_timestamp_ptr;
 
     SharedDataType     CURRENT_LAYOUT;
     SharedDataType     CURRENT_DATA;
+    unsigned           CURRENT_TIMESTAMP;
 
     unsigned                                m_check_sum;
     unsigned                                m_number_of_nodes;
@@ -191,15 +192,16 @@ private:
 
 public:
     SharedDataFacade( ) {
-        data_type_ptr = (SharedDataType *)SharedMemoryFactory::Get(
+        data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
             CURRENT_REGIONS,
-            2*sizeof(SharedDataType),
+            sizeof(SharedDataTimestamp),
             false,
             false
         )->Ptr();
 
         CURRENT_LAYOUT = LAYOUT_NONE;
         CURRENT_DATA = DATA_NONE;
+        CURRENT_TIMESTAMP = 0;
 
         //load data
         CheckAndReloadFacade();
@@ -207,15 +209,17 @@ public:
 
     void CheckAndReloadFacade() {
         if(
-            CURRENT_LAYOUT != data_type_ptr[0] ||
-            CURRENT_DATA   != data_type_ptr[1]
+            CURRENT_LAYOUT    != data_timestamp_ptr->layout    ||
+            CURRENT_DATA      != data_timestamp_ptr->data      ||
+            CURRENT_TIMESTAMP != data_timestamp_ptr->timestamp
         ) {
             // release the previous shared memory segments
             SharedMemory::Remove(CURRENT_LAYOUT);
             SharedMemory::Remove(CURRENT_DATA);
 
-            CURRENT_LAYOUT = data_type_ptr[0];
-            CURRENT_DATA   = data_type_ptr[1];
+            CURRENT_LAYOUT    = data_timestamp_ptr->layout;
+            CURRENT_DATA      = data_timestamp_ptr->data;
+            CURRENT_TIMESTAMP = data_timestamp_ptr->timestamp;
 
             m_layout_memory.reset( SharedMemoryFactory::Get(CURRENT_LAYOUT) );
 
@@ -224,7 +228,10 @@ public:
             );
             boost::filesystem::path ram_index_path(data_layout->ram_index_file_name);
             if( !boost::filesystem::exists(ram_index_path) ) {
-                throw OSRMException("no leaf index file given in ini file");
+                throw OSRMException(
+                    "no leaf index file given. "
+                    "Is any data loaded into shared memory?"
+                );
             }
 
             m_large_memory.reset( SharedMemoryFactory::Get(CURRENT_DATA) );

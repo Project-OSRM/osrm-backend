@@ -220,4 +220,10 @@ enum SharedDataType {
     DATA_NONE
 };
 
+struct SharedDataTimestamp {
+    SharedDataType layout;
+    SharedDataType data;
+    unsigned timestamp;
+};
+
 #endif /* SHARED_DATA_TYPE_H_ */

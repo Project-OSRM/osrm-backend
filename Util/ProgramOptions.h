@@ -230,7 +230,7 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
-    if( !option_variables.count("sharedmemory") ) {
+    if( !use_shared_memory ) {
         if( !option_variables.count("hsgrdata") ) {
             if( !option_variables.count("base") ) {
                 throw OSRMException("hsgrdata (or base) must be specified");
