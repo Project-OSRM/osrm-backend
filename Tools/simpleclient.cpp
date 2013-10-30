@@ -55,7 +55,7 @@ int main (int argc, const char * argv[]) {
     try {
         std::string ip_address;
         int ip_port, requested_num_threads;
-
+        bool use_shared_memory = false;
         ServerPaths server_paths;
         if( !GenerateServerProgramOptions(
                 argc,
@@ -63,7 +63,8 @@ int main (int argc, const char * argv[]) {
                 server_paths,
                 ip_address,
                 ip_port,
-                requested_num_threads
+                requested_num_threads,
+                use_shared_memory
              )
         ) {
             return 0;
@@ -73,7 +74,7 @@ int main (int argc, const char * argv[]) {
             "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
             "compiled at " << __DATE__ << ", " __TIME__;
 
-        OSRM routing_machine(server_paths);
+        OSRM routing_machine( server_paths, use_shared_memory );
 
         RouteParameters route_parameters;
         route_parameters.zoomLevel = 18; //no generalization

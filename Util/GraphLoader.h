@@ -410,12 +410,11 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
 template<typename NodeT, typename EdgeT>
 unsigned readHSGRFromStream(
-    const std::string & hsgr_filename,
+    const boost::filesystem::path & hsgr_file,
     std::vector<NodeT> & node_list,
     std::vector<EdgeT> & edge_list,
     unsigned * check_sum
 ) {
-    boost::filesystem::path hsgr_file(hsgr_filename);
     if ( !boost::filesystem::exists( hsgr_file ) ) {
         throw OSRMException("hsgr file does not exist");
     }
@@ -434,20 +433,17 @@ unsigned readHSGRFromStream(
     }
 
     unsigned number_of_nodes = 0;
-    hsgr_input_stream.read((char*) check_sum, sizeof(unsigned));
-    hsgr_input_stream.read((char*) & number_of_nodes, sizeof(unsigned));
+    unsigned number_of_edges = 0;
+    hsgr_input_stream.read( (char*) check_sum, sizeof(unsigned) );
+    hsgr_input_stream.read( (char*) &number_of_nodes, sizeof(unsigned) );
     BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
+    hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
+    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
     node_list.resize(number_of_nodes + 1);
     hsgr_input_stream.read(
         (char*) &(node_list[0]),
         number_of_nodes*sizeof(NodeT)
     );
-    unsigned number_of_edges = 0;
-    hsgr_input_stream.read(
-        (char*) &number_of_edges,
-        sizeof(unsigned)
-    );
-    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
 
     edge_list.resize(number_of_edges);
     hsgr_input_stream.read(

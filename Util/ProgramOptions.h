@@ -52,7 +52,7 @@ namespace boost {
         // Validator for boost::filesystem::path, that verifies that the file
         // exists. The validate() function must be defined in the same namespace
         // as the target type, (boost::filesystem::path in this case), otherwise
-        // it is not be called
+        // it is not called
         inline void validate(
             boost::any & v,
             const std::vector<std::string> & values,
@@ -71,14 +71,12 @@ namespace boost {
     }
 }
 
-// support old capitalized option names by downcasing them with a regex replace
-// read from file and store in a stringstream that can be passed to
-// boost::program_options
+// support old capitalized option names by down-casing them with a regex replace
 inline void PrepareConfigFile(
     const boost::filesystem::path& path,
     std::string& output
 ) {
-    std::ifstream config_stream(path.string().c_str());
+    std::ifstream config_stream( path.string().c_str() );
     std::string input_str(
         (std::istreambuf_iterator<char>(config_stream)),
         std::istreambuf_iterator<char>()
@@ -96,7 +94,8 @@ inline bool GenerateServerProgramOptions(
     ServerPaths & paths,
     std::string & ip_address,
     int & ip_port,
-    int & requested_num_threads
+    int & requested_num_threads,
+    bool & use_shared_memory
 ) {
 
     // declare a group of options that will be allowed only on command line
@@ -160,6 +159,11 @@ inline bool GenerateServerProgramOptions(
             "threads,t",
             boost::program_options::value<int>(&requested_num_threads)->default_value(8),
             "Number of threads to use"
+        )
+        (
+            "sharedmemory,s",
+            boost::program_options::value<bool>(&use_shared_memory)->default_value(false),
+            "Load data from shared memory"
         );
 
     // hidden options, will be allowed both on command line and in config
@@ -209,8 +213,11 @@ inline bool GenerateServerProgramOptions(
 
     // parse config file
     ServerPaths::const_iterator path_iterator = paths.find("config");
-    if( path_iterator != paths.end() &&
-        boost::filesystem::is_regular_file(path_iterator->second)) {
+    if(
+        path_iterator != paths.end() &&
+        boost::filesystem::is_regular_file(path_iterator->second) &&
+        !option_variables.count("base")
+    ) {
         SimpleLogger().Write() <<
             "Reading options from: " << path_iterator->second.string();
         std::string config_str;
@@ -223,55 +230,56 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
-    if(!option_variables.count("hsgrdata")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("hsgrdata (or base) must be specified");
+    if( !use_shared_memory ) {
+        if( !option_variables.count("hsgrdata") ) {
+            if( !option_variables.count("base") ) {
+                throw OSRMException("hsgrdata (or base) must be specified");
+            }
+            paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
         }
-        paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
-    }
 
-    if(!option_variables.count("nodesdata")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("nodesdata (or base) must be specified");
+        if(!option_variables.count("nodesdata")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("nodesdata (or base) must be specified");
+            }
+            paths["nodesdata"] = std::string( paths["base"].c_str()) + ".nodes";
         }
-        paths["nodesdata"] = std::string( paths["base"].c_str()) + ".nodes";
-    }
 
-    if(!option_variables.count("edgesdata")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("edgesdata (or base) must be specified");
+        if(!option_variables.count("edgesdata")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("edgesdata (or base) must be specified");
+            }
+            paths["edgesdata"] = std::string( paths["base"].c_str()) + ".edges";
         }
-        paths["edgesdata"] = std::string( paths["base"].c_str()) + ".edges";
-    }
 
-    if(!option_variables.count("ramindex")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("ramindex (or base) must be specified");
+        if(!option_variables.count("ramindex")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("ramindex (or base) must be specified");
+            }
+            paths["ramindex"] = std::string( paths["base"].c_str()) + ".ramIndex";
         }
-        paths["ramindex"] = std::string( paths["base"].c_str()) + ".ramIndex";
-    }
 
-    if(!option_variables.count("fileindex")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("fileindex (or base) must be specified");
+        if(!option_variables.count("fileindex")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("fileindex (or base) must be specified");
+            }
+            paths["fileindex"] = std::string( paths["base"].c_str()) + ".fileIndex";
         }
-        paths["fileindex"] = std::string( paths["base"].c_str()) + ".fileIndex";
-    }
 
-    if(!option_variables.count("namesdata")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("namesdata (or base) must be specified");
+        if(!option_variables.count("namesdata")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("namesdata (or base) must be specified");
+            }
+            paths["namesdata"] = std::string( paths["base"].c_str()) + ".names";
         }
-        paths["namesdata"] = std::string( paths["base"].c_str()) + ".names";
-    }
 
-    if(!option_variables.count("timestamp")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("timestamp (or base) must be specified");
+        if(!option_variables.count("timestamp")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("timestamp (or base) must be specified");
+            }
+            paths["timestamp"] = std::string( paths["base"].c_str()) + ".timestamp";
         }
-        paths["timestamp"] = std::string( paths["base"].c_str()) + ".timestamp";
     }
-
     if(1 > requested_num_threads) {
         throw OSRMException("Number of threads must be a positive number");
     }

@@ -25,10 +25,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#ifndef SEARCH_ENGINE_DATA_H
+#define SEARCH_ENGINE_DATA_H
+
 #include "BinaryHeap.h"
 #include "QueryEdge.h"
 #include "StaticGraph.h"
-#include "../Server/DataStructures/QueryObjectsStorage.h"
 
 #include "../typedefs.h"
 
@@ -41,23 +43,12 @@ struct _HeapData {
     NodeID parent;
     _HeapData( NodeID p ) : parent(p) { }
 };
-typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
-typedef BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > QueryHeapType;
-typedef boost::thread_specific_ptr<QueryHeapType> SearchEngineHeapPtr;
+
+// typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
 
 struct SearchEngineData {
-    typedef QueryGraph Graph;
-    typedef QueryHeapType QueryHeap;
-    SearchEngineData(QueryObjectsStorage * query_objects)
-     :
-        query_objects(query_objects),
-        graph(query_objects->graph),
-        nodeHelpDesk(query_objects->nodeHelpDesk)
-    {}
-
-    const QueryObjectsStorage       * query_objects;
-    const QueryGraph                * graph;
-    const NodeInformationHelpDesk   * nodeHelpDesk;
+    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > QueryHeap;
+    typedef boost::thread_specific_ptr<QueryHeap> SearchEngineHeapPtr;
 
     static SearchEngineHeapPtr forwardHeap;
     static SearchEngineHeapPtr backwardHeap;
@@ -66,9 +57,11 @@ struct SearchEngineData {
     static SearchEngineHeapPtr forwardHeap3;
     static SearchEngineHeapPtr backwardHeap3;
 
-    void InitializeOrClearFirstThreadLocalStorage();
+    void InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes);
 
-    void InitializeOrClearSecondThreadLocalStorage();
+    void InitializeOrClearSecondThreadLocalStorage(const unsigned number_of_nodes);
 
-    void InitializeOrClearThirdThreadLocalStorage();
+    void InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes);
 };
+
+#endif // SEARCH_ENGINE_DATA_H

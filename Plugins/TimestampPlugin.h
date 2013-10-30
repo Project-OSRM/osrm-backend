@@ -30,10 +30,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasePlugin.h"
 
+template<class DataFacadeT>
 class TimestampPlugin : public BasePlugin {
 public:
-    TimestampPlugin(QueryObjectsStorage * o)
-     : objects(o), descriptor_string("timestamp")
+    TimestampPlugin(const DataFacadeT * facade)
+     : facade(facade), descriptor_string("timestamp")
     { }
     const std::string & GetDescriptor() const { return descriptor_string; }
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
@@ -51,7 +52,7 @@ public:
         reply.content += ("\"status\":");
             reply.content += "0,";
         reply.content += ("\"timestamp\":\"");
-        reply.content += objects->timestamp;
+        reply.content += facade->GetTimestamp();
         reply.content += "\"";
         reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON timestamp (v0.3)\"";
         reply.content += ("}");
@@ -73,7 +74,7 @@ public:
         reply.headers[0].value = tmp;
     }
 private:
-    QueryObjectsStorage * objects;
+    const DataFacadeT * facade;
     std::string descriptor_string;
 };
 

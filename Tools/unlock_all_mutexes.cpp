@@ -25,49 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASE_DESCRIPTOR_H_
-#define BASE_DESCRIPTOR_H_
+#include "../Util/GitDescription.h"
+#include "../Util/SimpleLogger.h"
+#include "../Server/DataStructures/SharedBarriers.h"
 
-#include "../DataStructures/HashTable.h"
-#include "../DataStructures/PhantomNodes.h"
-#include "../DataStructures/RawRouteData.h"
-#include "../Server/BasicDatastructures.h"
-#include "../Util/StringUtil.h"
-#include "../typedefs.h"
+#include <iostream>
 
-#include <cassert>
-#include <cmath>
-#include <cstdio>
-
-#include <string>
-#include <vector>
-
-struct DescriptorConfig {
-    DescriptorConfig() :
-        instructions(true),
-        geometry(true),
-        encode_geometry(true),
-        zoom_level(18)
-    { }
-    bool instructions;
-    bool geometry;
-    bool encode_geometry;
-    unsigned short zoom_level;
-};
-
-template<class DataFacadeT>
-class BaseDescriptor {
-public:
-    BaseDescriptor() { }
-    //Maybe someone can explain the pure virtual destructor thing to me (dennis)
-    virtual ~BaseDescriptor() { }
-    virtual void Run(
-        http::Reply & reply,
-        const RawRouteData &rawRoute,
-        PhantomNodes &phantomNodes,
-        const DataFacadeT * facade
-    ) = 0;
-    virtual void SetConfig(const DescriptorConfig & config) = 0;
-};
-
-#endif /* BASE_DESCRIPTOR_H_ */
+int main() {
+    LogPolicy::GetInstance().Unmute();
+    SimpleLogger().Write() <<
+            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
+            "compiled at " << __DATE__ << ", " __TIME__;
+    SimpleLogger().Write() << "Releasing all locks";
+    SharedBarriers barrier;
+    barrier.pending_update_mutex.unlock();
+    barrier.query_mutex.unlock();
+    barrier.update_mutex.unlock();
+    return 0;
+}
