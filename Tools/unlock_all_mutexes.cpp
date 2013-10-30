@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "../Util/GitDescription.h"
 #include "../Util/SimpleLogger.h"
 #include "../Server/DataStructures/SharedBarriers.h"
 
@@ -32,6 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int main() {
     LogPolicy::GetInstance().Unmute();
+    SimpleLogger().Write() <<
+            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
+            "compiled at " << __DATE__ << ", " __TIME__;
     SimpleLogger().Write() << "Releasing all locks";
     SharedBarriers barrier;
     barrier.pending_update_mutex.unlock();
