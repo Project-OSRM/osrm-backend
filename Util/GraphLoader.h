@@ -42,7 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/fstream.hpp>
 #include <boost/unordered_map.hpp>
 
-#include <cassert>
 #include <cmath>
 
 #include <algorithm>
@@ -158,7 +157,7 @@ NodeID readBinaryOSRMGraphFromStream(
         if (1 == dir) { backward = false; }
         if (2 == dir) { forward = false; }
 
-        assert(type >= 0);
+        BOOST_ASSERT(type >= 0);
 
         //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
@@ -308,12 +307,12 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         if(speedType == 13) {
             weight = length;
         }
-        assert(length > 0);
-        assert(weight > 0);
+        BOOST_ASSERT(length > 0);
+        BOOST_ASSERT(weight > 0);
         if(dir <0 || dir > 2) {
             SimpleLogger().Write(logWARNING) << "direction bogus: " << dir;
         }
-        assert(0<=dir && dir<=2);
+        BOOST_ASSERT(0<=dir && dir<=2);
 
         bool forward = true;
         bool backward = true;
@@ -373,11 +372,11 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         EdgeWeight weight;
         in >> source >> target >> weight >> dir;
 
-        assert(weight > 0);
+        BOOST_ASSERT(weight > 0);
         if(dir <0 || dir > 3) {
             throw OSRMException( "[error] direction bogus");
         }
-        assert(0<=dir && dir<=3);
+        BOOST_ASSERT(0<=dir && dir<=3);
 
         bool forward = true;
         bool backward = true;

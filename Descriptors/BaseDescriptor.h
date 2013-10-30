@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
-#include <cassert>
 #include <cmath>
 #include <cstdio>
 

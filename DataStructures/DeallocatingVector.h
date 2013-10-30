@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEALLOCATINGVECTOR_H_
 #define DEALLOCATINGVECTOR_H_
 
-#include <cassert>
+#include <boost/assert.hpp>
 #include <cstring>
 #include <vector>
 
@@ -103,7 +103,7 @@ public:
 
     template<typename T2>
     DeallocatingVectorIterator& operator=(const DeallocatingVectorIterator<T2> &r) {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         mState = r.mState; return *this;
     }
 
@@ -113,7 +113,7 @@ public:
     }
 
     inline DeallocatingVectorIterator& operator--() { //prefix
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         --mState.mIndex;
         return *this;
     }
@@ -124,7 +124,7 @@ public:
         return DeallocatingVectorIterator(_myState);
     }
     inline DeallocatingVectorIterator operator--(int) { //postfix
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         DeallocatingVectorIteratorState _myState(mState);
         mState.mIndex--;
         return DeallocatingVectorIterator(_myState);
@@ -141,14 +141,14 @@ public:
     }
 
     inline DeallocatingVectorIterator operator-(const difference_type& n) const {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         DeallocatingVectorIteratorState _myState(mState);
         _myState.mIndex-=n;
         return DeallocatingVectorIterator(_myState);
     }
 
     inline DeallocatingVectorIterator& operator-=(const difference_type &n) const {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         mState.mIndex-=n; return *this;
     }
 
@@ -185,7 +185,7 @@ public:
     }
 
     difference_type operator-(const DeallocatingVectorIterator & other) {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         return mState.mIndex-other.mState.mIndex;
     }
 };

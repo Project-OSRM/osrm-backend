@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/unordered_map.hpp>
 
-#include <cassert>
+#include <boost/assert.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -159,7 +159,7 @@ public:
     }
 
     bool WasRemoved( const NodeID node ) {
-        assert( WasInserted( node ) );
+        BOOST_ASSERT( WasInserted( node ) );
         const Key index = nodeIndex[node];
         return insertedNodes[index].key == 0;
     }
@@ -172,12 +172,12 @@ public:
     }
 
     NodeID Min() const {
-        assert( heap.size() > 1 );
+        BOOST_ASSERT( heap.size() > 1 );
         return insertedNodes[heap[1].index].node;
     }
 
     NodeID DeleteMin() {
-        assert( heap.size() > 1 );
+        BOOST_ASSERT( heap.size() > 1 );
         const Key removedIndex = heap[1].index;
         heap[1] = heap[heap.size()-1];
         heap.pop_back();
@@ -196,10 +196,10 @@ public:
     }
 
     void DecreaseKey( NodeID node, Weight weight ) {
-        assert( UINT_MAX != node );
+        BOOST_ASSERT( UINT_MAX != node );
         const Key & index = nodeIndex[node];
         Key & key = insertedNodes[index].key;
-        assert ( key >= 0 );
+        BOOST_ASSERT ( key >= 0 );
 
         insertedNodes[index].weight = weight;
         heap[key].weight = weight;
@@ -257,7 +257,7 @@ private:
         const Weight weight = heap[key].weight;
         Key nextKey = key >> 1;
         while ( heap[nextKey].weight > weight ) {
-            assert( nextKey != 0 );
+            BOOST_ASSERT( nextKey != 0 );
             heap[key] = heap[nextKey];
             insertedNodes[heap[key].index].key = key;
             key = nextKey;
@@ -271,7 +271,7 @@ private:
     void CheckHeap() {
 #ifndef NDEBUG
         for ( Key i = 2; i < (Key) heap.size(); ++i ) {
-            assert( heap[i].weight >= heap[i >> 1].weight );
+            BOOST_ASSERT( heap[i].weight >= heap[i >> 1].weight );
         }
 #endif
     }
