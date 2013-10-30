@@ -32,15 +32,12 @@ OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
     use_shared_memory(use_shared_memory)
 {
     if( !use_shared_memory ) {
-        SimpleLogger().Write() << "loading data into internal memory";
         query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
             server_paths
         );
     } else {
-        SimpleLogger().Write() << "loading data from shared memory";
         query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>( );
     }
-
 
     //The following plugins handle all requests.
     RegisterPlugin(
