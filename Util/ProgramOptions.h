@@ -230,55 +230,56 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
-    if( !option_variables.count("hsgrdata") ) {
-        if( !option_variables.count("base") ) {
-            throw OSRMException("hsgrdata (or base) must be specified");
+    if( !option_variables.count("sharedmemory") ) {
+        if( !option_variables.count("hsgrdata") ) {
+            if( !option_variables.count("base") ) {
+                throw OSRMException("hsgrdata (or base) must be specified");
+            }
+            paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
         }
-        paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
-    }
 
-    if(!option_variables.count("nodesdata")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("nodesdata (or base) must be specified");
+        if(!option_variables.count("nodesdata")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("nodesdata (or base) must be specified");
+            }
+            paths["nodesdata"] = std::string( paths["base"].c_str()) + ".nodes";
         }
-        paths["nodesdata"] = std::string( paths["base"].c_str()) + ".nodes";
-    }
 
-    if(!option_variables.count("edgesdata")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("edgesdata (or base) must be specified");
+        if(!option_variables.count("edgesdata")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("edgesdata (or base) must be specified");
+            }
+            paths["edgesdata"] = std::string( paths["base"].c_str()) + ".edges";
         }
-        paths["edgesdata"] = std::string( paths["base"].c_str()) + ".edges";
-    }
 
-    if(!option_variables.count("ramindex")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("ramindex (or base) must be specified");
+        if(!option_variables.count("ramindex")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("ramindex (or base) must be specified");
+            }
+            paths["ramindex"] = std::string( paths["base"].c_str()) + ".ramIndex";
         }
-        paths["ramindex"] = std::string( paths["base"].c_str()) + ".ramIndex";
-    }
 
-    if(!option_variables.count("fileindex")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("fileindex (or base) must be specified");
+        if(!option_variables.count("fileindex")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("fileindex (or base) must be specified");
+            }
+            paths["fileindex"] = std::string( paths["base"].c_str()) + ".fileIndex";
         }
-        paths["fileindex"] = std::string( paths["base"].c_str()) + ".fileIndex";
-    }
 
-    if(!option_variables.count("namesdata")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("namesdata (or base) must be specified");
+        if(!option_variables.count("namesdata")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("namesdata (or base) must be specified");
+            }
+            paths["namesdata"] = std::string( paths["base"].c_str()) + ".names";
         }
-        paths["namesdata"] = std::string( paths["base"].c_str()) + ".names";
-    }
 
-    if(!option_variables.count("timestamp")) {
-        if(!option_variables.count("base")) {
-            throw OSRMException("timestamp (or base) must be specified");
+        if(!option_variables.count("timestamp")) {
+            if(!option_variables.count("base")) {
+                throw OSRMException("timestamp (or base) must be specified");
+            }
+            paths["timestamp"] = std::string( paths["base"].c_str()) + ".timestamp";
         }
-        paths["timestamp"] = std::string( paths["base"].c_str()) + ".timestamp";
     }
-
     if(1 > requested_num_threads) {
         throw OSRMException("Number of threads must be a positive number");
     }
