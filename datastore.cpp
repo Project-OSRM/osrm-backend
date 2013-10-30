@@ -95,24 +95,31 @@ int main( const int argc, const char * argv[] ) {
 
         ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & hsgr_path = paths_iterator->second;
         paths_iterator = server_paths.find("timestamp");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & timestamp_path = paths_iterator->second;
         paths_iterator = server_paths.find("ramindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & ram_index_path = paths_iterator->second;
         paths_iterator = server_paths.find("fileindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
         const std::string & file_index_file_name = paths_iterator->second.string();
         paths_iterator = server_paths.find("nodesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & nodes_data_path = paths_iterator->second;
         paths_iterator = server_paths.find("edgesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & edges_data_path = paths_iterator->second;
         paths_iterator = server_paths.find("namesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & names_data_path = paths_iterator->second;
 
 
@@ -142,6 +149,7 @@ int main( const int argc, const char * argv[] ) {
 
         // collect number of elements to store in shared memory object
         SimpleLogger().Write(logDEBUG) << "Collecting files sizes";
+        SimpleLogger().Write() << "load names from: " << names_data_path;
         // number of entries in name index
         boost::filesystem::ifstream name_stream(
             names_data_path, std::ios::binary
@@ -149,6 +157,7 @@ int main( const int argc, const char * argv[] ) {
         unsigned name_index_size = 0;
         name_stream.read((char *)&name_index_size, sizeof(unsigned));
         shared_layout_ptr->name_index_list_size = name_index_size;
+        SimpleLogger().Write() << "size: " << name_index_size;
         // SimpleLogger().Write() << "name index size: " << shared_layout_ptr->name_index_list_size;
         BOOST_ASSERT_MSG(0 != shared_layout_ptr->name_index_list_size, "name file broken");
 
@@ -357,16 +366,17 @@ int main( const int argc, const char * argv[] ) {
         //TODO acquire lock
         SharedMemory * data_type_memory = SharedMemoryFactory::Get(
             CURRENT_REGIONS,
-            2*sizeof(SharedDataType),
+            sizeof(SharedDataTimestamp),
             true,
             false
         );
-        SharedDataType * data_type_ptr = static_cast<SharedDataType *>(
+        SharedDataTimestamp * data_timestamp_ptr = static_cast<SharedDataTimestamp*>(
             data_type_memory->Ptr()
         );
 
-        data_type_ptr[0] = LAYOUT;
-        data_type_ptr[1] = DATA;
+        data_timestamp_ptr->layout = LAYOUT;
+        data_timestamp_ptr->data = DATA;
+        data_timestamp_ptr->timestamp +=1;
         if(use_first_segment) {
             BOOST_ASSERT( DATA   == DATA_1   );
             BOOST_ASSERT( LAYOUT == LAYOUT_1 );
