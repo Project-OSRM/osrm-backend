@@ -32,12 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int main() {
     LogPolicy::GetInstance().Unmute();
+    SimpleLogger().Write() << "Releasing all locks";
     SharedBarriers barrier;
-    SimpleLogger().Write() << "This (debug) tool simply aquires a lock ...";
-    boost::interprocess::scoped_lock<
-        boost::interprocess::named_mutex
-    > pending_lock(barrier.pending_update_mutex);
-    SimpleLogger().Write() << "pending update lock aquired. Press key to exit.";
-    std::cin.get();
+    barrier.pending_update_mutex.unlock();
+    barrier.query_mutex.unlock();
+    barrier.update_mutex.unlock();
     return 0;
 }
