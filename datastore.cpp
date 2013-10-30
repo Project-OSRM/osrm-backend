@@ -374,6 +374,15 @@ int main( const int argc, const char * argv[] ) {
             data_type_memory->Ptr()
         );
 
+        boost::interprocess::scoped_lock<
+            boost::interprocess::named_mutex
+        > query_lock(barrier.query_mutex);
+
+        // notify all processes that were waiting for this condition
+        if (0 < barrier.number_of_queries) {
+            barrier.no_running_queries_condition.wait(query_lock);
+        }
+
         data_timestamp_ptr->layout = LAYOUT;
         data_timestamp_ptr->data = DATA;
         data_timestamp_ptr->timestamp +=1;
