@@ -94,7 +94,6 @@ private:
     void LoadRTree(
         const boost::filesystem::path & file_index_path
     ) {
-        SimpleLogger().Write() << "loading fileindex from " << file_index_path;
         RTreeNode * tree_ptr = (RTreeNode *)(
             shared_memory + data_layout->GetRSearchTreeOffset()
         );
@@ -202,8 +201,6 @@ public:
         CURRENT_LAYOUT = LAYOUT_NONE;
         CURRENT_DATA = DATA_NONE;
 
-        SimpleLogger().Write() << "new shared facade";
-
         //load data
         CheckAndReloadFacade();
     }
@@ -235,7 +232,6 @@ public:
                 m_large_memory->Ptr()
             );
 
-            SimpleLogger().Write(logDEBUG) << "(re-)getting data from shared memory";
             LoadGraph();
             LoadNodeAndEdgeInformation();
             LoadRTree(ram_index_path);
@@ -244,9 +240,6 @@ public:
             LoadNames();
 
             data_layout->PrintInformation();
-
-        } else {
-            SimpleLogger().Write(logDEBUG) << "using previously loaded data";
         }
     }
 
