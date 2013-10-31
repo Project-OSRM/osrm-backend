@@ -75,6 +75,7 @@ private:
 
 public:
     SharedMemoryWrapper() :
+        m_ptr(NULL),
         m_size(0)
     { }
 
