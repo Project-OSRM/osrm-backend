@@ -48,10 +48,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 int main( const int argc, const char * argv[] ) {
     SharedBarriers barrier;
 
-    boost::interprocess::scoped_lock<
-        boost::interprocess::named_mutex
-    > pending_lock(barrier.pending_update_mutex);
-
+    try {
+        boost::interprocess::scoped_lock<
+            boost::interprocess::named_mutex
+        > pending_lock(barrier.pending_update_mutex);
+    } catch(...) {
+        // hard unlock in case of any exception.
+        barrier.pending_update_mutex.unlock();
+    }
     try {
         LogPolicy::GetInstance().Unmute();
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
