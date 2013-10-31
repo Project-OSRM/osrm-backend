@@ -231,54 +231,76 @@ inline bool GenerateServerProgramOptions(
     }
 
     if( !use_shared_memory ) {
-        if( !option_variables.count("hsgrdata") ) {
-            if( !option_variables.count("base") ) {
-                throw OSRMException("hsgrdata (or base) must be specified");
-            }
-            paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
+        path_iterator = paths.find("hsgrdata");
+        if(
+            path_iterator == paths.end() ||
+            boost::filesystem::is_regular_file(path_iterator->second) ||
+            !option_variables.count("base")
+        ) {
+            throw OSRMException("hsgrdata (or base) must be specified");
         }
+        paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
 
-        if(!option_variables.count("nodesdata")) {
-            if(!option_variables.count("base")) {
-                throw OSRMException("nodesdata (or base) must be specified");
-            }
-            paths["nodesdata"] = std::string( paths["base"].c_str()) + ".nodes";
+        path_iterator = paths.find("nodesdata");
+        if(
+            path_iterator == paths.end() ||
+            boost::filesystem::is_regular_file(path_iterator->second) ||
+            !option_variables.count("base")
+        ) {
+            throw OSRMException("nodesdata (or base) must be specified");
         }
+        paths["nodesdata"] = std::string( paths["base"].string()) + ".nodes";
 
-        if(!option_variables.count("edgesdata")) {
-            if(!option_variables.count("base")) {
-                throw OSRMException("edgesdata (or base) must be specified");
-            }
-            paths["edgesdata"] = std::string( paths["base"].c_str()) + ".edges";
+        path_iterator = paths.find("edgesdata");
+        if(
+            path_iterator == paths.end() ||
+            boost::filesystem::is_regular_file(path_iterator->second) ||
+            !option_variables.count("base")
+        ) {
+            throw OSRMException("edgesdata (or base) must be specified");
         }
+        paths["edgesdata"] = std::string( paths["base"].string()) + ".edges";
 
-        if(!option_variables.count("ramindex")) {
-            if(!option_variables.count("base")) {
-                throw OSRMException("ramindex (or base) must be specified");
-            }
-            paths["ramindex"] = std::string( paths["base"].c_str()) + ".ramIndex";
+        path_iterator = paths.find("ramindex");
+        if(
+            path_iterator == paths.end() ||
+            boost::filesystem::is_regular_file(path_iterator->second) ||
+            !option_variables.count("base")
+        ) {
+            throw OSRMException("ramindex (or base) must be specified");
         }
+        paths["ramindex"] = std::string( paths["base"].string()) + ".ramIndex";
 
-        if(!option_variables.count("fileindex")) {
-            if(!option_variables.count("base")) {
-                throw OSRMException("fileindex (or base) must be specified");
-            }
-            paths["fileindex"] = std::string( paths["base"].c_str()) + ".fileIndex";
+        path_iterator = paths.find("fileindex");
+        if(
+            path_iterator == paths.end() ||
+            boost::filesystem::is_regular_file(path_iterator->second) ||
+            !option_variables.count("base")
+        ) {
+            throw OSRMException("fileindex (or base) must be specified");
         }
+        paths["fileindex"] = std::string( paths["base"].string()) + ".fileIndex";
 
-        if(!option_variables.count("namesdata")) {
-            if(!option_variables.count("base")) {
-                throw OSRMException("namesdata (or base) must be specified");
-            }
-            paths["namesdata"] = std::string( paths["base"].c_str()) + ".names";
+        path_iterator = paths.find("namesdata");
+        if(
+            path_iterator == paths.end() ||
+            boost::filesystem::is_regular_file(path_iterator->second) ||
+            !option_variables.count("base")
+        ) {
+            throw OSRMException("namesdata (or base) must be specified");
         }
+        paths["namesdata"] = std::string( paths["base"].string()) + ".names";
 
-        if(!option_variables.count("timestamp")) {
-            if(!option_variables.count("base")) {
-                throw OSRMException("timestamp (or base) must be specified");
-            }
-            paths["timestamp"] = std::string( paths["base"].c_str()) + ".timestamp";
+        path_iterator = paths.find("timestamp");
+        if(
+            path_iterator == paths.end() ||
+            boost::filesystem::is_regular_file(path_iterator->second) ||
+            !option_variables.count("base")
+        ) {
+            throw OSRMException("timestamp (or base) must be specified");
         }
+        paths["timestamp"] = (paths["base"].string() + ".timestamp");
+
     }
     if(1 > requested_num_threads) {
         throw OSRMException("Number of threads must be a positive number");
