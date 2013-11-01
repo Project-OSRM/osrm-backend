@@ -230,79 +230,66 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
-    if( !use_shared_memory ) {
+    if( !use_shared_memory && option_variables.count("base") ) {
+        std::string base_string = paths["base"].string();
         path_iterator = paths.find("hsgrdata");
         if(
-            path_iterator == paths.end() ||
-            boost::filesystem::is_regular_file(path_iterator->second) ||
-            !option_variables.count("base")
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            throw OSRMException("hsgrdata (or base) must be specified");
+            paths["hsgrdata"] = base_string + ".hsgr";
         }
-        paths["hsgrdata"] = std::string( paths["base"].string()) + ".hsgr";
 
         path_iterator = paths.find("nodesdata");
         if(
-            path_iterator == paths.end() ||
-            boost::filesystem::is_regular_file(path_iterator->second) ||
-            !option_variables.count("base")
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            throw OSRMException("nodesdata (or base) must be specified");
+            paths["nodesdata"] = base_string + ".nodes";
         }
-        paths["nodesdata"] = std::string( paths["base"].string()) + ".nodes";
 
         path_iterator = paths.find("edgesdata");
         if(
-            path_iterator == paths.end() ||
-            boost::filesystem::is_regular_file(path_iterator->second) ||
-            !option_variables.count("base")
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            throw OSRMException("edgesdata (or base) must be specified");
+            paths["edgesdata"] = base_string + ".edges";
         }
-        paths["edgesdata"] = std::string( paths["base"].string()) + ".edges";
 
         path_iterator = paths.find("ramindex");
         if(
-            path_iterator == paths.end() ||
-            boost::filesystem::is_regular_file(path_iterator->second) ||
-            !option_variables.count("base")
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            throw OSRMException("ramindex (or base) must be specified");
+            paths["ramindex"] = base_string + ".ramIndex";
         }
-        paths["ramindex"] = std::string( paths["base"].string()) + ".ramIndex";
 
         path_iterator = paths.find("fileindex");
         if(
-            path_iterator == paths.end() ||
-            boost::filesystem::is_regular_file(path_iterator->second) ||
-            !option_variables.count("base")
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            throw OSRMException("fileindex (or base) must be specified");
+            paths["fileindex"] = base_string + ".fileIndex";
         }
-        paths["fileindex"] = std::string( paths["base"].string()) + ".fileIndex";
 
         path_iterator = paths.find("namesdata");
         if(
-            path_iterator == paths.end() ||
-            boost::filesystem::is_regular_file(path_iterator->second) ||
-            !option_variables.count("base")
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            throw OSRMException("namesdata (or base) must be specified");
+            paths["namesdata"] = base_string + ".names";
         }
-        paths["namesdata"] = std::string( paths["base"].string()) + ".names";
 
         path_iterator = paths.find("timestamp");
         if(
-            path_iterator == paths.end() ||
-            boost::filesystem::is_regular_file(path_iterator->second) ||
-            !option_variables.count("base")
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            throw OSRMException("timestamp (or base) must be specified");
+            paths["timestamp"] = (paths["base"].string() + ".timestamp");
         }
-        paths["timestamp"] = (paths["base"].string() + ".timestamp");
-
     }
-    if(1 > requested_num_threads) {
+
+    if( 1 > requested_num_threads ) {
         throw OSRMException("Number of threads must be a positive number");
     }
     return true;
