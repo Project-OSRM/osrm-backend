@@ -71,6 +71,10 @@ public:
         return parameters.Find(key);
     }
 
+    std::string GetParameter(const std::string & key) const {
+        return parameters.Find(key);
+    }
+
     bool Holds(const std::string & key) const {
         return parameters.Holds(key);
     }

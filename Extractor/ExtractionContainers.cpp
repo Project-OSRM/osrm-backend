@@ -297,8 +297,21 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
             std::ios::binary
         );
 
-        const unsigned number_of_ways = name_list.size()+1;
-        name_file_stream.write((char *)&(number_of_ways), sizeof(unsigned));
+        //write number of names
+        const unsigned number_of_names = name_list.size()+1;
+        name_file_stream.write((char *)&(number_of_names), sizeof(unsigned));
+
+        //compute total number of chars
+        unsigned total_number_of_chars = 0;
+        BOOST_FOREACH(const std::string & str, name_list) {
+            total_number_of_chars += strlen(str.c_str());
+        }
+        //write total number of chars
+        name_file_stream.write(
+            (char *)&(total_number_of_chars),
+            sizeof(unsigned)
+        );
+        //write prefixe sums
         unsigned name_lengths_prefix_sum = 0;
         BOOST_FOREACH(const std::string & str, name_list) {
             name_file_stream.write(
@@ -307,12 +320,13 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
             );
             name_lengths_prefix_sum += strlen(str.c_str());
         }
+        //duplicate on purpose!
         name_file_stream.write(
             (char *)&(name_lengths_prefix_sum),
             sizeof(unsigned)
         );
-        //duplicate on purpose!
-        name_file_stream.write((char *)&(name_lengths_prefix_sum), sizeof(unsigned));
+
+        //write all chars consecutively
         BOOST_FOREACH(const std::string & str, name_list) {
             const unsigned lengthOfRawString = strlen(str.c_str());
             name_file_stream.write(str.c_str(), lengthOfRawString);

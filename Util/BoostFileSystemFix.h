@@ -25,40 +25,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef QUERYOBJECTSSTORAGE_H_
-#define QUERYOBJECTSSTORAGE_H_
+#ifndef BOOST_FILE_SYSTEM_FIX_H
+#define BOOST_FILE_SYSTEM_FIX_H
 
-#include "../../Util/GraphLoader.h"
-#include "../../Util/OSRMException.h"
-#include "../../Util/ProgramOptions.h"
-#include "../../Util/SimpleLogger.h"
-#include "../../DataStructures/NodeInformationHelpDesk.h"
-#include "../../DataStructures/QueryEdge.h"
-#include "../../DataStructures/StaticGraph.h"
-
-#include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 
-#include <vector>
-#include <string>
+//This is one big workaround for latest boost renaming woes.
 
+#if BOOST_FILESYSTEM_VERSION < 3
+#warning Boost Installation with Filesystem3 missing, activating workaround
+#include <cstdio>
+namespace boost {
+namespace filesystem {
+inline path temp_directory_path() {
+	char * buffer;
+	buffer = tmpnam (NULL);
 
-struct QueryObjectsStorage {
-    typedef StaticGraph<QueryEdge::EdgeData>    QueryGraph;
-    typedef QueryGraph::InputEdge               InputEdge;
+	return path(buffer);
+}
 
-    NodeInformationHelpDesk                   * nodeHelpDesk;
-    std::vector<char>                           m_names_char_list;
-    std::vector<unsigned>                       m_name_begin_indices;
-    QueryGraph                                * graph;
-    std::string                                 timestamp;
-    unsigned                                    check_sum;
+inline path unique_path(const path&) {
+	return temp_directory_path();
+}
 
-    void GetName( const unsigned name_id, std::string & result ) const;
+}
+}
 
-    QueryObjectsStorage( const ServerPaths & paths );
-    ~QueryObjectsStorage();
-};
+#endif
 
-#endif /* QUERYOBJECTSSTORAGE_H_ */
+#ifndef BOOST_FILESYSTEM_VERSION
+#define BOOST_FILESYSTEM_VERSION 3
+#endif
+
+#endif /* BOOST_FILE_SYSTEM_FIX_H */

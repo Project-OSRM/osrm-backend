@@ -265,7 +265,7 @@ int main (int argc, char *argv[]) {
         NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
         DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
         edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
-        std::vector<EdgeBasedGraphFactory::EdgeBasedNode> nodeBasedEdgeList;
+        std::vector<EdgeBasedNode> nodeBasedEdgeList;
         edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
         delete edgeBasedGraphFactory;
 
@@ -275,7 +275,12 @@ int main (int argc, char *argv[]) {
 
         SimpleLogger().Write() << "writing node map ...";
         std::ofstream mapOutFile(nodeOut.c_str(), std::ios::binary);
-        mapOutFile.write((char *)&(internalToExternalNodeMapping[0]), internalToExternalNodeMapping.size()*sizeof(NodeInfo));
+        const unsigned size_of_mapping = internalToExternalNodeMapping.size();
+        mapOutFile.write((char *)&size_of_mapping, sizeof(unsigned));
+        mapOutFile.write(
+            (char *)&(internalToExternalNodeMapping[0]),
+            size_of_mapping*sizeof(NodeInfo)
+        );
         mapOutFile.close();
         std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
 
@@ -286,14 +291,14 @@ int main (int argc, char *argv[]) {
          */
 
         SimpleLogger().Write() << "building r-tree ...";
-        StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode> * rtree =
-                new StaticRTree<EdgeBasedGraphFactory::EdgeBasedNode>(
+        StaticRTree<EdgeBasedNode> * rtree =
+                new StaticRTree<EdgeBasedNode>(
                         nodeBasedEdgeList,
                         rtree_nodes_path.c_str(),
                         rtree_leafs_path.c_str()
                 );
         delete rtree;
-        IteratorbasedCRC32<std::vector<EdgeBasedGraphFactory::EdgeBasedNode> > crc32;
+        IteratorbasedCRC32<std::vector<EdgeBasedNode> > crc32;
         unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
         nodeBasedEdgeList.clear();
         SimpleLogger().Write() << "CRC32: " << crc32OfNodeBasedEdgeList;
@@ -346,20 +351,31 @@ int main (int argc, char *argv[]) {
 
         StaticGraph<EdgeData>::EdgeIterator edge = 0;
         StaticGraph<EdgeData>::EdgeIterator position = 0;
-        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node <= numberOfNodes; ++node ) {
+        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
             StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
             while ( edge < numberOfEdges && contractedEdgeList[edge].source == node )
                 ++edge;
             _nodes[node].firstEdge = position; //=edge
             position += edge - lastEdge; //remove
         }
+
+        _nodes.back().firstEdge = numberOfEdges; //sentinel element
         ++numberOfNodes;
-        //Serialize numberOfNodes, nodes
+
+        BOOST_ASSERT_MSG(
+            _nodes.size() == numberOfNodes,
+            "no. of nodes dont match"
+        );
+
+        //serialize crc32, aka checksum
         hsgr_output_stream.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
+        //serialize number f nodes
         hsgr_output_stream.write((char*) &numberOfNodes, sizeof(unsigned));
-        hsgr_output_stream.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
-        //Serialize number of Edges
+        //serialize number of edges
         hsgr_output_stream.write((char*) &position, sizeof(unsigned));
+        //serialize all nodes
+        hsgr_output_stream.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
+        //serialize all edges
         --numberOfNodes;
         edge = 0;
         int usedEdgeCounter = 0;

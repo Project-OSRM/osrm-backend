@@ -26,38 +26,105 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "OSRM.h"
-#include <boost/foreach.hpp>
 
+OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
+ :
+    use_shared_memory(use_shared_memory)
+{
+    if( !use_shared_memory ) {
+        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
+            server_paths
+        );
+    } else {
+        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>( );
+    }
 
-OSRM::OSRM(boost::unordered_map<const std::string,boost::filesystem::path>& paths) {
-    objects = new QueryObjectsStorage( paths );
-    RegisterPlugin(new HelloWorldPlugin());
-    RegisterPlugin(new LocatePlugin(objects));
-    RegisterPlugin(new NearestPlugin(objects));
-    RegisterPlugin(new TimestampPlugin(objects));
-    RegisterPlugin(new ViaRoutePlugin(objects));
+    //The following plugins handle all requests.
+    RegisterPlugin(
+        new HelloWorldPlugin()
+    );
+    RegisterPlugin(
+        new LocatePlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
+    RegisterPlugin(
+        new NearestPlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
+    RegisterPlugin(
+        new TimestampPlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
+    RegisterPlugin(
+        new ViaRoutePlugin<BaseDataFacade<QueryEdge::EdgeData> >(
+            query_data_facade
+        )
+    );
 }
 
 OSRM::~OSRM() {
-    BOOST_FOREACH(PluginMap::value_type & plugin_pointer, pluginMap) {
+    BOOST_FOREACH(PluginMap::value_type & plugin_pointer, plugin_map) {
         delete plugin_pointer.second;
     }
-    delete objects;
 }
 
 void OSRM::RegisterPlugin(BasePlugin * plugin) {
     SimpleLogger().Write()  << "loaded plugin: " << plugin->GetDescriptor();
-    if( pluginMap.find(plugin->GetDescriptor()) != pluginMap.end() ) {
-        delete pluginMap.find(plugin->GetDescriptor())->second;
+    if( plugin_map.find(plugin->GetDescriptor()) != plugin_map.end() ) {
+        delete plugin_map.find(plugin->GetDescriptor())->second;
     }
-    pluginMap.emplace(plugin->GetDescriptor(), plugin);
+    plugin_map.emplace(plugin->GetDescriptor(), plugin);
 }
 
 void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
-    const PluginMap::const_iterator & iter = pluginMap.find(route_parameters.service);
-    if(pluginMap.end() != iter) {
+    const PluginMap::const_iterator & iter = plugin_map.find(
+        route_parameters.service
+    );
+
+    if(plugin_map.end() != iter) {
         reply.status = http::Reply::ok;
+        if( use_shared_memory ) {
+            // lock update pending
+            boost::interprocess::scoped_lock<
+                boost::interprocess::named_mutex
+            > pending_lock(barrier.pending_update_mutex);
+
+            // lock query
+            boost::interprocess::scoped_lock<
+                boost::interprocess::named_mutex
+            > query_lock(barrier.query_mutex);
+
+            // unlock update pending
+            pending_lock.unlock();
+
+            // increment query count
+            ++(barrier.number_of_queries);
+
+            (static_cast<SharedDataFacade<QueryEdge::EdgeData>* >(query_data_facade))->CheckAndReloadFacade();
+        }
+
         iter->second->HandleRequest(route_parameters, reply );
+        if( use_shared_memory ) {
+            // lock query
+            boost::interprocess::scoped_lock<
+                boost::interprocess::named_mutex
+            > query_lock(barrier.query_mutex);
+
+            // decrement query count
+            --(barrier.number_of_queries);
+            BOOST_ASSERT_MSG(
+                0 <= barrier.number_of_queries,
+                "invalid number of queries"
+            );
+
+            // notify all processes that were waiting for this condition
+            if (0 == barrier.number_of_queries) {
+                barrier.no_running_queries_condition.notify_all();
+            }
+        }
     } else {
         reply = http::Reply::stockReply(http::Reply::badRequest);
     }

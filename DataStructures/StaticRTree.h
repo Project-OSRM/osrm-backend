@@ -28,11 +28,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATICRTREE_H_
 #define STATICRTREE_H_
 
-#include "MercatorUtil.h"
 #include "Coordinate.h"
-#include "PhantomNodes.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
+#include "MercatorUtil.h"
+#include "PhantomNodes.h"
+#include "SharedMemoryFactory.h"
+#include "SharedMemoryVectorWrapper.h"
+
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
@@ -48,6 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
+#include <boost/type_traits.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -63,9 +67,9 @@ const static uint32_t RTREE_LEAF_NODE_SIZE = 1170;
 
 static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtree_stream;
 
-template<class DataT>
+template<class DataT, bool UseSharedMemory = false>
 class StaticRTree : boost::noncopyable {
-private:
+public:
     struct RectangleInt2D {
         RectangleInt2D() :
             min_lon(INT_MAX),
@@ -237,6 +241,16 @@ private:
 
     typedef RectangleInt2D RectangleT;
 
+    struct TreeNode {
+        TreeNode() : child_count(0), child_is_on_disk(false) {}
+        RectangleT minimum_bounding_rectangle;
+        uint32_t child_count:31;
+        bool child_is_on_disk:1;
+        uint32_t children[RTREE_BRANCHING_FACTOR];
+    };
+
+private:
+
     struct WrappedInputElement {
         explicit WrappedInputElement(
             const uint32_t _array_index,
@@ -259,14 +273,6 @@ private:
         DataT objects[RTREE_LEAF_NODE_SIZE];
     };
 
-    struct TreeNode {
-        TreeNode() : child_count(0), child_is_on_disk(false) {}
-        RectangleT minimum_bounding_rectangle;
-        uint32_t child_count:31;
-        bool child_is_on_disk:1;
-        uint32_t children[RTREE_BRANCHING_FACTOR];
-    };
-
     struct QueryCandidate {
         explicit QueryCandidate(
             const uint32_t n_id,
@@ -280,7 +286,7 @@ private:
         }
     };
 
-    std::vector<TreeNode> m_search_tree;
+    typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
     uint64_t m_element_count;
 
     const std::string m_leaf_node_filename;
@@ -414,11 +420,10 @@ public:
 
     //Read-only operation for queries
     explicit StaticRTree(
-            const std::string & node_filename,
-            const std::string & leaf_filename
-    ) : m_leaf_node_filename(leaf_filename) {
+            const boost::filesystem::path & node_file,
+            const boost::filesystem::path & leaf_file
+    ) : m_leaf_node_filename(leaf_file.string()) {
         //open tree node file and load into RAM.
-        boost::filesystem::path node_file(node_filename);
 
         if ( !boost::filesystem::exists( node_file ) ) {
             throw OSRMException("ram index file does not exist");
@@ -434,9 +439,7 @@ public:
         m_search_tree.resize(tree_size);
         tree_node_file.read((char*)&m_search_tree[0], sizeof(TreeNode)*tree_size);
         tree_node_file.close();
-
         //open leaf node file and store thread specific pointer
-        boost::filesystem::path leaf_file(leaf_filename);
         if ( !boost::filesystem::exists( leaf_file ) ) {
             throw OSRMException("mem index file does not exist");
         }
@@ -451,6 +454,34 @@ public:
         //SimpleLogger().Write() << tree_size << " nodes in search tree";
         //SimpleLogger().Write() << m_element_count << " elements in leafs";
     }
+
+    explicit StaticRTree(
+            TreeNode * tree_node_ptr,
+            const uint32_t number_of_nodes,
+            const boost::filesystem::path & leaf_file
+    ) : m_search_tree(tree_node_ptr, number_of_nodes),
+        m_leaf_node_filename(leaf_file.string())
+    {
+        //open leaf node file and store thread specific pointer
+        if ( !boost::filesystem::exists( leaf_file ) ) {
+            throw OSRMException("mem index file does not exist");
+        }
+        if ( 0 == boost::filesystem::file_size( leaf_file ) ) {
+            throw OSRMException("mem index file is empty");
+        }
+
+        boost::filesystem::ifstream leaf_node_file( leaf_file, std::ios::binary );
+        leaf_node_file.read((char*)&m_element_count, sizeof(uint64_t));
+        leaf_node_file.close();
+
+        if( thread_local_rtree_stream.get() ) {
+            thread_local_rtree_stream->close();
+        }
+
+        //SimpleLogger().Write() << tree_size << " nodes in search tree";
+        //SimpleLogger().Write() << m_element_count << " elements in leafs";
+    }
+    //Read-only operation for queries
 /*
     inline void FindKNearestPhantomNodesForCoordinate(
         const FixedPointCoordinate & location,

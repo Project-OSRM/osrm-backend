@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SIMPLESTACK_H_
 #define SIMPLESTACK_H_
 
-#include <cassert>
+#include <boost/assert.hpp>
 #include <vector>
 
 template<typename StackItemT, class ContainerT = std::vector<StackItemT> >
@@ -61,7 +61,7 @@ public:
 	}
 
 	inline StackItemT top() {
-		assert (last >= 0);
+		BOOST_ASSERT (last >= 0);
 		return arr[last];
 	}
 

@@ -25,43 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "SearchEngineData.h"
+#include "../Util/GitDescription.h"
+#include "../Util/SimpleLogger.h"
+#include "../Server/DataStructures/SharedBarriers.h"
 
-void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes) {
-    if(!forwardHeap.get()) {
-        forwardHeap.reset(new QueryHeap(number_of_nodes));
-    } else {
-        forwardHeap->Clear();
-    }
-    if(!backwardHeap.get()) {
-        backwardHeap.reset(new QueryHeap(number_of_nodes));
-    } else {
-        backwardHeap->Clear();
-    }
-}
+#include <iostream>
 
-void SearchEngineData::InitializeOrClearSecondThreadLocalStorage(const unsigned number_of_nodes) {
-    if(!forwardHeap2.get()) {
-        forwardHeap2.reset(new QueryHeap(number_of_nodes));
-    } else {
-        forwardHeap2->Clear();
-    }
-    if(!backwardHeap2.get()) {
-        backwardHeap2.reset(new QueryHeap(number_of_nodes));
-     } else {
-        backwardHeap2->Clear();
-    }
-}
-
-void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes) {
-    if(!forwardHeap3.get()) {
-        forwardHeap3.reset(new QueryHeap(number_of_nodes));
-    } else {
-        forwardHeap3->Clear();
-    }
-    if(!backwardHeap3.get()) {
-        backwardHeap3.reset(new QueryHeap(number_of_nodes));
-    } else {
-        backwardHeap3->Clear();
-    }
+int main() {
+    LogPolicy::GetInstance().Unmute();
+    SimpleLogger().Write() <<
+            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
+            "compiled at " << __DATE__ << ", " __TIME__;
+    SimpleLogger().Write() << "Releasing all locks";
+    SharedBarriers barrier;
+    barrier.pending_update_mutex.unlock();
+    barrier.query_mutex.unlock();
+    barrier.update_mutex.unlock();
+    return 0;
 }

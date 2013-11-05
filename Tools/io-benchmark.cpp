@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "../Util/GitDescription.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
@@ -74,8 +75,9 @@ void RunStatistics(std::vector<double> & timings_vector, Statistics & stats) {
 int main (int argc, char * argv[]) {
     LogPolicy::GetInstance().Unmute();
 
-    SimpleLogger().Write(logDEBUG) << "starting up engines, compiled at " <<
-        __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() <<
+            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
+            "compiled at " << __DATE__ << ", " __TIME__;
 
     if( 1 == argc ) {
         SimpleLogger().Write(logWARNING) <<

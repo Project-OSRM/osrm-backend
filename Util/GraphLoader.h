@@ -42,7 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/fstream.hpp>
 #include <boost/unordered_map.hpp>
 
-#include <cassert>
 #include <cmath>
 
 #include <algorithm>
@@ -158,7 +157,7 @@ NodeID readBinaryOSRMGraphFromStream(
         if (1 == dir) { backward = false; }
         if (2 == dir) { forward = false; }
 
-        assert(type >= 0);
+        BOOST_ASSERT(type >= 0);
 
         //         translate the external NodeIDs to internal IDs
         ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
@@ -308,12 +307,12 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         if(speedType == 13) {
             weight = length;
         }
-        assert(length > 0);
-        assert(weight > 0);
+        BOOST_ASSERT(length > 0);
+        BOOST_ASSERT(weight > 0);
         if(dir <0 || dir > 2) {
             SimpleLogger().Write(logWARNING) << "direction bogus: " << dir;
         }
-        assert(0<=dir && dir<=2);
+        BOOST_ASSERT(0<=dir && dir<=2);
 
         bool forward = true;
         bool backward = true;
@@ -373,11 +372,11 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         EdgeWeight weight;
         in >> source >> target >> weight >> dir;
 
-        assert(weight > 0);
+        BOOST_ASSERT(weight > 0);
         if(dir <0 || dir > 3) {
             throw OSRMException( "[error] direction bogus");
         }
-        assert(0<=dir && dir<=3);
+        BOOST_ASSERT(0<=dir && dir<=3);
 
         bool forward = true;
         bool backward = true;
@@ -410,12 +409,11 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
 template<typename NodeT, typename EdgeT>
 unsigned readHSGRFromStream(
-    const std::string & hsgr_filename,
+    const boost::filesystem::path & hsgr_file,
     std::vector<NodeT> & node_list,
     std::vector<EdgeT> & edge_list,
     unsigned * check_sum
 ) {
-    boost::filesystem::path hsgr_file(hsgr_filename);
     if ( !boost::filesystem::exists( hsgr_file ) ) {
         throw OSRMException("hsgr file does not exist");
     }
@@ -434,20 +432,17 @@ unsigned readHSGRFromStream(
     }
 
     unsigned number_of_nodes = 0;
-    hsgr_input_stream.read((char*) check_sum, sizeof(unsigned));
-    hsgr_input_stream.read((char*) & number_of_nodes, sizeof(unsigned));
+    unsigned number_of_edges = 0;
+    hsgr_input_stream.read( (char*) check_sum, sizeof(unsigned) );
+    hsgr_input_stream.read( (char*) &number_of_nodes, sizeof(unsigned) );
     BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
+    hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
+    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
     node_list.resize(number_of_nodes + 1);
     hsgr_input_stream.read(
         (char*) &(node_list[0]),
         number_of_nodes*sizeof(NodeT)
     );
-    unsigned number_of_edges = 0;
-    hsgr_input_stream.read(
-        (char*) &number_of_edges,
-        sizeof(unsigned)
-    );
-    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
 
     edge_list.resize(number_of_edges);
     hsgr_input_stream.read(
