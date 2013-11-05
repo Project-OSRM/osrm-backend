@@ -65,7 +65,7 @@ namespace boost {
             if(boost::filesystem::is_regular_file(input_string)) {
                 v = boost::any(boost::filesystem::path(input_string));
             } else {
-                throw OSRMException("File does not exist: " + input_string);
+                throw OSRMException(input_string + " not found");
             }
         }
     }
