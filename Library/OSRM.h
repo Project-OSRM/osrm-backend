@@ -36,6 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Plugins/NearestPlugin.h"
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
+#include "../Server/DataStructures/BaseDataFacade.h"
+#include "../Server/DataStructures/InternalDataFacade.h"
+#include "../Server/DataStructures/SharedBarriers.h"
+#include "../Server/DataStructures/SharedDataFacade.h"
 #include "../Server/DataStructures/RouteParameters.h"
 #include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
@@ -45,21 +49,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
 #include <vector>
 
 class OSRM : boost::noncopyable {
+private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
-    QueryObjectsStorage * objects;
 public:
-    OSRM(boost::unordered_map<const std::string,boost::filesystem::path>& paths);
+    OSRM(
+        const ServerPaths & paths,
+        const bool use_shared_memory = false
+    );
     ~OSRM();
     void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
+
 private:
     void RegisterPlugin(BasePlugin * plugin);
-    PluginMap pluginMap;
+    PluginMap plugin_map;
+    bool use_shared_memory;
+    SharedBarriers barrier;
+    //base class pointer to the objects
+    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
 };
 
 #endif //OSRM_H

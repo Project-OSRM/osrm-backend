@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATICKDTREE_H_INCLUDED
 #define STATICKDTREE_H_INCLUDED
 
-#include <cassert>
+#include <boost/assert.hpp>
 #include <vector>
 #include <algorithm>
 #include <stack>
@@ -100,8 +100,8 @@ public:
     };
 
     StaticKDTree( std::vector< InputPoint > * points ){
-        assert( k > 0 );
-        assert ( points->size() > 0 );
+        BOOST_ASSERT( k > 0 );
+        BOOST_ASSERT ( points->size() > 0 );
         size = points->size();
         kdtree = new InputPoint[size];
         for ( Iterator i = 0; i != size; ++i ) {
@@ -209,11 +209,11 @@ private:
     public:
         Less( unsigned d ) {
             dimension = d;
-            assert( dimension < k );
+            BOOST_ASSERT( dimension < k );
         }
 
         bool operator() ( const InputPoint& left, const InputPoint& right ) {
-            assert( dimension < k );
+            BOOST_ASSERT( dimension < k );
             return left.coordinates[dimension] < right.coordinates[dimension];
         }
     private:

@@ -29,20 +29,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOCATEPLUGIN_H_
 
 #include "BasePlugin.h"
-#include "../DataStructures/NodeInformationHelpDesk.h"
-#include "../Server/DataStructures/QueryObjectsStorage.h"
 #include "../Util/StringUtil.h"
 
-/*
- * This Plugin locates the nearest node in the road network for a given coordinate.
- */
+//locates the nearest node in the road network for a given coordinate.
+
+template<class DataFacadeT>
 class LocatePlugin : public BasePlugin {
 public:
-    LocatePlugin(QueryObjectsStorage * objects) : descriptor_string("locate") {
-        nodeHelpDesk = objects->nodeHelpDesk;
-    }
+    LocatePlugin(DataFacadeT * facade)
+     :
+        descriptor_string("locate"),
+        facade(facade)
+    { }
     const std::string & GetDescriptor() const { return descriptor_string; }
-    void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
+
+    void HandleRequest(
+        const RouteParameters & routeParameters,
+        http::Reply& reply
+    ) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
             reply = http::Reply::stockReply(http::Reply::badRequest);
@@ -58,15 +62,19 @@ public:
         std::string tmp;
         //json
 
-//        JSONParameter = routeParameters.options.Find("jsonp");
-        if("" != routeParameters.jsonpParameter) {
+        if(!routeParameters.jsonpParameter.empty()) {
             reply.content += routeParameters.jsonpParameter;
             reply.content += "(";
         }
         reply.status = http::Reply::ok;
         reply.content += ("{");
         reply.content += ("\"version\":0.3,");
-        if(!nodeHelpDesk->LocateClosestEndPointForCoordinate(routeParameters.coordinates[0], result)) {
+        if(
+            !facade->LocateClosestEndPointForCoordinate(
+                routeParameters.coordinates[0],
+                result
+             )
+        ) {
             reply.content += ("\"status\":207,");
             reply.content += ("\"mapped_coordinate\":[]");
         } else {
@@ -85,7 +93,7 @@ public:
         reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"";
         reply.content += ("}");
         reply.headers.resize(3);
-        if("" != routeParameters.jsonpParameter) {
+        if(!routeParameters.jsonpParameter.empty()) {
             reply.content += ")";
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
@@ -104,8 +112,8 @@ public:
     }
 
 private:
-    NodeInformationHelpDesk * nodeHelpDesk;
     std::string descriptor_string;
+    DataFacadeT * facade;
 };
 
 #endif /* LOCATEPLUGIN_H_ */

@@ -72,12 +72,13 @@ int main (int argc, const char * argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
 #ifdef __linux__
-        if(!mlockall(MCL_CURRENT | MCL_FUTURE)) {
+        if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
             SimpleLogger().Write(logWARNING) <<
-                "Process " << argv[0] << "could not be locked to RAM";
+                "Process " << argv[0] << " could not be locked to RAM";
         }
         installCrashHandler(argv[0]);
 #endif
+        bool use_shared_memory = false;
         std::string ip_address;
         int ip_port, requested_num_threads;
 
@@ -88,7 +89,8 @@ int main (int argc, const char * argv[]) {
                 server_paths,
                 ip_address,
                 ip_port,
-                requested_num_threads
+                requested_num_threads,
+                use_shared_memory
              )
         ) {
             return 0;
@@ -98,27 +100,30 @@ int main (int argc, const char * argv[]) {
             "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
             "compiled at " << __DATE__ << ", " __TIME__;
 
-        SimpleLogger().Write() <<
-            "HSGR file:\t" << server_paths["hsgrdata"];
-        SimpleLogger().Write() <<
-            "Nodes file:\t" << server_paths["nodesdata"];
-        SimpleLogger().Write() <<
-            "Edges file:\t" << server_paths["edgesdata"];
-        SimpleLogger().Write() <<
-            "RAM file:\t" << server_paths["ramindex"];
-        SimpleLogger().Write() <<
-            "Index file:\t" << server_paths["fileindex"];
-        SimpleLogger().Write() <<
-            "Names file:\t" << server_paths["namesdata"];
-        SimpleLogger().Write() <<
-            "Timestamp file:\t" << server_paths["timestamp"];
-        SimpleLogger().Write() <<
-            "Threads:\t" << requested_num_threads;
-        SimpleLogger().Write() <<
-            "IP address:\t" << ip_address;
-        SimpleLogger().Write() <<
-            "IP port:\t" << ip_port;
-
+        if( use_shared_memory ) {
+            SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
+        } else {
+            SimpleLogger().Write() <<
+                "HSGR file:\t" << server_paths["hsgrdata"];
+            SimpleLogger().Write(logDEBUG) <<
+                "Nodes file:\t" << server_paths["nodesdata"];
+            SimpleLogger().Write(logDEBUG) <<
+                "Edges file:\t" << server_paths["edgesdata"];
+            SimpleLogger().Write(logDEBUG) <<
+                "RAM file:\t" << server_paths["ramindex"];
+            SimpleLogger().Write(logDEBUG) <<
+                "Index file:\t" << server_paths["fileindex"];
+            SimpleLogger().Write(logDEBUG) <<
+                "Names file:\t" << server_paths["namesdata"];
+            SimpleLogger().Write(logDEBUG) <<
+                "Timestamp file:\t" << server_paths["timestamp"];
+            SimpleLogger().Write(logDEBUG) <<
+                "Threads:\t" << requested_num_threads;
+            SimpleLogger().Write(logDEBUG) <<
+                "IP address:\t" << ip_address;
+            SimpleLogger().Write(logDEBUG) <<
+                "IP port:\t" << ip_port;
+        }
 #ifndef _WIN32
         int sig = 0;
         sigset_t new_mask;
@@ -127,12 +132,13 @@ int main (int argc, const char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        OSRM routing_machine(server_paths);
+        OSRM routing_machine(server_paths, use_shared_memory);
         Server * s = ServerFactory::CreateServer(
                         ip_address,
                         ip_port,
                         requested_num_threads
                      );
+
         s->GetRequestHandlerPtr().RegisterRoutingMachine(&routing_machine);
 
         boost::thread t(boost::bind(&Server::Run, s));
@@ -159,7 +165,8 @@ int main (int argc, const char * argv[]) {
         std::cout << "[server] stopping threads" << std::endl;
 
         if(!t.timed_join(boost::posix_time::seconds(2))) {
-       	    SimpleLogger().Write(logDEBUG) << "Threads did not finish within 2 seconds. Hard abort!";
+       	    SimpleLogger().Write(logDEBUG) <<
+                "Threads did not finish within 2 seconds. Hard abort!";
         }
 
         std::cout << "[server] freeing objects" << std::endl;

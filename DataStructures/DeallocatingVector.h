@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEALLOCATINGVECTOR_H_
 #define DEALLOCATINGVECTOR_H_
 
-#include <cassert>
+#include <boost/assert.hpp>
 #include <cstring>
 #include <vector>
 
@@ -48,43 +48,30 @@ protected:
         //make constructors explicit, so we do not mix random access and deallocation iterators.
         DeallocatingVectorIteratorState();
     public:
-        explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r) : mData(r.mData), mIndex(r.mIndex), mBucketList(r.mBucketList) {}
-        //explicit DeallocatingVectorIteratorState(const ElementT * ptr, const std::size_t idx, const std::vector<ElementT *> & input_list) : mData(ptr), mIndex(idx), mBucketList(input_list) {}
-        explicit DeallocatingVectorIteratorState(const std::size_t idx, std::vector<ElementT *> & input_list) : mData(DEALLOCATION_VECTOR_NULL_PTR), mIndex(idx), mBucketList(input_list) {
-            setPointerForIndex();
+        explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r) : /*mData(r.mData),*/ mIndex(r.mIndex), mBucketList(r.mBucketList) {}
+        explicit DeallocatingVectorIteratorState(const std::size_t idx, std::vector<ElementT *> & input_list) : /*mData(DEALLOCATION_VECTOR_NULL_PTR),*/ mIndex(idx), mBucketList(input_list) {
         }
-        ElementT * mData;
         std::size_t mIndex;
         std::vector<ElementT *> & mBucketList;
 
-        inline void setPointerForIndex() {
-            if(bucketSizeC*mBucketList.size() <= mIndex) {
-                mData = DEALLOCATION_VECTOR_NULL_PTR;
-                return;
-            }
-            std::size_t _bucket = mIndex/bucketSizeC;
-            std::size_t _index = mIndex%bucketSizeC;
-            mData = &(mBucketList[_bucket][_index]);
-
-            if(DeallocateC) {
-                //if we hopped over the border of the previous bucket, then delete that bucket.
-                if(0 == _index && _bucket) {
-                    delete[] mBucketList[_bucket-1];
-                    mBucketList[_bucket-1] = DEALLOCATION_VECTOR_NULL_PTR;
-                }
-            }
-
-        }
         inline bool operator!=(const DeallocatingVectorIteratorState &other) {
-            return (mData != other.mData) || (mIndex != other.mIndex) || (mBucketList != other.mBucketList);
+            return mIndex != other.mIndex;
         }
 
         inline bool operator==(const DeallocatingVectorIteratorState &other) {
-            return (mData == other.mData) && (mIndex == other.mIndex) && (mBucketList == other.mBucketList);
+            return mIndex == other.mIndex;
         }
 
-        inline bool operator<(const DeallocatingVectorIteratorState &other) {
+        bool operator<(const DeallocatingVectorIteratorState &other) const {
             return mIndex < other.mIndex;
+        }
+
+        bool operator>(const DeallocatingVectorIteratorState &other) const {
+            return mIndex > other.mIndex;
+        }
+
+        bool operator>=(const DeallocatingVectorIteratorState &other) const {
+            return mIndex >= other.mIndex;
         }
 
         //This is a hack to make assignment operator possible with reference member
@@ -112,66 +99,69 @@ public:
     DeallocatingVectorIterator(const DeallocatingVectorIterator<T2> & r) : mState(r.mState) {}
 
     DeallocatingVectorIterator(std::size_t idx, std::vector<ElementT *> & input_list) : mState(idx, input_list) {}
-    //DeallocatingVectorIterator(std::size_t idx, const std::vector<ElementT *> & input_list) : mState(idx, input_list) {}
     DeallocatingVectorIterator(const DeallocatingVectorIteratorState & r) : mState(r) {}
 
     template<typename T2>
     DeallocatingVectorIterator& operator=(const DeallocatingVectorIterator<T2> &r) {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         mState = r.mState; return *this;
     }
 
     inline DeallocatingVectorIterator& operator++() { //prefix
-//        if(DeallocateC) assert(false);
-        ++mState.mIndex; mState.setPointerForIndex(); return *this;
+        ++mState.mIndex;
+        return *this;
     }
 
     inline DeallocatingVectorIterator& operator--() { //prefix
-        if(DeallocateC) assert(false);
-        --mState.mIndex; mState.setPointerForIndex(); return *this;
+        if(DeallocateC) BOOST_ASSERT(false);
+        --mState.mIndex;
+        return *this;
     }
 
     inline DeallocatingVectorIterator operator++(int) { //postfix
         DeallocatingVectorIteratorState _myState(mState);
-        mState.mIndex++; mState.setPointerForIndex();
+        mState.mIndex++;
         return DeallocatingVectorIterator(_myState);
     }
-    inline DeallocatingVectorIterator operator --(int) { //postfix
-        if(DeallocateC) assert(false);
+    inline DeallocatingVectorIterator operator--(int) { //postfix
+        if(DeallocateC) BOOST_ASSERT(false);
         DeallocatingVectorIteratorState _myState(mState);
-        mState.mIndex--; mState.setPointerForIndex();
+        mState.mIndex--;
         return DeallocatingVectorIterator(_myState);
     }
 
     inline DeallocatingVectorIterator operator+(const difference_type& n) const {
         DeallocatingVectorIteratorState _myState(mState);
-        _myState.mIndex+=n; _myState.setPointerForIndex();
+        _myState.mIndex+=n;
         return DeallocatingVectorIterator(_myState);
     }
 
-    inline DeallocatingVectorIterator& operator+=(const difference_type& n) const {
+    inline DeallocatingVectorIterator& operator+=(const difference_type& n) {
         mState.mIndex+=n; return *this;
     }
 
     inline DeallocatingVectorIterator operator-(const difference_type& n) const {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         DeallocatingVectorIteratorState _myState(mState);
-        _myState.mIndex-=n; _myState.setPointerForIndex();
+        _myState.mIndex-=n;
         return DeallocatingVectorIterator(_myState);
     }
 
     inline DeallocatingVectorIterator& operator-=(const difference_type &n) const {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         mState.mIndex-=n; return *this;
     }
-    inline reference operator*() const { return *mState.mData; }
-    inline pointer operator->() const { return mState.mData; }
-    inline reference operator[](const difference_type &n) const {
-        if(DeallocateC) assert(false);
-        DeallocatingVectorIteratorState _myState(mState);
-        _myState.mIndex += n;
-        _myState.setPointerForIndex;
-        return _myState.mData;
+
+    inline reference operator*() const {
+        std::size_t _bucket = mState.mIndex/bucketSizeC;
+        std::size_t _index = mState.mIndex%bucketSizeC;
+        return (mState.mBucketList[_bucket][_index]);
+    }
+
+    inline pointer operator->() const {
+        std::size_t _bucket = mState.mIndex/bucketSizeC;
+        std::size_t _index = mState.mIndex%bucketSizeC;
+        return &(mState.mBucketList[_bucket][_index]);
     }
 
     inline bool operator!=(const DeallocatingVectorIterator & other) {
@@ -182,12 +172,20 @@ public:
         return mState == other.mState;
     }
 
-    bool operator<(const DeallocatingVectorIterator & other) {
+    inline bool operator<(const DeallocatingVectorIterator & other) const {
         return mState < other.mState;
     }
 
+    inline bool operator>(const DeallocatingVectorIterator & other) const {
+        return mState > other.mState;
+    }
+
+    inline bool operator>=(const DeallocatingVectorIterator & other) const {
+        return mState >= other.mState;
+    }
+
     difference_type operator-(const DeallocatingVectorIterator & other) {
-        if(DeallocateC) assert(false);
+        if(DeallocateC) BOOST_ASSERT(false);
         return mState.mIndex-other.mState.mIndex;
     }
 };
