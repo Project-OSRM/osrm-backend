@@ -1,94 +1,36 @@
 /*
-    open source routing machine
-    Copyright (C) Dennis Luxen, 2010
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-any later version.
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-You should have received a copy of the GNU Affero General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-or see http://www.gnu.org/licenses/agpl.txt.
- */
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
 
 #include "OSRM.h"
+#include <boost/foreach.hpp>
 
-OSRM::OSRM(const char * server_ini_path) {
-    if( !testDataFile(server_ini_path) ){
-        std::string error_message = std::string(server_ini_path) + " not found";
-        throw OSRMException(error_message.c_str());
-    }
 
-    IniFile serverConfig(server_ini_path);
-
-    boost::filesystem::path base_path =
-               boost::filesystem::absolute(server_ini_path).parent_path();
-
-    if ( !serverConfig.Holds("hsgrData")) {
-        throw OSRMException("no ram index file name in server ini");
-    }
-    if ( !serverConfig.Holds("ramIndex") ) {
-        throw OSRMException("no mem index file name in server ini");
-    }
-    if ( !serverConfig.Holds("fileIndex") ) {
-        throw OSRMException("no nodes file name in server ini");
-    }
-    if ( !serverConfig.Holds("nodesData") ) {
-        throw OSRMException("no nodes file name in server ini");
-    }
-    if ( !serverConfig.Holds("edgesData") ) {
-        throw OSRMException("no edges file name in server ini");
-    }
-
-    boost::filesystem::path hsgr_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("hsgrData"),
-            base_path
-    );
-
-    boost::filesystem::path ram_index_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("ramIndex"),
-            base_path
-    );
-
-    boost::filesystem::path file_index_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("fileIndex"),
-            base_path
-    );
-
-    boost::filesystem::path node_data_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("nodesData"),
-            base_path
-    );
-    boost::filesystem::path edge_data_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("edgesData"),
-            base_path
-    );
-    boost::filesystem::path name_data_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("namesData"),
-            base_path
-    );
-    boost::filesystem::path timestamp_path = boost::filesystem::absolute(
-            serverConfig.GetParameter("timestamp"),
-            base_path
-    );
-
-    objects = new QueryObjectsStorage(
-        hsgr_path.string(),
-        ram_index_path.string(),
-        file_index_path.string(),
-        node_data_path.string(),
-        edge_data_path.string(),
-        name_data_path.string(),
-        timestamp_path.string()
-    );
-
+OSRM::OSRM(boost::unordered_map<const std::string,boost::filesystem::path>& paths) {
+    objects = new QueryObjectsStorage( paths );
     RegisterPlugin(new HelloWorldPlugin());
     RegisterPlugin(new LocatePlugin(objects));
     RegisterPlugin(new NearestPlugin(objects));

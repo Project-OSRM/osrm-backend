@@ -1,22 +1,29 @@
 /*
-    open source routing machine
-    Copyright (C) Dennis Luxen, others 2010
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-any later version.
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-You should have received a copy of the GNU Affero General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-or see http://www.gnu.org/licenses/agpl.txt.
- */
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
 
 #include "Extractor/ExtractorCallbacks.h"
 #include "Extractor/ExtractionContainers.h"
@@ -63,7 +70,7 @@ int main (int argc, char *argv[]) {
         config_options.add_options()
             ("profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)->default_value("profile.lua"),
                 "Path to LUA routing profile")
-            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(10), 
+            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
                 "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
@@ -105,9 +112,11 @@ int main (int argc, char *argv[]) {
 
         // parse config file
         if(boost::filesystem::is_regular_file(config_file_path)) {
-            std::ifstream ifs(config_file_path.c_str());
-            SimpleLogger().Write() << "Reading options from: " << config_file_path.filename().string();
-            boost::program_options::store(parse_config_file(ifs, config_file_options), option_variables);
+            SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
+            std::string config_str;
+            PrepareConfigFile( config_file_path.c_str(), config_str );
+            std::stringstream config_stream( config_str );
+            boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
             boost::program_options::notify(option_variables);
         }
 
@@ -197,11 +206,9 @@ int main (int argc, char *argv[]) {
             "extraction finished after " << get_timestamp() - startup_time <<
             "s";
 
-         SimpleLogger().Write() << "\nRun:\n./osrm-prepare " <<
-            output_file_name <<
-            " " <<
-            restrictionsFileName <<
-            std::endl;
+         SimpleLogger().Write() << "To prepare the data for routing, run: "
+            << "./osrm-prepare " << output_file_name << std::endl;
+
     } catch(boost::program_options::too_many_positional_options_error& e) {
         SimpleLogger().Write(logWARNING) << "Only one input file can be specified";
         return -1;

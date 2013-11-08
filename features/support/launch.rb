@@ -6,7 +6,8 @@ SHUTDOWN_TIMEOUT = 2
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
 class OSRMLauncher
-  def initialize &block
+  def initialize input_file, &block
+    @input_file = input_file
     Dir.chdir TEST_FOLDER do
       begin
         launch
@@ -48,7 +49,7 @@ class OSRMLauncher
 
   def osrm_up
     return if osrm_up?
-    @pid = Process.spawn(["#{BIN_PATH}/osrm-routed",''],:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+    @pid = Process.spawn("#{BIN_PATH}/osrm-routed #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
   end
 
   def osrm_down

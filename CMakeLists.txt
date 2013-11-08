@@ -38,10 +38,10 @@ set(ExtractorSources extractor.cpp ${ExtractorGlob} Util/GitDescription.cpp)
 add_executable(osrm-extract ${ExtractorSources} )
 
 file(GLOB PrepareGlob Contractor/*.cpp)
-set(PrepareSources createHierarchy.cpp ${PrepareGlob})
+set(PrepareSources createHierarchy.cpp ${PrepareGlob} Util/GitDescription.cpp)
 add_executable(osrm-prepare ${PrepareSources} )
 
-add_executable(osrm-routed routed.cpp )
+add_executable(osrm-routed routed.cpp Util/GitDescription.cpp)
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
@@ -164,7 +164,7 @@ if(WITH_TOOLS)
 			osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID
 		)
 	endif(GDAL_FOUND)
-	add_executable ( osrm-cli Tools/simpleclient.cpp )
+	add_executable ( osrm-cli Tools/simpleclient.cpp Util/GitDescription.cpp)
 	target_link_libraries( osrm-cli ${Boost_LIBRARIES} OSRM UUID )
     add_executable ( osrm-io-benchmark Tools/io-benchmark.cpp )
     target_link_libraries( osrm-io-benchmark ${Boost_LIBRARIES} )

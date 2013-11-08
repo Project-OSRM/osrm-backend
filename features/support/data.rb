@@ -263,13 +263,12 @@ def reprocess
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm #{@osm_file}.osrm.restrictions 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE} #{PROFILES_PATH}/#{@profile}.lua"
+      unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
       end
       log '', :preprocess
     end
     log_preprocess_done
-    write_server_ini
   end
 end

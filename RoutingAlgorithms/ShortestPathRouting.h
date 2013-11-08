@@ -1,24 +1,29 @@
 /*
-    open source routing machine
-    Copyright (C) Dennis Luxen, others 2010
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU AFFERO General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-any later version.
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-You should have received a copy of the GNU Affero General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-or see http://www.gnu.org/licenses/agpl.txt.
- */
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+*/
 
 #ifndef SHORTESTPATHROUTING_H_
 #define SHORTESTPATHROUTING_H_
@@ -72,15 +77,15 @@ public:
 
             //insert new starting nodes into forward heap, adjusted by previous distances.
             if(searchFrom1stStartNode) {
-                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
                 // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
-                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, -phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
+                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode, distance1-phantomNodePair.startPhantom.weight1, phantomNodePair.startPhantom.edgeBasedNode);
                 // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode << "´, w: " << -phantomNodePair.startPhantom.weight1);
            }
             if(phantomNodePair.startPhantom.isBidirected() && searchFrom2ndStartNode) {
-                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+                forward_heap1.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance2-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
                 // INFO("fw1: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
-                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, -phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
+                forward_heap2.Insert(phantomNodePair.startPhantom.edgeBasedNode+1, distance2-phantomNodePair.startPhantom.weight2, phantomNodePair.startPhantom.edgeBasedNode+1);
                 // INFO("fw2: " << phantomNodePair.startPhantom.edgeBasedNode+1 << "´, w: " << -phantomNodePair.startPhantom.weight2);
             }
 
@@ -160,11 +165,9 @@ public:
                     if( *(packedPath1.end()-1) == *(temporaryPackedPath1.begin())) {
                         packedPath2.clear();
                         packedPath2.insert(packedPath2.end(), packedPath1.begin(), packedPath1.end());
-                        distance2 = distance1;
                     } else {
                         packedPath1.clear();
                         packedPath1.insert(packedPath1.end(), packedPath2.begin(), packedPath2.end());
-                        distance1 = distance2;
                     }
                 } else  {
                     //packed paths 1 and 2 may need to switch.
@@ -184,8 +187,8 @@ public:
                 searchFrom2ndStartNode &= !(lastNodeID == phantomNodePair.targetPhantom.edgeBasedNode);
             }
 
-            distance1 += _localUpperbound1;
-            distance2 += _localUpperbound2;
+            distance1 = _localUpperbound1;
+            distance2 = _localUpperbound2;
         }
 
         if(distance1 > distance2){
