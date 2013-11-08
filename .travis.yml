@@ -2,6 +2,7 @@ language: cpp
 compiler:
   - gcc
 #  - clang
+# Make sure CMake is installed
 install:
  - sudo apt-get update >/dev/null
  - sudo apt-get -q install libprotoc-dev libprotobuf7 protobuf-compiler libprotobuf-dev libosmpbf-dev libpng12-dev libbz2-dev libstxxl-dev libstxxl-doc libstxxl1 libxml2-dev libzip-dev libboost1.46-all-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems osmosis
@@ -30,6 +31,7 @@ notifications:
   on_failure: always
   use_notice: true
   skip_join: false
+
   recipients:
     - dennis@mapbox.com
   email:
