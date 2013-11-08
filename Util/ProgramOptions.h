@@ -212,7 +212,7 @@ inline bool GenerateServerProgramOptions(
     boost::program_options::notify(option_variables);
 
     // parse config file
-    ServerPaths::const_iterator path_iterator = paths.find("config");
+    ServerPaths::iterator path_iterator = paths.find("config");
     if(
         path_iterator != paths.end() &&
         boost::filesystem::is_regular_file(path_iterator->second) &&
@@ -237,7 +237,7 @@ inline bool GenerateServerProgramOptions(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            paths["hsgrdata"] = base_string + ".hsgr";
+            path_iterator->second = base_string + ".hsgr";
         }
 
         path_iterator = paths.find("nodesdata");
@@ -245,7 +245,7 @@ inline bool GenerateServerProgramOptions(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            paths["nodesdata"] = base_string + ".nodes";
+            path_iterator->second = base_string + ".nodes";
         }
 
         path_iterator = paths.find("edgesdata");
@@ -253,7 +253,7 @@ inline bool GenerateServerProgramOptions(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            paths["edgesdata"] = base_string + ".edges";
+            path_iterator->second = base_string + ".edges";
         }
 
         path_iterator = paths.find("ramindex");
@@ -261,7 +261,7 @@ inline bool GenerateServerProgramOptions(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            paths["ramindex"] = base_string + ".ramIndex";
+            path_iterator->second = base_string + ".ramIndex";
         }
 
         path_iterator = paths.find("fileindex");
@@ -269,7 +269,7 @@ inline bool GenerateServerProgramOptions(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            paths["fileindex"] = base_string + ".fileIndex";
+            path_iterator->second = base_string + ".fileIndex";
         }
 
         path_iterator = paths.find("namesdata");
@@ -277,7 +277,7 @@ inline bool GenerateServerProgramOptions(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            paths["namesdata"] = base_string + ".names";
+            path_iterator->second = base_string + ".names";
         }
 
         path_iterator = paths.find("timestamp");
@@ -285,7 +285,7 @@ inline bool GenerateServerProgramOptions(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
-            paths["timestamp"] = (paths["base"].string() + ".timestamp");
+            path_iterator->second = base_string + ".timestamp";
         }
     }
 
