@@ -80,8 +80,8 @@ struct Reply {
 	} status;
 
 	std::vector<Header> headers;
-    std::vector<boost::asio::const_buffer> toBuffers();
-    std::vector<boost::asio::const_buffer> HeaderstoBuffers();
+    void ToBuffers(std::vector<boost::asio::const_buffer>&);
+    void HeadersToBuffers(std::vector<boost::asio::const_buffer>&);
 	std::string content;
 	static Reply stockReply(status_type status);
 	void setSize(const unsigned size) {
@@ -116,8 +116,7 @@ std::string ToString(Reply::status_type status) {
 	}
 }
 
-std::vector<boost::asio::const_buffer> Reply::toBuffers(){
-	std::vector<boost::asio::const_buffer> buffers;
+void Reply::ToBuffers( std::vector<boost::asio::const_buffer> & buffers ){
 	buffers.push_back(ToBuffer(status));
 	for (std::size_t i = 0; i < headers.size(); ++i) {
 		Header& h = headers[i];
@@ -128,11 +127,9 @@ std::vector<boost::asio::const_buffer> Reply::toBuffers(){
 	}
 	buffers.push_back(boost::asio::buffer(crlf));
 	buffers.push_back(boost::asio::buffer(content));
-	return buffers;
 }
 
-std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
-    std::vector<boost::asio::const_buffer> buffers;
+void Reply::HeadersToBuffers( std::vector<boost::asio::const_buffer>& buffers ){
     buffers.push_back(ToBuffer(status));
     for (std::size_t i = 0; i < headers.size(); ++i) {
         Header& h = headers[i];
@@ -142,7 +139,6 @@ std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
         buffers.push_back(boost::asio::buffer(crlf));
     }
     buffers.push_back(boost::asio::buffer(crlf));
-    return buffers;
 }
 
 Reply Reply::stockReply(Reply::status_type status) {

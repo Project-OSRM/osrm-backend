@@ -87,13 +87,13 @@ private:
 				&compression_type
 			);
 
+			std::vector<boost::asio::const_buffer> output_buffer;
 			if( result ) {
 				request.endpoint = TCP_socket.remote_endpoint().address();
 				request_handler.handle_request(request, reply);
 
 				Header compression_header;
 				std::vector<unsigned char> compressed_output;
-				std::vector<boost::asio::const_buffer> output_buffer;
 				switch(compression_type) {
 				case deflateRFC1951:
 					compression_header.name = "Content-Encoding";
@@ -109,7 +109,7 @@ private:
 						compression_type
 					);
 					reply.setSize(compressed_output.size());
-					output_buffer = reply.HeaderstoBuffers();
+					reply.HeadersToBuffers(output_buffer);
 					output_buffer.push_back(
 						boost::asio::buffer(compressed_output)
 					);
@@ -139,7 +139,7 @@ private:
 						compression_type
 					);
 					reply.setSize(compressed_output.size());
-					output_buffer = reply.HeaderstoBuffers();
+					reply.HeadersToBuffers(output_buffer);
 					output_buffer.push_back(
 						boost::asio::buffer(compressed_output)
 					);
@@ -156,9 +156,10 @@ private:
 					);
 					break;
 				case noCompression:
+					reply.HeadersToBuffers(output_buffer);
 					boost::asio::async_write(
 						TCP_socket,
-						reply.toBuffers(),
+						output_buffer,
 						strand.wrap(
 							boost::bind(
 								&Connection::handle_write,
@@ -171,9 +172,10 @@ private:
 				}
 			} else if (!result) {
 				reply = Reply::stockReply(Reply::badRequest);
+				reply.HeadersToBuffers(output_buffer);
 				boost::asio::async_write(
 					TCP_socket,
-					reply.toBuffers(),
+					output_buffer,
 					strand.wrap(
 						boost::bind(
 							&Connection::handle_write,
