@@ -37,6 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 enum LogLevel { logINFO, logWARNING, logDEBUG };
 static	boost::mutex logger_mutex;
+const char COL_RESET[] = "\x1b[0m";
+const char RED[]     = "\x1b[31m";
+const char GREEN[]   = "\x1b[32m";
+const char YELLOW[]  = "\x1b[33m";
+const char BLUE[]    = "\x1b[34m";
+const char MAGENTA[] = "\x1b[35m";
+const char CYAN[]    = "\x1b[36m";
 
 class LogPolicy : boost::noncopyable {
 public:
@@ -97,14 +104,14 @@ public:
 		   	if(!LogPolicy::GetInstance().IsMute()) {
 		   	switch(level) {
 				case logINFO:
-					std::cout << os.str() << std::endl;
+					std::cout 			<< os.str() << COL_RESET << std::endl;
 					break;
 				case logWARNING:
-					std::cerr << os.str() << std::endl;
+					std::cerr << RED 	<< os.str() << COL_RESET << std::endl;
 					break;
 				case logDEBUG:
 #ifndef NDEBUG
-					std::cout << os.str() << std::endl;
+					std::cout << YELLOW << os.str() << COL_RESET << std::endl;
 #endif
 					break;
 				default:
