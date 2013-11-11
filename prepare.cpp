@@ -236,18 +236,13 @@ int main (int argc, char *argv[]) {
         NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
         in.close();
         SimpleLogger().Write() <<
-            inputRestrictions.size() <<
-            " restrictions, " <<
-            bollardNodes.size() <<
-            " bollard nodes, " <<
-            trafficLightNodes.size() <<
-            " traffic lights";
+            inputRestrictions.size() << " restrictions, " <<
+            bollardNodes.size() << " bollard nodes, " <<
+            trafficLightNodes.size() << " traffic lights";
 
-        if(0 == edgeList.size()) {
-            std::cerr <<
-                "The input data is broken. "
-                "It is impossible to do any turns in this graph" <<
-                std::endl;
+        if( edgeList.empty() ) {
+            SimpleLogger().Write(logWARNING) << "The input data is broken. "
+                "It is impossible to do any turns in this graph";
             return -1;
         }
 
