@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/noncopyable.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/integer.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/xsi_shared_memory.hpp>
 
@@ -84,7 +85,7 @@ public:
 	SharedMemory(
 		const boost::filesystem::path & lock_file,
 		const IdentifierT id,
-		const unsigned size = 0,
+		const uint64_t size = 0,
 		bool read_write = false,
 		bool remove_prev = true
 	) : key(
@@ -195,7 +196,7 @@ public:
 	template<typename IdentifierT >
 	static SharedMemory * Get(
 		const IdentifierT & id,
-		const unsigned size = 0,
+		const uint64_t size = 0,
 		bool read_write = false,
 		bool remove_prev = true
 	) {
