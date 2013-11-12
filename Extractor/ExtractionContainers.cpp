@@ -165,7 +165,7 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
                 continue;
             }
             if(*usedNodeIDsIT == nodesIT->id) {
-                fout.write((char*)&(*nodesIT), sizeof(_Node));
+                fout.write((char*)&(*nodesIT), sizeof(ExternalMemoryNode));
                 ++usedNodeCounter;
                 ++usedNodeIDsIT;
                 ++nodesIT;

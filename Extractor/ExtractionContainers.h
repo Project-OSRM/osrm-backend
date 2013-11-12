@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class ExtractionContainers {
 public:
     typedef stxxl::vector<NodeID>                   STXXLNodeIDVector;
-    typedef stxxl::vector<_Node>                    STXXLNodeVector;
+    typedef stxxl::vector<ExternalMemoryNode>       STXXLNodeVector;
     typedef stxxl::vector<InternalExtractorEdge>    STXXLEdgeVector;
     typedef stxxl::vector<std::string>              STXXLStringVector;
     typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;

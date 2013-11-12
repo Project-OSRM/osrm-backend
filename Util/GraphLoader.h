@@ -84,9 +84,9 @@ NodeID readBinaryOSRMGraphFromStream(
     ExternalNodeMap ext_to_int_id_map;
     in.read((char*)&n, sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
-    _Node node;
+    ExternalMemoryNode node;
     for (NodeID i=0; i<n; ++i) {
-        in.read((char*)&node, sizeof(_Node));
+        in.read((char*)&node, sizeof(ExternalMemoryNode));
         int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
         ext_to_int_id_map.emplace(node.id, i);
         if(node.bollard) {

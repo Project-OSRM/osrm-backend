@@ -172,16 +172,19 @@ struct Cmp : public std::binary_function<NodeID, NodeID, bool> {
     }
 };
 
-struct CmpNodeByID : public std::binary_function<_Node, _Node, bool> {
-    typedef _Node value_type;
-    bool operator ()  (const _Node & a, const _Node & b) const {
+struct CmpNodeByID : public std::binary_function<ExternalMemoryNode, ExternalMemoryNode, bool> {
+    typedef ExternalMemoryNode value_type;
+    bool operator () (
+        const ExternalMemoryNode & a,
+        const ExternalMemoryNode & b
+    ) const {
         return a.id < b.id;
     }
     value_type max_value()  {
-        return _Node::max_value();
+        return ExternalMemoryNode::max_value();
     }
     value_type min_value() {
-        return _Node::min_value();
+        return ExternalMemoryNode::min_value();
     }
 };
 

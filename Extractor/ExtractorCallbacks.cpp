@@ -36,7 +36,7 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers * ext, StringMap * s
 ExtractorCallbacks::~ExtractorCallbacks() { }
 
 /** warning: caller needs to take care of synchronization! */
-void ExtractorCallbacks::nodeFunction(const _Node &n) {
+void ExtractorCallbacks::nodeFunction(const ExternalMemoryNode &n) {
     if(n.lat <= 85*COORDINATE_PRECISION && n.lat >= -85*COORDINATE_PRECISION) {
         externalMemory->allNodes.push_back(n);
     }

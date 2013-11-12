@@ -55,7 +55,7 @@ public:
     ~ExtractorCallbacks();
 
     /** warning: caller needs to take care of synchronization! */
-    void nodeFunction(const _Node &n);
+    void nodeFunction(const ExternalMemoryNode &n);
 
     bool restrictionFunction(const _RawRestrictionContainer &r);
 

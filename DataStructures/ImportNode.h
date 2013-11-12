@@ -32,15 +32,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/HashTable.h"
 
 
-struct _Node : NodeInfo{
-    _Node(int _lat, int _lon, unsigned int _id, bool _bollard, bool _trafficLight) : NodeInfo(_lat, _lon,  _id), bollard(_bollard), trafficLight(_trafficLight) {}
-    _Node() : bollard(false), trafficLight(false) {}
+struct ExternalMemoryNode : NodeInfo {
+    ExternalMemoryNode(
+        int lat,
+        int lon,
+        unsigned int id,
+        bool bollard,
+        bool traffic_light
+    ) :
+        NodeInfo(lat, lon, id),
+        bollard(bollard),
+        trafficLight(traffic_light)
+    { }
+    ExternalMemoryNode() : bollard(false), trafficLight(false) {}
 
-    static _Node min_value() {
-        return _Node(0,0,0, false, false);
+    static ExternalMemoryNode min_value() {
+        return ExternalMemoryNode(0,0,0, false, false);
     }
-    static _Node max_value() {
-        return _Node((std::numeric_limits<int>::max)(), (std::numeric_limits<int>::max)(), (std::numeric_limits<unsigned int>::max)(), false, false);
+    static ExternalMemoryNode max_value() {
+        return ExternalMemoryNode(
+            std::numeric_limits<int>::max(),
+            std::numeric_limits<int>::max(),
+            std::numeric_limits<unsigned>::max(),
+            false,
+            false
+        );
     }
     NodeID key() const {
         return id;
@@ -49,7 +65,7 @@ struct _Node : NodeInfo{
     bool trafficLight;
 };
 
-struct ImportNode : public _Node {
+struct ImportNode : public ExternalMemoryNode {
     HashTable<std::string, std::string> keyVals;
 
 	inline void Clear() {
