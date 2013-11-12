@@ -32,10 +32,9 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
         unsigned usedNodeCounter = 0;
         unsigned usedEdgeCounter = 0;
         double time = get_timestamp();
-        boost::uint64_t memory_to_use = static_cast<boost::uint64_t>(amountOfRAM) * 1024 * 1024 * 1024;
 
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
-        stxxl::sort(usedNodeIDs.begin(), usedNodeIDs.end(), Cmp(), memory_to_use);
+        stxxl::potentially_parallel::sort(usedNodeIDs.begin(), usedNodeIDs.end(), Cmp());
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
         time = get_timestamp();
@@ -46,16 +45,16 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
         time = get_timestamp();
 
         std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
-        stxxl::sort(allNodes.begin(), allNodes.end(), CmpNodeByID(), memory_to_use);
+        stxxl::potentially_parallel::sort(allNodes.begin(), allNodes.end(), CmpNodeByID());
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
         std::cout << "[extractor] Sorting used ways         ... " << std::flush;
-        stxxl::sort(wayStartEndVector.begin(), wayStartEndVector.end(), CmpWayByID(), memory_to_use);
+        stxxl::potentially_parallel::sort(wayStartEndVector.begin(), wayStartEndVector.end(), CmpWayByID());
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
         std::cout << "[extractor] Sorting restrctns. by from... " << std::flush;
-        stxxl::sort(restrictionsVector.begin(), restrictionsVector.end(), CmpRestrictionContainerByFrom(), memory_to_use);
+        stxxl::potentially_parallel::sort(restrictionsVector.begin(), restrictionsVector.end(), CmpRestrictionContainerByFrom());
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
         std::cout << "[extractor] Fixing restriction starts ... " << std::flush;
@@ -90,7 +89,7 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
         time = get_timestamp();
 
         std::cout << "[extractor] Sorting restrctns. by to  ... " << std::flush;
-        stxxl::sort(restrictionsVector.begin(), restrictionsVector.end(), CmpRestrictionContainerByTo(), memory_to_use);
+        stxxl::potentially_parallel::sort(restrictionsVector.begin(), restrictionsVector.end(), CmpRestrictionContainerByTo());
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
         time = get_timestamp();
@@ -186,7 +185,7 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
 
         // Sort edges by start.
         std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
-        stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByStartID(), memory_to_use);
+        stxxl::potentially_parallel::sort(allEdges.begin(), allEdges.end(), CmpEdgeByStartID());
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
@@ -215,7 +214,7 @@ void ExtractionContainers::PrepareData(const std::string & output_file_name, con
 
         // Sort Edges by target
         std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
-        stxxl::sort(allEdges.begin(), allEdges.end(), CmpEdgeByTargetID(), memory_to_use);
+        stxxl::potentially_parallel::sort(allEdges.begin(), allEdges.end(), CmpEdgeByTargetID());
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
