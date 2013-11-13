@@ -53,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;
 
 template<class EdgeT>
-struct _ExcessRemover {
+struct NodesWithoutSourceRemover {
     inline bool operator()( const EdgeT & edge ) const {
         return edge.source() == UINT_MAX;
     }
@@ -61,16 +61,16 @@ struct _ExcessRemover {
 
 template<typename EdgeT>
 NodeID readBinaryOSRMGraphFromStream(
-    std::istream &in,
-    std::vector<EdgeT>& edgeList,
-    std::vector<NodeID> &bollardNodes,
-    std::vector<NodeID> &trafficLightNodes,
-    std::vector<NodeInfo> * int2ExtNodeMap,
-    std::vector<TurnRestriction> & inputRestrictions
+    std::istream                 & input_stream,
+    std::vector<EdgeT>           & edge_list,
+    std::vector<NodeID>          & barrier_node_list,
+    std::vector<NodeID>          & traffic_light_node_list,
+    std::vector<NodeInfo>        * int_to_ext_node_id_map,
+    std::vector<TurnRestriction> & restriction_list
 ) {
     const UUID uuid_orig;
     UUID uuid_loaded;
-    in.read((char *) &uuid_loaded, sizeof(UUID));
+    input_stream.read((char *) &uuid_loaded, sizeof(UUID));
 
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
         SimpleLogger().Write(logWARNING) <<
@@ -82,29 +82,31 @@ NodeID readBinaryOSRMGraphFromStream(
     EdgeID m;
     short dir;// direction (0 = open, 1 = forward, 2+ = open)
     ExternalNodeMap ext_to_int_id_map;
-    in.read((char*)&n, sizeof(NodeID));
+    input_stream.read((char*)&n, sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
     ExternalMemoryNode node;
-    for (NodeID i=0; i<n; ++i) {
-        in.read((char*)&node, sizeof(ExternalMemoryNode));
-        int2ExtNodeMap->push_back(NodeInfo(node.lat, node.lon, node.id));
+    for( NodeID i=0; i<n; ++i ) {
+        input_stream.read((char*)&node, sizeof(ExternalMemoryNode));
+        int_to_ext_node_id_map->push_back(
+            NodeInfo(node.lat, node.lon, node.id)
+        );
         ext_to_int_id_map.emplace(node.id, i);
         if(node.bollard) {
-        	bollardNodes.push_back(i);
+        	barrier_node_list.push_back(i);
         }
         if(node.trafficLight) {
-        	trafficLightNodes.push_back(i);
+        	traffic_light_node_list.push_back(i);
         }
     }
 
     //tighten vector sizes
-    std::vector<NodeID>(bollardNodes).swap(bollardNodes);
-    std::vector<NodeID>(trafficLightNodes).swap(trafficLightNodes);
+    std::vector<NodeID>(barrier_node_list).swap(barrier_node_list);
+    std::vector<NodeID>(traffic_light_node_list).swap(traffic_light_node_list);
 
-    in.read((char*)&m, sizeof(unsigned));
+    input_stream.read((char*)&m, sizeof(unsigned));
     SimpleLogger().Write() << " and " << m << " edges ";
-    // for(unsigned i = 0; i < inputRestrictions.size(); ++i) {
-    BOOST_FOREACH(TurnRestriction & current_restriction, inputRestrictions) {
+    // for(unsigned i = 0; i < restriction_list.size(); ++i) {
+    BOOST_FOREACH(TurnRestriction & current_restriction, restriction_list) {
         ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(current_restriction.fromNode);
         if( intNodeID == ext_to_int_id_map.end()) {
             SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
@@ -128,7 +130,7 @@ NodeID readBinaryOSRMGraphFromStream(
         current_restriction.toNode = intNodeID->second;
     }
 
-    edgeList.reserve(m);
+    edge_list.reserve(m);
     EdgeWeight weight;
     short type;
     NodeID nameID;
@@ -136,17 +138,17 @@ NodeID readBinaryOSRMGraphFromStream(
     bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow;
 
     for (EdgeID i=0; i<m; ++i) {
-        in.read((char*)&source,             sizeof(unsigned));
-        in.read((char*)&target,             sizeof(unsigned));
-        in.read((char*)&length,             sizeof(int));
-        in.read((char*)&dir,                sizeof(short));
-        in.read((char*)&weight,             sizeof(int));
-        in.read((char*)&type,               sizeof(short));
-        in.read((char*)&nameID,             sizeof(unsigned));
-        in.read((char*)&isRoundabout,       sizeof(bool));
-        in.read((char*)&ignoreInGrid,       sizeof(bool));
-        in.read((char*)&isAccessRestricted, sizeof(bool));
-        in.read((char*)&isContraFlow,       sizeof(bool));
+        input_stream.read((char*)&source,             sizeof(unsigned));
+        input_stream.read((char*)&target,             sizeof(unsigned));
+        input_stream.read((char*)&length,             sizeof(int));
+        input_stream.read((char*)&dir,                sizeof(short));
+        input_stream.read((char*)&weight,             sizeof(int));
+        input_stream.read((char*)&type,               sizeof(short));
+        input_stream.read((char*)&nameID,             sizeof(unsigned));
+        input_stream.read((char*)&isRoundabout,       sizeof(bool));
+        input_stream.read((char*)&ignoreInGrid,       sizeof(bool));
+        input_stream.read((char*)&isAccessRestricted, sizeof(bool));
+        input_stream.read((char*)&isContraFlow,       sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge" );
         BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
@@ -188,47 +190,52 @@ NodeID readBinaryOSRMGraphFromStream(
         }
 
         EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow );
-        edgeList.push_back(inputEdge);
+        edge_list.push_back(inputEdge);
     }
-    std::sort(edgeList.begin(), edgeList.end());
-    for(unsigned i = 1; i < edgeList.size(); ++i) {
-        if( (edgeList[i-1].target() == edgeList[i].target()) && (edgeList[i-1].source() == edgeList[i].source()) ) {
-            bool edgeFlagsAreEquivalent = (edgeList[i-1].isForward() == edgeList[i].isForward()) && (edgeList[i-1].isBackward() == edgeList[i].isBackward());
-            bool edgeFlagsAreSuperSet1 = (edgeList[i-1].isForward() && edgeList[i-1].isBackward()) && (edgeList[i].isBackward() != edgeList[i].isBackward() );
-            bool edgeFlagsAreSuperSet2 = (edgeList[i].isForward() && edgeList[i].isBackward()) && (edgeList[i-1].isBackward() != edgeList[i-1].isBackward() );
+    std::sort(edge_list.begin(), edge_list.end());
+    for(unsigned i = 1; i < edge_list.size(); ++i) {
+        if( (edge_list[i-1].target() == edge_list[i].target()) && (edge_list[i-1].source() == edge_list[i].source()) ) {
+            bool edgeFlagsAreEquivalent = (edge_list[i-1].isForward() == edge_list[i].isForward()) && (edge_list[i-1].isBackward() == edge_list[i].isBackward());
+            bool edgeFlagsAreSuperSet1 = (edge_list[i-1].isForward() && edge_list[i-1].isBackward()) && (edge_list[i].isBackward() != edge_list[i].isBackward() );
+            bool edgeFlagsAreSuperSet2 = (edge_list[i].isForward() && edge_list[i].isBackward()) && (edge_list[i-1].isBackward() != edge_list[i-1].isBackward() );
 
             if( edgeFlagsAreEquivalent ) {
-                edgeList[i]._weight = std::min(edgeList[i-1].weight(), edgeList[i].weight());
-                edgeList[i-1]._source = UINT_MAX;
+                edge_list[i]._weight = std::min(edge_list[i-1].weight(), edge_list[i].weight());
+                edge_list[i-1]._source = UINT_MAX;
             } else if (edgeFlagsAreSuperSet1) {
-                if(edgeList[i-1].weight() <= edgeList[i].weight()) {
+                if(edge_list[i-1].weight() <= edge_list[i].weight()) {
                     //edge i-1 is smaller and goes in both directions. Throw away the other edge
-                    edgeList[i]._source = UINT_MAX;
+                    edge_list[i]._source = UINT_MAX;
                 } else {
                     //edge i-1 is open in both directions, but edge i is smaller in one direction. Close edge i-1 in this direction
-                    edgeList[i-1].forward = !edgeList[i].isForward();
-                    edgeList[i-1].backward = !edgeList[i].isBackward();
+                    edge_list[i-1].forward = !edge_list[i].isForward();
+                    edge_list[i-1].backward = !edge_list[i].isBackward();
                 }
             } else if (edgeFlagsAreSuperSet2) {
-                if(edgeList[i-1].weight() <= edgeList[i].weight()) {
+                if(edge_list[i-1].weight() <= edge_list[i].weight()) {
                      //edge i-1 is smaller for one direction. edge i is open in both. close edge i in the other direction
-                     edgeList[i].forward = !edgeList[i-1].isForward();
-                     edgeList[i].backward = !edgeList[i-1].isBackward();
+                     edge_list[i].forward = !edge_list[i-1].isForward();
+                     edge_list[i].backward = !edge_list[i-1].isBackward();
                  } else {
                      //edge i is smaller and goes in both direction. Throw away edge i-1
-                     edgeList[i-1]._source = UINT_MAX;
+                     edge_list[i-1]._source = UINT_MAX;
                  }
             }
         }
     }
-    typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edgeList.begin(), edgeList.end(), _ExcessRemover<EdgeT>());
+    typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edge_list.begin(), edge_list.end(), NodesWithoutSourceRemover<EdgeT>());
     ext_to_int_id_map.clear();
-    std::vector<EdgeT>(edgeList.begin(), newEnd).swap(edgeList); //remove excess candidates.
-    SimpleLogger().Write() << "Graph loaded ok and has " << edgeList.size() << " edges";
+    std::vector<EdgeT>(edge_list.begin(), newEnd).swap(edge_list); //remove excess candidates.
+    SimpleLogger().Write() << "Graph loaded ok and has " << edge_list.size() << " edges";
     return n;
 }
+
 template<typename EdgeT>
-NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeInfo> * int2ExtNodeMap) {
+NodeID readDTMPGraphFromStream(
+    std::istream &in,
+    std::vector<EdgeT>& edge_list,
+    std::vector<NodeInfo> * int_to_ext_node_id_map
+) {
     NodeID n, source, target, id;
     EdgeID m;
     int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
@@ -237,13 +244,13 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     SimpleLogger().Write(logDEBUG) << "Importing n = " << n << " nodes ";
     for (NodeID i=0; i<n; ++i) {
         in >> id >> ycoord >> xcoord;
-        int2ExtNodeMap->push_back(NodeInfo(xcoord, ycoord, id));
+        int_to_ext_node_id_map->push_back(NodeInfo(xcoord, ycoord, id));
         ext_to_int_id_map.insert(std::make_pair(id, i));
     }
     in >> m;
     SimpleLogger().Write(logDEBUG) << " and " << m << " edges";
 
-    edgeList.reserve(m);
+    edge_list.reserve(m);
     for (EdgeID i=0; i<m; ++i) {
         EdgeWeight weight;
         unsigned speedType(0);
@@ -344,16 +351,16 @@ NodeID readDTMPGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
         }
 
         EdgeT inputEdge(source, target, 0, weight, forward, backward, type );
-        edgeList.push_back(inputEdge);
+        edge_list.push_back(inputEdge);
     }
     ext_to_int_id_map.clear();
-    std::vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    std::vector<EdgeT>(edge_list.begin(), edge_list.end()).swap(edge_list); //remove excess candidates.
     std::cout << "ok" << std::endl;
     return n;
 }
 
 template<typename EdgeT>
-NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, std::vector<NodeID> & int2ExtNodeMap) {
+NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edge_list, std::vector<NodeID> & int_to_ext_node_id_map) {
     ExternalNodeMap nodeMap;
     NodeID n, source, target;
     unsigned numberOfNodes = 0;
@@ -367,7 +374,7 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
     SimpleLogger().Write(logDEBUG) <<
         "expecting " << n << " nodes and " << m << " edges ...";
 
-    edgeList.reserve(m);
+    edge_list.reserve(m);
     for (EdgeID i=0; i<m; i++) {
         EdgeWeight weight;
         in >> source >> target >> weight >> dir;
@@ -390,18 +397,18 @@ NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edgeList, s
 
         if( nodeMap.find(source) == nodeMap.end()) {
             nodeMap.insert(std::make_pair(source, numberOfNodes ));
-            int2ExtNodeMap.push_back(source);
+            int_to_ext_node_id_map.push_back(source);
             numberOfNodes++;
         }
         if( nodeMap.find(target) == nodeMap.end()) {
             nodeMap.insert(std::make_pair(target, numberOfNodes));
-            int2ExtNodeMap.push_back(target);
+            int_to_ext_node_id_map.push_back(target);
             numberOfNodes++;
         }
         EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
-        edgeList.push_back(inputEdge);
+        edge_list.push_back(inputEdge);
     }
-    std::vector<EdgeT>(edgeList.begin(), edgeList.end()).swap(edgeList); //remove excess candidates.
+    std::vector<EdgeT>(edge_list.begin(), edge_list.end()).swap(edge_list); //remove excess candidates.
 
     nodeMap.clear();
     return numberOfNodes;
