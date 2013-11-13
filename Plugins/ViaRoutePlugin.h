@@ -77,7 +77,7 @@ public:
     ) {
         //check number of parameters
         if( 2 > routeParameters.coordinates.size() ) {
-            reply = http::Reply::stockReply(http::Reply::badRequest);
+            reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
 
@@ -87,7 +87,7 @@ public:
         std::vector<std::string> textCoord;
         for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
             if( !checkCoord(routeParameters.coordinates[i]) ) {
-                reply = http::Reply::stockReply(http::Reply::badRequest);
+                reply = http::Reply::StockReply(http::Reply::badRequest);
                 return;
             }
             rawRoute.rawViaNodeCoordinates.push_back(routeParameters.coordinates[i]);

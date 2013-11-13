@@ -81,7 +81,7 @@ public:
             );
 
             if ( !result || (it != request.end()) ) {
-                rep = http::Reply::stockReply(http::Reply::badRequest);
+                rep = http::Reply::StockReply(http::Reply::badRequest);
                 const int position = std::distance(request.begin(), it);
                 std::string tmp_position_string;
                 intToString(position, tmp_position_string);
@@ -105,7 +105,7 @@ public:
                 return;
             }
         } catch(std::exception& e) {
-            rep = http::Reply::stockReply(http::Reply::internalServerError);
+            rep = http::Reply::StockReply(http::Reply::internalServerError);
             SimpleLogger().Write(logWARNING) <<
                 "[server error] code: " << e.what() << ", uri: " << req.uri;
             return;

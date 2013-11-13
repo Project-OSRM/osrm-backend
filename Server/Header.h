@@ -25,36 +25,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASEPLUGIN_H_
-#define BASEPLUGIN_H_
-
-#include "../DataStructures/Coordinate.h"
-#include "../Server/BasicDatastructures.h"
-#include "../Server/Reply.h"
-#include "../Server/DataStructures/RouteParameters.h"
+#ifndef HTTP_HEADER_H
+#define HTTP_HEADER_H
 
 #include <string>
-#include <vector>
 
-class BasePlugin {
-public:
-	BasePlugin() { }
-	//Maybe someone can explain the pure virtual destructor thing to me (dennis)
-	virtual ~BasePlugin() { }
-	virtual const std::string & GetDescriptor() const = 0;
-	virtual void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) = 0;
+namespace http {
 
-	inline bool checkCoord(const FixedPointCoordinate & c) {
-        if(
-            c.lat >   90*COORDINATE_PRECISION ||
-            c.lat <  -90*COORDINATE_PRECISION ||
-            c.lon >  180*COORDINATE_PRECISION ||
-            c.lon < -180*COORDINATE_PRECISION
-        ) {
-            return false;
+    struct Header {
+        std::string name;
+        std::string value;
+        void Clear() {
+            name.clear();
+            value.clear();
         }
-        return true;
-    }
-};
+    };
+}
 
-#endif /* BASEPLUGIN_H_ */
+#endif //HTTP_HEADER_H
+

@@ -49,11 +49,11 @@ public:
     ) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
-            reply = http::Reply::stockReply(http::Reply::badRequest);
+            reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
         if(false == checkCoord(routeParameters.coordinates[0])) {
-            reply = http::Reply::stockReply(http::Reply::badRequest);
+            reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
 

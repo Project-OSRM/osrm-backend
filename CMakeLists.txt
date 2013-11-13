@@ -36,7 +36,7 @@ file(GLOB ExtractorGlob Extractor/*.cpp)
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources} )
 
-file( GLOB PrepareGlob Contractor/*.cpp)
+file( GLOB PrepareGlob Contractor/*.cpp )
 set( PrepareSources prepare.cpp ${PrepareGlob} )
 add_executable( osrm-prepare ${PrepareSources} )
 
@@ -44,12 +44,13 @@ add_executable(osrm-routed routed.cpp)
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 add_executable(osrm-datastore datastore.cpp)
 
+file(GLOB ServerGlob Server/*.cpp)
 file(GLOB DescriptorGlob Descriptors/*.cpp)
 file(GLOB DatastructureGlob DataStructures/*.cpp)
 file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
 
-set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob} ${AlgorithmGlob})
+set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob} ${AlgorithmGlob} ${ServerGlob})
 add_library( OSRM SHARED ${OSRMSources} )
 add_library( UUID STATIC Util/UUID.cpp )
 add_library( GITDESCRIPTION STATIC Util/GitDescription.cpp )

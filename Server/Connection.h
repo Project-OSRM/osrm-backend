@@ -170,7 +170,7 @@ private:
 					break;
 				}
 			} else if (!result) {
-				reply = Reply::stockReply(Reply::badRequest);
+				reply = Reply::StockReply(Reply::badRequest);
 				boost::asio::async_write(
 					TCP_socket,
 					reply.toBuffers(),
