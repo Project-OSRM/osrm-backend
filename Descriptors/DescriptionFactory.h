@@ -45,8 +45,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  and produces the description plus the encoded polyline */
 
 class DescriptionFactory {
-    DouglasPeucker<SegmentInformation> dp;
-    PolylineCompressor pc;
+    DouglasPeucker polyline_generalizer;
+    PolylineCompressor polyline_compressor;
     PhantomNode start_phantom, target_phantom;
 
     double DegreeToRadian(const double degree) const;
@@ -202,7 +202,7 @@ public:
         }
 
         //Generalize poly line
-        dp.Run(pathDescription, zoomLevel);
+        polyline_generalizer.Run(pathDescription, zoomLevel);
 
         //fix what needs to be fixed else
         for(unsigned i = 0; i < pathDescription.size()-1 && pathDescription.size() >= 2; ++i){

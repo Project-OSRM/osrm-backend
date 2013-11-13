@@ -98,18 +98,18 @@ void DescriptionFactory::AppendEncodedPolylineString(
     std::string & output
 ) {
     if(return_encoded) {
-        pc.printEncodedString(pathDescription, output);
+        polyline_compressor.printEncodedString(pathDescription, output);
     } else {
-        pc.printUnencodedString(pathDescription, output);
+        polyline_compressor.printUnencodedString(pathDescription, output);
     }
 }
 
 void DescriptionFactory::AppendEncodedPolylineString(std::string &output) const {
-    pc.printEncodedString(pathDescription, output);
+    polyline_compressor.printEncodedString(pathDescription, output);
 }
 
 void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) const {
-    pc.printUnencodedString(pathDescription, output);
+    polyline_compressor.printUnencodedString(pathDescription, output);
 }
 
 // void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLevel) {

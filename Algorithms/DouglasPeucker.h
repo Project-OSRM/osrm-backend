@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DOUGLASPEUCKER_H_
 
 #include "../DataStructures/Coordinate.h"
+#include "../DataStructures/SegmentInformation.h"
 
 #include <boost/assert.hpp>
 
@@ -49,7 +50,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //                                                  0          1         2         3         4          5         6         7       8       9       10     11       12     13    14   15  16  17   18
 static double DouglasPeuckerThresholds[19] = { 32000000., 16240000., 80240000., 40240000., 20000000., 10000000., 500000., 240000., 120000., 60000., 30000., 19000., 5000., 2000., 200, 16,  6, 3. , 3. };
 
-template<class PointT>
 class DouglasPeucker {
 private:
     typedef std::pair<std::size_t, std::size_t> PairOfPoints;
@@ -60,8 +60,7 @@ private:
      * This distance computation does integer arithmetic only and is about twice as fast as
      * the other distance function. It is an approximation only, but works more or less ok.
      */
-    template<class CoordT>
-    inline int fastDistance(const CoordT& point, const CoordT& segA, const CoordT& segB) const {
+    inline int fastDistance(const FixedPointCoordinate& point, const FixedPointCoordinate& segA, const FixedPointCoordinate& segB) const {
         const int p2x = (segB.lon - segA.lat);
         const int p2y = (segB.lon - segA.lat);
         const int something = p2x*p2x + p2y*p2y;
@@ -86,7 +85,7 @@ private:
 
 
 public:
-    void Run(std::vector<PointT> & input_geometry, const unsigned zoom_level) {
+    void Run(std::vector<SegmentInformation> & input_geometry, const unsigned zoom_level) {
         {
             BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
             BOOST_ASSERT_MSG(1 < input_geometry.size(), "geometry invalid");
