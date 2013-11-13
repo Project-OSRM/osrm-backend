@@ -169,12 +169,6 @@ int main (int argc, char *argv[]) {
             }
         }
 
-        unsigned amountOfRAM = 1;
-        unsigned installedRAM = GetPhysicalmemory();
-        if(installedRAM < 2048264) {
-            SimpleLogger().Write(logWARNING) << "Machine has less than 2GB RAM.";
-        }
-
         StringMap stringMap;
         ExtractionContainers externalMemory;
 
@@ -197,7 +191,7 @@ int main (int argc, char *argv[]) {
             (get_timestamp() - parsing_start_time) <<
             " seconds";
 
-        externalMemory.PrepareData(output_file_name, restrictionsFileName, amountOfRAM);
+        externalMemory.PrepareData(output_file_name, restrictionsFileName);
 
         delete parser;
         delete extractCallBacks;
