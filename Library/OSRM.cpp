@@ -126,6 +126,6 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
             }
         }
     } else {
-        reply = http::Reply::stockReply(http::Reply::badRequest);
+        reply = http::Reply::StockReply(http::Reply::badRequest);
     }
 }
