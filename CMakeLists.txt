@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(OSRM)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FindPackageHandleStandardArgs)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -96,7 +96,7 @@ if(APPLE)
     STRING(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
     IF (DARWIN_VERSION GREATER 12)
         MESSAGE(STATUS "Activating -std=c++11 flag for >= OS X 10.9")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
     ENDIF (DARWIN_VERSION GREATER 12)
 endif()
 
