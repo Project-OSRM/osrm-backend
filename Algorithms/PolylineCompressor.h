@@ -36,125 +36,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class PolylineCompressor {
 private:
-	inline void encodeVectorSignedNumber(
+	void encodeVectorSignedNumber(
         std::vector<int> & numbers,
         std::string & output
-    ) const {
-		for(unsigned i = 0; i < numbers.size(); ++i) {
-			numbers[i] <<= 1;
-			if (numbers[i] < 0) {
-				numbers[i] = ~(numbers[i]);
-			}
-		}
-		for(unsigned i = 0; i < numbers.size(); ++i) {
-			encodeNumber(numbers[i], output);
-		}
-	}
+    ) const;
 
-	inline void encodeNumber(int number_to_encode, std::string & output) const {
-		while (number_to_encode >= 0x20) {
-			int nextValue = (0x20 | (number_to_encode & 0x1f)) + 63;
-			output += static_cast<char>(nextValue);
-			if(92 == nextValue) {
-				output += static_cast<char>(nextValue);
-            }
-			number_to_encode >>= 5;
-		}
-
-		number_to_encode += 63;
-		output += static_cast<char>(number_to_encode);
-		if(92 == number_to_encode) {
-			output += static_cast<char>(number_to_encode);
-        }
-	}
+	void encodeNumber(int number_to_encode, std::string & output) const;
 
 public:
-    inline void printEncodedString(
+    void printEncodedString(
         const std::vector<SegmentInformation> & polyline,
         std::string & output
-    ) const {
-    	std::vector<int> deltaNumbers;
-        output += "\"";
-        if(!polyline.empty()) {
-            FixedPointCoordinate lastCoordinate = polyline[0].location;
-            deltaNumbers.push_back( lastCoordinate.lat );
-            deltaNumbers.push_back( lastCoordinate.lon );
-            for(unsigned i = 1; i < polyline.size(); ++i) {
-                if(!polyline[i].necessary) {
-                    continue;
-                }
-                deltaNumbers.push_back(polyline[i].location.lat - lastCoordinate.lat);
-                deltaNumbers.push_back(polyline[i].location.lon - lastCoordinate.lon);
-                lastCoordinate = polyline[i].location;
-            }
-            encodeVectorSignedNumber(deltaNumbers, output);
-        }
-        output += "\"";
+    ) const;
 
-    }
-
-	inline void printEncodedString(
+    void printEncodedString(
         const std::vector<FixedPointCoordinate>& polyline,
         std::string &output
-    ) const {
-		std::vector<int> deltaNumbers(2*polyline.size());
-		output += "\"";
-		if(!polyline.empty()) {
-			deltaNumbers[0] = polyline[0].lat;
-			deltaNumbers[1] = polyline[0].lon;
-			for(unsigned i = 1; i < polyline.size(); ++i) {
-				deltaNumbers[(2*i)]   = (polyline[i].lat - polyline[i-1].lat);
-				deltaNumbers[(2*i)+1] = (polyline[i].lon - polyline[i-1].lon);
-			}
-			encodeVectorSignedNumber(deltaNumbers, output);
-		}
-		output += "\"";
-	}
+    ) const;
 
-    inline void printUnencodedString(
+    void printUnencodedString(
         const std::vector<FixedPointCoordinate> & polyline,
         std::string & output
-    ) const {
-        output += "[";
-        std::string tmp;
-        for(unsigned i = 0; i < polyline.size(); i++) {
-            convertInternalLatLonToString(polyline[i].lat, tmp);
-            output += "[";
-            output += tmp;
-            convertInternalLatLonToString(polyline[i].lon, tmp);
-            output += ", ";
-            output += tmp;
-            output += "]";
-            if( i < polyline.size()-1 ) {
-                output += ",";
-            }
-        }
-        output += "]";
-    }
+    ) const;
 
-    inline void printUnencodedString(
+    void printUnencodedString(
         const std::vector<SegmentInformation> & polyline,
         std::string & output
-    ) const {
-        output += "[";
-        std::string tmp;
-        for(unsigned i = 0; i < polyline.size(); i++) {
-            if(!polyline[i].necessary) {
-                continue;
-            }
-            convertInternalLatLonToString(polyline[i].location.lat, tmp);
-            output += "[";
-            output += tmp;
-            convertInternalLatLonToString(polyline[i].location.lon, tmp);
-            output += ", ";
-            output += tmp;
-            output += "]";
-            if( i < polyline.size()-1 ) {
-                output += ",";
-            }
-        }
-        output += "]";
-    }
+    ) const;
+
 };
 
 #endif /* POLYLINECOMPRESSOR_H_ */

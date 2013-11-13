@@ -46,9 +46,10 @@ add_executable(osrm-datastore datastore.cpp)
 
 file(GLOB DescriptorGlob Descriptors/*.cpp)
 file(GLOB DatastructureGlob DataStructures/*.cpp)
+file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
 
-set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob})
+set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob} ${AlgorithmGlob})
 add_library( OSRM SHARED ${OSRMSources} )
 add_library( UUID STATIC Util/UUID.cpp )
 add_library( GITDESCRIPTION STATIC Util/GitDescription.cpp )
