@@ -248,7 +248,7 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 
 		if(isRestriction) {
 			int64_t lastRef = 0;
-			_RawRestrictionContainer currentRestrictionContainer(isOnlyRestriction);
+			InputRestrictionContainer currentRestrictionContainer(isOnlyRestriction);
 			for(
 				int rolesIndex = 0, last_role =  inputRelation.roles_sid_size();
 				rolesIndex < last_role;

@@ -57,7 +57,7 @@ public:
     /** warning: caller needs to take care of synchronization! */
     void nodeFunction(const ExternalMemoryNode &n);
 
-    bool restrictionFunction(const _RawRestrictionContainer &r);
+    bool restrictionFunction(const InputRestrictionContainer &r);
 
     /** warning: caller needs to take care of synchronization! */
     void wayFunction(ExtractionWay &w);

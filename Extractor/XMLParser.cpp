@@ -74,7 +74,7 @@ bool XMLParser::Parse() {
 		}
 		if( use_turn_restrictions ) {
 			if ( xmlStrEqual( currentName, ( const xmlChar* ) "relation" ) == 1 ) {
-				_RawRestrictionContainer r = _ReadXMLRestriction();
+				InputRestrictionContainer r = _ReadXMLRestriction();
 				if(r.fromWay != UINT_MAX) {
 					if(!extractor_callbacks->restrictionFunction(r)) {
 						std::cerr << "[XMLParser] restriction not parsed" << std::endl;
@@ -87,8 +87,8 @@ bool XMLParser::Parse() {
 	return true;
 }
 
-_RawRestrictionContainer XMLParser::_ReadXMLRestriction() {
-    _RawRestrictionContainer restriction;
+InputRestrictionContainer XMLParser::_ReadXMLRestriction() {
+    InputRestrictionContainer restriction;
     std::string except_tag_string;
 
 	if ( xmlTextReaderIsEmptyElement( inputReader ) != 1 ) {

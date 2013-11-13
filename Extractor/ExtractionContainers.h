@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/TimingUtil.h"
 #include "../Util/UUID.h"
 
+#include <boost/assert.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -42,20 +43,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class ExtractionContainers {
 public:
-    typedef stxxl::vector<NodeID>                   STXXLNodeIDVector;
-    typedef stxxl::vector<ExternalMemoryNode>       STXXLNodeVector;
-    typedef stxxl::vector<InternalExtractorEdge>    STXXLEdgeVector;
-    typedef stxxl::vector<std::string>              STXXLStringVector;
-    typedef stxxl::vector<_RawRestrictionContainer> STXXLRestrictionsVector;
-    typedef stxxl::vector<_WayIDStartAndEndEdge>    STXXLWayIDStartEndVector;
+    typedef stxxl::vector<NodeID>                    STXXLNodeIDVector;
+    typedef stxxl::vector<ExternalMemoryNode>        STXXLNodeVector;
+    typedef stxxl::vector<InternalExtractorEdge>     STXXLEdgeVector;
+    typedef stxxl::vector<std::string>               STXXLStringVector;
+    typedef stxxl::vector<InputRestrictionContainer> STXXLRestrictionsVector;
+    typedef stxxl::vector<_WayIDStartAndEndEdge>     STXXLWayIDStartEndVector;
 
-
-    STXXLNodeIDVector                               usedNodeIDs;
-    STXXLNodeVector                                 allNodes;
-    STXXLEdgeVector                                 allEdges;
+    STXXLNodeIDVector                               used_node_id_list;
+    STXXLNodeVector                                 all_nodes_list;
+    STXXLEdgeVector                                 all_edges_list;
     STXXLStringVector                               name_list;
-    STXXLRestrictionsVector                         restrictionsVector;
-    STXXLWayIDStartEndVector                        wayStartEndVector;
+    STXXLRestrictionsVector                         restrictions_list;
+    STXXLWayIDStartEndVector                        way_start_end_id_list;
     const UUID uuid;
 
     ExtractionContainers() {
@@ -65,17 +65,17 @@ public:
     }
 
     virtual ~ExtractionContainers() {
-        usedNodeIDs.clear();
-        allNodes.clear();
-        allEdges.clear();
+        used_node_id_list.clear();
+        all_nodes_list.clear();
+        all_edges_list.clear();
         name_list.clear();
-        restrictionsVector.clear();
-        wayStartEndVector.clear();
+        restrictions_list.clear();
+        way_start_end_id_list.clear();
     }
 
     void PrepareData(
         const std::string & output_file_name,
-        const std::string restrictionsFileName
+        const std::string & restrictions_file_name
     );
 };
 

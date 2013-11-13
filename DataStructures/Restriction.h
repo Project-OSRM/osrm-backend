@@ -73,13 +73,13 @@ struct TurnRestriction {
     }
 };
 
-struct _RawRestrictionContainer {
-    TurnRestriction restriction;
+struct InputRestrictionContainer {
     EdgeID fromWay;
     EdgeID toWay;
     unsigned viaNode;
+    TurnRestriction restriction;
 
-    _RawRestrictionContainer(
+    InputRestrictionContainer(
         EdgeID fromWay,
         EdgeID toWay,
         NodeID vn,
@@ -91,7 +91,7 @@ struct _RawRestrictionContainer {
     {
         restriction.viaNode = vn;
     }
-    _RawRestrictionContainer(
+    InputRestrictionContainer(
         bool isOnly = false
     ) :
         fromWay(UINT_MAX),
@@ -101,37 +101,45 @@ struct _RawRestrictionContainer {
         restriction.flags.isOnly = isOnly;
     }
 
-    static _RawRestrictionContainer min_value() {
-        return _RawRestrictionContainer(0, 0, 0, 0);
+    static InputRestrictionContainer min_value() {
+        return InputRestrictionContainer(0, 0, 0, 0);
     }
-    static _RawRestrictionContainer max_value() {
-        return _RawRestrictionContainer(UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX);
+    static InputRestrictionContainer max_value() {
+        return InputRestrictionContainer(UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX);
     }
 };
 
-struct CmpRestrictionContainerByFrom : public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
-    typedef _RawRestrictionContainer value_type;
-    bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
+struct CmpRestrictionContainerByFrom :
+    public std::binary_function<InputRestrictionContainer, InputRestrictionContainer, bool>
+{
+    typedef InputRestrictionContainer value_type;
+    inline bool operator()(
+        const InputRestrictionContainer & a,
+        const InputRestrictionContainer & b
+    ) const {
         return a.fromWay < b.fromWay;
     }
-    value_type max_value()  {
-        return _RawRestrictionContainer::max_value();
+    inline value_type max_value() const {
+        return InputRestrictionContainer::max_value();
     }
-    value_type min_value() {
-        return _RawRestrictionContainer::min_value();
+    inline value_type min_value() const {
+        return InputRestrictionContainer::min_value();
     }
 };
 
-struct CmpRestrictionContainerByTo: public std::binary_function<_RawRestrictionContainer, _RawRestrictionContainer, bool> {
-    typedef _RawRestrictionContainer value_type;
-    bool operator ()  (const _RawRestrictionContainer & a, const _RawRestrictionContainer & b) const {
+struct CmpRestrictionContainerByTo: public std::binary_function<InputRestrictionContainer, InputRestrictionContainer, bool> {
+    typedef InputRestrictionContainer value_type;
+    inline bool operator ()(
+        const InputRestrictionContainer & a,
+        const InputRestrictionContainer & b
+    ) const {
         return a.toWay < b.toWay;
     }
-    value_type max_value()  {
-        return _RawRestrictionContainer::max_value();
+    value_type max_value() const {
+        return InputRestrictionContainer::max_value();
     }
-    value_type min_value() {
-        return _RawRestrictionContainer::min_value();
+    value_type min_value() const {
+        return InputRestrictionContainer::min_value();
     }
 };
 

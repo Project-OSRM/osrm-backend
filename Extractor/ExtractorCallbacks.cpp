@@ -38,12 +38,12 @@ ExtractorCallbacks::~ExtractorCallbacks() { }
 /** warning: caller needs to take care of synchronization! */
 void ExtractorCallbacks::nodeFunction(const ExternalMemoryNode &n) {
     if(n.lat <= 85*COORDINATE_PRECISION && n.lat >= -85*COORDINATE_PRECISION) {
-        externalMemory->allNodes.push_back(n);
+        externalMemory->all_nodes_list.push_back(n);
     }
 }
 
-bool ExtractorCallbacks::restrictionFunction(const _RawRestrictionContainer &r) {
-    externalMemory->restrictionsVector.push_back(r);
+bool ExtractorCallbacks::restrictionFunction(const InputRestrictionContainer &r) {
+    externalMemory->restrictions_list.push_back(r);
     return true;
 }
 
@@ -86,7 +86,7 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
         const bool split_bidirectional_edge = (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
 
         for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
-            externalMemory->allEdges.push_back(
+            externalMemory->all_edges_list.push_back(
                     InternalExtractorEdge(parsed_way.path[n],
                             parsed_way.path[n+1],
                             parsed_way.type,
@@ -99,17 +99,17 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
                             parsed_way.isAccessRestricted
                     )
             );
-            externalMemory->usedNodeIDs.push_back(parsed_way.path[n]);
+            externalMemory->used_node_id_list.push_back(parsed_way.path[n]);
         }
-        externalMemory->usedNodeIDs.push_back(parsed_way.path.back());
+        externalMemory->used_node_id_list.push_back(parsed_way.path.back());
 
         //The following information is needed to identify start and end segments of restrictions
-        externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(parsed_way.id, parsed_way.path[0], parsed_way.path[1], parsed_way.path[parsed_way.path.size()-2], parsed_way.path.back()));
+        externalMemory->way_start_end_id_list.push_back(_WayIDStartAndEndEdge(parsed_way.id, parsed_way.path[0], parsed_way.path[1], parsed_way.path[parsed_way.path.size()-2], parsed_way.path.back()));
 
         if(split_bidirectional_edge) { //Only true if the way should be split
             std::reverse( parsed_way.path.begin(), parsed_way.path.end() );
             for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
-                externalMemory->allEdges.push_back(
+                externalMemory->all_edges_list.push_back(
                         InternalExtractorEdge(parsed_way.path[n],
                                 parsed_way.path[n+1],
                                 parsed_way.type,
@@ -124,7 +124,7 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
                         )
                 );
             }
-            externalMemory->wayStartEndVector.push_back(_WayIDStartAndEndEdge(parsed_way.id, parsed_way.path[0], parsed_way.path[1], parsed_way.path[parsed_way.path.size()-2], parsed_way.path.back()));
+            externalMemory->way_start_end_id_list.push_back(_WayIDStartAndEndEdge(parsed_way.id, parsed_way.path[0], parsed_way.path[1], parsed_way.path[parsed_way.path.size()-2], parsed_way.path.back()));
         }
     }
 }

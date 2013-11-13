@@ -44,7 +44,7 @@ public:
     bool Parse();
 
 private:
-    _RawRestrictionContainer _ReadXMLRestriction();
+    InputRestrictionContainer _ReadXMLRestriction();
     ExtractionWay _ReadXMLWay();
     ImportNode _ReadXMLNode();
     xmlTextReaderPtr inputReader;
