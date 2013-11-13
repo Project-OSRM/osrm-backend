@@ -45,31 +45,47 @@ double DescriptionFactory::GetBearing(
 ) const {
     double deltaLong = DegreeToRadian(B.lon/COORDINATE_PRECISION - A.lon/COORDINATE_PRECISION);
 
-    double lat1 = DegreeToRadian(A.lat/COORDINATE_PRECISION);
-    double lat2 = DegreeToRadian(B.lat/COORDINATE_PRECISION);
+    const double lat1 = DegreeToRadian(A.lat/COORDINATE_PRECISION);
+    const double lat2 = DegreeToRadian(B.lat/COORDINATE_PRECISION);
 
-    double y = sin(deltaLong) * cos(lat2);
-    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLong);
+    const double y = sin(deltaLong) * cos(lat2);
+    const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLong);
     double result = RadianToDegree(atan2(y, x));
-    while(result <= 0.)
+    while(result < 0.) {
         result += 360.;
-    while(result >= 360.)
+    }
+    while(result >= 360.) {
         result -= 360.;
-
+    }
     return result;
 }
 
-void DescriptionFactory::SetStartSegment(const PhantomNode & _startPhantom) {
-    startPhantom = _startPhantom;
-    AppendSegment(_startPhantom.location, _PathData(0, _startPhantom.nodeBasedEdgeNameID, 10, _startPhantom.weight1));
+void DescriptionFactory::SetStartSegment(const PhantomNode & sph) {
+    start_phantom = sph;
+    AppendSegment(
+        sph.location,
+        _PathData(0, sph.nodeBasedEdgeNameID, 10, sph.weight1)
+    );
 }
 
-void DescriptionFactory::SetEndSegment(const PhantomNode & _targetPhantom) {
-    targetPhantom = _targetPhantom;
-    pathDescription.push_back(SegmentInformation(_targetPhantom.location, _targetPhantom.nodeBasedEdgeNameID, 0, _targetPhantom.weight1, 0, true) );
+void DescriptionFactory::SetEndSegment(const PhantomNode & tph) {
+    target_phantom = tph;
+    pathDescription.push_back(
+        SegmentInformation(
+            tph.location,
+            tph.nodeBasedEdgeNameID,
+            0,
+            tph.weight1,
+            0,
+            true
+        )
+    );
 }
 
-void DescriptionFactory::AppendSegment(const FixedPointCoordinate & coordinate, const _PathData & data ) {
+void DescriptionFactory::AppendSegment(
+    const FixedPointCoordinate & coordinate,
+    const _PathData & data
+) {
     if(1 == pathDescription.size() && pathDescription.back().location == coordinate) {
         pathDescription.back().nameID = data.nameID;
     } else {
@@ -77,18 +93,22 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate & coordinate, 
     }
 }
 
-void DescriptionFactory::AppendEncodedPolylineString(std::string & output, bool isEncoded) {
-    if(isEncoded)
+void DescriptionFactory::AppendEncodedPolylineString(
+    const bool return_encoded,
+    std::string & output
+) {
+    if(return_encoded) {
         pc.printEncodedString(pathDescription, output);
-    else
+    } else {
         pc.printUnencodedString(pathDescription, output);
+    }
 }
 
-void DescriptionFactory::AppendEncodedPolylineString(std::string &output) {
+void DescriptionFactory::AppendEncodedPolylineString(std::string &output) const {
     pc.printEncodedString(pathDescription, output);
 }
 
-void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
+void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) const {
     pc.printUnencodedString(pathDescription, output);
 }
 
@@ -174,16 +194,16 @@ void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
 
 //     //Post-processing to remove empty or nearly empty path segments
 //     if(FLT_EPSILON > pathDescription.back().length) {
-//         //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << targetPhantom.ratio << ", length: " << pathDescription.back().length;
+//         //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << target_phantom.ratio << ", length: " << pathDescription.back().length;
 //         if(pathDescription.size() > 2){
 //             pathDescription.pop_back();
 //             pathDescription.back().necessary = true;
 //             pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
-//             targetPhantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
+//             target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
 //             //            SimpleLogger().Write() << "Deleting last turn instruction";
 //         }
 //     } else {
-//         pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
+//         pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
 //     }
 //     if(FLT_EPSILON > pathDescription[0].length) {
 //         //TODO: this is never called actually?
@@ -191,11 +211,11 @@ void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
 //             pathDescription.erase(pathDescription.begin());
 //             pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
 //             pathDescription[0].necessary = true;
-//             startPhantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
-//             //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << startPhantom.ratio << ", length: " << pathDescription[0].length;
+//             start_phantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
+//             //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << start_phantom.ratio << ", length: " << pathDescription[0].length;
 //         }
 //     } else {
-//         pathDescription[0].duration *= startPhantom.ratio;
+//         pathDescription[0].duration *= start_phantom.ratio;
 //     }
 
 //     //Generalize poly line
@@ -213,8 +233,11 @@ void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) {
 //     return;
 // }
 
-void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time) {
-    summary.startName = startPhantom.nodeBasedEdgeNameID;
-    summary.destName = targetPhantom.nodeBasedEdgeNameID;
+void DescriptionFactory::BuildRouteSummary(
+    const double distance,
+    const unsigned time
+) {
+    summary.startName = start_phantom.nodeBasedEdgeNameID;
+    summary.destName = target_phantom.nodeBasedEdgeNameID;
     summary.BuildDurationAndLengthStrings(distance, time);
 }

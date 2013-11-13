@@ -32,10 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 
 #include <string>
+#include <vector>
 
 class PolylineCompressor {
 private:
-	inline void encodeVectorSignedNumber(std::vector<int> & numbers, std::string & output) const {
+	inline void encodeVectorSignedNumber(
+        std::vector<int> & numbers,
+        std::string & output
+    ) const {
 		for(unsigned i = 0; i < numbers.size(); ++i) {
 			numbers[i] <<= 1;
 			if (numbers[i] < 0) {
@@ -47,19 +51,21 @@ private:
 		}
 	}
 
-	inline void encodeNumber(int numberToEncode, std::string & output) const {
-		while (numberToEncode >= 0x20) {
-			int nextValue = (0x20 | (numberToEncode & 0x1f)) + 63;
-			output += (static_cast<char> (nextValue));
-			if(92 == nextValue)
-				output += (static_cast<char> (nextValue));
-			numberToEncode >>= 5;
+	inline void encodeNumber(int number_to_encode, std::string & output) const {
+		while (number_to_encode >= 0x20) {
+			int nextValue = (0x20 | (number_to_encode & 0x1f)) + 63;
+			output += static_cast<char>(nextValue);
+			if(92 == nextValue) {
+				output += static_cast<char>(nextValue);
+            }
+			number_to_encode >>= 5;
 		}
 
-		numberToEncode += 63;
-		output += (static_cast<char> (numberToEncode));
-		if(92 == numberToEncode)
-			output += (static_cast<char> (numberToEncode));
+		number_to_encode += 63;
+		output += static_cast<char>(number_to_encode);
+		if(92 == number_to_encode) {
+			output += static_cast<char>(number_to_encode);
+        }
 	}
 
 public:
@@ -74,8 +80,9 @@ public:
             deltaNumbers.push_back( lastCoordinate.lat );
             deltaNumbers.push_back( lastCoordinate.lon );
             for(unsigned i = 1; i < polyline.size(); ++i) {
-                if(!polyline[i].necessary)
+                if(!polyline[i].necessary) {
                     continue;
+                }
                 deltaNumbers.push_back(polyline[i].location.lat - lastCoordinate.lat);
                 deltaNumbers.push_back(polyline[i].location.lon - lastCoordinate.lon);
                 lastCoordinate = polyline[i].location;
@@ -86,7 +93,10 @@ public:
 
     }
 
-	inline void printEncodedString(const std::vector<FixedPointCoordinate>& polyline, std::string &output) const {
+	inline void printEncodedString(
+        const std::vector<FixedPointCoordinate>& polyline,
+        std::string &output
+    ) const {
 		std::vector<int> deltaNumbers(2*polyline.size());
 		output += "\"";
 		if(!polyline.empty()) {
@@ -101,7 +111,10 @@ public:
 		output += "\"";
 	}
 
-    inline void printUnencodedString(std::vector<FixedPointCoordinate> & polyline, std::string & output) const {
+    inline void printUnencodedString(
+        const std::vector<FixedPointCoordinate> & polyline,
+        std::string & output
+    ) const {
         output += "[";
         std::string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
@@ -119,12 +132,16 @@ public:
         output += "]";
     }
 
-    inline void printUnencodedString(std::vector<SegmentInformation> & polyline, std::string & output) const {
+    inline void printUnencodedString(
+        const std::vector<SegmentInformation> & polyline,
+        std::string & output
+    ) const {
         output += "[";
         std::string tmp;
         for(unsigned i = 0; i < polyline.size(); i++) {
-            if(!polyline[i].necessary)
+            if(!polyline[i].necessary) {
                 continue;
+            }
             convertInternalLatLonToString(polyline[i].location.lat, tmp);
             output += "[";
             output += tmp;

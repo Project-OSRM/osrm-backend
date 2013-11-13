@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class DescriptionFactory {
     DouglasPeucker<SegmentInformation> dp;
     PolylineCompressor pc;
-    PhantomNode startPhantom, targetPhantom;
+    PhantomNode start_phantom, target_phantom;
 
     double DegreeToRadian(const double degree) const;
     double RadianToDegree(const double degree) const;
@@ -64,7 +64,10 @@ public:
             destName(0)
         {}
 
-        void BuildDurationAndLengthStrings(const double distance, const unsigned time) {
+        void BuildDurationAndLengthStrings(
+            const double distance,
+            const unsigned time
+        ) {
             //compute distance/duration for route summary
             intToString(round(distance), lengthString);
             int travelTime = time/10 + 1;
@@ -79,13 +82,16 @@ public:
     DescriptionFactory();
     virtual ~DescriptionFactory();
     double GetBearing(const FixedPointCoordinate& C, const FixedPointCoordinate& B) const;
-    void AppendEncodedPolylineString(std::string &output);
-    void AppendUnencodedPolylineString(std::string &output);
+    void AppendEncodedPolylineString(std::string &output) const;
+    void AppendUnencodedPolylineString(std::string &output) const;
     void AppendSegment(const FixedPointCoordinate & coordinate, const _PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode & startPhantom);
-    void SetEndSegment(const PhantomNode & startPhantom);
-    void AppendEncodedPolylineString(std::string & output, bool isEncoded);
+    void SetStartSegment(const PhantomNode & start_phantom);
+    void SetEndSegment(const PhantomNode & start_phantom);
+    void AppendEncodedPolylineString(
+        const bool return_encoded,
+        std::string & output
+        );
 
     template<class DataFacadeT>
     void Run(const DataFacadeT * facade, const unsigned zoomLevel) {
@@ -171,16 +177,16 @@ public:
 
         //Post-processing to remove empty or nearly empty path segments
         if(std::numeric_limits<double>::epsilon() > pathDescription.back().length) {
-            //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << targetPhantom.ratio << ", length: " << pathDescription.back().length;
+            //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << target_phantom.ratio << ", length: " << pathDescription.back().length;
             if(pathDescription.size() > 2){
                 pathDescription.pop_back();
                 pathDescription.back().necessary = true;
                 pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
-                targetPhantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
+                target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
                 //            SimpleLogger().Write() << "Deleting last turn instruction";
             }
         } else {
-            pathDescription[indexOfSegmentBegin].duration *= (1.-targetPhantom.ratio);
+            pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
         }
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
             //TODO: this is never called actually?
@@ -188,11 +194,11 @@ public:
                 pathDescription.erase(pathDescription.begin());
                 pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
                 pathDescription[0].necessary = true;
-                startPhantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
-                //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << startPhantom.ratio << ", length: " << pathDescription[0].length;
+                start_phantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
+                //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << start_phantom.ratio << ", length: " << pathDescription[0].length;
             }
         } else {
-            pathDescription[0].duration *= startPhantom.ratio;
+            pathDescription[0].duration *= start_phantom.ratio;
         }
 
         //Generalize poly line

@@ -111,8 +111,8 @@ public:
         reply.content += "\"route_geometry\": ";
         if(config.geometry) {
             description_factory.AppendEncodedPolylineString(
-                reply.content,
-                config.encode_geometry
+               config.encode_geometry,
+               reply.content
             );
         } else {
             reply.content += "[]";
@@ -183,8 +183,8 @@ public:
         if(config.geometry && INT_MAX != raw_route_information.lengthOfAlternativePath) {
             //Generate the linestrings for each alternative
             alternateDescriptionFactory.AppendEncodedPolylineString(
-                reply.content,
-                config.encode_geometry
+                config.encode_geometry,
+                reply.content
             );
         }
         reply.content += "],";
