@@ -140,8 +140,8 @@ public:
         //TODO: Move to member as smart pointer
         BaseDescriptor<DataFacadeT> * desc;
         if("" != routeParameters.jsonpParameter) {
-            reply.content += routeParameters.jsonpParameter;
-            reply.content += "(";
+            reply.content.push_back(routeParameters.jsonpParameter);
+            reply.content.push_back("(");
         }
 
         DescriptorConfig descriptorConfig;
@@ -172,15 +172,12 @@ public:
 
         PhantomNodes phantomNodes;
         phantomNodes.startPhantom = rawRoute.segmentEndCoordinates[0].startPhantom;
-//        SimpleLogger().Write() << "Start location: " << phantomNodes.startPhantom.location;
         phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
-//        SimpleLogger().Write() << "TargetLocation: " << phantomNodes.targetPhantom.location;
-//        SimpleLogger().Write() << "Number of segments: " << rawRoute.segmentEndCoordinates.size();
         desc->SetConfig(descriptorConfig);
 
         desc->Run(reply, rawRoute, phantomNodes, facade);
         if("" != routeParameters.jsonpParameter) {
-            reply.content += ")\n";
+            reply.content.push_back(")\n");
         }
         reply.headers.resize(3);
         reply.headers[0].name = "Content-Length";

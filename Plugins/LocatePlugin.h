@@ -63,38 +63,38 @@ public:
         //json
 
         if(!routeParameters.jsonpParameter.empty()) {
-            reply.content += routeParameters.jsonpParameter;
-            reply.content += "(";
+            reply.content.push_back(routeParameters.jsonpParameter);
+            reply.content.push_back("(");
         }
         reply.status = http::Reply::ok;
-        reply.content += ("{");
-        reply.content += ("\"version\":0.3,");
+        reply.content.push_back ("{");
+        reply.content.push_back ("\"version\":0.3,");
         if(
             !facade->LocateClosestEndPointForCoordinate(
                 routeParameters.coordinates[0],
                 result
              )
         ) {
-            reply.content += ("\"status\":207,");
-            reply.content += ("\"mapped_coordinate\":[]");
+            reply.content.push_back ("\"status\":207,");
+            reply.content.push_back ("\"mapped_coordinate\":[]");
         } else {
             //Write coordinate to stream
             reply.status = http::Reply::ok;
-            reply.content += ("\"status\":0,");
-            reply.content += ("\"mapped_coordinate\":");
+            reply.content.push_back ("\"status\":0,");
+            reply.content.push_back ("\"mapped_coordinate\":");
             convertInternalLatLonToString(result.lat, tmp);
-            reply.content += "[";
-            reply.content += tmp;
+            reply.content.push_back("[");
+            reply.content.push_back(tmp);
             convertInternalLatLonToString(result.lon, tmp);
-            reply.content += ",";
-            reply.content += tmp;
-            reply.content += "]";
+            reply.content.push_back(",");
+            reply.content.push_back(tmp);
+            reply.content.push_back("]");
         }
-        reply.content += ",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"";
-        reply.content += ("}");
+        reply.content.push_back(",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"");
+        reply.content.push_back("}");
         reply.headers.resize(3);
         if(!routeParameters.jsonpParameter.empty()) {
-            reply.content += ")";
+            reply.content.push_back( ")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";

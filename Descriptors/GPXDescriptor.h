@@ -49,18 +49,18 @@ public:
         PhantomNodes &phantomNodes,
         const DataFacadeT * facade
     ) {
-        reply.content += ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        reply.content +=
+        reply.content.push_back("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        reply.content.push_back(
                 "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
                 "xmlns=\"http://www.topografix.com/GPX/1/1\" "
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
-                "\">";
-        reply.content +=
+                "\">");
+        reply.content.push_back(
                 "<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
                 " OpenStreetMap contributors (ODbL)</license></copyright>"
-                "</metadata>";
-        reply.content += "<rte>";
+                "</metadata>");
+        reply.content.push_back("<rte>");
         bool found_route =  (rawRoute.lengthOfShortestPath != INT_MAX) &&
                             (rawRoute.computedShortestPath.size()         );
         if( found_route ) {
@@ -68,12 +68,12 @@ public:
                 phantomNodes.startPhantom.location.lat,
                 tmp
             );
-            reply.content += "<rtept lat=\"" + tmp + "\" ";
+            reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
             convertInternalLatLonToString(
                 phantomNodes.startPhantom.location.lon,
                 tmp
             );
-            reply.content += "lon=\"" + tmp + "\"></rtept>";
+            reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
 
             BOOST_FOREACH(
                 const _PathData & pathData,
@@ -82,22 +82,22 @@ public:
                 current = facade->GetCoordinateOfNode(pathData.node);
 
                 convertInternalLatLonToString(current.lat, tmp);
-                reply.content += "<rtept lat=\"" + tmp + "\" ";
+                reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
                 convertInternalLatLonToString(current.lon, tmp);
-                reply.content += "lon=\"" + tmp + "\"></rtept>";
+                reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
             }
             convertInternalLatLonToString(
                 phantomNodes.targetPhantom.location.lat,
                 tmp
             );
-            reply.content += "<rtept lat=\"" + tmp + "\" ";
+            reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
             convertInternalLatLonToString(
                 phantomNodes.targetPhantom.location.lon,
                 tmp
             );
-            reply.content += "lon=\"" + tmp + "\"></rtept>";
+            reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
         }
-        reply.content += "</rte></gpx>";
+        reply.content.push_back("</rte></gpx>");
     }
 };
 #endif // GPX_DESCRIPTOR_H_

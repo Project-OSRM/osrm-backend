@@ -41,15 +41,16 @@ void Reply::setSize(const unsigned size) {
 std::vector<boost::asio::const_buffer> Reply::toBuffers(){
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));
-    for (std::size_t i = 0; i < headers.size(); ++i) {
-        Header& h = headers[i];
+    BOOST_FOREACH(const Header & h, headers) {
         buffers.push_back(boost::asio::buffer(h.name));
         buffers.push_back(boost::asio::buffer(seperators));
         buffers.push_back(boost::asio::buffer(h.value));
         buffers.push_back(boost::asio::buffer(crlf));
     }
     buffers.push_back(boost::asio::buffer(crlf));
-    buffers.push_back(boost::asio::buffer(content));
+    BOOST_FOREACH(const std::string & line, content) {
+        buffers.push_back(boost::asio::buffer(line));
+    }
     return buffers;
 }
 
@@ -70,7 +71,8 @@ std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
 Reply Reply::StockReply(Reply::status_type status) {
     Reply rep;
     rep.status = status;
-    rep.content = ToString(status);
+    rep.content.clear();
+    rep.content.push_back( ToString(status) );
     rep.headers.resize(3);
     rep.headers[0].name = "Access-Control-Allow-Origin";
     rep.headers[0].value = "*";
@@ -84,7 +86,6 @@ Reply Reply::StockReply(Reply::status_type status) {
     rep.headers[2].value = "text/html";
     return rep;
 }
-
 
 std::string Reply::ToString(Reply::status_type status) {
     switch (status) {
@@ -110,7 +111,7 @@ boost::asio::const_buffer Reply::ToBuffer(Reply::status_type status) {
 
 
 Reply::Reply() : status(ok) {
-    content.reserve(2 << 20);
+
 }
 
 }

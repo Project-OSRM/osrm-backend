@@ -59,7 +59,7 @@ const std::string internalServerErrorString = "HTTP/1.0 500 Internal Server Erro
             std::vector<Header> headers;
             std::vector<boost::asio::const_buffer> toBuffers();
             std::vector<boost::asio::const_buffer> HeaderstoBuffers();
-            std::string content;
+            std::vector<std::string> content;
             static Reply StockReply(status_type status);
             void setSize(const unsigned size);
             Reply();

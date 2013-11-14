@@ -92,8 +92,8 @@ public:
 
         if(raw_route_information.lengthOfShortestPath != INT_MAX) {
             description_factory.SetStartSegment(phantom_nodes.startPhantom);
-            reply.content += "0,"
-                    "\"status_message\": \"Found route between points\",";
+            reply.content.push_back("0,"
+                    "\"status_message\": \"Found route between points\",");
 
             //Get all the coordinates for the computed route
             BOOST_FOREACH(const _PathData & path_data, raw_route_information.computedShortestPath) {
@@ -103,23 +103,23 @@ public:
             description_factory.SetEndSegment(phantom_nodes.targetPhantom);
         } else {
             //We do not need to do much, if there is no route ;-)
-            reply.content += "207,"
-                    "\"status_message\": \"Cannot find route between points\",";
+            reply.content.push_back("207,"
+                    "\"status_message\": \"Cannot find route between points\",");
         }
 
         description_factory.Run(facade, config.zoom_level);
-        reply.content += "\"route_geometry\": ";
+        reply.content.push_back("\"route_geometry\": ");
         if(config.geometry) {
             description_factory.AppendEncodedPolylineString(
                config.encode_geometry,
                reply.content
             );
         } else {
-            reply.content += "[]";
+            reply.content.push_back("[]");
         }
 
-        reply.content += ","
-                "\"route_instructions\": [";
+        reply.content.push_back(","
+                "\"route_instructions\": [");
         entered_restricted_area_count = 0;
         if(config.instructions) {
             BuildTextualDescription(
@@ -138,32 +138,32 @@ public:
                 entered_restricted_area_count += (current_instruction != segment.turnInstruction);
             }
         }
-        reply.content += "],";
+        reply.content.push_back("],");
         description_factory.BuildRouteSummary(
             description_factory.entireLength,
             raw_route_information.lengthOfShortestPath - ( entered_restricted_area_count*TurnInstructions.AccessRestrictionPenalty)
         );
 
-        reply.content += "\"route_summary\":";
-        reply.content += "{";
-        reply.content += "\"total_distance\":";
-        reply.content += description_factory.summary.lengthString;
-        reply.content += ","
-                "\"total_time\":";
-        reply.content += description_factory.summary.durationString;
-        reply.content += ","
-                "\"start_point\":\"";
-        reply.content += facade->GetEscapedNameForNameID(
-            description_factory.summary.startName
+        reply.content.push_back("\"route_summary\":");
+        reply.content.push_back("{");
+        reply.content.push_back("\"total_distance\":");
+        reply.content.push_back(description_factory.summary.lengthString);
+        reply.content.push_back(","
+                "\"total_time\":");
+        reply.content.push_back(description_factory.summary.durationString);
+        reply.content.push_back(","
+                "\"start_point\":\"");
+        reply.content.push_back(
+            facade->GetEscapedNameForNameID(description_factory.summary.startName)
         );
-        reply.content += "\","
-                "\"end_point\":\"";
-        reply.content += facade->GetEscapedNameForNameID(
-            description_factory.summary.destName
+        reply.content.push_back("\","
+                "\"end_point\":\"");
+        reply.content.push_back(
+            facade->GetEscapedNameForNameID(description_factory.summary.destName)
         );
-        reply.content += "\"";
-        reply.content += "}";
-        reply.content +=",";
+        reply.content.push_back("\"");
+        reply.content.push_back("}");
+        reply.content.push_back(",");
 
         //only one alternative route is computed at this time, so this is hardcoded
 
@@ -179,7 +179,7 @@ public:
         alternateDescriptionFactory.Run(facade, config.zoom_level);
 
         //give an array of alternative routes
-        reply.content += "\"alternative_geometries\": [";
+        reply.content.push_back("\"alternative_geometries\": [");
         if(config.geometry && INT_MAX != raw_route_information.lengthOfAlternativePath) {
             //Generate the linestrings for each alternative
             alternateDescriptionFactory.AppendEncodedPolylineString(
@@ -187,11 +187,11 @@ public:
                 reply.content
             );
         }
-        reply.content += "],";
-        reply.content += "\"alternative_instructions\":[";
+        reply.content.push_back("],");
+        reply.content.push_back("\"alternative_instructions\":[");
         entered_restricted_area_count = 0;
         if(INT_MAX != raw_route_information.lengthOfAlternativePath) {
-            reply.content += "[";
+            reply.content.push_back("[");
             //Generate instructions for each alternative
             if(config.instructions) {
                 BuildTextualDescription(
@@ -207,89 +207,89 @@ public:
                     entered_restricted_area_count += (current_instruction != segment.turnInstruction);
                 }
             }
-            reply.content += "]";
+            reply.content.push_back("]");
         }
-        reply.content += "],";
-        reply.content += "\"alternative_summaries\":[";
+        reply.content.push_back("],");
+        reply.content.push_back("\"alternative_summaries\":[");
         if(INT_MAX != raw_route_information.lengthOfAlternativePath) {
             //Generate route summary (length, duration) for each alternative
             alternateDescriptionFactory.BuildRouteSummary(alternateDescriptionFactory.entireLength, raw_route_information.lengthOfAlternativePath - ( entered_restricted_area_count*TurnInstructions.AccessRestrictionPenalty));
-            reply.content += "{";
-            reply.content += "\"total_distance\":";
-            reply.content += alternateDescriptionFactory.summary.lengthString;
-            reply.content += ","
-                    "\"total_time\":";
-            reply.content += alternateDescriptionFactory.summary.durationString;
-            reply.content += ","
-                    "\"start_point\":\"";
-            reply.content += facade->GetEscapedNameForNameID(description_factory.summary.startName);
-            reply.content += "\","
-                    "\"end_point\":\"";
-            reply.content += facade->GetEscapedNameForNameID(description_factory.summary.destName);
-            reply.content += "\"";
-            reply.content += "}";
+            reply.content.push_back("{");
+            reply.content.push_back("\"total_distance\":");
+            reply.content.push_back(alternateDescriptionFactory.summary.lengthString);
+            reply.content.push_back(","
+                    "\"total_time\":");
+            reply.content.push_back(alternateDescriptionFactory.summary.durationString);
+            reply.content.push_back(","
+                    "\"start_point\":\"");
+            reply.content.push_back(facade->GetEscapedNameForNameID(description_factory.summary.startName));
+            reply.content.push_back("\","
+                    "\"end_point\":\"");
+            reply.content.push_back(facade->GetEscapedNameForNameID(description_factory.summary.destName));
+            reply.content.push_back("\"");
+            reply.content.push_back("}");
         }
-        reply.content += "],";
+        reply.content.push_back("],");
 
         //Get Names for both routes
         RouteNames routeNames;
         GetRouteNames(shortest_path_segments, alternative_path_segments, facade, routeNames);
 
-        reply.content += "\"route_name\":[\"";
-        reply.content += routeNames.shortestPathName1;
-        reply.content += "\",\"";
-        reply.content += routeNames.shortestPathName2;
-        reply.content += "\"],"
-                "\"alternative_names\":[";
-        reply.content += "[\"";
-        reply.content += routeNames.alternativePathName1;
-        reply.content += "\",\"";
-        reply.content += routeNames.alternativePathName2;
-        reply.content += "\"]";
-        reply.content += "],";
+        reply.content.push_back("\"route_name\":[\"");
+        reply.content.push_back(routeNames.shortestPathName1);
+        reply.content.push_back("\",\"");
+        reply.content.push_back(routeNames.shortestPathName2);
+        reply.content.push_back("\"],"
+                "\"alternative_names\":[");
+        reply.content.push_back("[\"");
+        reply.content.push_back(routeNames.alternativePathName1);
+        reply.content.push_back("\",\"");
+        reply.content.push_back(routeNames.alternativePathName2);
+        reply.content.push_back("\"]");
+        reply.content.push_back("],");
         //list all viapoints so that the client may display it
-        reply.content += "\"via_points\":[";
+        reply.content.push_back("\"via_points\":[");
         std::string tmp;
         if(config.geometry && INT_MAX != raw_route_information.lengthOfShortestPath) {
             for(unsigned i = 0; i < raw_route_information.segmentEndCoordinates.size(); ++i) {
-                reply.content += "[";
+                reply.content.push_back("[");
                 if(raw_route_information.segmentEndCoordinates[i].startPhantom.location.isSet())
                     convertInternalReversedCoordinateToString(raw_route_information.segmentEndCoordinates[i].startPhantom.location, tmp);
                 else
                     convertInternalReversedCoordinateToString(raw_route_information.rawViaNodeCoordinates[i], tmp);
 
-                reply.content += tmp;
-                reply.content += "],";
+                reply.content.push_back(tmp);
+                reply.content.push_back("],");
             }
-            reply.content += "[";
+            reply.content.push_back("[");
             if(raw_route_information.segmentEndCoordinates.back().startPhantom.location.isSet())
                 convertInternalReversedCoordinateToString(raw_route_information.segmentEndCoordinates.back().targetPhantom.location, tmp);
             else
                 convertInternalReversedCoordinateToString(raw_route_information.rawViaNodeCoordinates.back(), tmp);
-            reply.content += tmp;
-            reply.content += "]";
+            reply.content.push_back(tmp);
+            reply.content.push_back("]");
         }
-        reply.content += "],";
-        reply.content += "\"hint_data\": {";
-        reply.content += "\"checksum\":";
+        reply.content.push_back("],");
+        reply.content.push_back("\"hint_data\": {");
+        reply.content.push_back("\"checksum\":");
         intToString(raw_route_information.checkSum, tmp);
-        reply.content += tmp;
-        reply.content += ", \"locations\": [";
+        reply.content.push_back(tmp);
+        reply.content.push_back(", \"locations\": [");
 
         std::string hint;
         for(unsigned i = 0; i < raw_route_information.segmentEndCoordinates.size(); ++i) {
-            reply.content += "\"";
+            reply.content.push_back("\"");
             EncodeObjectToBase64(raw_route_information.segmentEndCoordinates[i].startPhantom, hint);
-            reply.content += hint;
-            reply.content += "\", ";
+            reply.content.push_back(hint);
+            reply.content.push_back("\", ");
         }
         EncodeObjectToBase64(raw_route_information.segmentEndCoordinates.back().targetPhantom, hint);
-        reply.content += "\"";
-        reply.content += hint;
-        reply.content += "\"]";
-        reply.content += "},";
-        reply.content += "\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"";
-        reply.content += "}";
+        reply.content.push_back("\"");
+        reply.content.push_back(hint);
+        reply.content.push_back("\"]");
+        reply.content.push_back("},");
+        reply.content.push_back("\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"");
+        reply.content.push_back("}");
     }
 
     // construct routes names
@@ -357,10 +357,12 @@ public:
         }
     }
 
-    inline void WriteHeaderToOutput(std::string & output) {
-        output += "{"
-                "\"version\": 0.3,"
-                "\"status\":";
+    inline void WriteHeaderToOutput(std::vector<std::string> & output) {
+        output.push_back(
+            "{"
+            "\"version\": 0.3,"
+            "\"status\":"
+        );
     }
 
     //TODO: reorder parameters
@@ -389,41 +391,41 @@ public:
                     roundAbout.start_index = prefixSumOfNecessarySegments;
                 } else {
                     if(0 != prefixSumOfNecessarySegments){
-                        reply.content += ",";
+                        reply.content.push_back(",");
                     }
-                    reply.content += "[\"";
+                    reply.content.push_back("[\"");
                     if(TurnInstructions.LeaveRoundAbout == current_instruction) {
                         intToString(TurnInstructions.EnterRoundAbout, tmpInstruction);
-                        reply.content += tmpInstruction;
-                        reply.content += "-";
+                        reply.content.push_back(tmpInstruction);
+                        reply.content.push_back("-");
                         intToString(roundAbout.leave_at_exit+1, tmpInstruction);
-                        reply.content += tmpInstruction;
+                        reply.content.push_back(tmpInstruction);
                         roundAbout.leave_at_exit = 0;
                     } else {
                         intToString(current_instruction, tmpInstruction);
-                        reply.content += tmpInstruction;
+                        reply.content.push_back(tmpInstruction);
                     }
 
-                    reply.content += "\",\"";
-                    reply.content += facade->GetEscapedNameForNameID(segment.nameID);
-                    reply.content += "\",";
+                    reply.content.push_back("\",\"");
+                    reply.content.push_back(facade->GetEscapedNameForNameID(segment.nameID));
+                    reply.content.push_back("\",");
                     intToString(segment.length, tmpDist);
-                    reply.content += tmpDist;
-                    reply.content += ",";
+                    reply.content.push_back(tmpDist);
+                    reply.content.push_back(",");
                     intToString(prefixSumOfNecessarySegments, tmpLength);
-                    reply.content += tmpLength;
-                    reply.content += ",";
+                    reply.content.push_back(tmpLength);
+                    reply.content.push_back(",");
                     intToString(segment.duration/10, tmpDuration);
-                    reply.content += tmpDuration;
-                    reply.content += ",\"";
+                    reply.content.push_back(tmpDuration);
+                    reply.content.push_back(",\"");
                     intToString(segment.length, tmpLength);
-                    reply.content += tmpLength;
-                    reply.content += "m\",\"";
-                    reply.content += Azimuth::Get(segment.bearing);
-                    reply.content += "\",";
+                    reply.content.push_back(tmpLength);
+                    reply.content.push_back("m\",\"");
+                    reply.content.push_back(Azimuth::Get(segment.bearing));
+                    reply.content.push_back("\",");
                     intToString(round(segment.bearing), tmpBearing);
-                    reply.content += tmpBearing;
-                    reply.content += "]";
+                    reply.content.push_back(tmpBearing);
+                    reply.content.push_back("]");
 
                     route_segments_list.push_back(
                         Segment(
@@ -440,23 +442,23 @@ public:
                 ++prefixSumOfNecessarySegments;
         }
         if(INT_MAX != route_length) {
-            reply.content += ",[\"";
+            reply.content.push_back(",[\"");
             intToString(TurnInstructions.ReachedYourDestination, tmpInstruction);
-            reply.content += tmpInstruction;
-            reply.content += "\",\"";
-            reply.content += "\",";
-            reply.content += "0";
-            reply.content += ",";
+            reply.content.push_back(tmpInstruction);
+            reply.content.push_back("\",\"");
+            reply.content.push_back("\",");
+            reply.content.push_back("0");
+            reply.content.push_back(",");
             intToString(prefixSumOfNecessarySegments-1, tmpLength);
-            reply.content += tmpLength;
-            reply.content += ",";
-            reply.content += "0";
-            reply.content += ",\"";
-            reply.content += "\",\"";
-            reply.content += Azimuth::Get(0.0);
-            reply.content += "\",";
-            reply.content += "0.0";
-            reply.content += "]";
+            reply.content.push_back(tmpLength);
+            reply.content.push_back(",");
+            reply.content.push_back("0");
+            reply.content.push_back(",\"");
+            reply.content.push_back("\",\"");
+            reply.content.push_back(Azimuth::Get(0.0));
+            reply.content.push_back("\",");
+            reply.content.push_back("0.0");
+            reply.content.push_back("]");
         }
     }
 

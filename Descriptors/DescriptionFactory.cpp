@@ -95,21 +95,31 @@ void DescriptionFactory::AppendSegment(
 
 void DescriptionFactory::AppendEncodedPolylineString(
     const bool return_encoded,
-    std::string & output
+    std::vector<std::string> & output
 ) {
+    std::string temp;
     if(return_encoded) {
-        polyline_compressor.printEncodedString(pathDescription, output);
+        polyline_compressor.printEncodedString(pathDescription, temp);
     } else {
-        polyline_compressor.printUnencodedString(pathDescription, output);
+        polyline_compressor.printUnencodedString(pathDescription, temp);
     }
+    output.push_back(temp);
 }
 
-void DescriptionFactory::AppendEncodedPolylineString(std::string &output) const {
-    polyline_compressor.printEncodedString(pathDescription, output);
+void DescriptionFactory::AppendEncodedPolylineString(
+    std::vector<std::string> &output
+) const {
+    std::string temp;
+    polyline_compressor.printEncodedString(pathDescription, temp);
+    output.push_back(temp);
 }
 
-void DescriptionFactory::AppendUnencodedPolylineString(std::string &output) const {
-    polyline_compressor.printUnencodedString(pathDescription, output);
+void DescriptionFactory::AppendUnencodedPolylineString(
+    std::vector<std::string>& output
+) const {
+    std::string temp;
+    polyline_compressor.printUnencodedString(pathDescription, temp);
+    output.push_back(temp);
 }
 
 // void DescriptionFactory::Run(const SearchEngine &sEngine, const unsigned zoomLevel) {

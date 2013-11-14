@@ -98,12 +98,14 @@ int main (int argc, const char * argv[]) {
 
         routing_machine.RunQuery(route_parameters, osrm_reply);
 
-        std::cout << osrm_reply.content << std::endl;
-
         //attention: super-inefficient hack below:
 
         std::stringstream ss;
-        ss << osrm_reply.content;
+        BOOST_FOREACH(const std::string & line, osrm_reply.content) {
+            std::cout << line;
+            ss << line;
+        }
+        std::cout << std::endl;
 
         boost::property_tree::ptree pt;
         boost::property_tree::read_json(ss, pt);

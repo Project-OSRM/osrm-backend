@@ -42,23 +42,23 @@ public:
 
         //json
         if("" != routeParameters.jsonpParameter) {
-            reply.content += routeParameters.jsonpParameter;
-            reply.content += "(";
+            reply.content.push_back(routeParameters.jsonpParameter);
+            reply.content.push_back("(");
         }
 
         reply.status = http::Reply::ok;
-        reply.content += ("{");
-        reply.content += ("\"version\":0.3,");
-        reply.content += ("\"status\":");
-            reply.content += "0,";
-        reply.content += ("\"timestamp\":\"");
-        reply.content += facade->GetTimestamp();
-        reply.content += "\"";
-        reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON timestamp (v0.3)\"";
-        reply.content += ("}");
+        reply.content.push_back("{");
+        reply.content.push_back("\"version\":0.3,");
+        reply.content.push_back("\"status\":");
+            reply.content.push_back("0,");
+        reply.content.push_back("\"timestamp\":\"");
+        reply.content.push_back(facade->GetTimestamp());
+        reply.content.push_back("\"");
+        reply.content.push_back(",\"transactionId\":\"OSRM Routing Engine JSON timestamp (v0.3)\"");
+        reply.content.push_back("}");
         reply.headers.resize(3);
         if("" != routeParameters.jsonpParameter) {
-            reply.content += ")";
+            reply.content.push_back(")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";

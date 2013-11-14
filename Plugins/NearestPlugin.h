@@ -70,40 +70,40 @@ public:
         //json
 
         if("" != routeParameters.jsonpParameter) {
-            reply.content += routeParameters.jsonpParameter;
-            reply.content += "(";
+            reply.content.push_back(routeParameters.jsonpParameter);
+            reply.content.push_back("(");
         }
 
         reply.status = http::Reply::ok;
-        reply.content += ("{");
-        reply.content += ("\"version\":0.3,");
-        reply.content += ("\"status\":");
+        reply.content.push_back("{");
+        reply.content.push_back("\"version\":0.3,");
+        reply.content.push_back("\"status\":");
         if(UINT_MAX != result.edgeBasedNode) {
-            reply.content += "0,";
+            reply.content.push_back("0,");
         } else {
-            reply.content += "207,";
+            reply.content.push_back("207,");
         }
-        reply.content += ("\"mapped_coordinate\":");
-        reply.content += "[";
+        reply.content.push_back("\"mapped_coordinate\":");
+        reply.content.push_back("[");
         if(UINT_MAX != result.edgeBasedNode) {
             convertInternalLatLonToString(result.location.lat, temp_string);
-            reply.content += temp_string;
+            reply.content.push_back(temp_string);
             convertInternalLatLonToString(result.location.lon, temp_string);
-            reply.content += ",";
-            reply.content += temp_string;
+            reply.content.push_back(",");
+            reply.content.push_back(temp_string);
         }
-        reply.content += "],";
-        reply.content += "\"name\":\"";
+        reply.content.push_back("],");
+        reply.content.push_back("\"name\":\"");
         if(UINT_MAX != result.edgeBasedNode) {
             facade->GetName(result.nodeBasedEdgeNameID, temp_string);
-            reply.content += temp_string;
+            reply.content.push_back(temp_string);
         }
-        reply.content += "\"";
-        reply.content += ",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"";
-        reply.content += ("}");
+        reply.content.push_back("\"");
+        reply.content.push_back(",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"");
+        reply.content.push_back("}");
         reply.headers.resize(3);
         if( !routeParameters.jsonpParameter.empty() ) {
-            reply.content += ")";
+            reply.content.push_back(")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";

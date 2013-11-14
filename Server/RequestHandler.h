@@ -85,16 +85,18 @@ public:
                 const int position = std::distance(request.begin(), it);
                 std::string tmp_position_string;
                 intToString(position, tmp_position_string);
-                rep.content += "Input seems to be malformed close to position ";
-                rep.content += "<br><pre>";
-                rep.content += request;
-                rep.content += tmp_position_string;
-                rep.content += "<br>";
+                rep.content.push_back(
+                    "Input seems to be malformed close to position "
+                    "<br><pre>"
+                );
+                rep.content.push_back( request );
+                rep.content.push_back(tmp_position_string);
+                rep.content.push_back("<br>");
                 const unsigned end = std::distance(request.begin(), it);
                 for(unsigned i = 0; i < end; ++i) {
-                    rep.content += "&nbsp;";
+                    rep.content.push_back("&nbsp;");
                 }
-                rep.content += "^<br></pre>";
+                rep.content.push_back("^<br></pre>");
             } else {
                 //parsing done, lets call the right plugin to handle the request
                 BOOST_ASSERT_MSG(

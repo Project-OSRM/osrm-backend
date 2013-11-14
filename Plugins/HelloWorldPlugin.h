@@ -29,10 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define HELLOWORLDPLUGIN_H_
 
 #include "BasePlugin.h"
+#include "../Util/StringUtil.h"
 
-#include <sstream>
+#include <string>
 
 class HelloWorldPlugin : public BasePlugin {
+    private:
+        std::string temp_string;
 public:
 	HelloWorldPlugin() : descriptor_string("hello"){}
 	virtual ~HelloWorldPlugin() { }
@@ -40,28 +43,56 @@ public:
 
 	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
 		reply.status = http::Reply::ok;
-		reply.content.append("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
-		std::stringstream content;
-		content << "<pre>";
-        content << "zoom level: " << routeParameters.zoomLevel << "\n";
-        content << "checksum: " << routeParameters.checkSum << "\n";
-        content << "instructions: " << (routeParameters.printInstructions ? "yes" : "no") << "\n";
-        content << "geometry: " << (routeParameters.geometry ? "yes" : "no") << "\n";
-        content << "compression: " << (routeParameters.compression ? "yes" : "no") << "\n";
-        content << "output format: " << routeParameters.outputFormat << "\n";
-        content << "json parameter: " << routeParameters.jsonpParameter << "\n";
-        content << "language: " << routeParameters.language << "<br>";
-        content << "Number of locations: " << routeParameters.coordinates.size() << "\n";
+		reply.content.push_back("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
+		reply.content.push_back("<pre>");
+        reply.content.push_back("zoom level: ");
+        intToString(routeParameters.zoomLevel, temp_string);
+        reply.content.push_back(temp_string);
+        reply.content.push_back("\nchecksum: ");
+        intToString(routeParameters.checkSum, temp_string);
+        reply.content.push_back(temp_string);
+        reply.content.push_back("\ninstructions: ");
+        reply.content.push_back((routeParameters.printInstructions ? "yes" : "no"));
+        reply.content.push_back(temp_string);
+        reply.content.push_back("\ngeometry: ");
+        reply.content.push_back((routeParameters.geometry ? "yes" : "no"));
+        reply.content.push_back("\ncompression: ");
+        reply.content.push_back((routeParameters.compression ? "yes" : "no"));
+        reply.content.push_back("\noutput format: ");
+        reply.content.push_back(routeParameters.outputFormat);
+        reply.content.push_back("\njson parameter: ");
+        reply.content.push_back(routeParameters.jsonpParameter);
+        reply.content.push_back("\nlanguage: ");
+        reply.content.push_back(routeParameters.language);
+        reply.content.push_back("\nNumber of locations: ");
+        intToString(routeParameters.coordinates.size(), temp_string);
+        reply.content.push_back(temp_string);
+        reply.content.push_back("\n");
         for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
-            content << "  [" << i << "] " << routeParameters.coordinates[i].lat/COORDINATE_PRECISION << "," << routeParameters.coordinates[i].lon/COORDINATE_PRECISION << "\n";
+            reply.content.push_back( "  [");
+            intToString(i, temp_string);
+            reply.content.push_back(temp_string);
+            reply.content.push_back("] ");
+            doubleToString(routeParameters.coordinates[i].lat/COORDINATE_PRECISION, temp_string);
+            reply.content.push_back(temp_string);
+            reply.content.push_back(",");
+            doubleToString(routeParameters.coordinates[i].lon/COORDINATE_PRECISION, temp_string);
+            reply.content.push_back(temp_string);
+            reply.content.push_back("\n");
         }
-        content << "Number of hints: " << routeParameters.hints.size() << "\n";
+        reply.content.push_back( "Number of hints: ");
+        intToString(routeParameters.hints.size(), temp_string);
+        reply.content.push_back(temp_string);
+        reply.content.push_back("\n");
         for(unsigned i = 0; i < routeParameters.hints.size(); ++i) {
-            content << "  [" << i << "] " << routeParameters.hints[i] << "\n";
+            reply.content.push_back( "  [");
+            intToString(i, temp_string);
+            reply.content.push_back(temp_string);
+            reply.content.push_back("] ");
+            reply.content.push_back(routeParameters.hints[i]);
+            reply.content.push_back("\n");
         }
-        content << "</pre>";
-		reply.content.append(content.str());
-		reply.content.append("</body></html>");
+        reply.content.push_back( "</pre></body></html>");
 	}
 private:
     std::string descriptor_string;

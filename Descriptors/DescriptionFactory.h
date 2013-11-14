@@ -82,15 +82,15 @@ public:
     DescriptionFactory();
     virtual ~DescriptionFactory();
     double GetBearing(const FixedPointCoordinate& C, const FixedPointCoordinate& B) const;
-    void AppendEncodedPolylineString(std::string &output) const;
-    void AppendUnencodedPolylineString(std::string &output) const;
+    void AppendEncodedPolylineString(std::vector<std::string> &output) const;
+    void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
     void AppendSegment(const FixedPointCoordinate & coordinate, const _PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & start_phantom);
     void SetEndSegment(const PhantomNode & start_phantom);
     void AppendEncodedPolylineString(
         const bool return_encoded,
-        std::string & output
+        std::vector<std::string> & output
         );
 
     template<class DataFacadeT>

@@ -37,11 +37,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <zlib.h>
 
+// #include <zlib.h>
+
+#include <string>
 #include <vector>
 
 namespace http {
@@ -92,7 +96,7 @@ private:
 				request_handler.handle_request(request, reply);
 
 				Header compression_header;
-				std::vector<unsigned char> compressed_output;
+				std::vector<char> compressed_output;
 				std::vector<boost::asio::const_buffer> output_buffer;
 				switch(compression_type) {
 				case deflateRFC1951:
@@ -102,11 +106,10 @@ private:
 						reply.headers.begin(),
 						compression_header
 					);
-					compressCharArray(
-						reply.content.c_str(),
-						reply.content.length(),
-						compressed_output,
-						compression_type
+					compressBufferCollection(
+						reply.content,
+						compression_type,
+						compressed_output
 					);
 					reply.setSize(compressed_output.size());
 					output_buffer = reply.HeaderstoBuffers();
@@ -132,11 +135,10 @@ private:
 						reply.headers.begin(),
 						compression_header
 					);
-					compressCharArray(
-						reply.content.c_str(),
-						reply.content.length(),
-						compressed_output,
-						compression_type
+					compressBufferCollection(
+						reply.content,
+						compression_type,
+						compressed_output
 					);
 					reply.setSize(compressed_output.size());
 					output_buffer = reply.HeaderstoBuffers();
@@ -210,71 +212,100 @@ private:
 		}
 	}
 
+	void compressBufferCollection(
+		std::vector<std::string> uncompressed_data,
+		CompressionType compression_type,
+	   	std::vector<char> & compressed_data
+   	) {
+   		boost::iostreams::gzip_params compression_parameters;
+
+   		compression_parameters.level = boost::iostreams::zlib::best_speed;
+   		if ( deflateRFC1951 == compression_type ) {
+   			compression_parameters.noheader = true;
+   		}
+
+		BOOST_ASSERT( compressed_data.empty() );
+		boost::iostreams::filtering_ostream compressing_stream;
+
+		compressing_stream.push(
+			boost::iostreams::gzip_compressor(compression_parameters)
+		);
+		compressing_stream.push(
+			boost::iostreams::back_inserter(compressed_data)
+		);
+
+		BOOST_FOREACH( const std::string & line, uncompressed_data) {
+			compressing_stream << line;
+		}
+
+		compressing_stream.reset();
+	}
+
 	// Big thanks to deusty who explains how to use gzip compression by
 	// the right call to deflateInit2():
 	// http://deusty.blogspot.com/2007/07/gzip-compressiondecompression.html
-	void compressCharArray(
-		const char * in_data,
-		size_t in_data_size,
-		std::vector<unsigned char> & buffer,
-		CompressionType type
-	) {
-		const size_t BUFSIZE = 128 * 1024;
-		unsigned char temp_buffer[BUFSIZE];
+	// void compressCharArray(
+	// 	const char * in_data,
+	// 	size_t in_data_size,
+	// 	std::vector<unsigned char> & buffer,
+	// 	CompressionType type
+	// ) {
+	// 	const size_t BUFSIZE = 128 * 1024;
+	// 	unsigned char temp_buffer[BUFSIZE];
 
-		z_stream strm;
-		strm.zalloc = Z_NULL;
-		strm.zfree = Z_NULL;
-		strm.opaque = Z_NULL;
-		strm.total_out = 0;
-		strm.next_in = (unsigned char *)(in_data);
-		strm.avail_in = in_data_size;
-		strm.next_out = temp_buffer;
-		strm.avail_out = BUFSIZE;
-		strm.data_type = Z_ASCII;
+	// 	z_stream strm;
+	// 	strm.zalloc = Z_NULL;
+	// 	strm.zfree = Z_NULL;
+	// 	strm.opaque = Z_NULL;
+	// 	strm.total_out = 0;
+	// 	strm.next_in = (unsigned char *)(in_data);
+	// 	strm.avail_in = in_data_size;
+	// 	strm.next_out = temp_buffer;
+	// 	strm.avail_out = BUFSIZE;
+	// 	strm.data_type = Z_ASCII;
 
-		switch(type){
-		case deflateRFC1951:
-			deflateInit(&strm, Z_BEST_SPEED);
-			break;
-		case gzipRFC1952:
-			deflateInit2(
-				&strm,
-				Z_DEFAULT_COMPRESSION,
-				Z_DEFLATED,
-				(15+16),
-				9,
-				Z_DEFAULT_STRATEGY
-			);
-			break;
-		default:
-			BOOST_ASSERT_MSG(false, "should not happen");
-			break;
-		}
+	// 	switch(type){
+	// 	case deflateRFC1951:
+	// 		deflateInit(&strm, Z_BEST_SPEED);
+	// 		break;
+	// 	case gzipRFC1952:
+	// 		deflateInit2(
+	// 			&strm,
+	// 			Z_DEFAULT_COMPRESSION,
+	// 			Z_DEFLATED,
+	// 			(15+16),
+	// 			9,
+	// 			Z_DEFAULT_STRATEGY
+	// 		);
+	// 		break;
+	// 	default:
+	// 		BOOST_ASSERT_MSG(false, "should not happen");
+	// 		break;
+	// 	}
 
-		int deflate_res = Z_OK;
-		do {
-			if ( 0 == strm.avail_out ) {
-				buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
-				strm.next_out = temp_buffer;
-				strm.avail_out = BUFSIZE;
-			}
-			deflate_res = deflate(&strm, Z_FINISH);
+	// 	int deflate_res = Z_OK;
+	// 	do {
+	// 		if ( 0 == strm.avail_out ) {
+	// 			buffer.insert(buffer.end(), temp_buffer, temp_buffer + BUFSIZE);
+	// 			strm.next_out = temp_buffer;
+	// 			strm.avail_out = BUFSIZE;
+	// 		}
+	// 		deflate_res = deflate(&strm, Z_FINISH);
 
-		} while (deflate_res == Z_OK);
+	// 	} while (deflate_res == Z_OK);
 
-		BOOST_ASSERT_MSG(
-			deflate_res == Z_STREAM_END,
-			"compression not properly finished"
-		);
+	// 	BOOST_ASSERT_MSG(
+	// 		deflate_res == Z_STREAM_END,
+	// 		"compression not properly finished"
+	// 	);
 
-		buffer.insert(
-			buffer.end(),
-			temp_buffer,
-			temp_buffer + BUFSIZE - strm.avail_out
-		);
-		deflateEnd(&strm);
-	}
+	// 	buffer.insert(
+	// 		buffer.end(),
+	// 		temp_buffer,
+	// 		temp_buffer + BUFSIZE - strm.avail_out
+	// 	);
+	// 	deflateEnd(&strm);
+	// }
 
 	boost::asio::io_service::strand strand;
 	boost::asio::ip::tcp::socket TCP_socket;
