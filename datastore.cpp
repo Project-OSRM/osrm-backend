@@ -39,6 +39,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/UUID.h"
 #include "typedefs.h"
 
+#ifdef __linux__
+#include <sys/mman.h>
+#endif
+
 #include <boost/integer.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -47,6 +51,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int main( const int argc, const char * argv[] ) {
     SharedBarriers barrier;
+
+
+#ifdef __linux__
+        if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
+            SimpleLogger().Write(logWARNING) <<
+                "Process " << argv[0] << " could not request RAM lock";
+        }
+#endif
 
     try {
         boost::interprocess::scoped_lock<
