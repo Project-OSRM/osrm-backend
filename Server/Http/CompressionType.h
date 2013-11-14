@@ -25,63 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef REQUEST_PARSER_H
-#define REQUEST_PARSER_H
-
-#include "Http/CompressionType.h"
-#include "Http/Header.h"
-#include "Http/Request.h"
-
-#include <boost/logic/tribool.hpp>
-#include <boost/tuple/tuple.hpp>
+#ifndef BASIC_DATASTRUCTURES_H
+#define BASIC_DATASTRUCTURES_H
 
 namespace http {
 
-class RequestParser {
-public:
-    RequestParser();
-    void Reset();
-
-    boost::tuple<boost::tribool, char*> Parse(Request& req, char* begin, char* end, CompressionType * compressionType);
-
-private:
-    boost::tribool consume(Request& req, char input, CompressionType * compressionType);
-
-    inline bool isChar(int c);
-
-    inline bool isCTL(int c);
-
-    inline bool isTSpecial(int c);
-
-    inline bool isDigit(int c);
-
-    enum state {
-        method_start,
-        method,
-        uri_start,
-        uri,
-        http_version_h,
-        http_version_t_1,
-        http_version_t_2,
-        http_version_p,
-        http_version_slash,
-        http_version_major_start,
-        http_version_major,
-        http_version_minor_start,
-        http_version_minor,
-        expecting_newline_1,
-        header_line_start,
-        header_lws,
-        header_name,
-        space_before_header_value,
-        header_value,
-        expecting_newline_2,
-        expecting_newline_3
-    } state_;
-
-    Header header;
+enum CompressionType {
+    noCompression,
+    gzipRFC1952,
+    deflateRFC1951
 };
 
 } // namespace http
 
-#endif // REQUEST_PARSER_H
+#endif //BASIC_DATASTRUCTURES_H
