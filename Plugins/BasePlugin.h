@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BASEPLUGIN_H_
 
 #include "../DataStructures/Coordinate.h"
-#include "../Server/BasicDatastructures.h"
-#include "../Server/Reply.h"
+#include "../Server/Http/BasicDatastructures.h"
+#include "../Server/Http/Reply.h"
 #include "../Server/DataStructures/RouteParameters.h"
 
 #include <string>

@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include "BasicDatastructures.h"
+#include "Http/BasicDatastructures.h"
 #include "RequestHandler.h"
 #include "RequestParser.h"
 

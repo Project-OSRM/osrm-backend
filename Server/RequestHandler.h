@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define REQUEST_HANDLER_H
 
 #include "APIGrammar.h"
-#include "BasicDatastructures.h"
 #include "DataStructures/RouteParameters.h"
+#include "Http/Request.h"
 #include "../Library/OSRM.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
