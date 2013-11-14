@@ -38,6 +38,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/xsi_shared_memory.hpp>
 
+#ifdef __linux__
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#endif
+
 #include <algorithm>
 #include <exception>
 
@@ -97,6 +102,7 @@ public:
     			boost::interprocess::open_only,
     			key
 			);
+
     		region = boost::interprocess::mapped_region (
     			shm,
     			(
@@ -115,6 +121,10 @@ public:
     			key,
     			size
     		);
+
+#ifdef __linux__
+			shmctl(shm.get_shmid(), SHM_LOCK, 0);
+#endif
 		    region = boost::interprocess::mapped_region (
 		    	shm,
 		    	boost::interprocess::read_write
