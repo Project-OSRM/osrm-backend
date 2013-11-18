@@ -101,6 +101,16 @@ function way_function (way)
     return
   end
 
+  local impassable = way.tags:Find("impassable")
+  if "yes" == impassable then
+    return
+  end
+
+  local status = way.tags:Find("status")
+  if "impassable" == status then
+    return
+  end
+
   -- Check if we are allowed to access the way
   local access = Access.find_access_tag(way, access_tags_hierachy)
   if access_tag_blacklist[access] then
@@ -120,7 +130,6 @@ function way_function (way)
   local cycleway = way.tags:Find("cycleway")
   local duration  = way.tags:Find("duration")
   local service  = way.tags:Find("service")
-
 
   -- Set the name that will be used for instructions
 	if "" ~= ref then
