@@ -60,10 +60,10 @@ int DouglasPeucker::fastDistance(
     const FixedPointCoordinate& segA,
     const FixedPointCoordinate& segB
 ) const {
-    const int p2x = (segB.lon - segA.lat);
-    const int p2y = (segB.lon - segA.lat);
+    const int p2x = (segB.lon - segA.lon);
+    const int p2y = (segB.lat - segA.lat);
     const int something = p2x*p2x + p2y*p2y;
-    int u = ( 0 == something  ? 0 : ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something);
+    double u = ( 0 == something  ? 0 : ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something);
 
     if (u > 1) {
         u = 1;
