@@ -43,6 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/shm.h>
 #endif
 
+#include <cstring>
+
 #include <algorithm>
 #include <exception>
 
@@ -121,9 +123,13 @@ public:
     			key,
     			size
     		);
-
 #ifdef __linux__
-			shmctl(shm.get_shmid(), SHM_LOCK, 0);
+			if( -1 == shmctl(shm.get_shmid(), SHM_LOCK, 0) ) {
+				if( ENOMEM == errno ) {
+					SimpleLogger().Write(logWARNING) <<
+						"could not lock shared memory to RAM";
+				}
+			}
 #endif
 		    region = boost::interprocess::mapped_region (
 		    	shm,
