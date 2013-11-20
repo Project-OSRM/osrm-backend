@@ -47,25 +47,25 @@ const std::string okString = "HTTP/1.0 200 OK\r\n";
 const std::string badRequestString = "HTTP/1.0 400 Bad Request\r\n";
 const std::string internalServerErrorString = "HTTP/1.0 500 Internal Server Error\r\n";
 
-    class Reply {
-        public:
-        enum status_type {
-                ok                  = 200,
-                badRequest          = 400,
-                internalServerError = 500
-            } status;
+class Reply {
+    public:
+    enum status_type {
+            ok                  = 200,
+            badRequest          = 400,
+            internalServerError = 500
+        } status;
 
 
-            std::vector<Header> headers;
-            std::vector<boost::asio::const_buffer> toBuffers();
-            std::vector<boost::asio::const_buffer> HeaderstoBuffers();
-            std::vector<std::string> content;
-            static Reply StockReply(status_type status);
-            void setSize(const unsigned size);
-            Reply();
-        private:
-            static std::string ToString(Reply::status_type status);
-            boost::asio::const_buffer ToBuffer(Reply::status_type status);
+        std::vector<Header> headers;
+        std::vector<boost::asio::const_buffer> toBuffers();
+        std::vector<boost::asio::const_buffer> HeaderstoBuffers();
+        std::vector<std::string> content;
+        static Reply StockReply(status_type status);
+        void setSize(const unsigned size);
+        Reply();
+    private:
+        static std::string ToString(Reply::status_type status);
+        boost::asio::const_buffer ToBuffer(Reply::status_type status);
 };
 
 }
