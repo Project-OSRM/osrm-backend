@@ -182,7 +182,11 @@ public:
         reply.headers.resize(3);
         reply.headers[0].name = "Content-Length";
         std::string tmp;
-        intToString(reply.content.size(), tmp);
+        unsigned content_length = 0;
+        BOOST_FOREACH(const std::string & snippet, reply.content) {
+            content_length += snippet.length();
+        }
+        intToString(content_length, tmp);
         reply.headers[0].value = tmp;
         switch(descriptorType){
         case 0:

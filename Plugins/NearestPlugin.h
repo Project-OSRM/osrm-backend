@@ -115,7 +115,11 @@ public:
             reply.headers[2].value = "attachment; filename=\"location.json\"";
         }
         reply.headers[0].name = "Content-Length";
-        intToString(reply.content.size(), temp_string);
+        unsigned content_length = 0;
+        BOOST_FOREACH(const std::string & snippet, reply.content) {
+            content_length += snippet.length();
+        }
+        intToString(content_length, temp_string);
         reply.headers[0].value = temp_string;
     }
 
