@@ -99,10 +99,4 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn){
     return out;
 }
 
-struct NodesOfEdge {
-    NodeID edgeBasedNode;
-    double ratio;
-    FixedPointCoordinate projectedPoint;
-};
-
 #endif /* PHANTOMNODES_H_ */
