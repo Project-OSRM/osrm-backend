@@ -761,6 +761,7 @@ public:
             "Root element in NN Search has min dist != 0."
         );
 
+        LeafNode current_leaf_node;
         while(!traversal_queue.empty()) {
             const QueryCandidate current_query_node = traversal_queue.top(); traversal_queue.pop();
 
@@ -770,7 +771,6 @@ public:
             if( !prune_downward && !prune_upward ) { //downward pruning
                 TreeNode & current_tree_node = m_search_tree[current_query_node.node_id];
                 if (current_tree_node.child_is_on_disk) {
-                    LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     // ++io_count;
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
