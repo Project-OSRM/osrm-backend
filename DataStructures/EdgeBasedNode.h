@@ -23,6 +23,10 @@ struct EdgeBasedNode {
         FixedPointCoordinate & nearest_location,
         double & r
     ) const {
+        if( ignoreInGrid ) {
+            return std::numeric_limits<double>::max();
+        }
+
         const double x = inputPoint.lat/COORDINATE_PRECISION;
         const double y = inputPoint.lon/COORDINATE_PRECISION;
         const double a = lat1/COORDINATE_PRECISION;
@@ -83,9 +87,9 @@ struct EdgeBasedNode {
         return centroid;
     }
 
-    inline bool isIgnored() const {
-        return ignoreInGrid;
-    }
+    // inline bool isIgnored() const {
+    //     return ignoreInGrid;
+    // }
 
     NodeID id;
     int lat1;
