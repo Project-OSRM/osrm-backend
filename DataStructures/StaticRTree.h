@@ -675,9 +675,6 @@ public:
                         ) {
                             continue;
                         }
-                        if(current_edge.isIgnored()) {
-                            continue;
-                        }
 
                         double current_minimum_distance = ApproximateDistance(
                                 input_coordinate.lat,
@@ -779,9 +776,6 @@ public:
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
                         DataT & current_edge = current_leaf_node.objects[i];
                         if(ignore_tiny_components && current_edge.belongsToTinyComponent) {
-                            continue;
-                        }
-                        if(current_edge.isIgnored()) {
                             continue;
                         }
 
