@@ -43,7 +43,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
         std::pair<NodeID, NodeID> restriction_source =
             std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
-        RestrictionMap::iterator restriction_iter = m_restriction_map.find(restriction_source);
+        RestrictionMap::iterator restriction_iter;
+        restriction_iter = m_restriction_map.find(restriction_source);
         if(restriction_iter == m_restriction_map.end()) {
             index = m_restriction_bucket_list.size();
             m_restriction_bucket_list.resize(index+1);
@@ -93,7 +94,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
         	continue;
         }
         edge.data.distance = (std::max)((int)import_edge.weight(), 1 );
-        assert( edge.data.distance > 0 );
+        BOOST_ASSERT( edge.data.distance > 0 );
         edge.data.shortcut = false;
         edge.data.roundabout = import_edge.isRoundabout();
         edge.data.ignoreInGrid = import_edge.ignoreInGrid();
@@ -131,8 +132,8 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(
 void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector<EdgeBasedNode> & nodes) {
 #ifndef NDEBUG
     BOOST_FOREACH(const EdgeBasedNode & node, m_edge_based_node_list){
-        assert(node.lat1 != INT_MAX); assert(node.lon1 != INT_MAX);
-        assert(node.lat2 != INT_MAX); assert(node.lon2 != INT_MAX);
+        BOOST_ASSERT(node.lat1 != INT_MAX); BOOST_ASSERT(node.lon1 != INT_MAX);
+        BOOST_ASSERT(node.lat2 != INT_MAX); BOOST_ASSERT(node.lon2 != INT_MAX);
     }
 #endif
     nodes.swap(m_edge_based_node_list);
@@ -143,7 +144,8 @@ NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(
     const NodeID v
 ) const {
     const std::pair < NodeID, NodeID > restriction_source = std::make_pair(u, v);
-    RestrictionMap::const_iterator restriction_iter = m_restriction_map.find(restriction_source);
+    RestrictionMap::const_iterator restriction_iter;
+    restriction_iter = m_restriction_map.find(restriction_source);
     if (restriction_iter != m_restriction_map.end()) {
         const unsigned index = restriction_iter->second;
         BOOST_FOREACH(
@@ -165,7 +167,8 @@ bool EdgeBasedGraphFactory::CheckIfTurnIsRestricted(
 ) const {
     //only add an edge if turn is not a U-turn except it is the end of dead-end street.
     const std::pair < NodeID, NodeID > restriction_source = std::make_pair(u, v);
-    RestrictionMap::const_iterator restriction_iter = m_restriction_map.find(restriction_source);
+    RestrictionMap::const_iterator restriction_iter;
+    restriction_iter = m_restriction_map.find(restriction_source);
     if (restriction_iter != m_restriction_map.end()) {
         const unsigned index = restriction_iter->second;
         BOOST_FOREACH(
@@ -203,9 +206,11 @@ void EdgeBasedGraphFactory::Run(
     const char * original_edge_data_filename,
     lua_State *lua_state
 ) {
+    SimpleLogger().Write() << "Compressing geometry of input graph";
+
+
     SimpleLogger().Write() << "Identifying components of the road network";
 
-    Percent p(m_node_based_graph->GetNumberOfNodes());
     unsigned skipped_turns_counter   = 0;
     unsigned node_based_edge_counter = 0;
     unsigned original_edges_counter  = 0;
@@ -221,93 +226,21 @@ void EdgeBasedGraphFactory::Run(
         sizeof(unsigned)
     );
 
-    unsigned current_component = 0, current_component_size = 0;
     //Run a BFS on the undirected graph and identify small components
-    std::queue<std::pair<NodeID, NodeID> > bfs_queue;
-    std::vector<unsigned> component_index_list(
-        m_node_based_graph->GetNumberOfNodes(),
-        UINT_MAX
-    );
+    std::vector<unsigned> component_index_list;
+    std::vector<NodeID> component_index_size;
+    BFSCompentExplorer( component_index_list, component_index_size);
 
-    std::vector<NodeID> component_size_list;
-    //put unexplorered node with parent pointer into queue
-    for(
-        NodeID node = 0,
-            last_node = m_node_based_graph->GetNumberOfNodes();
-        node < last_node;
-        ++node
-    ) {
-        if(UINT_MAX == component_index_list[node]) {
-            bfs_queue.push(std::make_pair(node, node));
-            //mark node as read
-            component_index_list[node] = current_component;
-            p.printIncrement();
-            while(!bfs_queue.empty()) {
-                //fetch element from BFS queue
-                std::pair<NodeID, NodeID> current_queue_item = bfs_queue.front();
-                bfs_queue.pop();
-                // SimpleLogger().Write() << "sizeof queue: " << bfs_queue.size() <<
-                //  ", current_component_sizes: " <<  current_component_size <<
-                //", settled nodes: " << settledNodes++ << ", max: " << endNodes;
-                const NodeID v = current_queue_item.first;  //current node
-                const NodeID u = current_queue_item.second; //parent
-                //increment size counter of current component
-                ++current_component_size;
-                const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
-                if(!is_barrier_node) {
-                    const NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
-
-                    //relaxieren edge outgoing edge like below where edge-expanded graph
-                    for(
-                        EdgeIterator e2 = m_node_based_graph->BeginEdges(v);
-                        e2 < m_node_based_graph->EndEdges(v);
-                        ++e2
-                    ) {
-                        NodeIterator w = m_node_based_graph->GetTarget(e2);
-
-                        if(
-                            to_node_of_only_restriction != UINT_MAX &&
-                            w != to_node_of_only_restriction
-                        ) {
-                            //We are at an only_-restriction but not at the right turn.
-                            continue;
-                        }
-                        if( u != w ) {
-                            //only add an edge if turn is not a U-turn except
-                            //when it is at the end of a dead-end street.
-                            if (!CheckIfTurnIsRestricted(u, v, w) ) {
-                                //only add an edge if turn is not prohibited
-                                if(UINT_MAX == component_index_list[w]) {
-                                    //insert next (node, parent) only if w has
-                                    //not yet been explored
-                                    //mark node as read
-                                    component_index_list[w] = current_component;
-                                    bfs_queue.push(std::make_pair(w,v));
-                                    p.printIncrement();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            //push size into vector
-            component_size_list.push_back(current_component_size);
-            //reset counters;
-            current_component_size = 0;
-            ++current_component;
-        }
-    }
     SimpleLogger().Write() <<
-        "identified: " << component_size_list.size() << " many components";
+        "identified: " << component_index_size.size() << " many components";
     SimpleLogger().Write() <<
         "generating edge-expanded nodes";
 
-    p.reinit(m_node_based_graph->GetNumberOfNodes());
+    Percent p(m_node_based_graph->GetNumberOfNodes());
     //loop over all edges and generate new set of nodes.
     for(
-        NodeIterator u = 0,
-            number_of_nodes = m_node_based_graph->GetNumberOfNodes();
-        u < number_of_nodes;
+        NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes();
+        u < end;
         ++u
      ) {
         p.printIncrement();
@@ -326,8 +259,8 @@ void EdgeBasedGraphFactory::Run(
             //Note: edges that end on barrier nodes or on a turn restriction
             //may actually be in two distinct components. We choose the smallest
                 const unsigned size_of_component = std::min(
-                    component_size_list[component_index_list[u]],
-                    component_size_list[component_index_list[v]]
+                    component_index_size[component_index_list[u]],
+                    component_index_size[component_index_list[v]]
                 );
 
                 InsertEdgeBasedNode( e1, u, v, size_of_component < 1000 );
@@ -341,9 +274,9 @@ void EdgeBasedGraphFactory::Run(
     SimpleLogger().Write() <<
         "generating edge-expanded edges";
 
-    std::vector<NodeID>().swap(component_size_list);
+    std::vector<NodeID>().swap(component_index_size);
     BOOST_ASSERT_MSG(
-        0 == component_size_list.capacity(),
+        0 == component_index_size.capacity(),
         "component size vector not deallocated"
     );
     std::vector<NodeID>().swap(component_index_list);
@@ -372,7 +305,7 @@ void EdgeBasedGraphFactory::Run(
         ) {
             ++node_based_edge_counter;
             NodeIterator v = m_node_based_graph->GetTarget(e1);
-            bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
+            const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
             NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
             for(
                 EdgeIterator e2 = m_node_based_graph->BeginEdges(v),
@@ -403,8 +336,12 @@ void EdgeBasedGraphFactory::Run(
                     ) { //only add an edge if turn is not prohibited
                         const EdgeData edge_data1 = m_node_based_graph->GetEdgeData(e1);
                         const EdgeData edge_data2 = m_node_based_graph->GetEdgeData(e2);
-                        assert(edge_data1.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges());
-                        assert(edge_data2.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges());
+                        BOOST_ASSERT(
+                            edge_data1.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
+                        );
+                        BOOST_ASSERT(
+                            edge_data2.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
+                        );
 
                         if(!edge_data1.forward || !edge_data2.forward) {
                             continue;
@@ -422,7 +359,10 @@ void EdgeBasedGraphFactory::Run(
                         }
                         distance += penalty;
 
-                        assert(edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID);
+                        BOOST_ASSERT(
+                            edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID
+                        );
+
                         original_edge_data_vector.push_back(
                             OriginalEdgeData(
                                 v,
@@ -575,4 +515,83 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
 
 unsigned EdgeBasedGraphFactory::GetNumberOfNodes() const {
     return m_node_based_graph->GetNumberOfEdges();
+}
+
+void EdgeBasedGraphFactory::BFSCompentExplorer(
+    std::vector<unsigned> & component_index_list,
+    std::vector<unsigned> & component_index_size
+) const {
+    std::queue<std::pair<NodeID, NodeID> > bfs_queue;
+    Percent p( m_node_based_graph->GetNumberOfNodes() );
+    unsigned current_component, current_component_size;
+    current_component = current_component_size = 0;
+
+    BOOST_ASSERT( component_index_list.empty() );
+    BOOST_ASSERT( component_index_size.empty() );
+
+    component_index_list.resize(
+        m_node_based_graph->GetNumberOfNodes(),
+        UINT_MAX
+    );
+
+        //put unexplorered node with parent pointer into queue
+    for( NodeID node = 0, end = m_node_based_graph->GetNumberOfNodes(); node < end; ++node) {
+        if(UINT_MAX == component_index_list[node]) {
+            bfs_queue.push(std::make_pair(node, node));
+            //mark node as read
+            component_index_list[node] = current_component;
+            p.printIncrement();
+            while(!bfs_queue.empty()) {
+                //fetch element from BFS queue
+                std::pair<NodeID, NodeID> current_queue_item = bfs_queue.front();
+                bfs_queue.pop();
+
+                const NodeID v = current_queue_item.first;  //current node
+                const NodeID u = current_queue_item.second; //parent
+                //increment size counter of current component
+                ++current_component_size;
+                const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
+                if(!is_barrier_node) {
+                    const NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
+
+                    //relaxieren edge outgoing edge like below where edge-expanded m_node_based_graph
+                    for(
+                        EdgeIterator e2 = m_node_based_graph->BeginEdges(v);
+                        e2 < m_node_based_graph->EndEdges(v);
+                        ++e2
+                    ) {
+                        NodeIterator w = m_node_based_graph->GetTarget(e2);
+
+                        if(
+                            to_node_of_only_restriction != UINT_MAX &&
+                            w != to_node_of_only_restriction
+                        ) {
+                            //We are at an only_-restriction but not at the right turn.
+                            continue;
+                        }
+                        if( u != w ) {
+                            //only add an edge if turn is not a U-turn except
+                            //when it is at the end of a dead-end street.
+                            if (!CheckIfTurnIsRestricted(u, v, w) ) {
+                                //only add an edge if turn is not prohibited
+                                if(UINT_MAX == component_index_list[w]) {
+                                    //insert next (node, parent) only if w has
+                                    //not yet been explored
+                                    //mark node as read
+                                    component_index_list[w] = current_component;
+                                    bfs_queue.push(std::make_pair(w,v));
+                                    p.printIncrement();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            //push size into vector
+            component_index_size.push_back(current_component_size);
+            //reset counters;
+            current_component_size = 0;
+            ++current_component;
+        }
+    }
 }
