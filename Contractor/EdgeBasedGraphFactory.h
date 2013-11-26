@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "GeometryCompressor.h"
 
+#include <boost/assert.hpp>
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
@@ -146,7 +147,6 @@ private:
 
     RestrictionMap                              m_restriction_map;
 
-
     NodeID CheckForEmanatingIsOnlyTurn(
         const NodeID u,
         const NodeID v
@@ -159,10 +159,16 @@ private:
     ) const;
 
     void InsertEdgeBasedNode(
-            NodeBasedDynamicGraph::EdgeIterator e1,
-            NodeBasedDynamicGraph::NodeIterator u,
-            NodeBasedDynamicGraph::NodeIterator v,
-            bool belongsToTinyComponent);
+        NodeBasedDynamicGraph::EdgeIterator e1,
+        NodeBasedDynamicGraph::NodeIterator u,
+        NodeBasedDynamicGraph::NodeIterator v,
+        bool belongsToTinyComponent
+    );
+
+    void BFSCompentExplorer(
+        std::vector<unsigned> & component_index_list,
+        std::vector<unsigned> & component_index_size
+    ) const;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */
