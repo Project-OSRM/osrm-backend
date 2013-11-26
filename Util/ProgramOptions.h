@@ -231,7 +231,10 @@ inline bool GenerateServerProgramOptions(
     }
 
     if( !use_shared_memory && option_variables.count("base") ) {
-        std::string base_string = paths["base"].string();
+        path_iterator = paths.find("base");
+        BOOST_ASSERT( paths.end() != path_iterator );
+        std::string base_string = path_iterator->second.string();
+
         path_iterator = paths.find("hsgrdata");
         if(
             path_iterator != paths.end() &&
