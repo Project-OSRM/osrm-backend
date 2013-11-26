@@ -90,5 +90,5 @@ void GeometryCompressor::PrintStatistics() const {
     SimpleLogger().Write() <<
         "surv: " << surviving_node_count <<
         ", comp: " << compressed_node_count <<
-        ", comp ratio: " << ((float)surviving_node_count/compressed_node_count);
+        ", comp ratio: " << ((float)surviving_node_count/std::max(compressed_node_count), 1);
 }
