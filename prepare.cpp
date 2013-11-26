@@ -296,6 +296,7 @@ int main (int argc, char *argv[]) {
         IteratorbasedCRC32<std::vector<EdgeBasedNode> > crc32;
         unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
         nodeBasedEdgeList.clear();
+        std::vector<EdgeBasedNode>(nodeBasedEdgeList).swap(nodeBasedEdgeList);
         SimpleLogger().Write() << "CRC32: " << crc32OfNodeBasedEdgeList;
 
         /***
