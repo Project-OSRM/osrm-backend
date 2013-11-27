@@ -1,5 +1,5 @@
 -- Begin of globals
-require("lib/access")
+--require("lib/access") --function temporarily inlined
 
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["entrance"] = true}
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true  }
@@ -41,6 +41,15 @@ traffic_signal_penalty  = 2
 u_turn_penalty 			    = 20
 
 -- End of globals
+function find_access_tag(source,access_tags_hierachy)
+    for i,v in ipairs(access_tags_hierachy) do
+        local tag = source.tags:Find(v)
+        if tag ~= '' then
+            return tag
+        end
+    end
+    return nil
+end
 
 function get_exceptions(vector)
 	for i,v in ipairs(restriction_exception_tags) do
@@ -64,7 +73,7 @@ end
 
 function node_function (node)
   local barrier = node.tags:Find("barrier")
-  local access = Access.find_access_tag(node, access_tags_hierachy)
+  local access = find_access_tag(node, access_tags_hierachy)
   local traffic_signal = node.tags:Find("highway")
 
   --flag node if it carries a traffic light
@@ -112,7 +121,7 @@ function way_function (way)
   end
 
   -- Check if we are allowed to access the way
-  local access = Access.find_access_tag(way, access_tags_hierachy)
+  local access = find_access_tag(way, access_tags_hierachy)
   if access_tag_blacklist[access] then
     return
   end
