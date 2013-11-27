@@ -214,14 +214,14 @@ public:
         //Create temporary file
 
         //        GetTemporaryFileName(temporaryEdgeStorageFilename);
-        temporaryStorageSlotID = TemporaryStorage::GetInstance().allocateSlot();
+        temporaryStorageSlotID = TemporaryStorage::GetInstance().AllocateSlot();
         std::cout << "contractor finished initalization" << std::endl;
     }
 
     ~Contractor() {
         //Delete temporary file
         //        remove(temporaryEdgeStorageFilename.c_str());
-        TemporaryStorage::GetInstance().deallocateSlot(temporaryStorageSlotID);
+        TemporaryStorage::GetInstance().DeallocateSlot(temporaryStorageSlotID);
     }
 
     void Run() {
@@ -287,9 +287,9 @@ public:
                 TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
                 //Write dummy number of edges to temporary file
                 //        		std::ofstream temporaryEdgeStorage(temporaryEdgeStorageFilename.c_str(), std::ios::binary);
-                uint64_t initialFilePosition = tempStorage.tell(temporaryStorageSlotID);
+                uint64_t initialFilePosition = tempStorage.Tell(temporaryStorageSlotID);
                 unsigned numberOfTemporaryEdges = 0;
-                tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
+                tempStorage.WriteToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
 
                 //walk over all nodes
                 for(unsigned i = 0; i < _graph->GetNumberOfNodes(); ++i) {
@@ -299,11 +299,11 @@ public:
                         const NodeID target = _graph->GetTarget(currentEdge);
                         if(UINT_MAX == newNodeIDFromOldNodeIDMap[i] ){
                             //Save edges of this node w/o renumbering.
-                            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
-                            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
-                            tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
+                            tempStorage.WriteToSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
+                            tempStorage.WriteToSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
+                            tempStorage.WriteToSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
                             ++numberOfTemporaryEdges;
-                        }else {
+                        } else {
                             //node is not yet contracted.
                             //add (renumbered) outgoing edges to new DynamicGraph.
                             _ContractorEdge newEdge;
@@ -324,8 +324,8 @@ public:
                     }
                 }
                 //Note the number of temporarily stored edges
-                tempStorage.seek(temporaryStorageSlotID, initialFilePosition);
-                tempStorage.writeToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
+                tempStorage.Seek(temporaryStorageSlotID, initialFilePosition);
+                tempStorage.WriteToSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
 
                 //Delete map from old NodeIDs to new ones.
                 std::vector<NodeID>().swap(newNodeIDFromOldNodeIDMap);
@@ -498,16 +498,16 @@ public:
         TemporaryStorage & tempStorage = TemporaryStorage::GetInstance();
         //Also get the edges from temporary storage
         unsigned numberOfTemporaryEdges = 0;
-        tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
+        tempStorage.ReadFromSlot(temporaryStorageSlotID, (char*)&numberOfTemporaryEdges, sizeof(unsigned));
         //loads edges of graph before renumbering, no need for further numbering action.
         NodeID start;
         NodeID target;
         //edges.reserve(edges.size()+numberOfTemporaryEdges);
         _DynamicGraph::EdgeData data;
         for(unsigned i = 0; i < numberOfTemporaryEdges; ++i) {
-            tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
-            tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
-            tempStorage.readFromSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
+            tempStorage.ReadFromSlot(temporaryStorageSlotID, (char*)&start,  sizeof(NodeID));
+            tempStorage.ReadFromSlot(temporaryStorageSlotID, (char*)&target, sizeof(NodeID));
+            tempStorage.ReadFromSlot(temporaryStorageSlotID, (char*)&data,   sizeof(_DynamicGraph::EdgeData));
             Edge newEdge;
             newEdge.source =  start;
             newEdge.target = target;
@@ -518,7 +518,7 @@ public:
             newEdge.data.backward = data.backward;
             edges.push_back( newEdge );
         }
-        tempStorage.deallocateSlot(temporaryStorageSlotID);
+        tempStorage.DeallocateSlot(temporaryStorageSlotID);
     }
 
 private:
