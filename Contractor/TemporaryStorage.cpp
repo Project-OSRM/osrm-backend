@@ -28,113 +28,137 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TemporaryStorage.h"
 
 TemporaryStorage::TemporaryStorage() {
-    tempDirectory = boost::filesystem::temp_directory_path();
+    temp_directory = boost::filesystem::temp_directory_path();
 }
 
 TemporaryStorage & TemporaryStorage::GetInstance(){
-    static TemporaryStorage runningInstance;
-    return runningInstance;
+    static TemporaryStorage static_instance;
+    return static_instance;
 }
 
 TemporaryStorage::~TemporaryStorage() {
-    removeAll();
+    RemoveAll();
+    mutex.unlock();
 }
 
-void TemporaryStorage::removeAll() {
+void TemporaryStorage::RemoveAll() {
     boost::mutex::scoped_lock lock(mutex);
-    for(unsigned slot_id = 0; slot_id < vectorOfStreamDatas.size(); ++slot_id) {
-        deallocateSlot(slot_id);
+    for(unsigned slot_id = 0; slot_id < stream_data_list.size(); ++slot_id) {
+        DeallocateSlot(slot_id);
     }
-    vectorOfStreamDatas.clear();
+    stream_data_list.clear();
 }
 
-int TemporaryStorage::allocateSlot() {
+int TemporaryStorage::AllocateSlot() {
     boost::mutex::scoped_lock lock(mutex);
     try {
-        vectorOfStreamDatas.push_back(StreamData());
-        //SimpleLogger().Write() << "created new temporary file: " << vectorOfStreamDatas.back().pathToTemporaryFile;
+        stream_data_list.push_back(StreamData());
     } catch(boost::filesystem::filesystem_error & e) {
-        abort(e);
+        Abort(e);
     }
-    return vectorOfStreamDatas.size() - 1;
+    CheckIfTemporaryDeviceFull();
+    return stream_data_list.size() - 1;
 }
 
-void TemporaryStorage::deallocateSlot(int slotID) {
+void TemporaryStorage::DeallocateSlot(const int slot_id) {
     try {
-        StreamData & data = vectorOfStreamDatas[slotID];
+        StreamData & data = stream_data_list[slot_id];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
-        if(!boost::filesystem::exists(data.pathToTemporaryFile)) {
+        if(!boost::filesystem::exists(data.temp_path)) {
             return;
         }
-        if(data.streamToTemporaryFile->is_open()) {
-            data.streamToTemporaryFile->close();
+        if(data.temp_file->is_open()) {
+            data.temp_file->close();
         }
 
-        boost::filesystem::remove(data.pathToTemporaryFile);
+        boost::filesystem::remove(data.temp_path);
     } catch(boost::filesystem::filesystem_error & e) {
-        abort(e);
+        Abort(e);
     }
 }
 
-void TemporaryStorage::writeToSlot(int slotID, char * pointer, std::streamsize size) {
+void TemporaryStorage::WriteToSlot(
+    const int slot_id,
+    char * pointer,
+    std::streamsize size
+) {
     try {
-        StreamData & data = vectorOfStreamDatas[slotID];
+        StreamData & data = stream_data_list[slot_id];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
         BOOST_ASSERT_MSG(
-            data.writeMode,
+            data.write_mode,
             "Writing after first read is not allowed"
         );
-        data.streamToTemporaryFile->write(pointer, size);
+        data.temp_file->write(pointer, size);
+        CheckIfTemporaryDeviceFull();
     } catch(boost::filesystem::filesystem_error & e) {
-        abort(e);
+        Abort(e);
     }
 }
-void TemporaryStorage::readFromSlot(int slotID, char * pointer, std::streamsize size) {
+void TemporaryStorage::ReadFromSlot(
+    const int slot_id,
+    char * pointer,
+    std::streamsize size
+) {
     try {
-        StreamData & data = vectorOfStreamDatas[slotID];
+        StreamData & data = stream_data_list[slot_id];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
-        if(data.writeMode) {
-            data.writeMode = false;
-            data.streamToTemporaryFile->seekg(0, data.streamToTemporaryFile->beg);
+        if(data.write_mode) {
+            data.write_mode = false;
+            data.temp_file->seekg(0, data.temp_file->beg);
         }
-        data.streamToTemporaryFile->read(pointer, size);
+        data.temp_file->read(pointer, size);
     } catch(boost::filesystem::filesystem_error & e) {
-        abort(e);
+        Abort(e);
     }
 }
 
-unsigned TemporaryStorage::getFreeBytesOnTemporaryDevice() {
-    boost::filesystem::space_info tempSpaceInfo;
+uint64_t TemporaryStorage::GetFreeBytesOnTemporaryDevice() {
+    uint64_t value = -1;
     try {
-        tempSpaceInfo = boost::filesystem::space(tempDirectory);
+        boost::filesystem::path p =  boost::filesystem::temp_directory_path();
+        boost::filesystem::space_info s = boost::filesystem::space( p );
+        value = s.free;
     } catch(boost::filesystem::filesystem_error & e) {
-        abort(e);
+        Abort(e);
     }
-    return tempSpaceInfo.available;
+    return value;
 }
 
-boost::filesystem::fstream::pos_type TemporaryStorage::tell(int slotID) {
+void TemporaryStorage::CheckIfTemporaryDeviceFull() {
+    boost::filesystem::path p =  boost::filesystem::temp_directory_path();
+    boost::filesystem::space_info s = boost::filesystem::space( p );
+    if(1024*1024 > s.free) {
+        throw OSRMException("temporary device is full");
+    }
+}
+
+boost::filesystem::fstream::pos_type TemporaryStorage::Tell(int slot_id) {
     boost::filesystem::fstream::pos_type position;
     try {
-        StreamData & data = vectorOfStreamDatas[slotID];
+        StreamData & data = stream_data_list[slot_id];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
-        position = data.streamToTemporaryFile->tellp();
+        position = data.temp_file->tellp();
     } catch(boost::filesystem::filesystem_error & e) {
-        abort(e);
-   }
+        Abort(e);
+    }
     return position;
 }
 
-void TemporaryStorage::abort(boost::filesystem::filesystem_error& ) {
-    removeAll();
+void TemporaryStorage::Abort(boost::filesystem::filesystem_error& e) {
+    RemoveAll();
+    throw OSRMException(e.what());
 }
 
-void TemporaryStorage::seek(int slotID, boost::filesystem::fstream::pos_type position) {
+void TemporaryStorage::Seek(
+    const int slot_id,
+    const boost::filesystem::fstream::pos_type position
+) {
     try {
-        StreamData & data = vectorOfStreamDatas[slotID];
+        StreamData & data = stream_data_list[slot_id];
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
-        data.streamToTemporaryFile->seekg(position);
+        data.temp_file->seekg(position);
     } catch(boost::filesystem::filesystem_error & e) {
-        abort(e);
+        Abort(e);
     }
 }

@@ -28,46 +28,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TEMPORARYSTORAGE_H_
 #define TEMPORARYSTORAGE_H_
 
-#include <vector>
-#include <fstream>
-
-#include <boost/assert.hpp>
-#include <boost/foreach.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/mutex.hpp>
-
+#include "../Util/BoostFileSystemFix.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
-//This is one big workaround for latest boost renaming woes.
+#include <boost/assert.hpp>
+#include <boost/foreach.hpp>
+#include <boost/integer.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
 
-#if BOOST_FILESYSTEM_VERSION < 3
-#warning Boost Installation with Filesystem3 missing, activating workaround
-#include <cstdio>
-namespace boost {
-namespace filesystem {
-inline path temp_directory_path() {
-	char * buffer;
-	buffer = tmpnam (NULL);
+#include <vector>
+#include <fstream>
 
-	return path(buffer);
-}
-
-inline path unique_path(const path&) {
-	return temp_directory_path();
-}
-
-}
-}
-
-#endif
-
-#ifndef BOOST_FILESYSTEM_VERSION
-#define BOOST_FILESYSTEM_VERSION 3
-#endif
 /**
  * This class implements a singleton file storage for temporary data.
  * temporary slots can be accessed by other objects through an int
@@ -77,48 +54,63 @@ inline path unique_path(const path&) {
  * -> Data is written in first phase and reread in second.
  */
 
-static boost::filesystem::path tempDirectory;
+static boost::filesystem::path temp_directory;
 static std::string TemporaryFilePattern("OSRM-%%%%-%%%%-%%%%");
 class TemporaryStorage {
 public:
     static TemporaryStorage & GetInstance();
     virtual ~TemporaryStorage();
 
-    int allocateSlot();
-    void deallocateSlot(int slotID);
-    void writeToSlot(int slotID, char * pointer, std::streamsize size);
-    void readFromSlot(int slotID, char * pointer, std::streamsize size);
+    int AllocateSlot();
+    void DeallocateSlot(const int slot_id);
+    void WriteToSlot(const int slot_id, char * pointer, std::streamsize size);
+    void ReadFromSlot(const int slot_id, char * pointer, std::streamsize size);
     //returns the number of free bytes
-    unsigned getFreeBytesOnTemporaryDevice();
-    boost::filesystem::fstream::pos_type tell(int slotID);
-    void seek(int slotID, boost::filesystem::fstream::pos_type);
-    void removeAll();
+    uint64_t GetFreeBytesOnTemporaryDevice();
+    boost::filesystem::fstream::pos_type Tell(int slot_id);
+    void Seek(const int slot_id, boost::filesystem::fstream::pos_type);
+    void RemoveAll();
 private:
     TemporaryStorage();
     TemporaryStorage(TemporaryStorage const &){};
-    TemporaryStorage& operator=(TemporaryStorage const &) {
+
+    TemporaryStorage & operator=(TemporaryStorage const &) {
         return *this;
     }
-    void abort(boost::filesystem::filesystem_error& e);
+
+    void Abort(boost::filesystem::filesystem_error& e);
+    void CheckIfTemporaryDeviceFull();
 
     struct StreamData {
-        bool writeMode;
-        boost::filesystem::path pathToTemporaryFile;
-        boost::shared_ptr<boost::filesystem::fstream> streamToTemporaryFile;
+        bool write_mode;
+        boost::filesystem::path temp_path;
+        boost::shared_ptr<boost::filesystem::fstream> temp_file;
         boost::shared_ptr<boost::mutex> readWriteMutex;
         StreamData() :
-            writeMode(true),
-            pathToTemporaryFile (boost::filesystem::unique_path(tempDirectory.append(TemporaryFilePattern.begin(), TemporaryFilePattern.end()))),
-            streamToTemporaryFile(new boost::filesystem::fstream(pathToTemporaryFile, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary)),
-            readWriteMutex(new boost::mutex)
+            write_mode(true),
+            temp_path(
+                boost::filesystem::unique_path(
+                    temp_directory.append(
+                        TemporaryFilePattern.begin(),
+                        TemporaryFilePattern.end()
+                    )
+                )
+            ),
+            temp_file(
+                new boost::filesystem::fstream(
+                    temp_path,
+                    std::ios::in|std::ios::out|std::ios::trunc|std::ios::binary
+                )
+            ),
+            readWriteMutex(boost::make_shared<boost::mutex>())
         {
-            if(streamToTemporaryFile->fail()) {
+            if(temp_file->fail()) {
                 throw OSRMException("temporary file could not be created");
             }
         }
     };
     //vector of file streams that is used to store temporary data
-    std::vector<StreamData> vectorOfStreamDatas;
+    std::vector<StreamData> stream_data_list;
     boost::mutex mutex;
 };
 
