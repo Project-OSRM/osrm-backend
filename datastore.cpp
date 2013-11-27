@@ -160,7 +160,7 @@ int main( const int argc, const char * argv[] ) {
             shared_layout_ptr->ram_index_file_name
         );
         // add zero termination
-        unsigned end_of_string_index = std::min(1023ul, file_index_file_name.length());
+        unsigned end_of_string_index = std::min((std::size_t)1023, file_index_file_name.length());
         shared_layout_ptr->ram_index_file_name[end_of_string_index] = '\0';
 
         // collect number of elements to store in shared memory object
