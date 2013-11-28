@@ -115,15 +115,6 @@ private:
         bool contraFlow:1;
     };
 
-    struct _EdgeBasedEdgeData {
-        int distance;
-        unsigned via;
-        unsigned nameID;
-        bool forward;
-        bool backward;
-        TurnInstruction turnInstruction;
-    };
-
     unsigned m_turn_restrictions_count;
 
     typedef DynamicGraph<NodeBasedEdgeData>     NodeBasedDynamicGraph;
