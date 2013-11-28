@@ -160,6 +160,11 @@ private:
         std::vector<unsigned> & component_index_list,
         std::vector<unsigned> & component_index_size
     ) const;
+
+    void FlushVectorToStream(
+        std::ofstream & edge_data_file,
+        std::vector<OriginalEdgeData> & original_edge_data_vector
+    ) const;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */
