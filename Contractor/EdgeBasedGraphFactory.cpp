@@ -292,9 +292,8 @@ void EdgeBasedGraphFactory::Run(
     //linear number of turns only.
     p.reinit(m_node_based_graph->GetNumberOfNodes());
     for(
-        NodeIterator u = 0,
-            last_node = m_node_based_graph->GetNumberOfNodes();
-        u < last_node;
+        NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes();
+        u < end;
         ++u
     ) {
         for(
@@ -304,9 +303,12 @@ void EdgeBasedGraphFactory::Run(
             ++e1
         ) {
             ++node_based_edge_counter;
-            NodeIterator v = m_node_based_graph->GetTarget(e1);
-            const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
-            NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
+            const NodeIterator v = m_node_based_graph->GetTarget(e1);
+            const NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
+
+
+            bool is_barrier_node = ( m_barrier_nodes.find(v) != m_barrier_nodes.end() );
+
             for(
                 EdgeIterator e2 = m_node_based_graph->BeginEdges(v),
                     last_edge_v = m_node_based_graph->EndEdges(v);
@@ -323,77 +325,82 @@ void EdgeBasedGraphFactory::Run(
                     continue;
                 }
 
+                if( is_barrier_node && (u != w) ) {
+                    ++skipped_turns_counter;
+                    continue;
+                }
+
                 if(u == w && 1 != m_node_based_graph->GetOutDegree(v) ) {
                     continue;
                 }
 
-                if( !is_barrier_node ) {
-                    //only add an edge if turn is not a U-turn except when it is
-                    //at the end of a dead-end street
-                    if (
-                        !CheckIfTurnIsRestricted(u, v, w) ||
-                        (to_node_of_only_restriction != UINT_MAX && w == to_node_of_only_restriction)
-                    ) { //only add an edge if turn is not prohibited
-                        const EdgeData edge_data1 = m_node_based_graph->GetEdgeData(e1);
-                        const EdgeData edge_data2 = m_node_based_graph->GetEdgeData(e2);
-                        BOOST_ASSERT(
-                            edge_data1.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
-                        );
-                        BOOST_ASSERT(
-                            edge_data2.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
-                        );
-
-                        if(!edge_data1.forward || !edge_data2.forward) {
-                            continue;
-                        }
-
-                        unsigned distance = edge_data1.distance;
-                        if(m_traffic_lights.find(v) != m_traffic_lights.end()) {
-                            distance += speed_profile.trafficSignalPenalty;
-                        }
-                        const unsigned penalty =
-                            GetTurnPenalty(u, v, w, lua_state);
-                        TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
-                        if(turnInstruction == TurnInstructions.UTurn){
-                            distance += speed_profile.uTurnPenalty;
-                        }
-                        distance += penalty;
-
-                        BOOST_ASSERT(
-                            edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID
-                        );
-
-                        original_edge_data_vector.push_back(
-                            OriginalEdgeData(
-                                v,
-                                edge_data2.nameID,
-                                turnInstruction
-                            )
-                        );
-                        ++original_edges_counter;
-
-                        if(original_edge_data_vector.size() > 100000) {
-                            edge_data_file.write(
-                                (char*)&(original_edge_data_vector[0]),
-                                original_edge_data_vector.size()*sizeof(OriginalEdgeData)
-                            );
-                            original_edge_data_vector.clear();
-                        }
-
-                        m_edge_based_edge_list.push_back(
-                            EdgeBasedEdge(
-                                edge_data1.edgeBasedNodeID,
-                                edge_data2.edgeBasedNodeID,
-                                m_edge_based_edge_list.size(),
-                                distance,
-                                true,
-                                false
-                            )
-                        );
-                    } else {
-                        ++skipped_turns_counter;
-                    }
+                //only add an edge if turn is not a U-turn except when it is
+                //at the end of a dead-end street
+                if (
+                    CheckIfTurnIsRestricted(u, v, w)          &&
+                    (to_node_of_only_restriction == UINT_MAX) &&
+                    (w != to_node_of_only_restriction)
+                ) {
+                    ++skipped_turns_counter;
+                    continue;
                 }
+
+                //only add an edge if turn is not prohibited
+                const EdgeData edge_data1 = m_node_based_graph->GetEdgeData(e1);
+                const EdgeData edge_data2 = m_node_based_graph->GetEdgeData(e2);
+                BOOST_ASSERT(
+                    edge_data1.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
+                );
+                BOOST_ASSERT(
+                    edge_data2.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
+                );
+
+                if(!edge_data1.forward || !edge_data2.forward) {
+                    continue;
+                }
+
+                unsigned distance = edge_data1.distance;
+                if(m_traffic_lights.find(v) != m_traffic_lights.end()) {
+                    distance += speed_profile.trafficSignalPenalty;
+                }
+                const unsigned penalty = GetTurnPenalty(u, v, w, lua_state);
+                TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
+                if(turnInstruction == TurnInstructions.UTurn){
+                    distance += speed_profile.uTurnPenalty;
+                }
+                distance += penalty;
+
+                BOOST_ASSERT(
+                    edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID
+                );
+
+                original_edge_data_vector.push_back(
+                    OriginalEdgeData(
+                        v,
+                        edge_data2.nameID,
+                        turnInstruction
+                    )
+                );
+                ++original_edges_counter;
+
+                if(original_edge_data_vector.size() > 100000) {
+                    edge_data_file.write(
+                        (char*)&(original_edge_data_vector[0]),
+                        original_edge_data_vector.size()*sizeof(OriginalEdgeData)
+                    );
+                    original_edge_data_vector.clear();
+                }
+
+                m_edge_based_edge_list.push_back(
+                    EdgeBasedEdge(
+                        edge_data1.edgeBasedNodeID,
+                        edge_data2.edgeBasedNodeID,
+                        m_edge_based_edge_list.size(),
+                        distance,
+                        true,
+                        false
+                    )
+                );
             }
         }
         p.printIncrement();
@@ -402,11 +409,8 @@ void EdgeBasedGraphFactory::Run(
         (char*)&(original_edge_data_vector[0]),
         original_edge_data_vector.size()*sizeof(OriginalEdgeData)
     );
-    edge_data_file.seekp(std::ios::beg);
-    edge_data_file.write(
-        (char*)&original_edges_counter,
-        sizeof(unsigned)
-    );
+    edge_data_file.seekp( std::ios::beg );
+    edge_data_file.write( (char*)&original_edges_counter, sizeof(unsigned) );
     edge_data_file.close();
 
     SimpleLogger().Write() <<
