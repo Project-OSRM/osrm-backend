@@ -321,7 +321,6 @@ int main (int argc, char *argv[]) {
          * Sorting contracted edges in a way that the static query graph can read some in in-place.
          */
 
-        SimpleLogger().Write() << "Building Node Array";
         std::sort(contractedEdgeList.begin(), contractedEdgeList.end());
         unsigned numberOfNodes = 0;
         unsigned numberOfEdges = contractedEdgeList.size();
@@ -333,6 +332,8 @@ int main (int argc, char *argv[]) {
         std::ofstream hsgr_output_stream(graphOut.c_str(), std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
+            BOOST_ASSERT( UINT32_MAX != edge.source );
+            BOOST_ASSERT( UINT32_MAX != edge.target );
             if(edge.source > numberOfNodes) {
                 numberOfNodes = edge.source;
             }
@@ -373,8 +374,10 @@ int main (int argc, char *argv[]) {
         hsgr_output_stream.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
         //serialize all edges
         --numberOfNodes;
+
         edge = 0;
         int usedEdgeCounter = 0;
+        SimpleLogger().Write() << "Building Node Array";
         StaticGraph<EdgeData>::_StrEdge currentEdge;
         for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
             for ( StaticGraph<EdgeData>::EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
