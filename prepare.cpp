@@ -332,8 +332,8 @@ int main (int argc, char *argv[]) {
         std::ofstream hsgr_output_stream(graphOut.c_str(), std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
-            BOOST_ASSERT( UINT32_MAX != edge.source );
-            BOOST_ASSERT( UINT32_MAX != edge.target );
+            BOOST_ASSERT( UINT_MAX != edge.source );
+            BOOST_ASSERT( UINT_MAX != edge.target );
             if(edge.source > numberOfNodes) {
                 numberOfNodes = edge.source;
             }
