@@ -101,6 +101,20 @@ public:
     unsigned GetNumberOfNodes() const;
 
 private:
+    struct EdgeBasedFactorStatistics {
+        EdgeBasedFactorStatistics() :
+            turn_restrictions_count(0),
+            skipped_turns_counter(0),
+            node_based_edge_counter(0),
+            original_edges_counter(0)
+        { }
+
+        unsigned turn_restrictions_count;
+        unsigned skipped_turns_counter;
+        unsigned node_based_edge_counter;
+        unsigned original_edges_counter;
+    } stats;
+
     struct NodeBasedEdgeData {
         int distance;
         unsigned edgeBasedNodeID;
@@ -114,8 +128,6 @@ private:
         bool ignoreInGrid:1;
         bool contraFlow:1;
     };
-
-    unsigned m_turn_restrictions_count;
 
     typedef DynamicGraph<NodeBasedEdgeData>     NodeBasedDynamicGraph;
     typedef NodeBasedDynamicGraph::InputEdge    NodeBasedEdge;
@@ -137,6 +149,7 @@ private:
     boost::unordered_set<NodeID>                m_traffic_lights;
 
     RestrictionMap                              m_restriction_map;
+    GeometryCompressor                          m_geometry_compressor;
 
     NodeID CheckForEmanatingIsOnlyTurn(
         const NodeID u,

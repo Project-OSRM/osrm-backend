@@ -27,6 +27,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "EdgeBasedGraphFactory.h"
 
+//TODO: CompressionWorker
+//TODO: EdgeBasedEdgeGenerator
+
+// template<class Work>
+// inline static void TraverseGraph(NodeBasedDynamicGraph & graph, Work & work) {
+
+// }
+
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     int number_of_nodes,
     std::vector<ImportEdge> & input_edge_list,
@@ -35,10 +43,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::vector<TurnRestriction> & input_restrictions_list,
     std::vector<NodeInfo> & m_node_info_list,
     SpeedProfileProperties speed_profile
-) : speed_profile(speed_profile),
-    m_turn_restrictions_count(0),
-    m_node_info_list(m_node_info_list)
-{
+) : speed_profile(speed_profile), m_node_info_list(m_node_info_list) {
+
 	BOOST_FOREACH(const TurnRestriction & restriction, input_restrictions_list) {
         std::pair<NodeID, NodeID> restriction_source =
             std::make_pair(restriction.fromNode, restriction.viaNode);
@@ -56,11 +62,11 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
                 continue;
             } else if(restriction.flags.isOnly) {
                 //We are going to insert an is_only_*-restriction. There can be only one.
-                m_turn_restrictions_count -= m_restriction_bucket_list.at(index).size();
+                stats.turn_restrictions_count -= m_restriction_bucket_list.at(index).size();
                 m_restriction_bucket_list.at(index).clear();
             }
         }
-        ++m_turn_restrictions_count;
+        ++stats.turn_restrictions_count;
         m_restriction_bucket_list.at(index).push_back(
             std::make_pair( restriction.toNode, restriction.flags.isOnly)
         );
@@ -219,20 +225,72 @@ void EdgeBasedGraphFactory::Run(
     lua_State *lua_state
 ) {
     SimpleLogger().Write() << "Compressing geometry of input graph";
-    //TODO: iterate over all turns
+    Percent p(m_node_based_graph->GetNumberOfNodes());
+    // iterate over all turns
+    for(
+        NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes();
+        u < end;
+        ++u
+    ) {
+        for(
+            EdgeIterator e1 = m_node_based_graph->BeginEdges(u),
+                last_edge_u = m_node_based_graph->EndEdges(u);
+            e1 < last_edge_u;
+            ++e1
+        ) {
+            ++stats.node_based_edge_counter;
+            const NodeIterator v = m_node_based_graph->GetTarget(e1);
+            const NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
+            const bool is_barrier_node = ( m_barrier_nodes.find(v) != m_barrier_nodes.end() );
 
-    //TODO: compress geometries
+            for(
+                EdgeIterator e2 = m_node_based_graph->BeginEdges(v),
+                    last_edge_v = m_node_based_graph->EndEdges(v);
+                    e2 < last_edge_v;
+                    ++e2
+            ) {
+                const NodeIterator w = m_node_based_graph->GetTarget(e2);
+                if(
+                    to_node_of_only_restriction != UINT_MAX &&
+                    w != to_node_of_only_restriction
+                ) {
+                    //We are at an only_-restriction but not at the right turn.
+                    ++stats.skipped_turns_counter;
+                    continue;
+                }
 
-    //TODO: update turn restrictions if concerned by compression
+                if( is_barrier_node && (u != w) ) {
+                    ++stats.skipped_turns_counter;
+                    continue;
+                }
 
-    //TODO: do some compression statistics
+                if( (u == w) && (1 != m_node_based_graph->GetOutDegree(v)) ) {
+                    continue;
+                }
+
+                //only add an edge if turn is not a U-turn except when it is
+                //at the end of a dead-end street
+                if (
+                    CheckIfTurnIsRestricted(u, v, w)          &&
+                    (to_node_of_only_restriction == UINT_MAX) &&
+                    (w != to_node_of_only_restriction)
+                ) {
+                    ++stats.skipped_turns_counter;
+                    continue;
+                }
+
+                //TODO: compress geometries, edgedata is congruent
+
+                //TODO: update turn restrictions if concerned by compression
+
+            }
+        }
+    }
+
+    //TODO: print compression statistics
 
 
     SimpleLogger().Write() << "Identifying components of the road network";
-
-    unsigned skipped_turns_counter   = 0;
-    unsigned node_based_edge_counter = 0;
-    unsigned original_edges_counter  = 0;
 
     std::ofstream edge_data_file(
         original_edge_data_filename,
@@ -241,7 +299,7 @@ void EdgeBasedGraphFactory::Run(
 
     //writes a dummy value that is updated later
     edge_data_file.write(
-        (char*)&original_edges_counter,
+        (char*)&stats.original_edges_counter,
         sizeof(unsigned)
     );
 
@@ -255,7 +313,7 @@ void EdgeBasedGraphFactory::Run(
     SimpleLogger().Write() <<
         "generating edge-expanded nodes";
 
-    Percent p(m_node_based_graph->GetNumberOfNodes());
+    p.reinit(m_node_based_graph->GetNumberOfNodes());
     //loop over all edges and generate new set of nodes.
     for(
         NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes();
@@ -320,7 +378,7 @@ void EdgeBasedGraphFactory::Run(
             e1 < last_edge_u;
             ++e1
         ) {
-            ++node_based_edge_counter;
+            ++stats.node_based_edge_counter;
             const NodeIterator v = m_node_based_graph->GetTarget(e1);
             const NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
             const bool is_barrier_node = ( m_barrier_nodes.find(v) != m_barrier_nodes.end() );
@@ -337,12 +395,12 @@ void EdgeBasedGraphFactory::Run(
                     w != to_node_of_only_restriction
                 ) {
                     //We are at an only_-restriction but not at the right turn.
-                    ++skipped_turns_counter;
+                    ++stats.skipped_turns_counter;
                     continue;
                 }
 
                 if( is_barrier_node && (u != w) ) {
-                    ++skipped_turns_counter;
+                    ++stats.skipped_turns_counter;
                     continue;
                 }
 
@@ -357,7 +415,7 @@ void EdgeBasedGraphFactory::Run(
                     (to_node_of_only_restriction == UINT_MAX) &&
                     (w != to_node_of_only_restriction)
                 ) {
-                    ++skipped_turns_counter;
+                    ++stats.skipped_turns_counter;
                     continue;
                 }
 
@@ -396,7 +454,7 @@ void EdgeBasedGraphFactory::Run(
                         turnInstruction
                     )
                 );
-                ++original_edges_counter;
+                ++stats.original_edges_counter;
 
                 if(original_edge_data_vector.size() > 100000) {
                     FlushVectorToStream(
@@ -422,20 +480,20 @@ void EdgeBasedGraphFactory::Run(
     FlushVectorToStream( edge_data_file, original_edge_data_vector );
 
     edge_data_file.seekp( std::ios::beg );
-    edge_data_file.write( (char*)&original_edges_counter, sizeof(unsigned) );
+    edge_data_file.write( (char*)&stats.original_edges_counter, sizeof(unsigned) );
     edge_data_file.close();
 
     SimpleLogger().Write() <<
         "Generated " << m_edge_based_node_list.size() << " edge based nodes";
     SimpleLogger().Write() <<
-        "Node-based graph contains " << node_based_edge_counter << " edges";
+        "Node-based graph contains " << stats.node_based_edge_counter << " edges";
     SimpleLogger().Write() <<
         "Edge-expanded graph ...";
     SimpleLogger().Write() <<
         "  contains " << m_edge_based_edge_list.size() << " edges";
     SimpleLogger().Write() <<
-        "  skips "  << skipped_turns_counter << " turns, "
-        "defined by " << m_turn_restrictions_count << " restrictions";
+        "  skips "  << stats.skipped_turns_counter << " turns, "
+        "defined by " << stats.turn_restrictions_count << " restrictions";
 }
 
 int EdgeBasedGraphFactory::GetTurnPenalty(
