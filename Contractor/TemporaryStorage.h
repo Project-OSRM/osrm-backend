@@ -63,12 +63,11 @@ public:
 
     int AllocateSlot();
     void DeallocateSlot(const int slot_id);
-    void WriteToSlot(const int slot_id, char * pointer, std::streamsize size);
-    void ReadFromSlot(const int slot_id, char * pointer, std::streamsize size);
+    void WriteToSlot(const int slot_id, char * pointer, const std::size_t size);
+    void ReadFromSlot(const int slot_id, char * pointer, const std::size_t size);
     //returns the number of free bytes
     uint64_t GetFreeBytesOnTemporaryDevice();
-    boost::filesystem::fstream::pos_type Tell(int slot_id);
-    void Seek(const int slot_id, boost::filesystem::fstream::pos_type);
+    boost::filesystem::fstream::pos_type Tell(const int slot_id);
     void RemoveAll();
 private:
     TemporaryStorage();
@@ -78,7 +77,7 @@ private:
         return *this;
     }
 
-    void Abort(boost::filesystem::filesystem_error& e);
+    void Abort(const boost::filesystem::filesystem_error& e);
     void CheckIfTemporaryDeviceFull();
 
     struct StreamData {
@@ -86,6 +85,8 @@ private:
         boost::filesystem::path temp_path;
         boost::shared_ptr<boost::filesystem::fstream> temp_file;
         boost::shared_ptr<boost::mutex> readWriteMutex;
+        std::vector<char> buffer;
+
         StreamData() :
             write_mode(true),
             temp_path(
@@ -104,14 +105,14 @@ private:
             ),
             readWriteMutex(boost::make_shared<boost::mutex>())
         {
-            if(temp_file->fail()) {
+            if( temp_file->fail() ) {
                 throw OSRMException("temporary file could not be created");
             }
         }
     };
     //vector of file streams that is used to store temporary data
-    std::vector<StreamData> stream_data_list;
     boost::mutex mutex;
+    std::vector<StreamData> stream_data_list;
 };
 
 #endif /* TEMPORARYSTORAGE_H_ */
