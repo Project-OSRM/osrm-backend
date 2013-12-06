@@ -90,7 +90,7 @@ int main (int argc, char *argv[]) {
         boost::program_options::options_description config_file_options;
         config_file_options.add(config_options).add(hidden_options);
 
-        boost::program_options::options_description visible_options(boost::filesystem::basename(argv[0]) + " <input.osm/.osm.bz2/.osm.pbf> [<profile.lua>]");
+        boost::program_options::options_description visible_options(boost::filesystem::basename(argv[0]) + " <input.osm/.osm.bz2/.osm.pbf> [options]");
         visible_options.add(generic_options).add(config_options);
 
         // parse command line options
