@@ -12,11 +12,14 @@ before_script:
  - mkdir build
  - cd build
  - cmake .. $CMAKEOPTIONS
-script: make
+script: make -j3
 branches:
   only:
     - master
     - develop
+cache:
+- bundler
+- apt
 env:
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release"
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug"
