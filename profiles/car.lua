@@ -34,8 +34,8 @@ speed_profile = {
 
 take_minimum_of_speeds  = false
 obey_oneway 			      = true
-obey_bollards           =  true
-use_restrictions 		    = true
+obey_bollards           = true
+use_turn_restrictions   = true
 ignore_areas 			      = true -- future feature
 traffic_signal_penalty  = 2
 u_turn_penalty 			    = 20
