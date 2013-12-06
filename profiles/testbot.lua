@@ -6,7 +6,7 @@
 -- Secondary road:	18km/h = 18000m/3600s = 100m/20s
 -- Tertiary road:	12km/h = 12000m/3600s = 100m/30s
 
-speed_profile = { 
+speed_profile = {
 	["primary"] = 36,
 	["secondary"] = 18,
 	["tertiary"] = 12,
@@ -17,8 +17,8 @@ speed_profile = {
 
 take_minimum_of_speeds 	= true
 obey_oneway 			= true
-obey_bollards 			= true
-use_restrictions 		= true
+obey_barriers 			= true
+use_turn_restrictions 	= true
 ignore_areas 			= true	-- future feature
 traffic_signal_penalty 	= 7		-- seconds
 u_turn_penalty 			= 20
@@ -55,7 +55,7 @@ function way_function (way)
     local maxspeed = tonumber(way.tags:Find ( "maxspeed"))
     local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
     local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
-	
+
 	way.name = name
 
   	if route ~= nil and durationIsValid(duration) then
@@ -69,7 +69,7 @@ function way_function (way)
     		speed_forw = temp_speed*1.5
     		speed_back = temp_speed/1.5
    	end
-            	
+
         if maxspeed_forward ~= nil and maxspeed_forward > 0 then
 			speed_forw = maxspeed_forward
 		else
@@ -77,7 +77,7 @@ function way_function (way)
 				speed_forw = maxspeed
 			end
 		end
-		
+
 		if maxspeed_backward ~= nil and maxspeed_backward > 0 then
 			speed_back = maxspeed_backward
 		else
@@ -85,13 +85,13 @@ function way_function (way)
 				speed_back = maxspeed
 			end
 		end
-        
+
         way.speed = speed_forw
         if speed_back ~= way_forw then
             way.backward_speed = speed_back
         end
 	end
-	
+
 	if oneway == "no" or oneway == "0" or oneway == "false" then
 		way.direction = Way.bidirectional
 	elseif oneway == "-1" then
@@ -101,7 +101,7 @@ function way_function (way)
 	else
 		way.direction = Way.bidirectional
 	end
-	
+
 	way.type = 1
 	return 1
 end
