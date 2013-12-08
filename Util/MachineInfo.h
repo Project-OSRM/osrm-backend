@@ -28,15 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MACHINE_INFO_H
 #define MACHINE_INFO_H
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
-extern "C" {
-    #include <sys/types.h>
-    #include <sys/sysctl.h>
-}
-#elif defined _WIN32
-    #include <windows.h>
-#endif
-
 enum Endianness {
     LittleEndian = 1,
     BigEndian = 2
@@ -46,8 +37,9 @@ enum Endianness {
 inline Endianness getMachineEndianness() {
     int i(1);
     char *p = (char *) &i;
-    if (1 == p[0])
+    if (1 == p[0]) {
         return LittleEndian;
+    }
     return BigEndian;
 }
 
@@ -58,36 +50,4 @@ inline unsigned swapEndian(unsigned x) {
     return x;
 }
 
-// Returns the physical memory size in kilobytes
-inline unsigned GetPhysicalmemory(void){
-#if defined(SUN5) || defined(__linux__)
-	return (sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE));
-
-#elif defined(__APPLE__)
-	int mib[2] = {CTL_HW, HW_MEMSIZE};
-	long long memsize;
-	size_t len = sizeof(memsize);
-	sysctl(mib, 2, &memsize, &len, NULL, 0);
-	return memsize/1024;
-
-#elif defined(__FreeBSD__)
-	int mib[2] = {CTL_HW, HW_PHYSMEM};
-	long long memsize;
-	size_t len = sizeof(memsize);
-	sysctl(mib, 2, &memsize, &len, NULL, 0);
-	return memsize/1024;
-
-#elif defined(_WIN32)
-	MEMORYSTATUSEX status;
-	status.dwLength = sizeof(status);
-	GlobalMemoryStatusEx(&status);
-	return status.ullTotalPhys/1024;
-#else
-	std::cout << "[Warning] Compiling on unknown architecture." << std::endl
-		<< "Please file a ticket at http://project-osrm.org" << std::endl;
-	return 2048*1024; /* 128 Mb default memory */
-
-#endif
-}
 #endif // MACHINE_INFO_H
-
