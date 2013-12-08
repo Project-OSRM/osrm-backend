@@ -274,7 +274,7 @@ public:
 private:
     //unpack <s,..,v,..,t> by exploring search spaces from v
     inline void retrievePackedViaPath(QueryHeap & _forwardHeap1, QueryHeap & _backwardHeap1, QueryHeap & _forwardHeap2, QueryHeap & _backwardHeap2,
-            const NodeID s_v_middle, const NodeID v_t_middle, std::vector<_PathData> & unpackedPath) {
+            const NodeID s_v_middle, const NodeID v_t_middle, std::vector<PathData> & unpackedPath) {
         //unpack [s,v)
         std::vector<NodeID> packed_s_v_path, packed_v_t_path;
         super::RetrievePackedPathFromHeap(_forwardHeap1, _backwardHeap2, s_v_middle, packed_s_v_path);
@@ -305,19 +305,19 @@ private:
         std::vector<NodeID> partiallyUnpackedViaPath;
 
         NodeID s_v_middle = UINT_MAX;
-        int upperBoundFor_s_v_Path = INT_MAX;//compute path <s,..,v> by reusing forward search from s
+        int upperBoundFor_s_vPath = INT_MAX;//compute path <s,..,v> by reusing forward search from s
         newBackwardHeap.Insert(via_node, 0, via_node);
         while (0 < newBackwardHeap.Size()) {
-            super::RoutingStep(newBackwardHeap, existingForwardHeap, &s_v_middle, &upperBoundFor_s_v_Path, 2 * offset, false);
+            super::RoutingStep(newBackwardHeap, existingForwardHeap, &s_v_middle, &upperBoundFor_s_vPath, 2 * offset, false);
         }
         //compute path <v,..,t> by reusing backward search from node t
         NodeID v_t_middle = UINT_MAX;
-        int upperBoundFor_v_t_Path = INT_MAX;
+        int upperBoundFor_v_tPath = INT_MAX;
         newForwardHeap.Insert(via_node, 0, via_node);
         while (0 < newForwardHeap.Size() ) {
-            super::RoutingStep(newForwardHeap, existingBackwardHeap, &v_t_middle, &upperBoundFor_v_t_Path, 2 * offset, true);
+            super::RoutingStep(newForwardHeap, existingBackwardHeap, &v_t_middle, &upperBoundFor_v_tPath, 2 * offset, true);
         }
-        *real_length_of_via_path = upperBoundFor_s_v_Path + upperBoundFor_v_t_Path;
+        *real_length_of_via_path = upperBoundFor_s_vPath + upperBoundFor_v_tPath;
 
         if(UINT_MAX == s_v_middle || UINT_MAX == v_t_middle)
             return;
@@ -469,28 +469,28 @@ private:
         std::vector < NodeID > packed_v_t_path;
 
         *s_v_middle = UINT_MAX;
-        int upperBoundFor_s_v_Path = INT_MAX;
+        int upperBoundFor_s_vPath = INT_MAX;
         //compute path <s,..,v> by reusing forward search from s
         newBackwardHeap.Insert(candidate.node, 0, candidate.node);
         while (newBackwardHeap.Size() > 0) {
-            super::RoutingStep(newBackwardHeap, existingForwardHeap, s_v_middle, &upperBoundFor_s_v_Path, 2*offset, false);
+            super::RoutingStep(newBackwardHeap, existingForwardHeap, s_v_middle, &upperBoundFor_s_vPath, 2*offset, false);
         }
 
-        if(INT_MAX == upperBoundFor_s_v_Path)
+        if(INT_MAX == upperBoundFor_s_vPath)
             return false;
 
         //compute path <v,..,t> by reusing backward search from t
         *v_t_middle = UINT_MAX;
-        int upperBoundFor_v_t_Path = INT_MAX;
+        int upperBoundFor_v_tPath = INT_MAX;
         newForwardHeap.Insert(candidate.node, 0, candidate.node);
         while (newForwardHeap.Size() > 0) {
-            super::RoutingStep(newForwardHeap, existingBackwardHeap, v_t_middle, &upperBoundFor_v_t_Path, 2*offset, true);
+            super::RoutingStep(newForwardHeap, existingBackwardHeap, v_t_middle, &upperBoundFor_v_tPath, 2*offset, true);
         }
 
-        if(INT_MAX == upperBoundFor_v_t_Path)
+        if(INT_MAX == upperBoundFor_v_tPath)
             return false;
 
-        *lengthOfViaPath = upperBoundFor_s_v_Path + upperBoundFor_v_t_Path;
+        *lengthOfViaPath = upperBoundFor_s_vPath + upperBoundFor_v_tPath;
 
         //retrieve packed paths
         super::RetrievePackedPathFromHeap(existingForwardHeap, newBackwardHeap, *s_v_middle, packed_s_v_path);
@@ -547,7 +547,7 @@ private:
             }
         }
 
-        int lengthOfPathT_Test_Path = unpackedUntilDistance;
+        int lengthOfPathT_TestPath = unpackedUntilDistance;
         unpackedUntilDistance = 0;
         //Traverse path s-->v
         for (unsigned i = 0, lengthOfPackedPath = packed_v_t_path.size() - 1; (i < lengthOfPackedPath) && unpackStack.empty(); ++i) {
@@ -587,7 +587,7 @@ private:
             }
         }
 
-        lengthOfPathT_Test_Path += unpackedUntilDistance;
+        lengthOfPathT_TestPath += unpackedUntilDistance;
         //Run actual T-Test query and compare if distances equal.
         engine_working_data.InitializeOrClearThirdThreadLocalStorage(
             super::facade->GetNumberOfNodes()
@@ -608,7 +608,7 @@ private:
                 super::RoutingStep(backward_heap3, forward_heap3, &middle, &_upperBound, offset, false);
             }
         }
-        return (_upperBound <= lengthOfPathT_Test_Path);
+        return (_upperBound <= lengthOfPathT_TestPath);
     }
 };
 

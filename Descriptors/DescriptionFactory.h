@@ -84,7 +84,7 @@ public:
     double GetBearing(const FixedPointCoordinate& C, const FixedPointCoordinate& B) const;
     void AppendEncodedPolylineString(std::vector<std::string> &output) const;
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
-    void AppendSegment(const FixedPointCoordinate & coordinate, const _PathData & data);
+    void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & start_phantom);
     void SetEndSegment(const PhantomNode & start_phantom);

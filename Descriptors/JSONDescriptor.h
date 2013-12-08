@@ -96,7 +96,7 @@ public:
                     "\"status_message\": \"Found route between points\",");
 
             //Get all the coordinates for the computed route
-            BOOST_FOREACH(const _PathData & path_data, raw_route_information.computedShortestPath) {
+            BOOST_FOREACH(const PathData & path_data, raw_route_information.computedShortestPath) {
                 current = facade->GetCoordinateOfNode(path_data.node);
                 description_factory.AppendSegment(current, path_data );
             }
@@ -170,7 +170,7 @@ public:
         if(raw_route_information.lengthOfAlternativePath != INT_MAX) {
             alternateDescriptionFactory.SetStartSegment(phantom_nodes.startPhantom);
             //Get all the coordinates for the computed route
-            BOOST_FOREACH(const _PathData & path_data, raw_route_information.computedAlternativePath) {
+            BOOST_FOREACH(const PathData & path_data, raw_route_information.computedAlternativePath) {
                 current = facade->GetCoordinateOfNode(path_data.node);
                 alternateDescriptionFactory.AppendSegment(current, path_data );
             }

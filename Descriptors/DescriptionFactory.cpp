@@ -64,7 +64,7 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & sph) {
     start_phantom = sph;
     AppendSegment(
         sph.location,
-        _PathData(0, sph.nodeBasedEdgeNameID, 10, sph.weight1)
+        PathData(0, sph.nodeBasedEdgeNameID, 10, sph.weight1)
     );
 }
 
@@ -84,7 +84,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & tph) {
 
 void DescriptionFactory::AppendSegment(
     const FixedPointCoordinate & coordinate,
-    const _PathData & data
+    const PathData & data
 ) {
     if(1 == pathDescription.size() && pathDescription.back().location == coordinate) {
         pathDescription.back().name_id = data.name_id;

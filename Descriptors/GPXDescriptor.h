@@ -76,7 +76,7 @@ public:
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
 
             BOOST_FOREACH(
-                const _PathData & pathData,
+                const PathData & pathData,
                 rawRoute.computedShortestPath
             ) {
                 current = facade->GetCoordinateOfNode(pathData.node);

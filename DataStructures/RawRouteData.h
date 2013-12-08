@@ -32,10 +32,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/PhantomNodes.h"
 #include "../typedefs.h"
 
+#include <limits>
+
 #include <vector>
 
-struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), name_id(na), durationOfSegment(dur), turnInstruction(tu) { }
+struct PathData {
+    PathData(
+        NodeID no,
+        unsigned na,
+        unsigned tu,
+        unsigned dur
+    ) :
+        node(no),
+        name_id(na),
+        durationOfSegment(dur),
+        turnInstruction(tu)
+    { }
     NodeID node;
     unsigned name_id;
     unsigned durationOfSegment;
@@ -43,14 +55,18 @@ struct _PathData {
 };
 
 struct RawRouteData {
-    std::vector< _PathData > computedShortestPath;
-    std::vector< _PathData > computedAlternativePath;
+    std::vector< PathData > computedShortestPath;
+    std::vector< PathData > computedAlternativePath;
     std::vector< PhantomNodes > segmentEndCoordinates;
     std::vector< FixedPointCoordinate > rawViaNodeCoordinates;
     unsigned checkSum;
     int lengthOfShortestPath;
     int lengthOfAlternativePath;
-    RawRouteData() : checkSum(UINT_MAX), lengthOfShortestPath(INT_MAX), lengthOfAlternativePath(INT_MAX) {}
+    RawRouteData() :
+        checkSum(UINT_MAX),
+        lengthOfShortestPath(INT_MAX),
+        lengthOfAlternativePath(INT_MAX)
+    { }
 };
 
 #endif /* RAWROUTEDATA_H_ */
