@@ -26,6 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../Library/OSRM.h"
+#include "../Util/GitDescription.h"
+#include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
 
 #include <boost/property_tree/ptree.hpp>

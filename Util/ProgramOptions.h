@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "GitDescription.h"
 #include "OSRMException.h"
+#include "ServerPaths.h"
 #include "SimpleLogger.h"
 
 #include <boost/any.hpp>
@@ -42,10 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-typedef boost::unordered_map<
-            const std::string,
-            boost::filesystem::path
-        > ServerPaths;
 
 namespace boost {
     namespace filesystem {

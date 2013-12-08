@@ -25,33 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVERFACTORY_H_
-#define SERVERFACTORY_H_
+#ifndef SERVER_PATH_H
+#define SERVER_PATH_H
 
-#include "Server.h"
-#include "../Util/OpenMPWrapper.h"
-#include "../Util/SimpleLogger.h"
-#include "../Util/StringUtil.h"
+#include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
 
-#include <zlib.h>
+#include <string>
 
-#include <boost/noncopyable.hpp>
-#include <sstream>
+typedef boost::unordered_map<
+            const std::string,
+            boost::filesystem::path
+        > ServerPaths;
 
-struct ServerFactory : boost::noncopyable {
-	static Server * CreateServer(std::string& ip_address, int ip_port, int threads) {
-
-		SimpleLogger().Write() <<
-			"http 1.1 compression handled by zlib version " << zlibVersion();
-
-        std::stringstream   port_stream;
-        port_stream << ip_port;
-        return new Server(
-            ip_address,
-            port_stream.str(),
-            std::min( omp_get_num_procs(), threads)
-        );
-	}
-};
-
-#endif /* SERVERFACTORY_H_ */
+#endif //SERVER_PATH_H
