@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
-#include "../../Util/IniFile.h"
 #include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
 
