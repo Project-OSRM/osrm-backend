@@ -134,8 +134,8 @@ public:
                 const SegmentInformation & segment,
                 description_factory.pathDescription
             ) {
-                TurnInstruction current_instruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
-                entered_restricted_area_count += (current_instruction != segment.turnInstruction);
+                TurnInstruction current_instruction = segment.turn_instruction & TurnInstructions.InverseAccessRestrictionFlag;
+                entered_restricted_area_count += (current_instruction != segment.turn_instruction);
             }
         }
         reply.content.push_back("],");
@@ -203,8 +203,8 @@ public:
                 );
             } else {
                 BOOST_FOREACH(const SegmentInformation & segment, alternateDescriptionFactory.pathDescription) {
-                	TurnInstruction current_instruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
-                    entered_restricted_area_count += (current_instruction != segment.turnInstruction);
+                	TurnInstruction current_instruction = segment.turn_instruction & TurnInstructions.InverseAccessRestrictionFlag;
+                    entered_restricted_area_count += (current_instruction != segment.turn_instruction);
                 }
             }
             reply.content.push_back("]");
@@ -383,11 +383,11 @@ public:
         std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
         //Fetch data from Factory and generate a string from it.
         BOOST_FOREACH(const SegmentInformation & segment, description_factory.pathDescription) {
-        	TurnInstruction current_instruction = segment.turnInstruction & TurnInstructions.InverseAccessRestrictionFlag;
-            entered_restricted_area_count += (current_instruction != segment.turnInstruction);
+        	TurnInstruction current_instruction = segment.turn_instruction & TurnInstructions.InverseAccessRestrictionFlag;
+            entered_restricted_area_count += (current_instruction != segment.turn_instruction);
             if(TurnInstructions.TurnIsNecessary( current_instruction) ) {
                 if(TurnInstructions.EnterRoundAbout == current_instruction) {
-                    roundAbout.name_id = segment.nameID;
+                    roundAbout.name_id = segment.name_id;
                     roundAbout.start_index = prefixSumOfNecessarySegments;
                 } else {
                     if(0 != prefixSumOfNecessarySegments){
@@ -407,7 +407,7 @@ public:
                     }
 
                     reply.content.push_back("\",\"");
-                    reply.content.push_back(facade->GetEscapedNameForNameID(segment.nameID));
+                    reply.content.push_back(facade->GetEscapedNameForNameID(segment.name_id));
                     reply.content.push_back("\",");
                     intToString(segment.length, tmpDist);
                     reply.content.push_back(tmpDist);
@@ -421,15 +421,16 @@ public:
                     intToString(segment.length, tmpLength);
                     reply.content.push_back(tmpLength);
                     reply.content.push_back("m\",\"");
-                    reply.content.push_back(Azimuth::Get(segment.bearing));
+                    double bearing_value = round(segment.bearing/10.);
+                    reply.content.push_back(Azimuth::Get(bearing_value));
                     reply.content.push_back("\",");
-                    intToString(round(segment.bearing), tmpBearing);
+                    intToString(bearing_value, tmpBearing);
                     reply.content.push_back(tmpBearing);
                     reply.content.push_back("]");
 
                     route_segments_list.push_back(
                         Segment(
-                            segment.nameID,
+                            segment.name_id,
                             segment.length,
                             route_segments_list.size()
                         )

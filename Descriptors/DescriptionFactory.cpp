@@ -87,9 +87,9 @@ void DescriptionFactory::AppendSegment(
     const _PathData & data
 ) {
     if(1 == pathDescription.size() && pathDescription.back().location == coordinate) {
-        pathDescription.back().nameID = data.nameID;
+        pathDescription.back().name_id = data.name_id;
     } else {
-        pathDescription.push_back(SegmentInformation(coordinate, data.nameID, 0, data.durationOfSegment, data.turnInstruction) );
+        pathDescription.push_back(SegmentInformation(coordinate, data.name_id, 0, data.durationOfSegment, data.turnInstruction) );
     }
 }
 
@@ -138,7 +138,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(
 //     unsigned durationOfSegment = 0;
 //     unsigned indexOfSegmentBegin = 0;
 
-//     std::string string0 = sEngine.GetEscapedNameForNameID(pathDescription[0].nameID);
+//     std::string string0 = sEngine.GetEscapedNameForNameID(pathDescription[0].name_id);
 //     std::string string1;
 
 
@@ -156,7 +156,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(
 
 // //    unsigned lastTurn = 0;
 // //    for(unsigned i = 1; i < pathDescription.size(); ++i) {
-// //        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].nameID);
+// //        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].name_id);
 // //        if(TurnInstructionsClass::GoStraight == pathDescription[i].turnInstruction) {
 // //            if(std::string::npos != string0.find(string1+";")
 // //            		|| std::string::npos != string0.find(";"+string1)
@@ -165,7 +165,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(
 // //                    ){
 // //                SimpleLogger().Write() << "->next correct: " << string0 << " contains " << string1;
 // //                for(; lastTurn != i; ++lastTurn)
-// //                    pathDescription[lastTurn].nameID = pathDescription[i].nameID;
+// //                    pathDescription[lastTurn].name_id = pathDescription[i].name_id;
 // //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
 // //            } else if(std::string::npos != string1.find(string0+";")
 // //            		|| std::string::npos != string1.find(";"+string0)
@@ -173,7 +173,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(
 // //                    || std::string::npos != string1.find("; "+string0)
 // //                    ){
 // //                SimpleLogger().Write() << "->prev correct: " << string1 << " contains " << string0;
-// //                pathDescription[i].nameID = pathDescription[i-1].nameID;
+// //                pathDescription[i].name_id = pathDescription[i-1].name_id;
 // //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
 // //            }
 // //        }
@@ -193,7 +193,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(
 
 
 //         if(TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
-//             //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << segment.nameID;
+//             //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << segment.name_id;
 //             assert(pathDescription[i].necessary);
 //             lengthOfSegment = 0;
 //             durationOfSegment = 0;
@@ -209,7 +209,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(
 //             pathDescription.pop_back();
 //             pathDescription.back().necessary = true;
 //             pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
-//             target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
+//             target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
 //             //            SimpleLogger().Write() << "Deleting last turn instruction";
 //         }
 //     } else {
@@ -221,7 +221,7 @@ void DescriptionFactory::AppendUnencodedPolylineString(
 //             pathDescription.erase(pathDescription.begin());
 //             pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
 //             pathDescription[0].necessary = true;
-//             start_phantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
+//             start_phantom.nodeBasedEdgeNameID = pathDescription[0].name_id;
 //             //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << start_phantom.ratio << ", length: " << pathDescription[0].length;
 //         }
 //     } else {

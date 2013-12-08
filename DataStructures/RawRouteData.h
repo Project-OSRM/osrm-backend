@@ -35,9 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu) { }
+    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), name_id(na), durationOfSegment(dur), turnInstruction(tu) { }
     NodeID node;
-    unsigned nameID;
+    unsigned name_id;
     unsigned durationOfSegment;
     short turnInstruction;
 };

@@ -111,7 +111,7 @@ public:
         unsigned durationOfSegment = 0;
         unsigned indexOfSegmentBegin = 0;
 
-        // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].nameID);
+        // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
         // std::string string1;
 
 
@@ -129,8 +129,8 @@ public:
 
     //    unsigned lastTurn = 0;
     //    for(unsigned i = 1; i < pathDescription.size(); ++i) {
-    //        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].nameID);
-    //        if(TurnInstructionsClass::GoStraight == pathDescription[i].turnInstruction) {
+    //        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].name_id);
+    //        if(TurnInstructionsClass::GoStraight == pathDescription[i].turn_instruction) {
     //            if(std::string::npos != string0.find(string1+";")
     //                  || std::string::npos != string0.find(";"+string1)
     //                  || std::string::npos != string0.find(string1+" ;")
@@ -138,19 +138,19 @@ public:
     //                    ){
     //                SimpleLogger().Write() << "->next correct: " << string0 << " contains " << string1;
     //                for(; lastTurn != i; ++lastTurn)
-    //                    pathDescription[lastTurn].nameID = pathDescription[i].nameID;
-    //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
+    //                    pathDescription[lastTurn].name_id = pathDescription[i].name_id;
+    //                pathDescription[i].turn_instruction = TurnInstructionsClass::NoTurn;
     //            } else if(std::string::npos != string1.find(string0+";")
     //                  || std::string::npos != string1.find(";"+string0)
     //                    || std::string::npos != string1.find(string0+" ;")
     //                    || std::string::npos != string1.find("; "+string0)
     //                    ){
     //                SimpleLogger().Write() << "->prev correct: " << string1 << " contains " << string0;
-    //                pathDescription[i].nameID = pathDescription[i-1].nameID;
-    //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
+    //                pathDescription[i].name_id = pathDescription[i-1].name_id;
+    //                pathDescription[i].turn_instruction = TurnInstructionsClass::NoTurn;
     //            }
     //        }
-    //        if (TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
+    //        if (TurnInstructionsClass::NoTurn != pathDescription[i].turn_instruction) {
     //            lastTurn = i;
     //        }
     //        string0 = string1;
@@ -165,8 +165,8 @@ public:
             pathDescription[indexOfSegmentBegin].duration = durationOfSegment;
 
 
-            if(TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
-                //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << pathDescription[i].nameID;
+            if(TurnInstructionsClass::NoTurn != pathDescription[i].turn_instruction) {
+                //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << pathDescription[i].name_id;
                 assert(pathDescription[i].necessary);
                 lengthOfSegment = 0;
                 durationOfSegment = 0;
@@ -181,8 +181,8 @@ public:
             if(pathDescription.size() > 2){
                 pathDescription.pop_back();
                 pathDescription.back().necessary = true;
-                pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
-                target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
+                pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
+                target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
                 //            SimpleLogger().Write() << "Deleting last turn instruction";
             }
         } else {
@@ -192,9 +192,9 @@ public:
             //TODO: this is never called actually?
             if(pathDescription.size() > 2) {
                 pathDescription.erase(pathDescription.begin());
-                pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
+                pathDescription[0].turn_instruction = TurnInstructions.HeadOn;
                 pathDescription[0].necessary = true;
-                start_phantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
+                start_phantom.nodeBasedEdgeNameID = pathDescription[0].name_id;
                 //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << start_phantom.ratio << ", length: " << pathDescription[0].length;
             }
         } else {
@@ -208,7 +208,7 @@ public:
         for(unsigned i = 0; i < pathDescription.size()-1 && pathDescription.size() >= 2; ++i){
             if(pathDescription[i].necessary) {
                 double angle = GetBearing(pathDescription[i].location, pathDescription[i+1].location);
-                pathDescription[i].bearing = angle;
+                pathDescription[i].bearing = angle*10;
             }
         }
 

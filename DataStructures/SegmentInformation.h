@@ -30,22 +30,51 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Coordinate.h"
 #include "TurnInstructions.h"
+
 #include "../typedefs.h"
 
-#include <climits>
-
+// Struct fits everything in one cache line
 struct SegmentInformation {
     FixedPointCoordinate location;
-    NodeID nameID;
-    double length;
+    NodeID name_id;
     unsigned duration;
-    double bearing;
-    TurnInstruction turnInstruction;
+    double length;
+    short bearing; //more than enough [0..3600] fits into 12 bits
+    TurnInstruction turn_instruction;
     bool necessary;
-    SegmentInformation(const FixedPointCoordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr, const bool nec) :
-            location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(nec) {}
-    SegmentInformation(const FixedPointCoordinate & loc, const NodeID nam, const double len, const unsigned dur, const TurnInstruction tInstr) :
-        location(loc), nameID(nam), length(len), duration(dur), bearing(0.), turnInstruction(tInstr), necessary(tInstr != 0) {}
+
+    explicit SegmentInformation(
+        const FixedPointCoordinate & location,
+        const NodeID name_id,
+        const unsigned duration,
+        const double length,
+        const TurnInstruction turn_instruction,
+        const bool necessary
+    ) :
+        location(location),
+        name_id(name_id),
+        duration(duration),
+        length(length),
+        bearing(0),
+        turn_instruction(turn_instruction),
+        necessary(necessary)
+    { }
+
+    explicit SegmentInformation(
+        const FixedPointCoordinate & location,
+        const NodeID name_id,
+        const unsigned duration,
+        const double length,
+        const TurnInstruction turn_instruction
+    ) :
+        location(location),
+        name_id(name_id),
+        duration(duration),
+        length(length),
+        bearing(0),
+        turn_instruction(turn_instruction),
+        necessary(turn_instruction != 0)
+    { }
 };
 
 #endif /* SEGMENTINFORMATION_H_ */
