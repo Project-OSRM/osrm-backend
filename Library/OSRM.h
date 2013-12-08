@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_H
 #define OSRM_H
 
-#include "OSRM.h"
-
 #include "../Plugins/BasePlugin.h"
 #include "../Plugins/HelloWorldPlugin.h"
 #include "../Plugins/LocatePlugin.h"
