@@ -56,12 +56,10 @@ PBFParser::~PBFParser() {
 	}
 	google::protobuf::ShutdownProtobufLibrary();
 
-#ifndef NDEBUG
 	SimpleLogger().Write(logDEBUG) <<
 		"parsed " << blockCount <<
 		" blocks from pbf with " << groupCount <<
 		" groups";
-#endif
 }
 
 inline bool PBFParser::ReadHeader() {
