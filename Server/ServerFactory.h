@@ -38,13 +38,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/noncopyable.hpp>
 
 struct ServerFactory : boost::noncopyable {
-	static Server * CreateServer(std::string& ip_address, int ip_port, int threads) {
+	static Server * CreateServer(
+        std::string& ip_address,
+        int ip_port,
+        int threads
+    ) {
 
 		SimpleLogger().Write() <<
 			"http 1.1 compression handled by zlib version " << zlibVersion();
 
         std::string port_stream;
         intToString(ip_port, port_stream);
+
         return new Server(
             ip_address,
             port_stream,
