@@ -38,10 +38,8 @@ PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnv
 		throw OSRMException("pbf file not found.");
 	}
 
-#ifndef NDEBUG
 	blockCount = 0;
 	groupCount = 0;
-#endif
 }
 
 PBFParser::~PBFParser() {
