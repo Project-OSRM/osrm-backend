@@ -99,11 +99,8 @@ private:
     static const int MAX_BLOB_HEADER_SIZE = 64 * 1024;
     static const int MAX_BLOB_SIZE = 32 * 1024 * 1024;
 
-#ifndef NDEBUG
-    /* counting the number of read blocks and groups */
     unsigned groupCount;
     unsigned blockCount;
-#endif
 
     std::fstream input;     // the input stream to parse
     boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;

@@ -361,9 +361,7 @@ inline void PBFParser::loadGroup(_ThreadData * threadData) {
 }
 
 inline void PBFParser::loadBlock(_ThreadData * threadData) {
-#ifndef NDEBUG
 	++blockCount;
-#endif
 	threadData->currentGroupID = 0;
 	threadData->currentEntityID = 0;
 }
