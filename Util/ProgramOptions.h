@@ -238,6 +238,8 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".hsgr";
+        } else {
+            throw OSRMException(base_string + ".hsgr not found");
         }
 
         path_iterator = paths.find("nodesdata");
@@ -246,7 +248,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".nodes";
+        } else {
+            throw OSRMException(base_string + ".nodes not found");
         }
+
 
         path_iterator = paths.find("edgesdata");
         if(
@@ -254,7 +259,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".edges";
+        } else {
+            throw OSRMException(base_string + ".edges not found");
         }
+
 
         path_iterator = paths.find("ramindex");
         if(
@@ -262,7 +270,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".ramIndex";
+        } else {
+            throw OSRMException(base_string + ".ramIndex not found");
         }
+
 
         path_iterator = paths.find("fileindex");
         if(
@@ -270,7 +281,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".fileIndex";
+        } else {
+            throw OSRMException(base_string + ".fileIndex not found");
         }
+
 
         path_iterator = paths.find("namesdata");
         if(
@@ -278,6 +292,8 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".names";
+        } else {
+            throw OSRMException(base_string + ".namesIndex not found");
         }
 
         path_iterator = paths.find("timestamp");
