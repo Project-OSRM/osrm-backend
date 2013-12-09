@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Server/DataStructures/RouteParameters.h"
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/BaseDataFacade.h"
+#include "../Util/ProgramOptions.h"
 #include "../Util/ServerPaths.h"
 
 #include <boost/noncopyable.hpp>
