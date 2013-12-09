@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "DataStructures/OriginalEdgeData.h"
 #include "DataStructures/QueryEdge.h"
 #include "DataStructures/SharedMemoryFactory.h"
 #include "DataStructures/SharedMemoryVectorWrapper.h"
@@ -324,9 +325,9 @@ int main( const int argc, const char * argv[] ) {
                 (char*)&(current_edge_data),
                 sizeof(OriginalEdgeData)
             );
-            via_node_ptr[i] = current_edge_data.viaNode;
-            name_id_ptr[i]  = current_edge_data.nameID;
-            turn_instructions_ptr[i] = current_edge_data.turnInstruction;
+            via_node_ptr[i] = current_edge_data.via_node;
+            name_id_ptr[i]  = current_edge_data.name_id;
+            turn_instructions_ptr[i] = current_edge_data.turn_instruction;
         }
         edges_input_stream.close();
 

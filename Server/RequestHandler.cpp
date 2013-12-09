@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <iostream>
-#include <iterator>
 
 RequestHandler::RequestHandler() : routing_machine(NULL) { }
 
@@ -60,14 +59,14 @@ void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
             req.referrer << ( 0 == req.referrer.length() ? "- " :" ") <<
             req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri;
 
-        RouteParameters routeParameters;
-        APIGrammarParser apiParser(&routeParameters);
+        RouteParameters route_parameters;
+        APIGrammarParser api_parser(&route_parameters);
 
         std::string::iterator it = request.begin();
         const bool result = boost::spirit::qi::parse(
             it,
             request.end(),
-            apiParser
+            api_parser
         );
 
         if ( !result || (it != request.end()) ) {
@@ -93,10 +92,10 @@ void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
                 routing_machine != NULL,
                 "pointer not init'ed"
             );
-            routing_machine->RunQuery(routeParameters, rep);
+            routing_machine->RunQuery(route_parameters, rep);
             return;
         }
-    } catch(std::exception& e) {
+    } catch(const std::exception& e) {
         rep = http::Reply::StockReply(http::Reply::internalServerError);
         SimpleLogger().Write(logWARNING) <<
             "[server error] code: " << e.what() << ", uri: " << req.uri;

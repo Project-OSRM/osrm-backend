@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/EdgeBasedNode.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportEdge.h"
+#include "../DataStructures/OriginalEdgeData.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/TurnInstructions.h"
