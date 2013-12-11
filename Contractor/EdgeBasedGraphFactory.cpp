@@ -349,13 +349,16 @@ void EdgeBasedGraphFactory::Run(
                     continue;
                 }
 
-                if( is_barrier_node && (u != w) ) {
-                    ++skipped_turns_counter;
-                    continue;
-                }
-
-                if( (u == w) && (1 != m_node_based_graph->GetOutDegree(v)) ) {
-                    continue;
+                if( is_barrier_node) {
+                    if(u != w) {
+                        ++skipped_turns_counter;
+                        continue;
+                    }
+                } else {
+                    if ( (u == w) && (m_node_based_graph->GetOutDegree(v) > 1) ) {
+                        ++skipped_turns_counter;
+                        continue;
+                    }
                 }
 
                 //only add an edge if turn is not a U-turn except when it is
