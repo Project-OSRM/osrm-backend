@@ -132,21 +132,21 @@ static inline void convertInternalLatLonToString(const int value, std::string & 
 
 static inline void convertInternalCoordinateToString(const FixedPointCoordinate & coord, std::string & output) {
     std::string tmp;
+    tmp.reserve(23);
     convertInternalLatLonToString(coord.lon, tmp);
     output = tmp;
     output += ",";
     convertInternalLatLonToString(coord.lat, tmp);
     output += tmp;
-    output += " ";
 }
 static inline void convertInternalReversedCoordinateToString(const FixedPointCoordinate & coord, std::string & output) {
     std::string tmp;
+    tmp.reserve(23);
     convertInternalLatLonToString(coord.lat, tmp);
     output = tmp;
     output += ",";
     convertInternalLatLonToString(coord.lon, tmp);
     output += tmp;
-    output += " ";
 }
 
 
