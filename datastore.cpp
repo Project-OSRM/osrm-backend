@@ -380,7 +380,7 @@ int main( const int argc, const char * argv[] ) {
         );
         hsgr_input_stream.close();
 
-        //TODO acquire lock
+        // acquire lock
         SharedMemory * data_type_memory = SharedMemoryFactory::Get(
             CURRENT_REGIONS,
             sizeof(SharedDataTimestamp),
