@@ -76,7 +76,6 @@ public:
 
         reply.status = http::Reply::ok;
         reply.content.push_back("{");
-        reply.content.push_back("\"version\":0.3,");
         reply.content.push_back("\"status\":");
         if(UINT_MAX != result.edgeBasedNode) {
             reply.content.push_back("0,");
@@ -99,7 +98,6 @@ public:
             reply.content.push_back(temp_string);
         }
         reply.content.push_back("\"");
-        reply.content.push_back(",\"transactionId\":\"OSRM Routing Engine JSON Nearest (v0.3)\"");
         reply.content.push_back("}");
         reply.headers.resize(3);
         if( !routeParameters.jsonpParameter.empty() ) {

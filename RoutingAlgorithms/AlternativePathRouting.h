@@ -77,7 +77,8 @@ public:
 
     void operator()(
         const PhantomNodes & phantom_node_pair,
-        RawRouteData & raw_route_data) {
+        RawRouteData & raw_route_data
+    ) {
         if( (!phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX()) ||
               phantom_node_pair.PhantomNodesHaveEqualLocation()
         ) {
@@ -255,16 +256,18 @@ public:
             }
         }
 
+
         //Unpack shortest path and alternative, if they exist
         if(INT_MAX != upper_bound_to_shortest_path_distance) {
-            super::UnpackPath(packedShortestPath, raw_route_data.computedShortestPath);
+            raw_route_data.unpacked_path_segments.resize(1);
+            super::UnpackPath(packedShortestPath, raw_route_data.unpacked_path_segments[0]);
             raw_route_data.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
         } else {
             raw_route_data.lengthOfShortestPath = INT_MAX;
         }
 
         if(selectedViaNode != UINT_MAX) {
-            retrievePackedViaPath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, s_v_middle, v_t_middle, raw_route_data.computedAlternativePath);
+            retrievePackedViaPath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, s_v_middle, v_t_middle, raw_route_data.unpacked_alternative);
             raw_route_data.lengthOfAlternativePath = lengthOfViaPath;
         } else {
             raw_route_data.lengthOfAlternativePath = INT_MAX;

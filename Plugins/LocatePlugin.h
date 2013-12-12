@@ -68,7 +68,6 @@ public:
         }
         reply.status = http::Reply::ok;
         reply.content.push_back ("{");
-        reply.content.push_back ("\"version\":0.3,");
         if(
             !facade->LocateClosestEndPointForCoordinate(
                 routeParameters.coordinates[0],
@@ -90,7 +89,6 @@ public:
             reply.content.push_back(tmp);
             reply.content.push_back("]");
         }
-        reply.content.push_back(",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"");
         reply.content.push_back("}");
         reply.headers.resize(3);
         if(!routeParameters.jsonpParameter.empty()) {

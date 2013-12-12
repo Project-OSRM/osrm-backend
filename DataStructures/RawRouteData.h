@@ -37,6 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 struct PathData {
+    PathData() :
+        node(UINT_MAX),
+        name_id(UINT_MAX),
+        durationOfSegment(UINT_MAX),
+        turnInstruction(UCHAR_MAX)
+    { }
+
     PathData(
         NodeID no,
         unsigned na,
@@ -55,8 +62,8 @@ struct PathData {
 };
 
 struct RawRouteData {
-    std::vector< PathData > computedShortestPath;
-    std::vector< PathData > computedAlternativePath;
+    std::vector< std::vector<PathData> > unpacked_path_segments;
+    std::vector< PathData > unpacked_alternative;
     std::vector< PhantomNodes > segmentEndCoordinates;
     std::vector< FixedPointCoordinate > rawViaNodeCoordinates;
     unsigned checkSum;

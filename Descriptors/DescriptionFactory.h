@@ -91,11 +91,13 @@ public:
     void AppendEncodedPolylineString(
         const bool return_encoded,
         std::vector<std::string> & output
-        );
+    );
 
     template<class DataFacadeT>
-    void Run(const DataFacadeT * facade, const unsigned zoomLevel) {
-
+    void Run(
+        const DataFacadeT * facade,
+        const unsigned zoomLevel
+    ) {
         if( pathDescription.empty() ) {
             return;
         }
@@ -106,10 +108,6 @@ public:
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
             pathDescription[i].length = ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
         }
-
-        double lengthOfSegment = 0;
-        unsigned durationOfSegment = 0;
-        unsigned indexOfSegmentBegin = 0;
 
         // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
         // std::string string1;
@@ -156,6 +154,9 @@ public:
     //        string0 = string1;
     //    }
 
+        double lengthOfSegment = 0;
+        unsigned durationOfSegment = 0;
+        unsigned indexOfSegmentBegin = 0;
 
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
             entireLength += pathDescription[i].length;
@@ -183,7 +184,7 @@ public:
                 pathDescription.back().necessary = true;
                 pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
                 target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
-                //            SimpleLogger().Write() << "Deleting last turn instruction";
+                SimpleLogger().Write() << "Deleting last turn instruction";
             }
         } else {
             pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);

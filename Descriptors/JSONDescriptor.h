@@ -44,9 +44,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class DataFacadeT>
 class JSONDescriptor : public BaseDescriptor<DataFacadeT> {
 private:
+    DataFacadeT * facade;
     DescriptorConfig config;
     DescriptionFactory description_factory;
-    DescriptionFactory alternateDescriptionFactory;
+    DescriptionFactory alternate_descriptionFactory;
     FixedPointCoordinate current;
     unsigned entered_restricted_area_count;
     struct RoundAbout{
@@ -68,6 +69,7 @@ private:
         int position;
     };
     std::vector<Segment> shortest_path_segments, alternative_path_segments;
+    std::vector<unsigned> shortest_leg_end_indices, alternative_leg_end_indices;
 
     struct RouteNames {
         std::string shortestPathName1;
@@ -77,37 +79,68 @@ private:
     };
 
 public:
-    JSONDescriptor() : entered_restricted_area_count(0) {}
+    JSONDescriptor() : entered_restricted_area_count(0) {
+        shortest_leg_end_indices.push_back(0);
+        alternative_leg_end_indices.push_back(0);
+    }
+
     void SetConfig(const DescriptorConfig & c) { config = c; }
 
-    //TODO: reorder parameters
-    void Run(
-        http::Reply & reply,
-        const RawRouteData & raw_route_information,
-        PhantomNodes & phantom_nodes,
-        const DataFacadeT * facade
+    int DescribeLeg(
+        const std::vector<PathData> route_leg,
+        const PhantomNodes & leg_phantoms
     ) {
+        int added_element_count = 0;
+        //Get all the coordinates for the computed route
+        FixedPointCoordinate current_coordinate;
+        BOOST_FOREACH(const PathData & path_data, route_leg) {
+            current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+            description_factory.AppendSegment(current_coordinate, path_data );
+            ++added_element_count;
+        }
+        // description_factory.SetEndSegment( leg_phantoms.targetPhantom );
+        ++added_element_count;
+        BOOST_ASSERT( route_leg.size() + 1 == added_element_count );
+        return added_element_count;
+    }
 
-        WriteHeaderToOutput(reply.content);
+    void Run(
+        const RawRouteData & raw_route,
+        const PhantomNodes & phantom_nodes,
+        // TODO: move facade initalization to c'tor
+        DataFacadeT * f,
+        http::Reply & reply
+    ) {
+        facade = f;
+        reply.content.push_back(
+            "{\"status\":"
+        );
 
-        if(raw_route_information.lengthOfShortestPath != INT_MAX) {
+        if(raw_route.lengthOfShortestPath != INT_MAX) {
             description_factory.SetStartSegment(phantom_nodes.startPhantom);
             reply.content.push_back("0,"
                     "\"status_message\": \"Found route between points\",");
 
-            //Get all the coordinates for the computed route
-            BOOST_FOREACH(const PathData & path_data, raw_route_information.computedShortestPath) {
-                current = facade->GetCoordinateOfNode(path_data.node);
-                description_factory.AppendSegment(current, path_data );
+            BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
+            for( unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i ) {
+                const int added_segments = DescribeLeg(
+                    raw_route.unpacked_path_segments[i],
+                    raw_route.segmentEndCoordinates[i]
+                );
+                BOOST_ASSERT( 0 < added_segments );
+                shortest_leg_end_indices.push_back(
+                    added_segments + shortest_leg_end_indices.back()
+                );
             }
             description_factory.SetEndSegment(phantom_nodes.targetPhantom);
+            description_factory.Run(facade, config.zoom_level);
         } else {
             //We do not need to do much, if there is no route ;-)
             reply.content.push_back("207,"
-                    "\"status_message\": \"Cannot find route between points\",");
+                    "\"status_message\": \"Cannot find route between points\"}");
+            return;
         }
 
-        description_factory.Run(facade, config.zoom_level);
         reply.content.push_back("\"route_geometry\": ");
         if(config.geometry) {
             description_factory.AppendEncodedPolylineString(
@@ -118,30 +151,20 @@ public:
             reply.content.push_back("[]");
         }
 
-        reply.content.push_back(","
-                "\"route_instructions\": [");
-        entered_restricted_area_count = 0;
+        reply.content.push_back(",\"route_instructions\": [");
         if(config.instructions) {
             BuildTextualDescription(
                 description_factory,
                 reply,
-                raw_route_information.lengthOfShortestPath,
+                raw_route.lengthOfShortestPath,
                 facade,
                 shortest_path_segments
             );
-        } else {
-            BOOST_FOREACH(
-                const SegmentInformation & segment,
-                description_factory.pathDescription
-            ) {
-                TurnInstruction current_instruction = segment.turn_instruction & TurnInstructions.InverseAccessRestrictionFlag;
-                entered_restricted_area_count += (current_instruction != segment.turn_instruction);
-            }
         }
         reply.content.push_back("],");
         description_factory.BuildRouteSummary(
             description_factory.entireLength,
-            raw_route_information.lengthOfShortestPath - ( entered_restricted_area_count*TurnInstructions.AccessRestrictionPenalty)
+            raw_route.lengthOfShortestPath
         );
 
         reply.content.push_back("\"route_summary\":");
@@ -167,62 +190,67 @@ public:
 
         //only one alternative route is computed at this time, so this is hardcoded
 
-        if(raw_route_information.lengthOfAlternativePath != INT_MAX) {
-            alternateDescriptionFactory.SetStartSegment(phantom_nodes.startPhantom);
+        if(raw_route.lengthOfAlternativePath != INT_MAX) {
+            alternate_descriptionFactory.SetStartSegment(phantom_nodes.startPhantom);
             //Get all the coordinates for the computed route
-            BOOST_FOREACH(const PathData & path_data, raw_route_information.computedAlternativePath) {
+            BOOST_FOREACH(const PathData & path_data, raw_route.unpacked_alternative) {
                 current = facade->GetCoordinateOfNode(path_data.node);
-                alternateDescriptionFactory.AppendSegment(current, path_data );
+                alternate_descriptionFactory.AppendSegment(current, path_data );
             }
-            alternateDescriptionFactory.SetEndSegment(phantom_nodes.targetPhantom);
+            alternate_descriptionFactory.SetEndSegment(phantom_nodes.targetPhantom);
         }
-        alternateDescriptionFactory.Run(facade, config.zoom_level);
+        alternate_descriptionFactory.Run(facade, config.zoom_level);
 
-        //give an array of alternative routes
+        // //give an array of alternative routes
         reply.content.push_back("\"alternative_geometries\": [");
-        if(config.geometry && INT_MAX != raw_route_information.lengthOfAlternativePath) {
+        if(config.geometry && INT_MAX != raw_route.lengthOfAlternativePath) {
             //Generate the linestrings for each alternative
-            alternateDescriptionFactory.AppendEncodedPolylineString(
+            alternate_descriptionFactory.AppendEncodedPolylineString(
                 config.encode_geometry,
                 reply.content
             );
         }
         reply.content.push_back("],");
         reply.content.push_back("\"alternative_instructions\":[");
-        entered_restricted_area_count = 0;
-        if(INT_MAX != raw_route_information.lengthOfAlternativePath) {
+        if(INT_MAX != raw_route.lengthOfAlternativePath) {
             reply.content.push_back("[");
             //Generate instructions for each alternative
             if(config.instructions) {
                 BuildTextualDescription(
-                    alternateDescriptionFactory,
+                    alternate_descriptionFactory,
                     reply,
-                    raw_route_information.lengthOfAlternativePath,
+                    raw_route.lengthOfAlternativePath,
                     facade,
                     alternative_path_segments
                 );
-            } else {
-                BOOST_FOREACH(const SegmentInformation & segment, alternateDescriptionFactory.pathDescription) {
-                	TurnInstruction current_instruction = segment.turn_instruction & TurnInstructions.InverseAccessRestrictionFlag;
-                    entered_restricted_area_count += (current_instruction != segment.turn_instruction);
-                }
             }
             reply.content.push_back("]");
         }
         reply.content.push_back("],");
         reply.content.push_back("\"alternative_summaries\":[");
-        if(INT_MAX != raw_route_information.lengthOfAlternativePath) {
+        if(INT_MAX != raw_route.lengthOfAlternativePath) {
             //Generate route summary (length, duration) for each alternative
-            alternateDescriptionFactory.BuildRouteSummary(alternateDescriptionFactory.entireLength, raw_route_information.lengthOfAlternativePath - ( entered_restricted_area_count*TurnInstructions.AccessRestrictionPenalty));
+            alternate_descriptionFactory.BuildRouteSummary(
+                alternate_descriptionFactory.entireLength,
+                raw_route.lengthOfAlternativePath
+            );
             reply.content.push_back("{");
             reply.content.push_back("\"total_distance\":");
-            reply.content.push_back(alternateDescriptionFactory.summary.lengthString);
+            reply.content.push_back(
+                alternate_descriptionFactory.summary.lengthString
+            );
             reply.content.push_back(","
                     "\"total_time\":");
-            reply.content.push_back(alternateDescriptionFactory.summary.durationString);
+            reply.content.push_back(
+                alternate_descriptionFactory.summary.durationString
+            );
             reply.content.push_back(","
                     "\"start_point\":\"");
-            reply.content.push_back(facade->GetEscapedNameForNameID(description_factory.summary.startName));
+            reply.content.push_back(
+                facade->GetEscapedNameForNameID(
+                    description_factory.summary.startName
+                )
+            );
             reply.content.push_back("\","
                     "\"end_point\":\"");
             reply.content.push_back(facade->GetEscapedNameForNameID(description_factory.summary.destName));
@@ -231,7 +259,7 @@ public:
         }
         reply.content.push_back("],");
 
-        //Get Names for both routes
+        // //Get Names for both routes
         RouteNames routeNames;
         GetRouteNames(shortest_path_segments, alternative_path_segments, facade, routeNames);
 
@@ -249,47 +277,66 @@ public:
         reply.content.push_back("],");
         //list all viapoints so that the client may display it
         reply.content.push_back("\"via_points\":[");
-        std::string tmp;
-        if(config.geometry && INT_MAX != raw_route_information.lengthOfShortestPath) {
-            for(unsigned i = 0; i < raw_route_information.segmentEndCoordinates.size(); ++i) {
-                reply.content.push_back("[");
-                if(raw_route_information.segmentEndCoordinates[i].startPhantom.location.isSet())
-                    convertInternalReversedCoordinateToString(raw_route_information.segmentEndCoordinates[i].startPhantom.location, tmp);
-                else
-                    convertInternalReversedCoordinateToString(raw_route_information.rawViaNodeCoordinates[i], tmp);
 
-                reply.content.push_back(tmp);
-                reply.content.push_back("],");
-            }
-            reply.content.push_back("[");
-            if(raw_route_information.segmentEndCoordinates.back().startPhantom.location.isSet())
-                convertInternalReversedCoordinateToString(raw_route_information.segmentEndCoordinates.back().targetPhantom.location, tmp);
-            else
-                convertInternalReversedCoordinateToString(raw_route_information.rawViaNodeCoordinates.back(), tmp);
+        BOOST_ASSERT( !raw_route.segmentEndCoordinates.empty() );
+
+        std::string tmp;
+        convertInternalReversedCoordinateToString(
+            raw_route.segmentEndCoordinates.front().startPhantom.location,
+            tmp
+        );
+        reply.content.push_back("[");
+        reply.content.push_back(tmp);
+        reply.content.push_back("]");
+
+        BOOST_FOREACH(const PhantomNodes & nodes, raw_route.segmentEndCoordinates) {
+            tmp.clear();
+            convertInternalReversedCoordinateToString(
+                nodes.targetPhantom.location,
+                tmp
+            );
+            reply.content.push_back(",[");
             reply.content.push_back(tmp);
             reply.content.push_back("]");
         }
+
+        reply.content.push_back("],");
+        reply.content.push_back("\"via_indices\":[");
+        BOOST_FOREACH(const unsigned index, shortest_leg_end_indices) {
+            tmp.clear();
+            intToString(index, tmp);
+            reply.content.push_back(tmp);
+            if( index != shortest_leg_end_indices.back() ) {
+                reply.content.push_back(",");
+            }
+        }
+        reply.content.push_back("],\"alternative_indices\":[");
+        if(INT_MAX != raw_route.lengthOfAlternativePath) {
+            reply.content.push_back("0,");
+            tmp.clear();
+            intToString(alternate_descriptionFactory.pathDescription.size(), tmp);
+            reply.content.push_back(tmp);
+        }
+
         reply.content.push_back("],");
         reply.content.push_back("\"hint_data\": {");
         reply.content.push_back("\"checksum\":");
-        intToString(raw_route_information.checkSum, tmp);
+        intToString(raw_route.checkSum, tmp);
         reply.content.push_back(tmp);
         reply.content.push_back(", \"locations\": [");
 
         std::string hint;
-        for(unsigned i = 0; i < raw_route_information.segmentEndCoordinates.size(); ++i) {
+        for(unsigned i = 0; i < raw_route.segmentEndCoordinates.size(); ++i) {
             reply.content.push_back("\"");
-            EncodeObjectToBase64(raw_route_information.segmentEndCoordinates[i].startPhantom, hint);
+            EncodeObjectToBase64(raw_route.segmentEndCoordinates[i].startPhantom, hint);
             reply.content.push_back(hint);
             reply.content.push_back("\", ");
         }
-        EncodeObjectToBase64(raw_route_information.segmentEndCoordinates.back().targetPhantom, hint);
+        EncodeObjectToBase64(raw_route.segmentEndCoordinates.back().targetPhantom, hint);
         reply.content.push_back("\"");
         reply.content.push_back(hint);
         reply.content.push_back("\"]");
-        reply.content.push_back("},");
-        reply.content.push_back("\"transactionId\": \"OSRM Routing Engine JSON Descriptor (v0.3)\"");
-        reply.content.push_back("}");
+        reply.content.push_back("}}");
     }
 
     // construct routes names
@@ -355,14 +402,6 @@ public:
                 alternativeSegment2.name_id
             );
         }
-    }
-
-    inline void WriteHeaderToOutput(std::vector<std::string> & output) {
-        output.push_back(
-            "{"
-            "\"version\": 0.3,"
-            "\"status\":"
-        );
     }
 
     //TODO: reorder parameters

@@ -61,10 +61,10 @@ public:
     //Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() { }
     virtual void Run(
-        http::Reply & reply,
-        const RawRouteData &rawRoute,
-        PhantomNodes &phantomNodes,
-        const DataFacadeT * facade
+        const RawRouteData & rawRoute,
+        const PhantomNodes & phantomNodes,
+        DataFacadeT * facade,
+        http::Reply & reply
     ) = 0;
     virtual void SetConfig(const DescriptorConfig & config) = 0;
 };
