@@ -29,10 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define REPLY_H
 
 #include "Header.h"
-#include "../../Util/StringUtil.h"
 
 #include <boost/asio.hpp>
-#include <boost/foreach.hpp>
 
 #include <vector>
 
