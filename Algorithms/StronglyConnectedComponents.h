@@ -385,7 +385,7 @@ public:
                 }
                 const TarjanDynamicGraph::NodeIterator v = m_node_based_graph->GetTarget(e1);
 
-                total_network_distance += 100*ApproximateDistance(
+                total_network_distance += 100*FixedPointCoordinate::ApproximateDistance(
                         m_coordinate_list[u].lat,
                         m_coordinate_list[u].lon,
                         m_coordinate_list[v].lat,

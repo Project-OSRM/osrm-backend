@@ -39,11 +39,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 class RequestHandler : private boost::noncopyable {
+
 public:
     typedef APIGrammar<std::string::iterator, RouteParameters> APIGrammarParser;
-    explicit RequestHandler();
+
+    RequestHandler();
+
     void handle_request(const http::Request& req, http::Reply& rep);
     void RegisterRoutingMachine(OSRM * osrm);
+
 private:
     OSRM * routing_machine;
 };

@@ -85,9 +85,9 @@ public:
         reply.content.push_back("\"mapped_coordinate\":");
         reply.content.push_back("[");
         if(UINT_MAX != result.edgeBasedNode) {
-            convertInternalLatLonToString(result.location.lat, temp_string);
+            FixedPointCoordinate::convertInternalLatLonToString(result.location.lat, temp_string);
             reply.content.push_back(temp_string);
-            convertInternalLatLonToString(result.location.lon, temp_string);
+            FixedPointCoordinate::convertInternalLatLonToString(result.location.lon, temp_string);
             reply.content.push_back(",");
             reply.content.push_back(temp_string);
         }

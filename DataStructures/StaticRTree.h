@@ -31,11 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Coordinate.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
-#include "MercatorUtil.h"
 #include "PhantomNodes.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
+#include "../Util/MercatorUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
@@ -140,7 +140,7 @@ public:
             double min_dist = std::numeric_limits<double>::max();
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             max_lat,
@@ -149,7 +149,7 @@ public:
             );
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             max_lat,
@@ -158,7 +158,7 @@ public:
             );
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             min_lat,
@@ -167,7 +167,7 @@ public:
             );
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             min_lat,
@@ -188,32 +188,32 @@ public:
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                        ApproximateDistance(location, upper_left ),
-                        ApproximateDistance(location, upper_right)
+                        FixedPointCoordinate::ApproximateDistance(location, upper_left ),
+                        FixedPointCoordinate::ApproximateDistance(location, upper_right)
                     )
             );
 
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                        ApproximateDistance(location, upper_right),
-                        ApproximateDistance(location, lower_right)
+                        FixedPointCoordinate::ApproximateDistance(location, upper_right),
+                        FixedPointCoordinate::ApproximateDistance(location, lower_right)
                     )
             );
 
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                        ApproximateDistance(location, lower_right),
-                        ApproximateDistance(location, lower_left )
+                        FixedPointCoordinate::ApproximateDistance(location, lower_right),
+                        FixedPointCoordinate::ApproximateDistance(location, lower_left )
                     )
             );
 
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                        ApproximateDistance(location, lower_left ),
-                        ApproximateDistance(location, upper_left )
+                        FixedPointCoordinate::ApproximateDistance(location, lower_left ),
+                        FixedPointCoordinate::ApproximateDistance(location, upper_left )
                     )
             );
             return min_max_dist;
@@ -676,7 +676,7 @@ public:
                             continue;
                         }
 
-                        double current_minimum_distance = ApproximateDistance(
+                        double current_minimum_distance = FixedPointCoordinate::ApproximateDistance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 current_edge.lat1,
@@ -690,7 +690,7 @@ public:
                             found_a_nearest_edge = true;
                         }
 
-                        current_minimum_distance = ApproximateDistance(
+                        current_minimum_distance = FixedPointCoordinate::ApproximateDistance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 current_edge.lat2,
@@ -856,8 +856,8 @@ public:
         }
 
         const double ratio = (found_a_nearest_edge ?
-        std::min(1., ApproximateDistance(current_start_coordinate,
-            result_phantom_node.location)/ApproximateDistance(current_start_coordinate, current_end_coordinate)
+        std::min(1., FixedPointCoordinate::ApproximateDistance(current_start_coordinate,
+            result_phantom_node.location)/FixedPointCoordinate::ApproximateDistance(current_start_coordinate, current_end_coordinate)
             ) : 0
         );
         result_phantom_node.weight1 *= ratio;
@@ -899,7 +899,12 @@ private:
         thread_local_rtree_stream->read((char *)&result_node, sizeof(LeafNode));
     }
 
-    inline bool EdgesAreEquivalent(const FixedPointCoordinate & a, const FixedPointCoordinate & b, const FixedPointCoordinate & c, const FixedPointCoordinate & d) const {
+    inline bool EdgesAreEquivalent(
+        const FixedPointCoordinate & a,
+        const FixedPointCoordinate & b,
+        const FixedPointCoordinate & c,
+        const FixedPointCoordinate & d
+    ) const {
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
     }
 

@@ -64,12 +64,12 @@ public:
         bool found_route =  (raw_route.lengthOfShortestPath != INT_MAX) &&
                             (raw_route.unpacked_path_segments[0].size());
         if( found_route ) {
-            convertInternalLatLonToString(
+            FixedPointCoordinate::convertInternalLatLonToString(
                 phantom_node_list.startPhantom.location.lat,
                 tmp
             );
             reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-            convertInternalLatLonToString(
+            FixedPointCoordinate::convertInternalLatLonToString(
                 phantom_node_list.startPhantom.location.lon,
                 tmp
             );
@@ -82,18 +82,18 @@ public:
                 ) {
                     current = facade->GetCoordinateOfNode(pathData.node);
 
-                    convertInternalLatLonToString(current.lat, tmp);
+                    FixedPointCoordinate::convertInternalLatLonToString(current.lat, tmp);
                     reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-                    convertInternalLatLonToString(current.lon, tmp);
+                    FixedPointCoordinate::convertInternalLatLonToString(current.lon, tmp);
                     reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
                 }
-                // TODO: Add the via point or the end coordinate
-                convertInternalLatLonToString(
+                // Add the via point or the end coordinate
+                FixedPointCoordinate::convertInternalLatLonToString(
                     phantom_node_list.targetPhantom.location.lat,
                     tmp
                 );
                 reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-                convertInternalLatLonToString(
+                FixedPointCoordinate::convertInternalLatLonToString(
                     phantom_node_list.targetPhantom.location.lon,
                     tmp
                 );

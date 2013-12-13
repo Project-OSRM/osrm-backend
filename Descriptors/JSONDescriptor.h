@@ -284,7 +284,7 @@ public:
         BOOST_ASSERT( !raw_route.segmentEndCoordinates.empty() );
 
         std::string tmp;
-        convertInternalReversedCoordinateToString(
+        FixedPointCoordinate::convertInternalReversedCoordinateToString(
             raw_route.segmentEndCoordinates.front().startPhantom.location,
             tmp
         );
@@ -294,7 +294,7 @@ public:
 
         BOOST_FOREACH(const PhantomNodes & nodes, raw_route.segmentEndCoordinates) {
             tmp.clear();
-            convertInternalReversedCoordinateToString(
+            FixedPointCoordinate::convertInternalReversedCoordinateToString(
                 nodes.targetPhantom.location,
                 tmp
             );

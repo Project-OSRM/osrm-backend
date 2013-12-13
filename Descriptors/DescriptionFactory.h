@@ -106,7 +106,7 @@ public:
         /** starts at index 1 */
         pathDescription[0].length = 0;
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
-            pathDescription[i].length = ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
+            pathDescription[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
         }
 
         // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].name_id);

@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "EdgeBasedGraphFactory.h"
 
+#include "../Util/ComputeAngle.h"
+
 //TODO: CompressionWorker
 //TODO: EdgeBasedEdgeGenerator
 

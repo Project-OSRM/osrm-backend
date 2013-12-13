@@ -1,6 +1,8 @@
 #ifndef EDGE_BASED_NODE_H
 #define EDGE_BASED_NODE_H
 
+#include <cmath>
+
 #include "Coordinate.h"
 
 struct EdgeBasedNode {

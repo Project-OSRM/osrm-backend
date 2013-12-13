@@ -108,10 +108,10 @@ void PolylineCompressor::printUnencodedString(
     output += "[";
     std::string tmp;
     for(unsigned i = 0; i < polyline.size(); i++) {
-        convertInternalLatLonToString(polyline[i].lat, tmp);
+        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].lat, tmp);
         output += "[";
         output += tmp;
-        convertInternalLatLonToString(polyline[i].lon, tmp);
+        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].lon, tmp);
         output += ", ";
         output += tmp;
         output += "]";
@@ -132,10 +132,10 @@ void PolylineCompressor::printUnencodedString(
         if(!polyline[i].necessary) {
             continue;
         }
-        convertInternalLatLonToString(polyline[i].location.lat, tmp);
+        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].location.lat, tmp);
         output += "[";
         output += tmp;
-        convertInternalLatLonToString(polyline[i].location.lon, tmp);
+        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].location.lon, tmp);
         output += ", ";
         output += tmp;
         output += "]";

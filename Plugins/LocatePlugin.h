@@ -81,10 +81,10 @@ public:
             reply.status = http::Reply::ok;
             reply.content.push_back ("\"status\":0,");
             reply.content.push_back ("\"mapped_coordinate\":");
-            convertInternalLatLonToString(result.lat, tmp);
+            FixedPointCoordinate::convertInternalLatLonToString(result.lat, tmp);
             reply.content.push_back("[");
             reply.content.push_back(tmp);
-            convertInternalLatLonToString(result.lon, tmp);
+            FixedPointCoordinate::convertInternalLatLonToString(result.lon, tmp);
             reply.content.push_back(",");
             reply.content.push_back(tmp);
             reply.content.push_back("]");
