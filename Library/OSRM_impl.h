@@ -25,28 +25,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_H
-#define OSRM_H
+#ifndef OSRM_IMPL_H
+#define OSRM_IMPL_H
 
-#include <boost/scoped_ptr.hpp>
-
-#include "../Server/DataStructures/RouteParameters.h"
+#include "../DataStructures/QueryEdge.h"
+#include "../Plugins/BasePlugin.h"
 #include "../Server/Http/Reply.h"
+#include "../Server/DataStructures/RouteParameters.h"
+#include "../Server/DataStructures/SharedBarriers.h"
+#include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Util/ProgramOptions.h"
 #include "../Util/ServerPaths.h"
 
-class OSRM_impl;
+#include <boost/noncopyable.hpp>
 
-class OSRM {
+
+class OSRM_impl : boost::noncopyable {
 private:
-    OSRM_impl * OSRM_pimpl_;
+    typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
 public:
-    OSRM(
+    OSRM_impl(
         const ServerPaths & paths,
-        const bool use_shared_memory = false
+        const bool use_shared_memory
     );
-    ~OSRM();
+    virtual ~OSRM_impl();
     void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
+
+private:
+    void RegisterPlugin(BasePlugin * plugin);
+    PluginMap plugin_map;
+    bool use_shared_memory;
+    SharedBarriers barrier;
+    //base class pointer to the objects
+    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
 };
 
-#endif // OSRM_H
+#endif //OSRM_IMPL_H
