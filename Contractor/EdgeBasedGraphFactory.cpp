@@ -25,9 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "EdgeBasedGraphFactory.h"
 
+#include "EdgeBasedGraphFactory.h"
 #include "../Util/ComputeAngle.h"
+
+#include <boost/assert.hpp>
+#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 //TODO: CompressionWorker
 //TODO: EdgeBasedEdgeGenerator

@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/UUID.h"
 
 #ifdef __linux__
-#include "Util/LinuxStackTrace.h"
 #include <sys/mman.h>
 #endif
 
@@ -76,7 +75,6 @@ int main (int argc, const char * argv[]) {
             SimpleLogger().Write(logWARNING) <<
                 "Process " << argv[0] << " could not be locked to RAM";
         }
-        installCrashHandler(argv[0]);
 #endif
         bool use_shared_memory = false;
         std::string ip_address;
