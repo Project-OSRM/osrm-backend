@@ -79,7 +79,10 @@ private:
     };
 
 public:
-    JSONDescriptor() : entered_restricted_area_count(0) {
+    JSONDescriptor() :
+        facade(NULL),
+        entered_restricted_area_count(0)
+    {
         shortest_leg_end_indices.push_back(0);
         alternative_leg_end_indices.push_back(0);
     }
