@@ -185,6 +185,12 @@ include_directories(${OSMPBF_INCLUDE_DIR})
 target_link_libraries (osrm-extract ${OSMPBF_LIBRARY})
 target_link_libraries (osrm-prepare ${OSMPBF_LIBRARY})
 
+install (TARGETS osrm-extract DESTINATION bin)
+install (TARGETS osrm-prepare DESTINATION bin)
+install (TARGETS osrm-datastore DESTINATION bin)
+install (TARGETS osrm-routed DESTINATION bin)
+install (TARGETS OSRM DESTINATION lib)
+
 if(WITH_TOOLS)
 	message(STATUS "Activating OSRM internal tools")
 	find_package( GDAL )
