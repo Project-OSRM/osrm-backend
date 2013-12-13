@@ -101,7 +101,7 @@ void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
             "[server error] code: " << e.what() << ", uri: " << req.uri;
         return;
     }
-};
+}
 
 void RequestHandler::RegisterRoutingMachine(OSRM * osrm) {
     routing_machine = osrm;
