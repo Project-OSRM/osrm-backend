@@ -73,8 +73,8 @@ endif(CMAKE_BUILD_TYPE MATCHES Release)
 # set compile switches
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     # not using Visual Studio C++
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC -O0")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC -O3")
 endif()
 
 # Configuring compilers
