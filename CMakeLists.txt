@@ -120,15 +120,6 @@ target_link_libraries( osrm-prepare ${CoordinateGlob} ${Boost_LIBRARIES} UUID GI
 target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION )
 target_link_libraries( osrm-datastore ${Boost_LIBRARIES} UUID GITDESCRIPTION )
 
-find_package ( BZip2 REQUIRED )
-include_directories(${BZIP_INCLUDE_DIRS})
-target_link_libraries (osrm-extract ${BZIP2_LIBRARIES})
-
-find_package( ZLIB REQUIRED )
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (osrm-extract ${ZLIB_LIBRARY})
-target_link_libraries (osrm-routed ${ZLIB_LIBRARY})
-
 find_package( Threads REQUIRED )
 target_link_libraries (osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 
@@ -162,11 +153,6 @@ include_directories(${LUABIND_INCLUDE_DIR})
 target_link_libraries (osrm-extract ${LUABIND_LIBRARY})
 target_link_libraries (osrm-prepare ${LUABIND_LIBRARY})
 
-find_package( Protobuf REQUIRED )
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-target_link_libraries (osrm-extract ${PROTOBUF_LIBRARY})
-target_link_libraries (osrm-prepare ${PROTOBUF_LIBRARY})
-
 find_package( STXXL REQUIRED )
 include_directories(${STXXL_INCLUDE_DIR})
 target_link_libraries (OSRM ${STXXL_LIBRARY})
@@ -177,6 +163,20 @@ find_package( OSMPBF REQUIRED )
 include_directories(${OSMPBF_INCLUDE_DIR})
 target_link_libraries (osrm-extract ${OSMPBF_LIBRARY})
 target_link_libraries (osrm-prepare ${OSMPBF_LIBRARY})
+
+find_package( Protobuf REQUIRED )
+include_directories(${PROTOBUF_INCLUDE_DIRS})
+target_link_libraries (osrm-extract ${PROTOBUF_LIBRARY})
+target_link_libraries (osrm-prepare ${PROTOBUF_LIBRARY})
+
+find_package ( BZip2 REQUIRED )
+include_directories(${BZIP_INCLUDE_DIRS})
+target_link_libraries (osrm-extract ${BZIP2_LIBRARIES})
+
+find_package( ZLIB REQUIRED )
+include_directories(${ZLIB_INCLUDE_DIRS})
+target_link_libraries (osrm-extract ${ZLIB_LIBRARY})
+target_link_libraries (osrm-routed ${ZLIB_LIBRARY})
 
 if(WITH_TOOLS)
 	message(STATUS "Activating OSRM internal tools")
