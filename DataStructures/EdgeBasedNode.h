@@ -4,6 +4,8 @@
 #include <cmath>
 
 #include "Coordinate.h"
+#include "../Util/MercatorUtil.h"
+#include "../typedefs.h"
 
 struct EdgeBasedNode {
 
@@ -29,11 +31,11 @@ struct EdgeBasedNode {
             return std::numeric_limits<double>::max();
         }
 
-        const double x = inputPoint.lat/COORDINATE_PRECISION;
+        const double x = lat2y(inputPoint.lat/COORDINATE_PRECISION);
         const double y = inputPoint.lon/COORDINATE_PRECISION;
-        const double a = lat1/COORDINATE_PRECISION;
+        const double a = lat2y(lat1/COORDINATE_PRECISION);
         const double b = lon1/COORDINATE_PRECISION;
-        const double c = lat2/COORDINATE_PRECISION;
+        const double c = lat2y(lat2/COORDINATE_PRECISION);
         const double d = lon2/COORDINATE_PRECISION;
         double p,q,mX,nY;
         if(std::fabs(a-c) > std::numeric_limits<double>::epsilon() ){
@@ -66,7 +68,7 @@ struct EdgeBasedNode {
 //            return std::sqrt(((d - y)*(d - y) + (c - x)*(c - x)));
         }
         // point lies in between
-        nearest_location.lat = p*COORDINATE_PRECISION;
+        nearest_location.lat = y2lat(p)*COORDINATE_PRECISION;
         nearest_location.lon = q*COORDINATE_PRECISION;
 //        return std::sqrt((p-x)*(p-x) + (q-y)*(q-y));
         return (p-x)*(p-x) + (q-y)*(q-y);
