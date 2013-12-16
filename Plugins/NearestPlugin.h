@@ -75,15 +75,13 @@ public:
         }
 
         reply.status = http::Reply::ok;
-        reply.content.push_back("{");
-        reply.content.push_back("\"status\":");
+        reply.content.push_back("{\"status\":");
         if(UINT_MAX != result.edgeBasedNode) {
             reply.content.push_back("0,");
         } else {
             reply.content.push_back("207,");
         }
-        reply.content.push_back("\"mapped_coordinate\":");
-        reply.content.push_back("[");
+        reply.content.push_back("\"mapped_coordinate\":[");
         if(UINT_MAX != result.edgeBasedNode) {
             FixedPointCoordinate::convertInternalLatLonToString(result.location.lat, temp_string);
             reply.content.push_back(temp_string);
@@ -91,14 +89,12 @@ public:
             reply.content.push_back(",");
             reply.content.push_back(temp_string);
         }
-        reply.content.push_back("],");
-        reply.content.push_back("\"name\":\"");
+        reply.content.push_back("],\"name\":\"");
         if(UINT_MAX != result.edgeBasedNode) {
             facade->GetName(result.nodeBasedEdgeNameID, temp_string);
             reply.content.push_back(temp_string);
         }
-        reply.content.push_back("\"");
-        reply.content.push_back("}");
+        reply.content.push_back("\"}");
         reply.headers.resize(3);
         if( !routeParameters.jsonpParameter.empty() ) {
             reply.content.push_back(")");
