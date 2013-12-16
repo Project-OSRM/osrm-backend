@@ -7,16 +7,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
 
-TRY_RUN(SHARED_LIBRARY_PATH_TYPE SHARED_LIBRARY_PATH_INFO_COMPILED ${PROJECT_BINARY_DIR}/CMakeTmp ${PROJECT_SOURCE_DIR}/cmake/size.cpp OUTPUT_VARIABLE IS_64_SYSTEM)
-if(IS_64_SYSTEM)
-	message(STATUS "System supports 64 bits.")
-	set( HAS64BITS 1 )
-else(IS_64_SYSTEM)
-	MESSAGE(WARNING "Compiling on a 32 bit system is unsupported!")
-	set( HAS64BITS 0 )
-endif(IS_64_SYSTEM)
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+set(bitness 32)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(bitness 64)
+  message(STATUS "Building on a 64 bit system")
+else()
+  message(WARNING "Building on a 32 bit system is unsupported")
+endif()
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -70,24 +69,17 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
     message(STATUS "Configuring OSRM in release mode")
 endif(CMAKE_BUILD_TYPE MATCHES Release)
 
-# set compile switches
-if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    # not using Visual Studio C++
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC")
-endif()
-
 # Configuring compilers
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	# using Clang
-	set(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-unneeded-internal-declaration")
+	set(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-unneeded-internal-declaration -pedantic -fPIC")
 	message(STATUS "OpenMP parallelization not available using clang++")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	# using GCC
-	set(CMAKE_CXX_FLAGS "-Wall -fopenmp -pedantic")
+	set(CMAKE_CXX_FLAGS "-Wall -fopenmp -pedantic -fPIC")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 	# using Intel C++
-	set(CMAKE_CXX_FLAGS "-static-intel -wd10237 -Wall -openmp -ipo")
+	set(CMAKE_CXX_FLAGS "-static-intel -wd10237 -Wall -openmp -ipo -fPIC")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	# using Visual Studio C++
 endif()
@@ -110,10 +102,10 @@ if(UNIX AND NOT APPLE)
 endif(UNIX AND NOT APPLE)
 
 #Check Boost
-set(BOOST_MIN_VERSION "1.44.0")
+set(BOOST_MIN_VERSION "1.46.0")
 find_package( Boost ${BOOST_MIN_VERSION} COMPONENTS ${BOOST_COMPONENTS} REQUIRED )
 if (NOT Boost_FOUND)
-      message(FATAL_ERROR "Fatal error: Boost (version >= 1.44.0) required.\n")
+      message(FATAL_ERROR "Fatal error: Boost (version >= 1.46.0) required.\n")
 endif (NOT Boost_FOUND)
 include_directories(${Boost_INCLUDE_DIRS})
 
