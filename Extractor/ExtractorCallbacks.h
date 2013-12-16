@@ -28,20 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTORCALLBACKS_H_
 #define EXTRACTORCALLBACKS_H_
 
-#include "ExtractionContainers.h"
-#include "ExtractionHelperFunctions.h"
 #include "ExtractorStructs.h"
 
-#include "../DataStructures/Coordinate.h"
 
-#include <cfloat>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
-#include <boost/regex.hpp>
-
-#include <string>
-#include <vector>
+class ExtractionContainers;
 
 class ExtractorCallbacks{
 private:

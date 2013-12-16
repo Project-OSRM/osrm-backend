@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Util/GitDescription.h"
 #include "Util/InputFileUtil.h"
-#include "Util/OpenMPWrapper.h"
+// #include "Util/OpenMPWrapper.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/UUID.h"

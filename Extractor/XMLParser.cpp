@@ -30,6 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/InputReaderFactory.h"
+#include "../DataStructures/Coordinate.h"
+#include "../Util/SimpleLogger.h"
+#include "../Util/StringUtil.h"
+#include "../typedefs.h"
 
 #include <boost/ref.hpp>
 

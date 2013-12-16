@@ -29,24 +29,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PBFPARSER_H_
 
 #include "BaseParser.h"
-
-#include "../DataStructures/Coordinate.h"
-#include "../DataStructures/HashTable.h"
 #include "../DataStructures/ConcurrentQueue.h"
-#include "../Util/MachineInfo.h"
-#include "../Util/OpenMPWrapper.h"
-#include "../Util/OSRMException.h"
-#include "../Util/SimpleLogger.h"
-#include "../typedefs.h"
 
 #include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/ref.hpp>
 
 #include <osmpbf/fileformat.pb.h>
 #include <osmpbf/osmformat.pb.h>
 
-#include <zlib.h>
+#include <fstream>
 
 class PBFParser : public BaseParser {
 
@@ -73,7 +63,11 @@ class PBFParser : public BaseParser {
     };
 
 public:
-    PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnvironment& se);
+    PBFParser(
+        const char * fileName,
+        ExtractorCallbacks* ec,
+        ScriptingEnvironment& se
+    );
     virtual ~PBFParser();
 
     inline bool ReadHeader();

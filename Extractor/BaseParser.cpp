@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "BaseParser.h"
+#include "ExtractorStructs.h"
+
+#include <boost/foreach.hpp>
 
 BaseParser::BaseParser(ExtractorCallbacks* ec, ScriptingEnvironment& se) :
 extractor_callbacks(ec), scriptingEnvironment(se), luaState(NULL), use_turn_restrictions(true) {

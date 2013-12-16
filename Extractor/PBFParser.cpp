@@ -25,7 +25,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "ExtractorCallbacks.h"
+#include "ExtractorStructs.h"
 #include "PBFParser.h"
+#include "../DataStructures/Coordinate.h"
+#include "../DataStructures/HashTable.h"
+#include "../Util/MachineInfo.h"
+#include "../Util/OpenMPWrapper.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
+#include "../typedefs.h"
+
+#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/ref.hpp>
+
+#include <zlib.h>
 
 PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser( ec, se ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;

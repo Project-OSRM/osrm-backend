@@ -30,12 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Http/CompressionType.h"
 #include "Http/Header.h"
-#include "Http/Request.h"
 
 #include <boost/logic/tribool.hpp>
 #include <boost/tuple/tuple.hpp>
 
 namespace http {
+
+struct Request;
 
 class RequestParser {
 public:

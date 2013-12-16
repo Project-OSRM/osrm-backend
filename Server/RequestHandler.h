@@ -28,15 +28,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
-#include "APIGrammar.h"
-#include "DataStructures/RouteParameters.h"
 #include "Http/Reply.h"
 #include "Http/Request.h"
-#include "../Library/OSRM.h"
 
 #include <boost/noncopyable.hpp>
 
 #include <string>
+
+template <typename Iterator, class HandlerT>
+struct APIGrammar;
+struct RouteParameters;
+class OSRM;
 
 class RequestHandler : private boost::noncopyable {
 

@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPARSER_H_
 #define BASEPARSER_H_
 
-#include "ExtractorCallbacks.h"
+// #include "ExtractorCallbacks.h"
 #include "ScriptingEnvironment.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
@@ -40,6 +40,10 @@ extern "C" {
 }
 
 #include <boost/noncopyable.hpp>
+
+class ExtractorCallbacks;
+struct ExtractionWay;
+struct ImportNode;
 
 class BaseParser : boost::noncopyable {
 public:

@@ -25,7 +25,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "ExtractionContainers.h"
+#include "ExtractionHelperFunctions.h"
 #include "ExtractorCallbacks.h"
+
+#include "../DataStructures/Coordinate.h"
+
+#include <cfloat>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
+
+#include <string>
+#include <vector>
 
 ExtractorCallbacks::ExtractorCallbacks() {externalMemory = NULL; stringMap = NULL; }
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers * ext, StringMap * strMap) {
