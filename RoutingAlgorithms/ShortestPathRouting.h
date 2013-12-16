@@ -72,7 +72,6 @@ public:
         NodeID middle2 = UINT_MAX;
         std::vector<std::vector<NodeID> > packed_legs1(phantom_nodes_vector.size());
         std::vector<std::vector<NodeID> > packed_legs2(phantom_nodes_vector.size());
-        // SimpleLogger().Write() << "resizing to " << phantom_nodes_vector.size() << " legs";
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes()
@@ -103,11 +102,6 @@ public:
             middle1 = UINT_MAX;
             middle2 = UINT_MAX;
 
-            // SimpleLogger().Write() << "search_from_1st_node: " << (search_from_1st_node ? "y" : "n");
-            // SimpleLogger().Write() << "search_from_2nd_node: " << (search_from_2nd_node ? "y" : "n");
-            // SimpleLogger().Write() << "FW node1: " << phantom_node_pair.startPhantom.edgeBasedNode << ", node2: " << phantom_node_pair.startPhantom.edgeBasedNode+1;
-            // SimpleLogger().Write() << "RV node1: " << phantom_node_pair.targetPhantom.edgeBasedNode << ", node2: " << phantom_node_pair.targetPhantom.edgeBasedNode+1;
-
             //insert new starting nodes into forward heap, adjusted by previous distances.
             if(search_from_1st_node) {
                 forward_heap1.Insert(
@@ -115,13 +109,11 @@ public:
                     distance1-phantom_node_pair.startPhantom.weight1,
                     phantom_node_pair.startPhantom.edgeBasedNode
                 );
-                // SimpleLogger().Write() << "fq1: " << phantom_node_pair.startPhantom.edgeBasedNode << "´, w: " << distance1-phantom_node_pair.startPhantom.weight1;
                 forward_heap2.Insert(
                     phantom_node_pair.startPhantom.edgeBasedNode,
                     distance1-phantom_node_pair.startPhantom.weight1,
                     phantom_node_pair.startPhantom.edgeBasedNode
                 );
-                // SimpleLogger().Write() << "fq2: " << phantom_node_pair.startPhantom.edgeBasedNode << "´, w: " << distance1-phantom_node_pair.startPhantom.weight1;
             }
             if(phantom_node_pair.startPhantom.isBidirected() && search_from_2nd_node) {
                 forward_heap1.Insert(
@@ -129,13 +121,11 @@ public:
                     distance2-phantom_node_pair.startPhantom.weight2,
                     phantom_node_pair.startPhantom.edgeBasedNode+1
                 );
-                // SimpleLogger().Write() << "fq1: " << phantom_node_pair.startPhantom.edgeBasedNode+1 << "´, w: " << distance2-phantom_node_pair.startPhantom.weight2;
                 forward_heap2.Insert(
                     phantom_node_pair.startPhantom.edgeBasedNode+1,
                     distance2-phantom_node_pair.startPhantom.weight2,
                     phantom_node_pair.startPhantom.edgeBasedNode+1
                 );
-                // SimpleLogger().Write() << "fq2: " << phantom_node_pair.startPhantom.edgeBasedNode+1 << "´, w: " << distance2-phantom_node_pair.startPhantom.weight2;
             }
 
             //insert new backward nodes into backward heap, unadjusted.
@@ -144,14 +134,12 @@ public:
                 phantom_node_pair.targetPhantom.weight1,
                 phantom_node_pair.targetPhantom.edgeBasedNode
             );
-            // SimpleLogger().Write() << "rq1: " << phantom_node_pair.targetPhantom.edgeBasedNode << ", w: " << phantom_node_pair.targetPhantom.weight1;
             if(phantom_node_pair.targetPhantom.isBidirected() ) {
                 reverse_heap2.Insert(
                     phantom_node_pair.targetPhantom.edgeBasedNode+1,
                     phantom_node_pair.targetPhantom.weight2,
                     phantom_node_pair.targetPhantom.edgeBasedNode+1
                 );
-                // SimpleLogger().Write() << "rq2: " << phantom_node_pair.targetPhantom.edgeBasedNode+1 << ", w: " << phantom_node_pair.targetPhantom.weight2;
             }
 
             const int forward_offset =  super::ComputeEdgeOffset(
@@ -210,9 +198,6 @@ public:
                 }
             }
 
-            // SimpleLogger().Write() << "lb1: " << local_upper_bound1 << ", middle1: " << middle1;
-            // SimpleLogger().Write() << "lb2: " << local_upper_bound2 << ", middle2: " << middle2;
-//
             //No path found for both target nodes?
             if(
                 (INT_MAX == local_upper_bound1) &&
@@ -234,8 +219,6 @@ public:
                 (INT_MAX != distance1 || INT_MAX != distance2),
                 "no path found"
             );
-
-            // SimpleLogger().Write() << "computed leg " << current_leg;
 
             //Unpack paths if they exist
             std::vector<NodeID> temporary_packed_leg1;
@@ -288,9 +271,6 @@ public:
                 "tempory packed paths empty"
             );
 
-            // SimpleLogger().Write() << "path1 size: " << temporary_packed_leg1.size();
-            // SimpleLogger().Write() << "path2 size: " << temporary_packed_leg2.size();
-
             BOOST_ASSERT(
                 (0 == current_leg) || !packed_legs1[current_leg-1].empty()
             );
@@ -307,7 +287,6 @@ public:
                 if( ( end_id_of_segment1 != start_id_of_leg1 ) &&
                     ( end_id_of_segment2 != start_id_of_leg2 )
                 ) {
-                    // SimpleLogger().Write() << "swapping legs";
                     std::swap(temporary_packed_leg1, temporary_packed_leg2);
                     std::swap(local_upper_bound1, local_upper_bound2);
                 }
@@ -323,21 +302,13 @@ public:
                     const NodeID last_id_of_packed_legs1 = packed_legs1[current_leg-1].back();
                     const NodeID last_id_of_packed_legs2 = packed_legs2[current_leg-1].back();
                     if( start_id_of_leg1 != last_id_of_packed_legs1 ) {
-                        // BOOST_ASSERT(
-                        //     last_id_of_packed_legs1 == temporary_packed_leg2.front()
-                        // );
                         packed_legs1 = packed_legs2;
-                        // SimpleLogger().Write() << "throw away packed_legs1";
                         BOOST_ASSERT(
                             start_id_of_leg1 == temporary_packed_leg1.front()
                         );
                     } else
                     if( start_id_of_leg2 != last_id_of_packed_legs2 ) {
-                        // BOOST_ASSERT(
-                        //     start_id_of_leg2 == temporary_packed_leg1.front()
-                        // );
                         packed_legs2 = packed_legs1;
-                        // SimpleLogger().Write() << "throw away packed_legs2";
                         BOOST_ASSERT(
                             start_id_of_leg2 == temporary_packed_leg2.front()
                         );
@@ -348,17 +319,12 @@ public:
                 packed_legs1.size() == packed_legs2.size()
             );
 
-            // SimpleLogger().Write() << "packed_legs1[" << current_leg << "].size: " << packed_legs1[current_leg].size();
             packed_legs1[current_leg].insert(
                 packed_legs1[current_leg].end(),
                 temporary_packed_leg1.begin(),
                 temporary_packed_leg1.end()
             );
-            // SimpleLogger().Write() << "packed_legs1[" << current_leg << "].size: " << packed_legs1[current_leg].size();
-//
             BOOST_ASSERT(packed_legs1[current_leg].size() == temporary_packed_leg1.size() );
-//
-            // SimpleLogger().Write() << "packed_legs2[" << current_leg << "].size: " << packed_legs2[current_leg].size();
             packed_legs2[current_leg].insert(
                 packed_legs2[current_leg].end(),
                 temporary_packed_leg2.begin(),
@@ -366,8 +332,6 @@ public:
             );
             BOOST_ASSERT(packed_legs2[current_leg].size() == temporary_packed_leg2.size() );
 
-            // SimpleLogger().Write() << "packed_legs2[" << current_leg << "].size: " << packed_legs2[current_leg].size();
-//
             if(
                 (packed_legs1[current_leg].back() == packed_legs2[current_leg].back()) &&
                 phantom_node_pair.targetPhantom.isBidirected()
@@ -381,32 +345,14 @@ public:
             distance1 = local_upper_bound1;
             distance2 = local_upper_bound2;
             previous_leg = current_leg;
-            // SimpleLogger().Write() << "packed leg 1: ";
-            // for(unsigned j = 0; j < packed_legs1[current_leg].size(); ++j) {
-                // std::cout << packed_legs1[current_leg][j] << " ";
-            // }
-            // std::cout << std::endl;
-//
-            // SimpleLogger().Write() << "packed leg 2: ";
-            // for(unsigned j = 0; j < packed_legs2[current_leg].size(); ++j) {
-            //     std::cout << packed_legs2[current_leg][j] << " ";
-            // }
-            // std::cout << std::endl;
             ++current_leg;
         }
 
         if( distance1 > distance2 ) {
             std::swap( packed_legs1, packed_legs2 );
-            // SimpleLogger().Write() << "dist1: " << distance1 << ", dist2: " << distance2;
         }
         raw_route_data.unpacked_path_segments.resize( packed_legs1.size() );
         for(unsigned i = 0; i < packed_legs1.size(); ++i){
-            // SimpleLogger().Write() << "unpacked leg " << i << ", size: " << packed_legs1[i].size();
-            // for(unsigned j = 0; j < packed_legs1[i].size(); ++j) {
-                // std::cout << packed_legs1[i][j] << " ";
-            // }
-            // std::cout << std::endl;
-
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size() );
             super::UnpackPath(
                 packed_legs1[i],
@@ -414,7 +360,6 @@ public:
             );
         }
         raw_route_data.lengthOfShortestPath = std::min(distance1, distance2);
-        // SimpleLogger().Write() << "done";
     }
 
 };
