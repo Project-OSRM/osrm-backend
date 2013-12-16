@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/noncopyable.hpp>
 
-
 class OSRM_impl : boost::noncopyable {
 private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
