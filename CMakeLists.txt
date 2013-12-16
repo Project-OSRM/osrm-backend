@@ -130,7 +130,7 @@ target_link_libraries (osrm-extract ${ZLIB_LIBRARY})
 target_link_libraries (osrm-routed ${ZLIB_LIBRARY})
 
 find_package( Threads REQUIRED )
-target_link_libraries (osrm-extract ${Threads_LIBRARY})
+target_link_libraries (osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 
 find_package( Lua52 )
 IF ( NOT LUA52_FOUND )
