@@ -28,14 +28,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_IMPL_H
 #define OSRM_IMPL_H
 
+#include <Reply.h>
+#include <RouteParameters.h>
+#include <ServerPaths.h>
+
 #include "../DataStructures/QueryEdge.h"
 #include "../Plugins/BasePlugin.h"
-#include "../Server/Http/Reply.h"
-#include "../Server/DataStructures/RouteParameters.h"
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Util/ProgramOptions.h"
-#include "../Util/ServerPaths.h"
 
 #include <boost/noncopyable.hpp>
 

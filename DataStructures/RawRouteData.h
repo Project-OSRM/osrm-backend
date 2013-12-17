@@ -28,9 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RAWROUTEDATA_H_
 #define RAWROUTEDATA_H_
 
-#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../typedefs.h"
+
+#include <Coordinate.h>
 
 #include <limits>
 

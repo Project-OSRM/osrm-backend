@@ -25,46 +25,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef DOUGLASPEUCKER_H_
-#define DOUGLASPEUCKER_H_
+#ifndef REPLY_H
+#define REPLY_H
 
-#include "../DataStructures/SegmentInformation.h"
+#include <Header.h>
 
-#include <Coordinate.h>
+#include <boost/asio.hpp>
 
-#include <boost/assert.hpp>
-
-#include <cmath>
-
-#include <limits>
-#include <stack>
 #include <vector>
 
-/*This class object computes the bitvector of indicating generalized input points
- * according to the (Ramer-)Douglas-Peucker algorithm.
- *
- * Input is vector of pairs. Each pair consists of the point information and a bit
- * indicating if the points is present in the generalization.
- * Note: points may also be pre-selected*/
+namespace http {
 
-class DouglasPeucker {
-private:
-    typedef std::pair<std::size_t, std::size_t> PairOfPoints;
-    //Stack to simulate the recursion
-    std::stack<PairOfPoints > recursion_stack;
+const char okHTML[]                  = "";
+const char badRequestHTML[]          = "<html><head><title>Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>";
+const char internalServerErrorHTML[] = "<html><head><title>Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>";
+const char seperators[]              = { ':', ' ' };
+const char crlf[]                    = { '\r', '\n' };
+const std::string okString = "HTTP/1.0 200 OK\r\n";
+const std::string badRequestString = "HTTP/1.0 400 Bad Request\r\n";
+const std::string internalServerErrorString = "HTTP/1.0 500 Internal Server Error\r\n";
 
-    /**
-     * This distance computation does integer arithmetic only and is about twice as fast as
-     * the other distance function. It is an approximation only, but works more or less ok.
-     */
-    int fastDistance(
-        const FixedPointCoordinate& point,
-        const FixedPointCoordinate& segA,
-        const FixedPointCoordinate& segB
-    ) const;
+class Reply {
 public:
-    void Run(std::vector<SegmentInformation> & input_geometry, const unsigned zoom_level);
+    enum status_type {
+        ok                  = 200,
+        badRequest          = 400,
+        internalServerError = 500
+    } status;
 
+
+    std::vector<Header> headers;
+    std::vector<boost::asio::const_buffer> toBuffers();
+    std::vector<boost::asio::const_buffer> HeaderstoBuffers();
+    std::vector<std::string> content;
+    static Reply StockReply(status_type status);
+    void setSize(const unsigned size);
+    Reply();
+private:
+    static std::string ToString(Reply::status_type status);
+    boost::asio::const_buffer ToBuffer(Reply::status_type status);
 };
 
-#endif /* DOUGLASPEUCKER_H_ */
+}
+
+#endif //REPLY_H

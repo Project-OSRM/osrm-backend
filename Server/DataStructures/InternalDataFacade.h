@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDataFacade.h"
 
-#include "../../DataStructures/Coordinate.h"
 #include "../../DataStructures/OriginalEdgeData.h"
 #include "../../DataStructures/QueryNode.h"
 #include "../../DataStructures/QueryEdge.h"
@@ -43,6 +42,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/GraphLoader.h"
 #include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
+
+#include <Coordinate.h>
 
 template<class EdgeDataT>
 class InternalDataFacade : public BaseDataFacade<EdgeDataT> {

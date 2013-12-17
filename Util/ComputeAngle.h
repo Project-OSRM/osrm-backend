@@ -28,11 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef COMPUTE_ANGLE_H
 #define COMPUTE_ANGLE_H
 
+#include "../Util/MercatorUtil.h"
+#include <Coordinate.h>
+
 #include <boost/assert.hpp>
 #include <cmath>
-
-#include "../DataStructures/Coordinate.h"
-#include "../Util/MercatorUtil.h"
 
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
 template<class CoordinateT>

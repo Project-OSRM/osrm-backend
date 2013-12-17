@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
-#include "Http/Reply.h"
 #include "Http/Request.h"
+
+#include <Reply.h>
 
 #include <boost/noncopyable.hpp>
 

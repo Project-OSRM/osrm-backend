@@ -17,6 +17,8 @@ else()
   message(WARNING "Building on a 32 bit system is unsupported")
 endif()
 
+include_directories(${CMAKE_SOURCE_DIR}/Library/include)
+
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/UUID-Config.cmake
@@ -33,11 +35,11 @@ set(BOOST_COMPONENTS filesystem iostreams program_options regex system thread)
 configure_file(Util/GitDescription.cpp.in ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp)
 file(GLOB ExtractorGlob Extractor/*.cpp)
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
-add_executable(osrm-extract ${ExtractorSources} )
+add_executable(osrm-extract ${ExtractorSources})
 
-file( GLOB PrepareGlob Contractor/*.cpp DataStructures/HilbertValue.cpp)
-set( PrepareSources prepare.cpp ${PrepareGlob} )
-add_executable( osrm-prepare ${PrepareSources} )
+file(GLOB PrepareGlob Contractor/*.cpp DataStructures/HilbertValue.cpp)
+set(PrepareSources prepare.cpp ${PrepareGlob})
+add_executable(osrm-prepare ${PrepareSources})
 
 file(GLOB ServerGlob Server/*.cpp)
 file(GLOB DescriptorGlob Descriptors/*.cpp)
@@ -47,7 +49,8 @@ file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB HttpGlob Server/Http/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
 
-set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob} ${CoordinateGlob} ${AlgorithmGlob} ${HttpGlob})
+set(OSRMSources ${LibOSRMGlob} ${DescriptorGlob} ${DatastructureGlob} ${AlgorithmGlob} ${HttpGlob})
+add_library( COORDLIB STATIC ${CoordinateGlob} )
 add_library( OSRM SHARED ${OSRMSources} Util/GitDescription.cpp Util/UUID.cpp )
 add_library( UUID STATIC Util/UUID.cpp )
 add_library( GITDESCRIPTION STATIC Util/GitDescription.cpp )
@@ -56,7 +59,7 @@ add_dependencies( GITDESCRIPTION GIT_DESCRIPTION )
 
 add_executable(osrm-routed routed.cpp ${ServerGlob})
 set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
-add_executable(osrm-datastore datastore.cpp ${CoordinateGlob})
+add_executable(osrm-datastore datastore.cpp)
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -109,11 +112,11 @@ if(NOT Boost_FOUND)
 endif(NOT Boost_FOUND)
 include_directories(${Boost_INCLUDE_DIRS})
 
-target_link_libraries( OSRM ${Boost_LIBRARIES} )
-target_link_libraries( osrm-extract ${CoordinateGlob} ${Boost_LIBRARIES} UUID GITDESCRIPTION )
-target_link_libraries( osrm-prepare ${CoordinateGlob} ${Boost_LIBRARIES} UUID GITDESCRIPTION )
-target_link_libraries( osrm-routed ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION )
-target_link_libraries( osrm-datastore ${Boost_LIBRARIES} UUID GITDESCRIPTION )
+target_link_libraries(OSRM ${Boost_LIBRARIES} COORDLIB)
+target_link_libraries(osrm-extract ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
+target_link_libraries(osrm-prepare ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
+target_link_libraries(osrm-routed ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION)
+target_link_libraries(osrm-datastore ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
 
 find_package( Threads REQUIRED )
 target_link_libraries (osrm-extract ${CMAKE_THREAD_LIBS_INIT})
@@ -180,7 +183,7 @@ if(WITH_TOOLS)
 		add_executable(osrm-components Tools/componentAnalysis.cpp)
 		include_directories(${GDAL_INCLUDE_DIR})
 		target_link_libraries(
-			osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID GITDESCRIPTION ${CoordinateGlob}
+			osrm-components ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB
 		)
 	endif(GDAL_FOUND)
 	add_executable ( osrm-cli Tools/simpleclient.cpp)
@@ -194,8 +197,11 @@ if(WITH_TOOLS)
     endif(UNIX AND NOT APPLE)
 endif(WITH_TOOLS)
 
-install (TARGETS osrm-extract DESTINATION bin)
-install (TARGETS osrm-prepare DESTINATION bin)
-install (TARGETS osrm-datastore DESTINATION bin)
-install (TARGETS osrm-routed DESTINATION bin)
-install (TARGETS OSRM DESTINATION lib)
+file(GLOB InstallGlob Library/include/*.h)
+
+install(FILES ${InstallGlob} DESTINATION include)
+install(TARGETS osrm-extract DESTINATION bin)
+install(TARGETS osrm-prepare DESTINATION bin)
+install(TARGETS osrm-datastore DESTINATION bin)
+install(TARGETS osrm-routed DESTINATION bin)
+install(TARGETS OSRM DESTINATION lib)

@@ -3,9 +3,10 @@
 
 #include <cmath>
 
-#include "Coordinate.h"
 #include "../Util/MercatorUtil.h"
 #include "../typedefs.h"
+
+#include <Coordinate.h>
 
 struct EdgeBasedNode {
 

@@ -25,29 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_H
-#define OSRM_H
+#ifndef SERVER_PATH_H
+#define SERVER_PATH_H
 
-#include <boost/scoped_ptr.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
 
-#include <Reply.h>
-#include <RouteParameters.h>
-#include <ServerPaths.h>
+#include <string>
 
-#include "../Util/ProgramOptions.h"
+typedef boost::unordered_map<
+            const std::string,
+            boost::filesystem::path
+        > ServerPaths;
 
-class OSRM_impl;
-
-class OSRM {
-private:
-    OSRM_impl * OSRM_pimpl_;
-public:
-    OSRM(
-        const ServerPaths & paths,
-        const bool use_shared_memory = false
-    );
-    ~OSRM();
-    void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
-};
-
-#endif // OSRM_H
+#endif //SERVER_PATH_H

@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HILBERTVALUE_H_
 #define HILBERTVALUE_H_
 
-#include "Coordinate.h"
+#include <Coordinate.h>
 
 #include <boost/integer.hpp>
 #include <boost/noncopyable.hpp>

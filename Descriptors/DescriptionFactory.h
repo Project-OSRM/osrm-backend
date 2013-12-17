@@ -30,13 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
-#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
+
+#include <Coordinate.h>
 
 #include <limits>
 #include <vector>

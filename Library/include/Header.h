@@ -25,29 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_H
-#define OSRM_H
+#ifndef HTTP_HEADER_H
+#define HTTP_HEADER_H
 
-#include <boost/scoped_ptr.hpp>
+#include <string>
 
-#include <Reply.h>
-#include <RouteParameters.h>
-#include <ServerPaths.h>
+namespace http {
 
-#include "../Util/ProgramOptions.h"
+    struct Header {
+        std::string name;
+        std::string value;
+        void Clear() {
+            name.clear();
+            value.clear();
+        }
+    };
+}
 
-class OSRM_impl;
-
-class OSRM {
-private:
-    OSRM_impl * OSRM_pimpl_;
-public:
-    OSRM(
-        const ServerPaths & paths,
-        const bool use_shared_memory = false
-    );
-    ~OSRM();
-    void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
-};
-
-#endif // OSRM_H
+#endif //HTTP_HEADER_H

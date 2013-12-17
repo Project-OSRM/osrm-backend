@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "Coordinate.h"
+#include <Coordinate.h>
 #include "../Util/StringUtil.h"
 
 #include <boost/assert.hpp>

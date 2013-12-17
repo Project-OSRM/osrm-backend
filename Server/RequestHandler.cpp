@@ -27,12 +27,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "APIGrammar.h"
 #include "RequestHandler.h"
-#include "DataStructures/RouteParameters.h"
 
 #include "../Library/OSRM.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
+
+#include <RouteParameters.h>
 
 #include <boost/foreach.hpp>
 

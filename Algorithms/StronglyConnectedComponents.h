@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STRONGLYCONNECTEDCOMPONENTS_H_
 #define STRONGLYCONNECTEDCOMPONENTS_H_
 
-#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/ImportEdge.h"
@@ -38,6 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/TurnInstructions.h"
 
 #include "../Util/SimpleLogger.h"
+
+#include <Coordinate.h>
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

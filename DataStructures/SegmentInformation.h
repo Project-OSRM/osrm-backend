@@ -28,10 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SEGMENTINFORMATION_H_
 #define SEGMENTINFORMATION_H_
 
-#include "Coordinate.h"
 #include "TurnInstructions.h"
 
 #include "../typedefs.h"
+
+#include <Coordinate.h>
 
 // Struct fits everything in one cache line
 struct SegmentInformation {

@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractionHelperFunctions.h"
 #include "ExtractorCallbacks.h"
 
-#include "../DataStructures/Coordinate.h"
+#include <Coordinate.h>
 
 #include <cfloat>
 

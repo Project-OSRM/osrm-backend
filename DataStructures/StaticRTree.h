@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATICRTREE_H_
 #define STATICRTREE_H_
 
-#include "Coordinate.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
 #include "PhantomNodes.h"
@@ -40,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
+
+#include <Coordinate.h>
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>

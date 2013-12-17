@@ -29,8 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CONNECTION_H
 
 #include "Http/CompressionType.h"
-#include "Http/Reply.h"
 #include "Http/Request.h"
+
+#include <Reply.h>
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
