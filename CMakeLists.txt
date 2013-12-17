@@ -197,9 +197,9 @@ if(WITH_TOOLS)
     endif(UNIX AND NOT APPLE)
 endif(WITH_TOOLS)
 
-file(GLOB InstallGlob Library/include/*.h)
+file(GLOB InstallGlob Library/include/*.h Library/OSRM.h)
 
-install(FILES ${InstallGlob} DESTINATION include)
+install(FILES ${InstallGlob} DESTINATION include/osrm)
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-prepare DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
