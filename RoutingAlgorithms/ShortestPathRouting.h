@@ -29,9 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SHORTESTPATHROUTING_H_
 
 #include <boost/assert.hpp>
+#include <boost/foreach.hpp>
 
 #include "BasicRoutingInterface.h"
 #include "../DataStructures/SearchEngineData.h"
+#include "../typedefs.h"
 
 template<class DataFacadeT>
 class ShortestPathRouting : public BasicRoutingInterface<DataFacadeT>{
@@ -89,7 +91,6 @@ public:
         QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
         int current_leg = 0;
-        int previous_leg  = 0;
         //Get distance to next pair of target nodes.
         BOOST_FOREACH(
             const PhantomNodes & phantom_node_pair, phantom_nodes_vector
@@ -344,7 +345,6 @@ public:
 
             distance1 = local_upper_bound1;
             distance2 = local_upper_bound2;
-            previous_leg = current_leg;
             ++current_leg;
         }
 
@@ -361,7 +361,6 @@ public:
         }
         raw_route_data.lengthOfShortestPath = std::min(distance1, distance2);
     }
-
 };
 
 #endif /* SHORTESTPATHROUTING_H_ */
