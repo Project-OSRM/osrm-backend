@@ -34,8 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <RouteParameters.h>
 #include <ServerPaths.h>
 
-#include "../Util/ProgramOptions.h"
-
 class OSRM_impl;
 
 class OSRM {
