@@ -25,36 +25,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INI_FILE_H_
-#define INI_FILE_H_
+#include "../Util/SimpleLogger.h"
+#include "../typedefs.h"
 
-#include "../DataStructures/HashTable.h"
+#include <boost/assert.hpp>
+#include <boost/foreach.hpp>
+#include <boost/unordered_map.hpp>
 
-#include <string>
+#include <algorithm>
+#include <limits>
 #include <vector>
 
-class IniFile {
+#ifndef GEOMETRY_COMPRESSOR_H
+#define GEOMETRY_COMPRESSOR_H
+
+class GeometryCompressor {
 public:
-    IniFile(const char * config_filename);
-
-    std::string GetParameter(const std::string & key);
-
-    std::string GetParameter(const std::string & key) const;
-
-    bool Holds(const std::string & key) const;
-
-    void SetParameter(const char* key, const char* value);
-
-    void SetParameter(const std::string & key, const std::string & value);
+    GeometryCompressor();
+    void AppendNodeIDsToGeomtry( NodeID node_id, NodeID contracted_node_id );
+    void PrintStatistics() const;
 
 private:
-    void Tokenize(
-        const std::string& str,
-        std::vector<std::string>& tokens,
-        const std::string& delimiters = "="
-    );
 
-    HashTable<std::string, std::string> parameters;
+    void IncreaseFreeList();
+
+    std::vector<std::vector<unsigned> > m_compressed_geometries;
+    std::vector<unsigned> m_free_list;
+    boost::unordered_map<unsigned, unsigned> m_node_id_to_index_map;
 };
 
-#endif /* INI_FILE_H_ */
+
+#endif //GEOMETRY_COMPRESSOR_H

@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DOUGLASPEUCKER_H_
 #define DOUGLASPEUCKER_H_
 
-#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/SegmentInformation.h"
+
+#include <Coordinate.h>
 
 #include <boost/assert.hpp>
 

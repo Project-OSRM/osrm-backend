@@ -25,7 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "ExtractionHelperFunctions.h"
+#include "ExtractorStructs.h"
 #include "ScriptingEnvironment.h"
+#include "../DataStructures/ImportNode.h"
+#include "../Util/OpenMPWrapper.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
+#include "../typedefs.h"
 
 ScriptingEnvironment::ScriptingEnvironment() {}
 ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {

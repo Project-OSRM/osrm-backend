@@ -28,32 +28,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef QUERYEDGE_H_
 #define QUERYEDGE_H_
 
-#include "TurnInstructions.h"
 #include "../typedefs.h"
 
 #include <climits>
-
-struct OriginalEdgeData{
-    explicit OriginalEdgeData(
-        NodeID viaNode,
-        unsigned nameID,
-        TurnInstruction turnInstruction
-    ) : viaNode(viaNode), nameID(nameID), turnInstruction(turnInstruction) {}
-    OriginalEdgeData() : viaNode(UINT_MAX), nameID(UINT_MAX), turnInstruction(UCHAR_MAX) {}
-    NodeID viaNode;
-    unsigned nameID;
-    TurnInstruction turnInstruction;
-};
 
 struct QueryEdge {
     NodeID source;
     NodeID target;
     struct EdgeData {
         NodeID id:31;
-        bool shortcut:1;
-        int distance:30;
-        bool forward:1;
-        bool backward:1;
+        bool   shortcut:1;
+        int    distance:30;
+        bool   forward:1;
+        bool   backward:1;
     } data;
 
     bool operator<( const QueryEdge& right ) const {
@@ -64,9 +51,14 @@ struct QueryEdge {
     }
 
     bool operator== ( const QueryEdge& right ) const {
-        return ( source == right.source && target == right.target && data.distance == right.data.distance &&
-                data.shortcut == right.data.shortcut && data.forward == right.data.forward && data.backward == right.data.backward
-                && data.id == right.data.id
+        return (
+            source == right.source               &&
+            target == right.target               &&
+            data.distance == right.data.distance &&
+            data.shortcut == right.data.shortcut &&
+            data.forward == right.data.forward   &&
+            data.backward == right.data.backward &&
+            data.id == right.data.id
         );
     }
 };

@@ -28,12 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTORSTRUCTS_H_
 #define EXTRACTORSTRUCTS_H_
 
-#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../typedefs.h"
+
+#include <Coordinate.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>

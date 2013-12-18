@@ -28,7 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PHANTOMNODES_H_
 #define PHANTOMNODES_H_
 
-#include "Coordinate.h"
+#include <Coordinate.h>
+
+#include "../typedefs.h"
 
 struct PhantomNode {
     PhantomNode() :

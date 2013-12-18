@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _NODE_COORDS_H
 #define _NODE_COORDS_H
 
-#include "Coordinate.h"
 #include "../typedefs.h"
+
+#include <Coordinate.h>
 
 #include <boost/assert.hpp>
 

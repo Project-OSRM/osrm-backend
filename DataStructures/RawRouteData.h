@@ -28,29 +28,53 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef RAWROUTEDATA_H_
 #define RAWROUTEDATA_H_
 
-#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../typedefs.h"
 
+#include <Coordinate.h>
+
+#include <limits>
+
 #include <vector>
 
-struct _PathData {
-    _PathData(NodeID no, unsigned na, unsigned tu, unsigned dur) : node(no), nameID(na), durationOfSegment(dur), turnInstruction(tu) { }
+struct PathData {
+    PathData() :
+        node(UINT_MAX),
+        name_id(UINT_MAX),
+        durationOfSegment(UINT_MAX),
+        turnInstruction(UCHAR_MAX)
+    { }
+
+    PathData(
+        NodeID no,
+        unsigned na,
+        unsigned tu,
+        unsigned dur
+    ) :
+        node(no),
+        name_id(na),
+        durationOfSegment(dur),
+        turnInstruction(tu)
+    { }
     NodeID node;
-    unsigned nameID;
+    unsigned name_id;
     unsigned durationOfSegment;
     short turnInstruction;
 };
 
 struct RawRouteData {
-    std::vector< _PathData > computedShortestPath;
-    std::vector< _PathData > computedAlternativePath;
+    std::vector< std::vector<PathData> > unpacked_path_segments;
+    std::vector< PathData > unpacked_alternative;
     std::vector< PhantomNodes > segmentEndCoordinates;
     std::vector< FixedPointCoordinate > rawViaNodeCoordinates;
     unsigned checkSum;
     int lengthOfShortestPath;
     int lengthOfAlternativePath;
-    RawRouteData() : checkSum(UINT_MAX), lengthOfShortestPath(INT_MAX), lengthOfAlternativePath(INT_MAX) {}
+    RawRouteData() :
+        checkSum(UINT_MAX),
+        lengthOfShortestPath(INT_MAX),
+        lengthOfAlternativePath(INT_MAX)
+    { }
 };
 
 #endif /* RAWROUTEDATA_H_ */

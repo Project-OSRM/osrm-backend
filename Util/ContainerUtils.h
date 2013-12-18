@@ -50,5 +50,19 @@ inline void remove_consecutive_duplicates_from_vector(std::vector<T> & vector) {
     vector.resize(number_of_unique_elements);
 }
 
+template< typename FwdIter, typename Func >
+Func for_each_pair( FwdIter iter_begin, FwdIter iter_end, Func func ) {
+    if( iter_begin == iter_end ) {
+        return func;
+    }
+
+    FwdIter iter_next = iter_begin;
+    ++iter_next;
+
+    for( ; iter_next != iter_end; ++iter_begin, ++iter_next ){
+        func( *iter_begin, *iter_next );
+    }
+    return func;
+}
 
 #endif /* CONTAINERUTILS_H_ */

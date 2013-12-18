@@ -136,7 +136,7 @@ public:
 
     inline void UnpackPath(
         const std::vector<NodeID> & packed_path,
-        std::vector<_PathData> & unpacked_path
+        std::vector<PathData> & unpacked_path
     ) const {
         const unsigned packed_path_size = packed_path.size();
         std::stack<std::pair<NodeID, NodeID> > recursion_stack;
@@ -199,7 +199,7 @@ public:
             } else {
                 BOOST_ASSERT_MSG(!ed.shortcut, "edge must be a shortcut");
                 unpacked_path.push_back(
-                    _PathData(
+                    PathData(
                         ed.id,
                         facade->GetNameIndexFromEdgeID(ed.id),
                         facade->GetTurnInstructionForEdgeID(ed.id),

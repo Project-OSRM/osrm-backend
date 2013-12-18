@@ -26,8 +26,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "OSRM.h"
+#include "OSRM_impl.h"
 
-OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
+#include "../Plugins/HelloWorldPlugin.h"
+#include "../Plugins/LocatePlugin.h"
+#include "../Plugins/NearestPlugin.h"
+#include "../Plugins/TimestampPlugin.h"
+#include "../Plugins/ViaRoutePlugin.h"
+
+
+#include "../Server/DataStructures/InternalDataFacade.h"
+#include "../Server/DataStructures/SharedDataFacade.h"
+
+#include <boost/assert.hpp>
+
+OSRM_impl::OSRM_impl( const ServerPaths & server_paths, const bool use_shared_memory )
  :
     use_shared_memory(use_shared_memory)
 {
@@ -65,13 +78,13 @@ OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
     );
 }
 
-OSRM::~OSRM() {
+OSRM_impl::~OSRM_impl() {
     BOOST_FOREACH(PluginMap::value_type & plugin_pointer, plugin_map) {
         delete plugin_pointer.second;
     }
 }
 
-void OSRM::RegisterPlugin(BasePlugin * plugin) {
+void OSRM_impl::RegisterPlugin(BasePlugin * plugin) {
     SimpleLogger().Write()  << "loaded plugin: " << plugin->GetDescriptor();
     if( plugin_map.find(plugin->GetDescriptor()) != plugin_map.end() ) {
         delete plugin_map.find(plugin->GetDescriptor())->second;
@@ -79,7 +92,7 @@ void OSRM::RegisterPlugin(BasePlugin * plugin) {
     plugin_map.emplace(plugin->GetDescriptor(), plugin);
 }
 
-void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
+void OSRM_impl::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
     const PluginMap::const_iterator & iter = plugin_map.find(
         route_parameters.service
     );
@@ -128,4 +141,19 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
     } else {
         reply = http::Reply::StockReply(http::Reply::badRequest);
     }
+}
+
+// proxy code for compilation firewall
+
+OSRM::OSRM(
+    const ServerPaths & paths,
+    const bool use_shared_memory
+) : OSRM_pimpl_(new OSRM_impl(paths, use_shared_memory)) { }
+
+OSRM::~OSRM() {
+    delete OSRM_pimpl_;
+}
+
+void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
+    OSRM_pimpl_->RunQuery(route_parameters, reply);
 }

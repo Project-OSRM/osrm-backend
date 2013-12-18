@@ -25,36 +25,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INI_FILE_H_
-#define INI_FILE_H_
+#ifndef OSRM_IMPL_H
+#define OSRM_IMPL_H
 
-#include "../DataStructures/HashTable.h"
+#include <Reply.h>
+#include <RouteParameters.h>
+#include <ServerPaths.h>
 
-#include <string>
-#include <vector>
+#include "../DataStructures/QueryEdge.h"
+#include "../Plugins/BasePlugin.h"
+#include "../Server/DataStructures/SharedBarriers.h"
+#include "../Server/DataStructures/BaseDataFacade.h"
+#include "../Util/ProgramOptions.h"
 
-class IniFile {
+#include <boost/noncopyable.hpp>
+
+class OSRM_impl : boost::noncopyable {
+private:
+    typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
 public:
-    IniFile(const char * config_filename);
-
-    std::string GetParameter(const std::string & key);
-
-    std::string GetParameter(const std::string & key) const;
-
-    bool Holds(const std::string & key) const;
-
-    void SetParameter(const char* key, const char* value);
-
-    void SetParameter(const std::string & key, const std::string & value);
+    OSRM_impl(
+        const ServerPaths & paths,
+        const bool use_shared_memory
+    );
+    virtual ~OSRM_impl();
+    void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
 
 private:
-    void Tokenize(
-        const std::string& str,
-        std::vector<std::string>& tokens,
-        const std::string& delimiters = "="
-    );
-
-    HashTable<std::string, std::string> parameters;
+    void RegisterPlugin(BasePlugin * plugin);
+    PluginMap plugin_map;
+    bool use_shared_memory;
+    SharedBarriers barrier;
+    //base class pointer to the objects
+    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
 };
 
-#endif /* INI_FILE_H_ */
+#endif //OSRM_IMPL_H

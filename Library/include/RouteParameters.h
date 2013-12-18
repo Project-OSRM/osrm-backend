@@ -28,8 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTE_PARAMETERS_H
 #define ROUTE_PARAMETERS_H
 
-#include "../../DataStructures/Coordinate.h"
-#include "../../DataStructures/HashTable.h"
+#include <Coordinate.h>
 
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic.hpp>
@@ -60,7 +59,6 @@ struct RouteParameters {
     std::string language;
     std::vector<std::string> hints;
     std::vector<FixedPointCoordinate> coordinates;
-    typedef HashTable<std::string, std::string>::const_iterator OptionsIterator;
 
     void setZoomLevel(const short i) {
         if (18 > i && 0 < i) {

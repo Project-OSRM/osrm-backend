@@ -25,73 +25,60 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef REQUEST_PARSER_H
-#define REQUEST_PARSER_H
+#ifndef FIXED_POINT_COORDINATE_H_
+#define FIXED_POINT_COORDINATE_H_
 
-#include "Http/CompressionType.h"
-#include <Header.h>
+#include <iostream>
 
-#include <boost/logic/tribool.hpp>
-#include <boost/tuple/tuple.hpp>
+static const double COORDINATE_PRECISION = 1000000.;
 
-namespace http {
+struct FixedPointCoordinate {
+    int lat;
+    int lon;
 
-struct Request;
-
-class RequestParser {
-public:
-    RequestParser();
+    FixedPointCoordinate();
+    explicit FixedPointCoordinate (int lat, int lon);
     void Reset();
+    bool isSet() const;
+    bool isValid() const;
+    bool operator==(const FixedPointCoordinate & other) const;
 
-    boost::tuple<boost::tribool, char*> Parse(
-        Request& req,
-        char* begin,
-        char* end,
-        CompressionType * compressionType
+    static double ApproximateDistance(
+        const int lat1,
+        const int lon1,
+        const int lat2,
+        const int lon2
     );
 
-private:
-    boost::tribool consume(
-        Request& req,
-        char input,
-        CompressionType * compressionType
+    static double ApproximateDistance(
+        const FixedPointCoordinate & c1,
+        const FixedPointCoordinate & c2
     );
 
-    inline bool isChar(int c);
+    static double ApproximateEuclideanDistance(
+        const FixedPointCoordinate & c1,
+        const FixedPointCoordinate & c2
+    );
 
-    inline bool isCTL(int c);
+    static void convertInternalLatLonToString(
+        const int value,
+        std::string & output
+    );
 
-    inline bool isTSpecial(int c);
+    static void convertInternalCoordinateToString(
+        const FixedPointCoordinate & coord,
+        std::string & output
+    );
 
-    inline bool isDigit(int c);
-
-    enum state {
-        method_start,
-        method,
-        uri_start,
-        uri,
-        http_version_h,
-        http_version_t_1,
-        http_version_t_2,
-        http_version_p,
-        http_version_slash,
-        http_version_major_start,
-        http_version_major,
-        http_version_minor_start,
-        http_version_minor,
-        expecting_newline_1,
-        header_line_start,
-        header_lws,
-        header_name,
-        space_before_header_value,
-        header_value,
-        expecting_newline_2,
-        expecting_newline_3
-    } state_;
-
-    Header header;
+    static void convertInternalReversedCoordinateToString(
+        const FixedPointCoordinate & coord,
+        std::string & output
+    );
 };
 
-} // namespace http
+inline std::ostream & operator<<(std::ostream & out, const FixedPointCoordinate & c){
+    out << "(" << c.lat << "," << c.lon << ")";
+    return out;
+}
 
-#endif // REQUEST_PARSER_H
+#endif /* FIXED_POINT_COORDINATE_H_ */

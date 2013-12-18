@@ -25,36 +25,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INI_FILE_H_
-#define INI_FILE_H_
+#ifndef ORIGINAL_EDGE_DATA_H
+#define ORIGINAL_EDGE_DATA_H
 
-#include "../DataStructures/HashTable.h"
+#include "TurnInstructions.h"
+#include "../typedefs.h"
 
-#include <string>
-#include <vector>
+#include <climits>
 
-class IniFile {
-public:
-    IniFile(const char * config_filename);
+struct OriginalEdgeData{
+    explicit OriginalEdgeData(
+        NodeID via_node,
+        unsigned name_id,
+        TurnInstruction turn_instruction
+    ) :
+        via_node(via_node),
+        name_id(name_id),
+        turn_instruction(turn_instruction)
+    { }
 
-    std::string GetParameter(const std::string & key);
+    OriginalEdgeData() :
+        via_node(UINT_MAX),
+        name_id(UINT_MAX),
+        turn_instruction(UCHAR_MAX)
+    { }
 
-    std::string GetParameter(const std::string & key) const;
-
-    bool Holds(const std::string & key) const;
-
-    void SetParameter(const char* key, const char* value);
-
-    void SetParameter(const std::string & key, const std::string & value);
-
-private:
-    void Tokenize(
-        const std::string& str,
-        std::vector<std::string>& tokens,
-        const std::string& delimiters = "="
-    );
-
-    HashTable<std::string, std::string> parameters;
+    NodeID via_node;
+    unsigned name_id;
+    TurnInstruction turn_instruction;
 };
 
-#endif /* INI_FILE_H_ */
+#endif //ORIGINAL_EDGE_DATA_H

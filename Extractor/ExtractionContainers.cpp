@@ -304,7 +304,7 @@ void ExtractionContainers::PrepareData(
                 edge_iterator->targetCoord.lat = node_iterator->lat;
                 edge_iterator->targetCoord.lon = node_iterator->lon;
 
-                const double distance = ApproximateDistance(
+                const double distance = FixedPointCoordinate::ApproximateDistance(
                     edge_iterator->startCoord.lat,
                     edge_iterator->startCoord.lon,
                     node_iterator->lat,

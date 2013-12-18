@@ -43,4 +43,3 @@ namespace http {
 }
 
 #endif //HTTP_HEADER_H
-

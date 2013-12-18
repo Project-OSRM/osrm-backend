@@ -25,7 +25,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "ExtractorCallbacks.h"
+#include "ExtractorStructs.h"
 #include "PBFParser.h"
+#include "../DataStructures/HashTable.h"
+#include "../Util/MachineInfo.h"
+#include "../Util/OpenMPWrapper.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
+#include "../typedefs.h"
+
+#include <Coordinate.h>
+
+#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/ref.hpp>
+
+#include <zlib.h>
 
 PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser( ec, se ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -38,10 +54,8 @@ PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnv
 		throw OSRMException("pbf file not found.");
 	}
 
-#ifndef NDEBUG
 	blockCount = 0;
 	groupCount = 0;
-#endif
 }
 
 PBFParser::~PBFParser() {
@@ -56,12 +70,10 @@ PBFParser::~PBFParser() {
 	}
 	google::protobuf::ShutdownProtobufLibrary();
 
-#ifndef NDEBUG
 	SimpleLogger().Write(logDEBUG) <<
 		"parsed " << blockCount <<
 		" blocks from pbf with " << groupCount <<
 		" groups";
-#endif
 }
 
 inline bool PBFParser::ReadHeader() {
@@ -365,9 +377,7 @@ inline void PBFParser::loadGroup(_ThreadData * threadData) {
 }
 
 inline void PBFParser::loadBlock(_ThreadData * threadData) {
-#ifndef NDEBUG
 	++blockCount;
-#endif
 	threadData->currentGroupID = 0;
 	threadData->currentEntityID = 0;
 }

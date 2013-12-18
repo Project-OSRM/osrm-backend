@@ -28,95 +28,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
-#include "APIGrammar.h"
-#include "DataStructures/RouteParameters.h"
 #include "Http/Request.h"
-#include "../Library/OSRM.h"
-#include "../Util/SimpleLogger.h"
-#include "../Util/StringUtil.h"
-#include "../typedefs.h"
 
-#include <boost/foreach.hpp>
+#include <Reply.h>
+
 #include <boost/noncopyable.hpp>
 
-#include <algorithm>
-#include <iostream>
-#include <iterator>
 #include <string>
 
+template <typename Iterator, class HandlerT>
+struct APIGrammar;
+struct RouteParameters;
+class OSRM;
+
 class RequestHandler : private boost::noncopyable {
+
 public:
     typedef APIGrammar<std::string::iterator, RouteParameters> APIGrammarParser;
-    explicit RequestHandler() : routing_machine(NULL) { }
 
-    void handle_request(const http::Request& req, http::Reply& rep){
-        //parse command
-        try {
-            std::string request(req.uri);
+    RequestHandler();
 
-            time_t ltime;
-            struct tm *Tm;
-
-            ltime=time(NULL);
-            Tm=localtime(&ltime);
-
-            SimpleLogger().Write() <<
-                (Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday    << "-" <<
-                (Tm->tm_mon+1 < 10 ? "0" : "" ) << (Tm->tm_mon+1) << "-" <<
-                1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) <<
-                Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) <<
-                Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) <<
-                Tm->tm_sec << " " << req.endpoint.to_string() << " " <<
-                req.referrer << ( 0 == req.referrer.length() ? "- " :" ") <<
-                req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri;
-
-            RouteParameters routeParameters;
-            APIGrammarParser apiParser(&routeParameters);
-
-            std::string::iterator it = request.begin();
-            const bool result = boost::spirit::qi::parse(
-                it,
-                request.end(),
-                apiParser
-            );
-
-            if ( !result || (it != request.end()) ) {
-                rep = http::Reply::StockReply(http::Reply::badRequest);
-                const int position = std::distance(request.begin(), it);
-                std::string tmp_position_string;
-                intToString(position, tmp_position_string);
-                rep.content.push_back(
-                    "Input seems to be malformed close to position "
-                    "<br><pre>"
-                );
-                rep.content.push_back( request );
-                rep.content.push_back(tmp_position_string);
-                rep.content.push_back("<br>");
-                const unsigned end = std::distance(request.begin(), it);
-                for(unsigned i = 0; i < end; ++i) {
-                    rep.content.push_back("&nbsp;");
-                }
-                rep.content.push_back("^<br></pre>");
-            } else {
-                //parsing done, lets call the right plugin to handle the request
-                BOOST_ASSERT_MSG(
-                    routing_machine != NULL,
-                    "pointer not init'ed"
-                );
-                routing_machine->RunQuery(routeParameters, rep);
-                return;
-            }
-        } catch(std::exception& e) {
-            rep = http::Reply::StockReply(http::Reply::internalServerError);
-            SimpleLogger().Write(logWARNING) <<
-                "[server error] code: " << e.what() << ", uri: " << req.uri;
-            return;
-        }
-    };
-
-    void RegisterRoutingMachine(OSRM * osrm) {
-        routing_machine = osrm;
-    }
+    void handle_request(const http::Request& req, http::Reply& rep);
+    void RegisterRoutingMachine(OSRM * osrm);
 
 private:
     OSRM * routing_machine;

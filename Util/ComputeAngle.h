@@ -25,36 +25,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef INI_FILE_H_
-#define INI_FILE_H_
+#ifndef COMPUTE_ANGLE_H
+#define COMPUTE_ANGLE_H
 
-#include "../DataStructures/HashTable.h"
+#include "../Util/MercatorUtil.h"
+#include <Coordinate.h>
 
-#include <string>
-#include <vector>
+#include <boost/assert.hpp>
+#include <cmath>
 
-class IniFile {
-public:
-    IniFile(const char * config_filename);
+/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
+template<class CoordinateT>
+inline static double GetAngleBetweenThreeFixedPointCoordinates (
+    const CoordinateT & A,
+    const CoordinateT & C,
+    const CoordinateT & B
+) {
+    const double v1x = (A.lon - C.lon)/COORDINATE_PRECISION;
+    const double v1y = lat2y(A.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
+    const double v2x = (B.lon - C.lon)/COORDINATE_PRECISION;
+    const double v2y = lat2y(B.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
 
-    std::string GetParameter(const std::string & key);
+    double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
+    while(angle < 0)
+        angle += 360;
+    return angle;
+}
 
-    std::string GetParameter(const std::string & key) const;
 
-    bool Holds(const std::string & key) const;
-
-    void SetParameter(const char* key, const char* value);
-
-    void SetParameter(const std::string & key, const std::string & value);
-
-private:
-    void Tokenize(
-        const std::string& str,
-        std::vector<std::string>& tokens,
-        const std::string& delimiters = "="
-    );
-
-    HashTable<std::string, std::string> parameters;
-};
-
-#endif /* INI_FILE_H_ */
+#endif // COMPUTE_ANGLE_H
