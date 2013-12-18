@@ -57,11 +57,12 @@ set(
   ${LibOSRMGlob}
   ${DescriptorGlob}
   ${DatastructureGlob}
+  ${CoordinateGlob}
   ${AlgorithmGlob}
   ${HttpGlob}
 )
 add_library(COORDLIB STATIC ${CoordinateGlob})
-add_library(OSRM SHARED ${OSRMSources} Util/GitDescription.cpp Util/UUID.cpp)
+add_library(OSRM STATIC ${OSRMSources} Util/GitDescription.cpp Util/UUID.cpp)
 add_library(UUID STATIC Util/UUID.cpp)
 add_library(GITDESCRIPTION STATIC Util/GitDescription.cpp)
 add_dependencies(UUID UUIDConfigure)
