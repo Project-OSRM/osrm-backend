@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Coordinate.h>
 
+#include "../typedefs.h"
+
 struct PhantomNode {
     PhantomNode() :
         edgeBasedNode(UINT_MAX),
