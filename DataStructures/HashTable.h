@@ -40,10 +40,10 @@ public:
 
     HashTable(const unsigned size) : super(size) { }
 
-    HashTable &operator=(const HashTable &other) {
-        super::operator = (other);
-        return *this;
-    }
+    // HashTable &operator=(const HashTable &other) {
+    //     super::operator = (other);
+    //     return *this;
+    // }
 
     inline void Add(const keyT& key, const valueT& value){
         super::insert(std::make_pair(key, value));
