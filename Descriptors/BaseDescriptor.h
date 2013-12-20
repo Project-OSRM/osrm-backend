@@ -28,16 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASE_DESCRIPTOR_H_
 #define BASE_DESCRIPTOR_H_
 
-#include "../DataStructures/HashTable.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
 #include <osrm/Reply.h>
-
-#include <cmath>
-#include <cstdio>
 
 #include <string>
 #include <vector>
