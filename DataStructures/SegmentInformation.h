@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 
-#include <Coordinate.h>
+#include <osrm/Coordinate.h>
 
 // Struct fits everything in one cache line
 struct SegmentInformation {

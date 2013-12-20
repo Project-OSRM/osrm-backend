@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
 
-#include <Coordinate.h>
+#include <osrm/Coordinate.h>
 
 template<class EdgeDataT>
 class InternalDataFacade : public BaseDataFacade<EdgeDataT> {

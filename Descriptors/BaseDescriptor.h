@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
-#include <Reply.h>
+#include <osrm/Reply.h>
 
 #include <cmath>
 #include <cstdio>

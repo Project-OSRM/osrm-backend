@@ -25,44 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SEARCHENGINE_H
-#define SEARCHENGINE_H
+#ifndef SERVER_PATH_H
+#define SERVER_PATH_H
 
-#include "SearchEngineData.h"
-#include "PhantomNodes.h"
-#include "QueryEdge.h"
-#include "../RoutingAlgorithms/AlternativePathRouting.h"
-#include "../RoutingAlgorithms/ShortestPathRouting.h"
+#include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
 
-#include "../Util/StringUtil.h"
-#include "../typedefs.h"
-
-#include <osrm/Coordinate.h>
-
-#include <boost/assert.hpp>
-
-#include <climits>
 #include <string>
-#include <vector>
 
-template<class DataFacadeT>
-class SearchEngine {
-private:
-    DataFacadeT * facade;
-    SearchEngineData engine_working_data;
-public:
-    ShortestPathRouting<DataFacadeT> shortest_path;
-    AlternativeRouting <DataFacadeT> alternative_path;
+typedef boost::unordered_map<
+            const std::string,
+            boost::filesystem::path
+        > ServerPaths;
 
-    SearchEngine( DataFacadeT * facade )
-     :
-        facade             (facade),
-        shortest_path      (facade, engine_working_data),
-        alternative_path   (facade, engine_working_data)
-    {}
-
-    ~SearchEngine() {}
-
-};
-
-#endif // SEARCHENGINE_H
+#endif //SERVER_PATH_H

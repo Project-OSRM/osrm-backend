@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Http/CompressionType.h"
 #include "Http/Request.h"
 
-#include <Reply.h>
+#include <osrm/Reply.h>
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>

@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPLUGIN_H_
 #define BASEPLUGIN_H_
 
-#include <Coordinate.h>
-#include <Reply.h>
-#include <RouteParameters.h>
+#include <osrm/Coordinate.h>
+#include <osrm/Reply.h>
+#include <osrm/RouteParameters.h>
 
 #include <string>
 #include <vector>

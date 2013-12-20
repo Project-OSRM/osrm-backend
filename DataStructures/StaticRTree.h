@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
 
-#include <Coordinate.h>
+#include <osrm/Coordinate.h>
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>

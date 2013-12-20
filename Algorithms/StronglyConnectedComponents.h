@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/SimpleLogger.h"
 
-#include <Coordinate.h>
+#include <osrm/Coordinate.h>
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>

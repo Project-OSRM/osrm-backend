@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Http/Request.h"
 
-#include <Reply.h>
+#include <osrm/Reply.h>
 
 #include <boost/noncopyable.hpp>
 

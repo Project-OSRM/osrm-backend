@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OSRMException.h"
 #include "SimpleLogger.h"
 
-#include <ServerPaths.h>
+#include <osrm/ServerPaths.h>
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>

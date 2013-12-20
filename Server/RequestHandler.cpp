@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
-#include <RouteParameters.h>
+#include <osrm/RouteParameters.h>
 
 #include <boost/foreach.hpp>
 

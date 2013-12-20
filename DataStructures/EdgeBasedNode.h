@@ -6,7 +6,7 @@
 #include "../Util/MercatorUtil.h"
 #include "../typedefs.h"
 
-#include <Coordinate.h>
+#include <osrm/Coordinate.h>
 
 struct EdgeBasedNode {
 

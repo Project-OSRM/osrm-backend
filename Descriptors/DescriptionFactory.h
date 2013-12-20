@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
-#include <Coordinate.h>
+#include <osrm/Coordinate.h>
 
 #include <limits>
 #include <vector>

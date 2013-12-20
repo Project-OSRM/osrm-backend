@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/scoped_ptr.hpp>
 
-#include <Reply.h>
-#include <RouteParameters.h>
-#include <ServerPaths.h>
+#include <osrm/Reply.h>
+#include <osrm/RouteParameters.h>
+#include <osrm/ServerPaths.h>
 
 class OSRM_impl;
 

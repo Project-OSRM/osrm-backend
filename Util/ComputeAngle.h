@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define COMPUTE_ANGLE_H
 
 #include "../Util/MercatorUtil.h"
-#include <Coordinate.h>
+#include <osrm/Coordinate.h>
 
 #include <boost/assert.hpp>
 #include <cmath>

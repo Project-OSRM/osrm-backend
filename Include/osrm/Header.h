@@ -25,44 +25,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SEARCHENGINE_H
-#define SEARCHENGINE_H
+#ifndef HTTP_HEADER_H
+#define HTTP_HEADER_H
 
-#include "SearchEngineData.h"
-#include "PhantomNodes.h"
-#include "QueryEdge.h"
-#include "../RoutingAlgorithms/AlternativePathRouting.h"
-#include "../RoutingAlgorithms/ShortestPathRouting.h"
-
-#include "../Util/StringUtil.h"
-#include "../typedefs.h"
-
-#include <osrm/Coordinate.h>
-
-#include <boost/assert.hpp>
-
-#include <climits>
 #include <string>
-#include <vector>
 
-template<class DataFacadeT>
-class SearchEngine {
-private:
-    DataFacadeT * facade;
-    SearchEngineData engine_working_data;
-public:
-    ShortestPathRouting<DataFacadeT> shortest_path;
-    AlternativeRouting <DataFacadeT> alternative_path;
+namespace http {
 
-    SearchEngine( DataFacadeT * facade )
-     :
-        facade             (facade),
-        shortest_path      (facade, engine_working_data),
-        alternative_path   (facade, engine_working_data)
-    {}
+    struct Header {
+        std::string name;
+        std::string value;
+        void Clear() {
+            name.clear();
+            value.clear();
+        }
+    };
+}
 
-    ~SearchEngine() {}
-
-};
-
-#endif // SEARCHENGINE_H
+#endif //HTTP_HEADER_H
