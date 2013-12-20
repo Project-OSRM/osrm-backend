@@ -103,7 +103,7 @@ public:
         }
         // description_factory.SetEndSegment( leg_phantoms.targetPhantom );
         ++added_element_count;
-        BOOST_ASSERT( (unsigned)(route_leg.size() + 1) == added_element_count );
+        BOOST_ASSERT( (int)(route_leg.size() + 1) == added_element_count );
         return added_element_count;
     }
 
