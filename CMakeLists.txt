@@ -213,7 +213,7 @@ if(WITH_TOOLS)
     endif()
 endif()
 
-file(GLOB InstallGlob Include/osrm*.h Library/OSRM.h)
+file(GLOB InstallGlob Include/osrm/*.h Library/OSRM.h)
 
 install(FILES ${InstallGlob} DESTINATION include/osrm)
 install(TARGETS osrm-extract DESTINATION bin)

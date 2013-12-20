@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
-#include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
 #include <osrm/Reply.h>
