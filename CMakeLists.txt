@@ -17,7 +17,7 @@ else()
   message(WARNING "Building on a 32 bit system is unsupported")
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/Library/include)
+include_directories(${CMAKE_SOURCE_DIR}/Include/)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -33,7 +33,7 @@ add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp)
 set(BOOST_COMPONENTS filesystem iostreams program_options regex system thread)
 
 configure_file(
-  Util/GitDescription.cpp.in
+  ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
 )
 file(GLOB ExtractorGlob Extractor/*.cpp)
@@ -212,7 +212,7 @@ if(WITH_TOOLS)
     endif()
 endif()
 
-file(GLOB InstallGlob Library/include/*.h Library/OSRM.h)
+file(GLOB InstallGlob Include/osrm*.h Library/OSRM.h)
 
 install(FILES ${InstallGlob} DESTINATION include/osrm)
 install(TARGETS osrm-extract DESTINATION bin)
@@ -220,3 +220,5 @@ install(TARGETS osrm-prepare DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
 install(TARGETS osrm-routed DESTINATION bin)
 install(TARGETS OSRM DESTINATION lib)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
+install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
