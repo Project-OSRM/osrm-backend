@@ -28,11 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPARSER_H_
 #define BASEPARSER_H_
 
-// #include "ExtractorCallbacks.h"
-#include "ScriptingEnvironment.h"
-#include "../Util/OSRMException.h"
-#include "../Util/SimpleLogger.h"
-
 extern "C" {
     #include <lua.h>
     #include <lauxlib.h>
@@ -40,33 +35,40 @@ extern "C" {
 }
 
 #include <boost/noncopyable.hpp>
+#include <string>
+#include <vector>
 
 class ExtractorCallbacks;
+class ScriptingEnvironment;
 struct ExtractionWay;
 struct ImportNode;
 
 class BaseParser : boost::noncopyable {
 public:
-    BaseParser(ExtractorCallbacks* ec, ScriptingEnvironment& se);
+    BaseParser(
+        ExtractorCallbacks * extractor_callbacks,
+        ScriptingEnvironment & scripting_environment
+    );
     virtual ~BaseParser() {}
     virtual bool ReadHeader() = 0;
     virtual bool Parse() = 0;
 
-    virtual void ParseNodeInLua(ImportNode& n, lua_State* luaStateForThread);
-    virtual void ParseWayInLua(ExtractionWay& n, lua_State* luaStateForThread);
-    virtual void report_errors(lua_State *L, const int status) const;
+    virtual void ParseNodeInLua(ImportNode & n, lua_State* thread_lua_state);
+    virtual void ParseWayInLua(ExtractionWay & n, lua_State* thread_lua_state);
+    virtual void report_errors(lua_State * lua_state, const int status) const;
 
 protected:
     virtual void ReadUseRestrictionsSetting();
     virtual void ReadRestrictionExceptions();
-    virtual bool ShouldIgnoreRestriction(const std::string& except_tag_string) const;
+    virtual bool ShouldIgnoreRestriction(
+        const std::string & except_tag_string
+    ) const;
 
-    ExtractorCallbacks* extractor_callbacks;
-    ScriptingEnvironment& scriptingEnvironment;
-    lua_State* luaState;
+    ExtractorCallbacks     * extractor_callbacks;
+    lua_State              * lua_state;
+    ScriptingEnvironment   & scripting_environment;
     std::vector<std::string> restriction_exceptions;
     bool use_turn_restrictions;
-
 };
 
 #endif /* BASEPARSER_H_ */

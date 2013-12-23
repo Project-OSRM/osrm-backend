@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SCRIPTINGENVIRONMENT_H_
 #define SCRIPTINGENVIRONMENT_H_
 
-#include "../Util/LuaUtil.h"
-
 #include <vector>
+
+struct lua_State;
 
 class ScriptingEnvironment {
 public:

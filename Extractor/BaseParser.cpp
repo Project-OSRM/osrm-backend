@@ -27,24 +27,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseParser.h"
 #include "ExtractorStructs.h"
+#include "ScriptingEnvironment.h"
+
+#include "../Util/LuaUtil.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
 
 #include <boost/foreach.hpp>
 
-BaseParser::BaseParser(ExtractorCallbacks* ec, ScriptingEnvironment& se) :
-extractor_callbacks(ec), scriptingEnvironment(se), luaState(NULL), use_turn_restrictions(true) {
-    luaState = se.getLuaStateForThreadID(0);
+BaseParser::BaseParser(
+    ExtractorCallbacks   * extractor_callbacks,
+    ScriptingEnvironment & scripting_environment
+) : extractor_callbacks(extractor_callbacks),
+    lua_state(scripting_environment.getLuaStateForThreadID(0)),
+    scripting_environment(scripting_environment),
+    use_turn_restrictions(true)
+{
     ReadUseRestrictionsSetting();
     ReadRestrictionExceptions();
 }
 
 void BaseParser::ReadUseRestrictionsSetting() {
-    if( 0 != luaL_dostring( luaState, "return use_turn_restrictions\n") ) {
-        throw OSRMException(
-            /*lua_tostring( luaState, -1 ) + */"ERROR occured in scripting block"
-        );
+    if( 0 != luaL_dostring( lua_state, "return use_turn_restrictions\n") ) {
+        throw OSRMException("ERROR occured in scripting block");
     }
-    if( lua_isboolean( luaState, -1) ) {
-        use_turn_restrictions = lua_toboolean(luaState, -1);
+    if( lua_isboolean( lua_state, -1) ) {
+        use_turn_restrictions = lua_toboolean(lua_state, -1);
     }
     if( use_turn_restrictions ) {
         SimpleLogger().Write() << "Using turn restrictions";
@@ -54,16 +62,18 @@ void BaseParser::ReadUseRestrictionsSetting() {
 }
 
 void BaseParser::ReadRestrictionExceptions() {
-    if(lua_function_exists(luaState, "get_exceptions" )) {
+    if(lua_function_exists(lua_state, "get_exceptions" )) {
         //get list of turn restriction exceptions
         luabind::call_function<void>(
-            luaState,
+            lua_state,
             "get_exceptions",
             boost::ref(restriction_exceptions)
         );
-        SimpleLogger().Write() << "Found " << restriction_exceptions.size() << " exceptions to turn restriction";
+        const unsigned exception_count = restriction_exceptions.size();
+        SimpleLogger().Write() <<
+            "Found " << exception_count << " exceptions to turn restrictions:";
         BOOST_FOREACH(const std::string & str, restriction_exceptions) {
-            SimpleLogger().Write() << "   " << str;
+            SimpleLogger().Write() << "  " << str;
         }
     } else {
         SimpleLogger().Write() << "Found no exceptions to turn restrictions";
@@ -77,20 +87,32 @@ void BaseParser::report_errors(lua_State *L, const int status) const {
     }
 }
 
-void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* localLuaState) {
-    luabind::call_function<void>( localLuaState, "node_function", boost::ref(n) );
+void BaseParser::ParseNodeInLua(ImportNode& n, lua_State* local_lua_state) {
+    luabind::call_function<void>(
+        local_lua_state,
+        "node_function",
+        boost::ref(n)
+    );
 }
 
-void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* localLuaState) {
-    luabind::call_function<void>( localLuaState, "way_function", boost::ref(w) );
+void BaseParser::ParseWayInLua(ExtractionWay& w, lua_State* local_lua_state) {
+    luabind::call_function<void>(
+        local_lua_state,
+        "way_function",
+        boost::ref(w)
+    );
 }
 
-bool BaseParser::ShouldIgnoreRestriction(const std::string & except_tag_string) const {
+bool BaseParser::ShouldIgnoreRestriction(
+    const std::string & except_tag_string
+) const {
     //should this restriction be ignored? yes if there's an overlap between:
-    //a) the list of modes in the except tag of the restriction (except_tag_string), ex: except=bus;bicycle
-    //b) the lua profile defines a hierachy of modes, ex: [access, vehicle, bicycle]
+    // a) the list of modes in the except tag of the restriction
+    //    (except_tag_string), eg: except=bus;bicycle
+    // b) the lua profile defines a hierachy of modes,
+    //    eg: [access, vehicle, bicycle]
 
-    if( "" == except_tag_string ) {
+    if( except_tag_string.empty() ) {
         return false;
     }
 
@@ -98,8 +120,14 @@ bool BaseParser::ShouldIgnoreRestriction(const std::string & except_tag_string) 
     //only a few exceptions are actually defined.
     std::vector<std::string> exceptions;
     boost::algorithm::split_regex(exceptions, except_tag_string, boost::regex("[;][ ]*"));
-    BOOST_FOREACH(std::string& str, exceptions) {
-        if( restriction_exceptions.end() != std::find(restriction_exceptions.begin(), restriction_exceptions.end(), str) ) {
+    BOOST_FOREACH(std::string& current_string, exceptions) {
+        std::vector<std::string>::const_iterator string_iterator;
+        string_iterator = std::find(
+            restriction_exceptions.begin(),
+            restriction_exceptions.end(),
+            current_string
+        );
+        if( restriction_exceptions.end() != string_iterator ) {
             return true;
         }
     }

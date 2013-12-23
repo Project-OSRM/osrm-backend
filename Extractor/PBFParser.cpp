@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractorCallbacks.h"
 #include "ExtractorStructs.h"
 #include "PBFParser.h"
+#include "ScriptingEnvironment.h"
+
 #include "../DataStructures/HashTable.h"
 #include "../Util/MachineInfo.h"
 #include "../Util/OpenMPWrapper.h"
@@ -43,7 +45,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <zlib.h>
 
-PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser( ec, se ) {
+PBFParser::PBFParser(
+	const char * fileName,
+	ExtractorCallbacks* ec,
+	ScriptingEnvironment& se
+) : BaseParser( ec, se ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
@@ -207,7 +213,7 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_nodes; ++i) {
 	    ImportNode &n = extracted_nodes_vector[i];
-	    ParseNodeInLua( n, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
+	    ParseNodeInLua( n, scripting_environment.getLuaStateForThreadID(omp_get_thread_num()) );
 	}
 
 	BOOST_FOREACH(const ImportNode &n, extracted_nodes_vector) {
@@ -342,7 +348,7 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 		if(2 > w.path.size()) {
         	continue;
     	}
-	    ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID( omp_get_thread_num()) );
+	    ParseWayInLua( w, scripting_environment.getLuaStateForThreadID( omp_get_thread_num()) );
 	}
 
 	BOOST_FOREACH(ExtractionWay & w, parsed_way_vector) {
