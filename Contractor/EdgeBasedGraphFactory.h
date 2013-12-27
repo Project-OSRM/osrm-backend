@@ -81,14 +81,17 @@ public:
     );
 
     void Run(const char * originalEdgeDataFilename, lua_State *myLuaState);
+
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
+
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
-    void GetOriginalEdgeData( std::vector<OriginalEdgeData> & originalEdgeData);
+
     TurnInstruction AnalyzeTurn(
         const NodeID u,
         const NodeID v,
         const NodeID w
     ) const;
+
     int GetTurnPenalty(
         const NodeID u,
         const NodeID v,
