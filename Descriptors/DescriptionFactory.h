@@ -185,7 +185,7 @@ public:
                 pathDescription.back().necessary = true;
                 pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
                 target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
-                SimpleLogger().Write() << "Deleting last turn instruction";
+                // SimpleLogger().Write() << "Deleting last turn instruction";
             }
         } else {
             pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
