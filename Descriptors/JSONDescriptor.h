@@ -119,30 +119,31 @@ public:
             "{\"status\":"
         );
 
-        if(raw_route.lengthOfShortestPath != INT_MAX) {
-            description_factory.SetStartSegment(phantom_nodes.startPhantom);
-            reply.content.push_back("0,"
-                    "\"status_message\": \"Found route between points\",");
-
-            BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
-            for( unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i ) {
-                const int added_segments = DescribeLeg(
-                    raw_route.unpacked_path_segments[i],
-                    raw_route.segmentEndCoordinates[i]
-                );
-                BOOST_ASSERT( 0 < added_segments );
-                shortest_leg_end_indices.push_back(
-                    added_segments + shortest_leg_end_indices.back()
-                );
-            }
-            description_factory.SetEndSegment(phantom_nodes.targetPhantom);
-            description_factory.Run(facade, config.zoom_level);
-        } else {
+        if(INT_MAX == raw_route.lengthOfShortestPath) {
             //We do not need to do much, if there is no route ;-)
-            reply.content.push_back("207,"
-                    "\"status_message\": \"Cannot find route between points\"}");
+            reply.content.push_back(
+                "207,\"status_message\": \"Cannot find route between points\"}"
+            );
             return;
         }
+
+        description_factory.SetStartSegment(phantom_nodes.startPhantom);
+        reply.content.push_back("0,"
+                "\"status_message\": \"Found route between points\",");
+
+        BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
+        for( unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i ) {
+            const int added_segments = DescribeLeg(
+                raw_route.unpacked_path_segments[i],
+                raw_route.segmentEndCoordinates[i]
+            );
+            BOOST_ASSERT( 0 < added_segments );
+            shortest_leg_end_indices.push_back(
+                added_segments + shortest_leg_end_indices.back()
+            );
+        }
+        description_factory.SetEndSegment(phantom_nodes.targetPhantom);
+        description_factory.Run(facade, config.zoom_level);
 
         reply.content.push_back("\"route_geometry\": ");
         if(config.geometry) {
