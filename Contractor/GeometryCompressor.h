@@ -25,14 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
-#include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 
-#include <algorithm>
 #include <limits>
 #include <vector>
 
@@ -42,17 +38,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class GeometryCompressor {
 public:
     GeometryCompressor();
-    void AppendNodeIDsToGeomtry( NodeID node_id, NodeID contracted_node_id );
+    void CompressEdge(
+        const EdgeID first_edge_id,
+        const EdgeID second_edge_id,
+        const NodeID via_node_id
+    );
     void PrintStatistics() const;
+    bool HasEntryForID(const EdgeID edge_id);
+    void AddNodeIDToCompressedEdge(const EdgeID edge_id, const NodeID node_id);
+    unsigned GetPositionForID(const EdgeID edge_id);
+    void SerializeInternalVector(const std::string & path) const;
 
 private:
 
     void IncreaseFreeList();
 
-    std::vector<std::vector<unsigned> > m_compressed_geometries;
+    std::vector<std::vector<NodeID> > m_compressed_geometries;
     std::vector<unsigned> m_free_list;
-    boost::unordered_map<unsigned, unsigned> m_node_id_to_index_map;
+    boost::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
 };
-
 
 #endif //GEOMETRY_COMPRESSOR_H

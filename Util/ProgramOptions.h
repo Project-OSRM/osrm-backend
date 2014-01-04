@@ -111,6 +111,10 @@ inline unsigned GenerateServerProgramOptions(
             boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
             ".edges file")
         (
+            "geometries",
+            boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
+            ".geometries file")
+        (
             "ramindex",
             boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
             ".ramIndex file")

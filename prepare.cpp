@@ -183,11 +183,12 @@ int main (int argc, char *argv[]) {
         std::ifstream in;
         in.open (input_path.c_str(), std::ifstream::in | std::ifstream::binary);
 
-        std::string nodeOut(input_path.string() + ".nodes");
-        std::string edgeOut(input_path.string() + ".edges");
-        std::string graphOut(input_path.string() + ".hsgr");
-        std::string rtree_nodes_path(input_path.string() + ".ramIndex");
-        std::string rtree_leafs_path(input_path.string() + ".fileIndex");
+        const std::string nodeOut = input_path.string() + ".nodes";
+        const std::string edgeOut = input_path.string() + ".edges";
+        const std::string geometry_filename = input_path.string() + ".geometry";
+        const std::string graphOut = input_path.string() + ".hsgr";
+        const std::string rtree_nodes_path = input_path.string() + ".ramIndex";
+        const std::string rtree_leafs_path = input_path.string() + ".fileIndex";
 
         /*** Setup Scripting Environment ***/
 
@@ -254,7 +255,7 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write() << "Generating edge-expanded graph representation";
         EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
         std::vector<ImportEdge>().swap(edgeList);
-        edgeBasedGraphFactory->Run(edgeOut.c_str(), myLuaState);
+        edgeBasedGraphFactory->Run(edgeOut,geometry_filename, myLuaState);
         std::vector<TurnRestriction>().swap(inputRestrictions);
         std::vector<NodeID>().swap(bollardNodes);
         std::vector<NodeID>().swap(trafficLightNodes);
@@ -270,7 +271,7 @@ int main (int argc, char *argv[]) {
          */
 
         SimpleLogger().Write() << "writing node map ...";
-        std::ofstream mapOutFile(nodeOut.c_str(), std::ios::binary);
+        std::ofstream mapOutFile(nodeOut, std::ios::binary);
         const unsigned size_of_mapping = internalToExternalNodeMapping.size();
         mapOutFile.write((char *)&size_of_mapping, sizeof(unsigned));
         mapOutFile.write(
@@ -330,7 +331,7 @@ int main (int argc, char *argv[]) {
             numberOfEdges <<
             " edges";
 
-        std::ofstream hsgr_output_stream(graphOut.c_str(), std::ios::binary);
+        std::ofstream hsgr_output_stream(graphOut, std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
             BOOST_ASSERT( UINT_MAX != edge.source );

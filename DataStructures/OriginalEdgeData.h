@@ -37,22 +37,26 @@ struct OriginalEdgeData{
     explicit OriginalEdgeData(
         NodeID via_node,
         unsigned name_id,
-        TurnInstruction turn_instruction
+        TurnInstruction turn_instruction,
+        bool compressed_geometry
     ) :
-        via_node(via_node),
-        name_id(name_id),
-        turn_instruction(turn_instruction)
+        via_node( via_node ),
+        name_id( name_id ),
+        turn_instruction( turn_instruction ),
+        compressed_geometry( compressed_geometry )
     { }
 
     OriginalEdgeData() :
-        via_node(UINT_MAX),
-        name_id(UINT_MAX),
-        turn_instruction(UCHAR_MAX)
+        via_node( UINT_MAX ),
+        name_id( UINT_MAX ),
+        turn_instruction( UCHAR_MAX ),
+        compressed_geometry( false )
     { }
 
     NodeID via_node;
     unsigned name_id;
     TurnInstruction turn_instruction;
+    bool compressed_geometry;
 };
 
 #endif //ORIGINAL_EDGE_DATA_H

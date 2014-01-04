@@ -241,6 +241,7 @@ public:
 
             LoadGraph();
             LoadNodeAndEdgeInformation();
+            //TODO: LoadGeometries();
             LoadRTree(ram_index_path);
             LoadTimestamp();
             LoadViaNodeList();

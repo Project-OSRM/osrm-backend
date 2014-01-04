@@ -113,8 +113,8 @@ private:
     }
 
     void LoadNodeAndEdgeInformation(
-        const boost::filesystem::path nodes_file,
-        const boost::filesystem::path edges_file
+        const boost::filesystem::path & nodes_file,
+        const boost::filesystem::path & edges_file
     ) {
         boost::filesystem::ifstream nodes_input_stream(
             nodes_file,
@@ -161,6 +161,12 @@ private:
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
         }
         edges_input_stream.close();
+    }
+
+    void LoadGeometries(
+        const boost::filesystem::path & geometries_file
+    ) {
+
     }
 
     void LoadRTree(
@@ -249,12 +255,17 @@ public:
         paths_iterator = server_paths.find("namesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path & names_data_path = paths_iterator->second;
+        paths_iterator = server_paths.find("geometries");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        const boost::filesystem::path & geometries_path = paths_iterator->second;
 
         //load data
         SimpleLogger().Write() << "loading graph data";
         LoadGraph(hsgr_path);
         SimpleLogger().Write() << "loading egde information";
         LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
+        SimpleLogger().Write() << "loading geometries";
+        LoadGeometries( geometries_path );
         SimpleLogger().Write() << "loading r-tree";
         LoadRTree(ram_index_path, file_index_path);
         SimpleLogger().Write() << "loading timestamp";

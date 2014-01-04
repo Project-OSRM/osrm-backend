@@ -53,23 +53,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/unordered_set.hpp>
 
 #include <algorithm>
-#include <fstream>
+#include <iosfwd>
 #include <queue>
 #include <vector>
 
 class EdgeBasedGraphFactory : boost::noncopyable {
 public:
-    struct SpeedProfileProperties{
-        SpeedProfileProperties() :
-            trafficSignalPenalty(0),
-            uTurnPenalty(0),
-            has_turn_penalty_function(false)
-        { }
-
-        int trafficSignalPenalty;
-        int uTurnPenalty;
-        bool has_turn_penalty_function;
-    } speed_profile;
+    struct SpeedProfileProperties;
 
     explicit EdgeBasedGraphFactory(
         int number_of_nodes,
@@ -78,10 +68,14 @@ public:
         std::vector<NodeID> & traffic_light_node_list,
         std::vector<TurnRestriction> & input_restrictions_list,
         std::vector<NodeInfo> & m_node_info_list,
-        SpeedProfileProperties speed_profile
+        SpeedProfileProperties & speed_profile
     );
 
-    void Run(const char * originalEdgeDataFilename, lua_State *myLuaState);
+    void Run(
+        const std::string & original_edge_data_filename,
+        const std::string & geometry_filename,
+        lua_State *myLuaState
+    );
 
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
 
@@ -102,6 +96,18 @@ public:
 
     unsigned GetNumberOfNodes() const;
 
+    struct SpeedProfileProperties{
+        SpeedProfileProperties() :
+            trafficSignalPenalty(0),
+            uTurnPenalty(0),
+            has_turn_penalty_function(false)
+        { }
+
+        int trafficSignalPenalty;
+        int uTurnPenalty;
+        bool has_turn_penalty_function;
+    } speed_profile;
+
 private:
     struct NodeBasedEdgeData {
         int distance;
@@ -115,6 +121,20 @@ private:
         bool roundabout:1;
         bool ignoreInGrid:1;
         bool contraFlow:1;
+
+        void SwapDirectionFlags() {
+            bool temp_flag = forward;
+            forward = backward;
+            backward = temp_flag;
+        }
+
+        bool IsEqualTo( const NodeBasedEdgeData & other ) const {
+            return (forward  == other.forward)          &&
+                   (backward == other.backward)         &&
+                   (nameID == other.nameID)             &&
+                   (ignoreInGrid == other.ignoreInGrid) &&
+                   (contraFlow == other.contraFlow);
+        }
     };
 
     unsigned m_turn_restrictions_count;
@@ -139,6 +159,7 @@ private:
     boost::unordered_set<NodeID>                m_traffic_lights;
 
     RestrictionMap                              m_restriction_map;
+    GeometryCompressor                          m_geometry_compressor;
 
     NodeID CheckForEmanatingIsOnlyTurn(
         const NodeID u,
@@ -167,6 +188,18 @@ private:
         std::ofstream & edge_data_file,
         std::vector<OriginalEdgeData> & original_edge_data_vector
     ) const;
+
+    void FixupArrivingTurnRestriction(
+        const NodeID u,
+        const NodeID v,
+        const NodeID w
+    );
+
+    void FixupStartingTurnRestriction(
+        const NodeID u,
+        const NodeID v,
+        const NodeID w
+    );
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */
