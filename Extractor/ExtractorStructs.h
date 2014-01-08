@@ -71,13 +71,13 @@ struct ExtractionWay {
     enum Directions {
         notSure = 0, oneway, bidirectional, opposite
     };
-    Directions direction;
     unsigned id;
     unsigned nameID;
-    std::string name;
     double speed;
     double backward_speed;
     double duration;
+    Directions direction;
+    std::string name;
     short type;
     bool access;
     bool roundabout;
