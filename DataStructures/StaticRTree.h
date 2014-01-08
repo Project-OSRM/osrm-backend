@@ -786,7 +786,8 @@ public:
                             nearest,
                             current_ratio
                         );
-                        BOOST_ASSERT( 0 <= current_perpendicular_distance );
+
+                        BOOST_ASSERT( 0. <= current_perpendicular_distance );
 
                         if(
                             ( current_perpendicular_distance < min_dist ) &&
@@ -856,17 +857,6 @@ public:
             }
         }
 
-        const double ratio = (found_a_nearest_edge ?
-        std::min(1., FixedPointCoordinate::ApproximateDistance(current_start_coordinate,
-            result_phantom_node.location)/FixedPointCoordinate::ApproximateDistance(current_start_coordinate, current_end_coordinate)
-            ) : 0
-        );
-        result_phantom_node.weight1 *= ratio;
-        if(INT_MAX != result_phantom_node.weight2) {
-            result_phantom_node.weight2 *= (1.-ratio);
-        }
-        result_phantom_node.ratio = ratio;
-
         //Hack to fix rounding errors and wandering via nodes.
         if(std::abs(input_coordinate.lon - result_phantom_node.location.lon) == 1) {
             result_phantom_node.location.lon = input_coordinate.lon;
@@ -874,6 +864,29 @@ public:
         if(std::abs(input_coordinate.lat - result_phantom_node.location.lat) == 1) {
             result_phantom_node.location.lat = input_coordinate.lat;
         }
+
+        double ratio = 0.;
+
+        if( found_a_nearest_edge) {
+            const double distance_1 = FixedPointCoordinate::ApproximateDistance(
+                current_start_coordinate,
+                result_phantom_node.location
+            );
+
+            const double distance_2 = FixedPointCoordinate::ApproximateDistance(
+                current_start_coordinate,
+                current_end_coordinate
+            );
+
+            ratio = distance_1/distance_2;
+            ratio = std::min(1., ratio);
+        }
+
+        result_phantom_node.weight1 *= ratio;
+        if(INT_MAX != result_phantom_node.weight2) {
+            result_phantom_node.weight2 *= (1.-ratio);
+        }
+        result_phantom_node.ratio = ratio;
 
         return found_a_nearest_edge;
     }

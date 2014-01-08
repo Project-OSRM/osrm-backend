@@ -3,7 +3,10 @@
 
 #include <cmath>
 
+#include <boost/assert.hpp>
+
 #include "../Util/MercatorUtil.h"
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -24,22 +27,24 @@ struct EdgeBasedNode {
 
 
     double ComputePerpendicularDistance(
-        const FixedPointCoordinate& inputPoint,
+        const FixedPointCoordinate& query_location,
         FixedPointCoordinate & nearest_location,
         double & r
     ) const {
+        BOOST_ASSERT( query_location.isValid() );
+
         if( ignoreInGrid ) {
             return std::numeric_limits<double>::max();
         }
 
-        const double x = lat2y(inputPoint.lat/COORDINATE_PRECISION);
-        const double y = inputPoint.lon/COORDINATE_PRECISION;
+        const double x = lat2y(query_location.lat/COORDINATE_PRECISION);
+        const double y = query_location.lon/COORDINATE_PRECISION;
         const double a = lat2y(lat1/COORDINATE_PRECISION);
         const double b = lon1/COORDINATE_PRECISION;
         const double c = lat2y(lat2/COORDINATE_PRECISION);
         const double d = lon2/COORDINATE_PRECISION;
-        double p,q,mX,nY;
-        if(std::fabs(a-c) > std::numeric_limits<double>::epsilon() ){
+        double p,q/*,mX*/,nY;
+        if( std::abs(a-c) > std::numeric_limits<double>::epsilon() ){
             const double m = (d-b)/(c-a); // slope
             // Projection of (x,y) on line joining (a,b) and (c,d)
             p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
@@ -49,30 +54,38 @@ struct EdgeBasedNode {
             q = y;
         }
         nY = (d*p - c*q)/(a*d - b*c);
-        mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we need
+        r = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we need
         // not calculate the explicit values of m an n as we
         // are just interested in the ratio
-        if(std::isnan(mX)) {
-            r = ((lat2 == inputPoint.lat) && (lon2 == inputPoint.lon)) ? 1. : 0.;
-        } else {
-            r = mX;
+        if( std::isnan(r) ) {
+            r = ((lat2 == query_location.lat) && (lon2 == query_location.lon)) ? 1. : 0.;
+        } else if( std::abs(r) <= std::numeric_limits<double>::epsilon() ) {
+            r = 0.;
+        } else if( std::abs(r-1.) <= std::numeric_limits<double>::epsilon() ) {
+            r = 1.;
         }
-        if(r<=0.){
+        BOOST_ASSERT( !std::isnan(r) );
+        if( r <= 0. ){
             nearest_location.lat = lat1;
             nearest_location.lon = lon1;
-            return ((b - y)*(b - y) + (a - x)*(a - x));
-//            return std::sqrt(((b - y)*(b - y) + (a - x)*(a - x)));
-        } else if(r >= 1.){
+        } else if( r >= 1. ){
             nearest_location.lat = lat2;
             nearest_location.lon = lon2;
-            return ((d - y)*(d - y) + (c - x)*(c - x));
-//            return std::sqrt(((d - y)*(d - y) + (c - x)*(c - x)));
+        } else {
+            // point lies in between
+            nearest_location.lat = y2lat(p)*COORDINATE_PRECISION;
+            nearest_location.lon = q*COORDINATE_PRECISION;
         }
-        // point lies in between
-        nearest_location.lat = y2lat(p)*COORDINATE_PRECISION;
-        nearest_location.lon = q*COORDINATE_PRECISION;
-//        return std::sqrt((p-x)*(p-x) + (q-y)*(q-y));
-        return (p-x)*(p-x) + (q-y)*(q-y);
+        BOOST_ASSERT( nearest_location.isValid() );
+
+        // TODO: Replace with euclidean approximation when k-NN search is done
+        // const double approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
+        const double approximated_distance = FixedPointCoordinate::ApproximateDistance(
+            query_location,
+            nearest_location
+        );
+        BOOST_ASSERT( 0. <= approximated_distance );
+        return approximated_distance;
     }
 
     bool operator<(const EdgeBasedNode & other) const {
@@ -91,10 +104,6 @@ struct EdgeBasedNode {
         centroid.lat = (std::min(lat1, lat2) + std::max(lat1, lat2))/2;
         return centroid;
     }
-
-    // inline bool isIgnored() const {
-    //     return ignoreInGrid;
-    // }
 
     NodeID id;
     int lat1;
