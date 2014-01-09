@@ -51,8 +51,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 int main( const int argc, const char * argv[] ) {
-    SharedBarriers barrier;
 
+    LogPolicy::GetInstance().Unmute();
+    SharedBarriers barrier;
 
 #ifdef __linux__
         if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
@@ -62,15 +63,19 @@ int main( const int argc, const char * argv[] ) {
 #endif
 
     try {
-        boost::interprocess::scoped_lock<
-            boost::interprocess::named_mutex
-        > pending_lock(barrier.pending_update_mutex);
-    } catch(...) {
-        // hard unlock in case of any exception.
-        barrier.pending_update_mutex.unlock();
+        try {
+            boost::interprocess::scoped_lock<
+                boost::interprocess::named_mutex
+            > pending_lock(barrier.pending_update_mutex);
+        } catch(...) {
+            // hard unlock in case of any exception.
+            barrier.pending_update_mutex.unlock();
+        }
+    } catch(const std::exception & e) {
+        SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     }
+
     try {
-        LogPolicy::GetInstance().Unmute();
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
         bool use_shared_memory = false;
