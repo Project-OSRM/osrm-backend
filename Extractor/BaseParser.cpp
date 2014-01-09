@@ -26,14 +26,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "BaseParser.h"
-#include "ExtractorStructs.h"
+#include "ExtractionWay.h"
 #include "ScriptingEnvironment.h"
 
+#include "../DataStructures/ImportNode.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
 #include <boost/foreach.hpp>
+#include <boost/regex.hpp>
 
 BaseParser::BaseParser(
     ExtractorCallbacks   * extractor_callbacks,

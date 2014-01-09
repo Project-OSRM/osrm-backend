@@ -27,7 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ExtractionContainers.h"
 #include "ExtractionHelperFunctions.h"
+#include "ExtractionWay.h"
 #include "ExtractorCallbacks.h"
+
+#include "../DataStructures/Restriction.h"
+#include "../Util/SimpleLogger.h"
 
 #include <osrm/Coordinate.h>
 
@@ -40,11 +44,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-ExtractorCallbacks::ExtractorCallbacks() {externalMemory = NULL; stringMap = NULL; }
-ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers * ext, StringMap * strMap) {
-    externalMemory = ext;
-    stringMap = strMap;
-}
+ExtractorCallbacks::ExtractorCallbacks()
+ :
+    stringMap(NULL),
+    externalMemory(NULL)
+{ }
+
+ExtractorCallbacks::ExtractorCallbacks(
+    ExtractionContainers * ext,
+    StringMap * strMap
+) :
+    stringMap(strMap),
+    externalMemory(ext)
+{ }
 
 ExtractorCallbacks::~ExtractorCallbacks() { }
 
@@ -82,7 +94,7 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
         }
 
         //Get the unique identifier for the street name
-        const StringMap::const_iterator string_map_iterator = stringMap->find(parsed_way.name);
+        const StringMap::const_iterator & string_map_iterator = stringMap->find(parsed_way.name);
         if(stringMap->end() == string_map_iterator) {
             parsed_way.nameID = externalMemory->name_list.size();
             externalMemory->name_list.push_back(parsed_way.name);

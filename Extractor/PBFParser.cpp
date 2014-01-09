@@ -25,12 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "ExtractorCallbacks.h"
-#include "ExtractorStructs.h"
 #include "PBFParser.h"
+
+#include "ExtractionWay.h"
+#include "ExtractorCallbacks.h"
 #include "ScriptingEnvironment.h"
 
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/Restriction.h"
 #include "../Util/MachineInfo.h"
 #include "../Util/OpenMPWrapper.h"
 #include "../Util/OSRMException.h"

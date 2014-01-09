@@ -184,4 +184,18 @@ inline bool StringStartsWith(
     return boost::starts_with(input, prefix);
 }
 
+inline std::string GetRandomString() {
+    char s[128];
+    static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < 127; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+    s[127] = 0;
+    return std::string(s);
+}
+
 #endif /* STRINGUTIL_H_ */

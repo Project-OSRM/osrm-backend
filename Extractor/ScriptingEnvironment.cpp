@@ -25,9 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "ExtractionHelperFunctions.h"
-#include "ExtractorStructs.h"
 #include "ScriptingEnvironment.h"
+
+#include "ExtractionHelperFunctions.h"
+#include "ExtractionWay.h"
 #include "../DataStructures/ImportNode.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/OpenMPWrapper.h"

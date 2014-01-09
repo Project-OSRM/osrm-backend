@@ -27,9 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "XMLParser.h"
 
-#include "ExtractorStructs.h"
+#include "ExtractionWay.h"
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/ImportNode.h"
 #include "../DataStructures/InputReaderFactory.h"
+#include "../DataStructures/Restriction.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"

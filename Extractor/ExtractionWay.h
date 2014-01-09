@@ -25,44 +25,54 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTORCALLBACKS_H_
-#define EXTRACTORCALLBACKS_H_
+#ifndef EXTRACTION_WAY_H
+#define EXTRACTION_WAY_H
 
-#include "ExtractorStructs.h"
+#include "../DataStructures/HashTable.h"
 #include "../typedefs.h"
 
-#include <boost/unordered_map.hpp>
 #include <string>
+#include <vector>
 
-class ExtractionContainers;
-struct ExtractionWay;
-struct InputRestrictionContainer;
+struct ExtractionWay {
+    ExtractionWay() {
+        Clear();
+    }
 
-typedef boost::unordered_map<std::string, NodeID> StringMap;
+    inline void Clear(){
+        id = UINT_MAX;
+        nameID = UINT_MAX;
+        path.clear();
+        keyVals.clear();
+        direction = ExtractionWay::notSure;
+        speed = -1;
+        backward_speed = -1;
+        duration = -1;
+        type = -1;
+        access = true;
+        roundabout = false;
+        isAccessRestricted = false;
+        ignoreInGrid = false;
+    }
 
-class ExtractorCallbacks{
-private:
-
-    StringMap * stringMap;
-    ExtractionContainers * externalMemory;
-
-    ExtractorCallbacks();
-public:
-    explicit ExtractorCallbacks(
-        ExtractionContainers * ext,
-        StringMap * strMap
-    );
-
-    ~ExtractorCallbacks();
-
-    /** warning: caller needs to take care of synchronization! */
-    void nodeFunction(const ExternalMemoryNode &n);
-
-    bool restrictionFunction(const InputRestrictionContainer &r);
-
-    /** warning: caller needs to take care of synchronization! */
-    void wayFunction(ExtractionWay &w);
-
+    enum Directions {
+        notSure = 0, oneway, bidirectional, opposite
+    };
+    unsigned id;
+    unsigned nameID;
+    double speed;
+    double backward_speed;
+    double duration;
+    Directions direction;
+    std::string name;
+    short type;
+    bool access;
+    bool roundabout;
+    bool isAccessRestricted;
+    bool ignoreInGrid;
+    std::vector< NodeID > path;
+    HashTable<std::string, std::string> keyVals;
 };
 
-#endif /* EXTRACTORCALLBACKS_H_ */
+
+#endif //EXTRACTION_WAY_H

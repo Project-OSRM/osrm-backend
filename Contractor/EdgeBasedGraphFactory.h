@@ -39,8 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/OriginalEdgeData.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/QueryEdge.h"
+#include "../DataStructures/QueryNode.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../Extractor/ExtractorStructs.h"
+#include "../DataStructures/Restriction.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/SimpleLogger.h"
 
