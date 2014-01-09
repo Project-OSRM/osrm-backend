@@ -220,7 +220,7 @@ inline bool GenerateServerProgramOptions(
         SimpleLogger().Write() <<
             "Reading options from: " << path_iterator->second.string();
         std::string config_str;
-        PrepareConfigFile( paths["config"], config_str );
+        PrepareConfigFile( path_iterator->second, config_str );
         std::stringstream config_stream( config_str );
         boost::program_options::store(
             parse_config_file(config_stream, config_file_options),
