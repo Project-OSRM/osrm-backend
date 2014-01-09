@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasicRoutingInterface.h"
 #include "../DataStructures/SearchEngineData.h"
 
+#include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <cmath>
 #include <vector>
@@ -213,12 +214,19 @@ public:
         		approximated_reverse_sharing[v] = reverse_heap1.GetKey(u);
         	} else {
         		//sharing (s) = sharing (t)
-        		approximated_reverse_sharing[v] = approximated_reverse_sharing[u];
+                boost::unordered_map<NodeID, int>::const_iterator rev_iterator = approximated_reverse_sharing.find(u);
+                const int rev_sharing = (rev_iterator != approximated_reverse_sharing.end()) ? rev_iterator->second : 0;
+        		approximated_reverse_sharing[v] = rev_sharing;
         	}
         }
         std::vector<NodeID> nodes_that_passed_preselection;
         BOOST_FOREACH(const NodeID node, via_node_candidate_list) {
-            int approximated_sharing = approximated_forward_sharing[node] + approximated_reverse_sharing[node];
+            boost::unordered_map<NodeID, int>::const_iterator fwd_iterator = approximated_forward_sharing.find(node);
+            const int fwd_sharing = (fwd_iterator != approximated_forward_sharing.end()) ? fwd_iterator->second : 0;
+            boost::unordered_map<NodeID, int>::const_iterator rev_iterator = approximated_reverse_sharing.find(node);
+            const int rev_sharing = (rev_iterator != approximated_reverse_sharing.end()) ? rev_iterator->second : 0;
+
+            int approximated_sharing = fwd_sharing + rev_sharing;
             int approximated_length = forward_heap1.GetKey(node)+reverse_heap1.GetKey(node);
             bool lengthPassed = (approximated_length < upper_bound_to_shortest_path_distance*(1+VIAPATH_EPSILON));
             bool sharingPassed = (approximated_sharing <= upper_bound_to_shortest_path_distance*VIAPATH_GAMMA);
