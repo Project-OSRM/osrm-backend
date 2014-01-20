@@ -40,13 +40,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stack>
 
-SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
+/*SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap2;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap2;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap3;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap3;
-
+*/
 template<class DataFacadeT>
 class BasicRoutingInterface : boost::noncopyable {
 private:
