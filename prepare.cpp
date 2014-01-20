@@ -128,7 +128,7 @@ int main (int argc, char *argv[]) {
         boost::program_options::notify(option_variables);
 
         if(boost::filesystem::is_regular_file(config_file_path)) {
-            SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
+            SimpleLogger().Write() << "Reading options from: " << config_file_path;
             std::string config_str;
             PrepareConfigFile( config_file_path.c_str(), config_str );
             std::stringstream config_stream( config_str );
@@ -137,7 +137,7 @@ int main (int argc, char *argv[]) {
         }
 
         if(!option_variables.count("restrictions")) {
-            restrictions_path = std::string( input_path.c_str()) + ".restrictions";
+            restrictions_path =  input_path.string() + ".restrictions";
         }
 
         if(!option_variables.count("input")) {
@@ -181,13 +181,14 @@ int main (int argc, char *argv[]) {
         restrictionsInstream.close();
 
         std::ifstream in;
-        in.open (input_path.c_str(), std::ifstream::in | std::ifstream::binary);
-
-        std::string nodeOut(input_path.c_str());		nodeOut += ".nodes";
-        std::string edgeOut(input_path.c_str());		edgeOut += ".edges";
-        std::string graphOut(input_path.c_str());		graphOut += ".hsgr";
-        std::string rtree_nodes_path(input_path.c_str());  rtree_nodes_path += ".ramIndex";
-        std::string rtree_leafs_path(input_path.c_str());  rtree_leafs_path += ".fileIndex";
+        in.open (input_path.string().c_str(), std::ifstream::in | std::ifstream::binary);
+		
+		
+        std::string nodeOut = input_path.string();		nodeOut += ".nodes";
+        std::string edgeOut = input_path.string();		edgeOut += ".edges";
+        std::string graphOut = input_path.string();		graphOut += ".hsgr";
+        std::string rtree_nodes_path = input_path.string();  rtree_nodes_path += ".ramIndex";
+        std::string rtree_leafs_path = input_path.string();  rtree_leafs_path += ".fileIndex";
 
         /*** Setup Scripting Environment ***/
 
@@ -201,10 +202,10 @@ int main (int argc, char *argv[]) {
         luaL_openlibs(myLuaState);
 
         //adjust lua load path
-        luaAddScriptFolderToLoadPath( myLuaState, profile_path.c_str() );
+        luaAddScriptFolderToLoadPath( myLuaState, profile_path.string().c_str() );
 
         // Now call our function in a lua script
-        if(0 != luaL_dofile(myLuaState, profile_path.c_str() )) {
+        if(0 != luaL_dofile(myLuaState, profile_path.string().c_str() )) {
             std::cerr <<
                 lua_tostring(myLuaState,-1)   <<
                 " occured in scripting block" <<
