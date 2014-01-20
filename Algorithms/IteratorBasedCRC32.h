@@ -47,6 +47,7 @@ private:
         CRC32_Processor.process_bytes( str, len);
         return CRC32_Processor.checksum();
     }
+#ifndef _MSC_VER
     unsigned SSEBasedCRC32( char *str, unsigned len, unsigned crc){
         unsigned q=len/sizeof(unsigned),
                 r=len%sizeof(unsigned),
@@ -82,8 +83,13 @@ private:
         asm("cpuid" : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx) : "a" (functionInput));
         return ecx;
     }
+#endif
 
     CRC32CFunctionPtr detectBestCRC32C(){
+#ifdef _MSC_VER
+        SimpleLogger().Write() << "Microsfot compiler -> using software based CRC32 computation";
+        return &IteratorbasedCRC32::SoftwareBasedCRC32; //crc32cSlicingBy8;
+#else
         static const int SSE42_BIT = 20;
         unsigned ecx = cpuid(1);
         bool hasSSE42 = ecx & (1 << SSE42_BIT);
@@ -94,6 +100,7 @@ private:
             SimpleLogger().Write() << "using software based CRC32 computation";
             return &IteratorbasedCRC32::SoftwareBasedCRC32; //crc32cSlicingBy8;
         }
+#endif
     }
     CRC32CFunctionPtr crcFunction;
 public:
