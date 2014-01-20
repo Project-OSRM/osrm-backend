@@ -810,7 +810,7 @@ public:
                             found_a_nearest_edge = true;
                         } else
                         if( DoubleEpsilonCompare(current_perpendicular_distance, min_dist) &&
-                            ( 1 == abs(current_edge.id - result_phantom_node.edgeBasedNode ) ) &&
+                            ( current_edge.id == result_phantom_node.edgeBasedNode+1 || current_edge.id+1 == result_phantom_node.edgeBasedNode ) &&
                             EdgesAreEquivalent(
                                 current_start_coordinate,
                                 FixedPointCoordinate(
