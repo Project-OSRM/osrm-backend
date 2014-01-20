@@ -96,8 +96,8 @@ void DescriptionFactory::AppendSegment(
             SegmentInformation(
                 coordinate,
                 data.name_id,
-                0,
                 data.durationOfSegment,
+                0,
                 data.turnInstruction
             )
         );
