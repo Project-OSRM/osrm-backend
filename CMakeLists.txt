@@ -7,6 +7,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
 
+OPTION(WITH_TOOLS "Build ORSM tools" ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(bitness 32)
@@ -30,7 +31,11 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp)
 
-set(BOOST_COMPONENTS filesystem iostreams program_options regex system thread)
+if(WIN32)
+  set(MORE_BOOST_LIBS date_time chrono zlib)
+  message(STATUS "Windows build, some more boost libraries are used")
+endif()
+set(BOOST_COMPONENTS filesystem iostreams program_options regex system thread ${MORE_BOOST_LIBS})
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
