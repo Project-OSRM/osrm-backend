@@ -71,8 +71,8 @@ public:
         ) {
             //compute distance/duration for route summary
             intToString(round(distance), lengthString);
-            int travelTime = time/10 + 1;
-            intToString(travelTime, durationString);
+            int travel_time = time/10;
+            intToString(std::max(travel_time, 1), durationString);
         }
     } summary;
 
@@ -103,7 +103,6 @@ public:
             return;
         }
 
-    //    unsigned entireLength = 0;
         /** starts at index 1 */
         pathDescription[0].length = 0;
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
@@ -168,36 +167,30 @@ public:
 
 
             if(TurnInstructionsClass::NoTurn != pathDescription[i].turn_instruction) {
-                //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << pathDescription[i].name_id;
-                assert(pathDescription[i].necessary);
+                BOOST_ASSERT(pathDescription[i].necessary);
                 lengthOfSegment = 0;
                 durationOfSegment = 0;
                 indexOfSegmentBegin = i;
             }
         }
-        //    SimpleLogger().Write() << "#segs: " << pathDescription.size();
 
         //Post-processing to remove empty or nearly empty path segments
         if(std::numeric_limits<double>::epsilon() > pathDescription.back().length) {
-            //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << target_phantom.ratio << ", length: " << pathDescription.back().length;
             if(pathDescription.size() > 2){
                 pathDescription.pop_back();
                 pathDescription.back().necessary = true;
                 pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
                 target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
-                // SimpleLogger().Write() << "Deleting last turn instruction";
             }
         } else {
             pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
         }
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
-            //TODO: this is never called actually?
             if(pathDescription.size() > 2) {
                 pathDescription.erase(pathDescription.begin());
                 pathDescription[0].turn_instruction = TurnInstructions.HeadOn;
                 pathDescription[0].necessary = true;
                 start_phantom.nodeBasedEdgeNameID = pathDescription[0].name_id;
-                //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << start_phantom.ratio << ", length: " << pathDescription[0].length;
             }
         } else {
             pathDescription[0].duration *= start_phantom.ratio;
@@ -213,8 +206,6 @@ public:
                 pathDescription[i].bearing = angle*10;
             }
         }
-
-    //    BuildRouteSummary(entireLength, duration);
         return;
     }
 };
