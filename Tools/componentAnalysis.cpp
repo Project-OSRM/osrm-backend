@@ -65,9 +65,9 @@ int main (int argc, char * argv[]) {
     SimpleLogger().Write() <<
         "Using restrictions from file: " << argv[2];
     std::ifstream restriction_ifstream(argv[2], std::ios::binary);
-    const UUID uuid_orig;
-    UUID uuid_loaded;
-    restriction_ifstream.read((char *) &uuid_loaded, sizeof(UUID));
+    const UUIDC uuid_orig;
+    UUIDC uuid_loaded;
+    restriction_ifstream.read((char *) &uuid_loaded, sizeof(UUIDC));
 
     if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
         SimpleLogger().Write(logWARNING) <<

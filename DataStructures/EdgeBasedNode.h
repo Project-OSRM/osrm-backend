@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include <boost/assert.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include "../Util/MercatorUtil.h"
 #include "../Util/SimpleLogger.h"
@@ -57,14 +58,14 @@ struct EdgeBasedNode {
         r = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we need
         // not calculate the explicit values of m an n as we
         // are just interested in the ratio
-        if( std::isnan(r) ) {
+        if( boost::math::isnan(r) ) {
             r = ((lat2 == query_location.lat) && (lon2 == query_location.lon)) ? 1. : 0.;
         } else if( std::abs(r) <= std::numeric_limits<double>::epsilon() ) {
             r = 0.;
         } else if( std::abs(r-1.) <= std::numeric_limits<double>::epsilon() ) {
             r = 1.;
         }
-        BOOST_ASSERT( !std::isnan(r) );
+        BOOST_ASSERT( !boost::math::isnan(r) );
         if( r <= 0. ){
             nearest_location.lat = lat1;
             nearest_location.lon = lon1;

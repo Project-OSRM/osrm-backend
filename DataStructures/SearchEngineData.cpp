@@ -65,3 +65,10 @@ void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned n
         backwardHeap3->Clear();
     }
 }
+
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap2;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap3;
+SearchEngineData::SearchEngineHeapPtr SearchEngineData::backwardHeap3;

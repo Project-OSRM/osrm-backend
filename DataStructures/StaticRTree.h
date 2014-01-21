@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/algorithm/minmax.hpp>
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 #include <boost/type_traits.hpp>
@@ -810,7 +811,7 @@ public:
                             found_a_nearest_edge = true;
                         } else
                         if( DoubleEpsilonCompare(current_perpendicular_distance, min_dist) &&
-                            ( 1 == abs(current_edge.id - result_phantom_node.edgeBasedNode ) ) &&
+                            ( DoubleEpsilonCompare((double) current_edge.id - result_phantom_node.edgeBasedNode , 1) ) &&
                             EdgesAreEquivalent(
                                 current_start_coordinate,
                                 FixedPointCoordinate(

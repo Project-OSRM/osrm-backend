@@ -139,7 +139,7 @@ void DouglasPeucker::Run(
                                     input_geometry[pair.first].location,
                                     input_geometry[pair.second].location
                                 );
-            const double distance = std::fabs(temp_dist);
+            const double distance = std::fabs((double) temp_dist);
             if(
                 distance > DouglasPeuckerThresholds[zoom_level] &&
                 distance > max_distance

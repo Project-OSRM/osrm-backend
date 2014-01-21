@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #cmakedefine MD5GRAPH "${MD5GRAPH}"
 #cmakedefine MD5OBJECTS "${MD5OBJECTS}"
 
-UUID::UUID() : magic_number(1297240911) {
+UUIDC::UUIDC() : magic_number(1297240911) {
     md5_prepare[32] =
     md5_tree[32]    =
     md5_graph[32]   =
@@ -56,40 +56,40 @@ UUID::UUID() : magic_number(1297240911) {
 	has_64_bits = HAS64BITS;
 }
 
-UUID::~UUID() {
+UUIDC::~UUIDC() {
 
 }
 
-const boost::uuids::uuid & UUID::GetUUID() const {
+const boost::uuids::uuid & UUIDC::GetUUID() const {
 	return named_uuid;
 }
 
-bool UUID::IsMagicNumberOK() const {
+bool UUIDC::IsMagicNumberOK() const {
 	return 1297240911 == magic_number;
 }
 
-bool UUID::TestGraphUtil(const UUID & other) const {
+bool UUIDC::TestGraphUtil(const UUIDC & other) const {
     if(!other.IsMagicNumberOK()) {
         throw OSRMException("hsgr input file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_graph, md5_graph+32, other.md5_graph);
 }
 
-bool UUID::TestPrepare(const UUID & other) const {
+bool UUIDC::TestPrepare(const UUIDC & other) const {
     if(!other.IsMagicNumberOK()) {
         throw OSRMException("extracted input file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_prepare, md5_prepare+32, other.md5_prepare);
 }
 
-bool UUID::TestRTree(const UUID & other) const {
+bool UUIDC::TestRTree(const UUIDC & other) const {
     if(!other.IsMagicNumberOK()) {
         throw OSRMException("r-tree input file misses magic number. Check or reprocess the file");
     }
 	return std::equal(md5_tree, md5_tree+32, other.md5_tree);
 }
 
-bool UUID::TestQueryObjects(const UUID & other) const {
+bool UUIDC::TestQueryObjects(const UUIDC & other) const {
     if(!other.IsMagicNumberOK()) {
         throw OSRMException("missing magic number. Check or reprocess the file");
     }
