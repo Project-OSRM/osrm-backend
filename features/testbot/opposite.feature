@@ -14,5 +14,5 @@ Feature: Separate settings for forward/backward direction
 
         When I route I should get
             | from | to | route | distance  | time |
-            | a    | d  | abcd  | 300 +- 1m | 31s  |
-            | d    | a  | abcd  | 300 +- 1m | 68s  |
+            | a    | d  | abcd  | 300 +- 1m | 30s  |
+            | d    | a  | abcd  | 300 +- 1m | 67s  |
