@@ -87,18 +87,18 @@ public:
                     FixedPointCoordinate::convertInternalLatLonToString(current.lon, tmp);
                     reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
                 }
-                // Add the via point or the end coordinate
-                FixedPointCoordinate::convertInternalLatLonToString(
-                    phantom_node_list.targetPhantom.location.lat,
-                    tmp
-                );
-                reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-                FixedPointCoordinate::convertInternalLatLonToString(
-                    phantom_node_list.targetPhantom.location.lon,
-                    tmp
-                );
-                reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
             }
+            // Add the via point or the end coordinate
+            FixedPointCoordinate::convertInternalLatLonToString(
+                phantom_node_list.targetPhantom.location.lat,
+                tmp
+            );
+            reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
+            FixedPointCoordinate::convertInternalLatLonToString(
+                phantom_node_list.targetPhantom.location.lon,
+                tmp
+            );
+            reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
         }
         reply.content.push_back("</rte></gpx>");
     }
