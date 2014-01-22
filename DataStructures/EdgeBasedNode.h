@@ -54,6 +54,12 @@ struct EdgeBasedNode {
             q = y;
         }
         nY = (d*p - c*q)/(a*d - b*c);
+
+        //discretize the result to coordinate precision. it's a hack!
+        if( std::abs(nY) < (1./COORDINATE_PRECISION) ) {
+            nY = 0.;
+        }
+
         r = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we need
         // not calculate the explicit values of m an n as we
         // are just interested in the ratio
