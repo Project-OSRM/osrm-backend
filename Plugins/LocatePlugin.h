@@ -90,7 +90,7 @@ public:
             reply.content.push_back("]");
         }
         reply.content.push_back("}");
-        reply.headers.resize(3);
+        reply.headers.resize(4);
         if(!routeParameters.jsonpParameter.empty()) {
             reply.content.push_back( ")");
             reply.headers[1].name = "Content-Type";
@@ -104,6 +104,8 @@ public:
             reply.headers[2].value = "attachment; filename=\"location.json\"";
         }
         reply.headers[0].name = "Content-Length";
+        reply.headers[3].name = "Access-Control-Allow-Origin";
+        reply.headers[3].value = "*";
         unsigned content_length = 0;
         BOOST_FOREACH(const std::string & snippet, reply.content) {
             content_length += snippet.length();

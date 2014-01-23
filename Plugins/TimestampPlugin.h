@@ -54,7 +54,7 @@ public:
         reply.content.push_back(facade->GetTimestamp());
         reply.content.push_back("\"");
         reply.content.push_back("}");
-        reply.headers.resize(3);
+        reply.headers.resize(4);
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")");
             reply.headers[1].name = "Content-Type";
@@ -73,6 +73,8 @@ public:
         }
         intToString(content_length, tmp);
         reply.headers[0].value = tmp;
+        reply.headers[3].name = "Access-Control-Allow-Origin";
+        reply.headers[3].value = "*";
     }
 private:
     const DataFacadeT * facade;

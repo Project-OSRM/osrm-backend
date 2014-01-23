@@ -180,7 +180,7 @@ public:
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")\n");
         }
-        reply.headers.resize(3);
+        reply.headers.resize(4);
         reply.headers[0].name = "Content-Length";
         std::string tmp;
         unsigned content_length = 0;
@@ -225,6 +225,8 @@ public:
             }
             break;
         }
+        reply.headers[3].name = "Access-Control-Allow-Origin";
+        reply.headers[3].value = "*";
 
         delete desc;
         return;
