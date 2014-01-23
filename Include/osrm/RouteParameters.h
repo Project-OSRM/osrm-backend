@@ -61,7 +61,7 @@ struct RouteParameters {
     std::vector<FixedPointCoordinate> coordinates;
 
     void setZoomLevel(const short i) {
-        if (18 > i && 0 < i) {
+        if (18 >= i && 0 <= i) {
             zoomLevel = i;
         }
     }
