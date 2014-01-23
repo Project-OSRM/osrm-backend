@@ -12,7 +12,7 @@ before_script:
  - mkdir build
  - cd build
  - cmake .. $CMAKEOPTIONS
-script: make -j3
+script: make -j `nproc`
 after_script:
  - cd ..
  - cucumber -p verify
