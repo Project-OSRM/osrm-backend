@@ -225,13 +225,17 @@ def convert_osm_to_pbf
 end
 
 def extracted?
-  File.exist?("#{@osm_file}.osrm") &&
-  File.exist?("#{@osm_file}.osrm.names") &&
-  File.exist?("#{@osm_file}.osrm.restrictions")
+  Dir.chdir TEST_FOLDER do
+    File.exist?("#{@osm_file}.osrm") &&
+    File.exist?("#{@osm_file}.osrm.names") &&
+    File.exist?("#{@osm_file}.osrm.restrictions")
+  end
 end
 
 def prepared?
-  File.exist?("#{@osm_file}.osrm.hsgr")
+  Dir.chdir TEST_FOLDER do
+    File.exist?("#{@osm_file}.osrm.hsgr")
+  end
 end
 
 def write_timestamp

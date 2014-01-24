@@ -1,6 +1,6 @@
 When /^I request \/(.*)$/ do |path|
   reprocess
-  OSRMBackgroundLauncher.new("#{@osm_file}.osrm") do
+  OSRMLoader.load("#{@osm_file}.osrm") do
     @response = request_path path
   end
 end

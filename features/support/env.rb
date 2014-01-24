@@ -17,6 +17,20 @@ PROFILES_PATH = File.join ROOT_FOLDER, 'profiles'
 BIN_PATH = File.join ROOT_FOLDER, 'build'
 DEFAULT_INPUT_FORMAT = 'osm'
 DEFAULT_ORIGIN = [1,1]
+LAUNCH_TIMEOUT = 1
+SHUTDOWN_TIMEOUT = 10
+
+
+def log_time_and_run cmd
+  log_time cmd
+  `#{cmd}`
+end
+
+def log_time cmd
+  puts "[#{Time.now.strftime('%Y-%m-%d %H:%M:%S:%L')}] #{cmd}"
+end
+
+
 
 
 puts "Ruby version #{RUBY_VERSION}"
@@ -54,4 +68,8 @@ end
 
 AfterConfiguration do |config|
   clear_log_files
+end
+
+at_exit do
+  OSRMLoader.shutdown
 end
