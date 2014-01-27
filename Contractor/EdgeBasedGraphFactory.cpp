@@ -473,7 +473,7 @@ int EdgeBasedGraphFactory::GetTurnPenalty(
             return luabind::call_function<int>(
                 lua_state,
                 "turn_function",
-                std::abs(180.-angle)
+                180.-angle
             );
         } catch (const luabind::error &er) {
             SimpleLogger().Write(logWARNING) << er.what();
