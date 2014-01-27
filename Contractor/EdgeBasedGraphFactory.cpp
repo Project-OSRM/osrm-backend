@@ -399,7 +399,7 @@ void EdgeBasedGraphFactory::Run(
                 if( m_traffic_lights.find(v) != m_traffic_lights.end() ) {
                     distance += speed_profile.trafficSignalPenalty;
                 }
-                const int turn_penalty = 10*GetTurnPenalty(u, v, w, lua_state);
+                const int turn_penalty = GetTurnPenalty(u, v, w, lua_state);
                 TurnInstruction turnInstruction = AnalyzeTurn(u, v, w);
                 if(turnInstruction == TurnInstructions.UTurn){
                     distance += speed_profile.uTurnPenalty;
