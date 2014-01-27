@@ -87,7 +87,7 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
             parsed_way.speed = parsed_way.duration/(parsed_way.path.size()-1);
         }
 
-        if(std::numeric_limits<double>::epsilon() >= fabs(-1. - parsed_way.speed)){
+        if(std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.speed)){
             SimpleLogger().Write(logDEBUG) <<
                 "found way with bogus speed, id: " << parsed_way.id;
             return;

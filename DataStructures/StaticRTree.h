@@ -923,7 +923,7 @@ private:
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) const {
-        return (std::fabs(d1 - d2) < std::numeric_limits<double>::epsilon() );
+        return (std::abs(d1 - d2) < std::numeric_limits<double>::epsilon() );
     }
 
 };

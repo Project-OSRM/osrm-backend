@@ -45,8 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <ctime>
-
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -732,7 +730,7 @@ private:
             if ( priority > targetPriority )
                 return false;
             //tie breaking
-            if ( fabs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
+            if ( std::abs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
                 return false;
             }
             neighbours.push_back( target );
@@ -754,7 +752,7 @@ private:
                 if ( priority > targetPriority)
                     return false;
                 //tie breaking
-                if ( fabs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
+                if ( std::abs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
                     return false;
                 }
             }
