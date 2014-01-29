@@ -29,12 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 
 #include <boost/assert.hpp>
-#include <cmath>
-#include <climits>
+#include <limits>
 
 FixedPointCoordinate::FixedPointCoordinate()
- :  lat(INT_MIN),
-    lon(INT_MIN)
+ :  lat(std::numeric_limits<int>::min()),
+    lon(std::numeric_limits<int>::min())
 { }
 
 FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
@@ -43,11 +42,11 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
 { }
 
 void FixedPointCoordinate::Reset() {
-    lat = INT_MIN;
-    lon = INT_MIN;
+    lat = std::numeric_limits<int>::min();
+    lon = std::numeric_limits<int>::min();
 }
 bool FixedPointCoordinate::isSet() const {
-    return (INT_MIN != lat) && (INT_MIN != lon);
+    return (std::numeric_limits<int>::min() != lat) && (std::numeric_limits<int>::min() != lon);
 }
 bool FixedPointCoordinate::isValid() const {
     if(
@@ -70,10 +69,10 @@ double FixedPointCoordinate::ApproximateDistance(
     const int lat2,
     const int lon2
 ) {
-    BOOST_ASSERT(lat1 != INT_MIN);
-    BOOST_ASSERT(lon1 != INT_MIN);
-    BOOST_ASSERT(lat2 != INT_MIN);
-    BOOST_ASSERT(lon2 != INT_MIN);
+    BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
     double RAD = 0.017453292519943295769236907684886;
     double lt1 = lat1/COORDINATE_PRECISION;
     double ln1 = lon1/COORDINATE_PRECISION;
@@ -108,10 +107,10 @@ double FixedPointCoordinate::ApproximateEuclideanDistance(
     const FixedPointCoordinate &c1,
     const FixedPointCoordinate &c2
 ) {
-    BOOST_ASSERT(c1.lat != INT_MIN);
-    BOOST_ASSERT(c1.lon != INT_MIN);
-    BOOST_ASSERT(c2.lat != INT_MIN);
-    BOOST_ASSERT(c2.lon != INT_MIN);
+    BOOST_ASSERT(c1.lat != std::numeric_limits<int>::min());
+    BOOST_ASSERT(c1.lon != std::numeric_limits<int>::min());
+    BOOST_ASSERT(c2.lat != std::numeric_limits<int>::min());
+    BOOST_ASSERT(c2.lon != std::numeric_limits<int>::min());
     const double RAD = 0.017453292519943295769236907684886;
     const double lat1 = (c1.lat/COORDINATE_PRECISION)*RAD;
     const double lon1 = (c1.lon/COORDINATE_PRECISION)*RAD;
