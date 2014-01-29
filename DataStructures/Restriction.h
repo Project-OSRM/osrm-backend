@@ -29,7 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RESTRICTION_H_
 
 #include "../typedefs.h"
-#include <climits>
+
+#include <limits>
 
 struct TurnRestriction {
     NodeID viaNode;
@@ -60,8 +61,8 @@ struct TurnRestriction {
 
     explicit TurnRestriction(NodeID viaNode) :
         viaNode(viaNode),
-        fromNode(UINT_MAX),
-        toNode(UINT_MAX) {
+        fromNode(std::numeric_limits<unsigned>::max()),
+        toNode(std::numeric_limits<unsigned>::max()) {
     }
 
     explicit TurnRestriction(const bool isOnly = false) :
@@ -93,9 +94,9 @@ struct InputRestrictionContainer {
     explicit InputRestrictionContainer(
         bool isOnly = false
     ) :
-        fromWay(UINT_MAX),
-        toWay(UINT_MAX),
-        viaNode(UINT_MAX)
+        fromWay(std::numeric_limits<unsigned>::max()),
+        toWay(std::numeric_limits<unsigned>::max()),
+        viaNode(std::numeric_limits<unsigned>::max())
     {
         restriction.flags.isOnly = isOnly;
     }
@@ -105,10 +106,10 @@ struct InputRestrictionContainer {
     }
     static InputRestrictionContainer max_value() {
         return  InputRestrictionContainer(
-                    UINT_MAX,
-                    UINT_MAX,
-                    UINT_MAX,
-                    UINT_MAX
+                    std::numeric_limits<unsigned>::max(),
+                    std::numeric_limits<unsigned>::max(),
+                    std::numeric_limits<unsigned>::max(),
+                    std::numeric_limits<unsigned>::max()
                 );
     }
 };
