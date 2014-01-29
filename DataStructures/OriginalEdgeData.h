@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TurnInstructions.h"
 #include "../typedefs.h"
 
-#include <climits>
+#include <limits>
 
 struct OriginalEdgeData{
     explicit OriginalEdgeData(
@@ -47,9 +47,9 @@ struct OriginalEdgeData{
     { }
 
     OriginalEdgeData() :
-        via_node( UINT_MAX ),
-        name_id( UINT_MAX ),
-        turn_instruction( UCHAR_MAX ),
+        via_node( std::numeric_limits<unsigned>::max() ),
+        name_id( std::numeric_limits<unsigned>::max() ),
+        turn_instruction( std::numeric_limits<unsigned char>::max() ),
         compressed_geometry( false )
     { }
 
