@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_DATA_FACADE_H
 #define SHARED_DATA_FACADE_H
 
-//implements all data storage when shared memory is _NOT_ used
+//implements all data storage when shared memory _IS_ used
 
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
