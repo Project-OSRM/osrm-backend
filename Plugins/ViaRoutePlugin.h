@@ -136,11 +136,13 @@ public:
             SimpleLogger().Write(logDEBUG) <<
                 "Error occurred, single path not found";
         }
-        reply.status = http::Reply::ok;
+
+        bool isJsonpRequest = !routeParameters.jsonpParameter.empty();
+        reply = http::Reply::JsReply(http::Reply::ok, isJsonpRequest, "route");
 
         //TODO: Move to member as smart pointer
         BaseDescriptor<DataFacadeT> * desc;
-        if("" != routeParameters.jsonpParameter) {
+        if(isJsonpRequest) {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
@@ -177,57 +179,23 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
-        if("" != routeParameters.jsonpParameter) {
+        if(isJsonpRequest) {
             reply.content.push_back(")\n");
         }
-        reply.headers.resize(4);
-        reply.headers[0].name = "Content-Length";
+        
         std::string tmp;
-        unsigned content_length = 0;
-        BOOST_FOREACH(const std::string & snippet, reply.content) {
-            content_length += snippet.length();
-        }
-        intToString(content_length, tmp);
-        reply.headers[0].value = tmp;
+        reply.setSize();
+
         switch(descriptorType){
-        case 0:
-            if( !routeParameters.jsonpParameter.empty() ){
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.js\"";
-            } else {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.json\"";
-            }
-
-            break;
         case 1:
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/gpx+xml; charset=UTF-8";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"route.gpx\"";
+            reply.headers[2].name = "Content-Type";
+            reply.headers[2].value = "application/gpx+xml; charset=UTF-8";
+            reply.headers[3].name = "Content-Disposition";
+            reply.headers[3].value = "attachment; filename=\"route.gpx\"";
 
-            break;
-        default:
-            if( !routeParameters.jsonpParameter.empty() ){
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.js\"";
-            } else {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.json\"";
-            }
             break;
         }
-        reply.headers[3].name = "Access-Control-Allow-Origin";
-        reply.headers[3].value = "*";
-
+ 
         delete desc;
         return;
     }

@@ -59,7 +59,9 @@ public:
     std::vector<boost::asio::const_buffer> HeaderstoBuffers();
     std::vector<std::string> content;
     static Reply StockReply(status_type status);
+    static Reply JsReply(status_type status, bool isJsonpRequest, std::string filename);
     void setSize(const unsigned size);
+    void setSize();
     Reply();
 private:
     static std::string ToString(Reply::status_type status);

@@ -60,13 +60,16 @@ public:
         //query to helpdesk
         FixedPointCoordinate result;
         std::string tmp;
-        //json
+        bool isJsonpRequest = !routeParameters.jsonpParameter.empty();
 
-        if(!routeParameters.jsonpParameter.empty()) {
+        //json
+        reply = http::Reply::JsReply(http::Reply::ok, isJsonpRequest, "location");
+        
+        if(isJsonpRequest) {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
-        reply.status = http::Reply::ok;
+
         reply.content.push_back ("{");
         if(
             !facade->LocateClosestEndPointForCoordinate(
@@ -90,28 +93,13 @@ public:
             reply.content.push_back("]");
         }
         reply.content.push_back("}");
-        reply.headers.resize(4);
-        if(!routeParameters.jsonpParameter.empty()) {
-            reply.content.push_back( ")");
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "text/javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"location.js\"";
-        } else {
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/x-javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"location.json\"";
-        }
-        reply.headers[0].name = "Content-Length";
-        reply.headers[3].name = "Access-Control-Allow-Origin";
-        reply.headers[3].value = "*";
-        unsigned content_length = 0;
-        BOOST_FOREACH(const std::string & snippet, reply.content) {
-            content_length += snippet.length();
-        }
-        intToString(content_length, tmp);
-        reply.headers[0].value = tmp;
+        
+        if(isJsonpRequest) {
+            reply.content.push_back( ")");  
+        } 
+        
+        reply.setSize();
+
         return;
     }
 

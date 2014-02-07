@@ -42,6 +42,14 @@ void Reply::setSize(const unsigned size) {
     }
 }
 
+void Reply::setSize() {
+    unsigned content_length = 0;
+    BOOST_FOREACH(const std::string & snippet, content) {
+        content_length += snippet.length();
+    }
+    setSize(content_length);
+}
+
 std::vector<boost::asio::const_buffer> Reply::toBuffers(){
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));
@@ -88,6 +96,17 @@ Reply Reply::StockReply(Reply::status_type status) {
     rep.headers[1].value = s;
     rep.headers[2].name = "Content-Type";
     rep.headers[2].value = "text/html";
+    return rep;
+}
+
+Reply Reply::JsReply(Reply::status_type status, bool isJsonpRequest, std::string filename) {
+    Reply rep  = Reply::StockReply(status);
+    
+    rep.headers.resize(4);
+    rep.headers[2].name = "Content-Type";
+    rep.headers[2].value = isJsonpRequest ? "text/javascript" : "application/x-javascript";
+    rep.headers[3].name = "Content-Disposition";
+    rep.headers[3].value = isJsonpRequest ? "attachment; filename=\"" + filename + ".js\"" : "attachment; filename=\"" + filename + ".json\"";
     return rep;
 }
 

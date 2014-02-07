@@ -40,13 +40,16 @@ public:
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         std::string tmp;
 
+        bool isJsonpRequest = !routeParameters.jsonpParameter.empty();
+
         //json
-        if("" != routeParameters.jsonpParameter) {
+        reply = http::Reply::JsReply(http::Reply::ok, isJsonpRequest, "timestamp");
+
+        if(isJsonpRequest) {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
 
-        reply.status = http::Reply::ok;
         reply.content.push_back("{");
         reply.content.push_back("\"status\":");
             reply.content.push_back("0,");
@@ -54,27 +57,12 @@ public:
         reply.content.push_back(facade->GetTimestamp());
         reply.content.push_back("\"");
         reply.content.push_back("}");
-        reply.headers.resize(4);
-        if("" != routeParameters.jsonpParameter) {
+        
+        if(isJsonpRequest) {
             reply.content.push_back(")");
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "text/javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"timestamp.js\"";
-        } else {
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/x-javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"timestamp.json\"";
-        }
-        unsigned content_length = 0;
-        BOOST_FOREACH(const std::string & snippet, reply.content) {
-            content_length += snippet.length();
-        }
-        intToString(content_length, tmp);
-        reply.headers[0].value = tmp;
-        reply.headers[3].name = "Access-Control-Allow-Origin";
-        reply.headers[3].value = "*";
+        } 
+        
+        reply.setSize();
     }
 private:
     const DataFacadeT * facade;
