@@ -45,7 +45,9 @@ struct RouteParameters {
         geometry(true),
         compression(true),
         deprecatedAPI(false),
-        checkSum(-1) {}
+        checkSum(-1)
+    { }
+
     short zoomLevel;
     bool printInstructions;
     bool alternateRoute;
@@ -95,8 +97,7 @@ struct RouteParameters {
     }
 
     void addHint(const std::string & s) {
-        hints.resize(coordinates.size());
-        hints.back() = s;
+        hints.push_back(s);
     }
 
     void setLanguage(const std::string & s) {
