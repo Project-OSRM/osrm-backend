@@ -5,8 +5,13 @@ compiler:
 # Make sure CMake is installed
 install:
  - sudo apt-get update >/dev/null
- - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.46-all-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems osmosis libpostgis-java
+ - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.46-all-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems
 before_script:
+ - wget http://bretth.dev.openstreetmap.org/osmosis-build/osmosis-latest.tgz
+ - tar xvfz osmosis-latest.tgz
+ - chmod a+x bin/osmosis
+ - bin/osmosis
+ - sudo ln -s /usr/bin/osmosis bin/osmosis
  - rvm use 1.9.3
  - gem install bundler
  - bundle install
