@@ -61,7 +61,7 @@ public:
     static Reply StockReply(status_type status);
     static Reply JsReply(status_type status, bool isJsonpRequest, std::string filename);
     void setSize(const unsigned size);
-    void setSize();
+    void ComputeAndSetSize();
     Reply();
 private:
     static std::string ToString(Reply::status_type status);

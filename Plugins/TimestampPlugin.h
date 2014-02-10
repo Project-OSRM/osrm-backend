@@ -40,12 +40,12 @@ public:
     void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
         std::string tmp;
 
-        bool isJsonpRequest = !routeParameters.jsonpParameter.empty();
+        bool is_jsonp_request = !routeParameters.jsonpParameter.empty();
 
         //json
-        reply = http::Reply::JsReply(http::Reply::ok, isJsonpRequest, "timestamp");
+        reply = http::Reply::JsReply(http::Reply::ok, is_jsonp_request, "timestamp");
 
-        if(isJsonpRequest) {
+        if( is_jsonp_request ) {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
@@ -58,11 +58,11 @@ public:
         reply.content.push_back("\"");
         reply.content.push_back("}");
         
-        if(isJsonpRequest) {
+        if( is_jsonp_request ) {
             reply.content.push_back(")");
         } 
         
-        reply.setSize();
+        reply.ComputeAndSetSize();
     }
 private:
     const DataFacadeT * facade;

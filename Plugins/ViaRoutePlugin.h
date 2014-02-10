@@ -137,12 +137,12 @@ public:
                 "Error occurred, single path not found";
         }
 
-        bool isJsonpRequest = !routeParameters.jsonpParameter.empty();
-        reply = http::Reply::JsReply(http::Reply::ok, isJsonpRequest, "route");
+        bool is_jsonp_request = !routeParameters.jsonpParameter.empty();
+        reply = http::Reply::JsReply(http::Reply::ok, is_jsonp_request, "route");
 
         //TODO: Move to member as smart pointer
         BaseDescriptor<DataFacadeT> * desc;
-        if(isJsonpRequest) {
+        if( is_jsonp_request ) {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
@@ -179,12 +179,12 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
-        if(isJsonpRequest) {
+        if( is_jsonp_request ) {
             reply.content.push_back(")\n");
         }
         
         std::string tmp;
-        reply.setSize();
+        reply.ComputeAndSetSize();
 
         switch(descriptorType){
         case 1:

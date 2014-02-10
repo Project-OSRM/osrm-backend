@@ -42,7 +42,7 @@ void Reply::setSize(const unsigned size) {
     }
 }
 
-void Reply::setSize() {
+void Reply::ComputeAndSetSize() {
     unsigned content_length = 0;
     BOOST_FOREACH(const std::string & snippet, content) {
         content_length += snippet.length();
@@ -99,14 +99,14 @@ Reply Reply::StockReply(Reply::status_type status) {
     return rep;
 }
 
-Reply Reply::JsReply(Reply::status_type status, bool isJsonpRequest, std::string filename) {
+Reply Reply::JsReply(Reply::status_type status, bool is_jsonp_request, std::string filename) {
     Reply rep  = Reply::StockReply(status);
     
     rep.headers.resize(4);
     rep.headers[2].name = "Content-Type";
-    rep.headers[2].value = isJsonpRequest ? "text/javascript" : "application/x-javascript";
+    rep.headers[2].value = is_jsonp_request ? "text/javascript" : "application/x-javascript";
     rep.headers[3].name = "Content-Disposition";
-    rep.headers[3].value = isJsonpRequest ? "attachment; filename=\"" + filename + ".js\"" : "attachment; filename=\"" + filename + ".json\"";
+    rep.headers[3].value = is_jsonp_request ? "attachment; filename=\"" + filename + ".js\"" : "attachment; filename=\"" + filename + ".json\"";
     return rep;
 }
 
