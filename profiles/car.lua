@@ -48,10 +48,38 @@ function get_exceptions(vector)
 	end
 end
 
+-- parse string-value speed limits 
+do
+  local stringSpeedValues = {
+    -- from http://wiki.openstreetmap.org/wiki/Speed_limit_string_values_for_Romania
+    ["RO:urban"] = "50",
+    ["RO:rural"] = "90",
+    ["RO:trunk"] = "100",
+    ["RO:motorway"] = "130",
+    -- from http://wiki.openstreetmap.org/wiki/RU:Key:maxspeed
+    ["RU:urban"] = "50",
+    ["RU:rural"] = "90",
+    -- from http://wiki.openstreetmap.org/wiki/Speed_limits#Country_code.2Fcategory_conversion_table
+    ["CZ:urban"] = "50",
+
+  }
+  function lookupStringValueSpeed(stringValue)
+    local numericValue = stringSpeedValues[stringValue]
+    if numericValue ~= nil then
+      return tonumber(numericValue)
+  end
+end
+
 local function parse_maxspeed(source)
 	if source == nil then
 		return 0
 	end
+
+        local replacedStringSpeedValue=lookupStringValueSpeed(source);
+	if replacedStringSpeedValue ~= nil then
+		return replacedStringSpeedValue;
+	end
+
 	local n = tonumber(source:match("%d*"))
 	if n == nil then
 		n = 0
