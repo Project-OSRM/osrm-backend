@@ -7,7 +7,7 @@ install:
  - sudo apt-get update >/dev/null
  - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.46-all-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems osmosis
 before_script:
- - sudo gem install bundler
+ - gem install bundler
  - bundle install
  - mkdir build
  - cd build
@@ -23,6 +23,8 @@ branches:
 cache:
 - bundler
 - apt
+  directories:
+  - .gem
 env:
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release"
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug"
