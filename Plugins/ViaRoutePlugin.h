@@ -186,14 +186,11 @@ public:
         std::string tmp;
         reply.ComputeAndSetSize();
 
-        switch(descriptorType){
-        case 1:
+        if( descriptorType == 1 ){
             reply.headers[2].name = "Content-Type";
             reply.headers[2].value = "application/gpx+xml; charset=UTF-8";
             reply.headers[3].name = "Content-Disposition";
             reply.headers[3].value = "attachment; filename=\"route.gpx\"";
-
-            break;
         }
  
         delete desc;
