@@ -10,7 +10,7 @@ before_script:
  - wget http://bretth.dev.openstreetmap.org/osmosis-build/osmosis-latest.tgz
  - tar xvfz osmosis-latest.tgz
  - chmod a+x bin/osmosis
- - sudo ln -s bin/osmosis /usr/bin
+ - sudo ln bin/osmosis /usr/bin
  - rvm use 1.9.3
  - gem install bundler
  - bundle install
