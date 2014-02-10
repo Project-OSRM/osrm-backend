@@ -52,6 +52,35 @@ local function parse_maxspeed(source)
 	if source == nil then
 		return 0
 	end
+
+	-- parse string-value speed limits 
+	if string.match(source, "CZ:urban") then
+		return 50
+	end
+	-- from http://wiki.openstreetmap.org/wiki/Speed_limit_string_values_for_Romania
+	if string.match(source, "RO:urban") then
+		return 50
+	end
+	if string.match(source, "RO:rural") then
+		return 90
+	end
+	if string.match(source, "RO:trunk") then
+		return 100
+	end
+	if string.match(source, "RO:motorway") then
+		return 130
+	end
+	if string.match(source, "RO:motorway") then
+		return 130
+	end
+	-- from http://wiki.openstreetmap.org/wiki/RU:Key:maxspeed
+	if string.match(source, "RU:urban") then
+		return 50
+	end
+	if string.match(source, "RU:rural") then
+		return 90
+	end
+	
 	local n = tonumber(source:match("%d*"))
 	if n == nil then
 		n = 0
