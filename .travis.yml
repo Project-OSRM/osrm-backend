@@ -23,8 +23,6 @@ branches:
 cache:
 - bundler
 - apt
-  directories:
-  - .gem
 env:
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release"
  - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug"
