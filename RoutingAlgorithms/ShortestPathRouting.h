@@ -105,41 +105,47 @@ public:
 
             //insert new starting nodes into forward heap, adjusted by previous distances.
             if(search_from_1st_node) {
+                BOOST_ASSERT(phantom_node_pair.startPhantom.forward_node_id != UINT_MAX);
+
                 forward_heap1.Insert(
-                    phantom_node_pair.startPhantom.edgeBasedNode,
-                    distance1-phantom_node_pair.startPhantom.weight1,
-                    phantom_node_pair.startPhantom.edgeBasedNode
+                    phantom_node_pair.startPhantom.forward_node_id,
+                    distance1-phantom_node_pair.startPhantom.forward_weight,
+                    phantom_node_pair.startPhantom.forward_node_id
                 );
                 forward_heap2.Insert(
-                    phantom_node_pair.startPhantom.edgeBasedNode,
-                    distance1-phantom_node_pair.startPhantom.weight1,
-                    phantom_node_pair.startPhantom.edgeBasedNode
+                    phantom_node_pair.startPhantom.forward_node_id,
+                    distance1-phantom_node_pair.startPhantom.forward_weight,
+                    phantom_node_pair.startPhantom.forward_node_id
                 );
             }
             if(phantom_node_pair.startPhantom.isBidirected() && search_from_2nd_node) {
+                BOOST_ASSERT(phantom_node_pair.startPhantom.reverse_node_id != UINT_MAX);
                 forward_heap1.Insert(
-                    phantom_node_pair.startPhantom.edgeBasedNode+1,
-                    distance2-phantom_node_pair.startPhantom.weight2,
-                    phantom_node_pair.startPhantom.edgeBasedNode+1
+                    phantom_node_pair.startPhantom.reverse_node_id,
+                    distance2-phantom_node_pair.startPhantom.reverse_weight,
+                    phantom_node_pair.startPhantom.reverse_node_id
                 );
                 forward_heap2.Insert(
-                    phantom_node_pair.startPhantom.edgeBasedNode+1,
-                    distance2-phantom_node_pair.startPhantom.weight2,
-                    phantom_node_pair.startPhantom.edgeBasedNode+1
+                    phantom_node_pair.startPhantom.reverse_node_id,
+                    distance2-phantom_node_pair.startPhantom.reverse_weight,
+                    phantom_node_pair.startPhantom.reverse_node_id
                 );
             }
 
             //insert new backward nodes into backward heap, unadjusted.
             reverse_heap1.Insert(
-                phantom_node_pair.targetPhantom.edgeBasedNode,
-                phantom_node_pair.targetPhantom.weight1,
-                phantom_node_pair.targetPhantom.edgeBasedNode
+                phantom_node_pair.targetPhantom.forward_node_id,
+                phantom_node_pair.targetPhantom.forward_weight,
+                phantom_node_pair.targetPhantom.forward_node_id
             );
+            BOOST_ASSERT(phantom_node_pair.targetPhantom.forward_node_id != UINT_MAX);
+
             if(phantom_node_pair.targetPhantom.isBidirected() ) {
+                BOOST_ASSERT(phantom_node_pair.startPhantom.forward_node_id != UINT_MAX);
                 reverse_heap2.Insert(
-                    phantom_node_pair.targetPhantom.edgeBasedNode+1,
-                    phantom_node_pair.targetPhantom.weight2,
-                    phantom_node_pair.targetPhantom.edgeBasedNode+1
+                    phantom_node_pair.targetPhantom.reverse_node_id,
+                    phantom_node_pair.targetPhantom.reverse_weight,
+                    phantom_node_pair.targetPhantom.reverse_node_id
                 );
             }
 
@@ -264,8 +270,6 @@ public:
                 local_upper_bound2 = local_upper_bound1;
             }
 
-            // SimpleLogger().Write() << "fetched packed paths";
-
             BOOST_ASSERT_MSG(
                 !temporary_packed_leg1.empty() ||
                 !temporary_packed_leg2.empty(),
@@ -338,8 +342,8 @@ public:
                 phantom_node_pair.targetPhantom.isBidirected()
             ) {
                 const NodeID last_node_id = packed_legs2[current_leg].back();
-                search_from_1st_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode+1);
-                search_from_2nd_node &= !(last_node_id == phantom_node_pair.targetPhantom.edgeBasedNode);
+                search_from_1st_node &= !(last_node_id == phantom_node_pair.targetPhantom.reverse_node_id);
+                search_from_2nd_node &= !(last_node_id == phantom_node_pair.targetPhantom.forward_node_id);
                 BOOST_ASSERT( search_from_1st_node != search_from_2nd_node );
             }
 

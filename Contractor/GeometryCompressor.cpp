@@ -37,7 +37,7 @@ int current_free_list_maximum = 0;
 int UniqueNumber () { return ++current_free_list_maximum; }
 
 GeometryCompressor::GeometryCompressor() {
-    m_free_list.resize(100);
+    m_free_list.reserve(100);
     IncreaseFreeList();
 }
 
@@ -49,68 +49,91 @@ void GeometryCompressor::IncreaseFreeList() {
     }
 }
 
-bool GeometryCompressor::HasEntryForID(const EdgeID edge_id) {
+bool GeometryCompressor::HasEntryForID(const EdgeID edge_id) const {
     return (m_edge_id_to_list_index_map.find(edge_id) != m_edge_id_to_list_index_map.end());
 }
 
-unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) {
+unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const {
     boost::unordered_map<EdgeID, unsigned>::const_iterator map_iterator;
     map_iterator = m_edge_id_to_list_index_map.find(edge_id);
     BOOST_ASSERT( map_iterator != m_edge_id_to_list_index_map.end() );
+    BOOST_ASSERT( map_iterator->second < m_compressed_geometries.size() );
     return map_iterator->second;
 }
 
-void GeometryCompressor::AddNodeIDToCompressedEdge(
+void GeometryCompressor::AddLastViaNodeIDToCompressedEdge(
     const EdgeID edge_id,
-    const NodeID node_id
+    const NodeID node_id,
+    const EdgeWeight weight
 ) {
     unsigned index = GetPositionForID(edge_id);
     BOOST_ASSERT( index < m_compressed_geometries.size() );
-    m_compressed_geometries[index].push_back( node_id );
+    if( !m_compressed_geometries[index].empty() ) {
+        if( m_compressed_geometries[index].back().first == node_id ) {
+            return;
+        }
+    }
+    BOOST_ASSERT( node_id != m_compressed_geometries[index].back().first );
+    m_compressed_geometries[index].push_back( std::make_pair(node_id, weight) );
+    BOOST_ASSERT( node_id == m_compressed_geometries[index].back().first );
 }
 
 void GeometryCompressor::SerializeInternalVector(
     const std::string & path
 ) const {
+    //TODO: remove super-trivial geometries
+
     std::ofstream geometry_out_stream( path.c_str(), std::ios::binary );
-    const unsigned compressed_edge_count = m_compressed_geometries.size()+1;
-    BOOST_ASSERT( UINT_MAX != compressed_edge_count );
+    const unsigned number_of_compressed_geometries = m_compressed_geometries.size()+1;
+    BOOST_ASSERT( UINT_MAX != number_of_compressed_geometries );
     geometry_out_stream.write(
-        (char*)&compressed_edge_count,
+        (char*)&number_of_compressed_geometries,
         sizeof(unsigned)
     );
+
+    SimpleLogger().Write(logDEBUG) << "number_of_compressed_geometries: " << number_of_compressed_geometries;
 
     // write indices array
     unsigned prefix_sum_of_list_indices = 0;
     for(unsigned i = 0; i < m_compressed_geometries.size(); ++i ) {
-        const std::vector<unsigned> & current_vector = m_compressed_geometries[i];
-        const unsigned unpacked_size = current_vector.size();
-        BOOST_ASSERT( UINT_MAX != unpacked_size );
         geometry_out_stream.write(
             (char*)&prefix_sum_of_list_indices,
             sizeof(unsigned)
         );
+
+        const std::vector<CompressedNode> & current_vector = m_compressed_geometries.at(i);
+        const unsigned unpacked_size = current_vector.size();
+        BOOST_ASSERT( UINT_MAX != unpacked_size );
         prefix_sum_of_list_indices += unpacked_size;
     }
-    // write sentinel element
+    // sentinel element
     geometry_out_stream.write(
         (char*)&prefix_sum_of_list_indices,
         sizeof(unsigned)
     );
 
+    // number of geometry entries to follow, it is the (inclusive) prefix sum
+    geometry_out_stream.write(
+        (char*)&prefix_sum_of_list_indices,
+        sizeof(unsigned)
+    );
+
+    SimpleLogger().Write(logDEBUG) << "number of geometry nodes: " << prefix_sum_of_list_indices;
+    unsigned control_sum = 0;
     // write compressed geometries
     for(unsigned i = 0; i < m_compressed_geometries.size(); ++i ) {
-        const std::vector<unsigned> & current_vector = m_compressed_geometries[i];
+        const std::vector<CompressedNode> & current_vector = m_compressed_geometries[i];
         const unsigned unpacked_size = current_vector.size();
+        control_sum += unpacked_size;
         BOOST_ASSERT( UINT_MAX != unpacked_size );
-        for(unsigned j = 0; j < unpacked_size; ++j) {
+        BOOST_FOREACH(const CompressedNode current_node, current_vector ) {
             geometry_out_stream.write(
-                (char*)&(current_vector[j]),
-                sizeof(unsigned)
+                (char*)&(current_node.first),
+                sizeof(NodeID)
             );
         }
     }
-
+    BOOST_ASSERT( control_sum == prefix_sum_of_list_indices );
     // all done, let's close the resource
     geometry_out_stream.close();
 }
@@ -118,8 +141,11 @@ void GeometryCompressor::SerializeInternalVector(
 void GeometryCompressor::CompressEdge(
     const EdgeID surviving_edge_id,
     const EdgeID removed_edge_id,
-    const NodeID via_node_id
+    const NodeID via_node_id,
+    const EdgeWeight weight1//,
+    // const EdgeWeight weight2
 ) {
+
     BOOST_ASSERT( UINT_MAX != surviving_edge_id );
     BOOST_ASSERT( UINT_MAX != removed_edge_id   );
     BOOST_ASSERT( UINT_MAX != via_node_id       );
@@ -138,60 +164,80 @@ void GeometryCompressor::CompressEdge(
         // create a new entry in the map
         if( 0 == m_free_list.size() ) {
             // make sure there is a place to put the entries
+            // SimpleLogger().Write() << "increased free list";
             IncreaseFreeList();
         }
+        BOOST_ASSERT( !m_free_list.empty() );
+        // SimpleLogger().Write() << "free list size: " << m_free_list.size();
         m_edge_id_to_list_index_map[surviving_edge_id] = m_free_list.back();
         m_free_list.pop_back();
     }
     const unsigned surving_list_id = m_edge_id_to_list_index_map[surviving_edge_id];
+    BOOST_ASSERT( surving_list_id == GetPositionForID(surviving_edge_id));
+
+    // SimpleLogger().Write() << "surviving edge id " << surviving_edge_id << " is listed at " << surving_list_id;
     BOOST_ASSERT( surving_list_id < m_compressed_geometries.size() );
 
-    std::vector<NodeID> & compressed_id_list = m_compressed_geometries[surving_list_id];
-    compressed_id_list.push_back(via_node_id);
-    BOOST_ASSERT( 0 < compressed_id_list.size() );
+    std::vector<CompressedNode> & surviving_geometry_list = m_compressed_geometries[surving_list_id];
+    if( !surviving_geometry_list.empty() ) {
+        BOOST_ASSERT( via_node_id != surviving_geometry_list.back().first );
+    }
+    surviving_geometry_list.push_back( std::make_pair(via_node_id, weight1) );
+    BOOST_ASSERT( 0 < surviving_geometry_list.size() );
+    BOOST_ASSERT( !surviving_geometry_list.empty() );
 
     // Find any existing list for removed_edge_id
-    typename boost::unordered_map<EdgeID, unsigned>::const_iterator map_iterator;
-    map_iterator = m_edge_id_to_list_index_map.find(removed_edge_id);
-    if( m_edge_id_to_list_index_map.end() != map_iterator ) {
-        const unsigned index = map_iterator->second;
-        BOOST_ASSERT( index < m_compressed_geometries.size() );
+    typename boost::unordered_map<EdgeID, unsigned>::const_iterator remove_list_iterator;
+    remove_list_iterator = m_edge_id_to_list_index_map.find(removed_edge_id);
+    if( m_edge_id_to_list_index_map.end() != remove_list_iterator ) {
+        const unsigned list_to_remove_index = remove_list_iterator->second;
+        BOOST_ASSERT( list_to_remove_index == GetPositionForID(removed_edge_id));
+        BOOST_ASSERT( list_to_remove_index < m_compressed_geometries.size() );
+
+        std::vector<CompressedNode> & remove_geometry_list = m_compressed_geometries[list_to_remove_index];
         // found an existing list, append it to the list of surviving_edge_id
-        compressed_id_list.insert(
-            compressed_id_list.end(),
-            m_compressed_geometries[index].begin(),
-            m_compressed_geometries[index].end()
+        surviving_geometry_list.insert(
+            surviving_geometry_list.end(),
+            remove_geometry_list.begin(),
+            remove_geometry_list.end()
         );
 
         //remove the list of removed_edge_id
-        m_edge_id_to_list_index_map.erase(map_iterator);
+        m_edge_id_to_list_index_map.erase(remove_list_iterator);
         BOOST_ASSERT( m_edge_id_to_list_index_map.end() == m_edge_id_to_list_index_map.find(removed_edge_id) );
-        m_compressed_geometries[index].clear();
-        BOOST_ASSERT( 0 == m_compressed_geometries[index].size() );
-        m_free_list.push_back(index);
-        BOOST_ASSERT( index == m_free_list.back() );
+        remove_geometry_list.clear();
+        BOOST_ASSERT( 0 == remove_geometry_list.size() );
+        m_free_list.push_back(list_to_remove_index);
+        BOOST_ASSERT( list_to_remove_index == m_free_list.back() );
     }
 }
 
 void GeometryCompressor::PrintStatistics() const {
-    unsigned removed_edge_count = 0;
-    const unsigned surviving_edge_count = m_compressed_geometries.size()-m_free_list.size();
+    unsigned number_of_compressed_geometries = 0;
+    const unsigned compressed_edges = m_compressed_geometries.size();
 
     BOOST_ASSERT( m_compressed_geometries.size() + m_free_list.size() > 0 );
 
     unsigned long longest_chain_length = 0;
-    BOOST_FOREACH(const std::vector<unsigned> & current_vector, m_compressed_geometries) {
-        removed_edge_count += current_vector.size();
+    BOOST_FOREACH(const std::vector<CompressedNode> & current_vector, m_compressed_geometries) {
+        number_of_compressed_geometries += current_vector.size();
         longest_chain_length = std::max(longest_chain_length, current_vector.size());
     }
-    BOOST_ASSERT(0 == surviving_edge_count % 2);
+    BOOST_ASSERT(0 == compressed_edges % 2);
     SimpleLogger().Write() <<
-        "surviving edges: " << surviving_edge_count <<
-        ", compressed edges: " << removed_edge_count <<
+        "compressed edges: " << compressed_edges <<
+        ", compressed geometries: " << number_of_compressed_geometries <<
         ", longest chain length: " << longest_chain_length <<
-        ", comp ratio: " << ((float)surviving_edge_count/std::max(removed_edge_count, 1u) ) <<
-        ", avg: chain length: " << (float)removed_edge_count/std::max(1u, surviving_edge_count);
+        ", cmpr ratio: " << ((float)compressed_edges/std::max(number_of_compressed_geometries, 1u) ) <<
+        ", avg chain length: " << (float)number_of_compressed_geometries/std::max(1u, compressed_edges);
 
     SimpleLogger().Write() <<
-        "No bytes: " <<  4*surviving_edge_count + removed_edge_count*4;
+        "No bytes: " <<  4*compressed_edges + number_of_compressed_geometries*4 +8;
+}
+
+const std::vector<GeometryCompressor::CompressedNode> & GeometryCompressor::GetBucketReference(
+    const EdgeID edge_id
+) const {
+    const unsigned index = m_edge_id_to_list_index_map.at( edge_id );
+    return m_compressed_geometries.at( index );
 }

@@ -180,7 +180,7 @@ public:
                 pathDescription.pop_back();
                 pathDescription.back().necessary = true;
                 pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
-                target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
+                target_phantom.name_id = (pathDescription.end()-2)->name_id;
             }
         } else {
             pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
@@ -190,7 +190,7 @@ public:
                 pathDescription.erase(pathDescription.begin());
                 pathDescription[0].turn_instruction = TurnInstructions.HeadOn;
                 pathDescription[0].necessary = true;
-                start_phantom.nodeBasedEdgeNameID = pathDescription[0].name_id;
+                start_phantom.name_id = pathDescription[0].name_id;
             }
         } else {
             pathDescription[0].duration *= start_phantom.ratio;

@@ -259,7 +259,10 @@ int main (int argc, char *argv[]) {
         std::vector<TurnRestriction>().swap(inputRestrictions);
         std::vector<NodeID>().swap(bollardNodes);
         std::vector<NodeID>().swap(trafficLightNodes);
-        NodeID edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfNodes();
+        unsigned edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfEdgeBasedNodes();
+        BOOST_ASSERT(
+            edgeBasedNodeNumber != std::numeric_limits<unsigned>::max()
+        );
         DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
         edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
         std::vector<EdgeBasedNode> nodeBasedEdgeList;

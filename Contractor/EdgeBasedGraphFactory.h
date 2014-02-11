@@ -94,7 +94,7 @@ public:
         lua_State *myLuaState
     ) const;
 
-    unsigned GetNumberOfNodes() const;
+    unsigned GetNumberOfEdgeBasedNodes() const;
 
     struct SpeedProfileProperties{
         SpeedProfileProperties() :
@@ -110,6 +110,11 @@ public:
 
 private:
     struct NodeBasedEdgeData {
+        NodeBasedEdgeData() {
+            //TODO: proper c'tor
+            edgeBasedNodeID = UINT_MAX;
+        }
+
         int distance;
         unsigned edgeBasedNodeID;
         unsigned nameID;
@@ -119,7 +124,7 @@ private:
         bool forward:1;
         bool backward:1;
         bool roundabout:1;
-        bool ignoreInGrid:1;
+        bool ignore_in_grid:1;
         bool contraFlow:1;
 
         void SwapDirectionFlags() {
@@ -132,12 +137,13 @@ private:
             return (forward  == other.forward)          &&
                    (backward == other.backward)         &&
                    (nameID == other.nameID)             &&
-                   (ignoreInGrid == other.ignoreInGrid) &&
+                   (ignore_in_grid == other.ignore_in_grid) &&
                    (contraFlow == other.contraFlow);
         }
     };
 
     unsigned m_turn_restrictions_count;
+    unsigned m_number_of_edge_based_nodes;
 
     typedef DynamicGraph<NodeBasedEdgeData>     NodeBasedDynamicGraph;
     typedef NodeBasedDynamicGraph::InputEdge    NodeBasedEdge;
@@ -173,7 +179,6 @@ private:
     ) const;
 
     void InsertEdgeBasedNode(
-        NodeBasedDynamicGraph::EdgeIterator e1,
         NodeBasedDynamicGraph::NodeIterator u,
         NodeBasedDynamicGraph::NodeIterator v,
         bool belongsToTinyComponent

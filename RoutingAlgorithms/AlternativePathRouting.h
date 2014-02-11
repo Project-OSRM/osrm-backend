@@ -112,28 +112,28 @@ public:
         int upper_bound_to_shortest_path_distance = INT_MAX;
         NodeID middle_node = UINT_MAX;
         forward_heap1.Insert(
-            phantom_node_pair.startPhantom.edgeBasedNode,
-            -phantom_node_pair.startPhantom.weight1,
-            phantom_node_pair.startPhantom.edgeBasedNode
+            phantom_node_pair.startPhantom.forward_node_id,
+            -phantom_node_pair.startPhantom.forward_weight,
+            phantom_node_pair.startPhantom.forward_node_id
         );
         if(phantom_node_pair.startPhantom.isBidirected() ) {
             forward_heap1.Insert(
-                phantom_node_pair.startPhantom.edgeBasedNode+1,
-                -phantom_node_pair.startPhantom.weight2,
-                phantom_node_pair.startPhantom.edgeBasedNode+1
+                phantom_node_pair.startPhantom.reverse_node_id,
+                -phantom_node_pair.startPhantom.reverse_weight,
+                phantom_node_pair.startPhantom.reverse_node_id
             );
         }
 
         reverse_heap1.Insert(
-            phantom_node_pair.targetPhantom.edgeBasedNode,
-            phantom_node_pair.targetPhantom.weight1,
-            phantom_node_pair.targetPhantom.edgeBasedNode
+            phantom_node_pair.targetPhantom.forward_node_id,
+            phantom_node_pair.targetPhantom.forward_weight,
+            phantom_node_pair.targetPhantom.forward_node_id
         );
         if(phantom_node_pair.targetPhantom.isBidirected() ) {
         	reverse_heap1.Insert(
-                phantom_node_pair.targetPhantom.edgeBasedNode+1,
-                phantom_node_pair.targetPhantom.weight2,
-                phantom_node_pair.targetPhantom.edgeBasedNode+1
+                phantom_node_pair.targetPhantom.reverse_node_id,
+                phantom_node_pair.targetPhantom.reverse_weight,
+                phantom_node_pair.targetPhantom.reverse_node_id
             );
         }
 

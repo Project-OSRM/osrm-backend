@@ -108,6 +108,7 @@ int main (int argc, const char * argv[])
             SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
             SimpleLogger().Write(logDEBUG) << "Nodes file:\t" << server_paths["nodesdata"];
             SimpleLogger().Write(logDEBUG) << "Edges file:\t" << server_paths["edgesdata"];
+             SimpleLogger().Write(logDEBUG) << "Geometry file:\t" << server_paths["geometries"];
             SimpleLogger().Write(logDEBUG) << "RAM file:\t" << server_paths["ramindex"];
             SimpleLogger().Write(logDEBUG) << "Index file:\t" << server_paths["fileindex"];
             SimpleLogger().Write(logDEBUG) << "Names file:\t" << server_paths["namesdata"];

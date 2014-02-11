@@ -1,28 +1,58 @@
 #ifndef EDGE_BASED_NODE_H
 #define EDGE_BASED_NODE_H
 
-#include <cmath>
-
-#include <boost/assert.hpp>
-
 #include "../Util/MercatorUtil.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
 
 // An EdgeBasedNode represents a node in the edge-expanded graph.
+
+#include <limits>
+
 struct EdgeBasedNode {
 
     EdgeBasedNode() :
     id(INT_MAX),
-    lat1(INT_MAX),
-    lat2(INT_MAX),
-    lon1(INT_MAX),
-    lon2(INT_MAX >> 1),
-    belongsToTinyComponent(false),
-    nameID(UINT_MAX),
-    weight(UINT_MAX >> 1),
-    ignoreInGrid(false)
+        reverse_edge_based_node_id(std::numeric_limits<int>::max()),
+        lat1(std::numeric_limits<int>::max()),
+        lon1(std::numeric_limits<int>::max()),
+        lat2(std::numeric_limits<int>::max()),
+        lon2(std::numeric_limits<int>::max() >> 1),
+        belongsToTinyComponent(false),
+        name_id(std::numeric_limits<unsigned>::max()),
+        forward_weight(std::numeric_limits<int>::max() >> 1),
+        reverse_weight(std::numeric_limits<int>::max() >> 1),
+        forward_offset_to_edge_based_node(0),
+        reverse_offset_to_edge_based_node(0)
+    { }
+
+    EdgeBasedNode(
+        NodeID forward_edge_based_node_id,
+        NodeID reverse_edge_based_node_id,
+        int lat1,
+        int lon1,
+        int lat2,
+        int lon2,
+        bool belongsToTinyComponent,
+        NodeID name_id,
+        int forward_weight,
+        int reverse_weight,
+        int forward_offset_to_edge_based_node,
+        int reverse_offset_to_edge_based_node
+    ) :
+        forward_edge_based_node_id(forward_edge_based_node_id),
+        reverse_edge_based_node_id(reverse_edge_based_node_id),
+        lat1(lat1),
+        lon1(lon1),
+        lat2(lat2),
+        lon2(lon2),
+        belongsToTinyComponent(belongsToTinyComponent),
+        name_id(name_id),
+        forward_weight(forward_weight),
+        reverse_weight(reverse_weight),
+        forward_offset_to_edge_based_node(forward_offset_to_edge_based_node),
+        reverse_offset_to_edge_based_node(reverse_offset_to_edge_based_node)
     { }
 
     // Computes:
@@ -39,9 +69,26 @@ struct EdgeBasedNode {
         BOOST_ASSERT( query_location.isValid() );
 
         const double epsilon = 1.0/precision;
+        const double y = query_location.lon/COORDINATE_PRECISION;
+        const double a = lat2y(lat1/COORDINATE_PRECISION);
+        const double b = lon1/COORDINATE_PRECISION;
+        const double c = lat2y(lat2/COORDINATE_PRECISION);
+        const double d = lon2/COORDINATE_PRECISION;
+        double p,q/*,mX*/,nY;
+        if( std::abs(a-c) > std::numeric_limits<double>::epsilon() ){
+            const double m = (d-b)/(c-a); // slope
+            // Projection of (x,y) on line joining (a,b) and (c,d)
+            p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
+            q = b + m*(p - a);
+        } else {
+            p = c;
+            q = y;
+        }
+        nY = (d*p - c*q)/(a*d - b*c);
 
-        if( ignoreInGrid ) {
-            return std::numeric_limits<double>::max();
+        //discretize the result to coordinate precision. it's a hack!
+        if( std::abs(nY) < (1./COORDINATE_PRECISION) ) {
+            nY = 0.;
         }
 
         // p, q : the end points of the underlying edge
@@ -50,13 +97,14 @@ struct EdgeBasedNode {
 
         // r : query location
         const Point r(lat2y(query_location.lat/COORDINATE_PRECISION),
+        } else if( std::abs(r-1.) <= std::numeric_limits<double>::epsilon() ) {
                             query_location.lon/COORDINATE_PRECISION);
 
         const Point foot = ComputePerpendicularFoot(p, q, r, epsilon);
         ratio            = ComputeRatio(p, q, foot, epsilon);
 
         BOOST_ASSERT( !std::isnan(ratio) );
-
+            nearest_location.lat = y2lat(p)*COORDINATE_PRECISION;
         nearest_location = ComputeNearestPointOnSegment(foot, ratio);
 
         BOOST_ASSERT( nearest_location.isValid() );
@@ -65,6 +113,9 @@ struct EdgeBasedNode {
         // const double approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
         const double approximated_distance = FixedPointCoordinate::ApproximateDistance(query_location, nearest_location);
 
+            query_location,
+            nearest_location
+        );
         BOOST_ASSERT( 0.0 <= approximated_distance );
         return approximated_distance;
     }
@@ -82,21 +133,21 @@ struct EdgeBasedNode {
         return FixedPointCoordinate((lat1+lat2)/2, (lon1+lon2)/2);
     }
 
-    NodeID id;
+    NodeID forward_edge_based_node_id;
 
     // The coordinates of the end-points of the underlying edge.
     int lat1;
-    int lat2;
     int lon1;
+    int lat2;
     int lon2:31;
 
     bool belongsToTinyComponent:1;
-    NodeID nameID;
+    NodeID name_id;
 
     // The weight of the underlying edge.
     unsigned weight:31;
 
-    bool ignoreInGrid:1;
+    int reverse_weight;
 
 private:
 

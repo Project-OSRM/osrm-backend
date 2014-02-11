@@ -30,10 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SearchEngineData.h"
+#include "../DataStructures/TurnInstructions.h"
 #include "../Util/ContainerUtils.h"
 #include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
+#include <boost/foreach.hpp>
 #include <boost/noncopyable.hpp>
 
 #include <climits>
@@ -188,7 +190,7 @@ public:
                     }
                 }
             }
-            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge id invalid");
+            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge weight invalid");
 
             const EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
             if( ed.shortcut ) {//unpack
@@ -197,15 +199,43 @@ public:
                 recursion_stack.push(std::make_pair(middle_node_id, edge.second));
                 recursion_stack.push(std::make_pair(edge.first, middle_node_id));
             } else {
-                BOOST_ASSERT_MSG(!ed.shortcut, "edge must be a shortcut");
-                unpacked_path.push_back(
-                    PathData(
-                        ed.id,
-                        facade->GetNameIndexFromEdgeID(ed.id),
-                        facade->GetTurnInstructionForEdgeID(ed.id),
-                        ed.distance
-                    )
-                );
+                BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
+                unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
+                TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
+                //TODO: reorder to always iterate over a result vector
+                if ( !facade->EdgeIsCompressed(ed.id) ){
+                    SimpleLogger().Write() << "Edge " << ed.id << " is not compressed, smaller_edge_id: " << smaller_edge_id;
+                    BOOST_ASSERT( !facade->EdgeIsCompressed(ed.id) );
+                    unpacked_path.push_back(
+                        PathData(
+                            facade->GetGeometryIndexForEdgeID(ed.id),
+                            name_index,
+                            turn_instruction,
+                            ed.distance
+                        )
+                    );
+                } else {
+                    SimpleLogger().Write() << "Edge " << ed.id << " is compressed";
+                    std::vector<unsigned> id_vector;
+                    facade->GetUncompressedGeometry(ed.id, id_vector);
+                    BOOST_FOREACH(const unsigned coordinate_id, id_vector){
+                        //TODO: unpack entire geometry
+                        //TODO: set distance to 0, see if works
+
+                        unpacked_path.push_back(
+                            PathData(
+                                coordinate_id,
+                                name_index,
+                                TurnInstructionsClass::NoTurn,
+                                0
+                            )
+                        );
+
+                    }
+                    unpacked_path.back().turnInstruction = turn_instruction;
+                    unpacked_path.back().durationOfSegment = ed.distance;
+                }
+
             }
         }
     }
@@ -313,7 +343,7 @@ public:
     }
 
     int ComputeEdgeOffset(const PhantomNode & phantom) const {
-        return phantom.weight1 + (phantom.isBidirected() ? phantom.weight2 : 0);
+        return phantom.forward_weight + (phantom.isBidirected() ? phantom.reverse_weight : 0);
     }
 
 };

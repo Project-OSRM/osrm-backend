@@ -308,9 +308,24 @@ public:
     FixedPointCoordinate GetCoordinateOfNode(
         const unsigned id
     ) const {
-        const NodeID node = m_via_node_list.at(id);
-        return m_coordinate_list.at(node);
+        // const NodeID node = m_via_node_list.at(id);
+        return m_coordinate_list.at(id);
     };
+
+    virtual bool EdgeIsCompressed( const unsigned id ) const {
+        //TODO!!
+        return false;
+    }
+
+    virtual void GetUncompressedGeometry(
+        const unsigned id, std::vector<unsigned> & result_nodes
+    ) const {
+        //TODO!!
+    }
+
+    virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const {
+        return m_via_node_list.at(id);
+    }
 
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id

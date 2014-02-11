@@ -34,17 +34,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
-#include <cstddef>
-#include <climits>
-
 #include <limits>
 
 struct NodeInfo {
 	typedef NodeID key_type; 	//type of NodeID
 	typedef int value_type;		//type of lat,lons
 
-	NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), id(_id) {}
-	NodeInfo() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
+	NodeInfo(int lat, int lon, NodeID id) : lat(lat), lon(lon), id(id) { }
+	NodeInfo()
+	 :
+		lat(std::numeric_limits<int>::max()),
+		lon(std::numeric_limits<int>::max()),
+		id(std::numeric_limits<unsigned>::max())
+	{ }
+
 	int lat;
 	int lon;
 	NodeID id;
@@ -75,11 +78,11 @@ struct NodeInfo {
 			break;
 		default:
 			BOOST_ASSERT_MSG(false, "should not happen");
-			return UINT_MAX;
+			return std::numeric_limits<unsigned>::max();
 			break;
 		}
 		BOOST_ASSERT_MSG(false, "should not happen");
-		return UINT_MAX;
+		return std::numeric_limits<unsigned>::max();
 	}
 };
 

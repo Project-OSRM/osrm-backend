@@ -162,7 +162,7 @@ public:
         m_weight(w),
         m_forward(f),
         m_backward(b)
-    {}
+    { }
 
     NodeID      target()        const { return m_target;   }
     NodeID      source()        const { return m_source;   }

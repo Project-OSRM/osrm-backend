@@ -64,7 +64,7 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & start) {
     start_phantom = start;
     AppendSegment(
         start.location,
-        PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1)
+        PathData(0, start.name_id, 10, start.forward_weight)
     );
 }
 
@@ -73,9 +73,9 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
     pathDescription.push_back(
         SegmentInformation(
             target.location,
-            target.nodeBasedEdgeNameID,
+            target.name_id,
             0,
-            target.weight1,
+            target.reverse_weight,
             0,
             true
         )
@@ -137,7 +137,7 @@ void DescriptionFactory::BuildRouteSummary(
     const double distance,
     const unsigned time
 ) {
-    summary.startName = start_phantom.nodeBasedEdgeNameID;
-    summary.destName = target_phantom.nodeBasedEdgeNameID;
+    summary.startName = start_phantom.name_id;
+    summary.destName = target_phantom.name_id;
     summary.BuildDurationAndLengthStrings(distance, time);
 }

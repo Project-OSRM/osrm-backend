@@ -29,37 +29,45 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PHANTOMNODES_H_
 
 #include <osrm/Coordinate.h>
-
 #include "../typedefs.h"
 
 struct PhantomNode {
     PhantomNode() :
-        edgeBasedNode(UINT_MAX),
-        nodeBasedEdgeNameID(UINT_MAX),
-        weight1(INT_MAX),
-        weight2(INT_MAX),
+        forward_node_id(UINT_MAX),
+        reverse_node_id(UINT_MAX),
+        name_id(UINT_MAX),
+        forward_weight(INT_MAX),
+        reverse_weight(INT_MAX),
         ratio(0.)
     { }
 
-    NodeID edgeBasedNode;
-    unsigned nodeBasedEdgeNameID;
-    int weight1;
-    int weight2;
+    NodeID forward_node_id;
+    NodeID reverse_node_id;
+    unsigned name_id;
+    int forward_weight;
+    int reverse_weight;
     double ratio;
     FixedPointCoordinate location;
+
     void Reset() {
-        edgeBasedNode = UINT_MAX;
-        nodeBasedEdgeNameID = UINT_MAX;
-        weight1 = INT_MAX;
-        weight2 = INT_MAX;
+        forward_node_id = UINT_MAX;
+        name_id = UINT_MAX;
+        forward_weight = INT_MAX;
+        reverse_weight = INT_MAX;
         ratio = 0.;
         location.Reset();
     }
     bool isBidirected() const {
-        return weight2 != INT_MAX;
+        return forward_weight != INT_MAX && reverse_weight != INT_MAX;
     }
     bool isValid(const unsigned numberOfNodes) const {
-        return location.isValid() && (edgeBasedNode < numberOfNodes) && (weight1 != INT_MAX) && (ratio >= 0.) && (ratio <= 1.) && (nodeBasedEdgeNameID != UINT_MAX);
+        return
+            location.isValid() &&
+            ( (forward_node_id < numberOfNodes) || (reverse_node_id < numberOfNodes) ) &&
+            ( (forward_weight != INT_MAX) || (reverse_weight != INT_MAX) ) &&
+            (ratio >= 0.) &&
+            (ratio <= 1.) &&
+            (name_id != UINT_MAX);
     }
 
     bool operator==(const PhantomNode & other) const {
@@ -76,11 +84,11 @@ struct PhantomNodes {
     }
 
     bool PhantomsAreOnSameNodeBasedEdge() const {
-        return (startPhantom.edgeBasedNode == targetPhantom.edgeBasedNode);
+        return (startPhantom.forward_node_id == targetPhantom.forward_node_id);
     }
 
     bool AtLeastOnePhantomNodeIsUINTMAX() const {
-        return !(startPhantom.edgeBasedNode == UINT_MAX || targetPhantom.edgeBasedNode == UINT_MAX);
+        return !(startPhantom.forward_node_id == UINT_MAX || targetPhantom.forward_node_id == UINT_MAX);
     }
 
     bool PhantomNodesHaveEqualLocation() const {
@@ -89,15 +97,15 @@ struct PhantomNodes {
 };
 
 inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
-    out << "Node1: " << pn.startPhantom.edgeBasedNode << std::endl;
-    out << "Node2: " << pn.targetPhantom.edgeBasedNode << std::endl;
-    out << "startCoord: " << pn.startPhantom.location << std::endl;
+    out << "Node1: " << pn.startPhantom.forward_node_id  << std::endl;
+    out << "Node2: " << pn.targetPhantom.reverse_node_id << std::endl;
+    out << "startCoord: "  << pn.startPhantom.location << std::endl;
     out << "targetCoord: " << pn.targetPhantom.location << std::endl;
     return out;
 }
 
 inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn){
-    out << "node: " << pn.edgeBasedNode << ", name: " << pn.nodeBasedEdgeNameID << ", w1: " << pn.weight1 << ", w2: " << pn.weight2 << ", ratio: " << pn.ratio << ", loc: " << pn.location;
+    out << "node1: " << pn.forward_node_id << ", node2: " << pn.reverse_node_id << ", name: " << pn.name_id << ", w1: " << pn.forward_weight << ", w2: " << pn.reverse_weight << ", ratio: " << pn.ratio << ", loc: " << pn.location;
     return out;
 }
 
