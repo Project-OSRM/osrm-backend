@@ -38,7 +38,6 @@ TemporaryStorage & TemporaryStorage::GetInstance(){
 
 TemporaryStorage::~TemporaryStorage() {
     RemoveAll();
-    mutex.unlock();
 }
 
 void TemporaryStorage::RemoveAll() {
