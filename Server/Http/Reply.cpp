@@ -80,7 +80,7 @@ std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
     return buffers;
 }
 
-Reply Reply::StockReply(Reply::status_type status) {
+Reply Reply::StockReply(Reply::status_type status, Reply::request_format req_format, std::string filename) {
     Reply rep;
     rep.status = status;
     rep.content.clear();
@@ -94,20 +94,33 @@ Reply Reply::StockReply(Reply::status_type status) {
     intToString(rep.content.size(), s);
 
     rep.headers[1].value = s;
-    rep.headers[2].name = "Content-Type";
-    rep.headers[2].value = "text/html";
+
+    http::format_info req_format_info = Reply::GetFormatInfo(req_format);
+    rep.headers[2].name  = "Content-Type";
+    rep.headers[2].value = req_format_info.content_type;
+
+    if ( req_format != Reply::html ) {
+        rep.headers.resize(4);
+        rep.headers[3].name = "Content-Disposition";
+        rep.headers[3].value = "attachment; filename=\"" + filename + "." + req_format_info.file_extension + "\"";
+    }
+    
     return rep;
 }
 
-Reply Reply::JsReply(Reply::status_type status, bool is_jsonp_request, std::string filename) {
-    Reply rep  = Reply::StockReply(status);
-    
-    rep.headers.resize(4);
-    rep.headers[2].name = "Content-Type";
-    rep.headers[2].value = is_jsonp_request ? "text/javascript" : "application/x-javascript";
-    rep.headers[3].name = "Content-Disposition";
-    rep.headers[3].value = is_jsonp_request ? "attachment; filename=\"" + filename + ".js\"" : "attachment; filename=\"" + filename + ".json\"";
-    return rep;
+http::format_info Reply::GetFormatInfo(Reply::request_format format) {
+    switch (format) {
+    case Reply::html:
+        return htmlFormat;
+    case Reply::json:
+        return jsonFormat;
+    case Reply::jsonp:
+        return jsonpFormat;
+    case Reply::gpx:
+        return gpxFormat;
+    default:
+        return htmlFormat;
+    }
 }
 
 std::string Reply::ToString(Reply::status_type status) {

@@ -63,7 +63,7 @@ public:
         bool is_jsonp_request = !routeParameters.jsonpParameter.empty();
 
         //json
-        reply = http::Reply::JsReply(http::Reply::ok, is_jsonp_request, "location");
+        reply = http::Reply::StockReply(http::Reply::ok, is_jsonp_request ? http::Reply::jsonp : http::Reply::json, "location");
         
         if( is_jsonp_request ) {
             reply.content.push_back(routeParameters.jsonpParameter);

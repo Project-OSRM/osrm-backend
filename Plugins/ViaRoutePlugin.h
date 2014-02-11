@@ -138,7 +138,16 @@ public:
         }
 
         bool is_jsonp_request = !routeParameters.jsonpParameter.empty();
-        reply = http::Reply::JsReply(http::Reply::ok, is_jsonp_request, "route");
+        
+        DescriptorConfig descriptorConfig;
+
+        unsigned descriptorType = 0;
+        if(descriptorTable.find(routeParameters.outputFormat) != descriptorTable.end() ) {
+            descriptorType = descriptorTable.find(routeParameters.outputFormat)->second;
+        }
+
+        http::Reply::request_format req_format = descriptorType == 1 ? http::Reply::gpx : ( is_jsonp_request ? http::Reply::jsonp : http::Reply::json );
+        reply = http::Reply::StockReply(http::Reply::ok, req_format, "route");
 
         //TODO: Move to member as smart pointer
         BaseDescriptor<DataFacadeT> * desc;
@@ -147,12 +156,6 @@ public:
             reply.content.push_back("(");
         }
 
-        DescriptorConfig descriptorConfig;
-
-        unsigned descriptorType = 0;
-        if(descriptorTable.find(routeParameters.outputFormat) != descriptorTable.end() ) {
-            descriptorType = descriptorTable.find(routeParameters.outputFormat)->second;
-        }
         descriptorConfig.zoom_level = routeParameters.zoomLevel;
         descriptorConfig.instructions = routeParameters.printInstructions;
         descriptorConfig.geometry = routeParameters.geometry;
@@ -185,13 +188,6 @@ public:
         
         std::string tmp;
         reply.ComputeAndSetSize();
-
-        if( descriptorType == 1 ){
-            reply.headers[2].name = "Content-Type";
-            reply.headers[2].value = "application/gpx+xml; charset=UTF-8";
-            reply.headers[3].name = "Content-Disposition";
-            reply.headers[3].value = "attachment; filename=\"route.gpx\"";
-        }
  
         delete desc;
         return;
