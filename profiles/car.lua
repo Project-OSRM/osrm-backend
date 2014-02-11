@@ -57,11 +57,23 @@ do
     ["RO:trunk"] = "100",
     ["RO:motorway"] = "130",
     -- from http://wiki.openstreetmap.org/wiki/RU:Key:maxspeed
-    ["RU:urban"] = "50",
+    ["RU:urban"] = "60",
     ["RU:rural"] = "90",
+    ["RU:motorway"] = "110",
+    ["RU:living_street"] = "20",
+    ["RU:Living_street"] = "20",
     -- from http://wiki.openstreetmap.org/wiki/Speed_limits#Country_code.2Fcategory_conversion_table
+    ["AT:urban"] = "50",
+    ["AT:rural"] = "100",
     ["CZ:urban"] = "50",
-
+    ["DE:living_street"] = "7",
+    ["DE:rural"] = "100",
+    ["DE:urban"] = "50",
+    ["FR:rural"] = "90",
+    ["IT:motorway"] = "130",
+    ["IT:rural"] = "90",
+    ["IT:urban"] = "50",
+    ["UA:urban"] = "60",
   }
   function lookupStringValueSpeed(stringValue)
     local numericValue = stringSpeedValues[stringValue]
@@ -75,7 +87,7 @@ local function parse_maxspeed(source)
 		return 0
 	end
 
-        local replacedStringSpeedValue=lookupStringValueSpeed(source);
+	local replacedStringSpeedValue=lookupStringValueSpeed(source);
 	if replacedStringSpeedValue ~= nil then
 		return replacedStringSpeedValue;
 	end
