@@ -25,43 +25,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef HASHTABLE_H_
-#define HASHTABLE_H_
+#ifndef HASH_TABLE_H
+#define HASH_TABLE_H
 
 #include <boost/ref.hpp>
 #include <boost/unordered_map.hpp>
 
-template<typename keyT, typename valueT>
-class HashTable : public boost::unordered_map<keyT, valueT> {
+template<typename KeyT, typename ValueT>
+class HashTable : public boost::unordered_map<KeyT, ValueT> {
 private:
-    typedef boost::unordered_map<keyT, valueT> super;
+    typedef boost::unordered_map<KeyT, ValueT> super;
 public:
+    static ValueT default_value;
+
     HashTable() : super() { }
 
     HashTable(const unsigned size) : super(size) { }
 
-    // HashTable &operator=(const HashTable &other) {
-    //     super::operator = (other);
-    //     return *this;
-    // }
-
-    inline void Add(const keyT& key, const valueT& value){
-        super::insert(std::make_pair(key, value));
+    inline void Add( KeyT const & key, ValueT const & value) {
+        super::emplace(std::make_pair(key, value));
     }
 
-    inline valueT Find(const keyT& key) const {
-        if(super::find(key) == super::end()) {
-            return valueT();
+    inline const ValueT Find(KeyT const & key) const {
+        typename super::const_iterator iter = super::find(key);
+        if( iter == super::end() ) {
+            return boost::cref(default_value);
         }
-        return boost::ref(super::find(key)->second);
+        return boost::cref(iter->second);
     }
 
-    inline bool Holds(const keyT& key) const {
-        if(super::find(key) == super::end()) {
+    inline bool Holds( KeyT const & key) const {
+        if( super::find(key) == super::end() ) {
             return false;
         }
         return true;
     }
 };
 
-#endif /* HASHTABLE_H_ */
+template<typename KeyT, typename ValueT>
+ValueT HashTable<KeyT, ValueT>::default_value;
+
+#endif /* HASH_TABLE_H */
