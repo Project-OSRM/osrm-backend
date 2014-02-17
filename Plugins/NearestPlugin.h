@@ -50,10 +50,9 @@ public:
         descriptorTable.emplace("json", 1);
     }
     const std::string & GetDescriptor() const { return descriptor_string; }
-
     void HandleRequest(
         const RouteParameters & routeParameters,
-        http::Reply& reply
+        http::Reply & reply
     ) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
@@ -82,13 +81,13 @@ public:
 
         reply.status = http::Reply::ok;
         reply.content.push_back("{\"status\":");
-        if(UINT_MAX != result.edgeBasedNode) {
+        if(UINT_MAX != result.forward_node_id) {
             reply.content.push_back("0,");
         } else {
             reply.content.push_back("207,");
         }
         reply.content.push_back("\"mapped_coordinate\":[");
-        if(UINT_MAX != result.edgeBasedNode) {
+        if(UINT_MAX != result.forward_node_id) {
             FixedPointCoordinate::convertInternalLatLonToString(result.location.lat, temp_string);
             reply.content.push_back(temp_string);
             FixedPointCoordinate::convertInternalLatLonToString(result.location.lon, temp_string);
@@ -96,8 +95,8 @@ public:
             reply.content.push_back(temp_string);
         }
         reply.content.push_back("],\"name\":\"");
-        if(UINT_MAX != result.edgeBasedNode) {
-            facade->GetName(result.nodeBasedEdgeNameID, temp_string);
+        if(UINT_MAX != result.forward_node_id) {
+            facade->GetName(result.name_id, temp_string);
             reply.content.push_back(temp_string);
         }
         reply.content.push_back("\"}");
