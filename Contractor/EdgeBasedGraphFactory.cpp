@@ -303,6 +303,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         for( unsigned i = 0; i < reverse_geometry.size(); ++i ) {
             if( forward_geometry[i].first != reverse_geometry[reverse_geometry.size()-1-i].first ) {
 #ifndef NDEBUG
+                //Dumps debug information when data is borked
                 SimpleLogger().Write() << "size1: " << forward_geometry.size() << ", size2: " << reverse_geometry.size();
                 SimpleLogger().Write() << "index1: " << i << ", index2: " << reverse_geometry.size()-1-i;
                 SimpleLogger().Write() << forward_geometry[0].first << "!=" << reverse_geometry[reverse_geometry.size()-1-i].first;

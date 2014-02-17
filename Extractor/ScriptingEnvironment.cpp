@@ -58,7 +58,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
         // Add our function to the state's global scope
         luabind::module(myLuaState) [
             luabind::def("print", LUA_print<std::string>),
-            luabind::def("parseMaxspeed", parseMaxspeed),
+            // luabind::def("parseMaxspeed", parseMaxspeed),
             luabind::def("durationIsValid", durationIsValid),
             luabind::def("parseDuration", parseDuration)
         ];
@@ -66,7 +66,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
         luabind::module(myLuaState) [
             luabind::class_<HashTable<std::string, std::string> >("keyVals")
             .def("Add", &HashTable<std::string, std::string>::Add)
-            .def("Find", &HashTable<std::string, std::string>::Find)
+            .def("Get", &HashTable<std::string, std::string>::Get)
             .def("Holds", &HashTable<std::string, std::string>::Holds)
         ];
 
