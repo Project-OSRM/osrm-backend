@@ -722,6 +722,11 @@ public:
         }
         result_phantom_node.ratio = ratio;
 
+        SimpleLogger().Write(logDEBUG) << "result location: " << result_phantom_node.location;
+        SimpleLogger().Write(logDEBUG) << "fwd node: " << result_phantom_node.forward_node_id << ", rev node: " << result_phantom_node.reverse_node_id;
+        SimpleLogger().Write(logDEBUG) << "fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight << ", ratio: " << result_phantom_node.ratio;
+
+
         return found_a_nearest_edge;
     }
 

@@ -66,7 +66,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
         luabind::module(myLuaState) [
             luabind::class_<HashTable<std::string, std::string> >("keyVals")
             .def("Add", &HashTable<std::string, std::string>::Add)
-            .def("Get", &HashTable<std::string, std::string>::Get)
+            .def("Find", &HashTable<std::string, std::string>::Find)
             .def("Holds", &HashTable<std::string, std::string>::Holds)
         ];
 

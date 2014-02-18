@@ -146,10 +146,10 @@ void GeometryCompressor::CompressEdge(
     // const EdgeWeight weight2
 ) {
 
-    BOOST_ASSERT( UINT_MAX != surviving_edge_id );
-    BOOST_ASSERT( UINT_MAX != removed_edge_id   );
-    BOOST_ASSERT( UINT_MAX != via_node_id       );
-
+    BOOST_ASSERT( SPECIAL_EDGEID != surviving_edge_id );
+    BOOST_ASSERT( SPECIAL_NODEID != removed_edge_id   );
+    BOOST_ASSERT( SPECIAL_NODEID != via_node_id       );
+    BOOST_ASSERT( std::numeric_limits<unsigned>::max() != weight1 );
     // append list of removed edge_id plus via node to surviving edge id:
     // <surv_1, .. , surv_n, via_node_id, rem_1, .. rem_n
     //
@@ -179,9 +179,15 @@ void GeometryCompressor::CompressEdge(
     BOOST_ASSERT( surving_list_id < m_compressed_geometries.size() );
 
     std::vector<CompressedNode> & surviving_geometry_list = m_compressed_geometries[surving_list_id];
-    if( !surviving_geometry_list.empty() ) {
-        BOOST_ASSERT( via_node_id != surviving_geometry_list.back().first );
+    BOOST_ASSERT(
+        surviving_geometry_list.empty() ||
+        ( via_node_id != surviving_geometry_list.back().first )
+    );
+
+    if(surviving_edge_id == 0) {
+        SimpleLogger().Write(logDEBUG) << "adding via " << via_node_id << ", w: " << weight1;
     }
+
     surviving_geometry_list.push_back( std::make_pair(via_node_id, weight1) );
     BOOST_ASSERT( 0 < surviving_geometry_list.size() );
     BOOST_ASSERT( !surviving_geometry_list.empty() );
@@ -195,6 +201,14 @@ void GeometryCompressor::CompressEdge(
         BOOST_ASSERT( list_to_remove_index < m_compressed_geometries.size() );
 
         std::vector<CompressedNode> & remove_geometry_list = m_compressed_geometries[list_to_remove_index];
+        if(surviving_edge_id == 0) {
+            SimpleLogger().Write(logDEBUG) << "appending to list: ";
+            BOOST_FOREACH(const CompressedNode & node, remove_geometry_list) {
+                SimpleLogger().Write(logDEBUG) << "adding via " << node.first << ", w: " << node.second;
+            }
+        }
+
+
         // found an existing list, append it to the list of surviving_edge_id
         surviving_geometry_list.insert(
             surviving_geometry_list.end(),

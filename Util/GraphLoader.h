@@ -136,7 +136,7 @@ NodeID readBinaryOSRMGraphFromStream(
     short type;
     NodeID nameID;
     int length;
-    bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow;
+    bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, is_split;
 
     for (EdgeID i=0; i<m; ++i) {
         input_stream.read((char*)&source,             sizeof(unsigned));
@@ -150,6 +150,7 @@ NodeID readBinaryOSRMGraphFromStream(
         input_stream.read((char*)&ignoreInGrid,       sizeof(bool));
         input_stream.read((char*)&isAccessRestricted, sizeof(bool));
         input_stream.read((char*)&isContraFlow,       sizeof(bool));
+        input_stream.read((char*)&is_split,           sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge" );
         BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
@@ -190,7 +191,7 @@ NodeID readBinaryOSRMGraphFromStream(
             std::swap(forward, backward);
         }
 
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow );
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, is_split );
         edge_list.push_back(inputEdge);
     }
     std::sort(edge_list.begin(), edge_list.end());

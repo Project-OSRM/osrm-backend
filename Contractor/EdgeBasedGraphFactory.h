@@ -181,6 +181,7 @@ private:
     void InsertEdgeBasedNode(
         NodeBasedDynamicGraph::NodeIterator u,
         NodeBasedDynamicGraph::NodeIterator v,
+        NodeBasedDynamicGraph::EdgeIterator e1,
         bool belongsToTinyComponent
     );
 

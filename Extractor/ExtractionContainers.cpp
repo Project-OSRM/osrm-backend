@@ -373,23 +373,27 @@ void ExtractionContainers::PrepareData(
                     sizeof(short)
                 );
                 file_out_stream.write(
-                    (char*)&edge_iterator->nameID,
+                    (char *) &edge_iterator->nameID,
                     sizeof(unsigned)
                 );
                 file_out_stream.write(
-                    (char*)&edge_iterator->isRoundabout,
+                    (char *) &edge_iterator->isRoundabout,
                     sizeof(bool)
                 );
                 file_out_stream.write(
-                    (char*)&edge_iterator->ignoreInGrid,
+                    (char *) &edge_iterator->ignoreInGrid,
                     sizeof(bool)
                 );
                 file_out_stream.write(
-                    (char*)&edge_iterator->isAccessRestricted,
+                    (char *) &edge_iterator->isAccessRestricted,
                     sizeof(bool)
                 );
                 file_out_stream.write(
-                    (char*)&edge_iterator->isContraFlow,
+                    (char *) &edge_iterator->isContraFlow,
+                    sizeof(bool)
+                );
+                file_out_stream.write(
+                    (char *) &edge_iterator->is_split,
                     sizeof(bool)
                 );
                 ++number_of_used_edges;

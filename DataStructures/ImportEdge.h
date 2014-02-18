@@ -61,7 +61,8 @@ public:
         bool ra,
         bool ig,
         bool ar,
-        bool cf
+        bool cf,
+        bool is_split
     ) : _source(s),
         _target(t),
         _name(n),
@@ -72,7 +73,8 @@ public:
         _roundabout(ra),
         _ignoreInGrid(ig),
         _accessRestricted(ar),
-        _contraFlow(cf)
+        _contraFlow(cf),
+        is_split(is_split)
     {
         if(ty < 0) {
             throw OSRMException("negative edge type");
@@ -93,6 +95,7 @@ public:
     bool ignoreInGrid()         const { return _ignoreInGrid; }
     bool isAccessRestricted()   const { return _accessRestricted; }
     bool isContraFlow()         const { return _contraFlow; }
+    bool IsSplit()              const { return is_split; }
 
     //TODO: names need to be fixed.
     NodeID      _source;
@@ -106,6 +109,7 @@ public:
     bool        _ignoreInGrid:1;
     bool        _accessRestricted:1;
     bool        _contraFlow:1;
+    bool        is_split:1;
 
 private:
     NodeBasedEdge() { }
