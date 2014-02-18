@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/JSONDescriptor.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimeMeasurement.h"
 
 #include <boost/unordered_map.hpp>
 
@@ -45,6 +46,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 #include <vector>
+
+static bool IsTransactionStr (const std::string &s) {
+	static std::string trans("transactionId");
+	if (s.size() < trans.size()) {
+		return false;
+	}
+	return (0 == s.compare(1, trans.size(), trans));
+}
 
 template<class DataFacadeT>
 class ViaRoutePlugin : public BasePlugin {
@@ -81,6 +90,7 @@ public:
             return;
         }
 
+	TimeMeasurement measure;
         RawRouteData rawRoute;
         rawRoute.checkSum = facade->GetCheckSum();
         bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
@@ -176,6 +186,16 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(reply, rawRoute, phantomNodes, facade);
+
+	if (routeParameters.measurement) {
+		int64_t time_ms = measure.toNow();
+		std::vector<std::string>::iterator it = std::find_if(reply.content.begin(), reply.content.end(), IsTransactionStr);
+		if (it != reply.content.end()) {
+			std::string temp_string;
+			int64ToString(time_ms, temp_string);
+			reply.content.insert(it, "\"measurement_ms\":" + temp_string + ",");
+		}
+	}	
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")\n");
         }

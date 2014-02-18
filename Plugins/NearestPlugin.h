@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimeMeasurement.h"
 
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
@@ -59,12 +60,15 @@ public:
             return;
         }
 
+	TimeMeasurement measure;
         PhantomNode result;
         facade->FindPhantomNodeForCoordinate(
             routeParameters.coordinates[0],
             result,
             routeParameters.zoomLevel
         );
+
+	int64_t time_ms = measure.toNow();
 
         std::string temp_string;
         //json
@@ -83,6 +87,10 @@ public:
         } else {
             reply.content.push_back("207,");
         }
+	if (routeParameters.measurement) {
+		int64ToString(time_ms, temp_string);
+		reply.content.push_back("\"measurement_ms\":" + temp_string + ",");
+	}
         reply.content.push_back("\"mapped_coordinate\":");
         reply.content.push_back("[");
         if(UINT_MAX != result.edgeBasedNode) {
