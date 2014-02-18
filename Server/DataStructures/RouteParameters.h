@@ -46,6 +46,7 @@ struct RouteParameters {
         geometry(true),
         compression(true),
         deprecatedAPI(false),
+	measurement(false),
         checkSum(-1) {}
     short zoomLevel;
     bool printInstructions;
@@ -53,6 +54,7 @@ struct RouteParameters {
     bool geometry;
     bool compression;
     bool deprecatedAPI;
+	bool measurement;
     unsigned checkSum;
     std::string service;
     std::string outputFormat;
@@ -75,6 +77,10 @@ struct RouteParameters {
     void setDeprecatedAPIFlag(const std::string &) {
         deprecatedAPI = true;
     }
+
+	void setMeasurementFlag(const bool b) {
+		measurement = b;
+	}
 
     void setChecksum(const unsigned c) {
         checkSum = c;
