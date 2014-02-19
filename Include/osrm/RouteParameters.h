@@ -45,6 +45,7 @@ struct RouteParameters {
         geometry(true),
         compression(true),
         deprecatedAPI(false),
+        exec_time(false),
         checkSum(-1)
     { }
 
@@ -54,6 +55,7 @@ struct RouteParameters {
     bool geometry;
     bool compression;
     bool deprecatedAPI;
+    bool exec_time;
     unsigned checkSum;
     std::string service;
     std::string outputFormat;
@@ -74,6 +76,10 @@ struct RouteParameters {
 
     void setDeprecatedAPIFlag(const std::string &) {
         deprecatedAPI = true;
+    }
+
+    void setExecTimeFlag(const bool b) {
+        exec_time = b;
     }
 
     void setChecksum(const unsigned c) {

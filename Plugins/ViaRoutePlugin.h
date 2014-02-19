@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/JSONDescriptor.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimingUtil.h"
 
 #include <boost/unordered_map.hpp>
 
@@ -81,6 +82,7 @@ public:
             return;
         }
 
+        TimeMeasurement exec_time;
         RawRouteData rawRoute;
         rawRoute.checkSum = facade->GetCheckSum();
         const bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
@@ -156,17 +158,16 @@ public:
         descriptorConfig.geometry = routeParameters.geometry;
         descriptorConfig.encode_geometry = routeParameters.compression;
 
+	std::string exec_time_token;
         switch(descriptorType){
-        case 0:
-            desc = new JSONDescriptor<DataFacadeT>();
-
-            break;
         case 1:
             desc = new GPXDescriptor<DataFacadeT>();
-
+            exec_time_token = "<metadata>";
             break;
+        case 0:
         default:
             desc = new JSONDescriptor<DataFacadeT>();
+            exec_time_token = "{";
 
             break;
         }
@@ -177,6 +178,25 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
+
+        if (routeParameters.exec_time) {
+            int64_t time_ms = exec_time.toNowInMs();
+            std::vector<std::string>::iterator it = reply.content.begin();
+            for (; it != reply.content.end(); ++it) {
+                if (0 == (*it).compare(0, exec_time_token.size(), exec_time_token)) {
+			break; // we have found place to insert exec time metric
+                }
+            }
+            if (it != reply.content.end()) {
+                std::string temp_string;
+                int64ToString(time_ms, temp_string);
+                reply.content.insert(++it, (1 == descriptorType)?
+                    "<exec_time_ms>" + temp_string + "</exec_time_ms>" : "\"exec_time_ms\":" + temp_string + ","
+                );
+            } else {
+                SimpleLogger().Write(logDEBUG) << "Can't find place to insert exec time metric";
+            }
+        }
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")\n");
         }

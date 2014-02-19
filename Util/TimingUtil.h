@@ -28,6 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TIMINGUTIL_H_
 #define TIMINGUTIL_H_
 
+#include "../typedefs.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 // excluded as this requires boost 1.47 (for now)
 // #include <boost/chrono.hpp>
 // #include <boost/timer/timer.hpp>
@@ -67,5 +71,26 @@ static inline double get_timestamp() {
     gettimeofday(&tp, NULL);
     return double(tp.tv_sec) + tp.tv_usec / 1000000.;
 }
+
+class TimeMeasurement {
+public:
+    TimeMeasurement() throw() { fromNow(); }
+    inline void fromNow() throw() {
+        m_from = boost::posix_time::microsec_clock::local_time();
+    }
+    // get time period from the fromNow() func. calling to now in milliseconds
+    inline int64_t toNowInMs() const throw() {
+        boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - m_from;
+        return diff.total_milliseconds();
+    }
+    // get time period from the fromNow() func. calling to now in seconds
+    inline int64_t toNowInSec() const throw() {
+        boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - m_from;
+        return diff.total_seconds();
+    }
+
+private:
+    boost::posix_time::ptime m_from;
+};
 
 #endif /* TIMINGUTIL_H_ */

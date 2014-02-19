@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimingUtil.h"
 
 #include <boost/unordered_map.hpp>
 
@@ -65,12 +66,15 @@ public:
             return;
         }
 
+	TimeMeasurement exec_time;
         PhantomNode result;
         facade->FindPhantomNodeForCoordinate(
             routeParameters.coordinates[0],
             result,
             routeParameters.zoomLevel
         );
+
+        int64_t time_ms = exec_time.toNowInMs();
 
         std::string temp_string;
         //json
@@ -81,7 +85,12 @@ public:
         }
 
         reply.status = http::Reply::ok;
-        reply.content.push_back("{\"status\":");
+        reply.content.push_back("{");
+        if (routeParameters.exec_time) {
+                int64ToString(time_ms, temp_string);
+                reply.content.push_back("\"exec_time_ms\":" + temp_string + ",");
+        }
+        reply.content.push_back("\"status\":");
         if(UINT_MAX != result.edgeBasedNode) {
             reply.content.push_back("0,");
         } else {

@@ -38,7 +38,7 @@ template <typename Iterator, class HandlerT>
 struct APIGrammar : qi::grammar<Iterator> {
     APIGrammar(HandlerT * h) : APIGrammar::base_type(api_call), handler(h) {
         api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >> *(query);
-        query    = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | cmp | language | instruction | geometry | alt_route | old_API) ) ;
+        query    = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | cmp | language | instruction | geometry | alt_route | old_API | exec_time) ) ;
 
         zoom        = (-qi::lit('&')) >> qi::lit('z')            >> '=' >> qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
         output      = (-qi::lit('&')) >> qi::lit("output")       >> '=' >> string[boost::bind(&HandlerT::setOutputFormat, handler, ::_1)];
@@ -52,6 +52,7 @@ struct APIGrammar : qi::grammar<Iterator> {
         language    = (-qi::lit('&')) >> qi::lit("hl")           >> '=' >> string[boost::bind(&HandlerT::setLanguage, handler, ::_1)];
         alt_route   = (-qi::lit('&')) >> qi::lit("alt")          >> '=' >> qi::bool_[boost::bind(&HandlerT::setAlternateRouteFlag, handler, ::_1)];
         old_API     = (-qi::lit('&')) >> qi::lit("geomformat")   >> '=' >> string[boost::bind(&HandlerT::setDeprecatedAPIFlag, handler, ::_1)];
+	exec_time   = (-qi::lit('&')) >> qi::lit("exec_time")  >> '=' >> qi::bool_[boost::bind(&HandlerT::setExecTimeFlag, handler, ::_1)];
 
         string            = +(qi::char_("a-zA-Z"));
         stringwithDot     = +(qi::char_("a-zA-Z0-9_.-"));
@@ -61,7 +62,7 @@ struct APIGrammar : qi::grammar<Iterator> {
     qi::rule<Iterator> api_call, query;
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location, hint,
                                       stringwithDot, stringwithPercent, language, instruction, geometry,
-                                      cmp, alt_route, old_API;
+                                      cmp, alt_route, old_API, exec_time;
 
     HandlerT * handler;
 };
