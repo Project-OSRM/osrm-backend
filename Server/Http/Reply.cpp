@@ -25,7 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "Reply.h"
+#include <boost/foreach.hpp>
+
+#include <osrm/Reply.h>
+
+#include "../../Util/StringUtil.h"
 
 namespace http {
 

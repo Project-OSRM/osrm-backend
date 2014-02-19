@@ -24,12 +24,18 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include <cstdlib>
 
-int main( int argc, char* argv[] ) {
-	size_t size = sizeof(void*);
-	if ( 4 == size ) {
-		return 0;
-	}
-	return 1;
-}
+#ifndef SERVER_PATH_H
+#define SERVER_PATH_H
+
+#include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
+
+#include <string>
+
+typedef boost::unordered_map<
+            const std::string,
+            boost::filesystem::path
+        > ServerPaths;
+
+#endif //SERVER_PATH_H

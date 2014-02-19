@@ -27,9 +27,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "XMLParser.h"
 
-#include "ExtractorStructs.h"
+#include "ExtractionWay.h"
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/ImportNode.h"
 #include "../DataStructures/InputReaderFactory.h"
+#include "../DataStructures/Restriction.h"
+#include "../Util/SimpleLogger.h"
+#include "../Util/StringUtil.h"
+#include "../typedefs.h"
+
+#include <osrm/Coordinate.h>
 
 #include <boost/ref.hpp>
 
@@ -59,7 +66,7 @@ bool XMLParser::Parse() {
 
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
 			ImportNode n = _ReadXMLNode();
-			ParseNodeInLua( n, luaState );
+			ParseNodeInLua( n, lua_state );
 			extractor_callbacks->nodeFunction(n);
 //			if(!extractor_callbacks->nodeFunction(n))
 //				std::cerr << "[XMLParser] dense node not parsed" << std::endl;
@@ -67,7 +74,7 @@ bool XMLParser::Parse() {
 
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "way" ) == 1 ) {
 			ExtractionWay way = _ReadXMLWay( );
-			ParseWayInLua( way, luaState );
+			ParseWayInLua( way, lua_state );
 			extractor_callbacks->wayFunction(way);
 //			if(!extractor_callbacks->wayFunction(way))
 //				std::cerr << "[PBFParser] way not parsed" << std::endl;

@@ -26,60 +26,92 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "DouglasPeucker.h"
+#include "../DataStructures/SegmentInformation.h"
+#include "../Util/MercatorUtil.h"
+
+#include <limits>
 
 //These thresholds are more or less heuristically chosen.
 static double DouglasPeuckerThresholds[19] = {
-    32000000., //z0
-    16240000., //z1
-     8240000., //z2
-     4240000., //z3
-     2000000., //z4
-     1000000., //z5
-      500000., //z6
-      240000., //z7
-      120000., //z8
-       60000., //z9
-       30000., //z10
-       19000., //z11
-        5000., //z12
-        2000., //z13
-         200., //z14
-          16., //z15
-           6., //z16
-           3., //z17
-           3.  //z18
+      262144., //z0
+      131072., //z1
+       65536., //z2
+       32768., //z3
+       16384., //z4
+        8192., //z5
+        4096., //z6
+        2048., //z7
+         960., //z8
+         480., //z9
+         240., //z10
+          90., //z11
+          50., //z12
+          25., //z13
+          15., //z14
+           5., //z15
+            .65, //z16
+            .5, //z17
+            .35  //z18
 };
 
 /**
- * This distance computation does integer arithmetic only and is about twice as
- * fast as the other distance function. It is an approximation only, but works
- * more or less ok.
+ * Yuck! Code duplication. This function is also in EgdeBasedNode.h
  */
-int DouglasPeucker::fastDistance(
+double DouglasPeucker::ComputeDistance(
     const FixedPointCoordinate& point,
     const FixedPointCoordinate& segA,
     const FixedPointCoordinate& segB
 ) const {
-    const int p2x = (segB.lon - segA.lon);
-    const int p2y = (segB.lat - segA.lat);
-    const int something = p2x*p2x + p2y*p2y;
-    double u = ( 0 == something  ? 0 : ((point.lon - segA.lon) * p2x + (point.lat - segA.lat) * p2y) / something);
+    const double x = lat2y(point.lat/COORDINATE_PRECISION);
+    const double y = point.lon/COORDINATE_PRECISION;
+    const double a = lat2y(segA.lat/COORDINATE_PRECISION);
+    const double b = segA.lon/COORDINATE_PRECISION;
+    const double c = lat2y(segB.lat/COORDINATE_PRECISION);
+    const double d = segB.lon/COORDINATE_PRECISION;
+    double p,q,nY;
+    if( std::abs(a-c) > std::numeric_limits<double>::epsilon() ){
+        const double m = (d-b)/(c-a); // slope
+        // Projection of (x,y) on line joining (a,b) and (c,d)
+        p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
+        q = b + m*(p - a);
+    } else {
+        p = c;
+        q = y;
+    }
+    nY = (d*p - c*q)/(a*d - b*c);
 
-    if (u > 1) {
-        u = 1;
-    } else if (u < 0) {
-        u = 0;
+    //discretize the result to coordinate precision. it's a hack!
+    if( std::abs(nY) < (1./COORDINATE_PRECISION) ) {
+        nY = 0.;
     }
 
-    const int x = segA.lon + u * p2x;
-    const int y = segA.lat + u * p2y;
-
-    const int dx = x - point.lon;
-    const int dy = y - point.lat;
-
-    const int dist = (dx*dx + dy*dy);
-
-    return dist;
+    double r = (p - nY*a)/c;
+    if( std::isnan(r) ) {
+        r = ((segB.lat == point.lat) && (segB.lon == point.lon)) ? 1. : 0.;
+    } else if( std::abs(r) <= std::numeric_limits<double>::epsilon() ) {
+        r = 0.;
+    } else if( std::abs(r-1.) <= std::numeric_limits<double>::epsilon() ) {
+        r = 1.;
+    }
+    FixedPointCoordinate nearest_location;
+    BOOST_ASSERT( !std::isnan(r) );
+    if( r <= 0. ){
+        nearest_location.lat = segA.lat;
+        nearest_location.lon = segA.lon;
+    } else if( r >= 1. ){
+        nearest_location.lat = segB.lat;
+        nearest_location.lon = segB.lon;
+    } else { // point lies in between
+        nearest_location.lat = y2lat(p)*COORDINATE_PRECISION;
+        nearest_location.lon = q*COORDINATE_PRECISION;
+    }
+    BOOST_ASSERT( nearest_location.isValid() );
+    const double approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
+        point,
+        nearest_location
+    );
+    BOOST_ASSERT( 0. <= approximated_distance );
+    return approximated_distance;
 }
 
 void DouglasPeucker::Run(
@@ -91,7 +123,7 @@ void DouglasPeucker::Run(
         BOOST_ASSERT_MSG(1 < input_geometry.size(), "geometry invalid");
         std::size_t left_border = 0;
         std::size_t right_border = 1;
-        //Sweep linerarily over array and identify those ranges that need to be checked
+        //Sweep over array and identify those ranges that need to be checked
         do {
             BOOST_ASSERT_MSG(
                 input_geometry[left_border].necessary,
@@ -109,7 +141,7 @@ void DouglasPeucker::Run(
             ++right_border;
         } while( right_border < input_geometry.size());
     }
-    while(!recursion_stack.empty()) {
+    while( !recursion_stack.empty() ) {
         //pop next element
         const PairOfPoints pair = recursion_stack.top();
         recursion_stack.pop();
@@ -129,17 +161,17 @@ void DouglasPeucker::Run(
             pair.first < pair.second,
             "left border on the wrong side"
         );
-        int max_distance = INT_MIN;
+        double max_distance = std::numeric_limits<double>::min();
 
         std::size_t farthest_element_index = pair.second;
         //find index idx of element with max_distance
         for(std::size_t i = pair.first+1; i < pair.second; ++i){
-            const int temp_dist = fastDistance(
+            const int temp_dist = ComputeDistance(
                                     input_geometry[i].location,
                                     input_geometry[pair.first].location,
                                     input_geometry[pair.second].location
                                 );
-            const double distance = std::fabs(temp_dist);
+            const double distance = std::abs(temp_dist);
             if(
                 distance > DouglasPeuckerThresholds[zoom_level] &&
                 distance > max_distance

@@ -28,18 +28,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef XMLPARSER_H_
 #define XMLPARSER_H_
 
+#include "ExtractorCallbacks.h"
 #include "BaseParser.h"
-#include "../DataStructures/Coordinate.h"
-#include "../Util/SimpleLogger.h"
-#include "../Util/StringUtil.h"
-#include "../typedefs.h"
 
 #include <libxml/xmlreader.h>
 
 
 class XMLParser : public BaseParser {
 public:
-    XMLParser(const char* filename, ExtractorCallbacks* ec, ScriptingEnvironment& se);
+    XMLParser(
+        const char* filename,
+        ExtractorCallbacks* ec,
+        ScriptingEnvironment& se
+    );
     bool ReadHeader();
     bool Parse();
 

@@ -48,5 +48,6 @@ Feature: Via points
             | dh    |
 
         When I route I should get
-            | waypoints   | route     |
-            | a,c,f,h | ab,bcd,de,efg,gh |
+            | waypoints | route            |
+            | a,c,f     | ab,bcd,de,efg    |
+            | a,c,f,h   | ab,bcd,de,efg,gh |

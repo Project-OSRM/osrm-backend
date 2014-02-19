@@ -26,6 +26,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "ExtractionContainers.h"
+#include "ExtractionWay.h"
+#include "../Util/SimpleLogger.h"
+#include "../Util/TimingUtil.h"
+
+#include <boost/assert.hpp>
+#include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
+#include <stxxl/sort>
+
+ExtractionContainers::ExtractionContainers() {
+    //Check if stxxl can be instantiated
+    stxxl::vector<unsigned> dummy_vector;
+    name_list.push_back("");
+}
+
+ExtractionContainers::~ExtractionContainers() {
+    used_node_id_list.clear();
+    all_nodes_list.clear();
+    all_edges_list.clear();
+    name_list.clear();
+    restrictions_list.clear();
+    way_start_end_id_list.clear();
+}
 
 void ExtractionContainers::PrepareData(
     const std::string & output_file_name,
@@ -304,7 +329,7 @@ void ExtractionContainers::PrepareData(
                 edge_iterator->targetCoord.lat = node_iterator->lat;
                 edge_iterator->targetCoord.lon = node_iterator->lon;
 
-                const double distance = ApproximateDistance(
+                const double distance = FixedPointCoordinate::ApproximateDistance(
                     edge_iterator->startCoord.lat,
                     edge_iterator->startCoord.lon,
                     node_iterator->lat,

@@ -30,13 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
-#include "../DataStructures/Coordinate.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
+
+#include <osrm/Coordinate.h>
 
 #include <limits>
 #include <vector>
@@ -70,8 +71,8 @@ public:
         ) {
             //compute distance/duration for route summary
             intToString(round(distance), lengthString);
-            int travelTime = time/10 + 1;
-            intToString(travelTime, durationString);
+            int travel_time = time/10;
+            intToString(std::max(travel_time, 1), durationString);
         }
     } summary;
 
@@ -84,34 +85,31 @@ public:
     double GetBearing(const FixedPointCoordinate& C, const FixedPointCoordinate& B) const;
     void AppendEncodedPolylineString(std::vector<std::string> &output) const;
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
-    void AppendSegment(const FixedPointCoordinate & coordinate, const _PathData & data);
+    void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & start_phantom);
     void SetEndSegment(const PhantomNode & start_phantom);
     void AppendEncodedPolylineString(
         const bool return_encoded,
         std::vector<std::string> & output
-        );
+    );
 
     template<class DataFacadeT>
-    void Run(const DataFacadeT * facade, const unsigned zoomLevel) {
-
+    void Run(
+        const DataFacadeT * facade,
+        const unsigned zoomLevel
+    ) {
         if( pathDescription.empty() ) {
             return;
         }
 
-    //    unsigned entireLength = 0;
         /** starts at index 1 */
         pathDescription[0].length = 0;
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
-            pathDescription[i].length = ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
+            pathDescription[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
         }
 
-        double lengthOfSegment = 0;
-        unsigned durationOfSegment = 0;
-        unsigned indexOfSegmentBegin = 0;
-
-        // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].nameID);
+        // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
         // std::string string1;
 
 
@@ -129,8 +127,8 @@ public:
 
     //    unsigned lastTurn = 0;
     //    for(unsigned i = 1; i < pathDescription.size(); ++i) {
-    //        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].nameID);
-    //        if(TurnInstructionsClass::GoStraight == pathDescription[i].turnInstruction) {
+    //        string1 = sEngine.GetEscapedNameForNameID(pathDescription[i].name_id);
+    //        if(TurnInstructionsClass::GoStraight == pathDescription[i].turn_instruction) {
     //            if(std::string::npos != string0.find(string1+";")
     //                  || std::string::npos != string0.find(";"+string1)
     //                  || std::string::npos != string0.find(string1+" ;")
@@ -138,24 +136,27 @@ public:
     //                    ){
     //                SimpleLogger().Write() << "->next correct: " << string0 << " contains " << string1;
     //                for(; lastTurn != i; ++lastTurn)
-    //                    pathDescription[lastTurn].nameID = pathDescription[i].nameID;
-    //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
+    //                    pathDescription[lastTurn].name_id = pathDescription[i].name_id;
+    //                pathDescription[i].turn_instruction = TurnInstructionsClass::NoTurn;
     //            } else if(std::string::npos != string1.find(string0+";")
     //                  || std::string::npos != string1.find(";"+string0)
     //                    || std::string::npos != string1.find(string0+" ;")
     //                    || std::string::npos != string1.find("; "+string0)
     //                    ){
     //                SimpleLogger().Write() << "->prev correct: " << string1 << " contains " << string0;
-    //                pathDescription[i].nameID = pathDescription[i-1].nameID;
-    //                pathDescription[i].turnInstruction = TurnInstructionsClass::NoTurn;
+    //                pathDescription[i].name_id = pathDescription[i-1].name_id;
+    //                pathDescription[i].turn_instruction = TurnInstructionsClass::NoTurn;
     //            }
     //        }
-    //        if (TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
+    //        if (TurnInstructionsClass::NoTurn != pathDescription[i].turn_instruction) {
     //            lastTurn = i;
     //        }
     //        string0 = string1;
     //    }
 
+        double lengthOfSegment = 0;
+        unsigned durationOfSegment = 0;
+        unsigned indexOfSegmentBegin = 0;
 
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
             entireLength += pathDescription[i].length;
@@ -165,37 +166,31 @@ public:
             pathDescription[indexOfSegmentBegin].duration = durationOfSegment;
 
 
-            if(TurnInstructionsClass::NoTurn != pathDescription[i].turnInstruction) {
-                //SimpleLogger().Write() << "Turn after " << lengthOfSegment << "m into way with name id " << pathDescription[i].nameID;
-                assert(pathDescription[i].necessary);
+            if(TurnInstructionsClass::NoTurn != pathDescription[i].turn_instruction) {
+                BOOST_ASSERT(pathDescription[i].necessary);
                 lengthOfSegment = 0;
                 durationOfSegment = 0;
                 indexOfSegmentBegin = i;
             }
         }
-        //    SimpleLogger().Write() << "#segs: " << pathDescription.size();
 
         //Post-processing to remove empty or nearly empty path segments
         if(std::numeric_limits<double>::epsilon() > pathDescription.back().length) {
-            //        SimpleLogger().Write() << "#segs: " << pathDescription.size() << ", last ratio: " << target_phantom.ratio << ", length: " << pathDescription.back().length;
             if(pathDescription.size() > 2){
                 pathDescription.pop_back();
                 pathDescription.back().necessary = true;
-                pathDescription.back().turnInstruction = TurnInstructions.NoTurn;
-                target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->nameID;
-                //            SimpleLogger().Write() << "Deleting last turn instruction";
+                pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
+                target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
             }
         } else {
             pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
         }
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
-            //TODO: this is never called actually?
             if(pathDescription.size() > 2) {
                 pathDescription.erase(pathDescription.begin());
-                pathDescription[0].turnInstruction = TurnInstructions.HeadOn;
+                pathDescription[0].turn_instruction = TurnInstructions.HeadOn;
                 pathDescription[0].necessary = true;
-                start_phantom.nodeBasedEdgeNameID = pathDescription[0].nameID;
-                //            SimpleLogger().Write() << "Deleting first turn instruction, ratio: " << start_phantom.ratio << ", length: " << pathDescription[0].length;
+                start_phantom.nodeBasedEdgeNameID = pathDescription[0].name_id;
             }
         } else {
             pathDescription[0].duration *= start_phantom.ratio;
@@ -208,11 +203,9 @@ public:
         for(unsigned i = 0; i < pathDescription.size()-1 && pathDescription.size() >= 2; ++i){
             if(pathDescription[i].necessary) {
                 double angle = GetBearing(pathDescription[i].location, pathDescription[i+1].location);
-                pathDescription[i].bearing = angle;
+                pathDescription[i].bearing = angle*10;
             }
         }
-
-    //    BuildRouteSummary(entireLength, duration);
         return;
     }
 };

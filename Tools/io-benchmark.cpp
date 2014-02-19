@@ -79,6 +79,11 @@ int main (int argc, char * argv[]) {
             "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
             "compiled at " << __DATE__ << ", " __TIME__;
 
+#ifdef __FreeBSD__
+	SimpleLogger().Write() << "Not supported on FreeBSD";
+	return 0;
+#endif
+
     if( 1 == argc ) {
         SimpleLogger().Write(logWARNING) <<
             "usage: " << argv[0] << " /path/on/device";
@@ -222,6 +227,12 @@ int main (int argc, char * argv[]) {
                 int ret1 = fseek(fd, current_offset, SEEK_SET);
                 int ret2 = read(fileno(fd), (char*)&single_block[0], 4096);
 #endif
+
+#ifdef __FreeBSD__
+		int ret1 = 0;
+		int ret2 = 0;
+#endif
+
 #ifdef __linux__
                 int ret1 = lseek(f, current_offset, SEEK_SET);
                 int ret2 = read(f, (char*)single_block, 4096);
@@ -281,6 +292,12 @@ int main (int argc, char * argv[]) {
                 int ret1 = fseek(fd, current_offset, SEEK_SET);
                 int ret2 = read(fileno(fd), (char*)&single_block, 4096);
     #endif
+
+    #ifdef __FreeBSD__
+		int ret1 = 0;
+		int ret2 = 0;
+    #endif
+
     #ifdef __linux__
                 int ret1 = lseek(f, current_offset, SEEK_SET);
 

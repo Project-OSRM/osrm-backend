@@ -28,8 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTE_PARAMETERS_H
 #define ROUTE_PARAMETERS_H
 
-#include "../../DataStructures/Coordinate.h"
-#include "../../DataStructures/HashTable.h"
+#include <osrm/Coordinate.h>
 
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic.hpp>
@@ -46,13 +45,17 @@ struct RouteParameters {
         geometry(true),
         compression(true),
         deprecatedAPI(false),
-        checkSum(-1) {}
+        exec_time(false),
+        checkSum(-1)
+    { }
+
     short zoomLevel;
     bool printInstructions;
     bool alternateRoute;
     bool geometry;
     bool compression;
     bool deprecatedAPI;
+    bool exec_time;
     unsigned checkSum;
     std::string service;
     std::string outputFormat;
@@ -60,10 +63,9 @@ struct RouteParameters {
     std::string language;
     std::vector<std::string> hints;
     std::vector<FixedPointCoordinate> coordinates;
-    typedef HashTable<std::string, std::string>::const_iterator OptionsIterator;
 
     void setZoomLevel(const short i) {
-        if (18 > i && 0 < i) {
+        if (18 >= i && 0 <= i) {
             zoomLevel = i;
         }
     }
@@ -74,6 +76,10 @@ struct RouteParameters {
 
     void setDeprecatedAPIFlag(const std::string &) {
         deprecatedAPI = true;
+    }
+
+    void setExecTimeFlag(const bool b) {
+        exec_time = b;
     }
 
     void setChecksum(const unsigned c) {
@@ -97,8 +103,10 @@ struct RouteParameters {
     }
 
     void addHint(const std::string & s) {
-        hints.resize(coordinates.size());
-        hints.back() = s;
+        hints.resize( coordinates.size() );
+        if( !hints.empty() ) {
+            hints.back() = s;
+        }
     }
 
     void setLanguage(const std::string & s) {

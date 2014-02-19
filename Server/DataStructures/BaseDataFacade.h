@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //Exposes all data access interfaces to the algorithms via base class ptr
 
-#include "../../DataStructures/Coordinate.h"
 #include "../../DataStructures/EdgeBasedNode.h"
 #include "../../DataStructures/ImportNode.h"
 #include "../../DataStructures/PhantomNodes.h"
@@ -38,6 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/OSRMException.h"
 #include "../../Util/StringUtil.h"
 #include "../../typedefs.h"
+
+#include <osrm/Coordinate.h>
 
 #include <string>
 

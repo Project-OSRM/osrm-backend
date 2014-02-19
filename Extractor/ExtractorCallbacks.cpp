@@ -25,13 +25,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "ExtractionContainers.h"
+#include "ExtractionHelperFunctions.h"
+#include "ExtractionWay.h"
 #include "ExtractorCallbacks.h"
 
-ExtractorCallbacks::ExtractorCallbacks() {externalMemory = NULL; stringMap = NULL; }
-ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers * ext, StringMap * strMap) {
-    externalMemory = ext;
-    stringMap = strMap;
-}
+#include "../DataStructures/Restriction.h"
+#include "../Util/SimpleLogger.h"
+
+#include <osrm/Coordinate.h>
+
+#include <cfloat>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex.hpp>
+#include <boost/regex.hpp>
+
+#include <string>
+#include <vector>
+
+ExtractorCallbacks::ExtractorCallbacks()
+ :
+    stringMap(NULL),
+    externalMemory(NULL)
+{ }
+
+ExtractorCallbacks::ExtractorCallbacks(
+    ExtractionContainers * ext,
+    StringMap * strMap
+) :
+    stringMap(strMap),
+    externalMemory(ext)
+{ }
 
 ExtractorCallbacks::~ExtractorCallbacks() { }
 
@@ -62,14 +87,14 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
             parsed_way.speed = parsed_way.duration/(parsed_way.path.size()-1);
         }
 
-        if(std::numeric_limits<double>::epsilon() >= fabs(-1. - parsed_way.speed)){
+        if(std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.speed)){
             SimpleLogger().Write(logDEBUG) <<
                 "found way with bogus speed, id: " << parsed_way.id;
             return;
         }
 
         //Get the unique identifier for the street name
-        const StringMap::const_iterator string_map_iterator = stringMap->find(parsed_way.name);
+        const StringMap::const_iterator & string_map_iterator = stringMap->find(parsed_way.name);
         if(stringMap->end() == string_map_iterator) {
             parsed_way.nameID = externalMemory->name_list.size();
             externalMemory->name_list.push_back(parsed_way.name);
