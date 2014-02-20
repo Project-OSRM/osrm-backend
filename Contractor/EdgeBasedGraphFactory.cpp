@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fstream>
 #include <iomanip>
+#include <numeric>
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     int number_of_nodes,
@@ -301,12 +302,11 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         for(EdgeIterator id = m_node_based_graph->BeginEdges(v); id < m_node_based_graph->EndEdges(v); ++id) {
             SimpleLogger().Write(logDEBUG) << " id: " << id << ", edge (" << v << "," << m_node_based_graph->GetTarget(id) << ")";
         }
-
-        SimpleLogger().Write() << "e1: " << e1 << "u: " << u << ", v: " << v;
         SimpleLogger().Write() << std::setprecision(6) << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION << " <-> " <<
                 m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
     }
     BOOST_ASSERT( forward_data.edgeBasedNodeID != std::numeric_limits<unsigned>::max() );
+    SimpleLogger().Write() << "e1: " << e1 << "u: " << u << ", v: " << v;
 
     if( forward_data.ignore_in_grid ) {
         // SimpleLogger().Write(logDEBUG) << "skipped edge at " << m_node_info_list[u].lat << "," <<
@@ -320,9 +320,11 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
 
     // find reverse edge id and
     const EdgeID e2 = m_node_based_graph->FindEdge(v, u);
+#ifndef NDEBUG
     if ( e2 == m_node_based_graph->EndEdges(v) ) {
         SimpleLogger().Write(logDEBUG) << "Did not find edge (" << v << "," << u << ")";
     }
+#endif NDEBUG
     BOOST_ASSERT( e2 != std::numeric_limits<unsigned>::max() );
     BOOST_ASSERT( e2 < m_node_based_graph->EndEdges(v) );
     const EdgeData & reverse_data = m_node_based_graph->GetEdgeData(e2);
@@ -350,76 +352,136 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         const std::vector<GeometryCompressor::CompressedNode> & reverse_geometry = m_geometry_compressor.GetBucketReference(e2);
         BOOST_ASSERT( forward_geometry.size() == reverse_geometry.size() );
         BOOST_ASSERT( 0 != forward_geometry.size() );
-//         for( unsigned i = 0; i < reverse_geometry.size(); ++i ) {
-//             if( forward_geometry[i].first != reverse_geometry.back().first ) {
-// #ifndef NDEBUG
-//                 //Dumps debug information when data is borked
-//                 SimpleLogger().Write() << "size1: " << forward_geometry.size() << ", size2: " << reverse_geometry.size();
-//                 SimpleLogger().Write() << "index1: " << i << ", index2: " << reverse_geometry.size()-1-i;
-//                 SimpleLogger().Write() << forward_geometry[0].first << "!=" << reverse_geometry[reverse_geometry.size()-1-i].first;
-//                 BOOST_FOREACH(const GeometryCompressor::CompressedNode geometry_node, forward_geometry) {
-//                     SimpleLogger().Write(logDEBUG) << "fwd node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION;
-//                 }
-//                 BOOST_FOREACH(const GeometryCompressor::CompressedNode geometry_node, reverse_geometry) {
-//                     SimpleLogger().Write(logDEBUG) << "rev node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION;
-//                 }
-// #endif
-//             }
-//             BOOST_ASSERT( forward_geometry[i].first == reverse_geometry[reverse_geometry.size()-1-i].first );
-//         }
-        //TODO reconstruct bidirectional edge with weights.
 
         int fwd_sum_of_weights = 0;
         NodeID fwd_start_node = u;
         // SimpleLogger().Write(logDEBUG) << "fwd node " << "weight" << "," << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION;
-        SimpleLogger().Write(logDEBUG) << "fwd edge id: " << e1;
-        BOOST_FOREACH(const GeometryCompressor::CompressedNode geometry_node, forward_geometry) {
-            NodeID fwd_end_node = geometry_node.first;
-            EdgeWeight fwd_weight = geometry_node.second;
+        // if( 1 == e1 ) {
+        //     SimpleLogger().Write(logDEBUG) << "fwd edge id: " << e1;
+        // }
+        BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, forward_geometry) {
+            const NodeID fwd_end_node = geometry_node.first;
+            const EdgeWeight fwd_weight = geometry_node.second;
 
             // SimpleLogger().Write(logDEBUG) << "fwd node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION << ", w: " << geometry_node.second;
-            fwd_sum_of_weights += geometry_node.second;
-            SimpleLogger().Write(logDEBUG) << "fwd-edge (" << fwd_start_node << "," << fwd_end_node << "), w: " << fwd_weight;
+            fwd_sum_of_weights += fwd_weight;
+            // if( 1 == e1 ) {
+            //     SimpleLogger().Write(logDEBUG) << "fwd-edge (" << fwd_start_node << "," << fwd_end_node << "), w: " << fwd_weight;
+            // }
             fwd_start_node = fwd_end_node;
         }
-        SimpleLogger().Write(logDEBUG) << "fwd-edge (" << fwd_start_node << "," << v << "), w: " << (forward_data.distance - fwd_sum_of_weights);
+        // if( 1 == e1 ) {
+        //     SimpleLogger().Write(logDEBUG) << "fwd-edge (" << fwd_start_node << "," << v << "), w: " << (forward_data.distance - fwd_sum_of_weights);
+        // }
+        // SimpleLogger().Write(logDEBUG) << "fwd node " << "weight" << "," << m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
+        // SimpleLogger().Write(logDEBUG) << "rev node " << "weight" << "," << m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
+        // BOOST_FOREACH(const GeometryCompressor::CompressedNode geometry_node, reverse_geometry) {
+        //     SimpleLogger().Write(logDEBUG) << "rev node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION;
+        // }
+        // SimpleLogger().Write(logDEBUG) << "rev node " << "weight" << "," << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION;
 
-            // SimpleLogger().Write(logDEBUG) << "fwd node " << "weight" << "," << m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
-            // SimpleLogger().Write(logDEBUG) << "rev node " << "weight" << "," << m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
-            // BOOST_FOREACH(const GeometryCompressor::CompressedNode geometry_node, reverse_geometry) {
-            //     SimpleLogger().Write(logDEBUG) << "rev node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION;
-            // }
-            // SimpleLogger().Write(logDEBUG) << "rev node " << "weight" << "," << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION;
-
-        SimpleLogger().Write(logDEBUG) << "fwd sum of edge weights: " << fwd_sum_of_weights;
-        SimpleLogger().Write(logDEBUG) << "c'ted edge weight: " << forward_data.distance;
-        SimpleLogger().Write(logDEBUG) << "weight diff: " << (forward_data.distance - fwd_sum_of_weights);
+        // if( 1 == e1 ) {
+        //     SimpleLogger().Write(logDEBUG) << "fwd sum of edge weights: " << fwd_sum_of_weights;
+        //     SimpleLogger().Write(logDEBUG) << "c'ted edge weight: " << forward_data.distance;
+        //     SimpleLogger().Write(logDEBUG) << "weight diff: " << (forward_data.distance - fwd_sum_of_weights);
+        // }
+        BOOST_ASSERT( forward_data.distance == fwd_sum_of_weights );
 
 
         int rev_sum_of_weights = 0;
         NodeID rev_start_node = v;
         // SimpleLogger().Write(logDEBUG) << "fwd node " << "weight" << "," << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION;
-        BOOST_FOREACH(const GeometryCompressor::CompressedNode geometry_node, reverse_geometry) {
-            NodeID rev_end_node = geometry_node.first;
-            EdgeWeight rev_weight = geometry_node.second;
+        BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, reverse_geometry) {
+            const NodeID rev_end_node = geometry_node.first;
+            const EdgeWeight rev_weight = geometry_node.second;
 
-            // SimpleLogger().Write(logDEBUG) << "fwd node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION << ", w: " << geometry_node.second;
-            rev_sum_of_weights += geometry_node.second;
-            SimpleLogger().Write(logDEBUG) << "Edge (" << rev_start_node << "," << rev_end_node << "), w: " << rev_weight;
+            // SimpleLogger().Write(logDEBUG) << "rev node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION << ", w: " << geometry_node.second;
+            rev_sum_of_weights += rev_weight;
+            // if( 1 == e1 ) {
+            //     SimpleLogger().Write(logDEBUG) << "Edge (" << rev_start_node << "," << rev_end_node << "), w: " << rev_weight;
+            // }
             rev_start_node = rev_end_node;
         }
-        SimpleLogger().Write(logDEBUG) << "Edge (" << rev_start_node << "," << u << "), w: " << (reverse_data.distance - rev_sum_of_weights);
+        // if( 1 == e1 ) {
+        //     SimpleLogger().Write(logDEBUG) << "Edge (" << rev_start_node << "," << u << "), w: " << (reverse_data.distance - rev_sum_of_weights);
 
-        SimpleLogger().Write(logDEBUG) << "rev sum of edge weights: " << rev_sum_of_weights;
-        SimpleLogger().Write(logDEBUG) << "c'ted edge weight: " << reverse_data.distance;
-        SimpleLogger().Write(logDEBUG) << "weight diff: " << (reverse_data.distance - rev_sum_of_weights);
+        //     SimpleLogger().Write(logDEBUG) << "rev sum of edge weights: " << rev_sum_of_weights;
+        //     SimpleLogger().Write(logDEBUG) << "c'ted edge weight: " << reverse_data.distance;
+        //     SimpleLogger().Write(logDEBUG) << "weight diff: " << (reverse_data.distance - rev_sum_of_weights);
 
-
-        BOOST_ASSERT(false);
-
+        BOOST_ASSERT( reverse_data.distance == rev_sum_of_weights );
+        //     // BOOST_ASSERT(false);
+        // }
         // SimpleLogger().Write(logDEBUG) << "start " << m_node_info_list[u].lat << "," << m_node_info_list[u].lon;
         // SimpleLogger().Write(logDEBUG) << "target " << m_node_info_list[v].lat << "," << m_node_info_list[v].lon;
         // BOOST_ASSERT( false );
+
+        //TODO reconstruct bidirectional edge with individual weights and put each into the NN index
+
+        std::vector<int> forward_dist_prefix_sum( forward_geometry.size() );
+        std::vector<int> reverse_dist_prefix_sum( reverse_geometry.size() );
+
+        //quick'n'dirty prefix sum as std::partial_sum needs addtional casts
+        // SimpleLogger().Write(logDEBUG) << "Prefix sums of edge " << e1 << ", w: " << reverse_data.distance;
+        int temp_sum = 0;
+        for( unsigned i = 0; i < forward_geometry.size(); ++i ) {
+            temp_sum += forward_geometry[i].second;
+            BOOST_ASSERT( forward_data.distance >= temp_sum );
+            forward_dist_prefix_sum[i] = forward_data.distance - temp_sum;
+            // SimpleLogger().Write(logDEBUG) << "[" << i << "]" << temp_sum << ", n: " << forward_geometry[i].first << ", loc: " << m_node_info_list[forward_geometry[i].first].lat/COORDINATE_PRECISION << "," << m_node_info_list[forward_geometry[i].first].lon/COORDINATE_PRECISION;
+        }
+        BOOST_ASSERT( forward_data.distance == temp_sum );
+        temp_sum = 0;
+        for( unsigned i = 0; i < reverse_geometry.size(); ++i ) {
+            temp_sum += reverse_geometry[i].second;
+            BOOST_ASSERT( reverse_data.distance >= temp_sum );
+            reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
+            // SimpleLogger().Write(logDEBUG) << "[" << i << "]" << temp_sum << ", n: " << reverse_geometry[i].first << ", loc: " << m_node_info_list[reverse_geometry[i].first].lat/COORDINATE_PRECISION << "," << m_node_info_list[reverse_geometry[i].first].lon/COORDINATE_PRECISION;
+        }
+        BOOST_ASSERT( reverse_data.distance == temp_sum );
+
+        BOOST_ASSERT( forward_geometry.size() == reverse_geometry.size() );
+
+        const unsigned geometry_size = forward_geometry.size();
+        NodeID first_node_of_edge = u;
+        // traverse arrays from start and end respectively
+        for( unsigned i = 0; i < geometry_size; ++i ) {
+            BOOST_ASSERT( first_node_of_edge == reverse_geometry[geometry_size-1-i].first );
+            const NodeID last_coordinate_id = forward_geometry[i].first;
+
+            // SimpleLogger().Write() << "adding edge (" << first_node_of_edge << "," << forward_geometry[i].first << ") ";
+            // SimpleLogger().Write() << "fwd w: " << forward_geometry[i].second << ", fwd o: " << forward_dist_prefix_sum[i];
+            // SimpleLogger().Write() << "rev w: " << reverse_geometry[geometry_size-1-i].second << ", rev o: " << reverse_dist_prefix_sum[geometry_size-1-i];
+
+            //TODO: build edges
+            m_edge_based_node_list.push_back(
+                EdgeBasedNode(
+                    forward_data.edgeBasedNodeID,
+                    reverse_data.edgeBasedNodeID,
+                    m_node_info_list[first_node_of_edge].lat,
+                    m_node_info_list[first_node_of_edge].lon,
+                    m_node_info_list[forward_geometry[i].first].lat,
+                    m_node_info_list[forward_geometry[i].first].lon,
+                    belongs_to_tiny_cc,//TODO
+                    forward_data.nameID,
+                    forward_geometry[i].second,
+                    reverse_geometry[geometry_size-1-i].second,
+                    forward_dist_prefix_sum[i],
+                    reverse_dist_prefix_sum[geometry_size-1-i]
+                )
+            );
+            first_node_of_edge = last_coordinate_id;
+        }
+        //TODO: Manually reconstruct last edge.
+
+        if( first_node_of_edge != v ) {
+            SimpleLogger().Write(logDEBUG) << "first_node_of_edge:" << first_node_of_edge << ", u: " << u << ", v: " << v;
+        }
+
+        // BOOST_ASSERT( false );
+
+        BOOST_ASSERT( first_node_of_edge == v );
+
     } else {
         BOOST_ASSERT( !m_geometry_compressor.HasEntryForID(e2) );
 
@@ -537,32 +599,17 @@ void EdgeBasedGraphFactory::Run(
             rev_edge_data1.IsEqualTo(rev_edge_data2)
         ) {
             //Get distances before graph is modified
-            const bool fwd_e1_is_compressed = m_geometry_compressor.HasEntryForID(forward_e1);
-            int forward_weight1 = 0;
-            if( fwd_e1_is_compressed ) {
-                forward_weight1 = m_geometry_compressor.GetBucketReference(forward_e1).back().second;
-            } else {
-                forward_weight1 = m_node_based_graph->GetEdgeData(forward_e1).distance;
-            }
-            if( 0 == forward_e1 ) {
-                SimpleLogger().Write(logDEBUG) << (fwd_e1_is_compressed ? "fetched" : "used") << " fwd weight: " << forward_weight1;
-            }
+            const int forward_weight1 = m_node_based_graph->GetEdgeData(forward_e1).distance;
+            const int forward_weight2 = m_node_based_graph->GetEdgeData(forward_e2).distance;
 
             BOOST_ASSERT( 0 != forward_weight1 );
-            // const int forward_weight2 = fwd_edge_data2.distance;
+            BOOST_ASSERT( 0 != forward_weight2 );
 
-            const bool rev_e1_is_compressed = m_geometry_compressor.HasEntryForID(reverse_e1);
-            int reverse_weight1 = 0;
-            if( rev_e1_is_compressed ) {
-                reverse_weight1 = m_geometry_compressor.GetBucketReference(reverse_e1).back().second;
-            } else {
-                reverse_weight1 = m_node_based_graph->GetEdgeData(reverse_e1).distance;
-            }
+            const int reverse_weight1 = m_node_based_graph->GetEdgeData(reverse_e1).distance;
+            const int reverse_weight2 = m_node_based_graph->GetEdgeData(reverse_e2).distance;
+
             BOOST_ASSERT( 0 != reverse_weight1 );
-            if( 0 == reverse_e1 ) {
-                SimpleLogger().Write(logDEBUG) << (rev_e1_is_compressed ? "fetched" : "used") << " fwd weight: " << reverse_weight1;
-            }
-
+            BOOST_ASSERT( 0 != forward_weight2 );
 
             // add weight of e2's to e1
             m_node_based_graph->GetEdgeData(forward_e1).distance += fwd_edge_data2.distance;
@@ -590,15 +637,17 @@ void EdgeBasedGraphFactory::Run(
                 forward_e1,
                 forward_e2,
                 v,
-                forward_weight1//,
-                // forward_weight2
+                w,
+                forward_weight1,
+                forward_weight2
             );
             m_geometry_compressor.CompressEdge(
                 reverse_e1,
                 reverse_e2,
                 v,
-                reverse_weight1//,
-                // reverse_weight2
+                u,
+                reverse_weight1,
+                reverse_weight2
             );
 
             ++removed_node_count;
@@ -858,7 +907,7 @@ void EdgeBasedGraphFactory::Run(
                 const bool edge_is_compressed = m_geometry_compressor.HasEntryForID(e1);
                 if(edge_is_compressed) {
                     ++compressed;
-                    m_geometry_compressor.AddLastViaNodeIDToCompressedEdge(e1, v, /*TODO*/ 1);
+                    // m_geometry_compressor.AddLastViaNodeIDToCompressedEdge(e1, v, /*TODO*/ 1);
                     if ( 0 == m_geometry_compressor.GetPositionForID(e1) ) {
                         SimpleLogger().Write(logDEBUG) << "e1: " << e1 << " is zero with via node: " << v;
                     }

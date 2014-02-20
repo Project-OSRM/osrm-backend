@@ -61,23 +61,6 @@ unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const {
     return map_iterator->second;
 }
 
-void GeometryCompressor::AddLastViaNodeIDToCompressedEdge(
-    const EdgeID edge_id,
-    const NodeID node_id,
-    const EdgeWeight weight
-) {
-    unsigned index = GetPositionForID(edge_id);
-    BOOST_ASSERT( index < m_compressed_geometries.size() );
-    if( !m_compressed_geometries[index].empty() ) {
-        if( m_compressed_geometries[index].back().first == node_id ) {
-            return;
-        }
-    }
-    BOOST_ASSERT( node_id != m_compressed_geometries[index].back().first );
-    m_compressed_geometries[index].push_back( std::make_pair(node_id, weight) );
-    BOOST_ASSERT( node_id == m_compressed_geometries[index].back().first );
-}
-
 void GeometryCompressor::SerializeInternalVector(
     const std::string & path
 ) const {
@@ -139,27 +122,31 @@ void GeometryCompressor::SerializeInternalVector(
 }
 
 void GeometryCompressor::CompressEdge(
-    const EdgeID surviving_edge_id,
-    const EdgeID removed_edge_id,
+    const EdgeID edge_id_1,
+    const EdgeID edge_id_2,
     const NodeID via_node_id,
-    const EdgeWeight weight1//,
-    // const EdgeWeight weight2
+    const NodeID target_node_id,
+    const EdgeWeight weight1,
+    const EdgeWeight weight2
 ) {
 
-    BOOST_ASSERT( SPECIAL_EDGEID != surviving_edge_id );
-    BOOST_ASSERT( SPECIAL_NODEID != removed_edge_id   );
-    BOOST_ASSERT( SPECIAL_NODEID != via_node_id       );
+    BOOST_ASSERT( SPECIAL_EDGEID != edge_id_1 );
+    BOOST_ASSERT( SPECIAL_EDGEID != edge_id_2 );
+    BOOST_ASSERT( SPECIAL_NODEID != via_node_id );
+    BOOST_ASSERT( SPECIAL_NODEID != target_node_id );
     BOOST_ASSERT( std::numeric_limits<unsigned>::max() != weight1 );
+    BOOST_ASSERT( std::numeric_limits<unsigned>::max() != weight2 );
+
     // append list of removed edge_id plus via node to surviving edge id:
     // <surv_1, .. , surv_n, via_node_id, rem_1, .. rem_n
     //
     // General scheme:
-    // 1. append via node id to list of surviving_edge_id
-    // 2. find list for removed_edge_id, if yes add all elements and delete it
+    // 1. append via node id to list of edge_id_1
+    // 2. find list for edge_id_2, if yes add all elements and delete it
 
     // Add via node id. List is created if it does not exist
     if(
-        m_edge_id_to_list_index_map.find(surviving_edge_id) == m_edge_id_to_list_index_map.end()
+        !HasEntryForID(edge_id_1)
     ) {
         // create a new entry in the map
         if( 0 == m_free_list.size() ) {
@@ -169,60 +156,57 @@ void GeometryCompressor::CompressEdge(
         }
         BOOST_ASSERT( !m_free_list.empty() );
         // SimpleLogger().Write() << "free list size: " << m_free_list.size();
-        m_edge_id_to_list_index_map[surviving_edge_id] = m_free_list.back();
+        m_edge_id_to_list_index_map[edge_id_1] = m_free_list.back();
         m_free_list.pop_back();
     }
-    const unsigned surving_list_id = m_edge_id_to_list_index_map[surviving_edge_id];
-    BOOST_ASSERT( surving_list_id == GetPositionForID(surviving_edge_id));
 
-    // SimpleLogger().Write() << "surviving edge id " << surviving_edge_id << " is listed at " << surving_list_id;
-    BOOST_ASSERT( surving_list_id < m_compressed_geometries.size() );
+    const unsigned edge_bucket_id1 = m_edge_id_to_list_index_map[edge_id_1];
+    BOOST_ASSERT( edge_bucket_id1 == GetPositionForID(edge_id_1));
+    BOOST_ASSERT( edge_bucket_id1 < m_compressed_geometries.size() );
 
-    std::vector<CompressedNode> & surviving_geometry_list = m_compressed_geometries[surving_list_id];
-    BOOST_ASSERT(
-        surviving_geometry_list.empty() ||
-        ( via_node_id != surviving_geometry_list.back().first )
-    );
+    std::vector<CompressedNode> & edge_bucket_list1 = m_compressed_geometries[edge_bucket_id1];
 
-    if(surviving_edge_id == 0) {
+    if( 0 == edge_id_1 ) {
         SimpleLogger().Write(logDEBUG) << "adding via " << via_node_id << ", w: " << weight1;
     }
 
-    surviving_geometry_list.push_back( std::make_pair(via_node_id, weight1) );
-    BOOST_ASSERT( 0 < surviving_geometry_list.size() );
-    BOOST_ASSERT( !surviving_geometry_list.empty() );
+    if( edge_bucket_list1.empty() ) {
+        edge_bucket_list1.push_back( std::make_pair(via_node_id, weight1) );
+    }
 
-    // Find any existing list for removed_edge_id
-    typename boost::unordered_map<EdgeID, unsigned>::const_iterator remove_list_iterator;
-    remove_list_iterator = m_edge_id_to_list_index_map.find(removed_edge_id);
-    if( m_edge_id_to_list_index_map.end() != remove_list_iterator ) {
-        const unsigned list_to_remove_index = remove_list_iterator->second;
-        BOOST_ASSERT( list_to_remove_index == GetPositionForID(removed_edge_id));
+    BOOST_ASSERT( 0 < edge_bucket_list1.size() );
+    BOOST_ASSERT( !edge_bucket_list1.empty() );
+
+    if( HasEntryForID(edge_id_2) ) {
+        // second edge is not atomic anymore
+        const unsigned list_to_remove_index = GetPositionForID(edge_id_2);
         BOOST_ASSERT( list_to_remove_index < m_compressed_geometries.size() );
 
-        std::vector<CompressedNode> & remove_geometry_list = m_compressed_geometries[list_to_remove_index];
-        if(surviving_edge_id == 0) {
+        std::vector<CompressedNode> & edge_bucket_list2 = m_compressed_geometries[list_to_remove_index];
+        if( 0 == edge_id_1 ) {
             SimpleLogger().Write(logDEBUG) << "appending to list: ";
-            BOOST_FOREACH(const CompressedNode & node, remove_geometry_list) {
+            BOOST_FOREACH(const CompressedNode & node, edge_bucket_list2) {
                 SimpleLogger().Write(logDEBUG) << "adding via " << node.first << ", w: " << node.second;
             }
         }
 
-
-        // found an existing list, append it to the list of surviving_edge_id
-        surviving_geometry_list.insert(
-            surviving_geometry_list.end(),
-            remove_geometry_list.begin(),
-            remove_geometry_list.end()
+        // found an existing list, append it to the list of edge_id_1
+        edge_bucket_list1.insert(
+            edge_bucket_list1.end(),
+            edge_bucket_list2.begin(),
+            edge_bucket_list2.end()
         );
 
-        //remove the list of removed_edge_id
-        m_edge_id_to_list_index_map.erase(remove_list_iterator);
-        BOOST_ASSERT( m_edge_id_to_list_index_map.end() == m_edge_id_to_list_index_map.find(removed_edge_id) );
-        remove_geometry_list.clear();
-        BOOST_ASSERT( 0 == remove_geometry_list.size() );
+        //remove the list of edge_id_2
+        m_edge_id_to_list_index_map.erase(edge_id_2);
+        BOOST_ASSERT( m_edge_id_to_list_index_map.end() == m_edge_id_to_list_index_map.find(edge_id_2) );
+        edge_bucket_list2.clear();
+        BOOST_ASSERT( 0 == edge_bucket_list2.size() );
         m_free_list.push_back(list_to_remove_index);
         BOOST_ASSERT( list_to_remove_index == m_free_list.back() );
+    } else {
+        // we are certain that the second edge is atomic.
+        edge_bucket_list1.push_back( std::make_pair(target_node_id, weight2) );
     }
 }
 

@@ -42,18 +42,19 @@ public:
 
     GeometryCompressor();
     void CompressEdge(
-        const EdgeID first_edge_id,
-        const EdgeID second_edge_id,
+        const EdgeID surviving_edge_id,
+        const EdgeID removed_edge_id,
         const NodeID via_node_id,
-        const EdgeWeight weight1//,
-        // const EdgeWeight weight2
+        const NodeID target_node,
+        const EdgeWeight weight1,
+        const EdgeWeight weight2
     );
 
-    void AddLastViaNodeIDToCompressedEdge(
-        const EdgeID edge_id,
-        const NodeID node_id,
-        const EdgeWeight weight
-    );
+    // void AddLastViaNodeIDToCompressedEdge(
+    //     const EdgeID edge_id,
+    //     const NodeID node_id,
+    //     const EdgeWeight weight
+    // );
     bool HasEntryForID(const EdgeID edge_id) const;
     void PrintStatistics() const;
     void SerializeInternalVector(const std::string & path) const;
