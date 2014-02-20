@@ -28,9 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 
-// To fix long and long long woes
-#include <boost/integer.hpp>
-#include <boost/integer_traits.hpp>
+#include <limits>
 
 // Necessary workaround for Windows as VS doesn't implement C99
 #ifdef _MSC_VER
@@ -46,9 +44,10 @@ digitT round(digitT x) {
 
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
-typedef unsigned int EdgeWeight;
+typedef int EdgeWeight;
 
-static const NodeID SPECIAL_NODEID = boost::integer_traits<uint32_t>::const_max;
-static const EdgeID SPECIAL_EDGEID = boost::integer_traits<uint32_t>::const_max;
+static const NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
+static const EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();
+static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
 
 #endif /* TYPEDEFS_H_ */
