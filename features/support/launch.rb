@@ -4,10 +4,16 @@ require 'open3'
 LAUNCH_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 2
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
+if ENV['OS']=~/Windows.*/ then
+  TERMSIGNAL=9
+else
+  TERMSIGNAL='TERM'
+end
 
 class OSRMLauncher
   def initialize input_file, &block
     @input_file = input_file
+
     Dir.chdir TEST_FOLDER do
       begin
         launch
@@ -41,9 +47,15 @@ class OSRMLauncher
 
   def osrm_up?
     if @pid
-      `ps -o state -p #{@pid}`.split[1].to_s =~ /^[DRST]/
-    else
-      false
+       begin
+         if Process.waitpid(@pid, Process::WNOHANG) then
+            false
+         else
+            true
+         end
+       rescue Errno::ESRCH
+        false
+      end
     end
   end
 
@@ -54,7 +66,7 @@ class OSRMLauncher
 
   def osrm_down
     if @pid
-      Process.kill 'TERM', @pid
+      Process.kill TERMSIGNAL, @pid
       wait_for_shutdown
     end
   end

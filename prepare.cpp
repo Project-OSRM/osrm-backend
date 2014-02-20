@@ -128,7 +128,7 @@ int main (int argc, char *argv[]) {
         boost::program_options::notify(option_variables);
 
         if(boost::filesystem::is_regular_file(config_file_path)) {
-            SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
+            SimpleLogger().Write() << "Reading options from: " << config_file_path;
             std::string config_str;
             PrepareConfigFile( config_file_path.c_str(), config_str );
             std::stringstream config_stream( config_str );
@@ -137,7 +137,7 @@ int main (int argc, char *argv[]) {
         }
 
         if(!option_variables.count("restrictions")) {
-            restrictions_path = std::string( input_path.c_str()) + ".restrictions";
+            restrictions_path =  input_path.string() + ".restrictions";
         }
 
         if(!option_variables.count("input")) {
@@ -157,11 +157,12 @@ int main (int argc, char *argv[]) {
 
         omp_set_num_threads( std::min( omp_get_num_procs(), requested_num_threads) );
         LogPolicy::GetInstance().Unmute();
-        std::ifstream restrictionsInstream( restrictions_path.c_str(), std::ios::binary);
+		
+        std::ifstream restrictionsInstream( restrictions_path.string().c_str(), std::ios::binary);
         TurnRestriction restriction;
-        UUID uuid_loaded, uuid_orig;
+        UUIDC uuid_loaded, uuid_orig;
         unsigned usableRestrictionsCounter(0);
-        restrictionsInstream.read((char*)&uuid_loaded, sizeof(UUID));
+        restrictionsInstream.read((char*)&uuid_loaded, sizeof(UUIDC));
         if( !uuid_loaded.TestPrepare(uuid_orig) ) {
             SimpleLogger().Write(logWARNING) <<
                 ".restrictions was prepared with different build.\n"
@@ -180,13 +181,14 @@ int main (int argc, char *argv[]) {
         restrictionsInstream.close();
 
         std::ifstream in;
-        in.open (input_path.c_str(), std::ifstream::in | std::ifstream::binary);
-
-        std::string nodeOut(input_path.c_str());		nodeOut += ".nodes";
-        std::string edgeOut(input_path.c_str());		edgeOut += ".edges";
-        std::string graphOut(input_path.c_str());		graphOut += ".hsgr";
-        std::string rtree_nodes_path(input_path.c_str());  rtree_nodes_path += ".ramIndex";
-        std::string rtree_leafs_path(input_path.c_str());  rtree_leafs_path += ".fileIndex";
+        in.open (input_path.string().c_str(), std::ifstream::in | std::ifstream::binary);
+		
+		
+        std::string nodeOut = input_path.string();		nodeOut += ".nodes";
+        std::string edgeOut = input_path.string();		edgeOut += ".edges";
+        std::string graphOut = input_path.string();		graphOut += ".hsgr";
+        std::string rtree_nodes_path = input_path.string();  rtree_nodes_path += ".ramIndex";
+        std::string rtree_leafs_path = input_path.string();  rtree_leafs_path += ".fileIndex";
 
         /*** Setup Scripting Environment ***/
 
@@ -200,10 +202,10 @@ int main (int argc, char *argv[]) {
         luaL_openlibs(myLuaState);
 
         //adjust lua load path
-        luaAddScriptFolderToLoadPath( myLuaState, profile_path.c_str() );
+        luaAddScriptFolderToLoadPath( myLuaState, profile_path.string().c_str() );
 
         // Now call our function in a lua script
-        if(0 != luaL_dofile(myLuaState, profile_path.c_str() )) {
+        if(0 != luaL_dofile(myLuaState, profile_path.string().c_str() )) {
             std::cerr <<
                 lua_tostring(myLuaState,-1)   <<
                 " occured in scripting block" <<
@@ -330,7 +332,7 @@ int main (int argc, char *argv[]) {
             " edges";
 
         std::ofstream hsgr_output_stream(graphOut.c_str(), std::ios::binary);
-        hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
+        hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUIDC) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
             BOOST_ASSERT( UINT_MAX != edge.source );
             BOOST_ASSERT( UINT_MAX != edge.target );

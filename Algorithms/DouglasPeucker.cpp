@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include <boost/math/special_functions/fpclassify.hpp>
 #include "DouglasPeucker.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../Util/MercatorUtil.h"
@@ -86,7 +87,7 @@ double DouglasPeucker::ComputeDistance(
     }
 
     double r = (p - nY*a)/c;
-    if( std::isnan(r) ) {
+    if( boost::math::isnan(r) ) {
         r = ((segB.lat == point.lat) && (segB.lon == point.lon)) ? 1. : 0.;
     } else if( std::abs(r) <= std::numeric_limits<double>::epsilon() ) {
         r = 0.;
@@ -94,7 +95,7 @@ double DouglasPeucker::ComputeDistance(
         r = 1.;
     }
     FixedPointCoordinate nearest_location;
-    BOOST_ASSERT( !std::isnan(r) );
+    BOOST_ASSERT( !boost::math::isnan(r) );
     if( r <= 0. ){
         nearest_location.lat = segA.lat;
         nearest_location.lon = segA.lon;

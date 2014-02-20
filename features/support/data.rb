@@ -16,6 +16,14 @@ DEFAULT_GRID_SIZE = 100   #meters
 PROFILES_PATH = '../profiles'
 BIN_PATH = '../build'
 
+if ENV['OS']=~/Windows.*/ then
+   EXE='.exe'
+   QQ='"'
+else
+   EXE=''
+   QQ=''
+end
+
 DEFAULT_ORIGIN = [1,1]
 
 class Location
@@ -224,7 +232,7 @@ def convert_osm_to_pbf
   unless File.exist?("#{@osm_file}.osm.pbf")
     log_preprocess_info
     log "== Converting #{@osm_file}.osm to protobuffer format...", :preprocess
-    unless system "osmosis --read-xml #{@osm_file}.osm --write-pbf #{@osm_file}.osm.pbf omitmetadata=true 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+    unless system "osmosis --read-xml #{@osm_file}.osm --write-pbf #{@osm_file}.osm.pbf omitmetadata=true >>#{PREPROCESS_LOG_FILE} 2>&1"
       raise OsmosisError.new $?, "osmosis exited with code #{$?.exitstatus}"
     end
     log '', :preprocess
@@ -254,7 +262,8 @@ def reprocess
     unless extracted?
       log_preprocess_info
       log "== Extracting #{@osm_file}.osm...", :preprocess
-      unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if use_pbf} --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+      unless system "#{QQ}#{BIN_PATH}/osrm-extract#{EXE}#{QQ} #{@osm_file}.osm#{'.pbf' if use_pbf} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+        log "#{BIN_PATH}/osrm-extract#{EXE} #{@osm_file}.osm#{'.pbf' if use_pbf} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1", :preprocess
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
       end
@@ -263,7 +272,7 @@ def reprocess
     unless prepared?
       log_preprocess_info
       log "== Preparing #{@osm_file}.osm...", :preprocess
-      unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+      unless system "#{QQ}#{BIN_PATH}/osrm-prepare#{EXE}#{QQ} #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
         log "*** Exited with code #{$?.exitstatus}.", :preprocess
         raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
       end

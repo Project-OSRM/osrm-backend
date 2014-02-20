@@ -206,8 +206,8 @@ int main( const int argc, const char * argv[] ) {
             std::ios::binary
         );
 
-        UUID uuid_loaded, uuid_orig;
-        hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
+        UUIDC uuid_loaded, uuid_orig;
+        hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUIDC));
         if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
             SimpleLogger().Write(logWARNING) <<
                 ".hsgr was prepared with different build. "
