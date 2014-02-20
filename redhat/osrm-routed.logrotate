@@ -1,0 +1,11 @@
+/var/log/osrm/osrm-routed.log {
+	rotate 14
+	size=100M
+	missingok
+	notifempty
+	sharedscripts
+	compress
+	nodateext
+	delaycompress
+	copytruncate
+}
