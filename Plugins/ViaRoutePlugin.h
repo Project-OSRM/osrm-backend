@@ -158,17 +158,13 @@ public:
         descriptorConfig.geometry = routeParameters.geometry;
         descriptorConfig.encode_geometry = routeParameters.compression;
 
-	std::string exec_time_token;
         switch(descriptorType){
         case 1:
             desc = new GPXDescriptor<DataFacadeT>();
-            exec_time_token = "<metadata>";
             break;
         case 0:
         default:
             desc = new JSONDescriptor<DataFacadeT>();
-            exec_time_token = "{";
-
             break;
         }
 
@@ -181,16 +177,11 @@ public:
 
         if (routeParameters.exec_time) {
             int64_t time_ms = exec_time.toNowInMs();
-            std::vector<std::string>::iterator it = reply.content.begin();
-            for (; it != reply.content.end(); ++it) {
-                if (0 == (*it).compare(0, exec_time_token.size(), exec_time_token)) {
-			break; // we have found place to insert exec time metric
-                }
-            }
+            std::vector<std::string>::iterator it = reply.getContentInsIter();
             if (it != reply.content.end()) {
                 std::string temp_string;
                 int64ToString(time_ms, temp_string);
-                reply.content.insert(++it, (1 == descriptorType)?
+                reply.content.insert(it, (1 == descriptorType)?
                     "<exec_time_ms>" + temp_string + "</exec_time_ms>" : "\"exec_time_ms\":" + temp_string + ","
                 );
             } else {

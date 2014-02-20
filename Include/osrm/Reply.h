@@ -61,9 +61,18 @@ public:
     static Reply StockReply(status_type status);
     void setSize(const unsigned size);
     Reply();
+
+    // Obtain iterator for inserting additional data into the content
+    std::vector<std::string>::iterator getContentInsIter() throw();
+
+    // Assing iterator for inserting data
+    inline void setContentInsIndex(ssize_t i) throw() { m_contentInsIndex = i; }
+
 private:
     static std::string ToString(Reply::status_type status);
     boost::asio::const_buffer ToBuffer(Reply::status_type status);
+
+    ssize_t m_contentInsIndex;
 };
 
 }

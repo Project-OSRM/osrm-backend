@@ -117,6 +117,7 @@ public:
         facade = f;
         reply.content.push_back("{");
         reply.content.push_back("\"status\":");
+        reply.setContentInsIndex(reply.content.size() - 1); // place to insert additional content
 
         if(INT_MAX == raw_route.lengthOfShortestPath) {
             //We do not need to do much, if there is no route ;-)
