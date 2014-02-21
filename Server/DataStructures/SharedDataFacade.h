@@ -30,9 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //implements all data storage when shared memory _IS_ used
 
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "BaseDataFacade.h"
 #include "SharedDataType.h"
 
@@ -41,6 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
+
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <algorithm>
 
@@ -55,7 +55,7 @@ private:
     typedef typename StaticGraph<EdgeData, true>::_StrEdge  GraphEdge;
     typedef typename QueryGraph::InputEdge                  InputEdge;
     typedef typename super::RTreeLeaf                       RTreeLeaf;
-    typedef typename StaticRTree<RTreeLeaf, true>::TreeNode RTreeNode;
+    typedef typename StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;
 
     SharedDataLayout    * data_layout;
     char                * shared_memory;
@@ -72,13 +72,21 @@ private:
     boost::shared_ptr<SharedMemory>         m_large_memory;
     std::string                             m_timestamp;
 
-    ShM<FixedPointCoordinate, true>::vector m_coordinate_list;
+    boost::shared_ptr<
+        ShM<FixedPointCoordinate, true>::vector
+    > m_coordinate_list;
     ShM<NodeID, true>::vector               m_via_node_list;
     ShM<unsigned, true>::vector             m_name_ID_list;
     ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
     ShM<char, true>::vector                 m_names_char_list;
     ShM<unsigned, true>::vector             m_name_begin_indices;
-    boost::shared_ptr<StaticRTree<RTreeLeaf, true> > m_static_rtree;
+    boost::shared_ptr<
+        StaticRTree<
+            RTreeLeaf,
+            ShM<FixedPointCoordinate, true>::vector,
+            true
+        >
+    > m_static_rtree;
 
     // SharedDataFacade() { }
 
@@ -95,13 +103,19 @@ private:
     void LoadRTree(
         const boost::filesystem::path & file_index_path
     ) {
+        BOOST_ASSERT_MSG(
+            !m_coordinate_list->empty(),
+            "coordinates must be loaded before r-tree"
+        );
+
         RTreeNode * tree_ptr = (RTreeNode *)(
             shared_memory + data_layout->GetRSearchTreeOffset()
         );
-        m_static_rtree = boost::make_shared<StaticRTree<RTreeLeaf, true> >(
+        m_static_rtree = boost::make_shared<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true> >(
             tree_ptr,
             data_layout->r_search_tree_size,
-            file_index_path
+            file_index_path,
+            m_coordinate_list
         );
     }
 
@@ -134,11 +148,10 @@ private:
         FixedPointCoordinate * coordinate_list_ptr = (FixedPointCoordinate *)(
             shared_memory + data_layout->GetCoordinateListOffset()
         );
-        typename ShM<FixedPointCoordinate, true>::vector coordinate_list(
+        m_coordinate_list = boost::make_shared<ShM<FixedPointCoordinate, true>::vector> (
                 coordinate_list_ptr,
                 data_layout->coordinate_list_size
         );
-        m_coordinate_list.swap( coordinate_list );
 
         TurnInstruction * turn_instruction_list_ptr = (TurnInstruction *)(
             shared_memory + data_layout->GetTurnInstructionListOffset()
@@ -309,7 +322,7 @@ public:
         const unsigned id
     ) const {
         // const NodeID node = m_via_node_list.at(id);
-        return m_coordinate_list.at(id);
+        return m_coordinate_list->at(id);
     };
 
     virtual bool EdgeIsCompressed( const unsigned id ) const {

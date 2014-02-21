@@ -306,7 +306,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                 m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
     }
     BOOST_ASSERT( forward_data.edgeBasedNodeID != std::numeric_limits<unsigned>::max() );
-    SimpleLogger().Write() << "e1: " << e1 << "u: " << u << ", v: " << v;
+    // SimpleLogger().Write() << "e1: " << e1 << "u: " << u << ", v: " << v;
 
     if( forward_data.ignore_in_grid ) {
         // SimpleLogger().Write(logDEBUG) << "skipped edge at " << m_node_info_list[u].lat << "," <<
@@ -324,7 +324,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     if ( e2 == m_node_based_graph->EndEdges(v) ) {
         SimpleLogger().Write(logDEBUG) << "Did not find edge (" << v << "," << u << ")";
     }
-#endif NDEBUG
+#endif
     BOOST_ASSERT( e2 != std::numeric_limits<unsigned>::max() );
     BOOST_ASSERT( e2 < m_node_based_graph->EndEdges(v) );
     const EdgeData & reverse_data = m_node_based_graph->GetEdgeData(e2);
@@ -470,6 +470,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                     reverse_dist_prefix_sum[geometry_size-1-i]
                 )
             );
+            BOOST_ASSERT( m_edge_based_node_list.back().IsCompressed() );
             first_node_of_edge = last_coordinate_id;
         }
         //TODO: Manually reconstruct last edge.
@@ -518,6 +519,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                 0
             )
         );
+        BOOST_ASSERT( !m_edge_based_node_list.back().IsCompressed() );
     }
 }
 
@@ -742,7 +744,7 @@ void EdgeBasedGraphFactory::Run(
             if( u > v ) {
                 continue;
             }
-            BOOST_ASSERT( u < v );
+            // BOOST_ASSERT( u < v );
             BOOST_ASSERT( edge_data.type != SHRT_MAX );
 
             //Note: edges that end on barrier nodes or on a turn restriction

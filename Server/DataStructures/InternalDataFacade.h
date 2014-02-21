@@ -45,6 +45,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+
 template<class EdgeDataT>
 class InternalDataFacade : public BaseDataFacade<EdgeDataT> {
 
@@ -61,7 +64,7 @@ private:
     QueryGraph                             * m_query_graph;
     std::string                              m_timestamp;
 
-    ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
+    boost::shared_ptr<ShM<FixedPointCoordinate, false>::vector> m_coordinate_list;
     ShM<NodeID, false>::vector               m_via_node_list;
     ShM<unsigned, false>::vector             m_name_ID_list;
     ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
@@ -71,7 +74,13 @@ private:
     ShM<unsigned, false>::vector             m_compressed_geometry_indices;
     ShM<unsigned, false>::vector             m_compressed_geometries;
 
-    StaticRTree<RTreeLeaf, false>          * m_static_rtree;
+    boost::shared_ptr<
+        StaticRTree<
+            RTreeLeaf,
+            ShM<FixedPointCoordinate, false>::vector,
+            false
+        >
+    > m_static_rtree;
 
 
     void LoadTimestamp(const boost::filesystem::path & timestamp_path) {
@@ -131,15 +140,16 @@ private:
             (char *)&number_of_coordinates,
             sizeof(unsigned)
         );
-        m_coordinate_list.resize(number_of_coordinates);
+        m_coordinate_list = boost::make_shared<std::vector<FixedPointCoordinate> >(number_of_coordinates);
         for(unsigned i = 0; i < number_of_coordinates; ++i) {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
-            m_coordinate_list[i] = FixedPointCoordinate(
+            m_coordinate_list->at(i) = FixedPointCoordinate(
                     current_node.lat,
                     current_node.lon
             );
+            BOOST_ASSERT( ( m_coordinate_list->at(i).lat >> 30) == 0 );
+            BOOST_ASSERT( ( m_coordinate_list->at(i).lon >> 30) == 0 );
         }
-        std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
         nodes_input_stream.close();
 
         SimpleLogger().Write(logDEBUG) << "Loading edge data";
@@ -221,9 +231,15 @@ private:
         const boost::filesystem::path & ram_index_path,
         const boost::filesystem::path & file_index_path
     ) {
-        m_static_rtree = new StaticRTree<RTreeLeaf>(
+        BOOST_ASSERT_MSG(
+            !m_coordinate_list->empty(),
+            "coordinates must be loaded before r-tree"
+        );
+
+        m_static_rtree = boost::make_shared<StaticRTree<RTreeLeaf> >(
             ram_index_path,
-            file_index_path
+            file_index_path,
+            m_coordinate_list
         );
     }
 
@@ -237,6 +253,8 @@ private:
         name_stream.read((char *)&number_of_chars, sizeof(unsigned));
         BOOST_ASSERT_MSG(0 != number_of_names, "name file broken");
         BOOST_ASSERT_MSG(0 != number_of_chars, "name file broken");
+
+        SimpleLogger().Write(logDEBUG) << "no. of names: " << number_of_names;
 
         m_name_begin_indices.resize(number_of_names);
         name_stream.read(
@@ -258,7 +276,7 @@ private:
 public:
     ~InternalDataFacade() {
         delete m_query_graph;
-        delete m_static_rtree;
+        m_static_rtree.reset();
     }
 
     explicit InternalDataFacade( const ServerPaths & server_paths ) {
@@ -379,7 +397,7 @@ public:
         const unsigned id
     ) const {
         // const unsigned coordinate_index = m_via_node_list.at(id);
-        return m_coordinate_list.at(id);
+        return m_coordinate_list->at(id);
     };
 
     bool EdgeIsCompressed( const unsigned id ) const {
@@ -471,7 +489,7 @@ public:
             unsigned coordinate_id = m_compressed_geometries[geometry_index];
             // uncomment to use compressed geometry
             result_nodes.push_back( coordinate_id );
-            SimpleLogger().Write() << "coordinate " << coordinate_id << " at " << m_coordinate_list.at(coordinate_id);
+            SimpleLogger().Write() << "coordinate " << coordinate_id << " at " << m_coordinate_list->at(coordinate_id);
         }
     }
 

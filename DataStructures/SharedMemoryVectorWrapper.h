@@ -115,6 +115,8 @@ public:
 
     std::size_t size() const { return m_size; }
 
+    bool empty() const { return 0 == size(); }
+
     DataT & operator[](const unsigned index) {
         BOOST_ASSERT_MSG(index < m_size, "invalid size");
         return m_ptr[index];

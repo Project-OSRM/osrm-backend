@@ -26,9 +26,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <osrm/Coordinate.h>
+#include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
 #include <boost/assert.hpp>
+
+#include <bitset>
+#include <iostream>
 #include <limits>
 
 FixedPointCoordinate::FixedPointCoordinate()
@@ -39,7 +43,16 @@ FixedPointCoordinate::FixedPointCoordinate()
 FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
  :  lat(lat),
     lon(lon)
-{ }
+{
+    if(0 != (lat >> 30)) {
+        std::bitset<32> y(lat);
+        SimpleLogger().Write(logDEBUG) << "broken lat: " << lat << ", bits: " << y;
+    }
+    if(0 != (lon >> 30)) {
+        std::bitset<32> x(lon);
+        SimpleLogger().Write(logDEBUG) << "broken lon: " << lon << ", bits: " << x;
+    }
+}
 
 void FixedPointCoordinate::Reset() {
     lat = std::numeric_limits<int>::min();
@@ -158,4 +171,8 @@ void FixedPointCoordinate::convertInternalReversedCoordinateToString(
     output += ",";
     convertInternalLatLonToString(coord.lon, tmp);
     output += tmp;
+}
+
+void FixedPointCoordinate::Output(std::ostream & out) const {//, FixedPointCoordinate & c) {
+    out << "(" << lat << "," << lon << ")";
 }

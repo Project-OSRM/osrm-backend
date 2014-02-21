@@ -33,11 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct PhantomNode {
     PhantomNode() :
-        forward_node_id(std::numeric_limits<unsigned>::max()),
-        reverse_node_id(std::numeric_limits<unsigned>::max()),
-        name_id(std::numeric_limits<unsigned>::max()),
-        forward_weight(INT_MAX),
-        reverse_weight(INT_MAX),
+        forward_node_id( SPECIAL_NODEID ),
+        reverse_node_id( SPECIAL_NODEID ),
+        name_id( std::numeric_limits<unsigned>::max() ),
+        forward_weight(INVALID_EDGE_WEIGHT),
+        reverse_weight(INVALID_EDGE_WEIGHT),
+        forward_offset(0),
+        reverse_offset(0),
         ratio(0.)
     { }
 
@@ -46,25 +48,44 @@ struct PhantomNode {
     unsigned name_id;
     int forward_weight;
     int reverse_weight;
+    int forward_offset;
+    int reverse_offset;
     double ratio;
     FixedPointCoordinate location;
 
+    int GetForwardWeightPlusOffset() const {
+        return forward_weight + forward_offset;
+    }
+
+    int GetReverseWeightPlusOffset() const {
+        return reverse_weight + reverse_offset;
+    }
+
     void Reset() {
-        forward_node_id = std::numeric_limits<unsigned>::max();
-        name_id = std::numeric_limits<unsigned>::max();
-        forward_weight = INT_MAX;
-        reverse_weight = INT_MAX;
+        forward_node_id = SPECIAL_NODEID;
+        name_id = SPECIAL_NODEID;
+        forward_weight = INVALID_EDGE_WEIGHT;
+        reverse_weight = INVALID_EDGE_WEIGHT;
+        forward_offset = 0;
+        reverse_offset = 0;
         ratio = 0.;
         location.Reset();
     }
+
     bool isBidirected() const {
-        return forward_node_id != UINT_MAX && reverse_node_id != UINT_MAX;
+        return ( forward_node_id != SPECIAL_NODEID ) &&
+               ( reverse_node_id != SPECIAL_NODEID );
     }
+
+    bool IsCompressed() const {
+        return (forward_offset != 0) || (reverse_offset != 0);
+    }
+
     bool isValid(const unsigned numberOfNodes) const {
         return
             location.isValid() &&
             ( (forward_node_id < numberOfNodes) || (reverse_node_id < numberOfNodes) ) &&
-            ( (forward_weight != INT_MAX) || (reverse_weight != INT_MAX) ) &&
+            ( (forward_weight != INVALID_EDGE_WEIGHT) || (reverse_weight != INVALID_EDGE_WEIGHT) ) &&
             (ratio >= 0.) &&
             (ratio <= 1.) &&
             (name_id != std::numeric_limits<unsigned>::max());
@@ -88,7 +109,7 @@ struct PhantomNodes {
     }
 
     bool AtLeastOnePhantomNodeIsUINTMAX() const {
-        return !(startPhantom.forward_node_id == std::numeric_limits<unsigned>::max() || targetPhantom.forward_node_id == std::numeric_limits<unsigned>::max());
+        return !(startPhantom.forward_node_id == SPECIAL_NODEID || targetPhantom.forward_node_id == SPECIAL_NODEID);
     }
 
     bool PhantomNodesHaveEqualLocation() const {

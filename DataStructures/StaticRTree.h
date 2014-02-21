@@ -51,6 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <boost/type_traits.hpp>
 
@@ -68,7 +69,7 @@ const static uint32_t RTREE_LEAF_NODE_SIZE = 1170;
 
 static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtree_stream;
 
-template<class DataT, bool UseSharedMemory = false>
+template<class DataT, class CoordinateListT = std::vector<FixedPointCoordinate>, bool UseSharedMemory = false>
 class StaticRTree : boost::noncopyable {
 public:
     struct RectangleInt2D {
@@ -289,8 +290,9 @@ private:
 
     typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
     uint64_t m_element_count;
-
     const std::string m_leaf_node_filename;
+    boost::shared_ptr<CoordinateListT> m_coordinate_list;
+
 public:
     //Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(
@@ -426,9 +428,11 @@ public:
     //Read-only operation for queries
     explicit StaticRTree(
             const boost::filesystem::path & node_file,
-            const boost::filesystem::path & leaf_file
-    ) : m_leaf_node_filename(leaf_file.string()) {
+            const boost::filesystem::path & leaf_file,
+            const boost::shared_ptr<CoordinateListT> coordinate_list
+    ) : m_leaf_node_filename( leaf_file.string() ) {
         //open tree node file and load into RAM.
+        m_coordinate_list = coordinate_list;
 
         if ( !boost::filesystem::exists( node_file ) ) {
             throw OSRMException("ram index file does not exist");
@@ -463,9 +467,11 @@ public:
     explicit StaticRTree(
             TreeNode * tree_node_ptr,
             const uint32_t number_of_nodes,
-            const boost::filesystem::path & leaf_file
+            const boost::filesystem::path & leaf_file,
+            boost::shared_ptr<CoordinateListT> coordinate_list
     ) : m_search_tree(tree_node_ptr, number_of_nodes),
-        m_leaf_node_filename(leaf_file.string())
+        m_leaf_node_filename(leaf_file.string()),
+        m_coordinate_list(coordinate_list)
     {
         //open leaf node file and store thread specific pointer
         if ( !boost::filesystem::exists( leaf_file ) ) {
@@ -659,6 +665,8 @@ public:
                             result_phantom_node.name_id = current_edge.name_id;
                             result_phantom_node.forward_weight = current_edge.forward_weight;
                             result_phantom_node.reverse_weight = current_edge.reverse_weight;
+                            result_phantom_node.forward_offset = current_edge.forward_offset;
+                            result_phantom_node.reverse_offset = current_edge.reverse_offset;
                             result_phantom_node.location = nearest;
                             current_start_coordinate.lat = current_edge.lat1;
                             current_start_coordinate.lon = current_edge.lon1;

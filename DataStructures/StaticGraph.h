@@ -115,6 +115,7 @@ public:
                                 u << "," << data.id << "," << v << ")";
 
                         data.shortcut = false;
+                        BOOST_ASSERT(false);
                     }
                     eid2 = FindEdgeInEitherDirection(data.id, v);
                     if(eid2 == UINT_MAX) {
@@ -122,6 +123,7 @@ public:
                             "cannot find second segment of edge (" <<
                                 u << "," << data.id << "," << v << ")";
                         data.shortcut = false;
+                        BOOST_ASSERT(false);
                     }
                 }
             }
@@ -165,7 +167,7 @@ public:
     //searches for a specific edge
     EdgeIterator FindEdge( const NodeIterator from, const NodeIterator to ) const {
         EdgeIterator smallestEdge = SPECIAL_EDGEID;
-        EdgeWeight smallestWeight = UINT_MAX;
+        EdgeWeight smallestWeight = INVALID_EDGE_WEIGHT;
         for ( EdgeIterator edge = BeginEdges( from ); edge < EndEdges(from); edge++ ) {
             const NodeID target = GetTarget(edge);
             const EdgeWeight weight = GetEdgeData(edge).distance;

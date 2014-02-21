@@ -202,7 +202,8 @@ public:
                 BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
                 TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
-                //TODO: reorder to always iterate over a result vector
+
+                //TODO: refactor to iterate over a result vector in both cases
                 if ( !facade->EdgeIsCompressed(ed.id) ){
                     SimpleLogger().Write() << "Edge " << ed.id << " is not compressed, smaller_edge_id: " << smaller_edge_id;
                     BOOST_ASSERT( !facade->EdgeIsCompressed(ed.id) );
@@ -218,10 +219,17 @@ public:
                     SimpleLogger().Write() << "Edge " << ed.id << " is compressed";
                     std::vector<unsigned> id_vector;
                     facade->GetUncompressedGeometry(ed.id, id_vector);
-                    BOOST_FOREACH(const unsigned coordinate_id, id_vector){
-                        //TODO: unpack entire geometry
-                        //TODO: set distance to 0, see if works
+                    if( unpacked_path.empty() ) {
+                        SimpleLogger().Write(logDEBUG) << "first segment(" << facade->GetEscapedNameForNameID(ed.id) << ") is packed";
 
+                    }
+
+                    // if( recursion_stack.empty() ) {
+                    //     SimpleLogger().Write(logDEBUG) << "last segment is packed";
+                    // }
+
+                    BOOST_FOREACH(const unsigned coordinate_id, id_vector){
+                        //TODO: skip if first edge is compressed until start point is reached
                         unpacked_path.push_back(
                             PathData(
                                 coordinate_id,
@@ -238,6 +246,8 @@ public:
 
             }
         }
+
+
     }
 
     inline void UnpackEdge(

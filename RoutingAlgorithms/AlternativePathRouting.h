@@ -113,26 +113,26 @@ public:
         NodeID middle_node = UINT_MAX;
         forward_heap1.Insert(
             phantom_node_pair.startPhantom.forward_node_id,
-            -phantom_node_pair.startPhantom.forward_weight,
+            -phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
             phantom_node_pair.startPhantom.forward_node_id
         );
         if(phantom_node_pair.startPhantom.isBidirected() ) {
             forward_heap1.Insert(
                 phantom_node_pair.startPhantom.reverse_node_id,
-                -phantom_node_pair.startPhantom.reverse_weight,
+                -phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
                 phantom_node_pair.startPhantom.reverse_node_id
             );
         }
 
         reverse_heap1.Insert(
             phantom_node_pair.targetPhantom.forward_node_id,
-            phantom_node_pair.targetPhantom.forward_weight,
+            phantom_node_pair.targetPhantom.GetForwardWeightPlusOffset(),
             phantom_node_pair.targetPhantom.forward_node_id
         );
         if(phantom_node_pair.targetPhantom.isBidirected() ) {
         	reverse_heap1.Insert(
                 phantom_node_pair.targetPhantom.reverse_node_id,
-                phantom_node_pair.targetPhantom.reverse_weight,
+                phantom_node_pair.targetPhantom.GetReverseWeightPlusOffset(),
                 phantom_node_pair.targetPhantom.reverse_node_id
             );
         }

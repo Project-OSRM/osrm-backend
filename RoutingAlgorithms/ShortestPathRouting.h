@@ -109,12 +109,12 @@ public:
 
                 forward_heap1.Insert(
                     phantom_node_pair.startPhantom.forward_node_id,
-                    distance1-phantom_node_pair.startPhantom.forward_weight,
+                    distance1-phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.startPhantom.forward_node_id
                 );
                 forward_heap2.Insert(
                     phantom_node_pair.startPhantom.forward_node_id,
-                    distance1-phantom_node_pair.startPhantom.forward_weight,
+                    distance1-phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.startPhantom.forward_node_id
                 );
             }
@@ -122,12 +122,12 @@ public:
                 BOOST_ASSERT(phantom_node_pair.startPhantom.reverse_node_id != UINT_MAX);
                 forward_heap1.Insert(
                     phantom_node_pair.startPhantom.reverse_node_id,
-                    distance2-phantom_node_pair.startPhantom.reverse_weight,
+                    distance2-phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.startPhantom.reverse_node_id
                 );
                 forward_heap2.Insert(
                     phantom_node_pair.startPhantom.reverse_node_id,
-                    distance2-phantom_node_pair.startPhantom.reverse_weight,
+                    distance2-phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.startPhantom.reverse_node_id
                 );
             }
@@ -135,7 +135,7 @@ public:
             //insert new backward nodes into backward heap, unadjusted.
             reverse_heap1.Insert(
                 phantom_node_pair.targetPhantom.forward_node_id,
-                phantom_node_pair.targetPhantom.forward_weight,
+                phantom_node_pair.targetPhantom.GetForwardWeightPlusOffset(),
                 phantom_node_pair.targetPhantom.forward_node_id
             );
             BOOST_ASSERT(phantom_node_pair.targetPhantom.forward_node_id != UINT_MAX);
@@ -144,7 +144,7 @@ public:
                 BOOST_ASSERT(phantom_node_pair.startPhantom.forward_node_id != UINT_MAX);
                 reverse_heap2.Insert(
                     phantom_node_pair.targetPhantom.reverse_node_id,
-                    phantom_node_pair.targetPhantom.reverse_weight,
+                    phantom_node_pair.targetPhantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.targetPhantom.reverse_node_id
                 );
             }

@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/integer.hpp>
 
 typedef BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf RTreeLeaf;
-typedef StaticRTree<RTreeLeaf, true>::TreeNode RTreeNode;
+typedef StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;
 typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
 
 struct SharedDataLayout {

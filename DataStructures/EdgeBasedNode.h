@@ -23,8 +23,8 @@ struct EdgeBasedNode {
         name_id(std::numeric_limits<unsigned>::max()),
         forward_weight(std::numeric_limits<int>::max() >> 1),
         reverse_weight(std::numeric_limits<int>::max() >> 1),
-        forward_offset_to_edge_based_node(0),
-        reverse_offset_to_edge_based_node(0)
+        forward_offset(0),
+        reverse_offset(0)
     { }
 
     EdgeBasedNode(
@@ -38,8 +38,8 @@ struct EdgeBasedNode {
         NodeID name_id,
         int forward_weight,
         int reverse_weight,
-        int forward_offset_to_edge_based_node,
-        int reverse_offset_to_edge_based_node
+        int forward_offset,
+        int reverse_offset
     ) :
         forward_edge_based_node_id(forward_edge_based_node_id),
         reverse_edge_based_node_id(reverse_edge_based_node_id),
@@ -51,8 +51,8 @@ struct EdgeBasedNode {
         name_id(name_id),
         forward_weight(forward_weight),
         reverse_weight(reverse_weight),
-        forward_offset_to_edge_based_node(forward_offset_to_edge_based_node),
-        reverse_offset_to_edge_based_node(reverse_offset_to_edge_based_node)
+        forward_offset(forward_offset),
+        reverse_offset(reverse_offset)
     { }
 
     // Computes:
