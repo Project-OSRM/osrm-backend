@@ -4,7 +4,7 @@ Name:           osrm
 Version:        0.3.7
 Release:        9%{?dist}
 Summary:        Open Source Routing Machine computes shortest paths in a graph. It was designed to run well with map data from the Openstreetmap Project.
-License:        GPLv2
+License:        Simplified 2-clause BSD
 URL:            https://github.com/DennisOSRM/Project-OSRM
 Source0:        %{name}-%{version}.tar.gz
 BuildRequires:  cmake, boost148-devel, luabind-devel >= 0.9.1, libluajit-devel >= 2.0.1, protobuf-devel, stxxl-devel, osmpbf
