@@ -82,7 +82,7 @@ public:
             return;
         }
 
-        TimeMeasurement exec_time;
+	double _time_from = get_timestamp();
         RawRouteData rawRoute;
         rawRoute.checkSum = facade->GetCheckSum();
         const bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
@@ -176,11 +176,11 @@ public:
         desc->Run(rawRoute, phantomNodes, facade, reply);
 
         if (routeParameters.exec_time) {
-            int64_t time_ms = exec_time.toNowInMs();
+            double _time_diff = (get_timestamp() - _time_from) * 1000; // time difference in ms
             std::vector<std::string>::iterator it = reply.getContentInsIter();
             if (it != reply.content.end()) {
                 std::string temp_string;
-                int64ToString(time_ms, temp_string);
+		intToString((int)(_time_diff), temp_string);
                 reply.content.insert(it, (1 == descriptorType)?
                     "<exec_time_ms>" + temp_string + "</exec_time_ms>" : "\"exec_time_ms\":" + temp_string + ","
                 );

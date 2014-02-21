@@ -66,7 +66,7 @@ public:
             return;
         }
 
-	TimeMeasurement exec_time;
+	double _time_from = get_timestamp();
         PhantomNode result;
         facade->FindPhantomNodeForCoordinate(
             routeParameters.coordinates[0],
@@ -74,7 +74,7 @@ public:
             routeParameters.zoomLevel
         );
 
-        int64_t time_ms = exec_time.toNowInMs();
+        double _time_diff = (get_timestamp() - _time_from) * 1000; // time difference in ms
 
         std::string temp_string;
         //json
@@ -87,7 +87,7 @@ public:
         reply.status = http::Reply::ok;
         reply.content.push_back("{");
         if (routeParameters.exec_time) {
-                int64ToString(time_ms, temp_string);
+                int64ToString(_time_diff, temp_string);
                 reply.content.push_back("\"exec_time_ms\":" + temp_string + ",");
         }
         reply.content.push_back("\"status\":");
