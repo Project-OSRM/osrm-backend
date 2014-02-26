@@ -92,7 +92,7 @@ endif()
 # Configuring compilers
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # using Clang
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unknown-pragmas -Wno-unneeded-internal-declaration -pedantic -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wunreachable-code -Wno-unknown-pragmas -Wno-unneeded-internal-declaration -pedantic -fPIC")
   message(STATUS "OpenMP parallelization not available using clang++")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # using GCC

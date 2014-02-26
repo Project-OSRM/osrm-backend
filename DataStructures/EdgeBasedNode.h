@@ -13,67 +13,66 @@
 struct EdgeBasedNode {
 
     EdgeBasedNode() :
-    id(INT_MAX),
-        reverse_edge_based_node_id(std::numeric_limits<int>::max()),
-        lat1(std::numeric_limits<int>::max()),
-        lon1(std::numeric_limits<int>::max()),
-        lat2(std::numeric_limits<int>::max()),
-        lon2(std::numeric_limits<int>::max() >> 1),
-        belongsToTinyComponent(false),
-        name_id(std::numeric_limits<unsigned>::max()),
+        forward_edge_based_node_id(SPECIAL_NODEID),
+        reverse_edge_based_node_id(SPECIAL_NODEID),
+        u(SPECIAL_NODEID),
+        v(SPECIAL_NODEID),
+        name_id(0),
         forward_weight(std::numeric_limits<int>::max() >> 1),
         reverse_weight(std::numeric_limits<int>::max() >> 1),
         forward_offset(0),
-        reverse_offset(0)
+        reverse_offset(0),
+        fwd_segment_position( std::numeric_limits<unsigned short>::max() ),
+        rev_segment_position( std::numeric_limits<unsigned short>::max() >> 1 ),
+        belongsToTinyComponent(false)
     { }
 
     EdgeBasedNode(
         NodeID forward_edge_based_node_id,
         NodeID reverse_edge_based_node_id,
-        int lat1,
-        int lon1,
-        int lat2,
-        int lon2,
-        bool belongsToTinyComponent,
-        NodeID name_id,
+        NodeID u,
+        NodeID v,
+        unsigned name_id,
         int forward_weight,
         int reverse_weight,
         int forward_offset,
-        int reverse_offset
+        int reverse_offset,
+        unsigned short fwd_segment_position,
+        unsigned short rev_segment_position,
+        bool belongsToTinyComponent
     ) :
         forward_edge_based_node_id(forward_edge_based_node_id),
         reverse_edge_based_node_id(reverse_edge_based_node_id),
-        lat1(lat1),
-        lon1(lon1),
-        lat2(lat2),
-        lon2(lon2),
-        belongsToTinyComponent(belongsToTinyComponent),
+        u(u),
+        v(v),
         name_id(name_id),
         forward_weight(forward_weight),
         reverse_weight(reverse_weight),
         forward_offset(forward_offset),
-        reverse_offset(reverse_offset)
+        reverse_offset(reverse_offset),
+        fwd_segment_position(fwd_segment_position),
+        rev_segment_position(rev_segment_position),
+        belongsToTinyComponent(belongsToTinyComponent)
     { }
-
     // Computes:
     // - the distance from the given query location to nearest point on this edge (and returns it)
-    // - the location on this edge which is nearest to the query location
-    // - the ratio ps:pq, where p and q are the end points of this edge, and s is the perpendicular foot of
+    inline static double ComputePerpendicularDistance(
+        const FixedPointCoordinate & coord_a,
+        const FixedPointCoordinate & coord_b,
     //   the query location on the line defined by p and q.
     double ComputePerpendicularDistance(
-        const FixedPointCoordinate& query_location,
+        const FixedPointCoordinate & query_location,
         FixedPointCoordinate & nearest_location,
-        double & ratio,
-        double precision = COORDINATE_PRECISION
-    ) const {
+        double & r
+    ) {
         BOOST_ASSERT( query_location.isValid() );
 
         const double epsilon = 1.0/precision;
         const double y = query_location.lon/COORDINATE_PRECISION;
-        const double a = lat2y(lat1/COORDINATE_PRECISION);
-        const double b = lon1/COORDINATE_PRECISION;
-        const double c = lat2y(lat2/COORDINATE_PRECISION);
-        const double d = lon2/COORDINATE_PRECISION;
+        const double a = lat2y(coord_a.lat/COORDINATE_PRECISION);
+        const double b = coord_a.lon/COORDINATE_PRECISION;
+        const double c = lat2y(coord_b.lat/COORDINATE_PRECISION);
+        const double d = coord_b.lon/COORDINATE_PRECISION;
         double p,q/*,mX*/,nY;
         if( std::abs(a-c) > std::numeric_limits<double>::epsilon() ){
             const double m = (d-b)/(c-a); // slope
@@ -92,18 +91,20 @@ struct EdgeBasedNode {
         }
 
         // p, q : the end points of the underlying edge
-        const Point p(lat2y(lat1/COORDINATE_PRECISION), lon1/COORDINATE_PRECISION);
-        const Point q(lat2y(lat2/COORDINATE_PRECISION), lon2/COORDINATE_PRECISION);
+        if( std::isnan(r) ) {
+            r = ((coord_b.lat == query_location.lat) && (coord_b.lon == query_location.lon)) ? 1. : 0.;
 
         // r : query location
         const Point r(lat2y(query_location.lat/COORDINATE_PRECISION),
         } else if( std::abs(r-1.) <= std::numeric_limits<double>::epsilon() ) {
                             query_location.lon/COORDINATE_PRECISION);
-
-        const Point foot = ComputePerpendicularFoot(p, q, r, epsilon);
-        ratio            = ComputeRatio(p, q, foot, epsilon);
-
-        BOOST_ASSERT( !std::isnan(ratio) );
+            nearest_location.lat = coord_a.lat;
+            nearest_location.lon = coord_a.lon;
+        } else if( r >= 1. ){
+            nearest_location.lat = coord_b.lat;
+            nearest_location.lon = coord_b.lon;
+        } else {
+            // point lies in between
             nearest_location.lat = y2lat(p)*COORDINATE_PRECISION;
         nearest_location = ComputeNearestPointOnSegment(foot, ratio);
 
@@ -120,12 +121,20 @@ struct EdgeBasedNode {
         return approximated_distance;
     }
 
-    bool operator<(const EdgeBasedNode & other) const {
+    static inline FixedPointCoordinate Centroid(
+        const FixedPointCoordinate & a,
+        const FixedPointCoordinate & b
+    ) {
         return other.id < id;
+        //The coordinates of the midpoint are given by:
+        //x = (x1 + x2) /2 and y = (y1 + y2) /2.
+        centroid.lon = (std::min(a.lon, b.lon) + std::max(a.lon, b.lon))/2;
+        centroid.lat = (std::min(a.lat, b.lat) + std::max(a.lat, b.lat))/2;
+        return centroid;
     }
 
-    bool operator==(const EdgeBasedNode & other) const {
-        return id == other.id;
+    bool IsCompressed() {
+        return (fwd_segment_position + rev_segment_position) != 0;
     }
 
     // Returns the midpoint of the underlying edge.
@@ -134,13 +143,16 @@ struct EdgeBasedNode {
     }
 
     NodeID forward_edge_based_node_id;
-
-    // The coordinates of the end-points of the underlying edge.
-    int lat1;
-    int lon1;
-    int lat2;
-    int lon2:31;
-
+    NodeID reverse_edge_based_node_id;
+    NodeID u;
+    NodeID v;
+    unsigned name_id;
+    int forward_weight;
+    int reverse_weight;
+    int forward_offset;
+    int reverse_offset;
+    unsigned short fwd_segment_position;
+    unsigned short rev_segment_position:15;
     bool belongsToTinyComponent:1;
     NodeID name_id;
 

@@ -428,11 +428,13 @@ public:
         PhantomNode & resulting_phantom_node,
         const unsigned zoom_level
     ) const {
-        return  m_static_rtree->FindPhantomNodeForCoordinate(
-                    input_coordinate,
-                    resulting_phantom_node,
-                    zoom_level
-                );
+        // SimpleLogger().Write(logDEBUG) << "name id: " << resulting_phantom_node.name_id;
+        const bool found =  m_static_rtree->FindPhantomNodeForCoordinate(
+                        input_coordinate,
+                        resulting_phantom_node,
+                        zoom_level
+                    );
+        return found;
     }
 
     unsigned GetCheckSum() const { return m_check_sum; }
@@ -479,17 +481,17 @@ public:
         const unsigned id, std::vector<unsigned> & result_nodes
     ) const {
         const NodeID node = m_via_node_list.at(id);
-        SimpleLogger().Write() << "translated " << id << " to " << node;
-        SimpleLogger().Write() << "getting geometry from compression bucket " << node << "/" << m_compressed_geometry_indices.size();
+        // SimpleLogger().Write() << "translated " << id << " to " << node;
+        // SimpleLogger().Write() << "getting geometry from compression bucket " << node << "/" << m_compressed_geometry_indices.size();
         unsigned begin = m_compressed_geometry_indices.at(node);
         unsigned end = m_compressed_geometry_indices.at(node+1);
-        SimpleLogger().Write() << "bucket " << node << " has range [" << begin << "," << end-1 << "]";
+        // SimpleLogger().Write() << "bucket " << node << " has range [" << begin << "," << end-1 << "]";
         //TODO: use vector.insert(.)
         for(unsigned geometry_index = begin; geometry_index < end; ++geometry_index) {
             unsigned coordinate_id = m_compressed_geometries[geometry_index];
             // uncomment to use compressed geometry
             result_nodes.push_back( coordinate_id );
-            SimpleLogger().Write() << "coordinate " << coordinate_id << " at " << m_coordinate_list->at(coordinate_id);
+            // SimpleLogger().Write() << "coordinate " << coordinate_id << " at " << m_coordinate_list->at(coordinate_id);
         }
     }
 

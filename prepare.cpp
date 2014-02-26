@@ -269,6 +269,26 @@ int main (int argc, char *argv[]) {
         edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
         delete edgeBasedGraphFactory;
 
+        double expansionHasFinishedTime = get_timestamp() - startupTime;
+        /***
+         * Building grid-like nearest-neighbor data structure
+         */
+
+        SimpleLogger().Write() << "building r-tree ...";
+        StaticRTree<EdgeBasedNode> * rtree =
+                new StaticRTree<EdgeBasedNode>(
+                    nodeBasedEdgeList,
+                    rtree_nodes_path.c_str(),
+                    rtree_leafs_path.c_str(),
+                    internalToExternalNodeMapping
+                );
+        delete rtree;
+        IteratorbasedCRC32<std::vector<EdgeBasedNode> > crc32;
+        unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
+        nodeBasedEdgeList.clear();
+        std::vector<EdgeBasedNode>(nodeBasedEdgeList).swap(nodeBasedEdgeList);
+        SimpleLogger().Write() << "CRC32: " << crc32OfNodeBasedEdgeList;
+
         /***
          * Writing info on original (node-based) nodes
          */
@@ -283,26 +303,6 @@ int main (int argc, char *argv[]) {
         );
         mapOutFile.close();
         std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
-
-        double expansionHasFinishedTime = get_timestamp() - startupTime;
-
-        /***
-         * Building grid-like nearest-neighbor data structure
-         */
-
-        SimpleLogger().Write() << "building r-tree ...";
-        StaticRTree<EdgeBasedNode> * rtree =
-                new StaticRTree<EdgeBasedNode>(
-                        nodeBasedEdgeList,
-                        rtree_nodes_path.c_str(),
-                        rtree_leafs_path.c_str()
-                );
-        delete rtree;
-        IteratorbasedCRC32<std::vector<EdgeBasedNode> > crc32;
-        unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
-        nodeBasedEdgeList.clear();
-        std::vector<EdgeBasedNode>(nodeBasedEdgeList).swap(nodeBasedEdgeList);
-        SimpleLogger().Write() << "CRC32: " << crc32OfNodeBasedEdgeList;
 
         /***
          * Contracting the edge-expanded graph

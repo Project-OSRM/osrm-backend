@@ -223,8 +223,11 @@ void EdgeBasedGraphFactory::GetEdgeBasedEdges(
 void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector<EdgeBasedNode> & nodes) {
 #ifndef NDEBUG
     BOOST_FOREACH(const EdgeBasedNode & node, m_edge_based_node_list){
-        BOOST_ASSERT(node.lat1 != INT_MAX); BOOST_ASSERT(node.lon1 != INT_MAX);
-        BOOST_ASSERT(node.lat2 != INT_MAX); BOOST_ASSERT(node.lon2 != INT_MAX);
+
+        BOOST_ASSERT( m_node_info_list.at(node.u).lat != INT_MAX );
+        BOOST_ASSERT( m_node_info_list.at(node.u).lon != INT_MAX );
+        BOOST_ASSERT( m_node_info_list.at(node.v).lon != INT_MAX );
+        BOOST_ASSERT( m_node_info_list.at(node.v).lat != INT_MAX );
     }
 #endif
     nodes.swap(m_edge_based_node_list);
@@ -443,13 +446,14 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         BOOST_ASSERT( forward_geometry.size() == reverse_geometry.size() );
 
         const unsigned geometry_size = forward_geometry.size();
-        NodeID first_node_of_edge = u;
+        BOOST_ASSERT( geometry_size > 1 );
+        NodeID current_edge_start_coordinate_id = u;
         // traverse arrays from start and end respectively
         for( unsigned i = 0; i < geometry_size; ++i ) {
-            BOOST_ASSERT( first_node_of_edge == reverse_geometry[geometry_size-1-i].first );
-            const NodeID last_coordinate_id = forward_geometry[i].first;
+            BOOST_ASSERT( current_edge_start_coordinate_id == reverse_geometry[geometry_size-1-i].first );
+            const NodeID current_edge_target_coordinate_id = forward_geometry[i].first;
 
-            // SimpleLogger().Write() << "adding edge (" << first_node_of_edge << "," << forward_geometry[i].first << ") ";
+            // SimpleLogger().Write() << "adding edge (" << current_edge_start_coordinate_id << "," << forward_geometry[i].first << ") ";
             // SimpleLogger().Write() << "fwd w: " << forward_geometry[i].second << ", fwd o: " << forward_dist_prefix_sum[i];
             // SimpleLogger().Write() << "rev w: " << reverse_geometry[geometry_size-1-i].second << ", rev o: " << reverse_dist_prefix_sum[geometry_size-1-i];
 
@@ -458,30 +462,35 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                 EdgeBasedNode(
                     forward_data.edgeBasedNodeID,
                     reverse_data.edgeBasedNodeID,
-                    m_node_info_list[first_node_of_edge].lat,
-                    m_node_info_list[first_node_of_edge].lon,
-                    m_node_info_list[forward_geometry[i].first].lat,
-                    m_node_info_list[forward_geometry[i].first].lon,
-                    belongs_to_tiny_cc,//TODO
+                    current_edge_start_coordinate_id,
+                    current_edge_target_coordinate_id,
                     forward_data.nameID,
                     forward_geometry[i].second,
                     reverse_geometry[geometry_size-1-i].second,
                     forward_dist_prefix_sum[i],
-                    reverse_dist_prefix_sum[geometry_size-1-i]
+                    reverse_dist_prefix_sum[geometry_size-1-i],
+                    i,
+                    geometry_size-1-i,
+                    belongs_to_tiny_cc
                 )
             );
+            current_edge_start_coordinate_id = current_edge_target_coordinate_id;
+
             BOOST_ASSERT( m_edge_based_node_list.back().IsCompressed() );
-            first_node_of_edge = last_coordinate_id;
+
+            BOOST_ASSERT(
+                u != m_edge_based_node_list.back().u ||
+                v != m_edge_based_node_list.back().v
+            );
+
+            BOOST_ASSERT(
+                u != m_edge_based_node_list.back().v ||
+                v != m_edge_based_node_list.back().u
+            );
         }
         //TODO: Manually reconstruct last edge.
-
-        if( first_node_of_edge != v ) {
-            SimpleLogger().Write(logDEBUG) << "first_node_of_edge:" << first_node_of_edge << ", u: " << u << ", v: " << v;
-        }
-
-        // BOOST_ASSERT( false );
-
-        BOOST_ASSERT( first_node_of_edge == v );
+        BOOST_ASSERT( current_edge_start_coordinate_id == v );
+        BOOST_ASSERT( m_edge_based_node_list.back().IsCompressed() );
 
     } else {
         BOOST_ASSERT( !m_geometry_compressor.HasEntryForID(e2) );
@@ -507,16 +516,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             EdgeBasedNode(
                 forward_data.edgeBasedNodeID,
                 reverse_data.edgeBasedNodeID,
-                m_node_info_list[u].lat,
-                m_node_info_list[u].lon,
-                m_node_info_list[v].lat,
-                m_node_info_list[v].lon,
-                belongs_to_tiny_cc,
-                forward_data.nameID, //TODO use also reverse name id?
+                u,
+                v,
+                forward_data.nameID,
                 forward_data.distance,
                 reverse_data.distance,
                 0,
-                0
+                0,
+                0,
+                0,
+                belongs_to_tiny_cc
             )
         );
         BOOST_ASSERT( !m_edge_based_node_list.back().IsCompressed() );

@@ -140,8 +140,8 @@ void DescriptionFactory::BuildRouteSummary(
     summary.startName = start_phantom.name_id;
     summary.destName = target_phantom.name_id;
 
-    SimpleLogger().Write(logDEBUG) << "phantom start name: " << start_phantom.name_id << ", path: " << pathDescription.front().name_id;
-    SimpleLogger().Write(logDEBUG) << "phantom target name: " << target_phantom.name_id << ", path: " << pathDescription.back().name_id;
+    // SimpleLogger().Write(logDEBUG) << "phantom start name: " << start_phantom.name_id << ", path: " << pathDescription.front().name_id;
+    // SimpleLogger().Write(logDEBUG) << "phantom target name: " << target_phantom.name_id << ", path: " << pathDescription.back().name_id;
 
     summary.BuildDurationAndLengthStrings(distance, time);
 }

@@ -356,10 +356,17 @@ public:
             std::swap( packed_legs1, packed_legs2 );
         }
         raw_route_data.unpacked_path_segments.resize( packed_legs1.size() );
+        const int start_offset = ( packed_legs1[0].front() == phantom_nodes_vector.front().startPhantom.forward_node_id  ?  1 : -1 )*phantom_nodes_vector.front().startPhantom.fwd_segment_position;
+
         for(unsigned i = 0; i < packed_legs1.size(); ++i){
+            BOOST_ASSERT( !phantom_nodes_vector.empty() );
+            bool at_beginning = (0 == i);
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size() );
             super::UnpackPath(
                 packed_legs1[i],
+                ( at_beginning ? start_offset : 0),
+                0,
+                false,
                 raw_route_data.unpacked_path_segments[i]
             );
         }

@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
 #include "PhantomNodes.h"
+#include "QueryNode.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
@@ -84,21 +85,34 @@ public:
 
         inline void InitializeMBRectangle(
                 DataT const * objects,
-                const uint32_t element_count
+                const uint32_t element_count,
+                const std::vector<NodeInfo> & coordinate_list
         ) {
             for(uint32_t i = 0; i < element_count; ++i) {
                 min_lon = std::min(
-                        min_lon, std::min(objects[i].lon1, objects[i].lon2)
+                        min_lon, std::min(
+                            coordinate_list.at(objects[i].u).lon,
+                            coordinate_list.at(objects[i].v).lon
+                        )
                 );
                 max_lon = std::max(
-                        max_lon, std::max(objects[i].lon1, objects[i].lon2)
+                        max_lon, std::max(
+                            coordinate_list.at(objects[i].u).lon,
+                            coordinate_list.at(objects[i].v).lon
+                        )
                 );
 
                 min_lat = std::min(
-                        min_lat, std::min(objects[i].lat1, objects[i].lat2)
+                        min_lat, std::min(
+                            coordinate_list.at(objects[i].u).lat,
+                            coordinate_list.at(objects[i].v).lon
+                        )
                 );
                 max_lat = std::max(
-                        max_lat, std::max(objects[i].lat1, objects[i].lat2)
+                        max_lat, std::max(
+                            coordinate_list.at(objects[i].u).lat,
+                            coordinate_list.at(objects[i].v).lon
+                        )
                 );
             }
         }
@@ -298,14 +312,15 @@ public:
     explicit StaticRTree(
         std::vector<DataT> & input_data_vector,
         const std::string tree_node_filename,
-        const std::string leaf_node_filename
+        const std::string leaf_node_filename,
+        const std::vector<NodeInfo> & coordinate_list
     )
      :  m_element_count(input_data_vector.size()),
         m_leaf_node_filename(leaf_node_filename)
     {
         SimpleLogger().Write() <<
             "constructing r-tree of " << m_element_count <<
-            " elements";
+            " edge elements build on-top of " << coordinate_list.size() << " coordinates";
 
         double time1 = get_timestamp();
         std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
@@ -318,7 +333,16 @@ public:
             input_wrapper_vector[element_counter].m_array_index = element_counter;
             //Get Hilbert-Value for centroid in mercartor projection
             DataT const & current_element = input_data_vector[element_counter];
-            FixedPointCoordinate current_centroid = current_element.Centroid();
+            FixedPointCoordinate current_centroid = DataT::Centroid(
+                FixedPointCoordinate(
+                    coordinate_list.at(current_element.u).lat,
+                    coordinate_list.at(current_element.u).lon
+                ),
+                FixedPointCoordinate(
+                    coordinate_list.at(current_element.v).lat,
+                    coordinate_list.at(current_element.v).lon
+                )
+            );
             current_centroid.lat = COORDINATE_PRECISION*lat2y(current_centroid.lat/COORDINATE_PRECISION);
 
             uint64_t current_hilbert_value = get_hilbert_number(current_centroid);
@@ -349,7 +373,11 @@ public:
             }
 
             //generate tree node that resemble the objects in leaf and store it for next level
-            current_node.minimum_bounding_rectangle.InitializeMBRectangle(current_leaf.objects, current_leaf.object_count);
+            current_node.minimum_bounding_rectangle.InitializeMBRectangle(
+                current_leaf.objects,
+                current_leaf.object_count,
+                coordinate_list
+            );
             current_node.child_is_on_disk = true;
             current_node.children[0] = tree_nodes_in_level.size();
             tree_nodes_in_level.push_back(current_node);
@@ -543,29 +571,29 @@ public:
                         double current_minimum_distance = FixedPointCoordinate::ApproximateDistance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
-                                current_edge.lat1,
-                                current_edge.lon1
+                                m_coordinate_list->at(current_edge.u).lat,
+                                m_coordinate_list->at(current_edge.u).lon
                             );
                         if( current_minimum_distance < min_dist ) {
                             //found a new minimum
                             min_dist = current_minimum_distance;
-                            result_coordinate.lat = current_edge.lat1;
-                            result_coordinate.lon = current_edge.lon1;
+                            result_coordinate.lat = m_coordinate_list->at(current_edge.u).lat;
+                            result_coordinate.lon = m_coordinate_list->at(current_edge.u).lon;
                             found_a_nearest_edge = true;
                         }
 
                         current_minimum_distance = FixedPointCoordinate::ApproximateDistance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
-                                current_edge.lat2,
-                                current_edge.lon2
+                                m_coordinate_list->at(current_edge.v).lat,
+                                m_coordinate_list->at(current_edge.v).lon
                             );
 
                         if( current_minimum_distance < min_dist ) {
                             //found a new minimum
                             min_dist = current_minimum_distance;
-                            result_coordinate.lat = current_edge.lat2;
-                            result_coordinate.lon = current_edge.lon2;
+                            result_coordinate.lat = m_coordinate_list->at(current_edge.v).lat;
+                            result_coordinate.lon = m_coordinate_list->at(current_edge.v).lon;
                             found_a_nearest_edge = true;
                         }
                     }
@@ -645,6 +673,8 @@ public:
 
                         double current_ratio = 0.;
                         double current_perpendicular_distance = current_edge.ComputePerpendicularDistance(
+                            m_coordinate_list->at(current_edge.u),
+                            m_coordinate_list->at(current_edge.v),
                             input_coordinate,
                             nearest,
                             current_ratio
@@ -653,25 +683,27 @@ public:
                         BOOST_ASSERT( 0. <= current_perpendicular_distance );
 
                         if(
-                            ( current_perpendicular_distance < min_dist ) &&
-                            !DoubleEpsilonCompare(
-                                current_perpendicular_distance,
-                                min_dist
-                            )
+                            ( current_perpendicular_distance < min_dist ) //&&
+                            // !DoubleEpsilonCompare(
+                            //     current_perpendicular_distance,
+                            //     min_dist
+                            // )
                         ) { //found a new minimum
                             min_dist = current_perpendicular_distance;
                             result_phantom_node.forward_node_id = current_edge.forward_edge_based_node_id;
                             result_phantom_node.reverse_node_id = current_edge.reverse_edge_based_node_id;
-                            result_phantom_node.name_id = current_edge.name_id;
                             result_phantom_node.forward_weight = current_edge.forward_weight;
                             result_phantom_node.reverse_weight = current_edge.reverse_weight;
                             result_phantom_node.forward_offset = current_edge.forward_offset;
                             result_phantom_node.reverse_offset = current_edge.reverse_offset;
+                            result_phantom_node.fwd_segment_position = current_edge.fwd_segment_position;
+                            result_phantom_node.rev_segment_position = current_edge.rev_segment_position;
+                            result_phantom_node.name_id = current_edge.name_id;
                             result_phantom_node.location = nearest;
-                            current_start_coordinate.lat = current_edge.lat1;
-                            current_start_coordinate.lon = current_edge.lon1;
-                            current_end_coordinate.lat = current_edge.lat2;
-                            current_end_coordinate.lon = current_edge.lon2;
+                            current_start_coordinate.lat = m_coordinate_list->at(current_edge.u).lat;
+                            current_start_coordinate.lon = m_coordinate_list->at(current_edge.u).lon;
+                            current_end_coordinate.lat = m_coordinate_list->at(current_edge.v).lat;
+                            current_end_coordinate.lon = m_coordinate_list->at(current_edge.v).lon;
                             nearest_edge = current_edge;
                             found_a_nearest_edge = true;
                         }
@@ -730,10 +762,11 @@ public:
         }
         result_phantom_node.ratio = ratio;
 
-        SimpleLogger().Write(logDEBUG) << "result location: " << result_phantom_node.location;
+        SimpleLogger().Write(logDEBUG) << "result location: " << result_phantom_node.location << ", start: " << current_start_coordinate << ", end: " << current_end_coordinate;
         SimpleLogger().Write(logDEBUG) << "fwd node: " << result_phantom_node.forward_node_id << ", rev node: " << result_phantom_node.reverse_node_id;
         SimpleLogger().Write(logDEBUG) << "fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight << ", ratio: " << result_phantom_node.ratio;
-
+        SimpleLogger().Write(logDEBUG) << "bidirected: " << (result_phantom_node.isBidirected() ? "y" : "n");
+        SimpleLogger().Write(logDEBUG) << "name id: " << result_phantom_node.name_id;
 
         return found_a_nearest_edge;
     }

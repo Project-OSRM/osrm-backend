@@ -96,6 +96,11 @@ public:
         return nodes[node];
     }
 
+    Key const & operator[]( const NodeID node ) const {
+        UnorderedMapConstIterator iter = nodes.find(node);
+        return iter->second;
+    }
+
     void Clear() {
         nodes.clear();
     }
@@ -154,6 +159,11 @@ public:
     }
 
     Data& GetData( NodeID node ) {
+        const Key index = nodeIndex[node];
+        return insertedNodes[index].data;
+    }
+
+    Data const & GetData( NodeID node ) const {
         const Key index = nodeIndex[node];
         return insertedNodes[index].data;
     }

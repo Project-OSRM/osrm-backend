@@ -40,7 +40,9 @@ struct PhantomNode {
         reverse_weight(INVALID_EDGE_WEIGHT),
         forward_offset(0),
         reverse_offset(0),
-        ratio(0.)
+        ratio(0.),
+        fwd_segment_position(0),
+        rev_segment_position(0)
     { }
 
     NodeID forward_node_id;
@@ -52,6 +54,9 @@ struct PhantomNode {
     int reverse_offset;
     double ratio;
     FixedPointCoordinate location;
+    unsigned short fwd_segment_position;
+    unsigned short rev_segment_position;
+
 
     int GetForwardWeightPlusOffset() const {
         return forward_weight + forward_offset;
@@ -108,8 +113,10 @@ struct PhantomNodes {
         return (startPhantom.forward_node_id == targetPhantom.forward_node_id);
     }
 
+
+    //TODO: Rename to: BothPhantomNodesAreInvalid
     bool AtLeastOnePhantomNodeIsUINTMAX() const {
-        return !(startPhantom.forward_node_id == SPECIAL_NODEID || targetPhantom.forward_node_id == SPECIAL_NODEID);
+        return (startPhantom.forward_node_id == SPECIAL_NODEID) && (targetPhantom.forward_node_id == SPECIAL_NODEID);
     }
 
     bool PhantomNodesHaveEqualLocation() const {

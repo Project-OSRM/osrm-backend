@@ -72,13 +72,11 @@ struct NodeInfo {
 		switch(n) {
 		case 1:
 			return lat;
-			break;
+			// break;
 		case 0:
 			return lon;
-			break;
+			// break;
 		default:
-			BOOST_ASSERT_MSG(false, "should not happen");
-			return std::numeric_limits<unsigned>::max();
 			break;
 		}
 		BOOST_ASSERT_MSG(false, "should not happen");

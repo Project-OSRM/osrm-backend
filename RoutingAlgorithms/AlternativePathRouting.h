@@ -76,15 +76,16 @@ public:
 
     ~AlternativeRouting() {}
 
-    void operator()(
+    void operator() (
         const PhantomNodes & phantom_node_pair,
         RawRouteData & raw_route_data
     ) {
-        if( (!phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX()) ||
-              phantom_node_pair.PhantomNodesHaveEqualLocation()
+        if( //phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX() ||
+            phantom_node_pair.PhantomNodesHaveEqualLocation()
         ) {
             raw_route_data.lengthOfShortestPath = INT_MAX;
             raw_route_data.lengthOfAlternativePath = INT_MAX;
+            SimpleLogger().Write(logDEBUG) << "not executing path search";
             return;
         }
 
@@ -109,14 +110,18 @@ public:
         QueryHeap & forward_heap2 = *(engine_working_data.forwardHeap2);
         QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
-        int upper_bound_to_shortest_path_distance = INT_MAX;
+        int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = UINT_MAX;
-        forward_heap1.Insert(
-            phantom_node_pair.startPhantom.forward_node_id,
-            -phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
-            phantom_node_pair.startPhantom.forward_node_id
-        );
-        if(phantom_node_pair.startPhantom.isBidirected() ) {
+        if(phantom_node_pair.startPhantom.forward_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.startPhantom.forward_node_id;
+            forward_heap1.Insert(
+                phantom_node_pair.startPhantom.forward_node_id,
+                -phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
+                phantom_node_pair.startPhantom.forward_node_id
+            );
+        }
+        if(phantom_node_pair.startPhantom.reverse_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.startPhantom.reverse_node_id;
             forward_heap1.Insert(
                 phantom_node_pair.startPhantom.reverse_node_id,
                 -phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
@@ -124,12 +129,16 @@ public:
             );
         }
 
-        reverse_heap1.Insert(
-            phantom_node_pair.targetPhantom.forward_node_id,
-            phantom_node_pair.targetPhantom.GetForwardWeightPlusOffset(),
-            phantom_node_pair.targetPhantom.forward_node_id
-        );
-        if(phantom_node_pair.targetPhantom.isBidirected() ) {
+        if(phantom_node_pair.targetPhantom.forward_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.targetPhantom.forward_node_id;
+            reverse_heap1.Insert(
+                phantom_node_pair.targetPhantom.forward_node_id,
+                phantom_node_pair.targetPhantom.GetForwardWeightPlusOffset(),
+                phantom_node_pair.targetPhantom.forward_node_id
+            );
+        }
+        if(phantom_node_pair.targetPhantom.reverse_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.targetPhantom.reverse_node_id;
         	reverse_heap1.Insert(
                 phantom_node_pair.targetPhantom.reverse_node_id,
                 phantom_node_pair.targetPhantom.GetReverseWeightPlusOffset(),
@@ -237,16 +246,16 @@ public:
             }
         }
 
-        std::vector<NodeID> & packedShortestPath = packed_forward_path;
-        std::reverse(packedShortestPath.begin(), packedShortestPath.end());
-        packedShortestPath.push_back(middle_node);
-        packedShortestPath.insert(packedShortestPath.end(),packed_reverse_path.begin(), packed_reverse_path.end());
+        std::vector<NodeID> & packed_shortest_path = packed_forward_path;
+        std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
+        packed_shortest_path.push_back(middle_node);
+        packed_shortest_path.insert(packed_shortest_path.end(),packed_reverse_path.begin(), packed_reverse_path.end());
         std::vector<RankedCandidateNode > rankedCandidates;
 
         //prioritizing via nodes for deep inspection
         BOOST_FOREACH(const NodeID node, nodes_that_passed_preselection) {
             int lengthOfViaPath = 0, sharingOfViaPath = 0;
-            computeLengthAndSharingOfViaPath(node, &lengthOfViaPath, &sharingOfViaPath, forward_offset+reverse_offset, packedShortestPath);
+            computeLengthAndSharingOfViaPath(node, &lengthOfViaPath, &sharingOfViaPath, forward_offset+reverse_offset, packed_shortest_path);
             if(sharingOfViaPath <= upper_bound_to_shortest_path_distance*VIAPATH_GAMMA) {
                 rankedCandidates.push_back(RankedCandidateNode(node, lengthOfViaPath, sharingOfViaPath));
             }
@@ -267,33 +276,92 @@ public:
 
         //Unpack shortest path and alternative, if they exist
         if(INT_MAX != upper_bound_to_shortest_path_distance) {
+            BOOST_ASSERT( !packed_shortest_path.empty() );
             raw_route_data.unpacked_path_segments.resize(1);
-            super::UnpackPath(packedShortestPath, raw_route_data.unpacked_path_segments[0]);
+            // SimpleLogger().Write() << "fwd offset1: " << phantom_node_pair.startPhantom.fwd_segment_position;
+            // SimpleLogger().Write() << "fwd offset2: " << phantom_node_pair.startPhantom.rev_segment_position;
+            // SimpleLogger().Write() << "rev offset1: " << phantom_node_pair.targetPhantom.fwd_segment_position;
+            // SimpleLogger().Write() << "rev offset2: " << phantom_node_pair.targetPhantom.rev_segment_position;
+
+            // int start_offset = ( packed_shortest_path.front() == phantom_node_pair.startPhantom.forward_node_id  ?  1 : -1 )*phantom_node_pair.startPhantom.fwd_segment_position;
+            // SimpleLogger().Write(logDEBUG) << "unpacking from index " << phantom_node_pair.startPhantom.fwd_segment_position;
+
+            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.forward_node_id: " << phantom_node_pair.startPhantom.forward_node_id;
+            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.reverse_node_id: " << phantom_node_pair.startPhantom.reverse_node_id;
+            SimpleLogger().Write(logDEBUG) << "packed_shortest_path.front(): " << packed_shortest_path.front();
+            // SimpleLogger().Write(logDEBUG) << "packed_shortest_path.back(): " << packed_shortest_path.back();
+
+            super::UnpackPath(
+                packed_shortest_path,
+                phantom_node_pair.startPhantom.fwd_segment_position,
+                (packed_shortest_path.front() == phantom_node_pair.startPhantom.reverse_node_id),
+                phantom_node_pair.targetPhantom.fwd_segment_position,//( packed_forward_path.back() == phantom_node_pair.targetPhantom.forward_node_id ? 1 :  -1 )*phantom_node_pair.targetPhantom.fwd_segment_position,
+                raw_route_data.unpacked_path_segments.front()
+            );
             raw_route_data.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
         } else {
+            //TODO: kill this branch by initialization
             raw_route_data.lengthOfShortestPath = INT_MAX;
         }
 
         if(selectedViaNode != UINT_MAX) {
-            retrievePackedViaPath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, s_v_middle, v_t_middle, raw_route_data.unpacked_alternative);
+            RetrieveAndUnpackAlternatePath(
+                forward_heap1,
+                reverse_heap1,
+                forward_heap2,
+                reverse_heap2,
+                s_v_middle,
+                v_t_middle,
+                raw_route_data.unpacked_alternative
+            );
             raw_route_data.lengthOfAlternativePath = lengthOfViaPath;
         } else {
+            //TODO: kill this branch by initialization
             raw_route_data.lengthOfAlternativePath = INT_MAX;
         }
     }
 
 private:
     //unpack <s,..,v,..,t> by exploring search spaces from v
-    inline void retrievePackedViaPath(QueryHeap & _forwardHeap1, QueryHeap & _backwardHeap1, QueryHeap & _forwardHeap2, QueryHeap & _backwardHeap2,
-            const NodeID s_v_middle, const NodeID v_t_middle, std::vector<PathData> & unpackedPath) {
-        //unpack [s,v)
+    inline void RetrieveAndUnpackAlternatePath(
+        const QueryHeap & forward_heap1,
+        const QueryHeap & reverse_heap1,
+        const QueryHeap & forward_heap2,
+        const QueryHeap & reverse_heap2,
+        const NodeID s_v_middle,
+        const NodeID v_t_middle,
+        std::vector<PathData> & unpacked_path
+    ) const {
+        //fetch packed path [s,v)
         std::vector<NodeID> packed_s_v_path, packed_v_t_path;
-        super::RetrievePackedPathFromHeap(_forwardHeap1, _backwardHeap2, s_v_middle, packed_s_v_path);
-        packed_s_v_path.resize(packed_s_v_path.size()-1);
-        //unpack [v,t]
-        super::RetrievePackedPathFromHeap(_forwardHeap2, _backwardHeap1, v_t_middle, packed_v_t_path);
-        packed_s_v_path.insert(packed_s_v_path.end(),packed_v_t_path.begin(), packed_v_t_path.end() );
-        super::UnpackPath(packed_s_v_path, unpackedPath);
+        super::RetrievePackedPathFromHeap(
+            forward_heap1,
+            reverse_heap2,
+            s_v_middle,
+            packed_s_v_path
+        );
+        packed_s_v_path.pop_back(); //remove v, other we get it twice
+
+        //fetch patched path [v,t]
+        super::RetrievePackedPathFromHeap(
+            forward_heap2,
+            reverse_heap1,
+            v_t_middle,
+            packed_v_t_path
+        );
+
+        packed_s_v_path.insert(
+            packed_s_v_path.end(),
+            packed_v_t_path.begin(),
+            packed_v_t_path.end()
+        );
+
+        // unpack, supply correct offsets to packed start and end nodes.
+        super::UnpackPath(
+            packed_s_v_path,
+            0, false, 0, //TODO: replace by real offsets
+            unpacked_path
+        );
     }
 
     inline void computeLengthAndSharingOfViaPath(const NodeID via_node, int *real_length_of_via_path, int *sharing_of_via_path,
@@ -312,7 +380,7 @@ private:
         std::vector < NodeID > packed_s_v_path;
         std::vector < NodeID > packed_v_t_path;
 
-        std::vector<NodeID> partiallyUnpackedShortestPath;
+        std::vector<NodeID> partiallyUnpacked_shortest_path;
         std::vector<NodeID> partiallyUnpackedViaPath;
 
         NodeID s_v_middle = UINT_MAX;
@@ -346,13 +414,13 @@ private:
             } else {
                 if (packed_s_v_path[i] == packed_shortest_path[i]) {
                     super::UnpackEdge(packed_s_v_path[i], packed_s_v_path[i+1], partiallyUnpackedViaPath);
-                    super::UnpackEdge(packed_shortest_path[i], packed_shortest_path[i+1], partiallyUnpackedShortestPath);
+                    super::UnpackEdge(packed_shortest_path[i], packed_shortest_path[i+1], partiallyUnpacked_shortest_path);
                     break;
                 }
             }
         }
         //traverse partially unpacked edge and note common prefix
-        for (int i = 0, lengthOfPackedPath = std::min( partiallyUnpackedViaPath.size(), partiallyUnpackedShortestPath.size()) - 1; (i < lengthOfPackedPath) && (partiallyUnpackedViaPath[i] == partiallyUnpackedShortestPath[i] && partiallyUnpackedViaPath[i+1] == partiallyUnpackedShortestPath[i+1]); ++i) {
+        for (int i = 0, lengthOfPackedPath = std::min( partiallyUnpackedViaPath.size(), partiallyUnpacked_shortest_path.size()) - 1; (i < lengthOfPackedPath) && (partiallyUnpackedViaPath[i] == partiallyUnpacked_shortest_path[i] && partiallyUnpackedViaPath[i+1] == partiallyUnpacked_shortest_path[i+1]); ++i) {
             EdgeID edgeID = facade->FindEdgeInEitherDirection(partiallyUnpackedViaPath[i], partiallyUnpackedViaPath[i+1]);
             *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
         }
@@ -367,16 +435,16 @@ private:
             } else {
                 if (packed_v_t_path[viaPathIndex] == packed_shortest_path[shortestPathIndex]) {
                     super::UnpackEdge(packed_v_t_path[viaPathIndex-1], packed_v_t_path[viaPathIndex], partiallyUnpackedViaPath);
-                    super::UnpackEdge(packed_shortest_path[shortestPathIndex-1] , packed_shortest_path[shortestPathIndex], partiallyUnpackedShortestPath);
+                    super::UnpackEdge(packed_shortest_path[shortestPathIndex-1] , packed_shortest_path[shortestPathIndex], partiallyUnpacked_shortest_path);
                     break;
                 }
             }
         }
 
         viaPathIndex = partiallyUnpackedViaPath.size() - 1;
-        shortestPathIndex = partiallyUnpackedShortestPath.size() - 1;
+        shortestPathIndex = partiallyUnpacked_shortest_path.size() - 1;
         for (; viaPathIndex > 0 && shortestPathIndex > 0; --viaPathIndex,--shortestPathIndex) {
-            if (partiallyUnpackedViaPath[viaPathIndex - 1] == partiallyUnpackedShortestPath[shortestPathIndex - 1] && partiallyUnpackedViaPath[viaPathIndex] == partiallyUnpackedShortestPath[shortestPathIndex]) {
+            if (partiallyUnpackedViaPath[viaPathIndex - 1] == partiallyUnpacked_shortest_path[shortestPathIndex - 1] && partiallyUnpackedViaPath[viaPathIndex] == partiallyUnpacked_shortest_path[shortestPathIndex]) {
                 EdgeID edgeID = facade->FindEdgeInEitherDirection( partiallyUnpackedViaPath[viaPathIndex - 1], partiallyUnpackedViaPath[viaPathIndex]);
                 *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             } else {
@@ -386,17 +454,17 @@ private:
         //finished partial unpacking spree! Amount of sharing is stored to appropriate pointer variable
     }
 
-    inline int approximateAmountOfSharing(const NodeID middleNodeIDOfAlternativePath, QueryHeap & _forwardHeap, QueryHeap & _backwardHeap, const std::vector<NodeID> & packedShortestPath) {
+    inline int approximateAmountOfSharing(const NodeID middleNodeIDOfAlternativePath, QueryHeap & _forwardHeap, QueryHeap & _backwardHeap, const std::vector<NodeID> & packed_shortest_path) {
         std::vector<NodeID> packedAlternativePath;
         super::RetrievePackedPathFromHeap(_forwardHeap, _backwardHeap, middleNodeIDOfAlternativePath, packedAlternativePath);
 
-        if(packedShortestPath.size() < 2 || packedAlternativePath.size() < 2)
+        if(packed_shortest_path.size() < 2 || packedAlternativePath.size() < 2)
             return 0;
 
         int sharing = 0;
         int aindex = 0;
         //compute forward sharing
-        while( (packedAlternativePath[aindex] == packedShortestPath[aindex]) && (packedAlternativePath[aindex+1] == packedShortestPath[aindex+1]) ) {
+        while( (packedAlternativePath[aindex] == packed_shortest_path[aindex]) && (packedAlternativePath[aindex+1] == packed_shortest_path[aindex+1]) ) {
             //            SimpleLogger().Write() << "retrieving edge (" << packedAlternativePath[aindex] << "," << packedAlternativePath[aindex+1] << ")";
             EdgeID edgeID = facade->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex+1]);
             sharing += facade->GetEdgeData(edgeID).distance;
@@ -404,9 +472,9 @@ private:
         }
 
         aindex = packedAlternativePath.size()-1;
-        int bindex = packedShortestPath.size()-1;
+        int bindex = packed_shortest_path.size()-1;
         //compute backward sharing
-        while( aindex > 0 && bindex > 0 && (packedAlternativePath[aindex] == packedShortestPath[bindex]) && (packedAlternativePath[aindex-1] == packedShortestPath[bindex-1]) ) {
+        while( aindex > 0 && bindex > 0 && (packedAlternativePath[aindex] == packed_shortest_path[bindex]) && (packedAlternativePath[aindex-1] == packed_shortest_path[bindex-1]) ) {
             EdgeID edgeID = facade->FindEdgeInEitherDirection(packedAlternativePath[aindex], packedAlternativePath[aindex-1]);
             sharing += facade->GetEdgeData(edgeID).distance;
             --aindex; --bindex;

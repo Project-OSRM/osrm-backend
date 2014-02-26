@@ -363,11 +363,21 @@ public:
         PhantomNode & resulting_phantom_node,
         const unsigned zoom_level
     ) const {
-        return  m_static_rtree->FindPhantomNodeForCoordinate(
-                    input_coordinate,
-                    resulting_phantom_node,
-                    zoom_level
-                );
+        const bool found =  m_static_rtree->FindPhantomNodeForCoordinate(
+                        input_coordinate,
+                        resulting_phantom_node,
+                        zoom_level
+                    );
+
+        if ( found ) {
+            resulting_phantom_node.name_id = GetNameIndexFromEdgeID(
+                FindEdge(
+                    resulting_phantom_node.forward_node_id,
+                    resulting_phantom_node.reverse_node_id
+                )
+            );
+        }
+        return found;
     }
 
     unsigned GetCheckSum() const { return m_check_sum; }
