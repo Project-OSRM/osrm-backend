@@ -149,12 +149,6 @@ public:
         //     std::cout << packed_path[i] << " ";
         // }
 
-        bool segment_reversed = false;
-
-        SimpleLogger().Write(logDEBUG) << "fwd offset: " << fwd_index_offset;
-        SimpleLogger().Write(logDEBUG) << "rev offset: " << rev_index_offset;
-        SimpleLogger().Write(logDEBUG) << "start_traversed_in_reverse: " << ( start_traversed_in_reverse ? "y" : "n" );
-
         // SimpleLogger().Write() << "starting unpack";
         const unsigned packed_path_size = packed_path.size();
         std::stack<std::pair<NodeID, NodeID> > recursion_stack;
@@ -168,6 +162,7 @@ public:
 
         std::pair<NodeID, NodeID> edge;
         while(!recursion_stack.empty()) {
+            bool segment_reversed = false;
             edge = recursion_stack.top();
             recursion_stack.pop();
 
@@ -216,6 +211,13 @@ public:
                     //     // SimpleLogger().Write(logDEBUG) << "first geometry: " << id_vector.front() << ", last geometry: " << id_vector.back();
 
                         const bool edge_is_reversed = (!ed.forward && ed.backward);
+                        SimpleLogger().Write(logDEBUG) << "fwd offset: " << fwd_index_offset;
+                        SimpleLogger().Write(logDEBUG) << "rev offset: " << rev_index_offset;
+                        SimpleLogger().Write(logDEBUG) << "start_traversed_in_reverse: " << ( start_traversed_in_reverse ? "y" : "n" );
+                        SimpleLogger().Write(logDEBUG) << "edge_is_reversed: " << ( edge_is_reversed ? "y" : "n" );
+
+
+
 
                         // if( edge_is_reversed ) {
                         //     SimpleLogger().Write(logDEBUG) << "reversing geometry";
@@ -230,8 +232,14 @@ public:
                         BOOST_FOREACH(unsigned number, id_vector) {
                             SimpleLogger().Write() << "[" << number << "] " << facade->GetCoordinateOfNode(number);
                         }
-                        const int start_index = ( ( start_traversed_in_reverse ) ? fwd_index_offset : 0 );
-                        const int end_index =   ( ( start_traversed_in_reverse ) ? id_vector.size() : fwd_index_offset );
+                        int start_index = ( ( start_traversed_in_reverse ) ? 0 : id_vector.size() - fwd_index_offset );
+                        int end_index =   ( ( start_traversed_in_reverse ) ? id_vector.size() + 1 - fwd_index_offset : id_vector.size() );
+
+                        if( edge_is_reversed ) {
+                            start_index = ( ( !start_traversed_in_reverse ) ? id_vector.size() - fwd_index_offset - 1: fwd_index_offset );
+                            end_index =   ( ( !start_traversed_in_reverse ) ? id_vector.size() : id_vector.size() + 1 - fwd_index_offset );
+                        }
+
 
                     //     BOOST_ASSERT( start_index >= 0 );
                     //     // BOOST_ASSERT( start_index <= end_index );
