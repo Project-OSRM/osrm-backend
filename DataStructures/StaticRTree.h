@@ -683,11 +683,11 @@ public:
                         BOOST_ASSERT( 0. <= current_perpendicular_distance );
 
                         if(
-                            ( current_perpendicular_distance < min_dist ) //&&
-                            // !DoubleEpsilonCompare(
-                            //     current_perpendicular_distance,
-                            //     min_dist
-                            // )
+                            ( current_perpendicular_distance < min_dist ) &&
+                            !DoubleEpsilonCompare(
+                                current_perpendicular_distance,
+                                min_dist
+                            )
                         ) { //found a new minimum
                             min_dist = current_perpendicular_distance;
                             result_phantom_node.forward_node_id = current_edge.forward_edge_based_node_id;

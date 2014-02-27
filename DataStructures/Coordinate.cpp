@@ -174,5 +174,5 @@ void FixedPointCoordinate::convertInternalReversedCoordinateToString(
 }
 
 void FixedPointCoordinate::Output(std::ostream & out) const {//, FixedPointCoordinate & c) {
-    out << "(" << lat << "," << lon << ")";
+    out << "(" << lat/COORDINATE_PRECISION << "," << lon/COORDINATE_PRECISION << ")";
 }

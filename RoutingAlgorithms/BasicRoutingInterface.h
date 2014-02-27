@@ -69,7 +69,7 @@ public:
     ) const {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
-        //SimpleLogger().Write() << "Settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
+        SimpleLogger().Write() << (forward_direction ? "fwd" : "rev") << " settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
         if(reverse_heap.WasInserted(node) ){
             const int new_distance = reverse_heap.GetKey(node) + distance;
             if(new_distance < *upper_bound ){
@@ -143,13 +143,6 @@ public:
         int rev_index_offset,
         std::vector<PathData> & unpacked_path
     ) const {
-
-        // SimpleLogger().Write(logDEBUG) << "unpacking path";
-        // for(unsigned i = 0; i < packed_path.size(); ++i) {
-        //     std::cout << packed_path[i] << " ";
-        // }
-
-        // SimpleLogger().Write() << "starting unpack";
         const unsigned packed_path_size = packed_path.size();
         std::stack<std::pair<NodeID, NodeID> > recursion_stack;
 
@@ -162,17 +155,50 @@ public:
 
         std::pair<NodeID, NodeID> edge;
         while(!recursion_stack.empty()) {
-            bool segment_reversed = false;
+            // bool segment_reversed = false;
             edge = recursion_stack.top();
             recursion_stack.pop();
 
-            EdgeID smaller_edge_id = facade->FindEdgeIndicateIfReverse(
-                edge.first,
-                edge.second,
-                segment_reversed
-            );
+            // facade->FindEdge does not suffice here in case of shortcuts.
+            // The above explanation unclear? Think!
+            EdgeID smaller_edge_id = SPECIAL_EDGEID;
+            int edge_weight = INT_MAX;
+            for(
+                EdgeID edge_id = facade->BeginEdges(edge.first);
+                edge_id < facade->EndEdges(edge.first);
+                ++edge_id
+            ){
+                const int weight = facade->GetEdgeData(edge_id).distance;
+                if(
+                    (facade->GetTarget(edge_id) == edge.second) &&
+                    (weight < edge_weight)                      &&
+                    facade->GetEdgeData(edge_id).forward
+                ){
+                    smaller_edge_id = edge_id;
+                    edge_weight = weight;
+                }
+            }
+            if( SPECIAL_EDGEID == smaller_edge_id ){
+                for(
+                    EdgeID edge_id = facade->BeginEdges(edge.second);
+                    edge_id < facade->EndEdges(edge.second);
+                    ++edge_id
+                ){
+                    const int weight = facade->GetEdgeData(edge_id).distance;
+                    if(
+                        (facade->GetTarget(edge_id) == edge.first) &&
+                        (weight < edge_weight)              &&
+                        facade->GetEdgeData(edge_id).backward
+                    ){
+                        smaller_edge_id = edge_id;
+                        edge_weight = weight;
+                    }
+                }
+            }
+            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge id invalid");
 
-            BOOST_ASSERT( SPECIAL_EDGEID != smaller_edge_id );
+
+            BOOST_ASSERT( facade->EndEdges(edge.first) != smaller_edge_id );
 
             const EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
             if( ed.shortcut ) {//unpack
@@ -185,7 +211,6 @@ public:
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
                 const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
 
-                //TODO: refactor to iterate over a result vector in both cases
                 if ( !facade->EdgeIsCompressed(ed.id) ){
                     BOOST_ASSERT( !facade->EdgeIsCompressed(ed.id) );
                     unpacked_path.push_back(
@@ -200,81 +225,27 @@ public:
                     std::vector<unsigned> id_vector;
                     facade->GetUncompressedGeometry(ed.id, id_vector);
 
+                    const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - fwd_index_offset - 1 : fwd_index_offset ) : 0 );
+                    const int end_index = id_vector.size();
 
-                    //TODO use only a single for loop
-                    if( unpacked_path.empty() ) {
-                    //     // SimpleLogger().Write(logDEBUG) << "1st node in packed path: " << packed_path.front() << ", edge (" << edge.first << "," << edge.second << ")";
-                    //     // SimpleLogger().Write(logDEBUG) << "REVERSED1: " << ( facade->GetTarget(smaller_edge_id) != edge.second ? "y" : "n" );
-                    //     // SimpleLogger().Write(logDEBUG) << "REVERSED2: " << ( facade->GetTarget(smaller_edge_id) != edge.first ? "y" : "n" );
-                    //     SimpleLogger().Write(logDEBUG) << "segment_reversed: " << ( segment_reversed ? "y" : "n" );
-                    //     // SimpleLogger().Write(logDEBUG) << "target of edge: " << facade->GetTarget(smaller_edge_id);
-                    //     // SimpleLogger().Write(logDEBUG) << "first geometry: " << id_vector.front() << ", last geometry: " << id_vector.back();
-
-                        const bool edge_is_reversed = (!ed.forward && ed.backward);
-                        SimpleLogger().Write(logDEBUG) << "fwd offset: " << fwd_index_offset;
-                        SimpleLogger().Write(logDEBUG) << "rev offset: " << rev_index_offset;
-                        SimpleLogger().Write(logDEBUG) << "start_traversed_in_reverse: " << ( start_traversed_in_reverse ? "y" : "n" );
-                        SimpleLogger().Write(logDEBUG) << "edge_is_reversed: " << ( edge_is_reversed ? "y" : "n" );
-
-
-
-
-                        // if( edge_is_reversed ) {
-                        //     SimpleLogger().Write(logDEBUG) << "reversing geometry";
-                        //     std::reverse( id_vector.begin(), id_vector.end() );
-                        //     fwd_index_offset = id_vector.size() - (1+fwd_index_offset);
-                        //     SimpleLogger().Write() << "new fwd offset: " << fwd_index_offset;
-                        // }
-
-                        SimpleLogger().Write(logDEBUG) << "edge data fwd: " << (ed.forward ? "y": "n") << ", reverse: " << (ed.backward ? "y" : "n" );
-                        SimpleLogger().Write() << "Edge " << ed.id << "=(" << edge.first << "," << edge.second << ") is compressed";
-                        SimpleLogger().Write(logDEBUG) << "packed ids: ";
-                        BOOST_FOREACH(unsigned number, id_vector) {
-                            SimpleLogger().Write() << "[" << number << "] " << facade->GetCoordinateOfNode(number);
-                        }
-                        int start_index = ( ( start_traversed_in_reverse ) ? 0 : id_vector.size() - fwd_index_offset );
-                        int end_index =   ( ( start_traversed_in_reverse ) ? id_vector.size() + 1 - fwd_index_offset : id_vector.size() );
-
-                        if( edge_is_reversed ) {
-                            start_index = ( ( !start_traversed_in_reverse ) ? id_vector.size() - fwd_index_offset - 1: fwd_index_offset );
-                            end_index =   ( ( !start_traversed_in_reverse ) ? id_vector.size() : id_vector.size() + 1 - fwd_index_offset );
-                        }
-
-
-                    //     BOOST_ASSERT( start_index >= 0 );
-                    //     // BOOST_ASSERT( start_index <= end_index );
-                        SimpleLogger().Write(logDEBUG) << "geometry count: " << id_vector.size() << ", fetching[" << start_index << "..." << end_index << "]";
-                        for(
-                            unsigned i = start_index;
-                            i != end_index;
-                            (start_index > end_index) ? --i : ++i
-                        ) {
-                            SimpleLogger().Write(logDEBUG) << "[" << i << "]pushing id: " << id_vector[i];
-                            unpacked_path.push_back(
-                                PathData(
-                                    id_vector[i],
-                                    name_index,
-                                    TurnInstructionsClass::NoTurn,
-                                    0
-                                )
-                            );
-                        }
-                    } else {
-                        BOOST_FOREACH(const unsigned coordinate_id, id_vector){
-                            // SimpleLogger().Write(logDEBUG) << "pushing id: " << coordinate_id;
-                            unpacked_path.push_back(
-                                PathData(
-                                    coordinate_id,
-                                    name_index,
-                                    TurnInstructionsClass::NoTurn,
-                                    0
-                                )
-                            );
-
-                        }
-                        unpacked_path.back().turnInstruction = turn_instruction;
-                        unpacked_path.back().durationOfSegment = ed.distance;
+                    BOOST_ASSERT( start_index >= 0 );
+                    BOOST_ASSERT( start_index <= end_index );
+                    for(
+                        unsigned i = start_index;
+                        i < end_index;
+                        ++i
+                    ) {
+                        unpacked_path.push_back(
+                            PathData(
+                                id_vector[i],
+                                name_index,
+                                TurnInstructionsClass::NoTurn,
+                                0
+                            )
+                        );
                     }
+                    unpacked_path.back().turnInstruction = turn_instruction;
+                    unpacked_path.back().durationOfSegment = ed.distance;
                 }
             }
         }
@@ -368,6 +339,11 @@ public:
             current_node_id = reverse_heap.GetData(current_node_id).parent;
             packed_path.push_back(current_node_id);
     	}
+
+
+        BOOST_FOREACH(NodeID node, packed_path) {
+            SimpleLogger().Write(logDEBUG) << "node: " << node;
+        }
     }
 
 //TODO: reorder parameters

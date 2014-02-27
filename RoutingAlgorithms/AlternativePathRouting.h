@@ -294,7 +294,7 @@ public:
             super::UnpackPath(
                 packed_shortest_path,
                 phantom_node_pair.startPhantom.fwd_segment_position,
-                (packed_shortest_path.front() == phantom_node_pair.startPhantom.forward_node_id),
+                (packed_shortest_path.front() != phantom_node_pair.startPhantom.forward_node_id),
                 phantom_node_pair.targetPhantom.fwd_segment_position,//( packed_forward_path.back() == phantom_node_pair.targetPhantom.forward_node_id ? 1 :  -1 )*phantom_node_pair.targetPhantom.fwd_segment_position,
                 raw_route_data.unpacked_path_segments.front()
             );

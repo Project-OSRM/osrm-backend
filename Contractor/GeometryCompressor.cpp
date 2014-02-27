@@ -166,10 +166,6 @@ void GeometryCompressor::CompressEdge(
 
     std::vector<CompressedNode> & edge_bucket_list1 = m_compressed_geometries[edge_bucket_id1];
 
-    if( 0 == edge_id_1 ) {
-        SimpleLogger().Write(logDEBUG) << "adding via " << via_node_id << ", w: " << weight1;
-    }
-
     if( edge_bucket_list1.empty() ) {
         edge_bucket_list1.push_back( std::make_pair(via_node_id, weight1) );
     }
@@ -183,12 +179,6 @@ void GeometryCompressor::CompressEdge(
         BOOST_ASSERT( list_to_remove_index < m_compressed_geometries.size() );
 
         std::vector<CompressedNode> & edge_bucket_list2 = m_compressed_geometries[list_to_remove_index];
-        if( 0 == edge_id_1 ) {
-            SimpleLogger().Write(logDEBUG) << "appending to list: ";
-            BOOST_FOREACH(const CompressedNode & node, edge_bucket_list2) {
-                SimpleLogger().Write(logDEBUG) << "adding via " << node.first << ", w: " << node.second;
-            }
-        }
 
         // found an existing list, append it to the list of edge_id_1
         edge_bucket_list1.insert(

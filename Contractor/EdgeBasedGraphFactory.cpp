@@ -299,53 +299,29 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     // find forward edge id and
     // const EdgeID e1 = m_node_based_graph->FindEdge(u, v);
 
-    BOOST_ASSERT( e1 != std::numeric_limits<unsigned>::max() );
+    BOOST_ASSERT( e1 != SPECIAL_EDGEID );
     const EdgeData & forward_data = m_node_based_graph->GetEdgeData(e1);
-    if( forward_data.edgeBasedNodeID == std::numeric_limits<unsigned>::max() ) {
-        for(EdgeIterator id = m_node_based_graph->BeginEdges(v); id < m_node_based_graph->EndEdges(v); ++id) {
-            SimpleLogger().Write(logDEBUG) << " id: " << id << ", edge (" << v << "," << m_node_based_graph->GetTarget(id) << ")";
-        }
-        SimpleLogger().Write() << std::setprecision(6) << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION << " <-> " <<
-                m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
-    }
-    BOOST_ASSERT( forward_data.edgeBasedNodeID != std::numeric_limits<unsigned>::max() );
-    // SimpleLogger().Write() << "e1: " << e1 << "u: " << u << ", v: " << v;
-
-    if( forward_data.ignore_in_grid ) {
-        // SimpleLogger().Write(logDEBUG) << "skipped edge at " << m_node_info_list[u].lat << "," <<
-        //         m_node_info_list[u].lon << " - " <<
-        //         m_node_info_list[v].lat << "," <<
-        //         m_node_info_list[v].lon;
-        return;
-    }
-
-    BOOST_ASSERT( forward_data.forward );
 
     // find reverse edge id and
     const EdgeID e2 = m_node_based_graph->FindEdge(v, u);
+
 #ifndef NDEBUG
     if ( e2 == m_node_based_graph->EndEdges(v) ) {
-        SimpleLogger().Write(logDEBUG) << "Did not find edge (" << v << "," << u << ")";
+        SimpleLogger().Write(logWARNING) << "Did not find edge (" << v << "," << u << ")";
     }
 #endif
-    BOOST_ASSERT( e2 != std::numeric_limits<unsigned>::max() );
+    BOOST_ASSERT( e2 != SPECIAL_EDGEID );
     BOOST_ASSERT( e2 < m_node_based_graph->EndEdges(v) );
     const EdgeData & reverse_data = m_node_based_graph->GetEdgeData(e2);
 
-    // if( forward_data.forward == reverse_data.forward && forward_data.forward != forward_data.backward ) {
-    //     SimpleLogger().Write(logDEBUG) << "flags on edge (" << u << "," << v << "), e1: " << e1 << ", e2: " << e2;
-    //     SimpleLogger().Write(logDEBUG) << "fwd-fwd: " << (forward_data.forward ? "y" : "n");
-    //     SimpleLogger().Write(logDEBUG) << "fwd-rev: " << (forward_data.backward ? "y": "n");
-    //     SimpleLogger().Write(logDEBUG) << "rev-fwd: " << (reverse_data.forward ? "y" : "n");
-    //     SimpleLogger().Write(logDEBUG) << "rev-rev: " << (reverse_data.backward ? "y": "n");
-    //     SimpleLogger().Write(logDEBUG) << "outgoing edges to ";
-    //     for(EdgeIterator id = m_node_based_graph->BeginEdges(v); id < m_node_based_graph->EndEdges(v); ++id) {
-    //         SimpleLogger().Write(logDEBUG) << " id: " << id << ", edge (" << v << "," << m_node_based_graph->GetTarget(id) << ")";
-    //     }
-    //     BOOST_ASSERT( reverse_data.edgeBasedNodeID != std::numeric_limits<unsigned>::max() );
-    // } else {
-    //     BOOST_ASSERT( reverse_data.edgeBasedNodeID == std::numeric_limits<unsigned>::max() );
-    // }
+    if(
+        forward_data.edgeBasedNodeID == SPECIAL_NODEID &&
+        reverse_data.edgeBasedNodeID == SPECIAL_NODEID
+    ) {
+        return;
+    }
+
+    BOOST_ASSERT( m_geometry_compressor.HasEntryForID(e1) == m_geometry_compressor.HasEntryForID(e2) );
 
     if( m_geometry_compressor.HasEntryForID(e1) ) {
         BOOST_ASSERT( m_geometry_compressor.HasEntryForID(e2) );
@@ -356,82 +332,41 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         BOOST_ASSERT( forward_geometry.size() == reverse_geometry.size() );
         BOOST_ASSERT( 0 != forward_geometry.size() );
 
-        int fwd_sum_of_weights = 0;
-        NodeID fwd_start_node = u;
-        // SimpleLogger().Write(logDEBUG) << "fwd node " << "weight" << "," << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION;
-        // if( 1 == e1 ) {
-        //     SimpleLogger().Write(logDEBUG) << "fwd edge id: " << e1;
+        // int fwd_sum_of_weights = 0;
+        // NodeID fwd_start_node = u;
+        // BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, forward_geometry) {
+        //     const NodeID fwd_end_node = geometry_node.first;
+        //     const EdgeWeight fwd_weight = geometry_node.second;
+        //     fwd_sum_of_weights += fwd_weight;
+        //     fwd_start_node = fwd_end_node;
         // }
-        BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, forward_geometry) {
-            const NodeID fwd_end_node = geometry_node.first;
-            const EdgeWeight fwd_weight = geometry_node.second;
 
-            // SimpleLogger().Write(logDEBUG) << "fwd node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION << ", w: " << geometry_node.second;
-            fwd_sum_of_weights += fwd_weight;
-            // if( 1 == e1 ) {
-            //     SimpleLogger().Write(logDEBUG) << "fwd-edge (" << fwd_start_node << "," << fwd_end_node << "), w: " << fwd_weight;
-            // }
-            fwd_start_node = fwd_end_node;
-        }
-        // if( 1 == e1 ) {
-        //     SimpleLogger().Write(logDEBUG) << "fwd-edge (" << fwd_start_node << "," << v << "), w: " << (forward_data.distance - fwd_sum_of_weights);
+        // BOOST_ASSERT( forward_data.distance == fwd_sum_of_weights );
+
+        // int rev_sum_of_weights = 0;
+        // NodeID rev_start_node = v;
+        // BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, reverse_geometry) {
+        //     const NodeID rev_end_node = geometry_node.first;
+        //     const EdgeWeight rev_weight = geometry_node.second;
+
+        //     rev_sum_of_weights += rev_weight;
+        //     rev_start_node = rev_end_node;
         // }
-        // SimpleLogger().Write(logDEBUG) << "fwd node " << "weight" << "," << m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
-        // SimpleLogger().Write(logDEBUG) << "rev node " << "weight" << "," << m_node_info_list[v].lat/COORDINATE_PRECISION << "," << m_node_info_list[v].lon/COORDINATE_PRECISION;
-        // BOOST_FOREACH(const GeometryCompressor::CompressedNode geometry_node, reverse_geometry) {
-        //     SimpleLogger().Write(logDEBUG) << "rev node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION;
-        // }
-        // SimpleLogger().Write(logDEBUG) << "rev node " << "weight" << "," << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION;
 
-        // if( 1 == e1 ) {
-        //     SimpleLogger().Write(logDEBUG) << "fwd sum of edge weights: " << fwd_sum_of_weights;
-        //     SimpleLogger().Write(logDEBUG) << "c'ted edge weight: " << forward_data.distance;
-        //     SimpleLogger().Write(logDEBUG) << "weight diff: " << (forward_data.distance - fwd_sum_of_weights);
-        // }
-        BOOST_ASSERT( forward_data.distance == fwd_sum_of_weights );
+        // BOOST_ASSERT( reverse_data.distance == rev_sum_of_weights );
 
-
-        int rev_sum_of_weights = 0;
-        NodeID rev_start_node = v;
-        // SimpleLogger().Write(logDEBUG) << "fwd node " << "weight" << "," << m_node_info_list[u].lat/COORDINATE_PRECISION << "," << m_node_info_list[u].lon/COORDINATE_PRECISION;
-        BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, reverse_geometry) {
-            const NodeID rev_end_node = geometry_node.first;
-            const EdgeWeight rev_weight = geometry_node.second;
-
-            // SimpleLogger().Write(logDEBUG) << "rev node " << geometry_node.first << "," << m_node_info_list[geometry_node.first].lat/COORDINATE_PRECISION << "," << m_node_info_list[geometry_node.first].lon/COORDINATE_PRECISION << ", w: " << geometry_node.second;
-            rev_sum_of_weights += rev_weight;
-            // if( 1 == e1 ) {
-            //     SimpleLogger().Write(logDEBUG) << "Edge (" << rev_start_node << "," << rev_end_node << "), w: " << rev_weight;
-            // }
-            rev_start_node = rev_end_node;
-        }
-        // if( 1 == e1 ) {
-        //     SimpleLogger().Write(logDEBUG) << "Edge (" << rev_start_node << "," << u << "), w: " << (reverse_data.distance - rev_sum_of_weights);
-
-        //     SimpleLogger().Write(logDEBUG) << "rev sum of edge weights: " << rev_sum_of_weights;
-        //     SimpleLogger().Write(logDEBUG) << "c'ted edge weight: " << reverse_data.distance;
-        //     SimpleLogger().Write(logDEBUG) << "weight diff: " << (reverse_data.distance - rev_sum_of_weights);
-
-        BOOST_ASSERT( reverse_data.distance == rev_sum_of_weights );
-        //     // BOOST_ASSERT(false);
-        // }
-        // SimpleLogger().Write(logDEBUG) << "start " << m_node_info_list[u].lat << "," << m_node_info_list[u].lon;
-        // SimpleLogger().Write(logDEBUG) << "target " << m_node_info_list[v].lat << "," << m_node_info_list[v].lon;
-        // BOOST_ASSERT( false );
-
-        //TODO reconstruct bidirectional edge with individual weights and put each into the NN index
+        // reconstruct bidirectional edge with individual weights and put each into the NN index
 
         std::vector<int> forward_dist_prefix_sum( forward_geometry.size() );
         std::vector<int> reverse_dist_prefix_sum( reverse_geometry.size() );
 
-        //quick'n'dirty prefix sum as std::partial_sum needs addtional casts
+        // quick'n'dirty prefix sum as std::partial_sum needs addtional casts
         // SimpleLogger().Write(logDEBUG) << "Prefix sums of edge " << e1 << ", w: " << reverse_data.distance;
         int temp_sum = 0;
         for( unsigned i = 0; i < forward_geometry.size(); ++i ) {
             temp_sum += forward_geometry[i].second;
             BOOST_ASSERT( forward_data.distance >= temp_sum );
             forward_dist_prefix_sum[i] = forward_data.distance - temp_sum;
-            // SimpleLogger().Write(logDEBUG) << "[" << i << "]" << temp_sum << ", n: " << forward_geometry[i].first << ", loc: " << m_node_info_list[forward_geometry[i].first].lat/COORDINATE_PRECISION << "," << m_node_info_list[forward_geometry[i].first].lon/COORDINATE_PRECISION;
         }
         BOOST_ASSERT( forward_data.distance == temp_sum );
         temp_sum = 0;
@@ -439,7 +374,6 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             temp_sum += reverse_geometry[i].second;
             BOOST_ASSERT( reverse_data.distance >= temp_sum );
             reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
-            // SimpleLogger().Write(logDEBUG) << "[" << i << "]" << temp_sum << ", n: " << reverse_geometry[i].first << ", loc: " << m_node_info_list[reverse_geometry[i].first].lat/COORDINATE_PRECISION << "," << m_node_info_list[reverse_geometry[i].first].lon/COORDINATE_PRECISION;
         }
         BOOST_ASSERT( reverse_data.distance == temp_sum );
 
@@ -453,11 +387,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             BOOST_ASSERT( current_edge_start_coordinate_id == reverse_geometry[geometry_size-1-i].first );
             const NodeID current_edge_target_coordinate_id = forward_geometry[i].first;
 
-            // SimpleLogger().Write() << "adding edge (" << current_edge_start_coordinate_id << "," << forward_geometry[i].first << ") ";
-            // SimpleLogger().Write() << "fwd w: " << forward_geometry[i].second << ", fwd o: " << forward_dist_prefix_sum[i];
-            // SimpleLogger().Write() << "rev w: " << reverse_geometry[geometry_size-1-i].second << ", rev o: " << reverse_dist_prefix_sum[geometry_size-1-i];
-
-            //TODO: build edges
+            // build edges
             m_edge_based_node_list.push_back(
                 EdgeBasedNode(
                     forward_data.edgeBasedNodeID,
@@ -471,7 +401,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                     reverse_dist_prefix_sum[geometry_size-1-i],
                     i,
                     geometry_size-1-i,
-                    belongs_to_tiny_cc
+                    belongs_to_tiny_cc,
+                    true
                 )
             );
             current_edge_start_coordinate_id = current_edge_target_coordinate_id;
@@ -511,6 +442,11 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         // BOOST_ASSERT( forward_data.forward == reverse_data.backward );
         // BOOST_ASSERT( reverse_data.forward == forward_data.backward );
 
+        BOOST_ASSERT(
+            forward_data.edgeBasedNodeID != SPECIAL_NODEID ||
+            reverse_data.edgeBasedNodeID != SPECIAL_NODEID
+        );
+
         //TODO: emplace_back with C++11
         m_edge_based_node_list.push_back(
             EdgeBasedNode(
@@ -525,7 +461,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                 0,
                 0,
                 0,
-                belongs_to_tiny_cc
+                belongs_to_tiny_cc,
+                false
             )
         );
         BOOST_ASSERT( !m_edge_based_node_list.back().IsCompressed() );
@@ -641,8 +578,6 @@ void EdgeBasedGraphFactory::Run(
             FixupStartingTurnRestriction( w, v, u );
             FixupArrivingTurnRestriction( w, v, u );
 
-            // const int reverse_weight2 = rev_edge_data2.distance;
-
             // store compressed geometry in container
             m_geometry_compressor.CompressEdge(
                 forward_e1,
@@ -686,7 +621,6 @@ void EdgeBasedGraphFactory::Run(
         for(EdgeIterator current_edge = m_node_based_graph->BeginEdges(current_node); current_edge < m_node_based_graph->EndEdges(current_node); ++current_edge) {
             EdgeData & edge_data = m_node_based_graph->GetEdgeData(current_edge);
             if( !edge_data.forward ) {
-                // SimpleLogger().Write(logDEBUG) << "skipped edge (" << source << "," << target << ")=[" << current_edge_id << "]";
                 continue;
             }
 
@@ -722,8 +656,7 @@ void EdgeBasedGraphFactory::Run(
 
     SimpleLogger().Write() <<
         "identified: " << component_index_size.size() << " many components";
-    SimpleLogger().Write() <<
-        "generating edge-expanded nodes";
+    SimpleLogger().Write() << "generating edge-expanded nodes";
 
     p.reinit(m_node_based_graph->GetNumberOfNodes());
 
@@ -737,22 +670,24 @@ void EdgeBasedGraphFactory::Run(
         BOOST_ASSERT( u < m_node_based_graph->GetNumberOfNodes() );
         p.printIncrement();
         for(
-            EdgeIterator e1 = m_node_based_graph->BeginEdges(u),
+            EdgeID e1 = m_node_based_graph->BeginEdges(u),
                 last_edge = m_node_based_graph->EndEdges(u);
             e1 < last_edge;
             ++e1
         ) {
             const EdgeData & edge_data = m_node_based_graph->GetEdgeData(e1);
-            if( edge_data.edgeBasedNodeID == std::numeric_limits<unsigned>::max() ) {
-                continue;
+            if( edge_data.edgeBasedNodeID == SPECIAL_NODEID ) {
+                // continue;
             }
-            BOOST_ASSERT( e1 != std::numeric_limits<unsigned>::max() );
-            NodeIterator v = m_node_based_graph->GetTarget(e1);
-            BOOST_ASSERT( std::numeric_limits<unsigned>::max() != v );
+            BOOST_ASSERT( e1 != SPECIAL_EDGEID );
+            const NodeID v = m_node_based_graph->GetTarget(e1);
+
+            BOOST_ASSERT( SPECIAL_NODEID != v );
             // pick only every other edge
             if( u > v ) {
                 continue;
             }
+
             // BOOST_ASSERT( u < v );
             BOOST_ASSERT( edge_data.type != SHRT_MAX );
 
@@ -764,39 +699,9 @@ void EdgeBasedGraphFactory::Run(
             );
 
             const bool component_is_tiny = ( size_of_component < 1000 );
-
             InsertEdgeBasedNode( u, v, e1, component_is_tiny );
         }
     }
-
-    // for(
-    //     NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes();
-    //     u < end;
-    //     ++u
-    //  ) {
-    //     BOOST_ASSERT( u != std::numeric_limits<unsigned>::max() );
-    //     BOOST_ASSERT( u < m_node_based_graph->GetNumberOfNodes() );
-    //     p.printIncrement();
-    //     for(
-    //         EdgeIterator e1 = m_node_based_graph->BeginEdges(u),
-    //             last_edge = m_node_based_graph->EndEdges(u);
-    //         e1 < last_edge;
-    //         ++e1
-    //     ) {
-    //         BOOST_ASSERT( e1 != std::numeric_limits<unsigned>::max() );
-    //         NodeIterator v = m_node_based_graph->GetTarget(e1);
-
-    //         EdgeIterator e2 = m_node_based_graph->FindEdge(u, v);
-    //         BOOST_ASSERT( e2 != m_node_based_graph->EndEdges(v) );
-    //         BOOST_ASSERT( e1 == e2 );
-
-    //         const EdgeData & data = m_node_based_graph->GetEdgeData(e1);
-    //         if( data.forward ) {
-    //             BOOST_ASSERT( data.edgeBasedNodeID != std::numeric_limits<unsigned>::max() );
-    //         }
-
-    //     }
-    // }
 
     m_number_of_edge_based_nodes = numbered_edges_count;
 
@@ -855,8 +760,9 @@ void EdgeBasedGraphFactory::Run(
                     continue;
                 }
                 const NodeIterator w = m_node_based_graph->GetTarget(e2);
+
                 if(
-                    to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
+                    to_node_of_only_restriction != SPECIAL_NODEID &&
                     w != to_node_of_only_restriction
                 ) {
                     //We are at an only_-restriction but not at the right turn.
@@ -880,7 +786,7 @@ void EdgeBasedGraphFactory::Run(
                 //at the end of a dead-end street
                 if (
                     CheckIfTurnIsRestricted(u, v, w)          &&
-                    (to_node_of_only_restriction == std::numeric_limits<unsigned>::max()) &&
+                    (to_node_of_only_restriction == SPECIAL_NODEID) &&
                     (w != to_node_of_only_restriction)
                 ) {
                     ++restricted_turns_counter;
@@ -916,12 +822,9 @@ void EdgeBasedGraphFactory::Run(
                 distance += turn_penalty;
 
                 const bool edge_is_compressed = m_geometry_compressor.HasEntryForID(e1);
+
                 if(edge_is_compressed) {
                     ++compressed;
-                    // m_geometry_compressor.AddLastViaNodeIDToCompressedEdge(e1, v, /*TODO*/ 1);
-                    if ( 0 == m_geometry_compressor.GetPositionForID(e1) ) {
-                        SimpleLogger().Write(logDEBUG) << "e1: " << e1 << " is zero with via node: " << v;
-                    }
                 }
 
                 original_edge_data_vector.push_back(
@@ -932,6 +835,7 @@ void EdgeBasedGraphFactory::Run(
                         edge_is_compressed
                     )
                 );
+
                 ++original_edges_counter;
 
                 if(original_edge_data_vector.size() > 100000) {
@@ -940,6 +844,9 @@ void EdgeBasedGraphFactory::Run(
                         original_edge_data_vector
                     );
                 }
+
+                BOOST_ASSERT( SPECIAL_NODEID != edge_data1.edgeBasedNodeID );
+                BOOST_ASSERT( SPECIAL_NODEID != edge_data2.edgeBasedNodeID );
 
                 m_edge_based_edge_list.push_back(
                     EdgeBasedEdge(
