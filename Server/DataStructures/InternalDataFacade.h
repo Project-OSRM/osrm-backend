@@ -478,9 +478,9 @@ public:
     }
 
     virtual void GetUncompressedGeometry(
-        const unsigned id, std::vector<unsigned> & result_nodes
+        const unsigned node, std::vector<unsigned> & result_nodes
     ) const {
-        const NodeID node = m_via_node_list.at(id);
+        // const NodeID node = m_via_node_list.at(id);
         // SimpleLogger().Write() << "translated " << id << " to " << node;
         // SimpleLogger().Write() << "getting geometry from compression bucket " << node << "/" << m_compressed_geometry_indices.size();
         unsigned begin = m_compressed_geometry_indices.at(node);

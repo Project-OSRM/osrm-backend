@@ -40,9 +40,9 @@ struct PhantomNode {
         reverse_weight(INVALID_EDGE_WEIGHT),
         forward_offset(0),
         reverse_offset(0),
+        packed_geometry_id(SPECIAL_EDGEID),
         ratio(0.),
-        fwd_segment_position(0),
-        rev_segment_position(0)
+        fwd_segment_position(0)
     { }
 
     NodeID forward_node_id;
@@ -52,10 +52,10 @@ struct PhantomNode {
     int reverse_weight;
     int forward_offset;
     int reverse_offset;
+    unsigned packed_geometry_id;
     double ratio;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
-    unsigned short rev_segment_position;
 
 
     int GetForwardWeightPlusOffset() const {

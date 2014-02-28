@@ -365,8 +365,8 @@ public:
             super::UnpackPath(
                 packed_legs1[i],
                 ( at_beginning ? start_offset : 0),
-                0,
                 false,
+                SPECIAL_EDGEID, 0, false,
                 raw_route_data.unpacked_path_segments[i]
             );
         }

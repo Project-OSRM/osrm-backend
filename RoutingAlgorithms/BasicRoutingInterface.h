@@ -69,7 +69,7 @@ public:
     ) const {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
-        SimpleLogger().Write() << (forward_direction ? "fwd" : "rev") << " settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
+        // SimpleLogger().Write() << (forward_direction ? "fwd" : "rev") << " settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
         if(reverse_heap.WasInserted(node) ){
             const int new_distance = reverse_heap.GetKey(node) + distance;
             if(new_distance < *upper_bound ){
@@ -136,11 +136,15 @@ public:
         }
     }
 
+
+    //TODO: refactor parameters to only edge ids for start and end
     inline void UnpackPath(
         const std::vector<NodeID> & packed_path,
-        int fwd_index_offset,
-        bool start_traversed_in_reverse,
-        int rev_index_offset,
+        const int fwd_index_offset,
+        const bool start_traversed_in_reverse,
+        const unsigned packed_geometry_id_of_last_edge,
+        const int rev_index_offset,
+        const bool target_traversed_in_reverse,
         std::vector<PathData> & unpacked_path
     ) const {
         const unsigned packed_path_size = packed_path.size();
@@ -223,7 +227,7 @@ public:
                     );
                 } else {
                     std::vector<unsigned> id_vector;
-                    facade->GetUncompressedGeometry(ed.id, id_vector);
+                    facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id), id_vector);
 
                     const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - fwd_index_offset - 1 : fwd_index_offset ) : 0 );
                     const int end_index = id_vector.size();
@@ -247,6 +251,31 @@ public:
                     unpacked_path.back().turnInstruction = turn_instruction;
                     unpacked_path.back().durationOfSegment = ed.distance;
                 }
+            }
+        }
+        if(SPECIAL_EDGEID != packed_geometry_id_of_last_edge) {
+            SimpleLogger().Write(logDEBUG) << "unpacking last segment " << packed_geometry_id_of_last_edge;
+            std::vector<unsigned> id_vector;
+            facade->GetUncompressedGeometry(packed_geometry_id_of_last_edge, id_vector);
+            const int start_index = 0;
+            const int end_index = rev_index_offset;
+
+            BOOST_ASSERT( start_index >= 0 );
+            BOOST_ASSERT( start_index <= end_index );
+            for(
+                unsigned i = start_index;
+                i < end_index;
+                ++i
+            ) {
+                SimpleLogger().Write(logDEBUG) << facade->GetCoordinateOfNode(id_vector[i]);
+                unpacked_path.push_back(
+                    PathData(
+                        id_vector[i],
+                        0,
+                        TurnInstructionsClass::NoTurn,
+                        0
+                    )
+                );
             }
         }
     }
@@ -330,8 +359,7 @@ public:
             current_node_id = forward_heap.GetData(current_node_id).parent;
             packed_path.push_back(current_node_id);
         }
-        //throw away first segment, unpack individually
-
+        SimpleLogger().Write() << "parent of last node. " << forward_heap.GetData(current_node_id).parent;
         std::reverse(packed_path.begin(), packed_path.end());
         packed_path.push_back(middle_node_id);
         current_node_id = middle_node_id;
@@ -340,7 +368,7 @@ public:
             packed_path.push_back(current_node_id);
     	}
 
-
+        SimpleLogger().Write(logDEBUG) << "packed path";
         BOOST_FOREACH(NodeID node, packed_path) {
             SimpleLogger().Write(logDEBUG) << "node: " << node;
         }

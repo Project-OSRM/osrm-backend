@@ -128,13 +128,6 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
             edge.data.SwapDirectionFlags();
             edges_list.push_back( edge );
         }
-
-        // if( import_edge.source() == 150903 || import_edge.target() == 150903 ) {
-        //     SimpleLogger().Write(logDEBUG) << "[" << edges_list.size() << "] (" << import_edge.source() << "," << import_edge.target() << "), w: " << import_edge.weight();
-        //     if( import_edge.IsSplit() ) {
-        //         SimpleLogger().Write(logDEBUG) << "edge split: (" << import_edge.source() << "," << import_edge.target() << ")";
-        //     }
-        // }
     }
 
     std::vector<ImportEdge>().swap(input_edge_list);
@@ -297,7 +290,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     BOOST_ASSERT( e1 != SPECIAL_EDGEID );
 
     // find forward edge id and
-    // const EdgeID e1 = m_node_based_graph->FindEdge(u, v);
+    const EdgeID e1b = m_node_based_graph->FindEdge(u, v);
+    BOOST_ASSERT( e1 == e1b );
 
     BOOST_ASSERT( e1 != SPECIAL_EDGEID );
     const EdgeData & forward_data = m_node_based_graph->GetEdgeData(e1);
@@ -322,8 +316,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     }
 
     BOOST_ASSERT( m_geometry_compressor.HasEntryForID(e1) == m_geometry_compressor.HasEntryForID(e2) );
-
     if( m_geometry_compressor.HasEntryForID(e1) ) {
+        if(forward_data.edgeBasedNodeID == 16176) {
+            SimpleLogger().Write(logDEBUG) << "reverse_data.edgeBasedNodeID=" << reverse_data.edgeBasedNodeID;
+            SimpleLogger().Write(logDEBUG) << "u: " << u << ", v: " << v << " at " << m_node_info_list.at(u).lat/COORDINATE_PRECISION << ","
+                << m_node_info_list.at(u).lon/COORDINATE_PRECISION << "<->" << m_node_info_list.at(v).lat/COORDINATE_PRECISION << ","
+                << m_node_info_list.at(v).lon/COORDINATE_PRECISION;
+            SimpleLogger().Write(logDEBUG) << "pos(" << e1 << ")=" << m_geometry_compressor.GetPositionForID(e1);
+            SimpleLogger().Write(logDEBUG) << "pos(" << e2 << ")=" << m_geometry_compressor.GetPositionForID(e2);
+        }
+
         BOOST_ASSERT( m_geometry_compressor.HasEntryForID(e2) );
 
         // reconstruct geometry and put in each individual edge with its offset
@@ -399,10 +401,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                     reverse_geometry[geometry_size-1-i].second,
                     forward_dist_prefix_sum[i],
                     reverse_dist_prefix_sum[geometry_size-1-i],
+                    m_geometry_compressor.GetPositionForID(e1),
                     i,
-                    geometry_size-1-i,
-                    belongs_to_tiny_cc,
-                    true
+                    belongs_to_tiny_cc
                 )
             );
             current_edge_start_coordinate_id = current_edge_target_coordinate_id;
@@ -419,7 +420,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                 v != m_edge_based_node_list.back().u
             );
         }
-        //TODO: Manually reconstruct last edge.
+
         BOOST_ASSERT( current_edge_start_coordinate_id == v );
         BOOST_ASSERT( m_edge_based_node_list.back().IsCompressed() );
 
@@ -459,10 +460,9 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
                 reverse_data.distance,
                 0,
                 0,
+                SPECIAL_EDGEID,
                 0,
-                0,
-                belongs_to_tiny_cc,
-                false
+                belongs_to_tiny_cc
             )
         );
         BOOST_ASSERT( !m_edge_based_node_list.back().IsCompressed() );
@@ -688,7 +688,7 @@ void EdgeBasedGraphFactory::Run(
                 continue;
             }
 
-            // BOOST_ASSERT( u < v );
+            BOOST_ASSERT( u < v );
             BOOST_ASSERT( edge_data.type != SHRT_MAX );
 
             //Note: edges that end on barrier nodes or on a turn restriction

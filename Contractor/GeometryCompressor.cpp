@@ -64,7 +64,6 @@ unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const {
 void GeometryCompressor::SerializeInternalVector(
     const std::string & path
 ) const {
-    //TODO: remove super-trivial geometries
 
     std::ofstream geometry_out_stream( path.c_str(), std::ios::binary );
     const unsigned number_of_compressed_geometries = m_compressed_geometries.size()+1;
@@ -129,6 +128,7 @@ void GeometryCompressor::CompressEdge(
     const EdgeWeight weight1,
     const EdgeWeight weight2
 ) {
+    //TODO: remove super-trivial geometries
 
     BOOST_ASSERT( SPECIAL_EDGEID != edge_id_1 );
     BOOST_ASSERT( SPECIAL_EDGEID != edge_id_2 );

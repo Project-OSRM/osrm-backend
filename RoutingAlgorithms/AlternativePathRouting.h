@@ -288,14 +288,16 @@ public:
 
             SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.forward_node_id: " << phantom_node_pair.startPhantom.forward_node_id;
             SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.reverse_node_id: " << phantom_node_pair.startPhantom.reverse_node_id;
-            SimpleLogger().Write(logDEBUG) << "packed_shortest_path.front(): " << packed_shortest_path.front();
+            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.targetPhantom.packed_geometry_id: " << phantom_node_pair.targetPhantom.packed_geometry_id;
             // SimpleLogger().Write(logDEBUG) << "packed_shortest_path.back(): " << packed_shortest_path.back();
 
             super::UnpackPath(
                 packed_shortest_path,
                 phantom_node_pair.startPhantom.fwd_segment_position,
                 (packed_shortest_path.front() != phantom_node_pair.startPhantom.forward_node_id),
-                phantom_node_pair.targetPhantom.fwd_segment_position,//( packed_forward_path.back() == phantom_node_pair.targetPhantom.forward_node_id ? 1 :  -1 )*phantom_node_pair.targetPhantom.fwd_segment_position,
+                phantom_node_pair.targetPhantom.packed_geometry_id,
+                phantom_node_pair.targetPhantom.fwd_segment_position,
+                (packed_shortest_path.back() != phantom_node_pair.targetPhantom.forward_node_id),
                 raw_route_data.unpacked_path_segments.front()
             );
             raw_route_data.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
@@ -359,7 +361,7 @@ private:
         // unpack, supply correct offsets to packed start and end nodes.
         super::UnpackPath(
             packed_s_v_path,
-            0, false, 0, //TODO: replace by real offsets
+            0, false, SPECIAL_EDGEID, 0, false, //TODO: replace by real offsets
             unpacked_path
         );
     }
