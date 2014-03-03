@@ -63,7 +63,7 @@ struct PhantomNode {
     }
 
     int GetReverseWeightPlusOffset() const {
-        return reverse_weight + reverse_offset;
+        return reverse_weight - reverse_offset;
     }
 
     void Reset() {
@@ -89,8 +89,14 @@ struct PhantomNode {
     bool isValid(const unsigned numberOfNodes) const {
         return
             location.isValid() &&
-            ( (forward_node_id < numberOfNodes) || (reverse_node_id < numberOfNodes) ) &&
-            ( (forward_weight != INVALID_EDGE_WEIGHT) || (reverse_weight != INVALID_EDGE_WEIGHT) ) &&
+            (
+                (forward_node_id < numberOfNodes) ||
+                (reverse_node_id < numberOfNodes)
+            ) &&
+            (
+                (forward_weight != INVALID_EDGE_WEIGHT) ||
+                (reverse_weight != INVALID_EDGE_WEIGHT)
+            ) &&
             (ratio >= 0.) &&
             (ratio <= 1.) &&
             (name_id != std::numeric_limits<unsigned>::max());
@@ -102,6 +108,7 @@ struct PhantomNode {
 };
 
 struct PhantomNodes {
+    //TODO: rename to lower-case non-camel
     PhantomNode startPhantom;
     PhantomNode targetPhantom;
     void Reset() {
@@ -113,7 +120,6 @@ struct PhantomNodes {
         return (startPhantom.forward_node_id == targetPhantom.forward_node_id);
     }
 
-
     //TODO: Rename to: BothPhantomNodesAreInvalid
     bool AtLeastOnePhantomNodeIsUINTMAX() const {
         return (startPhantom.forward_node_id == SPECIAL_NODEID) && (targetPhantom.forward_node_id == SPECIAL_NODEID);
@@ -124,16 +130,26 @@ struct PhantomNodes {
     }
 };
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn){
-    out << "Node1: " << pn.startPhantom.forward_node_id  << std::endl;
-    out << "Node2: " << pn.targetPhantom.reverse_node_id << std::endl;
-    out << "startCoord: "  << pn.startPhantom.location << std::endl;
-    out << "targetCoord: " << pn.targetPhantom.location << std::endl;
+inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn) {
+    // out << "Node1: "        << pn.startPhantom.forward_node_id  << "\n";
+    // out << "Node2: "        << pn.targetPhantom.reverse_node_id << "\n";
+    out << "start_coord: "  << pn.startPhantom.location         << "\n";
+    out << "target_coord: " << pn.targetPhantom.location        << std::endl;
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn){
-    out << "node1: " << pn.forward_node_id << ", node2: " << pn.reverse_node_id << ", name: " << pn.name_id << ", w1: " << pn.forward_weight << ", w2: " << pn.reverse_weight << ", ratio: " << pn.ratio << ", loc: " << pn.location;
+inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn) {
+    out <<  "node1: " << pn.forward_node_id      << ", " <<
+            "node2: " << pn.reverse_node_id      << ", " <<
+            "name: "  << pn.name_id              << ", " <<
+            "fwd-w: " << pn.forward_weight       << ", " <<
+            "rev-w: " << pn.reverse_weight       << ", " <<
+            "fwd-o: " << pn.forward_offset       << ", " <<
+            "rev-o: " << pn.reverse_offset       << ", " <<
+            "ratio: " << pn.ratio                << ", " <<
+            "geom: "  << pn.packed_geometry_id   << ", " <<
+            "pos: "   << pn.fwd_segment_position << ", " <<
+            "loc: "   << pn.location;
     return out;
 }
 

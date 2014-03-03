@@ -25,14 +25,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "RequestHandler.h"
 #include "APIGrammar.h"
+#include "RequestHandler.h"
+#include "Http/Request.h"
 
 #include "../Library/OSRM.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../typedefs.h"
 
+#include <osrm/Reply.h>
 #include <osrm/RouteParameters.h>
 
 #include <boost/foreach.hpp>

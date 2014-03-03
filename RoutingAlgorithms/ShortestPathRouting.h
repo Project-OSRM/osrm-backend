@@ -364,8 +364,7 @@ public:
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size() );
             super::UnpackPath(
                 packed_legs1[i],
-                ( at_beginning ? start_offset : 0),
-                false,
+                SPECIAL_EDGEID, ( at_beginning ? start_offset : 0), false,
                 SPECIAL_EDGEID, 0, false,
                 raw_route_data.unpacked_path_segments[i]
             );

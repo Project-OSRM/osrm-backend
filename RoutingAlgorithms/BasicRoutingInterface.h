@@ -140,6 +140,7 @@ public:
     //TODO: refactor parameters to only edge ids for start and end
     inline void UnpackPath(
         const std::vector<NodeID> & packed_path,
+        const unsigned packed_geometry_id_of_first_edge,
         const int fwd_index_offset,
         const bool start_traversed_in_reverse,
         const unsigned packed_geometry_id_of_last_edge,
@@ -255,10 +256,18 @@ public:
         }
         if(SPECIAL_EDGEID != packed_geometry_id_of_last_edge) {
             SimpleLogger().Write(logDEBUG) << "unpacking last segment " << packed_geometry_id_of_last_edge;
+            SimpleLogger().Write(logDEBUG) << "target_traversed_in_reverse: " << (target_traversed_in_reverse ? "y" : "n");
             std::vector<unsigned> id_vector;
             facade->GetUncompressedGeometry(packed_geometry_id_of_last_edge, id_vector);
-            const int start_index = 0;
-            const int end_index = rev_index_offset;
+            if( target_traversed_in_reverse ) {
+                std::reverse(id_vector.begin(), id_vector.end() );
+            }
+            SimpleLogger().Write(logDEBUG) << "id_vector.size() " << id_vector.size();
+            const bool start_and_end_on_same_edge = (packed_geometry_id_of_first_edge == packed_geometry_id_of_last_edge) && unpacked_path.empty();
+            const int start_index = ( start_and_end_on_same_edge ? id_vector.size() - fwd_index_offset : 0 );
+            const int end_index = (target_traversed_in_reverse ? id_vector.size() - rev_index_offset : rev_index_offset);
+
+            SimpleLogger().Write(logDEBUG) << "fetching from [" << start_index << "," << end_index << "]";
 
             BOOST_ASSERT( start_index >= 0 );
             BOOST_ASSERT( start_index <= end_index );
