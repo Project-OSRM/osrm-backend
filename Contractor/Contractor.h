@@ -385,10 +385,14 @@ public:
                     _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
                     if(currentEdgeID < _graph->EndEdges(edge.source) ) {
                         _DynamicGraph::EdgeData & currentEdgeData = _graph->GetEdgeData(currentEdgeID);
-                        if( currentEdgeData.shortcut
-                                && edge.data.forward == currentEdgeData.forward
-                                && edge.data.backward == currentEdgeData.backward ) {
-                            currentEdgeData.distance = std::min(currentEdgeData.distance, edge.data.distance);
+                        if( currentEdgeData.shortcut &&
+                            edge.data.forward == currentEdgeData.forward &&
+                            edge.data.backward == currentEdgeData.backward &&
+                            edge.data.distance < currentEdgeData.distance
+                        ) {
+                            // found a duplicate edge with smaller weight, update it.
+                            currentEdgeData = edge.data;
+                            // currentEdgeData.distance = std::min(currentEdgeData.distance, edge.data.distance);
                             continue;
                         }
                     }
