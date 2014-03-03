@@ -72,7 +72,7 @@ local function parse_maxspeed(source)
 	if string.match(source, "mph") or string.match(source, "mp/h") then
 		n = (n*1609)/1000;
 	end
-	return abs(n*0.66)
+	return n
 end
 
 function node_function (node)
@@ -251,6 +251,10 @@ function way_function (way)
 		way.ignore_in_grid = true
 	end
 	way.type = 1
+  way.speed = abs(way.speed*0.66) -- scaling of travel times.
+  if(way.backward_speed > 0) then
+    way.backward_speed = abs(way.backward_speed*0.66) -- scaling of travel times.
+  end
   return
 end
 

@@ -16,7 +16,7 @@ Feature: Car - Max speed restrictions
 
         When I route I should get
             | from | to | route | time      |
-            | a    | b  | ab    | 42s ~10%  |
+            | a    | b  | ab    | 64s  ~10% |
             | b    | c  | bc    | 545s ~10% |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
@@ -30,26 +30,25 @@ Feature: Car - Max speed restrictions
 
         When I route I should get
             | from | to | route | time      |
-            | a    | b  | ab    | 144s ~10% |
-            | b    | c  | bc    | 64s ~10%  |
+            | a    | b  | ab    | 216s ~10% |
+            | b    | c  | bc    | 64s  ~10% |
 
     Scenario: Car - Forward/backward maxspeed
         Given the shortcuts
-            | key   | value     |
-            | car-1 | 11s ~10%  |
-            | car   | 18s ~10%  |
-            | run   | 110s ~10%  |
-            | walk  | 220s ~10% |
+            | key   | value      |
+            | car   | 17s   ~10% |
+            | run   | 109s  ~10% |
+            | walk  | 219s  ~10% |
             | snail | 1080s ~10% |
 
         And a grid size of 100 meters
 
         Then routability should be
             | maxspeed | maxspeed:forward | maxspeed:backward | forw  | backw |
-            |          |                  |                   | car-1 | car-1 |
+            |          |                  |                   | car   | car   |
             | 10       |                  |                   | run   | run   |
-            |          | 10               |                   | run   | car-1 |
-            |          |                  | 10                | car-1 | run   |
+            |          | 10               |                   | run   | car   |
+            |          |                  | 10                | car   | run   |
             | 1        | 10               |                   | run   | snail |
             | 1        |                  | 10                | snail | run   |
             | 1        | 5                | 10                | walk  | run   |
