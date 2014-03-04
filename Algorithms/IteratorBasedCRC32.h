@@ -98,7 +98,7 @@ private:
     }
 
     inline unsigned cpuid() const {
-        unsigned eax, ebx, ecx, edx;
+        unsigned eax = 0, ebx = 0, ecx = 0, edx = 0;
         // on X64 this calls hardware cpuid(.) instr. otherwise a dummy impl.
         __get_cpuid( 1, &eax,  &ebx, &ecx, &edx );
         return ecx;
