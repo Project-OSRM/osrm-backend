@@ -114,7 +114,7 @@ public:
     std::string GetEscapedNameForNameID(const unsigned name_id) const {
         std::string temporary_string;
         GetName(name_id, temporary_string);
-        return HTMLEntitize(temporary_string);
+        return EscapeJSONString(temporary_string);
     }
 
     virtual std::string GetTimestamp() const = 0;
