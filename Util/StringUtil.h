@@ -160,6 +160,47 @@ inline void stringSplit(
 	boost::split(result, s, boost::is_any_of(std::string(&delim)));
 }
 
+inline std::string EscapeJSONString(const std::string& input) {
+    std::string output;
+    output.reserve(input.size());
+    for(
+        std::string::const_iterator iter = input.begin();
+        iter != input.end();
+        ++iter
+    ) {
+        switch (iter[0]) {
+            case '\\':
+                output += "\\\\";
+                break;
+            case '"':
+                output += "\\\"";
+                break;
+            case '/':
+                output += "\\/";
+                break;
+            case '\b':
+                output += "\\b";
+                break;
+            case '\f':
+                output += "\\f";
+                break;
+            case '\n':
+                output += "\\n";
+                break;
+            case '\r':
+                output += "\\r";
+                break;
+            case '\t':
+                output += "\\t";
+                break;
+            default:
+                output += *iter;
+                break;
+        }
+    }
+    return output;
+}
+
 static std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]", "\\"};
 static std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;" };
 
