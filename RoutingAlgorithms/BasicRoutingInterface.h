@@ -200,10 +200,10 @@ public:
                     }
                 }
             }
-            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge id invalid");
+            BOOST_ASSERT_MSG(edge_weight != SPECIAL_EDGEID, "edge id invalid");
 
 
-            BOOST_ASSERT( facade->EndEdges(edge.first) != smaller_edge_id );
+            // BOOST_ASSERT( facade->EndEdges(edge.first) != smaller_edge_id );
 
             const EdgeData& ed = facade->GetEdgeData(smaller_edge_id);
             if( ed.shortcut ) {//unpack
@@ -368,7 +368,7 @@ public:
             current_node_id = forward_heap.GetData(current_node_id).parent;
             packed_path.push_back(current_node_id);
         }
-        SimpleLogger().Write() << "parent of last node. " << forward_heap.GetData(current_node_id).parent;
+        // SimpleLogger().Write() << "parent of last node. " << forward_heap.GetData(current_node_id).parent;
         std::reverse(packed_path.begin(), packed_path.end());
         packed_path.push_back(middle_node_id);
         current_node_id = middle_node_id;
@@ -376,11 +376,6 @@ public:
             current_node_id = reverse_heap.GetData(current_node_id).parent;
             packed_path.push_back(current_node_id);
     	}
-
-        SimpleLogger().Write(logDEBUG) << "packed path";
-        BOOST_FOREACH(NodeID node, packed_path) {
-            SimpleLogger().Write(logDEBUG) << "node: " << node;
-        }
     }
 
 //TODO: reorder parameters
