@@ -96,6 +96,22 @@ turn_penalty      = 60
 turn_bias         = 1.4
 -- End of globals
 
+
+local function parse_maxspeed(source)
+    if not source then
+        return 0
+    end
+    local n = tonumber(source:match("%d*"))
+    if not n then
+        n = 0
+    end
+    if string.match(source, "mph") or string.match(source, "mp/h") then
+        n = (n*1609)/1000;
+    end
+    return n
+end
+
+
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
     vector:Add(v)
@@ -106,6 +122,29 @@ function node_function (node)
   local barrier = node.tags:Find ("barrier")
   local access = Access.find_access_tag(node, access_tags_hierachy)
   local traffic_signal = node.tags:Find("highway")
+
+	-- flag node if it carries a traffic light
+	if traffic_signal == "traffic_signals" then
+		node.traffic_light = true
+	end
+
+	-- parse access and barrier tags
+	if access and access ~= "" then
+		if access_tag_blacklist[access] then
+			node.bollard = true
+		else
+			node.bollard = false
+		end
+	elseif barrier and barrier ~= "" then
+		if barrier_whitelist[barrier] then
+			node.bollard = false
+		else
+			node.bollard = true
+		end
+	end
+
+	-- return 1
+end
 
   -- flag node if it carries a traffic light
   if traffic_signal == "traffic_signals" then
@@ -158,7 +197,6 @@ function way_function (way)
   if access_tag_blacklist[access] then
     return 0
   end
-
 
   -- other tags
   local name = way.tags:Find("name")
