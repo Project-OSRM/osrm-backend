@@ -99,7 +99,8 @@ struct PhantomNode {
             ) &&
             (ratio >= 0.) &&
             (ratio <= 1.) &&
-            (name_id != std::numeric_limits<unsigned>::max());
+            (name_id != std::numeric_limits<unsigned>::max()
+        );
     }
 
     bool operator==(const PhantomNode & other) const {
