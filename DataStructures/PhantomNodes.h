@@ -59,11 +59,11 @@ struct PhantomNode {
 
 
     int GetForwardWeightPlusOffset() const {
-        return forward_weight + forward_offset;
+        return forward_weight - forward_offset;
     }
 
     int GetReverseWeightPlusOffset() const {
-        return reverse_weight - reverse_offset;
+        return reverse_weight + reverse_offset;
     }
 
     void Reset() {
