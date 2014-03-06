@@ -44,11 +44,11 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
  :  lat(lat),
     lon(lon)
 {
-    if(0 != (lat >> 30)) {
+    if(0 != (std::abs(lat) >> 30)) {
         std::bitset<32> y(lat);
         SimpleLogger().Write(logDEBUG) << "broken lat: " << lat << ", bits: " << y;
     }
-    if(0 != (lon >> 30)) {
+    if(0 != (std::abs(lon) >> 30)) {
         std::bitset<32> x(lon);
         SimpleLogger().Write(logDEBUG) << "broken lon: " << lon << ", bits: " << x;
     }
