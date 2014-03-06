@@ -161,7 +161,7 @@ public:
 
             //run two-Target Dijkstra routing step.
             while(0 < (forward_heap1.Size() + reverse_heap1.Size() )){
-                if( !forward_heap1.Empty()){
+                if( 0 < forward_heap1.Size() ){
                     super::RoutingStep(
                         forward_heap1,
                         reverse_heap1,
@@ -171,7 +171,7 @@ public:
                         true
                     );
                 }
-                if( !reverse_heap1.Empty() ){
+                if( 0 < reverse_heap1.Size() ){
                     super::RoutingStep(
                         reverse_heap1,
                         forward_heap1,
@@ -185,7 +185,7 @@ public:
 
             if( !reverse_heap2.Empty() ) {
                 while(0 < (forward_heap2.Size() + reverse_heap2.Size() )){
-                    if( !forward_heap2.Empty() ){
+                    if( 0 < forward_heap2.Size() ){
                         super::RoutingStep(
                             forward_heap2,
                             reverse_heap2,
@@ -195,7 +195,7 @@ public:
                             true
                         );
                     }
-                    if( !reverse_heap2.Empty() ){
+                    if( 0 < reverse_heap2.Size() ){
                         super::RoutingStep(
                             reverse_heap2,
                             forward_heap2,

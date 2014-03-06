@@ -96,7 +96,6 @@ public:
         std::vector<SearchSpaceEdge> forward_search_space;
         std::vector<SearchSpaceEdge> reverse_search_space;
 
-
         //Init queues, semi-expensive because access to TSS invokes a sys-call
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes()
@@ -114,7 +113,7 @@ public:
         QueryHeap & reverse_heap2 = *(engine_working_data.backwardHeap2);
 
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
-        NodeID middle_node = UINT_MAX;
+        NodeID middle_node = SPECIAL_NODEID;
         if(phantom_node_pair.startPhantom.forward_node_id != SPECIAL_NODEID ) {
             SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.startPhantom.forward_node_id;
             forward_heap1.Insert(
@@ -183,7 +182,8 @@ public:
                 );
             }
         }
-        sort_unique_resize(via_node_candidate_list);
+        SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
+        sort_unique_resize( via_node_candidate_list );
         SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
 
         std::vector<NodeID> packed_forward_path;
@@ -340,7 +340,7 @@ public:
             SimpleLogger().Write(logDEBUG) << "upper_bound_to_shortest_path_distance: " << upper_bound_to_shortest_path_distance;
         }
 
-        if(SPECIAL_NODEID != selected_via_node ) {
+        if( SPECIAL_NODEID != selected_via_node ) {
             std::vector<NodeID> packed_alternate_path;
             // retrieve alternate path
             RetrievePackedAlternatePath(
@@ -481,37 +481,68 @@ private:
             i < s_v_min_path_size;
             ++i
         ) {
-            if(packed_s_v_path[i] == packed_shortest_path[i] && packed_s_v_path[i + 1] == packed_shortest_path[i + 1]) {
+            if( packed_s_v_path[i] == packed_shortest_path[i] &&
+                packed_s_v_path[i+1] == packed_shortest_path[i+1]
+            ) {
                 EdgeID edgeID = facade->FindEdgeInEitherDirection(packed_s_v_path[i], packed_s_v_path[i + 1]);
                 *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             } else {
                 if( packed_s_v_path[i] == packed_shortest_path[i] ) {
-                    super::UnpackEdge(packed_s_v_path[i], packed_s_v_path[i+1], partially_unpacked_via_path);
-                    super::UnpackEdge(packed_shortest_path[i], packed_shortest_path[i+1], partially_unpacked_shortest_path);
+                    super::UnpackEdge(
+                        packed_s_v_path[i],
+                        packed_s_v_path[i+1],
+                        partially_unpacked_via_path
+                    );
+                    super::UnpackEdge(
+                        packed_shortest_path[i],
+                        packed_shortest_path[i+1],
+                        partially_unpacked_shortest_path
+                    );
                     break;
                 }
             }
         }
         //traverse partially unpacked edge and note common prefix
-        for (int i = 0, packed_path_length = std::min( partially_unpacked_via_path.size(), partially_unpacked_shortest_path.size()) - 1; (i < packed_path_length) && (partially_unpacked_via_path[i] == partially_unpacked_shortest_path[i] && partially_unpacked_via_path[i+1] == partially_unpacked_shortest_path[i+1]); ++i) {
-            EdgeID edgeID = facade->FindEdgeInEitherDirection(partially_unpacked_via_path[i], partially_unpacked_via_path[i+1]);
+        for(
+            int i = 0, packed_path_length = std::min( partially_unpacked_via_path.size(), partially_unpacked_shortest_path.size()) - 1;
+            (i < packed_path_length) && (partially_unpacked_via_path[i] == partially_unpacked_shortest_path[i] && partially_unpacked_via_path[i+1] == partially_unpacked_shortest_path[i+1]);
+            ++i
+        ) {
+            EdgeID edgeID = facade->FindEdgeInEitherDirection(
+                partially_unpacked_via_path[i],
+                partially_unpacked_via_path[i+1]
+            );
             *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
         }
 
         //Second, partially unpack v-->t in reverse order until paths deviate and note lengths
-        int via_path_index = packed_v_t_path.size() - 1;
-        int shortest_path_index = packed_shortest_path.size() - 1;
-        for (;
+        int via_path_index = packed_v_t_path.size()-1;
+        int shortest_path_index = packed_shortest_path.size()-1;
+        for(;
             via_path_index > 0 && shortest_path_index > 0;
             --via_path_index,--shortest_path_index
         ) {
-            if (packed_v_t_path[via_path_index-1] == packed_shortest_path[shortest_path_index-1] && packed_v_t_path[via_path_index] == packed_shortest_path[shortest_path_index]) {
-                EdgeID edgeID = facade->FindEdgeInEitherDirection( packed_v_t_path[via_path_index-1], packed_v_t_path[via_path_index]);
+            if(
+                packed_v_t_path[via_path_index-1] == packed_shortest_path[shortest_path_index-1] &&
+                packed_v_t_path[via_path_index] == packed_shortest_path[shortest_path_index]
+            ) {
+                EdgeID edgeID = facade->FindEdgeInEitherDirection(
+                    packed_v_t_path[via_path_index-1],
+                    packed_v_t_path[via_path_index]
+                );
                 *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             } else {
-                if (packed_v_t_path[via_path_index] == packed_shortest_path[shortest_path_index]) {
-                    super::UnpackEdge(packed_v_t_path[via_path_index-1], packed_v_t_path[via_path_index], partially_unpacked_via_path);
-                    super::UnpackEdge(packed_shortest_path[shortest_path_index-1] , packed_shortest_path[shortest_path_index], partially_unpacked_shortest_path);
+                if( packed_v_t_path[via_path_index] == packed_shortest_path[shortest_path_index] ) {
+                    super::UnpackEdge(
+                        packed_v_t_path[via_path_index-1],
+                        packed_v_t_path[via_path_index],
+                        partially_unpacked_via_path
+                    );
+                    super::UnpackEdge(
+                        packed_shortest_path[shortest_path_index-1],
+                        packed_shortest_path[shortest_path_index],
+                        partially_unpacked_shortest_path
+                    );
                     break;
                 }
             }
@@ -519,9 +550,18 @@ private:
 
         via_path_index = partially_unpacked_via_path.size()-1;
         shortest_path_index = partially_unpacked_shortest_path.size()-1;
-        for (; via_path_index > 0 && shortest_path_index > 0; --via_path_index,--shortest_path_index) {
-            if (partially_unpacked_via_path[via_path_index-1] == partially_unpacked_shortest_path[shortest_path_index-1] && partially_unpacked_via_path[via_path_index] == partially_unpacked_shortest_path[shortest_path_index]) {
-                EdgeID edgeID = facade->FindEdgeInEitherDirection( partially_unpacked_via_path[via_path_index-1], partially_unpacked_via_path[via_path_index]);
+        for(;
+            via_path_index > 0 && shortest_path_index > 0;
+            --via_path_index,--shortest_path_index
+        ) {
+            if(
+                partially_unpacked_via_path[via_path_index-1] == partially_unpacked_shortest_path[shortest_path_index-1] &&
+                partially_unpacked_via_path[via_path_index] == partially_unpacked_shortest_path[shortest_path_index]
+            ) {
+                EdgeID edgeID = facade->FindEdgeInEitherDirection(
+                    partially_unpacked_via_path[via_path_index-1],
+                    partially_unpacked_via_path[via_path_index]
+                );
                 *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             } else {
                 break;
@@ -619,12 +659,12 @@ private:
                 const int to_distance = distance + edge_weight;
 
                 //New Node discovered -> Add to Heap + Node Info Storage
-                if ( !forward_heap.WasInserted( to ) ) {
+                if( !forward_heap.WasInserted( to ) ) {
                     forward_heap.Insert( to, to_distance, node );
 
                 }
                 //Found a shorter Path -> Update distance
-                else if ( to_distance < forward_heap.GetKey( to ) ) {
+                else if( to_distance < forward_heap.GetKey( to ) ) {
                     // new parent
                     forward_heap.GetData( to ).parent = node;
                     // decreased distance
@@ -726,7 +766,11 @@ private:
         while( !unpack_stack.empty() ) {
             const SearchSpaceEdge via_path_edge = unpack_stack.top();
             unpack_stack.pop();
-            EdgeID edge_in_via_path_id = facade->FindEdgeInEitherDirection(via_path_edge.first, via_path_edge.second);
+            EdgeID edge_in_via_path_id = facade->FindEdgeInEitherDirection(
+                via_path_edge.first,
+                via_path_edge.second
+            );
+
             if( SPECIAL_EDGEID == edge_in_via_path_id ) {
                 return false;
             }
