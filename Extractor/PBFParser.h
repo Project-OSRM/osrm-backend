@@ -76,13 +76,13 @@ public:
 private:
     inline void ReadData();
     inline void ParseData();
-    inline void parseDenseNode  (_ThreadData * threadData);
-    inline void parseNode       (_ThreadData * threadData);
-    inline void parseRelation   (_ThreadData * threadData);
-    inline void parseWay        (_ThreadData * threadData);
+    inline void parseDenseNode   (_ThreadData * threadData);
+    inline void parseNode        (_ThreadData * threadData);
+    inline void parseRelation    (_ThreadData * threadData);
+    inline void parseWay         (_ThreadData * threadData);
 
-    inline void loadGroup       (_ThreadData * threadData);
-    inline void loadBlock       (_ThreadData * threadData);
+    inline void loadGroup        (_ThreadData * threadData);
+    inline void loadBlock        (_ThreadData * threadData);
     inline bool readPBFBlobHeader(std::fstream & stream, _ThreadData * threadData);
     inline bool unpackZLIB       (std::fstream & stream, _ThreadData * threadData);
     inline bool unpackLZMA       (std::fstream & stream, _ThreadData * threadData);

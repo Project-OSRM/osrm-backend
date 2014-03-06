@@ -28,32 +28,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractorCallbacks.h"
 
 #include "ExtractionContainers.h"
-#include "ExtractionHelperFunctions.h"
 #include "ExtractionWay.h"
 
 #include "../DataStructures/Restriction.h"
+#include "../DataStructures/ImportNode.h"
 #include "../Util/SimpleLogger.h"
 
 #include <osrm/Coordinate.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
-#include <boost/regex.hpp>
 
 #include <string>
 #include <vector>
 
 ExtractorCallbacks::ExtractorCallbacks()
  :
-    stringMap(NULL),
+    string_map(NULL),
     externalMemory(NULL)
 { }
 
 ExtractorCallbacks::ExtractorCallbacks(
     ExtractionContainers * ext,
-    StringMap * strMap
+    boost::unordered_map<std::string, NodeID> * string_map
 ) :
-    stringMap(strMap),
+    string_map(string_map),
     externalMemory(ext)
 { }
 
@@ -93,11 +89,11 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
         }
 
         //Get the unique identifier for the street name
-        const StringMap::const_iterator & string_map_iterator = stringMap->find(parsed_way.name);
-        if(stringMap->end() == string_map_iterator) {
+        const boost::unordered_map<std::string, NodeID>::const_iterator & string_map_iterator = string_map->find(parsed_way.name);
+        if(string_map->end() == string_map_iterator) {
             parsed_way.nameID = externalMemory->name_list.size();
             externalMemory->name_list.push_back(parsed_way.name);
-            stringMap->insert(std::make_pair(parsed_way.name, parsed_way.nameID));
+            string_map->insert(std::make_pair(parsed_way.name, parsed_way.nameID));
         } else {
             parsed_way.nameID = string_map_iterator->second;
         }

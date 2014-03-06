@@ -75,13 +75,13 @@ inline unsigned parseDuration(const std::string &s) {
     return UINT_MAX;
 }
 
-inline int parseMaxspeed(std::string input) { //call-by-value on purpose.
-    boost::algorithm::to_lower(input);
-    int n = stringToInt(input);
-    if (input.find("mph") != std::string::npos || input.find("mp/h") != std::string::npos) {
-        n = (n*1609)/1000;
-    }
-    return n;
-}
+// inline int parseMaxspeed(std::string input) { //call-by-value on purpose.
+//     boost::algorithm::to_lower(input);
+//     int n = stringToInt(input);
+//     if (input.find("mph") != std::string::npos || input.find("mp/h") != std::string::npos) {
+//         n = (n*1609)/1000;
+//     }
+//     return n;
+// }
 
 #endif /* EXTRACTIONHELPERFUNCTIONS_H_ */

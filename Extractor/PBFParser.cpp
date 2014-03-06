@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ScriptingEnvironment.h"
 
 #include "../DataStructures/HashTable.h"
+#include "../DataStructures/ImportNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../Util/MachineInfo.h"
 #include "../Util/OpenMPWrapper.h"

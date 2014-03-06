@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "XMLParser.h"
 
 #include "ExtractionWay.h"
+#include "ExtractorCallbacks.h"
+
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/InputReaderFactory.h"
