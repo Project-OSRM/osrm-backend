@@ -147,8 +147,8 @@ private:
                     current_node.lat,
                     current_node.lon
             );
-            BOOST_ASSERT( ( m_coordinate_list->at(i).lat >> 30) == 0 );
-            BOOST_ASSERT( ( m_coordinate_list->at(i).lon >> 30) == 0 );
+            BOOST_ASSERT( ( std::abs(m_coordinate_list->at(i).lat) >> 30) == 0 );
+            BOOST_ASSERT( ( std::abs(m_coordinate_list->at(i).lon) >> 30) == 0 );
         }
         nodes_input_stream.close();
 
