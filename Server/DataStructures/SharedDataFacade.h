@@ -311,6 +311,12 @@ public:
         return m_coordinate_list.at(node);
     };
 
+    int GetElevationOfNode(
+        const unsigned id
+    ) const {
+        return 1000000;
+    }
+
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id
     ) const {

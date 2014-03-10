@@ -271,9 +271,12 @@ ImportNode XMLParser::_ReadXMLNode() {
 			}
 
 			if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
-				xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
+                xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
 				xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
 				if ( k != NULL && value != NULL ) {
+                    if (xmlStrEqual( k, ( const xmlChar* ) "ele") == 1 ) {
+                        node.ele = ELEVATION_FACTOR * atoi(( const char* ) value );
+                    }
 					node.keyVals.Add(std::string( reinterpret_cast<char*>(k) ), std::string( reinterpret_cast<char*>(value)));
 				}
 				if ( k != NULL ) {

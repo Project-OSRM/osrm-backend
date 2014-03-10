@@ -43,10 +43,12 @@ struct NodeInfo {
 	typedef NodeID key_type; 	//type of NodeID
 	typedef int value_type;		//type of lat,lons
 
-	NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), id(_id) {}
-	NodeInfo() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
+    NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), ele(INT_MAX), id(_id) {}
+    NodeInfo(int _lat, int _lon, int _ele, NodeID _id) : lat(_lat), lon(_lon), ele(_ele), id(_id) {}
+    NodeInfo() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
 	int lat;
 	int lon;
+    int ele;
 	NodeID id;
 
 	static NodeInfo min_value() {
@@ -67,7 +69,10 @@ struct NodeInfo {
 
 	value_type operator[](const std::size_t n) const {
 		switch(n) {
-		case 1:
+        case 2:
+            return ele;
+            break;
+        case 1:
 			return lat;
 			break;
 		case 0:

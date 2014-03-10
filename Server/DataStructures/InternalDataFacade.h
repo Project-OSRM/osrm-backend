@@ -62,6 +62,7 @@ private:
     std::string                              m_timestamp;
 
     ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
+    ShM<int, false>::vector                  m_elevation_list;
     ShM<NodeID, false>::vector               m_via_node_list;
     ShM<unsigned, false>::vector             m_name_ID_list;
     ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
@@ -129,14 +130,17 @@ private:
             sizeof(unsigned)
         );
         m_coordinate_list.resize(number_of_coordinates);
+        m_elevation_list.resize(number_of_coordinates);
         for(unsigned i = 0; i < number_of_coordinates; ++i) {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
             m_coordinate_list[i] = FixedPointCoordinate(
                     current_node.lat,
                     current_node.lon
             );
+            m_elevation_list[i] = current_node.ele;
         }
         std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
+        std::vector<int>(m_elevation_list).swap(m_elevation_list);
         nodes_input_stream.close();
 
         SimpleLogger().Write(logDEBUG) << "Loading edge data";
@@ -321,7 +325,14 @@ public:
     ) const {
         const NodeID node = m_via_node_list.at(id);
         return m_coordinate_list.at(node);
-    };
+    }
+
+    int GetElevationOfNode(
+        const unsigned id
+    ) const {
+        const NodeID node = m_via_node_list.at(id);
+        return m_elevation_list.at(node);
+    }
 
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id

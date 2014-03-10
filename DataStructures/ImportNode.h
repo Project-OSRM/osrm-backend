@@ -44,13 +44,26 @@ struct ExternalMemoryNode : NodeInfo {
         bollard(bollard),
         trafficLight(traffic_light)
     { }
+    ExternalMemoryNode(
+        int lat,
+        int lon,
+        int ele,
+        unsigned int id,
+        bool bollard,
+        bool traffic_light
+    ) :
+        NodeInfo(lat, lon, ele, id),
+        bollard(bollard),
+        trafficLight(traffic_light)
+    { }
     ExternalMemoryNode() : bollard(false), trafficLight(false) {}
 
     static ExternalMemoryNode min_value() {
-        return ExternalMemoryNode(0,0,0, false, false);
+        return ExternalMemoryNode(0,0,0, 0, false, false);
     }
     static ExternalMemoryNode max_value() {
         return ExternalMemoryNode(
+            std::numeric_limits<int>::max(),
             std::numeric_limits<int>::max(),
             std::numeric_limits<int>::max(),
             std::numeric_limits<unsigned>::max(),
@@ -70,7 +83,7 @@ struct ImportNode : public ExternalMemoryNode {
 
 	inline void Clear() {
 		keyVals.clear();
-		lat = 0; lon = 0; id = 0; bollard = false; trafficLight = false;
+        lat = 0; lon = 0; ele = 0; id = 0; bollard = false; trafficLight = false;
 	}
 };
 

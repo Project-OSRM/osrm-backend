@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 
 static const double COORDINATE_PRECISION = 1000000.;
+static const int ELEVATION_FACTOR = 1000;
 
 struct FixedPointCoordinate {
     int lat;

@@ -88,7 +88,7 @@ NodeID readBinaryOSRMGraphFromStream(
     for( NodeID i=0; i<n; ++i ) {
         input_stream.read((char*)&node, sizeof(ExternalMemoryNode));
         int_to_ext_node_id_map->push_back(
-            NodeInfo(node.lat, node.lon, node.id)
+            NodeInfo(node.lat, node.lon, node.ele, node.id)
         );
         ext_to_int_id_map.emplace(node.id, i);
         if(node.bollard) {
