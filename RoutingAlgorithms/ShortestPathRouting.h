@@ -359,7 +359,7 @@ public:
             std::swap( packed_legs1, packed_legs2 );
         }
         raw_route_data.unpacked_path_segments.resize( packed_legs1.size() );
-        const int start_offset = ( packed_legs1[0].front() == phantom_nodes_vector.front().startPhantom.forward_node_id  ?  1 : -1 )*phantom_nodes_vector.front().startPhantom.fwd_segment_position;
+        // const int start_offset = ( packed_legs1[0].front() == phantom_nodes_vector.front().startPhantom.forward_node_id  ?  1 : -1 )*phantom_nodes_vector.front().startPhantom.fwd_segment_position;
 
         for(unsigned i = 0; i < packed_legs1.size(); ++i){
             BOOST_ASSERT( !phantom_nodes_vector.empty() );
@@ -367,30 +367,27 @@ public:
             const bool at_end = (packed_legs1.size() == i+1);
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size() );
 
+            PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[i];
+            if (!at_beginning)
+            {
+                unpack_phantom_node_pair.startPhantom.packed_geometry_id = SPECIAL_EDGEID;
+                unpack_phantom_node_pair.startPhantom.fwd_segment_position = 0;
+            }
+
+            if (!at_end)
+            {
+               unpack_phantom_node_pair.targetPhantom.packed_geometry_id = SPECIAL_EDGEID;
+               unpack_phantom_node_pair.targetPhantom.fwd_segment_position = 0;
+            }
 
             super::UnpackPath(
                 // -- packed input
                 packed_legs1[i],
-                // -- start of route
-                ( !at_beginning ? SPECIAL_EDGEID : phantom_nodes_vector.front().startPhantom.packed_geometry_id ),
-                ( !at_beginning ? 0 : phantom_nodes_vector.front().startPhantom.fwd_segment_position ),
-                ( !at_beginning ? false : (packed_legs1.front().front() != phantom_nodes_vector.front().startPhantom.forward_node_id) ),
-                // -- end of route
-                ( !at_end ? SPECIAL_EDGEID : phantom_nodes_vector.back().targetPhantom.packed_geometry_id ),
-                ( !at_end ? 0 : phantom_nodes_vector.back().targetPhantom.fwd_segment_position ),
-                ( !at_end ? false : (packed_legs1.back().back() != phantom_nodes_vector.back().targetPhantom.forward_node_id) ),
+                // -- start and end of (sub-)route
+                unpack_phantom_node_pair,
                 // -- unpacked output
                 raw_route_data.unpacked_path_segments[i]
             );
-
-
-            // // TODO: properly unpack first and last segments
-            // super::UnpackPath(
-            //     packed_legs1[i],
-            //     SPECIAL_EDGEID, ( at_beginning ? start_offset : 0), false,
-            //     SPECIAL_EDGEID, 0, false,
-            //     raw_route_data.unpacked_path_segments[i]
-            // );
         }
         raw_route_data.lengthOfShortestPath = std::min(distance1, distance2);
     }

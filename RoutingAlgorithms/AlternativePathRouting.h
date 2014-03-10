@@ -38,9 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
-const double VIAPATH_ALPHA   = 0.15;
-const double VIAPATH_EPSILON = 0.10; //alternative at most 15% longer
-const double VIAPATH_GAMMA   = 0.75; //alternative shares at most 75% with the shortest.
+const double VIAPATH_ALPHA   = 0.10;
+const double VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
+const double VIAPATH_GAMMA   = 0.75; // alternative shares at most 75% with the shortest.
 
 template<class DataFacadeT>
 class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
@@ -50,10 +50,14 @@ class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
     typedef std::pair<NodeID, NodeID> SearchSpaceEdge;
 
     struct RankedCandidateNode {
-        RankedCandidateNode(const NodeID n, const int l, const int s) :
-            node(n),
-            length(l),
-            sharing(s)
+        RankedCandidateNode(
+            const NodeID node,
+            const int length,
+            const int sharing
+        ) :
+            node(node),
+            length(length),
+            sharing(sharing)
         { }
 
         NodeID node;
@@ -255,7 +259,7 @@ public:
             const int approximated_length = forward_heap1.GetKey(node) + reverse_heap1.GetKey(node);
             const bool length_passes = (approximated_length < upper_bound_to_shortest_path_distance*(1+VIAPATH_EPSILON));
             const bool sharing_passes = (approximated_sharing <= upper_bound_to_shortest_path_distance*VIAPATH_GAMMA);
-            const bool stretch_passes = (approximated_length - approximated_sharing) < ((1.+VIAPATH_EPSILON)*(upper_bound_to_shortest_path_distance-approximated_sharing));
+            const bool stretch_passes = (approximated_length - approximated_sharing) < ((1.+VIAPATH_ALPHA)*(upper_bound_to_shortest_path_distance-approximated_sharing));
 
             if( length_passes && sharing_passes && stretch_passes ) {
                 preselected_node_list.push_back(node);
@@ -279,7 +283,7 @@ public:
             int length_of_via_path = 0, sharing_of_via_path = 0;
             ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path, forward_offset+reverse_offset, packed_shortest_path);
             const int maximum_allowed_sharing = upper_bound_to_shortest_path_distance*VIAPATH_GAMMA;
-            if( sharing_of_via_path <= maximum_allowed_sharing ) {
+            if( sharing_of_via_path <= maximum_allowed_sharing && length_of_via_path <= upper_bound_to_shortest_path_distance*(1+VIAPATH_EPSILON)) {
                 ranked_candidates_list.push_back(
                     RankedCandidateNode(
                         node,
@@ -317,22 +321,16 @@ public:
             // int start_offset = ( packed_shortest_path.front() == phantom_node_pair.startPhantom.forward_node_id  ?  1 : -1 )*phantom_node_pair.startPhantom.fwd_segment_position;
             // SimpleLogger().Write(logDEBUG) << "unpacking from index " << phantom_node_pair.startPhantom.fwd_segment_position;
 
-            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.forward_node_id: " << phantom_node_pair.startPhantom.forward_node_id;
-            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.reverse_node_id: " << phantom_node_pair.startPhantom.reverse_node_id;
-            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.targetPhantom.packed_geometry_id: " << phantom_node_pair.targetPhantom.packed_geometry_id;
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.forward_node_id: " << phantom_node_pair.startPhantom.forward_node_id;
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.reverse_node_id: " << phantom_node_pair.startPhantom.reverse_node_id;
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.targetPhantom.packed_geometry_id: " << phantom_node_pair.targetPhantom.packed_geometry_id;
             // SimpleLogger().Write(logDEBUG) << "packed_shortest_path.back(): " << packed_shortest_path.back();
 
             super::UnpackPath(
                 // -- packed input
                 packed_shortest_path,
                 // -- start of route
-                phantom_node_pair.startPhantom.packed_geometry_id,
-                phantom_node_pair.startPhantom.fwd_segment_position,
-                (packed_shortest_path.front() != phantom_node_pair.startPhantom.forward_node_id),
-                // -- end of route
-                phantom_node_pair.targetPhantom.packed_geometry_id,
-                phantom_node_pair.targetPhantom.fwd_segment_position,
-                (packed_shortest_path.back() != phantom_node_pair.targetPhantom.forward_node_id),
+                phantom_node_pair,
                 // -- unpacked output
                 raw_route_data.unpacked_path_segments.front()
             );
@@ -356,12 +354,7 @@ public:
             // unpack the alternate path
             super::UnpackPath(
                 packed_alternate_path,
-                phantom_node_pair.startPhantom.packed_geometry_id,
-                phantom_node_pair.startPhantom.fwd_segment_position,
-                (packed_alternate_path.front() != phantom_node_pair.startPhantom.forward_node_id),
-                phantom_node_pair.targetPhantom.packed_geometry_id,
-                phantom_node_pair.targetPhantom.fwd_segment_position,
-                (packed_alternate_path.back() != phantom_node_pair.targetPhantom.forward_node_id),
+                phantom_node_pair,
                 raw_route_data.unpacked_alternative
             );
 
@@ -406,10 +399,17 @@ private:
         );
     }
 
-    inline void ComputeLengthAndSharingOfViaPath(const NodeID via_node, int *real_length_of_via_path, int *sharing_of_via_path,
-            const int offset, const std::vector<NodeID> & packed_shortest_path) {
-        //compute and unpack <s,..,v> and <v,..,t> by exploring search spaces from v and intersecting against queues
-        //only half-searches have to be done at this stage
+    //TODO: reorder parameters
+    // compute and unpack <s,..,v> and <v,..,t> by exploring search spaces
+    // from v and intersecting against queues. only half-searches have to be
+    // done at this stage
+    inline void ComputeLengthAndSharingOfViaPath(
+        const NodeID via_node,
+        int *real_length_of_via_path,
+        int *sharing_of_via_path,
+        const int offset,
+        const std::vector<NodeID> & packed_shortest_path
+    ) {
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
             super::facade->GetNumberOfNodes()
         );
@@ -609,6 +609,7 @@ private:
     //     return sharing;
     // }
 
+    //todo: reorder parameters
     template<bool is_forward_directed>
     inline void AlternativeRoutingStep(
     		QueryHeap & forward_heap,
@@ -622,7 +623,12 @@ private:
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         const int scaled_distance = (distance-edge_expansion_offset)/(1.+VIAPATH_EPSILON);
-        if( scaled_distance > *upper_bound_to_shortest_path_distance ){
+        // SimpleLogger().Write(logDEBUG) << "ub: " << *upper_bound_to_shortest_path_distance << ", distance: " << distance << ", scaled_distance: " << scaled_distance;
+        if(
+            (INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_distance) &&
+            (scaled_distance > *upper_bound_to_shortest_path_distance)
+        ) {
+            // SimpleLogger().Write(logDEBUG) << "removing nodes from heap";
             forward_heap.DeleteAll();
             return;
         }

@@ -38,8 +38,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/foreach.hpp>
 #include <boost/noncopyable.hpp>
 
-#include <climits>
-
 #include <stack>
 
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::forwardHeap;
@@ -140,14 +138,12 @@ public:
     //TODO: refactor parameters to only edge ids for start and end
     inline void UnpackPath(
         const std::vector<NodeID> & packed_path,
-        const unsigned packed_geometry_id_of_first_edge,
-        const int fwd_index_offset,
-        const bool start_traversed_in_reverse,
-        const unsigned packed_geometry_id_of_last_edge,
-        const int rev_index_offset,
-        const bool target_traversed_in_reverse,
+        const PhantomNodes & phantom_node_pair,
         std::vector<PathData> & unpacked_path
     ) const {
+        const bool start_traversed_in_reverse = (packed_path.front() != phantom_node_pair.startPhantom.forward_node_id);
+        const bool target_traversed_in_reverse = (packed_path.back() != phantom_node_pair.targetPhantom.forward_node_id);
+
         const unsigned packed_path_size = packed_path.size();
         std::stack<std::pair<NodeID, NodeID> > recursion_stack;
 
@@ -230,7 +226,7 @@ public:
                     std::vector<unsigned> id_vector;
                     facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id), id_vector);
 
-                    const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - fwd_index_offset - 1 : fwd_index_offset ) : 0 );
+                    const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position - 1 : phantom_node_pair.startPhantom.fwd_segment_position ) : 0 );
                     const int end_index = id_vector.size();
 
                     BOOST_ASSERT( start_index >= 0 );
@@ -254,21 +250,22 @@ public:
                 }
             }
         }
-        if(SPECIAL_EDGEID != packed_geometry_id_of_last_edge) {
-            SimpleLogger().Write(logDEBUG) << "unpacking last segment " << packed_geometry_id_of_last_edge;
+        if(SPECIAL_EDGEID != phantom_node_pair.targetPhantom.packed_geometry_id ) {
+            SimpleLogger().Write(logDEBUG) << "unpacking last segment " << phantom_node_pair.targetPhantom.packed_geometry_id;
             SimpleLogger().Write(logDEBUG) << "start_traversed_in_reverse: " << (start_traversed_in_reverse ? "y" : "n");
             SimpleLogger().Write(logDEBUG) << "target_traversed_in_reverse: " << (target_traversed_in_reverse ? "y" : "n");
-            SimpleLogger().Write(logDEBUG) << "fwd_index_offset: " << fwd_index_offset << ", rev_index_offset: " << rev_index_offset;
+            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.fwd_segment_position: " << phantom_node_pair.startPhantom.fwd_segment_position << ", " <<
+                                              "phantom_node_pair.targetPhantom.fwd_segment_position: " << phantom_node_pair.targetPhantom.fwd_segment_position;
             std::vector<unsigned> id_vector;
-            facade->GetUncompressedGeometry(packed_geometry_id_of_last_edge, id_vector);
+            facade->GetUncompressedGeometry(phantom_node_pair.targetPhantom.packed_geometry_id, id_vector);
             if( target_traversed_in_reverse ) {
                 std::reverse(id_vector.begin(), id_vector.end() );
             }
             SimpleLogger().Write(logDEBUG) << "id_vector.size() " << id_vector.size();
-            const bool start_and_end_on_same_edge = (packed_geometry_id_of_first_edge == packed_geometry_id_of_last_edge) && unpacked_path.empty();
+            const bool start_and_end_on_same_edge = (phantom_node_pair.startPhantom.packed_geometry_id  == phantom_node_pair.targetPhantom.packed_geometry_id) && unpacked_path.empty();
 
-            const int start_index = ( start_and_end_on_same_edge ? id_vector.size() - fwd_index_offset : 0 );
-            const int end_index = (target_traversed_in_reverse ? id_vector.size() - rev_index_offset : rev_index_offset);
+            const int start_index = ( start_and_end_on_same_edge ? phantom_node_pair.startPhantom.fwd_segment_position : 0 );
+            const int end_index = (target_traversed_in_reverse ? id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position : phantom_node_pair.targetPhantom.fwd_segment_position);
 
             SimpleLogger().Write(logDEBUG) << "fetching from [" << start_index << "," << end_index << "]";
 
@@ -283,7 +280,7 @@ public:
                 unpacked_path.push_back(
                     PathData(
                         id_vector[i],
-                        0,
+                        phantom_node_pair.targetPhantom.name_id,
                         TurnInstructionsClass::NoTurn,
                         0
                     )
