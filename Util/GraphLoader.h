@@ -446,7 +446,7 @@ unsigned readHSGRFromStream(
     hsgr_input_stream.read( (char*) &number_of_nodes, sizeof(unsigned) );
     BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
     hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
-    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
+    // BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
     node_list.resize(number_of_nodes + 1);
     hsgr_input_stream.read(
         (char*) &(node_list[0]),

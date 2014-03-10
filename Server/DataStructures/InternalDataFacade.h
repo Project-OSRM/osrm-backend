@@ -115,7 +115,7 @@ private:
         );
 
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
-        BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
+        // BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
         SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size() << " edges";
         m_query_graph = new QueryGraph(node_list, edge_list);
 
