@@ -153,6 +153,7 @@ public:
         }
         descriptorConfig.zoom_level = routeParameters.zoomLevel;
         descriptorConfig.instructions = routeParameters.printInstructions;
+        descriptorConfig.elevation = routeParameters.printElevation;
         descriptorConfig.geometry = routeParameters.geometry;
         descriptorConfig.encode_geometry = routeParameters.compression;
 

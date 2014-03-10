@@ -41,6 +41,7 @@ struct RouteParameters {
     RouteParameters() :
         zoomLevel(18),
         printInstructions(false),
+        printElevation(false),
         alternateRoute(true),
         geometry(true),
         compression(true),
@@ -50,6 +51,7 @@ struct RouteParameters {
 
     short zoomLevel;
     bool printInstructions;
+    bool printElevation;
     bool alternateRoute;
     bool geometry;
     bool compression;
@@ -82,6 +84,10 @@ struct RouteParameters {
 
     void setInstructionFlag(const bool b) {
         printInstructions = b;
+    }
+
+    void setElevationFlag(const bool e) {
+        printElevation = e;
     }
 
     void setService( const std::string & s) {
