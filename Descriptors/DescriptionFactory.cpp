@@ -68,11 +68,34 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & start) {
     );
 }
 
+void DescriptionFactory::SetStartSegmentWithElevation(const PhantomNode & start, const int elevation) {
+    start_phantom = start;
+    AppendSegmentWithElevation(
+        start.location, elevation,
+        PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1)
+    );
+}
+
 void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
     target_phantom = target;
     pathDescription.push_back(
         SegmentInformation(
             target.location,
+            target.nodeBasedEdgeNameID,
+            0,
+            target.weight1,
+            0,
+            true
+        )
+    );
+}
+
+void DescriptionFactory::SetEndSegmentWithElevation(const PhantomNode & target, const int elevation) {
+    target_phantom = target;
+    pathDescription.push_back(
+        SegmentInformation(
+            target.location,
+            elevation,
             target.nodeBasedEdgeNameID,
             0,
             target.weight1,
@@ -104,6 +127,30 @@ void DescriptionFactory::AppendSegment(
     }
 }
 
+void DescriptionFactory::AppendSegmentWithElevation(
+    const FixedPointCoordinate & coordinate,
+    const int elevation,
+    const PathData & data
+) {
+    if(
+        ( 1 == pathDescription.size())                  &&
+        ( pathDescription.back().location == coordinate)
+    ) {
+        pathDescription.back().name_id = data.name_id;
+    } else {
+        pathDescription.push_back(
+            SegmentInformation(
+                coordinate,
+                elevation,
+                data.name_id,
+                data.durationOfSegment,
+                0,
+                data.turnInstruction
+            )
+        );
+    }
+}
+
 void DescriptionFactory::AppendEncodedPolylineString(
     const bool return_encoded,
     std::vector<std::string> & output
@@ -111,6 +158,19 @@ void DescriptionFactory::AppendEncodedPolylineString(
     std::string temp;
     if(return_encoded) {
         polyline_compressor.printEncodedString(pathDescription, temp);
+    } else {
+        polyline_compressor.printUnencodedString(pathDescription, temp);
+    }
+    output.push_back(temp);
+}
+
+void DescriptionFactory::AppendEncodedPolylineStringWithElevation(
+    const bool return_encoded,
+    std::vector<std::string> & output
+) {
+    std::string temp;
+    if(return_encoded) {
+        polyline_compressor.printEncodedStringWithElevation(pathDescription, temp);
     } else {
         polyline_compressor.printUnencodedString(pathDescription, temp);
     }

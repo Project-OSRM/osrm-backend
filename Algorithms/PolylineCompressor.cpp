@@ -83,6 +83,34 @@ void PolylineCompressor::printEncodedString(
 
 }
 
+void PolylineCompressor::printEncodedStringWithElevation(
+    const std::vector<SegmentInformation> & polyline,
+    std::string & output
+) const {
+    std::vector<int> deltaNumbers;
+    output += "\"";
+    if(!polyline.empty()) {
+        FixedPointCoordinate lastCoordinate = polyline[0].location;
+        int lastElevation = polyline[0].elevation;
+        deltaNumbers.push_back( lastCoordinate.lat );
+        deltaNumbers.push_back( lastCoordinate.lon );
+        deltaNumbers.push_back(lastElevation);
+        for(unsigned i = 1; i < polyline.size(); ++i) {
+            if(!polyline[i].necessary) {
+                continue;
+            }
+            deltaNumbers.push_back(polyline[i].location.lat - lastCoordinate.lat);
+            deltaNumbers.push_back(polyline[i].location.lon - lastCoordinate.lon);
+            deltaNumbers.push_back(polyline[i].elevation - lastElevation);
+            lastCoordinate = polyline[i].location;
+            lastElevation = polyline[i].elevation;
+        }
+        encodeVectorSignedNumber(deltaNumbers, output);
+    }
+    output += "\"";
+
+}
+
 void PolylineCompressor::printEncodedString(
     const std::vector<FixedPointCoordinate>& polyline,
     std::string &output

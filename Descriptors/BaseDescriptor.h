@@ -40,11 +40,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct DescriptorConfig {
     DescriptorConfig() :
         instructions(true),
+        elevation(false),
         geometry(true),
         encode_geometry(true),
         zoom_level(18)
     { }
     bool instructions;
+    bool elevation;
     bool geometry;
     bool encode_geometry;
     unsigned short zoom_level;

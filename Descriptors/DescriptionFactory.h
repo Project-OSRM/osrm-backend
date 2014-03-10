@@ -86,10 +86,17 @@ public:
     void AppendEncodedPolylineString(std::vector<std::string> &output) const;
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
     void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data);
+    void AppendSegmentWithElevation(const FixedPointCoordinate & coordinate, const int elevation, const PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & start_phantom);
+    void SetStartSegmentWithElevation(const PhantomNode & start_phantom, const int elevation);
     void SetEndSegment(const PhantomNode & start_phantom);
+    void SetEndSegmentWithElevation(const PhantomNode & start_phantom, const int elevation);
     void AppendEncodedPolylineString(
+        const bool return_encoded,
+        std::vector<std::string> & output
+    );
+    void AppendEncodedPolylineStringWithElevation(
         const bool return_encoded,
         std::vector<std::string> & output
     );

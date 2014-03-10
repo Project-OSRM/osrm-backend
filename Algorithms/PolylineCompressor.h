@@ -49,6 +49,11 @@ public:
         std::string & output
     ) const;
 
+    void printEncodedStringWithElevation(
+        const std::vector<SegmentInformation> & polyline,
+        std::string & output
+    ) const;
+
     void printEncodedString(
         const std::vector<FixedPointCoordinate>& polyline,
         std::string &output

@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Struct fits everything in one cache line
 struct SegmentInformation {
     FixedPointCoordinate location;
+    int elevation;
     NodeID name_id;
     unsigned duration;
     double length;
@@ -53,6 +54,26 @@ struct SegmentInformation {
         const bool necessary
     ) :
         location(location),
+        elevation(0),
+        name_id(name_id),
+        duration(duration),
+        length(length),
+        bearing(0),
+        turn_instruction(turn_instruction),
+        necessary(necessary)
+    { }
+
+    explicit SegmentInformation(
+        const FixedPointCoordinate & location,
+        const int elevation,
+        const NodeID name_id,
+        const unsigned duration,
+        const double length,
+        const TurnInstruction turn_instruction,
+        const bool necessary
+    ) :
+        location(location),
+        elevation(elevation),
         name_id(name_id),
         duration(duration),
         length(length),
@@ -69,6 +90,26 @@ struct SegmentInformation {
         const TurnInstruction turn_instruction
     ) :
         location(location),
+        elevation(0),
+        name_id(name_id),
+        duration(duration),
+        length(length),
+        bearing(0),
+        turn_instruction(turn_instruction),
+        necessary(turn_instruction != 0)
+    { }
+
+    // Constructor with elevation provided
+    explicit SegmentInformation(
+        const FixedPointCoordinate & location,
+        const int elevation,
+        const NodeID name_id,
+        const unsigned duration,
+        const double length,
+        const TurnInstruction turn_instruction
+    ) :
+        location(location),
+        elevation(elevation),
         name_id(name_id),
         duration(duration),
         length(length),
