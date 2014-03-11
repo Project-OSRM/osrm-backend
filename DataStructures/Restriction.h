@@ -105,13 +105,16 @@ struct InputRestrictionContainer {
         return InputRestrictionContainer(0, 0, 0, 0);
     }
     static InputRestrictionContainer max_value() {
-        return InputRestrictionContainer(UINT_MAX, UINT_MAX, UINT_MAX, UINT_MAX);
+        return  InputRestrictionContainer(
+                    UINT_MAX,
+                    UINT_MAX,
+                    UINT_MAX,
+                    UINT_MAX
+                );
     }
 };
 
-struct CmpRestrictionContainerByFrom :
-    public std::binary_function<InputRestrictionContainer, InputRestrictionContainer, bool>
-{
+struct CmpRestrictionContainerByFrom {
     typedef InputRestrictionContainer value_type;
     inline bool operator()(
         const InputRestrictionContainer & a,
@@ -127,9 +130,9 @@ struct CmpRestrictionContainerByFrom :
     }
 };
 
-struct CmpRestrictionContainerByTo: public std::binary_function<InputRestrictionContainer, InputRestrictionContainer, bool> {
+struct CmpRestrictionContainerByTo {
     typedef InputRestrictionContainer value_type;
-    inline bool operator ()(
+    inline bool operator()(
         const InputRestrictionContainer & a,
         const InputRestrictionContainer & b
     ) const {

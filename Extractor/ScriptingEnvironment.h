@@ -28,16 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SCRIPTINGENVIRONMENT_H_
 #define SCRIPTINGENVIRONMENT_H_
 
-#include "ExtractionHelperFunctions.h"
-#include "ExtractorStructs.h"
-#include "../DataStructures/ImportNode.h"
-#include "../Util/LuaUtil.h"
-#include "../Util/OpenMPWrapper.h"
-#include "../Util/OSRMException.h"
-#include "../Util/SimpleLogger.h"
-#include "../typedefs.h"
-
 #include <vector>
+
+struct lua_State;
 
 class ScriptingEnvironment {
 public:

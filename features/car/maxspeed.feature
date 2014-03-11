@@ -16,8 +16,8 @@ Feature: Car - Max speed restrictions
 
         When I route I should get
             | from | to | route | time      |
-            | a    | b  | ab    | 42s ~10%  |
-            | b    | c  | bc    | 360s ~10% |
+            | a    | b  | ab    | 64s  ~10% |
+            | b    | c  | bc    | 545s ~10% |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
@@ -30,16 +30,16 @@ Feature: Car - Max speed restrictions
 
         When I route I should get
             | from | to | route | time      |
-            | a    | b  | ab    | 144s ~10% |
-            | b    | c  | bc    | 42s ~10%  |
+            | a    | b  | ab    | 216s ~10% |
+            | b    | c  | bc    | 64s  ~10% |
 
     Scenario: Car - Forward/backward maxspeed
         Given the shortcuts
-            | key   | value     |
-            | car   | 12s ~10%  |
-            | run   | 73s ~10%  |
-            | walk  | 146s ~10% |
-            | snail | 720s ~10% |
+            | key   | value      |
+            | car   | 17s   ~10% |
+            | run   | 109s  ~10% |
+            | walk  | 219s  ~10% |
+            | snail | 1080s ~10% |
 
         And a grid size of 100 meters
 

@@ -41,8 +41,8 @@ template< typename EdgeDataT>
 class DynamicGraph {
     public:
         typedef EdgeDataT EdgeData;
-        typedef uint32_t NodeIterator;
-        typedef uint32_t EdgeIterator;
+        typedef unsigned NodeIterator;
+        typedef unsigned EdgeIterator;
 
         class InputEdge {
             public:
@@ -101,20 +101,24 @@ class DynamicGraph {
 
         ~DynamicGraph(){ }
 
-        uint32_t GetNumberOfNodes() const {
+        unsigned GetNumberOfNodes() const {
             return m_numNodes;
         }
 
-        uint32_t GetNumberOfEdges() const {
+        unsigned GetNumberOfEdges() const {
             return m_numEdges;
         }
 
-        uint32_t GetOutDegree( const NodeIterator n ) const {
+        unsigned GetOutDegree( const NodeIterator n ) const {
             return m_nodes[n].edges;
         }
 
         NodeIterator GetTarget( const EdgeIterator e ) const {
             return NodeIterator( m_edges[e].target );
+        }
+
+        void SetTarget( const EdgeIterator e, const NodeIterator n ) {
+            m_edges[e].target = n;
         }
 
         EdgeDataT &GetEdgeData( const EdgeIterator e ) {
@@ -143,7 +147,7 @@ class DynamicGraph {
                     m_edges[node.firstEdge] = m_edges[node.firstEdge + node.edges];
                 } else {
                     EdgeIterator newFirstEdge = ( EdgeIterator ) m_edges.size();
-                    uint32_t newSize = node.edges * 1.1 + 2;
+                    unsigned newSize = node.edges * 1.1 + 2;
                     EdgeIterator requiredCapacity = newSize + m_edges.size();
                     EdgeIterator oldCapacity = m_edges.capacity();
                     if ( requiredCapacity >= oldCapacity ) {
@@ -170,9 +174,12 @@ class DynamicGraph {
         //removes an edge. Invalidates edge iterators for the source node
         void DeleteEdge( const NodeIterator source, const EdgeIterator e ) {
             Node &node = m_nodes[source];
+            #pragma omp atomic
             --m_numEdges;
             --node.edges;
-            const uint32_t last = node.firstEdge + node.edges;
+            BOOST_ASSERT(UINT_MAX != node.edges);
+            const unsigned last = node.firstEdge + node.edges;
+            BOOST_ASSERT( UINT_MAX != last);
             //swap with last edge
             m_edges[e] = m_edges[last];
             makeDummy( last );
@@ -222,7 +229,7 @@ class DynamicGraph {
             //index of the first edge
             EdgeIterator firstEdge;
             //amount of edges
-            uint32_t edges;
+            unsigned edges;
         };
 
         struct Edge {

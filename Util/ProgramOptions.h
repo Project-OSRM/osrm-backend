@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OSRMException.h"
 #include "SimpleLogger.h"
 
+#include <osrm/ServerPaths.h>
+
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -42,10 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-typedef boost::unordered_map<
-            const std::string,
-            boost::filesystem::path
-        > ServerPaths;
 
 namespace boost {
     namespace filesystem {
@@ -62,6 +60,7 @@ namespace boost {
             boost::program_options::validators::check_first_occurrence(v);
             const std::string & input_string =
                 boost::program_options::validators::get_single_string(values);
+            SimpleLogger().Write() << "validator called for " << input_string;
             if(boost::filesystem::is_regular_file(input_string)) {
                 v = boost::any(boost::filesystem::path(input_string));
             } else {
@@ -221,7 +220,7 @@ inline bool GenerateServerProgramOptions(
         SimpleLogger().Write() <<
             "Reading options from: " << path_iterator->second.string();
         std::string config_str;
-        PrepareConfigFile( paths["config"], config_str );
+        PrepareConfigFile( path_iterator->second, config_str );
         std::stringstream config_stream( config_str );
         boost::program_options::store(
             parse_config_file(config_stream, config_file_options),
@@ -231,13 +230,18 @@ inline bool GenerateServerProgramOptions(
     }
 
     if( !use_shared_memory && option_variables.count("base") ) {
-        std::string base_string = paths["base"].string();
+        path_iterator = paths.find("base");
+        BOOST_ASSERT( paths.end() != path_iterator );
+        std::string base_string = path_iterator->second.string();
+
         path_iterator = paths.find("hsgrdata");
         if(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".hsgr";
+        } else {
+            throw OSRMException(base_string + ".hsgr not found");
         }
 
         path_iterator = paths.find("nodesdata");
@@ -246,7 +250,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".nodes";
+        } else {
+            throw OSRMException(base_string + ".nodes not found");
         }
+
 
         path_iterator = paths.find("edgesdata");
         if(
@@ -254,7 +261,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".edges";
+        } else {
+            throw OSRMException(base_string + ".edges not found");
         }
+
 
         path_iterator = paths.find("ramindex");
         if(
@@ -262,7 +272,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".ramIndex";
+        } else {
+            throw OSRMException(base_string + ".ramIndex not found");
         }
+
 
         path_iterator = paths.find("fileindex");
         if(
@@ -270,7 +283,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".fileIndex";
+        } else {
+            throw OSRMException(base_string + ".fileIndex not found");
         }
+
 
         path_iterator = paths.find("namesdata");
         if(
@@ -278,6 +294,8 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".names";
+        } else {
+            throw OSRMException(base_string + ".namesIndex not found");
         }
 
         path_iterator = paths.find("timestamp");

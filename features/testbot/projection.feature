@@ -1,6 +1,6 @@
-@routing @projection @todo
+@routing @projection
 Feature: Projection to nearest point on road
-Waypoints should be projected perpendicular onto the closest road, also at high latitudes.
+Waypoints are projected perpendiculary onto the closest road
 
     Background:
         The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html
@@ -24,15 +24,15 @@ Waypoints should be projected perpendicular onto the closest road, also at high 
     Scenario: Projection onto way at high latitudes, 1km distance
         When I route I should get
             | from | to | route | compass | bearing | distance  |
-            | b    | a  | abc   | SW      | 225     | 1000m +-3 |
-            | b    | c  | abc   | NE      | 45      | 1000m +-3 |
-            | a    | d  | abc   | NE      | 45      | 1000m +-3 |
-            | d    | a  | abc   | SW      | 225     | 1000m +-3 |
-            | c    | d  | abc   | SW      | 225     | 1000m +-3 |
-            | d    | c  | abc   | NE      | 45      | 1000m +-3 |
+            | b    | a  | abc   | SW      | 225     | 1000m +-7 |
+            | b    | c  | abc   | NE      | 45      | 1000m +-7 |
+            | a    | d  | abc   | NE      | 45      | 1000m +-7 |
+            | d    | a  | abc   | SW      | 225     | 1000m +-7 |
+            | c    | d  | abc   | SW      | 225     | 1000m +-7 |
+            | d    | c  | abc   | NE      | 45  +-1 | 1000m +-7 |
 
-    Scenario: Projection onto way at high latitudes, no distance 
+    Scenario: Projection onto way at high latitudes, no distance
         When I route I should get
             | from | to | route | distance |
-            | d    | b  | abc   | 0m       |
-            | b    | d  | abc   | 0m       |
+            | d    | b  | abc   | 0m  +-4  |
+            | b    | d  | abc   | 0m  +-4  |

@@ -28,29 +28,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTORCALLBACKS_H_
 #define EXTRACTORCALLBACKS_H_
 
-#include "ExtractionContainers.h"
-#include "ExtractionHelperFunctions.h"
 #include "ExtractorStructs.h"
+#include "../typedefs.h"
 
-#include "../DataStructures/Coordinate.h"
-
-#include <cfloat>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
-#include <boost/regex.hpp>
-
+#include <boost/unordered_map.hpp>
 #include <string>
-#include <vector>
+
+class ExtractionContainers;
+struct ExtractionWay;
+struct InputRestrictionContainer;
+
+typedef boost::unordered_map<std::string, NodeID> StringMap;
 
 class ExtractorCallbacks{
 private:
+
     StringMap * stringMap;
     ExtractionContainers * externalMemory;
 
     ExtractorCallbacks();
 public:
-    explicit ExtractorCallbacks(ExtractionContainers * ext, StringMap * strMap);
+    explicit ExtractorCallbacks(
+        ExtractionContainers * ext,
+        StringMap * strMap
+    );
 
     ~ExtractorCallbacks();
 

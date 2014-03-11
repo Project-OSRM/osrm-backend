@@ -42,7 +42,7 @@ struct APIGrammar : qi::grammar<Iterator> {
 
         zoom        = (-qi::lit('&')) >> qi::lit('z')            >> '=' >> qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
         output      = (-qi::lit('&')) >> qi::lit("output")       >> '=' >> string[boost::bind(&HandlerT::setOutputFormat, handler, ::_1)];
-        jsonp       = (-qi::lit('&')) >> qi::lit("jsonp")        >> '=' >> stringwithDot[boost::bind(&HandlerT::setJSONpParameter, handler, ::_1)];
+        jsonp       = (-qi::lit('&')) >> qi::lit("jsonp")        >> '=' >> stringwithPercent[boost::bind(&HandlerT::setJSONpParameter, handler, ::_1)];
         checksum    = (-qi::lit('&')) >> qi::lit("checksum")     >> '=' >> qi::int_[boost::bind(&HandlerT::setChecksum, handler, ::_1)];
         instruction = (-qi::lit('&')) >> qi::lit("instructions") >> '=' >> qi::bool_[boost::bind(&HandlerT::setInstructionFlag, handler, ::_1)];
         geometry    = (-qi::lit('&')) >> qi::lit("geometry")     >> '=' >> qi::bool_[boost::bind(&HandlerT::setGeometryFlag, handler, ::_1)];
@@ -53,16 +53,17 @@ struct APIGrammar : qi::grammar<Iterator> {
         alt_route   = (-qi::lit('&')) >> qi::lit("alt")          >> '=' >> qi::bool_[boost::bind(&HandlerT::setAlternateRouteFlag, handler, ::_1)];
         old_API     = (-qi::lit('&')) >> qi::lit("geomformat")   >> '=' >> string[boost::bind(&HandlerT::setDeprecatedAPIFlag, handler, ::_1)];
 
-        string        = +(qi::char_("a-zA-Z"));
-        stringwithDot = +(qi::char_("a-zA-Z0-9_.-"));
+        string            = +(qi::char_("a-zA-Z"));
+        stringwithDot     = +(qi::char_("a-zA-Z0-9_.-"));
+        stringwithPercent = +(qi::char_("a-zA-Z0-9_.-") | qi::char_('[') | qi::char_(']') | (qi::char_('%') >> qi::char_("0-9A-Z") >> qi::char_("0-9A-Z") ));
     }
+
     qi::rule<Iterator> api_call, query;
     qi::rule<Iterator, std::string()> service, zoom, output, string, jsonp, checksum, location, hint,
-                                      stringwithDot, language, instruction, geometry,
+                                      stringwithDot, stringwithPercent, language, instruction, geometry,
                                       cmp, alt_route, old_API;
 
     HandlerT * handler;
 };
-
 
 #endif /* APIGRAMMAR_H_ */

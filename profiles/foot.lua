@@ -114,7 +114,7 @@ function way_function (way)
     	then
     	return 0
     end
-    
+
     -- don't route on ways that are still under construction
     if highway=='construction' then
         return 0
@@ -125,7 +125,7 @@ function way_function (way)
     if access_tag_blacklist[access] then
 		return 0
     end
-    
+
 	local name = way.tags:Find("name")
 	local ref = way.tags:Find("ref")
 	local junction = way.tags:Find("junction")
@@ -179,7 +179,7 @@ function way_function (way)
 	    -- unknown way, but valid access tag
 		way.speed = walking_speed
     end
-    
+
 	-- oneway
 	if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
 		way.direction = Way.oneway
