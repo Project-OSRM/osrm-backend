@@ -48,7 +48,7 @@ struct NodeInfo {
 #ifdef OSRM_HAS_ELEVATION
     NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), ele(INT_MAX), id(_id) {}
     NodeInfo(int _lat, int _lon, int _ele, NodeID _id) : lat(_lat), lon(_lon), ele(_ele), id(_id) {}
-    NodeInfo() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
+    NodeInfo() : lat(INT_MAX), lon(INT_MAX), ele(INT_MAX), id(UINT_MAX) {}
 #else
     NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), id(_id) {}
     NodeInfo() : lat(INT_MAX), lon(INT_MAX) {}
