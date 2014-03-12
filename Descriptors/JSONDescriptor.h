@@ -139,7 +139,7 @@ public:
 
 #ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
-            int start_elevation = facade->GetElevationOfNode(phantom_nodes.startPhantom.nodeBasedEdgeNameID);
+            int start_elevation = facade->GetElevationOfNode(raw_route.unpacked_path_segments.front().front().node);
             description_factory.SetStartSegmentWithElevation(phantom_nodes.startPhantom, start_elevation);
         } else {
 #endif
@@ -163,7 +163,7 @@ public:
         }
 #ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
-            int end_elevation = facade->GetElevationOfNode(phantom_nodes.targetPhantom.nodeBasedEdgeNameID);
+            int end_elevation = facade->GetElevationOfNode(raw_route.unpacked_path_segments.back().back().node);
             description_factory.SetEndSegmentWithElevation(phantom_nodes.targetPhantom, end_elevation);
         } else {
 #endif
