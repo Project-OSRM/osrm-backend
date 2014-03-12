@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASE_DESCRIPTOR_H_
 #define BASE_DESCRIPTOR_H_
 
+#include "OSRM_config.h"
+
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
 #include "../typedefs.h"
@@ -40,13 +42,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct DescriptorConfig {
     DescriptorConfig() :
         instructions(true),
-        elevation(false),
+#ifdef OSRM_HAS_ELEVATION
+        elevation(true),
+#endif
         geometry(true),
         encode_geometry(true),
         zoom_level(18)
     { }
     bool instructions;
+#ifdef OSRM_HAS_ELEVATION
     bool elevation;
+#endif
     bool geometry;
     bool encode_geometry;
     unsigned short zoom_level;

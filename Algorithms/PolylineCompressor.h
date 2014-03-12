@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef POLYLINECOMPRESSOR_H_
 #define POLYLINECOMPRESSOR_H_
 
+#include "OSRM_config.h"
+
 #include "../DataStructures/SegmentInformation.h"
 #include "../Util/StringUtil.h"
 
@@ -49,10 +51,12 @@ public:
         std::string & output
     ) const;
 
+#ifdef OSRM_HAS_ELEVATION
     void printEncodedStringWithElevation(
         const std::vector<SegmentInformation> & polyline,
         std::string & output
     ) const;
+#endif
 
     void printEncodedString(
         const std::vector<FixedPointCoordinate>& polyline,

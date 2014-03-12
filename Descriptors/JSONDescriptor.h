@@ -98,13 +98,17 @@ public:
         FixedPointCoordinate current_coordinate;
         BOOST_FOREACH(const PathData & path_data, route_leg) {
             current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+#ifdef OSRM_HAS_ELEVATION
             if (config.elevation) {
                 // Get elevation from node and append segment with elevation
                 int current_elevation = facade->GetElevationOfNode(path_data.node);
                 description_factory.AppendSegmentWithElevation(current_coordinate, current_elevation, path_data);
             } else {
+#endif
                 description_factory.AppendSegment(current_coordinate, path_data );
+#ifdef OSRM_HAS_ELEVATION
             }
+#endif
             ++added_element_count;
         }
         // description_factory.SetEndSegment( leg_phantoms.targetPhantom );
@@ -133,12 +137,16 @@ public:
             return;
         }
 
+#ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
             int start_elevation = facade->GetElevationOfNode(phantom_nodes.startPhantom.nodeBasedEdgeNameID);
             description_factory.SetStartSegmentWithElevation(phantom_nodes.startPhantom, start_elevation);
         } else {
+#endif
             description_factory.SetStartSegment(phantom_nodes.startPhantom);
+#ifdef OSRM_HAS_ELEVATION
         }
+#endif
         reply.content.push_back("0,"
                 "\"status_message\": \"Found route between points\",");
 
@@ -153,27 +161,35 @@ public:
                 added_segments + shortest_leg_end_indices.back()
             );
         }
+#ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
             int end_elevation = facade->GetElevationOfNode(phantom_nodes.targetPhantom.nodeBasedEdgeNameID);
             description_factory.SetEndSegmentWithElevation(phantom_nodes.targetPhantom, end_elevation);
         } else {
+#endif
             description_factory.SetEndSegment(phantom_nodes.targetPhantom);
+#ifdef OSRM_HAS_ELEVATION
         }
+#endif
         description_factory.Run(facade, config.zoom_level);
 
         reply.content.push_back("\"route_geometry\": ");
         if(config.geometry) {
+#ifdef OSRM_HAS_ELEVATION
             if (config.elevation) {
                 description_factory.AppendEncodedPolylineStringWithElevation(
                    config.encode_geometry,
                    reply.content
                 );
             } else {
+#endif
                 description_factory.AppendEncodedPolylineString(
                    config.encode_geometry,
                    reply.content
                 );
+#ifdef OSRM_HAS_ELEVATION
             }
+#endif
         } else {
             reply.content.push_back("[]");
         }

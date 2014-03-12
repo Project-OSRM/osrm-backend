@@ -68,6 +68,7 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & start) {
     );
 }
 
+#ifdef OSRM_HAS_ELEVATION
 void DescriptionFactory::SetStartSegmentWithElevation(const PhantomNode & start, const int elevation) {
     start_phantom = start;
     AppendSegmentWithElevation(
@@ -75,6 +76,7 @@ void DescriptionFactory::SetStartSegmentWithElevation(const PhantomNode & start,
         PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1)
     );
 }
+#endif
 
 void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
     target_phantom = target;
@@ -90,6 +92,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
     );
 }
 
+#ifdef OSRM_HAS_ELEVATION
 void DescriptionFactory::SetEndSegmentWithElevation(const PhantomNode & target, const int elevation) {
     target_phantom = target;
     pathDescription.push_back(
@@ -104,6 +107,7 @@ void DescriptionFactory::SetEndSegmentWithElevation(const PhantomNode & target, 
         )
     );
 }
+#endif
 
 void DescriptionFactory::AppendSegment(
     const FixedPointCoordinate & coordinate,
@@ -127,6 +131,7 @@ void DescriptionFactory::AppendSegment(
     }
 }
 
+#ifdef OSRM_HAS_ELEVATION
 void DescriptionFactory::AppendSegmentWithElevation(
     const FixedPointCoordinate & coordinate,
     const int elevation,
@@ -150,6 +155,7 @@ void DescriptionFactory::AppendSegmentWithElevation(
         );
     }
 }
+#endif
 
 void DescriptionFactory::AppendEncodedPolylineString(
     const bool return_encoded,
@@ -164,6 +170,7 @@ void DescriptionFactory::AppendEncodedPolylineString(
     output.push_back(temp);
 }
 
+#ifdef OSRM_HAS_ELEVATION
 void DescriptionFactory::AppendEncodedPolylineStringWithElevation(
     const bool return_encoded,
     std::vector<std::string> & output
@@ -176,6 +183,7 @@ void DescriptionFactory::AppendEncodedPolylineStringWithElevation(
     }
     output.push_back(temp);
 }
+#endif
 
 void DescriptionFactory::AppendEncodedPolylineString(
     std::vector<std::string> &output

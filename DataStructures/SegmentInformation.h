@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SEGMENTINFORMATION_H_
 #define SEGMENTINFORMATION_H_
 
+#include "OSRM_config.h"
+
 #include "TurnInstructions.h"
 
 #include "../typedefs.h"
@@ -37,7 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Struct fits everything in one cache line
 struct SegmentInformation {
     FixedPointCoordinate location;
+#ifdef OSRM_HAS_ELEVATION
     int elevation;
+#endif
     NodeID name_id;
     unsigned duration;
     double length;
@@ -54,7 +58,9 @@ struct SegmentInformation {
         const bool necessary
     ) :
         location(location),
-        elevation(0),
+#ifdef OSRM_HAS_ELEVATION
+        elevation(INT_MAX),
+#endif
         name_id(name_id),
         duration(duration),
         length(length),
@@ -63,6 +69,7 @@ struct SegmentInformation {
         necessary(necessary)
     { }
 
+#ifdef OSRM_HAS_ELEVATION
     explicit SegmentInformation(
         const FixedPointCoordinate & location,
         const int elevation,
@@ -81,6 +88,7 @@ struct SegmentInformation {
         turn_instruction(turn_instruction),
         necessary(necessary)
     { }
+#endif
 
     explicit SegmentInformation(
         const FixedPointCoordinate & location,
@@ -90,7 +98,9 @@ struct SegmentInformation {
         const TurnInstruction turn_instruction
     ) :
         location(location),
-        elevation(0),
+#ifdef OSRM_HAS_ELEVATION
+        elevation(INT_MAX),
+#endif
         name_id(name_id),
         duration(duration),
         length(length),
@@ -99,6 +109,7 @@ struct SegmentInformation {
         necessary(turn_instruction != 0)
     { }
 
+#ifdef OSRM_HAS_ELEVATION
     // Constructor with elevation provided
     explicit SegmentInformation(
         const FixedPointCoordinate & location,
@@ -117,6 +128,7 @@ struct SegmentInformation {
         turn_instruction(turn_instruction),
         necessary(turn_instruction != 0)
     { }
+#endif
 };
 
 #endif /* SEGMENTINFORMATION_H_ */

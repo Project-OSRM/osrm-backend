@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //Exposes all data access interfaces to the algorithms via base class ptr
 
+#include "OSRM_config.h"
+
 #include "../../DataStructures/EdgeBasedNode.h"
 #include "../../DataStructures/ImportNode.h"
 #include "../../DataStructures/PhantomNodes.h"
@@ -86,9 +88,11 @@ public:
         const unsigned id
     ) const = 0;
 
+#ifdef OSRM_HAS_ELEVATION
     virtual int GetElevationOfNode(
         const unsigned id
     ) const = 0;
+#endif
 
     virtual TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id

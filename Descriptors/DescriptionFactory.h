@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DESCRIPTIONFACTORY_H_
 #define DESCRIPTIONFACTORY_H_
 
+#include "OSRM_config.h"
+
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/PhantomNodes.h"
@@ -86,20 +88,28 @@ public:
     void AppendEncodedPolylineString(std::vector<std::string> &output) const;
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
     void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data);
+#ifdef OSRM_HAS_ELEVATION
     void AppendSegmentWithElevation(const FixedPointCoordinate & coordinate, const int elevation, const PathData & data);
+#endif
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & start_phantom);
+#ifdef OSRM_HAS_ELEVATION
     void SetStartSegmentWithElevation(const PhantomNode & start_phantom, const int elevation);
+#endif
     void SetEndSegment(const PhantomNode & start_phantom);
+#ifdef OSRM_HAS_ELEVATION
     void SetEndSegmentWithElevation(const PhantomNode & start_phantom, const int elevation);
+#endif
     void AppendEncodedPolylineString(
         const bool return_encoded,
         std::vector<std::string> & output
     );
+#ifdef OSRM_HAS_ELEVATION
     void AppendEncodedPolylineStringWithElevation(
         const bool return_encoded,
         std::vector<std::string> & output
     );
+#endif
 
     template<class DataFacadeT>
     void Run(

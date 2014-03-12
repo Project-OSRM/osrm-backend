@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //implements all data storage when shared memory _IS_ used
 
+#include <OSRM_config.h>
+
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -309,13 +311,15 @@ public:
     ) const {
         const NodeID node = m_via_node_list.at(id);
         return m_coordinate_list.at(node);
-    };
+    }
 
+#ifdef OSRM_HAS_ELEVATION
     int GetElevationOfNode(
         const unsigned id
     ) const {
         return 1000000;
     }
+#endif
 
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id

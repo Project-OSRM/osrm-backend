@@ -28,10 +28,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef FIXED_POINT_COORDINATE_H_
 #define FIXED_POINT_COORDINATE_H_
 
+#include <OSRM_config.h>
+
 #include <iostream>
 
 static const double COORDINATE_PRECISION = 1000000.;
+#ifdef OSRM_HAS_ELEVATION
 static const int ELEVATION_FACTOR = 1000;
+#endif
 
 struct FixedPointCoordinate {
     int lat;

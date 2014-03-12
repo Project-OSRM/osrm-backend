@@ -83,6 +83,7 @@ void PolylineCompressor::printEncodedString(
 
 }
 
+#ifdef OSRM_HAS_ELEVATION
 void PolylineCompressor::printEncodedStringWithElevation(
     const std::vector<SegmentInformation> & polyline,
     std::string & output
@@ -110,6 +111,7 @@ void PolylineCompressor::printEncodedStringWithElevation(
     output += "\"";
 
 }
+#endif
 
 void PolylineCompressor::printEncodedString(
     const std::vector<FixedPointCoordinate>& polyline,
