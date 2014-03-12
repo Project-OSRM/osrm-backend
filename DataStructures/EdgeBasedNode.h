@@ -39,7 +39,7 @@ struct EdgeBasedNode {
         ) const {
         BOOST_ASSERT( query_location.isValid() );
 
-        const double epsilon = 1.0/COORDINATE_PRECISION;
+        const double epsilon = 1.0/precision;
 
         if( ignoreInGrid ) {
             return std::numeric_limits<double>::max();
