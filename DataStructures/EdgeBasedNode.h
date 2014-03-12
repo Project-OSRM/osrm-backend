@@ -6,7 +6,6 @@
 #include <boost/assert.hpp>
 
 #include "../Util/MercatorUtil.h"
-#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -36,7 +35,7 @@ struct EdgeBasedNode {
         FixedPointCoordinate & nearest_location,
         double & ratio,
         double precision = COORDINATE_PRECISION
-        ) const {
+    ) const {
         BOOST_ASSERT( query_location.isValid() );
 
         const double epsilon = 1.0/precision;
@@ -51,7 +50,7 @@ struct EdgeBasedNode {
 
         // r : query location
         const Point r(lat2y(query_location.lat/COORDINATE_PRECISION),
-            query_location.lon/COORDINATE_PRECISION);
+                            query_location.lon/COORDINATE_PRECISION);
 
         const Point foot = ComputePerpendicularFoot(p, q, r, epsilon);
         ratio            = ComputeRatio(p, q, foot, epsilon);
@@ -103,7 +102,6 @@ private:
 
     typedef std::pair<double,double> Point;
 
-
     // Compute the perpendicular foot of point r on the line defined by p and q.
     Point ComputePerpendicularFoot(const Point &p, const Point &q, const Point &r, double epsilon) const {
 
@@ -131,7 +129,7 @@ private:
     double ComputeRatio(const Point & p, const Point & q, const Point & r, double epsilon) const {
 
         const bool is_parallel_to_x_axis = std::abs(q.second-p.second) < epsilon;
-        const bool is_parallel_to_y_axis = std::abs(q.first-p.first) < epsilon;
+        const bool is_parallel_to_y_axis = std::abs(q.first -p.first ) < epsilon;
 
         double ratio;
 
@@ -164,12 +162,13 @@ private:
             return FixedPointCoordinate(lat1, lon1);
         } else if( lambda >= 1.0 ) {
             return FixedPointCoordinate(lat2, lon2);
-        } else {
-            // r lies between p and q
-            return FixedPointCoordinate(y2lat(r.first)*COORDINATE_PRECISION,
-                r.second*COORDINATE_PRECISION);
         }
 
+        // r lies between p and q
+        return  FixedPointCoordinate(
+                    y2lat(r.first)*COORDINATE_PRECISION,
+                    r.second*COORDINATE_PRECISION
+                );
     }
 
 };
