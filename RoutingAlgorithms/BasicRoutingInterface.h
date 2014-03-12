@@ -141,6 +141,7 @@ public:
         const PhantomNodes & phantom_node_pair,
         std::vector<PathData> & unpacked_path
     ) const {
+        SimpleLogger().Write(logDEBUG) << "packed_path.size: " << packed_path.size();
         const bool start_traversed_in_reverse = (packed_path.front() != phantom_node_pair.startPhantom.forward_node_id);
         const bool target_traversed_in_reverse = (packed_path.back() != phantom_node_pair.targetPhantom.forward_node_id);
 
@@ -262,10 +263,38 @@ public:
                 std::reverse(id_vector.begin(), id_vector.end() );
             }
             SimpleLogger().Write(logDEBUG) << "id_vector.size() " << id_vector.size();
-            const bool start_and_end_on_same_edge = (phantom_node_pair.startPhantom.packed_geometry_id  == phantom_node_pair.targetPhantom.packed_geometry_id) && unpacked_path.empty();
+            SimpleLogger().Write(logDEBUG) << "unpacked_path.empty()=" << (unpacked_path.empty() ? "y" : "n");
 
-            const int start_index = ( start_and_end_on_same_edge ? phantom_node_pair.startPhantom.fwd_segment_position : 0 );
-            const int end_index = (target_traversed_in_reverse ? id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position : phantom_node_pair.targetPhantom.fwd_segment_position);
+            const bool is_local_path = (phantom_node_pair.startPhantom.packed_geometry_id  == phantom_node_pair.targetPhantom.packed_geometry_id) && unpacked_path.empty();
+            SimpleLogger().Write(logDEBUG) << "is_local_path: " << (is_local_path ? "y" : "n");
+
+
+           //         const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position - 1 : phantom_node_pair.startPhantom.fwd_segment_position ) : 0 );
+
+            int start_index = 0;
+            int end_index = phantom_node_pair.targetPhantom.fwd_segment_position;
+            SimpleLogger().Write(logDEBUG) << "case1";
+            if (target_traversed_in_reverse)
+            {
+                // start_index = id_vector.size() -1;
+                end_index = id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position;
+                // if (is_local_path)
+                // {
+                //     start_index = id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position -1;
+                // }
+            }
+            if (is_local_path)
+            {
+                SimpleLogger().Write(logDEBUG) << "case3";
+                start_index = phantom_node_pair.startPhantom.fwd_segment_position - 1;
+                end_index = phantom_node_pair.targetPhantom.fwd_segment_position - 1;
+                if (target_traversed_in_reverse)
+                {
+                    SimpleLogger().Write(logDEBUG) << "case4";
+                    start_index = id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position - 1;
+                    end_index = id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position - 1;
+                }
+            }
 
             SimpleLogger().Write(logDEBUG) << "fetching from [" << start_index << "," << end_index << "]";
 
@@ -273,10 +302,10 @@ public:
             // BOOST_ASSERT( start_index <= end_index );
             for(
                 unsigned i = start_index;
-                i < end_index;
+                i != end_index;
                 ( start_index < end_index ? ++i :--i)
             ) {
-                SimpleLogger().Write(logDEBUG) << facade->GetCoordinateOfNode(id_vector[i]);
+                SimpleLogger().Write(logDEBUG) << "[" << i << "]" << facade->GetCoordinateOfNode(id_vector[i]);
                 unpacked_path.push_back(
                     PathData(
                         id_vector[i],
@@ -391,8 +420,18 @@ public:
         }
     }
 
-    int ComputeEdgeOffset(const PhantomNode & phantom) const {
-        return phantom.forward_weight + (phantom.isBidirected() ? phantom.reverse_weight : 0);
+    int ComputeEdgeOffset(const PhantomNode & phantom_node) const {
+        int weight_offset = 0;
+        if (phantom_node.forward_node_id != SPECIAL_NODEID)
+        {
+            weight_offset += phantom_node.GetForwardWeightPlusOffset();
+        }
+        if (phantom_node.reverse_node_id != SPECIAL_NODEID)
+        {
+            weight_offset += phantom_node.GetReverseWeightPlusOffset();
+        }
+        return weight_offset;
+        // return phantom_node.forward_weight + (phantom_node.isBidirected() ? phantom_node.reverse_weight : 0);
     }
 
 };

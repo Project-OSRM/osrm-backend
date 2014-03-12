@@ -31,7 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
+#ifndef NDEBUG
 #include <bitset>
+#endif
 #include <iostream>
 #include <limits>
 
@@ -44,6 +46,7 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
  :  lat(lat),
     lon(lon)
 {
+#ifndef NDEBUG
     if(0 != (std::abs(lat) >> 30)) {
         std::bitset<32> y(lat);
         SimpleLogger().Write(logDEBUG) << "broken lat: " << lat << ", bits: " << y;
@@ -52,6 +55,7 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
         std::bitset<32> x(lon);
         SimpleLogger().Write(logDEBUG) << "broken lon: " << lon << ", bits: " << x;
     }
+#endif
 }
 
 void FixedPointCoordinate::Reset() {
@@ -59,7 +63,8 @@ void FixedPointCoordinate::Reset() {
     lon = std::numeric_limits<int>::min();
 }
 bool FixedPointCoordinate::isSet() const {
-    return (std::numeric_limits<int>::min() != lat) && (std::numeric_limits<int>::min() != lon);
+    return (std::numeric_limits<int>::min() != lat) &&
+           (std::numeric_limits<int>::min() != lon);
 }
 bool FixedPointCoordinate::isValid() const {
     if(

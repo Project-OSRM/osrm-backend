@@ -59,11 +59,11 @@ struct PhantomNode {
 
 
     int GetForwardWeightPlusOffset() const {
-        return forward_weight - forward_offset;
+        return forward_weight + forward_offset;
     }
 
     int GetReverseWeightPlusOffset() const {
-        return reverse_weight + reverse_offset;
+        return reverse_offset + reverse_weight;
     }
 
     void Reset() {
@@ -123,7 +123,7 @@ struct PhantomNodes {
 
     //TODO: Rename to: BothPhantomNodesAreInvalid
     bool AtLeastOnePhantomNodeIsUINTMAX() const {
-        return (startPhantom.forward_node_id == SPECIAL_NODEID) && (targetPhantom.forward_node_id == SPECIAL_NODEID);
+        return (startPhantom.forward_node_id == SPECIAL_NODEID) && (targetPhantom.reverse_node_id == SPECIAL_NODEID);
     }
 
     bool PhantomNodesHaveEqualLocation() const {
