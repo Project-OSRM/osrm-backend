@@ -55,6 +55,12 @@ int main( const int argc, const char * argv[] ) {
     LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
 
+    if (argc < 2)
+    {
+        SimpleLogger().Write(logWARNING) << "no parameters given. try\n\t" << argv[0] << " --help";
+        return -1;
+    }
+
 #ifdef __linux__
         if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
             SimpleLogger().Write(logWARNING) <<
