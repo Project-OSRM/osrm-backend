@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Server/DataStructures/SharedDataType.h"
 #include "Server/DataStructures/SharedBarriers.h"
 #include "Util/BoostFileSystemFix.h"
-#include "Util/ProgramOptions.h"
+#include "Util/DataStoreOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/UUID.h"
 #include "typedefs.h"
@@ -54,12 +54,6 @@ int main( const int argc, const char * argv[] ) {
 
     LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
-
-    if (argc < 2)
-    {
-        SimpleLogger().Write(logWARNING) << "no parameters given. try\n\t" << argv[0] << " --help";
-        return -1;
-    }
 
 #ifdef __linux__
         if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
@@ -84,20 +78,12 @@ int main( const int argc, const char * argv[] ) {
     try {
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
-        bool use_shared_memory = false;
-        std::string ip_address;
-        int ip_port, requested_num_threads;
-
         ServerPaths server_paths;
         if(
-            !GenerateServerProgramOptions(
+            !GenerateDataStoreOptions(
                 argc,
                 argv,
-                server_paths,
-                ip_address,
-                ip_port,
-                requested_num_threads,
-                use_shared_memory
+                server_paths
             )
         ) {
             return 0;

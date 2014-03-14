@@ -25,9 +25,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef PROGAM_OPTIONS_H
-#define PROGAM_OPTIONS_H
+#ifndef DATA_STORE_OPTIONS_H
+#define DATA_STORE_OPTIONS_H
 
+#include "BoostFileSystemFix.h"
 #include "GitDescription.h"
 #include "OSRMException.h"
 #include "SimpleLogger.h"
@@ -36,19 +37,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>
 #include <boost/regex.hpp>
 #include <boost/unordered_map.hpp>
 
-#include <fstream>
 #include <string>
+
 
 // support old capitalized option names by down-casing them with a regex replace
 inline void PrepareConfigFile(
     const boost::filesystem::path& path,
     std::string& output
 ) {
-    std::ifstream config_stream( path.string().c_str() );
+    boost::filesystem::fstream config_stream( path );
     std::string input_str(
         (std::istreambuf_iterator<char>(config_stream)),
         std::istreambuf_iterator<char>()
@@ -58,15 +60,12 @@ inline void PrepareConfigFile(
     output = boost::regex_replace( input_str, regex, format );
 }
 
+
 // generate boost::program_options object for the routing part
-inline bool GenerateServerProgramOptions(
+inline bool GenerateDataStoreOptions(
     const int argc,
     const char * argv[],
-    ServerPaths & paths,
-    std::string & ip_address,
-    int & ip_port,
-    int & requested_num_threads,
-    bool & use_shared_memory
+    ServerPaths & paths
 ) {
 
     // declare a group of options that will be allowed only on command line
@@ -99,42 +98,32 @@ inline bool GenerateServerProgramOptions(
         (
             "edgesdata",
             boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
-            ".edges file")
+            ".edges file"
+        )
+        (
+            "geometry",
+            boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
+            ".geometry file"
+        )
         (
             "ramindex",
             boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
-            ".ramIndex file")
+            ".ramIndex file"
+        )
         (
             "fileindex",
             boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
-            "File index file")
+            "File index file"
+        )
         (
             "namesdata",
             boost::program_options::value<boost::filesystem::path>(&paths["namesdata"]),
-            ".names file")
+            ".names file"
+        )
         (
             "timestamp",
             boost::program_options::value<boost::filesystem::path>(&paths["timestamp"]),
-            ".timestamp file")
-        (
-            "ip,i",
-            boost::program_options::value<std::string>(&ip_address)->default_value("0.0.0.0"),
-            "IP address"
-        )
-        (
-            "port,p",
-            boost::program_options::value<int>(&ip_port)->default_value(5000),
-            "TCP/IP port"
-        )
-        (
-            "threads,t",
-            boost::program_options::value<int>(&requested_num_threads)->default_value(8),
-            "Number of threads to use"
-        )
-        (
-            "sharedmemory,s",
-            boost::program_options::value<bool>(&use_shared_memory)->default_value(false),
-            "Load data from shared memory"
+            ".timestamp file"
         );
 
     // hidden options, will be allowed both on command line and in config
@@ -201,7 +190,7 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
-    if( !use_shared_memory && option_variables.count("base") ) {
+    if( option_variables.count("base") ) {
         path_iterator = paths.find("base");
         BOOST_ASSERT( paths.end() != path_iterator );
         std::string base_string = path_iterator->second.string();
@@ -235,6 +224,17 @@ inline bool GenerateServerProgramOptions(
             path_iterator->second = base_string + ".edges";
         } else {
             throw OSRMException(base_string + ".edges not found");
+        }
+
+
+        path_iterator = paths.find("geometries");
+        if(
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
+        ) {
+            path_iterator->second = base_string + ".geometry";
+        } else {
+            throw OSRMException(base_string + ".geometry not found");
         }
 
 
@@ -277,12 +277,13 @@ inline bool GenerateServerProgramOptions(
         ) {
             path_iterator->second = base_string + ".timestamp";
         }
+
+        return true;
     }
 
-    if( 1 > requested_num_threads ) {
-        throw OSRMException("Number of threads must be a positive number");
-    }
-    return true;
+    SimpleLogger().Write() << visible_options;
+
+    return false;
 }
 
-#endif /* PROGRAM_OPTIONS_H */
+#endif /* DATA_STORE_OPTIONS_H */
