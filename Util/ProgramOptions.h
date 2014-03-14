@@ -201,6 +201,10 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
+    if( 1 > requested_num_threads ) {
+        throw OSRMException("Number of threads must be a positive number");
+    }
+
     if( !use_shared_memory && option_variables.count("base") ) {
         path_iterator = paths.find("base");
         BOOST_ASSERT( paths.end() != path_iterator );
@@ -277,12 +281,12 @@ inline bool GenerateServerProgramOptions(
         ) {
             path_iterator->second = base_string + ".timestamp";
         }
+
+        return true;
     }
 
-    if( 1 > requested_num_threads ) {
-        throw OSRMException("Number of threads must be a positive number");
-    }
-    return true;
+    SimpleLogger().Write() << visible_options;
+    return false;
 }
 
 #endif /* PROGRAM_OPTIONS_H */

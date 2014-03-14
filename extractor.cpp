@@ -123,6 +123,7 @@ int main (int argc, char *argv[]) {
 
         if(!option_variables.count("input")) {
             SimpleLogger().Write(logWARNING) << "No input file specified";
+            SimpleLogger().Write() << visible_options;
             return -1;
         }
 
