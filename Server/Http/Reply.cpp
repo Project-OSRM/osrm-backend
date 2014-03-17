@@ -92,25 +92,27 @@ Reply Reply::StockReply(Reply::status_type status) {
 }
 
 std::string Reply::ToString(Reply::status_type status) {
-    switch (status) {
-    case Reply::ok:
+    if (Reply::ok == status)
+    {
         return okHTML;
-    case Reply::badRequest:
-        return badRequestHTML;
-    default:
-        return internalServerErrorHTML;
     }
+    if (Reply::badRequest == status)
+    {
+        return badRequestHTML;
+    }
+    return internalServerErrorHTML;
 }
 
 boost::asio::const_buffer Reply::ToBuffer(Reply::status_type status) {
-    switch (status) {
-    case Reply::ok:
+    if (Reply::ok == status)
+    {
         return boost::asio::buffer(okString);
-    case Reply::internalServerError:
-        return boost::asio::buffer(internalServerErrorString);
-    default:
-        return boost::asio::buffer(badRequestString);
     }
+    if (Reply::internalServerError == status)
+    {
+        return boost::asio::buffer(internalServerErrorString);
+    }
+    return boost::asio::buffer(badRequestString);
 }
 
 
