@@ -32,6 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDescriptor.h"
 
+#ifdef OSRM_HAS_ELEVATION
+#include "../Util/SuggestElevation.h"
+#endif
+
 #include <boost/foreach.hpp>
 
 template<class DataFacadeT>
@@ -77,10 +81,9 @@ public:
             );
 #ifdef OSRM_HAS_ELEVATION
             reply.content.push_back("lon=\"" + tmp + "\" ");
-            FixedPointCoordinate::convertInternalLatLonToString(
-                facade->GetElevationOfNode(raw_route.unpacked_path_segments.front().front().node),
-                tmp
-            );
+            int start_elevation = SuggestElevation(phantom_node_list.startPhantom,
+                                                   raw_route.unpacked_path_segments, facade, true);
+            FixedPointCoordinate::convertInternalLatLonToString(start_elevation, tmp);
             reply.content.push_back("ele=\"" + tmp + "\"></rtept>");
 #else
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
@@ -119,11 +122,9 @@ public:
             );
 #ifdef OSRM_HAS_ELEVATION
             reply.content.push_back("lon=\"" + tmp + "\" ");
-            unsigned int nid = raw_route.unpacked_path_segments.back().back().node;
-            FixedPointCoordinate::convertInternalLatLonToString(
-                facade->GetElevationOfNode(nid),
-                tmp
-            );
+            int target_elevation = SuggestElevation(phantom_node_list.targetPhantom,
+                                                    raw_route.unpacked_path_segments, facade, false);
+            FixedPointCoordinate::convertInternalLatLonToString(target_elevation, tmp);
             reply.content.push_back("ele=\"" + tmp + "\"></rtept>");
 #else
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
