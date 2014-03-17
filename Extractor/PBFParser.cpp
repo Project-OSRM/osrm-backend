@@ -55,7 +55,9 @@ PBFParser::PBFParser(
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
-	threadDataQueue = boost::make_shared<ConcurrentQueue<_ThreadData*> >( 2500 ); /* Max 2500 items in queue, hardcoded. */
+
+	// Max 2500 items in queue, hardcoded.
+	threadDataQueue = boost::make_shared<ConcurrentQueue<_ThreadData*> >( 2500 );
 	input.open(fileName, std::ios::in | std::ios::binary);
 
 	if (!input) {
