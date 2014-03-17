@@ -45,13 +45,16 @@ OSRM_impl::OSRM_impl( const ServerPaths & server_paths, const bool use_shared_me
  :
     use_shared_memory(use_shared_memory)
 {
-    if( !use_shared_memory ) {
+    if (use_shared_memory)
+    {
+        barrier = new SharedBarriers();
+        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>( );
+    }
+    else
+    {
         query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
             server_paths
         );
-    } else {
-        barrier = new SharedBarriers();
-        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>( );
     }
 
     //The following plugins handle all requests.
