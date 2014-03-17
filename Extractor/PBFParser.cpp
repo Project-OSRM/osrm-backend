@@ -74,9 +74,10 @@ PBFParser::~PBFParser() {
 	}
 
 	// Clean up any leftover ThreadData objects in the queue
-	_ThreadData* td;
-	while (threadDataQueue->try_pop(td)) {
-		delete td;
+	_ThreadData* thread_data;
+	while (threadDataQueue->try_pop(thread_data))
+	{
+		delete thread_data;
 	}
 	google::protobuf::ShutdownProtobufLibrary();
 
