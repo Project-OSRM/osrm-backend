@@ -252,12 +252,12 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 					break;
 				}
 			}
-			if ("restriction" == key) {
-				if(val.find("only_") == 0) {
-					isOnlyRestriction = true;
-				}
+			if ( ("restriction" == key) && (val.find("only_") == 0) )
+			{
+				isOnlyRestriction = true;
 			}
-			if ("except" == key) {
+			if ("except" == key)
+			{
 				except_tag_string = val;
 			}
 		}
