@@ -217,12 +217,15 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_nodes; ++i) {
-	    ImportNode &n = extracted_nodes_vector[i];
-	    ParseNodeInLua( n, scripting_environment.getLuaStateForThreadID(omp_get_thread_num()) );
+	    ImportNode & import_node = extracted_nodes_vector[i];
+	    ParseNodeInLua(
+	    	import_node,
+	    	scripting_environment.getLuaStateForThreadID(omp_get_thread_num())
+	    );
 	}
 
-	BOOST_FOREACH(const ImportNode &n, extracted_nodes_vector) {
-	    extractor_callbacks->nodeFunction(n);
+	BOOST_FOREACH(const ImportNode &import_node, extracted_nodes_vector) {
+	    extractor_callbacks->nodeFunction(import_node);
 	}
 }
 
@@ -349,18 +352,23 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_ways; ++i) {
-	    ExtractionWay & w = parsed_way_vector[i];
-		if(2 > w.path.size()) {
+	    ExtractionWay & extraction_way = parsed_way_vector[i];
+		if (2 > extraction_way.path.size())
+		{
         	continue;
     	}
-	    ParseWayInLua( w, scripting_environment.getLuaStateForThreadID( omp_get_thread_num()) );
+	    ParseWayInLua(
+	    	extraction_way,
+	    	scripting_environment.getLuaStateForThreadID( omp_get_thread_num())
+	   	);
 	}
 
-	BOOST_FOREACH(ExtractionWay & w, parsed_way_vector) {
-		if(2 > w.path.size()) {
+	BOOST_FOREACH(ExtractionWay & extraction_way, parsed_way_vector) {
+		if (2 > extraction_way.path.size())
+		{
         	continue;
     	}
-	    extractor_callbacks->wayFunction(w);
+	    extractor_callbacks->wayFunction(extraction_way);
 	}
 }
 
