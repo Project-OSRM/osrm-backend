@@ -38,12 +38,13 @@ uint64_t HilbertCode::operator() (
     return BitInterleaving(location[0], location[1]);
 }
 
-uint64_t HilbertCode::BitInterleaving(const uint32_t a, const uint32_t b) {
+uint64_t HilbertCode::BitInterleaving(const uint32_t latitude, const uint32_t longitude) const
+{
     uint64_t result = 0;
     for(int8_t index = 31; index >= 0; --index){
-        result |= (a >> index) & 1;
+        result |= (latitude >> index) & 1;
         result <<= 1;
-        result |= (b >> index) & 1;
+        result |= (longitude >> index) & 1;
         if(0 != index){
             result <<= 1;
         }
@@ -51,7 +52,8 @@ uint64_t HilbertCode::BitInterleaving(const uint32_t a, const uint32_t b) {
     return result;
 }
 
-void HilbertCode::TransposeCoordinate( uint32_t * X) {
+void HilbertCode::TransposeCoordinate( uint32_t * X) const
+{
     uint32_t M = 1 << (32-1), P, Q, t;
     int i;
     // Inverse undo
