@@ -35,8 +35,7 @@ uint64_t HilbertCode::GetHilbertNumberForCoordinate(
     location[1] = current_coordinate.lon+(180*COORDINATE_PRECISION);
 
     TransposeCoordinate(location);
-    const uint64_t result = BitInterleaving(location[0], location[1]);
-    return result;
+    return BitInterleaving(location[0], location[1]);
 }
 
 uint64_t HilbertCode::BitInterleaving(const uint32_t a, const uint32_t b) {
