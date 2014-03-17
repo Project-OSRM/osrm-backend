@@ -59,7 +59,9 @@ void HilbertCode::TransposeCoordinate( uint32_t * X) {
     for( Q = M; Q > 1; Q >>= 1 ) {
         P=Q-1;
         for( i = 0; i < 2; ++i ) {
-            if( X[i] & Q ) {
+
+            const bool condition = (X[i] & Q);
+            if( condition ) {
                 X[0] ^= P; // invert
             } else {
                 t = (X[0]^X[i]) & P;
@@ -74,7 +76,8 @@ void HilbertCode::TransposeCoordinate( uint32_t * X) {
     }
     t=0;
     for( Q = M; Q > 1; Q >>= 1 ) {
-        if( X[2-1] & Q ) {
+        const bool condition = (X[2-1] & Q);
+        if( condition ) {
             t ^= Q-1;
         }
     } //check if this for loop is wrong
