@@ -49,9 +49,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PBFParser::PBFParser(
 	const char * fileName,
-	ExtractorCallbacks* ec,
-	ScriptingEnvironment& se
-) : BaseParser( ec, se ) {
+	ExtractorCallbacks * extractor_callbacks,
+	ScriptingEnvironment& scripting_environment
+) : BaseParser( extractor_callbacks, scripting_environment ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
