@@ -38,13 +38,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class HilbertCode : boost::noncopyable
 {
 public:
-	uint64_t GetHilbertNumberForCoordinate
+	uint64_t operator()
     (
 		const FixedPointCoordinate & current_coordinate
-	);
+	) const;
 private:
-	inline uint64_t BitInterleaving( const uint32_t a, const uint32_t b);
-	inline void TransposeCoordinate( uint32_t * X);
+	inline uint64_t BitInterleaving( const uint32_t a, const uint32_t b) const;
+	inline void TransposeCoordinate( uint32_t * X) const;
 };
 
 #endif /* HILBERTVALUE_H_ */
