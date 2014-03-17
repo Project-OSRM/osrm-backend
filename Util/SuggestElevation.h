@@ -121,7 +121,7 @@ int SuggestElevation(const PhantomNode& node,
         }
 
         int elevation = 0;
-        for (int i = 0; i < elevation_vector.size(); ++i) {
+        for (unsigned i = 0; i < elevation_vector.size(); ++i) {
             elevation += static_cast<int>(elevation_vector[i] * 1 / distance_vector[i] / denominator);
         }
         return elevation;
