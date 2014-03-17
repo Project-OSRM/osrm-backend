@@ -40,15 +40,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 
 //Dude, real recursions on the OS stack? You must be brave...
-void print_tree(boost::property_tree::ptree const& pt, const unsigned recursion_depth)
+void print_tree(boost::property_tree::ptree const& property_tree, const unsigned recursion_depth)
 {
-    boost::property_tree::ptree::const_iterator end = pt.end();
-    for (boost::property_tree::ptree::const_iterator it = pt.begin(); it != end; ++it) {
-        for(unsigned i = 0; i < recursion_depth; ++i) {
+    boost::property_tree::ptree::const_iterator end = property_tree.end();
+    for (boost::property_tree::ptree::const_iterator tree_iterator = property_tree.begin(); tree_iterator != end; ++tree_iterator)
+    {
+        for (unsigned current_recursion = 0; current_recursion < recursion_depth; ++current_recursion)
+        {
             std::cout << " " << std::flush;
         }
-        std::cout << it->first << ": " << it->second.get_value<std::string>() << std::endl;
-        print_tree(it->second, recursion_depth+1);
+        std::cout << tree_iterator->first << ": " << tree_iterator->second.get_value<std::string>() << std::endl;
+        print_tree(tree_iterator->second, recursion_depth+1);
     }
 }
 
@@ -57,7 +59,7 @@ int main (int argc, const char * argv[]) {
     LogPolicy::GetInstance().Unmute();
     try {
         std::string ip_address;
-        int ip_port, requested_num_threads;
+        int ip_port, requested_thread_num;
         bool use_shared_memory = false;
         ServerPaths server_paths;
         if( !GenerateServerProgramOptions(
@@ -66,7 +68,7 @@ int main (int argc, const char * argv[]) {
                 server_paths,
                 ip_address,
                 ip_port,
-                requested_num_threads,
+                requested_thread_num,
                 use_shared_memory
              )
         ) {
@@ -103,19 +105,20 @@ int main (int argc, const char * argv[]) {
 
         //attention: super-inefficient hack below:
 
-        std::stringstream ss;
-        BOOST_FOREACH(const std::string & line, osrm_reply.content) {
+        std::stringstream my_stream;
+        BOOST_FOREACH(const std::string & line, osrm_reply.content)
+        {
             std::cout << line;
-            ss << line;
+            my_stream << line;
         }
         std::cout << std::endl;
 
-        boost::property_tree::ptree pt;
-        boost::property_tree::read_json(ss, pt);
+        boost::property_tree::ptree property_tree;
+        boost::property_tree::read_json(my_stream, property_tree);
 
-        print_tree(pt, 0);
-    } catch (std::exception & e) {
-        SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
+        print_tree(property_tree, 0);
+    } catch (std::exception & current_exception) {
+        SimpleLogger().Write(logWARNING) << "caught exception: " << current_exception.what();
         return -1;
     }
     return 0;
