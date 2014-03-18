@@ -44,30 +44,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
+void AssertPathExists(const boost::filesystem::path& path)
+{
+    if (!boost::filesystem::is_regular_file(path))
+    {
+        SimpleLogger().Write(logDEBUG) << path << " check failed";
+        throw OSRMException(path.string() + " not found.");
+    } else {
+        SimpleLogger().Write(logDEBUG) << path << " exists";
+    }
+}
 
 // support old capitalized option names by down-casing them with a regex replace
 inline void PrepareConfigFile(
-    const boost::filesystem::path& path,
-    std::string& output
+    const boost::filesystem::path & path,
+    std::string & output
 ) {
-    boost::filesystem::fstream config_stream( path );
+    boost::filesystem::fstream config_stream(path);
     std::string input_str(
         (std::istreambuf_iterator<char>(config_stream)),
         std::istreambuf_iterator<char>()
     );
-    boost::regex regex( "^([^=]*)" );    //match from start of line to '='
-    std::string format( "\\L$1\\E" );    //replace with downcased substring
+    boost::regex regex("^([^=]*)");    //match from start of line to '='
+    std::string format("\\L$1\\E");    //replace with downcased substring
     output = boost::regex_replace( input_str, regex, format );
 }
 
-
 // generate boost::program_options object for the routing part
-inline bool GenerateDataStoreOptions(
-    const int argc,
-    const char * argv[],
-    ServerPaths & paths
-) {
-
+inline bool GenerateDataStoreOptions(const int argc, const char * argv[], ServerPaths & paths)
+{
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
     generic_options.add_options()
@@ -100,11 +105,11 @@ inline bool GenerateDataStoreOptions(
             boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
             ".edges file"
         )
-        (
-            "geometry",
-            boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
-            ".geometry file"
-        )
+        // (
+        //     "geometry",
+        //     boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
+        //     ".geometry file"
+        // )
         (
             "ramindex",
             boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
@@ -113,7 +118,7 @@ inline bool GenerateDataStoreOptions(
         (
             "fileindex",
             boost::program_options::value<boost::filesystem::path>(&paths["fileindex"]),
-            "File index file"
+            ".fileIndex file"
         )
         (
             "namesdata",
@@ -148,38 +153,64 @@ inline bool GenerateDataStoreOptions(
     config_file_options.add(config_options).add(hidden_options);
 
     boost::program_options::options_description visible_options(
-        boost::filesystem::basename(argv[0]) + " <base.osrm> [<options>]"
+        boost::filesystem::basename(argv[0]) + " [<options>] <configuration>"
     );
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options
     boost::program_options::variables_map option_variables;
-    boost::program_options::store(
+    boost::program_options::store
+    (
         boost::program_options::command_line_parser(argc, argv).options(cmdline_options).positional(positional_options).run(),
         option_variables
     );
 
-    if(option_variables.count("version")) {
+    if(option_variables.count("version"))
+    {
         SimpleLogger().Write() << g_GIT_DESCRIPTION;
         return false;
     }
 
-    if(option_variables.count("help")) {
+    if(option_variables.count("help"))
+    {
         SimpleLogger().Write() << visible_options;
         return false;
     }
 
     boost::program_options::notify(option_variables);
 
+    const bool parameter_present =
+        (paths.find("hsgrdata")  != paths.end() && !paths.find("hsgrdata")->second.string().empty()  ) ||
+        (paths.find("nodesdata") != paths.end() && !paths.find("nodesdata")->second.string().empty()) ||
+        (paths.find("edgesdata") != paths.end() && !paths.find("edgesdata")->second.string().empty()) ||
+        // (paths.find("geometry") != paths.end() && !paths.find("geometry")->second.string().empty())) ||
+        (paths.find("ramindex")  != paths.end() && !paths.find("ramindex")->second.string().empty())  ||
+        (paths.find("fileindex") != paths.end() && !paths.find("fileindex")->second.string().empty()) ||
+        (paths.find("timestamp") != paths.end() && !paths.find("timestamp")->second.string().empty()) ;
+
+    if (parameter_present)
+    {
+        if  (
+                (   paths.find("config") != paths.end() &&
+                    boost::filesystem::is_regular_file(paths.find("config")->second)
+                ) || option_variables.count("base")
+            )
+        {
+            SimpleLogger().Write(logWARNING) << "conflicting parameters";
+            SimpleLogger().Write() << visible_options;
+            return false;
+        }
+    }
+
     // parse config file
     ServerPaths::iterator path_iterator = paths.find("config");
-    if(
-        path_iterator != paths.end() &&
-        boost::filesystem::is_regular_file(path_iterator->second) &&
-        !option_variables.count("base")
-    ) {
-        SimpleLogger().Write() <<
-            "Reading options from: " << path_iterator->second.string();
+    if  (
+            path_iterator != paths.end() &&
+            boost::filesystem::is_regular_file(path_iterator->second) &&
+            !option_variables.count("base")
+        )
+    {
+        SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
         std::string config_str;
         PrepareConfigFile( path_iterator->second, config_str );
         std::stringstream config_stream( config_str );
@@ -189,101 +220,117 @@ inline bool GenerateDataStoreOptions(
         );
         boost::program_options::notify(option_variables);
     }
-
-    if( option_variables.count("base") ) {
+    else if (option_variables.count("base"))
+    {
         path_iterator = paths.find("base");
         BOOST_ASSERT( paths.end() != path_iterator );
         std::string base_string = path_iterator->second.string();
 
         path_iterator = paths.find("hsgrdata");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
+        if (path_iterator != paths.end())
+        {
             path_iterator->second = base_string + ".hsgr";
-        } else {
-            throw OSRMException(base_string + ".hsgr not found");
         }
 
         path_iterator = paths.find("nodesdata");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
+        if (path_iterator != paths.end())
+        {
             path_iterator->second = base_string + ".nodes";
-        } else {
-            throw OSRMException(base_string + ".nodes not found");
         }
-
 
         path_iterator = paths.find("edgesdata");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
+        if (path_iterator != paths.end())
+        {
             path_iterator->second = base_string + ".edges";
-        } else {
-            throw OSRMException(base_string + ".edges not found");
         }
 
-
-        path_iterator = paths.find("geometries");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
-            path_iterator->second = base_string + ".geometry";
-        } else {
-            throw OSRMException(base_string + ".geometry not found");
-        }
-
+        // path_iterator = paths.find("geometries");
+        // if (path_iterator != paths.end())
+        // {
+        //     path_iterator->second = base_string + ".geometry";
+        // }
 
         path_iterator = paths.find("ramindex");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
+        if (path_iterator != paths.end())
+        {
             path_iterator->second = base_string + ".ramIndex";
-        } else {
-            throw OSRMException(base_string + ".ramIndex not found");
         }
-
 
         path_iterator = paths.find("fileindex");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
+        if (path_iterator != paths.end())
+        {
             path_iterator->second = base_string + ".fileIndex";
-        } else {
-            throw OSRMException(base_string + ".fileIndex not found");
         }
 
-
         path_iterator = paths.find("namesdata");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
+        if (path_iterator != paths.end())
+        {
             path_iterator->second = base_string + ".names";
-        } else {
-            throw OSRMException(base_string + ".namesIndex not found");
         }
 
         path_iterator = paths.find("timestamp");
-        if(
-            path_iterator != paths.end() &&
-            !boost::filesystem::is_regular_file(path_iterator->second)
-        ) {
+        if (path_iterator != paths.end())
+        {
             path_iterator->second = base_string + ".timestamp";
         }
-
-        return true;
     }
 
-    SimpleLogger().Write() << visible_options;
+    path_iterator = paths.find("hsgrdata");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".hsgr file must be specified");
+    }
+    AssertPathExists(path_iterator->second);
 
-    return false;
+    path_iterator = paths.find("nodesdata");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".nodes file must be specified");
+    }
+    AssertPathExists(path_iterator->second);
+
+    path_iterator = paths.find("edgesdata");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".edges file must be specified");
+    }
+    AssertPathExists(path_iterator->second);
+
+    // path_iterator = paths.find("geometries");
+    // if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    // {
+    //     path_iterator->second = base_string + ".geometry";
+    // }
+    // AssertPathExists(path_iterator->second);
+
+    path_iterator = paths.find("ramindex");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".ramindex file must be specified");
+    }
+    AssertPathExists(path_iterator->second);
+
+    path_iterator = paths.find("fileindex");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".fileindex file must be specified");
+    }
+    AssertPathExists(path_iterator->second);
+
+    path_iterator = paths.find("namesdata");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".names file must be specified");
+    }
+    AssertPathExists(path_iterator->second);
+
+    path_iterator = paths.find("timestamp");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".timestamp file must be specified");
+    }
+
+    return true;
 }
 
 #endif /* DATA_STORE_OPTIONS_H */
