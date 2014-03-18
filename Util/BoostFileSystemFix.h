@@ -49,23 +49,23 @@ namespace filesystem {
 // exists. The validate() function must be defined in the same namespace
 // as the target type, (boost::filesystem::path in this case), otherwise
 // it is not called
-inline void validate(
-    boost::any & v,
-    const std::vector<std::string> & values,
-    boost::filesystem::path *,
-    int
-) {
-    boost::program_options::validators::check_first_occurrence(v);
-    const std::string & input_string =
-        boost::program_options::validators::get_single_string(values);
-    // SimpleLogger().Write() << "validator called for " << input_string;
-    // SimpleLogger().Write() << "validator called for " << input_string;
-    if(boost::filesystem::is_regular_file(input_string)) {
-        v = boost::any(boost::filesystem::path(input_string));
-    } else {
-        throw OSRMException(input_string + " not found");
-    }
-}
+// inline void validate(
+//     boost::any & v,
+//     const std::vector<std::string> & values,
+//     boost::filesystem::path *,
+//     int
+// ) {
+//     boost::program_options::validators::check_first_occurrence(v);
+//     const std::string & input_string =
+//         boost::program_options::validators::get_single_string(values);
+//     // SimpleLogger().Write() << "validator called for " << input_string;
+//     // SimpleLogger().Write() << "validator called for " << input_string;
+//     if(boost::filesystem::is_regular_file(input_string)) {
+//         v = boost::any(boost::filesystem::path(input_string));
+//     } else {
+//         throw OSRMException(input_string + " not found");
+//     }
+// }
 
 // adapted from: http://stackoverflow.com/questions/1746136/how-do-i-normalize-a-pathname-using-boostfilesystem
 inline boost::filesystem::path portable_canonical(
