@@ -284,7 +284,10 @@ inline bool GenerateServerProgramOptions(
 
         return true;
     }
-
+    if (use_shared_memory && !option_variables.count("base"))
+    {
+        return true;
+    }
     SimpleLogger().Write() << visible_options;
     return false;
 }

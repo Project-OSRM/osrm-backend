@@ -78,7 +78,7 @@ int main (int argc, const char * argv[]) {
 #endif
         bool use_shared_memory = false;
         std::string ip_address;
-        int ip_port, requested_num_threads;
+        int ip_port, requested_thread_num;
 
         ServerPaths server_paths;
         if( !GenerateServerProgramOptions(
@@ -87,7 +87,7 @@ int main (int argc, const char * argv[]) {
                 server_paths,
                 ip_address,
                 ip_port,
-                requested_num_threads,
+                requested_thread_num,
                 use_shared_memory
              )
         ) {
@@ -116,7 +116,7 @@ int main (int argc, const char * argv[]) {
             SimpleLogger().Write(logDEBUG) <<
                 "Timestamp file:\t" << server_paths["timestamp"];
             SimpleLogger().Write(logDEBUG) <<
-                "Threads:\t" << requested_num_threads;
+                "Threads:\t" << requested_thread_num;
             SimpleLogger().Write(logDEBUG) <<
                 "IP address:\t" << ip_address;
             SimpleLogger().Write(logDEBUG) <<
@@ -130,16 +130,16 @@ int main (int argc, const char * argv[]) {
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        OSRM routing_machine(server_paths, use_shared_memory);
-        Server * s = ServerFactory::CreateServer(
+        OSRM osrm_lib(server_paths, use_shared_memory);
+        Server * routing_server = ServerFactory::CreateServer(
                         ip_address,
                         ip_port,
-                        requested_num_threads
+                        requested_thread_num
                      );
 
-        s->GetRequestHandlerPtr().RegisterRoutingMachine(&routing_machine);
+        routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
-        boost::thread t(boost::bind(&Server::Run, s));
+        boost::thread server_thread(boost::bind(&Server::Run, routing_server));
 
 #ifndef _WIN32
         sigset_t wait_mask;
@@ -153,24 +153,27 @@ int main (int argc, const char * argv[]) {
         sigwait(&wait_mask, &sig);
 #else
         // Set console control handler to allow server to be stopped.
-        console_ctrl_function = boost::bind(&Server::Stop, s);
+        console_ctrl_function = boost::bind(&Server::Stop, routing_server);
         SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
         std::cout << "[server] running and waiting for requests" << std::endl;
-        s->Run();
+        routing_server->Run();
 #endif
         std::cout << "[server] initiating shutdown" << std::endl;
-        s->Stop();
+        routing_server->Stop();
         std::cout << "[server] stopping threads" << std::endl;
 
-        if(!t.timed_join(boost::posix_time::seconds(2))) {
+        if (!server_thread.timed_join(boost::posix_time::seconds(2)))
+        {
        	    SimpleLogger().Write(logDEBUG) <<
                 "Threads did not finish within 2 seconds. Hard abort!";
         }
 
         std::cout << "[server] freeing objects" << std::endl;
-        delete s;
+        delete routing_server;
         std::cout << "[server] shutdown completed" << std::endl;
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         std::cerr << "[fatal error] exception: " << e.what() << std::endl;
     }
 #ifdef __linux__
