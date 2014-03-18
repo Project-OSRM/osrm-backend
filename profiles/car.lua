@@ -32,6 +32,91 @@ speed_profile = {
   ["default"] = 10
 }
 
+tracktype_profile = {
+  ["grade1"] = math.huge,
+  ["grade2"] = 45,
+  ["grade3"] = 30,
+  ["grade4"] = 20,
+  ["grade5"] = 15
+}
+
+surface_tracktype_profile = {
+  ["asphalt"] = tracktype_profile["grade1"],
+  ["concrete"] = tracktype_profile["grade1"],
+  ["tartan"] = tracktype_profile["grade1"],
+  ["paved"] = tracktype_profile["grade1"],
+  ["paving_stones"] = tracktype_profile["grade1"],
+  ["concrete:plates"] = tracktype_profile["grade1"],
+  ["metal"] = tracktype_profile["grade1"],
+  ["compacted"] = tracktype_profile["grade1"],
+  ["sett"] = tracktype_profile["grade1"],
+  ["concrete:lanes"] = tracktype_profile["grade1"],
+  ["bricks"] = tracktype_profile["grade1"],
+  ["cement"] = tracktype_profile["grade1"],
+  ["cobblestone"] = tracktype_profile["grade1"],
+  ["wood"] = tracktype_profile["grade1"],
+  ["stone"] = tracktype_profile["grade1"],
+  ["rocky"] = tracktype_profile["grade1"],
+  ["gravel"] = tracktype_profile["grade2"],
+  ["fine_gravel"] = tracktype_profile["grade2"],
+  ["grass_paver"] = tracktype_profile["grade2"],
+  ["unpaved"] = tracktype_profile["grade3"],
+  ["ground"] = tracktype_profile["grade3"],
+  ["dirt"] = tracktype_profile["grade3"],
+  ["grass"] = tracktype_profile["grade3"],
+  ["pebblestone"] = tracktype_profile["grade3"],
+  ["clay"] = tracktype_profile["grade4"],
+  ["sand"] = tracktype_profile["grade5"],
+  ["earth"] = tracktype_profile["grade5"],
+  ["mud"] = tracktype_profile["grade5"]
+}
+
+smoothness_profile = {
+  ["excellent"] = math.huge,
+  ["thin_rollers"] = math.huge,
+  ["good"] = 60,
+  ["thin_wheels"] = 60,
+  ["intermediate"] = 45,
+  ["wheels"] = 45,
+  ["bad"] = 30,
+  ["robust_wheels"] = 30,
+  ["very_bad"] = 15,
+  ["high_clearance"] = 15,
+  ["horrible"] = 3,
+  ["off_road_wheels"] = 3
+}
+
+surface_smoothness_profile = {
+  ["asphalt"] = smoothness_profile["thin_rollers"],
+  ["concrete"] = smoothness_profile["thin_rollers"],
+  ["tartan"] = smoothness_profile["thin_rollers"],
+  ["paved"] = smoothness_profile["thin_wheels"],
+  ["paving_stones"] = smoothness_profile["thin_wheels"],
+  ["concrete:plates"] = smoothness_profile["thin_wheels"],
+  ["metal"] = smoothness_profile["thin_wheels"],
+  ["compacted"] = smoothness_profile["wheels"],
+  ["sett"] = smoothness_profile["wheels"],
+  ["concrete:lanes"] = smoothness_profile["wheels"],
+  ["bricks"] = smoothness_profile["wheels"],
+  ["cement"] = smoothness_profile["wheels"],
+  ["grass_paver"] = smoothness_profile["wheels"],
+  ["cobblestone"] = smoothness_profile["robust_wheels"],
+  ["wood"] = smoothness_profile["robust_wheels"],
+  ["stone"] = smoothness_profile["robust_wheels"],
+  ["rocky"] = smoothness_profile["robust_wheels"],
+  ["gravel"] = smoothness_profile["robust_wheels"],
+  ["fine_gravel"] = smoothness_profile["robust_wheels"],
+  ["unpaved"] = smoothness_profile["robust_wheels"],
+  ["ground"] = smoothness_profile["robust_wheels"],
+  ["dirt"] = smoothness_profile["robust_wheels"],
+  ["grass"] = smoothness_profile["robust_wheels"],
+  ["pebblestone"] = smoothness_profile["robust_wheels"],
+  ["clay"] = smoothness_profile["robust_wheels"],
+  ["sand"] = smoothness_profile["robust_wheels"],
+  ["earth"] = smoothness_profile["robust_wheels"],
+  ["mud"] = smoothness_profile["high_clearance"]
+}
+
 take_minimum_of_speeds  = false
 obey_oneway 			      = true
 obey_bollards           =  true
@@ -116,6 +201,20 @@ function way_function (way)
   if access_tag_blacklist[access] then
     return
   end
+  
+  -- Don't route over difficult surfaces or invalid tracktype and smoothness values
+  local tracktype = way.tags:Find("tracktype")
+  if tracktype ~= "" then
+    if tracktype_profile[tracktype] == nil then
+      return
+    end
+  end  
+  local smoothness = way.tags:Find("smoothness")
+  if smoothness ~= "" then
+    if smoothness_profile[smoothness] == nil then
+      return
+    end
+  end
 
   -- Second, parse the way according to these properties
   local highway = way.tags:Find("highway")
@@ -130,6 +229,7 @@ function way_function (way)
   local cycleway = way.tags:Find("cycleway")
   local duration  = way.tags:Find("duration")
   local service  = way.tags:Find("service")
+  local surface = way.tags:Find("surface")
 
   -- Set the name that will be used for instructions
 	if "" ~= ref then
@@ -201,6 +301,22 @@ function way_function (way)
       (highway == "motorway" and oneway ~= "no")
       then
 	     way.direction = Way.oneway
+    end
+  end
+  
+  -- Lowers the avg speed on ways with difficult surfaces
+  if tracktype ~= "" then
+    way.speed = math.min(way.speed, tracktype_profile[tracktype])
+  else
+    if surface_tracktype_profile[surface] ~= nil then
+      way.speed = math.min(way.speed, surface_tracktype_profile[surface])
+    end
+  end
+  if smoothness ~= "" then
+    way.speed = math.min(way.speed, smoothness_profile[smoothness])
+  else
+    if surface_smoothness_profile[surface] ~= nil then
+      way.speed = math.min(way.speed, surface_smoothness_profile[surface])
     end
   end
 
