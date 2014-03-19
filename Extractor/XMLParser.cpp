@@ -41,9 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/ref.hpp>
 
 XMLParser::XMLParser(const char * filename, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser(ec, se) {
-	SimpleLogger().Write(logWARNING) <<
-		"Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf";
-
 	inputReader = inputReaderFactory(filename);
 }
 
