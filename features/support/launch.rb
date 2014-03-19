@@ -50,6 +50,7 @@ class OSRMLauncher
   def osrm_up
     return if osrm_up?
     @pid = Process.spawn("#{BIN_PATH}/osrm-routed #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+    Process.detach(@pid)    # avoid zombie processes
   end
 
   def osrm_down
