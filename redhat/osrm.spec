@@ -2,12 +2,12 @@
 
 Name:           osrm
 Version:        0.3.7
-Release:        9%{?dist}
+Release:        11%{?dist}
 Summary:        Open Source Routing Machine computes shortest paths in a graph. It was designed to run well with map data from the Openstreetmap Project.
 License:        Simplified 2-clause BSD
 URL:            https://github.com/DennisOSRM/Project-OSRM
-Source0:        %{name}-%{version}.tar.gz
-BuildRequires:  cmake, boost148-devel, luabind-devel >= 0.9.1, libluajit-devel >= 2.0.1, protobuf-devel, stxxl-devel, osmpbf
+Source0:        Project-OSRM-%{version}.tar.gz
+BuildRequires:  cmake, boost-devel >= 1.48, luabind-devel, libluajit-devel, libluajit-static, protobuf-devel, stxxl-devel, osmpbf
 BuildRequires:  gcc, gcc-c++
 Source1:	%{osrm_name}.init
 Source2:	%{osrm_name}.sysconfig
@@ -18,12 +18,12 @@ Source4:	%{osrm_name}.serverini
 ProjectOSRM. Open Source Routing Machine computes shortest paths in a graph. It was designed to run well with map data from the Openstreetmap Project.
  
 %prep
-%setup -q
+%setup -q -n Project-OSRM-%{version}
  
 %build
 mkdir build
 cd build
-cmake -D Boost_INCLUDE_DIR=/usr/include -D Boost_LIBRARY_DIRS=/usr/lib64 -D LUAJIT_LIBRARY=/usr/lib64/libluajit-5.1.so ..
+cmake -D Boost_INCLUDE_DIR=/usr/include -D Boost_LIBRARY_DIRS=/usr/lib64 -D LUAJIT_LIBRARY=/usr/lib64/libluajit-5.1.so -D LUA_INCLUDE_DIR="/usr/include/luajit-2.0 ..
 
 #rpmbuild -ba osrm.spec --define 'jobs 8' 
 %{__make} %{?jobs:-j%jobs}
@@ -39,6 +39,7 @@ mkdir -p %{buildroot}%{_localstatedir}/run/%{name}
 %{__install} -p -D -m 0644 build/libUUID.a %{buildroot}%{_libdir}
 %{__install} -p -D -m 0755 build/osrm-* %{buildroot}%{_bindir}
 cp -a profiles %{buildroot}%{_datadir}/osrm
+#%{__install} -a -p -D -m 0755 profiles %{buildroot}%{_datadir}/osrm
 %{__install} -p -D -m 0755 %{SOURCE1} %{buildroot}%{_initrddir}/%{osrm_name}
 %{__install} -p -D -m 0644 %{SOURCE2} %{buildroot}%{_sysconfdir}/sysconfig/%{osrm_name}
 %{__install} -p -D -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/logrotate.d/%{osrm_name}
@@ -67,6 +68,9 @@ cp -a profiles %{buildroot}%{_datadir}/osrm
 %attr(-,apache,apache) %dir %{_localstatedir}/run/%{name}
 
 %changelog
+* Wed Mar 19 2014 <kay.diam@gmail.com> - 0.3.7-11
+- Updated luajit dependency
+
 * Thu Feb 18 2014 <kay.diam@gmail.com> - 0.3.7-9
 - Typo fixed in init script
 
