@@ -5,7 +5,7 @@ LAUNCH_TIMEOUT = 2
 SHUTDOWN_TIMEOUT = 2
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
-class OSRMLauncher
+class OSRMBackgroundLauncher
   def initialize input_file, &block
     @input_file = input_file
     Dir.chdir TEST_FOLDER do
