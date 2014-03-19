@@ -86,6 +86,7 @@ public:
         const PhantomNodes & phantom_node_pair,
         RawRouteData & raw_route_data
     ) {
+        SimpleLogger().Write(logDEBUG) << "alt path routing";
         if( //phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX() ||
             phantom_node_pair.PhantomNodesHaveEqualLocation()
         ) {
@@ -628,7 +629,7 @@ private:
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         const int scaled_distance = (distance-edge_expansion_offset)/(1.+VIAPATH_EPSILON);
-        SimpleLogger().Write(logDEBUG) << "node: " << node << ", distance: " << distance << ", ub: " << *upper_bound_to_shortest_path_distance << ", scaled_distance: " << scaled_distance;
+        // SimpleLogger().Write(logDEBUG) << "node: " << node << ", distance: " << distance << ", ub: " << *upper_bound_to_shortest_path_distance << ", scaled_distance: " << scaled_distance;
         if(
             (INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_distance) &&
             (scaled_distance > *upper_bound_to_shortest_path_distance)

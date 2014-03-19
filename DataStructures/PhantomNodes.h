@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PHANTOMNODES_H_
 
 #include <osrm/Coordinate.h>
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 struct PhantomNode {
@@ -59,11 +60,14 @@ struct PhantomNode {
 
 
     int GetForwardWeightPlusOffset() const {
-        return forward_weight + forward_offset;
+        SimpleLogger().Write(logDEBUG) << "->fwd_offset: " << forward_offset << ", weight: " << forward_weight;
+        return reverse_offset + forward_weight;
     }
 
     int GetReverseWeightPlusOffset() const {
-        return reverse_offset + reverse_weight;
+        SimpleLogger().Write(logDEBUG) << "->rev_offset: " << reverse_offset << ", weight: " << reverse_weight;
+
+        return forward_offset + reverse_weight;
     }
 
     void Reset() {

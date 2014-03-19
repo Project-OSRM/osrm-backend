@@ -113,12 +113,12 @@ public:
                 SimpleLogger().Write(logDEBUG) << "fwd1 insert: " << phantom_node_pair.startPhantom.forward_node_id << ", w: " << -phantom_node_pair.startPhantom.GetForwardWeightPlusOffset();
                 forward_heap1.Insert(
                     phantom_node_pair.startPhantom.forward_node_id,
-                    -distance1-phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
+                    distance1-phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.startPhantom.forward_node_id
                 );
                 forward_heap2.Insert(
                     phantom_node_pair.startPhantom.forward_node_id,
-                    -distance1-phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
+                    distance1-phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.startPhantom.forward_node_id
                 );
             }
@@ -129,12 +129,12 @@ public:
                 SimpleLogger().Write(logDEBUG) << "fwd1 insert: " << phantom_node_pair.startPhantom.reverse_node_id << ", w: " << -phantom_node_pair.startPhantom.GetReverseWeightPlusOffset();
                 forward_heap1.Insert(
                     phantom_node_pair.startPhantom.reverse_node_id,
-                    -distance2-phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
+                    distance2-phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.startPhantom.reverse_node_id
                 );
                 forward_heap2.Insert(
                     phantom_node_pair.startPhantom.reverse_node_id,
-                    -distance2-phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
+                    distance2-phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.startPhantom.reverse_node_id
                 );
             }
@@ -369,8 +369,8 @@ public:
 
         for(unsigned i = 0; i < packed_legs1.size(); ++i){
             BOOST_ASSERT( !phantom_nodes_vector.empty() );
-            const bool at_beginning = (packed_legs1[i] == packed_legs1.front());
-            const bool at_end = (packed_legs1[i] == packed_legs1.back());
+            // const bool at_beginning = (packed_legs1[i] == packed_legs1.front());
+            // const bool at_end = (packed_legs1[i] == packed_legs1.back());
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size() );
 
             PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[i];

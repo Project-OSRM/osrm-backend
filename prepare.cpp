@@ -181,7 +181,7 @@ int main (int argc, char *argv[]) {
         restrictionsInstream.close();
 
         std::ifstream in;
-        in.open (input_path.c_str(), std::ifstream::in | std::ifstream::binary);
+        in.open(input_path.c_str(), std::ifstream::in|std::ifstream::binary);
 
         const std::string nodeOut = input_path.string() + ".nodes";
         const std::string edgeOut = input_path.string() + ".edges";
@@ -327,86 +327,126 @@ int main (int argc, char *argv[]) {
          */
 
         std::sort(contractedEdgeList.begin(), contractedEdgeList.end());
-        unsigned numberOfNodes = 0;
-        unsigned numberOfEdges = contractedEdgeList.size();
+        unsigned max_used_node_id = 0;
+        unsigned contracted_edge_count = contractedEdgeList.size();
         SimpleLogger().Write() <<
             "Serializing compacted graph of " <<
-            numberOfEdges <<
+            contracted_edge_count <<
             " edges";
 
         std::ofstream hsgr_output_stream(graphOut, std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
-        BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList) {
+        BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList)
+        {
             BOOST_ASSERT( UINT_MAX != edge.source );
             BOOST_ASSERT( UINT_MAX != edge.target );
-            if(edge.source > numberOfNodes) {
-                numberOfNodes = edge.source;
-            }
-            if(edge.target > numberOfNodes) {
-                numberOfNodes = edge.target;
-            }
+
+            max_used_node_id = std::max(max_used_node_id, edge.source);
+            max_used_node_id = std::max(max_used_node_id, edge.target);
         }
-        numberOfNodes+=1;
+        SimpleLogger().Write(logDEBUG) << "input graph has " << edgeBasedNodeNumber << " nodes";
+        SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
+        max_used_node_id+=1;
 
-        std::vector< StaticGraph<EdgeData>::_StrNode > _nodes;
-        _nodes.resize( numberOfNodes + 1 );
+        std::vector< StaticGraph<EdgeData>::_StrNode > node_array;
+        node_array.resize( edgeBasedNodeNumber + 1);
 
+        SimpleLogger().Write() << "Building node array";
         StaticGraph<EdgeData>::EdgeIterator edge = 0;
         StaticGraph<EdgeData>::EdgeIterator position = 0;
-        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
-            StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
-            while ( edge < numberOfEdges && contractedEdgeList[edge].source == node )
+        StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
+
+        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node ) {
+            lastEdge = edge;
+            while ( edge < contracted_edge_count && contractedEdgeList[edge].source == node )
+            {
                 ++edge;
-            _nodes[node].firstEdge = position; //=edge
+            }
+            node_array[node].firstEdge = position; //=edge
             position += edge - lastEdge; //remove
+            SimpleLogger().Write(logDEBUG) << "node: " << node << ", edge: " << edge << ", position: " << position << ", lastEdge: " << lastEdge;
         }
 
-        _nodes.back().firstEdge = numberOfEdges; //sentinel element
-        ++numberOfNodes;
+        SimpleLogger().Write(logDEBUG) << "contracted_edge_count: " << contracted_edge_count << ", position: " << position << ", lastEdge: " << lastEdge;
+        SimpleLogger().Write(logDEBUG) << "marking range [" << max_used_node_id << "," << node_array.size() << ") as dummies";
 
-        BOOST_ASSERT_MSG(
-            _nodes.size() == numberOfNodes,
-            "no. of nodes dont match"
-        );
+        for (unsigned sentinel_counter = max_used_node_id;
+             sentinel_counter != node_array.size();
+             ++sentinel_counter
+            )
+        {
+            //sentinel element, guarded against underflow
+            node_array[sentinel_counter].firstEdge = contracted_edge_count;
+            SimpleLogger().Write(logDEBUG) << "node_array[" << sentinel_counter << "].firstEdge = " << node_array[sentinel_counter].firstEdge;
+        }
+        // node_array.back().firstEdge = contracted_edge_count; //sentinel element
+        // ++max_used_node_id;
+
+        // BOOST_ASSERT_MSG(
+        //     node_array.size() == max_used_node_id,
+        //     "no. of nodes dont match"
+        // );
+
+        for(unsigned i = 0; i < node_array.size(); ++i)
+        {
+            SimpleLogger().Write() << "node_array[" << i << "].firstEdge = " << node_array[i].firstEdge;
+        }
+
+        unsigned node_array_size = node_array.size();
 
         //serialize crc32, aka checksum
         hsgr_output_stream.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
-        //serialize number f nodes
-        hsgr_output_stream.write((char*) &numberOfNodes, sizeof(unsigned));
+        //serialize number of nodes
+        hsgr_output_stream.write((char*) &node_array_size, sizeof(unsigned));
         //serialize number of edges
-        hsgr_output_stream.write((char*) &position, sizeof(unsigned));
+        hsgr_output_stream.write((char*) &contracted_edge_count, sizeof(unsigned));
         //serialize all nodes
-        hsgr_output_stream.write((char*) &_nodes[0], sizeof(StaticGraph<EdgeData>::_StrNode)*(numberOfNodes));
+        hsgr_output_stream.write((char*) &node_array[0], sizeof(StaticGraph<EdgeData>::_StrNode)*node_array_size);
         //serialize all edges
-        --numberOfNodes;
 
+        SimpleLogger().Write() << "Building edge array";
         edge = 0;
         int usedEdgeCounter = 0;
-        SimpleLogger().Write() << "Building Node Array";
+
+        for(unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
+        {
+            SimpleLogger().Write(logDEBUG) << ">[" << edge << "] (" << contractedEdgeList[edge].source << "," << contractedEdgeList[edge].target << ")";
+        }
+
         StaticGraph<EdgeData>::_StrEdge currentEdge;
-        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < numberOfNodes; ++node ) {
-            for ( StaticGraph<EdgeData>::EdgeIterator i = _nodes[node].firstEdge, e = _nodes[node+1].firstEdge; i != e; ++i ) {
-                assert(node != contractedEdgeList[edge].target);
+        for(unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
+        {
+        // for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node ) {
+            // for ( StaticGraph<EdgeData>::EdgeIterator i = node_array[node].firstEdge, e = node_array[node+1].firstEdge; i != e; ++i ) {
+                // BOOST_ASSERT(node == contractedEdgeList[edge].source)
+                // no eigen loops
+                BOOST_ASSERT(contractedEdgeList[edge].source != contractedEdgeList[edge].target);
                 currentEdge.target = contractedEdgeList[edge].target;
                 currentEdge.data = contractedEdgeList[edge].data;
+
+                // every target needs to be valid
+                BOOST_ASSERT(currentEdge.target < max_used_node_id);
                 if(currentEdge.data.distance <= 0) {
                     SimpleLogger().Write(logWARNING) <<
-                        "Edge: "     << i <<
+                        "Edge: "     << edge <<
                         ",source: "  << contractedEdgeList[edge].source <<
                         ", target: " << contractedEdgeList[edge].target <<
                         ", dist: "   << currentEdge.data.distance;
 
                     SimpleLogger().Write(logWARNING) <<
-                        "Failed at edges of node " << node <<
-                        " of " << numberOfNodes;
+                        "Failed at adjacency list of node " << contractedEdgeList[edge].source << "/" << node_array.size()-1;
                         return 1;
                 }
                 //Serialize edges
+                SimpleLogger().Write(logDEBUG) << "edge[" << edge << "], (" << contractedEdgeList[edge].source << "," << currentEdge.target << "), w: " << currentEdge.data.distance <<
+                "shortcut: " << (currentEdge.data.shortcut ? "y" : "n");
                 hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
-                ++edge;
+                // ++edge;
                 ++usedEdgeCounter;
             }
-        }
+        // }
+        hsgr_output_stream.close();
+
         SimpleLogger().Write() << "Preprocessing : " <<
             (get_timestamp() - startupTime) << " seconds";
         SimpleLogger().Write() << "Expansion  : " <<
@@ -417,11 +457,10 @@ int main (int argc, char *argv[]) {
             (edgeBasedNodeNumber/contraction_duration) << " nodes/sec and " <<
             usedEdgeCounter/contraction_duration << " edges/sec";
 
-        hsgr_output_stream.close();
         //cleanedEdgeList.clear();
-        _nodes.clear();
+        node_array.clear();
         SimpleLogger().Write() << "finished preprocessing";
-    } catch(boost::program_options::too_many_positional_options_error& e) {
+    } catch(boost::program_options::too_many_positional_options_error&) {
         SimpleLogger().Write(logWARNING) << "Only one file can be specified";
         return 1;
     } catch(boost::program_options::error& e) {

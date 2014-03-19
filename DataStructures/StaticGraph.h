@@ -101,6 +101,12 @@ public:
         _nodes.swap(nodes);
         _edges.swap(edges);
 
+        for(unsigned i = 0; i < _numNodes; ++i)
+        {
+            SimpleLogger().Write(logDEBUG) << "edges of " << i << ": [" << BeginEdges(i) << "," << EndEdges(i) << ")";
+        }
+
+
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
         for(unsigned u = 0; u < GetNumberOfNodes(); ++u) {
@@ -112,7 +118,7 @@ public:
                     if(eid2 == UINT_MAX) {
                         SimpleLogger().Write(logWARNING) <<
                             "cannot find first segment of edge (" <<
-                                u << "," << data.id << "," << v << ")";
+                                u << "," << data.id << "," << v << "), eid: " << eid;
 
                         data.shortcut = false;
                         BOOST_ASSERT(false);
@@ -121,13 +127,17 @@ public:
                     if(eid2 == UINT_MAX) {
                         SimpleLogger().Write(logWARNING) <<
                             "cannot find second segment of edge (" <<
-                                u << "," << data.id << "," << v << ")";
+                                u << "," << data.id << "," << v << "), eid2: " << eid2;
                         data.shortcut = false;
                         BOOST_ASSERT(false);
                     }
                 }
             }
             p.printIncrement();
+        }
+        for(unsigned i = 0; i < _numNodes; ++i)
+        {
+            SimpleLogger().Write(logDEBUG) << "edges of " << i << ": [" << BeginEdges(i) << "," << EndEdges(i) << ")";
         }
 #endif
     }
@@ -157,11 +167,11 @@ public:
     }
 
     EdgeIterator BeginEdges( const NodeIterator n ) const {
-        return EdgeIterator( _nodes[n].firstEdge );
+        return EdgeIterator( _nodes.at(n).firstEdge );
     }
 
     EdgeIterator EndEdges( const NodeIterator n ) const {
-        return EdgeIterator( _nodes[n+1].firstEdge );
+        return EdgeIterator( _nodes.at(n+1).firstEdge );
     }
 
     //searches for a specific edge

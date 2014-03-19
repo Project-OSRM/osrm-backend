@@ -765,11 +765,11 @@ public:
 
         if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
         {
-            result_phantom_node.forward_weight *= (1.-ratio);
+            result_phantom_node.forward_weight *= (ratio);
         }
         if( SPECIAL_NODEID != result_phantom_node.reverse_node_id )
         {
-            result_phantom_node.reverse_weight *= ratio;
+            result_phantom_node.reverse_weight *= 1.-ratio;
         }
         result_phantom_node.ratio = ratio;
 

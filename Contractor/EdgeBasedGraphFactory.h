@@ -206,6 +206,8 @@ private:
         const NodeID v,
         const NodeID w
     );
+
+    unsigned max_id;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */

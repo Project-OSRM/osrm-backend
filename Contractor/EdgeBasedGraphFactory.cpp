@@ -48,7 +48,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
 ) : speed_profile(speed_profile),
     m_turn_restrictions_count(0),
     m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
-    m_node_info_list(node_info_list)
+    m_node_info_list(node_info_list),
+    max_id(0)
 {
 	BOOST_FOREACH(const TurnRestriction & restriction, input_restrictions_list) {
         std::pair<NodeID, NodeID> restriction_source =
@@ -384,10 +385,20 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         const unsigned geometry_size = forward_geometry.size();
         BOOST_ASSERT( geometry_size > 1 );
         NodeID current_edge_start_coordinate_id = u;
+
+        if (forward_data.edgeBasedNodeID != SPECIAL_NODEID)
+        {
+            max_id = std::max(forward_data.edgeBasedNodeID, max_id);
+        }
+        if (SPECIAL_NODEID != reverse_data.edgeBasedNodeID)
+        {
+            max_id = std::max(reverse_data.edgeBasedNodeID, max_id);
+        }
         // traverse arrays from start and end respectively
         for( unsigned i = 0; i < geometry_size; ++i ) {
             BOOST_ASSERT( current_edge_start_coordinate_id == reverse_geometry[geometry_size-1-i].first );
             const NodeID current_edge_target_coordinate_id = forward_geometry[i].first;
+            BOOST_ASSERT( current_edge_target_coordinate_id != current_edge_start_coordinate_id);
 
             // build edges
             m_edge_based_node_list.push_back(
@@ -888,6 +899,7 @@ void EdgeBasedGraphFactory::Run(
         "  skips "  << skipped_uturns_counter << " U turns";
     SimpleLogger().Write() <<
         "  skips "  <<  skipped_barrier_turns_counter << " turns over barriers";
+    SimpleLogger().Write(logDEBUG) << "maximum written id: " << max_id;
 }
 
 int EdgeBasedGraphFactory::GetTurnPenalty(

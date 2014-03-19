@@ -446,6 +446,9 @@ unsigned readHSGRFromStream(
     hsgr_input_stream.read( (char*) &number_of_nodes, sizeof(unsigned) );
     BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
     hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
+
+    SimpleLogger().Write() << "number_of_nodes: " << number_of_nodes << ", number_of_edges: " << number_of_edges;
+
     // BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
     node_list.resize(number_of_nodes + 1);
     hsgr_input_stream.read(
@@ -459,6 +462,16 @@ unsigned readHSGRFromStream(
         number_of_edges*sizeof(EdgeT)
     );
     hsgr_input_stream.close();
+
+    for(unsigned i = 0; i < number_of_nodes; ++i)
+    {
+        SimpleLogger().Write(logDEBUG) << "node_list[" << i << "]=" << node_list[i].firstEdge;
+    }
+    for(unsigned i = 0; i < number_of_edges; ++i)
+    {
+        SimpleLogger().Write(logDEBUG) << "edge_list[" << i << "]=(*," << edge_list[i].target << "), w: " << edge_list[i].data.distance;
+    }
+
     return number_of_nodes;
 }
 
