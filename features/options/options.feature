@@ -38,7 +38,7 @@ Feature: Command line options
         When I run "osrm-routed --fly-me-to-the-moon"
         Then it should exit with code 255
         Then stdout should be empty
-        And stderr should contain "unrecognised option '--fly-me-to-the-moon'"
+        And stderr should contain "fly-me-to-the-moon"
 
     Scenario: Missing file
         When I run "osrm-routed overtherainbow.osrm"
