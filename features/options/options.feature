@@ -33,17 +33,14 @@ Feature: Command line options
         And stdout should contain "--port"
         And stdout should contain "--threads"
         And stdout should contain "--sharedmemory"
-    
-    @todo
+
     Scenario: Non-existing option
         When I run "osrm-routed --fly-me-to-the-moon"
         Then it should exit with code 255
         Then stdout should be empty
         And stderr should contain "unrecognised option '--fly-me-to-the-moon'"
-    
-    @todo
+
     Scenario: Missing file
         When I run "osrm-routed overtherainbow.osrm"
         Then it should exit with code 255
-        Then stdout should be empty
-        And stderr should contain "missing"
+        And stderr should contain "does not exist"

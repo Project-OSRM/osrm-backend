@@ -185,6 +185,7 @@ int main (int argc, const char * argv[])
     catch (std::exception& e)
     {
         std::cerr << "[fatal error] exception: " << e.what() << std::endl;
+        return -1;
     }
 #ifdef __linux__
     munlockall();
