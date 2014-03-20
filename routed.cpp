@@ -67,40 +67,50 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 }
 #endif
 
-int main (int argc, const char * argv[]) {
-    try {
+int main (int argc, const char * argv[])
+{
+    try
+    {
         LogPolicy::GetInstance().Unmute();
-#ifdef __linux__
-        if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
-            SimpleLogger().Write(logWARNING) <<
-                "Process " << argv[0] << " could not be locked to RAM";
-        }
-#endif
+
         bool use_shared_memory = false;
         std::string ip_address;
         int ip_port, requested_thread_num;
 
         ServerPaths server_paths;
-        if( !GenerateServerProgramOptions(
-                argc,
-                argv,
-                server_paths,
-                ip_address,
-                ip_port,
-                requested_thread_num,
-                use_shared_memory
-             )
-        ) {
+        if  (!GenerateServerProgramOptions
+                (
+                    argc,
+                    argv,
+                    server_paths,
+                    ip_address,
+                    ip_port,
+                    requested_thread_num,
+                    use_shared_memory
+                )
+            )
+        {
             return 0;
         }
 
+#ifdef __linux__
+        const int lock_flags = (MCL_CURRENT | MCL_FUTURE);
+        if (-1 == mlockall(lock_flags))
+        {
+            SimpleLogger().Write(logWARNING) <<
+                "Process " << argv[0] << " could not be locked to RAM";
+        }
+#endif
         SimpleLogger().Write() <<
             "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
             "compiled at " << __DATE__ << ", " __TIME__;
 
-        if( use_shared_memory ) {
+        if(use_shared_memory)
+        {
             SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
-        } else {
+        }
+        else
+        {
             SimpleLogger().Write() <<
                 "HSGR file:\t" << server_paths["hsgrdata"];
             SimpleLogger().Write(logDEBUG) <<
