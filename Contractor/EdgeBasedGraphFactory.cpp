@@ -822,7 +822,6 @@ void EdgeBasedGraphFactory::Run(
                 // the following is the core of the loop.
                 unsigned distance = edge_data1.distance;
                 if( m_traffic_lights.find(v) != m_traffic_lights.end() ) {
-                    SimpleLogger().Write(logDEBUG) << "penalty: " << speed_profile.trafficSignalPenalty;
                     distance += speed_profile.trafficSignalPenalty;
                 }
                 const int turn_penalty = GetTurnPenalty(u, v, w, lua_state);
