@@ -21,6 +21,7 @@ Feature: Command line options
         And stdout should contain "--version"
         And stdout should contain "--help"
         And stdout should contain "--config"
+        And stdout should contain "--trial"
         And stdout should contain "Configuration:"
         And stdout should contain "--hsgrdata arg"
         And stdout should contain "--nodesdata arg"

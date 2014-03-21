@@ -76,20 +76,20 @@ int main (int argc, const char * argv[])
         bool use_shared_memory = false;
         std::string ip_address;
         int ip_port, requested_thread_num;
+        bool trial = false;
 
         ServerPaths server_paths;
-        if  (!GenerateServerProgramOptions
-                (
-                    argc,
-                    argv,
-                    server_paths,
-                    ip_address,
-                    ip_port,
-                    requested_thread_num,
-                    use_shared_memory
-                )
-            )
-        {
+        if( !GenerateServerProgramOptions(
+                argc,
+                argv,
+                server_paths,
+                ip_address,
+                ip_port,
+                requested_thread_num,
+                use_shared_memory,
+                trial
+             )
+        ) {
             return 0;
         }
 
@@ -149,33 +149,37 @@ int main (int argc, const char * argv[])
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
-        boost::thread server_thread(boost::bind(&Server::Run, routing_server));
+        if( trial ) {
+            std::cout << "[server] trial run, quitting after successful initialization" << std::endl;
+        } else {
+            boost::thread server_thread(boost::bind(&Server::Run, routing_server));
 
 #ifndef _WIN32
-        sigset_t wait_mask;
-        pthread_sigmask(SIG_SETMASK, &old_mask, 0);
-        sigemptyset(&wait_mask);
-        sigaddset(&wait_mask, SIGINT);
-        sigaddset(&wait_mask, SIGQUIT);
-        sigaddset(&wait_mask, SIGTERM);
-        pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
-        std::cout << "[server] running and waiting for requests" << std::endl;
-        sigwait(&wait_mask, &sig);
+            sigset_t wait_mask;
+            pthread_sigmask(SIG_SETMASK, &old_mask, 0);
+            sigemptyset(&wait_mask);
+            sigaddset(&wait_mask, SIGINT);
+            sigaddset(&wait_mask, SIGQUIT);
+            sigaddset(&wait_mask, SIGTERM);
+            pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
+            std::cout << "[server] running and waiting for requests" << std::endl;
+            sigwait(&wait_mask, &sig);
 #else
-        // Set console control handler to allow server to be stopped.
-        console_ctrl_function = boost::bind(&Server::Stop, routing_server);
-        SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
-        std::cout << "[server] running and waiting for requests" << std::endl;
-        routing_server->Run();
+            // Set console control handler to allow server to be stopped.
+            console_ctrl_function = boost::bind(&Server::Stop, routing_server);
+            SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
+            std::cout << "[server] running and waiting for requests" << std::endl;
+            routing_server->Run();
 #endif
-        std::cout << "[server] initiating shutdown" << std::endl;
-        routing_server->Stop();
-        std::cout << "[server] stopping threads" << std::endl;
+            std::cout << "[server] initiating shutdown" << std::endl;
+            routing_server->Stop();
+            std::cout << "[server] stopping threads" << std::endl;
 
-        if (!server_thread.timed_join(boost::posix_time::seconds(2)))
-        {
-       	    SimpleLogger().Write(logDEBUG) <<
-                "Threads did not finish within 2 seconds. Hard abort!";
+            if (!server_thread.timed_join(boost::posix_time::seconds(2)))
+            {
+                SimpleLogger().Write(logDEBUG) <<
+                    "Threads did not finish within 2 seconds. Hard abort!";
+            }
         }
 
         std::cout << "[server] freeing objects" << std::endl;

@@ -66,7 +66,8 @@ inline bool GenerateServerProgramOptions(
     std::string & ip_address,
     int & ip_port,
     int & requested_num_threads,
-    bool & use_shared_memory
+    bool & use_shared_memory,
+    bool & trial
 ) {
 
     // declare a group of options that will be allowed only on command line
@@ -80,6 +81,11 @@ inline bool GenerateServerProgramOptions(
                 &paths["config"]
             )->default_value("server.ini"),
             "Path to a configuration file"
+        )
+        (
+            "trial",
+            boost::program_options::value<bool>(&trial)->implicit_value(true),
+            "Quit after initialization"
         );
 
     // declare a group of options that will be allowed both on command line
