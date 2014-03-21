@@ -32,7 +32,7 @@ speed_profile = {
   ["default"] = 10
 }
 
-local take_minimum_of_speeds    = false
+local take_minimum_of_speeds  = false
 local obey_oneway               = true
 local obey_bollards             = true
 local use_turn_restrictions     = true
