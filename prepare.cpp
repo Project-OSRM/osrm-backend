@@ -222,6 +222,7 @@ int main (int argc, char *argv[]) {
                 return 1;
         }
         speedProfile.trafficSignalPenalty = 10*lua_tointeger(myLuaState, -1);
+        SimpleLogger().Write(logDEBUG) << "traffic_signal_penalty: " << speedProfile.trafficSignalPenalty;
 
         if(0 != luaL_dostring( myLuaState, "return u_turn_penalty\n")) {
             std::cerr <<
@@ -364,11 +365,11 @@ int main (int argc, char *argv[]) {
             }
             node_array[node].firstEdge = position; //=edge
             position += edge - lastEdge; //remove
-            SimpleLogger().Write(logDEBUG) << "node: " << node << ", edge: " << edge << ", position: " << position << ", lastEdge: " << lastEdge;
+            // SimpleLogger().Write(logDEBUG) << "node: " << node << ", edge: " << edge << ", position: " << position << ", lastEdge: " << lastEdge;
         }
 
-        SimpleLogger().Write(logDEBUG) << "contracted_edge_count: " << contracted_edge_count << ", position: " << position << ", lastEdge: " << lastEdge;
-        SimpleLogger().Write(logDEBUG) << "marking range [" << max_used_node_id << "," << node_array.size() << ") as dummies";
+        // SimpleLogger().Write(logDEBUG) << "contracted_edge_count: " << contracted_edge_count << ", position: " << position << ", lastEdge: " << lastEdge;
+        // SimpleLogger().Write(logDEBUG) << "marking range [" << max_used_node_id << "," << node_array.size() << ") as dummies";
 
         for (unsigned sentinel_counter = max_used_node_id;
              sentinel_counter != node_array.size();
@@ -377,7 +378,7 @@ int main (int argc, char *argv[]) {
         {
             //sentinel element, guarded against underflow
             node_array[sentinel_counter].firstEdge = contracted_edge_count;
-            SimpleLogger().Write(logDEBUG) << "node_array[" << sentinel_counter << "].firstEdge = " << node_array[sentinel_counter].firstEdge;
+            // SimpleLogger().Write(logDEBUG) << "node_array[" << sentinel_counter << "].firstEdge = " << node_array[sentinel_counter].firstEdge;
         }
         // node_array.back().firstEdge = contracted_edge_count; //sentinel element
         // ++max_used_node_id;
@@ -387,10 +388,10 @@ int main (int argc, char *argv[]) {
         //     "no. of nodes dont match"
         // );
 
-        for(unsigned i = 0; i < node_array.size(); ++i)
-        {
-            SimpleLogger().Write() << "node_array[" << i << "].firstEdge = " << node_array[i].firstEdge;
-        }
+        // for(unsigned i = 0; i < node_array.size(); ++i)
+        // {
+        //     SimpleLogger().Write() << "node_array[" << i << "].firstEdge = " << node_array[i].firstEdge;
+        // }
 
         unsigned node_array_size = node_array.size();
 
@@ -410,7 +411,7 @@ int main (int argc, char *argv[]) {
 
         for(unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
         {
-            SimpleLogger().Write(logDEBUG) << ">[" << edge << "] (" << contractedEdgeList[edge].source << "," << contractedEdgeList[edge].target << ")";
+            // SimpleLogger().Write(logDEBUG) << ">[" << edge << "] (" << contractedEdgeList[edge].source << "," << contractedEdgeList[edge].target << ")";
         }
 
         StaticGraph<EdgeData>::_StrEdge currentEdge;
@@ -438,8 +439,8 @@ int main (int argc, char *argv[]) {
                         return 1;
                 }
                 //Serialize edges
-                SimpleLogger().Write(logDEBUG) << "edge[" << edge << "], (" << contractedEdgeList[edge].source << "," << currentEdge.target << "), w: " << currentEdge.data.distance <<
-                "shortcut: " << (currentEdge.data.shortcut ? "y" : "n");
+                // SimpleLogger().Write(logDEBUG) << "edge[" << edge << "], (" << contractedEdgeList[edge].source << "," << currentEdge.target << "), w: " << currentEdge.data.distance <<
+                // "shortcut: " << (currentEdge.data.shortcut ? "y" : "n");
                 hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
                 // ++edge;
                 ++usedEdgeCounter;

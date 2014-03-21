@@ -371,14 +371,14 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             BOOST_ASSERT( forward_data.distance >= temp_sum );
             forward_dist_prefix_sum[i] = forward_data.distance - temp_sum;
         }
-        BOOST_ASSERT( forward_data.distance == temp_sum );
+        // BOOST_ASSERT( forward_data.distance == temp_sum );
         temp_sum = 0;
         for( unsigned i = 0; i < reverse_geometry.size(); ++i ) {
             temp_sum += reverse_geometry[i].second;
             BOOST_ASSERT( reverse_data.distance >= temp_sum );
             reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
         }
-        BOOST_ASSERT( reverse_data.distance == temp_sum );
+        // BOOST_ASSERT( reverse_data.distance == temp_sum );
 
         BOOST_ASSERT( forward_geometry.size() == reverse_geometry.size() );
 
@@ -570,9 +570,16 @@ void EdgeBasedGraphFactory::Run(
             BOOST_ASSERT( 0 != reverse_weight1 );
             BOOST_ASSERT( 0 != forward_weight2 );
 
+            const bool add_traffic_signal_penalty = (m_traffic_lights.find(v) != m_traffic_lights.end());
+
             // add weight of e2's to e1
             m_node_based_graph->GetEdgeData(forward_e1).distance += fwd_edge_data2.distance;
             m_node_based_graph->GetEdgeData(reverse_e1).distance += rev_edge_data2.distance;
+            if (add_traffic_signal_penalty)
+            {
+                m_node_based_graph->GetEdgeData(forward_e1).distance += speed_profile.trafficSignalPenalty;
+                m_node_based_graph->GetEdgeData(reverse_e1).distance += speed_profile.trafficSignalPenalty;
+            }
 
             // extend e1's to targets of e2's
             m_node_based_graph->SetTarget(forward_e1, w);
@@ -595,7 +602,7 @@ void EdgeBasedGraphFactory::Run(
                 forward_e2,
                 v,
                 w,
-                forward_weight1,
+                forward_weight1 + (add_traffic_signal_penalty ? speed_profile.trafficSignalPenalty :0),
                 forward_weight2
             );
             m_geometry_compressor.CompressEdge(
@@ -603,8 +610,8 @@ void EdgeBasedGraphFactory::Run(
                 reverse_e2,
                 v,
                 u,
-                reverse_weight1,
-                reverse_weight2
+                reverse_weight1 ,
+                reverse_weight2 + (add_traffic_signal_penalty ? speed_profile.trafficSignalPenalty :0)
             );
 
             ++removed_node_count;
@@ -808,21 +815,14 @@ void EdgeBasedGraphFactory::Run(
                 const EdgeData & edge_data1 = m_node_based_graph->GetEdgeData(e1);
                 const EdgeData & edge_data2 = m_node_based_graph->GetEdgeData(e2);
 
-                // BOOST_ASSERT(
-                //     edge_data1.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
-                // );
-                // BOOST_ASSERT(
-                //     edge_data2.edgeBasedNodeID < m_node_based_graph->GetNumberOfEdges()
-                // );
-                BOOST_ASSERT(
-                    edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID
-                );
-                BOOST_ASSERT( edge_data1.forward );
-                BOOST_ASSERT( edge_data2.forward );
+                BOOST_ASSERT(edge_data1.edgeBasedNodeID != edge_data2.edgeBasedNodeID);
+                BOOST_ASSERT(edge_data1.forward);
+                BOOST_ASSERT(edge_data2.forward);
 
                 // the following is the core of the loop.
                 unsigned distance = edge_data1.distance;
                 if( m_traffic_lights.find(v) != m_traffic_lights.end() ) {
+                    SimpleLogger().Write(logDEBUG) << "penalty: " << speed_profile.trafficSignalPenalty;
                     distance += speed_profile.trafficSignalPenalty;
                 }
                 const int turn_penalty = GetTurnPenalty(u, v, w, lua_state);
