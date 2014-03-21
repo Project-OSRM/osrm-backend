@@ -67,10 +67,10 @@ public:
     ) const {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
-        SimpleLogger().Write() << (forward_direction ? "fwd" : "rev") << " settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
+        // SimpleLogger().Write() << (forward_direction ? "fwd" : "rev") << " settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
         if(reverse_heap.WasInserted(node) ){
             const int new_distance = reverse_heap.GetKey(node) + distance;
-            SimpleLogger().Write(logDEBUG) << "new_distance: " << new_distance;
+            // SimpleLogger().Write(logDEBUG) << "new_distance: " << new_distance;
             if(new_distance < *upper_bound ){
                 if( new_distance >= 0 ) {
                     *middle_node_id = node;
@@ -80,7 +80,7 @@ public:
         }
 
         if( (distance-edge_expansion_offset) > *upper_bound ){
-            SimpleLogger().Write() << "found path";
+            // SimpleLogger().Write() << "found path";
             forward_heap.DeleteAll();
             return;
         }
@@ -101,13 +101,13 @@ public:
 
                 if(forward_heap.WasInserted( to )) {
                     if(forward_heap.GetKey( to ) + edge_weight < distance) {
-                        SimpleLogger().Write(logDEBUG) << "stalled";
+                        // SimpleLogger().Write(logDEBUG) << "stalled";
                         return;
                     }
                 }
             }
         }
-        SimpleLogger().Write(logDEBUG) << "done stalling";
+        // SimpleLogger().Write(logDEBUG) << "done stalling";
         for(
             EdgeID edge = facade->BeginEdges(node), end_edge = facade->EndEdges(node);
             edge < end_edge;
@@ -125,14 +125,14 @@ public:
 
                 //New Node discovered -> Add to Heap + Node Info Storage
                 if ( !forward_heap.WasInserted( to ) ) {
-                    SimpleLogger().Write() << "insert (" << node << "," << to << "), distance: " << to_distance << ", edge id: " << edge;
+                    // SimpleLogger().Write() << "insert (" << node << "," << to << "), distance: " << to_distance << ", edge id: " << edge;
                     forward_heap.Insert( to, to_distance, node );
                 }
                 //Found a shorter Path -> Update distance
                 else if ( to_distance < forward_heap.GetKey( to ) ) {
                     forward_heap.GetData( to ).parent = node;
                     forward_heap.DecreaseKey( to, to_distance );
-                    SimpleLogger().Write() << "decrease (" << node << "," << to << "), distance: " << to_distance;
+                    // SimpleLogger().Write() << "decrease (" << node << "," << to << "), distance: " << to_distance;
                     //new parent
                 }
             }
@@ -146,7 +146,7 @@ public:
         const PhantomNodes & phantom_node_pair,
         std::vector<PathData> & unpacked_path
     ) const {
-        SimpleLogger().Write(logDEBUG) << "packed_path.size: " << packed_path.size();
+        // SimpleLogger().Write(logDEBUG) << "packed_path.size: " << packed_path.size();
         const bool start_traversed_in_reverse = (packed_path.front() != phantom_node_pair.startPhantom.forward_node_id);
         const bool target_traversed_in_reverse = (packed_path.back() != phantom_node_pair.targetPhantom.forward_node_id);
 
@@ -257,64 +257,55 @@ public:
             }
         }
         if(SPECIAL_EDGEID != phantom_node_pair.targetPhantom.packed_geometry_id ) {
-            SimpleLogger().Write(logDEBUG) << "unpacking last segment " << phantom_node_pair.targetPhantom.packed_geometry_id;
-            SimpleLogger().Write(logDEBUG) << "start_traversed_in_reverse: " << (start_traversed_in_reverse ? "y" : "n");
-            SimpleLogger().Write(logDEBUG) << "target_traversed_in_reverse: " << (target_traversed_in_reverse ? "y" : "n");
-            SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.fwd_segment_position: " << phantom_node_pair.startPhantom.fwd_segment_position << ", " <<
-                                              "phantom_node_pair.targetPhantom.fwd_segment_position: " << phantom_node_pair.targetPhantom.fwd_segment_position;
+            // SimpleLogger().Write(logDEBUG) << "unpacking last segment " << phantom_node_pair.targetPhantom.packed_geometry_id;
+            // SimpleLogger().Write(logDEBUG) << "start_traversed_in_reverse: " << (start_traversed_in_reverse ? "y" : "n");
+            // SimpleLogger().Write(logDEBUG) << "target_traversed_in_reverse: " << (target_traversed_in_reverse ? "y" : "n");
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.fwd_segment_position: " << phantom_node_pair.startPhantom.fwd_segment_position << ", " <<
+            //                                   "phantom_node_pair.targetPhantom.fwd_segment_position: " << phantom_node_pair.targetPhantom.fwd_segment_position;
             std::vector<unsigned> id_vector;
             facade->GetUncompressedGeometry(phantom_node_pair.targetPhantom.packed_geometry_id, id_vector);
             if( target_traversed_in_reverse ) {
                 std::reverse(id_vector.begin(), id_vector.end() );
             }
-            SimpleLogger().Write(logDEBUG) << "id_vector.size() " << id_vector.size();
-            SimpleLogger().Write(logDEBUG) << "unpacked_path.empty()=" << (unpacked_path.empty() ? "y" : "n");
+            // SimpleLogger().Write(logDEBUG) << "id_vector.size() " << id_vector.size();
+            // SimpleLogger().Write(logDEBUG) << "unpacked_path.empty()=" << (unpacked_path.empty() ? "y" : "n");
 
             const bool is_local_path = (phantom_node_pair.startPhantom.packed_geometry_id  == phantom_node_pair.targetPhantom.packed_geometry_id) && unpacked_path.empty();
-            SimpleLogger().Write(logDEBUG) << "is_local_path: " << (is_local_path ? "y" : "n");
-
-
-           //         const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position - 1 : phantom_node_pair.startPhantom.fwd_segment_position ) : 0 );
+            // SimpleLogger().Write(logDEBUG) << "is_local_path: " << (is_local_path ? "y" : "n");
 
             int start_index = 0;
             int end_index = phantom_node_pair.targetPhantom.fwd_segment_position;
-            SimpleLogger().Write(logDEBUG) << "case1";
+            // SimpleLogger().Write(logDEBUG) << "case1";
             if (target_traversed_in_reverse)
             {
-                // start_index = id_vector.size() -1;
                 end_index = id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position;
-                // if (is_local_path)
-                // {
-                //     start_index = id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position -1;
-                // }
             }
             if (is_local_path)
             {
-                SimpleLogger().Write(logDEBUG) << "case3";
+                // SimpleLogger().Write(logDEBUG) << "case3";
                 start_index = phantom_node_pair.startPhantom.fwd_segment_position;
                 end_index = phantom_node_pair.targetPhantom.fwd_segment_position;
                 if (target_traversed_in_reverse)
                 {
-                    SimpleLogger().Write(logDEBUG) << "case4";
-                    start_index = id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position - 1;
-                    end_index = id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position - 1;
+                    // SimpleLogger().Write(logDEBUG) << "case4";
+                    start_index = id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position;
+                    end_index = id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position;
                 }
             }
 
-            SimpleLogger().Write(logDEBUG) << "fetching from [" << start_index << "," << end_index << "]";
+            // SimpleLogger().Write(logDEBUG) << "fetching from [" << start_index << "," << end_index << "]";
 
             BOOST_ASSERT( start_index >= 0 );
-            // BOOST_ASSERT( start_index <= end_index );
             for(
                 int i = start_index;
                 i != end_index;
                 ( start_index < end_index ? ++i :--i)
             ) {
                 BOOST_ASSERT( i >= -1 );
-                if ( i >= 0 )
-                {
-                    SimpleLogger().Write(logDEBUG) << "[" << i << "]" << facade->GetCoordinateOfNode(id_vector[i]);
-                }
+                // if ( i >= 0 )
+                // {
+                //     SimpleLogger().Write(logDEBUG) << "[" << i << "]" << facade->GetCoordinateOfNode(id_vector[i]);
+                // }
                 unpacked_path.push_back(
                     PathData(
                         id_vector[i],
