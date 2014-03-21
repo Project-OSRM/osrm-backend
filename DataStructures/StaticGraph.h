@@ -101,12 +101,6 @@ public:
         _nodes.swap(nodes);
         _edges.swap(edges);
 
-        for(unsigned i = 0; i < _numNodes; ++i)
-        {
-            SimpleLogger().Write(logDEBUG) << "edges of " << i << ": [" << BeginEdges(i) << "," << EndEdges(i) << ")";
-        }
-
-
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
         for(unsigned u = 0; u < GetNumberOfNodes(); ++u) {
@@ -134,10 +128,6 @@ public:
                 }
             }
             p.printIncrement();
-        }
-        for(unsigned i = 0; i < _numNodes; ++i)
-        {
-            SimpleLogger().Write(logDEBUG) << "edges of " << i << ": [" << BeginEdges(i) << "," << EndEdges(i) << ")";
         }
 #endif
     }

@@ -173,9 +173,9 @@ private:
                 sizeof(OriginalEdgeData)
             );
             m_via_node_list[i] = current_edge_data.via_node;
-            if(current_edge_data.via_node == 0 && current_edge_data.compressed_geometry) {
-                SimpleLogger().Write() << "0 at index " << i;
-            }
+            // if(current_edge_data.via_node == 0 && current_edge_data.compressed_geometry) {
+            //     SimpleLogger().Write() << "0 at index " << i;
+            // }
 
             m_name_ID_list[i]  = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
@@ -184,7 +184,7 @@ private:
                 ++compressed;
             }
         }
-        SimpleLogger().Write(logDEBUG) << "compressed: " << compressed;
+        // SimpleLogger().Write(logDEBUG) << "compressed: " << compressed;
 
         edges_input_stream.close();
     }

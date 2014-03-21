@@ -463,15 +463,6 @@ unsigned readHSGRFromStream(
     );
     hsgr_input_stream.close();
 
-    for(unsigned i = 0; i < number_of_nodes; ++i)
-    {
-        SimpleLogger().Write(logDEBUG) << "node_list[" << i << "]=" << node_list[i].firstEdge;
-    }
-    for(unsigned i = 0; i < number_of_edges; ++i)
-    {
-        SimpleLogger().Write(logDEBUG) << "edge_list[" << i << "]=(*," << edge_list[i].target << "), w: " << edge_list[i].data.distance;
-    }
-
     return number_of_nodes;
 }
 
