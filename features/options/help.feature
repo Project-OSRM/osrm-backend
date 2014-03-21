@@ -6,8 +6,7 @@ Feature: Command line options: help
 
     Scenario: No options should show help
         When I run "osrm-routed"
-        Then it should exit with code 0
-        And stderr should be empty
+        Then stderr should be empty
         And stdout should contain "osrm-routed <base.osrm> [<options>]:"
         And stdout should contain "Options:"
         And stdout should contain "--version"
@@ -26,11 +25,11 @@ Feature: Command line options: help
         And stdout should contain "--port"
         And stdout should contain "--threads"
         And stdout should contain "--sharedmemory"
+        And it should exit with code 0
 
     Scenario: Help, short
         When I run "osrm-routed -h"
-        Then it should exit with code 0
-        And stderr should be empty
+        Then stderr should be empty
         And stdout should contain "osrm-routed <base.osrm> [<options>]:"
         And stdout should contain "Options:"
         And stdout should contain "--version"
@@ -49,11 +48,11 @@ Feature: Command line options: help
         And stdout should contain "--port"
         And stdout should contain "--threads"
         And stdout should contain "--sharedmemory"
+        And it should exit with code 0
 
     Scenario: Help, long
         When I run "osrm-routed --help"
-        Then it should exit with code 0
-        And stderr should be empty
+        Then stderr should be empty
         And stdout should contain "osrm-routed <base.osrm> [<options>]:"
         And stdout should contain "Options:"
         And stdout should contain "--version"
@@ -72,3 +71,4 @@ Feature: Command line options: help
         And stdout should contain "--port"
         And stdout should contain "--threads"
         And stdout should contain "--sharedmemory"
+        And it should exit with code 0
