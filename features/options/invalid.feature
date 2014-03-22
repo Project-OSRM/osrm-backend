@@ -17,4 +17,3 @@ Feature: Command line options: invalid options
         And stderr should contain "exception"
         And stderr should contain "does not exist"
         And it should exit with code 255
-        
