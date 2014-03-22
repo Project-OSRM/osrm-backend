@@ -32,89 +32,93 @@ speed_profile = {
   ["default"] = 10
 }
 
-tracktype_profile = {
-  ["grade1"] = math.huge,
-  ["grade2"] = 45,
-  ["grade3"] = 30,
-  ["grade4"] = 20,
-  ["grade5"] = 15
+-- [1] is safe absolute speed
+-- [2] is preference level (multiplied by way speed)
+tracktype_qualities = {
+  ["grade1"] = { 300, 1.00 },
+  ["grade2"] = {  60, 0.63 },
+  ["grade3"] = {  40, 0.40 },
+  ["grade4"] = {  20, 0.25 },
+  ["grade5"] = {  10, 0.16 }
 }
 
-surface_tracktype_profile = {
-  ["asphalt"] = tracktype_profile["grade1"],
-  ["concrete"] = tracktype_profile["grade1"],
-  ["tartan"] = tracktype_profile["grade1"],
-  ["paved"] = tracktype_profile["grade1"],
-  ["paving_stones"] = tracktype_profile["grade1"],
-  ["concrete:plates"] = tracktype_profile["grade1"],
-  ["metal"] = tracktype_profile["grade1"],
-  ["compacted"] = tracktype_profile["grade1"],
-  ["sett"] = tracktype_profile["grade1"],
-  ["concrete:lanes"] = tracktype_profile["grade1"],
-  ["bricks"] = tracktype_profile["grade1"],
-  ["cement"] = tracktype_profile["grade1"],
-  ["cobblestone"] = tracktype_profile["grade1"],
-  ["wood"] = tracktype_profile["grade1"],
-  ["stone"] = tracktype_profile["grade1"],
-  ["rocky"] = tracktype_profile["grade1"],
-  ["gravel"] = tracktype_profile["grade2"],
-  ["fine_gravel"] = tracktype_profile["grade2"],
-  ["grass_paver"] = tracktype_profile["grade2"],
-  ["unpaved"] = tracktype_profile["grade3"],
-  ["ground"] = tracktype_profile["grade3"],
-  ["dirt"] = tracktype_profile["grade3"],
-  ["grass"] = tracktype_profile["grade3"],
-  ["pebblestone"] = tracktype_profile["grade3"],
-  ["clay"] = tracktype_profile["grade4"],
-  ["sand"] = tracktype_profile["grade5"],
-  ["earth"] = tracktype_profile["grade5"],
-  ["mud"] = tracktype_profile["grade5"]
+-- [1] is safe absolute speed
+-- [2] is preference level (multiplied by way speed)
+smoothness_qualities = {
+  ["excellent"]       = { 300, 1.00 },
+  ["thin_rollers"]    = { 300, 1.00 },
+  ["good"]            = { 120, 0.98 },
+  ["thin_wheels"]     = { 120, 0.98 },
+  ["intermediate"]    = {  60, 0.96 },
+  ["wheels"]          = {  60, 0.96 },
+  ["bad"]             = {  15, 0.24 },
+  ["robust_wheels"]   = {  15, 0.24 },
+  ["very_bad"]        = {   4, 0.06 },
+  ["high_clearance"]  = {   4, 0.06 }
 }
 
-smoothness_profile = {
-  ["excellent"] = math.huge,
-  ["thin_rollers"] = math.huge,
-  ["good"] = 60,
-  ["thin_wheels"] = 60,
-  ["intermediate"] = 45,
-  ["wheels"] = 45,
-  ["bad"] = 30,
-  ["robust_wheels"] = 30,
-  ["very_bad"] = 15,
-  ["high_clearance"] = 15,
-  ["horrible"] = 3,
-  ["off_road_wheels"] = 3
+-- surface materials can be seen as having expected tracktype and smoothness
+-- but these are just guesses based on OSM's wiki articles
+surface_tracktype_qualities = {
+  ["asphalt"] = tracktype_qualities["grade1"],
+  ["concrete"] = tracktype_qualities["grade1"],
+  ["tartan"] = tracktype_qualities["grade1"],
+  ["paved"] = tracktype_qualities["grade1"],
+  ["paving_stones"] = tracktype_qualities["grade1"],
+  ["concrete:plates"] = tracktype_qualities["grade1"],
+  ["metal"] = tracktype_qualities["grade1"],
+  ["compacted"] = tracktype_qualities["grade1"],
+  ["sett"] = tracktype_qualities["grade1"],
+  ["concrete:lanes"] = tracktype_qualities["grade1"],
+  ["bricks"] = tracktype_qualities["grade1"],
+  ["cement"] = tracktype_qualities["grade1"],
+  ["cobblestone"] = tracktype_qualities["grade1"],
+  ["wood"] = tracktype_qualities["grade1"],
+  ["stone"] = tracktype_qualities["grade1"],
+  ["rocky"] = tracktype_qualities["grade1"],
+  ["grass_paver"] = tracktype_qualities["grade2"],
+  ["gravel"] = tracktype_qualities["grade2"],
+  ["fine_gravel"] = tracktype_qualities["grade2"],
+  ["unpaved"] = tracktype_qualities["grade3"],
+  ["ground"] = tracktype_qualities["grade3"],
+  ["dirt"] = tracktype_qualities["grade3"],
+  ["grass"] = tracktype_qualities["grade3"],
+  ["pebblestone"] = tracktype_qualities["grade3"],
+  ["clay"] = tracktype_qualities["grade4"],
+  ["sand"] = tracktype_qualities["grade5"],
+  ["earth"] = tracktype_qualities["grade5"],
+  ["mud"] = tracktype_qualities["grade5"]
 }
 
-surface_smoothness_profile = {
-  ["asphalt"] = smoothness_profile["thin_rollers"],
-  ["concrete"] = smoothness_profile["thin_rollers"],
-  ["tartan"] = smoothness_profile["thin_rollers"],
-  ["paved"] = smoothness_profile["thin_rollers"],
-  ["paving_stones"] = smoothness_profile["thin_wheels"],
-  ["concrete:plates"] = smoothness_profile["thin_wheels"],
-  ["metal"] = smoothness_profile["thin_wheels"],
-  ["compacted"] = smoothness_profile["wheels"],
-  ["sett"] = smoothness_profile["wheels"],
-  ["concrete:lanes"] = smoothness_profile["wheels"],
-  ["bricks"] = smoothness_profile["wheels"],
-  ["cement"] = smoothness_profile["wheels"],
-  ["grass_paver"] = smoothness_profile["wheels"],
-  ["cobblestone"] = smoothness_profile["robust_wheels"],
-  ["wood"] = smoothness_profile["robust_wheels"],
-  ["stone"] = smoothness_profile["robust_wheels"],
-  ["rocky"] = smoothness_profile["robust_wheels"],
-  ["gravel"] = smoothness_profile["robust_wheels"],
-  ["fine_gravel"] = smoothness_profile["robust_wheels"],
-  ["unpaved"] = smoothness_profile["robust_wheels"],
-  ["ground"] = smoothness_profile["robust_wheels"],
-  ["dirt"] = smoothness_profile["robust_wheels"],
-  ["grass"] = smoothness_profile["robust_wheels"],
-  ["pebblestone"] = smoothness_profile["robust_wheels"],
-  ["clay"] = smoothness_profile["robust_wheels"],
-  ["sand"] = smoothness_profile["robust_wheels"],
-  ["earth"] = smoothness_profile["robust_wheels"],
-  ["mud"] = smoothness_profile["high_clearance"]
+surface_smoothness_qualities = {
+  ["asphalt"] = smoothness_qualities["thin_rollers"],
+  ["concrete"] = smoothness_qualities["thin_rollers"],
+  ["tartan"] = smoothness_qualities["thin_rollers"],
+  ["paved"] = smoothness_qualities["thin_rollers"],
+  ["paving_stones"] = smoothness_qualities["thin_wheels"],
+  ["concrete:plates"] = smoothness_qualities["thin_wheels"],
+  ["metal"] = smoothness_qualities["thin_wheels"],
+  ["compacted"] = smoothness_qualities["wheels"],
+  ["sett"] = smoothness_qualities["wheels"],
+  ["concrete:lanes"] = smoothness_qualities["wheels"],
+  ["bricks"] = smoothness_qualities["wheels"],
+  ["cement"] = smoothness_qualities["wheels"],
+  ["grass_paver"] = smoothness_qualities["wheels"],
+  ["cobblestone"] = smoothness_qualities["robust_wheels"],
+  ["wood"] = smoothness_qualities["robust_wheels"],
+  ["stone"] = smoothness_qualities["robust_wheels"],
+  ["rocky"] = smoothness_qualities["robust_wheels"],
+  ["gravel"] = smoothness_qualities["robust_wheels"],
+  ["fine_gravel"] = smoothness_qualities["robust_wheels"],
+  ["unpaved"] = smoothness_qualities["robust_wheels"],
+  ["ground"] = smoothness_qualities["robust_wheels"],
+  ["dirt"] = smoothness_qualities["robust_wheels"],
+  ["grass"] = smoothness_qualities["robust_wheels"],
+  ["pebblestone"] = smoothness_qualities["robust_wheels"],
+  ["clay"] = smoothness_qualities["robust_wheels"],
+  ["sand"] = smoothness_qualities["robust_wheels"],
+  ["earth"] = smoothness_qualities["robust_wheels"],
+  ["mud"] = smoothness_qualities["high_clearance"]
 }
 
 take_minimum_of_speeds  = false
@@ -205,13 +209,13 @@ function way_function (way)
   -- Don't route over difficult surfaces or invalid tracktype and smoothness values
   local tracktype = way.tags:Find("tracktype")
   if tracktype ~= "" then
-    if tracktype_profile[tracktype] == nil then
+    if tracktype_qualities[tracktype] == nil then
       return
     end
-  end  
+  end
   local smoothness = way.tags:Find("smoothness")
   if smoothness ~= "" then
-    if smoothness_profile[smoothness] == nil then
+    if smoothness_qualities[smoothness] == nil then
       return
     end
   end
@@ -305,18 +309,19 @@ function way_function (way)
   end
   
   -- Lowers the avg speed on ways with difficult surfaces
+  local way_speed = way.speed
   if tracktype ~= "" then
-    way.speed = math.min(way.speed, tracktype_profile[tracktype])
+    way.speed = math.min(tracktype_qualities[tracktype][1], tracktype_qualities[tracktype][2] * way_speed)
   else
-    if surface_tracktype_profile[surface] ~= nil then
-      way.speed = math.min(way.speed, surface_tracktype_profile[surface])
+    if surface_tracktype_qualities[surface] ~= nil then
+      way.speed = math.min(surface_tracktype_qualities[surface][1], surface_tracktype_qualities[surface][2] * way_speed)
     end
   end
   if smoothness ~= "" then
-    way.speed = math.min(way.speed, smoothness_profile[smoothness])
+    way.speed = math.min(smoothness_qualities[smoothness][1], smoothness_qualities[smoothness][2] * way_speed, way.speed)
   else
-    if surface_smoothness_profile[surface] ~= nil then
-      way.speed = math.min(way.speed, surface_smoothness_profile[surface])
+    if surface_smoothness_qualities[surface] ~= nil then
+      way.speed = math.min(surface_smoothness_qualities[surface][1], surface_smoothness_qualities[surface][2] * way_speed, way.speed)
     end
   end
 
