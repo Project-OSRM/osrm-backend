@@ -30,7 +30,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp)
 
-set(BOOST_COMPONENTS filesystem iostreams program_options regex system thread)
+set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
