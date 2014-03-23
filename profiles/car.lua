@@ -53,8 +53,8 @@ smoothness_qualities = {
   ["wheels"]          = {  60, 0.96 },
   ["bad"]             = {  15, 0.24 },
   ["robust_wheels"]   = {  15, 0.24 },
-  ["very_bad"]        = {   4, 0.06 },
-  ["high_clearance"]  = {   4, 0.06 }
+  ["very_bad"]        = {   3, 0.06 },
+  ["high_clearance"]  = {   3, 0.06 }
 }
 
 -- surface materials can be seen as having expected tracktype and smoothness
@@ -281,7 +281,42 @@ function way_function (way)
     end
     way.speed = math.min(speed_profile["default"], maxspeed)
   end
-
+  
+  -- Calculate safe speed and preference factor
+  local preference_factor = 1;
+  local safe_speed = 300;
+  
+  if tracktype ~= "" then
+    safe_speed = tracktype_qualities[tracktype][1]
+    preference_factor = tracktype_qualities[tracktype][2]
+  else
+    if surface_tracktype_qualities[surface] ~= nil then
+      safe_speed = surface_tracktype_qualities[surface][1]
+      preference_factor = surface_tracktype_qualities[surface][2]
+    end
+  end
+  if smoothness ~= "" then
+    safe_speed = math.min(safe_speed, smoothness_qualities[smoothness][1])
+    preference_factor = math.min(preference_factor, smoothness_qualities[smoothness][2])
+  else
+    if surface_smoothness_qualities[surface] ~= nil then
+      safe_speed = math.min(safe_speed, surface_smoothness_qualities[surface][1])
+      preference_factor = math.min(preference_factor, surface_smoothness_qualities[surface][2])
+    end
+  end
+  
+  -- Use explicit forward/backward maxspeed when given and apply safe speed and preference factor to both directions
+  way.speed = math.min(safe_speed, way.speed * preference_factor)
+  if way.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
+    if Way.bidirectional == way.direction then
+      way.backward_speed = way.speed
+    end
+    way.speed = math.min(safe_speed, maxspeed_forward * preference_factor)
+  end
+  if maxspeed_backward ~= nil and maxspeed_backward > 0 then
+    way.backward_speed = math.min(safe_speed, maxspeed_backward * preference_factor)
+  end
+  
   -- Set access restriction flag if access is allowed under certain restrictions only
   if access ~= "" and access_tag_restricted[access] then
     way.is_access_restricted = true
@@ -306,35 +341,7 @@ function way_function (way)
       then
 	     way.direction = Way.oneway
     end
-  end
-  
-  -- Lowers the avg speed on ways with difficult surfaces
-  local way_speed = way.speed
-  if tracktype ~= "" then
-    way.speed = math.min(tracktype_qualities[tracktype][1], tracktype_qualities[tracktype][2] * way_speed)
-  else
-    if surface_tracktype_qualities[surface] ~= nil then
-      way.speed = math.min(surface_tracktype_qualities[surface][1], surface_tracktype_qualities[surface][2] * way_speed)
-    end
-  end
-  if smoothness ~= "" then
-    way.speed = math.min(smoothness_qualities[smoothness][1], smoothness_qualities[smoothness][2] * way_speed, way.speed)
-  else
-    if surface_smoothness_qualities[surface] ~= nil then
-      way.speed = math.min(surface_smoothness_qualities[surface][1], surface_smoothness_qualities[surface][2] * way_speed, way.speed)
-    end
-  end
-
-  -- Override speed settings if explicit forward/backward maxspeeds are given
-  if way.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
-    if Way.bidirectional == way.direction then
-      way.backward_speed = way.speed
-    end
-    way.speed = maxspeed_forward
-  end
-  if maxspeed_backward ~= nil and maxspeed_backward > 0 then
-    way.backward_speed = maxspeed_backward
-  end
+  end  
 
   -- Override general direction settings of there is a specific one for our mode of travel
   if ignore_in_grid[highway] ~= nil and ignore_in_grid[highway] then
