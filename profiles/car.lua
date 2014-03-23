@@ -32,6 +32,95 @@ speed_profile = {
   ["default"] = 10
 }
 
+-- [1] is safe absolute speed
+-- [2] is preference level (multiplied by way speed)
+tracktype_qualities = {
+  ["grade1"] = { 300, 1.00 },
+  ["grade2"] = {  60, 0.63 },
+  ["grade3"] = {  40, 0.40 },
+  ["grade4"] = {  20, 0.25 },
+  ["grade5"] = {  10, 0.16 }
+}
+
+-- [1] is safe absolute speed
+-- [2] is preference level (multiplied by way speed)
+smoothness_qualities = {
+  ["excellent"]       = { 300, 1.00 },
+  ["thin_rollers"]    = { 300, 1.00 },
+  ["good"]            = { 120, 0.98 },
+  ["thin_wheels"]     = { 120, 0.98 },
+  ["intermediate"]    = {  60, 0.96 },
+  ["wheels"]          = {  60, 0.96 },
+  ["bad"]             = {  15, 0.24 },
+  ["robust_wheels"]   = {  15, 0.24 },
+  ["very_bad"]        = {   3, 0.06 },
+  ["high_clearance"]  = {   3, 0.06 }
+}
+
+-- surface materials can be seen as having expected tracktype and smoothness
+-- but these are just guesses based on OSM's wiki articles
+surface_tracktype_qualities = {
+  ["asphalt"] = tracktype_qualities["grade1"],
+  ["concrete"] = tracktype_qualities["grade1"],
+  ["tartan"] = tracktype_qualities["grade1"],
+  ["paved"] = tracktype_qualities["grade1"],
+  ["paving_stones"] = tracktype_qualities["grade1"],
+  ["concrete:plates"] = tracktype_qualities["grade1"],
+  ["metal"] = tracktype_qualities["grade1"],
+  ["compacted"] = tracktype_qualities["grade1"],
+  ["sett"] = tracktype_qualities["grade1"],
+  ["concrete:lanes"] = tracktype_qualities["grade1"],
+  ["bricks"] = tracktype_qualities["grade1"],
+  ["cement"] = tracktype_qualities["grade1"],
+  ["cobblestone"] = tracktype_qualities["grade1"],
+  ["wood"] = tracktype_qualities["grade1"],
+  ["stone"] = tracktype_qualities["grade1"],
+  ["rocky"] = tracktype_qualities["grade1"],
+  ["grass_paver"] = tracktype_qualities["grade2"],
+  ["gravel"] = tracktype_qualities["grade2"],
+  ["fine_gravel"] = tracktype_qualities["grade2"],
+  ["unpaved"] = tracktype_qualities["grade3"],
+  ["ground"] = tracktype_qualities["grade3"],
+  ["dirt"] = tracktype_qualities["grade3"],
+  ["grass"] = tracktype_qualities["grade3"],
+  ["pebblestone"] = tracktype_qualities["grade3"],
+  ["clay"] = tracktype_qualities["grade4"],
+  ["sand"] = tracktype_qualities["grade5"],
+  ["earth"] = tracktype_qualities["grade5"],
+  ["mud"] = tracktype_qualities["grade5"]
+}
+
+surface_smoothness_qualities = {
+  ["asphalt"] = smoothness_qualities["thin_rollers"],
+  ["concrete"] = smoothness_qualities["thin_rollers"],
+  ["tartan"] = smoothness_qualities["thin_rollers"],
+  ["paved"] = smoothness_qualities["thin_rollers"],
+  ["paving_stones"] = smoothness_qualities["thin_wheels"],
+  ["concrete:plates"] = smoothness_qualities["thin_wheels"],
+  ["metal"] = smoothness_qualities["thin_wheels"],
+  ["compacted"] = smoothness_qualities["wheels"],
+  ["sett"] = smoothness_qualities["wheels"],
+  ["concrete:lanes"] = smoothness_qualities["wheels"],
+  ["bricks"] = smoothness_qualities["wheels"],
+  ["cement"] = smoothness_qualities["wheels"],
+  ["grass_paver"] = smoothness_qualities["wheels"],
+  ["cobblestone"] = smoothness_qualities["robust_wheels"],
+  ["wood"] = smoothness_qualities["robust_wheels"],
+  ["stone"] = smoothness_qualities["robust_wheels"],
+  ["rocky"] = smoothness_qualities["robust_wheels"],
+  ["gravel"] = smoothness_qualities["robust_wheels"],
+  ["fine_gravel"] = smoothness_qualities["robust_wheels"],
+  ["unpaved"] = smoothness_qualities["robust_wheels"],
+  ["ground"] = smoothness_qualities["robust_wheels"],
+  ["dirt"] = smoothness_qualities["robust_wheels"],
+  ["grass"] = smoothness_qualities["robust_wheels"],
+  ["pebblestone"] = smoothness_qualities["robust_wheels"],
+  ["clay"] = smoothness_qualities["robust_wheels"],
+  ["sand"] = smoothness_qualities["robust_wheels"],
+  ["earth"] = smoothness_qualities["robust_wheels"],
+  ["mud"] = smoothness_qualities["high_clearance"]
+}
+
 take_minimum_of_speeds  = false
 obey_oneway 			      = true
 obey_bollards           =  true
@@ -116,6 +205,20 @@ function way_function (way)
   if access_tag_blacklist[access] then
     return
   end
+  
+  -- Don't route over difficult surfaces or invalid tracktype and smoothness values
+  local tracktype = way.tags:Find("tracktype")
+  if tracktype ~= "" then
+    if tracktype_qualities[tracktype] == nil then
+      return
+    end
+  end
+  local smoothness = way.tags:Find("smoothness")
+  if smoothness ~= "" then
+    if smoothness_qualities[smoothness] == nil then
+      return
+    end
+  end
 
   -- Second, parse the way according to these properties
   local highway = way.tags:Find("highway")
@@ -130,6 +233,7 @@ function way_function (way)
   local cycleway = way.tags:Find("cycleway")
   local duration  = way.tags:Find("duration")
   local service  = way.tags:Find("service")
+  local surface = way.tags:Find("surface")
 
   -- Set the name that will be used for instructions
 	if "" ~= ref then
@@ -177,7 +281,42 @@ function way_function (way)
     end
     way.speed = math.min(speed_profile["default"], maxspeed)
   end
-
+  
+  -- Calculate safe speed and preference factor
+  local preference_factor = 1;
+  local safe_speed = 300;
+  
+  if tracktype ~= "" then
+    safe_speed = tracktype_qualities[tracktype][1]
+    preference_factor = tracktype_qualities[tracktype][2]
+  else
+    if surface_tracktype_qualities[surface] ~= nil then
+      safe_speed = surface_tracktype_qualities[surface][1]
+      preference_factor = surface_tracktype_qualities[surface][2]
+    end
+  end
+  if smoothness ~= "" then
+    safe_speed = math.min(safe_speed, smoothness_qualities[smoothness][1])
+    preference_factor = math.min(preference_factor, smoothness_qualities[smoothness][2])
+  else
+    if surface_smoothness_qualities[surface] ~= nil then
+      safe_speed = math.min(safe_speed, surface_smoothness_qualities[surface][1])
+      preference_factor = math.min(preference_factor, surface_smoothness_qualities[surface][2])
+    end
+  end
+  
+  -- Use explicit forward/backward maxspeed when given and apply safe speed and preference factor to both directions
+  way.speed = math.min(safe_speed, way.speed * preference_factor)
+  if way.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
+    if Way.bidirectional == way.direction then
+      way.backward_speed = way.speed
+    end
+    way.speed = math.min(safe_speed, maxspeed_forward * preference_factor)
+  end
+  if maxspeed_backward ~= nil and maxspeed_backward > 0 then
+    way.backward_speed = math.min(safe_speed, maxspeed_backward * preference_factor)
+  end
+  
   -- Set access restriction flag if access is allowed under certain restrictions only
   if access ~= "" and access_tag_restricted[access] then
     way.is_access_restricted = true
@@ -202,18 +341,7 @@ function way_function (way)
       then
 	     way.direction = Way.oneway
     end
-  end
-
-  -- Override speed settings if explicit forward/backward maxspeeds are given
-  if way.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
-    if Way.bidirectional == way.direction then
-      way.backward_speed = way.speed
-    end
-    way.speed = maxspeed_forward
-  end
-  if maxspeed_backward ~= nil and maxspeed_backward > 0 then
-    way.backward_speed = maxspeed_backward
-  end
+  end  
 
   -- Override general direction settings of there is a specific one for our mode of travel
   if ignore_in_grid[highway] ~= nil and ignore_in_grid[highway] then
