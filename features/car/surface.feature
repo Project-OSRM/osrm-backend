@@ -100,7 +100,7 @@ Feature: Car - Surface restrictions
             | motorway    |           |              | asphalt | 9s ~23%  |
             | residential | grade1    | excellent    | asphalt | 30s ~10% |
             | residential | grade1    | thin_rollers | asphalt | 30s ~10% |
-            | residential | grade1    |              | asphalt | 30s ~10% |
+            | residential | grade1    |              |         | 30s ~10% |
             | residential |           | excellent    |         | 30s ~10% |
             | residential |           | thin_rollers |         | 30s ~10% |
             | residential |           |              | asphalt | 30s ~10% |
