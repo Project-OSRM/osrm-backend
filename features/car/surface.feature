@@ -137,7 +137,7 @@ Feature: Car - Surface restrictions
             | residential | very_bad       | 481s ~10% |
             | residential | high_clearance | 481s ~10% |
 
-    Scenario: Car - Maxspeed is subject to the preference factor and the safe speed associated with tracktype/smoothness/surface
+    Scenario: Car - Maxspeed is subject to the preference factor associated with tracktype/smoothness/surface
         Then routability should be
             | highway     | tracktype | smoothness   | surface | maxspeed | bothw     |
             | motorway    | grade1    | excellent    | asphalt | 5        | 145s ~10% |
@@ -165,7 +165,7 @@ Feature: Car - Surface restrictions
             | residential |           |              | asphalt | 5        | 145s ~10% |
             | residential |           |              | sett    | 5        | 151s ~10% |
 
-    Scenario: Car - Directional maxspeed is subject to the preference factor and the safe speed associated with tracktype/smoothness/surface
+    Scenario: Car - Directional maxspeed is subject to the preference factor associated with tracktype/smoothness/surface
         Then routability should be
             | highway     | tracktype | smoothness   | surface | maxspeed:forward | maxspeed:backward | forw      | backw     |
             | motorway    | grade1    | excellent    | asphalt | 5                | 4                 | 73s ~10%  | 91s ~10%  |
