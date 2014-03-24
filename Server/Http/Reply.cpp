@@ -42,6 +42,18 @@ void Reply::setSize(const unsigned size) {
     }
 }
 
+// Sets the size of the uncompressed output.
+void Reply::SetUncompressedSize()
+{
+    unsigned uncompressed_size = 0;
+    BOOST_FOREACH ( const std::string & current_line, content)
+    {
+        uncompressed_size += current_line.size();
+    }
+    setSize(uncompressed_size);
+}
+
+
 std::vector<boost::asio::const_buffer> Reply::toBuffers(){
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));

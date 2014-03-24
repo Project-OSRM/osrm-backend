@@ -60,6 +60,8 @@ public:
     std::vector<std::string> content;
     static Reply StockReply(status_type status);
     void setSize(const unsigned size);
+    void SetUncompressedSize();
+
     Reply();
 private:
     static std::string ToString(Reply::status_type status);
