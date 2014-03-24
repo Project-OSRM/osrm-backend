@@ -362,7 +362,6 @@ void ExtractionContainers::PrepareData(
                     break;
                 default:
                     throw OSRMException("edge has broken direction");
-                    break;
                 }
                 file_out_stream.write(
                     (char*)&integer_weight, sizeof(int)

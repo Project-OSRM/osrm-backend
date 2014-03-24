@@ -239,8 +239,6 @@ boost::tribool RequestParser::consume(
         }
     case expecting_newline_3:
         return (input == '\n');
-    default:
-        return false;
     }
 }
 
