@@ -139,7 +139,7 @@ inline bool GenerateServerProgramOptions(
         )
         (
             "sharedmemory,s",
-            boost::program_options::value<bool>(&use_shared_memory)->default_value(false),
+            boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
             "Load data from shared memory"
         );
 
