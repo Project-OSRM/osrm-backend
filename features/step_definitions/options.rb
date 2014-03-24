@@ -2,12 +2,12 @@ When(/^I run "osrm\-routed\s?(.*?)"$/) do |options|
   Dir.chdir TEST_FOLDER do
     if options.include? '{base}'
       # expand {base} to base path of preprocessed data file
-      raise "*** Cannot expand {base} without a preprocessed file." unless @osm_file
-      options_expanded = options.gsub "{base}", "#{@osm_file}"   
+      raise "*** Cannot expand {base} without a preprocessed file." unless @osm_file
+      options_expanded = options.gsub "{base}", "#{@osm_file}"
     else
       options_expanded = options
     end
-    
+
     begin
       Timeout.timeout(1) do
         @stdout = `#{BIN_PATH}/osrm-routed #{options_expanded} 2>error.log`
