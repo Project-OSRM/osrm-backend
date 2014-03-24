@@ -30,7 +30,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp)
 
-set(BOOST_COMPONENTS filesystem iostreams program_options regex system thread)
+set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
@@ -221,6 +221,14 @@ if(WITH_TOOLS)
 endif()
 
 file(GLOB InstallGlob Include/osrm/*.h Library/OSRM.h)
+
+# Add RPATH info to executables so that when they are run after being installed
+# (i.e., from /usr/local/bin/) the linker can find library dependencies. For
+# more info see http://www.cmake.org/Wiki/CMake_RPATH_handling
+set_property(TARGET osrm-extract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET osrm-prepare PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 install(FILES ${InstallGlob} DESTINATION include/osrm)
 install(TARGETS osrm-extract DESTINATION bin)
