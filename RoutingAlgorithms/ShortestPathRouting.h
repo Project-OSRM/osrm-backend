@@ -60,7 +60,7 @@ public:
             const PhantomNodes & phantom_node_pair,
             phantom_nodes_vector
         ){
-            if( phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX() ) {
+            if( phantom_node_pair.AtLeastOnePhantomNodeIsInvalid() ) {
                 // raw_route_data.lengthOfShortestPath = INT_MAX;
                 // raw_route_data.lengthOfAlternativePath = INT_MAX;
                 SimpleLogger().Write(logDEBUG) << "returning early";

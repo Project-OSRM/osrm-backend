@@ -113,7 +113,7 @@ struct PhantomNode {
 };
 
 struct PhantomNodes {
-    //TODO: rename to lower-case non-camel
+    //TODO: rename to lower-case non-camel source_*,target_*
     PhantomNode startPhantom;
     PhantomNode targetPhantom;
     void Reset() {
@@ -125,9 +125,9 @@ struct PhantomNodes {
         return (startPhantom.forward_node_id == targetPhantom.forward_node_id);
     }
 
-    //TODO: Rename to: BothPhantomNodesAreInvalid
-    bool AtLeastOnePhantomNodeIsUINTMAX() const {
-        return (startPhantom.forward_node_id == SPECIAL_NODEID) && (targetPhantom.reverse_node_id == SPECIAL_NODEID);
+    bool AtLeastOnePhantomNodeIsInvalid() const {
+        return ((startPhantom.forward_node_id == SPECIAL_NODEID) && (startPhantom.reverse_node_id == SPECIAL_NODEID)) ||
+               ((targetPhantom.forward_node_id == SPECIAL_NODEID) && (targetPhantom.reverse_node_id == SPECIAL_NODEID));
     }
 
     bool PhantomNodesHaveEqualLocation() const {

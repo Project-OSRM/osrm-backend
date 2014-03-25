@@ -87,7 +87,7 @@ public:
         RawRouteData & raw_route_data
     ) {
         SimpleLogger().Write(logDEBUG) << "alt path routing";
-        if( //phantom_node_pair.AtLeastOnePhantomNodeIsUINTMAX() ||
+        if( //phantom_node_pair.AtLeastOnePhantomNodeIsInvalid() ||
             phantom_node_pair.PhantomNodesHaveEqualLocation()
         ) {
             // raw_route_data.lengthOfShortestPath    = INVALID_EDGE_WEIGHT;
