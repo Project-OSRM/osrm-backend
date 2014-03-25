@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_H
 #define OSRM_H
 
-#include <boost/scoped_ptr.hpp>
-
 #include <osrm/Reply.h>
 #include <osrm/RouteParameters.h>
 #include <osrm/ServerPaths.h>
