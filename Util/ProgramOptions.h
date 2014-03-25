@@ -43,6 +43,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <string>
 
+const static unsigned INIT_OK_START_ENGINE = 0;
+const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
+const static unsigned INIT_FAILED = -1;
+
 // support old capitalized option names by down-casing them with a regex replace
 inline void PrepareConfigFile(
     const boost::filesystem::path& path,
@@ -59,7 +63,7 @@ inline void PrepareConfigFile(
 }
 
 // generate boost::program_options object for the routing part
-inline bool GenerateServerProgramOptions(
+inline unsigned GenerateServerProgramOptions(
     const int argc,
     const char * argv[],
     ServerPaths & paths,
@@ -178,12 +182,12 @@ inline bool GenerateServerProgramOptions(
 
     if(option_variables.count("version")) {
         SimpleLogger().Write() << g_GIT_DESCRIPTION;
-        return false;
+        return INIT_OK_DO_NOT_START_ENGINE;
     }
 
     if(option_variables.count("help")) {
         SimpleLogger().Write() << visible_options;
-        return false;
+        return INIT_OK_DO_NOT_START_ENGINE;
     }
 
     boost::program_options::notify(option_variables);
@@ -288,14 +292,14 @@ inline bool GenerateServerProgramOptions(
             path_iterator->second = base_string + ".timestamp";
         }
 
-        return true;
+        return INIT_OK_START_ENGINE;
     }
     if (use_shared_memory && !option_variables.count("base"))
     {
-        return true;
+        return INIT_OK_START_ENGINE;
     }
     SimpleLogger().Write() << visible_options;
-    return false;
+    return INIT_OK_DO_NOT_START_ENGINE;
 }
 
 #endif /* PROGRAM_OPTIONS_H */

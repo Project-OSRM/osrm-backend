@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Util/GitDescription.h"
 #include "Util/InputFileUtil.h"
-// #include "Util/OpenMPWrapper.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/UUID.h"
@@ -43,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <signal.h>
 
 #include <boost/bind.hpp>
-#include <boost/date_time.hpp>
+// #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
 
 #include <iostream>
@@ -73,32 +72,27 @@ int main (int argc, const char * argv[])
     {
         LogPolicy::GetInstance().Unmute();
 
-        bool use_shared_memory = false;
+        bool use_shared_memory = false, trial = false;
         std::string ip_address;
         int ip_port, requested_thread_num;
-        bool trial = false;
 
         ServerPaths server_paths;
-        if( !GenerateServerProgramOptions(
-                argc,
-                argv,
-                server_paths,
-                ip_address,
-                ip_port,
-                requested_thread_num,
-                use_shared_memory,
-                trial
-             )
-        ) {
+
+        const unsigned init_result = GenerateServerProgramOptions(argc, argv, server_paths, ip_address, ip_port, requested_thread_num, use_shared_memory, trial);
+        if (init_result == INIT_OK_DO_NOT_START_ENGINE)
+        {
             return 0;
+        }
+        if (init_result == INIT_FAILED)
+        {
+            return 1;
         }
 
 #ifdef __linux__
         const int lock_flags = (MCL_CURRENT | MCL_FUTURE);
         if (-1 == mlockall(lock_flags))
         {
-            SimpleLogger().Write(logWARNING) <<
-                "Process " << argv[0] << " could not be locked to RAM";
+            SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not be locked to RAM";
         }
 #endif
         SimpleLogger().Write() <<
@@ -111,26 +105,16 @@ int main (int argc, const char * argv[])
         }
         else
         {
-            SimpleLogger().Write() <<
-                "HSGR file:\t" << server_paths["hsgrdata"];
-            SimpleLogger().Write(logDEBUG) <<
-                "Nodes file:\t" << server_paths["nodesdata"];
-            SimpleLogger().Write(logDEBUG) <<
-                "Edges file:\t" << server_paths["edgesdata"];
-            SimpleLogger().Write(logDEBUG) <<
-                "RAM file:\t" << server_paths["ramindex"];
-            SimpleLogger().Write(logDEBUG) <<
-                "Index file:\t" << server_paths["fileindex"];
-            SimpleLogger().Write(logDEBUG) <<
-                "Names file:\t" << server_paths["namesdata"];
-            SimpleLogger().Write(logDEBUG) <<
-                "Timestamp file:\t" << server_paths["timestamp"];
-            SimpleLogger().Write(logDEBUG) <<
-                "Threads:\t" << requested_thread_num;
-            SimpleLogger().Write(logDEBUG) <<
-                "IP address:\t" << ip_address;
-            SimpleLogger().Write(logDEBUG) <<
-                "IP port:\t" << ip_port;
+            SimpleLogger().Write() << "HSGR file:\t" << server_paths["hsgrdata"];
+            SimpleLogger().Write(logDEBUG) << "Nodes file:\t" << server_paths["nodesdata"];
+            SimpleLogger().Write(logDEBUG) << "Edges file:\t" << server_paths["edgesdata"];
+            SimpleLogger().Write(logDEBUG) << "RAM file:\t" << server_paths["ramindex"];
+            SimpleLogger().Write(logDEBUG) << "Index file:\t" << server_paths["fileindex"];
+            SimpleLogger().Write(logDEBUG) << "Names file:\t" << server_paths["namesdata"];
+            SimpleLogger().Write(logDEBUG) << "Timestamp file:\t" << server_paths["timestamp"];
+            SimpleLogger().Write(logDEBUG) << "Threads:\t" << requested_thread_num;
+            SimpleLogger().Write(logDEBUG) << "IP address:\t" << ip_address;
+            SimpleLogger().Write(logDEBUG) << "IP port:\t" << ip_port;
         }
 #ifndef _WIN32
         int sig = 0;
@@ -149,9 +133,12 @@ int main (int argc, const char * argv[])
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
-        if( trial ) {
-            std::cout << "[server] trial run, quitting after successful initialization" << std::endl;
-        } else {
+        if( trial )
+        {
+            SimpleLogger().Write() << "trial run, quitting after successful initialization";
+        }
+        else
+        {
             boost::thread server_thread(boost::bind(&Server::Run, routing_server));
 
 #ifndef _WIN32
@@ -162,34 +149,33 @@ int main (int argc, const char * argv[])
             sigaddset(&wait_mask, SIGQUIT);
             sigaddset(&wait_mask, SIGTERM);
             pthread_sigmask(SIG_BLOCK, &wait_mask, 0);
-            std::cout << "[server] running and waiting for requests" << std::endl;
+            SimpleLogger().Write() << "running and waiting for requests";
             sigwait(&wait_mask, &sig);
 #else
             // Set console control handler to allow server to be stopped.
             console_ctrl_function = boost::bind(&Server::Stop, routing_server);
             SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
-            std::cout << "[server] running and waiting for requests" << std::endl;
+            SimpleLogger().Write() << "running and waiting for requests";
             routing_server->Run();
 #endif
-            std::cout << "[server] initiating shutdown" << std::endl;
+            SimpleLogger().Write() << "initiating shutdown";
             routing_server->Stop();
-            std::cout << "[server] stopping threads" << std::endl;
+            SimpleLogger().Write() << "stopping threads";
 
             if (!server_thread.timed_join(boost::posix_time::seconds(2)))
             {
-                SimpleLogger().Write(logDEBUG) <<
-                    "Threads did not finish within 2 seconds. Hard abort!";
+                SimpleLogger().Write(logDEBUG) << "Threads did not finish within 2 seconds. Hard abort!";
             }
         }
 
-        std::cout << "[server] freeing objects" << std::endl;
+        SimpleLogger().Write() << "freeing objects";
         delete routing_server;
-        std::cout << "[server] shutdown completed" << std::endl;
+        SimpleLogger().Write() << "shutdown completed";
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
-        std::cerr << "[fatal error] exception: " << e.what() << std::endl;
-        return -1;
+        SimpleLogger().Write(logWARNING) << "exception: " << e.what();
+        return 1;
     }
 #ifdef __linux__
     munlockall();
