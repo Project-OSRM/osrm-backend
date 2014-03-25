@@ -147,8 +147,8 @@ public:
         std::vector<PathData> & unpacked_path
     ) const {
         // SimpleLogger().Write(logDEBUG) << "packed_path.size: " << packed_path.size();
-        const bool start_traversed_in_reverse = (packed_path.front() != phantom_node_pair.startPhantom.forward_node_id);
-        const bool target_traversed_in_reverse = (packed_path.back() != phantom_node_pair.targetPhantom.forward_node_id);
+        const bool start_traversed_in_reverse = (packed_path.front() != phantom_node_pair.source_phantom.forward_node_id);
+        const bool target_traversed_in_reverse = (packed_path.back() != phantom_node_pair.target_phantom.forward_node_id);
 
         const unsigned packed_path_size = packed_path.size();
         std::stack<std::pair<NodeID, NodeID> > recursion_stack;
@@ -232,7 +232,7 @@ public:
                     std::vector<unsigned> id_vector;
                     facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id), id_vector);
 
-                    const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position - 1 : phantom_node_pair.startPhantom.fwd_segment_position ) : 0 );
+                    const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1 : phantom_node_pair.source_phantom.fwd_segment_position ) : 0 );
                     const int end_index = id_vector.size();
 
                     BOOST_ASSERT( start_index >= 0 );
@@ -256,40 +256,40 @@ public:
                 }
             }
         }
-        if(SPECIAL_EDGEID != phantom_node_pair.targetPhantom.packed_geometry_id ) {
-            // SimpleLogger().Write(logDEBUG) << "unpacking last segment " << phantom_node_pair.targetPhantom.packed_geometry_id;
+        if(SPECIAL_EDGEID != phantom_node_pair.target_phantom.packed_geometry_id ) {
+            // SimpleLogger().Write(logDEBUG) << "unpacking last segment " << phantom_node_pair.target_phantom.packed_geometry_id;
             // SimpleLogger().Write(logDEBUG) << "start_traversed_in_reverse: " << (start_traversed_in_reverse ? "y" : "n");
             // SimpleLogger().Write(logDEBUG) << "target_traversed_in_reverse: " << (target_traversed_in_reverse ? "y" : "n");
-            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.fwd_segment_position: " << phantom_node_pair.startPhantom.fwd_segment_position << ", " <<
-            //                                   "phantom_node_pair.targetPhantom.fwd_segment_position: " << phantom_node_pair.targetPhantom.fwd_segment_position;
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.source_phantom.fwd_segment_position: " << phantom_node_pair.source_phantom.fwd_segment_position << ", " <<
+            //                                   "phantom_node_pair.target_phantom.fwd_segment_position: " << phantom_node_pair.target_phantom.fwd_segment_position;
             std::vector<unsigned> id_vector;
-            facade->GetUncompressedGeometry(phantom_node_pair.targetPhantom.packed_geometry_id, id_vector);
+            facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.packed_geometry_id, id_vector);
             if( target_traversed_in_reverse ) {
                 std::reverse(id_vector.begin(), id_vector.end() );
             }
             // SimpleLogger().Write(logDEBUG) << "id_vector.size() " << id_vector.size();
             // SimpleLogger().Write(logDEBUG) << "unpacked_path.empty()=" << (unpacked_path.empty() ? "y" : "n");
 
-            const bool is_local_path = (phantom_node_pair.startPhantom.packed_geometry_id  == phantom_node_pair.targetPhantom.packed_geometry_id) && unpacked_path.empty();
-            // SimpleLogger().Write(logDEBUG) << "is_local_path: " << (is_local_path ? "y" : "n");
+            const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id  == phantom_node_pair.target_phantom.packed_geometry_id) && unpacked_path.empty();
+            // SimpleLogger().Write(logDEBUG) << "is_loc_pl_path: " << (is_local_path ? "y" : "n");
 
             int start_index = 0;
-            int end_index = phantom_node_pair.targetPhantom.fwd_segment_position;
+            int end_index = phantom_node_pair.target_phantom.fwd_segment_position;
             // SimpleLogger().Write(logDEBUG) << "case1";
             if (target_traversed_in_reverse)
             {
-                end_index = id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position;
+                end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
             }
             if (is_local_path)
             {
                 // SimpleLogger().Write(logDEBUG) << "case3";
-                start_index = phantom_node_pair.startPhantom.fwd_segment_position;
-                end_index = phantom_node_pair.targetPhantom.fwd_segment_position;
+                start_index = phantom_node_pair.source_phantom.fwd_segment_position;
+                end_index = phantom_node_pair.target_phantom.fwd_segment_position;
                 if (target_traversed_in_reverse)
                 {
                     // SimpleLogger().Write(logDEBUG) << "case4";
-                    start_index = id_vector.size() - phantom_node_pair.startPhantom.fwd_segment_position;
-                    end_index = id_vector.size() - phantom_node_pair.targetPhantom.fwd_segment_position;
+                    start_index = id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position;
+                    end_index = id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
                 }
             }
 
@@ -309,7 +309,7 @@ public:
                 unpacked_path.push_back(
                     PathData(
                         id_vector[i],
-                        phantom_node_pair.targetPhantom.name_id,
+                        phantom_node_pair.target_phantom.name_id,
                         TurnInstructionsClass::NoTurn,
                         0
                     )

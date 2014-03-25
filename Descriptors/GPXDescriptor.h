@@ -65,12 +65,12 @@ public:
                             (raw_route.unpacked_path_segments[0].size());
         if( found_route ) {
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.startPhantom.location.lat,
+                phantom_node_list.source_phantom.location.lat,
                 tmp
             );
             reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.startPhantom.location.lon,
+                phantom_node_list.source_phantom.location.lon,
                 tmp
             );
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
@@ -90,12 +90,12 @@ public:
             }
             // Add the via point or the end coordinate
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.targetPhantom.location.lat,
+                phantom_node_list.target_phantom.location.lat,
                 tmp
             );
             reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.targetPhantom.location.lon,
+                phantom_node_list.target_phantom.location.lon,
                 tmp
             );
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");

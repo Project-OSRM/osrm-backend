@@ -119,45 +119,45 @@ public:
 
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
-        if(phantom_node_pair.startPhantom.forward_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.startPhantom.forward_node_id << ", w: " << -phantom_node_pair.startPhantom.GetForwardWeightPlusOffset();
+        if(phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
             forward_heap1.Insert(
-                phantom_node_pair.startPhantom.forward_node_id,
-                -phantom_node_pair.startPhantom.GetForwardWeightPlusOffset(),
-                phantom_node_pair.startPhantom.forward_node_id
+                phantom_node_pair.source_phantom.forward_node_id,
+                -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
+                phantom_node_pair.source_phantom.forward_node_id
             );
         }
-        if(phantom_node_pair.startPhantom.reverse_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.startPhantom.reverse_node_id << ", w: " << -phantom_node_pair.startPhantom.GetReverseWeightPlusOffset();
+        if(phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             forward_heap1.Insert(
-                phantom_node_pair.startPhantom.reverse_node_id,
-                -phantom_node_pair.startPhantom.GetReverseWeightPlusOffset(),
-                phantom_node_pair.startPhantom.reverse_node_id
+                phantom_node_pair.source_phantom.reverse_node_id,
+                -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
+                phantom_node_pair.source_phantom.reverse_node_id
             );
         }
 
-        if(phantom_node_pair.targetPhantom.forward_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.targetPhantom.forward_node_id << ", w: " << phantom_node_pair.targetPhantom.GetForwardWeightPlusOffset();
+        if(phantom_node_pair.target_phantom.forward_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
             reverse_heap1.Insert(
-                phantom_node_pair.targetPhantom.forward_node_id,
-                phantom_node_pair.targetPhantom.GetForwardWeightPlusOffset(),
-                phantom_node_pair.targetPhantom.forward_node_id
+                phantom_node_pair.target_phantom.forward_node_id,
+                phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
+                phantom_node_pair.target_phantom.forward_node_id
             );
         }
-        if(phantom_node_pair.targetPhantom.reverse_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.targetPhantom.reverse_node_id << ", w: " << phantom_node_pair.targetPhantom.GetReverseWeightPlusOffset();
+        if(phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID ) {
+            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
         	reverse_heap1.Insert(
-                phantom_node_pair.targetPhantom.reverse_node_id,
-                phantom_node_pair.targetPhantom.GetReverseWeightPlusOffset(),
-                phantom_node_pair.targetPhantom.reverse_node_id
+                phantom_node_pair.target_phantom.reverse_node_id,
+                phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),
+                phantom_node_pair.target_phantom.reverse_node_id
             );
         }
 
         const int forward_offset =  super::ComputeEdgeOffset(
-                                        phantom_node_pair.startPhantom
+                                        phantom_node_pair.source_phantom
                                     );
         const int reverse_offset =  super::ComputeEdgeOffset(
-                                        phantom_node_pair.targetPhantom
+                                        phantom_node_pair.target_phantom
                                     );
 
         SimpleLogger().Write(logDEBUG) << "fwd_offset: " << forward_offset << ", reverse_offset: " << reverse_offset;
@@ -319,17 +319,17 @@ public:
         if( INVALID_EDGE_WEIGHT != upper_bound_to_shortest_path_distance ) {
             BOOST_ASSERT( !packed_shortest_path.empty() );
             raw_route_data.unpacked_path_segments.resize(1);
-            // SimpleLogger().Write() << "fwd offset1: " << phantom_node_pair.startPhantom.fwd_segment_position;
-            // SimpleLogger().Write() << "fwd offset2: " << phantom_node_pair.startPhantom.rev_segment_position;
-            // SimpleLogger().Write() << "rev offset1: " << phantom_node_pair.targetPhantom.fwd_segment_position;
-            // SimpleLogger().Write() << "rev offset2: " << phantom_node_pair.targetPhantom.rev_segment_position;
+            // SimpleLogger().Write() << "fwd offset1: " << phantom_node_pair.source_phantom.fwd_segment_position;
+            // SimpleLogger().Write() << "fwd offset2: " << phantom_node_pair.source_phantom.rev_segment_position;
+            // SimpleLogger().Write() << "rev offset1: " << phantom_node_pair.target_phantom.fwd_segment_position;
+            // SimpleLogger().Write() << "rev offset2: " << phantom_node_pair.target_phantom.rev_segment_position;
 
-            // int start_offset = ( packed_shortest_path.front() == phantom_node_pair.startPhantom.forward_node_id  ?  1 : -1 )*phantom_node_pair.startPhantom.fwd_segment_position;
-            // SimpleLogger().Write(logDEBUG) << "unpacking from index " << phantom_node_pair.startPhantom.fwd_segment_position;
+            // int start_offset = ( packed_shortest_path.front() == phantom_node_pair.source_phantom.forward_node_id  ?  1 : -1 )*phantom_node_pair.source_phantom.fwd_segment_position;
+            // SimpleLogger().Write(logDEBUG) << "unpacking from index " << phantom_node_pair.source_phantom.fwd_segment_position;
 
-            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.forward_node_id: " << phantom_node_pair.startPhantom.forward_node_id;
-            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.startPhantom.reverse_node_id: " << phantom_node_pair.startPhantom.reverse_node_id;
-            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.targetPhantom.packed_geometry_id: " << phantom_node_pair.targetPhantom.packed_geometry_id;
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.source_phantom.forward_node_id: " << phantom_node_pair.source_phantom.forward_node_id;
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.source_phantom.reverse_node_id: " << phantom_node_pair.source_phantom.reverse_node_id;
+            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.target_phantom.packed_geometry_id: " << phantom_node_pair.target_phantom.packed_geometry_id;
             // SimpleLogger().Write(logDEBUG) << "packed_shortest_path.back(): " << packed_shortest_path.back();
 
             super::UnpackPath(

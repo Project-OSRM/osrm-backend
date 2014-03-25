@@ -101,7 +101,7 @@ public:
             description_factory.AppendSegment(current_coordinate, path_data );
             ++added_element_count;
         }
-        // description_factory.SetEndSegment( leg_phantoms.targetPhantom );
+        // description_factory.SetEndSegment( leg_phantoms.target_phantom );
         ++added_element_count;
         BOOST_ASSERT( (int)(route_leg.size() + 1) == added_element_count );
         return added_element_count;
@@ -127,7 +127,7 @@ public:
             return;
         }
 
-        description_factory.SetStartSegment(phantom_nodes.startPhantom);
+        description_factory.SetStartSegment(phantom_nodes.source_phantom);
         reply.content.push_back("0,"
                 "\"status_message\": \"Found route between points\",");
 
@@ -142,7 +142,7 @@ public:
                 added_segments + shortest_leg_end_indices.back()
             );
         }
-        description_factory.SetEndSegment(phantom_nodes.targetPhantom);
+        description_factory.SetEndSegment(phantom_nodes.target_phantom);
         description_factory.Run(facade, config.zoom_level);
 
         reply.content.push_back("\"route_geometry\": ");
@@ -195,13 +195,13 @@ public:
         //only one alternative route is computed at this time, so this is hardcoded
 
         if(raw_route.lengthOfAlternativePath != INT_MAX) {
-            alternate_descriptionFactory.SetStartSegment(phantom_nodes.startPhantom);
+            alternate_descriptionFactory.SetStartSegment(phantom_nodes.source_phantom);
             //Get all the coordinates for the computed route
             BOOST_FOREACH(const PathData & path_data, raw_route.unpacked_alternative) {
                 current = facade->GetCoordinateOfNode(path_data.node);
                 alternate_descriptionFactory.AppendSegment(current, path_data );
             }
-            alternate_descriptionFactory.SetEndSegment(phantom_nodes.targetPhantom);
+            alternate_descriptionFactory.SetEndSegment(phantom_nodes.target_phantom);
         }
         alternate_descriptionFactory.Run(facade, config.zoom_level);
 
@@ -286,7 +286,7 @@ public:
 
         std::string tmp;
         FixedPointCoordinate::convertInternalReversedCoordinateToString(
-            raw_route.segmentEndCoordinates.front().startPhantom.location,
+            raw_route.segmentEndCoordinates.front().source_phantom.location,
             tmp
         );
         reply.content.push_back("[");
@@ -296,7 +296,7 @@ public:
         BOOST_FOREACH(const PhantomNodes & nodes, raw_route.segmentEndCoordinates) {
             tmp.clear();
             FixedPointCoordinate::convertInternalReversedCoordinateToString(
-                nodes.targetPhantom.location,
+                nodes.target_phantom.location,
                 tmp
             );
             reply.content.push_back(",[");
@@ -332,11 +332,11 @@ public:
         std::string hint;
         for(unsigned i = 0; i < raw_route.segmentEndCoordinates.size(); ++i) {
             reply.content.push_back("\"");
-            EncodeObjectToBase64(raw_route.segmentEndCoordinates[i].startPhantom, hint);
+            EncodeObjectToBase64(raw_route.segmentEndCoordinates[i].source_phantom, hint);
             reply.content.push_back(hint);
             reply.content.push_back("\", ");
         }
-        EncodeObjectToBase64(raw_route.segmentEndCoordinates.back().targetPhantom, hint);
+        EncodeObjectToBase64(raw_route.segmentEndCoordinates.back().target_phantom, hint);
         reply.content.push_back("\"");
         reply.content.push_back(hint);
         reply.content.push_back("\"]");

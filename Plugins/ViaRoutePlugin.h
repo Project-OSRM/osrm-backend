@@ -112,8 +112,8 @@ public:
 
         PhantomNodes segmentPhantomNodes;
         for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
-            segmentPhantomNodes.startPhantom = phantomNodeVector[i];
-            segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
+            segmentPhantomNodes.source_phantom = phantomNodeVector[i];
+            segmentPhantomNodes.target_phantom = phantomNodeVector[i+1];
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         }
 
@@ -172,8 +172,8 @@ public:
         }
 
         PhantomNodes phantomNodes;
-        phantomNodes.startPhantom = rawRoute.segmentEndCoordinates[0].startPhantom;
-        phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
+        phantomNodes.source_phantom = rawRoute.segmentEndCoordinates[0].source_phantom;
+        phantomNodes.target_phantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].target_phantom;
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
