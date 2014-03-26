@@ -105,13 +105,16 @@ public:
 
         /** starts at index 1 */
         pathDescription[0].length = 0;
-        for(unsigned i = 1; i < pathDescription.size(); ++i) {
+        for(unsigned i = 1; i < pathDescription.size(); ++i)
+        {
             pathDescription[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
         }
 
-        // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
-        // std::string string1;
-
+        for (unsigned i = 0; i < pathDescription.size(); ++i)
+        {
+            const std::string name = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
+            SimpleLogger().Write(logDEBUG) << "[" << i << "] name: " << name << ", duration: " << pathDescription[i].duration << ", length: " << pathDescription[i].length << ", coordinate: " << pathDescription[i].location;
+        }
 
         /*Simplify turn instructions
         Input :
@@ -154,23 +157,23 @@ public:
     //        string0 = string1;
     //    }
 
-        double lengthOfSegment = 0;
-        unsigned durationOfSegment = 0;
-        unsigned indexOfSegmentBegin = 0;
+        double segment_length = 0.;
+        unsigned segment_duration = 0;
+        unsigned segment_start_index = 0;
 
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
             entireLength += pathDescription[i].length;
-            lengthOfSegment += pathDescription[i].length;
-            durationOfSegment += pathDescription[i].duration;
-            pathDescription[indexOfSegmentBegin].length = lengthOfSegment;
-            pathDescription[indexOfSegmentBegin].duration = durationOfSegment;
+            segment_length += pathDescription[i].length;
+            segment_duration += pathDescription[i].duration;
+            pathDescription[segment_start_index].length = segment_length;
+            pathDescription[segment_start_index].duration = segment_duration;
 
 
             if(TurnInstructionsClass::NoTurn != pathDescription[i].turn_instruction) {
                 BOOST_ASSERT(pathDescription[i].necessary);
-                lengthOfSegment = 0;
-                durationOfSegment = 0;
-                indexOfSegmentBegin = i;
+                segment_length = 0;
+                segment_duration = 0;
+                segment_start_index = i;
             }
         }
 
@@ -183,7 +186,7 @@ public:
                 target_phantom.name_id = (pathDescription.end()-2)->name_id;
             }
         } else {
-            pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
+            pathDescription[segment_start_index].duration *= (1.-target_phantom.ratio);
         }
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
             if(pathDescription.size() > 2) {
