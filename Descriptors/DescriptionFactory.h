@@ -179,7 +179,7 @@ public:
             if(pathDescription.size() > 2){
                 pathDescription.pop_back();
                 pathDescription.back().necessary = true;
-                pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
+                pathDescription.back().turn_instruction = TurnInstructionsClass::NoTurn;
                 target_phantom.name_id = (pathDescription.end()-2)->name_id;
             }
         } else {
@@ -188,7 +188,7 @@ public:
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
             if(pathDescription.size() > 2) {
                 pathDescription.erase(pathDescription.begin());
-                pathDescription[0].turn_instruction = TurnInstructions.HeadOn;
+                pathDescription[0].turn_instruction = TurnInstructionsClass::HeadOn;
                 pathDescription[0].necessary = true;
                 start_phantom.name_id = pathDescription[0].name_id;
             }

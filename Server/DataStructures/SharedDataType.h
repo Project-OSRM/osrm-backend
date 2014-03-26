@@ -96,17 +96,17 @@ struct SharedDataLayout {
 
     uint64_t GetSizeOfLayout() const {
         uint64_t result =
-            (name_index_list_size       * sizeof(unsigned)            ) +
-            (name_char_list_size        * sizeof(char)                ) +
-            (name_id_list_size          * sizeof(unsigned)            ) +
-            (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
-            (timestamp_length           * sizeof(char)                ) +
-            (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructions)    ) +
-            (r_search_tree_size         * sizeof(RTreeNode)           ) +
-            sizeof(checksum)                                            +
+            (name_index_list_size       * sizeof(unsigned)             ) +
+            (name_char_list_size        * sizeof(char)                 ) +
+            (name_id_list_size          * sizeof(unsigned)             ) +
+            (via_node_list_size         * sizeof(NodeID)               ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (timestamp_length           * sizeof(char)                 ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
+            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
+            (r_search_tree_size         * sizeof(RTreeNode)            ) +
+            sizeof(checksum)                                             +
             1024*sizeof(char);
         return result;
     }
@@ -184,29 +184,29 @@ struct SharedDataLayout {
     }
     uint64_t GetRSearchTreeOffset() const {
         uint64_t result =
-            (name_index_list_size       * sizeof(unsigned)            ) +
-            (name_char_list_size        * sizeof(char)                ) +
-            (name_id_list_size          * sizeof(unsigned)            ) +
-            (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
-            (timestamp_length           * sizeof(char)                ) +
-            (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructions)    );
+            (name_index_list_size       * sizeof(unsigned)             ) +
+            (name_char_list_size        * sizeof(char)                 ) +
+            (name_id_list_size          * sizeof(unsigned)             ) +
+            (via_node_list_size         * sizeof(NodeID)               ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (timestamp_length           * sizeof(char)                 ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
+            (turn_instruction_list_size * sizeof(TurnInstructionsClass));
         return result;
     }
     uint64_t GetChecksumOffset() const {
         uint64_t result =
-            (name_index_list_size       * sizeof(unsigned)            ) +
-            (name_char_list_size        * sizeof(char)                ) +
-            (name_id_list_size          * sizeof(unsigned)            ) +
-            (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
-            (timestamp_length           * sizeof(char)                ) +
-            (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructions)    ) +
-            (r_search_tree_size         * sizeof(RTreeNode)           );
+            (name_index_list_size       * sizeof(unsigned)             ) +
+            (name_char_list_size        * sizeof(char)                 ) +
+            (name_id_list_size          * sizeof(unsigned)             ) +
+            (via_node_list_size         * sizeof(NodeID)               ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (timestamp_length           * sizeof(char)                 ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
+            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
+            (r_search_tree_size         * sizeof(RTreeNode)            );
         return result;
     }
 };
