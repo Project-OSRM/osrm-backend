@@ -16,3 +16,7 @@ else
   puts "Using default port #{OSRM_PORT}"
 end
 
+
+AfterConfiguration do |config|
+  clear_log_files
+end

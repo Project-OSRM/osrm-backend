@@ -5,6 +5,7 @@ def test_routability_row i
     b = Location.new @origin[0]+(3+WAY_SPACING*i)*@zoom, @origin[1]
     r = {}
     r[:response] = request_route direction=='forw' ? [a,b] : [b,a]
+    r[:query] = @query
     r[:json] = JSON.parse(r[:response].body)
 
     r[:status] = route_status r[:response]
@@ -33,7 +34,7 @@ def test_routability_row i
       result['bothw'][key] = 'diff'
     end
   end
-  
+  result['bothw'][:response] = [result['forw'][:response],result['backw'][:response]]
   result
 end
 
@@ -46,30 +47,30 @@ Then /^routability should be$/ do |table|
   end
   OSRMBackgroundLauncher.new("#{@osm_file}.osrm") do
     table.hashes.each_with_index do |row,i|
-      got = row.dup
+      output_row = row.dup
       attempts = []
       result = test_routability_row i
-      (['forw','backw','bothw'] & table.headers).each do |direction|
+      directions = ['forw','backw','bothw']
+      (directions & table.headers).each do |direction|
         want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
-                
         case want
         when '', 'x'
-          got[direction] = result[direction][:status].to_s
+          output_row[direction] = result[direction][:status].to_s
         when /^\d+s/
-          got[direction] = "#{result[direction][:time]}s"
+          output_row[direction] = "#{result[direction][:time]}s"
         when /^\d+ km\/h/
-          got[direction] = "#{result[direction][:speed]} km/h"
+          output_row[direction] = "#{result[direction][:speed]} km/h"
         end
         
-        if FuzzyMatch.match got[direction], want
-          got[direction] = row[direction]
-        else
-#          attempts << { :attempt => direction, :query => @query, :response => result[direction][:response] }
+        if FuzzyMatch.match output_row[direction], want
+          output_row[direction] = row[direction]
         end
       end
       
-      log_fail row,got,attempts if got != row
-      actual << got
+      if output_row != row
+        log_fail row,output_row,result
+      end
+      actual << output_row
     end
   end
   table.routing_diff! actual

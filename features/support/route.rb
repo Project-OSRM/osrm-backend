@@ -17,6 +17,7 @@ def request_path path, waypoints=[], options={}
   params = (locs + options.to_param).join('&')
   params = nil if params==""
   uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
+  @query = uri.to_s
   Timeout.timeout(REQUEST_TIMEOUT) do
     Net::HTTP.get_response uri
   end
