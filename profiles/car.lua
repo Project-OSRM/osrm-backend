@@ -1,8 +1,8 @@
 -- Begin of globals
 --require("lib/access") --function temporarily inlined
 
-barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["entrance"] = true}
-access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true  }
+barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["entrance"] = true }
+access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
@@ -32,13 +32,13 @@ speed_profile = {
   ["default"] = 10
 }
 
-local take_minimum_of_speeds  = false
-local obey_oneway 			      = true
-local obey_bollards           = true
-local use_turn_restrictions   = true
-local ignore_areas 			      = true -- future feature
-local traffic_signal_penalty  = 2
-local u_turn_penalty 			    = 20
+local take_minimum_of_speeds    = false
+local obey_oneway               = true
+local obey_bollards             = true
+local use_turn_restrictions     = true
+local ignore_areas              = true     -- future feature
+local traffic_signal_penalty    = 2
+local u_turn_penalty            = 20
 
 local abs = math.abs
 local min = math.min
@@ -58,23 +58,23 @@ local function find_access_tag(source,access_tags_hierachy)
 end
 
 function get_exceptions(vector)
-	for i,v in ipairs(restriction_exception_tags) do
-		vector:Add(v)
-	end
+  for i,v in ipairs(restriction_exception_tags) do
+    vector:Add(v)
+  end
 end
 
 local function parse_maxspeed(source)
-	if not source then
-		return 0
-	end
-	local n = tonumber(source:match("%d*"))
-	if not n then
-		n = 0
-	end
-	if string.match(source, "mph") or string.match(source, "mp/h") then
-		n = (n*1609)/1000;
-	end
-	return n
+  if not source then
+    return 0
+  end
+  local n = tonumber(source:match("%d*"))
+  if not n then
+    n = 0
+  end
+  if string.match(source, "mph") or string.match(source, "mp/h") then
+    n = (n*1609)/1000;
+  end
+  return n
 end
 
 function node_function (node)
@@ -87,19 +87,19 @@ function node_function (node)
     end
   end
 
-	-- parse access and barrier tags
-	if access and access ~= "" then
-		if access_tag_blacklist[access] then
-			node.bollard = true
-		end
-	elseif node.tags:Holds("barrier") then
+  -- parse access and barrier tags
+  if access and access ~= "" then
+    if access_tag_blacklist[access] then
+      node.bollard = true
+    end
+  elseif node.tags:Holds("barrier") then
     local barrier = node.tags:Find("barrier")
-		if barrier_whitelist[barrier] then
-			return
-		else
-			node.bollard = true
-		end
-	end
+    if barrier_whitelist[barrier] then
+      return
+    else
+      node.bollard = true
+    end
+  end
 end
 
 function way_function (way)
@@ -202,7 +202,7 @@ function way_function (way)
   elseif "" ~= name then
     way.name = name
 --  else
---      way.name = highway    -- if no name exists, use way type
+      --    way.name = highway  -- if no name exists, use way type
   end
 
   if "roundabout" == junction then
@@ -216,22 +216,21 @@ function way_function (way)
 
   -- Set access restriction flag if service is allowed under certain restrictions only
   if service ~= "" and service_tag_restricted[service] then
-	  way.is_access_restricted = true
+    way.is_access_restricted = true
   end
 
   -- Set direction according to tags on way
   way.direction = Way.bidirectional
   if obey_oneway  then
-	  if oneway == "-1" then
-	    way.direction = Way.opposite
+    if oneway == "-1" then
+      way.direction = Way.opposite
     elseif oneway == "yes" or
-      oneway == "1" or
-      oneway == "true" or
-      junction == "roundabout" or
-      (highway == "motorway_link" and oneway ~="no") or
-      (highway == "motorway" and oneway ~= "no")
-      then
-	     way.direction = Way.oneway
+    oneway == "1" or
+    oneway == "true" or
+    junction == "roundabout" or
+    (highway == "motorway_link" and oneway ~="no") or
+    (highway == "motorway" and oneway ~= "no") then
+      way.direction = Way.oneway
     end
   end
 
@@ -250,16 +249,15 @@ function way_function (way)
 
   -- Override general direction settings of there is a specific one for our mode of travel
   if ignore_in_grid[highway] then
-		way.ignore_in_grid = true
-	end
-	way.type = 1
+    way.ignore_in_grid = true
+  end
+  way.type = 1
   return
 end
 
 -- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT
-
 function node_vector_function(vector)
- for v in vector.nodes do
-  node_function(v)
- end
+  for v in vector.nodes do
+    node_function(v)
+  end
 end
