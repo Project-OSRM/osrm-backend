@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BaseDescriptor.h"
 
 #ifdef OSRM_HAS_ELEVATION
-#include "../Util/SuggestElevation.h"
+#include "../Util/EstimateElevation.h"
 #endif
 
 #include <boost/foreach.hpp>
@@ -81,8 +81,8 @@ public:
             );
 #ifdef OSRM_HAS_ELEVATION
             reply.content.push_back("lon=\"" + tmp + "\" ");
-            int start_elevation = SuggestElevation(phantom_node_list.startPhantom,
-                                                   raw_route.unpacked_path_segments, facade, true);
+            int start_elevation = EstimateElevation(phantom_node_list.startPhantom,
+                                                    raw_route.unpacked_path_segments, facade, true);
             FixedPointCoordinate::convertInternalLatLonToString(start_elevation, tmp);
             reply.content.push_back("ele=\"" + tmp + "\"></rtept>");
 #else
@@ -122,8 +122,8 @@ public:
             );
 #ifdef OSRM_HAS_ELEVATION
             reply.content.push_back("lon=\"" + tmp + "\" ");
-            int target_elevation = SuggestElevation(phantom_node_list.targetPhantom,
-                                                    raw_route.unpacked_path_segments, facade, false);
+            int target_elevation = EstimateElevation(phantom_node_list.targetPhantom,
+                                                     raw_route.unpacked_path_segments, facade, false);
             FixedPointCoordinate::convertInternalLatLonToString(target_elevation, tmp);
             reply.content.push_back("ele=\"" + tmp + "\"></rtept>");
 #else

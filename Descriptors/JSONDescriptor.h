@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 
 #ifdef OSRM_HAS_ELEVATION
-#include "../Util/SuggestElevation.h"
+#include "../Util/EstimateElevation.h"
 #endif
 
 #include <boost/bind.hpp>
@@ -145,8 +145,8 @@ public:
 
 #ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
-            int start_elevation = SuggestElevation(phantom_nodes.startPhantom,
-                                                   raw_route.unpacked_path_segments, facade, true);
+            int start_elevation = EstimateElevation(phantom_nodes.startPhantom,
+                                                    raw_route.unpacked_path_segments, facade, true);
             description_factory.SetStartSegmentWithElevation(phantom_nodes.startPhantom, start_elevation);
         } else {
 #endif
@@ -170,8 +170,8 @@ public:
         }
 #ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
-            int end_elevation = SuggestElevation(phantom_nodes.targetPhantom,
-                                                 raw_route.unpacked_path_segments, facade, false);
+            int end_elevation = EstimateElevation(phantom_nodes.targetPhantom,
+                                                  raw_route.unpacked_path_segments, facade, false);
             description_factory.SetEndSegmentWithElevation(phantom_nodes.targetPhantom, end_elevation);
         } else {
 #endif
