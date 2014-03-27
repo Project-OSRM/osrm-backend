@@ -34,7 +34,6 @@ def test_routability_row i
       result['bothw'][key] = 'diff'
     end
   end
-  result['bothw'][:response] = [result['forw'][:response],result['backw'][:response]]
   result
 end
 
