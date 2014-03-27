@@ -25,28 +25,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SUGGESTELEVATION_H_
-#define SUGGESTELEVATION_H_
+#ifndef ESTIMATEELEVATION_H_
+#define ESTIMATEELEVATION_H_
 
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
 #include "osrm/Coordinate.h"
 
 /*
- * node - phantom node for which we need to suggest an elevation
+ * The EstimateElevation function is used to estimate the elevation of Phantom points. It involves and inverse distance
+ * weighted (IDW) average type computation, using at most <max_points> points of the computed route.
+ * The <forward> boolean flag indicates whether we are using the first or last <max_points> of the computed route.
+ * The averate points are sought inside a search radius <search_radius_upper>. If a point is encountered that is closer
+ * than <search_radius_lower> to the phantom point, this elevation of the phantom point is approximated with this
+ * point's elevation.
+ *
+ * node - phantom node for which we need to estimate an elevation
  * path_data_vector - vector of vector of PathData - the computed route segments
  * facade - data facade used for coordinate and elevation queries
  * forward - boolean flag which indicates direction (true for the start phantom node, false for the target phantom
+ * max_points - maximum number of points used for the weighted average computation (default 5)
+ * search_radius_upper - upper bound for the search radius of points
+ * search_radius_lower - lower bound for the search radius of points
  */
 template <typename DataFacadeT>
-int SuggestElevation(const PhantomNode& node,
-                     const std::vector<std::vector<PathData> >& path_data_vector,
-                     const DataFacadeT* facade,
-                     const bool forward
-) {
-    const double search_radius = 100.0; // search radius in metres
-    const int max_points = 5; // maximum number of points used for the weighted average
+int EstimateElevation(const PhantomNode& node,
+                      const std::vector<std::vector<PathData> >& path_data_vector,
+                      const DataFacadeT* facade,
+                      const bool forward,
+                      const int max_points = 5,
+                      const double search_radius_upper = 100.0,
+                      const double search_radius_lower = 1.0
 
+) {
     std::vector<std::vector<PathData> >::const_iterator outer_iterator;
     std::vector<std::vector<PathData> >::const_iterator outer_iterator_end;
     std::vector<PathData>::const_iterator inner_iterator;
@@ -78,13 +89,13 @@ int SuggestElevation(const PhantomNode& node,
         const double current_distance = FixedPointCoordinate::ApproximateDistance(initialCoordinates,
                                                                                  current_coordinates);
         int current_elevation = facade->GetElevationOfNode(inner_iterator->node);
-        if (current_distance < 1) {
+        if (current_distance < search_radius_lower) {
             return current_elevation;
         } else {
             distance_vector.push_back(current_distance);
             elevation_vector.push_back(current_elevation);
             num_points++;
-            if (current_distance > search_radius) {
+            if (current_distance > search_radius_upper) {
                 break;
             }
         }
@@ -130,4 +141,4 @@ int SuggestElevation(const PhantomNode& node,
     }
 }
 
-#endif // SUGGESTELEVATION_H_
+#endif // ESTIMATEELEVATION_H_
