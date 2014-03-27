@@ -1,6 +1,6 @@
 @routing @car @access
 Feature: Car - Restricted access
-Reference: http://wiki.openstreetmap.org/wiki/Key:access
+# Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Background:
         Given the profile "car"

@@ -1,13 +1,13 @@
 @routing @projection
 Feature: Projection to nearest point on road
-Waypoints are projected perpendiculary onto the closest road
+# Waypoints are projected perpendiculary onto the closest road
 
     Background:
-        The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html
-        The nodes are placed as follows, with ab, bc and bd all being 1 km in length each:
-            |   |   | c |
-            |   | b |   | (this is sketch only, real data is in the table below)
-            | a |   | d |
+    # The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html
+    # The nodes are placed as follows, with ab, bc and bd all being 1 km in length each:
+    #   |   |   | c |
+    #   |   | b |   |   (this is sketch only, real data is in the table below)
+    #   | a |   | d |
 
         Given the profile "testbot"
         Given the node locations

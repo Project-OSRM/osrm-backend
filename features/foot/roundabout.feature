@@ -6,8 +6,8 @@ Feature: Roundabout Instructions
     
     @todo
     Scenario: Foot - Roundabout instructions
-    You can walk in both directions on a roundabout, bu the normal roundabout instructions don't
-    make sense when you're going the opposite way around the roundabout.
+    # You can walk in both directions on a roundabout, bu the normal roundabout instructions don't
+    # make sense when you're going the opposite way around the roundabout.
     
         Given the node map
             |   |   | v |   |   |

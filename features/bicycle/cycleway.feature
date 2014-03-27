@@ -1,6 +1,6 @@
 @routing @bicycle @cycleway
 Feature: Bike - Cycle tracks/lanes
-Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
+# Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
 
     Background:
         Given the profile "bicycle"

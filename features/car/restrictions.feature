@@ -1,7 +1,7 @@
 @routing @car @restrictions
 Feature: Car - Turn restrictions
-    Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
-    Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
+# Handle turn restrictions as defined by http://wiki.openstreetmap.org/wiki/Relation:restriction
+# Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 
     Background: Use car routing
         Given the profile "car"

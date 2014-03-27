@@ -5,7 +5,7 @@ Feature: OSM Route Relation
         Given the profile "testbot"
 
     Scenario: Prioritize ways that are part of route relations
-    This scenario assumes that the testbot uses an impedance of 0.5 for ways that are part of 'testbot' routes.
+    # This scenario assumes that the testbot uses an impedance of 0.5 for ways that are part of 'testbot' routes.
 
         Given the node map
             | s |  |  | t |  |  |   |

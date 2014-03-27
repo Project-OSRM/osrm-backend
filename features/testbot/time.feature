@@ -1,9 +1,9 @@
 @routing @time
 Feature: Estimation of travel time
-Testbot speeds:
-Primary road:    36km/h = 36000m/3600s = 100m/10s
-Secondary road:    18km/h = 18000m/3600s = 100m/20s
-Tertiary road:    12km/h = 12000m/3600s = 100m/30s
+# Testbot speeds:
+# Primary road:    36km/h = 36000m/3600s = 100m/10s
+# Secondary road:    18km/h = 18000m/3600s = 100m/20s
+# Tertiary road:    12km/h = 12000m/3600s = 100m/30s
 
     Background: Use specific speeds
         Given the profile "testbot"
