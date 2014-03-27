@@ -60,6 +60,8 @@ Then /^routability should be$/ do |table|
           output_row[direction] = "#{result[direction][:time]}s"
         when /^\d+ km\/h/
           output_row[direction] = "#{result[direction][:speed]} km/h"
+        else
+          raise "*** Unknown expectation format: #{want}"
         end
         
         if FuzzyMatch.match output_row[direction], want
