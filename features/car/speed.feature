@@ -5,7 +5,6 @@ Feature: Car - speeds
         Given the profile "car"
         And a grid size of 1000 meters
     
-    @bug
     Scenario: Car - speed of various way types
         Then routability should be
             | highway        | oneway | bothw   |

@@ -44,6 +44,8 @@ local abs = math.abs
 local min = math.min
 local max = math.max
 
+local maxspeed_reduction = 0.66
+
 -- End of globals
 local function find_access_tag(source,access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
@@ -161,7 +163,7 @@ function way_function (way)
 
   if way.speed == -1 then
     local highway_speed = speed_profile[highway]
-    local max_speed = parse_maxspeed( way.tags:Find("maxspeed") )
+    local max_speed = parse_maxspeed( way.tags:Find("maxspeed") )*maxspeed_reduction
     -- Set the avg speed on the way if it is accessible by road class
     if highway_speed then
       if max_speed > highway_speed then
@@ -234,8 +236,8 @@ function way_function (way)
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
-  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
+  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))*maxspeed_reduction
+  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))*maxspeed_reduction
   if maxspeed_forward > 0 then
     if Way.bidirectional == way.direction then
       way.backward_speed = way.speed
@@ -251,10 +253,6 @@ function way_function (way)
 		way.ignore_in_grid = true
 	end
 	way.type = 1
-  way.speed = abs(way.speed*0.66) -- scaling of travel times.
-  if(way.backward_speed > 0) then
-    way.backward_speed = abs(way.backward_speed*0.66) -- scaling of travel times.
-  end
   return
 end
 
