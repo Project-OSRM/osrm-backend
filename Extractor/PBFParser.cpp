@@ -25,8 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "OSRM_config.h"
-
 #include "PBFParser.h"
 
 #include "ExtractionWay.h"
@@ -52,8 +50,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 PBFParser::PBFParser(
 	const char * fileName,
 	ExtractorCallbacks * extractor_callbacks,
-	ScriptingEnvironment& scripting_environment
-) : BaseParser( extractor_callbacks, scripting_environment ) {
+    ScriptingEnvironment& scripting_environment,
+    const bool use_elevation
+) : BaseParser( extractor_callbacks, scripting_environment, use_elevation ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
@@ -212,11 +211,6 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 			const int keyValue = dense.keys_vals ( denseTagIndex+1 );
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(tagValue);
 			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue);
-#ifdef OSRM_HAS_ELEVATION
-            if (key == "ele") {
-                extracted_nodes_vector[i].ele = static_cast<int>(ELEVATION_PRECISION * atof(value.c_str() ));
-            }
-#endif
             extracted_nodes_vector[i].keyVals.emplace(key, value);
 			denseTagIndex += 2;
 		}
@@ -232,8 +226,8 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 	}
 
 	BOOST_FOREACH(const ImportNode &import_node, extracted_nodes_vector) {
-	    extractor_callbacks->nodeFunction(import_node);
-	}
+        extractor_callbacks->nodeFunction(import_node, use_elevation);
+    }
 }
 
 inline void PBFParser::parseNode(_ThreadData * ) {

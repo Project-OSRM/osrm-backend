@@ -135,7 +135,6 @@ void FixedPointCoordinate::convertInternalLatLonToString(
     output = string;
 }
 
-#ifdef OSRM_HAS_ELEVATION
 void FixedPointCoordinate::convertInternalElevationToString(
     const int value,
     std::string &output
@@ -145,7 +144,6 @@ void FixedPointCoordinate::convertInternalElevationToString(
     char* string = printInt< 11, ELEVATION_NUM_DIGITS >( buffer, value );
     output = string;
 }
-#endif
 
 void FixedPointCoordinate::convertInternalCoordinateToString(
     const FixedPointCoordinate & coord,

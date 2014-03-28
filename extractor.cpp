@@ -57,6 +57,7 @@ int main (int argc, char *argv[]) {
 
         boost::filesystem::path config_file_path, input_path, profile_path;
         int requested_num_threads;
+        bool use_elevation = false;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -71,6 +72,8 @@ int main (int argc, char *argv[]) {
         config_options.add_options()
             ("profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)->default_value("profile.lua"),
                 "Path to LUA routing profile")
+            ("elevation,e", boost::program_options::value<bool>(&use_elevation)->implicit_value(true),
+                "Read and store elevation values from input file nodes")
             ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
                 "Number of threads to use");
 
@@ -178,9 +181,9 @@ int main (int argc, char *argv[]) {
         extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
         BaseParser* parser;
         if(file_has_pbf_format) {
-            parser = new PBFParser(input_path.c_str(), extractCallBacks, scriptingEnvironment);
+            parser = new PBFParser(input_path.c_str(), extractCallBacks, scriptingEnvironment, use_elevation);
         } else {
-            parser = new XMLParser(input_path.c_str(), extractCallBacks, scriptingEnvironment);
+            parser = new XMLParser(input_path.c_str(), extractCallBacks, scriptingEnvironment, use_elevation);
         }
 
         if(!parser->ReadHeader()) {

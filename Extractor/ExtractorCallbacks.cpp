@@ -61,9 +61,13 @@ ExtractorCallbacks::ExtractorCallbacks(
 ExtractorCallbacks::~ExtractorCallbacks() { }
 
 /** warning: caller needs to take care of synchronization! */
-void ExtractorCallbacks::nodeFunction(const ExternalMemoryNode &n) {
+void ExtractorCallbacks::nodeFunction(const ImportNode &n, const bool use_elevation) {
     if(n.lat <= 85*COORDINATE_PRECISION && n.lat >= -85*COORDINATE_PRECISION) {
-        externalMemory->all_nodes_list.push_back(n);
+        externalMemory->all_nodes_list.push_back(static_cast<const ExternalMemoryNode&>(n));
+        if (use_elevation && n.keyVals.Holds("ele")) {
+            int elevation = static_cast<int>(ELEVATION_PRECISION * atoi(n.keyVals.Find("ele").c_str()));
+            externalMemory->all_nodes_list.back().set_ele(elevation);
+        }
     }
 }
 

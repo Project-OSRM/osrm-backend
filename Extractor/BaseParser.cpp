@@ -41,11 +41,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 BaseParser::BaseParser(
     ExtractorCallbacks   * extractor_callbacks,
-    ScriptingEnvironment & scripting_environment
+    ScriptingEnvironment & scripting_environment,
+    const bool use_elevation
 ) : extractor_callbacks(extractor_callbacks),
     lua_state(scripting_environment.getLuaStateForThreadID(0)),
     scripting_environment(scripting_environment),
-    use_turn_restrictions(true)
+    use_turn_restrictions(true),
+    use_elevation(use_elevation)
 {
     ReadUseRestrictionsSetting();
     ReadRestrictionExceptions();

@@ -25,8 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "OSRM_config.h"
-
 #include "XMLParser.h"
 
 #include "ExtractionWay.h"
@@ -42,7 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/ref.hpp>
 
-XMLParser::XMLParser(const char * filename, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser(ec, se) {
+XMLParser::XMLParser(const char * filename, ExtractorCallbacks* ec, ScriptingEnvironment& se,
+                     const bool use_elevation) : BaseParser(ec, se, use_elevation) {
 	SimpleLogger().Write(logWARNING) <<
 		"Parsing plain .osm/.osm.bz2 is deprecated. Switch to .pbf";
 
@@ -69,7 +68,7 @@ bool XMLParser::Parse() {
 		if ( xmlStrEqual( currentName, ( const xmlChar* ) "node" ) == 1 ) {
 			ImportNode n = _ReadXMLNode();
 			ParseNodeInLua( n, lua_state );
-			extractor_callbacks->nodeFunction(n);
+            extractor_callbacks->nodeFunction(n, use_elevation);
 //			if(!extractor_callbacks->nodeFunction(n))
 //				std::cerr << "[XMLParser] dense node not parsed" << std::endl;
 		}
@@ -276,11 +275,6 @@ ImportNode XMLParser::_ReadXMLNode() {
                 xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
 				xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
 				if ( k != NULL && value != NULL ) {
-#ifdef OSRM_HAS_ELEVATION
-                    if (xmlStrEqual( k, ( const xmlChar* ) "ele") == 1 ) {
-                        node.ele = static_cast<int>(ELEVATION_PRECISION * atof(( const char* ) value ));
-                    }
-#endif
 					node.keyVals.Add(std::string( reinterpret_cast<char*>(k) ), std::string( reinterpret_cast<char*>(value)));
 				}
 				if ( k != NULL ) {

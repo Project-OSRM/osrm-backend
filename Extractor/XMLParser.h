@@ -39,7 +39,8 @@ public:
     XMLParser(
         const char* filename,
         ExtractorCallbacks* ec,
-        ScriptingEnvironment& se
+        ScriptingEnvironment& se,
+        const bool use_elevation = false
     );
     bool ReadHeader();
     bool Parse();

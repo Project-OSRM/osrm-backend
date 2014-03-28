@@ -56,7 +56,7 @@ public:
     ~ExtractorCallbacks();
 
     /** warning: caller needs to take care of synchronization! */
-    void nodeFunction(const ExternalMemoryNode &n);
+    void nodeFunction(const ImportNode &n, const bool use_elevation = false);
 
     bool restrictionFunction(const InputRestrictionContainer &r);
 

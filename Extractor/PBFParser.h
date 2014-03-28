@@ -66,7 +66,8 @@ public:
     PBFParser(
         const char * fileName,
         ExtractorCallbacks* ec,
-        ScriptingEnvironment& se
+        ScriptingEnvironment& se,
+        const bool use_elevation = false
     );
     virtual ~PBFParser();
 
