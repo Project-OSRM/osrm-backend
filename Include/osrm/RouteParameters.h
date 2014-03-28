@@ -44,7 +44,7 @@ struct RouteParameters {
         zoomLevel(18),
         printInstructions(false),
 #ifdef OSRM_HAS_ELEVATION
-        printElevation(true),
+        printElevation(false),
 #endif
         alternateRoute(true),
         geometry(true),
