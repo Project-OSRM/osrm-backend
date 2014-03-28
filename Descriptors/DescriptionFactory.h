@@ -87,29 +87,25 @@ public:
     double GetBearing(const FixedPointCoordinate& C, const FixedPointCoordinate& B) const;
     void AppendEncodedPolylineString(std::vector<std::string> &output) const;
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
+#ifdef OSRM_HAS_ELEVATION
+    void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data, const bool with_elevation = false, const int elevation = INT_MAX);
+    void SetStartSegment(const PhantomNode & start_phantom, const bool with_elevation = false, const int elevation = INT_MAX);
+    void SetEndSegment(const PhantomNode & start_phantom, const bool with_elevation = false, const int elevation = INT_MAX);
+    void AppendEncodedPolylineString(
+        const bool return_encoded,
+        std::vector<std::string> & output,
+        const bool with_elevation = false
+    );
+#else
     void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data);
-#ifdef OSRM_HAS_ELEVATION
-    void AppendSegmentWithElevation(const FixedPointCoordinate & coordinate, const int elevation, const PathData & data);
-#endif
-    void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode & start_phantom);
-#ifdef OSRM_HAS_ELEVATION
-    void SetStartSegmentWithElevation(const PhantomNode & start_phantom, const int elevation);
-#endif
     void SetEndSegment(const PhantomNode & start_phantom);
-#ifdef OSRM_HAS_ELEVATION
-    void SetEndSegmentWithElevation(const PhantomNode & start_phantom, const int elevation);
-#endif
     void AppendEncodedPolylineString(
         const bool return_encoded,
         std::vector<std::string> & output
     );
-#ifdef OSRM_HAS_ELEVATION
-    void AppendEncodedPolylineStringWithElevation(
-        const bool return_encoded,
-        std::vector<std::string> & output
-    );
 #endif
+    void BuildRouteSummary(const double distance, const unsigned time);
 
     template<class DataFacadeT>
     void Run(

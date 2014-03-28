@@ -59,9 +59,10 @@ void PolylineCompressor::encodeNumber(int number_to_encode, std::string & output
     }
 }
 
-void PolylineCompressor::printEncodedString(
-    const std::vector<SegmentInformation> & polyline,
-    std::string & output
+#ifdef OSRM_HAS_ELEVATION
+void PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> & polyline,
+    std::string & output,
+    const bool with_elevation
 ) const {
     std::vector<int> deltaNumbers;
     output += "\"";
@@ -69,6 +70,11 @@ void PolylineCompressor::printEncodedString(
         FixedPointCoordinate lastCoordinate = polyline[0].location;
         deltaNumbers.push_back( lastCoordinate.lat );
         deltaNumbers.push_back( lastCoordinate.lon );
+        int lastElevation;
+        if (with_elevation) {
+            lastElevation = polyline[0].elevation;
+            deltaNumbers.push_back( lastElevation );
+        }
         for(unsigned i = 1; i < polyline.size(); ++i) {
             if(!polyline[i].necessary) {
                 continue;
@@ -76,35 +82,32 @@ void PolylineCompressor::printEncodedString(
             deltaNumbers.push_back(polyline[i].location.lat - lastCoordinate.lat);
             deltaNumbers.push_back(polyline[i].location.lon - lastCoordinate.lon);
             lastCoordinate = polyline[i].location;
+            if (with_elevation) {
+                deltaNumbers.push_back(polyline[i].elevation - lastElevation);
+                lastElevation = polyline[i].elevation;
+            }
         }
         encodeVectorSignedNumber(deltaNumbers, output);
     }
     output += "\"";
 
 }
-
-#ifdef OSRM_HAS_ELEVATION
-void PolylineCompressor::printEncodedStringWithElevation(
-    const std::vector<SegmentInformation> & polyline,
-    std::string & output
-) const {
+#else
+void PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> & polyline,
+    std::string & output) const {
     std::vector<int> deltaNumbers;
     output += "\"";
     if(!polyline.empty()) {
         FixedPointCoordinate lastCoordinate = polyline[0].location;
-        int lastElevation = polyline[0].elevation;
         deltaNumbers.push_back( lastCoordinate.lat );
         deltaNumbers.push_back( lastCoordinate.lon );
-        deltaNumbers.push_back(lastElevation);
         for(unsigned i = 1; i < polyline.size(); ++i) {
             if(!polyline[i].necessary) {
                 continue;
             }
             deltaNumbers.push_back(polyline[i].location.lat - lastCoordinate.lat);
             deltaNumbers.push_back(polyline[i].location.lon - lastCoordinate.lon);
-            deltaNumbers.push_back(polyline[i].elevation - lastElevation);
             lastCoordinate = polyline[i].location;
-            lastElevation = polyline[i].elevation;
         }
         encodeVectorSignedNumber(deltaNumbers, output);
     }

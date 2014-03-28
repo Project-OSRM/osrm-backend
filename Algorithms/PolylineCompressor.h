@@ -46,13 +46,14 @@ private:
 	void encodeNumber(int number_to_encode, std::string & output) const;
 
 public:
+#ifdef OSRM_HAS_ELEVATION
     void printEncodedString(
         const std::vector<SegmentInformation> & polyline,
-        std::string & output
+        std::string & output,
+        const bool with_elevation = false
     ) const;
-
-#ifdef OSRM_HAS_ELEVATION
-    void printEncodedStringWithElevation(
+#else
+    void printEncodedString(
         const std::vector<SegmentInformation> & polyline,
         std::string & output
     ) const;

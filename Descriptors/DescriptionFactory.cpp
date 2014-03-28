@@ -60,6 +60,101 @@ double DescriptionFactory::GetBearing(
     return result;
 }
 
+#ifdef OSRM_HAS_ELEVATION
+void DescriptionFactory::SetStartSegment(const PhantomNode & start, const bool with_elevation, const int elevation) {
+    start_phantom = start;
+    if (with_elevation) {
+        AppendSegment(
+            start.location,
+            PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1),
+            true, elevation
+        );
+    } else {
+        AppendSegment(
+            start.location,
+            PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1)
+        );
+    }
+}
+
+void DescriptionFactory::SetEndSegment(const PhantomNode & target, const bool with_elevation, const int elevation) {
+    target_phantom = target;
+    if (with_elevation) {
+        pathDescription.push_back(
+            SegmentInformation(
+                target.location,
+                elevation,
+                target.nodeBasedEdgeNameID,
+                0,
+                target.weight1,
+                0,
+                true
+            )
+        );
+    } else {
+        pathDescription.push_back(
+            SegmentInformation(
+                target.location,
+                target.nodeBasedEdgeNameID,
+                0,
+                target.weight1,
+                0,
+                true
+            )
+        );
+    }
+}
+
+void DescriptionFactory::AppendSegment(
+    const FixedPointCoordinate & coordinate,
+    const PathData & data,
+    const bool with_elevation,
+    const int elevation
+) {
+    if(
+        ( 1 == pathDescription.size())                  &&
+        ( pathDescription.back().location == coordinate)
+    ) {
+        pathDescription.back().name_id = data.name_id;
+    } else {
+        if (with_elevation) {
+            pathDescription.push_back(
+                SegmentInformation(
+                    coordinate,
+                    elevation,
+                    data.name_id,
+                    data.durationOfSegment,
+                    0,
+                    data.turnInstruction
+                )
+            );
+        } else {
+            pathDescription.push_back(
+                SegmentInformation(
+                    coordinate,
+                    data.name_id,
+                    data.durationOfSegment,
+                    0,
+                    data.turnInstruction
+                )
+            );
+        }
+    }
+}
+
+void DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded,
+    std::vector<std::string> & output,
+    const bool with_elevation) {
+    std::string temp;
+    if(return_encoded) {
+        polyline_compressor.printEncodedString(pathDescription, temp, with_elevation);
+    } else {
+        polyline_compressor.printUnencodedString(pathDescription, temp);
+    }
+    output.push_back(temp);
+}
+
+#else
 void DescriptionFactory::SetStartSegment(const PhantomNode & start) {
     start_phantom = start;
     AppendSegment(
@@ -67,16 +162,6 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & start) {
         PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1)
     );
 }
-
-#ifdef OSRM_HAS_ELEVATION
-void DescriptionFactory::SetStartSegmentWithElevation(const PhantomNode & start, const int elevation) {
-    start_phantom = start;
-    AppendSegmentWithElevation(
-        start.location, elevation,
-        PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1)
-    );
-}
-#endif
 
 void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
     target_phantom = target;
@@ -91,23 +176,6 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
         )
     );
 }
-
-#ifdef OSRM_HAS_ELEVATION
-void DescriptionFactory::SetEndSegmentWithElevation(const PhantomNode & target, const int elevation) {
-    target_phantom = target;
-    pathDescription.push_back(
-        SegmentInformation(
-            target.location,
-            elevation,
-            target.nodeBasedEdgeNameID,
-            0,
-            target.weight1,
-            0,
-            true
-        )
-    );
-}
-#endif
 
 void DescriptionFactory::AppendSegment(
     const FixedPointCoordinate & coordinate,
@@ -131,53 +199,11 @@ void DescriptionFactory::AppendSegment(
     }
 }
 
-#ifdef OSRM_HAS_ELEVATION
-void DescriptionFactory::AppendSegmentWithElevation(
-    const FixedPointCoordinate & coordinate,
-    const int elevation,
-    const PathData & data
-) {
-    if(
-        ( 1 == pathDescription.size())                  &&
-        ( pathDescription.back().location == coordinate)
-    ) {
-        pathDescription.back().name_id = data.name_id;
-    } else {
-        pathDescription.push_back(
-            SegmentInformation(
-                coordinate,
-                elevation,
-                data.name_id,
-                data.durationOfSegment,
-                0,
-                data.turnInstruction
-            )
-        );
-    }
-}
-#endif
-
-void DescriptionFactory::AppendEncodedPolylineString(
-    const bool return_encoded,
-    std::vector<std::string> & output
-) {
+void DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded,
+    std::vector<std::string> & output) {
     std::string temp;
     if(return_encoded) {
         polyline_compressor.printEncodedString(pathDescription, temp);
-    } else {
-        polyline_compressor.printUnencodedString(pathDescription, temp);
-    }
-    output.push_back(temp);
-}
-
-#ifdef OSRM_HAS_ELEVATION
-void DescriptionFactory::AppendEncodedPolylineStringWithElevation(
-    const bool return_encoded,
-    std::vector<std::string> & output
-) {
-    std::string temp;
-    if(return_encoded) {
-        polyline_compressor.printEncodedStringWithElevation(pathDescription, temp);
     } else {
         polyline_compressor.printUnencodedString(pathDescription, temp);
     }
