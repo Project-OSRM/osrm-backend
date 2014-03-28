@@ -323,7 +323,28 @@ public:
         BOOST_FOREACH(const PathData & path_data, unpacked_path)
         {
             std::string name = facade->GetEscapedNameForNameID(path_data.name_id);
-            SimpleLogger().Write(logDEBUG) << "{up} " << facade->GetCoordinateOfNode(path_data.node) << ", name: " << name;
+            SimpleLogger().Write(logDEBUG) << "{up} node: " << path_data.node << ", " << facade->GetCoordinateOfNode(path_data.node) << ", name: " << name;
+        }
+
+        // there is no equivalent to a node-based node in an edge-expanded graph.
+        // two equivalent routes may start (or end) at different node-based edges
+        // as they are added with the offset how much "distance" on the edge
+        // has already been traversed. Depending on offset one needs to remove
+        // the last node.
+        if (unpacked_path.size() > 1)
+        {
+            const unsigned last_index = unpacked_path.size()-1;
+            const unsigned second_to_last_index = last_index -1;
+
+            //looks like a trivially true check but tests for underflow
+            BOOST_ASSERT(last_index > second_to_last_index);
+
+            if (unpacked_path[last_index].node == unpacked_path[second_to_last_index].node)
+            {
+                SimpleLogger().Write(logDEBUG) << "{rm} node: " << unpacked_path.back().node;
+                unpacked_path.pop_back();
+            }
+            BOOST_ASSERT(!unpacked_path.empty());
         }
     }
 
