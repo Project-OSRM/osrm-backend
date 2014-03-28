@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //implements all data storage when shared memory is _NOT_ used
 
+#include "OSRM_config.h"
+
 #include "BaseDataFacade.h"
 
 #include "../../DataStructures/OriginalEdgeData.h"
@@ -62,6 +64,9 @@ private:
     std::string                              m_timestamp;
 
     ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
+#ifdef OSRM_HAS_ELEVATION
+    ShM<int, false>::vector                  m_elevation_list;
+#endif
     ShM<NodeID, false>::vector               m_via_node_list;
     ShM<unsigned, false>::vector             m_name_ID_list;
     ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
@@ -129,14 +134,23 @@ private:
             sizeof(unsigned)
         );
         m_coordinate_list.resize(number_of_coordinates);
+#ifdef OSRM_HAS_ELEVATION
+        m_elevation_list.resize(number_of_coordinates);
+#endif
         for(unsigned i = 0; i < number_of_coordinates; ++i) {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
             m_coordinate_list[i] = FixedPointCoordinate(
                     current_node.lat,
                     current_node.lon
             );
+#ifdef OSRM_HAS_ELEVATION
+            m_elevation_list[i] = current_node.ele;
+#endif
         }
         std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
+#ifdef OSRM_HAS_ELEVATION
+        std::vector<int>(m_elevation_list).swap(m_elevation_list);
+#endif
         nodes_input_stream.close();
 
         SimpleLogger().Write(logDEBUG) << "Loading edge data";
@@ -321,7 +335,16 @@ public:
     ) const {
         const NodeID node = m_via_node_list.at(id);
         return m_coordinate_list.at(node);
-    };
+    }
+
+#ifdef OSRM_HAS_ELEVATION
+    int GetElevationOfNode(
+        const unsigned id
+    ) const {
+        const NodeID node = m_via_node_list.at(id);
+        return m_elevation_list.at(node);
+    }
+#endif
 
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id

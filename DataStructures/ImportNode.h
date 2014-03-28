@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef IMPORTNODE_H_
 #define IMPORTNODE_H_
 
+#include "OSRM_config.h"
+
 #include "QueryNode.h"
 #include "../DataStructures/HashTable.h"
 
@@ -44,15 +46,36 @@ struct ExternalMemoryNode : NodeInfo {
         bollard(bollard),
         trafficLight(traffic_light)
     { }
+#ifdef OSRM_HAS_ELEVATION
+    ExternalMemoryNode(
+        int lat,
+        int lon,
+        int ele,
+        unsigned int id,
+        bool bollard,
+        bool traffic_light
+    ) :
+        NodeInfo(lat, lon, ele, id),
+        bollard(bollard),
+        trafficLight(traffic_light)
+    { }
+#endif
     ExternalMemoryNode() : bollard(false), trafficLight(false) {}
 
     static ExternalMemoryNode min_value() {
+#ifdef OSRM_HAS_ELEVATION
+        return ExternalMemoryNode(0,0,0, 0, false, false);
+#else
         return ExternalMemoryNode(0,0,0, false, false);
+#endif
     }
     static ExternalMemoryNode max_value() {
         return ExternalMemoryNode(
             std::numeric_limits<int>::max(),
             std::numeric_limits<int>::max(),
+#ifdef OSRM_HAS_ELEVATION
+            std::numeric_limits<int>::max(),
+#endif
             std::numeric_limits<unsigned>::max(),
             false,
             false
@@ -70,8 +93,11 @@ struct ImportNode : public ExternalMemoryNode {
 
 	inline void Clear() {
 		keyVals.clear();
-		lat = 0; lon = 0; id = 0; bollard = false; trafficLight = false;
-	}
+        lat = 0; lon = 0; id = 0; bollard = false; trafficLight = false;
+#ifdef OSRM_HAS_ELEVATION
+        ele = std::numeric_limits<int>::max();
+#endif
+    }
 };
 
 #endif /* IMPORTNODE_H_ */

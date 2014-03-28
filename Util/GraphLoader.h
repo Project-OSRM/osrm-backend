@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
+#include "OSRM_config.h"
+
 #include "OSRMException.h"
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/ImportEdge.h"
@@ -88,8 +90,12 @@ NodeID readBinaryOSRMGraphFromStream(
     for( NodeID i=0; i<n; ++i ) {
         input_stream.read((char*)&node, sizeof(ExternalMemoryNode));
         int_to_ext_node_id_map->push_back(
-            NodeInfo(node.lat, node.lon, node.id)
-        );
+                    NodeInfo(node.lat, node.lon,
+#ifdef OSRM_HAS_ELEVATION
+                             node.ele,
+#endif
+                    node.id)
+                    );
         ext_to_int_id_map.emplace(node.id, i);
         if(node.bollard) {
         	barrier_node_list.push_back(i);

@@ -1,0 +1,6 @@
+#ifndef OSRM_CONFIG
+#define OSRM_CONFIG
+
+#cmakedefine OSRM_HAS_ELEVATION
+
+#endif // OSRM_CONFIG

@@ -25,6 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "OSRM_config.h"
+
 #include "DataStructures/OriginalEdgeData.h"
 #include "DataStructures/QueryEdge.h"
 #include "DataStructures/SharedMemoryFactory.h"
@@ -272,7 +274,11 @@ int main( const int argc, const char * argv[] ) {
         unsigned coordinate_list_size = 0;
         nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
         shared_layout_ptr->coordinate_list_size = coordinate_list_size;
-
+#ifdef OSRM_HAS_ELEVATION
+//        unsigned elevation_list_size = 0;
+//        nodes_input_stream.read((char *)&elevation_list_size, sizeof(unsigned));
+        shared_layout_ptr->elevation_list_size = coordinate_list_size;
+#endif
 
         // allocate shared memory block
 
@@ -333,11 +339,18 @@ int main( const int argc, const char * argv[] ) {
         FixedPointCoordinate * coordinates_ptr = (FixedPointCoordinate *)(
             shared_memory_ptr + shared_layout_ptr->GetCoordinateListOffset()
         );
+#ifdef OSRM_HAS_ELEVATION
+        int* elevation_ptr = (int *)(
+            shared_memory_ptr + shared_layout_ptr->GetElevationListOffset());
+#endif
 
         NodeInfo current_node;
         for(unsigned i = 0; i < coordinate_list_size; ++i) {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
             coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon);
+#ifdef OSRM_HAS_ELEVATION
+            elevation_ptr[i] = current_node.ele;
+#endif
         }
         nodes_input_stream.close();
 

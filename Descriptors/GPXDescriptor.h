@@ -28,7 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GPX_DESCRIPTOR_H_
 #define GPX_DESCRIPTOR_H_
 
+#include "OSRM_config.h"
+
 #include "BaseDescriptor.h"
+
+#ifdef OSRM_HAS_ELEVATION
+#include "../Util/EstimateElevation.h"
+#endif
 
 #include <boost/foreach.hpp>
 
@@ -73,8 +79,19 @@ public:
                 phantom_node_list.startPhantom.location.lon,
                 tmp
             );
-            reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
-
+            reply.content.push_back("lon=\"" + tmp + "\" ");
+#ifdef OSRM_HAS_ELEVATION
+            if (config.elevation) {
+                int start_elevation = EstimateElevation(phantom_node_list.startPhantom,
+                                                        raw_route.unpacked_path_segments, facade, true);
+                FixedPointCoordinate::convertInternalElevationToString(start_elevation, tmp);
+                reply.content.push_back("ele=\"" + tmp + "\" ></rtept>");
+            } else {
+                reply.content.push_back("></rtept>");
+            }
+#else
+            reply.content.push_back("></rtept>");
+#endif
             for(unsigned i=0; i < raw_route.unpacked_path_segments.size(); ++i){
                 BOOST_FOREACH(
                     const PathData & pathData,
@@ -85,7 +102,20 @@ public:
                     FixedPointCoordinate::convertInternalLatLonToString(current.lat, tmp);
                     reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
                     FixedPointCoordinate::convertInternalLatLonToString(current.lon, tmp);
-                    reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
+                    reply.content.push_back("lon=\"" + tmp + "\" ");
+#ifdef OSRM_HAS_ELEVATION
+                    if (config.elevation) {
+                        FixedPointCoordinate::convertInternalElevationToString(
+                            facade->GetElevationOfNode(pathData.node),
+                            tmp
+                        );
+                        reply.content.push_back("ele=\"" + tmp + "\" ></rtept>");
+                    } else {
+                        reply.content.push_back("></rtept>");
+                    }
+#else
+                    reply.content.push_back("></rtept>");
+#endif
                 }
             }
             // Add the via point or the end coordinate
@@ -98,7 +128,19 @@ public:
                 phantom_node_list.targetPhantom.location.lon,
                 tmp
             );
-            reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
+            reply.content.push_back("lon=\"" + tmp + "\" ");
+#ifdef OSRM_HAS_ELEVATION
+            if (config.elevation) {
+                int target_elevation = EstimateElevation(phantom_node_list.targetPhantom,
+                                                         raw_route.unpacked_path_segments, facade, false);
+                FixedPointCoordinate::convertInternalElevationToString(target_elevation, tmp);
+                reply.content.push_back("ele=\"" + tmp + "\" ></rtept>");
+            } else {
+                reply.content.push_back("></rtept>");
+            }
+#else
+            reply.content.push_back("></rtept>");
+#endif
         }
         reply.content.push_back("</rte></gpx>");
     }

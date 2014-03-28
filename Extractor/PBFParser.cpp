@@ -25,6 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "OSRM_config.h"
+
 #include "PBFParser.h"
 
 #include "ExtractionWay.h"
@@ -210,7 +212,12 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 			const int keyValue = dense.keys_vals ( denseTagIndex+1 );
 			const std::string & key = threadData->PBFprimitiveBlock.stringtable().s(tagValue);
 			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue);
-			extracted_nodes_vector[i].keyVals.emplace(key, value);
+#ifdef OSRM_HAS_ELEVATION
+            if (key == "ele") {
+                extracted_nodes_vector[i].ele = static_cast<int>(ELEVATION_PRECISION * atof(value.c_str() ));
+            }
+#endif
+            extracted_nodes_vector[i].keyVals.emplace(key, value);
 			denseTagIndex += 2;
 		}
 	}

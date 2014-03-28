@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _NODE_COORDS_H
 #define _NODE_COORDS_H
 
+#include "OSRM_config.h"
+
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -43,11 +45,20 @@ struct NodeInfo {
 	typedef NodeID key_type; 	//type of NodeID
 	typedef int value_type;		//type of lat,lons
 
-	NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), id(_id) {}
-	NodeInfo() : lat(INT_MAX), lon(INT_MAX), id(UINT_MAX) {}
-	int lat;
+#ifdef OSRM_HAS_ELEVATION
+    NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), ele(INT_MAX), id(_id) {}
+    NodeInfo(int _lat, int _lon, int _ele, NodeID _id) : lat(_lat), lon(_lon), ele(_ele), id(_id) {}
+    NodeInfo() : lat(INT_MAX), lon(INT_MAX), ele(INT_MAX), id(UINT_MAX) {}
+#else
+    NodeInfo(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), id(_id) {}
+    NodeInfo() : lat(INT_MAX), lon(INT_MAX) {}
+#endif
+    int lat;
 	int lon;
-	NodeID id;
+#ifdef OSRM_HAS_ELEVATION
+    int ele;
+#endif
+    NodeID id;
 
 	static NodeInfo min_value() {
 		return NodeInfo(
@@ -67,7 +78,12 @@ struct NodeInfo {
 
 	value_type operator[](const std::size_t n) const {
 		switch(n) {
-		case 1:
+#ifdef OSRM_HAS_ELEVATION
+        case 2:
+            return ele;
+            break;
+#endif
+        case 1:
 			return lat;
 			break;
 		case 0:

@@ -25,6 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "OSRM_config.h"
+
 #include "XMLParser.h"
 
 #include "ExtractionWay.h"
@@ -271,9 +273,14 @@ ImportNode XMLParser::_ReadXMLNode() {
 			}
 
 			if ( xmlStrEqual( childName, ( const xmlChar* ) "tag" ) == 1 ) {
-				xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
+                xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
 				xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
 				if ( k != NULL && value != NULL ) {
+#ifdef OSRM_HAS_ELEVATION
+                    if (xmlStrEqual( k, ( const xmlChar* ) "ele") == 1 ) {
+                        node.ele = static_cast<int>(ELEVATION_PRECISION * atof(( const char* ) value ));
+                    }
+#endif
 					node.keyVals.Add(std::string( reinterpret_cast<char*>(k) ), std::string( reinterpret_cast<char*>(value)));
 				}
 				if ( k != NULL ) {

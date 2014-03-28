@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef VIAROUTEPLUGIN_H_
 #define VIAROUTEPLUGIN_H_
 
+#include "OSRM_config.h"
+
 #include "BasePlugin.h"
 
 #include "../Algorithms/ObjectToBase64.h"
@@ -153,6 +155,9 @@ public:
         }
         descriptorConfig.zoom_level = routeParameters.zoomLevel;
         descriptorConfig.instructions = routeParameters.printInstructions;
+#ifdef OSRM_HAS_ELEVATION
+        descriptorConfig.elevation = routeParameters.printElevation;
+#endif
         descriptorConfig.geometry = routeParameters.geometry;
         descriptorConfig.encode_geometry = routeParameters.compression;
 
