@@ -34,7 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static const double COORDINATE_PRECISION = 1000000.;
 #ifdef OSRM_HAS_ELEVATION
-static const int ELEVATION_FACTOR = 1000;
+static const int ELEVATION_NUM_DIGITS = 2;
+static const int ELEVATION_PRECISION = 100.0;
 #endif
 
 struct FixedPointCoordinate {
@@ -69,6 +70,13 @@ struct FixedPointCoordinate {
         const int value,
         std::string & output
     );
+
+#ifdef OSRM_HAS_ELEVATION
+    static void convertInternalElevationToString(
+        const int value,
+        std::string & output
+    );
+#endif
 
     static void convertInternalCoordinateToString(
         const FixedPointCoordinate & coord,

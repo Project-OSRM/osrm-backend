@@ -214,7 +214,7 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 			const std::string & value = threadData->PBFprimitiveBlock.stringtable().s(keyValue);
 #ifdef OSRM_HAS_ELEVATION
             if (key == "ele") {
-                extracted_nodes_vector[i].ele = ELEVATION_FACTOR * atoi(value.c_str() );
+                extracted_nodes_vector[i].ele = static_cast<int>(ELEVATION_PRECISION * atof(value.c_str() ));
             }
 #endif
             extracted_nodes_vector[i].keyVals.emplace(key, value);

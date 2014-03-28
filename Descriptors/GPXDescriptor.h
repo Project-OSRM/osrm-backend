@@ -83,7 +83,7 @@ public:
             reply.content.push_back("lon=\"" + tmp + "\" ");
             int start_elevation = EstimateElevation(phantom_node_list.startPhantom,
                                                     raw_route.unpacked_path_segments, facade, true);
-            FixedPointCoordinate::convertInternalLatLonToString(start_elevation, tmp);
+            FixedPointCoordinate::convertInternalElevationToString(start_elevation, tmp);
             reply.content.push_back("ele=\"" + tmp + "\"></rtept>");
 #else
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
@@ -100,7 +100,7 @@ public:
                     FixedPointCoordinate::convertInternalLatLonToString(current.lon, tmp);
 #ifdef OSRM_HAS_ELEVATION
                     reply.content.push_back("lon=\"" + tmp + "\" ");
-                    FixedPointCoordinate::convertInternalLatLonToString(
+                    FixedPointCoordinate::convertInternalElevationToString(
                         facade->GetElevationOfNode(pathData.node),
                         tmp
                     );
@@ -124,7 +124,7 @@ public:
             reply.content.push_back("lon=\"" + tmp + "\" ");
             int target_elevation = EstimateElevation(phantom_node_list.targetPhantom,
                                                      raw_route.unpacked_path_segments, facade, false);
-            FixedPointCoordinate::convertInternalLatLonToString(target_elevation, tmp);
+            FixedPointCoordinate::convertInternalElevationToString(target_elevation, tmp);
             reply.content.push_back("ele=\"" + tmp + "\"></rtept>");
 #else
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");

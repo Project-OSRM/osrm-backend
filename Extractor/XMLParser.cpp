@@ -278,7 +278,7 @@ ImportNode XMLParser::_ReadXMLNode() {
 				if ( k != NULL && value != NULL ) {
 #ifdef OSRM_HAS_ELEVATION
                     if (xmlStrEqual( k, ( const xmlChar* ) "ele") == 1 ) {
-                        node.ele = ELEVATION_FACTOR * atoi(( const char* ) value );
+                        node.ele = static_cast<int>(ELEVATION_PRECISION * atof(( const char* ) value ));
                     }
 #endif
 					node.keyVals.Add(std::string( reinterpret_cast<char*>(k) ), std::string( reinterpret_cast<char*>(value)));
