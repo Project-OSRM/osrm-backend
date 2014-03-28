@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_DESCRIPTOR_H_
 #define JSON_DESCRIPTOR_H_
 
-#include "OSRM_config.h"
-
 #include "BaseDescriptor.h"
 #include "DescriptionFactory.h"
 #include "../Algorithms/ObjectToBase64.h"
@@ -38,9 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/Azimuth.h"
 #include "../Util/StringUtil.h"
 
-#ifdef OSRM_HAS_ELEVATION
 #include "../Util/EstimateElevation.h"
-#endif
 
 #include <boost/bind.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -104,7 +100,6 @@ public:
         FixedPointCoordinate current_coordinate;
         BOOST_FOREACH(const PathData & path_data, route_leg) {
             current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-#ifdef OSRM_HAS_ELEVATION
             if (config.elevation) {
                 // Get elevation from node and append segment with elevation
                 int current_elevation = facade->GetElevationOfNode(path_data.node);
@@ -112,9 +107,6 @@ public:
             } else {
                 description_factory.AppendSegment(current_coordinate, path_data );
             }
-#else
-            description_factory.AppendSegment(current_coordinate, path_data );
-#endif
             ++added_element_count;
         }
         // description_factory.SetEndSegment( leg_phantoms.targetPhantom );
@@ -143,7 +135,6 @@ public:
             return;
         }
 
-#ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
             int start_elevation = EstimateElevation(phantom_nodes.startPhantom,
                                                     raw_route.unpacked_path_segments, facade, true);
@@ -151,9 +142,6 @@ public:
         } else {
             description_factory.SetStartSegment(phantom_nodes.startPhantom);\
         }
-#else
-        description_factory.SetStartSegment(phantom_nodes.startPhantom);
-#endif
         reply.content.push_back("0,"
                 "\"status_message\": \"Found route between points\",");
 
@@ -168,7 +156,6 @@ public:
                 added_segments + shortest_leg_end_indices.back()
             );
         }
-#ifdef OSRM_HAS_ELEVATION
         if (config.elevation) {
             int end_elevation = EstimateElevation(phantom_nodes.targetPhantom,
                                                   raw_route.unpacked_path_segments, facade, false);
@@ -176,25 +163,15 @@ public:
         } else {
             description_factory.SetEndSegment(phantom_nodes.targetPhantom);
         }
-#else
-        description_factory.SetEndSegment(phantom_nodes.targetPhantom);
-#endif
         description_factory.Run(facade, config.zoom_level);
 
         reply.content.push_back("\"route_geometry\": ");
         if(config.geometry) {
-#ifdef OSRM_HAS_ELEVATION
         description_factory.AppendEncodedPolylineString(
             config.encode_geometry,
             reply.content,
             config.elevation
         );
-#else
-        description_factory.AppendEncodedPolylineString(
-            config.encode_geometry,
-            reply.content
-        );
-#endif
         } else {
             reply.content.push_back("[]");
         }

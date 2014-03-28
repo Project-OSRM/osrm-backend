@@ -30,14 +30,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
+#include <OSRM_config.h>
+
+#include <../../typedefs.h>
+
 static const double COORDINATE_PRECISION = 1000000.;
 static const int ELEVATION_NUM_DIGITS = 2;
 static const int ELEVATION_PRECISION = 100.0;
 
-struct FixedPointCoordinate {
+struct Coord2D {
     int lat;
     int lon;
 
+    Coord2D(const int lat, const int lon) : lat(lat), lon(lon) {}
+
+    const int get_ele() const { return INT_MAX; }
+    void set_ele(const int /*elevation*/) {}
+};
+
+struct Coord3D : public Coord2D {
+    int ele;
+
+    Coord3D(const int lat, const int lon) : Coord2D(lat, lon), ele(INT_MAX) {}
+
+    const int get_ele() const { return ele; }
+    void set_ele(const int elevation) { ele = elevation; }
+};
+
+#ifdef OSRM_HAS_ELEVATION
+typedef Coord3D CoordType;
+#else
+typedef Coord2D CoordType;
+#endif
+
+struct FixedPointCoordinate : public CoordType {
+    typedef CoordType super;
     FixedPointCoordinate();
     explicit FixedPointCoordinate (int lat, int lon);
     void Reset();

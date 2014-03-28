@@ -48,7 +48,8 @@ private:
 public:
     OSRM_impl(
         const ServerPaths & paths,
-        const bool use_shared_memory
+        const bool use_shared_memory,
+        const bool use_elevation = false
     );
     virtual ~OSRM_impl();
     void RunQuery(RouteParameters & route_parameters, http::Reply & reply);

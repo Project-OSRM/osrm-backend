@@ -67,7 +67,8 @@ inline bool GenerateServerProgramOptions(
     int & ip_port,
     int & requested_num_threads,
     bool & use_shared_memory,
-    bool & trial
+    bool & trial,
+    bool & use_elevation
 ) {
 
     // declare a group of options that will be allowed only on command line
@@ -131,6 +132,10 @@ inline bool GenerateServerProgramOptions(
             "port,p",
             boost::program_options::value<int>(&ip_port)->default_value(5000),
             "TCP/IP port"
+        )
+        (
+            "elevation,e", boost::program_options::value<bool>(&use_elevation)->implicit_value(true),
+            "Enable elevation output support"
         )
         (
             "threads,t",

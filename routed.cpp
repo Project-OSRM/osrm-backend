@@ -74,6 +74,7 @@ int main (int argc, const char * argv[])
         LogPolicy::GetInstance().Unmute();
 
         bool use_shared_memory = false;
+        bool use_elevation = false;
         std::string ip_address;
         int ip_port, requested_thread_num;
         bool trial = false;
@@ -87,7 +88,8 @@ int main (int argc, const char * argv[])
                 ip_port,
                 requested_thread_num,
                 use_shared_memory,
-                trial
+                trial,
+                use_elevation
              )
         ) {
             return 0;
@@ -140,7 +142,7 @@ int main (int argc, const char * argv[])
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        OSRM osrm_lib(server_paths, use_shared_memory);
+        OSRM osrm_lib(server_paths, use_shared_memory, use_elevation);
         Server * routing_server = ServerFactory::CreateServer(
                         ip_address,
                         ip_port,

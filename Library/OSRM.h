@@ -42,7 +42,8 @@ private:
 public:
     OSRM(
         const ServerPaths & paths,
-        const bool use_shared_memory = false
+        const bool use_shared_memory = false,
+        const bool use_elevation = false
     );
     ~OSRM();
     void RunQuery(RouteParameters & route_parameters, http::Reply & reply);

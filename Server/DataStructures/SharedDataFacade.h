@@ -85,6 +85,8 @@ private:
     ShM<unsigned, true>::vector             m_name_begin_indices;
     boost::shared_ptr<StaticRTree<RTreeLeaf, true> > m_static_rtree;
 
+    bool                                    m_use_elevation;
+
     // SharedDataFacade() { }
 
     void LoadTimestamp() {
@@ -206,7 +208,9 @@ private:
     }
 
 public:
-    SharedDataFacade( ) {
+    SharedDataFacade( const bool use_elevation)
+        : m_use_elevation(use_elevation)
+    {
         data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
             CURRENT_REGIONS,
             sizeof(SharedDataTimestamp),

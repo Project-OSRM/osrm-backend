@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ROUTE_PARAMETERS_H
 #define ROUTE_PARAMETERS_H
 
-#include <OSRM_config.h>
-
 #include <osrm/Coordinate.h>
 
 #include <boost/fusion/container/vector.hpp>
@@ -43,9 +41,7 @@ struct RouteParameters {
     RouteParameters() :
         zoomLevel(18),
         printInstructions(false),
-#ifdef OSRM_HAS_ELEVATION
         printElevation(false),
-#endif
         alternateRoute(true),
         geometry(true),
         compression(true),
@@ -55,9 +51,7 @@ struct RouteParameters {
 
     short zoomLevel;
     bool printInstructions;
-#ifdef OSRM_HAS_ELEVATION
     bool printElevation;
-#endif
     bool alternateRoute;
     bool geometry;
     bool compression;
@@ -92,11 +86,9 @@ struct RouteParameters {
         printInstructions = b;
     }
 
-#ifdef OSRM_HAS_ELEVATION
     void setElevationFlag(const bool e) {
         printElevation = e;
     }
-#endif
 
     void setService( const std::string & s) {
         service = s;

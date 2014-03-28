@@ -33,13 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <climits>
 
 FixedPointCoordinate::FixedPointCoordinate()
- :  lat(INT_MIN),
-    lon(INT_MIN)
+ :  super(INT_MIN, INT_MIN)
 { }
 
 FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
- :  lat(lat),
-    lon(lon)
+ :  super(lat, lon)
 { }
 
 void FixedPointCoordinate::Reset() {

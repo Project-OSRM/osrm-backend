@@ -85,7 +85,7 @@ struct NodeInfo2D {
 		return UINT_MAX;
 	}
 
-    int get_ele() const { return std::numeric_limits<int>::max(); }
+    const int get_ele() const { return std::numeric_limits<int>::max(); }
     void set_ele(const int /*e*/) {}
 };
 
@@ -128,7 +128,7 @@ struct NodeInfo3D : public NodeInfo2D {
         return UINT_MAX;
     }
 
-    int get_ele() const { return ele; }
+    const int get_ele() const { return ele; }
     void set_ele(const int e) { ele = e; }
 };
 

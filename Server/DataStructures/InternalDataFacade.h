@@ -30,8 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //implements all data storage when shared memory is _NOT_ used
 
-#include "OSRM_config.h"
-
 #include "BaseDataFacade.h"
 
 #include "../../DataStructures/OriginalEdgeData.h"
@@ -64,9 +62,7 @@ private:
     std::string                              m_timestamp;
 
     ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
-#ifdef OSRM_HAS_ELEVATION
     ShM<int, false>::vector                  m_elevation_list;
-#endif
     ShM<NodeID, false>::vector               m_via_node_list;
     ShM<unsigned, false>::vector             m_name_ID_list;
     ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
@@ -74,6 +70,8 @@ private:
     ShM<unsigned, false>::vector             m_name_begin_indices;
 
     StaticRTree<RTreeLeaf, false>          * m_static_rtree;
+
+    bool                                     m_use_elevation;
 
 
     void LoadTimestamp(const boost::filesystem::path & timestamp_path) {
@@ -134,23 +132,22 @@ private:
             sizeof(unsigned)
         );
         m_coordinate_list.resize(number_of_coordinates);
-#ifdef OSRM_HAS_ELEVATION
-        m_elevation_list.resize(number_of_coordinates);
-#endif
+        if (m_use_elevation) {
+            m_elevation_list.resize(number_of_coordinates);
+        }
         for(unsigned i = 0; i < number_of_coordinates; ++i) {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
             m_coordinate_list[i] = FixedPointCoordinate(
                     current_node.lat,
                     current_node.lon
             );
-#ifdef OSRM_HAS_ELEVATION
-            m_elevation_list[i] = current_node.ele;
-#endif
+            if (m_use_elevation) {
+                m_elevation_list[i] = current_node.ele;
+            }
         }
         std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
-#ifdef OSRM_HAS_ELEVATION
         std::vector<int>(m_elevation_list).swap(m_elevation_list);
-#endif
+
         nodes_input_stream.close();
 
         SimpleLogger().Write(logDEBUG) << "Loading edge data";
@@ -221,7 +218,9 @@ public:
         delete m_static_rtree;
     }
 
-    InternalDataFacade( const ServerPaths & server_paths ) {
+    InternalDataFacade( const ServerPaths & server_paths, const bool use_elevation = false )
+        : m_use_elevation(use_elevation)
+    {
         //generate paths of data files
         if( server_paths.find("hsgrdata") == server_paths.end() ) {
             throw OSRMException("no hsgr file given in ini file");
@@ -337,14 +336,16 @@ public:
         return m_coordinate_list.at(node);
     }
 
-#ifdef OSRM_HAS_ELEVATION
     int GetElevationOfNode(
         const unsigned id
     ) const {
         const NodeID node = m_via_node_list.at(id);
-        return m_elevation_list.at(node);
+        if (m_use_elevation) {
+            return m_elevation_list.at(node);
+        } else {
+            return std::numeric_limits<int>::max();
+        }
     }
-#endif
 
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id
