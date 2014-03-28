@@ -71,6 +71,7 @@ int main (int argc, char *argv[]) {
         double startupTime = get_timestamp();
         boost::filesystem::path config_file_path, input_path, restrictions_path, profile_path;
         int requested_num_threads;
+        bool use_elevation;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -87,6 +88,8 @@ int main (int argc, char *argv[]) {
                 "Restrictions file in .osrm.restrictions format")
             ("profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)->default_value("profile.lua"),
                 "Path to LUA routing profile")
+            ("elevation,e", boost::program_options::value<bool>(&use_elevation)->implicit_value(true),
+                "Process elevation values from input file nodes")
             ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
                 "Number of threads to use");
 
@@ -234,7 +237,7 @@ int main (int argc, char *argv[]) {
         speedProfile.has_turn_penalty_function = lua_function_exists( myLuaState, "turn_function" );
 
         std::vector<ImportEdge> edgeList;
-        NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
+        NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions, use_elevation);
         in.close();
         SimpleLogger().Write() <<
             inputRestrictions.size() << " restrictions, " <<

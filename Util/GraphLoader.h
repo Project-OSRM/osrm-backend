@@ -68,7 +68,8 @@ NodeID readBinaryOSRMGraphFromStream(
     std::vector<NodeID>          & barrier_node_list,
     std::vector<NodeID>          & traffic_light_node_list,
     std::vector<NodeInfo>        * int_to_ext_node_id_map,
-    std::vector<TurnRestriction> & restriction_list
+    std::vector<TurnRestriction> & restriction_list,
+    const bool use_elevation = false
 ) {
     const UUID uuid_orig;
     UUID uuid_loaded;
@@ -90,12 +91,10 @@ NodeID readBinaryOSRMGraphFromStream(
     for( NodeID i=0; i<n; ++i ) {
         input_stream.read((char*)&node, sizeof(ExternalMemoryNode));
         int_to_ext_node_id_map->push_back(
-                    NodeInfo(node.lat, node.lon,
-#ifdef OSRM_HAS_ELEVATION
-                             node.ele,
-#endif
-                    node.id)
-                    );
+                    NodeInfo(node.lat, node.lon, node.id));
+        if (use_elevation) {
+            int_to_ext_node_id_map->back().set_ele(node.get_ele());
+        }
         ext_to_int_id_map.emplace(node.id, i);
         if(node.bollard) {
         	barrier_node_list.push_back(i);
