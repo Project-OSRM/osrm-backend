@@ -186,6 +186,7 @@ public:
                 }
             }
             if( SPECIAL_EDGEID == smaller_edge_id ){
+                SimpleLogger().Write() << "checking reverse";
                 for(
                     EdgeID edge_id = facade->BeginEdges(edge.second);
                     edge_id < facade->EndEdges(edge.second);
@@ -234,6 +235,9 @@ public:
 
                     const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1 : phantom_node_pair.source_phantom.fwd_segment_position ) : 0 );
                     const int end_index = id_vector.size();
+                    std::string name = facade->GetEscapedNameForNameID(name_index);
+            SimpleLogger().Write(logDEBUG) << "compressed via segment " << name << " from [" << start_index << "," << end_index << "]";
+
 
                     BOOST_ASSERT( start_index >= 0 );
                     BOOST_ASSERT( start_index <= end_index );
@@ -293,7 +297,7 @@ public:
                 }
             }
 
-            // SimpleLogger().Write(logDEBUG) << "fetching from [" << start_index << "," << end_index << "]";
+            SimpleLogger().Write(logDEBUG) << "fetching target segment from [" << start_index << "," << end_index << "]";
 
             BOOST_ASSERT( start_index >= 0 );
             for(
@@ -302,10 +306,10 @@ public:
                 ( start_index < end_index ? ++i :--i)
             ) {
                 BOOST_ASSERT( i >= -1 );
-                // if ( i >= 0 )
-                // {
-                //     SimpleLogger().Write(logDEBUG) << "[" << i << "]" << facade->GetCoordinateOfNode(id_vector[i]);
-                // }
+                if ( i >= 0 )
+                {
+                    SimpleLogger().Write(logDEBUG) << "target [" << i << "]" << facade->GetCoordinateOfNode(id_vector[i]);
+                }
                 unpacked_path.push_back(
                     PathData(
                         id_vector[i],
@@ -315,6 +319,11 @@ public:
                     )
                 );
             }
+        }
+        BOOST_FOREACH(const PathData & path_data, unpacked_path)
+        {
+            std::string name = facade->GetEscapedNameForNameID(path_data.name_id);
+            SimpleLogger().Write(logDEBUG) << "{up} " << facade->GetCoordinateOfNode(path_data.node) << ", name: " << name;
         }
     }
 

@@ -87,8 +87,8 @@ public:
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
     void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode & start_phantom);
-    void SetEndSegment(const PhantomNode & start_phantom);
+    void SetStartSegment(const PhantomNode & start_phantom, const bool source_traversed_in_reverse);
+    void SetEndSegment(const PhantomNode & start_phantom, const bool target_traversed_in_reverse);
     void AppendEncodedPolylineString(
         const bool return_encoded,
         std::vector<std::string> & output
@@ -105,15 +105,17 @@ public:
 
         /** starts at index 1 */
         pathDescription[0].length = 0;
-        for(unsigned i = 1; i < pathDescription.size(); ++i)
+        for (unsigned i = 1; i < pathDescription.size(); ++i)
         {
+            //move down names by one, q&d hack
+            pathDescription[i-1].name_id = pathDescription[i].name_id;
             pathDescription[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
         }
 
         for (unsigned i = 0; i < pathDescription.size(); ++i)
         {
             const std::string name = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
-            SimpleLogger().Write(logDEBUG) << "[" << i << "] name: " << name << ", duration: " << pathDescription[i].duration << ", length: " << pathDescription[i].length << ", coordinate: " << pathDescription[i].location;
+            SimpleLogger().Write(logDEBUG) << "df [" << i << "] name: " << name << ", duration: " << pathDescription[i].duration << ", length: " << pathDescription[i].length << ", coordinate: " << pathDescription[i].location;
         }
 
         /*Simplify turn instructions
@@ -186,7 +188,7 @@ public:
                 target_phantom.name_id = (pathDescription.end()-2)->name_id;
             }
         } else {
-            pathDescription[segment_start_index].duration *= (1.-target_phantom.ratio);
+            // pathDescription[segment_start_index].duration *= (1.-target_phantom.ratio);
         }
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
             if(pathDescription.size() > 2) {
@@ -196,7 +198,7 @@ public:
                 start_phantom.name_id = pathDescription[0].name_id;
             }
         } else {
-            pathDescription[0].duration *= start_phantom.ratio;
+            // pathDescription[0].duration *= start_phantom.ratio;
         }
 
         //Generalize poly line

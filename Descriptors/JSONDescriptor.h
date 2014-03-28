@@ -99,7 +99,7 @@ public:
         FixedPointCoordinate current_coordinate;
         BOOST_FOREACH(const PathData & path_data, route_leg) {
             current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-            description_factory.AppendSegment(current_coordinate, path_data );
+            description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
         // description_factory.SetEndSegment( leg_phantoms.target_phantom );
@@ -120,7 +120,8 @@ public:
             "{\"status\":"
         );
 
-        if(INT_MAX == raw_route.lengthOfShortestPath) {
+        if (INVALID_EDGE_WEIGHT == raw_route.lengthOfShortestPath)
+        {
             //We do not need to do much, if there is no route ;-)
             reply.content.push_back(
                 "207,\"status_message\": \"Cannot find route between points\"}"
@@ -128,12 +129,87 @@ public:
             return;
         }
 
-        description_factory.SetStartSegment(phantom_nodes.source_phantom);
+        std::string name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
+        int fwd_weight = phantom_nodes.source_phantom.forward_weight;
+        int rev_weight = phantom_nodes.source_phantom.reverse_weight;
+        int fwd_offset = phantom_nodes.source_phantom.forward_offset;
+        int rev_offset = phantom_nodes.source_phantom.reverse_offset;
+        SimpleLogger().Write(logDEBUG) << "json source: " << name << ", location: " << phantom_nodes.source_phantom.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+        name = facade->GetEscapedNameForNameID(phantom_nodes.target_phantom.name_id);
+        fwd_weight = phantom_nodes.target_phantom.forward_weight;
+        rev_weight = phantom_nodes.target_phantom.reverse_weight;
+        fwd_offset = phantom_nodes.target_phantom.forward_offset;
+        rev_offset = phantom_nodes.target_phantom.reverse_offset;
+        SimpleLogger().Write(logDEBUG) << "json target: " << name << ", location: " << phantom_nodes.target_phantom.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+
+
+        //TODO: replace the previous logic with this one.
+
+        //check if first segment is non-zero
+        std::string road_name;
+        int source_duration = phantom_nodes.source_phantom.GetForwardWeightPlusOffset();
+        SimpleLogger().Write(logDEBUG) << "-> source_traversed_in_reverse: " << (raw_route.source_traversed_in_reverse ? "y" : "n");
+        if (!raw_route.source_traversed_in_reverse)
+        {
+            source_duration = phantom_nodes.source_phantom.GetReverseWeightPlusOffset();
+        }
+        BOOST_ASSERT(source_duration >= 0);
+        road_name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
+        if (source_duration > 0)
+        {
+            SimpleLogger().Write(logDEBUG) << "adding source \"" << road_name << "\" at " << phantom_nodes.source_phantom.location << ", duration: " << source_duration;
+        }
+        else
+        {
+            SimpleLogger().Write(logDEBUG) << "ignoring source \"" << road_name << "\"";
+        }
+
+        // TODO, for each unpacked segment add the leg to the description
+        BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
+
+        for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
+        {
+            const std::vector<PathData> & leg_path = raw_route.unpacked_path_segments[i];
+            const PhantomNodes & leg_phantoms = raw_route.segmentEndCoordinates[i];
+            SimpleLogger().Write(logDEBUG) << " Describing leg from " << leg_phantoms.source_phantom.location << " and " << leg_phantoms.target_phantom.location;
+            FixedPointCoordinate current_coordinate;
+            BOOST_FOREACH(const PathData & path_data, leg_path)
+            {
+                current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+                road_name = facade->GetEscapedNameForNameID(path_data.name_id);
+                SimpleLogger().Write(logDEBUG) << "  adding way point for \"" << road_name << "\" at " << current_coordinate << ", duration: " << path_data.durationOfSegment;
+            }
+        }
+
+        //check if last segment is non-zero
+        road_name = facade->GetEscapedNameForNameID(phantom_nodes.target_phantom.name_id);
+
+        int target_duration = phantom_nodes.target_phantom.GetForwardWeightPlusOffset();
+        if (raw_route.target_traversed_in_reverse)
+        {
+            target_duration = phantom_nodes.target_phantom.GetReverseWeightPlusOffset();
+        }
+        BOOST_ASSERT(target_duration >= 0);
+
+        if (target_duration > 0)
+        {
+            SimpleLogger().Write(logDEBUG) << "adding target \"" << road_name << "\" at " << phantom_nodes.target_phantom.location << ", duration: " << target_duration;
+        }
+        else
+        {
+            SimpleLogger().Write(logDEBUG) << "ignoring target \"" << road_name << "\"";
+        }
+        SimpleLogger().Write(logDEBUG) << "-> target_traversed_in_reverse: " << (raw_route.target_traversed_in_reverse ? "y" : "n");
+
+        //END OF TODO
+
+        description_factory.SetStartSegment(phantom_nodes.source_phantom, raw_route.source_traversed_in_reverse);
         reply.content.push_back("0,"
                 "\"status_message\": \"Found route between points\",");
 
         BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
-        for( unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i ) {
+        for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
+        {
             const int added_segments = DescribeLeg(
                 raw_route.unpacked_path_segments[i],
                 raw_route.segmentEndCoordinates[i]
@@ -143,7 +219,7 @@ public:
                 added_segments + shortest_leg_end_indices.back()
             );
         }
-        description_factory.SetEndSegment(phantom_nodes.target_phantom);
+        description_factory.SetEndSegment(phantom_nodes.target_phantom, raw_route.target_traversed_in_reverse);
         description_factory.Run(facade, config.zoom_level);
 
         reply.content.push_back("\"route_geometry\": ");
@@ -195,14 +271,16 @@ public:
 
         //only one alternative route is computed at this time, so this is hardcoded
 
-        if(raw_route.lengthOfAlternativePath != INT_MAX) {
-            alternate_descriptionFactory.SetStartSegment(phantom_nodes.source_phantom);
+
+        if(raw_route.lengthOfAlternativePath != INVALID_EDGE_WEIGHT)
+        {
+            alternate_descriptionFactory.SetStartSegment(phantom_nodes.source_phantom, raw_route.alt_source_traversed_in_reverse);
             //Get all the coordinates for the computed route
             BOOST_FOREACH(const PathData & path_data, raw_route.unpacked_alternative) {
                 current = facade->GetCoordinateOfNode(path_data.node);
                 alternate_descriptionFactory.AppendSegment(current, path_data );
             }
-            alternate_descriptionFactory.SetEndSegment(phantom_nodes.target_phantom);
+            alternate_descriptionFactory.SetEndSegment(phantom_nodes.target_phantom, raw_route.alt_target_traversed_in_reverse);
         }
         alternate_descriptionFactory.Run(facade, config.zoom_level);
 

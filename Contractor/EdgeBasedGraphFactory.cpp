@@ -318,14 +318,6 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
 
     BOOST_ASSERT( m_geometry_compressor.HasEntryForID(e1) == m_geometry_compressor.HasEntryForID(e2) );
     if( m_geometry_compressor.HasEntryForID(e1) ) {
-        if(forward_data.edgeBasedNodeID == 16176) {
-            SimpleLogger().Write(logDEBUG) << "reverse_data.edgeBasedNodeID=" << reverse_data.edgeBasedNodeID;
-            SimpleLogger().Write(logDEBUG) << "u: " << u << ", v: " << v << " at " << m_node_info_list.at(u).lat/COORDINATE_PRECISION << ","
-                << m_node_info_list.at(u).lon/COORDINATE_PRECISION << "<->" << m_node_info_list.at(v).lat/COORDINATE_PRECISION << ","
-                << m_node_info_list.at(v).lon/COORDINATE_PRECISION;
-            SimpleLogger().Write(logDEBUG) << "pos(" << e1 << ")=" << m_geometry_compressor.GetPositionForID(e1);
-            SimpleLogger().Write(logDEBUG) << "pos(" << e2 << ")=" << m_geometry_compressor.GetPositionForID(e2);
-        }
 
         BOOST_ASSERT( m_geometry_compressor.HasEntryForID(e2) );
 
@@ -605,6 +597,7 @@ void EdgeBasedGraphFactory::Run(
                 forward_weight1 + (add_traffic_signal_penalty ? speed_profile.trafficSignalPenalty :0),
                 forward_weight2
             );
+            SimpleLogger().Write(logDEBUG) << "compressing fwd segment with name " << m_node_based_graph->GetEdgeData(forward_e1).nameID;
             m_geometry_compressor.CompressEdge(
                 reverse_e1,
                 reverse_e2,
@@ -613,8 +606,14 @@ void EdgeBasedGraphFactory::Run(
                 reverse_weight1 ,
                 reverse_weight2 + (add_traffic_signal_penalty ? speed_profile.trafficSignalPenalty :0)
             );
-
+            SimpleLogger().Write(logDEBUG) << "compressing rev segment with name " << m_node_based_graph->GetEdgeData(reverse_e1).nameID;
             ++removed_node_count;
+
+            BOOST_ASSERT
+            (
+                m_node_based_graph->GetEdgeData(forward_e1).nameID ==
+                m_node_based_graph->GetEdgeData(reverse_e1).nameID
+            );
         }
     }
     SimpleLogger().Write() << "removed " << removed_node_count << " nodes";
@@ -840,7 +839,7 @@ void EdgeBasedGraphFactory::Run(
                 original_edge_data_vector.push_back(
                     OriginalEdgeData(
                         (edge_is_compressed ? m_geometry_compressor.GetPositionForID(e1) : v),
-                        edge_data2.nameID,
+                        (edge_is_compressed ? edge_data1.nameID : edge_data1.nameID),
                         turn_instruction,
                         edge_is_compressed
                     )

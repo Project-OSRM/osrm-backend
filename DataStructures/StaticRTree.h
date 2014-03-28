@@ -771,12 +771,12 @@ public:
         {
             result_phantom_node.reverse_weight *= 1.-ratio;
         }
-        result_phantom_node.ratio = ratio;
+        // result_phantom_node.ratio = ratio;
 
         SimpleLogger().Write(logDEBUG) << "result location: " << result_phantom_node.location << ", start: " << current_start_coordinate << ", end: " << current_end_coordinate;
         SimpleLogger().Write(logDEBUG) << "fwd node: " << result_phantom_node.forward_node_id << ", rev node: " << result_phantom_node.reverse_node_id;
-        SimpleLogger().Write(logDEBUG) << "fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight << ", ratio: " << result_phantom_node.ratio;
-        SimpleLogger().Write(logDEBUG) << "fwd offset: " << result_phantom_node.forward_offset << ", rev offset: " << result_phantom_node.reverse_offset << ", ratio: " << result_phantom_node.ratio;
+        SimpleLogger().Write(logDEBUG) << "fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight;// << ", ratio: " << result_phantom_node.ratio;
+        SimpleLogger().Write(logDEBUG) << "fwd offset: " << result_phantom_node.forward_offset << ", rev offset: " << result_phantom_node.reverse_offset;// << ", ratio: " << result_phantom_node.ratio;
         SimpleLogger().Write(logDEBUG) << "bidirected: " << (result_phantom_node.isBidirected() ? "y" : "n");
         SimpleLogger().Write(logDEBUG) << "name id: " << result_phantom_node.name_id;
         SimpleLogger().Write(logDEBUG) << "geom id: " << result_phantom_node.packed_geometry_id;

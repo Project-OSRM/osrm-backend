@@ -316,8 +316,9 @@ public:
         }
 
         //Unpack shortest path and alternative, if they exist
-        if( INVALID_EDGE_WEIGHT != upper_bound_to_shortest_path_distance ) {
-            BOOST_ASSERT( !packed_shortest_path.empty() );
+        if( INVALID_EDGE_WEIGHT != upper_bound_to_shortest_path_distance )
+        {
+            BOOST_ASSERT(!packed_shortest_path.empty());
             raw_route_data.unpacked_path_segments.resize(1);
             // SimpleLogger().Write() << "fwd offset1: " << phantom_node_pair.source_phantom.fwd_segment_position;
             // SimpleLogger().Write() << "fwd offset2: " << phantom_node_pair.source_phantom.rev_segment_position;
@@ -331,6 +332,9 @@ public:
             // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.source_phantom.reverse_node_id: " << phantom_node_pair.source_phantom.reverse_node_id;
             // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.target_phantom.packed_geometry_id: " << phantom_node_pair.target_phantom.packed_geometry_id;
             // SimpleLogger().Write(logDEBUG) << "packed_shortest_path.back(): " << packed_shortest_path.back();
+
+            raw_route_data.source_traversed_in_reverse = (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id);
+            raw_route_data.target_traversed_in_reverse = (packed_shortest_path.back()  != phantom_node_pair.target_phantom.forward_node_id);
 
             super::UnpackPath(
                 // -- packed input
@@ -356,6 +360,9 @@ public:
                 v_t_middle,
                 packed_alternate_path
             );
+
+            raw_route_data.source_traversed_in_reverse = (packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id);
+            raw_route_data.target_traversed_in_reverse = (packed_alternate_path.back()  != phantom_node_pair.target_phantom.forward_node_id);
 
             // unpack the alternate path
             super::UnpackPath(

@@ -42,7 +42,6 @@ struct PhantomNode {
         forward_offset(0),
         reverse_offset(0),
         packed_geometry_id(SPECIAL_EDGEID),
-        ratio(0.),
         fwd_segment_position(0)
     { }
 
@@ -54,10 +53,9 @@ struct PhantomNode {
     int forward_offset;
     int reverse_offset;
     unsigned packed_geometry_id;
-    double ratio;
+    // double ratio;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
-
 
     int GetForwardWeightPlusOffset() const
     {
@@ -79,7 +77,7 @@ struct PhantomNode {
         reverse_weight = INVALID_EDGE_WEIGHT;
         forward_offset = 0;
         reverse_offset = 0;
-        ratio = 0.;
+        // ratio = 0.;
         location.Reset();
     }
 
@@ -106,8 +104,8 @@ struct PhantomNode {
                 (forward_weight != INVALID_EDGE_WEIGHT) ||
                 (reverse_weight != INVALID_EDGE_WEIGHT)
             ) &&
-            (ratio >= 0.) &&
-            (ratio <= 1.) &&
+            // (ratio >= 0.) &&
+            // (ratio <= 1.) &&
             (name_id != std::numeric_limits<unsigned>::max()
         );
     }
@@ -162,7 +160,7 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn) {
             "rev-w: " << pn.reverse_weight       << ", " <<
             "fwd-o: " << pn.forward_offset       << ", " <<
             "rev-o: " << pn.reverse_offset       << ", " <<
-            "ratio: " << pn.ratio                << ", " <<
+            // "ratio: " << pn.ratio                << ", " <<
             "geom: "  << pn.packed_geometry_id   << ", " <<
             "pos: "   << pn.fwd_segment_position << ", " <<
             "loc: "   << pn.location;

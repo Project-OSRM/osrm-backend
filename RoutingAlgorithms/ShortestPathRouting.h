@@ -362,17 +362,22 @@ public:
             ++current_leg;
         }
 
-        if( distance1 > distance2 ) {
+        if (distance1 > distance2)
+        {
             std::swap( packed_legs1, packed_legs2 );
         }
         raw_route_data.unpacked_path_segments.resize( packed_legs1.size() );
         // const int start_offset = ( packed_legs1[0].front() == phantom_nodes_vector.front().source_phantom.forward_node_id  ?  1 : -1 )*phantom_nodes_vector.front().source_phantom.fwd_segment_position;
 
-        for(unsigned i = 0; i < packed_legs1.size(); ++i){
-            BOOST_ASSERT( !phantom_nodes_vector.empty() );
+        raw_route_data.source_traversed_in_reverse = (packed_legs1.front().front() != phantom_nodes_vector.front().source_phantom.forward_node_id);
+        raw_route_data.target_traversed_in_reverse = (packed_legs1.back().back() != phantom_nodes_vector.back().target_phantom.forward_node_id);
+
+        for (unsigned i = 0; i < packed_legs1.size(); ++i)
+        {
+            BOOST_ASSERT(!phantom_nodes_vector.empty());
             // const bool at_beginning = (packed_legs1[i] == packed_legs1.front());
             // const bool at_end = (packed_legs1[i] == packed_legs1.back());
-            BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size() );
+            BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size());
 
             PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[i];
             // if (!at_beginning)

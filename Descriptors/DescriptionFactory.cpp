@@ -31,18 +31,18 @@ DescriptionFactory::DescriptionFactory() : entireLength(0) { }
 
 DescriptionFactory::~DescriptionFactory() { }
 
-inline double DescriptionFactory::DegreeToRadian(const double degree) const {
-        return degree * (M_PI/180);
+inline double DescriptionFactory::DegreeToRadian(const double degree) const
+{
+    return degree * (M_PI/180.);
 }
 
-inline double DescriptionFactory::RadianToDegree(const double radian) const {
-        return radian * (180/M_PI);
+inline double DescriptionFactory::RadianToDegree(const double radian) const
+{
+    return radian * (180./M_PI);
 }
 
-double DescriptionFactory::GetBearing(
-    const FixedPointCoordinate & A,
-    const FixedPointCoordinate & B
-) const {
+double DescriptionFactory::GetBearing(const FixedPointCoordinate & A, const FixedPointCoordinate & B) const
+{
     double delta_long = DegreeToRadian(B.lon/COORDINATE_PRECISION - A.lon/COORDINATE_PRECISION);
 
     const double lat1 = DegreeToRadian(A.lat/COORDINATE_PRECISION);
@@ -51,24 +51,42 @@ double DescriptionFactory::GetBearing(
     const double y = sin(delta_long) * cos(lat2);
     const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
     double result = RadianToDegree(atan2(y, x));
-    while(result < 0.) {
+    while (result < 0.)
+    {
         result += 360.;
     }
-    while(result >= 360.) {
+
+    while (result >= 360.)
+    {
         result -= 360.;
     }
     return result;
 }
 
-void DescriptionFactory::SetStartSegment(const PhantomNode & start) {
-    start_phantom = start;
+void DescriptionFactory::SetStartSegment(const PhantomNode & source, const bool source_traversed_in_reverse)
+{
+    int fwd_weight = source.forward_weight;
+    int rev_weight = source.reverse_weight;
+    int fwd_offset = source.forward_offset;
+    int rev_offset = source.reverse_offset;
+    SimpleLogger().Write(logDEBUG) << "df source, traversed in reverse: " << (source_traversed_in_reverse ? "y" : "n") << ", location: " << source.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+    SimpleLogger().Write(logDEBUG) << "duration of first segment: " << (source_traversed_in_reverse ? source.GetReverseWeightPlusOffset() : source.GetForwardWeightPlusOffset());
+    start_phantom = source;
     AppendSegment(
-        start.location,
-        PathData(0, start.name_id, 10, start.forward_weight)
+        source.location,
+        PathData(0, source.name_id, 10, source.forward_weight)
     );
 }
 
-void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
+void DescriptionFactory::SetEndSegment(const PhantomNode & target, const bool target_traversed_in_reverse)
+{
+    int fwd_weight = target.forward_weight;
+    int rev_weight = target.reverse_weight;
+    int fwd_offset = target.forward_offset;
+    int rev_offset = target.reverse_offset;
+    SimpleLogger().Write(logDEBUG) << "df target, traversed in reverse: " << (target_traversed_in_reverse ? "y" : "n") << ", location: " << target.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+    SimpleLogger().Write(logDEBUG) << "duration of last segment: " << (target_traversed_in_reverse ? target.GetReverseWeightPlusOffset() : target.GetForwardWeightPlusOffset());
+
     target_phantom = target;
     pathDescription.push_back(
         SegmentInformation(
@@ -86,22 +104,22 @@ void DescriptionFactory::AppendSegment(
     const FixedPointCoordinate & coordinate,
     const PathData & data
 ) {
-    if(
-        ( 1 == pathDescription.size())                  &&
-        ( pathDescription.back().location == coordinate)
-    ) {
-        pathDescription.back().name_id = data.name_id;
-    } else {
-        pathDescription.push_back(
-            SegmentInformation(
-                coordinate,
-                data.name_id,
-                data.durationOfSegment,
-                0,
-                data.turnInstruction
-            )
-        );
-    }
+    // if(
+    //     ( 1 == pathDescription.size())                  &&
+    //     ( pathDescription.back().location == coordinate)
+    // ) {
+    //     pathDescription.back().name_id = data.name_id;
+    // } else {
+    pathDescription.push_back(
+        SegmentInformation(
+            coordinate,
+            data.name_id,
+            data.durationOfSegment,
+            0,
+            data.turnInstruction
+        )
+    );
+    // }
 }
 
 void DescriptionFactory::AppendEncodedPolylineString(
