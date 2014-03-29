@@ -75,17 +75,12 @@ private:
     std::string                             m_timestamp;
 
     ShM<FixedPointCoordinate, true>::vector m_coordinate_list;
-#ifdef OSRM_HAS_ELEVATION
-    ShM<int, true>::vector                  m_elevation_list;
-#endif
     ShM<NodeID, true>::vector               m_via_node_list;
     ShM<unsigned, true>::vector             m_name_ID_list;
     ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
     ShM<char, true>::vector                 m_names_char_list;
     ShM<unsigned, true>::vector             m_name_begin_indices;
     boost::shared_ptr<StaticRTree<RTreeLeaf, true> > m_static_rtree;
-
-    bool                                    m_use_elevation;
 
     // SharedDataFacade() { }
 
@@ -146,17 +141,6 @@ private:
                 data_layout->coordinate_list_size
         );
         m_coordinate_list.swap( coordinate_list );
-#ifdef OSRM_HAS_ELEVATION
-        int* elevation_list_ptr = (int *)(
-            shared_memory + data_layout->GetElevationListOffset()
-        );
-        typename ShM<int, true>::vector elevation_list(
-                elevation_list_ptr,
-                data_layout->elevation_list_size
-        );
-        m_elevation_list.swap( elevation_list );
-#endif
-
         TurnInstruction * turn_instruction_list_ptr = (TurnInstruction *)(
             shared_memory + data_layout->GetTurnInstructionListOffset()
         );
@@ -208,9 +192,7 @@ private:
     }
 
 public:
-    SharedDataFacade( const bool use_elevation)
-        : m_use_elevation(use_elevation)
-    {
+    SharedDataFacade() {
         data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
             CURRENT_REGIONS,
             sizeof(SharedDataTimestamp),
@@ -330,14 +312,12 @@ public:
         return m_coordinate_list.at(node);
     }
 
-#ifdef OSRM_HAS_ELEVATION
     int GetElevationOfNode(
         const unsigned id
     ) const {
         const NodeID node = m_via_node_list.at(id);
-        return m_elevation_list.at(node);
+        return m_coordinate_list.at(node).get_ele();
     }
-#endif
 
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id

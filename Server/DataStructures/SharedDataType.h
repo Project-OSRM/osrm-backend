@@ -29,8 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_DATA_TYPE_H_
 #define SHARED_DATA_TYPE_H_
 
-#include "OSRM_config.h"
-
 #include "BaseDataFacade.h"
 
 #include "../../DataStructures/QueryEdge.h"
@@ -56,9 +54,6 @@ struct SharedDataLayout {
     uint64_t graph_node_list_size;
     uint64_t graph_edge_list_size;
     uint64_t coordinate_list_size;
-#ifdef OSRM_HAS_ELEVATION
-    uint64_t elevation_list_size;
-#endif
     uint64_t turn_instruction_list_size;
     uint64_t r_search_tree_size;
 
@@ -75,9 +70,6 @@ struct SharedDataLayout {
         graph_node_list_size(0),
         graph_edge_list_size(0),
         coordinate_list_size(0),
-#ifdef OSRM_HAS_ELEVATION
-        elevation_list_size(0),
-#endif
         turn_instruction_list_size(0),
         r_search_tree_size(0),
         checksum(0),
@@ -96,9 +88,6 @@ struct SharedDataLayout {
         SimpleLogger().Write(logDEBUG) << "graph_edge_list_size:       " << graph_edge_list_size;
         SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << timestamp_length;
         SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << coordinate_list_size;
-#ifdef OSRM_HAS_ELEVATION
-        SimpleLogger().Write(logDEBUG) << "elevation_list_size:        " << elevation_list_size;
-#endif
         SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << turn_instruction_list_size;
         SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
         SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
@@ -115,9 +104,6 @@ struct SharedDataLayout {
             (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
             (timestamp_length           * sizeof(char)                ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
-#ifdef OSRM_HAS_ELEVATION
-            (elevation_list_size        * sizeof(int))                  +
-#endif
             (turn_instruction_list_size * sizeof(TurnInstructions)    ) +
             (r_search_tree_size         * sizeof(RTreeNode)           ) +
             sizeof(checksum)                                            +
@@ -184,20 +170,6 @@ struct SharedDataLayout {
             (timestamp_length           * sizeof(char)                );
         return result;
     }
-#ifdef OSRM_HAS_ELEVATION
-    uint64_t GetElevationListOffset() const {
-        uint64_t result =
-            (name_index_list_size       * sizeof(unsigned)            ) +
-            (name_char_list_size        * sizeof(char)                ) +
-            (name_id_list_size          * sizeof(unsigned)            ) +
-            (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
-            (timestamp_length           * sizeof(char)                ) +
-            (coordinate_list_size       * sizeof(FixedPointCoordinate));
-        return result;
-    }
-#endif
     uint64_t GetTurnInstructionListOffset() const {
         uint64_t result =
             (name_index_list_size       * sizeof(unsigned)            ) +
@@ -207,12 +179,7 @@ struct SharedDataLayout {
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
             (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
             (timestamp_length           * sizeof(char)                ) +
-#ifdef OSRM_HAS_ELEVATION
-            (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
-            (elevation_list_size        * sizeof(int)                 );
-#else
             (coordinate_list_size       * sizeof(FixedPointCoordinate));
-#endif
         return result;
     }
     uint64_t GetRSearchTreeOffset() const {
@@ -225,9 +192,6 @@ struct SharedDataLayout {
             (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
             (timestamp_length           * sizeof(char)                ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
-#ifdef OSRM_HAS_ELEVATION
-            (elevation_list_size        * sizeof(int)                 ) +
-#endif
             (turn_instruction_list_size * sizeof(TurnInstructions)    );
         return result;
     }
@@ -241,9 +205,6 @@ struct SharedDataLayout {
             (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
             (timestamp_length           * sizeof(char)                ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate)) +
-#ifdef OSRM_HAS_ELEVATION
-            (elevation_list_size        * sizeof(int)                 ) +
-#endif
             (turn_instruction_list_size * sizeof(TurnInstructions)    ) +
             (r_search_tree_size         * sizeof(RTreeNode)           );
         return result;

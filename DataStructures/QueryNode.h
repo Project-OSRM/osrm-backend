@@ -95,8 +95,6 @@ struct NodeInfo3D : public NodeInfo2D {
     NodeInfo3D(int _lat, int _lon, int _ele, NodeID _id) : super(_lat, _lon, _id), ele(_ele) {}
     NodeInfo3D() : super(), ele(std::numeric_limits<int>::max()) {}
 
-    int ele;
-
     static NodeInfo3D min_value() {
         return NodeInfo3D(
              -90*COORDINATE_PRECISION,
@@ -130,6 +128,9 @@ struct NodeInfo3D : public NodeInfo2D {
 
     const int get_ele() const { return ele; }
     void set_ele(const int e) { ele = e; }
+
+private:
+    int ele;
 };
 
 #ifdef OSRM_HAS_ELEVATION

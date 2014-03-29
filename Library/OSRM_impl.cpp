@@ -48,7 +48,7 @@ OSRM_impl::OSRM_impl( const ServerPaths & server_paths, const bool use_shared_me
     if (use_shared_memory)
     {
         barrier = new SharedBarriers();
-        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>(use_elevation);
+        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>();
     }
     else
     {

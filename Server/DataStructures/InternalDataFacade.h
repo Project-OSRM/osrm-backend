@@ -62,7 +62,6 @@ private:
     std::string                              m_timestamp;
 
     ShM<FixedPointCoordinate, false>::vector m_coordinate_list;
-    ShM<int, false>::vector                  m_elevation_list;
     ShM<NodeID, false>::vector               m_via_node_list;
     ShM<unsigned, false>::vector             m_name_ID_list;
     ShM<TurnInstruction, false>::vector      m_turn_instruction_list;
@@ -132,9 +131,6 @@ private:
             sizeof(unsigned)
         );
         m_coordinate_list.resize(number_of_coordinates);
-        if (m_use_elevation) {
-            m_elevation_list.resize(number_of_coordinates);
-        }
         for(unsigned i = 0; i < number_of_coordinates; ++i) {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
             m_coordinate_list[i] = FixedPointCoordinate(
@@ -142,11 +138,10 @@ private:
                     current_node.lon
             );
             if (m_use_elevation) {
-                m_elevation_list[i] = current_node.ele;
+                m_coordinate_list[i].set_ele(current_node.get_ele());
             }
         }
         std::vector<FixedPointCoordinate>(m_coordinate_list).swap(m_coordinate_list);
-        std::vector<int>(m_elevation_list).swap(m_elevation_list);
 
         nodes_input_stream.close();
 
@@ -340,11 +335,7 @@ public:
         const unsigned id
     ) const {
         const NodeID node = m_via_node_list.at(id);
-        if (m_use_elevation) {
-            return m_elevation_list.at(node);
-        } else {
-            return std::numeric_limits<int>::max();
-        }
+        return m_coordinate_list.at(node).get_ele();
     }
 
     TurnInstruction GetTurnInstructionForEdgeID(

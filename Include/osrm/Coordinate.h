@@ -49,12 +49,12 @@ struct Coord2D {
 };
 
 struct Coord3D : public Coord2D {
-    int ele;
-
     Coord3D(const int lat, const int lon) : Coord2D(lat, lon), ele(INT_MAX) {}
 
     const int get_ele() const { return ele; }
     void set_ele(const int elevation) { ele = elevation; }
+private:
+    int ele;
 };
 
 #ifdef OSRM_HAS_ELEVATION
