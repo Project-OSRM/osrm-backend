@@ -135,7 +135,7 @@ inline bool GenerateServerProgramOptions(
         )
         (
             "elevation,e",
-            boost::program_options::value<bool>(&use_elevation)->implicit_value(false),
+            boost::program_options::value<bool>(&use_elevation)->implicit_value(true),
             "Enable elevation output support"
         )
         (
