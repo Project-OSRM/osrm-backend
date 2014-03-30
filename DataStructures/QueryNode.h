@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _NODE_COORDS_H
 #define _NODE_COORDS_H
 
-#include "OSRM_config.h"
-
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -41,27 +39,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-struct NodeInfo2D {
+struct NodeInfo : public CoordType {
 	typedef NodeID key_type; 	//type of NodeID
 	typedef int value_type;		//type of lat,lons
 
-    NodeInfo2D(int _lat, int _lon, NodeID _id) : lat(_lat), lon(_lon), id(_id) {}
-    NodeInfo2D() : lat(INT_MAX), lon(INT_MAX) {}
+    NodeInfo(int _lat, int _lon, NodeID _id) : CoordType(_lat, _lon), id(_id) {}
+    NodeInfo() : CoordType(INT_MAX, INT_MAX) {}
 
-    int lat;
-	int lon;
     NodeID id;
 
-    static NodeInfo2D min_value() {
-        return NodeInfo2D(
+    static NodeInfo min_value() {
+        return NodeInfo(
 			 -90*COORDINATE_PRECISION,
 			-180*COORDINATE_PRECISION,
 			std::numeric_limits<NodeID>::min()
 		);
 	}
 
-    static NodeInfo2D max_value() {
-        return NodeInfo2D(
+    static NodeInfo max_value() {
+        return NodeInfo(
 			 90*COORDINATE_PRECISION,
 			180*COORDINATE_PRECISION,
 			std::numeric_limits<NodeID>::max()
@@ -70,6 +66,9 @@ struct NodeInfo2D {
 
 	value_type operator[](const std::size_t n) const {
 		switch(n) {
+        case 2:
+            return get_ele();
+            break;
         case 1:
 			return lat;
 			break;
@@ -84,59 +83,6 @@ struct NodeInfo2D {
 		BOOST_ASSERT_MSG(false, "should not happen");
 		return UINT_MAX;
 	}
-
-    const int get_ele() const { return std::numeric_limits<int>::max(); }
-    void set_ele(const int /*e*/) {}
 };
-
-struct NodeInfo3D : public NodeInfo2D {
-    typedef NodeInfo2D super;
-    NodeInfo3D(int _lat, int _lon, NodeID _id) : super(_lat, _lon, _id), ele(std::numeric_limits<int>::max()){}
-    NodeInfo3D(int _lat, int _lon, int _ele, NodeID _id) : super(_lat, _lon, _id), ele(_ele) {}
-    NodeInfo3D() : super(), ele(std::numeric_limits<int>::max()) {}
-
-    static NodeInfo3D min_value() {
-        return NodeInfo3D(
-             -90*COORDINATE_PRECISION,
-            -180*COORDINATE_PRECISION,
-            std::numeric_limits<int>::min(),
-            std::numeric_limits<NodeID>::min()
-        );
-    }
-
-    static NodeInfo3D max_value() {
-        return NodeInfo3D(
-             90*COORDINATE_PRECISION,
-            180*COORDINATE_PRECISION,
-            std::numeric_limits<int>::max(),
-            std::numeric_limits<NodeID>::max()
-            );
-    }
-
-    value_type operator[](const std::size_t n) const {
-        switch(n) {
-        case 2:
-            return ele;
-            break;
-        default:
-            return super::operator [](n);
-            break;
-        }
-        BOOST_ASSERT_MSG(false, "should not happen");
-        return UINT_MAX;
-    }
-
-    const int get_ele() const { return ele; }
-    void set_ele(const int e) { ele = e; }
-
-private:
-    int ele;
-};
-
-#ifdef OSRM_HAS_ELEVATION
-typedef NodeInfo3D NodeInfo;
-#else
-typedef NodeInfo2D NodeInfo;
-#endif
 
 #endif //_NODE_COORDS_H
