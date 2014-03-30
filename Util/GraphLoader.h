@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef GRAPHLOADER_H
 #define GRAPHLOADER_H
 
-#include "OSRM_config.h"
-
 #include "OSRMException.h"
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/ImportEdge.h"

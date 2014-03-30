@@ -30,8 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //implements all data storage when shared memory _IS_ used
 
-#include <OSRM_config.h>
-
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
