@@ -1,8 +1,6 @@
 require 'socket'
 require 'open3'
 
-LAUNCH_TIMEOUT = 20
-SHUTDOWN_TIMEOUT = 20
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
 class OSRMBackgroundLauncher
@@ -21,7 +19,7 @@ class OSRMBackgroundLauncher
   private
 
   def launch
-    Timeout.timeout(LAUNCH_TIMEOUT) do
+    Timeout.timeout(OSRM_TIMEOUT) do
       osrm_up
       wait_for_connection
     end
@@ -30,7 +28,7 @@ class OSRMBackgroundLauncher
   end
 
   def shutdown
-    Timeout.timeout(SHUTDOWN_TIMEOUT) do
+    Timeout.timeout(OSRM_TIMEOUT) do
       osrm_down
     end
   rescue Timeout::Error
