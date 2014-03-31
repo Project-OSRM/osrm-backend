@@ -1,7 +1,6 @@
 require 'net/http'
 
 HOST = "http://localhost:#{OSRM_PORT}"
-REQUEST_TIMEOUT = 1
 DESTINATION_REACHED = 15      #OSRM instruction code
 
 class Hash
@@ -18,7 +17,7 @@ def request_path path, waypoints=[], options={}
   params = nil if params==""
   uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
   @query = uri.to_s
-  Timeout.timeout(REQUEST_TIMEOUT) do
+  Timeout.timeout(OSRM_TIMEOUT) do
     Net::HTTP.get_response uri
   end
 rescue Errno::ECONNREFUSED => e
