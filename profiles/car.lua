@@ -79,6 +79,7 @@ do
     local numericValue = stringSpeedValues[stringValue]
     if numericValue ~= nil then
       return tonumber(numericValue)
+    end
   end
 end
 
