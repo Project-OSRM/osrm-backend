@@ -310,13 +310,6 @@ public:
         return m_coordinate_list.at(node);
     }
 
-    int GetElevationOfNode(
-        const unsigned id
-    ) const {
-        const NodeID node = m_via_node_list.at(id);
-        return m_coordinate_list.at(node).get_ele();
-    }
-
     TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id
     ) const {

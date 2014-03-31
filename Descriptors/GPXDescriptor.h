@@ -97,7 +97,7 @@ public:
                     reply.content.push_back("lon=\"" + tmp + "\" ");
                     if (config.elevation) {
                         FixedPointCoordinate::convertInternalElevationToString(
-                            facade->GetElevationOfNode(pathData.node),
+                            current.get_ele(),
                             tmp
                         );
                         reply.content.push_back("ele=\"" + tmp + "\" ></rtept>");

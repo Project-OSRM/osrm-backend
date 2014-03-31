@@ -86,10 +86,6 @@ public:
         const unsigned id
     ) const = 0;
 
-    virtual int GetElevationOfNode(
-        const unsigned id
-    ) const = 0;
-
     virtual TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id
     ) const  = 0;

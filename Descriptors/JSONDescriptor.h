@@ -101,9 +101,7 @@ public:
         BOOST_FOREACH(const PathData & path_data, route_leg) {
             current_coordinate = facade->GetCoordinateOfNode(path_data.node);
             if (config.elevation) {
-                // Get elevation from node and append segment with elevation
-                int current_elevation = facade->GetElevationOfNode(path_data.node);
-                description_factory.AppendSegment(current_coordinate, path_data, true, current_elevation);
+                description_factory.AppendSegment(current_coordinate, path_data, true, current_coordinate.get_ele());
             } else {
                 description_factory.AppendSegment(current_coordinate, path_data );
             }

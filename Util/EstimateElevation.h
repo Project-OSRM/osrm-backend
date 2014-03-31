@@ -88,7 +88,7 @@ int EstimateElevation(const PhantomNode& node,
         const FixedPointCoordinate current_coordinates = facade->GetCoordinateOfNode(inner_iterator->node);
         const double current_distance = FixedPointCoordinate::ApproximateDistance(initialCoordinates,
                                                                                  current_coordinates);
-        int current_elevation = facade->GetElevationOfNode(inner_iterator->node);
+        int current_elevation = current_coordinates.get_ele();
         if (current_distance < search_radius_lower) {
             return current_elevation;
         } else {
