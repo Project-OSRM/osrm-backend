@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include <unistd.h>
+
 #include <ostream>
 #include <iostream>
 
@@ -70,16 +72,20 @@ private:
 	bool m_is_mute;
 };
 
-class SimpleLogger {
+class SimpleLogger
+{
 public:
 	SimpleLogger() : level(logINFO) { }
 
-    std::ostringstream& Write(LogLevel l = logINFO) {
-    	try {
+    std::ostringstream& Write(LogLevel l = logINFO)
+    {
+    	try
+    	{
 			boost::mutex::scoped_lock lock(logger_mutex);
 			level = l;
 			os << "[";
-		   	switch(level) {
+			switch(level)
+			{
 				case logINFO:
 		    		os << "info";
 		    		break;
@@ -96,22 +102,26 @@ public:
 		    		break;
 			}
 			os << "] ";
-		} catch (...) { }
+		}
+		catch (...) { }
 	   	return os;
    }
 
 	virtual ~SimpleLogger() {
-		   	if(!LogPolicy::GetInstance().IsMute()) {
-		   	switch(level) {
+	   	if(!LogPolicy::GetInstance().IsMute())
+	   	{
+			const bool is_terminal = isatty(fileno(stdout));
+		   	switch(level)
+		   	{
 				case logINFO:
-					std::cout 			<< os.str() 			 << std::endl;
+					std::cout << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
 					break;
 				case logWARNING:
-					std::cerr << RED 	<< os.str() << COL_RESET << std::endl;
+					std::cerr << (is_terminal ? RED : "")	<< os.str() << (is_terminal ? COL_RESET : "") << std::endl;
 					break;
 				case logDEBUG:
 #ifndef NDEBUG
-					std::cout << YELLOW << os.str() << COL_RESET << std::endl;
+					std::cout << (is_terminal ? YELLOW : "") << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
 #endif
 					break;
 				default:
