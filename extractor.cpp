@@ -193,6 +193,11 @@ int main (int argc, char *argv[]) {
             (get_timestamp() - parsing_start_time) <<
             " seconds";
 
+        if( externalMemory.all_edges_list.empty() ) {
+            SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
+            return -1;
+        }
+
         externalMemory.PrepareData(output_file_name, restrictionsFileName);
 
         delete parser;

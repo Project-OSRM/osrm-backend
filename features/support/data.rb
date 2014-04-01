@@ -13,7 +13,7 @@ WAY_SPACING = 100
 DEFAULT_GRID_SIZE = 100   #meters
 PROFILES_PATH = '../profiles'
 BIN_PATH = '../build'
-
+DEFAULT_INPUT_FORMAT = 'osm'
 DEFAULT_ORIGIN = [1,1]
 
 class Location
@@ -23,6 +23,15 @@ class Location
     @lat = lat
     @lon = lon
   end
+end
+
+def set_input_format format
+  raise '*** Input format must be eiter "osm" or "pbf"' unless ['pbf','osm'].include? format.to_s
+  @input_format = format.to_s
+end
+
+def input_format
+  @input_format || DEFAULT_INPUT_FORMAT
 end
 
 def sanitized_scenario_title
@@ -244,8 +253,8 @@ def write_timestamp
 end
 
 def reprocess
-  use_pbf = true
   Dir.chdir TEST_FOLDER do
+    use_pbf = (input_format=='pbf')
     write_osm
     write_timestamp
     convert_osm_to_pbf if use_pbf

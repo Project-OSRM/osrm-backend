@@ -236,16 +236,16 @@ int main (int argc, char *argv[]) {
         std::vector<ImportEdge> edgeList;
         NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
         in.close();
+
+        if( edgeList.empty() ) {
+            SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
+            return -1;
+        }
+
         SimpleLogger().Write() <<
             inputRestrictions.size() << " restrictions, " <<
             bollardNodes.size() << " bollard nodes, " <<
             trafficLightNodes.size() << " traffic lights";
-
-        if( edgeList.empty() ) {
-            SimpleLogger().Write(logWARNING) << "The input data is broken. "
-                "It is impossible to do any turns in this graph";
-            return -1;
-        }
 
         /***
          * Building an edge-expanded graph from node-based input an turn restrictions
