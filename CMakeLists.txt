@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(OSRM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -102,6 +103,20 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
 endif()
+
+# Check if LTO is available
+set(LTO_FLAGS "")
+CHECK_CXX_COMPILER_FLAG("-flto" HAS_LTO_FLAG)
+if    (HAS_LTO_FLAG)
+  set(LTO_FLAGS "${LTO_FLAGS} -flto")
+else  (HAS_LTO_FLAG)
+  set(LTO_FLAGS "${LTO_FLAGS} -flto")
+endif (HAS_LTO_FLAG)
+
+# Add Link-Time-Optimization flags, if supported (GCC >= 4.5) and enabled
+set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}           ${LTO_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    ${LTO_FLAGS}")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LTO_FLAGS}")
 
 # Configuring other platform dependencies
 if(APPLE)
