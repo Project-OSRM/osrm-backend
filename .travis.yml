@@ -16,11 +16,11 @@ before_script:
  - cmake .. $CMAKEOPTIONS
 script:
  - make -j 2
- # - cd ..
- # - cucumber -p verify
-after_script:
  - cd ..
  - cucumber -p verify
+after_script:
+# - cd ..
+# - cucumber -p verify
 branches:
   only:
     - master
