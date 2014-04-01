@@ -187,8 +187,6 @@ public:
                 pathDescription.back().turn_instruction = TurnInstructionsClass::NoTurn;
                 target_phantom.name_id = (pathDescription.end()-2)->name_id;
             }
-        } else {
-            // pathDescription[segment_start_index].duration *= (1.-target_phantom.ratio);
         }
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
             if(pathDescription.size() > 2) {
@@ -197,8 +195,6 @@ public:
                 pathDescription[0].necessary = true;
                 start_phantom.name_id = pathDescription[0].name_id;
             }
-        } else {
-            // pathDescription[0].duration *= start_phantom.ratio;
         }
 
         //Generalize poly line

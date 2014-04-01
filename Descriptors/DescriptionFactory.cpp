@@ -60,6 +60,9 @@ double DescriptionFactory::GetBearing(const FixedPointCoordinate & A, const Fixe
     {
         result -= 360.;
     }
+
+    SimpleLogger().Write(logDEBUG) << "bearing between " << A << " and " << B << " is " << result;
+
     return result;
 }
 
@@ -100,26 +103,18 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & target, const bool ta
     );
 }
 
-void DescriptionFactory::AppendSegment(
-    const FixedPointCoordinate & coordinate,
-    const PathData & data
-) {
-    // if(
-    //     ( 1 == pathDescription.size())                  &&
-    //     ( pathDescription.back().location == coordinate)
-    // ) {
-    //     pathDescription.back().name_id = data.name_id;
-    // } else {
-    pathDescription.push_back(
-        SegmentInformation(
-            coordinate,
-            data.name_id,
-            data.durationOfSegment,
-            0,
-            data.turnInstruction
-        )
-    );
-    // }
+void DescriptionFactory::AppendSegment(const FixedPointCoordinate & coordinate, const PathData & path_point)
+{
+    if ((1 == pathDescription.size()) && ( pathDescription.back().location == coordinate))
+    {
+        pathDescription.back().name_id = path_point.name_id;
+    }
+    else
+    {
+        pathDescription.push_back(
+            SegmentInformation(coordinate, path_point.name_id, path_point.durationOfSegment, 0, path_point.turnInstruction)
+        );
+    }
 }
 
 void DescriptionFactory::AppendEncodedPolylineString(
