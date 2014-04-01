@@ -128,8 +128,15 @@ boost::asio::const_buffer Reply::ToBuffer(Reply::status_type status) {
 }
 
 
-Reply::Reply() : status(ok) {
+Reply::Reply() : status(ok), m_contentInsIndex(-1) {
 
 }
 
+std::vector<std::string>::iterator Reply::getContentInsIter() throw() {
+    if ((0 > m_contentInsIndex) || ((size_t)m_contentInsIndex >= content.size())) {
+        return content.end();
+    }
+    return content.begin() + (size_t)m_contentInsIndex;
 }
+
+} // end of namespace http

@@ -56,10 +56,12 @@ public:
                 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
                 "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
                 "\">");
+        reply.content.push_back("<metadata>");
         reply.content.push_back(
-                "<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
+                "<copyright author=\"Project OSRM\"><license>Data (c)"
                 " OpenStreetMap contributors (ODbL)</license></copyright>"
                 "</metadata>");
+        reply.setContentInsIndex(reply.content.size() - 1); // place to insert additional content
         reply.content.push_back("<rte>");
         bool found_route =  (raw_route.lengthOfShortestPath != INT_MAX) &&
                             (raw_route.unpacked_path_segments[0].size());

@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/JSONDescriptor.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimingUtil.h"
 
 #include <boost/unordered_map.hpp>
 
@@ -81,6 +82,7 @@ public:
             return;
         }
 
+	double _time_from = get_timestamp();
         RawRouteData rawRoute;
         rawRoute.checkSum = facade->GetCheckSum();
         const bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
@@ -157,17 +159,12 @@ public:
         descriptorConfig.encode_geometry = routeParameters.compression;
 
         switch(descriptorType){
-        case 0:
-            desc = new JSONDescriptor<DataFacadeT>();
-
-            break;
         case 1:
             desc = new GPXDescriptor<DataFacadeT>();
-
             break;
+        case 0:
         default:
             desc = new JSONDescriptor<DataFacadeT>();
-
             break;
         }
 
@@ -177,6 +174,20 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
+
+        if (routeParameters.exec_time) {
+            double _time_diff = (get_timestamp() - _time_from) * 1000; // time difference in ms
+            std::vector<std::string>::iterator it = reply.getContentInsIter();
+            if (it != reply.content.end()) {
+                std::string temp_string;
+		intToString((int)(_time_diff), temp_string);
+                reply.content.insert(it, (1 == descriptorType)?
+                    "<exec_time_ms>" + temp_string + "</exec_time_ms>" : "\"exec_time_ms\":" + temp_string + ","
+                );
+            } else {
+                SimpleLogger().Write(logDEBUG) << "Can't find place to insert exec time metric";
+            }
+        }
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")\n");
         }
