@@ -16,15 +16,15 @@ Feature: Estimation of travel time
             | f | e | d |
 
         And the ways
-            | nodes | highway   |
-            | xa    | primary   |
-            | xb    | primary   |
-            | xc    | primary   |
-            | xd    | primary   |
-            | xe    | primary   |
-            | xf    | primary   |
-            | xg    | primary   |
-            | xh    | primary   |
+            | nodes | highway |
+            | xa    | primary |
+            | xb    | primary |
+            | xc    | primary |
+            | xd    | primary |
+            | xe    | primary |
+            | xf    | primary |
+            | xg    | primary |
+            | xh    | primary |
 
         When I route I should get
             | from | to | route | time   |
@@ -45,15 +45,15 @@ Feature: Estimation of travel time
             | f | e | d |
 
         And the ways
-            | nodes | highway   |
-            | xa    | primary   |
-            | xb    | primary   |
-            | xc    | primary   |
-            | xd    | primary   |
-            | xe    | primary   |
-            | xf    | primary   |
-            | xg    | primary   |
-            | xh    | primary   |
+            | nodes | highway |
+            | xa    | primary |
+            | xb    | primary |
+            | xc    | primary |
+            | xd    | primary |
+            | xe    | primary |
+            | xf    | primary |
+            | xg    | primary |
+            | xh    | primary |
 
         When I route I should get
             | from | to | route | time    |
@@ -74,15 +74,15 @@ Feature: Estimation of travel time
             | f | e | d |
 
         And the ways
-            | nodes | highway   |
-            | xa    | primary   |
-            | xb    | primary   |
-            | xc    | primary   |
-            | xd    | primary   |
-            | xe    | primary   |
-            | xf    | primary   |
-            | xg    | primary   |
-            | xh    | primary   |
+            | nodes | highway |
+            | xa    | primary |
+            | xb    | primary |
+            | xc    | primary |
+            | xd    | primary |
+            | xe    | primary |
+            | xf    | primary |
+            | xg    | primary |
+            | xh    | primary |
 
         When I route I should get
             | from | to | route | time     |
@@ -103,15 +103,15 @@ Feature: Estimation of travel time
             | f | e | d |
 
         And the ways
-            | nodes | highway   |
-            | xa    | primary   |
-            | xb    | primary   |
-            | xc    | primary   |
-            | xd    | primary   |
-            | xe    | primary   |
-            | xf    | primary   |
-            | xg    | primary   |
-            | xh    | primary   |
+            | nodes | highway |
+            | xa    | primary |
+            | xb    | primary |
+            | xc    | primary |
+            | xd    | primary |
+            | xe    | primary |
+            | xf    | primary |
+            | xg    | primary |
+            | xh    | primary |
 
         When I route I should get
             | from | to | route | time      |
@@ -183,9 +183,9 @@ Feature: Estimation of travel time
             |   |   | e |
 
         And the ways
-            | nodes | highway   |
-            | abc   | primary   |
-            | cde   | tertiary  |
+            | nodes | highway  |
+            | abc   | primary  |
+            | cde   | tertiary |
 
         When I route I should get
             | from | to | route   | time    |
@@ -213,3 +213,26 @@ Feature: Estimation of travel time
             | 4    | 3  | ab    | 10s +-1 |
             | 4    | 2  | ab    | 20s +-1 |
             | 4    | 1  | ab    | 30s +-1 |
+    
+    @bug
+    Scenario: Total travel time should match sum of times of individual ways
+        Given a grid size of 1000 meters
+        And the node map
+            | a | b |  |  |   |
+            |   |   |  |  |   |
+            |   | c |  |  | d |
+
+        And the ways
+            | nodes | highway |
+            | ab    | primary |
+            | bc    | primary |
+            | cd    | primary |
+
+        When I route I should get
+            | from | to | route    | distances             | distance  | times              | time     |
+            | a    | b  | ab       | 1000m +-1             | 1000m +-1 | 100s +-1           | 100s +-1 |
+            | b    | c  | bc       | 2000m +-1             | 2000m +-1 | 200s +-1           | 200s +-1 |
+            | c    | d  | cd       | 3000m +-1             | 3000m +-1 | 300s +-1           | 300s +-1 |
+            | a    | c  | ab,bc    | 1000m,2000m +-1       | 3000m +-1 | 100s,200s +-1      | 300s +-1 |
+            | b    | d  | bc,cd    | 2000m,3000m +-1       | 5000m +-1 | 200s,300s +-1      | 500s +-1 |
+            | a    | d  | ab,bc,cd | 1000m,2000m,3000m +-1 | 6000m +-1 | 100s,200s,300s +-1 | 600s +-1 |

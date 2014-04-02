@@ -46,6 +46,8 @@ When /^I route I should get$/ do |table|
           compasses = compass_list json['route_instructions']
           turns = turn_list json['route_instructions']
           modes = mode_list json['route_instructions']
+          times = time_list json['route_instructions']
+          distances = distance_list json['route_instructions']
         end
       end
 
@@ -89,6 +91,12 @@ When /^I route I should get$/ do |table|
         end
         if table.headers.include? 'modes'
           got['modes'] = modes
+        end
+        if table.headers.include? 'times'
+          got['times'] = times
+        end
+        if table.headers.include? 'distances'
+          got['distances'] = distances
         end
         if table.headers.include? '#'   # comment column
           got['#'] = row['#']           # copy value so it always match
