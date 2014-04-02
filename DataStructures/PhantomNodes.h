@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
-struct PhantomNode {
+struct PhantomNode
+{
     PhantomNode() :
         forward_node_id(SPECIAL_NODEID),
         reverse_node_id(SPECIAL_NODEID),
@@ -53,7 +54,6 @@ struct PhantomNode {
     int forward_offset;
     int reverse_offset;
     unsigned packed_geometry_id;
-    // double ratio;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
 
@@ -77,7 +77,6 @@ struct PhantomNode {
         reverse_weight = INVALID_EDGE_WEIGHT;
         forward_offset = 0;
         reverse_offset = 0;
-        // ratio = 0.;
         location.Reset();
     }
 
@@ -118,9 +117,9 @@ struct PhantomNode {
 
 struct PhantomNodes
 {
-    //TODO: rename to lower-case non-camel source_*,target_*
     PhantomNode source_phantom;
     PhantomNode target_phantom;
+
     void Reset()
     {
         source_phantom.Reset();
@@ -144,15 +143,15 @@ struct PhantomNodes
     }
 };
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn) {
-    // out << "Node1: "        << pn.source_phantom.forward_node_id  << "\n";
-    // out << "Node2: "        << pn.target_phantom.reverse_node_id << "\n";
+inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn)
+{
     out << "source_coord: " << pn.source_phantom.location        << "\n";
     out << "target_coord: " << pn.target_phantom.location        << std::endl;
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn) {
+inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn)
+{
     out <<  "node1: " << pn.forward_node_id      << ", " <<
             "node2: " << pn.reverse_node_id      << ", " <<
             "name: "  << pn.name_id              << ", " <<
@@ -160,7 +159,6 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn) {
             "rev-w: " << pn.reverse_weight       << ", " <<
             "fwd-o: " << pn.forward_offset       << ", " <<
             "rev-o: " << pn.reverse_offset       << ", " <<
-            // "ratio: " << pn.ratio                << ", " <<
             "geom: "  << pn.packed_geometry_id   << ", " <<
             "pos: "   << pn.fwd_segment_position << ", " <<
             "loc: "   << pn.location;
