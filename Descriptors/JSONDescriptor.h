@@ -505,6 +505,5 @@ public:
             reply.content.push_back("]");
         }
     }
-
 };
 #endif /* JSON_DESCRIPTOR_H_ */
