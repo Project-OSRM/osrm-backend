@@ -506,4 +506,5 @@ public:
         }
     }
 };
+
 #endif /* JSON_DESCRIPTOR_H_ */
