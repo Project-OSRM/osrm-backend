@@ -33,9 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-typedef boost::unordered_map<
-            const std::string,
-            boost::filesystem::path
-        > ServerPaths;
+typedef boost::unordered_map<const std::string, boost::filesystem::path> ServerPaths;
 
 #endif //SERVER_PATH_H
