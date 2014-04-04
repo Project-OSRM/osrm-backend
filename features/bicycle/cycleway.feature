@@ -1,29 +1,29 @@
 @routing @bicycle @cycleway
 Feature: Bike - Cycle tracks/lanes
-Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
+# Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
 
     Background:
         Given the profile "bicycle"
 
     Scenario: Bike - Cycle tracks/lanes should enable biking
         Then routability should be
-            | highway     | cycleway     | bothw |
-            | motorway    |              |       |
-            | motorway    | track        | x     |
-            | motorway    | lane         | x     |
-            | motorway    | shared       | x     |
-            | motorway    | share_busway | x     |
-            | motorway    | sharrow      | x     |
-            | some_tag    | track        | x     |
-            | some_tag    | lane         | x     |
-            | some_tag    | shared       | x     |
-            | some_tag    | share_busway | x     |
-            | some_tag    | sharrow      | x     |
-            | residential | track        | x     |
-            | residential | lane         | x     |
-            | residential | shared       | x     |
-            | residential | share_busway | x     |
-            | residential | sharrow      | x     |
+            | highway     | cycleway     | forw | backw |
+            | motorway    |              |      |       |
+            | motorway    | track        | x    |       |
+            | motorway    | lane         | x    |       |
+            | motorway    | shared       | x    |       |
+            | motorway    | share_busway | x    |       |
+            | motorway    | sharrow      | x    |       |
+            | some_tag    | track        | x    | x     |
+            | some_tag    | lane         | x    | x     |
+            | some_tag    | shared       | x    | x     |
+            | some_tag    | share_busway | x    | x     |
+            | some_tag    | sharrow      | x    | x     |
+            | residential | track        | x    | x     |
+            | residential | lane         | x    | x     |
+            | residential | shared       | x    | x     |
+            | residential | share_busway | x    | x     |
+            | residential | sharrow      | x    | x     |
 
     Scenario: Bike - Left/right side cycleways on implied bidirectionals
         Then routability should be
@@ -70,12 +70,12 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:cycleway
 
     Scenario: Bike - Access tags should overwrite cycleway access
         Then routability should be
-            | highway     | cycleway | access | bothw |
-            | motorway    | track    | no     |       |
-            | residential | track    | no     |       |
-            | footway     | track    | no     |       |
-            | cycleway    | track    | no     |       |
-            | motorway    | lane     | yes    | x     |
-            | residential | lane     | yes    | x     |
-            | footway     | lane     | yes    | x     |
-            | cycleway    | lane     | yes    | x     |
+            | highway     | cycleway | access | forw | backw |
+            | motorway    | track    | no     |      |       |
+            | residential | track    | no     |      |       |
+            | footway     | track    | no     |      |       |
+            | cycleway    | track    | no     |      |       |
+            | motorway    | lane     | yes    | x    |       |
+            | residential | lane     | yes    | x    | x     |
+            | footway     | lane     | yes    | x    | x     |
+            | cycleway    | lane     | yes    | x    | x     |

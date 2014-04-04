@@ -28,82 +28,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INI_FILE_H_
 #define INI_FILE_H_
 
-#include "OSRMException.h"
 #include "../DataStructures/HashTable.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-
-#include <exception>
-#include <iostream>
 #include <string>
+#include <vector>
 
 class IniFile {
 public:
-    IniFile(const char * config_filename) {
-        boost::filesystem::path config_file(config_filename);
-        if ( !boost::filesystem::exists( config_file ) ) {
-            std::string error = std::string(config_filename) + " not found";
-            throw OSRMException(error);
-       }
-        if ( 0 == boost::filesystem::file_size( config_file ) ) {
-            std::string error = std::string(config_filename) + " is empty";
-            throw OSRMException(error);
-        }
+    IniFile(const char * config_filename);
 
-        boost::filesystem::ifstream config( config_file );
-        std::string line;
-        if (config.is_open()) {
-            while ( config.good() )  {
-                getline (config,line);
-                std::vector<std::string> tokens;
-                Tokenize(line, tokens);
-                if(2 == tokens.size() ) {
-                    parameters.insert(std::make_pair(tokens[0], tokens[1]));
-                }
-            }
-            config.close();
-        }
-    }
+    std::string GetParameter(const std::string & key);
 
-    std::string GetParameter(const std::string & key){
-        return parameters.Find(key);
-    }
+    std::string GetParameter(const std::string & key) const;
 
-    std::string GetParameter(const std::string & key) const {
-        return parameters.Find(key);
-    }
+    bool Holds(const std::string & key) const;
 
-    bool Holds(const std::string & key) const {
-        return parameters.Holds(key);
-    }
+    void SetParameter(const char* key, const char* value);
 
-    void SetParameter(const char* key, const char* value) {
-        SetParameter(std::string(key), std::string(value));
-    }
-
-    void SetParameter(const std::string & key, const std::string & value) {
-        parameters.insert(std::make_pair(key, value));
-    }
+    void SetParameter(const std::string & key, const std::string & value);
 
 private:
     void Tokenize(
         const std::string& str,
         std::vector<std::string>& tokens,
         const std::string& delimiters = "="
-    ) {
-        std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-        std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-        while (std::string::npos != pos || std::string::npos != lastPos) {
-            std::string temp = str.substr(lastPos, pos - lastPos);
-            boost::trim(temp);
-            tokens.push_back( temp );
-            lastPos = str.find_first_not_of(delimiters, pos);
-            pos = str.find_first_of(delimiters, lastPos);
-        }
-    }
+    );
 
     HashTable<std::string, std::string> parameters;
 };

@@ -44,10 +44,10 @@ public:
 
     //TODO: reorder parameters
     void Run(
-        http::Reply & reply,
-        const RawRouteData &rawRoute,
-        PhantomNodes &phantomNodes,
-        const DataFacadeT * facade
+        const RawRouteData &raw_route,
+        const PhantomNodes &phantom_node_list,
+        DataFacadeT * facade,
+        http::Reply & reply
     ) {
         reply.content.push_back("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         reply.content.push_back(
@@ -61,38 +61,41 @@ public:
                 " OpenStreetMap contributors (ODbL)</license></copyright>"
                 "</metadata>");
         reply.content.push_back("<rte>");
-        bool found_route =  (rawRoute.lengthOfShortestPath != INT_MAX) &&
-                            (rawRoute.computedShortestPath.size()         );
+        bool found_route =  (raw_route.lengthOfShortestPath != INT_MAX) &&
+                            (raw_route.unpacked_path_segments[0].size());
         if( found_route ) {
-            convertInternalLatLonToString(
-                phantomNodes.startPhantom.location.lat,
+            FixedPointCoordinate::convertInternalLatLonToString(
+                phantom_node_list.startPhantom.location.lat,
                 tmp
             );
             reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-            convertInternalLatLonToString(
-                phantomNodes.startPhantom.location.lon,
+            FixedPointCoordinate::convertInternalLatLonToString(
+                phantom_node_list.startPhantom.location.lon,
                 tmp
             );
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
 
-            BOOST_FOREACH(
-                const _PathData & pathData,
-                rawRoute.computedShortestPath
-            ) {
-                current = facade->GetCoordinateOfNode(pathData.node);
+            for(unsigned i=0; i < raw_route.unpacked_path_segments.size(); ++i){
+                BOOST_FOREACH(
+                    const PathData & pathData,
+                    raw_route.unpacked_path_segments[i]
+                ) {
+                    current = facade->GetCoordinateOfNode(pathData.node);
 
-                convertInternalLatLonToString(current.lat, tmp);
-                reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-                convertInternalLatLonToString(current.lon, tmp);
-                reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
+                    FixedPointCoordinate::convertInternalLatLonToString(current.lat, tmp);
+                    reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
+                    FixedPointCoordinate::convertInternalLatLonToString(current.lon, tmp);
+                    reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
+                }
             }
-            convertInternalLatLonToString(
-                phantomNodes.targetPhantom.location.lat,
+            // Add the via point or the end coordinate
+            FixedPointCoordinate::convertInternalLatLonToString(
+                phantom_node_list.targetPhantom.location.lat,
                 tmp
             );
             reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-            convertInternalLatLonToString(
-                phantomNodes.targetPhantom.location.lon,
+            FixedPointCoordinate::convertInternalLatLonToString(
+                phantom_node_list.targetPhantom.location.lon,
                 tmp
             );
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");

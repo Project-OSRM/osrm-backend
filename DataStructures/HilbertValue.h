@@ -28,70 +28,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HILBERTVALUE_H_
 #define HILBERTVALUE_H_
 
-#include "Coordinate.h"
+#include <osrm/Coordinate.h>
 
 #include <boost/integer.hpp>
 #include <boost/noncopyable.hpp>
 
 // computes a 64 bit value that corresponds to the hilbert space filling curve
 
-class HilbertCode : boost::noncopyable {
+class HilbertCode : boost::noncopyable
+{
 public:
-	static uint64_t GetHilbertNumberForCoordinate(
+	uint64_t operator()
+    (
 		const FixedPointCoordinate & current_coordinate
-	) {
-		unsigned location[2];
-		location[0] = current_coordinate.lat+( 90*COORDINATE_PRECISION);
-		location[1] = current_coordinate.lon+(180*COORDINATE_PRECISION);
-
-		TransposeCoordinate(location);
-		const uint64_t result = BitInterleaving(location[0], location[1]);
-		return result;
-	}
+	) const;
 private:
-	static inline uint64_t BitInterleaving(const uint32_t a, const uint32_t b) {
-		uint64_t result = 0;
-		for(int8_t index = 31; index >= 0; --index){
-			result |= (a >> index) & 1;
-			result <<= 1;
-			result |= (b >> index) & 1;
-			if(0 != index){
-				result <<= 1;
-			}
-		}
-		return result;
-	}
-
-	static inline void TransposeCoordinate( uint32_t * X) {
-		uint32_t M = 1 << (32-1), P, Q, t;
-		int i;
-		// Inverse undo
-		for( Q = M; Q > 1; Q >>= 1 ) {
-			P=Q-1;
-			for( i = 0; i < 2; ++i ) {
-				if( X[i] & Q ) {
-					X[0] ^= P; // invert
-				} else {
-					t = (X[0]^X[i]) & P;
-					X[0] ^= t;
-					X[i] ^= t;
-				}
-			} // exchange
-		}
-		// Gray encode
-		for( i = 1; i < 2; ++i ) {
-			X[i] ^= X[i-1];
-		}
-		t=0;
-		for( Q = M; Q > 1; Q >>= 1 ) {
-			if( X[2-1] & Q ) {
-				t ^= Q-1;
-			}
-		} //check if this for loop is wrong
-		for( i = 0; i < 2; ++i ) {
-			X[i] ^= t;
-		}
-	}
+	inline uint64_t BitInterleaving( const uint32_t a, const uint32_t b) const;
+	inline void TransposeCoordinate( uint32_t * X) const;
 };
 
 #endif /* HILBERTVALUE_H_ */

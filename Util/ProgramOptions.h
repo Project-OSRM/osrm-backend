@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OSRMException.h"
 #include "SimpleLogger.h"
 
+#include <osrm/ServerPaths.h>
+
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -40,36 +42,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fstream>
 #include <string>
-#include <vector>
 
-typedef boost::unordered_map<
-            const std::string,
-            boost::filesystem::path
-        > ServerPaths;
-
-namespace boost {
-    namespace filesystem {
-        // Validator for boost::filesystem::path, that verifies that the file
-        // exists. The validate() function must be defined in the same namespace
-        // as the target type, (boost::filesystem::path in this case), otherwise
-        // it is not called
-        inline void validate(
-            boost::any & v,
-            const std::vector<std::string> & values,
-            boost::filesystem::path *,
-            int
-        ) {
-            boost::program_options::validators::check_first_occurrence(v);
-            const std::string & input_string =
-                boost::program_options::validators::get_single_string(values);
-            if(boost::filesystem::is_regular_file(input_string)) {
-                v = boost::any(boost::filesystem::path(input_string));
-            } else {
-                throw OSRMException(input_string + " not found");
-            }
-        }
-    }
-}
+const static unsigned INIT_OK_START_ENGINE = 0;
+const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
+const static unsigned INIT_FAILED = -1;
 
 // support old capitalized option names by down-casing them with a regex replace
 inline void PrepareConfigFile(
@@ -86,16 +62,16 @@ inline void PrepareConfigFile(
     output = boost::regex_replace( input_str, regex, format );
 }
 
-
 // generate boost::program_options object for the routing part
-inline bool GenerateServerProgramOptions(
+inline unsigned GenerateServerProgramOptions(
     const int argc,
     const char * argv[],
     ServerPaths & paths,
     std::string & ip_address,
     int & ip_port,
     int & requested_num_threads,
-    bool & use_shared_memory
+    bool & use_shared_memory,
+    bool & trial
 ) {
 
     // declare a group of options that will be allowed only on command line
@@ -109,6 +85,11 @@ inline bool GenerateServerProgramOptions(
                 &paths["config"]
             )->default_value("server.ini"),
             "Path to a configuration file"
+        )
+        (
+            "trial",
+            boost::program_options::value<bool>(&trial)->implicit_value(true),
+            "Quit after initialization"
         );
 
     // declare a group of options that will be allowed both on command line
@@ -162,7 +143,7 @@ inline bool GenerateServerProgramOptions(
         )
         (
             "sharedmemory,s",
-            boost::program_options::value<bool>(&use_shared_memory)->default_value(false),
+            boost::program_options::value<bool>(&use_shared_memory)->implicit_value(true),
             "Load data from shared memory"
         );
 
@@ -201,12 +182,12 @@ inline bool GenerateServerProgramOptions(
 
     if(option_variables.count("version")) {
         SimpleLogger().Write() << g_GIT_DESCRIPTION;
-        return false;
+        return INIT_OK_DO_NOT_START_ENGINE;
     }
 
     if(option_variables.count("help")) {
         SimpleLogger().Write() << visible_options;
-        return false;
+        return INIT_OK_DO_NOT_START_ENGINE;
     }
 
     boost::program_options::notify(option_variables);
@@ -221,7 +202,7 @@ inline bool GenerateServerProgramOptions(
         SimpleLogger().Write() <<
             "Reading options from: " << path_iterator->second.string();
         std::string config_str;
-        PrepareConfigFile( paths["config"], config_str );
+        PrepareConfigFile( path_iterator->second, config_str );
         std::stringstream config_stream( config_str );
         boost::program_options::store(
             parse_config_file(config_stream, config_file_options),
@@ -230,14 +211,23 @@ inline bool GenerateServerProgramOptions(
         boost::program_options::notify(option_variables);
     }
 
+    if( 1 > requested_num_threads ) {
+        throw OSRMException("Number of threads must be a positive number");
+    }
+
     if( !use_shared_memory && option_variables.count("base") ) {
-        std::string base_string = paths["base"].string();
+        path_iterator = paths.find("base");
+        BOOST_ASSERT( paths.end() != path_iterator );
+        std::string base_string = path_iterator->second.string();
+
         path_iterator = paths.find("hsgrdata");
         if(
             path_iterator != paths.end() &&
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".hsgr";
+        } else {
+            throw OSRMException(base_string + ".hsgr not found");
         }
 
         path_iterator = paths.find("nodesdata");
@@ -246,7 +236,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".nodes";
+        } else {
+            throw OSRMException(base_string + ".nodes not found");
         }
+
 
         path_iterator = paths.find("edgesdata");
         if(
@@ -254,7 +247,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".edges";
+        } else {
+            throw OSRMException(base_string + ".edges not found");
         }
+
 
         path_iterator = paths.find("ramindex");
         if(
@@ -262,7 +258,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".ramIndex";
+        } else {
+            throw OSRMException(base_string + ".ramIndex not found");
         }
+
 
         path_iterator = paths.find("fileindex");
         if(
@@ -270,7 +269,10 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".fileIndex";
+        } else {
+            throw OSRMException(base_string + ".fileIndex not found");
         }
+
 
         path_iterator = paths.find("namesdata");
         if(
@@ -278,6 +280,8 @@ inline bool GenerateServerProgramOptions(
             !boost::filesystem::is_regular_file(path_iterator->second)
         ) {
             path_iterator->second = base_string + ".names";
+        } else {
+            throw OSRMException(base_string + ".namesIndex not found");
         }
 
         path_iterator = paths.find("timestamp");
@@ -287,12 +291,15 @@ inline bool GenerateServerProgramOptions(
         ) {
             path_iterator->second = base_string + ".timestamp";
         }
-    }
 
-    if( 1 > requested_num_threads ) {
-        throw OSRMException("Number of threads must be a positive number");
+        return INIT_OK_START_ENGINE;
     }
-    return true;
+    if (use_shared_memory && !option_variables.count("base"))
+    {
+        return INIT_OK_START_ENGINE;
+    }
+    SimpleLogger().Write() << visible_options;
+    return INIT_OK_DO_NOT_START_ENGINE;
 }
 
 #endif /* PROGRAM_OPTIONS_H */

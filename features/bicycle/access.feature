@@ -1,6 +1,6 @@
 @routing @bicycle @access
 Feature: Bike - Access tags on ways
-Reference: http://wiki.openstreetmap.org/wiki/Key:access
+# Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Background:
         Given the profile "bicycle"
@@ -153,14 +153,14 @@ Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Scenario: Bike - Access combinations
         Then routability should be
-            | highway     | access     | vehicle    | bicycle    | bothw |
-            | runway      | private    |            | yes        | x     |
-            | footway     |            | no         | permissive | x     |
-            | motorway    |            |            | yes        | x     |
-            | track       | forestry   |            | permissive | x     |
-            | cycleway    | yes        | designated | no         |       |
-            | primary     |            | yes        | private    |       |
-            | residential | permissive |            | no         |       |
+            | highway     | access     | vehicle    | bicycle    | forw | backw |
+            | runway      | private    |            | yes        | x    | x     |
+            | footway     |            | no         | permissive | x    | x     |
+            | motorway    |            |            | yes        | x    |       |
+            | track       | forestry   |            | permissive | x    | x     |
+            | cycleway    | yes        | designated | no         |      |       |
+            | primary     |            | yes        | private    |      |       |
+            | residential | permissive |            | no         |      |       |
 
     Scenario: Bike - Ignore access tags for other modes
         Then routability should be

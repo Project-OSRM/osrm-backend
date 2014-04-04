@@ -1,7 +1,7 @@
 @routing @bicycle @restrictions
 Feature: Bike - Turn restrictions
-    Ignore turn restrictions on bicycle, since you always become a temporary pedestrian.
-    Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
+# Ignore turn restrictions on bicycle, since you always become a temporary pedestrian.
+# Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 
     Background:
         Given the profile "bicycle"

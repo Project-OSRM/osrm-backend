@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BINARYHEAP_H_INCLUDED
-#define BINARYHEAP_H_INCLUDED
+#ifndef BINARY_HEAP_H
+#define BINARY_HEAP_H
 
 //Not compatible with non contiguous node ids
 
@@ -82,6 +82,9 @@ private:
 
 template< typename NodeID, typename Key >
 class UnorderedMapStorage {
+    typedef boost::unordered_map<NodeID, Key> UnorderedMapType;
+    typedef typename UnorderedMapType::iterator UnorderedMapIterator;
+    typedef typename UnorderedMapType::const_iterator UnorderedMapConstIterator;
 public:
 
 	UnorderedMapStorage( size_t ) {
@@ -89,8 +92,8 @@ public:
 		nodes.rehash(1000);
 	}
 
-    Key &operator[]( const NodeID node ) {
-    	return nodes[node];
+    Key & operator[]( const NodeID node ) {
+        return nodes[node];
     }
 
     void Clear() {
@@ -101,13 +104,13 @@ private:
     boost::unordered_map< NodeID, Key > nodes;
 };
 
-template<typename NodeID = unsigned>
-struct _SimpleHeapData {
-    NodeID parent;
-    _SimpleHeapData( NodeID p ) : parent(p) { }
-};
-
-template < typename NodeID, typename Key, typename Weight, typename Data, typename IndexStorage = ArrayStorage<NodeID, NodeID> >
+template<
+    typename NodeID,
+    typename Key,
+    typename Weight,
+    typename Data,
+    typename IndexStorage = ArrayStorage<NodeID, NodeID>
+>
 class BinaryHeap {
 private:
     BinaryHeap( const BinaryHeap& right );
@@ -117,7 +120,9 @@ public:
     typedef Data DataType;
 
     BinaryHeap( size_t maxID )
-    : nodeIndex( maxID ) {
+     :
+        nodeIndex( maxID )
+    {
         Clear();
     }
 
@@ -210,11 +215,13 @@ public:
 private:
     class HeapNode {
     public:
-        HeapNode() {
-        }
         HeapNode( NodeID n, Key k, Weight w, Data d )
-        : node( n ), key( k ), weight( w ), data( d ) {
-        }
+         :
+            node(n),
+            key(k),
+            weight(w),
+            data(d)
+        { }
 
         NodeID node;
         Key key;
@@ -234,14 +241,17 @@ private:
         const Key droppingIndex = heap[key].index;
         const Weight weight = heap[key].weight;
         Key nextKey = key << 1;
-        while ( nextKey < static_cast<Key>( heap.size() ) ) {
+        while( nextKey < static_cast<Key>( heap.size() ) ){
             const Key nextKeyOther = nextKey + 1;
-            if ( ( nextKeyOther < static_cast<Key> ( heap.size() ) )&& ( heap[nextKey].weight > heap[nextKeyOther].weight) )
+            if (
+                ( nextKeyOther < static_cast<Key>( heap.size() )   ) &&
+                ( heap[nextKey].weight > heap[nextKeyOther].weight )
+            ) {
                 nextKey = nextKeyOther;
-
-            if ( weight <= heap[nextKey].weight )
+            }
+            if ( weight <= heap[nextKey].weight ){
                 break;
-
+            }
             heap[key] = heap[nextKey];
             insertedNodes[heap[key].index].key = key;
             key = nextKey;
@@ -277,4 +287,4 @@ private:
     }
 };
 
-#endif //#ifndef BINARYHEAP_H_INCLUDED
+#endif //BINARY_HEAP_H

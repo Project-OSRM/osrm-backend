@@ -3,7 +3,7 @@ require 'net/http'
 def request_locate_url path
   @query = path
   uri = URI.parse "#{HOST}/#{path}"
-  Timeout.timeout(REQUEST_TIMEOUT) do
+  Timeout.timeout(OSRM_TIMEOUT) do
     Net::HTTP.get_response uri
   end
 rescue Errno::ECONNREFUSED => e

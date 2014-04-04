@@ -25,22 +25,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef HTTP_HEADER_H
-#define HTTP_HEADER_H
+#ifndef ORIGINAL_EDGE_DATA_H
+#define ORIGINAL_EDGE_DATA_H
 
-#include <string>
+#include "TurnInstructions.h"
+#include "../typedefs.h"
 
-namespace http {
+#include <climits>
 
-    struct Header {
-        std::string name;
-        std::string value;
-        void Clear() {
-            name.clear();
-            value.clear();
-        }
-    };
-}
+struct OriginalEdgeData{
+    explicit OriginalEdgeData(
+        NodeID via_node,
+        unsigned name_id,
+        TurnInstruction turn_instruction
+    ) :
+        via_node(via_node),
+        name_id(name_id),
+        turn_instruction(turn_instruction)
+    { }
 
-#endif //HTTP_HEADER_H
+    OriginalEdgeData() :
+        via_node(UINT_MAX),
+        name_id(UINT_MAX),
+        turn_instruction(UCHAR_MAX)
+    { }
 
+    NodeID via_node;
+    unsigned name_id;
+    TurnInstruction turn_instruction;
+};
+
+#endif //ORIGINAL_EDGE_DATA_H

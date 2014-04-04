@@ -83,7 +83,7 @@ public:
 
         RawRouteData rawRoute;
         rawRoute.checkSum = facade->GetCheckSum();
-        bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
+        const bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
         std::vector<std::string> textCoord;
         for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
             if( !checkCoord(routeParameters.coordinates[i]) ) {
@@ -110,12 +110,13 @@ public:
             );
         }
 
+        PhantomNodes segmentPhantomNodes;
         for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
-            PhantomNodes segmentPhantomNodes;
             segmentPhantomNodes.startPhantom = phantomNodeVector[i];
             segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         }
+
         if(
             ( routeParameters.alternateRoute ) &&
             (1 == rawRoute.segmentEndCoordinates.size())
@@ -175,7 +176,7 @@ public:
         phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
         desc->SetConfig(descriptorConfig);
 
-        desc->Run(reply, rawRoute, phantomNodes, facade);
+        desc->Run(rawRoute, phantomNodes, facade, reply);
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")\n");
         }

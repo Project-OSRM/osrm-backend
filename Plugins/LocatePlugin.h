@@ -68,7 +68,6 @@ public:
         }
         reply.status = http::Reply::ok;
         reply.content.push_back ("{");
-        reply.content.push_back ("\"version\":0.3,");
         if(
             !facade->LocateClosestEndPointForCoordinate(
                 routeParameters.coordinates[0],
@@ -82,15 +81,14 @@ public:
             reply.status = http::Reply::ok;
             reply.content.push_back ("\"status\":0,");
             reply.content.push_back ("\"mapped_coordinate\":");
-            convertInternalLatLonToString(result.lat, tmp);
+            FixedPointCoordinate::convertInternalLatLonToString(result.lat, tmp);
             reply.content.push_back("[");
             reply.content.push_back(tmp);
-            convertInternalLatLonToString(result.lon, tmp);
+            FixedPointCoordinate::convertInternalLatLonToString(result.lon, tmp);
             reply.content.push_back(",");
             reply.content.push_back(tmp);
             reply.content.push_back("]");
         }
-        reply.content.push_back(",\"transactionId\": \"OSRM Routing Engine JSON Locate (v0.3)\"");
         reply.content.push_back("}");
         reply.headers.resize(3);
         if(!routeParameters.jsonpParameter.empty()) {

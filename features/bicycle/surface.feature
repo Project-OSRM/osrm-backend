@@ -7,34 +7,34 @@ Feature: Bike - Surfaces
     Scenario: Bicycle - Slow surfaces
         Then routability should be
             | highway  | surface               | bothw |
-            | cycleway |                       | 49s   |
-            | cycleway | asphalt               | 49s   |
-            | cycleway | cobblestone:flattened | 73s   |
-            | cycleway | paving_stones         | 73s   |
-            | cycleway | compacted             | 73s   |
-            | cycleway | cobblestone           | 121s  |
-            | cycleway | unpaved               | 121s  |
-            | cycleway | fine_gravel           | 121s  |
-            | cycleway | gravel                | 121s  |
-            | cycleway | pebbelstone           | 121s  |
-            | cycleway | dirt                  | 121s  |
-            | cycleway | earth                 | 121s  |
-            | cycleway | grass                 | 121s  |
-            | cycleway | mud                   | 241s  |
-            | cycleway | sand                  | 241s  |
+            | cycleway |                       | 48s   |
+            | cycleway | asphalt               | 48s   |
+            | cycleway | cobblestone:flattened | 72s   |
+            | cycleway | paving_stones         | 72s   |
+            | cycleway | compacted             | 72s   |
+            | cycleway | cobblestone           | 120s  |
+            | cycleway | unpaved               | 120s  |
+            | cycleway | fine_gravel           | 120s  |
+            | cycleway | gravel                | 120s  |
+            | cycleway | pebbelstone           | 120s  |
+            | cycleway | dirt                  | 120s  |
+            | cycleway | earth                 | 120s  |
+            | cycleway | grass                 | 120s  |
+            | cycleway | mud                   | 240s  |
+            | cycleway | sand                  | 240s  |
 
     Scenario: Bicycle - Good surfaces on small paths
         Then routability should be
         | highway  | surface | bothw |
-        | cycleway |         | 49s   |
-        | path     |         | 61s   |
-        | track    |         | 61s   |
-        | track    | asphalt | 49s   |
-        | path     | asphalt | 49s   |
+        | cycleway |         | 48s   |
+        | path     |         | 60s   |
+        | track    |         | 60s   |
+        | track    | asphalt | 48s   |
+        | path     | asphalt | 48s   |
 
     Scenario: Bicycle - Surfaces should not make unknown ways routable
         Then routability should be
         | highway  | surface | bothw |
-        | cycleway |         | 49s   |
+        | cycleway |         | 48s   |
         | nosense  |         |       |
         | nosense  | asphalt |       |

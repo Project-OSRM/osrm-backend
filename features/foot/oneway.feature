@@ -1,6 +1,6 @@
 @routing @foot @oneway
 Feature: Foot - Oneway streets
-Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
+# Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 
     Background:
         Given the profile "foot"

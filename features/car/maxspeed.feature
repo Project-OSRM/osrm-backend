@@ -1,5 +1,6 @@
 @routing @maxspeed @car
 Feature: Car - Max speed restrictions
+When a max speed is set, osrm will use 2/3 of that as the actual speed.
 
     Background: Use specific speeds
         Given the profile "car"
@@ -12,12 +13,12 @@ Feature: Car - Max speed restrictions
         And the ways
             | nodes | highway | maxspeed |
             | ab    | trunk   |          |
-            | bc    | trunk   | 10       |
+            | bc    | trunk   | 60       |
 
         When I route I should get
-            | from | to | route | time      |
-            | a    | b  | ab    | 42s ~10%  |
-            | b    | c  | bc    | 360s ~10% |
+            | from | to | route | speed   |
+            | a    | b  | ab    | 85 km/h |
+            | b    | c  | bc    | 40 km/h |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
@@ -26,32 +27,25 @@ Feature: Car - Max speed restrictions
         And the ways
             | nodes | highway     | maxspeed |
             | ab    | residential |          |
-            | bc    | residential | 85       |
+            | bc    | residential | 90       |
 
         When I route I should get
-            | from | to | route | time      |
-            | a    | b  | ab    | 144s ~10% |
-            | b    | c  | bc    | 42s ~10%  |
+            | from | to | route | speed   |
+            | a    | b  | ab    | 25 km/h |
+            | b    | c  | bc    | 60 km/h |
 
     Scenario: Car - Forward/backward maxspeed
-        Given the shortcuts
-            | key   | value     |
-            | car   | 12s ~10%  |
-            | run   | 73s ~10%  |
-            | walk  | 146s ~10% |
-            | snail | 720s ~10% |
-
-        And a grid size of 100 meters
+        Given a grid size of 100 meters
 
         Then routability should be
-            | maxspeed | maxspeed:forward | maxspeed:backward | forw  | backw |
-            |          |                  |                   | car   | car   |
-            | 10       |                  |                   | run   | run   |
-            |          | 10               |                   | run   | car   |
-            |          |                  | 10                | car   | run   |
-            | 1        | 10               |                   | run   | snail |
-            | 1        |                  | 10                | snail | run   |
-            | 1        | 5                | 10                | walk  | run   |
+            | highway | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
+            | primary |          |                  |                   | 65 km/h | 65 km/h |
+            | primary | 60       |                  |                   | 40 km/h | 40 km/h |
+            | primary |          | 60               |                   | 40 km/h | 65 km/h |
+            | primary |          |                  | 60                | 65 km/h | 40 km/h |
+            | primary | 15       | 60               |                   | 40 km/h | 10 km/h |
+            | primary | 15       |                  | 60                | 10 km/h | 40 km/h |
+            | primary | 15       | 30               | 60                | 20 km/h | 40 km/h |
 
     Scenario: Car - Maxspeed should not allow routing on unroutable ways
         Then routability should be

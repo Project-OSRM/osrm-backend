@@ -45,8 +45,8 @@ Feature: Handle bad data in a graceful manner
 
     @poles
     Scenario: Routing close to the north/south pole
-    Mercator is undefined close to the poles.
-    All nodes and request with latitude to close to either of the poles should therefore be ignored.
+    # Mercator is undefined close to the poles.
+    # All nodes and request with latitude to close to either of the poles should therefore be ignored.
 
         Given the node locations
             | node | lat | lon |

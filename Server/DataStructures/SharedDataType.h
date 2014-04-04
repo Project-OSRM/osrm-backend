@@ -31,13 +31,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDataFacade.h"
 
-#include "../../DataStructures/Coordinate.h"
 #include "../../DataStructures/QueryEdge.h"
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
 #include "../../DataStructures/TurnInstructions.h"
 
 #include "../../typedefs.h"
+
+#include <osrm/Coordinate.h>
 
 #include <boost/integer.hpp>
 

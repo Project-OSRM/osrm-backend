@@ -27,41 +27,65 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "SearchEngineData.h"
 
-void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes) {
-    if(!forwardHeap.get()) {
-        forwardHeap.reset(new QueryHeap(number_of_nodes));
-    } else {
+void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
+{
+    if (forwardHeap.get())
+    {
         forwardHeap->Clear();
     }
-    if(!backwardHeap.get()) {
-        backwardHeap.reset(new QueryHeap(number_of_nodes));
-    } else {
+    else
+    {
+        forwardHeap.reset(new QueryHeap(number_of_nodes));
+    }
+
+    if (backwardHeap.get())
+    {
         backwardHeap->Clear();
     }
+    else
+    {
+        backwardHeap.reset(new QueryHeap(number_of_nodes));
+    }
 }
 
-void SearchEngineData::InitializeOrClearSecondThreadLocalStorage(const unsigned number_of_nodes) {
-    if(!forwardHeap2.get()) {
-        forwardHeap2.reset(new QueryHeap(number_of_nodes));
-    } else {
+void SearchEngineData::InitializeOrClearSecondThreadLocalStorage(const unsigned number_of_nodes)
+{
+    if (forwardHeap2.get())
+    {
         forwardHeap2->Clear();
     }
-    if(!backwardHeap2.get()) {
-        backwardHeap2.reset(new QueryHeap(number_of_nodes));
-     } else {
+    else
+    {
+        forwardHeap2.reset(new QueryHeap(number_of_nodes));
+    }
+
+    if (backwardHeap2.get())
+    {
         backwardHeap2->Clear();
+    }
+    else
+    {
+        backwardHeap2.reset(new QueryHeap(number_of_nodes));
     }
 }
 
-void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes) {
-    if(!forwardHeap3.get()) {
-        forwardHeap3.reset(new QueryHeap(number_of_nodes));
-    } else {
+void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes)
+{
+    if (forwardHeap3.get())
+    {
         forwardHeap3->Clear();
     }
-    if(!backwardHeap3.get()) {
-        backwardHeap3.reset(new QueryHeap(number_of_nodes));
-    } else {
+    else
+    {
+        forwardHeap3.reset(new QueryHeap(number_of_nodes));
+    }
+
+    if (backwardHeap3.get())
+    {
         backwardHeap3->Clear();
+    }
+    else
+    {
+        backwardHeap3.reset(new QueryHeap(number_of_nodes));
     }
 }

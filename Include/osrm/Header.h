@@ -24,12 +24,22 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-#include <cstdlib>
 
-int main( int argc, char* argv[] ) {
-	size_t size = sizeof(void*);
-	if ( 4 == size ) {
-		return 0;
-	}
-	return 1;
+#ifndef HTTP_HEADER_H
+#define HTTP_HEADER_H
+
+#include <string>
+
+namespace http {
+
+    struct Header {
+        std::string name;
+        std::string value;
+        void Clear() {
+            name.clear();
+            value.clear();
+        }
+    };
 }
+
+#endif //HTTP_HEADER_H

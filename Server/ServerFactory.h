@@ -29,23 +29,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SERVERFACTORY_H_
 
 #include "Server.h"
+#include "../Util/OpenMPWrapper.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
 #include <zlib.h>
 
 #include <boost/noncopyable.hpp>
-#include <sstream>
 
 struct ServerFactory : boost::noncopyable {
-	static Server * CreateServer(std::string& ip_address, int ip_port, int threads) {
+	static Server * CreateServer(
+        std::string& ip_address,
+        int ip_port,
+        int threads
+    ) {
 
 		SimpleLogger().Write() <<
 			"http 1.1 compression handled by zlib version " << zlibVersion();
 
-        std::stringstream   port_stream;
-        port_stream << ip_port;
-        return new Server( ip_address, port_stream.str(), std::min( omp_get_num_procs(), threads) );
+        std::string port_stream;
+        intToString(ip_port, port_stream);
+
+        return new Server(
+            ip_address,
+            port_stream,
+            std::min( omp_get_num_procs(), threads )
+        );
 	}
 };
 

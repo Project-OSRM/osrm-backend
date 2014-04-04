@@ -1,6 +1,5 @@
 @routing @testbot @example
 Feature: Testbot - Walkthrough
-
 # A complete walk-through of how this data is processed can be found at:
 # https://github.com/DennisOSRM/Project-OSRM/wiki/Processing-Flow
 

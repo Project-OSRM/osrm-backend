@@ -27,21 +27,45 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PBFParser.h"
 
-PBFParser::PBFParser(const char * fileName, ExtractorCallbacks* ec, ScriptingEnvironment& se) : BaseParser( ec, se ) {
+#include "ExtractionWay.h"
+#include "ExtractorCallbacks.h"
+#include "ScriptingEnvironment.h"
+
+#include "../DataStructures/HashTable.h"
+#include "../DataStructures/Restriction.h"
+#include "../Util/MachineInfo.h"
+#include "../Util/OpenMPWrapper.h"
+#include "../Util/OSRMException.h"
+#include "../Util/SimpleLogger.h"
+#include "../typedefs.h"
+
+#include <osrm/Coordinate.h>
+
+#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/ref.hpp>
+
+#include <zlib.h>
+
+PBFParser::PBFParser(
+	const char * fileName,
+	ExtractorCallbacks * extractor_callbacks,
+	ScriptingEnvironment& scripting_environment
+) : BaseParser( extractor_callbacks, scripting_environment ) {
 	GOOGLE_PROTOBUF_VERIFY_VERSION;
 	//TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
 	//NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
-	threadDataQueue = boost::make_shared<ConcurrentQueue<_ThreadData*> >( 2500 ); /* Max 2500 items in queue, hardcoded. */
+
+	// Max 2500 items in queue, hardcoded.
+	threadDataQueue = boost::make_shared<ConcurrentQueue<_ThreadData*> >( 2500 );
 	input.open(fileName, std::ios::in | std::ios::binary);
 
 	if (!input) {
 		throw OSRMException("pbf file not found.");
 	}
 
-#ifndef NDEBUG
 	blockCount = 0;
 	groupCount = 0;
-#endif
 }
 
 PBFParser::~PBFParser() {
@@ -50,18 +74,17 @@ PBFParser::~PBFParser() {
 	}
 
 	// Clean up any leftover ThreadData objects in the queue
-	_ThreadData* td;
-	while (threadDataQueue->try_pop(td)) {
-		delete td;
+	_ThreadData* thread_data;
+	while (threadDataQueue->try_pop(thread_data))
+	{
+		delete thread_data;
 	}
 	google::protobuf::ShutdownProtobufLibrary();
 
-#ifndef NDEBUG
 	SimpleLogger().Write(logDEBUG) <<
 		"parsed " << blockCount <<
 		" blocks from pbf with " << groupCount <<
 		" groups";
-#endif
 }
 
 inline bool PBFParser::ReadHeader() {
@@ -194,12 +217,15 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_nodes; ++i) {
-	    ImportNode &n = extracted_nodes_vector[i];
-	    ParseNodeInLua( n, scriptingEnvironment.getLuaStateForThreadID(omp_get_thread_num()) );
+	    ImportNode & import_node = extracted_nodes_vector[i];
+	    ParseNodeInLua(
+	    	import_node,
+	    	scripting_environment.getLuaStateForThreadID(omp_get_thread_num())
+	    );
 	}
 
-	BOOST_FOREACH(const ImportNode &n, extracted_nodes_vector) {
-	    extractor_callbacks->nodeFunction(n);
+	BOOST_FOREACH(const ImportNode &import_node, extracted_nodes_vector) {
+	    extractor_callbacks->nodeFunction(import_node);
 	}
 }
 
@@ -232,12 +258,12 @@ inline void PBFParser::parseRelation(_ThreadData * threadData) {
 					break;
 				}
 			}
-			if ("restriction" == key) {
-				if(val.find("only_") == 0) {
-					isOnlyRestriction = true;
-				}
+			if ( ("restriction" == key) && (val.find("only_") == 0) )
+			{
+				isOnlyRestriction = true;
 			}
-			if ("except" == key) {
+			if ("except" == key)
+			{
 				except_tag_string = val;
 			}
 		}
@@ -326,18 +352,23 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_ways; ++i) {
-	    ExtractionWay & w = parsed_way_vector[i];
-		if(2 > w.path.size()) {
+	    ExtractionWay & extraction_way = parsed_way_vector[i];
+		if (2 > extraction_way.path.size())
+		{
         	continue;
     	}
-	    ParseWayInLua( w, scriptingEnvironment.getLuaStateForThreadID( omp_get_thread_num()) );
+	    ParseWayInLua(
+	    	extraction_way,
+	    	scripting_environment.getLuaStateForThreadID( omp_get_thread_num())
+	   	);
 	}
 
-	BOOST_FOREACH(ExtractionWay & w, parsed_way_vector) {
-		if(2 > w.path.size()) {
+	BOOST_FOREACH(ExtractionWay & extraction_way, parsed_way_vector) {
+		if (2 > extraction_way.path.size())
+		{
         	continue;
     	}
-	    extractor_callbacks->wayFunction(w);
+	    extractor_callbacks->wayFunction(extraction_way);
 	}
 }
 
@@ -365,9 +396,7 @@ inline void PBFParser::loadGroup(_ThreadData * threadData) {
 }
 
 inline void PBFParser::loadBlock(_ThreadData * threadData) {
-#ifndef NDEBUG
 	++blockCount;
-#endif
 	threadData->currentGroupID = 0;
 	threadData->currentEntityID = 0;
 }

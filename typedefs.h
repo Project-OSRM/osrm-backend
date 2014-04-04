@@ -28,19 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TYPEDEFS_H_
 #define TYPEDEFS_H_
 
-#include <climits>
-#include <cstdlib>
-
 // To fix long and long long woes
 #include <boost/integer.hpp>
 #include <boost/integer_traits.hpp>
-
-#ifdef __APPLE__
-#include <signal.h>
-#endif
-
-#include <iostream>
-#include <ostream>
 
 // Necessary workaround for Windows as VS doesn't implement C99
 #ifdef _MSC_VER

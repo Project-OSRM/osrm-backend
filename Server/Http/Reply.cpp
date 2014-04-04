@@ -25,7 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "Reply.h"
+#include <boost/foreach.hpp>
+
+#include <osrm/Reply.h>
+
+#include "../../Util/StringUtil.h"
 
 namespace http {
 
@@ -37,6 +41,18 @@ void Reply::setSize(const unsigned size) {
         }
     }
 }
+
+// Sets the size of the uncompressed output.
+void Reply::SetUncompressedSize()
+{
+    unsigned uncompressed_size = 0;
+    BOOST_FOREACH ( const std::string & current_line, content)
+    {
+        uncompressed_size += current_line.size();
+    }
+    setSize(uncompressed_size);
+}
+
 
 std::vector<boost::asio::const_buffer> Reply::toBuffers(){
     std::vector<boost::asio::const_buffer> buffers;
@@ -88,25 +104,27 @@ Reply Reply::StockReply(Reply::status_type status) {
 }
 
 std::string Reply::ToString(Reply::status_type status) {
-    switch (status) {
-    case Reply::ok:
+    if (Reply::ok == status)
+    {
         return okHTML;
-    case Reply::badRequest:
-        return badRequestHTML;
-    default:
-        return internalServerErrorHTML;
     }
+    if (Reply::badRequest == status)
+    {
+        return badRequestHTML;
+    }
+    return internalServerErrorHTML;
 }
 
 boost::asio::const_buffer Reply::ToBuffer(Reply::status_type status) {
-    switch (status) {
-    case Reply::ok:
+    if (Reply::ok == status)
+    {
         return boost::asio::buffer(okString);
-    case Reply::internalServerError:
-        return boost::asio::buffer(internalServerErrorString);
-    default:
-        return boost::asio::buffer(badRequestString);
     }
+    if (Reply::internalServerError == status)
+    {
+        return boost::asio::buffer(internalServerErrorString);
+    }
+    return boost::asio::buffer(badRequestString);
 }
 
 

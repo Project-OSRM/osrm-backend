@@ -141,8 +141,8 @@ Feature: Compass bearing
             | f    | e  | abcdef | W       | 270     |
 
     Scenario: Bearings at high latitudes
-    The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
-    to form square with sides of 1 km.
+    # The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
+    # to form square with sides of 1 km.
 
         Given the node locations
             | node | lat       | lon      |
@@ -176,8 +176,8 @@ Feature: Compass bearing
             | d    | b  | bd    | NW      | 315     |
 
     Scenario: Bearings at high negative latitudes
-    The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
-    to form square with sides of 1 km.
+    # The coordinas below was calculated using http://www.movable-type.co.uk/scripts/latlong.html,
+    # to form square with sides of 1 km.
 
         Given the node locations
             | node | lat        | lon      |

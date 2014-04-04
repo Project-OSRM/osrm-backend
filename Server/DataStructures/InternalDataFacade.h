@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BaseDataFacade.h"
 
-#include "../../DataStructures/Coordinate.h"
+#include "../../DataStructures/OriginalEdgeData.h"
 #include "../../DataStructures/QueryNode.h"
 #include "../../DataStructures/QueryEdge.h"
 #include "../../DataStructures/SharedMemoryVectorWrapper.h"
@@ -40,9 +40,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/StaticRTree.h"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
-#include "../../Util/IniFile.h"
 #include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
+
+#include <osrm/Coordinate.h>
 
 template<class EdgeDataT>
 class InternalDataFacade : public BaseDataFacade<EdgeDataT> {
@@ -155,9 +156,9 @@ private:
                 (char*)&(current_edge_data),
                 sizeof(OriginalEdgeData)
             );
-            m_via_node_list[i] = current_edge_data.viaNode;
-            m_name_ID_list[i]  = current_edge_data.nameID;
-            m_turn_instruction_list[i] = current_edge_data.turnInstruction;
+            m_via_node_list[i] = current_edge_data.via_node;
+            m_name_ID_list[i]  = current_edge_data.name_id;
+            m_turn_instruction_list[i] = current_edge_data.turn_instruction;
         }
         edges_input_stream.close();
     }

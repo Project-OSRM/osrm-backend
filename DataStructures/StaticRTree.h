@@ -28,18 +28,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATICRTREE_H_
 #define STATICRTREE_H_
 
-#include "Coordinate.h"
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
-#include "MercatorUtil.h"
 #include "PhantomNodes.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
+#include "../Util/MercatorUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
+
+#include <osrm/Coordinate.h>
 
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
@@ -124,10 +125,10 @@ public:
             FixedPointCoordinate lower_left (other.min_lat, other.min_lon);
 
             return (
-                    Contains(upper_left)
-                    || Contains(upper_right)
-                    || Contains(lower_right)
-                    || Contains(lower_left)
+                    Contains(upper_left ) ||
+                    Contains(upper_right) ||
+                    Contains(lower_right) ||
+                    Contains(lower_left )
             );
         }
 
@@ -140,7 +141,7 @@ public:
             double min_dist = std::numeric_limits<double>::max();
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             max_lat,
@@ -149,7 +150,7 @@ public:
             );
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             max_lat,
@@ -158,7 +159,7 @@ public:
             );
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             min_lat,
@@ -167,7 +168,7 @@ public:
             );
             min_dist = std::min(
                     min_dist,
-                    ApproximateDistance(
+                    FixedPointCoordinate::ApproximateDistance(
                             location.lat,
                             location.lon,
                             min_lat,
@@ -188,32 +189,32 @@ public:
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                            ApproximateDistance(location, upper_left ),
-                            ApproximateDistance(location, upper_right)
+                        FixedPointCoordinate::ApproximateDistance(location, upper_left ),
+                        FixedPointCoordinate::ApproximateDistance(location, upper_right)
                     )
             );
 
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                            ApproximateDistance(location, upper_right),
-                            ApproximateDistance(location, lower_right)
+                        FixedPointCoordinate::ApproximateDistance(location, upper_right),
+                        FixedPointCoordinate::ApproximateDistance(location, lower_right)
                     )
             );
 
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                            ApproximateDistance(location, lower_right),
-                            ApproximateDistance(location, lower_left )
+                        FixedPointCoordinate::ApproximateDistance(location, lower_right),
+                        FixedPointCoordinate::ApproximateDistance(location, lower_left )
                     )
             );
 
             min_max_dist = std::min(
                     min_max_dist,
                     std::max(
-                            ApproximateDistance(location, lower_left ),
-                            ApproximateDistance(location, upper_left )
+                        FixedPointCoordinate::ApproximateDistance(location, lower_left ),
+                        FixedPointCoordinate::ApproximateDistance(location, upper_left )
                     )
             );
             return min_max_dist;
@@ -307,6 +308,8 @@ public:
         double time1 = get_timestamp();
         std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
+        HilbertCode get_hilbert_number;
+
         //generate auxiliary vector of hilbert-values
 #pragma omp parallel for schedule(guided)
         for(uint64_t element_counter = 0; element_counter < m_element_count; ++element_counter) {
@@ -316,10 +319,10 @@ public:
             FixedPointCoordinate current_centroid = current_element.Centroid();
             current_centroid.lat = COORDINATE_PRECISION*lat2y(current_centroid.lat/COORDINATE_PRECISION);
 
-            uint64_t current_hilbert_value = HilbertCode::GetHilbertNumberForCoordinate(current_centroid);
+            uint64_t current_hilbert_value = get_hilbert_number(current_centroid);
             input_wrapper_vector[element_counter].m_hilbert_value = current_hilbert_value;
-
         }
+
         //open leaf file
         boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
         leaf_node_file.write((char*) &m_element_count, sizeof(uint64_t));
@@ -334,6 +337,7 @@ public:
 
             LeafNode current_leaf;
             TreeNode current_node;
+        //SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes";
             for(uint32_t current_element_index = 0; RTREE_LEAF_NODE_SIZE > current_element_index; ++current_element_index) {
                 if(m_element_count > (processed_objects_count + current_element_index)) {
                     uint32_t index_of_next_object = input_wrapper_vector[processed_objects_count + current_element_index].m_array_index;
@@ -391,6 +395,7 @@ public:
 
         //reverse and renumber tree to have root at index 0
         std::reverse(m_search_tree.begin(), m_search_tree.end());
+
 #pragma omp parallel for schedule(guided)
         for(uint32_t i = 0; i < m_search_tree.size(); ++i) {
             TreeNode & current_tree_node = m_search_tree[i];
@@ -435,7 +440,7 @@ public:
 
         uint32_t tree_size = 0;
         tree_node_file.read((char*)&tree_size, sizeof(uint32_t));
-        //SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " << (sizeof(TreeNode)*tree_size) << " bytes";
+
         m_search_tree.resize(tree_size);
         tree_node_file.read((char*)&m_search_tree[0], sizeof(TreeNode)*tree_size);
         tree_node_file.close();
@@ -526,12 +531,10 @@ public:
                         }
 
                         double current_ratio = 0.;
-                        double current_perpendicular_distance = ComputePerpendicularDistance(
+                        double current_perpendicular_distance = current_edge.ComputePerpendicularDistance(
                                                                                              input_coordinate,
-                                                                                             FixedPointCoordinate(current_edge.lat1, current_edge.lon1),
-                                                                                             FixedPointCoordinate(current_edge.lat2, current_edge.lon2),
                                                                                              nearest,
-                                                                                             &current_ratio
+                                                                                             current_ratio
                                                                                              );
 
                         if(
@@ -556,7 +559,7 @@ public:
                         } else if(
                                   DoubleEpsilonCompare(current_perpendicular_distance, min_dist) &&
                                   1 == abs(current_edge.id - result_phantom_node.edgeBasedNode )
-                                  && CoordinatesAreEquivalent(
+                                  && EdgesAreEquivalent(
                                                               current_start_coordinate,
                                                               FixedPointCoordinate(
                                                                           current_edge.lat1,
@@ -675,11 +678,8 @@ public:
                         ) {
                             continue;
                         }
-                        if(current_edge.isIgnored()) {
-                            continue;
-                        }
 
-                        double current_minimum_distance = ApproximateDistance(
+                        double current_minimum_distance = FixedPointCoordinate::ApproximateDistance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 current_edge.lat1,
@@ -693,7 +693,7 @@ public:
                             found_a_nearest_edge = true;
                         }
 
-                        current_minimum_distance = ApproximateDistance(
+                        current_minimum_distance = FixedPointCoordinate::ApproximateDistance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
                                 current_edge.lat2,
@@ -736,7 +736,6 @@ public:
         return found_a_nearest_edge;
     }
 
-
     bool FindPhantomNodeForCoordinate(
             const FixedPointCoordinate & input_coordinate,
             PhantomNode & result_phantom_node,
@@ -746,7 +745,7 @@ public:
         bool ignore_tiny_components = (zoom_level <= 14);
         DataT nearest_edge;
 
-        uint32_t io_count = 0;
+        // uint32_t io_count = 0;
         uint32_t explored_tree_nodes_count = 0;
         //SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
         double min_dist = std::numeric_limits<double>::max();
@@ -758,15 +757,14 @@ public:
         //initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
         double current_min_dist = m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
-        traversal_queue.push(
-                             QueryCandidate(0, current_min_dist)
-        );
+        traversal_queue.push( QueryCandidate(0, current_min_dist) );
 
         BOOST_ASSERT_MSG(
             std::numeric_limits<double>::epsilon() > (0. - traversal_queue.top().min_dist),
             "Root element in NN Search has min dist != 0."
         );
 
+        LeafNode current_leaf_node;
         while(!traversal_queue.empty()) {
             const QueryCandidate current_query_node = traversal_queue.top(); traversal_queue.pop();
 
@@ -776,33 +774,29 @@ public:
             if( !prune_downward && !prune_upward ) { //downward pruning
                 TreeNode & current_tree_node = m_search_tree[current_query_node.node_id];
                 if (current_tree_node.child_is_on_disk) {
-                    LeafNode current_leaf_node;
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
-                    ++io_count;
+                    // ++io_count;
                     for(uint32_t i = 0; i < current_leaf_node.object_count; ++i) {
                         DataT & current_edge = current_leaf_node.objects[i];
                         if(ignore_tiny_components && current_edge.belongsToTinyComponent) {
                             continue;
                         }
-                        if(current_edge.isIgnored()) {
-                            continue;
-                        }
 
-                       double current_ratio = 0.;
-                       double current_perpendicular_distance = ComputePerpendicularDistance(
-                                input_coordinate,
-                                FixedPointCoordinate(current_edge.lat1, current_edge.lon1),
-                                FixedPointCoordinate(current_edge.lat2, current_edge.lon2),
-                                nearest,
-                                &current_ratio
+                        double current_ratio = 0.;
+                        double current_perpendicular_distance = current_edge.ComputePerpendicularDistance(
+                            input_coordinate,
+                            nearest,
+                            current_ratio
                         );
 
+                        BOOST_ASSERT( 0. <= current_perpendicular_distance );
+
                         if(
-                                current_perpendicular_distance < min_dist
-                                && !DoubleEpsilonCompare(
-                                        current_perpendicular_distance,
-                                        min_dist
-                                )
+                            ( current_perpendicular_distance < min_dist ) &&
+                            !DoubleEpsilonCompare(
+                                current_perpendicular_distance,
+                                min_dist
+                            )
                         ) { //found a new minimum
                             min_dist = current_perpendicular_distance;
                             result_phantom_node.edgeBasedNode = current_edge.id;
@@ -816,10 +810,10 @@ public:
                             current_end_coordinate.lon = current_edge.lon2;
                             nearest_edge = current_edge;
                             found_a_nearest_edge = true;
-                        } else if(
-                                DoubleEpsilonCompare(current_perpendicular_distance, min_dist) &&
-                                1 == abs(current_edge.id - result_phantom_node.edgeBasedNode )
-                        && CoordinatesAreEquivalent(
+                        } else
+                        if( DoubleEpsilonCompare(current_perpendicular_distance, min_dist) &&
+                            ( 1 == abs(current_edge.id - result_phantom_node.edgeBasedNode ) ) &&
+                            EdgesAreEquivalent(
                                 current_start_coordinate,
                                 FixedPointCoordinate(
                                         current_edge.lat1,
@@ -853,10 +847,10 @@ public:
                         if( current_min_max_dist < min_max_dist ) {
                             min_max_dist = current_min_max_dist;
                         }
-                        if (current_min_dist > min_max_dist) {
+                        if( current_min_dist > min_max_dist ) {
                             continue;
                         }
-                        if (current_min_dist > min_dist) { //upward pruning
+                        if( current_min_dist > min_dist ) { //upward pruning
                             continue;
                         }
                         traversal_queue.push(QueryCandidate(child_id, current_min_dist));
@@ -864,17 +858,6 @@ public:
                 }
             }
         }
-
-        const double ratio = (found_a_nearest_edge ?
-            std::min(1., ApproximateDistance(current_start_coordinate,
-                result_phantom_node.location)/ApproximateDistance(current_start_coordinate, current_end_coordinate)
-                ) : 0
-            );
-        result_phantom_node.weight1 *= ratio;
-        if(INT_MAX != result_phantom_node.weight2) {
-            result_phantom_node.weight2 *= (1.-ratio);
-        }
-        result_phantom_node.ratio = ratio;
 
         //Hack to fix rounding errors and wandering via nodes.
         if(std::abs(input_coordinate.lon - result_phantom_node.location.lon) == 1) {
@@ -884,8 +867,30 @@ public:
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-        return found_a_nearest_edge;
+        double ratio = 0.;
 
+        if( found_a_nearest_edge) {
+            const double distance_1 = FixedPointCoordinate::ApproximateDistance(
+                current_start_coordinate,
+                result_phantom_node.location
+            );
+
+            const double distance_2 = FixedPointCoordinate::ApproximateDistance(
+                current_start_coordinate,
+                current_end_coordinate
+            );
+
+            ratio = distance_1/distance_2;
+            ratio = std::min(1., ratio);
+        }
+
+        result_phantom_node.weight1 *= ratio;
+        if(INT_MAX != result_phantom_node.weight2) {
+            result_phantom_node.weight2 *= (1.-ratio);
+        }
+        result_phantom_node.ratio = ratio;
+
+        return found_a_nearest_edge;
     }
 
 private:
@@ -910,60 +915,17 @@ private:
         thread_local_rtree_stream->read((char *)&result_node, sizeof(LeafNode));
     }
 
-    inline double ComputePerpendicularDistance(
-            const FixedPointCoordinate& inputPoint,
-            const FixedPointCoordinate& source,
-            const FixedPointCoordinate& target,
-            FixedPointCoordinate& nearest, double *r) const {
-        const double x = inputPoint.lat/COORDINATE_PRECISION;
-        const double y = inputPoint.lon/COORDINATE_PRECISION;
-        const double a = source.lat/COORDINATE_PRECISION;
-        const double b = source.lon/COORDINATE_PRECISION;
-        const double c = target.lat/COORDINATE_PRECISION;
-        const double d = target.lon/COORDINATE_PRECISION;
-        double p,q,mX,nY;
-        if(std::fabs(a-c) > std::numeric_limits<double>::epsilon() ){
-            const double m = (d-b)/(c-a); // slope
-            // Projection of (x,y) on line joining (a,b) and (c,d)
-            p = ((x + (m*y)) + (m*m*a - m*b))/(1. + m*m);
-            q = b + m*(p - a);
-        } else {
-            p = c;
-            q = y;
-        }
-        nY = (d*p - c*q)/(a*d - b*c);
-        mX = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we need
-        // not calculate the explicit values of m an n as we
-        // are just interested in the ratio
-        if(std::isnan(mX)) {
-            *r = (target == inputPoint) ? 1. : 0.;
-        } else {
-            *r = mX;
-        }
-        if(*r<=0.){
-            nearest.lat = source.lat;
-            nearest.lon = source.lon;
-            return ((b - y)*(b - y) + (a - x)*(a - x));
-//            return std::sqrt(((b - y)*(b - y) + (a - x)*(a - x)));
-        } else if(*r >= 1.){
-            nearest.lat = target.lat;
-            nearest.lon = target.lon;
-            return ((d - y)*(d - y) + (c - x)*(c - x));
-//            return std::sqrt(((d - y)*(d - y) + (c - x)*(c - x)));
-        }
-        // point lies in between
-        nearest.lat = p*COORDINATE_PRECISION;
-        nearest.lon = q*COORDINATE_PRECISION;
-//        return std::sqrt((p-x)*(p-x) + (q-y)*(q-y));
-        return (p-x)*(p-x) + (q-y)*(q-y);
-    }
-
-    inline bool CoordinatesAreEquivalent(const FixedPointCoordinate & a, const FixedPointCoordinate & b, const FixedPointCoordinate & c, const FixedPointCoordinate & d) const {
+    inline bool EdgesAreEquivalent(
+        const FixedPointCoordinate & a,
+        const FixedPointCoordinate & b,
+        const FixedPointCoordinate & c,
+        const FixedPointCoordinate & d
+    ) const {
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) const {
-        return (std::fabs(d1 - d2) < std::numeric_limits<double>::epsilon() );
+        return (std::abs(d1 - d2) < std::numeric_limits<double>::epsilon() );
     }
 
 };

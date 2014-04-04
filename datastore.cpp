@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "DataStructures/OriginalEdgeData.h"
 #include "DataStructures/QueryEdge.h"
 #include "DataStructures/SharedMemoryFactory.h"
 #include "DataStructures/SharedMemoryVectorWrapper.h"
@@ -34,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Server/DataStructures/SharedDataType.h"
 #include "Server/DataStructures/SharedBarriers.h"
 #include "Util/BoostFileSystemFix.h"
-#include "Util/ProgramOptions.h"
+#include "Util/DataStoreOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/UUID.h"
 #include "typedefs.h"
@@ -50,8 +51,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 int main( const int argc, const char * argv[] ) {
-    SharedBarriers barrier;
 
+    LogPolicy::GetInstance().Unmute();
+    SharedBarriers barrier;
 
 #ifdef __linux__
         if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
@@ -61,31 +63,27 @@ int main( const int argc, const char * argv[] ) {
 #endif
 
     try {
-        boost::interprocess::scoped_lock<
-            boost::interprocess::named_mutex
-        > pending_lock(barrier.pending_update_mutex);
-    } catch(...) {
-        // hard unlock in case of any exception.
-        barrier.pending_update_mutex.unlock();
+        try {
+            boost::interprocess::scoped_lock<
+                boost::interprocess::named_mutex
+            > pending_lock(barrier.pending_update_mutex);
+        } catch(...) {
+            // hard unlock in case of any exception.
+            barrier.pending_update_mutex.unlock();
+        }
+    } catch(const std::exception & e) {
+        SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     }
-    try {
-        LogPolicy::GetInstance().Unmute();
-        SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
-        bool use_shared_memory = false;
-        std::string ip_address;
-        int ip_port, requested_num_threads;
+    try {
+        SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
         ServerPaths server_paths;
         if(
-            !GenerateServerProgramOptions(
+            !GenerateDataStoreOptions(
                 argc,
                 argv,
-                server_paths,
-                ip_address,
-                ip_port,
-                requested_num_threads,
-                use_shared_memory
+                server_paths
             )
         ) {
             return 0;
@@ -124,7 +122,8 @@ int main( const int argc, const char * argv[] ) {
         paths_iterator = server_paths.find("fileindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         BOOST_ASSERT(!paths_iterator->second.empty());
-        const std::string & file_index_file_name = paths_iterator->second.string();
+        const boost::filesystem::path index_file_path_absolute = boost::filesystem::portable_canonical(paths_iterator->second);
+        const std::string & file_index_file_name = index_file_path_absolute.string();
         paths_iterator = server_paths.find("nodesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         BOOST_ASSERT(!paths_iterator->second.empty());
@@ -160,7 +159,7 @@ int main( const int argc, const char * argv[] ) {
             shared_layout_ptr->ram_index_file_name
         );
         // add zero termination
-        unsigned end_of_string_index = std::min(1023ul, file_index_file_name.length());
+        unsigned end_of_string_index = std::min((std::size_t)1023, file_index_file_name.length());
         shared_layout_ptr->ram_index_file_name[end_of_string_index] = '\0';
 
         // collect number of elements to store in shared memory object
@@ -324,9 +323,9 @@ int main( const int argc, const char * argv[] ) {
                 (char*)&(current_edge_data),
                 sizeof(OriginalEdgeData)
             );
-            via_node_ptr[i] = current_edge_data.viaNode;
-            name_id_ptr[i]  = current_edge_data.nameID;
-            turn_instructions_ptr[i] = current_edge_data.turnInstruction;
+            via_node_ptr[i] = current_edge_data.via_node;
+            name_id_ptr[i]  = current_edge_data.name_id;
+            turn_instructions_ptr[i] = current_edge_data.turn_instruction;
         }
         edges_input_stream.close();
 
@@ -379,7 +378,7 @@ int main( const int argc, const char * argv[] ) {
         );
         hsgr_input_stream.close();
 
-        //TODO acquire lock
+        // acquire lock
         SharedMemory * data_type_memory = SharedMemoryFactory::Get(
             CURRENT_REGIONS,
             sizeof(SharedDataTimestamp),

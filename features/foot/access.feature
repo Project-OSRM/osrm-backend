@@ -1,6 +1,6 @@
 @routing @foot @access
 Feature: Foot - Access tags on ways
-Reference: http://wiki.openstreetmap.org/wiki/Key:access
+# Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Background:
         Given the profile "foot"

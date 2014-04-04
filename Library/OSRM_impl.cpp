@@ -26,17 +26,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "OSRM.h"
+#include "OSRM_impl.h"
 
-OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
+#include "../Plugins/HelloWorldPlugin.h"
+#include "../Plugins/LocatePlugin.h"
+#include "../Plugins/NearestPlugin.h"
+#include "../Plugins/TimestampPlugin.h"
+#include "../Plugins/ViaRoutePlugin.h"
+
+#include "../Server/DataStructures/BaseDataFacade.h"
+#include "../Server/DataStructures/InternalDataFacade.h"
+#include "../Server/DataStructures/SharedBarriers.h"
+#include "../Server/DataStructures/SharedDataFacade.h"
+
+#include <boost/assert.hpp>
+
+OSRM_impl::OSRM_impl( const ServerPaths & server_paths, const bool use_shared_memory )
  :
     use_shared_memory(use_shared_memory)
 {
-    if( !use_shared_memory ) {
+    if (use_shared_memory)
+    {
+        barrier = new SharedBarriers();
+        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>( );
+    }
+    else
+    {
         query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
             server_paths
         );
-    } else {
-        query_data_facade = new SharedDataFacade<QueryEdge::EdgeData>( );
     }
 
     //The following plugins handle all requests.
@@ -65,13 +83,16 @@ OSRM::OSRM( const ServerPaths & server_paths, const bool use_shared_memory )
     );
 }
 
-OSRM::~OSRM() {
+OSRM_impl::~OSRM_impl() {
     BOOST_FOREACH(PluginMap::value_type & plugin_pointer, plugin_map) {
         delete plugin_pointer.second;
     }
+    if( use_shared_memory ) {
+        delete barrier;
+    }
 }
 
-void OSRM::RegisterPlugin(BasePlugin * plugin) {
+void OSRM_impl::RegisterPlugin(BasePlugin * plugin) {
     SimpleLogger().Write()  << "loaded plugin: " << plugin->GetDescriptor();
     if( plugin_map.find(plugin->GetDescriptor()) != plugin_map.end() ) {
         delete plugin_map.find(plugin->GetDescriptor())->second;
@@ -79,7 +100,7 @@ void OSRM::RegisterPlugin(BasePlugin * plugin) {
     plugin_map.emplace(plugin->GetDescriptor(), plugin);
 }
 
-void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
+void OSRM_impl::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
     const PluginMap::const_iterator & iter = plugin_map.find(
         route_parameters.service
     );
@@ -90,18 +111,18 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
             // lock update pending
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
-            > pending_lock(barrier.pending_update_mutex);
+            > pending_lock(barrier->pending_update_mutex);
 
             // lock query
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
-            > query_lock(barrier.query_mutex);
+            > query_lock(barrier->query_mutex);
 
             // unlock update pending
             pending_lock.unlock();
 
             // increment query count
-            ++(barrier.number_of_queries);
+            ++(barrier->number_of_queries);
 
             (static_cast<SharedDataFacade<QueryEdge::EdgeData>* >(query_data_facade))->CheckAndReloadFacade();
         }
@@ -111,21 +132,36 @@ void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
             // lock query
             boost::interprocess::scoped_lock<
                 boost::interprocess::named_mutex
-            > query_lock(barrier.query_mutex);
+            > query_lock(barrier->query_mutex);
 
             // decrement query count
-            --(barrier.number_of_queries);
+            --(barrier->number_of_queries);
             BOOST_ASSERT_MSG(
-                0 <= barrier.number_of_queries,
+                0 <= barrier->number_of_queries,
                 "invalid number of queries"
             );
 
             // notify all processes that were waiting for this condition
-            if (0 == barrier.number_of_queries) {
-                barrier.no_running_queries_condition.notify_all();
+            if (0 == barrier->number_of_queries) {
+                barrier->no_running_queries_condition.notify_all();
             }
         }
     } else {
         reply = http::Reply::StockReply(http::Reply::badRequest);
     }
+}
+
+// proxy code for compilation firewall
+
+OSRM::OSRM(
+    const ServerPaths & paths,
+    const bool use_shared_memory
+) : OSRM_pimpl_(new OSRM_impl(paths, use_shared_memory)) { }
+
+OSRM::~OSRM() {
+    delete OSRM_pimpl_;
+}
+
+void OSRM::RunQuery(RouteParameters & route_parameters, http::Reply & reply) {
+    OSRM_pimpl_->RunQuery(route_parameters, reply);
 }

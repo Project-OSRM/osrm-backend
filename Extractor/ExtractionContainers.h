@@ -28,17 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTIONCONTAINERS_H_
 #define EXTRACTIONCONTAINERS_H_
 
+#include "InternalExtractorEdge.h"
 #include "ExtractorStructs.h"
-#include "../Util/SimpleLogger.h"
-#include "../Util/TimingUtil.h"
+#include "../DataStructures/Restriction.h"
 #include "../Util/UUID.h"
 
-#include <boost/assert.hpp>
-#include <boost/foreach.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-
-#include <stxxl/sort>
 #include <stxxl/vector>
 
 class ExtractionContainers {
@@ -58,20 +52,9 @@ public:
     STXXLWayIDStartEndVector                        way_start_end_id_list;
     const UUID uuid;
 
-    ExtractionContainers() {
-        //Check if stxxl can be instantiated
-        stxxl::vector<unsigned> dummy_vector;
-        name_list.push_back("");
-    }
+    ExtractionContainers();
 
-    virtual ~ExtractionContainers() {
-        used_node_id_list.clear();
-        all_nodes_list.clear();
-        all_edges_list.clear();
-        name_list.clear();
-        restrictions_list.clear();
-        way_start_end_id_list.clear();
-    }
+    virtual ~ExtractionContainers();
 
     void PrepareData(
         const std::string & output_file_name,

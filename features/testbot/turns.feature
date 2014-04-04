@@ -98,7 +98,7 @@ Feature: Turn directions/codes
             | g | e | xg,xe | head,sharp_right,destination  |
 
     Scenario: Turn instructions at high latitude
-    https://github.com/DennisOSRM/Project-OSRM/issues/532
+    # https://github.com/DennisOSRM/Project-OSRM/issues/532
         Given the node locations
             | node | lat       | lon      |
             | a    | 55.68740  | 12.52430 |

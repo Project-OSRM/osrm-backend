@@ -5,8 +5,8 @@ Feature: Bike - Accessability of different way types
         Given the profile "bicycle"
 
     Scenario: Bike - Routability of way types
-    Bikes are allowed on footways etc because you can pull your bike at a lower speed.
-    Pier is not allowed, since it's tagged using man_made=pier.
+    # Bikes are allowed on footways etc because you can pull your bike at a lower speed.
+    # Pier is not allowed, since it's tagged using man_made=pier.
 
         Then routability should be
             | highway        | bothw |

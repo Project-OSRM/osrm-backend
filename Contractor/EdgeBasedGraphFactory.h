@@ -34,17 +34,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/EdgeBasedNode.h"
-#include "../Extractor/ExtractorStructs.h"
 #include "../DataStructures/HashTable.h"
 #include "../DataStructures/ImportEdge.h"
-#include "../DataStructures/QueryEdge.h"
+#include "../DataStructures/OriginalEdgeData.h"
 #include "../DataStructures/Percent.h"
+#include "../DataStructures/QueryEdge.h"
+#include "../DataStructures/QueryNode.h"
 #include "../DataStructures/TurnInstructions.h"
+#include "../DataStructures/Restriction.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/SimpleLogger.h"
 
-#include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
+#include "GeometryCompressor.h"
+
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
@@ -80,14 +82,17 @@ public:
     );
 
     void Run(const char * originalEdgeDataFilename, lua_State *myLuaState);
+
     void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
+
     void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
-    void GetOriginalEdgeData( std::vector<OriginalEdgeData> & originalEdgeData);
+
     TurnInstruction AnalyzeTurn(
         const NodeID u,
         const NodeID v,
         const NodeID w
     ) const;
+
     int GetTurnPenalty(
         const NodeID u,
         const NodeID v,
@@ -110,15 +115,6 @@ private:
         bool roundabout:1;
         bool ignoreInGrid:1;
         bool contraFlow:1;
-    };
-
-    struct _EdgeBasedEdgeData {
-        int distance;
-        unsigned via;
-        unsigned nameID;
-        bool forward;
-        bool backward;
-        TurnInstruction turnInstruction;
     };
 
     unsigned m_turn_restrictions_count;
@@ -144,7 +140,6 @@ private:
 
     RestrictionMap                              m_restriction_map;
 
-
     NodeID CheckForEmanatingIsOnlyTurn(
         const NodeID u,
         const NodeID v
@@ -157,10 +152,21 @@ private:
     ) const;
 
     void InsertEdgeBasedNode(
-            NodeBasedDynamicGraph::EdgeIterator e1,
-            NodeBasedDynamicGraph::NodeIterator u,
-            NodeBasedDynamicGraph::NodeIterator v,
-            bool belongsToTinyComponent);
+        NodeBasedDynamicGraph::EdgeIterator e1,
+        NodeBasedDynamicGraph::NodeIterator u,
+        NodeBasedDynamicGraph::NodeIterator v,
+        bool belongsToTinyComponent
+    );
+
+    void BFSCompentExplorer(
+        std::vector<unsigned> & component_index_list,
+        std::vector<unsigned> & component_index_size
+    ) const;
+
+    void FlushVectorToStream(
+        std::ofstream & edge_data_file,
+        std::vector<OriginalEdgeData> & original_edge_data_vector
+    ) const;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */
