@@ -51,7 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/timeb.h>
 #include <sys/types.h>
 #include <winsock.h>
-void gettimeofday(struct timeval* t,void* timezone) {
+inline void gettimeofday(struct timeval* t,void* timezone) {
     struct _timeb timebuffer;
     _ftime( &timebuffer );
     t->tv_sec=timebuffer.time;
