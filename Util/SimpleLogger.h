@@ -104,7 +104,7 @@ public:
 		   	if(!LogPolicy::GetInstance().IsMute()) {
 		   	switch(level) {
 				case logINFO:
-					std::cout 			<< os.str() << COL_RESET << std::endl;
+					std::cout 			<< os.str() 			 << std::endl;
 					break;
 				case logWARNING:
 					std::cerr << RED 	<< os.str() << COL_RESET << std::endl;
