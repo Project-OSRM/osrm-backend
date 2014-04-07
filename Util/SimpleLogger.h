@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 
 enum LogLevel { logINFO, logWARNING, logDEBUG };
-static	boost::mutex logger_mutex;
+static boost::mutex logger_mutex;
 const char COL_RESET[] = "\x1b[0m";
 const char RED[]     = "\x1b[31m";
 const char GREEN[]   = "\x1b[32m";
@@ -79,7 +79,7 @@ public:
 			boost::mutex::scoped_lock lock(logger_mutex);
 			level = l;
 			os << "[";
-			   	switch(level) {
+		   	switch(level) {
 				case logINFO:
 		    		os << "info";
 		    		break;
