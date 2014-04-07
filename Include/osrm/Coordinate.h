@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OSRM_config.h>
 
-#include <../../typedefs.h>
+#include "../../typedefs.h"
 
 static const double COORDINATE_PRECISION = 1000000.;
 static const int ELEVATION_NUM_DIGITS = 2;
