@@ -115,7 +115,7 @@ public:
         for (unsigned i = 0; i < pathDescription.size(); ++i)
         {
             const std::string name = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
-            SimpleLogger().Write(logDEBUG) << "df [" << i << "] name: " << name << ", duration: " << pathDescription[i].duration << ", length: " << pathDescription[i].length << ", coordinate: " << pathDescription[i].location;
+            // SimpleLogger().Write(logDEBUG) << "df [" << i << "] name: " << name << ", duration: " << pathDescription[i].duration << ", length: " << pathDescription[i].length << ", coordinate: " << pathDescription[i].location;
         }
 
         /*Simplify turn instructions

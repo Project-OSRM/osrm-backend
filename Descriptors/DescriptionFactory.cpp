@@ -61,7 +61,7 @@ double DescriptionFactory::GetBearing(const FixedPointCoordinate & A, const Fixe
         result -= 360.;
     }
 
-    SimpleLogger().Write(logDEBUG) << "bearing between " << A << " and " << B << " is " << result;
+    // SimpleLogger().Write(logDEBUG) << "bearing between " << A << " and " << B << " is " << result;
 
     return result;
 }
@@ -72,8 +72,8 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & source, const bool 
     int rev_weight = source.reverse_weight;
     int fwd_offset = source.forward_offset;
     int rev_offset = source.reverse_offset;
-    SimpleLogger().Write(logDEBUG) << "df source, traversed in reverse: " << (source_traversed_in_reverse ? "y" : "n") << ", location: " << source.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
-    SimpleLogger().Write(logDEBUG) << "duration of first segment: " << (source_traversed_in_reverse ? source.GetReverseWeightPlusOffset() : source.GetForwardWeightPlusOffset());
+    // SimpleLogger().Write(logDEBUG) << "df source, traversed in reverse: " << (source_traversed_in_reverse ? "y" : "n") << ", location: " << source.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+    // SimpleLogger().Write(logDEBUG) << "duration of first segment: " << (source_traversed_in_reverse ? source.GetReverseWeightPlusOffset() : source.GetForwardWeightPlusOffset());
     start_phantom = source;
     AppendSegment(
         source.location,
@@ -87,8 +87,8 @@ void DescriptionFactory::SetEndSegment(const PhantomNode & target, const bool ta
     int rev_weight = target.reverse_weight;
     int fwd_offset = target.forward_offset;
     int rev_offset = target.reverse_offset;
-    SimpleLogger().Write(logDEBUG) << "df target, traversed in reverse: " << (target_traversed_in_reverse ? "y" : "n") << ", location: " << target.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
-    SimpleLogger().Write(logDEBUG) << "duration of last segment: " << (target_traversed_in_reverse ? target.GetReverseWeightPlusOffset() : target.GetForwardWeightPlusOffset());
+    // SimpleLogger().Write(logDEBUG) << "df target, traversed in reverse: " << (target_traversed_in_reverse ? "y" : "n") << ", location: " << target.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+    // SimpleLogger().Write(logDEBUG) << "duration of last segment: " << (target_traversed_in_reverse ? target.GetReverseWeightPlusOffset() : target.GetForwardWeightPlusOffset());
 
     target_phantom = target;
     pathDescription.push_back(

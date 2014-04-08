@@ -81,7 +81,7 @@ void GeometryCompressor::SerializeInternalVector(const std::string & path) const
 
     // write indices array
     unsigned prefix_sum_of_list_indices = 0;
-    for(unsigned i = 0; i < m_compressed_geometries.size(); ++i )
+    for (unsigned i = 0; i < m_compressed_geometries.size(); ++i)
     {
         geometry_out_stream.write(
             (char*)&prefix_sum_of_list_indices,

@@ -49,21 +49,18 @@ class AlternativeRouting : private BasicRoutingInterface<DataFacadeT> {
     typedef SearchEngineData::QueryHeap QueryHeap;
     typedef std::pair<NodeID, NodeID> SearchSpaceEdge;
 
-    struct RankedCandidateNode {
-        RankedCandidateNode(
-            const NodeID node,
-            const int length,
-            const int sharing
-        ) :
-            node(node),
-            length(length),
-            sharing(sharing)
+    struct RankedCandidateNode
+    {
+        RankedCandidateNode(const NodeID node, const int length, const int sharing)
+         : node(node),  length(length), sharing(sharing)
         { }
 
         NodeID node;
         int length;
         int sharing;
-        bool operator<(const RankedCandidateNode& other) const {
+
+        bool operator<(const RankedCandidateNode& other) const
+        {
             return (2*length + sharing) < (2*other.length + other.sharing);
         }
     };
@@ -92,7 +89,7 @@ public:
         ) {
             // raw_route_data.lengthOfShortestPath    = INVALID_EDGE_WEIGHT;
             // raw_route_data.lengthOfAlternativePath = INVALID_EDGE_WEIGHT;
-            SimpleLogger().Write(logDEBUG) << "not executing path search";
+            // SimpleLogger().Write(logDEBUG) << "not executing path search";
             return;
         }
 
@@ -120,7 +117,7 @@ public:
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
         if(phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
+            SimpleLogger().Write(logDEBUG) << "fwd-a insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
             forward_heap1.Insert(
                 phantom_node_pair.source_phantom.forward_node_id,
                 -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
@@ -128,7 +125,7 @@ public:
             );
         }
         if(phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "fwd insert: " << phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
+            SimpleLogger().Write(logDEBUG) << "fwd-b insert: " << phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             forward_heap1.Insert(
                 phantom_node_pair.source_phantom.reverse_node_id,
                 -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
@@ -137,7 +134,7 @@ public:
         }
 
         if(phantom_node_pair.target_phantom.forward_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
+            SimpleLogger().Write(logDEBUG) << "rev-a insert: " << phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
             reverse_heap1.Insert(
                 phantom_node_pair.target_phantom.forward_node_id,
                 phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
@@ -145,7 +142,7 @@ public:
             );
         }
         if(phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
+            SimpleLogger().Write(logDEBUG) << "rev-b insert: " << phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
         	reverse_heap1.Insert(
                 phantom_node_pair.target_phantom.reverse_node_id,
                 phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),
@@ -153,14 +150,16 @@ public:
             );
         }
 
-        const int forward_offset =  super::ComputeEdgeOffset(
-                                        phantom_node_pair.source_phantom
-                                    );
-        const int reverse_offset =  super::ComputeEdgeOffset(
-                                        phantom_node_pair.target_phantom
-                                    );
+        const int forward_offset = phantom_node_pair.ComputeForwardQueueOffset();
+        // const int forward_offset =  super::ComputeEdgeOffset(
+        //                                 phantom_node_pair.source_phantom
+        //                             );
+        const int reverse_offset = phantom_node_pair.ComputeReverseQueueOffset();
+        // const int reverse_offset =  super::ComputeEdgeOffset(
+        //                                 phantom_node_pair.target_phantom
+        //                             );
 
-        SimpleLogger().Write(logDEBUG) << "fwd_offset: " << forward_offset << ", reverse_offset: " << reverse_offset;
+        // SimpleLogger().Write(logDEBUG) << "fwd_offset: " << forward_offset << ", reverse_offset: " << reverse_offset;
 
         //search from s and t till new_min/(1+epsilon) > length_of_shortest_path
         while(0 < (forward_heap1.Size() + reverse_heap1.Size())){
@@ -188,9 +187,9 @@ public:
             }
         }
 
-        SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
+        // SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
         sort_unique_resize( via_node_candidate_list );
-        SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
+        // SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
 
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;
@@ -208,7 +207,7 @@ public:
 
         //TODO: leave early when no path found:
 
-        SimpleLogger().Write(logDEBUG) << "ub: " << upper_bound_to_shortest_path_distance;
+        // SimpleLogger().Write(logDEBUG) << "ub: " << upper_bound_to_shortest_path_distance;
 
         boost::unordered_map<NodeID, int> approximated_forward_sharing;
         boost::unordered_map<NodeID, int> approximated_reverse_sharing;
@@ -251,8 +250,8 @@ public:
         	}
         }
 
-        SimpleLogger().Write(logDEBUG) << "fwd_search_space size: " << forward_search_space.size() << ", marked " << approximated_forward_sharing.size() << " nodes";
-        SimpleLogger().Write(logDEBUG) << "rev_search_space size: " << reverse_search_space.size() << ", marked " << approximated_reverse_sharing.size() << " nodes";
+        // SimpleLogger().Write(logDEBUG) << "fwd_search_space size: " << forward_search_space.size() << ", marked " << approximated_forward_sharing.size() << " nodes";
+        // SimpleLogger().Write(logDEBUG) << "rev_search_space size: " << reverse_search_space.size() << ", marked " << approximated_reverse_sharing.size() << " nodes";
 
         std::vector<NodeID> preselected_node_list;
         BOOST_FOREACH(const NodeID node, via_node_candidate_list) {
@@ -272,7 +271,7 @@ public:
             }
         }
 
-        SimpleLogger().Write() << preselected_node_list.size() << " passed preselection";
+        // SimpleLogger().Write() << preselected_node_list.size() << " passed preselection";
 
         std::vector<NodeID> & packed_shortest_path = packed_forward_path;
         std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
@@ -345,7 +344,7 @@ public:
                 raw_route_data.unpacked_path_segments.front()
             );
             raw_route_data.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
-            SimpleLogger().Write(logDEBUG) << "upper_bound_to_shortest_path_distance: " << upper_bound_to_shortest_path_distance;
+            // SimpleLogger().Write(logDEBUG) << "upper_bound_to_shortest_path_distance: " << upper_bound_to_shortest_path_distance;
         }
 
         if( SPECIAL_NODEID != selected_via_node ) {
@@ -372,7 +371,7 @@ public:
             );
 
             raw_route_data.lengthOfAlternativePath = length_of_via_path;
-            SimpleLogger().Write(logDEBUG) << "length_of_via_path: " << length_of_via_path;
+            // SimpleLogger().Write(logDEBUG) << "length_of_via_path: " << length_of_via_path;
         }
     }
 
@@ -635,7 +634,7 @@ private:
 	) const {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
-        const int scaled_distance = (distance-edge_expansion_offset)/(1.+VIAPATH_EPSILON);
+        const int scaled_distance = distance/(1.+VIAPATH_EPSILON);
         // SimpleLogger().Write(logDEBUG) << "node: " << node << ", distance: " << distance << ", ub: " << *upper_bound_to_shortest_path_distance << ", scaled_distance: " << scaled_distance;
         if(
             (INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_distance) &&
@@ -650,12 +649,14 @@ private:
             std::make_pair(forward_heap.GetData( node ).parent, node)
         );
 
-        if( reverse_heap.WasInserted(node) ) {
+        if (reverse_heap.WasInserted(node)) {
             search_space_intersection.push_back(node);
 
             const int new_distance = reverse_heap.GetKey(node) + distance;
-            if( new_distance < *upper_bound_to_shortest_path_distance ){
-                if( new_distance >= 0 ) {
+            if (new_distance < *upper_bound_to_shortest_path_distance)
+            {
+                if ((new_distance + edge_expansion_offset) >= 0)
+                {
                     *middle_node = node;
                     *upper_bound_to_shortest_path_distance = new_distance;
                 }

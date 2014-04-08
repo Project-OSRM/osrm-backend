@@ -64,22 +64,27 @@ public:
         int * upper_bound,
         const int edge_expansion_offset,
         const bool forward_direction
-    ) const {
+    ) const
+    {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         // SimpleLogger().Write() << (forward_direction ? "fwd" : "rev") << " settled (" << forward_heap.GetData( node ).parent << "," << node << ")=" << distance;
-        if(reverse_heap.WasInserted(node) ){
+        if (reverse_heap.WasInserted(node))
+        {
             const int new_distance = reverse_heap.GetKey(node) + distance;
             // SimpleLogger().Write(logDEBUG) << "new_distance: " << new_distance;
-            if(new_distance < *upper_bound ){
-                if( new_distance >= 0 ) {
+            if(new_distance < *upper_bound )
+            {
+                if( new_distance + edge_expansion_offset >= 0 )
+                {
                     *middle_node_id = node;
                     *upper_bound = new_distance;
                 }
             }
         }
 
-        if( (distance-edge_expansion_offset) > *upper_bound ){
+        if (distance > *upper_bound)
+        {
             // SimpleLogger().Write() << "found path";
             forward_heap.DeleteAll();
             return;
@@ -186,7 +191,7 @@ public:
                 }
             }
             if( SPECIAL_EDGEID == smaller_edge_id ){
-                SimpleLogger().Write() << "checking reverse";
+                // SimpleLogger().Write() << "checking reverse";
                 for(
                     EdgeID edge_id = facade->BeginEdges(edge.second);
                     edge_id < facade->EndEdges(edge.second);
@@ -236,7 +241,7 @@ public:
                     const int start_index = ( unpacked_path.empty() ? ( ( start_traversed_in_reverse ) ?  id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1 : phantom_node_pair.source_phantom.fwd_segment_position ) : 0 );
                     const int end_index = id_vector.size();
                     std::string name = facade->GetEscapedNameForNameID(name_index);
-            SimpleLogger().Write(logDEBUG) << "compressed via segment " << name << " from [" << start_index << "," << end_index << "]";
+            // SimpleLogger().Write(logDEBUG) << "compressed via segment " << name << " from [" << start_index << "," << end_index << "]";
 
 
                     BOOST_ASSERT( start_index >= 0 );
@@ -297,7 +302,7 @@ public:
                 }
             }
 
-            SimpleLogger().Write(logDEBUG) << "fetching target segment from [" << start_index << "," << end_index << "]";
+            // SimpleLogger().Write(logDEBUG) << "fetching target segment from [" << start_index << "," << end_index << "]";
 
             BOOST_ASSERT( start_index >= 0 );
             for(
@@ -308,7 +313,7 @@ public:
                 BOOST_ASSERT( i >= -1 );
                 if ( i >= 0 )
                 {
-                    SimpleLogger().Write(logDEBUG) << "target [" << i << "]" << facade->GetCoordinateOfNode(id_vector[i]);
+                    // SimpleLogger().Write(logDEBUG) << "target [" << i << "]" << facade->GetCoordinateOfNode(id_vector[i]);
                 }
                 unpacked_path.push_back(
                     PathData(
@@ -320,11 +325,11 @@ public:
                 );
             }
         }
-        BOOST_FOREACH(const PathData & path_data, unpacked_path)
-        {
-            std::string name = facade->GetEscapedNameForNameID(path_data.name_id);
-            SimpleLogger().Write(logDEBUG) << "{up} node: " << path_data.node << ", " << facade->GetCoordinateOfNode(path_data.node) << ", name: " << name;
-        }
+        // BOOST_FOREACH(const PathData & path_data, unpacked_path)
+        // {
+        //     std::string name = facade->GetEscapedNameForNameID(path_data.name_id);
+        //     SimpleLogger().Write(logDEBUG) << "{up} node: " << path_data.node << ", " << facade->GetCoordinateOfNode(path_data.node) << ", name: " << name;
+        // }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.
         // two equivalent routes may start (or end) at different node-based edges
@@ -341,7 +346,7 @@ public:
 
             if (unpacked_path[last_index].node == unpacked_path[second_to_last_index].node)
             {
-                SimpleLogger().Write(logDEBUG) << "{rm} node: " << unpacked_path.back().node;
+                // SimpleLogger().Write(logDEBUG) << "{rm} node: " << unpacked_path.back().node;
                 unpacked_path.pop_back();
             }
             BOOST_ASSERT(!unpacked_path.empty());
@@ -450,19 +455,19 @@ public:
         }
     }
 
-    int ComputeEdgeOffset(const PhantomNode & phantom_node) const {
-        int weight_offset = 0;
-        if (phantom_node.forward_node_id != SPECIAL_NODEID)
-        {
-            weight_offset += phantom_node.GetForwardWeightPlusOffset();
-        }
-        if (phantom_node.reverse_node_id != SPECIAL_NODEID)
-        {
-            weight_offset += phantom_node.GetReverseWeightPlusOffset();
-        }
-        return weight_offset;
-        // return phantom_node.forward_weight + (phantom_node.isBidirected() ? phantom_node.reverse_weight : 0);
-    }
+    // int ComputeOffset(const PhantomNode & phantom_node) const {
+    //     int weight_offset = 0;
+    //     if (phantom_node.forward_node_id != SPECIAL_NODEID)
+    //     {
+    //         weight_offset += phantom_node.GetForwardWeightPlusOffset();
+    //     }
+    //     if (phantom_node.reverse_node_id != SPECIAL_NODEID)
+    //     {
+    //         weight_offset += phantom_node.GetReverseWeightPlusOffset();
+    //     }
+    //     return weight_offset;
+    //     // return phantom_node.forward_weight + (phantom_node.isBidirected() ? phantom_node.reverse_weight : 0);
+    // }
 
 };
 

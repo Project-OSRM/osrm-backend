@@ -159,12 +159,14 @@ public:
                 );
             }
 
-            const int forward_offset =  super::ComputeEdgeOffset(
-                                            phantom_node_pair.source_phantom
-                                        );
-            const int reverse_offset =  super::ComputeEdgeOffset(
-                                            phantom_node_pair.target_phantom
-                                        );
+            const int forward_offset = phantom_node_pair.ComputeForwardQueueOffset();
+            // const int forward_offset =  super::ComputeForwardOffset(
+            //                                 phantom_node_pair.source_phantom
+            //                             );
+            const int reverse_offset = -phantom_node_pair.ComputeReverseQueueOffset();
+            // const int reverse_offset =  super::ComputeReverseOffset(
+            //                                 phantom_node_pair.target_phantom
+            //                             );
 
             //run two-Target Dijkstra routing step.
             while(0 < (forward_heap1.Size() + reverse_heap1.Size() )){

@@ -134,13 +134,13 @@ public:
         int rev_weight = phantom_nodes.source_phantom.reverse_weight;
         int fwd_offset = phantom_nodes.source_phantom.forward_offset;
         int rev_offset = phantom_nodes.source_phantom.reverse_offset;
-        SimpleLogger().Write(logDEBUG) << "json source: " << name << ", location: " << phantom_nodes.source_phantom.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+        // SimpleLogger().Write(logDEBUG) << "json source: " << name << ", location: " << phantom_nodes.source_phantom.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
         name = facade->GetEscapedNameForNameID(phantom_nodes.target_phantom.name_id);
         fwd_weight = phantom_nodes.target_phantom.forward_weight;
         rev_weight = phantom_nodes.target_phantom.reverse_weight;
         fwd_offset = phantom_nodes.target_phantom.forward_offset;
         rev_offset = phantom_nodes.target_phantom.reverse_offset;
-        SimpleLogger().Write(logDEBUG) << "json target: " << name << ", location: " << phantom_nodes.target_phantom.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
+        // SimpleLogger().Write(logDEBUG) << "json target: " << name << ", location: " << phantom_nodes.target_phantom.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
 
 
         //TODO: replace the previous logic with this one.
@@ -148,21 +148,21 @@ public:
         //check if first segment is non-zero
         std::string road_name;
         int source_duration = phantom_nodes.source_phantom.GetForwardWeightPlusOffset();
-        SimpleLogger().Write(logDEBUG) << "-> source_traversed_in_reverse: " << (raw_route.source_traversed_in_reverse ? "y" : "n");
+        // SimpleLogger().Write(logDEBUG) << "-> source_traversed_in_reverse: " << (raw_route.source_traversed_in_reverse ? "y" : "n");
         if (!raw_route.source_traversed_in_reverse)
         {
             source_duration = phantom_nodes.source_phantom.GetReverseWeightPlusOffset();
         }
         BOOST_ASSERT(source_duration >= 0);
         road_name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
-        if (source_duration > 0)
-        {
-            SimpleLogger().Write(logDEBUG) << "adding source \"" << road_name << "\" at " << phantom_nodes.source_phantom.location << ", duration: " << source_duration;
-        }
-        else
-        {
-            SimpleLogger().Write(logDEBUG) << "ignoring source \"" << road_name << "\"";
-        }
+        // if (source_duration > 0)
+        // {
+        //     SimpleLogger().Write(logDEBUG) << "adding source \"" << road_name << "\" at " << phantom_nodes.source_phantom.location << ", duration: " << source_duration;
+        // }
+        // else
+        // {
+        //     SimpleLogger().Write(logDEBUG) << "ignoring source \"" << road_name << "\"";
+        // }
 
         // TODO, for each unpacked segment add the leg to the description
         BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
@@ -170,14 +170,14 @@ public:
         for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
         {
             const std::vector<PathData> & leg_path = raw_route.unpacked_path_segments[i];
-            const PhantomNodes & leg_phantoms = raw_route.segmentEndCoordinates[i];
-            SimpleLogger().Write(logDEBUG) << " Describing leg from " << leg_phantoms.source_phantom.location << " and " << leg_phantoms.target_phantom.location;
+            // const PhantomNodes & leg_phantoms = raw_route.segmentEndCoordinates[i];
+            // SimpleLogger().Write(logDEBUG) << " Describing leg from " << leg_phantoms.source_phantom.location << " and " << leg_phantoms.target_phantom.location;
             FixedPointCoordinate current_coordinate;
             BOOST_FOREACH(const PathData & path_data, leg_path)
             {
                 current_coordinate = facade->GetCoordinateOfNode(path_data.node);
                 road_name = facade->GetEscapedNameForNameID(path_data.name_id);
-                SimpleLogger().Write(logDEBUG) << "  adding way point for \"" << road_name << "\" at " << current_coordinate << ", duration: " << path_data.durationOfSegment;
+                // SimpleLogger().Write(logDEBUG) << "  adding way point for \"" << road_name << "\" at " << current_coordinate << ", duration: " << path_data.durationOfSegment;
             }
         }
 
@@ -191,15 +191,15 @@ public:
         }
         BOOST_ASSERT(target_duration >= 0);
 
-        if (target_duration > 0)
-        {
-            SimpleLogger().Write(logDEBUG) << "adding target \"" << road_name << "\" at " << phantom_nodes.target_phantom.location << ", duration: " << target_duration;
-        }
-        else
-        {
-            SimpleLogger().Write(logDEBUG) << "ignoring target \"" << road_name << "\"";
-        }
-        SimpleLogger().Write(logDEBUG) << "-> target_traversed_in_reverse: " << (raw_route.target_traversed_in_reverse ? "y" : "n");
+        // if (target_duration > 0)
+        // {
+        //     SimpleLogger().Write(logDEBUG) << "adding target \"" << road_name << "\" at " << phantom_nodes.target_phantom.location << ", duration: " << target_duration;
+        // }
+        // else
+        // {
+        //     SimpleLogger().Write(logDEBUG) << "ignoring target \"" << road_name << "\"";
+        // }
+        // SimpleLogger().Write(logDEBUG) << "-> target_traversed_in_reverse: " << (raw_route.target_traversed_in_reverse ? "y" : "n");
 
         //END OF TODO
 
