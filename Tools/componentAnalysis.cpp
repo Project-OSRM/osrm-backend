@@ -46,99 +46,91 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-typedef QueryEdge::EdgeData               EdgeData;
+typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 
-std::vector<NodeInfo>       internal_to_external_node_map;
-std::vector<TurnRestriction>   restrictions_vector;
-std::vector<NodeID>         bollard_node_IDs_vector;
-std::vector<NodeID>         traffic_light_node_IDs_vector;
+std::vector<NodeInfo> internal_to_external_node_map;
+std::vector<TurnRestriction> restrictions_vector;
+std::vector<NodeID> bollard_node_IDs_vector;
+std::vector<NodeID> traffic_light_node_IDs_vector;
 
-int main (int argc, char * argv[]) {
+int main(int argc, char *argv[])
+{
     LogPolicy::GetInstance().Unmute();
-    if(argc < 3) {
-        SimpleLogger().Write(logWARNING) <<
-            "usage:\n" << argv[0] << " <osrm> <osrm.restrictions>";
+    if (argc < 3)
+    {
+        SimpleLogger().Write(logWARNING) << "usage:\n" << argv[0] << " <osrm> <osrm.restrictions>";
         return -1;
     }
 
-    SimpleLogger().Write() <<
-        "Using restrictions from file: " << argv[2];
-    std::ifstream restriction_ifstream(argv[2], std::ios::binary);
-    const UUID uuid_orig;
-    UUID uuid_loaded;
-    restriction_ifstream.read((char *) &uuid_loaded, sizeof(UUID));
+    try
+    {
+        SimpleLogger().Write() << "Using restrictions from file: " << argv[2];
+        std::ifstream restriction_ifstream(argv[2], std::ios::binary);
+        const UUID uuid_orig;
+        UUID uuid_loaded;
+        restriction_ifstream.read((char *)&uuid_loaded, sizeof(UUID));
 
-    if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-        SimpleLogger().Write(logWARNING) <<
-            argv[2] << " was prepared with a different build. "
-            "Reprocess to get rid of this warning.";
+        if (!uuid_loaded.TestGraphUtil(uuid_orig))
+        {
+            SimpleLogger().Write(logWARNING) << argv[2] << " was prepared with a different build. "
+                                                           "Reprocess to get rid of this warning.";
+        }
+
+        if (!restriction_ifstream.good())
+        {
+            throw OSRMException("Could not access <osrm-restrictions> files");
+        }
+        uint32_t usable_restriction_count = 0;
+        restriction_ifstream.read((char *)&usable_restriction_count, sizeof(uint32_t));
+        restrictions_vector.resize(usable_restriction_count);
+
+        restriction_ifstream.read((char *)&(restrictions_vector[0]),
+                                  usable_restriction_count * sizeof(TurnRestriction));
+        restriction_ifstream.close();
+
+        std::ifstream input_stream;
+        input_stream.open(argv[1], std::ifstream::in | std::ifstream::binary);
+
+        if (!input_stream.is_open())
+        {
+            throw OSRMException("Cannot open osrm file");
+        }
+
+        std::vector<ImportEdge> edge_list;
+        NodeID node_based_node_count = readBinaryOSRMGraphFromStream(
+            input_stream, edge_list, bollard_node_IDs_vector, traffic_light_node_IDs_vector,
+            &internal_to_external_node_map, restrictions_vector);
+        input_stream.close();
+
+        BOOST_ASSERT_MSG(restrictions_vector.size() == usable_restriction_count,
+                         "size of restrictions_vector changed");
+
+        SimpleLogger().Write() << restrictions_vector.size() << " restrictions, "
+                               << bollard_node_IDs_vector.size() << " bollard nodes, "
+                               << traffic_light_node_IDs_vector.size() << " traffic lights";
+
+        /***
+         * Building an edge-expanded graph from node-based input an turn
+         * restrictions
+         */
+
+        SimpleLogger().Write() << "Starting SCC graph traversal";
+        TarjanSCC *tarjan = new TarjanSCC(node_based_node_count, edge_list, bollard_node_IDs_vector,
+                                          traffic_light_node_IDs_vector, restrictions_vector,
+                                          internal_to_external_node_map);
+        std::vector<ImportEdge>().swap(edge_list);
+
+        tarjan->Run();
+
+        std::vector<TurnRestriction>().swap(restrictions_vector);
+        std::vector<NodeID>().swap(bollard_node_IDs_vector);
+        std::vector<NodeID>().swap(traffic_light_node_IDs_vector);
+        SimpleLogger().Write() << "finished component analysis";
     }
-
-    if(!restriction_ifstream.good()) {
-        throw OSRMException("Could not access <osrm-restrictions> files");
+    catch (const std::exception &e)
+    {
+        SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     }
-    uint32_t usable_restriction_count = 0;
-    restriction_ifstream.read(
-            (char*)&usable_restriction_count,
-            sizeof(uint32_t)
-    );
-    restrictions_vector.resize(usable_restriction_count);
-
-    restriction_ifstream.read(
-            (char *)&(restrictions_vector[0]),
-            usable_restriction_count*sizeof(TurnRestriction)
-    );
-    restriction_ifstream.close();
-
-    std::ifstream input_stream;
-    input_stream.open( argv[1], std::ifstream::in | std::ifstream::binary );
-
-    if (!input_stream.is_open()) {
-        throw OSRMException("Cannot open osrm file");
-    }
-
-    std::vector<ImportEdge> edge_list;
-    NodeID node_based_node_count = readBinaryOSRMGraphFromStream(
-            input_stream,
-            edge_list,
-            bollard_node_IDs_vector,
-            traffic_light_node_IDs_vector,
-            &internal_to_external_node_map,
-            restrictions_vector
-    );
-    input_stream.close();
-
-    BOOST_ASSERT_MSG(
-        restrictions_vector.size() == usable_restriction_count,
-        "size of restrictions_vector changed"
-    );
-
-    SimpleLogger().Write() <<
-            restrictions_vector.size() << " restrictions, " <<
-            bollard_node_IDs_vector.size() << " bollard nodes, " <<
-            traffic_light_node_IDs_vector.size() << " traffic lights";
-
-    /***
-     * Building an edge-expanded graph from node-based input an turn restrictions
-     */
-
-    SimpleLogger().Write() << "Starting SCC graph traversal";
-    TarjanSCC * tarjan = new TarjanSCC (
-            node_based_node_count,
-            edge_list,
-            bollard_node_IDs_vector,
-            traffic_light_node_IDs_vector,
-            restrictions_vector,
-            internal_to_external_node_map
-    );
-    std::vector<ImportEdge>().swap(edge_list);
-
-    tarjan->Run();
-
-    std::vector<TurnRestriction>().swap(restrictions_vector);
-    std::vector<NodeID>().swap(bollard_node_IDs_vector);
-    std::vector<NodeID>().swap(traffic_light_node_IDs_vector);
-    SimpleLogger().Write() << "finished component analysis";
     return 0;
 }
