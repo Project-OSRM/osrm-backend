@@ -76,21 +76,15 @@ void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
 
         if ( !result || (it != request.end()) ) {
             rep = http::Reply::StockReply(http::Reply::badRequest);
+            rep.content.clear();
             const int position = std::distance(request.begin(), it);
+            rep.content.push_back(
+                "{\"status\":400,\"status_message\":\"Query string malformed close to position "
+            );
             std::string tmp_position_string;
             intToString(position, tmp_position_string);
-            rep.content.push_back(
-                "Input seems to be malformed close to position "
-                "<br><pre>"
-            );
-            rep.content.push_back( request );
             rep.content.push_back(tmp_position_string);
-            rep.content.push_back("<br>");
-            const unsigned end = std::distance(request.begin(), it);
-            for(unsigned i = 0; i < end; ++i) {
-                rep.content.push_back("&nbsp;");
-            }
-            rep.content.push_back("^<br></pre>");
+            rep.content.push_back("\"}");
         } else {
             //parsing done, lets call the right plugin to handle the request
             BOOST_ASSERT_MSG(
