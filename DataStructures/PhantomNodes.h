@@ -152,30 +152,31 @@ struct PhantomNodes
         return source_phantom == target_phantom;
     }
 
-    bool ComputeForwardQueueOffset() const
-    {
-        if (source_phantom.forward_node_id == target_phantom.forward_node_id)
-        {
-            const int forward_queue_weight = source_phantom.GetForwardWeightPlusOffset();
-            const int reverse_queue_weight = target_phantom.GetForwardWeightPlusOffset();
-            const int weight_diff = (forward_queue_weight - reverse_queue_weight);
-            SimpleLogger().Write(logDEBUG) << "fwd queue offset: " << std::max(0, weight_diff);
-            return 0;//std::max(0, weight_diff);
-        }
-        return 0;
-    }
+    // bool ComputeForwardQueueOffset() const
+    // {
+    //     if (source_phantom.forward_node_id == target_phantom.forward_node_id)
+    //     {
+    //         const int forward_queue_weight = source_phantom.GetForwardWeightPlusOffset();
+    //         const int reverse_queue_weight = target_phantom.GetForwardWeightPlusOffset();
+    //         const int weight_diff = (forward_queue_weight - reverse_queue_weight);
+    //         SimpleLogger().Write(logDEBUG) << "fwd queue offset: " << std::max(0, weight_diff);
+    //         return 0;//std::max(0, weight_diff);
+    //     }
+    //     return 0;
+    // }
 
-    bool ComputeReverseQueueOffset() const
-    {
-        if (source_phantom.reverse_node_id == target_phantom.reverse_node_id)
-        {
-            const int forward_queue_weight = source_phantom.GetReverseWeightPlusOffset();
-            const int reverse_queue_weight = target_phantom.GetReverseWeightPlusOffset();
-            const int weight_diff = (forward_queue_weight - reverse_queue_weight);
-            return 0;//std::max(0, weight_diff);
-        }
-        return 0;
-    }
+    // bool ComputeReverseQueueOffset() const
+    // {
+    //     if (source_phantom.reverse_node_id == target_phantom.reverse_node_id)
+    //     {
+    //         const int forward_queue_weight = source_phantom.GetReverseWeightPlusOffset();
+    //         const int reverse_queue_weight = target_phantom.GetReverseWeightPlusOffset();
+    //         const int weight_diff = (forward_queue_weight - reverse_queue_weight);
+    //         SimpleLogger().Write(logDEBUG) << "rev queue offset: " << std::max(0, weight_diff);
+    //         return 0;//std::max(0, weight_diff);
+    //     }
+    //     return 0;
+    // }
 };
 
 inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn)

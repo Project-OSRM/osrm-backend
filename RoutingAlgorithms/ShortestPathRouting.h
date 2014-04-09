@@ -159,11 +159,11 @@ public:
                 );
             }
 
-            const int forward_offset = phantom_node_pair.ComputeForwardQueueOffset();
+            // const int forward_offset = phantom_node_pair.ComputeForwardQueueOffset();
             // const int forward_offset =  super::ComputeForwardOffset(
             //                                 phantom_node_pair.source_phantom
             //                             );
-            const int reverse_offset = -phantom_node_pair.ComputeReverseQueueOffset();
+            // const int reverse_offset = -phantom_node_pair.ComputeReverseQueueOffset();
             // const int reverse_offset =  super::ComputeReverseOffset(
             //                                 phantom_node_pair.target_phantom
             //                             );
@@ -176,7 +176,7 @@ public:
                         reverse_heap1,
                         &middle1,
                         &local_upper_bound1,
-                        forward_offset,
+                        0,
                         true
                     );
                 }
@@ -186,7 +186,7 @@ public:
                         forward_heap1,
                         &middle1,
                         &local_upper_bound1,
-                        reverse_offset,
+                        0,
                         false
                     );
                 }
@@ -200,7 +200,7 @@ public:
                             reverse_heap2,
                             &middle2,
                             &local_upper_bound2,
-                            forward_offset,
+                            0,
                             true
                         );
                     }
@@ -210,7 +210,7 @@ public:
                             forward_heap2,
                             &middle2,
                             &local_upper_bound2,
-                            reverse_offset,
+                            0,
                             false
                         );
                     }

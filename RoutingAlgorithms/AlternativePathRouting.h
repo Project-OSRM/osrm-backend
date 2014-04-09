@@ -150,11 +150,11 @@ public:
             );
         }
 
-        const int forward_offset = phantom_node_pair.ComputeForwardQueueOffset();
+        // const int forward_offset = phantom_node_pair.ComputeForwardQueueOffset();
         // const int forward_offset =  super::ComputeEdgeOffset(
         //                                 phantom_node_pair.source_phantom
         //                             );
-        const int reverse_offset = phantom_node_pair.ComputeReverseQueueOffset();
+        // const int reverse_offset = phantom_node_pair.ComputeReverseQueueOffset();
         // const int reverse_offset =  super::ComputeEdgeOffset(
         //                                 phantom_node_pair.target_phantom
         //                             );
@@ -171,7 +171,7 @@ public:
                     &upper_bound_to_shortest_path_distance,
                     via_node_candidate_list,
                     forward_search_space,
-                    forward_offset
+                    0
                 );
             }
             if(0 < reverse_heap1.Size()){
@@ -182,7 +182,7 @@ public:
                     &upper_bound_to_shortest_path_distance,
                     via_node_candidate_list,
                     reverse_search_space,
-                    reverse_offset
+                    0
                 );
             }
         }
@@ -286,7 +286,7 @@ public:
         //prioritizing via nodes for deep inspection
         BOOST_FOREACH(const NodeID node, preselected_node_list) {
             int length_of_via_path = 0, sharing_of_via_path = 0;
-            ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path, forward_offset+reverse_offset, packed_shortest_path);
+            ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path, 0, packed_shortest_path);
             const int maximum_allowed_sharing = upper_bound_to_shortest_path_distance*VIAPATH_GAMMA;
             if( sharing_of_via_path <= maximum_allowed_sharing && length_of_via_path <= upper_bound_to_shortest_path_distance*(1+VIAPATH_EPSILON)) {
                 ranked_candidates_list.push_back(
@@ -307,7 +307,7 @@ public:
         int length_of_via_path = INVALID_EDGE_WEIGHT;
         NodeID s_v_middle = SPECIAL_NODEID, v_t_middle = SPECIAL_NODEID;
         BOOST_FOREACH(const RankedCandidateNode & candidate, ranked_candidates_list){
-            if(ViaNodeCandidatePassesTTest(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate, forward_offset+reverse_offset, upper_bound_to_shortest_path_distance, &length_of_via_path, &s_v_middle, &v_t_middle)) {
+            if(ViaNodeCandidatePassesTTest(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate, 0, upper_bound_to_shortest_path_distance, &length_of_via_path, &s_v_middle, &v_t_middle)) {
                 // select first admissable
                 selected_via_node = candidate.node;
                 break;

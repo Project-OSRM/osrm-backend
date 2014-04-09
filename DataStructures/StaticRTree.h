@@ -691,13 +691,13 @@ public:
                         ) { //found a new minimum
                             min_dist = current_perpendicular_distance;
                             //TODO: use assignment c'tor in PhantomNode
-                            result_phantom_node.forward_node_id = current_edge.forward_edge_based_node_id;
-                            result_phantom_node.reverse_node_id = current_edge.reverse_edge_based_node_id;
+                            result_phantom_node.forward_node_id = current_edge.reverse_edge_based_node_id;
+                            result_phantom_node.reverse_node_id = current_edge.forward_edge_based_node_id;
                             result_phantom_node.name_id = current_edge.name_id;
-                            result_phantom_node.forward_weight = current_edge.forward_weight;
-                            result_phantom_node.reverse_weight = current_edge.reverse_weight;
-                            result_phantom_node.forward_offset = current_edge.forward_offset;
-                            result_phantom_node.reverse_offset = current_edge.reverse_offset;
+                            result_phantom_node.forward_weight = current_edge.reverse_weight;
+                            result_phantom_node.reverse_weight = current_edge.forward_weight;
+                            result_phantom_node.forward_offset = current_edge.reverse_offset;
+                            result_phantom_node.reverse_offset = current_edge.forward_offset;
                             result_phantom_node.packed_geometry_id = current_edge.packed_geometry_id;
                             result_phantom_node.fwd_segment_position = current_edge.fwd_segment_position;
 

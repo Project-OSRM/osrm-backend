@@ -545,7 +545,7 @@ void EdgeBasedGraphFactory::Run(
             continue;
         }
 
-        if (
+        if ( //TODO: rename to IsCompatibleTo
             fwd_edge_data1.IsEqualTo(fwd_edge_data2) &&
             rev_edge_data1.IsEqualTo(rev_edge_data2)
         ) {
