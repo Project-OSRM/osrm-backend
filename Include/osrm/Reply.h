@@ -37,8 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace http {
 
 const char okHTML[]                  = "";
-const char badRequestHTML[]          = "<html><head><title>Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>";
-const char internalServerErrorHTML[] = "<html><head><title>Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>";
+const char badRequestHTML[]          = "{\"status\": 400,\"status_message\":\"Bad Request\"}";
+const char internalServerErrorHTML[] = "{\"status\": 500,\"status_message\":\"Internal Server Error\"}";
 const char seperators[]              = { ':', ' ' };
 const char crlf[]                    = { '\r', '\n' };
 const std::string okString = "HTTP/1.0 200 OK\r\n";
