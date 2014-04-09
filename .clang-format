@@ -15,7 +15,7 @@ BreakBeforeBinaryOperators: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BinPackParameters: true
-ColumnLimit:     80
+ColumnLimit:     120
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 DerivePointerBinding: false
 ExperimentalAutoDetectBinPacking: false
