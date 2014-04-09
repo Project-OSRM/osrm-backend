@@ -1,6 +1,6 @@
 @routing @bicycle @access
 Feature: Bike - Access tags on nodes
-Reference: http://wiki.openstreetmap.org/wiki/Key:access
+# Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Background:
         Given the profile "bicycle"

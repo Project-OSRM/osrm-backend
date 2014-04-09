@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_DATA_FACADE_H
 #define SHARED_DATA_FACADE_H
 
-//implements all data storage when shared memory is _NOT_ used
+//implements all data storage when shared memory _IS_ used
 
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
@@ -356,14 +356,14 @@ public:
             name_id < m_name_begin_indices.size(),
             "name id too high"
         );
-        unsigned begin_index = m_name_begin_indices[name_id];
-        unsigned end_index = m_name_begin_indices[name_id+1];
+        const unsigned begin_index = m_name_begin_indices[name_id];
+        const unsigned end_index = m_name_begin_indices[name_id+1];
         BOOST_ASSERT_MSG(
-            begin_index < m_names_char_list.size(),
+            begin_index <= m_names_char_list.size(),
             "begin index of name too high"
         );
         BOOST_ASSERT_MSG(
-            end_index < m_names_char_list.size(),
+            end_index <= m_names_char_list.size(),
             "end index of name too high"
         );
 

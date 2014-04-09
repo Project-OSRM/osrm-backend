@@ -25,12 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef NearestPlugin_H_
-#define NearestPlugin_H_
+#ifndef NEAREST_PLUGIN_H
+#define NEAREST_PLUGIN_H
 
 #include "BasePlugin.h"
 #include "../DataStructures/PhantomNodes.h"
 #include "../Util/StringUtil.h"
+
+#include <boost/unordered_map.hpp>
 
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
@@ -44,11 +46,15 @@ public:
         facade(facade),
         descriptor_string("nearest")
     {
-        descriptorTable.insert(std::make_pair(""    , 0)); //default descriptor
-        descriptorTable.insert(std::make_pair("json", 1));
+        descriptorTable.emplace("",     0); //default descriptor
+        descriptorTable.emplace("json", 1);
     }
     const std::string & GetDescriptor() const { return descriptor_string; }
-    void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
+
+    void HandleRequest(
+        const RouteParameters & routeParameters,
+        http::Reply& reply
+    ) {
         //check number of parameters
         if(!routeParameters.coordinates.size()) {
             reply = http::Reply::StockReply(http::Reply::badRequest);
@@ -102,13 +108,13 @@ public:
             reply.content.push_back(")");
         } 
         
-        reply.ComputeAndSetSize();
+        reply.SetUncompressedSize();
     }
 
 private:
     DataFacadeT * facade;
-    HashTable<std::string, unsigned> descriptorTable;
+    boost::unordered_map<std::string, unsigned> descriptorTable;
     std::string descriptor_string;
 };
 
-#endif /* NearestPlugin_H_ */
+#endif /* NEAREST_PLUGIN_H */

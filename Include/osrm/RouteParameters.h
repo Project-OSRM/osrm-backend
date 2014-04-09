@@ -45,7 +45,9 @@ struct RouteParameters {
         geometry(true),
         compression(true),
         deprecatedAPI(false),
-        checkSum(-1) {}
+        checkSum(-1)
+    { }
+
     short zoomLevel;
     bool printInstructions;
     bool alternateRoute;
@@ -61,7 +63,7 @@ struct RouteParameters {
     std::vector<FixedPointCoordinate> coordinates;
 
     void setZoomLevel(const short i) {
-        if (18 > i && 0 < i) {
+        if (18 >= i && 0 <= i) {
             zoomLevel = i;
         }
     }
@@ -95,8 +97,10 @@ struct RouteParameters {
     }
 
     void addHint(const std::string & s) {
-        hints.resize(coordinates.size());
-        hints.back() = s;
+        hints.resize( coordinates.size() );
+        if( !hints.empty() ) {
+            hints.back() = s;
+        }
     }
 
     void setLanguage(const std::string & s) {

@@ -5,14 +5,22 @@ compiler:
 # Make sure CMake is installed
 install:
  - sudo apt-get update >/dev/null
- - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.46-all-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems osmosis
+ - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.46-all-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems
+ - curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
 before_script:
- - sudo gem install bundler
+ - rvm use 1.9.3
+ - gem install bundler
  - bundle install
  - mkdir build
  - cd build
  - cmake .. $CMAKEOPTIONS
-script: make -j3
+script:
+ - make -j 2
+ - cd ..
+ - cucumber -p verify
+after_script:
+# - cd ..
+# - cucumber -p verify
 branches:
   only:
     - master
@@ -21,8 +29,8 @@ cache:
 - bundler
 - apt
 env:
- - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release"
- - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug"
+ - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release" OSRM_PORT=5000 OSRM_TIMEOUT=60
+ - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug" OSRM_PORT=5010 OSRM_TIMEOUT=60
 notifications:
  irc:
   channels:

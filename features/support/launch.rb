@@ -1,11 +1,9 @@
 require 'socket'
 require 'open3'
 
-LAUNCH_TIMEOUT = 2
-SHUTDOWN_TIMEOUT = 2
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
-class OSRMLauncher
+class OSRMBackgroundLauncher
   def initialize input_file, &block
     @input_file = input_file
     Dir.chdir TEST_FOLDER do
@@ -21,7 +19,7 @@ class OSRMLauncher
   private
 
   def launch
-    Timeout.timeout(LAUNCH_TIMEOUT) do
+    Timeout.timeout(OSRM_TIMEOUT) do
       osrm_up
       wait_for_connection
     end
@@ -30,7 +28,7 @@ class OSRMLauncher
   end
 
   def shutdown
-    Timeout.timeout(SHUTDOWN_TIMEOUT) do
+    Timeout.timeout(OSRM_TIMEOUT) do
       osrm_down
     end
   rescue Timeout::Error
@@ -50,6 +48,7 @@ class OSRMLauncher
   def osrm_up
     return if osrm_up?
     @pid = Process.spawn("#{BIN_PATH}/osrm-routed #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+    Process.detach(@pid)    # avoid zombie processes
   end
 
   def osrm_down

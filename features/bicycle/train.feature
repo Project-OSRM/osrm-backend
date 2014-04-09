@@ -1,6 +1,6 @@
 @routing @bicycle @train
 Feature: Bike - Handle ferry routes
-Bringing bikes on trains and subways
+# Bringing bikes on trains and subways
 
     Background:
         Given the profile "bicycle"

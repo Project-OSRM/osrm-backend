@@ -1,7 +1,7 @@
 When /^I route I should get$/ do |table|
   reprocess
   actual = []
-  OSRMLauncher.new("#{@osm_file}.osrm") do
+  OSRMBackgroundLauncher.new("#{@osm_file}.osrm") do
     table.hashes.each_with_index do |row,ri|
       waypoints = []
       if row['from'] and row['to']
@@ -46,6 +46,8 @@ When /^I route I should get$/ do |table|
           compasses = compass_list json['route_instructions']
           turns = turn_list json['route_instructions']
           modes = mode_list json['route_instructions']
+          times = time_list json['route_instructions']
+          distances = distance_list json['route_instructions']
         end
       end
 
@@ -67,6 +69,17 @@ When /^I route I should get$/ do |table|
           raise "*** Time must be specied in seconds. (ex: 60s)" unless row['time'] =~ /\d+s/
           got['time'] = instructions ? "#{json['route_summary']['total_time'].to_s}s" : ''
         end
+        if table.headers.include?('speed')
+          if row['speed'] != '' && instructions
+            raise "*** Speed must be specied in km/h. (ex: 50 km/h)" unless row['speed'] =~ /\d+ km\/h/
+              time = json['route_summary']['total_time']
+              distance = json['route_summary']['total_distance']
+              speed = time>0 ? (3.6*distance/time).to_i : nil
+              got['speed'] =  "#{speed} km/h"
+          else
+            got['speed'] = ''
+          end
+        end
         if table.headers.include? 'bearing'
           got['bearing'] = bearings
         end
@@ -78,6 +91,12 @@ When /^I route I should get$/ do |table|
         end
         if table.headers.include? 'modes'
           got['modes'] = modes
+        end
+        if table.headers.include? 'times'
+          got['times'] = times
+        end
+        if table.headers.include? 'distances'
+          got['distances'] = distances
         end
         if table.headers.include? '#'   # comment column
           got['#'] = row['#']           # copy value so it always match
@@ -94,8 +113,7 @@ When /^I route I should get$/ do |table|
       end
 
       unless ok
-        failed = { :attempt => 'route', :query => @query, :response => response }
-        log_fail row,got,[failed]
+        log_fail row,got, { 'route' => {:query => @query, :response => response} }
       end
 
       actual << got

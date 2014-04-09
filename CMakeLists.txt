@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(OSRM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -30,7 +31,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp)
 
-set(BOOST_COMPONENTS filesystem iostreams program_options regex system thread)
+set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
@@ -77,12 +78,12 @@ if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    message(STATUS "Configuring OSRM in debug mode")
-    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-      message(STATUS "adding profiling flags")
-      set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage -fno-inline")
-      set(CMAKE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage -fno-inline")
-    endif()
+  message(STATUS "Configuring OSRM in debug mode")
+  if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    message(STATUS "adding profiling flags")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage -fno-inline")
+    set(CMAKE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage -fno-inline")
+  endif()
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Release)
     message(STATUS "Configuring OSRM in release mode")
@@ -103,28 +104,54 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
 endif()
 
+# Check if LTO is available
+set(LTO_FLAGS "")
+CHECK_CXX_COMPILER_FLAG("-flto" HAS_LTO_FLAG)
+if    (HAS_LTO_FLAG)
+  set(LTO_FLAGS "${LTO_FLAGS} -flto")
+endif (HAS_LTO_FLAG)
+
+# disable partitioning of LTO process when possible (fixes Debian issues)
+set(LTO_PARTITION_FLAGS "")
+CHECK_CXX_COMPILER_FLAG("-flto-partition=none" HAS_LTO_PARTITION_FLAG)
+if    (HAS_LTO_PARTITION_FLAG)
+  set(LTO_PARTITION_FLAGS "${LTO_PARTITION_FLAGS} -flto-partition=none")
+endif (HAS_LTO_PARTITION_FLAG)
+
+# Add Link-Time-Optimization flags, if supported (GCC >= 4.5) and enabled
+set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}           ${LTO_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
+
 # Configuring other platform dependencies
 if(APPLE)
   set(CMAKE_OSX_ARCHITECTURES "x86_64")
   message(STATUS "Set Architecture to x64 on OS X")
-    exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
-    string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
-    if(DARWIN_VERSION GREATER 12)
-        message(STATUS "Activating -std=c++11 flag for >= OS X 10.9")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
-    endif()
+  exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
+  string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
+  if(DARWIN_VERSION GREATER 12 AND NOT OSXLIBSTD)
+    message(STATUS "Activating -std=c++11 flag for >= OS X 10.9")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  endif()
+  if(OSXLIBSTD)
+    message(STATUS "linking against ${OSXLIBSTD}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=${OSXLIBSTD}")
+  elseif(DARWIN_VERSION GREATER 12)
+    message(STATUS "linking against libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+  endif()
 endif()
 
 if(UNIX AND NOT APPLE)
-    target_link_libraries(osrm-datastore rt)
-    target_link_libraries(OSRM rt)
+  target_link_libraries(osrm-datastore rt)
+  target_link_libraries(OSRM rt)
 endif()
 
 #Check Boost
 set(BOOST_MIN_VERSION "1.46.0")
 find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
 if(NOT Boost_FOUND)
-      message(FATAL_ERROR "Fatal error: Boost (version >= 1.46.0) required.\n")
+  message(FATAL_ERROR "Fatal error: Boost (version >= 1.46.0) required.\n")
 endif()
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -215,6 +242,14 @@ endif()
 
 file(GLOB InstallGlob Include/osrm/*.h Library/OSRM.h)
 
+# Add RPATH info to executables so that when they are run after being installed
+# (i.e., from /usr/local/bin/) the linker can find library dependencies. For
+# more info see http://www.cmake.org/Wiki/CMake_RPATH_handling
+set_property(TARGET osrm-extract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET osrm-prepare PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 install(FILES ${InstallGlob} DESTINATION include/osrm)
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-prepare DESTINATION bin)
@@ -225,9 +260,9 @@ list(GET Boost_LIBRARIES 1 BOOST_LIBRARY_FIRST)
 get_filename_component(BOOST_LIBRARY_LISTING "${BOOST_LIBRARY_FIRST}" PATH)
 set(BOOST_LIBRARY_LISTING "-L${BOOST_LIBRARY_LISTING}")
 foreach (lib ${Boost_LIBRARIES})
-    get_filename_component(BOOST_LIBRARY_NAME "${lib}" NAME_WE)
-    string(REPLACE "lib" "" BOOST_LIBRARY_NAME ${BOOST_LIBRARY_NAME})
-    set(BOOST_LIBRARY_LISTING "${BOOST_LIBRARY_LISTING} -l${BOOST_LIBRARY_NAME}")
+  get_filename_component(BOOST_LIBRARY_NAME "${lib}" NAME_WE)
+  string(REPLACE "lib" "" BOOST_LIBRARY_NAME ${BOOST_LIBRARY_NAME})
+  set(BOOST_LIBRARY_LISTING "${BOOST_LIBRARY_LISTING} -l${BOOST_LIBRARY_NAME}")
 endforeach ()
 
 configure_file(${CMAKE_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)

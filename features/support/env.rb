@@ -1,7 +1,7 @@
 require 'rspec/expectations'
 
 DEFAULT_PORT = 5000
-
+DEFAULT_TIMEOUT = 2
 
 puts "Ruby version #{RUBY_VERSION}"
 unless RUBY_VERSION.to_f >= 1.9
@@ -16,3 +16,15 @@ else
   puts "Using default port #{OSRM_PORT}"
 end
 
+if ENV["OSRM_TIMEOUT"]
+  OSRM_TIMEOUT = ENV["OSRM_TIMEOUT"].to_i
+  puts "Timeout set to #{OSRM_TIMEOUT}"
+else
+  OSRM_TIMEOUT = DEFAULT_TIMEOUT
+  puts "Using default timeout #{OSRM_TIMEOUT}"
+end
+
+
+AfterConfiguration do |config|
+  clear_log_files
+end

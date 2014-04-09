@@ -35,14 +35,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // computes a 64 bit value that corresponds to the hilbert space filling curve
 
-class HilbertCode : boost::noncopyable {
+class HilbertCode : boost::noncopyable
+{
 public:
-	static uint64_t GetHilbertNumberForCoordinate(
+	uint64_t operator()
+    (
 		const FixedPointCoordinate & current_coordinate
-	);
+	) const;
 private:
-	static inline uint64_t BitInterleaving(const uint32_t a, const uint32_t b);
-	static inline void TransposeCoordinate( uint32_t * X);
+	inline uint64_t BitInterleaving( const uint32_t a, const uint32_t b) const;
+	inline void TransposeCoordinate( uint32_t * X) const;
 };
 
 #endif /* HILBERTVALUE_H_ */

@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/LuaUtil.h"
 #include "Util/OpenMPWrapper.h"
 #include "Util/OSRMException.h"
-#include "Util/ProgramOptions.h"
+// #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
 #include "typedefs.h"
@@ -127,14 +127,14 @@ int main (int argc, char *argv[]) {
 
         boost::program_options::notify(option_variables);
 
-        if(boost::filesystem::is_regular_file(config_file_path)) {
-            SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
-            std::string config_str;
-            PrepareConfigFile( config_file_path.c_str(), config_str );
-            std::stringstream config_stream( config_str );
-            boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
-            boost::program_options::notify(option_variables);
-        }
+        // if(boost::filesystem::is_regular_file(config_file_path)) {
+        //     SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
+        //     std::string config_str;
+        //     PrepareConfigFile( config_file_path.c_str(), config_str );
+        //     std::stringstream config_stream( config_str );
+        //     boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
+        //     boost::program_options::notify(option_variables);
+        // }
 
         if(!option_variables.count("restrictions")) {
             restrictions_path = std::string( input_path.c_str()) + ".restrictions";
@@ -142,6 +142,7 @@ int main (int argc, char *argv[]) {
 
         if(!option_variables.count("input")) {
             SimpleLogger().Write(logWARNING) << "No input file specified";
+            SimpleLogger().Write() << visible_options;
             return -1;
         }
 
@@ -235,16 +236,16 @@ int main (int argc, char *argv[]) {
         std::vector<ImportEdge> edgeList;
         NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
         in.close();
+
+        if( edgeList.empty() ) {
+            SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
+            return -1;
+        }
+
         SimpleLogger().Write() <<
             inputRestrictions.size() << " restrictions, " <<
             bollardNodes.size() << " bollard nodes, " <<
             trafficLightNodes.size() << " traffic lights";
-
-        if( edgeList.empty() ) {
-            SimpleLogger().Write(logWARNING) << "The input data is broken. "
-                "It is impossible to do any turns in this graph";
-            return -1;
-        }
 
         /***
          * Building an edge-expanded graph from node-based input an turn restrictions

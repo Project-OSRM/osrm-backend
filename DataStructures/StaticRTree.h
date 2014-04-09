@@ -308,6 +308,8 @@ public:
         double time1 = get_timestamp();
         std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
+        HilbertCode get_hilbert_number;
+
         //generate auxiliary vector of hilbert-values
 #pragma omp parallel for schedule(guided)
         for(uint64_t element_counter = 0; element_counter < m_element_count; ++element_counter) {
@@ -317,7 +319,7 @@ public:
             FixedPointCoordinate current_centroid = current_element.Centroid();
             current_centroid.lat = COORDINATE_PRECISION*lat2y(current_centroid.lat/COORDINATE_PRECISION);
 
-            uint64_t current_hilbert_value = HilbertCode::GetHilbertNumberForCoordinate(current_centroid);
+            uint64_t current_hilbert_value = get_hilbert_number(current_centroid);
             input_wrapper_vector[element_counter].m_hilbert_value = current_hilbert_value;
         }
 
@@ -923,7 +925,7 @@ private:
     }
 
     inline bool DoubleEpsilonCompare(const double d1, const double d2) const {
-        return (std::fabs(d1 - d2) < std::numeric_limits<double>::epsilon() );
+        return (std::abs(d1 - d2) < std::numeric_limits<double>::epsilon() );
     }
 
 };

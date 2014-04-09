@@ -187,7 +187,7 @@ public:
         }
         
         std::string tmp;
-        reply.ComputeAndSetSize();
+        reply.SetUncompressedSize();
  
         delete desc;
         return;

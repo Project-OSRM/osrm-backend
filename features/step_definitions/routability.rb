@@ -1,3 +1,42 @@
+def test_routability_row i
+  result = {}
+  ['forw','backw'].each do |direction|
+    a = Location.new @origin[0]+(1+WAY_SPACING*i)*@zoom, @origin[1]
+    b = Location.new @origin[0]+(3+WAY_SPACING*i)*@zoom, @origin[1]
+    r = {}
+    r[:response] = request_route direction=='forw' ? [a,b] : [b,a]
+    r[:query] = @query
+    r[:json] = JSON.parse(r[:response].body)
+
+    r[:status] = route_status r[:response]
+    if r[:status].empty? == false
+      r[:route] = way_list r[:json]['route_instructions']
+      
+      if r[:route]=="w#{i}"
+        r[:time] = r[:json]['route_summary']['total_time']
+        r[:distance] = r[:json]['route_summary']['total_distance']
+        r[:speed] = r[:time]>0 ? (3.6*r[:distance]/r[:time]).to_i : nil
+      else
+        # if we hit the wrong way segment, we assume it's
+        # because the one we tested was not unroutable
+        r = {}
+      end
+    end
+    result[direction] = r
+  end
+  
+  # check if forw and backw returned the same values
+  result['bothw'] = {}
+  [:status,:time,:distance,:speed].each do |key|
+    if result['forw'][key] == result['backw'][key]
+      result['bothw'][key] = result['forw'][key]
+    else
+      result['bothw'][key] = 'diff'
+    end
+  end
+  result
+end
+
 Then /^routability should be$/ do |table|
   build_ways_from_table table
   reprocess
@@ -5,42 +44,34 @@ Then /^routability should be$/ do |table|
   if table.headers&["forw","backw","bothw"] == []
     raise "*** routability tabel must contain either 'forw', 'backw' or 'bothw' column"
   end
-  OSRMLauncher.new("#{@osm_file}.osrm") do
+  OSRMBackgroundLauncher.new("#{@osm_file}.osrm") do
     table.hashes.each_with_index do |row,i|
-      got = row.dup
+      output_row = row.dup
       attempts = []
-      ['forw','backw','bothw'].each do |direction|
-        if table.headers.include? direction
-          if direction == 'forw' || direction == 'bothw'
-            a = Location.new @origin[0]+(1+WAY_SPACING*i)*@zoom, @origin[1]
-            b = Location.new @origin[0]+(3+WAY_SPACING*i)*@zoom, @origin[1]
-            response = request_route [a,b]
-          elsif direction == 'backw' || direction == 'bothw'
-            a = Location.new @origin[0]+(3+WAY_SPACING*i)*@zoom, @origin[1]
-            b = Location.new @origin[0]+(1+WAY_SPACING*i)*@zoom, @origin[1]
-            response = request_route [a,b]
-          end
-          want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
-          got[direction] = route_status response
-          json = JSON.parse(response.body)
-          if got[direction].empty? == false
-            route = way_list json['route_instructions']
-            if route != "w#{i}"
-              got[direction] = ''
-            elsif want =~ /^\d+s/
-              time = json['route_summary']['total_time']
-              got[direction] = "#{time}s"
-            end
-          end
-          if FuzzyMatch.match got[direction], want
-            got[direction] = row[direction]
-          else
-            attempts << { :attempt => direction, :query => @query, :response => response }
-          end
+      result = test_routability_row i
+      directions = ['forw','backw','bothw']
+      (directions & table.headers).each do |direction|
+        want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
+        case want
+        when '', 'x'
+          output_row[direction] = result[direction][:status].to_s
+        when /^\d+s/
+          output_row[direction] = "#{result[direction][:time]}s"
+        when /^\d+ km\/h/
+          output_row[direction] = "#{result[direction][:speed]} km/h"
+        else
+          raise "*** Unknown expectation format: #{want}"
+        end
+        
+        if FuzzyMatch.match output_row[direction], want
+          output_row[direction] = row[direction]
         end
       end
-      log_fail row,got,attempts if got != row
-      actual << got
+      
+      if output_row != row
+        log_fail row,output_row,result
+      end
+      actual << output_row
     end
   end
   table.routing_diff! actual

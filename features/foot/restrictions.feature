@@ -1,6 +1,6 @@
 @routing @foot @restrictions
 Feature: Foot - Turn restrictions
-    Ignore turn restrictions on foot.
+# Ignore turn restrictions on foot.
 
     Background:
         Given the profile "foot"

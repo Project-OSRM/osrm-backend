@@ -62,7 +62,7 @@ public:
             reply.content.push_back(")");
         } 
         
-        reply.ComputeAndSetSize();
+        reply.SetUncompressedSize();
     }
 private:
     const DataFacadeT * facade;

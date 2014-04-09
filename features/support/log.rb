@@ -1,3 +1,19 @@
+# logging
+
+PREPROCESS_LOG_FILE = 'preprocessing.log'
+LOG_FILE = 'fail.log'
+
+
+def clear_log_files
+  Dir.chdir TEST_FOLDER do
+    # emptying existing files, rather than deleting and writing new ones makes it 
+    # easier to use tail -f from the command line
+    `echo '' > #{OSRM_ROUTED_LOG_FILE}`
+    `echo '' > #{PREPROCESS_LOG_FILE}`
+    `echo '' > #{LOG_FILE}`
+  end
+end
+
 def log s='', type=nil
   if type == :preprocess
     file = PREPROCESS_LOG_FILE
@@ -24,17 +40,20 @@ def log_scenario_fail_info
   @has_logged_scenario_info = true
 end
 
-def log_fail expected,actual,failed
+def log_fail expected,got,attempts
   log_scenario_fail_info
   log "== "
   log "Expected: #{expected}"
-  log "Got:      #{actual}"
+  log "Got:      #{got}"
   log
-  failed.each do |fail|
-    log "Attempt: #{fail[:attempt]}"
-    log "Query: #{fail[:query]}"
-    log "Response: #{fail[:response].body}"
-    log
+  ['route','forw','backw'].each do |direction|
+    if attempts[direction]
+      attempts[direction]
+      log "Direction: #{direction}"
+      log "Query: #{attempts[direction][:query]}"
+      log "Response: #{attempts[direction][:response].body}"
+      log
+    end
   end
 end
 

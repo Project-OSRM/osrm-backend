@@ -45,7 +45,8 @@ RequestHandler::RequestHandler() : routing_machine(NULL) { }
 void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
     //parse command
     try {
-        std::string request(req.uri);
+        std::string request;
+        URIDecode(req.uri, request);
 
         time_t ltime;
         struct tm *Tm;
@@ -61,7 +62,7 @@ void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
             Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) <<
             Tm->tm_sec << " " << req.endpoint.to_string() << " " <<
             req.referrer << ( 0 == req.referrer.length() ? "- " :" ") <<
-            req.agent << ( 0 == req.agent.length() ? "- " :" ") << req.uri;
+            req.agent << ( 0 == req.agent.length() ? "- " :" ") << request;
 
         RouteParameters route_parameters;
         APIGrammarParser api_parser(&route_parameters);

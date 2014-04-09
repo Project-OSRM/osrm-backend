@@ -98,7 +98,7 @@ public:
             reply.content.push_back( ")");  
         } 
         
-        reply.ComputeAndSetSize();
+        reply.SetUncompressedSize();
 
         return;
     }

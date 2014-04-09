@@ -152,9 +152,11 @@ void Connection::handle_read(
                 );
                 break;
             case noCompression:
+                reply.SetUncompressedSize();
+                output_buffer = reply.toBuffers();
                 boost::asio::async_write(
                     TCP_socket,
-                    reply.toBuffers(),
+                    output_buffer,
                     strand.wrap(
                         boost::bind(
                             &Connection::handle_write,
@@ -167,6 +169,7 @@ void Connection::handle_read(
             }
         } else if (!result) {
             reply = Reply::StockReply(Reply::badRequest);
+
             boost::asio::async_write(
                 TCP_socket,
                 reply.toBuffers(),

@@ -1,7 +1,7 @@
 @routing @bicycle @stop_area @todo
 Feature: Bike - Stop areas for public transport
-Platforms and railway/bus lines are connected using a relation rather that a way, as specified in:
-http://wiki.openstreetmap.org/wiki/Tag:public_transport%3Dstop_area
+# Platforms and railway/bus lines are connected using a relation rather that a way, as specified in:
+# http://wiki.openstreetmap.org/wiki/Tag:public_transport%3Dstop_area
 
     Background:
         Given the profile "bicycle"

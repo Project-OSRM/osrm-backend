@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Server/DataStructures/SharedDataType.h"
 #include "Server/DataStructures/SharedBarriers.h"
 #include "Util/BoostFileSystemFix.h"
-#include "Util/ProgramOptions.h"
+#include "Util/DataStoreOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/UUID.h"
 #include "typedefs.h"
@@ -78,20 +78,12 @@ int main( const int argc, const char * argv[] ) {
     try {
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
-        bool use_shared_memory = false;
-        std::string ip_address;
-        int ip_port, requested_num_threads;
-
         ServerPaths server_paths;
         if(
-            !GenerateServerProgramOptions(
+            !GenerateDataStoreOptions(
                 argc,
                 argv,
-                server_paths,
-                ip_address,
-                ip_port,
-                requested_num_threads,
-                use_shared_memory
+                server_paths
             )
         ) {
             return 0;
@@ -130,7 +122,8 @@ int main( const int argc, const char * argv[] ) {
         paths_iterator = server_paths.find("fileindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         BOOST_ASSERT(!paths_iterator->second.empty());
-        const std::string & file_index_file_name = paths_iterator->second.string();
+        const boost::filesystem::path index_file_path_absolute = boost::filesystem::portable_canonical(paths_iterator->second);
+        const std::string & file_index_file_name = index_file_path_absolute.string();
         paths_iterator = server_paths.find("nodesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         BOOST_ASSERT(!paths_iterator->second.empty());

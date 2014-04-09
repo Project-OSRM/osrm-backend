@@ -123,6 +123,7 @@ int main (int argc, char *argv[]) {
 
         if(!option_variables.count("input")) {
             SimpleLogger().Write(logWARNING) << "No input file specified";
+            SimpleLogger().Write() << visible_options;
             return -1;
         }
 
@@ -191,6 +192,11 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write() << "Parsing finished after " <<
             (get_timestamp() - parsing_start_time) <<
             " seconds";
+
+        if( externalMemory.all_edges_list.empty() ) {
+            SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
+            return -1;
+        }
 
         externalMemory.PrepareData(output_file_name, restrictionsFileName);
 

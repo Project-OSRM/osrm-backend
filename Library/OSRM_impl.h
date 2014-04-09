@@ -34,11 +34,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../DataStructures/QueryEdge.h"
 #include "../Plugins/BasePlugin.h"
-#include "../Server/DataStructures/SharedBarriers.h"
-#include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Util/ProgramOptions.h"
 
 #include <boost/noncopyable.hpp>
+
+struct SharedBarriers;
+template<class EdgeDataT>
+class BaseDataFacade;
 
 class OSRM_impl : boost::noncopyable {
 private:
@@ -55,7 +57,7 @@ private:
     void RegisterPlugin(BasePlugin * plugin);
     PluginMap plugin_map;
     bool use_shared_memory;
-    SharedBarriers barrier;
+    SharedBarriers * barrier;
     //base class pointer to the objects
     BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
 };

@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/spirit/include/qi.hpp>
 
 #include <cstdio>
+#include <cctype>
 #include <string>
 
 // precision:  position after decimal point
@@ -159,6 +160,47 @@ inline void stringSplit(
 	boost::split(result, s, boost::is_any_of(std::string(&delim)));
 }
 
+inline std::string EscapeJSONString(const std::string& input) {
+    std::string output;
+    output.reserve(input.size());
+    for(
+        std::string::const_iterator iter = input.begin();
+        iter != input.end();
+        ++iter
+    ) {
+        switch (iter[0]) {
+            case '\\':
+                output += "\\\\";
+                break;
+            case '"':
+                output += "\\\"";
+                break;
+            case '/':
+                output += "\\/";
+                break;
+            case '\b':
+                output += "\\b";
+                break;
+            case '\f':
+                output += "\\f";
+                break;
+            case '\n':
+                output += "\\n";
+                break;
+            case '\r':
+                output += "\\r";
+                break;
+            case '\t':
+                output += "\\t";
+                break;
+            default:
+                output += *iter;
+                break;
+        }
+    }
+    return output;
+}
+
 static std::string originals[] = {"&", "\"",  "<",  ">", "'", "[", "]", "\\"};
 static std::string entities[] = {"&amp;", "&quot;", "&lt;", "&gt;", "&#39;", "&91;", "&93;", " &#92;" };
 
@@ -175,6 +217,36 @@ inline std::string HTMLDeEntitize( std::string & result) {
         replaceAll(result, entities[i], originals[i]);
     }
     return result;
+}
+
+inline std::size_t URIDecode(const std::string & input, std::string & output) {
+    std::string::const_iterator src_iter = input.begin();
+    output.resize(input.size()+1);
+    std::size_t decoded_length = 0;
+    for( decoded_length = 0; src_iter != input.end(); ++decoded_length ) {
+        if(
+            src_iter[0] == '%'    &&
+            src_iter[1]           &&
+            src_iter[2]           &&
+            isxdigit(src_iter[1]) &&
+            isxdigit(src_iter[2])
+        ) {
+            std::string::value_type a = src_iter[1];
+            std::string::value_type b = src_iter[2];
+            a -= src_iter[1] < 58 ? 48 : src_iter[1] < 71 ? 55 : 87;
+            b -= src_iter[2] < 58 ? 48 : src_iter[2] < 71 ? 55 : 87;
+            output[decoded_length] = 16 * a + b;
+            src_iter += 3;
+            continue;
+        }
+        output[decoded_length] = *src_iter++;
+    }
+    output.resize(decoded_length);
+    return decoded_length;
+}
+
+inline std::size_t URIDecodeInPlace(std::string & URI) {
+    return URIDecode(URI, URI);
 }
 
 inline bool StringStartsWith(

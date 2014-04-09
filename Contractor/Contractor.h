@@ -45,8 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <ctime>
-
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -387,10 +385,14 @@ public:
                     _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
                     if(currentEdgeID < _graph->EndEdges(edge.source) ) {
                         _DynamicGraph::EdgeData & currentEdgeData = _graph->GetEdgeData(currentEdgeID);
-                        if( currentEdgeData.shortcut
-                                && edge.data.forward == currentEdgeData.forward
-                                && edge.data.backward == currentEdgeData.backward ) {
-                            currentEdgeData.distance = std::min(currentEdgeData.distance, edge.data.distance);
+                        if( currentEdgeData.shortcut &&
+                            edge.data.forward == currentEdgeData.forward &&
+                            edge.data.backward == currentEdgeData.backward &&
+                            edge.data.distance < currentEdgeData.distance
+                        ) {
+                            // found a duplicate edge with smaller weight, update it.
+                            currentEdgeData = edge.data;
+                            // currentEdgeData.distance = std::min(currentEdgeData.distance, edge.data.distance);
                             continue;
                         }
                     }
@@ -732,7 +734,7 @@ private:
             if ( priority > targetPriority )
                 return false;
             //tie breaking
-            if ( fabs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
+            if ( std::abs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
                 return false;
             }
             neighbours.push_back( target );
@@ -754,7 +756,7 @@ private:
                 if ( priority > targetPriority)
                     return false;
                 //tie breaking
-                if ( fabs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
+                if ( std::abs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
                     return false;
                 }
             }

@@ -70,7 +70,7 @@ public:
     std::vector<std::string> content;
     static Reply StockReply(status_type status, request_format format = html, std::string filename = "");
     void setSize(const unsigned size);
-    void ComputeAndSetSize();
+    void SetUncompressedSize();
     Reply();
 private:
     static std::string ToString(Reply::status_type status);

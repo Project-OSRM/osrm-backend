@@ -57,11 +57,11 @@ Feature: Bike - Accessability of different way types
 
     Scenario: Bike - Pushing bikes on ways with foot=yes
         Then routability should be
-            | highway  | foot | bothw |
-            | motorway |      |       |
-            | motorway | yes  | foot  |
-            | runway   |      |       |
-            | runway   | yes  | foot  |
+            | highway  | foot | forw | backw |
+            | motorway |      |      |       |
+            | motorway | yes  | foot |       |
+            | runway   |      |      |       |
+            | runway   | yes  | foot | foot  |
     
     @todo
     Scenario: Bike - Pushing bikes on ways with foot=yes in one direction

@@ -90,7 +90,7 @@ public:
     void SetConfig(const DescriptorConfig & c) { config = c; }
 
     int DescribeLeg(
-        const std::vector<PathData> route_leg,
+        const std::vector<PathData> & route_leg,
         const PhantomNodes & leg_phantoms
     ) {
         int added_element_count = 0;
@@ -505,6 +505,6 @@ public:
             reply.content.push_back("]");
         }
     }
-
 };
+
 #endif /* JSON_DESCRIPTOR_H_ */

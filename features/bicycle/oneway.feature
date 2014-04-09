@@ -1,7 +1,7 @@
 @routing @bicycle @oneway
 Feature: Bike - Oneway streets
-Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
-Usually we can push bikes against oneways, but we use foot=no to prevent this in these tests
+# Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
+# Usually we can push bikes against oneways, but we use foot=no to prevent this in these tests
 
     Background:
         Given the profile "bicycle"

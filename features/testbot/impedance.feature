@@ -1,9 +1,8 @@
 @routing @testbot @impedance @todo
 Feature: Setting impedance and speed separately
-These tests assume that the speed is not factored into the impedance by OSRM internally.
-Instead the speed can optionally be factored into the weiht in the lua profile.
-
-Note: With the default grid size of 100m, the diagonals has a length if 141.42m
+# These tests assume that the speed is not factored into the impedance by OSRM internally.
+# Instead the speed can optionally be factored into the weiht in the lua profile.
+# Note: With the default grid size of 100m, the diagonals has a length if 141.42m
 
     Background:
         Given the profile "testbot"
@@ -55,8 +54,8 @@ Note: With the default grid size of 100m, the diagonals has a length if 141.42m
             | c    | b  | btc   |
 
     Scenario: Use both impedance and speed (multiplied) when picking route
-      OSRM should not factor speed into impedance internally. However, the profile can choose to do so,
-      and this test expect the testbot profile to do it.
+    # OSRM should not factor speed into impedance internally. However, the profile can choose to do so,
+    # and this test expect the testbot profile to do it.
         Given the node map
             |   | s |   | t |   |
             | a |   | b |   | c |

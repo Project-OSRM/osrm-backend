@@ -27,24 +27,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HilbertValue.h"
 
-uint64_t HilbertCode::GetHilbertNumberForCoordinate(
+uint64_t HilbertCode::operator() (
     const FixedPointCoordinate & current_coordinate
-) {
+) const {
     unsigned location[2];
     location[0] = current_coordinate.lat+( 90*COORDINATE_PRECISION);
     location[1] = current_coordinate.lon+(180*COORDINATE_PRECISION);
 
     TransposeCoordinate(location);
-    const uint64_t result = BitInterleaving(location[0], location[1]);
-    return result;
+    return BitInterleaving(location[0], location[1]);
 }
 
-uint64_t HilbertCode::BitInterleaving(const uint32_t a, const uint32_t b) {
+uint64_t HilbertCode::BitInterleaving(const uint32_t latitude, const uint32_t longitude) const
+{
     uint64_t result = 0;
     for(int8_t index = 31; index >= 0; --index){
-        result |= (a >> index) & 1;
+        result |= (latitude >> index) & 1;
         result <<= 1;
-        result |= (b >> index) & 1;
+        result |= (longitude >> index) & 1;
         if(0 != index){
             result <<= 1;
         }
@@ -52,14 +52,17 @@ uint64_t HilbertCode::BitInterleaving(const uint32_t a, const uint32_t b) {
     return result;
 }
 
-void HilbertCode::TransposeCoordinate( uint32_t * X) {
+void HilbertCode::TransposeCoordinate( uint32_t * X) const
+{
     uint32_t M = 1 << (32-1), P, Q, t;
     int i;
     // Inverse undo
     for( Q = M; Q > 1; Q >>= 1 ) {
         P=Q-1;
         for( i = 0; i < 2; ++i ) {
-            if( X[i] & Q ) {
+
+            const bool condition = (X[i] & Q);
+            if( condition ) {
                 X[0] ^= P; // invert
             } else {
                 t = (X[0]^X[i]) & P;
@@ -74,7 +77,8 @@ void HilbertCode::TransposeCoordinate( uint32_t * X) {
     }
     t=0;
     for( Q = M; Q > 1; Q >>= 1 ) {
-        if( X[2-1] & Q ) {
+        const bool condition = (X[2-1] & Q);
+        if( condition ) {
             t ^= Q-1;
         }
     } //check if this for loop is wrong

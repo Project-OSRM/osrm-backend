@@ -1,7 +1,6 @@
 require 'net/http'
 
 HOST = "http://localhost:#{OSRM_PORT}"
-REQUEST_TIMEOUT = 1
 DESTINATION_REACHED = 15      #OSRM instruction code
 
 class Hash
@@ -17,7 +16,8 @@ def request_path path, waypoints=[], options={}
   params = (locs + options.to_param).join('&')
   params = nil if params==""
   uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
-  Timeout.timeout(REQUEST_TIMEOUT) do
+  @query = uri.to_s
+  Timeout.timeout(OSRM_TIMEOUT) do
     Net::HTTP.get_response uri
   end
 rescue Errno::ECONNREFUSED => e
@@ -80,25 +80,23 @@ def route_status response
   end
 end
 
-def way_list instructions
+def extract_instruction_list instructions, index, postfix=nil
   instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
-  map { |r| r[1] }.
-  map { |r| r=="" ? '""' : r }.
+  map { |r| r[index] }.
+  map { |r| (r=="" || r==nil) ? '""' : "#{r}#{postfix}" }.
   join(',')
+end
+
+def way_list instructions
+  extract_instruction_list instructions, 1
 end
 
 def compass_list instructions
-  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
-  map { |r| r[6] }.
-  map { |r| r=="" ? '""' : r }.
-  join(',')
+  extract_instruction_list instructions, 6
 end
 
 def bearing_list instructions
-  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
-  map { |r| r[7] }.
-  map { |r| r=="" ? '""' : r }.
-  join(',')
+  extract_instruction_list instructions, 7
 end
 
 def turn_list instructions
@@ -125,15 +123,20 @@ def turn_list instructions
   # replace instructions codes with strings
   # "11-3" (enter roundabout and leave a 3rd exit) gets converted to "enter_roundabout-3"
   instructions.map do |r|
-    r[0].to_s.gsub!(/^\d*/) do |match|
+    r[0].to_s.gsub(/^\d*/) do |match|
       types[match.to_i].to_s
     end
   end.join(',')
 end
 
 def mode_list instructions
-  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
-  map { |r| r[8] }.
-  map { |r| (r=="" || r==nil) ? '""' : r }.
-  join(',')
+  extract_instruction_list instructions, 8
+end
+
+def time_list instructions
+  extract_instruction_list instructions, 4, "s"
+end
+
+def distance_list instructions
+  extract_instruction_list instructions, 2, "m"
 end
