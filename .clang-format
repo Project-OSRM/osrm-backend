@@ -14,8 +14,8 @@ AlwaysBreakBeforeMultilineStrings: false
 BreakBeforeBinaryOperators: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
-BinPackParameters: true
-ColumnLimit:     120
+BinPackParameters: false
+ColumnLimit:     100
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 DerivePointerBinding: false
 ExperimentalAutoDetectBinPacking: false
@@ -29,7 +29,7 @@ PenaltyBreakBeforeFirstCallParameter: 19
 PenaltyBreakComment: 300
 PenaltyBreakString: 1000
 PenaltyBreakFirstLessLess: 120
-PenaltyExcessCharacter: 1000000
+PenaltyExcessCharacter: 1000
 PenaltyReturnTypeOnItsOwnLine: 60
 PointerBindsToType: false
 SpacesBeforeTrailingComments: 1
