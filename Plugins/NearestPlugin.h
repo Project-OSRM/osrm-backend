@@ -73,14 +73,16 @@ public:
         );
 
         std::string temp_string;
-        //json
+        bool is_jsonp_request = !routeParameters.jsonpParameter.empty();
 
-        if("" != routeParameters.jsonpParameter) {
+        //json
+        reply = http::Reply::StockReply(http::Reply::ok, is_jsonp_request ? http::Reply::jsonp : http::Reply::json, "location");
+
+        if( is_jsonp_request ) {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
 
-        reply.status = http::Reply::ok;
         reply.content.push_back("{\"status\":");
         if(UINT_MAX != result.edgeBasedNode) {
             reply.content.push_back("0,");
@@ -101,26 +103,12 @@ public:
             reply.content.push_back(temp_string);
         }
         reply.content.push_back("\"}");
-        reply.headers.resize(3);
-        if( !routeParameters.jsonpParameter.empty() ) {
+        
+        if( is_jsonp_request ) {
             reply.content.push_back(")");
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "text/javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"location.js\"";
-        } else {
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/x-javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"location.json\"";
-        }
-        reply.headers[0].name = "Content-Length";
-        unsigned content_length = 0;
-        BOOST_FOREACH(const std::string & snippet, reply.content) {
-            content_length += snippet.length();
-        }
-        intToString(content_length, temp_string);
-        reply.headers[0].value = temp_string;
+        } 
+        
+        reply.SetUncompressedSize();
     }
 
 private:

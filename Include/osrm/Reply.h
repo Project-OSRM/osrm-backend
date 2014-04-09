@@ -45,6 +45,15 @@ const std::string okString = "HTTP/1.0 200 OK\r\n";
 const std::string badRequestString = "HTTP/1.0 400 Bad Request\r\n";
 const std::string internalServerErrorString = "HTTP/1.0 500 Internal Server Error\r\n";
 
+struct format_info {
+    std::string content_type;
+    std::string file_extension;
+};
+const format_info htmlFormat         = {"text/html", "html"};
+const format_info jsonFormat         = {"application/x-javascript", "json"};
+const format_info jsonpFormat        = {"text/javascript", "js"};
+const format_info gpxFormat          = {"application/gpx+xml; charset=UTF-8", "gpx"};
+
 class Reply {
 public:
     enum status_type {
@@ -53,18 +62,19 @@ public:
         internalServerError = 500
     } status;
 
+    enum request_format { html, json, jsonp, gpx } format;
 
     std::vector<Header> headers;
     std::vector<boost::asio::const_buffer> toBuffers();
     std::vector<boost::asio::const_buffer> HeaderstoBuffers();
     std::vector<std::string> content;
-    static Reply StockReply(status_type status);
+    static Reply StockReply(status_type status, request_format format = html, std::string filename = "");
     void setSize(const unsigned size);
     void SetUncompressedSize();
-
     Reply();
 private:
     static std::string ToString(Reply::status_type status);
+    static format_info GetFormatInfo(Reply::request_format format);
     boost::asio::const_buffer ToBuffer(Reply::status_type status);
 };
 

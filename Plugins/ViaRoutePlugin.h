@@ -136,21 +136,26 @@ public:
             SimpleLogger().Write(logDEBUG) <<
                 "Error occurred, single path not found";
         }
-        reply.status = http::Reply::ok;
 
-        //TODO: Move to member as smart pointer
-        BaseDescriptor<DataFacadeT> * desc;
-        if("" != routeParameters.jsonpParameter) {
-            reply.content.push_back(routeParameters.jsonpParameter);
-            reply.content.push_back("(");
-        }
-
+        bool is_jsonp_request = !routeParameters.jsonpParameter.empty();
+        
         DescriptorConfig descriptorConfig;
 
         unsigned descriptorType = 0;
         if(descriptorTable.find(routeParameters.outputFormat) != descriptorTable.end() ) {
             descriptorType = descriptorTable.find(routeParameters.outputFormat)->second;
         }
+
+        http::Reply::request_format req_format = descriptorType == 1 ? http::Reply::gpx : ( is_jsonp_request ? http::Reply::jsonp : http::Reply::json );
+        reply = http::Reply::StockReply(http::Reply::ok, req_format, "route");
+
+        //TODO: Move to member as smart pointer
+        BaseDescriptor<DataFacadeT> * desc;
+        if( is_jsonp_request ) {
+            reply.content.push_back(routeParameters.jsonpParameter);
+            reply.content.push_back("(");
+        }
+
         descriptorConfig.zoom_level = routeParameters.zoomLevel;
         descriptorConfig.instructions = routeParameters.printInstructions;
         descriptorConfig.geometry = routeParameters.geometry;
@@ -177,55 +182,13 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
-        if("" != routeParameters.jsonpParameter) {
+        if( is_jsonp_request ) {
             reply.content.push_back(")\n");
         }
-        reply.headers.resize(3);
-        reply.headers[0].name = "Content-Length";
+        
         std::string tmp;
-        unsigned content_length = 0;
-        BOOST_FOREACH(const std::string & snippet, reply.content) {
-            content_length += snippet.length();
-        }
-        intToString(content_length, tmp);
-        reply.headers[0].value = tmp;
-        switch(descriptorType){
-        case 0:
-            if( !routeParameters.jsonpParameter.empty() ){
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.js\"";
-            } else {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.json\"";
-            }
-
-            break;
-        case 1:
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/gpx+xml; charset=UTF-8";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"route.gpx\"";
-
-            break;
-        default:
-            if( !routeParameters.jsonpParameter.empty() ){
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.js\"";
-            } else {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.json\"";
-            }
-            break;
-        }
-
+        reply.SetUncompressedSize();
+ 
         delete desc;
         return;
     }
