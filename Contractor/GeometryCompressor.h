@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/unordered_map.hpp>
 #include <boost/filesystem.hpp>
 
-#include <limits>
 #include <vector>
 
 #ifndef GEOMETRY_COMPRESSOR_H
@@ -50,11 +49,6 @@ public:
         const EdgeWeight weight2
     );
 
-    // void AddLastViaNodeIDToCompressedEdge(
-    //     const EdgeID edge_id,
-    //     const NodeID node_id,
-    //     const EdgeWeight weight
-    // );
     bool HasEntryForID(const EdgeID edge_id) const;
     void PrintStatistics() const;
     void SerializeInternalVector(const std::string & path) const;

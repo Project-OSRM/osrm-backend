@@ -672,7 +672,7 @@ public:
                         }
 
                         double current_ratio = 0.;
-                        double current_perpendicular_distance = current_edge.ComputePerpendicularDistance(
+                        const double current_perpendicular_distance = current_edge.ComputePerpendicularDistance(
                             m_coordinate_list->at(current_edge.u),
                             m_coordinate_list->at(current_edge.v),
                             input_coordinate,
@@ -691,13 +691,13 @@ public:
                         ) { //found a new minimum
                             min_dist = current_perpendicular_distance;
                             //TODO: use assignment c'tor in PhantomNode
-                            result_phantom_node.forward_node_id = current_edge.reverse_edge_based_node_id;
-                            result_phantom_node.reverse_node_id = current_edge.forward_edge_based_node_id;
+                            result_phantom_node.forward_node_id = current_edge.forward_edge_based_node_id;
+                            result_phantom_node.reverse_node_id = current_edge.reverse_edge_based_node_id;
                             result_phantom_node.name_id = current_edge.name_id;
-                            result_phantom_node.forward_weight = current_edge.reverse_weight;
-                            result_phantom_node.reverse_weight = current_edge.forward_weight;
-                            result_phantom_node.forward_offset = current_edge.reverse_offset;
-                            result_phantom_node.reverse_offset = current_edge.forward_offset;
+                            result_phantom_node.forward_weight = current_edge.forward_weight;
+                            result_phantom_node.reverse_weight = current_edge.reverse_weight;
+                            result_phantom_node.forward_offset = current_edge.forward_offset;
+                            result_phantom_node.reverse_offset = current_edge.reverse_offset;
                             result_phantom_node.packed_geometry_id = current_edge.packed_geometry_id;
                             result_phantom_node.fwd_segment_position = current_edge.fwd_segment_position;
 
@@ -758,10 +758,10 @@ public:
             ratio = std::min(1., ratio);
         }
 
-        SimpleLogger().Write(logDEBUG) << "result_phantom_node.forward_offset: " << result_phantom_node.forward_offset;
-        SimpleLogger().Write(logDEBUG) << "result_phantom_node.reverse_offset: " << result_phantom_node.reverse_offset;
-        SimpleLogger().Write(logDEBUG) << "result_phantom_node.forward_weight: " << result_phantom_node.forward_weight;
-        SimpleLogger().Write(logDEBUG) << "result_phantom_node.reverse_weight: " << result_phantom_node.reverse_weight;
+        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.forward_offset: " << result_phantom_node.forward_offset;
+        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.reverse_offset: " << result_phantom_node.reverse_offset;
+        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.forward_weight: " << result_phantom_node.forward_weight;
+        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.reverse_weight: " << result_phantom_node.reverse_weight;
 
         if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
         {
@@ -772,14 +772,14 @@ public:
             result_phantom_node.reverse_weight *= (1.-ratio);
         }
 
-        SimpleLogger().Write(logDEBUG) << "result location: " << result_phantom_node.location << ", start: " << current_start_coordinate << ", end: " << current_end_coordinate;
-        SimpleLogger().Write(logDEBUG) << "fwd node: " << result_phantom_node.forward_node_id << ", rev node: " << result_phantom_node.reverse_node_id;
-        SimpleLogger().Write(logDEBUG) << "fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight;
-        SimpleLogger().Write(logDEBUG) << "fwd offset: " << result_phantom_node.forward_offset << ", rev offset: " << result_phantom_node.reverse_offset;
-        SimpleLogger().Write(logDEBUG) << "bidirected: " << (result_phantom_node.isBidirected() ? "y" : "n");
-        SimpleLogger().Write(logDEBUG) << "name id: " << result_phantom_node.name_id;
-        SimpleLogger().Write(logDEBUG) << "geom id: " << result_phantom_node.packed_geometry_id;
-        SimpleLogger().Write(logDEBUG) << "ratio: " << ratio;
+        SimpleLogger().Write(logDEBUG) << "[rtree] result location: " << result_phantom_node.location << ", start: " << current_start_coordinate << ", end: " << current_end_coordinate;
+        SimpleLogger().Write(logDEBUG) << "[rtree] fwd node: " << result_phantom_node.forward_node_id << ", rev node: " << result_phantom_node.reverse_node_id;
+        SimpleLogger().Write(logDEBUG) << "[rtree] fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight;
+        SimpleLogger().Write(logDEBUG) << "[rtree] fwd offset: " << result_phantom_node.forward_offset << ", rev offset: " << result_phantom_node.reverse_offset;
+        SimpleLogger().Write(logDEBUG) << "[rtree] bidirected: " << (result_phantom_node.isBidirected() ? "y" : "n");
+        SimpleLogger().Write(logDEBUG) << "[rtree] name id: " << result_phantom_node.name_id;
+        SimpleLogger().Write(logDEBUG) << "[rtree] geom id: " << result_phantom_node.packed_geometry_id;
+        SimpleLogger().Write(logDEBUG) << "[rtree] ratio: " << ratio;
 
         return found_a_nearest_edge;
     }

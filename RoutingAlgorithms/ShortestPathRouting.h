@@ -57,6 +57,8 @@ public:
         RawRouteData & raw_route_data
     ) const
     {
+        SimpleLogger().Write(logDEBUG) << "shrt path routing";
+
         BOOST_FOREACH(
             const PhantomNodes & phantom_node_pair,
             phantom_nodes_vector

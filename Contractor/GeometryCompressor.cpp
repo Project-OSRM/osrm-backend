@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/foreach.hpp>
 
 #include <fstream>
+#include <limits>
 
 int current_free_list_maximum = 0;
 int UniqueNumber () { return ++current_free_list_maximum; }
