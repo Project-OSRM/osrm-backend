@@ -327,62 +327,29 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
         BOOST_ASSERT( forward_geometry.size() == reverse_geometry.size() );
         BOOST_ASSERT( 0 != forward_geometry.size() );
 
-        // int fwd_sum_of_weights = 0;
-        // NodeID fwd_start_node = u;
-        // BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, forward_geometry) {
-        //     const NodeID fwd_end_node = geometry_node.first;
-        //     const EdgeWeight fwd_weight = geometry_node.second;
-        //     fwd_sum_of_weights += fwd_weight;
-        //     fwd_start_node = fwd_end_node;
-        // }
-
-        // BOOST_ASSERT( forward_data.distance == fwd_sum_of_weights );
-
-        // int rev_sum_of_weights = 0;
-        // NodeID rev_start_node = v;
-        // BOOST_FOREACH(const GeometryCompressor::CompressedNode & geometry_node, reverse_geometry) {
-        //     const NodeID rev_end_node = geometry_node.first;
-        //     const EdgeWeight rev_weight = geometry_node.second;
-
-        //     rev_sum_of_weights += rev_weight;
-        //     rev_start_node = rev_end_node;
-        // }
-
-        // BOOST_ASSERT( reverse_data.distance == rev_sum_of_weights );
-
         // reconstruct bidirectional edge with individual weights and put each into the NN index
 
         std::vector<int> forward_dist_prefix_sum(forward_geometry.size(), 0);
         std::vector<int> reverse_dist_prefix_sum(reverse_geometry.size(), 0);
 
         // quick'n'dirty prefix sum as std::partial_sum needs addtional casts
-        // SimpleLogger().Write(logDEBUG) << "Prefix sums of edge " << e1 << ", w: " << reverse_data.distance;
+        // TODO: move to lambda function with C++11
         int temp_sum = 0;
 
-        std::cout << "\nfwd geom: ";
         for (unsigned i = 0; i < forward_geometry.size(); ++i)
         {
             forward_dist_prefix_sum[i] = temp_sum;
             temp_sum += forward_geometry[i].second;
 
             BOOST_ASSERT( forward_data.distance >= temp_sum );
-            std::cout << forward_dist_prefix_sum[i] << " ";
         }
-        std::cout << std::endl;
 
-        // BOOST_ASSERT( forward_data.distance == temp_sum );
         temp_sum = 0;
-        std::cout << "rev geom: ";
         for( unsigned i = 0; i < reverse_geometry.size(); ++i ) {
             temp_sum += reverse_geometry[reverse_geometry.size()-1-i].second;
             reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
             BOOST_ASSERT( reverse_data.distance >= temp_sum );
-
-            std::cout << reverse_dist_prefix_sum[i] << " ";
         }
-        std::cout << std::endl;
-
-        // BOOST_ASSERT(false);
 
         BOOST_ASSERT( forward_geometry.size() == reverse_geometry.size() );
 
@@ -399,17 +366,12 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             max_id = std::max(reverse_data.edgeBasedNodeID, max_id);
         }
 
-        SimpleLogger().Write(logDEBUG) << "-> serializing packed edge " << forward_data.edgeBasedNodeID << "|" << reverse_data.edgeBasedNodeID;
-
         // traverse arrays from start and end respectively
         for( unsigned i = 0; i < geometry_size; ++i ) {
             BOOST_ASSERT( current_edge_start_coordinate_id == reverse_geometry[geometry_size-1-i].first );
             const NodeID current_edge_target_coordinate_id = forward_geometry[i].first;
             BOOST_ASSERT( current_edge_target_coordinate_id != current_edge_start_coordinate_id);
 
-            SimpleLogger().Write(logDEBUG) << "  runs from coordinate " << current_edge_start_coordinate_id << " to " << current_edge_target_coordinate_id;
-            SimpleLogger().Write(logDEBUG) << "  fwd edge: " << forward_geometry[i].second << ", rev edge: " << reverse_geometry[geometry_size-1-i].second;
-            SimpleLogger().Write(logDEBUG) << "  fwd offset: " << forward_dist_prefix_sum[i] << ", rev offset: " << reverse_dist_prefix_sum[geometry_size-1-i];
             // build edges
             m_edge_based_node_list.push_back(
                 EdgeBasedNode(
@@ -615,7 +577,6 @@ void EdgeBasedGraphFactory::Run(
                 forward_weight1 + (add_traffic_signal_penalty ? speed_profile.trafficSignalPenalty :0),
                 forward_weight2
             );
-            SimpleLogger().Write(logDEBUG) << "compressing fwd segment with name " << m_node_based_graph->GetEdgeData(forward_e1).nameID;
             m_geometry_compressor.CompressEdge(
                 reverse_e1,
                 reverse_e2,
@@ -624,7 +585,6 @@ void EdgeBasedGraphFactory::Run(
                 reverse_weight1 ,
                 reverse_weight2 + (add_traffic_signal_penalty ? speed_profile.trafficSignalPenalty :0)
             );
-            SimpleLogger().Write(logDEBUG) << "compressing rev segment with name " << m_node_based_graph->GetEdgeData(reverse_e1).nameID;
             ++removed_node_count;
 
             BOOST_ASSERT
@@ -646,7 +606,6 @@ void EdgeBasedGraphFactory::Run(
         }
     }
     SimpleLogger().Write() << "new nodes: " << new_node_count << ", edges " << new_edge_count;
-    SimpleLogger().Write(logDEBUG) << "Graph reports: " << m_node_based_graph->GetNumberOfEdges() << " edges";
     SimpleLogger().Write() << "Node compression ratio: " << new_node_count/(double)original_number_of_nodes;
     SimpleLogger().Write() << "Edge compression ratio: " << new_edge_count/(double)original_number_of_edges;
 
@@ -660,11 +619,6 @@ void EdgeBasedGraphFactory::Run(
             }
             const NodeID target = m_node_based_graph->GetTarget(current_edge);
 
-            SimpleLogger().Write(logDEBUG) << "expanded node " << numbered_edges_count << " runs from " <<
-                m_node_info_list.at(current_node).lat << "," << m_node_info_list.at(current_node).lon << " to " <<
-                m_node_info_list.at(target).lat << "," << m_node_info_list.at(target).lon;
-
-
             BOOST_ASSERT( numbered_edges_count < m_node_based_graph->GetNumberOfEdges() );
             edge_data.edgeBasedNodeID = numbered_edges_count;
             ++numbered_edges_count;
@@ -673,7 +627,6 @@ void EdgeBasedGraphFactory::Run(
         }
     }
 
-    SimpleLogger().Write(logDEBUG) << "numbered " << numbered_edges_count << " edge-expanded nodes";
     SimpleLogger().Write() << "Identifying components of the road network";
 
     unsigned node_based_edge_counter = 0;
@@ -881,8 +834,6 @@ void EdgeBasedGraphFactory::Run(
                 BOOST_ASSERT( SPECIAL_NODEID != edge_data1.edgeBasedNodeID );
                 BOOST_ASSERT( SPECIAL_NODEID != edge_data2.edgeBasedNodeID );
 
-                SimpleLogger().Write(logDEBUG) << "Generating expanded edge (" << edge_data1.edgeBasedNodeID << "," << edge_data2.edgeBasedNodeID << "), w: " << distance;
-
                 m_edge_based_edge_list.push_back(
                     EdgeBasedEdge(
                         edge_data1.edgeBasedNodeID,
@@ -899,8 +850,6 @@ void EdgeBasedGraphFactory::Run(
     }
     FlushVectorToStream( edge_data_file, original_edge_data_vector );
 
-    SimpleLogger().Write(logDEBUG) << "compressed: " << compressed;
-
     edge_data_file.seekp( std::ios::beg );
     edge_data_file.write( (char*)&original_edges_counter, sizeof(unsigned) );
     edge_data_file.close();
@@ -908,22 +857,14 @@ void EdgeBasedGraphFactory::Run(
     SimpleLogger().Write(logDEBUG) << "serializing geometry to " << geometry_filename;
     m_geometry_compressor.SerializeInternalVector( geometry_filename );
 
-    SimpleLogger().Write() <<
-        "Generated " << m_edge_based_node_list.size() << " edge based nodes";
-    SimpleLogger().Write() <<
-        "Node-based graph contains " << node_based_edge_counter << " edges";
-    SimpleLogger().Write() <<
-        "Edge-expanded graph ...";
-    SimpleLogger().Write() <<
-        "  contains " << m_edge_based_edge_list.size() << " edges";
-    SimpleLogger().Write() <<
-        "  skips "  << restricted_turns_counter << " turns, "
-        "defined by " << m_turn_restrictions_count << " restrictions";
-    SimpleLogger().Write() <<
-        "  skips "  << skipped_uturns_counter << " U turns";
-    SimpleLogger().Write() <<
-        "  skips "  <<  skipped_barrier_turns_counter << " turns over barriers";
-    SimpleLogger().Write(logDEBUG) << "maximum written id: " << max_id;
+    SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size() << " edge based nodes";
+    SimpleLogger().Write() << "Node-based graph contains " << node_based_edge_counter << " edges";
+    SimpleLogger().Write() << "Edge-expanded graph ...";
+    SimpleLogger().Write() << "  contains " << m_edge_based_edge_list.size() << " edges";
+    SimpleLogger().Write() << "  skips "  << restricted_turns_counter << " turns, "
+                              "defined by " << m_turn_restrictions_count << " restrictions";
+    SimpleLogger().Write() << "  skips "  << skipped_uturns_counter << " U turns";
+    SimpleLogger().Write() << "  skips "  <<  skipped_barrier_turns_counter << " turns over barriers";
 }
 
 int EdgeBasedGraphFactory::GetTurnPenalty(
