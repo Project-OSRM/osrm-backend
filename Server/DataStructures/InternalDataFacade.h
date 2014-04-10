@@ -71,8 +71,8 @@ private:
     ShM<char, false>::vector                 m_names_char_list;
     ShM<unsigned, false>::vector             m_name_begin_indices;
     ShM<bool, false>::vector                 m_egde_is_compressed;
-    ShM<unsigned, false>::vector             m_compressed_geometry_indices;
-    ShM<unsigned, false>::vector             m_compressed_geometries;
+    ShM<unsigned, false>::vector             m_geometry_indices;
+    ShM<unsigned, false>::vector             m_geometry_list;
 
     boost::shared_ptr<
         StaticRTree<
@@ -189,9 +189,8 @@ private:
         edges_input_stream.close();
     }
 
-    void LoadGeometries(
-        const boost::filesystem::path & geometry_file
-    ) {
+    void LoadGeometries(const boost::filesystem::path & geometry_file)
+    {
         std::ifstream geometry_stream(
             geometry_file.c_str(),
             std::ios::binary
@@ -203,9 +202,9 @@ private:
             (char *)&number_of_indices,
             sizeof(unsigned)
         );
-        m_compressed_geometry_indices.resize(number_of_indices);
+        m_geometry_indices.resize(number_of_indices);
         geometry_stream.read(
-            (char *)&(m_compressed_geometry_indices[0]),
+            (char *)&(m_geometry_indices[0]),
             number_of_indices*sizeof(unsigned)
         );
 
@@ -214,17 +213,14 @@ private:
             sizeof(unsigned)
         );
 
-        BOOST_ASSERT( m_compressed_geometry_indices.back() == number_of_compressed_geometries );
-        m_compressed_geometries.resize( number_of_compressed_geometries );
+        BOOST_ASSERT( m_geometry_indices.back() == number_of_compressed_geometries );
+        m_geometry_list.resize( number_of_compressed_geometries );
 
         geometry_stream.read(
-            (char *)&(m_compressed_geometries[0]),
+            (char *)&(m_geometry_list[0]),
             number_of_compressed_geometries*sizeof(unsigned)
         );
         geometry_stream.close();
-
-        SimpleLogger().Write() << "number_of_indices: " << number_of_indices;
-        SimpleLogger().Write() << "number_of_compressed_geometries: " << number_of_compressed_geometries;
     }
 
     void LoadRTree(
@@ -289,6 +285,9 @@ public:
         }
         if( server_paths.find("fileindex") == server_paths.end() ) {
             throw OSRMException("no leaf index file given in ini file");
+        }
+        if( server_paths.find("geometries") == server_paths.end() ) {
+            throw OSRMException("no geometries file given in ini file");
         }
         if( server_paths.find("nodesdata") == server_paths.end() ) {
             throw OSRMException("no nodes file given in ini file");
@@ -478,23 +477,16 @@ public:
     }
 
     virtual void GetUncompressedGeometry(
-        const unsigned node, std::vector<unsigned> & result_nodes
+        const unsigned id, std::vector<unsigned> & result_nodes
     ) const {
-        // const NodeID node = m_via_node_list.at(id);
-        // SimpleLogger().Write() << "translated " << id << " to " << node;
-        // SimpleLogger().Write() << "getting geometry from compression bucket " << node << "/" << m_compressed_geometry_indices.size();
-        unsigned begin = m_compressed_geometry_indices.at(node);
-        unsigned end = m_compressed_geometry_indices.at(node+1);
-        // SimpleLogger().Write() << "bucket " << node << " has range [" << begin << "," << end-1 << "]";
-        //TODO: use vector.insert(.)
-        for(unsigned geometry_index = begin; geometry_index < end; ++geometry_index) {
-            unsigned coordinate_id = m_compressed_geometries[geometry_index];
-            // uncomment to use compressed geometry
-            result_nodes.push_back( coordinate_id );
-            // SimpleLogger().Write() << "coordinate " << coordinate_id << " at " << m_coordinate_list->at(coordinate_id);
-        }
-    }
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id+1);
 
+        result_nodes.clear();
+        result_nodes.insert(result_nodes.begin(),
+                            m_geometry_list.begin() + begin,
+                            m_geometry_list.begin() + end);
+    }
 
     std::string GetTimestamp() const {
         return m_timestamp;
