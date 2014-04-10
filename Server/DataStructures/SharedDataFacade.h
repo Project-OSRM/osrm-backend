@@ -80,6 +80,10 @@ private:
     ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
     ShM<char, true>::vector                 m_names_char_list;
     ShM<unsigned, true>::vector             m_name_begin_indices;
+    ShM<bool, true>::vector                m_egde_is_compressed;
+    ShM<unsigned, true>::vector            m_geometry_indices;
+    ShM<unsigned, true>::vector            m_geometry_list;
+
     boost::shared_ptr<
         StaticRTree<
             RTreeLeaf,
@@ -203,6 +207,28 @@ private:
         m_names_char_list.swap(names_char_list);
     }
 
+    void LoadGeometries()
+    {
+        unsigned * geometries_index_ptr = (unsigned *)(
+            shared_memory + data_layout->GetGeometriesIndicesOffset()
+        );
+
+        typename ShM<unsigned, true>::vector geometry_begin_indices(
+            geometries_index_ptr,
+            data_layout->geometries_index_list_size
+        );
+        m_geometry_indices.swap(geometry_begin_indices);
+
+        unsigned * geometries_list_ptr = (unsigned *)(
+            shared_memory + data_layout->GetGeometryListOffset()
+        );
+        typename ShM<unsigned, true>::vector geometry_list(
+            geometries_list_ptr,
+            data_layout->geometries_list_size
+        );
+        m_geometry_list.swap(geometry_list);
+    }
+
 public:
     SharedDataFacade( ) {
         data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
@@ -254,7 +280,7 @@ public:
 
             LoadGraph();
             LoadNodeAndEdgeInformation();
-            //TODO: LoadGeometries();
+            LoadGeometries();
             LoadRTree(ram_index_path);
             LoadTimestamp();
             LoadViaNodeList();
@@ -321,19 +347,23 @@ public:
     FixedPointCoordinate GetCoordinateOfNode(
         const unsigned id
     ) const {
-        // const NodeID node = m_via_node_list.at(id);
         return m_coordinate_list->at(id);
     };
 
     virtual bool EdgeIsCompressed( const unsigned id ) const {
-        //TODO!!
-        return false;
+        return m_egde_is_compressed.at(id);
     }
 
     virtual void GetUncompressedGeometry(
         const unsigned id, std::vector<unsigned> & result_nodes
     ) const {
-        //TODO!!
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id+1);
+
+        result_nodes.clear();
+        result_nodes.insert(result_nodes.begin(),
+                            m_geometry_list.begin() + begin,
+                            m_geometry_list.begin() + end);
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const {

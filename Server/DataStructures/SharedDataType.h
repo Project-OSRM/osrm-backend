@@ -56,6 +56,8 @@ struct SharedDataLayout {
     uint64_t coordinate_list_size;
     uint64_t turn_instruction_list_size;
     uint64_t r_search_tree_size;
+    uint64_t geometries_index_list_size;
+    uint64_t geometries_list_size;
 
     unsigned checksum;
     unsigned timestamp_length;
@@ -72,8 +74,11 @@ struct SharedDataLayout {
         coordinate_list_size(0),
         turn_instruction_list_size(0),
         r_search_tree_size(0),
+        geometries_index_list_size(0),
+        geometries_list_size(0),
         checksum(0),
         timestamp_length(0)
+
     {
         ram_index_file_name[0] = '\0';
     }
@@ -90,6 +95,8 @@ struct SharedDataLayout {
         SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << coordinate_list_size;
         SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << turn_instruction_list_size;
         SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
+        SimpleLogger().Write(logDEBUG) << "geometries_index_list_size: " << geometries_index_list_size;
+        SimpleLogger().Write(logDEBUG) << "geometry_list_size:         " << geometries_list_size;
         SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
         SimpleLogger().Write(logDEBUG) << "ram index file name:        " << ram_index_file_name;
     }
@@ -106,6 +113,8 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            ) +
+            (geometries_index_list_size * sizeof(unsigned)             ) +
+            (geometries_list_size       * sizeof(unsigned)             ) +
             sizeof(checksum)                                             +
             1024*sizeof(char);
         return result;
@@ -195,7 +204,7 @@ struct SharedDataLayout {
             (turn_instruction_list_size * sizeof(TurnInstructionsClass));
         return result;
     }
-    uint64_t GetChecksumOffset() const {
+    uint64_t GetGeometriesIndicesOffset() const {
         uint64_t result =
             (name_index_list_size       * sizeof(unsigned)             ) +
             (name_char_list_size        * sizeof(char)                 ) +
@@ -207,6 +216,37 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            );
+        return result;
+    }
+    uint64_t GetGeometryListOffset() const {
+        uint64_t result =
+            (name_index_list_size       * sizeof(unsigned)             ) +
+            (name_char_list_size        * sizeof(char)                 ) +
+            (name_id_list_size          * sizeof(unsigned)             ) +
+            (via_node_list_size         * sizeof(NodeID)               ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (timestamp_length           * sizeof(char)                 ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
+            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
+            (r_search_tree_size         * sizeof(RTreeNode)            ) +
+            (geometries_index_list_size * sizeof(unsigned)             );
+        return result;
+    }
+    uint64_t GetChecksumOffset() const {
+        uint64_t result =
+            (name_index_list_size       * sizeof(unsigned)             ) +
+            (name_char_list_size        * sizeof(char)                 ) +
+            (name_id_list_size          * sizeof(unsigned)             ) +
+            (via_node_list_size         * sizeof(NodeID)               ) +
+            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (timestamp_length           * sizeof(char)                 ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
+            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
+            (r_search_tree_size         * sizeof(RTreeNode)            ) +
+            (geometries_index_list_size * sizeof(unsigned)             ) +
+            (geometries_list_size       * sizeof(unsigned)             );
         return result;
     }
 };
