@@ -200,12 +200,14 @@ int main( const int argc, const char * argv[] ) {
 
         UUID uuid_loaded, uuid_orig;
         hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
-        if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-            SimpleLogger().Write(logWARNING) <<
-                ".hsgr was prepared with different build. "
-                "Reprocess to get rid of this warning.";
-        } else {
+        if (uuid_loaded.TestGraphUtil(uuid_orig))
+        {
             SimpleLogger().Write(logDEBUG) << "UUID checked out ok";
+        }
+        else
+        {
+            SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build. "
+                                                "Reprocess to get rid of this warning.";
         }
 
         // load checksum
