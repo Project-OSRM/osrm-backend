@@ -57,8 +57,6 @@ public:
         RawRouteData & raw_route_data
     ) const
     {
-        SimpleLogger().Write(logDEBUG) << "shrt path routing";
-
         BOOST_FOREACH(
             const PhantomNodes & phantom_node_pair,
             phantom_nodes_vector
@@ -66,8 +64,6 @@ public:
             if( phantom_node_pair.AtLeastOnePhantomNodeIsInvalid() ) {
                 // raw_route_data.lengthOfShortestPath = INT_MAX;
                 // raw_route_data.lengthOfAlternativePath = INT_MAX;
-                SimpleLogger().Write(logDEBUG) << "returning early";
-
                 return;
             }
         }
@@ -113,7 +109,7 @@ public:
                 search_from_1st_node &&
                 phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID
             ) {
-                SimpleLogger().Write(logDEBUG) << "fwd1 insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
+                // SimpleLogger().Write(logDEBUG) << "fwd1 insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
                 forward_heap1.Insert(
                     phantom_node_pair.source_phantom.forward_node_id,
                     distance1-phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
@@ -129,7 +125,7 @@ public:
                 search_from_2nd_node &&
                 phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID
             ) {
-                SimpleLogger().Write(logDEBUG) << "fwd1 insert: " << phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
+                // SimpleLogger().Write(logDEBUG) << "fwd1 insert: " << phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
                 forward_heap1.Insert(
                     phantom_node_pair.source_phantom.reverse_node_id,
                     distance2-phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
@@ -144,7 +140,7 @@ public:
 
             //insert new backward nodes into backward heap, unadjusted.
             if( phantom_node_pair.target_phantom.forward_node_id != SPECIAL_NODEID ) {
-                SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
+                // SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
                 reverse_heap1.Insert(
                     phantom_node_pair.target_phantom.forward_node_id,
                     phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
@@ -153,7 +149,7 @@ public:
             }
 
             if( phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID ) {
-                SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
+                // SimpleLogger().Write(logDEBUG) << "rev insert: " << phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
                 reverse_heap2.Insert(
                     phantom_node_pair.target_phantom.reverse_node_id,
                     phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),

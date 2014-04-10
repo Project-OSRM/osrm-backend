@@ -214,27 +214,24 @@ void GeometryCompressor::CompressEdge(
 
 void GeometryCompressor::PrintStatistics() const
 {
-    unsigned number_of_compressed_geometries = 0;
-    const unsigned compressed_edges = m_compressed_geometries.size();
-
+    const uint64_t compressed_edges = m_compressed_geometries.size();
+    BOOST_ASSERT(0 == compressed_edges % 2);
     BOOST_ASSERT( m_compressed_geometries.size() + m_free_list.size() > 0 );
 
-    unsigned long longest_chain_length = 0;
+    uint64_t number_of_compressed_geometries = 0;
+    uint64_t longest_chain_length = 0;
     BOOST_FOREACH(const std::vector<CompressedNode> & current_vector, m_compressed_geometries)
     {
         number_of_compressed_geometries += current_vector.size();
-        longest_chain_length = std::max(longest_chain_length, current_vector.size());
+        longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());
     }
-    BOOST_ASSERT(0 == compressed_edges % 2);
-    SimpleLogger().Write() <<
-        "compressed edges: " << compressed_edges <<
-        ", compressed geometries: " << number_of_compressed_geometries <<
-        ", longest chain length: " << longest_chain_length <<
-        ", cmpr ratio: " << ((float)compressed_edges/std::max(number_of_compressed_geometries, 1u) ) <<
-        ", avg chain length: " << (float)number_of_compressed_geometries/std::max(1u, compressed_edges);
 
-    SimpleLogger().Write() <<
-        "No bytes: " <<  4*compressed_edges + number_of_compressed_geometries*4 +8;
+    SimpleLogger().Write() << "Geometry successfully removed:"
+        "\n  compressed edges: " << compressed_edges <<
+        "\n  compressed geometries: " << number_of_compressed_geometries <<
+        "\n  longest chain length: " << longest_chain_length <<
+        "\n  cmpr ratio: " << ((float)compressed_edges/std::max(number_of_compressed_geometries, (uint64_t)1) ) <<
+        "\n  avg chain length: " << (float)number_of_compressed_geometries/std::max((uint64_t)1, compressed_edges);
 }
 
 const std::vector<GeometryCompressor::CompressedNode> & GeometryCompressor::GetBucketReference(

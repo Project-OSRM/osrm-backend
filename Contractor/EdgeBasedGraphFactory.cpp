@@ -617,7 +617,6 @@ void EdgeBasedGraphFactory::Run(
             if( !edge_data.forward ) {
                 continue;
             }
-            const NodeID target = m_node_based_graph->GetTarget(current_edge);
 
             BOOST_ASSERT( numbered_edges_count < m_node_based_graph->GetNumberOfEdges() );
             edge_data.edgeBasedNodeID = numbered_edges_count;

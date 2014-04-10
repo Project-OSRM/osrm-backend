@@ -758,10 +758,10 @@ public:
             ratio = std::min(1., ratio);
         }
 
-        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.forward_offset: " << result_phantom_node.forward_offset;
-        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.reverse_offset: " << result_phantom_node.reverse_offset;
-        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.forward_weight: " << result_phantom_node.forward_weight;
-        SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.reverse_weight: " << result_phantom_node.reverse_weight;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.forward_offset: " << result_phantom_node.forward_offset;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.reverse_offset: " << result_phantom_node.reverse_offset;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.forward_weight: " << result_phantom_node.forward_weight;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] result_phantom_node.reverse_weight: " << result_phantom_node.reverse_weight;
 
         if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
         {
@@ -772,14 +772,14 @@ public:
             result_phantom_node.reverse_weight *= (1.-ratio);
         }
 
-        SimpleLogger().Write(logDEBUG) << "[rtree] result location: " << result_phantom_node.location << ", start: " << current_start_coordinate << ", end: " << current_end_coordinate;
-        SimpleLogger().Write(logDEBUG) << "[rtree] fwd node: " << result_phantom_node.forward_node_id << ", rev node: " << result_phantom_node.reverse_node_id;
-        SimpleLogger().Write(logDEBUG) << "[rtree] fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight;
-        SimpleLogger().Write(logDEBUG) << "[rtree] fwd offset: " << result_phantom_node.forward_offset << ", rev offset: " << result_phantom_node.reverse_offset;
-        SimpleLogger().Write(logDEBUG) << "[rtree] bidirected: " << (result_phantom_node.isBidirected() ? "y" : "n");
-        SimpleLogger().Write(logDEBUG) << "[rtree] name id: " << result_phantom_node.name_id;
-        SimpleLogger().Write(logDEBUG) << "[rtree] geom id: " << result_phantom_node.packed_geometry_id;
-        SimpleLogger().Write(logDEBUG) << "[rtree] ratio: " << ratio;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] result location: " << result_phantom_node.location << ", start: " << current_start_coordinate << ", end: " << current_end_coordinate;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] fwd node: " << result_phantom_node.forward_node_id << ", rev node: " << result_phantom_node.reverse_node_id;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] fwd weight: " << result_phantom_node.forward_weight << ", rev weight: " << result_phantom_node.reverse_weight;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] fwd offset: " << result_phantom_node.forward_offset << ", rev offset: " << result_phantom_node.reverse_offset;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] bidirected: " << (result_phantom_node.isBidirected() ? "y" : "n");
+        // SimpleLogger().Write(logDEBUG) << "[rtree] name id: " << result_phantom_node.name_id;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] geom id: " << result_phantom_node.packed_geometry_id;
+        // SimpleLogger().Write(logDEBUG) << "[rtree] ratio: " << ratio;
 
         return found_a_nearest_edge;
     }

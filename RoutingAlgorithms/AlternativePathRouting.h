@@ -83,13 +83,11 @@ public:
         const PhantomNodes & phantom_node_pair,
         RawRouteData & raw_route_data
     ) {
-        SimpleLogger().Write(logDEBUG) << "alt path routing";
         if( //phantom_node_pair.AtLeastOnePhantomNodeIsInvalid() ||
             phantom_node_pair.PhantomNodesHaveEqualLocation()
         ) {
             // raw_route_data.lengthOfShortestPath    = INVALID_EDGE_WEIGHT;
             // raw_route_data.lengthOfAlternativePath = INVALID_EDGE_WEIGHT;
-            // SimpleLogger().Write(logDEBUG) << "not executing path search";
             return;
         }
 
@@ -117,7 +115,7 @@ public:
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
         if(phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "fwd-a insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
+            // SimpleLogger().Write(logDEBUG) << "fwd-a insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
             forward_heap1.Insert(
                 phantom_node_pair.source_phantom.forward_node_id,
                 -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
@@ -125,7 +123,7 @@ public:
             );
         }
         if(phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "fwd-b insert: " << phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
+            // SimpleLogger().Write(logDEBUG) << "fwd-b insert: " << phantom_node_pair.source_phantom.reverse_node_id << ", w: " << -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             forward_heap1.Insert(
                 phantom_node_pair.source_phantom.reverse_node_id,
                 -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
@@ -134,7 +132,7 @@ public:
         }
 
         if(phantom_node_pair.target_phantom.forward_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "rev-a insert: " << phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
+            // SimpleLogger().Write(logDEBUG) << "rev-a insert: " << phantom_node_pair.target_phantom.forward_node_id << ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
             reverse_heap1.Insert(
                 phantom_node_pair.target_phantom.forward_node_id,
                 phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
@@ -142,7 +140,7 @@ public:
             );
         }
         if(phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID ) {
-            SimpleLogger().Write(logDEBUG) << "rev-b insert: " << phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
+            // SimpleLogger().Write(logDEBUG) << "rev-b insert: " << phantom_node_pair.target_phantom.reverse_node_id << ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
         	reverse_heap1.Insert(
                 phantom_node_pair.target_phantom.reverse_node_id,
                 phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),
