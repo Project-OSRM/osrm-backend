@@ -423,15 +423,12 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             BOOST_ASSERT( !reverse_data.forward );
         }
 
-        // BOOST_ASSERT( forward_data.forward == reverse_data.backward );
-        // BOOST_ASSERT( reverse_data.forward == forward_data.backward );
-
         BOOST_ASSERT(
             forward_data.edgeBasedNodeID != SPECIAL_NODEID ||
             reverse_data.edgeBasedNodeID != SPECIAL_NODEID
         );
 
-        //TODO: emplace_back with C++11
+        //TODO C++11: emplace_back with
         m_edge_based_node_list.push_back(
             EdgeBasedNode(
                 forward_data.edgeBasedNodeID,
