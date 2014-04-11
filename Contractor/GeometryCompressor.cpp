@@ -140,11 +140,9 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
         if (0 == m_free_list.size())
         {
             // make sure there is a place to put the entries
-            // SimpleLogger().Write() << "increased free list";
             IncreaseFreeList();
         }
         BOOST_ASSERT(!m_free_list.empty());
-        // SimpleLogger().Write() << "free list size: " << m_free_list.size();
         m_edge_id_to_list_index_map[edge_id_1] = m_free_list.back();
         m_free_list.pop_back();
     }
