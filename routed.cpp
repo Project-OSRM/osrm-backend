@@ -107,6 +107,8 @@ int main (int argc, const char * argv[])
             "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
             "compiled at " << __DATE__ << ", " __TIME__;
 
+        SimpleLogger().Write() << "Using elevation: " << use_elevation;
+
         if(use_shared_memory)
         {
             SimpleLogger().Write(logDEBUG) << "Loading from shared memory";

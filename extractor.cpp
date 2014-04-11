@@ -138,6 +138,7 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
         SimpleLogger().Write() << "Threads: " << requested_num_threads;
+        SimpleLogger().Write() << "Using elevation: " << use_elevation;
 
         /*** Setup Scripting Environment ***/
         ScriptingEnvironment scriptingEnvironment(profile_path.c_str());
