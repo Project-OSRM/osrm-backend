@@ -28,38 +28,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/unordered_map.hpp>
-#include <boost/filesystem.hpp>
 
 #include <vector>
 
 #ifndef GEOMETRY_COMPRESSOR_H
 #define GEOMETRY_COMPRESSOR_H
 
-class GeometryCompressor {
-public:
+class GeometryCompressor
+{
+  public:
     typedef std::pair<NodeID, EdgeWeight> CompressedNode;
 
     GeometryCompressor();
-    void CompressEdge(
-        const EdgeID surviving_edge_id,
-        const EdgeID removed_edge_id,
-        const NodeID via_node_id,
-        const NodeID target_node,
-        const EdgeWeight weight1,
-        const EdgeWeight weight2
-    );
+    void CompressEdge(const EdgeID surviving_edge_id,
+                      const EdgeID removed_edge_id,
+                      const NodeID via_node_id,
+                      const NodeID target_node,
+                      const EdgeWeight weight1,
+                      const EdgeWeight weight2);
 
     bool HasEntryForID(const EdgeID edge_id) const;
     void PrintStatistics() const;
-    void SerializeInternalVector(const std::string & path) const;
+    void SerializeInternalVector(const std::string &path) const;
     unsigned GetPositionForID(const EdgeID edge_id) const;
-    const std::vector<GeometryCompressor::CompressedNode> & GetBucketReference(const EdgeID edge_id) const;
+    const std::vector<GeometryCompressor::CompressedNode> &
+    GetBucketReference(const EdgeID edge_id) const;
 
-private:
+  private:
     void IncreaseFreeList();
     std::vector<std::vector<CompressedNode> > m_compressed_geometries;
     std::vector<unsigned> m_free_list;
     boost::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
 };
 
-#endif //GEOMETRY_COMPRESSOR_H
+#endif // GEOMETRY_COMPRESSOR_H
