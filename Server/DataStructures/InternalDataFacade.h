@@ -395,12 +395,10 @@ public:
     FixedPointCoordinate GetCoordinateOfNode(
         const unsigned id
     ) const {
-        // const unsigned coordinate_index = m_via_node_list.at(id);
         return m_coordinate_list->at(id);
     };
 
     bool EdgeIsCompressed( const unsigned id ) const {
-        // const NodeID node = m_via_node_list.at(id);
         return m_egde_is_compressed.at(id);
     }
 
@@ -427,7 +425,6 @@ public:
         PhantomNode & resulting_phantom_node,
         const unsigned zoom_level
     ) const {
-        // SimpleLogger().Write(logDEBUG) << "name id: " << resulting_phantom_node.name_id;
         const bool found =  m_static_rtree->FindPhantomNodeForCoordinate(
                         input_coordinate,
                         resulting_phantom_node,
@@ -451,8 +448,8 @@ public:
             name_id < m_name_begin_indices.size(),
             "name id too high"
         );
-        unsigned begin_index = m_name_begin_indices[name_id];
-        unsigned end_index = m_name_begin_indices[name_id+1];
+        const unsigned begin_index = m_name_begin_indices[name_id];
+        const unsigned end_index = m_name_begin_indices[name_id+1];
         BOOST_ASSERT_MSG(
             begin_index < m_names_char_list.size(),
             "begin index of name too high"
