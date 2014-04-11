@@ -129,13 +129,13 @@ public:
             return;
         }
 
-        std::string name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
+        // std::string name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
         int fwd_weight = phantom_nodes.source_phantom.forward_weight;
         int rev_weight = phantom_nodes.source_phantom.reverse_weight;
         int fwd_offset = phantom_nodes.source_phantom.forward_offset;
         int rev_offset = phantom_nodes.source_phantom.reverse_offset;
         // SimpleLogger().Write(logDEBUG) << "json source: " << name << ", location: " << phantom_nodes.source_phantom.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
-        name = facade->GetEscapedNameForNameID(phantom_nodes.target_phantom.name_id);
+        // name = facade->GetEscapedNameForNameID(phantom_nodes.target_phantom.name_id);
         fwd_weight = phantom_nodes.target_phantom.forward_weight;
         rev_weight = phantom_nodes.target_phantom.reverse_weight;
         fwd_offset = phantom_nodes.target_phantom.forward_offset;
