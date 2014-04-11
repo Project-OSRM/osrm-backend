@@ -737,6 +737,7 @@ private:
             if ( std::abs(priority - targetPriority) < std::numeric_limits<double>::epsilon() && bias(node, target) ) {
                 return false;
             }
+            // TODO: C++11 copy_if with lambda
             neighbours.push_back( target );
         }
 
