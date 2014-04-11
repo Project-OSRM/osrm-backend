@@ -128,6 +128,64 @@ public:
     }
 };
 
+template<>
+class SharedMemoryWrapper<bool> {
+private:
+    unsigned * m_ptr;
+    std::size_t m_size;
+
+public:
+    SharedMemoryWrapper() :
+        m_ptr(NULL),
+        m_size(0)
+    { }
+
+    SharedMemoryWrapper(unsigned * ptr, std::size_t size) :
+        m_ptr(ptr),
+        m_size(size)
+    { }
+
+    void swap( SharedMemoryWrapper<bool> & other ) {
+        BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
+        std::swap( m_size, other.m_size);
+        std::swap( m_ptr , other.m_ptr );
+    }
+
+    // void SetData(const DataT * ptr, const std::size_t size) {
+    //     BOOST_ASSERT_MSG( 0 == m_size, "vector not empty");
+    //     BOOST_ASSERT_MSG( 0 < size   , "new vector empty");
+    //     m_ptr.reset(ptr);
+    //     m_size = size;
+    // }
+
+    bool at(const std::size_t index) const {
+        BOOST_ASSERT_MSG(index < m_size, "invalid size");
+        const unsigned bucket = index / 32;
+        const unsigned offset = index % 32;
+        return m_ptr[bucket] & (1 << offset);
+    }
+
+    // ShMemIterator<DataT> begin() const {
+    //     return ShMemIterator<DataT>(m_ptr);
+    // }
+
+    // ShMemIterator<DataT> end() const {
+    //     return ShMemIterator<DataT>(m_ptr+m_size);
+    // }
+
+    std::size_t size() const { return m_size; }
+
+    bool empty() const { return 0 == size(); }
+
+    bool operator[](const unsigned index) {
+        BOOST_ASSERT_MSG(index < m_size, "invalid size");
+        const unsigned bucket = index / 32;
+        const unsigned offset = index % 32;
+        return m_ptr[bucket] & (1 << offset);
+    }
+};
+
+
 template<typename DataT, bool UseSharedMemory>
 struct ShM {
     typedef typename boost::conditional<

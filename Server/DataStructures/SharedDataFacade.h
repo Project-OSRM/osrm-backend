@@ -80,9 +80,9 @@ private:
     ShM<TurnInstruction, true>::vector      m_turn_instruction_list;
     ShM<char, true>::vector                 m_names_char_list;
     ShM<unsigned, true>::vector             m_name_begin_indices;
-    ShM<bool, true>::vector                m_egde_is_compressed;
-    ShM<unsigned, true>::vector            m_geometry_indices;
-    ShM<unsigned, true>::vector            m_geometry_list;
+    ShM<bool, true>::vector                 m_egde_is_compressed;
+    ShM<unsigned, true>::vector             m_geometry_indices;
+    ShM<unsigned, true>::vector             m_geometry_list;
 
     boost::shared_ptr<
         StaticRTree<
@@ -209,10 +209,18 @@ private:
 
     void LoadGeometries()
     {
+        unsigned * geometries_compressed_ptr = (unsigned *)(
+            shared_memory + data_layout->GetGeometriesCompressedOffset()
+        );
+        typename ShM<bool, true>::vector egde_is_compressed(
+            geometries_compressed_ptr,
+            data_layout->geometries_index_list_size
+        );
+        m_egde_is_compressed.swap(egde_is_compressed);
+
         unsigned * geometries_index_ptr = (unsigned *)(
             shared_memory + data_layout->GetGeometriesIndicesOffset()
         );
-
         typename ShM<unsigned, true>::vector geometry_begin_indices(
             geometries_index_ptr,
             data_layout->geometries_index_list_size
