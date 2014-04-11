@@ -168,8 +168,7 @@ public:
                     &middle_node,
                     &upper_bound_to_shortest_path_distance,
                     via_node_candidate_list,
-                    forward_search_space,
-                    0
+                    forward_search_space
                 );
             }
             if(0 < reverse_heap1.Size()){
@@ -179,8 +178,7 @@ public:
                     &middle_node,
                     &upper_bound_to_shortest_path_distance,
                     via_node_candidate_list,
-                    reverse_search_space,
-                    0
+                    reverse_search_space
                 );
             }
         }
@@ -284,7 +282,7 @@ public:
         //prioritizing via nodes for deep inspection
         BOOST_FOREACH(const NodeID node, preselected_node_list) {
             int length_of_via_path = 0, sharing_of_via_path = 0;
-            ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path, 0, packed_shortest_path);
+            ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path, packed_shortest_path);
             const int maximum_allowed_sharing = upper_bound_to_shortest_path_distance*VIAPATH_GAMMA;
             if( sharing_of_via_path <= maximum_allowed_sharing && length_of_via_path <= upper_bound_to_shortest_path_distance*(1+VIAPATH_EPSILON)) {
                 ranked_candidates_list.push_back(
@@ -305,7 +303,7 @@ public:
         int length_of_via_path = INVALID_EDGE_WEIGHT;
         NodeID s_v_middle = SPECIAL_NODEID, v_t_middle = SPECIAL_NODEID;
         BOOST_FOREACH(const RankedCandidateNode & candidate, ranked_candidates_list){
-            if(ViaNodeCandidatePassesTTest(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate, 0, upper_bound_to_shortest_path_distance, &length_of_via_path, &s_v_middle, &v_t_middle)) {
+            if(ViaNodeCandidatePassesTTest(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate, upper_bound_to_shortest_path_distance, &length_of_via_path, &s_v_middle, &v_t_middle)) {
                 // select first admissable
                 selected_via_node = candidate.node;
                 break;
@@ -417,7 +415,6 @@ private:
         const NodeID via_node,
         int *real_length_of_via_path,
         int *sharing_of_via_path,
-        const int offset,
         const std::vector<NodeID> & packed_shortest_path
     ) {
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
@@ -445,7 +442,6 @@ private:
                 existing_forward_heap,
                 &s_v_middle,
                 &upper_bound_s_v_path_length,
-                2 * offset,
                 false
             );
         }
@@ -459,7 +455,6 @@ private:
                 existing_reverse_heap,
                 &v_t_middle,
                 &upper_bound_of_v_t_path_length,
-                2 * offset,
                 true
             );
         }
@@ -627,8 +622,7 @@ private:
     		NodeID * middle_node,
     		int * upper_bound_to_shortest_path_distance,
     		std::vector<NodeID> & search_space_intersection,
-    		std::vector<SearchSpaceEdge> & search_space,
-    		const int edge_expansion_offset
+    		std::vector<SearchSpaceEdge> & search_space
 	) const {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
@@ -653,7 +647,7 @@ private:
             const int new_distance = reverse_heap.GetKey(node) + distance;
             if (new_distance < *upper_bound_to_shortest_path_distance)
             {
-                if ((new_distance + edge_expansion_offset) >= 0)
+                if (new_distance >= 0)
                 {
                     *middle_node = node;
                     *upper_bound_to_shortest_path_distance = new_distance;
@@ -699,7 +693,6 @@ private:
         QueryHeap& new_forward_heap,
         QueryHeap& new_reverse_heap,
         const RankedCandidateNode& candidate,
-        const int offset,
         const int lengthOfShortestPath,
         int * length_of_via_path,
         NodeID * s_v_middle,
@@ -715,7 +708,7 @@ private:
         //compute path <s,..,v> by reusing forward search from s
         new_reverse_heap.Insert(candidate.node, 0, candidate.node);
         while (new_reverse_heap.Size() > 0) {
-            super::RoutingStep(new_reverse_heap, existing_forward_heap, s_v_middle, &upper_bound_s_v_path_length, 2*offset, false);
+            super::RoutingStep(new_reverse_heap, existing_forward_heap, s_v_middle, &upper_bound_s_v_path_length, false);
         }
 
         if( INVALID_EDGE_WEIGHT == upper_bound_s_v_path_length ) {
@@ -727,7 +720,7 @@ private:
         int upper_bound_of_v_t_path_length = INVALID_EDGE_WEIGHT;
         new_forward_heap.Insert(candidate.node, 0, candidate.node);
         while (new_forward_heap.Size() > 0) {
-            super::RoutingStep(new_forward_heap, existing_reverse_heap, v_t_middle, &upper_bound_of_v_t_path_length, 2*offset, true);
+            super::RoutingStep(new_forward_heap, existing_reverse_heap, v_t_middle, &upper_bound_of_v_t_path_length, true);
         }
 
         if( INVALID_EDGE_WEIGHT == upper_bound_of_v_t_path_length ){
@@ -891,7 +884,6 @@ private:
                     reverse_heap3,
                     &middle,
                     &upper_bound,
-                    offset,
                     true
                 );
             }
@@ -901,7 +893,6 @@ private:
                     forward_heap3,
                     &middle,
                     &upper_bound,
-                    offset,
                     false
                 );
             }

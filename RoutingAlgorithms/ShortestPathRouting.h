@@ -174,7 +174,6 @@ public:
                         reverse_heap1,
                         &middle1,
                         &local_upper_bound1,
-                        0,
                         true
                     );
                 }
@@ -184,7 +183,6 @@ public:
                         forward_heap1,
                         &middle1,
                         &local_upper_bound1,
-                        0,
                         false
                     );
                 }
@@ -198,7 +196,6 @@ public:
                             reverse_heap2,
                             &middle2,
                             &local_upper_bound2,
-                            0,
                             true
                         );
                     }
@@ -208,7 +205,6 @@ public:
                             forward_heap2,
                             &middle2,
                             &local_upper_bound2,
-                            0,
                             false
                         );
                     }

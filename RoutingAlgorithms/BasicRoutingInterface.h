@@ -62,7 +62,6 @@ public:
         SearchEngineData::QueryHeap & reverse_heap,
         NodeID * middle_node_id,
         int * upper_bound,
-        const int edge_expansion_offset,
         const bool forward_direction
     ) const
     {
@@ -75,7 +74,7 @@ public:
             // SimpleLogger().Write(logDEBUG) << "new_distance: " << new_distance;
             if(new_distance < *upper_bound )
             {
-                if( new_distance + edge_expansion_offset >= 0 )
+                if (new_distance >= 0)
                 {
                     *middle_node_id = node;
                     *upper_bound = new_distance;
