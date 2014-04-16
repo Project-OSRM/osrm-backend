@@ -96,10 +96,10 @@ public:
     DeallocatingVectorIterator() {}
 
     template<typename T2>
-    DeallocatingVectorIterator(const DeallocatingVectorIterator<T2> & r) : mState(r.mState) {}
+    explicit DeallocatingVectorIterator(const DeallocatingVectorIterator<T2> & r) : mState(r.mState) {}
 
     DeallocatingVectorIterator(std::size_t idx, std::vector<ElementT *> & input_list) : mState(idx, input_list) {}
-    DeallocatingVectorIterator(const DeallocatingVectorIteratorState & r) : mState(r) {}
+    explicit DeallocatingVectorIterator(const DeallocatingVectorIteratorState & r) : mState(r) {}
 
     template<typename T2>
     DeallocatingVectorIterator& operator=(const DeallocatingVectorIterator<T2> &r) {

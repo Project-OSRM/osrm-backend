@@ -57,7 +57,7 @@ class DynamicGraph {
         };
 
         //Constructs an empty graph with a given number of nodes.
-        DynamicGraph( int32_t nodes ) : m_numNodes(nodes), m_numEdges(0) {
+        explicit DynamicGraph( int32_t nodes ) : m_numNodes(nodes), m_numEdges(0) {
             m_nodes.reserve( m_numNodes );
             m_nodes.resize( m_numNodes );
 

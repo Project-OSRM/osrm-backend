@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef _NODE_COORDS_H
-#define _NODE_COORDS_H
+#ifndef QUERY_NODE_H
+#define QUERY_NODE_H
 
 #include "../typedefs.h"
 
@@ -83,4 +83,4 @@ struct NodeInfo {
 	}
 };
 
-#endif //_NODE_COORDS_H
+#endif //QUERY_NODE_H

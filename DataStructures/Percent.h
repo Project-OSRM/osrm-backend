@@ -38,7 +38,7 @@ public:
      * @param maxValue the value that corresponds to 100%
      * @param step the progress is shown in steps of 'step' percent
      */
-    Percent(unsigned maxValue, unsigned step = 5) {
+    explicit Percent(unsigned maxValue, unsigned step = 5) {
         reinit(maxValue, step);
     }
 

@@ -129,7 +129,7 @@ public:
     }
 
     template<class EdgeT>
-    EdgeBasedEdge(const EdgeT & myEdge ) :
+    explicit EdgeBasedEdge(const EdgeT & myEdge ) :
         m_source(myEdge.source),
         m_target(myEdge.target),
         m_edgeID(myEdge.data.via),

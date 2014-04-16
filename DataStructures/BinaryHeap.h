@@ -43,7 +43,7 @@ template< typename NodeID, typename Key >
 class ArrayStorage {
 public:
 
-    ArrayStorage( size_t size ) : positions( new Key[size] ) {
+    explicit ArrayStorage( size_t size ) : positions( new Key[size] ) {
         memset(positions, 0, size*sizeof(Key));
     }
 
@@ -65,7 +65,7 @@ template< typename NodeID, typename Key >
 class MapStorage {
 public:
 
-    MapStorage( size_t ) {}
+    explicit MapStorage( size_t ) {}
 
     Key &operator[]( NodeID node ) {
         return nodes[node];
@@ -87,7 +87,7 @@ class UnorderedMapStorage {
     typedef typename UnorderedMapType::const_iterator UnorderedMapConstIterator;
 public:
 
-	UnorderedMapStorage( size_t ) {
+	explicit UnorderedMapStorage( size_t ) {
 		//hash table gets 1000 Buckets
 		nodes.rehash(1000);
 	}
@@ -119,7 +119,7 @@ public:
     typedef Weight WeightType;
     typedef Data DataType;
 
-    BinaryHeap( size_t maxID )
+    explicit BinaryHeap( size_t maxID )
      :
         nodeIndex( maxID )
     {

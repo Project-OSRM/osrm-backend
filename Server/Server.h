@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
@@ -72,7 +73,7 @@ public:
 	void Run() {
 		std::vector<boost::shared_ptr<boost::thread> > threads;
 		for (unsigned i = 0; i < threadPoolSize; ++i) {
-			boost::shared_ptr<boost::thread> thread(new boost::thread(boost::bind(&boost::asio::io_service::run, &ioService)));
+			boost::shared_ptr<boost::thread> thread = boost::make_shared<boost::thread>(boost::bind(&boost::asio::io_service::run, &ioService));
 			threads.push_back(thread);
 		}
 		for (unsigned i = 0; i < threads.size(); ++i)

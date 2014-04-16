@@ -25,10 +25,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+#include "ExtractorCallbacks.h"
+
 #include "ExtractionContainers.h"
 #include "ExtractionHelperFunctions.h"
 #include "ExtractionWay.h"
-#include "ExtractorCallbacks.h"
 
 #include "../DataStructures/Restriction.h"
 #include "../Util/SimpleLogger.h"

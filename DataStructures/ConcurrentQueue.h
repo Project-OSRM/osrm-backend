@@ -40,7 +40,7 @@ template<typename Data>
 class ConcurrentQueue {
 
 public:
-    ConcurrentQueue(const size_t max_size) : m_internal_queue(max_size) { }
+    explicit ConcurrentQueue(const size_t max_size) : m_internal_queue(max_size) { }
 
     inline void push(const Data & data) {
         boost::mutex::scoped_lock lock(m_mutex);

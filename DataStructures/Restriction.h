@@ -58,14 +58,13 @@ struct TurnRestriction {
         bool unused7:1;
     } flags;
 
-    TurnRestriction(NodeID viaNode) :
+    explicit TurnRestriction(NodeID viaNode) :
         viaNode(viaNode),
         fromNode(UINT_MAX),
         toNode(UINT_MAX) {
-
     }
 
-    TurnRestriction(const bool isOnly = false) :
+    explicit TurnRestriction(const bool isOnly = false) :
         viaNode(UINT_MAX),
         fromNode(UINT_MAX),
         toNode(UINT_MAX) {
@@ -91,7 +90,7 @@ struct InputRestrictionContainer {
     {
         restriction.viaNode = vn;
     }
-    InputRestrictionContainer(
+    explicit InputRestrictionContainer(
         bool isOnly = false
     ) :
         fromWay(UINT_MAX),

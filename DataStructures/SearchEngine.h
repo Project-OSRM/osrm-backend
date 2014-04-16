@@ -54,7 +54,7 @@ public:
     ShortestPathRouting<DataFacadeT> shortest_path;
     AlternativeRouting <DataFacadeT> alternative_path;
 
-    SearchEngine( DataFacadeT * facade )
+    explicit SearchEngine( DataFacadeT * facade )
      :
         facade             (facade),
         shortest_path      (facade, engine_working_data),

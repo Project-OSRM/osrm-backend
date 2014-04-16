@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct _HeapData {
     NodeID parent;
-    _HeapData( NodeID p ) : parent(p) { }
+    /* explicit */ _HeapData( NodeID p ) : parent(p) { }
 };
 
 // typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;

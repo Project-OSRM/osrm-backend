@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class DataFacadeT>
 class NearestPlugin : public BasePlugin {
 public:
-    NearestPlugin(DataFacadeT * facade )
+    explicit NearestPlugin(DataFacadeT * facade )
      :
         facade(facade),
         descriptor_string("nearest")

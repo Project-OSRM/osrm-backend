@@ -28,9 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPLUGIN_H_
 #define BASEPLUGIN_H_
 
+#include "../Util/StringUtil.h"
+
 #include <osrm/Coordinate.h>
 #include <osrm/Reply.h>
 #include <osrm/RouteParameters.h>
+
+#include <boost/foreach.hpp>
 
 #include <string>
 #include <vector>
