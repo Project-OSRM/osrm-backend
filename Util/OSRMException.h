@@ -33,8 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class OSRMException: public std::exception {
 public:
-    OSRMException(const char * message) : message(message) {}
-    OSRMException(const std::string & message) : message(message) {}
+    explicit OSRMException(const char * message) : message(message) {}
+    explicit OSRMException(const std::string & message) : message(message) {}
     virtual ~OSRMException() throw() {}
 private:
     virtual const char* what() const throw() {

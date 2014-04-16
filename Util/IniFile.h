@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class IniFile {
 public:
-    IniFile(const char * config_filename);
+    explicit IniFile(const char * config_filename);
 
     std::string GetParameter(const std::string & key);
 
