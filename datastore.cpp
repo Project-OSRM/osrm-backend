@@ -287,11 +287,9 @@ int main( const int argc, const char * argv[] ) {
 
         // read actual data into shared memory object //
         // Loading street names
-        // SimpleLogger().Write() << "Loading names index and chars from: " << names_data_path.string();
         unsigned * name_index_ptr = (unsigned*)(
             shared_memory_ptr + shared_layout_ptr->GetNameIndexOffset()
         );
-        // SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_index_list_size*sizeof(unsigned);
 
         name_stream.read(
             (char*)name_index_ptr,

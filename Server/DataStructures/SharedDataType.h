@@ -97,9 +97,9 @@ struct SharedDataLayout {
         SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << coordinate_list_size;
         SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << turn_instruction_list_size;
         SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
-        SimpleLogger().Write(logDEBUG) << "geometries_compression:     " << geometries_compression;
+        SimpleLogger().Write(logDEBUG) << "geometries_compression:     " << geometries_compression << "/" << ((geometries_compression/32) + 1);
         SimpleLogger().Write(logDEBUG) << "geometries_index_list_size: " << geometries_index_list_size;
-        SimpleLogger().Write(logDEBUG) << "geometry_list_size:         " << geometries_list_size;
+        SimpleLogger().Write(logDEBUG) << "geometries_list_size:       " << geometries_list_size;
         SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
         SimpleLogger().Write(logDEBUG) << "ram index file name:        " << ram_index_file_name;
     }
@@ -116,6 +116,7 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            ) +
+            (geometries_compression/32) + 1                              +
             (geometries_index_list_size * sizeof(unsigned)             ) +
             (geometries_list_size       * sizeof(unsigned)             ) +
             sizeof(checksum)                                             +
