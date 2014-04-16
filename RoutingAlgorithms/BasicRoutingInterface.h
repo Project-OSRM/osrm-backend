@@ -54,7 +54,7 @@ private:
 protected:
     DataFacadeT * facade;
 public:
-    BasicRoutingInterface( DataFacadeT * facade ) : facade(facade) { }
+    explicit BasicRoutingInterface( DataFacadeT * facade ) : facade(facade) { }
     virtual ~BasicRoutingInterface(){ };
 
     inline void RoutingStep(
