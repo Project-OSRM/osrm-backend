@@ -43,7 +43,7 @@ private:
     std::list<CacheEntry> itemsInCache;
     boost::unordered_map<KeyT, typename std::list<CacheEntry>::iterator > positionMap;
 public:
-    LRUCache(unsigned c) : capacity(c) {}
+    explicit LRUCache(unsigned c) : capacity(c) {}
 
     bool Holds(KeyT key) {
         if(positionMap.find(key) != positionMap.end()) {

@@ -53,7 +53,7 @@ private:
     SearchEngine<DataFacadeT> * search_engine_ptr;
 public:
 
-    ViaRoutePlugin(DataFacadeT * facade)
+    explicit ViaRoutePlugin(DataFacadeT * facade)
      :
         descriptor_string("viaroute"),
         facade(facade)

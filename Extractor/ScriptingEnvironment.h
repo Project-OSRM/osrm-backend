@@ -35,7 +35,7 @@ struct lua_State;
 class ScriptingEnvironment {
 public:
     ScriptingEnvironment();
-    ScriptingEnvironment(const char * fileName);
+    explicit ScriptingEnvironment(const char * fileName);
     virtual ~ScriptingEnvironment();
 
     lua_State * getLuaStateForThreadID(const int);

@@ -41,7 +41,7 @@ template<typename DataT>
 class ShMemIterator : public std::iterator<std::input_iterator_tag, DataT> {
     DataT * p;
 public:
-    ShMemIterator(DataT * x) : p(x) {}
+    explicit ShMemIterator(DataT * x) : p(x) {}
     ShMemIterator(const ShMemIterator & mit) : p(mit.p) {}
     ShMemIterator& operator++() {
         ++p;

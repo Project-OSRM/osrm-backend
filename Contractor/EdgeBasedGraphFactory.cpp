@@ -47,11 +47,11 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::vector<NodeID> & barrier_node_list,
     std::vector<NodeID> & traffic_light_node_list,
     std::vector<TurnRestriction> & input_restrictions_list,
-    std::vector<NodeInfo> & m_node_info_list,
+    std::vector<NodeInfo> & node_info_list,
     SpeedProfileProperties speed_profile
 ) : speed_profile(speed_profile),
     m_turn_restrictions_count(0),
-    m_node_info_list(m_node_info_list)
+    m_node_info_list(node_info_list)
 {
 	BOOST_FOREACH(const TurnRestriction & restriction, input_restrictions_list) {
         std::pair<NodeID, NodeID> restriction_source =

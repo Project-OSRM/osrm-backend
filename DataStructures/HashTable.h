@@ -40,7 +40,7 @@ public:
 
     HashTable() : super() { }
 
-    HashTable(const unsigned size) : super(size) { }
+    explicit HashTable(const unsigned size) : super(size) { }
 
     inline void Add( KeyT const & key, ValueT const & value) {
         super::emplace(std::make_pair(key, value));

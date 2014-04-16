@@ -207,7 +207,7 @@ public:
         delete m_static_rtree;
     }
 
-    InternalDataFacade( const ServerPaths & server_paths ) {
+    explicit InternalDataFacade( const ServerPaths & server_paths ) {
         //generate paths of data files
         if( server_paths.find("hsgrdata") == server_paths.end() ) {
             throw OSRMException("no hsgr file given in ini file");

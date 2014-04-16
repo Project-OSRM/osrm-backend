@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class DataFacadeT>
 class TimestampPlugin : public BasePlugin {
 public:
-    TimestampPlugin(const DataFacadeT * facade)
+    explicit TimestampPlugin(const DataFacadeT * facade)
      : facade(facade), descriptor_string("timestamp")
     { }
     const std::string & GetDescriptor() const { return descriptor_string; }

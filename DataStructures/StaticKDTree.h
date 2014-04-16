@@ -99,7 +99,7 @@ public:
 		                }
     };
 
-    StaticKDTree( std::vector< InputPoint > * points ){
+    explicit StaticKDTree( std::vector< InputPoint > * points ){
         BOOST_ASSERT( k > 0 );
         BOOST_ASSERT ( points->size() > 0 );
         size = points->size();
@@ -207,7 +207,7 @@ private:
     };
     class Less {
     public:
-        Less( unsigned d ) {
+        explicit Less( unsigned d ) {
             dimension = d;
             BOOST_ASSERT( dimension < k );
         }
