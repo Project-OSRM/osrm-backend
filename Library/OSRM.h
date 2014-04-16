@@ -40,7 +40,7 @@ class OSRM {
 private:
     OSRM_impl * OSRM_pimpl_;
 public:
-    OSRM(
+    explicit OSRM(
         const ServerPaths & paths,
         const bool use_shared_memory = false
     );
