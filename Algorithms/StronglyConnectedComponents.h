@@ -145,7 +145,7 @@ public:
             if(restriction_iterator == m_restriction_map.end()) {
                 index = m_restriction_bucket_list.size();
                 m_restriction_bucket_list.resize(index+1);
-                restriction_iterator->second = index;
+                m_restriction_map[restrictionSource] = index;
             } else {
                 index = restriction_iterator->second;
                 //Map already contains an is_only_*-restriction
