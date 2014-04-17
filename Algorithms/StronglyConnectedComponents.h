@@ -96,7 +96,7 @@ private:
     typedef std::pair<NodeID, NodeID>           RestrictionSource;
     typedef std::pair<NodeID, bool>             restriction_target;
     typedef std::vector<restriction_target>      EmanatingRestrictionsVector;
-    typedef boost::unordered_map<RestrictionSource, unsigned > RestrictionMap;
+    typedef boost::unordered_map<RestrictionSource, unsigned> RestrictionMap;
 
     std::vector<NodeInfo>                       m_coordinate_list;
     std::vector<EmanatingRestrictionsVector>    m_restriction_bucket_list;
@@ -145,7 +145,7 @@ public:
             if(restriction_iterator == m_restriction_map.end()) {
                 index = m_restriction_bucket_list.size();
                 m_restriction_bucket_list.resize(index+1);
-                m_restriction_map[restrictionSource] = index;
+                m_restriction_map.insert(std::make_pair(restrictionSource, index));
             } else {
                 index = restriction_iterator->second;
                 //Map already contains an is_only_*-restriction
@@ -358,6 +358,7 @@ public:
             "identified: " << component_size_vector.size() <<
             " many components, marking small components";
 
+        // TODO/C++11: prime candidate for lambda function
         unsigned size_one_counter = 0;
         for(unsigned i = 0, end = component_size_vector.size(); i < end; ++i){
             if(1 == component_size_vector[i]) {
