@@ -192,6 +192,7 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->via_node_list_size = number_of_original_edges;
         shared_layout_ptr->name_id_list_size = number_of_original_edges;
         shared_layout_ptr->turn_instruction_list_size = number_of_original_edges;
+        shared_layout_ptr->geometries_compression = number_of_original_edges;
 
         boost::filesystem::ifstream hsgr_input_stream(
             hsgr_path,
@@ -316,6 +317,10 @@ int main( const int argc, const char * argv[] ) {
             shared_memory_ptr + shared_layout_ptr->GetTurnInstructionListOffset()
         );
 
+        unsigned * geometries_index_ptr = (unsigned *)(
+            shared_memory + shared_layout_ptr->GetGeometriesIndicesOffset()
+        );
+
         OriginalEdgeData current_edge_data;
         for(unsigned i = 0; i < number_of_original_edges; ++i) {
             // SimpleLogger().Write() << i << "/" << number_of_edges;
@@ -326,6 +331,11 @@ int main( const int argc, const char * argv[] ) {
             via_node_ptr[i] = current_edge_data.via_node;
             name_id_ptr[i]  = current_edge_data.name_id;
             turn_instructions_ptr[i] = current_edge_data.turn_instruction;
+
+            const unsigned bucket = i / 32;
+            const unsigned offset = i % 32;
+            geometries_index_ptr[bucket] |= (1 << offset);
+
         }
         edges_input_stream.close();
 

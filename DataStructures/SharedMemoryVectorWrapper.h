@@ -82,7 +82,9 @@ public:
     SharedMemoryWrapper(DataT * ptr, std::size_t size) :
         m_ptr(ptr),
         m_size(size)
-    { }
+    {
+            SimpleLogger().Write(logDEBUG) << "generated std::vector<DataT> of size " << size;
+    }
 
     void swap( SharedMemoryWrapper<DataT> & other ) {
         BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
@@ -143,7 +145,9 @@ public:
     SharedMemoryWrapper(unsigned * ptr, std::size_t size) :
         m_ptr(ptr),
         m_size(size)
-    { }
+    {
+        SimpleLogger().Write(logDEBUG) << "generated std::vector<bool> of size " << size;
+    }
 
     void swap( SharedMemoryWrapper<bool> & other ) {
         BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
