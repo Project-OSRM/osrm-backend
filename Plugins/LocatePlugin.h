@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class DataFacadeT>
 class LocatePlugin : public BasePlugin {
 public:
-    LocatePlugin(DataFacadeT * facade)
+    explicit LocatePlugin(DataFacadeT * facade)
      :
         descriptor_string("locate"),
         facade(facade)
