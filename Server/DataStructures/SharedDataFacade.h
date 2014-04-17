@@ -210,7 +210,7 @@ private:
     void LoadGeometries()
     {
         unsigned * geometries_compressed_ptr = (unsigned *)(
-            shared_memory + data_layout->GetGeometriesCompressedOffset()
+            shared_memory + data_layout->GetGeometriesIndexListOffset()
         );
         typename ShM<bool, true>::vector egde_is_compressed(
             geometries_compressed_ptr,
@@ -219,7 +219,7 @@ private:
         m_egde_is_compressed.swap(egde_is_compressed);
 
         unsigned * geometries_index_ptr = (unsigned *)(
-            shared_memory + data_layout->GetGeometriesIndicesOffset()
+            shared_memory + data_layout->GetGeometriesIndicatorOffset()
         );
         typename ShM<unsigned, true>::vector geometry_begin_indices(
             geometries_index_ptr,

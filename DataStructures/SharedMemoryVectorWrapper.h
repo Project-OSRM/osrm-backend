@@ -140,13 +140,15 @@ public:
     SharedMemoryWrapper() :
         m_ptr(NULL),
         m_size(0)
-    { }
+    {
+        SimpleLogger().Write(logDEBUG) << "generated std::vector<bool> of size " << m_size;
+    }
 
     SharedMemoryWrapper(unsigned * ptr, std::size_t size) :
         m_ptr(ptr),
         m_size(size)
     {
-        SimpleLogger().Write(logDEBUG) << "generated std::vector<bool> of size " << size;
+        SimpleLogger().Write(logDEBUG) << "generated std::vector<bool> of size " << m_size;
     }
 
     void swap( SharedMemoryWrapper<bool> & other ) {

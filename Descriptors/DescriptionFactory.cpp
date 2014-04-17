@@ -68,10 +68,10 @@ double DescriptionFactory::GetBearing(const FixedPointCoordinate & A, const Fixe
 
 void DescriptionFactory::SetStartSegment(const PhantomNode & source, const bool source_traversed_in_reverse)
 {
-    int fwd_weight = source.forward_weight;
-    int rev_weight = source.reverse_weight;
-    int fwd_offset = source.forward_offset;
-    int rev_offset = source.reverse_offset;
+    // int fwd_weight = source.forward_weight;
+    // int rev_weight = source.reverse_weight;
+    // int fwd_offset = source.forward_offset;
+    // int rev_offset = source.reverse_offset;
     // SimpleLogger().Write(logDEBUG) << "df source, traversed in reverse: " << (source_traversed_in_reverse ? "y" : "n") << ", location: " << source.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
     // SimpleLogger().Write(logDEBUG) << "duration of first segment: " << (source_traversed_in_reverse ? source.GetReverseWeightPlusOffset() : source.GetForwardWeightPlusOffset());
     start_phantom = source;
@@ -83,10 +83,10 @@ void DescriptionFactory::SetStartSegment(const PhantomNode & source, const bool 
 
 void DescriptionFactory::SetEndSegment(const PhantomNode & target, const bool target_traversed_in_reverse)
 {
-    int fwd_weight = target.forward_weight;
-    int rev_weight = target.reverse_weight;
-    int fwd_offset = target.forward_offset;
-    int rev_offset = target.reverse_offset;
+    // int fwd_weight = target.forward_weight;
+    // int rev_weight = target.reverse_weight;
+    // int fwd_offset = target.forward_offset;
+    // int rev_offset = target.reverse_offset;
     // SimpleLogger().Write(logDEBUG) << "df target, traversed in reverse: " << (target_traversed_in_reverse ? "y" : "n") << ", location: " << target.location << ", fwd_weight: " << fwd_weight << ", fwd_offset: " << fwd_offset << ", rev_weight: " << rev_weight << ", rev_offset: " << rev_offset;
     // SimpleLogger().Write(logDEBUG) << "duration of last segment: " << (target_traversed_in_reverse ? target.GetReverseWeightPlusOffset() : target.GetForwardWeightPlusOffset());
 
