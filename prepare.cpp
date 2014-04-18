@@ -181,12 +181,12 @@ int main (int argc, char *argv[]) {
         boost::filesystem::ifstream in;
         in.open(input_path, std::ios::in|std::ios::binary);
 
-        const std::string nodeOut = input_path.string() + ".nodes";
-        const std::string edgeOut = input_path.string() + ".edges";
+        const std::string nodeOut           = input_path.string() + ".nodes";
+        const std::string edgeOut           = input_path.string() + ".edges";
         const std::string geometry_filename = input_path.string() + ".geometry";
-        const std::string graphOut = input_path.string() + ".hsgr";
-        const std::string rtree_nodes_path = input_path.string() + ".ramIndex";
-        const std::string rtree_leafs_path = input_path.string() + ".fileIndex";
+        const std::string graphOut          = input_path.string() + ".hsgr";
+        const std::string rtree_nodes_path  = input_path.string() + ".ramIndex";
+        const std::string rtree_leafs_path  = input_path.string() + ".fileIndex";
 
         /*** Setup Scripting Environment ***/
 
@@ -269,10 +269,9 @@ int main (int argc, char *argv[]) {
         delete edgeBasedGraphFactory;
 
         double expansionHasFinishedTime = get_timestamp() - startupTime;
-        /***
-         * Building grid-like nearest-neighbor data structure
-         */
 
+
+        // Building grid-like nearest-neighbor data structure
         SimpleLogger().Write() << "building r-tree ...";
         StaticRTree<EdgeBasedNode> * rtree =
                 new StaticRTree<EdgeBasedNode>(
@@ -355,19 +354,16 @@ int main (int argc, char *argv[]) {
         StaticGraph<EdgeData>::EdgeIterator position = 0;
         StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
 
-        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node ) {
+        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node)
+        {
             lastEdge = edge;
-            while ( edge < contracted_edge_count && contractedEdgeList[edge].source == node )
+            while ((edge < contracted_edge_count) && (contractedEdgeList[edge].source == node))
             {
                 ++edge;
             }
             node_array[node].firstEdge = position; //=edge
             position += edge - lastEdge; //remove
-            // SimpleLogger().Write(logDEBUG) << "node: " << node << ", edge: " << edge << ", position: " << position << ", lastEdge: " << lastEdge;
         }
-
-        // SimpleLogger().Write(logDEBUG) << "contracted_edge_count: " << contracted_edge_count << ", position: " << position << ", lastEdge: " << lastEdge;
-        // SimpleLogger().Write(logDEBUG) << "marking range [" << max_used_node_id << "," << node_array.size() << ") as dummies";
 
         for (unsigned sentinel_counter = max_used_node_id;
              sentinel_counter != node_array.size();
@@ -376,23 +372,9 @@ int main (int argc, char *argv[]) {
         {
             //sentinel element, guarded against underflow
             node_array[sentinel_counter].firstEdge = contracted_edge_count;
-            // SimpleLogger().Write(logDEBUG) << "node_array[" << sentinel_counter << "].firstEdge = " << node_array[sentinel_counter].firstEdge;
         }
-        // node_array.back().firstEdge = contracted_edge_count; //sentinel element
-        // ++max_used_node_id;
-
-        // BOOST_ASSERT_MSG(
-        //     node_array.size() == max_used_node_id,
-        //     "no. of nodes dont match"
-        // );
-
-        // for(unsigned i = 0; i < node_array.size(); ++i)
-        // {
-        //     SimpleLogger().Write() << "node_array[" << i << "].firstEdge = " << node_array[i].firstEdge;
-        // }
 
         unsigned node_array_size = node_array.size();
-
         //serialize crc32, aka checksum
         hsgr_output_stream.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
         //serialize number of nodes
@@ -407,43 +389,30 @@ int main (int argc, char *argv[]) {
         edge = 0;
         int usedEdgeCounter = 0;
 
-        for(unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
-        {
-            // SimpleLogger().Write(logDEBUG) << ">[" << edge << "] (" << contractedEdgeList[edge].source << "," << contractedEdgeList[edge].target << ")";
-        }
-
         StaticGraph<EdgeData>::_StrEdge currentEdge;
-        for(unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
+        for (unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
         {
-        // for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node ) {
-            // for ( StaticGraph<EdgeData>::EdgeIterator i = node_array[node].firstEdge, e = node_array[node+1].firstEdge; i != e; ++i ) {
-                // BOOST_ASSERT(node == contractedEdgeList[edge].source)
-                // no eigen loops
-                BOOST_ASSERT(contractedEdgeList[edge].source != contractedEdgeList[edge].target);
-                currentEdge.target = contractedEdgeList[edge].target;
-                currentEdge.data = contractedEdgeList[edge].data;
+            // no eigen loops
+            BOOST_ASSERT(contractedEdgeList[edge].source != contractedEdgeList[edge].target);
+            currentEdge.target = contractedEdgeList[edge].target;
+            currentEdge.data = contractedEdgeList[edge].data;
 
-                // every target needs to be valid
-                BOOST_ASSERT(currentEdge.target < max_used_node_id);
-                if(currentEdge.data.distance <= 0) {
-                    SimpleLogger().Write(logWARNING) <<
-                        "Edge: "     << edge <<
-                        ",source: "  << contractedEdgeList[edge].source <<
-                        ", target: " << contractedEdgeList[edge].target <<
-                        ", dist: "   << currentEdge.data.distance;
+            // every target needs to be valid
+            BOOST_ASSERT(currentEdge.target < max_used_node_id);
+            if(currentEdge.data.distance <= 0) {
+                SimpleLogger().Write(logWARNING) <<
+                    "Edge: "     << edge <<
+                    ",source: "  << contractedEdgeList[edge].source <<
+                    ", target: " << contractedEdgeList[edge].target <<
+                    ", dist: "   << currentEdge.data.distance;
 
-                    SimpleLogger().Write(logWARNING) <<
-                        "Failed at adjacency list of node " << contractedEdgeList[edge].source << "/" << node_array.size()-1;
-                        return 1;
-                }
-                //Serialize edges
-                // SimpleLogger().Write(logDEBUG) << "edge[" << edge << "], (" << contractedEdgeList[edge].source << "," << currentEdge.target << "), w: " << currentEdge.data.distance <<
-                // "shortcut: " << (currentEdge.data.shortcut ? "y" : "n");
-                hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
-                // ++edge;
-                ++usedEdgeCounter;
+                SimpleLogger().Write(logWARNING) <<
+                    "Failed at adjacency list of node " << contractedEdgeList[edge].source << "/" << node_array.size()-1;
+                return 1;
             }
-        // }
+            hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
+            ++usedEdgeCounter;
+        }
         hsgr_output_stream.close();
 
         SimpleLogger().Write() << "Preprocessing : " <<
@@ -456,7 +425,6 @@ int main (int argc, char *argv[]) {
             (edgeBasedNodeNumber/contraction_duration) << " nodes/sec and " <<
             usedEdgeCounter/contraction_duration << " edges/sec";
 
-        //cleanedEdgeList.clear();
         node_array.clear();
         SimpleLogger().Write() << "finished preprocessing";
     } catch(boost::program_options::too_many_positional_options_error&) {
@@ -466,9 +434,8 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write(logWARNING) << e.what();
         return 1;
     } catch ( const std::exception &e ) {
-        SimpleLogger().Write(logWARNING) <<
-            "Exception occured: " << e.what() << std::endl;
-        return 1;
+        SimpleLogger().Write(logWARNING) << "Exception occured: " << e.what() << std::endl;
+        return -1;
     }
     return 0;
 }
