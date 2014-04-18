@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include <unistd.h>
+#include <cstdio>
 
 #include <ostream>
 #include <iostream>
