@@ -45,13 +45,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "typedefs.h"
 
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <luabind/luabind.hpp>
 
-#include <fstream>
-#include <istream>
-#include <iostream>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -158,7 +156,7 @@ int main (int argc, char *argv[]) {
 
         omp_set_num_threads( std::min( omp_get_num_procs(), requested_num_threads) );
         LogPolicy::GetInstance().Unmute();
-        std::ifstream restrictionsInstream( restrictions_path.c_str(), std::ios::binary);
+        boost::filesystem::ifstream restrictionsInstream(restrictions_path, std::ios::binary);
         TurnRestriction restriction;
         UUID uuid_loaded, uuid_orig;
         unsigned usableRestrictionsCounter(0);
@@ -180,8 +178,8 @@ int main (int argc, char *argv[]) {
         );
         restrictionsInstream.close();
 
-        std::ifstream in;
-        in.open(input_path.c_str(), std::ifstream::in|std::ifstream::binary);
+        boost::filesystem::ifstream in;
+        in.open(input_path, std::ios::in|std::ios::binary);
 
         const std::string nodeOut = input_path.string() + ".nodes";
         const std::string edgeOut = input_path.string() + ".edges";
@@ -295,7 +293,7 @@ int main (int argc, char *argv[]) {
          */
 
         SimpleLogger().Write() << "writing node map ...";
-        std::ofstream mapOutFile(nodeOut, std::ios::binary);
+        boost::filesystem::ofstream mapOutFile(nodeOut, std::ios::binary);
         const unsigned size_of_mapping = internalToExternalNodeMapping.size();
         mapOutFile.write((char *)&size_of_mapping, sizeof(unsigned));
         mapOutFile.write(
@@ -335,7 +333,7 @@ int main (int argc, char *argv[]) {
             contracted_edge_count <<
             " edges";
 
-        std::ofstream hsgr_output_stream(graphOut, std::ios::binary);
+        boost::filesystem::ofstream hsgr_output_stream(graphOut, std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
         BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList)
         {
