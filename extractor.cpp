@@ -132,6 +132,16 @@ int main (int argc, char *argv[]) {
             return -1;
         }
 
+        if(!boost::filesystem::is_regular_file(input_path)) {
+            SimpleLogger().Write(logWARNING) << "Input file " << input_path.c_str() << " not found!";
+            return -1;
+        }
+
+        if(!boost::filesystem::is_regular_file(profile_path)) {
+            SimpleLogger().Write(logWARNING) << "Profile " << profile_path.c_str() << " not found!";
+            return -1;
+        }
+
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
         SimpleLogger().Write() << "Threads: " << requested_num_threads;
