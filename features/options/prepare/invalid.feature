@@ -7,6 +7,6 @@ Feature: osrm-prepare command line options: invalid options
     Scenario: osrm-prepare - Non-existing option
         When I run "osrm-prepare --fly-me-to-the-moon"
         Then stdout should be empty
-        And stderr should contain "Exception"
+        And stderr should contain "unrecognised option"
         And stderr should contain "fly-me-to-the-moon"
         And it should exit with code 1
