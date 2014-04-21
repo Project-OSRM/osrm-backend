@@ -11,7 +11,7 @@ Feature: Handle bad data in a graceful manner
         Given the ways
             | nodes |
 
-        When I preprocess data
+        When the data has been prepared
         Then "osrm-extract" should return code 255
 
     Scenario: Only dead-end oneways

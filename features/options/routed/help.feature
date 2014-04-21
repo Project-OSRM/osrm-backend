@@ -1,10 +1,10 @@
-@routing @options
-Feature: Command line options: help
+@routed @options @help
+Feature: osrm-routed command line options: help
 
     Background:
         Given the profile "testbot"
 
-    Scenario: Help should be shown when no options are passed
+    Scenario: osrm-routed - Help should be shown when no options are passed
         When I run "osrm-routed"
         Then stderr should be empty
         And stdout should contain "osrm-routed <base.osrm> [<options>]:"
@@ -25,9 +25,10 @@ Feature: Command line options: help
         And stdout should contain "--port"
         And stdout should contain "--threads"
         And stdout should contain "--sharedmemory"
+        And stdout should contain 21 lines
         And it should exit with code 0
 
-    Scenario: Help, short
+    Scenario: osrm-routed - Help, short
         When I run "osrm-routed -h"
         Then stderr should be empty
         And stdout should contain "osrm-routed <base.osrm> [<options>]:"
@@ -48,9 +49,10 @@ Feature: Command line options: help
         And stdout should contain "--port"
         And stdout should contain "--threads"
         And stdout should contain "--sharedmemory"
+        And stdout should contain 21 lines
         And it should exit with code 0
 
-    Scenario: Help, long
+    Scenario: osrm-routed - Help, long
         When I run "osrm-routed --help"
         Then stderr should be empty
         And stdout should contain "osrm-routed <base.osrm> [<options>]:"
@@ -71,4 +73,5 @@ Feature: Command line options: help
         And stdout should contain "--port"
         And stdout should contain "--threads"
         And stdout should contain "--sharedmemory"
+        And stdout should contain 21 lines
         And it should exit with code 0

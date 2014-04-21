@@ -87,7 +87,7 @@ Feature: Importing protobuffer (.pbf) format
         Given the ways
             | nodes |
 
-        When I preprocess data
+        When the data has been prepared
         Then "osrm-extract" should return code 255
 
 
