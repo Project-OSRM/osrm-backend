@@ -29,14 +29,6 @@ Then /^response should be a well-formed route$/ do
   @json['via_indices'].class.should == Array
 end
 
-When /^I preprocess data$/ do
-  begin
-    reprocess
-  rescue OSRMError => e
-    @process_error = e
-  end
-end
-
 Then /^"([^"]*)" should return code (\d+)$/ do |binary, code|
   @process_error.is_a?(OSRMError).should == true
   @process_error.process.should == binary

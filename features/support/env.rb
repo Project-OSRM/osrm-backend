@@ -3,6 +3,22 @@ require 'rspec/expectations'
 DEFAULT_PORT = 5000
 DEFAULT_TIMEOUT = 2
 
+ROOT_FOLDER = Dir.pwd
+OSM_USER = 'osrm'
+OSM_GENERATOR = 'osrm-test'
+OSM_UID = 1
+TEST_FOLDER = File.join ROOT_FOLDER, 'test'
+DATA_FOLDER = 'cache'
+OSM_TIMESTAMP = '2000-00-00T00:00:00Z'
+DEFAULT_SPEEDPROFILE = 'bicycle'
+WAY_SPACING = 100
+DEFAULT_GRID_SIZE = 100   #meters
+PROFILES_PATH = File.join ROOT_FOLDER, 'profiles'
+BIN_PATH = File.join ROOT_FOLDER, 'build'
+DEFAULT_INPUT_FORMAT = 'osm'
+DEFAULT_ORIGIN = [1,1]
+
+
 puts "Ruby version #{RUBY_VERSION}"
 unless RUBY_VERSION.to_f >= 1.9
   raise "*** Please upgrade to Ruby 1.9.x to run the OSRM cucumber tests"
@@ -22,6 +38,10 @@ if ENV["OSRM_TIMEOUT"]
 else
   OSRM_TIMEOUT = DEFAULT_TIMEOUT
   puts "Using default timeout #{OSRM_TIMEOUT}"
+end
+
+unless File.exists? TEST_FOLDER
+  raise "*** Test folder #{TEST_FOLDER} doesn't exist."
 end
 
 

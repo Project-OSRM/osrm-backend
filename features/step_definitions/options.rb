@@ -1,23 +1,17 @@
 When(/^I run "osrm\-routed\s?(.*?)"$/) do |options|
-  Dir.chdir TEST_FOLDER do
-    if options.include? '{base}'
-      # expand {base} to base path of preprocessed data file
-      raise "*** Cannot expand {base} without a preprocessed file." unless @osm_file
-      options_expanded = options.gsub "{base}", "#{@osm_file}"
-    else
-      options_expanded = options
-    end
-
-    begin
-      Timeout.timeout(1) do
-        @stdout = `#{BIN_PATH}/osrm-routed #{options_expanded} 2>error.log`
-        @stderr = File.read 'error.log'
-        @exit_code = $?.exitstatus
-      end
-    rescue Timeout::Error
-      raise "*** osrm-routed didn't quit. Maybe the --trial option wasn't used?"
-    end
+  begin
+    Timeout.timeout(1) { run_bin 'osrm-routed', options }
+  rescue Timeout::Error
+    raise "*** osrm-routed didn't quit. Maybe the --trial option wasn't used?"
   end
+end
+
+When(/^I run "osrm\-extract\s?(.*?)"$/) do |options|
+  run_bin 'osrm-extract', options
+end
+
+When(/^I run "osrm\-prepare\s?(.*?)"$/) do |options|
+  run_bin 'osrm-prepare', options
 end
 
 Then /^it should exit with code (\d+)$/ do |code|

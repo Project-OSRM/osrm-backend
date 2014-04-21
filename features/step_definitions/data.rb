@@ -133,3 +133,28 @@ Given /^the input file ([^"]*)$/ do |file|
   raise "*** Input file must in .osm format" unless File.extname(file)=='.osm'
   @osm_str = File.read file
 end
+
+Given /^the data has been saved to disk$/ do
+  begin
+    write_input_data
+  rescue OSRMError => e
+    @process_error = e
+  end
+end
+
+Given /^the data has been extracted$/ do
+  begin
+    write_input_data
+    extract_data unless extracted?
+  rescue OSRMError => e
+    @process_error = e
+  end
+end
+
+Given /^the data has been prepared$/ do
+  begin
+    reprocess
+  rescue OSRMError => e
+    @process_error = e
+  end
+end
