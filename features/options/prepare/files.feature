@@ -14,16 +14,12 @@ Feature: osrm-prepare command line options: files
         And the data has been extracted
 
     Scenario: osrm-prepare - Passing base file
-        When I run "osrm-extract {base}.osm --profile {profile}"
-        Then stderr should be empty
-        And it should exit with code 0
         When I run "osrm-prepare {base}.osrm --profile {profile}"
         Then stderr should be empty
         And it should exit with code 0
     
-    @todo
     Scenario: osrm-prepare - Order of options should not matter
-        When I run "osrm-prepare --profile {profile} {base}.osm"
+        When I run "osrm-prepare --profile {profile} {base}.osrm"
         Then stderr should be empty
         And it should exit with code 0
     
