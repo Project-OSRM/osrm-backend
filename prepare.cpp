@@ -121,34 +121,34 @@ int main (int argc, char *argv[]) {
         }
 
         if(option_variables.count("help")) {
-            SimpleLogger().Write() << std::endl << visible_options;
+            SimpleLogger().Write() << "\n" << visible_options;
             return 0;
         }
 
         boost::program_options::notify(option_variables);
 
-        // if(boost::filesystem::is_regular_file(config_file_path)) {
-        //     SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
-        //     std::string config_str;
-        //     PrepareConfigFile( config_file_path.c_str(), config_str );
-        //     std::stringstream config_stream( config_str );
-        //     boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
-        //     boost::program_options::notify(option_variables);
-        // }
-
         if(!option_variables.count("restrictions")) {
-            restrictions_path = std::string( input_path.c_str()) + ".restrictions";
+            restrictions_path = std::string(input_path.string() + ".restrictions");
         }
 
         if(!option_variables.count("input")) {
-            SimpleLogger().Write(logWARNING) << "No input file specified";
-            SimpleLogger().Write() << visible_options;
-            return -1;
+            SimpleLogger().Write() << "\n" << visible_options;
+            return 0;
+        }
+
+        if(!boost::filesystem::is_regular_file(input_path)) {
+            SimpleLogger().Write(logWARNING) << "Input file " << input_path.string() << " not found!";
+            return 1;
+        }
+
+        if(!boost::filesystem::is_regular_file(profile_path)) {
+            SimpleLogger().Write(logWARNING) << "Profile " << profile_path.string() << " not found!";
+            return 1;
         }
 
         if(1 > requested_num_threads) {
             SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
-            return -1;
+            return 1;
         }
 
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
@@ -183,11 +183,11 @@ int main (int argc, char *argv[]) {
         std::ifstream in;
         in.open (input_path.c_str(), std::ifstream::in | std::ifstream::binary);
 
-        std::string nodeOut(input_path.c_str());		nodeOut += ".nodes";
-        std::string edgeOut(input_path.c_str());		edgeOut += ".edges";
-        std::string graphOut(input_path.c_str());		graphOut += ".hsgr";
-        std::string rtree_nodes_path(input_path.c_str());  rtree_nodes_path += ".ramIndex";
-        std::string rtree_leafs_path(input_path.c_str());  rtree_leafs_path += ".fileIndex";
+        std::string nodeOut(input_path.string() + ".nodes");
+        std::string edgeOut(input_path.string() + ".edges");
+        std::string graphOut(input_path.string() + ".hsgr");
+        std::string rtree_nodes_path(input_path.string() + ".ramIndex");
+        std::string rtree_leafs_path(input_path.string() + ".fileIndex");
 
         /*** Setup Scripting Environment ***/
 
@@ -218,7 +218,7 @@ int main (int argc, char *argv[]) {
                 lua_tostring(myLuaState,-1) <<
                 " occured in scripting block" <<
                 std::endl;
-                return -1;
+                return 1;
         }
         speedProfile.trafficSignalPenalty = 10*lua_tointeger(myLuaState, -1);
 
@@ -227,7 +227,7 @@ int main (int argc, char *argv[]) {
                 lua_tostring(myLuaState,-1)   <<
                 " occured in scripting block" <<
                 std::endl;
-            return -1;
+            return 1;
         }
         speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
 
@@ -239,7 +239,7 @@ int main (int argc, char *argv[]) {
 
         if( edgeList.empty() ) {
             SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
-            return -1;
+            return 1;
         }
 
         SimpleLogger().Write() <<
@@ -395,7 +395,7 @@ int main (int argc, char *argv[]) {
                     SimpleLogger().Write(logWARNING) <<
                         "Failed at edges of node " << node <<
                         " of " << numberOfNodes;
-                        return -1;
+                        return 1;
                 }
                 //Serialize edges
                 hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
@@ -419,14 +419,14 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write() << "finished preprocessing";
     } catch(boost::program_options::too_many_positional_options_error& e) {
         SimpleLogger().Write(logWARNING) << "Only one file can be specified";
-        return -1;
+        return 1;
     } catch(boost::program_options::error& e) {
         SimpleLogger().Write(logWARNING) << e.what();
-        return -1;
+        return 1;
     } catch ( const std::exception &e ) {
         SimpleLogger().Write(logWARNING) <<
             "Exception occured: " << e.what() << std::endl;
-        return -1;
+        return 1;
     }
     return 0;
 }

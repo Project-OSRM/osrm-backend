@@ -22,8 +22,7 @@ Feature: osrm-extract command line options: files
         When I run "osrm-extract --profile {profile} {base}.osm"
         Then stderr should be empty
         And it should exit with code 0
-    
-    @todo
+
     Scenario: osrm-extract - Missing input file
         When I run "osrm-extract over-the-rainbow.osrm --profile {profile}"
         And stderr should contain "over-the-rainbow.osrm"

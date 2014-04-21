@@ -17,13 +17,16 @@ Feature: osrm-prepare command line options: files
         When I run "osrm-prepare {base}.osrm --profile {profile}"
         Then stderr should be empty
         And it should exit with code 0
+<<<<<<< Updated upstream
     
+=======
+
+>>>>>>> Stashed changes
     Scenario: osrm-prepare - Order of options should not matter
         When I run "osrm-prepare --profile {profile} {base}.osrm"
         Then stderr should be empty
         And it should exit with code 0
-    
-    @todo
+
     Scenario: osrm-prepare - Missing input file
         When I run "osrm-prepare over-the-rainbow.osrm --profile {profile}"
         And stderr should contain "over-the-rainbow.osrm"
