@@ -8,7 +8,7 @@ Feature: Importing protobuffer (.pbf) format
     Background:
         Given the profile "testbot"
         And the import format "pbf"
-        
+
     Scenario: Testbot - Protobuffer import, nodes and ways
         Given the node map
             |   |   |   | d |
@@ -88,7 +88,7 @@ Feature: Importing protobuffer (.pbf) format
             | nodes |
 
         When the data has been prepared
-        Then "osrm-extract" should return code 255
+        Then "osrm-extract" should return code 1
 
 
     Scenario: Testbot - Protobuffer import, streetnames with UTF characters
