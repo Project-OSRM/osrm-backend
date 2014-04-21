@@ -3,8 +3,7 @@ Feature: osrm-prepare command line options: help
 
     Background:
         Given the profile "testbot"
-    
-    @todo
+
     Scenario: osrm-prepare - Help should be shown when no options are passed
         When I run "osrm-prepare"
         Then stderr should be empty

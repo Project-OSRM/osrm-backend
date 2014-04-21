@@ -122,24 +122,23 @@ int main (int argc, char *argv[]) {
         }
 
         if(!option_variables.count("input")) {
-            SimpleLogger().Write(logWARNING) << "No input file specified";
             SimpleLogger().Write() << visible_options;
-            return -1;
+            return 0;
         }
 
         if(1 > requested_num_threads) {
             SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
-            return -1;
+            return 1;
         }
 
         if(!boost::filesystem::is_regular_file(input_path)) {
             SimpleLogger().Write(logWARNING) << "Input file " << input_path.c_str() << " not found!";
-            return -1;
+            return 1;
         }
 
         if(!boost::filesystem::is_regular_file(profile_path)) {
             SimpleLogger().Write(logWARNING) << "Profile " << profile_path.c_str() << " not found!";
-            return -1;
+            return 1;
         }
 
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
@@ -205,7 +204,7 @@ int main (int argc, char *argv[]) {
 
         if( externalMemory.all_edges_list.empty() ) {
             SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
-            return -1;
+            return 1;
         }
 
         externalMemory.PrepareData(output_file_name, restrictionsFileName);
@@ -222,13 +221,13 @@ int main (int argc, char *argv[]) {
 
     } catch(boost::program_options::too_many_positional_options_error& e) {
         SimpleLogger().Write(logWARNING) << "Only one input file can be specified";
-        return -1;
+        return 1;
     } catch(boost::program_options::error& e) {
         SimpleLogger().Write(logWARNING) << e.what();
-        return -1;
+        return 1;
     } catch(std::exception & e) {
         SimpleLogger().Write(logWARNING) << "Unhandled exception: " << e.what();
-        return -1;
+        return 1;
     }
     return 0;
 }

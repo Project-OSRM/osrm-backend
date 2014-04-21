@@ -3,8 +3,7 @@ Feature: osrm-extract command line options: help
 
     Background:
         Given the profile "testbot"
-    
-    @todo
+
     Scenario: osrm-extract - Help should be shown when no options are passed
         When I run "osrm-extract"
         Then stderr should be empty

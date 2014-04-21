@@ -3,8 +3,7 @@ Feature: osrm-extract command line options: invalid options
 
     Background:
         Given the profile "testbot"
-    
-    @todo
+
     Scenario: osrm-extract - Non-existing option
         When I run "osrm-extract --fly-me-to-the-moon"
         Then stdout should be empty
