@@ -341,7 +341,6 @@ int main( const int argc, const char * argv[] ) {
 
         OriginalEdgeData current_edge_data;
         for(unsigned i = 0; i < number_of_original_edges; ++i) {
-            // SimpleLogger().Write() << i << "/" << number_of_edges;
             edges_input_stream.read(
                 (char*)&(current_edge_data),
                 sizeof(OriginalEdgeData)

@@ -87,34 +87,19 @@ struct SharedDataLayout {
 
     void PrintInformation() const {
         SimpleLogger().Write(logDEBUG) << "-";
-        SimpleLogger().Write(logDEBUG) << "GetSizeOfLayout: " << GetSizeOfLayout();
         SimpleLogger().Write(logDEBUG) << "name_index_list_size:       " << name_index_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetNameIndexOffset();
         SimpleLogger().Write(logDEBUG) << "name_char_list_size:        " << name_char_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetNameListOffset();
         SimpleLogger().Write(logDEBUG) << "name_id_list_size:          " << name_id_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetNameIDListOffset();
         SimpleLogger().Write(logDEBUG) << "via_node_list_size:         " << via_node_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetViaNodeListOffset();
         SimpleLogger().Write(logDEBUG) << "graph_node_list_size:       " << graph_node_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetGraphNodeListOffset();
         SimpleLogger().Write(logDEBUG) << "graph_edge_list_size:       " << graph_edge_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetGraphEdgeListOffset();
         SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << timestamp_length;
-        SimpleLogger().Write(logDEBUG) << "  " << GetTimeStampOffset();
         SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << coordinate_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetCoordinateListOffset();
         SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << turn_instruction_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetTurnInstructionListOffset();
         SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetRSearchTreeOffset();
-        SimpleLogger().Write(logDEBUG) << "geometries_indicators:     " << geometries_indicators << "/" << ((geometries_indicators/8) + 1);
-        SimpleLogger().Write(logDEBUG) << "  " << GetGeometriesIndicatorOffset();
+        SimpleLogger().Write(logDEBUG) << "geometries_indicators:      " << geometries_indicators << "/" << ((geometries_indicators/8) + 1);
         SimpleLogger().Write(logDEBUG) << "geometries_index_list_size: " << geometries_index_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetGeometriesIndexListOffset();
         SimpleLogger().Write(logDEBUG) << "geometries_list_size:       " << geometries_list_size;
-        SimpleLogger().Write(logDEBUG) << "  " << GetGeometryListOffset();
-        SimpleLogger().Write(logDEBUG) << "checksum offset: " << GetChecksumOffset();
         SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
         SimpleLogger().Write(logDEBUG) << "ram index file name:        " << ram_index_file_name;
     }

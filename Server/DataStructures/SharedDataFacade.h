@@ -142,7 +142,6 @@ private:
         m_query_graph.reset(
             new QueryGraph(node_list, edge_list)
         );
-
     }
 
     void LoadNodeAndEdgeInformation() {
@@ -295,7 +294,6 @@ public:
             data_layout->PrintInformation();
         }
     }
-
 
     //search graph access
     unsigned GetNumberOfNodes() const {
