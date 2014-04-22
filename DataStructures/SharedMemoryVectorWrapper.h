@@ -165,7 +165,7 @@ public:
     // }
 
     bool at(const std::size_t index) const {
-        BOOST_ASSERT_MSG(index < m_size, "invalid size");
+        // BOOST_ASSERT_MSG(index < m_size, "invalid size");
         const unsigned bucket = index / 32;
         const unsigned offset = index % 32;
         return m_ptr[bucket] & (1 << offset);
