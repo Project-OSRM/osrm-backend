@@ -123,8 +123,8 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_2);
     BOOST_ASSERT(SPECIAL_NODEID != via_node_id);
     BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
-    BOOST_ASSERT(std::numeric_limits<unsigned>::max() != weight1);
-    BOOST_ASSERT(std::numeric_limits<unsigned>::max() != weight2);
+    BOOST_ASSERT(std::numeric_limits<int>::max() != weight1);
+    BOOST_ASSERT(std::numeric_limits<int>::max() != weight2);
 
     // append list of removed edge_id plus via node to surviving edge id:
     // <surv_1, .. , surv_n, via_node_id, rem_1, .. rem_n
