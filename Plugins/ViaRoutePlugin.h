@@ -95,14 +95,11 @@ public:
         std::vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
-//                SimpleLogger().Write() <<"Decoding hint: " << routeParameters.hints[i] << " for location index " << i;
                 DecodeObjectFromBase64(routeParameters.hints[i], phantomNodeVector[i]);
                 if(phantomNodeVector[i].isValid(facade->GetNumberOfNodes())) {
-//                    SimpleLogger().Write() << "Decoded hint " << i << " successfully";
                     continue;
                 }
             }
-//            SimpleLogger().Write() << "Brute force lookup of coordinate " << i;
             facade->FindPhantomNodeForCoordinate(
                 rawRoute.rawViaNodeCoordinates[i],
                 phantomNodeVector[i],
@@ -132,9 +129,9 @@ public:
             );
         }
 
-        if(INT_MAX == rawRoute.lengthOfShortestPath ) {
-            SimpleLogger().Write(logDEBUG) <<
-                "Error occurred, single path not found";
+        if (INT_MAX == rawRoute.lengthOfShortestPath)
+        {
+            SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
         }
         reply.status = http::Reply::ok;
 
@@ -177,6 +174,7 @@ public:
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
+
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")\n");
         }
