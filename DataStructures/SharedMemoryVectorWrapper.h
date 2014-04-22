@@ -82,9 +82,7 @@ public:
     SharedMemoryWrapper(DataT * ptr, std::size_t size) :
         m_ptr(ptr),
         m_size(size)
-    {
-            SimpleLogger().Write(logDEBUG) << "generated std::vector<DataT> of size " << size;
-    }
+    { }
 
     void swap( SharedMemoryWrapper<DataT> & other ) {
         BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
@@ -140,16 +138,12 @@ public:
     SharedMemoryWrapper() :
         m_ptr(NULL),
         m_size(0)
-    {
-        SimpleLogger().Write(logDEBUG) << "generated std::vector<bool> of size " << m_size;
-    }
+    { }
 
     SharedMemoryWrapper(unsigned * ptr, std::size_t size) :
         m_ptr(ptr),
         m_size(size)
-    {
-        SimpleLogger().Write(logDEBUG) << "generated std::vector<bool> of size " << m_size;
-    }
+    { }
 
     void swap( SharedMemoryWrapper<bool> & other ) {
         BOOST_ASSERT_MSG(m_size != 0 || other.size() != 0, "size invalid");
@@ -191,7 +185,6 @@ public:
     }
 };
 
-
 template<typename DataT, bool UseSharedMemory>
 struct ShM {
     typedef typename boost::conditional<
@@ -200,6 +193,5 @@ struct ShM {
                      std::vector<DataT>
                  >::type vector;
  };
-
 
 #endif //SHARED_MEMORY_VECTOR_WRAPPER_H

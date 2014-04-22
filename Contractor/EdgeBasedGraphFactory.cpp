@@ -471,7 +471,6 @@ void EdgeBasedGraphFactory::Run(
     const unsigned original_number_of_nodes = m_node_based_graph->GetNumberOfNodes();
     const unsigned original_number_of_edges = m_node_based_graph->GetNumberOfEdges();
 
-    SimpleLogger().Write(logDEBUG) << "Input graph has " << original_number_of_nodes << " nodes and " << original_number_of_edges << " edges";
     Percent p(original_number_of_nodes);
     unsigned removed_node_count = 0;
 
@@ -850,7 +849,6 @@ void EdgeBasedGraphFactory::Run(
     edge_data_file.write( (char*)&original_edges_counter, sizeof(unsigned) );
     edge_data_file.close();
 
-    SimpleLogger().Write(logDEBUG) << "serializing geometry to " << geometry_filename;
     m_geometry_compressor.SerializeInternalVector( geometry_filename );
 
     SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size() << " edge based nodes";

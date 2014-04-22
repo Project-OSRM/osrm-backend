@@ -133,7 +133,6 @@ private:
             std::ios::binary
         );
 
-        SimpleLogger().Write(logDEBUG) << "Loading node data";
         NodeInfo current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read(
@@ -152,7 +151,6 @@ private:
         }
         nodes_input_stream.close();
 
-        SimpleLogger().Write(logDEBUG) << "Loading edge data";
         boost::filesystem::ifstream edges_input_stream(
             edges_file,
             std::ios::binary
