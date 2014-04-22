@@ -112,12 +112,6 @@ public:
             pathDescription[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
         }
 
-        for (unsigned i = 0; i < pathDescription.size(); ++i)
-        {
-            const std::string name = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
-            // SimpleLogger().Write(logDEBUG) << "df [" << i << "] name: " << name << ", duration: " << pathDescription[i].duration << ", length: " << pathDescription[i].length << ", coordinate: " << pathDescription[i].location;
-        }
-
         /*Simplify turn instructions
         Input :
         10. Turn left on B 36 for 20 km

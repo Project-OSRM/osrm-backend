@@ -132,7 +132,6 @@ public:
         //check if first segment is non-zero
         std::string road_name;
         int source_duration = phantom_nodes.source_phantom.GetForwardWeightPlusOffset();
-        // SimpleLogger().Write(logDEBUG) << "-> source_traversed_in_reverse: " << (raw_route.source_traversed_in_reverse ? "y" : "n");
         if (!raw_route.source_traversed_in_reverse)
         {
             source_duration = phantom_nodes.source_phantom.GetReverseWeightPlusOffset();
@@ -163,18 +162,6 @@ public:
             target_duration = phantom_nodes.target_phantom.GetReverseWeightPlusOffset();
         }
         BOOST_ASSERT(target_duration >= 0);
-
-        // if (target_duration > 0)
-        // {
-        //     SimpleLogger().Write(logDEBUG) << "adding target \"" << road_name << "\" at " << phantom_nodes.target_phantom.location << ", duration: " << target_duration;
-        // }
-        // else
-        // {
-        //     SimpleLogger().Write(logDEBUG) << "ignoring target \"" << road_name << "\"";
-        // }
-        // SimpleLogger().Write(logDEBUG) << "-> target_traversed_in_reverse: " << (raw_route.target_traversed_in_reverse ? "y" : "n");
-
-        //END OF TODO
 
         description_factory.SetStartSegment(phantom_nodes.source_phantom, raw_route.source_traversed_in_reverse);
         reply.content.push_back("0,"
@@ -243,7 +230,6 @@ public:
         reply.content.push_back(",");
 
         //only one alternative route is computed at this time, so this is hardcoded
-
 
         if(raw_route.lengthOfAlternativePath != INVALID_EDGE_WEIGHT)
         {
