@@ -58,7 +58,7 @@ struct SharedDataLayout {
     uint64_t r_search_tree_size;
     uint64_t geometries_index_list_size;
     uint64_t geometries_list_size;
-    uint64_t geometries_compression;
+    uint64_t geometries_indicators;
 
     unsigned checksum;
     unsigned timestamp_length;
@@ -77,7 +77,7 @@ struct SharedDataLayout {
         r_search_tree_size(0),
         geometries_index_list_size(0),
         geometries_list_size(0),
-        geometries_compression(0),
+        geometries_indicators(0),
         checksum(0),
         timestamp_length(0)
 
@@ -87,19 +87,34 @@ struct SharedDataLayout {
 
     void PrintInformation() const {
         SimpleLogger().Write(logDEBUG) << "-";
+        SimpleLogger().Write(logDEBUG) << "GetSizeOfLayout: " << GetSizeOfLayout();
         SimpleLogger().Write(logDEBUG) << "name_index_list_size:       " << name_index_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetNameIndexOffset();
         SimpleLogger().Write(logDEBUG) << "name_char_list_size:        " << name_char_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetNameListOffset();
         SimpleLogger().Write(logDEBUG) << "name_id_list_size:          " << name_id_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetNameIDListOffset();
         SimpleLogger().Write(logDEBUG) << "via_node_list_size:         " << via_node_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetViaNodeListOffset();
         SimpleLogger().Write(logDEBUG) << "graph_node_list_size:       " << graph_node_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetGraphNodeListOffset();
         SimpleLogger().Write(logDEBUG) << "graph_edge_list_size:       " << graph_edge_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetGraphEdgeListOffset();
         SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << timestamp_length;
+        SimpleLogger().Write(logDEBUG) << "  " << GetTimeStampOffset();
         SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << coordinate_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetCoordinateListOffset();
         SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << turn_instruction_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetTurnInstructionListOffset();
         SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
-        SimpleLogger().Write(logDEBUG) << "geometries_compression:     " << geometries_compression << "/" << ((geometries_compression/32) + 1);
+        SimpleLogger().Write(logDEBUG) << "  " << GetRSearchTreeOffset();
+        SimpleLogger().Write(logDEBUG) << "geometries_indicators:     " << geometries_indicators << "/" << ((geometries_indicators/8) + 1);
+        SimpleLogger().Write(logDEBUG) << "  " << GetGeometriesIndicatorOffset();
         SimpleLogger().Write(logDEBUG) << "geometries_index_list_size: " << geometries_index_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetGeometriesIndexListOffset();
         SimpleLogger().Write(logDEBUG) << "geometries_list_size:       " << geometries_list_size;
+        SimpleLogger().Write(logDEBUG) << "  " << GetGeometryListOffset();
+        SimpleLogger().Write(logDEBUG) << "checksum offset: " << GetChecksumOffset();
         SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
         SimpleLogger().Write(logDEBUG) << "ram index file name:        " << ram_index_file_name;
     }
@@ -116,12 +131,11 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            ) +
-            (geometries_compression/32 + 1) * sizeof(unsigned)           +
+            (geometries_indicators/32 + 1) * sizeof(unsigned)           +
             (geometries_index_list_size * sizeof(unsigned)             ) +
             (geometries_list_size       * sizeof(unsigned)             ) +
             sizeof(checksum)                                             +
             1024*sizeof(char);
-            PrintInformation();
         return result;
     }
 
@@ -154,10 +168,10 @@ struct SharedDataLayout {
             (via_node_list_size         * sizeof(NodeID)              );
         return result;
     }
-    uint64_t GetGraphEdgeListOffsett() const {
+    uint64_t GetGraphEdgeListOffset() const {
         uint64_t result =
-            (name_index_list_size           * sizeof(unsigned)            ) +
-            (name_char_list_size            * sizeof(char)                ) +
+            (name_index_list_size       * sizeof(unsigned)            ) +
+            (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) ;
@@ -171,7 +185,6 @@ struct SharedDataLayout {
             (via_node_list_size         * sizeof(NodeID)              ) +
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
             (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge));
-            SimpleLogger().Write(logDEBUG) << "GetTimeStampOffset: " << result;
         return result;
     }
     uint64_t GetCoordinateListOffset() const {
@@ -183,7 +196,6 @@ struct SharedDataLayout {
             (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
             (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
             (timestamp_length           * sizeof(char)                );
-            SimpleLogger().Write(logDEBUG) << "GetCoordinateListOffset: " << result;
         return result;
     }
     uint64_t GetTurnInstructionListOffset() const {
@@ -196,7 +208,6 @@ struct SharedDataLayout {
             (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
             (timestamp_length           * sizeof(char)                ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate));
-            SimpleLogger().Write(logDEBUG) << "GetTurnInstructionListOffset: " << result;
         return result;
     }
     uint64_t GetRSearchTreeOffset() const {
@@ -210,7 +221,6 @@ struct SharedDataLayout {
             (timestamp_length           * sizeof(char)                 ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass));
-            SimpleLogger().Write(logDEBUG) << "GetRSearchTreeOffset: " << result;
         return result;
     }
     uint64_t GetGeometriesIndicatorOffset() const {
@@ -225,13 +235,11 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            );
-            SimpleLogger().Write(logDEBUG) << "GetGeometriesIndicatorOffset: " << result;
         return result;
     }
 
     uint64_t GetGeometriesIndexListOffset() const
-    {
-        uint64_t result =
+    {        uint64_t result =
             (name_index_list_size       * sizeof(unsigned)             ) +
             (name_char_list_size        * sizeof(char)                 ) +
             (name_id_list_size          * sizeof(unsigned)             ) +
@@ -242,8 +250,7 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            ) +
-            (geometries_compression/32 + 1) * sizeof(unsigned);
-            SimpleLogger().Write(logDEBUG) << "GetGeometriesCompressedOffset: " << result;
+            (geometries_indicators/32 + 1) * sizeof(unsigned);
         return result;
     }
 
@@ -259,9 +266,8 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            ) +
-            (geometries_compression/32 + 1) * sizeof(unsigned)           +
+            (geometries_indicators/32 + 1) * sizeof(unsigned)           +
             (geometries_index_list_size * sizeof(unsigned)             );
-            SimpleLogger().Write(logDEBUG) << "GetGeometryListOffset: " << result;
         return result;
     }
     uint64_t GetChecksumOffset() const {
@@ -276,10 +282,9 @@ struct SharedDataLayout {
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
             (r_search_tree_size         * sizeof(RTreeNode)            ) +
-            (geometries_compression/32 + 1) * sizeof(unsigned)           +
+            (geometries_indicators/32 + 1) * sizeof(unsigned)           +
             (geometries_index_list_size * sizeof(unsigned)             ) +
             (geometries_list_size       * sizeof(unsigned)             );
-            SimpleLogger().Write(logDEBUG) << "GetChecksumOffset: " << result;
         return result;
     }
 };

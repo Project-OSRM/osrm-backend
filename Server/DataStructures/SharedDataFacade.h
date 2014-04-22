@@ -92,8 +92,6 @@ private:
         >
     > m_static_rtree;
 
-    // SharedDataFacade() { }
-
     void LoadTimestamp() {
         char * timestamp_ptr = shared_memory + data_layout->GetTimeStampOffset();
         m_timestamp.resize(data_layout->timestamp_length);
@@ -130,7 +128,7 @@ private:
         );
 
         GraphEdge * graph_edges_ptr = (GraphEdge *)(
-            shared_memory + data_layout->GetGraphEdgeListOffsett()
+            shared_memory + data_layout->GetGraphEdgeListOffset()
         );
 
         typename ShM<GraphNode, true>::vector node_list(
@@ -210,16 +208,16 @@ private:
     void LoadGeometries()
     {
         unsigned * geometries_compressed_ptr = (unsigned *)(
-            shared_memory + data_layout->GetGeometriesIndexListOffset()
+            shared_memory + data_layout->GetGeometriesIndicatorOffset()
         );
         typename ShM<bool, true>::vector egde_is_compressed(
             geometries_compressed_ptr,
-            data_layout->geometries_index_list_size
+            data_layout->geometries_indicators
         );
         m_egde_is_compressed.swap(egde_is_compressed);
 
         unsigned * geometries_index_ptr = (unsigned *)(
-            shared_memory + data_layout->GetGeometriesIndicatorOffset()
+            shared_memory + data_layout->GetGeometriesIndexListOffset()
         );
         typename ShM<unsigned, true>::vector geometry_begin_indices(
             geometries_index_ptr,
@@ -406,15 +404,6 @@ public:
                         resulting_phantom_node,
                         zoom_level
                     );
-
-        if ( found ) {
-            resulting_phantom_node.name_id = GetNameIndexFromEdgeID(
-                FindEdge(
-                    resulting_phantom_node.forward_node_id,
-                    resulting_phantom_node.reverse_node_id
-                )
-            );
-        }
         return found;
     }
 

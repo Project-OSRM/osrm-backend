@@ -173,10 +173,6 @@ private:
                 sizeof(OriginalEdgeData)
             );
             m_via_node_list[i] = current_edge_data.via_node;
-            // if(current_edge_data.via_node == 0 && current_edge_data.compressed_geometry) {
-            //     SimpleLogger().Write() << "0 at index " << i;
-            // }
-
             m_name_ID_list[i]  = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
             m_egde_is_compressed[i] = current_edge_data.compressed_geometry;
@@ -184,7 +180,6 @@ private:
                 ++compressed;
             }
         }
-        // SimpleLogger().Write(logDEBUG) << "compressed: " << compressed;
 
         edges_input_stream.close();
     }
@@ -202,6 +197,7 @@ private:
             (char *)&number_of_indices,
             sizeof(unsigned)
         );
+
         m_geometry_indices.resize(number_of_indices);
         geometry_stream.read(
             (char *)&(m_geometry_indices[0]),
@@ -249,8 +245,6 @@ private:
         name_stream.read((char *)&number_of_chars, sizeof(unsigned));
         BOOST_ASSERT_MSG(0 != number_of_names, "name file broken");
         BOOST_ASSERT_MSG(0 != number_of_chars, "name file broken");
-
-        SimpleLogger().Write(logDEBUG) << "no. of names: " << number_of_names;
 
         m_name_begin_indices.resize(number_of_names);
         name_stream.read(
