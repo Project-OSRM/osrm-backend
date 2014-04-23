@@ -290,10 +290,12 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     BOOST_ASSERT( v  != SPECIAL_NODEID );
     BOOST_ASSERT( e1 != SPECIAL_EDGEID );
 
+#ifndef NDEBUG
     // find forward edge id and
     const EdgeID e1b = m_node_based_graph->FindEdge(u, v);
     BOOST_ASSERT( e1 == e1b );
-
+#endif
+    
     BOOST_ASSERT( e1 != SPECIAL_EDGEID );
     const EdgeData & forward_data = m_node_based_graph->GetEdgeData(e1);
 

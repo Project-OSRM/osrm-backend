@@ -131,12 +131,6 @@ public:
 
         //check if first segment is non-zero
         std::string road_name;
-        int source_duration = phantom_nodes.source_phantom.GetForwardWeightPlusOffset();
-        if (!raw_route.source_traversed_in_reverse)
-        {
-            source_duration = phantom_nodes.source_phantom.GetReverseWeightPlusOffset();
-        }
-        BOOST_ASSERT(source_duration >= 0);
         road_name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
 
         // for each unpacked segment add the leg to the description
@@ -155,13 +149,6 @@ public:
 
         //check if last segment is non-zero
         road_name = facade->GetEscapedNameForNameID(phantom_nodes.target_phantom.name_id);
-
-        int target_duration = phantom_nodes.target_phantom.GetForwardWeightPlusOffset();
-        if (raw_route.target_traversed_in_reverse)
-        {
-            target_duration = phantom_nodes.target_phantom.GetReverseWeightPlusOffset();
-        }
-        BOOST_ASSERT(target_duration >= 0);
 
         description_factory.SetStartSegment(phantom_nodes.source_phantom, raw_route.source_traversed_in_reverse);
         reply.content.push_back("0,"
