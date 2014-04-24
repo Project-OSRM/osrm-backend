@@ -146,29 +146,6 @@ function node_function (node)
 	-- return 1
 end
 
-  -- flag node if it carries a traffic light
-  if traffic_signal == "traffic_signals" then
-    node.traffic_light = true
-  end
-
-  -- parse access and barrier tags
-  if access and access ~= "" then
-    if access_tag_blacklist[access] then
-      node.bollard = true
-    else
-      node.bollard = false
-    end
-  elseif barrier and barrier ~= "" then
-    if barrier_whitelist[barrier] then
-      node.bollard = false
-    else
-      node.bollard = true
-    end
-  end
-
-  return 1
-end
-
 function way_function (way)
   -- initial routability check, filters out buildings, boundaries, etc
   local highway = way.tags:Find("highway")
@@ -202,9 +179,9 @@ function way_function (way)
   local name = way.tags:Find("name")
   local ref = way.tags:Find("ref")
   local junction = way.tags:Find("junction")
-  local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
-  local maxspeed_forward = parseMaxspeed(way.tags:Find( "maxspeed:forward"))
-  local maxspeed_backward = parseMaxspeed(way.tags:Find( "maxspeed:backward"))
+  local maxspeed = parse_maxspeed(way.tags:Find ( "maxspeed") )
+  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
+  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
   local barrier = way.tags:Find("barrier")
   local oneway = way.tags:Find("oneway")
   local onewayClass = way.tags:Find("oneway:bicycle")
@@ -342,7 +319,6 @@ function way_function (way)
       way.direction = Way.bidirectional
     end
   end
-
 
   -- cycleways
   if cycleway and cycleway_tags[cycleway] then

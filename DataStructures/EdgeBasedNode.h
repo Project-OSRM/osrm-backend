@@ -2,11 +2,12 @@
 #define EDGE_BASED_NODE_H
 
 #include "../Util/MercatorUtil.h"
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
 
-// An EdgeBasedNode represents a node in the edge-expanded graph.
+#include <boost/assert.hpp>
 
 #include <limits>
 
@@ -63,15 +64,13 @@ struct EdgeBasedNode {
     inline static double ComputePerpendicularDistance(
         const FixedPointCoordinate & coord_a,
         const FixedPointCoordinate & coord_b,
-    //   the query location on the line defined by p and q.
-    double ComputePerpendicularDistance(
         const FixedPointCoordinate & query_location,
         FixedPointCoordinate & nearest_location,
         double & r
     ) {
         BOOST_ASSERT( query_location.isValid() );
 
-        const double epsilon = 1.0/precision;
+        const double x = lat2y(query_location.lat/COORDINATE_PRECISION);
         const double y = query_location.lon/COORDINATE_PRECISION;
         const double a = lat2y(coord_a.lat/COORDINATE_PRECISION);
         const double b = coord_a.lon/COORDINATE_PRECISION;
@@ -94,14 +93,18 @@ struct EdgeBasedNode {
             nY = 0.;
         }
 
-        // p, q : the end points of the underlying edge
+        r = (p - nY*a)/c;// These values are actually n/m+n and m/m+n , we need
+        // not calculate the explicit values of m an n as we
+        // are just interested in the ratio
         if( std::isnan(r) ) {
             r = ((coord_b.lat == query_location.lat) && (coord_b.lon == query_location.lon)) ? 1. : 0.;
-
-        // r : query location
-        const Point r(lat2y(query_location.lat/COORDINATE_PRECISION),
+        } else if( std::abs(r) <= std::numeric_limits<double>::epsilon() ) {
+            r = 0.;
         } else if( std::abs(r-1.) <= std::numeric_limits<double>::epsilon() ) {
-                            query_location.lon/COORDINATE_PRECISION);
+            r = 1.;
+        }
+        BOOST_ASSERT( !std::isnan(r) );
+        if( r <= 0. ){
             nearest_location.lat = coord_a.lat;
             nearest_location.lon = coord_a.lon;
         } else if( r >= 1. ){
@@ -110,18 +113,17 @@ struct EdgeBasedNode {
         } else {
             // point lies in between
             nearest_location.lat = y2lat(p)*COORDINATE_PRECISION;
-        nearest_location = ComputeNearestPointOnSegment(foot, ratio);
-
+            nearest_location.lon = q*COORDINATE_PRECISION;
+        }
         BOOST_ASSERT( nearest_location.isValid() );
 
         // TODO: Replace with euclidean approximation when k-NN search is done
         // const double approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
-        const double approximated_distance = FixedPointCoordinate::ApproximateDistance(query_location, nearest_location);
-
+        const double approximated_distance = FixedPointCoordinate::ApproximateDistance(
             query_location,
             nearest_location
         );
-        BOOST_ASSERT( 0.0 <= approximated_distance );
+        BOOST_ASSERT( 0. <= approximated_distance );
         return approximated_distance;
     }
 
@@ -129,7 +131,7 @@ struct EdgeBasedNode {
         const FixedPointCoordinate & a,
         const FixedPointCoordinate & b
     ) {
-        return other.id < id;
+        FixedPointCoordinate centroid;
         //The coordinates of the midpoint are given by:
         //x = (x1 + x2) /2 and y = (y1 + y2) /2.
         centroid.lon = (std::min(a.lon, b.lon) + std::max(a.lon, b.lon))/2;
@@ -141,103 +143,18 @@ struct EdgeBasedNode {
         return packed_geometry_id != SPECIAL_EDGEID;
     }
 
-    // Returns the midpoint of the underlying edge.
-    inline FixedPointCoordinate Centroid() const {
-        return FixedPointCoordinate((lat1+lat2)/2, (lon1+lon2)/2);
-    }
-
-    NodeID forward_edge_based_node_id;
+    NodeID forward_edge_based_node_id; // needed for edge-expanded graph
     NodeID reverse_edge_based_node_id; // needed for edge-expanded graph
-    NodeID u;
-    NodeID v;
-    unsigned name_id;
-    int forward_weight;
-    int reverse_weight;
-    int forward_offset;
-    int reverse_offset;
-    unsigned short fwd_segment_position;
-    unsigned short rev_segment_position:14; //TODO: not actually needed!
-    bool belongsToTinyComponent:1;
-    NodeID name_id;
-
-    // The weight of the underlying edge.
-    unsigned weight:31;
-
-    int reverse_weight;
-
-private:
-
-    typedef std::pair<double,double> Point;
-
-    // Compute the perpendicular foot of point r on the line defined by p and q.
-    Point ComputePerpendicularFoot(const Point &p, const Point &q, const Point &r, double epsilon) const {
-
-        // the projection of r onto the line pq
-        double foot_x, foot_y;
-
-        const bool is_parallel_to_y_axis = std::abs(q.first - p.first) < epsilon;
-
-        if( is_parallel_to_y_axis ) {
-            foot_x = q.first;
-            foot_y = r.second;
-        } else {
-            // the slope of the line through (a|b) and (c|d)
-            const double m = (q.second - p.second) / (q.first - p.first);
-
-            // Projection of (x|y) onto the line joining (a|b) and (c|d).
-            foot_x = ((r.first + (m*r.second)) + (m*m*p.first - m*p.second))/(1.0 + m*m);
-            foot_y = p.second + m*(foot_x - p.first);
-        }
-
-        return Point(foot_x, foot_y);
-    }
-
-    // Compute the ratio of the line segment pr to line segment pq.
-    double ComputeRatio(const Point & p, const Point & q, const Point & r, double epsilon) const {
-
-        const bool is_parallel_to_x_axis = std::abs(q.second-p.second) < epsilon;
-        const bool is_parallel_to_y_axis = std::abs(q.first -p.first ) < epsilon;
-
-        double ratio;
-
-        if( !is_parallel_to_y_axis ) {
-            ratio = (r.first - p.first)/(q.first - p.first);
-        } else if( !is_parallel_to_x_axis ) {
-            ratio = (r.second - p.second)/(q.second - p.second);
-        } else {
-            // (a|b) and (c|d) are essentially the same point
-            // by convention, we set the ratio to 0 in this case
-            //ratio = ((lat2 == query_location.lat) && (lon2 == query_location.lon)) ? 1. : 0.;
-            ratio = 0.0;
-        }
-
-        // Round to integer if the ratio is close to 0 or 1.
-        if( std::abs(ratio) <= epsilon ) {
-            ratio = 0.0;
-        } else if( std::abs(ratio-1.0) <= epsilon ) {
-            ratio = 1.0;
-        }
-
-        return ratio;
-    }
-
-    // Computes the point on the segment pq which is nearest to a point r = p + lambda * (q-p).
-    // p and q are the end points of the underlying edge.
-    FixedPointCoordinate ComputeNearestPointOnSegment(const Point & r, double lambda) const {
-
-        if( lambda <= 0.0 ) {
-            return FixedPointCoordinate(lat1, lon1);
-        } else if( lambda >= 1.0 ) {
-            return FixedPointCoordinate(lat2, lon2);
-        }
-
-        // r lies between p and q
-        return  FixedPointCoordinate(
-                    y2lat(r.first)*COORDINATE_PRECISION,
-                    r.second*COORDINATE_PRECISION
-                );
-    }
-
+    NodeID u;   // indices into the coordinates array
+    NodeID v;   // indices into the coordinates array
+    unsigned name_id;   // id of the edge name
+    int forward_weight; // weight of the edge
+    int reverse_weight; // weight in the other direction (may be different)
+    int forward_offset; // prefix sum of the weight up the edge TODO: short must suffice
+    int reverse_offset; // prefix sum of the weight from the edge TODO: short must suffice
+    unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
+    unsigned short fwd_segment_position; // segment id in a compressed geometry
+    bool belongsToTinyComponent;
 };
 
 #endif //EDGE_BASED_NODE_H

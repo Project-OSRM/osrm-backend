@@ -341,6 +341,9 @@ int main (int argc, char *argv[]) {
 
             max_used_node_id = std::max(max_used_node_id, edge.source);
             max_used_node_id = std::max(max_used_node_id, edge.target);
+
+            SimpleLogger().Write(logDEBUG) << "generated edge (" << edge.source << ", " << edge.target << ")=" << edge.data.distance;
+
         }
         SimpleLogger().Write(logDEBUG) << "input graph has " << edgeBasedNodeNumber << " nodes";
         SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
@@ -435,7 +438,7 @@ int main (int argc, char *argv[]) {
         return 1;
     } catch ( const std::exception &e ) {
         SimpleLogger().Write(logWARNING) << "Exception occured: " << e.what() << std::endl;
-        return -1;
+        return 1;
     }
     return 0;
 }

@@ -126,7 +126,6 @@ public:
             newEdge.source = diter->source();
             newEdge.target = diter->target();
             newEdge.data = ContractorEdgeData( (std::max)((int)diter->weight(), 1 ),  1,  diter->id(),  false,  diter->isForward(),  diter->isBackward());
-
             BOOST_ASSERT_MSG( newEdge.data.distance > 0, "edge distance < 1" );
 #ifndef NDEBUG
             if ( newEdge.data.distance > 24 * 60 * 60 * 10 ) {

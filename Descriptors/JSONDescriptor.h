@@ -91,7 +91,7 @@ public:
     void SetConfig(const DescriptorConfig & c) { config = c; }
 
     int DescribeLeg(
-        const std::vector<PathData> & route_leg,
+        const std::vector<PathData> route_leg,
         const PhantomNodes & leg_phantoms
     ) {
         int added_element_count = 0;
@@ -451,7 +451,7 @@ public:
 
         //Fetch data from Factory and generate a string from it.
         BOOST_FOREACH(const SegmentInformation & segment, description_factory.pathDescription) {
-        	TurnInstruction current_instruction = segment.turn_instruction & TurnInstructionsClass::InverseAccessRestrictionFlag;
+            TurnInstruction current_instruction = segment.turn_instruction & TurnInstructionsClass::InverseAccessRestrictionFlag;
             entered_restricted_area_count += (current_instruction != segment.turn_instruction);
             if (TurnInstructionsClass::TurnIsNecessary( current_instruction) )
             {

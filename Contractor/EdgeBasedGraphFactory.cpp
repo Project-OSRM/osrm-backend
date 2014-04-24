@@ -43,15 +43,15 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::vector<NodeID> & barrier_node_list,
     std::vector<NodeID> & traffic_light_node_list,
     std::vector<TurnRestriction> & input_restrictions_list,
-    std::vector<NodeInfo> & node_info_list,
-    SpeedProfileProperties speed_profile
+    std::vector<NodeInfo> & m_node_info_list,
+    SpeedProfileProperties & speed_profile
 ) : speed_profile(speed_profile),
     m_turn_restrictions_count(0),
     m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
-    m_node_info_list(node_info_list),
+    m_node_info_list(m_node_info_list),
     max_id(0)
 {
-	BOOST_FOREACH(const TurnRestriction & restriction, input_restrictions_list) {
+    BOOST_FOREACH(const TurnRestriction & restriction, input_restrictions_list) {
         std::pair<NodeID, NodeID> restriction_source =
             std::make_pair(restriction.fromNode, restriction.viaNode);
         unsigned index;
@@ -78,7 +78,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
         );
     }
 
-	m_barrier_nodes.insert(
+    m_barrier_nodes.insert(
         barrier_node_list.begin(),
         barrier_node_list.end()
     );
@@ -109,7 +109,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
         }
 
         if( edge.source == edge.target ) {
-        	continue;
+            continue;
         }
 
         edge.data.distance = (std::max)((int)import_edge.weight(), 1 );
@@ -295,7 +295,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     const EdgeID e1b = m_node_based_graph->FindEdge(u, v);
     BOOST_ASSERT( e1 == e1b );
 #endif
-    
+
     BOOST_ASSERT( e1 != SPECIAL_EDGEID );
     const EdgeData & forward_data = m_node_based_graph->GetEdgeData(e1);
 
@@ -906,10 +906,10 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
     const EdgeData & data2 = m_node_based_graph->GetEdgeData(edge2);
 
     if(!data1.contraFlow && data2.contraFlow) {
-    	return TurnInstructionsClass::EnterAgainstAllowedDirection;
+        return TurnInstructionsClass::EnterAgainstAllowedDirection;
     }
     if(data1.contraFlow && !data2.contraFlow) {
-    	return TurnInstructionsClass::LeaveAgainstAllowedDirection;
+        return TurnInstructionsClass::LeaveAgainstAllowedDirection;
     }
 
     //roundabouts need to be handled explicitely
