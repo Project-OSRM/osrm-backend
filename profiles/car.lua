@@ -11,17 +11,18 @@ service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
+-- average speeds of different way types
 speed_profile = {
   ["motorway"] = 90,
-  ["motorway_link"] = 75,
+  ["motorway_link"] = 40,
   ["trunk"] = 85,
-  ["trunk_link"] = 70,
+  ["trunk_link"] = 35,
   ["primary"] = 65,
-  ["primary_link"] = 60,
+  ["primary_link"] = 30,
   ["secondary"] = 55,
-  ["secondary_link"] = 50,
+  ["secondary_link"] = 25,
   ["tertiary"] = 40,
-  ["tertiary_link"] = 30,
+  ["tertiary_link"] = 25,
   ["unclassified"] = 25,
   ["residential"] = 25,
   ["living_street"] = 10,
@@ -46,7 +47,7 @@ local abs = math.abs
 local min = math.min
 local max = math.max
 
-local speed_reduction = 0.8
+local max_to_average_speed_factor = 0.8
 
 local function find_access_tag(source,access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
@@ -172,7 +173,7 @@ function way_function (way)
 
   if way.speed == -1 then
     local highway_speed = speed_profile[highway]
-    local max_speed = parse_maxspeed( way.tags:Find("maxspeed") )
+    local max_speed = parse_maxspeed( way.tags:Find("maxspeed") )*max_to_average_speed_factor
     -- Set the avg speed on the way if it is accessible by road class
     if highway_speed then
       if max_speed > highway_speed then
@@ -244,8 +245,8 @@ function way_function (way)
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
-  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
+  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))*max_to_average_speed_factor
+  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))*max_to_average_speed_factor
   if maxspeed_forward > 0 then
     if Way.bidirectional == way.direction then
       way.backward_speed = way.speed
@@ -262,11 +263,6 @@ function way_function (way)
   end
   way.type = 1
 
-  -- scale speeds to get better avg driving times
-  way.speed = way.speed * speed_reduction
-  if maxspeed_backward > 0 then
-    way.backward_speed = way.backward_speed*speed_reduction
-  end
   return
 end
 
