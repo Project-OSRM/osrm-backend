@@ -71,7 +71,7 @@ public:
         ) {
             //compute distance/duration for route summary
             intToString(round(distance), lengthString);
-            int travel_time = time/10;
+            int travel_time = round(time/10.);
             intToString(std::max(travel_time, 1), durationString);
         }
     } summary;

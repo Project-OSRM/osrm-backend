@@ -129,6 +129,8 @@ public:
             return;
         }
 
+        SimpleLogger().Write(logDEBUG) << "distance: " << raw_route.lengthOfShortestPath;
+
         //check if first segment is non-zero
         std::string road_name;
         road_name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
@@ -488,7 +490,7 @@ public:
                     intToString(necessary_segments_running_index, temp_length);
                     reply.content.push_back(temp_length);
                     reply.content.push_back(",");
-                    intToString(segment.duration/10, temp_duration);
+                    intToString(round(segment.duration/10.), temp_duration);
                     reply.content.push_back(temp_duration);
                     reply.content.push_back(",\"");
                     intToString(segment.length, temp_length);
