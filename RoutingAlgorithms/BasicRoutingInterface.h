@@ -239,7 +239,7 @@ public:
                     BOOST_ASSERT( start_index >= 0 );
                     BOOST_ASSERT( start_index <= end_index );
                     for(
-                        unsigned i = start_index;
+                        int i = start_index;
                         i < end_index;
                         ++i
                     ) {
