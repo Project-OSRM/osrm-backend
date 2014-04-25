@@ -87,35 +87,33 @@ public:
         }
 
         //Stalling
-        for(
-            EdgeID edge = facade->BeginEdges( node );
-            edge < facade->EndEdges(node);
-            ++edge
-         ) {
+        for (EdgeID edge = facade->BeginEdges( node ); edge < facade->EndEdges(node); ++edge)
+        {
             const EdgeData & data = facade->GetEdgeData(edge);
-            const bool reverse_flag = (!forward_direction) ? data.forward : data.backward;
-            if( reverse_flag ) {
+            const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
+            if (reverse_flag)
+            {
                 const NodeID to = facade->GetTarget(edge);
                 const int edge_weight = data.distance;
 
-                BOOST_ASSERT_MSG( edge_weight > 0, "edge_weight invalid" );
+                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
 
-                if(forward_heap.WasInserted( to )) {
-                    if(forward_heap.GetKey( to ) + edge_weight < distance) {
+                if (forward_heap.WasInserted(to))
+                {
+                    if(forward_heap.GetKey( to ) + edge_weight < distance)
+                    {
                         return;
                     }
                 }
             }
         }
 
-        for(
-            EdgeID edge = facade->BeginEdges(node), end_edge = facade->EndEdges(node);
-            edge < end_edge;
-            ++edge
-        ) {
+        for (EdgeID edge = facade->BeginEdges(node), end_edge = facade->EndEdges(node); edge < end_edge; ++edge)
+        {
             const EdgeData & data = facade->GetEdgeData(edge);
-            bool forward_directionFlag = (forward_direction ? data.forward : data.backward );
-            if( forward_directionFlag ) {
+            bool forward_directionFlag = (forward_direction ? data.forward : data.backward);
+            if (forward_directionFlag)
+            {
 
                 const NodeID to = facade->GetTarget(edge);
                 const int edge_weight = data.distance;
@@ -137,13 +135,8 @@ public:
         }
     }
 
-
-    //TODO: refactor parameters to only edge ids for start and end
-    inline void UnpackPath(
-        const std::vector<NodeID> & packed_path,
-        const PhantomNodes & phantom_node_pair,
-        std::vector<PathData> & unpacked_path
-    ) const {
+    inline void UnpackPath(const std::vector<NodeID> & packed_path, const PhantomNodes & phantom_node_pair, std::vector<PathData> & unpacked_path) const
+    {
         const bool start_traversed_in_reverse = (packed_path.front() != phantom_node_pair.source_phantom.forward_node_id);
         const bool target_traversed_in_reverse = (packed_path.back() != phantom_node_pair.target_phantom.forward_node_id);
 
