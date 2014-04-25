@@ -148,17 +148,6 @@ public:
             );
         }
 
-        // const int forward_offset = phantom_node_pair.ComputeForwardQueueOffset();
-        // const int forward_offset =  super::ComputeEdgeOffset(
-        //                                 phantom_node_pair.source_phantom
-        //                             );
-        // const int reverse_offset = phantom_node_pair.ComputeReverseQueueOffset();
-        // const int reverse_offset =  super::ComputeEdgeOffset(
-        //                                 phantom_node_pair.target_phantom
-        //                             );
-
-        // SimpleLogger().Write(logDEBUG) << "fwd_offset: " << forward_offset << ", reverse_offset: " << reverse_offset;
-
         //search from s and t till new_min/(1+epsilon) > length_of_shortest_path
         while(0 < (forward_heap1.Size() + reverse_heap1.Size())){
             if(0 < forward_heap1.Size()){
@@ -183,9 +172,7 @@ public:
             }
         }
 
-        // SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
         sort_unique_resize( via_node_candidate_list );
-        // SimpleLogger().Write(logDEBUG) << "found " << via_node_candidate_list.size() << " unique via node candidates";
 
         std::vector<NodeID> packed_forward_path;
         std::vector<NodeID> packed_reverse_path;
@@ -202,8 +189,6 @@ public:
         );
 
         //TODO: leave early when no path found:
-
-        // SimpleLogger().Write(logDEBUG) << "ub: " << upper_bound_to_shortest_path_distance;
 
         boost::unordered_map<NodeID, int> approximated_forward_sharing;
         boost::unordered_map<NodeID, int> approximated_reverse_sharing;
@@ -315,19 +300,6 @@ public:
         {
             BOOST_ASSERT(!packed_shortest_path.empty());
             raw_route_data.unpacked_path_segments.resize(1);
-            // SimpleLogger().Write() << "fwd offset1: " << phantom_node_pair.source_phantom.fwd_segment_position;
-            // SimpleLogger().Write() << "fwd offset2: " << phantom_node_pair.source_phantom.rev_segment_position;
-            // SimpleLogger().Write() << "rev offset1: " << phantom_node_pair.target_phantom.fwd_segment_position;
-            // SimpleLogger().Write() << "rev offset2: " << phantom_node_pair.target_phantom.rev_segment_position;
-
-            // int start_offset = ( packed_shortest_path.front() == phantom_node_pair.source_phantom.forward_node_id  ?  1 : -1 )*phantom_node_pair.source_phantom.fwd_segment_position;
-            // SimpleLogger().Write(logDEBUG) << "unpacking from index " << phantom_node_pair.source_phantom.fwd_segment_position;
-
-            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.source_phantom.forward_node_id: " << phantom_node_pair.source_phantom.forward_node_id;
-            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.source_phantom.reverse_node_id: " << phantom_node_pair.source_phantom.reverse_node_id;
-            // SimpleLogger().Write(logDEBUG) << "phantom_node_pair.target_phantom.packed_geometry_id: " << phantom_node_pair.target_phantom.packed_geometry_id;
-            // SimpleLogger().Write(logDEBUG) << "packed_shortest_path.back(): " << packed_shortest_path.back();
-
             raw_route_data.source_traversed_in_reverse = (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id);
             raw_route_data.target_traversed_in_reverse = (packed_shortest_path.back()  != phantom_node_pair.target_phantom.forward_node_id);
 
@@ -340,7 +312,6 @@ public:
                 raw_route_data.unpacked_path_segments.front()
             );
             raw_route_data.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
-            // SimpleLogger().Write(logDEBUG) << "upper_bound_to_shortest_path_distance: " << upper_bound_to_shortest_path_distance;
         }
 
         if( SPECIAL_NODEID != selected_via_node ) {
@@ -367,7 +338,6 @@ public:
             );
 
             raw_route_data.lengthOfAlternativePath = length_of_via_path;
-            // SimpleLogger().Write(logDEBUG) << "length_of_via_path: " << length_of_via_path;
         }
     }
 
