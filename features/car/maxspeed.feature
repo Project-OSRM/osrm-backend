@@ -18,7 +18,7 @@ When a max speed is set, osrm will use 2/3 of that as the actual speed.
         When I route I should get
             | from | to | route | speed   |
             | a    | b  | ab    | 85 km/h |
-            | b    | c  | bc    | 40 km/h |
+            | b    | c  | bc    | 39 km/h |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
@@ -32,7 +32,7 @@ When a max speed is set, osrm will use 2/3 of that as the actual speed.
         When I route I should get
             | from | to | route | speed   |
             | a    | b  | ab    | 25 km/h |
-            | b    | c  | bc    | 60 km/h |
+            | b    | c  | bc    | 59 km/h |
 
     Scenario: Car - Forward/backward maxspeed
         Given a grid size of 100 meters
@@ -43,8 +43,8 @@ When a max speed is set, osrm will use 2/3 of that as the actual speed.
             | primary | 60       |                  |                   | 40 km/h | 40 km/h |
             | primary |          | 60               |                   | 40 km/h | 65 km/h |
             | primary |          |                  | 60                | 65 km/h | 40 km/h |
-            | primary | 15       | 60               |                   | 40 km/h | 10 km/h |
-            | primary | 15       |                  | 60                | 10 km/h | 40 km/h |
+            | primary | 15       | 60               |                   | 40 km/h |  9 km/h |
+            | primary | 15       |                  | 60                |  9 km/h | 40 km/h |
             | primary | 15       | 30               | 60                | 20 km/h | 40 km/h |
 
     Scenario: Car - Maxspeed should not allow routing on unroutable ways

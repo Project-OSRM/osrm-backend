@@ -11,7 +11,7 @@ def test_routability_row i
     r[:status] = route_status r[:response]
     if r[:status].empty? == false
       r[:route] = way_list r[:json]['route_instructions']
-      
+
       if r[:route]=="w#{i}"
         r[:time] = r[:json]['route_summary']['total_time']
         r[:distance] = r[:json]['route_summary']['total_distance']
@@ -24,7 +24,7 @@ def test_routability_row i
     end
     result[direction] = r
   end
-  
+
   # check if forw and backw returned the same values
   result['bothw'] = {}
   [:status,:time,:distance,:speed].each do |key|
@@ -62,12 +62,12 @@ Then /^routability should be$/ do |table|
         else
           raise "*** Unknown expectation format: #{want}"
         end
-        
+
         if FuzzyMatch.match output_row[direction], want
           output_row[direction] = row[direction]
         end
       end
-      
+
       if output_row != row
         log_fail row,output_row,result
       end
