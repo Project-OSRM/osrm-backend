@@ -94,10 +94,10 @@ Reply Reply::StockReply(Reply::status_type status) {
     rep.headers[0].value = "*";
     rep.headers[1].name = "Content-Length";
 
-    std::string s;
-    intToString(rep.content.size(), s);
+    std::string size_string;
+    intToString(rep.content.size(), size_string);
 
-    rep.headers[1].value = s;
+    rep.headers[1].value = size_string;
     rep.headers[2].name = "Content-Type";
     rep.headers[2].value = "text/html";
     return rep;
