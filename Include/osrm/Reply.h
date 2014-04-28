@@ -64,7 +64,7 @@ public:
 
     Reply();
 private:
-    static std::string ToString(Reply::status_type status);
+    std::string ToString(Reply::status_type status);
     boost::asio::const_buffer ToBuffer(Reply::status_type status);
 };
 
