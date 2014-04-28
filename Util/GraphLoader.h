@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
+#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/unordered_map.hpp>
@@ -135,7 +136,7 @@ NodeID readBinaryOSRMGraphFromStream(
     short type;
     NodeID nameID;
     int length;
-    bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow;
+    bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, is_split;
 
     for (EdgeID i=0; i<m; ++i) {
         input_stream.read((char*)&source,             sizeof(unsigned));
@@ -149,6 +150,7 @@ NodeID readBinaryOSRMGraphFromStream(
         input_stream.read((char*)&ignoreInGrid,       sizeof(bool));
         input_stream.read((char*)&isAccessRestricted, sizeof(bool));
         input_stream.read((char*)&isContraFlow,       sizeof(bool));
+        input_stream.read((char*)&is_split,           sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge" );
         BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
@@ -189,7 +191,7 @@ NodeID readBinaryOSRMGraphFromStream(
             std::swap(forward, backward);
         }
 
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow );
+        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, is_split );
         edge_list.push_back(inputEdge);
     }
     std::sort(edge_list.begin(), edge_list.end());
@@ -444,7 +446,10 @@ unsigned readHSGRFromStream(
     hsgr_input_stream.read( (char*) &number_of_nodes, sizeof(unsigned) );
     BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
     hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
-    BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
+
+    SimpleLogger().Write() << "number_of_nodes: " << number_of_nodes << ", number_of_edges: " << number_of_edges;
+
+    // BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
     node_list.resize(number_of_nodes + 1);
     hsgr_input_stream.read(
         (char*) &(node_list[0]),
@@ -457,6 +462,7 @@ unsigned readHSGRFromStream(
         number_of_edges*sizeof(EdgeT)
     );
     hsgr_input_stream.close();
+
     return number_of_nodes;
 }
 

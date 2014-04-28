@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<class DataFacadeT>
 class JSONDescriptor : public BaseDescriptor<DataFacadeT> {
 private:
+    // TODO: initalize in c'tor
     DataFacadeT * facade;
     DescriptorConfig config;
     DescriptionFactory description_factory;
@@ -59,7 +60,7 @@ private:
         int start_index;
         int name_id;
         int leave_at_exit;
-    } roundAbout;
+    } round_about;
 
     struct Segment {
         Segment() : name_id(-1), length(-1), position(-1) {}
@@ -90,7 +91,7 @@ public:
     void SetConfig(const DescriptorConfig & c) { config = c; }
 
     int DescribeLeg(
-        const std::vector<PathData> & route_leg,
+        const std::vector<PathData> route_leg,
         const PhantomNodes & leg_phantoms
     ) {
         int added_element_count = 0;
@@ -98,10 +99,10 @@ public:
         FixedPointCoordinate current_coordinate;
         BOOST_FOREACH(const PathData & path_data, route_leg) {
             current_coordinate = facade->GetCoordinateOfNode(path_data.node);
-            description_factory.AppendSegment(current_coordinate, path_data );
+            description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
-        // description_factory.SetEndSegment( leg_phantoms.targetPhantom );
+        // description_factory.SetEndSegment( leg_phantoms.target_phantom );
         ++added_element_count;
         BOOST_ASSERT( (int)(route_leg.size() + 1) == added_element_count );
         return added_element_count;
@@ -119,7 +120,8 @@ public:
             "{\"status\":"
         );
 
-        if(INT_MAX == raw_route.lengthOfShortestPath) {
+        if (INVALID_EDGE_WEIGHT == raw_route.lengthOfShortestPath)
+        {
             //We do not need to do much, if there is no route ;-)
             reply.content.push_back(
                 "207,\"status_message\": \"Cannot find route between points\"}"
@@ -127,12 +129,36 @@ public:
             return;
         }
 
-        description_factory.SetStartSegment(phantom_nodes.startPhantom);
+        SimpleLogger().Write(logDEBUG) << "distance: " << raw_route.lengthOfShortestPath;
+
+        //check if first segment is non-zero
+        std::string road_name;
+        road_name = facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
+
+        // for each unpacked segment add the leg to the description
+        BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
+
+        for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
+        {
+            const std::vector<PathData> & leg_path = raw_route.unpacked_path_segments[i];
+            FixedPointCoordinate current_coordinate;
+            BOOST_FOREACH(const PathData & path_data, leg_path)
+            {
+                current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+                road_name = facade->GetEscapedNameForNameID(path_data.name_id);
+            }
+        }
+
+        //check if last segment is non-zero
+        road_name = facade->GetEscapedNameForNameID(phantom_nodes.target_phantom.name_id);
+
+        description_factory.SetStartSegment(phantom_nodes.source_phantom, raw_route.source_traversed_in_reverse);
         reply.content.push_back("0,"
                 "\"status_message\": \"Found route between points\",");
 
         BOOST_ASSERT( raw_route.unpacked_path_segments.size() == raw_route.segmentEndCoordinates.size() );
-        for( unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i ) {
+        for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
+        {
             const int added_segments = DescribeLeg(
                 raw_route.unpacked_path_segments[i],
                 raw_route.segmentEndCoordinates[i]
@@ -142,7 +168,7 @@ public:
                 added_segments + shortest_leg_end_indices.back()
             );
         }
-        description_factory.SetEndSegment(phantom_nodes.targetPhantom);
+        description_factory.SetEndSegment(phantom_nodes.target_phantom, raw_route.target_traversed_in_reverse);
         description_factory.Run(facade, config.zoom_level);
 
         reply.content.push_back("\"route_geometry\": ");
@@ -194,14 +220,15 @@ public:
 
         //only one alternative route is computed at this time, so this is hardcoded
 
-        if(raw_route.lengthOfAlternativePath != INT_MAX) {
-            alternate_descriptionFactory.SetStartSegment(phantom_nodes.startPhantom);
+        if(raw_route.lengthOfAlternativePath != INVALID_EDGE_WEIGHT)
+        {
+            alternate_descriptionFactory.SetStartSegment(phantom_nodes.source_phantom, raw_route.alt_source_traversed_in_reverse);
             //Get all the coordinates for the computed route
             BOOST_FOREACH(const PathData & path_data, raw_route.unpacked_alternative) {
                 current = facade->GetCoordinateOfNode(path_data.node);
                 alternate_descriptionFactory.AppendSegment(current, path_data );
             }
-            alternate_descriptionFactory.SetEndSegment(phantom_nodes.targetPhantom);
+            alternate_descriptionFactory.SetEndSegment(phantom_nodes.target_phantom, raw_route.alt_target_traversed_in_reverse);
         }
         alternate_descriptionFactory.Run(facade, config.zoom_level);
 
@@ -286,7 +313,7 @@ public:
 
         std::string tmp;
         FixedPointCoordinate::convertInternalReversedCoordinateToString(
-            raw_route.segmentEndCoordinates.front().startPhantom.location,
+            raw_route.segmentEndCoordinates.front().source_phantom.location,
             tmp
         );
         reply.content.push_back("[");
@@ -296,7 +323,7 @@ public:
         BOOST_FOREACH(const PhantomNodes & nodes, raw_route.segmentEndCoordinates) {
             tmp.clear();
             FixedPointCoordinate::convertInternalReversedCoordinateToString(
-                nodes.targetPhantom.location,
+                nodes.target_phantom.location,
                 tmp
             );
             reply.content.push_back(",[");
@@ -332,11 +359,11 @@ public:
         std::string hint;
         for(unsigned i = 0; i < raw_route.segmentEndCoordinates.size(); ++i) {
             reply.content.push_back("\"");
-            EncodeObjectToBase64(raw_route.segmentEndCoordinates[i].startPhantom, hint);
+            EncodeObjectToBase64(raw_route.segmentEndCoordinates[i].source_phantom, hint);
             reply.content.push_back(hint);
             reply.content.push_back("\", ");
         }
-        EncodeObjectToBase64(raw_route.segmentEndCoordinates.back().targetPhantom, hint);
+        EncodeObjectToBase64(raw_route.segmentEndCoordinates.back().target_phantom, hint);
         reply.content.push_back("\"");
         reply.content.push_back(hint);
         reply.content.push_back("\"]");
@@ -419,56 +446,61 @@ public:
         //Segment information has following format:
         //["instruction","streetname",length,position,time,"length","earth_direction",azimuth]
         //Example: ["Turn left","High Street",200,4,10,"200m","NE",22.5]
-        //See also: http://developers.cloudmade.com/wiki/navengine/JSON_format
-        unsigned prefixSumOfNecessarySegments = 0;
-        roundAbout.leave_at_exit = 0;
-        roundAbout.name_id = 0;
-        std::string tmpDist, tmpLength, tmpDuration, tmpBearing, tmpInstruction;
+        unsigned necessary_segments_running_index = 0;
+        round_about.leave_at_exit = 0;
+        round_about.name_id = 0;
+        std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
+
         //Fetch data from Factory and generate a string from it.
         BOOST_FOREACH(const SegmentInformation & segment, description_factory.pathDescription) {
-        	TurnInstruction current_instruction = segment.turn_instruction & TurnInstructions.InverseAccessRestrictionFlag;
+            TurnInstruction current_instruction = segment.turn_instruction & TurnInstructionsClass::InverseAccessRestrictionFlag;
             entered_restricted_area_count += (current_instruction != segment.turn_instruction);
-            if(TurnInstructions.TurnIsNecessary( current_instruction) ) {
-                if(TurnInstructions.EnterRoundAbout == current_instruction) {
-                    roundAbout.name_id = segment.name_id;
-                    roundAbout.start_index = prefixSumOfNecessarySegments;
-                } else {
-                    if(0 != prefixSumOfNecessarySegments){
+            if (TurnInstructionsClass::TurnIsNecessary( current_instruction) )
+            {
+                if (TurnInstructionsClass::EnterRoundAbout == current_instruction)
+                {
+                    round_about.name_id = segment.name_id;
+                    round_about.start_index = necessary_segments_running_index;
+                }
+                else
+                {
+                    if (0 != necessary_segments_running_index)
+                    {
                         reply.content.push_back(",");
                     }
                     reply.content.push_back("[\"");
-                    if(TurnInstructions.LeaveRoundAbout == current_instruction) {
-                        intToString(TurnInstructions.EnterRoundAbout, tmpInstruction);
-                        reply.content.push_back(tmpInstruction);
+                    if(TurnInstructionsClass::LeaveRoundAbout == current_instruction) {
+                        intToString(TurnInstructionsClass::EnterRoundAbout, temp_instruction);
+                        reply.content.push_back(temp_instruction);
                         reply.content.push_back("-");
-                        intToString(roundAbout.leave_at_exit+1, tmpInstruction);
-                        reply.content.push_back(tmpInstruction);
-                        roundAbout.leave_at_exit = 0;
+                        intToString(round_about.leave_at_exit+1, temp_instruction);
+                        reply.content.push_back(temp_instruction);
+                        round_about.leave_at_exit = 0;
                     } else {
-                        intToString(current_instruction, tmpInstruction);
-                        reply.content.push_back(tmpInstruction);
+                        intToString(current_instruction, temp_instruction);
+                        reply.content.push_back(temp_instruction);
                     }
 
                     reply.content.push_back("\",\"");
                     reply.content.push_back(facade->GetEscapedNameForNameID(segment.name_id));
                     reply.content.push_back("\",");
-                    intToString(segment.length, tmpDist);
-                    reply.content.push_back(tmpDist);
+                    intToString(segment.length, temp_dist);
+                    reply.content.push_back(temp_dist);
                     reply.content.push_back(",");
-                    intToString(prefixSumOfNecessarySegments, tmpLength);
-                    reply.content.push_back(tmpLength);
+                    intToString(necessary_segments_running_index, temp_length);
+                    reply.content.push_back(temp_length);
                     reply.content.push_back(",");
-                    intToString(segment.duration/10, tmpDuration);
-                    reply.content.push_back(tmpDuration);
+                    intToString(round(segment.duration/10.), temp_duration);
+                    reply.content.push_back(temp_duration);
                     reply.content.push_back(",\"");
-                    intToString(segment.length, tmpLength);
-                    reply.content.push_back(tmpLength);
+                    intToString(segment.length, temp_length);
+                    reply.content.push_back(temp_length);
                     reply.content.push_back("m\",\"");
                     double bearing_value = round(segment.bearing/10.);
                     reply.content.push_back(Azimuth::Get(bearing_value));
                     reply.content.push_back("\",");
-                    intToString(bearing_value, tmpBearing);
-                    reply.content.push_back(tmpBearing);
+                    intToString(bearing_value, temp_bearing);
+                    reply.content.push_back(temp_bearing);
                     reply.content.push_back("]");
 
                     route_segments_list.push_back(
@@ -479,22 +511,22 @@ public:
                         )
                     );
                 }
-            } else if(TurnInstructions.StayOnRoundAbout == current_instruction) {
-                ++roundAbout.leave_at_exit;
+            } else if(TurnInstructionsClass::StayOnRoundAbout == current_instruction) {
+                ++round_about.leave_at_exit;
             }
             if(segment.necessary)
-                ++prefixSumOfNecessarySegments;
+                ++necessary_segments_running_index;
         }
         if(INT_MAX != route_length) {
             reply.content.push_back(",[\"");
-            intToString(TurnInstructions.ReachedYourDestination, tmpInstruction);
-            reply.content.push_back(tmpInstruction);
+            intToString(TurnInstructionsClass::ReachedYourDestination, temp_instruction);
+            reply.content.push_back(temp_instruction);
             reply.content.push_back("\",\"");
             reply.content.push_back("\",");
             reply.content.push_back("0");
             reply.content.push_back(",");
-            intToString(prefixSumOfNecessarySegments-1, tmpLength);
-            reply.content.push_back(tmpLength);
+            intToString(necessary_segments_running_index-1, temp_length);
+            reply.content.push_back(temp_length);
             reply.content.push_back(",");
             reply.content.push_back("0");
             reply.content.push_back(",\"");

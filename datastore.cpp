@@ -44,9 +44,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/mman.h>
 #endif
 
-#include <boost/integer.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/integer.hpp>
+#include <boost/iostreams/seek.hpp>
 
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -137,6 +139,10 @@ int main( const int argc, const char * argv[] ) {
         BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & names_data_path = paths_iterator->second;
 
+        paths_iterator = server_paths.find("geometries");
+        BOOST_ASSERT(server_paths.end() != paths_iterator);
+        BOOST_ASSERT(!paths_iterator->second.empty());
+        const boost::filesystem::path & geometries_data_path = paths_iterator->second;
 
         // get the shared memory segment to use
         bool use_first_segment = SharedMemory::RegionExists( LAYOUT_2 );
@@ -163,7 +169,6 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->ram_index_file_name[end_of_string_index] = '\0';
 
         // collect number of elements to store in shared memory object
-        SimpleLogger().Write(logDEBUG) << "Collecting files sizes";
         SimpleLogger().Write() << "load names from: " << names_data_path;
         // number of entries in name index
         boost::filesystem::ifstream name_stream(
@@ -192,6 +197,7 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->via_node_list_size = number_of_original_edges;
         shared_layout_ptr->name_id_list_size = number_of_original_edges;
         shared_layout_ptr->turn_instruction_list_size = number_of_original_edges;
+        shared_layout_ptr->geometries_indicators = number_of_original_edges;
 
         boost::filesystem::ifstream hsgr_input_stream(
             hsgr_path,
@@ -276,8 +282,21 @@ int main( const int argc, const char * argv[] ) {
         shared_layout_ptr->coordinate_list_size = coordinate_list_size;
 
 
-        // allocate shared memory block
+        // load geometries sizes
+        std::ifstream geometry_input_stream(
+            geometries_data_path.c_str(),
+            std::ios::binary
+        );
+        unsigned number_of_geometries_indices = 0;
+        unsigned number_of_compressed_geometries = 0;
 
+        geometry_input_stream.read((char *)&number_of_geometries_indices, sizeof(unsigned));
+        shared_layout_ptr->geometries_index_list_size = number_of_geometries_indices;
+        boost::iostreams::seek(geometry_input_stream, number_of_geometries_indices*sizeof(unsigned), BOOST_IOS::cur);
+        geometry_input_stream.read( (char *)&number_of_compressed_geometries, sizeof(unsigned));
+        shared_layout_ptr->geometries_list_size = number_of_compressed_geometries;
+
+        // allocate shared memory block
         SimpleLogger().Write() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout() << " bytes";
         SharedMemory * shared_memory = SharedMemoryFactory::Get(
             DATA,
@@ -287,11 +306,9 @@ int main( const int argc, const char * argv[] ) {
 
         // read actual data into shared memory object //
         // Loading street names
-        // SimpleLogger().Write() << "Loading names index and chars from: " << names_data_path.string();
         unsigned * name_index_ptr = (unsigned*)(
             shared_memory_ptr + shared_layout_ptr->GetNameIndexOffset()
         );
-        // SimpleLogger().Write(logDEBUG) << "Bytes: " << shared_layout_ptr->name_index_list_size*sizeof(unsigned);
 
         name_stream.read(
             (char*)name_index_ptr,
@@ -318,9 +335,12 @@ int main( const int argc, const char * argv[] ) {
             shared_memory_ptr + shared_layout_ptr->GetTurnInstructionListOffset()
         );
 
+        unsigned * geometries_indicator_ptr = (unsigned *)(
+            shared_memory_ptr + shared_layout_ptr->GetGeometriesIndicatorOffset()
+        );
+
         OriginalEdgeData current_edge_data;
         for(unsigned i = 0; i < number_of_original_edges; ++i) {
-            // SimpleLogger().Write() << i << "/" << number_of_edges;
             edges_input_stream.read(
                 (char*)&(current_edge_data),
                 sizeof(OriginalEdgeData)
@@ -328,8 +348,42 @@ int main( const int argc, const char * argv[] ) {
             via_node_ptr[i] = current_edge_data.via_node;
             name_id_ptr[i]  = current_edge_data.name_id;
             turn_instructions_ptr[i] = current_edge_data.turn_instruction;
+
+            const unsigned bucket = i / 32;
+            const unsigned offset = i % 32;
+            unsigned value = ((0 == offset) ? 0 : geometries_indicator_ptr[bucket]);
+            if (current_edge_data.compressed_geometry)
+            {
+                geometries_indicator_ptr[bucket] = (value | (1 << offset));
+            }
         }
         edges_input_stream.close();
+
+        // load compressed geometry
+        unsigned temporary_value;
+        unsigned * geometries_index_ptr = (unsigned *)(
+            shared_memory_ptr + shared_layout_ptr->GetGeometriesIndexListOffset()
+        );
+        geometry_input_stream.seekg(0, geometry_input_stream.beg);
+        geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
+        BOOST_ASSERT(temporary_value == shared_layout_ptr->geometries_index_list_size);
+
+        geometry_input_stream.read(
+            (char *)geometries_index_ptr,
+            shared_layout_ptr->geometries_index_list_size*sizeof(unsigned)
+        );
+
+        unsigned * geometries_list_ptr = (unsigned *)(
+            shared_memory_ptr + shared_layout_ptr->GetGeometryListOffset()
+        );
+
+        geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
+        BOOST_ASSERT(temporary_value == shared_layout_ptr->geometries_list_size);
+
+        geometry_input_stream.read(
+            (char *)geometries_list_ptr,
+            shared_layout_ptr->geometries_list_size*sizeof(unsigned)
+        );
 
         // Loading list of coordinates
         FixedPointCoordinate * coordinates_ptr = (FixedPointCoordinate *)(
@@ -372,7 +426,7 @@ int main( const int argc, const char * argv[] ) {
 
         // load the edges of the search graph
         QueryGraph::_StrEdge * graph_edge_list_ptr = (QueryGraph::_StrEdge *)(
-            shared_memory_ptr + shared_layout_ptr->GetGraphEdgeListOffsett()
+            shared_memory_ptr + shared_layout_ptr->GetGraphEdgeListOffset()
         );
         hsgr_input_stream.read(
             (char*) graph_edge_list_ptr,
@@ -423,6 +477,8 @@ int main( const int argc, const char * argv[] ) {
             }
         }
         SimpleLogger().Write() << "all data loaded";
+
+        shared_layout_ptr->PrintInformation();
     } catch(const std::exception & e) {
         SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
     }

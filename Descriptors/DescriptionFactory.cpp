@@ -31,18 +31,18 @@ DescriptionFactory::DescriptionFactory() : entireLength(0) { }
 
 DescriptionFactory::~DescriptionFactory() { }
 
-inline double DescriptionFactory::DegreeToRadian(const double degree) const {
-        return degree * (M_PI/180);
+inline double DescriptionFactory::DegreeToRadian(const double degree) const
+{
+    return degree * (M_PI/180.);
 }
 
-inline double DescriptionFactory::RadianToDegree(const double radian) const {
-        return radian * (180/M_PI);
+inline double DescriptionFactory::RadianToDegree(const double radian) const
+{
+    return radian * (180./M_PI);
 }
 
-double DescriptionFactory::GetBearing(
-    const FixedPointCoordinate & A,
-    const FixedPointCoordinate & B
-) const {
+double DescriptionFactory::GetBearing(const FixedPointCoordinate & A, const FixedPointCoordinate & B) const
+{
     double delta_long = DegreeToRadian(B.lon/COORDINATE_PRECISION - A.lon/COORDINATE_PRECISION);
 
     const double lat1 = DegreeToRadian(A.lat/COORDINATE_PRECISION);
@@ -51,55 +51,52 @@ double DescriptionFactory::GetBearing(
     const double y = sin(delta_long) * cos(lat2);
     const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
     double result = RadianToDegree(atan2(y, x));
-    while(result < 0.) {
+    while (result < 0.)
+    {
         result += 360.;
     }
-    while(result >= 360.) {
+
+    while (result >= 360.)
+    {
         result -= 360.;
     }
     return result;
 }
 
-void DescriptionFactory::SetStartSegment(const PhantomNode & start) {
-    start_phantom = start;
+void DescriptionFactory::SetStartSegment(const PhantomNode & source, const bool source_traversed_in_reverse)
+{
+    start_phantom = source;
     AppendSegment(
-        start.location,
-        PathData(0, start.nodeBasedEdgeNameID, 10, start.weight1)
+        source.location,
+        PathData(0, source.name_id, 10, source.forward_weight)
     );
 }
 
-void DescriptionFactory::SetEndSegment(const PhantomNode & target) {
+void DescriptionFactory::SetEndSegment(const PhantomNode & target, const bool target_traversed_in_reverse)
+{
     target_phantom = target;
     pathDescription.push_back(
         SegmentInformation(
             target.location,
-            target.nodeBasedEdgeNameID,
+            target.name_id,
             0,
-            target.weight1,
+            target.reverse_weight,
             0,
             true
         )
     );
 }
 
-void DescriptionFactory::AppendSegment(
-    const FixedPointCoordinate & coordinate,
-    const PathData & data
-) {
-    if(
-        ( 1 == pathDescription.size())                  &&
-        ( pathDescription.back().location == coordinate)
-    ) {
-        pathDescription.back().name_id = data.name_id;
-    } else {
+void DescriptionFactory::AppendSegment(const FixedPointCoordinate & coordinate, const PathData & path_point)
+{
+    if ((1 == pathDescription.size()) && ( pathDescription.back().location == coordinate))
+    {
+        pathDescription.back().name_id = path_point.name_id;
+    }
+    else
+    {
         pathDescription.push_back(
-            SegmentInformation(
-                coordinate,
-                data.name_id,
-                data.durationOfSegment,
-                0,
-                data.turnInstruction
-            )
+            SegmentInformation(coordinate, path_point.name_id, path_point.durationOfSegment, 0, path_point.turnInstruction)
         );
     }
 }
@@ -137,7 +134,7 @@ void DescriptionFactory::BuildRouteSummary(
     const double distance,
     const unsigned time
 ) {
-    summary.startName = start_phantom.nodeBasedEdgeNameID;
-    summary.destName = target_phantom.nodeBasedEdgeNameID;
+    summary.startName = start_phantom.name_id;
+    summary.destName = target_phantom.name_id;
     summary.BuildDurationAndLengthStrings(distance, time);
 }

@@ -32,7 +32,7 @@ speed_profile = {
   ["default"] = 10
 }
 
-local take_minimum_of_speeds    = false
+local take_minimum_of_speeds  = false
 local obey_oneway               = true
 local obey_bollards             = true
 local use_turn_restrictions     = true
@@ -76,6 +76,14 @@ local function parse_maxspeed(source)
   end
   return n
 end
+
+-- function turn_function (angle)
+--   -- print ("called at angle " .. angle )
+--   local index = math.abs(math.floor(angle/10+0.5))+1 -- +1 'coz LUA starts as idx 1
+--   local penalty = turn_cost_table[index]
+--   -- print ("index: " .. index .. ", bias: " .. penalty )
+--   return penalty
+-- end
 
 function node_function (node)
   local access = find_access_tag(node, access_tags_hierachy)

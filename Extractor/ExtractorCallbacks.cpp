@@ -28,34 +28,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractorCallbacks.h"
 
 #include "ExtractionContainers.h"
-#include "ExtractionHelperFunctions.h"
 #include "ExtractionWay.h"
 
 #include "../DataStructures/Restriction.h"
+#include "../DataStructures/ImportNode.h"
 #include "../Util/SimpleLogger.h"
 
 #include <osrm/Coordinate.h>
-
-#include <cfloat>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
-#include <boost/regex.hpp>
 
 #include <string>
 #include <vector>
 
 ExtractorCallbacks::ExtractorCallbacks()
  :
-    stringMap(NULL),
+    string_map(NULL),
     externalMemory(NULL)
 { }
 
 ExtractorCallbacks::ExtractorCallbacks(
     ExtractionContainers * ext,
-    StringMap * strMap
+    boost::unordered_map<std::string, NodeID> * string_map
 ) :
-    stringMap(strMap),
+    string_map(string_map),
     externalMemory(ext)
 { }
 
@@ -95,11 +89,11 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
         }
 
         //Get the unique identifier for the street name
-        const StringMap::const_iterator & string_map_iterator = stringMap->find(parsed_way.name);
-        if(stringMap->end() == string_map_iterator) {
+        const boost::unordered_map<std::string, NodeID>::const_iterator & string_map_iterator = string_map->find(parsed_way.name);
+        if(string_map->end() == string_map_iterator) {
             parsed_way.nameID = externalMemory->name_list.size();
             externalMemory->name_list.push_back(parsed_way.name);
-            stringMap->insert(std::make_pair(parsed_way.name, parsed_way.nameID));
+            string_map->insert(std::make_pair(parsed_way.name, parsed_way.nameID));
         } else {
             parsed_way.nameID = string_map_iterator->second;
         }
@@ -113,16 +107,19 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
 
         for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
             externalMemory->all_edges_list.push_back(
-                    InternalExtractorEdge(parsed_way.path[n],
-                            parsed_way.path[n+1],
-                            parsed_way.type,
-                            (split_bidirectional_edge ? ExtractionWay::oneway : parsed_way.direction),
-                            parsed_way.speed,
-                            parsed_way.nameID,
-                            parsed_way.roundabout,
-                            parsed_way.ignoreInGrid,
-                            (0 < parsed_way.duration),
-                            parsed_way.isAccessRestricted
+                    InternalExtractorEdge(
+                        parsed_way.path[n],
+                        parsed_way.path[n+1],
+                        parsed_way.type,
+                        (split_bidirectional_edge ? ExtractionWay::oneway : parsed_way.direction),
+                        parsed_way.speed,
+                        parsed_way.nameID,
+                        parsed_way.roundabout,
+                        parsed_way.ignoreInGrid,
+                        (0 < parsed_way.duration),
+                        parsed_way.isAccessRestricted,
+                        false,
+                        split_bidirectional_edge
                     )
             );
             externalMemory->used_node_id_list.push_back(parsed_way.path[n]);
@@ -136,17 +133,19 @@ void ExtractorCallbacks::wayFunction(ExtractionWay &parsed_way) {
             std::reverse( parsed_way.path.begin(), parsed_way.path.end() );
             for(std::vector< NodeID >::size_type n = 0; n < parsed_way.path.size()-1; ++n) {
                 externalMemory->all_edges_list.push_back(
-                        InternalExtractorEdge(parsed_way.path[n],
-                                parsed_way.path[n+1],
-                                parsed_way.type,
-                                ExtractionWay::oneway,
-                                parsed_way.backward_speed,
-                                parsed_way.nameID,
-                                parsed_way.roundabout,
-                                parsed_way.ignoreInGrid,
-                                (0 < parsed_way.duration),
-                                parsed_way.isAccessRestricted,
-                                (ExtractionWay::oneway == parsed_way.direction)
+                        InternalExtractorEdge(
+                            parsed_way.path[n],
+                            parsed_way.path[n+1],
+                            parsed_way.type,
+                            ExtractionWay::oneway,
+                            parsed_way.backward_speed,
+                            parsed_way.nameID,
+                            parsed_way.roundabout,
+                            parsed_way.ignoreInGrid,
+                            (0 < parsed_way.duration),
+                            parsed_way.isAccessRestricted,
+                            (ExtractionWay::oneway == parsed_way.direction),
+                            split_bidirectional_edge
                         )
                 );
             }

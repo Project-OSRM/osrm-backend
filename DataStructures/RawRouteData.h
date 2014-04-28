@@ -70,10 +70,19 @@ struct RawRouteData {
     unsigned checkSum;
     int lengthOfShortestPath;
     int lengthOfAlternativePath;
+    bool source_traversed_in_reverse;
+    bool target_traversed_in_reverse;
+    bool alt_source_traversed_in_reverse;
+    bool alt_target_traversed_in_reverse;
+
     RawRouteData() :
         checkSum(UINT_MAX),
         lengthOfShortestPath(INT_MAX),
-        lengthOfAlternativePath(INT_MAX)
+        lengthOfAlternativePath(INT_MAX),
+        source_traversed_in_reverse(false),
+        target_traversed_in_reverse(false),
+        alt_source_traversed_in_reverse(false),
+        alt_target_traversed_in_reverse(false)
     { }
 };
 

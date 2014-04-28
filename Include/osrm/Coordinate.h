@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef FIXED_POINT_COORDINATE_H_
 #define FIXED_POINT_COORDINATE_H_
 
-#include <iostream>
+#include <iosfwd>   //for std::ostream
 
 static const double COORDINATE_PRECISION = 1000000.;
 
@@ -37,7 +37,7 @@ struct FixedPointCoordinate {
     int lon;
 
     FixedPointCoordinate();
-    explicit FixedPointCoordinate (int lat, int lon);
+    explicit FixedPointCoordinate( int lat, int lon);
     void Reset();
     bool isSet() const;
     bool isValid() const;
@@ -74,11 +74,13 @@ struct FixedPointCoordinate {
         const FixedPointCoordinate & coord,
         std::string & output
     );
+
+    void Output(std::ostream & out) const;
 };
 
-inline std::ostream & operator<<(std::ostream & out, const FixedPointCoordinate & c){
-    out << "(" << c.lat << "," << c.lon << ")";
-    return out;
+inline std::ostream& operator<<(std::ostream& o, FixedPointCoordinate const & c){
+    c.Output(o);
+    return o;
 }
 
 #endif /* FIXED_POINT_COORDINATE_H_ */

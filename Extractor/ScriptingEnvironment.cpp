@@ -58,7 +58,7 @@ ScriptingEnvironment::ScriptingEnvironment(const char * fileName) {
         // Add our function to the state's global scope
         luabind::module(myLuaState) [
             luabind::def("print", LUA_print<std::string>),
-            luabind::def("parseMaxspeed", parseMaxspeed),
+            // luabind::def("parseMaxspeed", parseMaxspeed),
             luabind::def("durationIsValid", durationIsValid),
             luabind::def("parseDuration", parseDuration)
         ];

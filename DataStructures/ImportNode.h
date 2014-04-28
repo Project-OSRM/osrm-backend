@@ -44,11 +44,17 @@ struct ExternalMemoryNode : NodeInfo {
         bollard(bollard),
         trafficLight(traffic_light)
     { }
-    ExternalMemoryNode() : bollard(false), trafficLight(false) {}
+
+    ExternalMemoryNode()
+     :
+    bollard(false),
+    trafficLight(false)
+    { }
 
     static ExternalMemoryNode min_value() {
         return ExternalMemoryNode(0,0,0, false, false);
     }
+
     static ExternalMemoryNode max_value() {
         return ExternalMemoryNode(
             std::numeric_limits<int>::max(),
@@ -58,9 +64,11 @@ struct ExternalMemoryNode : NodeInfo {
             false
         );
     }
+
     NodeID key() const {
         return id;
     }
+
     bool bollard;
     bool trafficLight;
 };

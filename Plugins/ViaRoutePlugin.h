@@ -95,14 +95,11 @@ public:
         std::vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
         for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
             if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
-//                SimpleLogger().Write() <<"Decoding hint: " << routeParameters.hints[i] << " for location index " << i;
                 DecodeObjectFromBase64(routeParameters.hints[i], phantomNodeVector[i]);
                 if(phantomNodeVector[i].isValid(facade->GetNumberOfNodes())) {
-//                    SimpleLogger().Write() << "Decoded hint " << i << " successfully";
                     continue;
                 }
             }
-//            SimpleLogger().Write() << "Brute force lookup of coordinate " << i;
             facade->FindPhantomNodeForCoordinate(
                 rawRoute.rawViaNodeCoordinates[i],
                 phantomNodeVector[i],
@@ -112,8 +109,8 @@ public:
 
         PhantomNodes segmentPhantomNodes;
         for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
-            segmentPhantomNodes.startPhantom = phantomNodeVector[i];
-            segmentPhantomNodes.targetPhantom = phantomNodeVector[i+1];
+            segmentPhantomNodes.source_phantom = phantomNodeVector[i];
+            segmentPhantomNodes.target_phantom = phantomNodeVector[i+1];
             rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
         }
 
@@ -132,9 +129,9 @@ public:
             );
         }
 
-        if(INT_MAX == rawRoute.lengthOfShortestPath ) {
-            SimpleLogger().Write(logDEBUG) <<
-                "Error occurred, single path not found";
+        if (INT_MAX == rawRoute.lengthOfShortestPath)
+        {
+            SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
         }
         reply.status = http::Reply::ok;
 
@@ -172,11 +169,12 @@ public:
         }
 
         PhantomNodes phantomNodes;
-        phantomNodes.startPhantom = rawRoute.segmentEndCoordinates[0].startPhantom;
-        phantomNodes.targetPhantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].targetPhantom;
+        phantomNodes.source_phantom = rawRoute.segmentEndCoordinates[0].source_phantom;
+        phantomNodes.target_phantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].target_phantom;
         desc->SetConfig(descriptorConfig);
 
         desc->Run(rawRoute, phantomNodes, facade, reply);
+
         if("" != routeParameters.jsonpParameter) {
             reply.content.push_back(")\n");
         }

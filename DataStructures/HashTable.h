@@ -54,7 +54,7 @@ public:
         return boost::cref(iter->second);
     }
 
-    inline bool Holds( KeyT const & key) const {
+    inline const bool Holds( KeyT const & key) const {
         if( super::find(key) == super::end() ) {
             return false;
         }

@@ -71,7 +71,7 @@ public:
         ) {
             //compute distance/duration for route summary
             intToString(round(distance), lengthString);
-            int travel_time = time/10;
+            int travel_time = round(time/10.);
             intToString(std::max(travel_time, 1), durationString);
         }
     } summary;
@@ -87,8 +87,8 @@ public:
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
     void AppendSegment(const FixedPointCoordinate & coordinate, const PathData & data);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode & start_phantom);
-    void SetEndSegment(const PhantomNode & start_phantom);
+    void SetStartSegment(const PhantomNode & start_phantom, const bool source_traversed_in_reverse);
+    void SetEndSegment(const PhantomNode & start_phantom, const bool target_traversed_in_reverse);
     void AppendEncodedPolylineString(
         const bool return_encoded,
         std::vector<std::string> & output
@@ -105,13 +105,12 @@ public:
 
         /** starts at index 1 */
         pathDescription[0].length = 0;
-        for(unsigned i = 1; i < pathDescription.size(); ++i) {
+        for (unsigned i = 1; i < pathDescription.size(); ++i)
+        {
+            //move down names by one, q&d hack
+            pathDescription[i-1].name_id = pathDescription[i].name_id;
             pathDescription[i].length = FixedPointCoordinate::ApproximateEuclideanDistance(pathDescription[i-1].location, pathDescription[i].location);
         }
-
-        // std::string string0 = facade->GetEscapedNameForNameID(pathDescription[0].name_id);
-        // std::string string1;
-
 
         /*Simplify turn instructions
         Input :
@@ -154,23 +153,23 @@ public:
     //        string0 = string1;
     //    }
 
-        double lengthOfSegment = 0;
-        unsigned durationOfSegment = 0;
-        unsigned indexOfSegmentBegin = 0;
+        double segment_length = 0.;
+        unsigned segment_duration = 0;
+        unsigned segment_start_index = 0;
 
         for(unsigned i = 1; i < pathDescription.size(); ++i) {
             entireLength += pathDescription[i].length;
-            lengthOfSegment += pathDescription[i].length;
-            durationOfSegment += pathDescription[i].duration;
-            pathDescription[indexOfSegmentBegin].length = lengthOfSegment;
-            pathDescription[indexOfSegmentBegin].duration = durationOfSegment;
+            segment_length += pathDescription[i].length;
+            segment_duration += pathDescription[i].duration;
+            pathDescription[segment_start_index].length = segment_length;
+            pathDescription[segment_start_index].duration = segment_duration;
 
 
             if(TurnInstructionsClass::NoTurn != pathDescription[i].turn_instruction) {
                 BOOST_ASSERT(pathDescription[i].necessary);
-                lengthOfSegment = 0;
-                durationOfSegment = 0;
-                indexOfSegmentBegin = i;
+                segment_length = 0;
+                segment_duration = 0;
+                segment_start_index = i;
             }
         }
 
@@ -179,21 +178,17 @@ public:
             if(pathDescription.size() > 2){
                 pathDescription.pop_back();
                 pathDescription.back().necessary = true;
-                pathDescription.back().turn_instruction = TurnInstructions.NoTurn;
-                target_phantom.nodeBasedEdgeNameID = (pathDescription.end()-2)->name_id;
+                pathDescription.back().turn_instruction = TurnInstructionsClass::NoTurn;
+                target_phantom.name_id = (pathDescription.end()-2)->name_id;
             }
-        } else {
-            pathDescription[indexOfSegmentBegin].duration *= (1.-target_phantom.ratio);
         }
         if(std::numeric_limits<double>::epsilon() > pathDescription[0].length) {
             if(pathDescription.size() > 2) {
                 pathDescription.erase(pathDescription.begin());
-                pathDescription[0].turn_instruction = TurnInstructions.HeadOn;
+                pathDescription[0].turn_instruction = TurnInstructionsClass::HeadOn;
                 pathDescription[0].necessary = true;
-                start_phantom.nodeBasedEdgeNameID = pathDescription[0].name_id;
+                start_phantom.name_id = pathDescription[0].name_id;
             }
-        } else {
-            pathDescription[0].duration *= start_phantom.ratio;
         }
 
         //Generalize poly line

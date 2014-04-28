@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INPUTREADERFACTORY_H
 #define INPUTREADERFACTORY_H
 
+#include <boost/assert.hpp>
+
 #include <bzlib.h>
 #include <libxml/xmlreader.h>
 
@@ -51,21 +53,21 @@ int readFromBz2Stream( void* pointer, char* buffer, int len ) {
             return read;
         } else if(BZ_STREAM_END == context->error) {
             BZ2_bzReadGetUnused(&context->error, context->bz2, &unusedTmpVoid, &context->nUnused);
-            if(BZ_OK != context->error) {std::cerr << "Could not BZ2_bzReadGetUnused" <<std::endl; exit(-1);};
+            BOOST_ASSERT_MSG(BZ_OK == context->error, "Could not BZ2_bzReadGetUnused");
             unusedTmp = (char*)unusedTmpVoid;
             for(int i=0;i<context->nUnused;i++) {
                 context->unused[i] = unusedTmp[i];
             }
             BZ2_bzReadClose(&context->error, context->bz2);
-            if(BZ_OK != context->error) {std::cerr << "Could not BZ2_bzReadClose" <<std::endl; exit(-1);};
+            BOOST_ASSERT_MSG(BZ_OK == context->error, "Could not BZ2_bzReadClose");
             context->error = BZ_STREAM_END; // set to the stream end for next call to this function
             if(0 == context->nUnused && feof(context->file)) {
                 return read;
             } else {
                 context->bz2 = BZ2_bzReadOpen(&context->error, context->file, 0, 0, context->unused, context->nUnused);
-                if(NULL == context->bz2){std::cerr << "Could not open file" <<std::endl; exit(-1);};
+                BOOST_ASSERT_MSG(NULL != context->bz2, "Could not open file");
             }
-        } else { std::cerr << "Could not read bz2 file" << std::endl; exit(-1); }
+        } else { BOOST_ASSERT_MSG(false, "Could not read bz2 file"); }
     }
     return read;
 }

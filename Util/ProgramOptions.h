@@ -111,6 +111,10 @@ inline unsigned GenerateServerProgramOptions(
             boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
             ".edges file")
         (
+            "geometry",
+            boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
+            ".geometry file")
+        (
             "ramindex",
             boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
             ".ramIndex file")
@@ -249,6 +253,17 @@ inline unsigned GenerateServerProgramOptions(
             path_iterator->second = base_string + ".edges";
         } else {
             throw OSRMException(base_string + ".edges not found");
+        }
+
+
+        path_iterator = paths.find("geometries");
+        if(
+            path_iterator != paths.end() &&
+            !boost::filesystem::is_regular_file(path_iterator->second)
+        ) {
+            path_iterator->second = base_string + ".geometry";
+        } else {
+            throw OSRMException(base_string + ".geometry not found");
         }
 
 

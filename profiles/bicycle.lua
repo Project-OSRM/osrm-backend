@@ -96,6 +96,22 @@ turn_penalty      = 60
 turn_bias         = 1.4
 -- End of globals
 
+
+local function parse_maxspeed(source)
+    if not source then
+        return 0
+    end
+    local n = tonumber(source:match("%d*"))
+    if not n then
+        n = 0
+    end
+    if string.match(source, "mph") or string.match(source, "mp/h") then
+        n = (n*1609)/1000;
+    end
+    return n
+end
+
+
 function get_exceptions(vector)
   for i,v in ipairs(restriction_exception_tags) do
     vector:Add(v)
@@ -107,27 +123,27 @@ function node_function (node)
   local access = Access.find_access_tag(node, access_tags_hierachy)
   local traffic_signal = node.tags:Find("highway")
 
-  -- flag node if it carries a traffic light
-  if traffic_signal == "traffic_signals" then
-    node.traffic_light = true
-  end
+	-- flag node if it carries a traffic light
+	if traffic_signal == "traffic_signals" then
+		node.traffic_light = true
+	end
 
-  -- parse access and barrier tags
-  if access and access ~= "" then
-    if access_tag_blacklist[access] then
-      node.bollard = true
-    else
-      node.bollard = false
-    end
-  elseif barrier and barrier ~= "" then
-    if barrier_whitelist[barrier] then
-      node.bollard = false
-    else
-      node.bollard = true
-    end
-  end
+	-- parse access and barrier tags
+	if access and access ~= "" then
+		if access_tag_blacklist[access] then
+			node.bollard = true
+		else
+			node.bollard = false
+		end
+	elseif barrier and barrier ~= "" then
+		if barrier_whitelist[barrier] then
+			node.bollard = false
+		else
+			node.bollard = true
+		end
+	end
 
-  return 1
+	-- return 1
 end
 
 function way_function (way)
@@ -159,14 +175,13 @@ function way_function (way)
     return 0
   end
 
-
   -- other tags
   local name = way.tags:Find("name")
   local ref = way.tags:Find("ref")
   local junction = way.tags:Find("junction")
-  local maxspeed = parseMaxspeed(way.tags:Find ( "maxspeed") )
-  local maxspeed_forward = parseMaxspeed(way.tags:Find( "maxspeed:forward"))
-  local maxspeed_backward = parseMaxspeed(way.tags:Find( "maxspeed:backward"))
+  local maxspeed = parse_maxspeed(way.tags:Find ( "maxspeed") )
+  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
+  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
   local barrier = way.tags:Find("barrier")
   local oneway = way.tags:Find("oneway")
   local onewayClass = way.tags:Find("oneway:bicycle")
@@ -304,7 +319,6 @@ function way_function (way)
       way.direction = Way.bidirectional
     end
   end
-
 
   -- cycleways
   if cycleway and cycleway_tags[cycleway] then

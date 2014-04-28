@@ -112,16 +112,18 @@ public:
                     if(eid2 == UINT_MAX) {
                         SimpleLogger().Write(logWARNING) <<
                             "cannot find first segment of edge (" <<
-                                u << "," << data.id << "," << v << ")";
+                                u << "," << data.id << "," << v << "), eid: " << eid;
 
                         data.shortcut = false;
+                        BOOST_ASSERT(false);
                     }
                     eid2 = FindEdgeInEitherDirection(data.id, v);
                     if(eid2 == UINT_MAX) {
                         SimpleLogger().Write(logWARNING) <<
                             "cannot find second segment of edge (" <<
-                                u << "," << data.id << "," << v << ")";
+                                u << "," << data.id << "," << v << "), eid2: " << eid2;
                         data.shortcut = false;
+                        BOOST_ASSERT(false);
                     }
                 }
             }
@@ -155,17 +157,17 @@ public:
     }
 
     EdgeIterator BeginEdges( const NodeIterator n ) const {
-        return EdgeIterator( _nodes[n].firstEdge );
+        return EdgeIterator( _nodes.at(n).firstEdge );
     }
 
     EdgeIterator EndEdges( const NodeIterator n ) const {
-        return EdgeIterator( _nodes[n+1].firstEdge );
+        return EdgeIterator( _nodes.at(n+1).firstEdge );
     }
 
     //searches for a specific edge
     EdgeIterator FindEdge( const NodeIterator from, const NodeIterator to ) const {
         EdgeIterator smallestEdge = SPECIAL_EDGEID;
-        EdgeWeight smallestWeight = UINT_MAX;
+        EdgeWeight smallestWeight = INVALID_EDGE_WEIGHT;
         for ( EdgeIterator edge = BeginEdges( from ); edge < EndEdges(from); edge++ ) {
             const NodeID target = GetTarget(edge);
             const EdgeWeight weight = GetEdgeData(edge).distance;

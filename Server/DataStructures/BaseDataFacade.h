@@ -86,6 +86,15 @@ public:
         const unsigned id
     ) const = 0;
 
+    virtual bool EdgeIsCompressed( const unsigned id ) const = 0;
+
+    virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const = 0;
+
+    virtual void GetUncompressedGeometry(
+        const unsigned id,
+        std::vector<unsigned> & result_nodes
+    ) const = 0;
+
     virtual TurnInstruction GetTurnInstructionForEdgeID(
         const unsigned id
     ) const  = 0;

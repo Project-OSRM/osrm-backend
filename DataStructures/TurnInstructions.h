@@ -92,6 +92,4 @@ struct TurnInstructionsClass : boost::noncopyable {
 
 };
 
-static TurnInstructionsClass TurnInstructions;
-
 #endif /* TURNINSTRUCTIONS_H_ */
