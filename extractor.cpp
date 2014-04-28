@@ -228,7 +228,7 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write(logWARNING) << e.what();
         return 1;
     } catch(std::exception & e) {
-        SimpleLogger().Write(logWARNING) << "Unhandled exception: " << e.what();
+        SimpleLogger().Write(logWARNING) << "Exception occured: " << e.what();
         return 1;
     }
     return 0;
