@@ -36,7 +36,6 @@ namespace http {
 void Reply::setSize(const unsigned size) {
     BOOST_FOREACH ( Header& h,  headers) {
         if("Content-Length" == h.name) {
-            std::string sizeString;
             intToString(size,h.value);
         }
     }
