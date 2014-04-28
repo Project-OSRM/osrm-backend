@@ -89,7 +89,7 @@ int main (int argc, const char * argv[])
         }
 
 #ifdef __linux__
-        const int lock_flags = (MCL_CURRENT | MCL_FUTURE);
+        const int lock_flags = MCL_CURRENT | MCL_FUTURE;
         if (-1 == mlockall(lock_flags))
         {
             SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not be locked to RAM";
