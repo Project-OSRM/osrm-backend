@@ -47,11 +47,13 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon)
     lon(lon)
 {
 #ifndef NDEBUG
-    if(0 != (std::abs(lat) >> 30)) {
+    if(0 != (std::abs(lat) >> 30))
+    {
         std::bitset<32> y(lat);
         SimpleLogger().Write(logDEBUG) << "broken lat: " << lat << ", bits: " << y;
     }
-    if(0 != (std::abs(lon) >> 30)) {
+    if(0 != (std::abs(lon) >> 30))
+    {
         std::bitset<32> x(lon);
         SimpleLogger().Write(logDEBUG) << "broken lon: " << lon << ", bits: " << x;
     }
@@ -67,12 +69,11 @@ bool FixedPointCoordinate::isSet() const {
            (std::numeric_limits<int>::min() != lon);
 }
 bool FixedPointCoordinate::isValid() const {
-    if(
-        lat >   90*COORDINATE_PRECISION ||
+    if (lat >   90*COORDINATE_PRECISION ||
         lat <  -90*COORDINATE_PRECISION ||
         lon >  180*COORDINATE_PRECISION ||
-        lon < -180*COORDINATE_PRECISION
-    ) {
+        lon < -180*COORDINATE_PRECISION)
+    {
         return false;
     }
     return true;
@@ -110,15 +111,14 @@ double FixedPointCoordinate::ApproximateDistance(
     //earth radius varies between 6,356.750-6,378.135 km (3,949.901-3,963.189mi)
     //The IUGG value for the equatorial radius is 6378.137 km (3963.19 miles)
     const double earth=6372797.560856;
-    double distance=earth*cHarv;
-    return distance;
+    return earth*cHarv;
 }
 
 double FixedPointCoordinate::ApproximateDistance(
     const FixedPointCoordinate &c1,
     const FixedPointCoordinate &c2
 ) {
-    return ApproximateDistance( c1.lat, c1.lon, c2.lat, c2.lon );
+    return ApproximateDistance(c1.lat, c1.lon, c2.lat, c2.lon);
 }
 
 double FixedPointCoordinate::ApproximateEuclideanDistance(
@@ -138,8 +138,7 @@ double FixedPointCoordinate::ApproximateEuclideanDistance(
     const double x = (lon2-lon1) * cos((lat1+lat2)/2.);
     const double y = (lat2-lat1);
     const double earthRadius = 6372797.560856;
-    const double d = sqrt(x*x + y*y) * earthRadius;
-    return d;
+    return sqrt(x*x + y*y) * earthRadius;
 }
 
 void FixedPointCoordinate::convertInternalLatLonToString(
@@ -178,6 +177,7 @@ void FixedPointCoordinate::convertInternalReversedCoordinateToString(
     output += tmp;
 }
 
-void FixedPointCoordinate::Output(std::ostream & out) const {//, FixedPointCoordinate & c) {
+void FixedPointCoordinate::Output(std::ostream & out) const
+{
     out << "(" << lat/COORDINATE_PRECISION << "," << lon/COORDINATE_PRECISION << ")";
 }
