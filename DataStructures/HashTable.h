@@ -28,41 +28,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
+#include <boost/functional/hash.hpp>
 #include <boost/ref.hpp>
 #include <boost/unordered_map.hpp>
 
-template<typename KeyT, typename ValueT>
-class HashTable : public boost::unordered_map<KeyT, ValueT> {
+template<typename Key, typename Value, typename Hash = boost::hash<Key> >
+class HashTable : public boost::unordered_map<Key, Value> {
 private:
-    typedef boost::unordered_map<KeyT, ValueT> super;
+    typedef boost::unordered_map<Key, Value, Hash> super;
 public:
-    static ValueT default_value;
+    static Value default_value;
 
     HashTable() : super() { }
 
     explicit HashTable(const unsigned size) : super(size) { }
 
-    inline void Add( KeyT const & key, ValueT const & value) {
+    inline void Add( Key const & key, Value const & value) {
         super::emplace(std::make_pair(key, value));
     }
 
-    inline const ValueT Find(KeyT const & key) const {
+    inline const Value Find(Key const & key) const
+    {
         typename super::const_iterator iter = super::find(key);
-        if( iter == super::end() ) {
+        if (iter == super::end())
+        {
             return boost::cref(default_value);
         }
         return boost::cref(iter->second);
     }
 
-    inline const bool Holds( KeyT const & key) const {
-        if( super::find(key) == super::end() ) {
+    inline const bool Holds( Key const & key) const
+    {
+        if(super::find(key) == super::end())
+        {
             return false;
         }
         return true;
     }
 };
 
-template<typename KeyT, typename ValueT>
-ValueT HashTable<KeyT, ValueT>::default_value;
+template<typename Key, typename Value, typename Hash>
+Value HashTable<Key, Value, Hash>::default_value;
 
 #endif /* HASH_TABLE_H */

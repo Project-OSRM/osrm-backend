@@ -26,7 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "ExtractorCallbacks.h"
-
 #include "ExtractionContainers.h"
 #include "ExtractionWay.h"
 

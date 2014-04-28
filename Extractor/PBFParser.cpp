@@ -215,25 +215,26 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 			denseTagIndex += 2;
 		}
 	}
-
+#pragma omp parallel
+{
+	const int thread_num = omp_get_thread_num();
 #pragma omp parallel for schedule ( guided )
-	for(int i = 0; i < number_of_nodes; ++i) {
+	for(int i = 0; i < number_of_nodes; ++i)
+	{
 	    ImportNode & import_node = extracted_nodes_vector[i];
-	    ParseNodeInLua(
-	    	import_node,
-	    	scripting_environment.getLuaStateForThreadID(omp_get_thread_num())
-	    );
+	    ParseNodeInLua(import_node,	scripting_environment.getLuaStateForThreadID(thread_num));
 	}
+}
 
-	BOOST_FOREACH(const ImportNode &import_node, extracted_nodes_vector) {
+	BOOST_FOREACH(const ImportNode &import_node, extracted_nodes_vector)
+	{
 	    extractor_callbacks->nodeFunction(import_node);
 	}
 }
 
-inline void PBFParser::parseNode(_ThreadData * ) {
-	throw OSRMException(
-		"Parsing of simple nodes not supported. PBF should use dense nodes"
-	);
+inline void PBFParser::parseNode(_ThreadData * )
+{
+	throw OSRMException("Parsing of simple nodes not supported. PBF should use dense nodes");
 }
 
 inline void PBFParser::parseRelation(_ThreadData * threadData) {
@@ -351,25 +352,29 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 		}
 	}
 
+#pragma omp parallel
+{
+	const int thread_num = omp_get_thread_num();
 #pragma omp parallel for schedule ( guided )
-	for(int i = 0; i < number_of_ways; ++i) {
+	for(int i = 0; i < number_of_ways; ++i)
+	{
 	    ExtractionWay & extraction_way = parsed_way_vector[i];
-		if (2 > extraction_way.path.size())
+		if (2 <= extraction_way.path.size())
 		{
-        	continue;
+		    ParseWayInLua(
+		    	extraction_way,
+		    	scripting_environment.getLuaStateForThreadID(thread_num)
+		   	);
     	}
-	    ParseWayInLua(
-	    	extraction_way,
-	    	scripting_environment.getLuaStateForThreadID( omp_get_thread_num())
-	   	);
 	}
+}
 
-	BOOST_FOREACH(ExtractionWay & extraction_way, parsed_way_vector) {
-		if (2 > extraction_way.path.size())
+	BOOST_FOREACH(ExtractionWay & extraction_way, parsed_way_vector)
+	{
+		if (2 <= extraction_way.path.size())
 		{
-        	continue;
+		    extractor_callbacks->wayFunction(extraction_way);
     	}
-	    extractor_callbacks->wayFunction(extraction_way);
 	}
 }
 

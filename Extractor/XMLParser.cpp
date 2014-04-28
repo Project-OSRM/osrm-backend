@@ -273,7 +273,7 @@ ImportNode XMLParser::_ReadXMLNode() {
 				xmlChar* k = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "k" );
 				xmlChar* value = xmlTextReaderGetAttribute( inputReader, ( const xmlChar* ) "v" );
 				if ( k != NULL && value != NULL ) {
-					node.keyVals.Add(std::string( reinterpret_cast<char*>(k) ), std::string( reinterpret_cast<char*>(value)));
+					node.keyVals.emplace(std::string(reinterpret_cast<char*>(k)), std::string(reinterpret_cast<char*>(value)));
 				}
 				if ( k != NULL ) {
 					xmlFree( k );
