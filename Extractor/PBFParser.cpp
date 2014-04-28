@@ -352,9 +352,6 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 		}
 	}
 
-#pragma omp parallel
-{
-	const int thread_num = omp_get_thread_num();
 #pragma omp parallel for schedule ( guided )
 	for(int i = 0; i < number_of_ways; ++i)
 	{
@@ -363,11 +360,10 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
 		{
 		    ParseWayInLua(
 		    	extraction_way,
-		    	scripting_environment.getLuaStateForThreadID(thread_num)
+		    	scripting_environment.getLuaStateForThreadID(omp_get_thread_num())
 		   	);
     	}
 	}
-}
 
 	BOOST_FOREACH(ExtractionWay & extraction_way, parsed_way_vector)
 	{
