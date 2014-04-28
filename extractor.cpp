@@ -101,12 +101,14 @@ int main (int argc, char *argv[]) {
         boost::program_options::store(boost::program_options::command_line_parser(argc, argv).
             options(cmdline_options).positional(positional_options).run(), option_variables);
 
-        if(option_variables.count("version")) {
+        if(option_variables.count("version"))
+        {
             SimpleLogger().Write() << g_GIT_DESCRIPTION;
             return 0;
         }
 
-        if(option_variables.count("help")) {
+        if(option_variables.count("help"))
+        {
             SimpleLogger().Write() << visible_options;
             return 0;
         }
@@ -114,8 +116,9 @@ int main (int argc, char *argv[]) {
         boost::program_options::notify(option_variables);
 
         // parse config file
-        if(boost::filesystem::is_regular_file(config_file_path)) {
-            SimpleLogger().Write() << "Reading options from: " << config_file_path.c_str();
+        if(boost::filesystem::is_regular_file(config_file_path))
+        {
+            SimpleLogger().Write() << "Reading options from: " << config_file_path.String();
             std::string config_str;
             PrepareConfigFile( config_file_path.c_str(), config_str );
             std::stringstream config_stream( config_str );
@@ -123,23 +126,27 @@ int main (int argc, char *argv[]) {
             boost::program_options::notify(option_variables);
         }
 
-        if(!option_variables.count("input")) {
+        if(!option_variables.count("input"))
+        {
             SimpleLogger().Write() << visible_options;
             return 0;
         }
 
-        if(1 > requested_num_threads) {
+        if(1 > requested_num_threads)
+        {
             SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
             return 1;
         }
 
-        if(!boost::filesystem::is_regular_file(input_path)) {
-            SimpleLogger().Write(logWARNING) << "Input file " << input_path.c_str() << " not found!";
+        if(!boost::filesystem::is_regular_file(input_path))
+        {
+            SimpleLogger().Write(logWARNING) << "Input file " << input_path.string() << " not found!";
             return 1;
         }
 
-        if(!boost::filesystem::is_regular_file(profile_path)) {
-            SimpleLogger().Write(logWARNING) << "Profile " << profile_path.c_str() << " not found!";
+        if(!boost::filesystem::is_regular_file(profile_path))
+        {
+            SimpleLogger().Write(logWARNING) << "Profile " << profile_path.string() << " not found!";
             return 1;
         }
 
@@ -150,15 +157,17 @@ int main (int argc, char *argv[]) {
         /*** Setup Scripting Environment ***/
         ScriptingEnvironment scriptingEnvironment(profile_path.c_str());
 
-        omp_set_num_threads( std::min( omp_get_num_procs(), requested_num_threads) );
+        omp_set_num_threads(std::min(omp_get_num_procs(), requested_num_threads));
 
         bool file_has_pbf_format(false);
-        std::string output_file_name(input_path.c_str());
-        std::string restrictionsFileName(input_path.c_str());
+        std::string output_file_name = input_path.string();
+        std::string restrictionsFileName = input_path.string();
         std::string::size_type pos = output_file_name.find(".osm.bz2");
-        if(pos==std::string::npos) {
+        if(pos==std::string::npos)
+        {
             pos = output_file_name.find(".osm.pbf");
-            if(pos!=std::string::npos) {
+            if (pos!=std::string::npos)
+            {
                 file_has_pbf_format = true;
             }
         }
@@ -196,13 +205,17 @@ int main (int argc, char *argv[]) {
         stringMap[""] = 0;
         extractCallBacks = new ExtractorCallbacks(&externalMemory, &stringMap);
         BaseParser* parser;
-        if(file_has_pbf_format) {
+        if(file_has_pbf_format)
+        {
             parser = new PBFParser(input_path.c_str(), extractCallBacks, scriptingEnvironment);
-        } else {
+        }
+        else
+        {
             parser = new XMLParser(input_path.c_str(), extractCallBacks, scriptingEnvironment);
         }
 
-        if(!parser->ReadHeader()) {
+        if(!parser->ReadHeader())
+        {
             throw OSRMException("Parser not initialized!");
         }
         SimpleLogger().Write() << "Parsing in progress..";
@@ -212,7 +225,8 @@ int main (int argc, char *argv[]) {
             (get_timestamp() - parsing_start_time) <<
             " seconds";
 
-        if( externalMemory.all_edges_list.empty() ) {
+        if (externalMemory.all_edges_list.empty())
+        {
             SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
             return 1;
         }
@@ -222,20 +236,17 @@ int main (int argc, char *argv[]) {
         delete parser;
         delete extractCallBacks;
 
-        SimpleLogger().Write() <<
-            "extraction finished after " << get_timestamp() - startup_time <<
-            "s";
+        SimpleLogger().Write() << "extraction finished after " << get_timestamp() - startup_time << "s";
+        SimpleLogger().Write() << "To prepare the data for routing, run: " << "./osrm-prepare " << output_file_name << std::endl;
 
-         SimpleLogger().Write() << "To prepare the data for routing, run: "
-            << "./osrm-prepare " << output_file_name << std::endl;
-
-    } catch(boost::program_options::too_many_positional_options_error& e) {
+    }
+    catch(boost::program_options::too_many_positional_options_error& e)
+    {
         SimpleLogger().Write(logWARNING) << "Only one input file can be specified";
         return 1;
-    } catch(boost::program_options::error& e) {
-        SimpleLogger().Write(logWARNING) << e.what();
-        return 1;
-    } catch(std::exception & e) {
+    }
+    catch(std::exception & e)
+    {
         SimpleLogger().Write(logWARNING) << "Exception occured: " << e.what();
         return 1;
     }
