@@ -118,9 +118,9 @@ int main (int argc, char *argv[]) {
         // parse config file
         if(boost::filesystem::is_regular_file(config_file_path))
         {
-            SimpleLogger().Write() << "Reading options from: " << config_file_path.String();
+            SimpleLogger().Write() << "Reading options from: " << config_file_path.string();
             std::string config_str;
-            PrepareConfigFile( config_file_path.c_str(), config_str );
+            PrepareConfigFile(config_file_path.c_str(), config_str);
             std::stringstream config_stream( config_str );
             boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
             boost::program_options::notify(option_variables);
