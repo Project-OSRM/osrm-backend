@@ -32,12 +32,14 @@ speed_profile = {
   ["default"] = 10
 }
 
-local take_minimum_of_speeds  = false
+traffic_signal_penalty          = 2
+
+-- End of globals
+local take_minimum_of_speeds    = false
 local obey_oneway               = true
 local obey_bollards             = true
 local use_turn_restrictions     = true
 local ignore_areas              = true     -- future feature
-local traffic_signal_penalty    = 2
 local u_turn_penalty            = 20
 
 local abs = math.abs
@@ -46,7 +48,6 @@ local max = math.max
 
 local maxspeed_reduction = 0.66
 
--- End of globals
 local function find_access_tag(source,access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
     local has_tag = source.tags:Holds(v)

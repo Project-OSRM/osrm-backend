@@ -213,11 +213,8 @@ int main (int argc, char *argv[]) {
         EdgeBasedGraphFactory::SpeedProfileProperties speedProfile;
 
         if(0 != luaL_dostring( myLuaState, "return traffic_signal_penalty\n")) {
-            std::cerr <<
-                lua_tostring(myLuaState,-1) <<
-                " occured in scripting block" <<
-                std::endl;
-                return 1;
+            std::cerr << lua_tostring(myLuaState,-1) << " occured in scripting block" << std::endl;
+            return 1;
         }
         speedProfile.trafficSignalPenalty = 10*lua_tointeger(myLuaState, -1);
         SimpleLogger().Write(logDEBUG) << "traffic_signal_penalty: " << speedProfile.trafficSignalPenalty;
