@@ -87,7 +87,7 @@ Reply Reply::StockReply(Reply::status_type status) {
     Reply rep;
     rep.status = status;
     rep.content.clear();
-    rep.content.push_back( ToString(status) );
+    rep.content.push_back(rep.ToString(status));
     rep.headers.resize(3);
     rep.headers[0].name = "Access-Control-Allow-Origin";
     rep.headers[0].value = "*";
