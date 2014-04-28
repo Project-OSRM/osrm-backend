@@ -172,7 +172,7 @@ int main (int argc, const char * argv[])
 
             if (!server_thread.timed_join(boost::posix_time::seconds(2)))
             {
-                SimpleLogger().Write(logDEBUG) << "Threads did not finish within 2 seconds. Hard abort!";
+                SimpleLogger().Write(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
             }
         }
 
