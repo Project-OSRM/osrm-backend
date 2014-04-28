@@ -721,17 +721,10 @@ void EdgeBasedGraphFactory::Run(
     unsigned skipped_barrier_turns_counter = 0;
     unsigned compressed = 0;
     p.reinit(m_node_based_graph->GetNumberOfNodes());
-    for(
-        NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes();
-        u < end;
-        ++u
-    ) {
-        for(
-            EdgeIterator e1 = m_node_based_graph->BeginEdges(u),
-                last_edge_u = m_node_based_graph->EndEdges(u);
-            e1 < last_edge_u;
-            ++e1
-        ) {
+    for (NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes(); u < end; ++u)
+    {
+        for (EdgeIterator e1 = m_node_based_graph->BeginEdges(u), last_edge_u = m_node_based_graph->EndEdges(u); e1 < last_edge_u; ++e1)
+        {
             if( !m_node_based_graph->GetEdgeData(e1).forward ) {
                 continue;
             }
@@ -747,27 +740,31 @@ void EdgeBasedGraphFactory::Run(
                     e2 < last_edge_v;
                     ++e2
             ) {
-                if( !m_node_based_graph->GetEdgeData(e2).forward ) {
+                if (!m_node_based_graph->GetEdgeData(e2).forward)
+                {
                     continue;
                 }
                 const NodeIterator w = m_node_based_graph->GetTarget(e2);
 
-                if(
-                    to_node_of_only_restriction != SPECIAL_NODEID &&
-                    w != to_node_of_only_restriction
-                ) {
+                if ((to_node_of_only_restriction != SPECIAL_NODEID) && (w != to_node_of_only_restriction))
+                {
                     //We are at an only_-restriction but not at the right turn.
                     ++restricted_turns_counter;
                     continue;
                 }
 
-                if( is_barrier_node) {
-                    if(u != w) {
+                if (is_barrier_node)
+                {
+                    if (u != w)
+                    {
                         ++skipped_barrier_turns_counter;
                         continue;
                     }
-                } else {
-                    if ( (u == w) && (m_node_based_graph->GetOutDegree(v) > 1) ) {
+                }
+                else
+                {
+                    if ((u == w) && (m_node_based_graph->GetOutDegree(v) > 1))
+                    {
                         ++skipped_uturns_counter;
                         continue;
                     }
@@ -775,11 +772,8 @@ void EdgeBasedGraphFactory::Run(
 
                 //only add an edge if turn is not a U-turn except when it is
                 //at the end of a dead-end street
-                if (
-                    CheckIfTurnIsRestricted(u, v, w)          &&
-                    (to_node_of_only_restriction == SPECIAL_NODEID) &&
-                    (w != to_node_of_only_restriction)
-                ) {
+                if (CheckIfTurnIsRestricted(u, v, w) && (to_node_of_only_restriction == SPECIAL_NODEID) && (w != to_node_of_only_restriction))
+                {
                     ++restricted_turns_counter;
                     continue;
                 }
@@ -794,19 +788,22 @@ void EdgeBasedGraphFactory::Run(
 
                 // the following is the core of the loop.
                 unsigned distance = edge_data1.distance;
-                if( m_traffic_lights.find(v) != m_traffic_lights.end() ) {
+                if (m_traffic_lights.find(v) != m_traffic_lights.end())
+                {
                     distance += speed_profile.trafficSignalPenalty;
                 }
                 const int turn_penalty = GetTurnPenalty(u, v, w, lua_state);
                 TurnInstruction turn_instruction = AnalyzeTurn(u, v, w);
-                if(turn_instruction == TurnInstructionsClass::UTurn){
+                if (turn_instruction == TurnInstructionsClass::UTurn)
+                {
                     distance += speed_profile.uTurnPenalty;
                 }
                 distance += turn_penalty;
 
                 const bool edge_is_compressed = m_geometry_compressor.HasEntryForID(e1);
 
-                if(edge_is_compressed) {
+                if (edge_is_compressed)
+                {
                     ++compressed;
                 }
 
@@ -821,11 +818,9 @@ void EdgeBasedGraphFactory::Run(
 
                 ++original_edges_counter;
 
-                if(original_edge_data_vector.size() > 100000) {
-                    FlushVectorToStream(
-                        edge_data_file,
-                        original_edge_data_vector
-                    );
+                if (original_edge_data_vector.size() > 100000)
+                {
+                    FlushVectorToStream(edge_data_file, original_edge_data_vector);
                 }
 
                 BOOST_ASSERT( SPECIAL_NODEID != edge_data1.edgeBasedNodeID );
