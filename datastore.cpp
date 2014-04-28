@@ -52,16 +52,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-int main( const int argc, const char * argv[] ) {
-
+int main( const int argc, const char * argv[] )
+{
     LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
 
 #ifdef __linux__
-        if( -1 == mlockall(MCL_CURRENT | MCL_FUTURE) ) {
-            SimpleLogger().Write(logWARNING) <<
-                "Process " << argv[0] << " could not request RAM lock";
-        }
+    const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
+    if (-1 == mlockall(lock_flags))
+    {
+        SimpleLogger().Write(logWARNING) << "Process " << argv[0] << " could not request RAM lock";
+    }
 #endif
 
     try {
