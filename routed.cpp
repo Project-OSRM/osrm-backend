@@ -78,7 +78,14 @@ int main (int argc, const char * argv[])
 
         ServerPaths server_paths;
 
-        const unsigned init_result = GenerateServerProgramOptions(argc, argv, server_paths, ip_address, ip_port, requested_thread_num, use_shared_memory, trial);
+        const unsigned init_result = GenerateServerProgramOptions(argc,
+                                                                  argv,
+                                                                  server_paths,
+                                                                  ip_address,
+                                                                  ip_port,
+                                                                  requested_thread_num,
+                                                                  use_shared_memory,
+                                                                  trial);
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
             return 0;
