@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 
+#include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 
 #include <cstdlib>
@@ -50,7 +52,7 @@ template<class DataFacadeT>
 class ViaRoutePlugin : public BasePlugin {
 private:
     boost::unordered_map<std::string, unsigned> descriptorTable;
-    SearchEngine<DataFacadeT> * search_engine_ptr;
+    boost::shared_ptr<SearchEngine<DataFacadeT> > search_engine_ptr;
 public:
 
     explicit ViaRoutePlugin(DataFacadeT * facade)
@@ -58,16 +60,13 @@ public:
         descriptor_string("viaroute"),
         facade(facade)
     {
-        //TODO: set up an engine for each thread!!
-        search_engine_ptr = new SearchEngine<DataFacadeT>(facade);
+        search_engine_ptr = boost::make_shared<SearchEngine<DataFacadeT> >(facade);
 
         descriptorTable.emplace("json", 0);
         descriptorTable.emplace("gpx" , 1);
     }
 
-    virtual ~ViaRoutePlugin() {
-        delete search_engine_ptr;
-    }
+    virtual ~ViaRoutePlugin() { }
 
     const std::string & GetDescriptor() const { return descriptor_string; }
 
@@ -81,19 +80,19 @@ public:
             return;
         }
 
-        RawRouteData rawRoute;
-        rawRoute.checkSum = facade->GetCheckSum();
-        const bool checksumOK = (routeParameters.checkSum == rawRoute.checkSum);
+        RawRouteData raw_route;
+        raw_route.checkSum = facade->GetCheckSum();
+        const bool checksumOK = (routeParameters.checkSum == raw_route.checkSum);
         std::vector<std::string> textCoord;
         for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
             if( !checkCoord(routeParameters.coordinates[i]) ) {
                 reply = http::Reply::StockReply(http::Reply::badRequest);
                 return;
             }
-            rawRoute.rawViaNodeCoordinates.push_back(routeParameters.coordinates[i]);
+            raw_route.rawViaNodeCoordinates.push_back(routeParameters.coordinates[i]);
         }
-        std::vector<PhantomNode> phantomNodeVector(rawRoute.rawViaNodeCoordinates.size());
-        for(unsigned i = 0; i < rawRoute.rawViaNodeCoordinates.size(); ++i) {
+        std::vector<PhantomNode> phantomNodeVector(raw_route.rawViaNodeCoordinates.size());
+        for(unsigned i = 0; i < raw_route.rawViaNodeCoordinates.size(); ++i) {
             if(checksumOK && i < routeParameters.hints.size() && "" != routeParameters.hints[i]) {
                 DecodeObjectFromBase64(routeParameters.hints[i], phantomNodeVector[i]);
                 if(phantomNodeVector[i].isValid(facade->GetNumberOfNodes())) {
@@ -101,93 +100,86 @@ public:
                 }
             }
             facade->FindPhantomNodeForCoordinate(
-                rawRoute.rawViaNodeCoordinates[i],
+                raw_route.rawViaNodeCoordinates[i],
                 phantomNodeVector[i],
                 routeParameters.zoomLevel
             );
         }
 
-        PhantomNodes segmentPhantomNodes;
-        for(unsigned i = 0; i < phantomNodeVector.size()-1; ++i) {
-            segmentPhantomNodes.source_phantom = phantomNodeVector[i];
-            segmentPhantomNodes.target_phantom = phantomNodeVector[i+1];
-            rawRoute.segmentEndCoordinates.push_back(segmentPhantomNodes);
+        PhantomNodes current_phantom_node_pair;
+        for (unsigned i = 0; i < phantomNodeVector.size()-1; ++i)
+        {
+            current_phantom_node_pair.source_phantom = phantomNodeVector[i];
+            current_phantom_node_pair.target_phantom = phantomNodeVector[i+1];
+            raw_route.segmentEndCoordinates.push_back(current_phantom_node_pair);
         }
 
-        if(
-            ( routeParameters.alternateRoute ) &&
-            (1 == rawRoute.segmentEndCoordinates.size())
-        ) {
-            search_engine_ptr->alternative_path(
-                rawRoute.segmentEndCoordinates[0],
-                rawRoute
-            );
-        } else {
-            search_engine_ptr->shortest_path(
-                rawRoute.segmentEndCoordinates,
-                rawRoute
-            );
+        if ((routeParameters.alternateRoute) && (1 == raw_route.segmentEndCoordinates.size()))
+        {
+            search_engine_ptr->alternative_path(raw_route.segmentEndCoordinates[0], raw_route);
+        }
+        else
+        {
+            search_engine_ptr->shortest_path(raw_route.segmentEndCoordinates, raw_route);
         }
 
-        if (INT_MAX == rawRoute.lengthOfShortestPath)
+        if (INT_MAX == raw_route.lengthOfShortestPath)
         {
             SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
         }
         reply.status = http::Reply::ok;
 
-        //TODO: Move to member as smart pointer
-        BaseDescriptor<DataFacadeT> * desc;
-        if("" != routeParameters.jsonpParameter) {
+        if (!routeParameters.jsonpParameter.empty())
+        {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
 
-        DescriptorConfig descriptorConfig;
+        DescriptorConfig descriptor_config;
 
-        unsigned descriptorType = 0;
+        unsigned descriptor_type = 0;
         if(descriptorTable.find(routeParameters.outputFormat) != descriptorTable.end() ) {
-            descriptorType = descriptorTable.find(routeParameters.outputFormat)->second;
+            descriptor_type = descriptorTable.find(routeParameters.outputFormat)->second;
         }
-        descriptorConfig.zoom_level = routeParameters.zoomLevel;
-        descriptorConfig.instructions = routeParameters.printInstructions;
-        descriptorConfig.geometry = routeParameters.geometry;
-        descriptorConfig.encode_geometry = routeParameters.compression;
+        descriptor_config.zoom_level = routeParameters.zoomLevel;
+        descriptor_config.instructions = routeParameters.printInstructions;
+        descriptor_config.geometry = routeParameters.geometry;
+        descriptor_config.encode_geometry = routeParameters.compression;
 
-        switch(descriptorType){
+        boost::shared_ptr<BaseDescriptor<DataFacadeT> > descriptor;
+        switch(descriptor_type){
         case 0:
-            desc = new JSONDescriptor<DataFacadeT>();
-
+            descriptor = boost::make_shared<JSONDescriptor<DataFacadeT> >();
             break;
         case 1:
-            desc = new GPXDescriptor<DataFacadeT>();
-
+            descriptor = boost::make_shared<GPXDescriptor<DataFacadeT> >();
             break;
         default:
-            desc = new JSONDescriptor<DataFacadeT>();
-
+            descriptor = boost::make_shared<JSONDescriptor<DataFacadeT> >();
             break;
         }
 
-        PhantomNodes phantomNodes;
-        phantomNodes.source_phantom = rawRoute.segmentEndCoordinates[0].source_phantom;
-        phantomNodes.target_phantom = rawRoute.segmentEndCoordinates[rawRoute.segmentEndCoordinates.size()-1].target_phantom;
-        desc->SetConfig(descriptorConfig);
+        PhantomNodes phantom_nodes;
+        phantom_nodes.source_phantom = raw_route.segmentEndCoordinates[0].source_phantom;
+        phantom_nodes.target_phantom = raw_route.segmentEndCoordinates[raw_route.segmentEndCoordinates.size()-1].target_phantom;
+        descriptor->SetConfig(descriptor_config);
 
-        desc->Run(rawRoute, phantomNodes, facade, reply);
+        descriptor->Run(raw_route, phantom_nodes, facade, reply);
 
-        if("" != routeParameters.jsonpParameter) {
+        if (!routeParameters.jsonpParameter.empty())
+        {
             reply.content.push_back(")\n");
         }
         reply.headers.resize(3);
         reply.headers[0].name = "Content-Length";
-        std::string tmp;
         unsigned content_length = 0;
         BOOST_FOREACH(const std::string & snippet, reply.content) {
             content_length += snippet.length();
         }
-        intToString(content_length, tmp);
-        reply.headers[0].value = tmp;
-        switch(descriptorType){
+        std::string tmp_string;
+        intToString(content_length, tmp_string);
+        reply.headers[0].value = tmp_string;
+        switch(descriptor_type){
         case 0:
             if( !routeParameters.jsonpParameter.empty() ){
                 reply.headers[1].name = "Content-Type";
@@ -223,8 +215,6 @@ public:
             }
             break;
         }
-
-        delete desc;
         return;
     }
 private:
