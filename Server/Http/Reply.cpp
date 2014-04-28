@@ -74,10 +74,10 @@ std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));
     for (std::size_t i = 0; i < headers.size(); ++i) {
-        Header& h = headers[i];
-        buffers.push_back(boost::asio::buffer(h.name));
+        Header& current_header = headers[i];
+        buffers.push_back(boost::asio::buffer(current_header.name));
         buffers.push_back(boost::asio::buffer(seperators));
-        buffers.push_back(boost::asio::buffer(h.value));
+        buffers.push_back(boost::asio::buffer(current_header.value));
         buffers.push_back(boost::asio::buffer(crlf));
     }
     buffers.push_back(boost::asio::buffer(crlf));
