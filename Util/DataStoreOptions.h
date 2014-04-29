@@ -105,11 +105,11 @@ inline bool GenerateDataStoreOptions(const int argc, const char * argv[], Server
             boost::program_options::value<boost::filesystem::path>(&paths["edgesdata"]),
             ".edges file"
         )
-        // (
-        //     "geometry",
-        //     boost::program_options::value<boost::filesystem::path>(&paths["geometries"]),
-        //     ".geometry file"
-        // )
+        (
+            "geometry",
+            boost::program_options::value<boost::filesystem::path>(&paths["geometry"]),
+            ".geometry file"
+        )
         (
             "ramindex",
             boost::program_options::value<boost::filesystem::path>(&paths["ramindex"]),
@@ -180,13 +180,13 @@ inline bool GenerateDataStoreOptions(const int argc, const char * argv[], Server
     boost::program_options::notify(option_variables);
 
     const bool parameter_present =
-        (paths.find("hsgrdata")  != paths.end() && !paths.find("hsgrdata")->second.string().empty()  ) ||
+        (paths.find("hsgrdata")  != paths.end() && !paths.find("hsgrdata" )->second.string().empty()) ||
         (paths.find("nodesdata") != paths.end() && !paths.find("nodesdata")->second.string().empty()) ||
         (paths.find("edgesdata") != paths.end() && !paths.find("edgesdata")->second.string().empty()) ||
-        // (paths.find("geometry") != paths.end() && !paths.find("geometry")->second.string().empty())) ||
-        (paths.find("ramindex")  != paths.end() && !paths.find("ramindex")->second.string().empty())  ||
+        (paths.find("geometry")  != paths.end() && !paths.find("geometry" )->second.string().empty()) ||
+        (paths.find("ramindex")  != paths.end() && !paths.find("ramindex" )->second.string().empty()) ||
         (paths.find("fileindex") != paths.end() && !paths.find("fileindex")->second.string().empty()) ||
-        (paths.find("timestamp") != paths.end() && !paths.find("timestamp")->second.string().empty()) ;
+        (paths.find("timestamp") != paths.end() && !paths.find("timestamp")->second.string().empty());
 
     if (parameter_present)
     {
@@ -244,11 +244,11 @@ inline bool GenerateDataStoreOptions(const int argc, const char * argv[], Server
             path_iterator->second = base_string + ".edges";
         }
 
-        // path_iterator = paths.find("geometries");
-        // if (path_iterator != paths.end())
-        // {
-        //     path_iterator->second = base_string + ".geometry";
-        // }
+        path_iterator = paths.find("geometry");
+        if (path_iterator != paths.end())
+        {
+            path_iterator->second = base_string + ".geometry";
+        }
 
         path_iterator = paths.find("ramindex");
         if (path_iterator != paths.end())
@@ -296,12 +296,12 @@ inline bool GenerateDataStoreOptions(const int argc, const char * argv[], Server
     }
     AssertPathExists(path_iterator->second);
 
-    // path_iterator = paths.find("geometries");
-    // if (path_iterator == paths.end() || path_iterator->second.string().empty())
-    // {
-    //     path_iterator->second = base_string + ".geometry";
-    // }
-    // AssertPathExists(path_iterator->second);
+    path_iterator = paths.find("geometry");
+    if (path_iterator == paths.end() || path_iterator->second.string().empty())
+    {
+        throw OSRMException(".geometry file must be specified");
+    }
+    AssertPathExists(path_iterator->second);
 
     path_iterator = paths.find("ramindex");
     if (path_iterator == paths.end() || path_iterator->second.string().empty())

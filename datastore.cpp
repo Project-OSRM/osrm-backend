@@ -92,22 +92,25 @@ int main( const int argc, const char * argv[] )
             return 0;
         }
         if( server_paths.find("hsgrdata") == server_paths.end() ) {
-            throw OSRMException("no hsgr file given in ini file");
+            throw OSRMException("no hsgr file found");
         }
         if( server_paths.find("ramindex") == server_paths.end() ) {
-            throw OSRMException("no ram index file given in ini file");
+            throw OSRMException("no ram index file found");
         }
         if( server_paths.find("fileindex") == server_paths.end() ) {
-            throw OSRMException("no leaf index file given in ini file");
+            throw OSRMException("no leaf index file found");
         }
         if( server_paths.find("nodesdata") == server_paths.end() ) {
-            throw OSRMException("no nodes file given in ini file");
+            throw OSRMException("no nodes file found");
         }
         if( server_paths.find("edgesdata") == server_paths.end() ) {
-            throw OSRMException("no edges file given in ini file");
+            throw OSRMException("no edges file found");
         }
         if( server_paths.find("namesdata") == server_paths.end() ) {
-            throw OSRMException("no names file given in ini file");
+            throw OSRMException("no names file found");
+        }
+        if( server_paths.find("geometry") == server_paths.end() ) {
+            throw OSRMException("no geometry file found");
         }
 
         ServerPaths::const_iterator paths_iterator = server_paths.find("hsgrdata");
@@ -139,8 +142,7 @@ int main( const int argc, const char * argv[] )
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & names_data_path = paths_iterator->second;
-
-        paths_iterator = server_paths.find("geometries");
+        paths_iterator = server_paths.find("geometry");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path & geometries_data_path = paths_iterator->second;
