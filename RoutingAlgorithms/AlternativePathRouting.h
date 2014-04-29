@@ -172,6 +172,11 @@ public:
             }
         }
 
+        if (INVALID_EDGE_WEIGHT == upper_bound_to_shortest_path_distance)
+        {
+            return;
+        }
+
         sort_unique_resize( via_node_candidate_list );
 
         std::vector<NodeID> packed_forward_path;
