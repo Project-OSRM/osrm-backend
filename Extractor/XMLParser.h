@@ -33,20 +33,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <libxml/xmlreader.h>
 
-class XMLParser : public BaseParser {
-public:
-    XMLParser(
-        const char* filename,
-        ExtractorCallbacks * ec,
-        ScriptingEnvironment & se
-    );
+class XMLParser : public BaseParser
+{
+  public:
+    XMLParser(const char *filename, ExtractorCallbacks *ec, ScriptingEnvironment &se);
     bool ReadHeader();
     bool Parse();
 
-private:
-    InputRestrictionContainer _ReadXMLRestriction();
-    ExtractionWay _ReadXMLWay();
-    ImportNode _ReadXMLNode();
+  private:
+    InputRestrictionContainer ReadXMLRestriction();
+    ExtractionWay ReadXMLWay();
+    ImportNode ReadXMLNode();
     xmlTextReaderPtr inputReader;
 };
 
