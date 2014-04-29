@@ -98,6 +98,12 @@ When /^I route I should get$/ do |table|
         if table.headers.include? 'distances'
           got['distances'] = distances
         end
+        if table.headers.include? 'status'
+          got['status'] = json['status'].to_s
+        end
+        if table.headers.include? 'message'
+          got['message'] = json['status_message']
+        end
         if table.headers.include? '#'   # comment column
           got['#'] = row['#']           # copy value so it always match
         end
