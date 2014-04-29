@@ -19,6 +19,16 @@ Then /^response should be well-formed$/ do
   @json['status'].class.should == Fixnum
 end
 
+Then /^status code should be (\d+)$/ do |code|
+  @json = JSON.parse @response.body
+  @json['status'].should == code.to_i
+end
+
+Then /^status message should be "(.*?)"$/ do |message|
+  @json = JSON.parse @response.body
+  @json['status_message'].should == message
+end
+
 Then /^response should be a well-formed route$/ do
   step "response should be well-formed"
   @json['status_message'].class.should == String

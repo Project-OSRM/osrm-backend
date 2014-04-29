@@ -1,39 +1,8 @@
-@routing @status
-Feature: Status messages
+@routing @query
+Feature: Query message parsing
 
     Background:
         Given the profile "testbot"
-
-    Scenario: Route found
-        Given the node map
-            | a | b |
-
-        Given the ways
-            | nodes |
-            | ab    |
-
-        When I route I should get
-            | from | to | route | status | message                    |
-            | a    | b  | ab    | 0      | Found route between points |
-            | b    | a  | ab    | 0      | Found route between points |
-
-    Scenario: No route found
-        Given the node map
-            | a | b |
-            |   |   |
-            | c | d |
-
-        Given the ways
-            | nodes |
-            | ab    |
-            | cd    |
-        
-        When I route I should get
-            | from | to | route | status | message                          |
-            | a    | b  | ab    | 0      | Found route between points       |
-            | c    | d  | cd    | 0      | Found route between points       |
-            | a    | c  |       | 207    | Cannot find route between points |
-            | b    | d  |       | 207    | Cannot find route between points |
 
     Scenario: Malformed requests
         Given the node locations

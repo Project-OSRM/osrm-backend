@@ -26,6 +26,18 @@ rescue Timeout::Error
   raise "*** osrm-routed did not respond."
 end
 
+def request_url path
+  uri = URI.parse"#{HOST}/#{path}"
+  @query = uri.to_s
+  Timeout.timeout(OSRM_TIMEOUT) do
+    Net::HTTP.get_response uri
+  end
+rescue Errno::ECONNREFUSED => e
+  raise "*** osrm-routed is not running."
+rescue Timeout::Error
+  raise "*** osrm-routed did not respond."
+end
+
 def request_route waypoints, params={}
   defaults = { 'output' => 'json', 'instructions' => true, 'alt' => false }
   request_path "viaroute", waypoints, defaults.merge(params)
