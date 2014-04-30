@@ -1,6 +1,6 @@
 require 'net/http'
 
-HOST = "http://localhost:#{OSRM_PORT}"
+HOST = "http://127.0.0.1:#{OSRM_PORT}"
 DESTINATION_REACHED = 15      #OSRM instruction code
 
 class Hash
