@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DouglasPeucker.h"
 #include "../DataStructures/SegmentInformation.h"
 
+#include <cmath>
+
 #include <boost/assert.hpp>
 
 #include <limits>
