@@ -200,10 +200,10 @@ int main (int argc, char *argv[]) {
         luaL_openlibs(myLuaState);
 
         //adjust lua load path
-        luaAddScriptFolderToLoadPath( myLuaState, profile_path.c_str() );
+        luaAddScriptFolderToLoadPath( myLuaState, profile_path.string().c_str() );
 
         // Now call our function in a lua script
-        if(0 != luaL_dofile(myLuaState, profile_path.c_str() )) {
+        if(0 != luaL_dofile(myLuaState, profile_path.string().c_str() )) {
             std::cerr <<
                 lua_tostring(myLuaState,-1)   <<
                 " occured in scripting block" <<
