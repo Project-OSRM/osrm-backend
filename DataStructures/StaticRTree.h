@@ -672,7 +672,7 @@ public:
                         }
 
                         double current_ratio = 0.;
-                        const double current_perpendicular_distance = current_edge.ComputePerpendicularDistance(
+                        const double current_perpendicular_distance = FixedPointCoordinate::ComputePerpendicularDistance(
                             m_coordinate_list->at(current_edge.u),
                             m_coordinate_list->at(current_edge.v),
                             input_coordinate,

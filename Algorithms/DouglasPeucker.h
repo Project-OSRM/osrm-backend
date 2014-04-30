@@ -28,16 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DOUGLASPEUCKER_H_
 #define DOUGLASPEUCKER_H_
 
-#include "../Util/SimpleLogger.h"
-
-#include <osrm/Coordinate.h>
-
-#include <boost/assert.hpp>
-#include <boost/foreach.hpp>
-
-#include <cmath>
-
-#include <limits>
 #include <stack>
 #include <vector>
 
@@ -48,25 +38,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * bit indicating if the points is present in the generalization.
  * Note: points may also be pre-selected*/
 
+struct FixedPointCoordinate;
 struct SegmentInformation;
 
-class DouglasPeucker {
-private:
-    typedef std::pair<std::size_t, std::size_t> PairOfPoints;
-    //Stack to simulate the recursion
-    std::stack<PairOfPoints> recursion_stack;
+class DouglasPeucker
+{
+  private:
+    typedef std::pair<unsigned, unsigned> GeometryRange;
+    // Stack to simulate the recursion
+    std::stack<GeometryRange> recursion_stack;
 
-    double ComputeDistance(
-        const FixedPointCoordinate& point,
-        const FixedPointCoordinate& segA,
-        const FixedPointCoordinate& segB
-    ) const;
-public:
-    void Run(
-        std::vector<SegmentInformation> & input_geometry,
-        const unsigned zoom_level
-    );
+    double ComputeDistance(const FixedPointCoordinate &point,
+                           const FixedPointCoordinate &segA,
+                           const FixedPointCoordinate &segB) const;
 
+  public:
+    void Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level);
 };
 
 #endif /* DOUGLASPEUCKER_H_ */
