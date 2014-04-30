@@ -102,6 +102,8 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -openmp -ipo -fPIC")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
 endif()
 
 # Check if LTO is available
