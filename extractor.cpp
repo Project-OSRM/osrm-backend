@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 ExtractorCallbacks * extractCallBacks;
-UUID uuid;
+UUIDC uuid;
 
 int main (int argc, char *argv[]) {
     try {
