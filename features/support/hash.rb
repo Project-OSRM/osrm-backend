@@ -7,7 +7,7 @@ def hash_of_files paths
   paths = [paths] unless paths.is_a? Array
   hash = Digest::SHA1.new
   for path in paths do
-    open(path,'r') do |io|
+    open(path,'rb') do |io|
       while !io.eof
         buf = io.readpartial 1024
         hash.update buf
@@ -32,15 +32,15 @@ def lua_lib_hash
 end
 
 def bin_extract_hash
-  bin_extract_hash ||= hash_of_files "#{BIN_PATH}/osrm-extract"
+  bin_extract_hash ||= hash_of_files "#{BIN_PATH}/osrm-extract#{EXE}"
 end
 
 def bin_prepare_hash
-  bin_prepare_hash ||= hash_of_files "#{BIN_PATH}/osrm-prepare"
+  bin_prepare_hash ||= hash_of_files "#{BIN_PATH}/osrm-prepare#{EXE}"
 end
 
 def bin_routed_hash
-  bin_routed_hash ||= hash_of_files "#{BIN_PATH}/osrm-routed"
+  bin_routed_hash ||= hash_of_files "#{BIN_PATH}/osrm-routed#{EXE}"
 end
 
 #combine state of data, profile and binaries into a hash that identifies the exact test scenario
