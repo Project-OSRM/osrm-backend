@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 ExtractorCallbacks * extractCallBacks;
-UUID uuid;
+UUIDC uuid;
 
 int main (int argc, char *argv[]) {
     try {
@@ -120,7 +120,7 @@ int main (int argc, char *argv[]) {
         {
             SimpleLogger().Write() << "Reading options from: " << config_file_path.string();
             std::string config_str;
-            PrepareConfigFile(config_file_path.c_str(), config_str);
+            PrepareConfigFile(config_file_path, config_str);
             std::stringstream config_stream( config_str );
             boost::program_options::store(parse_config_file(config_stream, config_file_options), option_variables);
             boost::program_options::notify(option_variables);
@@ -155,7 +155,7 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write() << "Threads: " << requested_num_threads;
 
         /*** Setup Scripting Environment ***/
-        ScriptingEnvironment scriptingEnvironment(profile_path.c_str());
+        ScriptingEnvironment scriptingEnvironment(profile_path.string().c_str());
 
         omp_set_num_threads(std::min(omp_get_num_procs(), requested_num_threads));
 
@@ -207,11 +207,11 @@ int main (int argc, char *argv[]) {
         BaseParser* parser;
         if(file_has_pbf_format)
         {
-            parser = new PBFParser(input_path.c_str(), extractCallBacks, scriptingEnvironment);
+            parser = new PBFParser(input_path.string().c_str(), extractCallBacks, scriptingEnvironment);
         }
         else
         {
-            parser = new XMLParser(input_path.c_str(), extractCallBacks, scriptingEnvironment);
+            parser = new XMLParser(input_path.string().c_str(), extractCallBacks, scriptingEnvironment);
         }
 
         if(!parser->ReadHeader())

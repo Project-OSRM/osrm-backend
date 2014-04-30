@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FIXED_POINT_COORDINATE_H_
 
 #include <iosfwd>   //for std::ostream
+#include <string>
 
 static const double COORDINATE_PRECISION = 1000000.;
 

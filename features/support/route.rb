@@ -1,6 +1,6 @@
 require 'net/http'
 
-HOST = "http://localhost:#{OSRM_PORT}"
+HOST = "http://127.0.0.1:#{OSRM_PORT}"
 DESTINATION_REACHED = 15      #OSRM instruction code
 
 class Hash
@@ -16,6 +16,18 @@ def request_path path, waypoints=[], options={}
   params = (locs + options.to_param).join('&')
   params = nil if params==""
   uri = URI.parse ["#{HOST}/#{path}", params].compact.join('?')
+  @query = uri.to_s
+  Timeout.timeout(OSRM_TIMEOUT) do
+    Net::HTTP.get_response uri
+  end
+rescue Errno::ECONNREFUSED => e
+  raise "*** osrm-routed is not running."
+rescue Timeout::Error
+  raise "*** osrm-routed did not respond."
+end
+
+def request_url path
+  uri = URI.parse"#{HOST}/#{path}"
   @query = uri.to_s
   Timeout.timeout(OSRM_TIMEOUT) do
     Net::HTTP.get_response uri

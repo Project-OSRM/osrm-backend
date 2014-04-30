@@ -8,6 +8,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
 
+OPTION(WITH_TOOLS "Build ORSM tools" ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(bitness 32)
@@ -31,7 +32,11 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
 
 add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp)
 
-set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
+if(WIN32)
+  set(MORE_BOOST_LIBS chrono zlib)
+  message(STATUS "Windows build, some more boost libraries are used")
+endif()
+set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread ${MORE_BOOST_LIBS})
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
@@ -102,6 +107,8 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -openmp -ipo -fPIC")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
 endif()
 
 # Check if LTO is available
@@ -231,8 +238,10 @@ if(WITH_TOOLS)
   endif()
   add_executable(osrm-cli Tools/simpleclient.cpp)
   target_link_libraries(osrm-cli ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION)
-    add_executable(osrm-io-benchmark Tools/io-benchmark.cpp)
-    target_link_libraries(osrm-io-benchmark ${Boost_LIBRARIES} GITDESCRIPTION)
+  if(NOT WIN32)
+     add_executable(osrm-io-benchmark Tools/io-benchmark.cpp)
+     target_link_libraries(osrm-io-benchmark ${Boost_LIBRARIES} GITDESCRIPTION)
+  endif()
     add_executable(osrm-unlock-all Tools/unlock_all_mutexes.cpp)
     target_link_libraries(osrm-unlock-all ${Boost_LIBRARIES} GITDESCRIPTION)
     if(UNIX AND NOT APPLE)
