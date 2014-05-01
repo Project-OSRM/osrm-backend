@@ -149,12 +149,14 @@ int main (int argc, char *argv[]) {
             return 1;
         }
 
+        int real_num_threads = std::min(omp_get_num_procs(), requested_num_threads);
+
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Restrictions file: " << restrictions_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
-        SimpleLogger().Write() << "Threads: " << requested_num_threads;
+        SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested " << requested_num_threads << ")";
 
-        omp_set_num_threads( std::min( omp_get_num_procs(), requested_num_threads) );
+        omp_set_num_threads(real_num_threads);
         LogPolicy::GetInstance().Unmute();
         boost::filesystem::ifstream restrictionsInstream(restrictions_path, std::ios::binary);
         TurnRestriction restriction;
