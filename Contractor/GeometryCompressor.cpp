@@ -147,7 +147,9 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
         m_free_list.pop_back();
     }
 
-    const unsigned edge_bucket_id1 = m_edge_id_to_list_index_map[edge_id_1];
+    const boost::unordered_map<EdgeID, unsigned>::const_iterator iter = m_edge_id_to_list_index_map.find(edge_id_1);
+    BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
+    const unsigned edge_bucket_id1 = iter->second;
     BOOST_ASSERT(edge_bucket_id1 == GetPositionForID(edge_id_1));
     BOOST_ASSERT(edge_bucket_id1 < m_compressed_geometries.size());
 
