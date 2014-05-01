@@ -245,7 +245,7 @@ int main (int argc, char *argv[]) {
             trafficLightNodes.size() << " traffic lights";
 
         /***
-         * Building an edge-expanded graph from node-based input an turn restrictions
+         * Building an edge-expanded graph from node-based input and turn restrictions
          */
 
         SimpleLogger().Write() << "Generating edge-expanded graph representation";

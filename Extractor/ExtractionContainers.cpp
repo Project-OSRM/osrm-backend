@@ -96,7 +96,7 @@ void ExtractionContainers::PrepareData(
         );
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
 
-        std::cout << "[extractor] Sorting restrctns. by from... " << std::flush;
+        std::cout << "[extractor] Sorting restrictions. by from... " << std::flush;
         stxxl::sort(
             restrictions_list.begin(),
             restrictions_list.end(),
@@ -142,7 +142,7 @@ void ExtractionContainers::PrepareData(
         std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
         time = get_timestamp();
 
-        std::cout << "[extractor] Sorting restrctns. by to  ... " << std::flush;
+        std::cout << "[extractor] Sorting restrictions. by to  ... " << std::flush;
         stxxl::sort(
             restrictions_list.begin(),
             restrictions_list.end(),
