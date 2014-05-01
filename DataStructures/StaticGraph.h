@@ -108,21 +108,16 @@ public:
                 unsigned v = GetTarget(eid);
                 EdgeData & data = GetEdgeData(eid);
                 if(data.shortcut) {
-                    unsigned eid2 = FindEdgeInEitherDirection(u, data.id);
-                    if(eid2 == UINT_MAX) {
-                        SimpleLogger().Write(logWARNING) <<
-                            "cannot find first segment of edge (" <<
-                                u << "," << data.id << "," << v << "), eid: " << eid;
-
-                        data.shortcut = false;
+                    const EdgeID first_edge_id = FindEdgeInEitherDirection(u, data.id);
+                    if (SPECIAL_EDGEID == first_edge_id)
+                    {
+                        SimpleLogger().Write(logWARNING) << "cannot find first segment of edge (" << u << "," << data.id << "," << v << "), eid: " << eid;
                         BOOST_ASSERT(false);
                     }
-                    eid2 = FindEdgeInEitherDirection(data.id, v);
-                    if(eid2 == UINT_MAX) {
-                        SimpleLogger().Write(logWARNING) <<
-                            "cannot find second segment of edge (" <<
-                                u << "," << data.id << "," << v << "), eid2: " << eid2;
-                        data.shortcut = false;
+                    const EdgeID second_edge_id = FindEdgeInEitherDirection(data.id, v);
+                    if (SPECIAL_EDGEID == second_edge_id)
+                    {
+                        SimpleLogger().Write(logWARNING) << "cannot find second segment of edge (" << u << "," << data.id << "," << v << "), eid: " << eid;
                         BOOST_ASSERT(false);
                     }
                 }
