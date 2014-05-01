@@ -110,10 +110,10 @@ public:
 
 private:
     struct NodeBasedEdgeData {
-        NodeBasedEdgeData() {
-            //TODO: proper c'tor
-            edgeBasedNodeID = UINT_MAX;
-        }
+        NodeBasedEdgeData() : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID), nameID(std::numeric_limits<unsigned>::max()),
+            type(std::numeric_limits<short>::max()), isAccessRestricted(false), shortcut(false), forward(false), backward(false),
+            roundabout(false), ignore_in_grid(false), contraFlow(false)
+        { }
 
         int distance;
         unsigned edgeBasedNodeID;
