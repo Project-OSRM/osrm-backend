@@ -711,7 +711,7 @@ void EdgeBasedGraphFactory::Run(
         "component index vector not deallocated"
     );
     std::vector<OriginalEdgeData> original_edge_data_vector;
-    original_edge_data_vector.reserve(10000);
+    original_edge_data_vector.reserve(1024*1024);
 
     //Loop over all turns and generate new set of edges.
     //Three nested loop look super-linear, but we are dealing with a (kind of)
@@ -818,7 +818,7 @@ void EdgeBasedGraphFactory::Run(
 
                 ++original_edges_counter;
 
-                if (original_edge_data_vector.size() > 100000)
+                if (original_edge_data_vector.size() > 1024*1024*10)
                 {
                     FlushVectorToStream(edge_data_file, original_edge_data_vector);
                 }
