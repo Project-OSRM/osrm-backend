@@ -7,6 +7,9 @@ install:
  - sudo apt-get update >/dev/null
  - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.46-all-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems
  - curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
+ - sudo apt-add-repository ppa:ubuntu-toolchain-r/test
+ - sudo apt-get update
+ - sudo apt-get  -q install g++-4.7
 before_script:
  - rvm use 1.9.3
  - gem install bundler
@@ -29,8 +32,8 @@ cache:
 - bundler
 - apt
 env:
- - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release" OSRM_PORT=5000 OSRM_TIMEOUT=60
- - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug" OSRM_PORT=5010 OSRM_TIMEOUT=60
+ - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Release" OSRM_PORT=5000 OSRM_TIMEOUT=60 -DCMAKE_CXX_COMPILER=g++-4.7
+ - CMAKEOPTIONS="-DCMAKE_BUILD_TYPE=Debug" OSRM_PORT=5010 OSRM_TIMEOUT=60 -DCMAKE_CXX_COMPILER=g++-4.7
 notifications:
  irc:
   channels:
