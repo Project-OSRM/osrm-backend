@@ -60,8 +60,6 @@ static double DouglasPeuckerThresholds[19] = {262144., // z0
 
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
-
-  unsigned counter = 2;
     {
         BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
         BOOST_ASSERT_MSG(1 < input_geometry.size(), "geometry invalid");
@@ -112,7 +110,6 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         {
             //  mark idx as necessary
             input_geometry[farthest_element_index].necessary = true;
-            ++counter;
             if (1 < (farthest_element_index - pair.first))
             {
                 recursion_stack.push(std::make_pair(pair.first, farthest_element_index));
