@@ -10,6 +10,7 @@ install:
  - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.49-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems
  - curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
  - sudo apt-get -q install g++-4.7
+ - sudo apt-get -q install libboost-*-dev
 before_script:
  - rvm use 1.9.3
  - gem install bundler
