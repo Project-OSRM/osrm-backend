@@ -7,7 +7,7 @@ install:
  - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
  - sudo add-apt-repository -y ppa:irie/boost
  - sudo apt-get update >/dev/null
- - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems
+ - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev libboost1.49-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems
  - curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
  - sudo apt-get -q install g++-4.7
 before_script:
