@@ -25,23 +25,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TIMESTAMPPLUGIN_H_
-#define TIMESTAMPPLUGIN_H_
+#ifndef TIMESTAMP_PLUGIN_H
+#define TIMESTAMP_PLUGIN_H
 
 #include "BasePlugin.h"
 
-template<class DataFacadeT>
-class TimestampPlugin : public BasePlugin {
-public:
-    explicit TimestampPlugin(const DataFacadeT * facade)
-     : facade(facade), descriptor_string("timestamp")
-    { }
-    const std::string & GetDescriptor() const { return descriptor_string; }
-    void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
+template <class DataFacadeT> class TimestampPlugin : public BasePlugin
+{
+  public:
+    explicit TimestampPlugin(const DataFacadeT *facade)
+        : facade(facade), descriptor_string("timestamp")
+    {
+    }
+    const std::string GetDescriptor() const { return descriptor_string; }
+    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    {
         std::string tmp;
 
-        //json
-        if("" != routeParameters.jsonpParameter) {
+        // json
+        if (!routeParameters.jsonpParameter.empty())
+        {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
@@ -49,34 +52,39 @@ public:
         reply.status = http::Reply::ok;
         reply.content.push_back("{");
         reply.content.push_back("\"status\":");
-            reply.content.push_back("0,");
+        reply.content.push_back("0,");
         reply.content.push_back("\"timestamp\":\"");
         reply.content.push_back(facade->GetTimestamp());
         reply.content.push_back("\"");
         reply.content.push_back("}");
         reply.headers.resize(3);
-        if("" != routeParameters.jsonpParameter) {
+        if (!routeParameters.jsonpParameter.empty())
+        {
             reply.content.push_back(")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";
             reply.headers[2].value = "attachment; filename=\"timestamp.js\"";
-        } else {
+        }
+        else
+        {
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "application/x-javascript";
             reply.headers[2].name = "Content-Disposition";
             reply.headers[2].value = "attachment; filename=\"timestamp.json\"";
         }
         unsigned content_length = 0;
-        BOOST_FOREACH(const std::string & snippet, reply.content) {
+        for (const std::string &snippet : reply.content)
+        {
             content_length += snippet.length();
         }
         intToString(content_length, tmp);
         reply.headers[0].value = tmp;
     }
-private:
-    const DataFacadeT * facade;
+
+  private:
+    const DataFacadeT *facade;
     std::string descriptor_string;
 };
 
-#endif /* TIMESTAMPPLUGIN_H_ */
+#endif /* TIMESTAMP_PLUGIN_H */

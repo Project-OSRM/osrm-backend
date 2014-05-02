@@ -32,62 +32,64 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/PhantomNodes.h"
 #include "../Util/StringUtil.h"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 /*
  * This Plugin locates the nearest point on a street in the road network for a given coordinate.
  */
 
-template<class DataFacadeT>
-class NearestPlugin : public BasePlugin {
-public:
-    explicit NearestPlugin(DataFacadeT * facade )
-     :
-        facade(facade),
-        descriptor_string("nearest")
+template <class DataFacadeT> class NearestPlugin : public BasePlugin
+{
+  public:
+    explicit NearestPlugin(DataFacadeT *facade) : facade(facade), descriptor_string("nearest")
     {
-        descriptorTable.emplace("",     0); //default descriptor
-        descriptorTable.emplace("json", 1);
+        descriptor_table.emplace("", 0); // default descriptor
+        descriptor_table.emplace("json", 1);
     }
-    const std::string & GetDescriptor() const { return descriptor_string; }
-    void HandleRequest(
-        const RouteParameters & routeParameters,
-        http::Reply & reply
-    ) {
-        //check number of parameters
-        if(!routeParameters.coordinates.size()) {
+
+    const std::string GetDescriptor() const { return descriptor_string; }
+
+    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    {
+        // check number of parameters
+        if (routeParameters.coordinates.empty())
+        {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
-        if( !checkCoord(routeParameters.coordinates[0]) ) {
+        if (!routeParameters.coordinates.front().isValid())
+        {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
 
         PhantomNode result;
         facade->FindPhantomNodeForCoordinate(
-            routeParameters.coordinates[0],
-            result,
-            routeParameters.zoomLevel
-        );
+            routeParameters.coordinates.front(), result, routeParameters.zoomLevel);
 
-        std::string temp_string;
-        //json
+        // json
 
-        if("" != routeParameters.jsonpParameter) {
+        if (!routeParameters.jsonpParameter.empty())
+        {
             reply.content.push_back(routeParameters.jsonpParameter);
             reply.content.push_back("(");
         }
 
         reply.status = http::Reply::ok;
         reply.content.push_back("{\"status\":");
-        if(UINT_MAX != result.forward_node_id) {
+        if (SPECIAL_NODEID != result.forward_node_id)
+        {
             reply.content.push_back("0,");
-        } else {
+        }
+        else
+        {
             reply.content.push_back("207,");
         }
         reply.content.push_back("\"mapped_coordinate\":[");
-        if(UINT_MAX != result.forward_node_id) {
+        std::string temp_string;
+
+        if (SPECIAL_NODEID != result.forward_node_id)
+        {
             FixedPointCoordinate::convertInternalLatLonToString(result.location.lat, temp_string);
             reply.content.push_back(temp_string);
             FixedPointCoordinate::convertInternalLatLonToString(result.location.lon, temp_string);
@@ -95,19 +97,23 @@ public:
             reply.content.push_back(temp_string);
         }
         reply.content.push_back("],\"name\":\"");
-        if(UINT_MAX != result.forward_node_id) {
+        if (SPECIAL_NODEID != result.forward_node_id)
+        {
             facade->GetName(result.name_id, temp_string);
             reply.content.push_back(temp_string);
         }
         reply.content.push_back("\"}");
         reply.headers.resize(3);
-        if( !routeParameters.jsonpParameter.empty() ) {
+        if (!routeParameters.jsonpParameter.empty())
+        {
             reply.content.push_back(")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";
             reply.headers[2].value = "attachment; filename=\"location.js\"";
-        } else {
+        }
+        else
+        {
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "application/x-javascript";
             reply.headers[2].name = "Content-Disposition";
@@ -115,16 +121,17 @@ public:
         }
         reply.headers[0].name = "Content-Length";
         unsigned content_length = 0;
-        BOOST_FOREACH(const std::string & snippet, reply.content) {
+        for (const std::string &snippet : reply.content)
+        {
             content_length += snippet.length();
         }
         intToString(content_length, temp_string);
         reply.headers[0].value = temp_string;
     }
 
-private:
-    DataFacadeT * facade;
-    boost::unordered_map<std::string, unsigned> descriptorTable;
+  private:
+    DataFacadeT *facade;
+    std::unordered_map<std::string, unsigned> descriptor_table;
     std::string descriptor_string;
 };
 

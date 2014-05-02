@@ -33,18 +33,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-class HelloWorldPlugin : public BasePlugin {
-    private:
-        std::string temp_string;
-public:
-	HelloWorldPlugin() : descriptor_string("hello"){}
-	virtual ~HelloWorldPlugin() { }
-	const std::string & GetDescriptor()    const { return descriptor_string; }
+class HelloWorldPlugin : public BasePlugin
+{
+  private:
+    std::string temp_string;
 
-	void HandleRequest(const RouteParameters & routeParameters, http::Reply& reply) {
-		reply.status = http::Reply::ok;
-		reply.content.push_back("<html><head><title>Hello World Demonstration Document</title></head><body><h1>Hello, World!</h1>");
-		reply.content.push_back("<pre>");
+  public:
+    HelloWorldPlugin() : descriptor_string("hello") {}
+    virtual ~HelloWorldPlugin() {}
+    const std::string GetDescriptor() const { return descriptor_string; }
+
+    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    {
+        reply.status = http::Reply::ok;
+        reply.content.push_back("<html><head><title>Hello World Demonstration "
+                                "Document</title></head><body><h1>Hello, World!</h1>");
+        reply.content.push_back("<pre>");
         reply.content.push_back("zoom level: ");
         intToString(routeParameters.zoomLevel, temp_string);
         reply.content.push_back(temp_string);
@@ -68,33 +72,43 @@ public:
         intToString(routeParameters.coordinates.size(), temp_string);
         reply.content.push_back(temp_string);
         reply.content.push_back("\n");
-        for(unsigned i = 0; i < routeParameters.coordinates.size(); ++i) {
-            reply.content.push_back( "  [");
-            intToString(i, temp_string);
+
+        unsigned counter = 0;
+        for (const FixedPointCoordinate &coordinate : routeParameters.coordinates)
+        {
+            reply.content.push_back("  [");
+            intToString(counter, temp_string);
             reply.content.push_back(temp_string);
             reply.content.push_back("] ");
-            doubleToString(routeParameters.coordinates[i].lat/COORDINATE_PRECISION, temp_string);
+            doubleToString(coordinate.lat / COORDINATE_PRECISION, temp_string);
             reply.content.push_back(temp_string);
             reply.content.push_back(",");
-            doubleToString(routeParameters.coordinates[i].lon/COORDINATE_PRECISION, temp_string);
+            doubleToString(coordinate.lon / COORDINATE_PRECISION, temp_string);
             reply.content.push_back(temp_string);
             reply.content.push_back("\n");
+            ++counter;
         }
-        reply.content.push_back( "Number of hints: ");
+
+        reply.content.push_back("Number of hints: ");
         intToString(routeParameters.hints.size(), temp_string);
         reply.content.push_back(temp_string);
         reply.content.push_back("\n");
-        for(unsigned i = 0; i < routeParameters.hints.size(); ++i) {
-            reply.content.push_back( "  [");
-            intToString(i, temp_string);
+
+        counter = 0;
+        for (const std::string &current_string : routeParameters.hints)
+        {
+            reply.content.push_back("  [");
+            intToString(counter, temp_string);
             reply.content.push_back(temp_string);
             reply.content.push_back("] ");
-            reply.content.push_back(routeParameters.hints[i]);
+            reply.content.push_back(current_string);
             reply.content.push_back("\n");
+            ++counter;
         }
-        reply.content.push_back( "</pre></body></html>");
-	}
-private:
+        reply.content.push_back("</pre></body></html>");
+    }
+
+  private:
     std::string descriptor_string;
 };
 
