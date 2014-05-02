@@ -7,9 +7,13 @@ install:
  - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
  - sudo add-apt-repository -y ppa:boost-latest/ppa
  - sudo apt-get update >/dev/null
- - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev lua5.1 liblua5.1-0-dev libluabind-dev rubygems
+ - sudo apt-get -q install libprotoc-dev libprotobuf7 libprotobuf-dev libosmpbf-dev libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev lua5.1 liblua5.1-0-dev rubygems
  - sudo apt-get -q install g++-4.7
  - sudo apt-get install libboost1.54-all-dev
+ #luabind
+ - curl https://gist.githubusercontent.com/DennisOSRM/f2eb7b948e6fe1ae319e/raw/install-luabind.sh | sudo bash
+ #osmosis
+ - curl -s https://gist.githubusercontent.com/DennisOSRM/803a64a9178ec375069f/raw/ | sudo bash
 before_script:
  - rvm use 1.9.3
  - gem install bundler
@@ -17,7 +21,6 @@ before_script:
  - mkdir build
  - cd build
  - cmake .. $CMAKEOPTIONS
- - curl https://gist.githubusercontent.com/DennisOSRM/35b1780f6e3f8f1e3143/raw/35ea1f4041d62f77d0cb0b14b80b089113ed5a75/boost.diff| sudo patch -p0 -N
 script:
  - make -j 2
  - cd ..
