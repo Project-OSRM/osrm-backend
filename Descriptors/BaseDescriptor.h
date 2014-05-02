@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASE_DESCRIPTOR_H_
-#define BASE_DESCRIPTOR_H_
+#ifndef BASE_DESCRIPTOR_H
+#define BASE_DESCRIPTOR_H
 
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/RawRouteData.h"
@@ -37,32 +37,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-struct DescriptorConfig {
-    DescriptorConfig() :
-        instructions(true),
-        geometry(true),
-        encode_geometry(true),
-        zoom_level(18)
-    { }
+struct DescriptorConfig
+{
+    DescriptorConfig() : instructions(true), geometry(true), encode_geometry(true), zoom_level(18)
+    {
+    }
     bool instructions;
     bool geometry;
     bool encode_geometry;
     unsigned short zoom_level;
 };
 
-template<class DataFacadeT>
-class BaseDescriptor {
-public:
-    BaseDescriptor() { }
-    //Maybe someone can explain the pure virtual destructor thing to me (dennis)
-    virtual ~BaseDescriptor() { }
-    virtual void Run(
-        const RawRouteData & rawRoute,
-        const PhantomNodes & phantomNodes,
-        DataFacadeT * facade,
-        http::Reply & reply
-    ) = 0;
-    virtual void SetConfig(const DescriptorConfig & config) = 0;
+template <class DataFacadeT> class BaseDescriptor
+{
+  public:
+    BaseDescriptor() {}
+    // Maybe someone can explain the pure virtual destructor thing to me (dennis)
+    virtual ~BaseDescriptor() {}
+    virtual void Run(const RawRouteData &raw_route,
+                     const PhantomNodes &phantom_nodes,
+                     DataFacadeT *facade,
+                     http::Reply &reply) = 0;
+    virtual void SetConfig(const DescriptorConfig &config) = 0;
 };
 
-#endif /* BASE_DESCRIPTOR_H_ */
+#endif // BASE_DESCRIPTOR_H

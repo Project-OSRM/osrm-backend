@@ -25,82 +25,72 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef GPX_DESCRIPTOR_H_
-#define GPX_DESCRIPTOR_H_
+#ifndef GPX_DESCRIPTOR_H
+#define GPX_DESCRIPTOR_H
 
 #include "BaseDescriptor.h"
 
-#include <boost/foreach.hpp>
-
-template<class DataFacadeT>
-class GPXDescriptor : public BaseDescriptor<DataFacadeT> {
-private:
+template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFacadeT>
+{
+  private:
     DescriptorConfig config;
     FixedPointCoordinate current;
 
     std::string tmp;
-public:
-    void SetConfig(const DescriptorConfig & c) { config = c; }
 
-    //TODO: reorder parameters
-    void Run(
-        const RawRouteData &raw_route,
-        const PhantomNodes &phantom_node_list,
-        DataFacadeT * facade,
-        http::Reply & reply
-    ) {
+  public:
+    void SetConfig(const DescriptorConfig &c) { config = c; }
+
+    // TODO: reorder parameters
+    void Run(const RawRouteData &raw_route,
+             const PhantomNodes &phantom_node_list,
+             DataFacadeT *facade,
+             http::Reply &reply)
+    {
         reply.content.push_back("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        reply.content.push_back(
-                "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
-                "xmlns=\"http://www.topografix.com/GPX/1/1\" "
-                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
-                "\">");
-        reply.content.push_back(
-                "<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
-                " OpenStreetMap contributors (ODbL)</license></copyright>"
-                "</metadata>");
+        reply.content.push_back("<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
+                                "xmlns=\"http://www.topografix.com/GPX/1/1\" "
+                                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                                "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
+                                "\">");
+        reply.content.push_back("<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
+                                " OpenStreetMap contributors (ODbL)</license></copyright>"
+                                "</metadata>");
         reply.content.push_back("<rte>");
-        bool found_route =  (raw_route.lengthOfShortestPath != INT_MAX) &&
-                            (raw_route.unpacked_path_segments[0].size());
-        if( found_route ) {
+        bool found_route = (raw_route.lengthOfShortestPath != INVALID_EDGE_WEIGHT) &&
+                           (!raw_route.unpacked_path_segments.front().empty());
+        if (found_route)
+        {
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.source_phantom.location.lat,
-                tmp
-            );
+                phantom_node_list.source_phantom.location.lat, tmp);
             reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.source_phantom.location.lon,
-                tmp
-            );
+                phantom_node_list.source_phantom.location.lon, tmp);
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
 
-            for(unsigned i=0; i < raw_route.unpacked_path_segments.size(); ++i){
-                BOOST_FOREACH(
-                    const PathData & pathData,
-                    raw_route.unpacked_path_segments[i]
-                ) {
-                    current = facade->GetCoordinateOfNode(pathData.node);
+            for (const std::vector<PathData> &path_data_vector : raw_route.unpacked_path_segments)
+            {
+                for (const PathData &path_data : path_data_vector)
+                {
+                    FixedPointCoordinate current_coordinate = facade->GetCoordinateOfNode(path_data.node);
 
-                    FixedPointCoordinate::convertInternalLatLonToString(current.lat, tmp);
+                    FixedPointCoordinate::convertInternalLatLonToString(current_coordinate.lat,
+                                                                        tmp);
                     reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
-                    FixedPointCoordinate::convertInternalLatLonToString(current.lon, tmp);
+                    FixedPointCoordinate::convertInternalLatLonToString(current_coordinate.lon,
+                                                                        tmp);
                     reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
                 }
             }
             // Add the via point or the end coordinate
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.target_phantom.location.lat,
-                tmp
-            );
+                phantom_node_list.target_phantom.location.lat, tmp);
             reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
             FixedPointCoordinate::convertInternalLatLonToString(
-                phantom_node_list.target_phantom.location.lon,
-                tmp
-            );
+                phantom_node_list.target_phantom.location.lon, tmp);
             reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
         }
         reply.content.push_back("</rte></gpx>");
     }
 };
-#endif // GPX_DESCRIPTOR_H_
+#endif // GPX_DESCRIPTOR_H
