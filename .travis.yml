@@ -18,7 +18,7 @@ before_script:
  - mkdir build
  - cd build
  - cmake .. $CMAKEOPTIONS
- - curl https://gist.githubusercontent.com/DennisOSRM/35b1780f6e3f8f1e3143/raw/35ea1f4041d62f77d0cb0b14b80b089113ed5a75/boost.diff| sudo patch -p0
+ - curl https://gist.githubusercontent.com/DennisOSRM/35b1780f6e3f8f1e3143/raw/35ea1f4041d62f77d0cb0b14b80b089113ed5a75/boost.diff| sudo patch -p0 -N
 script:
  - make -j 2
  - cd ..
