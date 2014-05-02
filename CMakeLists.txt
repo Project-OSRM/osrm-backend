@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 project(OSRM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
@@ -123,16 +123,22 @@ set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}           ${LTO_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
 
+# Activate C++11
+ADD_DEFINITIONS(
+    -std=c++11 # Or -std=c++0x
+    # Other flags
+)
+
 # Configuring other platform dependencies
 if(APPLE)
   set(CMAKE_OSX_ARCHITECTURES "x86_64")
   message(STATUS "Set Architecture to x64 on OS X")
   exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
   string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
-  if(DARWIN_VERSION GREATER 12 AND NOT OSXLIBSTD)
-    message(STATUS "Activating -std=c++11 flag for >= OS X 10.9")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  endif()
+#  if(DARWIN_VERSION GREATER 12 AND NOT OSXLIBSTD)
+#    message(STATUS "Activating -std=c++11 flag for >= OS X 10.9")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#  endif()
   if(OSXLIBSTD)
     message(STATUS "linking against ${OSXLIBSTD}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=${OSXLIBSTD}")
