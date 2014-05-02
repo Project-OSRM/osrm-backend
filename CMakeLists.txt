@@ -118,7 +118,7 @@ if    (HAS_LTO_PARTITION_FLAG)
   set(LTO_PARTITION_FLAGS "${LTO_PARTITION_FLAGS} -flto-partition=none")
 endif (HAS_LTO_PARTITION_FLAG)
 
-# Add Link-Time-Optimization flags, if supported (GCC >= 4.5) and enabled
+# Add Link-Time-Optimization flags, if supported (GCC >= 4.7) and enabled
 set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS}           ${LTO_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
