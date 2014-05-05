@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
+#include <cmath>
+
 #include <limits>
 
 DouglasPeucker::DouglasPeucker()
