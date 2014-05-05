@@ -353,7 +353,7 @@ class TarjanSCC
         uint64_t total_network_distance = 0;
         p.reinit(m_node_based_graph->GetNumberOfNodes());
         NodeID last_u_node = m_node_based_graph->GetNumberOfNodes();
-        for (auto u = 0; u < last_u_node; ++u)
+        for (NodeID u = 0; u < last_u_node; ++u)
         {
             p.printIncrement();
             EdgeID last_edge = m_node_based_graph->EndEdges(u);
