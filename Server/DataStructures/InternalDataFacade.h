@@ -102,8 +102,8 @@ private:
     }
 
     void LoadGraph(const boost::filesystem::path & hsgr_path) {
-        typename ShM<typename QueryGraph::_StrNode, false>::vector node_list;
-        typename ShM<typename QueryGraph::_StrEdge, false>::vector edge_list;
+        typename ShM<typename QueryGraph::NodeArrayEntry, false>::vector node_list;
+        typename ShM<typename QueryGraph::EdgeArrayEntry, false>::vector edge_list;
 
         SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 

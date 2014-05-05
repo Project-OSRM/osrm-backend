@@ -106,20 +106,20 @@ struct SharedDataLayout {
 
     uint64_t GetSizeOfLayout() const {
         uint64_t result =
-            (name_index_list_size       * sizeof(unsigned)             ) +
-            (name_char_list_size        * sizeof(char)                 ) +
-            (name_id_list_size          * sizeof(unsigned)             ) +
-            (via_node_list_size         * sizeof(NodeID)               ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
-            (timestamp_length           * sizeof(char)                 ) +
-            (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
-            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
-            (r_search_tree_size         * sizeof(RTreeNode)            ) +
-            (geometries_indicators/32 + 1) * sizeof(unsigned)           +
-            (geometries_index_list_size * sizeof(unsigned)             ) +
-            (geometries_list_size       * sizeof(unsigned)             ) +
-            sizeof(checksum)                                             +
+            (name_index_list_size       * sizeof(unsigned)                   ) +
+            (name_char_list_size        * sizeof(char)                       ) +
+            (name_id_list_size          * sizeof(unsigned)                   ) +
+            (via_node_list_size         * sizeof(NodeID)                     ) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry) ) +
+            (timestamp_length           * sizeof(char)                       ) +
+            (coordinate_list_size       * sizeof(FixedPointCoordinate)       ) +
+            (turn_instruction_list_size * sizeof(TurnInstructionsClass)      ) +
+            (r_search_tree_size         * sizeof(RTreeNode)                  ) +
+            (geometries_indicators/32 + 1) * sizeof(unsigned)                  +
+            (geometries_index_list_size * sizeof(unsigned)                   ) +
+            (geometries_list_size       * sizeof(unsigned)                   ) +
+            sizeof(checksum)                                                   +
             1024*sizeof(char);
         return result;
     }
@@ -159,7 +159,7 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) ;
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry)) ;
         return result;
     }
     uint64_t GetTimeStampOffset() const {
@@ -168,8 +168,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge));
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry));
         return result;
     }
     uint64_t GetCoordinateListOffset() const {
@@ -178,8 +178,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry)) +
             (timestamp_length           * sizeof(char)                );
         return result;
     }
@@ -189,8 +189,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                ) +
             (name_id_list_size          * sizeof(unsigned)            ) +
             (via_node_list_size         * sizeof(NodeID)              ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode)) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge)) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry)) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry)) +
             (timestamp_length           * sizeof(char)                ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate));
         return result;
@@ -201,8 +201,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                 ) +
             (name_id_list_size          * sizeof(unsigned)             ) +
             (via_node_list_size         * sizeof(NodeID)               ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry) ) +
             (timestamp_length           * sizeof(char)                 ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass));
@@ -214,8 +214,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                 ) +
             (name_id_list_size          * sizeof(unsigned)             ) +
             (via_node_list_size         * sizeof(NodeID)               ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry) ) +
             (timestamp_length           * sizeof(char)                 ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
@@ -229,8 +229,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                 ) +
             (name_id_list_size          * sizeof(unsigned)             ) +
             (via_node_list_size         * sizeof(NodeID)               ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry) ) +
             (timestamp_length           * sizeof(char)                 ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
@@ -245,8 +245,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                 ) +
             (name_id_list_size          * sizeof(unsigned)             ) +
             (via_node_list_size         * sizeof(NodeID)               ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry) ) +
             (timestamp_length           * sizeof(char)                 ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
@@ -261,8 +261,8 @@ struct SharedDataLayout {
             (name_char_list_size        * sizeof(char)                 ) +
             (name_id_list_size          * sizeof(unsigned)             ) +
             (via_node_list_size         * sizeof(NodeID)               ) +
-            (graph_node_list_size       * sizeof(QueryGraph::_StrNode) ) +
-            (graph_edge_list_size       * sizeof(QueryGraph::_StrEdge) ) +
+            (graph_node_list_size       * sizeof(QueryGraph::NodeArrayEntry) ) +
+            (graph_edge_list_size       * sizeof(QueryGraph::EdgeArrayEntry) ) +
             (timestamp_length           * sizeof(char)                 ) +
             (coordinate_list_size       * sizeof(FixedPointCoordinate) ) +
             (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +

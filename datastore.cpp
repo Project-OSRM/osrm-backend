@@ -419,21 +419,21 @@ int main( const int argc, const char * argv[] )
         tree_node_file.close();
 
         // load the nodes of the search graph
-        QueryGraph::_StrNode * graph_node_list_ptr = (QueryGraph::_StrNode*)(
+        QueryGraph::NodeArrayEntry * graph_node_list_ptr = (QueryGraph::NodeArrayEntry*)(
             shared_memory_ptr + shared_layout_ptr->GetGraphNodeListOffset()
         );
         hsgr_input_stream.read(
             (char*) graph_node_list_ptr,
-            shared_layout_ptr->graph_node_list_size*sizeof(QueryGraph::_StrNode)
+            shared_layout_ptr->graph_node_list_size*sizeof(QueryGraph::NodeArrayEntry)
         );
 
         // load the edges of the search graph
-        QueryGraph::_StrEdge * graph_edge_list_ptr = (QueryGraph::_StrEdge *)(
+        QueryGraph::EdgeArrayEntry * graph_edge_list_ptr = (QueryGraph::EdgeArrayEntry *)(
             shared_memory_ptr + shared_layout_ptr->GetGraphEdgeListOffset()
         );
         hsgr_input_stream.read(
             (char*) graph_edge_list_ptr,
-            shared_layout_ptr->graph_edge_list_size*sizeof(QueryGraph::_StrEdge)
+            shared_layout_ptr->graph_edge_list_size*sizeof(QueryGraph::EdgeArrayEntry)
         );
         hsgr_input_stream.close();
 

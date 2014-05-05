@@ -345,7 +345,7 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
         max_used_node_id+=1;
 
-        std::vector< StaticGraph<EdgeData>::_StrNode > node_array;
+        std::vector< StaticGraph<EdgeData>::NodeArrayEntry > node_array;
         node_array.resize( edgeBasedNodeNumber + 1);
 
         SimpleLogger().Write() << "Building node array";
@@ -381,14 +381,14 @@ int main (int argc, char *argv[]) {
         //serialize number of edges
         hsgr_output_stream.write((char*) &contracted_edge_count, sizeof(unsigned));
         //serialize all nodes
-        hsgr_output_stream.write((char*) &node_array[0], sizeof(StaticGraph<EdgeData>::_StrNode)*node_array_size);
+        hsgr_output_stream.write((char*) &node_array[0], sizeof(StaticGraph<EdgeData>::NodeArrayEntry)*node_array_size);
         //serialize all edges
 
         SimpleLogger().Write() << "Building edge array";
         edge = 0;
         int usedEdgeCounter = 0;
 
-        StaticGraph<EdgeData>::_StrEdge currentEdge;
+        StaticGraph<EdgeData>::EdgeArrayEntry currentEdge;
         for (unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
         {
             // no eigen loops
@@ -409,7 +409,7 @@ int main (int argc, char *argv[]) {
                     "Failed at adjacency list of node " << contractedEdgeList[edge].source << "/" << node_array.size()-1;
                 return 1;
             }
-            hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::_StrEdge));
+            hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::EdgeArrayEntry));
             ++usedEdgeCounter;
         }
         hsgr_output_stream.close();

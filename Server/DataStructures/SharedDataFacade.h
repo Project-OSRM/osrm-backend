@@ -49,12 +49,12 @@ class SharedDataFacade : public BaseDataFacade<EdgeDataT> {
 
 private:
     typedef EdgeDataT EdgeData;
-    typedef BaseDataFacade<EdgeData>                        super;
-    typedef StaticGraph<EdgeData, true>                     QueryGraph;
-    typedef typename StaticGraph<EdgeData, true>::_StrNode  GraphNode;
-    typedef typename StaticGraph<EdgeData, true>::_StrEdge  GraphEdge;
-    typedef typename QueryGraph::InputEdge                  InputEdge;
-    typedef typename super::RTreeLeaf                       RTreeLeaf;
+    typedef BaseDataFacade<EdgeData>                             super;
+    typedef StaticGraph<EdgeData, true>                          QueryGraph;
+    typedef typename StaticGraph<EdgeData, true>::NodeArrayEntry GraphNode;
+    typedef typename StaticGraph<EdgeData, true>::EdgeArrayEntry GraphEdge;
+    typedef typename QueryGraph::InputEdge                       InputEdge;
+    typedef typename super::RTreeLeaf                            RTreeLeaf;
     typedef typename StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;
 
     SharedDataLayout    * data_layout;

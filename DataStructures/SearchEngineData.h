@@ -36,18 +36,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/thread.hpp>
 
-#include <string>
 #include <vector>
 
-struct _HeapData {
+struct HeapData
+{
     NodeID parent;
-    /* explicit */ _HeapData( NodeID p ) : parent(p) { }
+    /* explicit */ HeapData(NodeID p) : parent(p) {}
 };
 
 // typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
 
-struct SearchEngineData {
-    typedef BinaryHeap< NodeID, NodeID, int, _HeapData, UnorderedMapStorage<NodeID, int> > QueryHeap;
+struct SearchEngineData
+{
+    typedef BinaryHeap<NodeID, NodeID, int, HeapData, UnorderedMapStorage<NodeID, int>> QueryHeap;
     typedef boost::thread_specific_ptr<QueryHeap> SearchEngineHeapPtr;
 
     static SearchEngineHeapPtr forwardHeap;
