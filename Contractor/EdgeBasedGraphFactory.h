@@ -35,13 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/EdgeBasedNode.h"
 #include "../DataStructures/HashTable.h"
-#include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/OriginalEdgeData.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../DataStructures/Restriction.h"
+#include "../DataStructures/NodeBasedGraph.h"
+#include "../DataStructures/RestrictionMap.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/SimpleLogger.h"
 
@@ -62,11 +63,10 @@ public:
     struct SpeedProfileProperties;
 
     explicit EdgeBasedGraphFactory(
-        int number_of_nodes,
-        std::vector<ImportEdge> & input_edge_list,
+        const boost::shared_ptr<NodeBasedDynamicGraph>& node_based_graph,
+        std::unique_ptr<RestrictionMap> restricion_map,
         std::vector<NodeID> & barrier_node_list,
         std::vector<NodeID> & traffic_light_node_list,
-        std::vector<TurnRestriction> & input_restrictions_list,
         std::vector<NodeInfo> & m_node_info_list,
         SpeedProfileProperties & speed_profile
     );
@@ -109,54 +109,13 @@ public:
     } speed_profile;
 
 private:
-    struct NodeBasedEdgeData {
-        NodeBasedEdgeData() : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID), nameID(std::numeric_limits<unsigned>::max()),
-            type(std::numeric_limits<short>::max()), isAccessRestricted(false), shortcut(false), forward(false), backward(false),
-            roundabout(false), ignore_in_grid(false), contraFlow(false)
-        { }
-
-        int distance;
-        unsigned edgeBasedNodeID;
-        unsigned nameID;
-        short type;
-        bool isAccessRestricted:1;
-        bool shortcut:1;
-        bool forward:1;
-        bool backward:1;
-        bool roundabout:1;
-        bool ignore_in_grid:1;
-        bool contraFlow:1;
-
-        void SwapDirectionFlags() {
-            bool temp_flag = forward;
-            forward = backward;
-            backward = temp_flag;
-        }
-
-        bool IsEqualTo( const NodeBasedEdgeData & other ) const {
-            return (forward  == other.forward)          &&
-                   (backward == other.backward)         &&
-                   (nameID == other.nameID)             &&
-                   (ignore_in_grid == other.ignore_in_grid) &&
-                   (contraFlow == other.contraFlow);
-        }
-    };
-
-    unsigned m_turn_restrictions_count;
-    unsigned m_number_of_edge_based_nodes;
-
-    typedef DynamicGraph<NodeBasedEdgeData>     NodeBasedDynamicGraph;
-    typedef NodeBasedDynamicGraph::InputEdge    NodeBasedEdge;
     typedef NodeBasedDynamicGraph::NodeIterator NodeIterator;
     typedef NodeBasedDynamicGraph::EdgeIterator EdgeIterator;
     typedef NodeBasedDynamicGraph::EdgeData     EdgeData;
-    typedef std::pair<NodeID, NodeID>           RestrictionSource;
-    typedef std::pair<NodeID, bool>             RestrictionTarget;
-    typedef std::vector<RestrictionTarget>      EmanatingRestrictionsVector;
-    typedef boost::unordered_map<RestrictionSource, unsigned > RestrictionMap;
+
+    unsigned m_number_of_edge_based_nodes;
 
     std::vector<NodeInfo>                       m_node_info_list;
-    std::vector<EmanatingRestrictionsVector>    m_restriction_bucket_list;
     std::vector<EdgeBasedNode>                  m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge>           m_edge_based_edge_list;
 
@@ -164,7 +123,8 @@ private:
     boost::unordered_set<NodeID>                m_barrier_nodes;
     boost::unordered_set<NodeID>                m_traffic_lights;
 
-    RestrictionMap                              m_restriction_map;
+    std::unique_ptr<RestrictionMap>             m_restriction_map;
+
     GeometryCompressor                          m_geometry_compressor;
 
     NodeID CheckForEmanatingIsOnlyTurn(

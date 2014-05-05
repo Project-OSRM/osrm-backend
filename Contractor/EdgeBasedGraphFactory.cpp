@@ -38,46 +38,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <numeric>
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
-    int number_of_nodes,
-    std::vector<ImportEdge> & input_edge_list,
+    const boost::shared_ptr<NodeBasedDynamicGraph>& node_based_graph,
+    std::unique_ptr<RestrictionMap> restriction_map,
     std::vector<NodeID> & barrier_node_list,
     std::vector<NodeID> & traffic_light_node_list,
-    std::vector<TurnRestriction> & input_restrictions_list,
     std::vector<NodeInfo> & m_node_info_list,
     SpeedProfileProperties & speed_profile
 ) : speed_profile(speed_profile),
-    m_turn_restrictions_count(0),
+    m_node_based_graph(node_based_graph),
     m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
+    m_restriction_map(std::move(restriction_map)),
     m_node_info_list(m_node_info_list),
     max_id(0)
 {
-    BOOST_FOREACH(const TurnRestriction & restriction, input_restrictions_list) {
-        std::pair<NodeID, NodeID> restriction_source =
-            std::make_pair(restriction.fromNode, restriction.viaNode);
-        unsigned index;
-        RestrictionMap::iterator restriction_iter;
-        restriction_iter = m_restriction_map.find(restriction_source);
-        if(restriction_iter == m_restriction_map.end()) {
-            index = m_restriction_bucket_list.size();
-            m_restriction_bucket_list.resize(index+1);
-            m_restriction_map.emplace(restriction_source, index);
-        } else {
-            index = restriction_iter->second;
-            //Map already contains an is_only_*-restriction
-            if(m_restriction_bucket_list.at(index).begin()->second) {
-                continue;
-            } else if(restriction.flags.isOnly) {
-                //We are going to insert an is_only_*-restriction. There can be only one.
-                m_turn_restrictions_count -= m_restriction_bucket_list.at(index).size();
-                m_restriction_bucket_list.at(index).clear();
-            }
-        }
-        ++m_turn_restrictions_count;
-        m_restriction_bucket_list.at(index).push_back(
-            std::make_pair( restriction.toNode, restriction.flags.isOnly)
-        );
-    }
 
+    // why not use the copy constructor?
     m_barrier_nodes.insert(
         barrier_node_list.begin(),
         barrier_node_list.end()
@@ -88,121 +63,8 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
         traffic_light_node_list.end()
     );
 
-    std::sort( input_edge_list.begin(), input_edge_list.end() );
-
-    //TODO: remove duplicate edges
-
-    DeallocatingVector<NodeBasedEdge> edges_list;
-    NodeBasedEdge edge;
-    BOOST_FOREACH(const ImportEdge & import_edge, input_edge_list) {
-
-        if( !import_edge.isForward() ) {
-            edge.source = import_edge.target();
-            edge.target = import_edge.source();
-            edge.data.backward = import_edge.isForward();
-            edge.data.forward = import_edge.isBackward();
-        } else {
-            edge.source = import_edge.source();
-            edge.target = import_edge.target();
-            edge.data.forward = import_edge.isForward();
-            edge.data.backward = import_edge.isBackward();
-        }
-
-        if( edge.source == edge.target ) {
-            continue;
-        }
-
-        edge.data.distance = (std::max)((int)import_edge.weight(), 1 );
-        BOOST_ASSERT( edge.data.distance > 0 );
-        edge.data.shortcut = false;
-        edge.data.roundabout = import_edge.isRoundabout();
-        edge.data.ignore_in_grid = import_edge.ignoreInGrid();
-        edge.data.nameID = import_edge.name();
-        edge.data.type = import_edge.type();
-        edge.data.isAccessRestricted = import_edge.isAccessRestricted();
-        edge.data.contraFlow = import_edge.isContraFlow();
-        edges_list.push_back( edge );
-
-        if( !import_edge.IsSplit() ) {
-            using std::swap; //enable ADL
-            swap( edge.source, edge.target );
-            edge.data.SwapDirectionFlags();
-            edges_list.push_back( edge );
-        }
-    }
-
-    std::vector<ImportEdge>().swap(input_edge_list);
-    std::sort( edges_list.begin(), edges_list.end() );
-
-    m_node_based_graph = boost::make_shared<NodeBasedDynamicGraph>(
-        number_of_nodes,
-        edges_list
-    );
-    DeallocatingVector<NodeBasedEdge>().swap(edges_list);
-    BOOST_ASSERT(0 == edges_list.size() );
 }
 
-void EdgeBasedGraphFactory::FixupArrivingTurnRestriction(
-    const NodeID u,
-    const NodeID v,
-    const NodeID w
-) {
-    BOOST_ASSERT( u != std::numeric_limits<unsigned>::max() );
-    BOOST_ASSERT( v != std::numeric_limits<unsigned>::max() );
-    BOOST_ASSERT( w != std::numeric_limits<unsigned>::max() );
-
-    std::vector<NodeID> predecessors;
-    for(
-        EdgeID current_edge_id = m_node_based_graph->BeginEdges(u);
-        current_edge_id < m_node_based_graph->EndEdges(u);
-        ++current_edge_id
-    ) {
-        const EdgeData & edge_data = m_node_based_graph->GetEdgeData(current_edge_id);
-        const NodeID target = m_node_based_graph->GetTarget(current_edge_id);
-        if( edge_data.backward && ( v != target) ) {
-            predecessors.push_back(target);
-        }
-    }
-    BOOST_FOREACH( const NodeID x, predecessors ) {
-        const std::pair<NodeID, NodeID> restr_start = std::make_pair(x,u);
-        RestrictionMap::const_iterator restriction_iterator;
-        restriction_iterator = m_restriction_map.find( restr_start );
-        if( restriction_iterator != m_restriction_map.end() ) {
-            const unsigned index = restriction_iterator->second;
-            BOOST_FOREACH(
-                RestrictionTarget & restriction_target,
-                m_restriction_bucket_list.at(index)
-            ) {
-                if( v == restriction_target.first ) {
-                    restriction_target.first = w;
-                }
-            }
-        }
-    }
-}
-
-void EdgeBasedGraphFactory::FixupStartingTurnRestriction(
-    const NodeID u,
-    const NodeID v,
-    const NodeID w
-) {
-    BOOST_ASSERT( u != std::numeric_limits<unsigned>::max() );
-    BOOST_ASSERT( v != std::numeric_limits<unsigned>::max() );
-    BOOST_ASSERT( w != std::numeric_limits<unsigned>::max() );
-
-    const std::pair<NodeID, NodeID> old_start = std::make_pair(v,w);
-    RestrictionMap::const_iterator restriction_iterator;
-    restriction_iterator = m_restriction_map.find( old_start );
-    if( restriction_iterator != m_restriction_map.end() ) {
-        const unsigned index = restriction_iterator->second;
-        // remove old restriction start (v,w)
-        m_restriction_map.erase( restriction_iterator );
-
-        // insert new restriction start (u,w) (point to index)
-        const std::pair<NodeID, NodeID> new_start = std::make_pair(u,w);
-        m_restriction_map.insert( std::make_pair(new_start, index) );
-    }
-}
 
 void EdgeBasedGraphFactory::GetEdgeBasedEdges(
     DeallocatingVector< EdgeBasedEdge >& output_edge_list
@@ -227,57 +89,6 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes( std::vector<EdgeBasedNode> & node
     nodes.swap(m_edge_based_node_list);
 }
 
-NodeID EdgeBasedGraphFactory::CheckForEmanatingIsOnlyTurn(
-    const NodeID u,
-    const NodeID v
-) const {
-    BOOST_ASSERT( u != std::numeric_limits<unsigned>::max() );
-    BOOST_ASSERT( v != std::numeric_limits<unsigned>::max() );
-    const std::pair<NodeID, NodeID> restriction_source = std::make_pair(u, v);
-    RestrictionMap::const_iterator restriction_iter;
-    restriction_iter = m_restriction_map.find(restriction_source);
-    if (restriction_iter != m_restriction_map.end()) {
-        const unsigned index = restriction_iter->second;
-        BOOST_FOREACH(
-            const RestrictionSource & restriction_target,
-            m_restriction_bucket_list.at(index)
-        ) {
-            if(restriction_target.second) {
-                return restriction_target.first;
-            }
-        }
-    }
-    return std::numeric_limits<unsigned>::max();
-}
-
-bool EdgeBasedGraphFactory::CheckIfTurnIsRestricted(
-    const NodeID u,
-    const NodeID v,
-    const NodeID w
-) const {
-    BOOST_ASSERT( u != std::numeric_limits<unsigned>::max() );
-    BOOST_ASSERT( v != std::numeric_limits<unsigned>::max() );
-    BOOST_ASSERT( w != std::numeric_limits<unsigned>::max() );
-
-    const std::pair<NodeID, NodeID> restriction_source = std::make_pair(u, v);
-    RestrictionMap::const_iterator restriction_iter;
-    restriction_iter = m_restriction_map.find(restriction_source);
-    if (restriction_iter != m_restriction_map.end()) {
-        const unsigned index = restriction_iter->second;
-        BOOST_FOREACH(
-            const RestrictionTarget & restriction_target,
-            m_restriction_bucket_list.at(index)
-        ) {
-            if(
-                ( w == restriction_target.first ) && // target found
-                ( !restriction_target.second    )    // and not an only_-restr.
-            ) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
 
 void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     NodeIterator u,
@@ -375,7 +186,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             BOOST_ASSERT( current_edge_target_coordinate_id != current_edge_start_coordinate_id);
 
             // build edges
-            m_edge_based_node_list.push_back(
+            m_edge_based_node_list.emplace_back(
                 EdgeBasedNode(
                     forward_data.edgeBasedNodeID,
                     reverse_data.edgeBasedNodeID,
@@ -430,8 +241,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
             reverse_data.edgeBasedNodeID != SPECIAL_NODEID
         );
 
-        //TODO C++11: emplace_back with
-        m_edge_based_node_list.push_back(
+        m_edge_based_node_list.emplace_back(
             EdgeBasedNode(
                 forward_data.edgeBasedNodeID,
                 reverse_data.edgeBasedNodeID,
@@ -560,11 +370,11 @@ void EdgeBasedGraphFactory::Run(
             m_node_based_graph->DeleteEdge(v, reverse_e2);
 
             // update any involved turn restrictions
-            FixupStartingTurnRestriction( u, v, w );
-            FixupArrivingTurnRestriction( u, v, w );
+            m_restriction_map->FixupStartingTurnRestriction( u, v, w );
+            m_restriction_map->FixupArrivingTurnRestriction( u, v, w );
 
-            FixupStartingTurnRestriction( w, v, u );
-            FixupArrivingTurnRestriction( w, v, u );
+            m_restriction_map->FixupStartingTurnRestriction( w, v, u );
+            m_restriction_map->FixupArrivingTurnRestriction( w, v, u );
 
             // store compressed geometry in container
             m_geometry_compressor.CompressEdge(
@@ -731,7 +541,7 @@ void EdgeBasedGraphFactory::Run(
 
             ++node_based_edge_counter;
             const NodeIterator v = m_node_based_graph->GetTarget(e1);
-            const NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
+            const NodeID to_node_of_only_restriction = m_restriction_map->CheckForEmanatingIsOnlyTurn(u, v);
             const bool is_barrier_node = ( m_barrier_nodes.find(v) != m_barrier_nodes.end() );
 
             for(
@@ -772,7 +582,7 @@ void EdgeBasedGraphFactory::Run(
 
                 //only add an edge if turn is not a U-turn except when it is
                 //at the end of a dead-end street
-                if (CheckIfTurnIsRestricted(u, v, w) && (to_node_of_only_restriction == SPECIAL_NODEID) && (w != to_node_of_only_restriction))
+                if (m_restriction_map->CheckIfTurnIsRestricted(u, v, w) && (to_node_of_only_restriction == SPECIAL_NODEID) && (w != to_node_of_only_restriction))
                 {
                     ++restricted_turns_counter;
                     continue;
@@ -853,7 +663,7 @@ void EdgeBasedGraphFactory::Run(
     SimpleLogger().Write() << "Edge-expanded graph ...";
     SimpleLogger().Write() << "  contains " << m_edge_based_edge_list.size() << " edges";
     SimpleLogger().Write() << "  skips "  << restricted_turns_counter << " turns, "
-                              "defined by " << m_turn_restrictions_count << " restrictions";
+                              "defined by " << m_restriction_map->size() << " restrictions";
     SimpleLogger().Write() << "  skips "  << skipped_uturns_counter << " U turns";
     SimpleLogger().Write() << "  skips "  <<  skipped_barrier_turns_counter << " turns over barriers";
 }
@@ -987,7 +797,7 @@ void EdgeBasedGraphFactory::BFSCompentExplorer(
                 ++current_component_size;
                 const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
                 if(!is_barrier_node) {
-                    const NodeID to_node_of_only_restriction = CheckForEmanatingIsOnlyTurn(u, v);
+                    const NodeID to_node_of_only_restriction = m_restriction_map->CheckForEmanatingIsOnlyTurn(u, v);
 
                     for(
                         EdgeIterator e2 = m_node_based_graph->BeginEdges(v);
@@ -1006,7 +816,7 @@ void EdgeBasedGraphFactory::BFSCompentExplorer(
                         if( u != w ) {
                             //only add an edge if turn is not a U-turn except
                             //when it is at the end of a dead-end street.
-                            if (!CheckIfTurnIsRestricted(u, v, w) ) {
+                            if (!m_restriction_map->CheckIfTurnIsRestricted(u, v, w) ) {
                                 //only add an edge if turn is not prohibited
                                 if(std::numeric_limits<unsigned>::max() == component_index_list[w]) {
                                     //insert next (node, parent) only if w has
