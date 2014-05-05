@@ -198,7 +198,7 @@ class BinaryHeap
 
     void DecreaseKey(NodeID node, Weight weight)
     {
-        BOOST_ASSERT(UINT_MAX != node);
+        BOOST_ASSERT(std::numeric_limits<NodeID>::max() != node);
         const Key &index = node_index[node];
         Key &key = inserted_nodes[index].key;
         BOOST_ASSERT(key >= 0);
