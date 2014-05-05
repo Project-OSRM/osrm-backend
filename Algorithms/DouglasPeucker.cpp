@@ -30,33 +30,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DouglasPeucker.h"
 #include "../DataStructures/SegmentInformation.h"
 
-#include <cmath>
-
 #include <boost/assert.hpp>
 
 #include <limits>
 
-// These thresholds are more or less heuristically chosen.
-static double DouglasPeuckerThresholds[19] = {262144., // z0
-                                              131072., // z1
-                                              65536.,  // z2
-                                              32768.,  // z3
-                                              16384.,  // z4
-                                              8192.,   // z5
-                                              4096.,   // z6
-                                              2048.,   // z7
-                                              960.,    // z8
-                                              480.,    // z9
-                                              240.,    // z10
-                                              90.,     // z11
-                                              50.,     // z12
-                                              25.,     // z13
-                                              15.,     // z14
-                                              5.,      // z15
-                                              .65,     // z16
-                                              .5,      // z17
-                                              .35      // z18
-};
+DouglasPeucker::DouglasPeucker()
+    : douglas_peucker_thresholds({262144., // z0
+                                  131072., // z1
+                                  65536.,  // z2
+                                  32768.,  // z3
+                                  16384.,  // z4
+                                  8192.,   // z5
+                                  4096.,   // z6
+                                  2048.,   // z7
+                                  960.,    // z8
+                                  480.,    // z9
+                                  240.,    // z10
+                                  90.,     // z11
+                                  50.,     // z12
+                                  25.,     // z13
+                                  15.,     // z14
+                                  5.,      // z15
+                                  .65,     // z16
+                                  .5,      // z17
+                                  .35      // z18
+      })
+{
+}
 
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
@@ -74,7 +74,7 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
 
             if (input_geometry[right_border].necessary)
             {
-                recursion_stack.push(std::make_pair(left_border, right_border));
+                recursion_stack.emplace(left_border, right_border);
                 left_border = right_border;
             }
             ++right_border;
@@ -100,23 +100,23 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
                 input_geometry[pair.first].location,
                 input_geometry[pair.second].location);
             const double distance = std::abs(temp_dist);
-            if (distance > DouglasPeuckerThresholds[zoom_level] && distance > max_distance)
+            if (distance > douglas_peucker_thresholds[zoom_level] && distance > max_distance)
             {
                 farthest_element_index = i;
                 max_distance = distance;
             }
         }
-        if (max_distance > DouglasPeuckerThresholds[zoom_level])
+        if (max_distance > douglas_peucker_thresholds[zoom_level])
         {
             //  mark idx as necessary
             input_geometry[farthest_element_index].necessary = true;
             if (1 < (farthest_element_index - pair.first))
             {
-                recursion_stack.push(std::make_pair(pair.first, farthest_element_index));
+                recursion_stack.emplace(pair.first, farthest_element_index);
             }
             if (1 < (pair.second - farthest_element_index))
             {
-                recursion_stack.push(std::make_pair(farthest_element_index, pair.second));
+                recursion_stack.emplace(farthest_element_index, pair.second);
             }
         }
     }

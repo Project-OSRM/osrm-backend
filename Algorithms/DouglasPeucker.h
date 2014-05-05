@@ -44,6 +44,8 @@ struct SegmentInformation;
 class DouglasPeucker
 {
   private:
+    std::vector<double> douglas_peucker_thresholds;
+
     typedef std::pair<unsigned, unsigned> GeometryRange;
     // Stack to simulate the recursion
     std::stack<GeometryRange> recursion_stack;
@@ -53,6 +55,7 @@ class DouglasPeucker
                            const FixedPointCoordinate &segB) const;
 
   public:
+    DouglasPeucker();
     void Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level);
 };
 

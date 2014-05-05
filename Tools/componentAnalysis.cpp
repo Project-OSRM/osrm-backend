@@ -27,8 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../Algorithms/StronglyConnectedComponents.h"
-#include "../DataStructures/BinaryHeap.h"
-#include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/TurnInstructions.h"
@@ -38,11 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../Util/UUID.h"
 
-#include <boost/foreach.hpp>
 #include <fstream>
-#include <istream>
-#include <iostream>
-#include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -98,9 +93,12 @@ int main(int argc, char *argv[])
         }
 
         std::vector<ImportEdge> edge_list;
-        NodeID node_based_node_count = readBinaryOSRMGraphFromStream(
-            input_stream, edge_list, bollard_node_IDs_vector, traffic_light_node_IDs_vector,
-            &internal_to_external_node_map, restrictions_vector);
+        const NodeID node_based_node_count = readBinaryOSRMGraphFromStream(input_stream,
+                                                                     edge_list,
+                                                                     bollard_node_IDs_vector,
+                                                                     traffic_light_node_IDs_vector,
+                                                                     &internal_to_external_node_map,
+                                                                     restrictions_vector);
         input_stream.close();
 
         BOOST_ASSERT_MSG(restrictions_vector.size() == usable_restriction_count,
@@ -116,16 +114,15 @@ int main(int argc, char *argv[])
          */
 
         SimpleLogger().Write() << "Starting SCC graph traversal";
-        TarjanSCC *tarjan = new TarjanSCC(node_based_node_count, edge_list, bollard_node_IDs_vector,
-                                          traffic_light_node_IDs_vector, restrictions_vector,
+        std::shared_ptr<TarjanSCC> tarjan = std::make_shared<TarjanSCC>(node_based_node_count,
+                                          edge_list,
+                                          bollard_node_IDs_vector,
+                                          traffic_light_node_IDs_vector,
+                                          restrictions_vector,
                                           internal_to_external_node_map);
         std::vector<ImportEdge>().swap(edge_list);
 
         tarjan->Run();
-
-        std::vector<TurnRestriction>().swap(restrictions_vector);
-        std::vector<NodeID>().swap(bollard_node_IDs_vector);
-        std::vector<NodeID>().swap(traffic_light_node_IDs_vector);
         SimpleLogger().Write() << "finished component analysis";
     }
     catch (const std::exception &e)

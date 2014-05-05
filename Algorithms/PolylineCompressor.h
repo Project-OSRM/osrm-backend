@@ -34,36 +34,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-class PolylineCompressor {
-private:
-	void encodeVectorSignedNumber(
-        std::vector<int> & numbers,
-        std::string & output
-    ) const;
+class PolylineCompressor
+{
+  private:
+    void encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output) const;
 
-	void encodeNumber(int number_to_encode, std::string & output) const;
+    void encodeNumber(int number_to_encode, std::string &output) const;
 
-public:
-    void printEncodedString(
-        const std::vector<SegmentInformation> & polyline,
-        std::string & output
-    ) const;
+  public:
+    void printEncodedString(const std::vector<SegmentInformation> &polyline,
+                            std::string &output) const;
 
-    void printEncodedString(
-        const std::vector<FixedPointCoordinate>& polyline,
-        std::string &output
-    ) const;
+    void printEncodedString(const std::vector<FixedPointCoordinate> &polyline,
+                            std::string &output) const;
 
-    void printUnencodedString(
-        const std::vector<FixedPointCoordinate> & polyline,
-        std::string & output
-    ) const;
+    void printUnencodedString(const std::vector<FixedPointCoordinate> &polyline,
+                              std::string &output) const;
 
-    void printUnencodedString(
-        const std::vector<SegmentInformation> & polyline,
-        std::string & output
-    ) const;
-
+    void printUnencodedString(const std::vector<SegmentInformation> &polyline,
+                              std::string &output) const;
 };
 
 #endif /* POLYLINECOMPRESSOR_H_ */
