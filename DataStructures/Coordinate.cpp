@@ -120,22 +120,31 @@ double FixedPointCoordinate::ApproximateDistance(const FixedPointCoordinate &c1,
 }
 
 double FixedPointCoordinate::ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
-                                                          const FixedPointCoordinate &c2)
+                                                 const FixedPointCoordinate &c2)
 {
-    BOOST_ASSERT(c1.lat != std::numeric_limits<int>::min());
-    BOOST_ASSERT(c1.lon != std::numeric_limits<int>::min());
-    BOOST_ASSERT(c2.lat != std::numeric_limits<int>::min());
-    BOOST_ASSERT(c2.lon != std::numeric_limits<int>::min());
-    const double RAD = 0.017453292519943295769236907684886;
-    const double lat1 = (c1.lat / COORDINATE_PRECISION) * RAD;
-    const double lon1 = (c1.lon / COORDINATE_PRECISION) * RAD;
-    const double lat2 = (c2.lat / COORDINATE_PRECISION) * RAD;
-    const double lon2 = (c2.lon / COORDINATE_PRECISION) * RAD;
+    return ApproximateEuclideanDistance(c1.lat, c1.lon, c2.lat, c2.lon);
+}
 
-    const double x = (lon2 - lon1) * cos((lat1 + lat2) / 2.);
-    const double y = (lat2 - lat1);
-    const double earthRadius = 6372797.560856;
-    return sqrt(x * x + y * y) * earthRadius;
+double FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
+                                                          const int lon1,
+                                                          const int lat2,
+                                                          const int lon2)
+{
+    BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
+    BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
+
+    const double RAD = 0.017453292519943295769236907684886;
+    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * RAD;
+    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * RAD;
+    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
+    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
+
+    const double x = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.);
+    const double y = (float_lat2 - float_lat1);
+    const double earth_radius = 6372797.560856;
+    return sqrt(x * x + y * y) * earth_radius;
 }
 
 // Yuck! Code duplication. This function is also in EgdeBasedNode.h

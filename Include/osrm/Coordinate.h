@@ -53,6 +53,8 @@ struct FixedPointCoordinate
     static double ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
                                                const FixedPointCoordinate &c2);
 
+    static double ApproximateEuclideanDistance(const int lat1, const int lon1, const int lat2, const int lon2);
+
     static void convertInternalLatLonToString(const int value, std::string &output);
 
     static void convertInternalCoordinateToString(const FixedPointCoordinate &coord,
