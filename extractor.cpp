@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
-#include "Util/TimingUtil.h"
 #include "Util/UUID.h"
 #include "typedefs.h"
 
@@ -55,7 +54,7 @@ UUID uuid;
 int main (int argc, char *argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
-        double startup_time = get_timestamp();
+        std::chrono::time_point<std::chrono::steady_clock> startup_time = std::chrono::steady_clock::now();
 
         boost::filesystem::path config_file_path, input_path, profile_path;
         int requested_num_threads;
@@ -221,11 +220,11 @@ int main (int argc, char *argv[]) {
             throw OSRMException("Parser not initialized!");
         }
         SimpleLogger().Write() << "Parsing in progress..";
-        double parsing_start_time = get_timestamp();
+        std::chrono::time_point<std::chrono::steady_clock> parsing_start_time = std::chrono::steady_clock::now();
+
         parser->Parse();
-        SimpleLogger().Write() << "Parsing finished after " <<
-            (get_timestamp() - parsing_start_time) <<
-            " seconds";
+        std::chrono::duration<double> parsing_duration = std::chrono::steady_clock::now() - parsing_start_time;
+        SimpleLogger().Write() << "Parsing finished after " << parsing_duration.count() << " seconds";
 
         if (externalMemory.all_edges_list.empty())
         {
@@ -238,9 +237,9 @@ int main (int argc, char *argv[]) {
         delete parser;
         delete extractCallBacks;
 
-        SimpleLogger().Write() << "extraction finished after " << get_timestamp() - startup_time << "s";
+        std::chrono::duration<double> extraction_duration = std::chrono::steady_clock::now() - startup_time;
+        SimpleLogger().Write() << "extraction finished after " << extraction_duration.count() << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: " << "./osrm-prepare " << output_file_name << std::endl;
-
     }
     catch(boost::program_options::too_many_positional_options_error& e)
     {
