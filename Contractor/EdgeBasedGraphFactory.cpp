@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "EdgeBasedGraphFactory.h"
 #include "../Util/ComputeAngle.h"
+#include "../DataStructures/BFSComponentExplorer.h"
 
 #include <boost/assert.hpp>
 #include <boost/foreach.hpp>
@@ -434,8 +435,6 @@ void EdgeBasedGraphFactory::Run(
         }
     }
 
-    SimpleLogger().Write() << "Identifying components of the road network";
-
     unsigned node_based_edge_counter = 0;
     unsigned original_edges_counter  = 0;
 
@@ -450,13 +449,20 @@ void EdgeBasedGraphFactory::Run(
         sizeof(unsigned)
     );
 
+    SimpleLogger().Write() << "Identifying components of the road network";
+
     //Run a BFS on the undirected graph and identify small components
-    std::vector<unsigned> component_index_list;
-    std::vector<NodeID  > component_index_size;
-    BFSCompentExplorer( component_index_list, component_index_size );
+    //TODO move this to a sub function, so we can just use scoping
+    auto component_explorer = new BFSComponentExplorer<NodeBasedDynamicGraph>(
+        *m_node_based_graph,
+        *m_restriction_map,
+        m_barrier_nodes
+    );
+
+    component_explorer->run();
 
     SimpleLogger().Write() <<
-        "identified: " << component_index_size.size() << " many components";
+        "identified: " << component_explorer->getNumberOfComponents() << " many components";
     SimpleLogger().Write() << "generating edge-expanded nodes";
 
     p.reinit(m_node_based_graph->GetNumberOfNodes());
@@ -495,8 +501,8 @@ void EdgeBasedGraphFactory::Run(
             //Note: edges that end on barrier nodes or on a turn restriction
             //may actually be in two distinct components. We choose the smallest
             const unsigned size_of_component = std::min(
-                component_index_size[component_index_list[u]],
-                component_index_size[component_index_list[v]]
+                component_explorer->getComponentSize(u),
+                component_explorer->getComponentSize(v)
             );
 
             const bool component_is_tiny = ( size_of_component < 1000 );
@@ -504,22 +510,15 @@ void EdgeBasedGraphFactory::Run(
         }
     }
 
+    delete component_explorer;
+
     m_number_of_edge_based_nodes = numbered_edges_count;
 
     SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size() <<
                               " nodes in edge-expanded graph";
+
     SimpleLogger().Write() << "generating edge-expanded edges";
 
-    std::vector<NodeID>().swap(component_index_size);
-    BOOST_ASSERT_MSG(
-        0 == component_index_size.capacity(),
-        "component size vector not deallocated"
-    );
-    std::vector<NodeID>().swap(component_index_list);
-    BOOST_ASSERT_MSG(
-        0 == component_index_list.capacity(),
-        "component index vector not deallocated"
-    );
     std::vector<OriginalEdgeData> original_edge_data_vector;
     original_edge_data_vector.reserve(1024*1024);
 
@@ -762,80 +761,3 @@ unsigned EdgeBasedGraphFactory::GetNumberOfEdgeBasedNodes() const {
     return m_number_of_edge_based_nodes;
 }
 
-void EdgeBasedGraphFactory::BFSCompentExplorer(
-    std::vector<unsigned> & component_index_list,
-    std::vector<unsigned> & component_index_size
-) const {
-    std::queue<std::pair<NodeID, NodeID> > bfs_queue;
-    Percent p( m_node_based_graph->GetNumberOfNodes() );
-    unsigned current_component, current_component_size;
-    current_component = current_component_size = 0;
-
-    BOOST_ASSERT( component_index_list.empty() );
-    BOOST_ASSERT( component_index_size.empty() );
-
-    component_index_list.resize(
-        m_node_based_graph->GetNumberOfNodes(),
-        std::numeric_limits<unsigned>::max()
-    );
-
-    //put unexplorered node with parent pointer into queue
-    for( NodeID node = 0, end = m_node_based_graph->GetNumberOfNodes(); node < end; ++node) {
-        if(std::numeric_limits<unsigned>::max() == component_index_list[node]) {
-            bfs_queue.push(std::make_pair(node, node));
-            //mark node as read
-            component_index_list[node] = current_component;
-            p.printIncrement();
-            while(!bfs_queue.empty()) {
-                //fetch element from BFS queue
-                std::pair<NodeID, NodeID> current_queue_item = bfs_queue.front();
-                bfs_queue.pop();
-
-                const NodeID v = current_queue_item.first;  //current node
-                const NodeID u = current_queue_item.second; //parent
-                //increment size counter of current component
-                ++current_component_size;
-                const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
-                if(!is_barrier_node) {
-                    const NodeID to_node_of_only_restriction = m_restriction_map->CheckForEmanatingIsOnlyTurn(u, v);
-
-                    for(
-                        EdgeIterator e2 = m_node_based_graph->BeginEdges(v);
-                        e2 < m_node_based_graph->EndEdges(v);
-                        ++e2
-                    ) {
-                        NodeIterator w = m_node_based_graph->GetTarget(e2);
-
-                        if(
-                            to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
-                            w != to_node_of_only_restriction
-                        ) {
-                            // At an only_-restriction but not at the right turn
-                            continue;
-                        }
-                        if( u != w ) {
-                            //only add an edge if turn is not a U-turn except
-                            //when it is at the end of a dead-end street.
-                            if (!m_restriction_map->CheckIfTurnIsRestricted(u, v, w) ) {
-                                //only add an edge if turn is not prohibited
-                                if(std::numeric_limits<unsigned>::max() == component_index_list[w]) {
-                                    //insert next (node, parent) only if w has
-                                    //not yet been explored
-                                    //mark node as read
-                                    component_index_list[w] = current_component;
-                                    bfs_queue.push(std::make_pair(w,v));
-                                    p.printIncrement();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            //push size into vector
-            component_index_size.push_back(current_component_size);
-            //reset counters;
-            current_component_size = 0;
-            ++current_component;
-        }
-    }
-}
