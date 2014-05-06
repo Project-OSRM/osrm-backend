@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stxxl/sort>
 
+#include <chrono>
+
 ExtractionContainers::ExtractionContainers() {
     //Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;

@@ -40,7 +40,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef __linux__
 #include <malloc.h>
 #endif
+
 #include <algorithm>
+#include <chrono>
 #include <iomanip>
 #include <numeric>
 #include <vector>
