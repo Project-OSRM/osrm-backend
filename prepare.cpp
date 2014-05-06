@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/LuaUtil.h"
 #include "Util/OpenMPWrapper.h"
 #include "Util/OSRMException.h"
-// #include "Util/ProgramOptions.h"
+#include "Util/TimingUtil.h"
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
 #include "typedefs.h"
