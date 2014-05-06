@@ -279,6 +279,21 @@ void EdgeBasedGraphFactory::Run(
     const std::string & geometry_filename,
     lua_State *lua_state
 ) {
+
+    CompressGeometry();
+
+    RenumberEdges();
+
+    GenerateEdgeExpandedNodes();
+
+    GenerateEdgeExpandedEdges(original_edge_data_filename, lua_state);
+
+    m_geometry_compressor.SerializeInternalVector( geometry_filename );
+
+}
+
+void EdgeBasedGraphFactory::CompressGeometry()
+{
     SimpleLogger().Write() << "Removing graph geometry while preserving topology";
 
     const unsigned original_number_of_nodes = m_node_based_graph->GetNumberOfNodes();
@@ -417,7 +432,13 @@ void EdgeBasedGraphFactory::Run(
     SimpleLogger().Write() << "new nodes: " << new_node_count << ", edges " << new_edge_count;
     SimpleLogger().Write() << "Node compression ratio: " << new_node_count/(double)original_number_of_nodes;
     SimpleLogger().Write() << "Edge compression ratio: " << new_edge_count/(double)original_number_of_edges;
+}
 
+/**
+ * Writes the id of the edge in the edge expanded graph (into the egde in the node based graph)
+ */
+void EdgeBasedGraphFactory::RenumberEdges()
+{
     // renumber edge based node IDs
     unsigned numbered_edges_count = 0;
     for(NodeID current_node = 0; current_node < m_node_based_graph->GetNumberOfNodes(); ++current_node) {
@@ -435,37 +456,30 @@ void EdgeBasedGraphFactory::Run(
         }
     }
 
-    unsigned node_based_edge_counter = 0;
-    unsigned original_edges_counter  = 0;
+    m_number_of_edge_based_nodes = numbered_edges_count;
+}
 
-    std::ofstream edge_data_file(
-        original_edge_data_filename.c_str(),
-        std::ios::binary
-    );
-
-    //writes a dummy value that is updated later
-    edge_data_file.write(
-        (char*)&original_edges_counter,
-        sizeof(unsigned)
-    );
-
+/**
+ * Creates the nodes in the edge expanded graph from edges in the node-based graph.
+ */
+void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
+{
     SimpleLogger().Write() << "Identifying components of the road network";
 
     //Run a BFS on the undirected graph and identify small components
-    //TODO move this to a sub function, so we can just use scoping
-    auto component_explorer = new BFSComponentExplorer<NodeBasedDynamicGraph>(
+    BFSComponentExplorer<NodeBasedDynamicGraph> component_explorer(
         *m_node_based_graph,
         *m_restriction_map,
         m_barrier_nodes
     );
 
-    component_explorer->run();
+    component_explorer.run();
 
     SimpleLogger().Write() <<
-        "identified: " << component_explorer->getNumberOfComponents() << " many components";
+        "identified: " << component_explorer.getNumberOfComponents() << " many components";
     SimpleLogger().Write() << "generating edge-expanded nodes";
 
-    p.reinit(m_node_based_graph->GetNumberOfNodes());
+    Percent p(m_node_based_graph->GetNumberOfNodes());
 
     //loop over all edges and generate new set of nodes
     for(
@@ -501,8 +515,8 @@ void EdgeBasedGraphFactory::Run(
             //Note: edges that end on barrier nodes or on a turn restriction
             //may actually be in two distinct components. We choose the smallest
             const unsigned size_of_component = std::min(
-                component_explorer->getComponentSize(u),
-                component_explorer->getComponentSize(v)
+                component_explorer.getComponentSize(u),
+                component_explorer.getComponentSize(v)
             );
 
             const bool component_is_tiny = ( size_of_component < 1000 );
@@ -510,14 +524,31 @@ void EdgeBasedGraphFactory::Run(
         }
     }
 
-    delete component_explorer;
-
-    m_number_of_edge_based_nodes = numbered_edges_count;
-
     SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size() <<
                               " nodes in edge-expanded graph";
+}
 
+/**
+ * Actually it also generates OriginalEdgeData and serializes them...
+ */
+void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string& original_edge_data_filename, lua_State* lua_state)
+{
     SimpleLogger().Write() << "generating edge-expanded edges";
+
+    unsigned node_based_edge_counter = 0;
+    unsigned original_edges_counter  = 0;
+
+    std::ofstream edge_data_file(
+        original_edge_data_filename.c_str(),
+        std::ios::binary
+    );
+
+    //writes a dummy value that is updated later
+    edge_data_file.write(
+        (char*)&original_edges_counter,
+        sizeof(unsigned)
+    );
+
 
     std::vector<OriginalEdgeData> original_edge_data_vector;
     original_edge_data_vector.reserve(1024*1024);
@@ -529,7 +560,9 @@ void EdgeBasedGraphFactory::Run(
     unsigned skipped_uturns_counter = 0;
     unsigned skipped_barrier_turns_counter = 0;
     unsigned compressed = 0;
-    p.reinit(m_node_based_graph->GetNumberOfNodes());
+
+    Percent p(m_node_based_graph->GetNumberOfNodes());
+
     for (NodeIterator u = 0, end = m_node_based_graph->GetNumberOfNodes(); u < end; ++u)
     {
         for (EdgeIterator e1 = m_node_based_graph->BeginEdges(u), last_edge_u = m_node_based_graph->EndEdges(u); e1 < last_edge_u; ++e1)
@@ -635,7 +668,7 @@ void EdgeBasedGraphFactory::Run(
                 BOOST_ASSERT( SPECIAL_NODEID != edge_data1.edgeBasedNodeID );
                 BOOST_ASSERT( SPECIAL_NODEID != edge_data2.edgeBasedNodeID );
 
-                m_edge_based_edge_list.push_back(
+                m_edge_based_edge_list.emplace_back(
                     EdgeBasedEdge(
                         edge_data1.edgeBasedNodeID,
                         edge_data2.edgeBasedNodeID,
@@ -655,8 +688,6 @@ void EdgeBasedGraphFactory::Run(
     edge_data_file.write( (char*)&original_edges_counter, sizeof(unsigned) );
     edge_data_file.close();
 
-    m_geometry_compressor.SerializeInternalVector( geometry_filename );
-
     SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size() << " edge based nodes";
     SimpleLogger().Write() << "Node-based graph contains " << node_based_edge_counter << " edges";
     SimpleLogger().Write() << "Edge-expanded graph ...";
@@ -666,6 +697,7 @@ void EdgeBasedGraphFactory::Run(
     SimpleLogger().Write() << "  skips "  << skipped_uturns_counter << " U turns";
     SimpleLogger().Write() << "  skips "  <<  skipped_barrier_turns_counter << " turns over barriers";
 }
+
 
 int EdgeBasedGraphFactory::GetTurnPenalty(
     const NodeID u,

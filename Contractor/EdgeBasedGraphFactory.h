@@ -127,16 +127,13 @@ private:
 
     GeometryCompressor                          m_geometry_compressor;
 
-    NodeID CheckForEmanatingIsOnlyTurn(
-        const NodeID u,
-        const NodeID v
-    ) const;
-
-    bool CheckIfTurnIsRestricted(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    ) const;
+    void CompressGeometry();
+    void RenumberEdges();
+    void GenerateEdgeExpandedNodes();
+    void GenerateEdgeExpandedEdges(
+        const std::string& original_edge_data_filename,
+        lua_State* lua_state
+    );
 
     void InsertEdgeBasedNode(
         NodeBasedDynamicGraph::NodeIterator u,
@@ -149,18 +146,6 @@ private:
         std::ofstream & edge_data_file,
         std::vector<OriginalEdgeData> & original_edge_data_vector
     ) const;
-
-    void FixupArrivingTurnRestriction(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    );
-
-    void FixupStartingTurnRestriction(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    );
 
     unsigned max_id;
 };
