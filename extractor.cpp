@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/unordered_map.hpp>
 
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
