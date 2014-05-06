@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/GraphLoader.h"
-#include "../Util/InputFileUtil.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/UUID.h"

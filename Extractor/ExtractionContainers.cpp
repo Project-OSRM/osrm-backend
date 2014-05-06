@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractionContainers.h"
 #include "ExtractionWay.h"
 #include "../Util/SimpleLogger.h"
-#include "../Util/TimingUtil.h"
 
 #include <boost/assert.hpp>
 #include <boost/foreach.hpp>
@@ -59,7 +58,7 @@ void ExtractionContainers::PrepareData(
     try {
         unsigned number_of_used_nodes = 0;
         unsigned number_of_used_edges = 0;
-        double time = get_timestamp();
+        std::chrono::time_point<std::chrono::steady_clock> time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
         stxxl::sort(
@@ -68,14 +67,19 @@ void ExtractionContainers::PrepareData(
             Cmp(),
             4294967296
         );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        std::chrono::time_point<std::chrono::steady_clock> time2 = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
 
-        time = get_timestamp();
+        time1 = std::chrono::steady_clock::now();
         std::cout << "[extractor] Erasing duplicate nodes   ... " << std::flush;
         stxxl::vector<NodeID>::iterator NewEnd = std::unique ( used_node_id_list.begin(),used_node_id_list.end() ) ;
         used_node_id_list.resize ( NewEnd - used_node_id_list.begin() );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        time = get_timestamp();
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
+        time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
         stxxl::sort(
@@ -84,8 +88,11 @@ void ExtractionContainers::PrepareData(
             CmpNodeByID(),
             4294967296
         );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        time = get_timestamp();
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
+        time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Sorting used ways         ... " << std::flush;
         stxxl::sort(
@@ -94,7 +101,10 @@ void ExtractionContainers::PrepareData(
             CmpWayByID(),
             4294967296
         );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
 
         std::cout << "[extractor] Sorting restrictions. by from... " << std::flush;
         stxxl::sort(
@@ -103,7 +113,10 @@ void ExtractionContainers::PrepareData(
             CmpRestrictionContainerByFrom(),
             4294967296
         );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
 
         std::cout << "[extractor] Fixing restriction starts ... " << std::flush;
         STXXLRestrictionsVector::iterator restrictions_iterator = restrictions_list.begin();
@@ -139,8 +152,11 @@ void ExtractionContainers::PrepareData(
             ++restrictions_iterator;
         }
 
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        time = get_timestamp();
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
+        time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Sorting restrictions. by to  ... " << std::flush;
         stxxl::sort(
@@ -149,9 +165,12 @@ void ExtractionContainers::PrepareData(
             CmpRestrictionContainerByTo(),
             4294967296
         );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
 
-        time = get_timestamp();
+
+        time1 = std::chrono::steady_clock::now();
         unsigned usableRestrictionsCounter(0);
         std::cout << "[extractor] Fixing restriction ends   ... " << std::flush;
         restrictions_iterator = restrictions_list.begin();
@@ -187,7 +206,10 @@ void ExtractionContainers::PrepareData(
             }
             ++restrictions_iterator;
         }
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
         SimpleLogger().Write() << "usable restrictions: " << usableRestrictionsCounter;
         //serialize restrictions
         std::ofstream restrictions_out_stream;
@@ -218,7 +240,7 @@ void ExtractionContainers::PrepareData(
         file_out_stream.open(output_file_name.c_str(), std::ios::binary);
         file_out_stream.write((char*)&uuid, sizeof(UUID));
         file_out_stream.write((char*)&number_of_used_nodes, sizeof(unsigned));
-        time = get_timestamp();
+        time1 = std::chrono::steady_clock::now();
         std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
 
         //identify all used nodes by a merging step of two sorted lists
@@ -248,7 +270,10 @@ void ExtractionContainers::PrepareData(
             ++node_iterator;
         }
 
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
 
         std::cout << "[extractor] setting number of nodes   ... " << std::flush;
         std::ios::pos_type previous_file_position = file_out_stream.tellp();
@@ -257,7 +282,7 @@ void ExtractionContainers::PrepareData(
         file_out_stream.seekp(previous_file_position);
 
         std::cout << "ok" << std::endl;
-        time = get_timestamp();
+        time1 = std::chrono::steady_clock::now();
 
         // Sort edges by start.
         std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
@@ -267,8 +292,11 @@ void ExtractionContainers::PrepareData(
             CmpEdgeByStartID(),
             4294967296
         );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        time = get_timestamp();
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
+        time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Setting start coords      ... " << std::flush;
         file_out_stream.write((char*)&number_of_used_edges, sizeof(unsigned));
@@ -293,8 +321,11 @@ void ExtractionContainers::PrepareData(
             edge_iterator->startCoord.lon = node_iterator->lon;
             ++edge_iterator;
         }
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        time = get_timestamp();
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
+        time1 = std::chrono::steady_clock::now();
 
         // Sort Edges by target
         std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
@@ -304,8 +335,11 @@ void ExtractionContainers::PrepareData(
             CmpEdgeByTargetID(),
             4294967296
         );
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
-        time = get_timestamp();
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
+        time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Setting target coords     ... " << std::flush;
         // Traverse list of edges and nodes in parallel and set target coord
@@ -399,14 +433,17 @@ void ExtractionContainers::PrepareData(
             }
             ++edge_iterator;
         }
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
         std::cout << "[extractor] setting number of edges   ... " << std::flush;
 
         file_out_stream.seekp(previous_file_position);
         file_out_stream.write((char*)&number_of_used_edges, sizeof(unsigned));
         file_out_stream.close();
         std::cout << "ok" << std::endl;
-        time = get_timestamp();
+        time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] writing street name index ... " << std::flush;
         std::string name_file_streamName = (output_file_name + ".names");
@@ -451,7 +488,10 @@ void ExtractionContainers::PrepareData(
         }
 
         name_file_stream.close();
-        std::cout << "ok, after " << get_timestamp() - time << "s" << std::endl;
+        time2 = std::chrono::steady_clock::now();
+        elapsed_seconds = time2-time1;
+        std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
+
         SimpleLogger().Write() << "Processed " <<
             number_of_used_nodes << " nodes and " <<
             number_of_used_edges << " edges";

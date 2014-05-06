@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasicRoutingInterface.h"
 #include "../DataStructures/SearchEngineData.h"
-#include "../Util/TimingUtil.h"
 
 #include <boost/assert.hpp>
 #include <boost/foreach.hpp>

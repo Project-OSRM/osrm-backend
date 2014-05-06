@@ -35,11 +35,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DataStructures/StaticRTree.h"
 #include "Util/GitDescription.h"
 #include "Util/GraphLoader.h"
-#include "Util/InputFileUtil.h"
 #include "Util/LuaUtil.h"
 #include "Util/OpenMPWrapper.h"
 #include "Util/OSRMException.h"
-#include "Util/TimingUtil.h"
+
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
 #include "typedefs.h"
@@ -50,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <luabind/luabind.hpp>
 
+#include <chrono>
 #include <string>
 #include <vector>
 
@@ -66,7 +66,8 @@ std::vector<ImportEdge> edgeList;
 int main (int argc, char *argv[]) {
     try {
         LogPolicy::GetInstance().Unmute();
-        double startupTime = get_timestamp();
+        std::chrono::time_point<std::chrono::steady_clock> startupTime = std::chrono::steady_clock::now();
+
         boost::filesystem::path config_file_path, input_path, restrictions_path, profile_path;
         int requested_num_threads;
 
@@ -267,8 +268,7 @@ int main (int argc, char *argv[]) {
         edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
         delete edgeBasedGraphFactory;
 
-        double expansionHasFinishedTime = get_timestamp() - startupTime;
-
+        std::chrono::duration<double> expansionHasFinishedTime = std::chrono::steady_clock::now() - startupTime;
 
         // Building grid-like nearest-neighbor data structure
         SimpleLogger().Write() << "building r-tree ...";
@@ -307,12 +307,13 @@ int main (int argc, char *argv[]) {
 
         SimpleLogger().Write() << "initializing contractor";
         Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
-        double contractionStartedTimestamp(get_timestamp());
+        std::chrono::time_point<std::chrono::steady_clock> contraction_start_timestamp = std::chrono::steady_clock::now();
+
         contractor->Run();
-        const double contraction_duration = (get_timestamp() - contractionStartedTimestamp);
+        std::chrono::duration<double> contraction_duration = std::chrono::steady_clock::now() - contraction_start_timestamp;
         SimpleLogger().Write() <<
             "Contraction took " <<
-            contraction_duration <<
+            contraction_duration.count() <<
             " sec";
 
         DeallocatingVector< QueryEdge > contractedEdgeList;
@@ -414,15 +415,16 @@ int main (int argc, char *argv[]) {
         }
         hsgr_output_stream.close();
 
-        SimpleLogger().Write() << "Preprocessing : " <<
-            (get_timestamp() - startupTime) << " seconds";
+        std::chrono::duration<double> entire_duration = std::chrono::steady_clock::now() - startupTime;
+
+        SimpleLogger().Write() << "Preprocessing : " << entire_duration.count() << " seconds";
         SimpleLogger().Write() << "Expansion  : " <<
-            (nodeBasedNodeNumber/expansionHasFinishedTime) << " nodes/sec and " <<
-            (edgeBasedNodeNumber/expansionHasFinishedTime) << " edges/sec";
+            (nodeBasedNodeNumber/expansionHasFinishedTime.count()) << " nodes/sec and " <<
+            (edgeBasedNodeNumber/expansionHasFinishedTime.count()) << " edges/sec";
 
         SimpleLogger().Write() << "Contraction: " <<
-            (edgeBasedNodeNumber/contraction_duration) << " nodes/sec and " <<
-            usedEdgeCounter/contraction_duration << " edges/sec";
+            (edgeBasedNodeNumber/contraction_duration.count()) << " nodes/sec and " <<
+            usedEdgeCounter/contraction_duration.count() << " edges/sec";
 
         node_array.clear();
         SimpleLogger().Write() << "finished preprocessing";
