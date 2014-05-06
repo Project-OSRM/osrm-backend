@@ -45,14 +45,14 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::vector<NodeInfo> & m_node_info_list,
     SpeedProfileProperties & speed_profile
 ) : speed_profile(speed_profile),
-    m_node_based_graph(node_based_graph),
     m_number_of_edge_based_nodes(std::numeric_limits<unsigned>::max()),
-    m_restriction_map(std::move(restriction_map)),
     m_node_info_list(m_node_info_list),
+    m_node_based_graph(node_based_graph),
+    m_restriction_map(std::move(restriction_map)),
     max_id(0)
 {
 
-    // why not use the copy constructor?
+    // insert into unordered sets for fast lookup
     m_barrier_nodes.insert(
         barrier_node_list.begin(),
         barrier_node_list.end()
