@@ -92,7 +92,8 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
 
     // tighten vector sizes
     barrier_node_list.shrink_to_fit();
-    traffic_light_node_list.shrink_to_fit() input_stream.read((char *)&m, sizeof(unsigned));
+    traffic_light_node_list.shrink_to_fit();
+    input_stream.read((char *)&m, sizeof(unsigned));
     SimpleLogger().Write() << " and " << m << " edges ";
     for (TurnRestriction &current_restriction : restriction_list)
     {
