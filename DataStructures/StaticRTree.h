@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/fstream.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 
 #include <algorithm>
 #include <array>
@@ -60,7 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 const static uint32_t RTREE_BRANCHING_FACTOR = 64;
 const static uint32_t RTREE_LEAF_NODE_SIZE = 1024;
 
-thread_local boost::filesystem::ifstream thread_local_rtree_stream;
+static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtree_stream;
 
 // Implements a static, i.e. packed, R-tree
 template <class DataT,
@@ -164,23 +165,25 @@ class StaticRTree : boost::noncopyable
 
             min_max_dist = std::min(
                 min_max_dist,
-                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left),
-                         FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right)));
+                std::max(
+                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left),
+                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right)));
 
             min_max_dist = std::min(
                 min_max_dist,
-                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right),
-                         FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right)));
+                std::max(
+                    FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_right),
+                    FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right)));
 
-            min_max_dist =
-                std::min(min_max_dist,
-                         std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right),
-                                  FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left)));
+            min_max_dist = std::min(
+                min_max_dist,
+                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_right),
+                         FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left)));
 
-            min_max_dist =
-                std::min(min_max_dist,
-                         std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left),
-                                  FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left)));
+            min_max_dist = std::min(
+                min_max_dist,
+                std::max(FixedPointCoordinate::ApproximateEuclideanDistance(location, lower_left),
+                         FixedPointCoordinate::ApproximateEuclideanDistance(location, upper_left)));
             return min_max_dist;
         }
 
@@ -409,7 +412,7 @@ class StaticRTree : boost::noncopyable
         // close tree node file.
         tree_node_file.close();
         std::chrono::time_point<std::chrono::steady_clock> time1 = std::chrono::steady_clock::now();
-        std::chrono::duration<double> elapsed_seconds = time1-time0;
+        std::chrono::duration<double> elapsed_seconds = time1 - time0;
         SimpleLogger().Write() << "finished r-tree construction in " << (elapsed_seconds.count())
                                << " seconds";
     }
@@ -478,7 +481,10 @@ class StaticRTree : boost::noncopyable
         leaf_node_file.read((char *)&m_element_count, sizeof(uint64_t));
         leaf_node_file.close();
 
-        thread_local_rtree_stream.close();
+        if (thread_local_rtree_stream.get())
+        {
+            thread_local_rtree_stream->close();
+        }
 
         // SimpleLogger().Write() << tree_size << " nodes in search tree";
         // SimpleLogger().Write() << m_element_count << " elements in leafs";
@@ -501,7 +507,8 @@ class StaticRTree : boost::noncopyable
             m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
         traversal_queue.emplace(0, current_min_dist);
 
-        BOOST_ASSERT_MSG(std::numeric_limits<double>::epsilon() > std::abs(traversal_queue.top().min_dist),
+        BOOST_ASSERT_MSG(std::numeric_limits<double>::epsilon() >
+                             std::abs(traversal_queue.top().min_dist),
                          "Root element in NN Search has min dist != 0.");
 
         while (!traversal_queue.empty())
@@ -526,11 +533,12 @@ class StaticRTree : boost::noncopyable
                             continue;
                         }
 
-                        double current_minimum_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
-                            input_coordinate.lat,
-                            input_coordinate.lon,
-                            m_coordinate_list->at(current_edge.u).lat,
-                            m_coordinate_list->at(current_edge.u).lon);
+                        double current_minimum_distance =
+                            FixedPointCoordinate::ApproximateEuclideanDistance(
+                                input_coordinate.lat,
+                                input_coordinate.lon,
+                                m_coordinate_list->at(current_edge.u).lat,
+                                m_coordinate_list->at(current_edge.u).lon);
                         if (current_minimum_distance < min_dist)
                         {
                             // found a new minimum
@@ -540,11 +548,12 @@ class StaticRTree : boost::noncopyable
                             found_a_nearest_edge = true;
                         }
 
-                        current_minimum_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
-                            input_coordinate.lat,
-                            input_coordinate.lon,
-                            m_coordinate_list->at(current_edge.v).lat,
-                            m_coordinate_list->at(current_edge.v).lon);
+                        current_minimum_distance =
+                            FixedPointCoordinate::ApproximateEuclideanDistance(
+                                input_coordinate.lat,
+                                input_coordinate.lon,
+                                m_coordinate_list->at(current_edge.v).lat,
+                                m_coordinate_list->at(current_edge.v).lon);
 
                         if (current_minimum_distance < min_dist)
                         {
@@ -747,18 +756,19 @@ class StaticRTree : boost::noncopyable
   private:
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode &result_node)
     {
-        if (!thread_local_rtree_stream.is_open())
+        if (!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open())
         {
-            thread_local_rtree_stream.open(m_leaf_node_filename, std::ios::in | std::ios::binary);
+            thread_local_rtree_stream.reset(new boost::filesystem::ifstream(
+                m_leaf_node_filename, std::ios::in | std::ios::binary));
         }
-        if (!thread_local_rtree_stream.good())
+        if (!thread_local_rtree_stream->good())
         {
-            thread_local_rtree_stream.clear(std::ios::goodbit);
+            thread_local_rtree_stream->clear(std::ios::goodbit);
             SimpleLogger().Write(logDEBUG) << "Resetting stale filestream";
         }
         uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
-        thread_local_rtree_stream.seekg(seek_pos);
-        thread_local_rtree_stream.read((char *)&result_node, sizeof(LeafNode));
+        thread_local_rtree_stream->seekg(seek_pos);
+        thread_local_rtree_stream->read((char *)&result_node, sizeof(LeafNode));
     }
 
     inline bool EdgesAreEquivalent(const FixedPointCoordinate &a,
