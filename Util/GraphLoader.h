@@ -38,10 +38,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/unordered_map.hpp>
 
 #include <cmath>
 
@@ -49,86 +47,78 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <unordered_map>
 #include <vector>
 
-typedef boost::unordered_map<NodeID, NodeID> ExternalNodeMap;
-
-template<class EdgeT>
-struct NodesWithoutSourceRemover {
-    inline bool operator()( const EdgeT & edge ) const {
-        return edge.source() == UINT_MAX;
-    }
-};
-
-template<typename EdgeT>
-NodeID readBinaryOSRMGraphFromStream(
-    std::istream                 & input_stream,
-    std::vector<EdgeT>           & edge_list,
-    std::vector<NodeID>          & barrier_node_list,
-    std::vector<NodeID>          & traffic_light_node_list,
-    std::vector<NodeInfo>        * int_to_ext_node_id_map,
-    std::vector<TurnRestriction> & restriction_list
-) {
+template <typename EdgeT>
+NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
+                                     std::vector<EdgeT> &edge_list,
+                                     std::vector<NodeID> &barrier_node_list,
+                                     std::vector<NodeID> &traffic_light_node_list,
+                                     std::vector<NodeInfo> *int_to_ext_node_id_map,
+                                     std::vector<TurnRestriction> &restriction_list)
+{
     const UUID uuid_orig;
     UUID uuid_loaded;
-    input_stream.read((char *) &uuid_loaded, sizeof(UUID));
+    input_stream.read((char *)&uuid_loaded, sizeof(UUID));
 
-    if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-        SimpleLogger().Write(logWARNING) <<
-            ".osrm was prepared with different build."
-            "Reprocess to get rid of this warning.";
+    if (!uuid_loaded.TestGraphUtil(uuid_orig))
+    {
+        SimpleLogger().Write(logWARNING) << ".osrm was prepared with different build."
+                                            "Reprocess to get rid of this warning.";
     }
 
     NodeID n, source, target;
     EdgeID m;
-    short dir;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext_to_int_id_map;
-    input_stream.read((char*)&n, sizeof(NodeID));
+    short dir; // direction (0 = open, 1 = forward, 2+ = open)
+    std::unordered_map<NodeID, NodeID> ext_to_int_id_map;
+    input_stream.read((char *)&n, sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
     ExternalMemoryNode node;
-    for( NodeID i=0; i<n; ++i ) {
-        input_stream.read((char*)&node, sizeof(ExternalMemoryNode));
-        int_to_ext_node_id_map->push_back(
-            NodeInfo(node.lat, node.lon, node.id)
-        );
+    for (NodeID i = 0; i < n; ++i)
+    {
+        input_stream.read((char *)&node, sizeof(ExternalMemoryNode));
+        int_to_ext_node_id_map->emplace_back(node.lat, node.lon, node.id);
         ext_to_int_id_map.emplace(node.id, i);
-        if(node.bollard) {
-        	barrier_node_list.push_back(i);
+        if (node.bollard)
+        {
+            barrier_node_list.emplace_back(i);
         }
-        if(node.trafficLight) {
-        	traffic_light_node_list.push_back(i);
+        if (node.trafficLight)
+        {
+            traffic_light_node_list.emplace_back(i);
         }
     }
 
-    //tighten vector sizes
-    std::vector<NodeID>(barrier_node_list).swap(barrier_node_list);
-    std::vector<NodeID>(traffic_light_node_list).swap(traffic_light_node_list);
-
-    input_stream.read((char*)&m, sizeof(unsigned));
+    // tighten vector sizes
+    barrier_node_list.shrink_to_fit();
+    traffic_light_node_list.shrink_to_fit() input_stream.read((char *)&m, sizeof(unsigned));
     SimpleLogger().Write() << " and " << m << " edges ";
-    // for(unsigned i = 0; i < restriction_list.size(); ++i) {
-    BOOST_FOREACH(TurnRestriction & current_restriction, restriction_list) {
-        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(current_restriction.fromNode);
-        if( intNodeID == ext_to_int_id_map.end()) {
+    for (TurnRestriction &current_restriction : restriction_list)
+    {
+        auto internal_id_iter = ext_to_int_id_map.find(current_restriction.fromNode);
+        if (internal_id_iter == ext_to_int_id_map.end())
+        {
             SimpleLogger().Write(logDEBUG) << "Unmapped from Node of restriction";
             continue;
-
         }
-        current_restriction.fromNode = intNodeID->second;
+        current_restriction.fromNode = internal_id_iter->second;
 
-        intNodeID = ext_to_int_id_map.find(current_restriction.viaNode);
-        if( intNodeID == ext_to_int_id_map.end()) {
+        internal_id_iter = ext_to_int_id_map.find(current_restriction.viaNode);
+        if (internal_id_iter == ext_to_int_id_map.end())
+        {
             SimpleLogger().Write(logDEBUG) << "Unmapped via node of restriction";
             continue;
         }
-        current_restriction.viaNode = intNodeID->second;
+        current_restriction.viaNode = internal_id_iter->second;
 
-        intNodeID = ext_to_int_id_map.find(current_restriction.toNode);
-        if( intNodeID == ext_to_int_id_map.end()) {
+        internal_id_iter = ext_to_int_id_map.find(current_restriction.toNode);
+        if (internal_id_iter == ext_to_int_id_map.end())
+        {
             SimpleLogger().Write(logDEBUG) << "Unmapped to node of restriction";
             continue;
         }
-        current_restriction.toNode = intNodeID->second;
+        current_restriction.toNode = internal_id_iter->second;
     }
 
     edge_list.reserve(m);
@@ -136,297 +126,157 @@ NodeID readBinaryOSRMGraphFromStream(
     short type;
     NodeID nameID;
     int length;
-    bool isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, is_split;
+    bool is_roundabout, ignore_in_grid, is_access_restricted, is_contra_flow, is_split;
 
-    for (EdgeID i=0; i<m; ++i) {
-        input_stream.read((char*)&source,             sizeof(unsigned));
-        input_stream.read((char*)&target,             sizeof(unsigned));
-        input_stream.read((char*)&length,             sizeof(int));
-        input_stream.read((char*)&dir,                sizeof(short));
-        input_stream.read((char*)&weight,             sizeof(int));
-        input_stream.read((char*)&type,               sizeof(short));
-        input_stream.read((char*)&nameID,             sizeof(unsigned));
-        input_stream.read((char*)&isRoundabout,       sizeof(bool));
-        input_stream.read((char*)&ignoreInGrid,       sizeof(bool));
-        input_stream.read((char*)&isAccessRestricted, sizeof(bool));
-        input_stream.read((char*)&isContraFlow,       sizeof(bool));
-        input_stream.read((char*)&is_split,           sizeof(bool));
+    for (EdgeID i = 0; i < m; ++i)
+    {
+        input_stream.read((char *)&source, sizeof(unsigned));
+        input_stream.read((char *)&target, sizeof(unsigned));
+        input_stream.read((char *)&length, sizeof(int));
+        input_stream.read((char *)&dir, sizeof(short));
+        input_stream.read((char *)&weight, sizeof(int));
+        input_stream.read((char *)&type, sizeof(short));
+        input_stream.read((char *)&nameID, sizeof(unsigned));
+        input_stream.read((char *)&is_roundabout, sizeof(bool));
+        input_stream.read((char *)&ignore_in_grid, sizeof(bool));
+        input_stream.read((char *)&is_access_restricted, sizeof(bool));
+        input_stream.read((char *)&is_contra_flow, sizeof(bool));
+        input_stream.read((char *)&is_split, sizeof(bool));
 
-        BOOST_ASSERT_MSG(length > 0, "loaded null length edge" );
+        BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
         BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
-        BOOST_ASSERT_MSG(0<=dir && dir<=2, "loaded bogus direction");
+        BOOST_ASSERT_MSG(0 <= dir && dir <= 2, "loaded bogus direction");
 
         bool forward = true;
         bool backward = true;
-        if (1 == dir) { backward = false; }
-        if (2 == dir) { forward = false; }
+        if (1 == dir)
+        {
+            backward = false;
+        }
+        if (2 == dir)
+        {
+            forward = false;
+        }
 
         BOOST_ASSERT(type >= 0);
 
-        //         translate the external NodeIDs to internal IDs
-        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
-        if( ext_to_int_id_map.find(source) == ext_to_int_id_map.end()) {
+        // translate the external NodeIDs to internal IDs
+        auto internal_id_iter = ext_to_int_id_map.find(source);
+        if (ext_to_int_id_map.find(source) == ext_to_int_id_map.end())
+        {
 #ifndef NDEBUG
-            SimpleLogger().Write(logWARNING) <<
-                " unresolved source NodeID: " << source;
+            SimpleLogger().Write(logWARNING) << " unresolved source NodeID: " << source;
 #endif
             continue;
         }
-        source = intNodeID->second;
-        intNodeID = ext_to_int_id_map.find(target);
-        if(ext_to_int_id_map.find(target) == ext_to_int_id_map.end()) {
+        source = internal_id_iter->second;
+        internal_id_iter = ext_to_int_id_map.find(target);
+        if (ext_to_int_id_map.find(target) == ext_to_int_id_map.end())
+        {
 #ifndef NDEBUG
-            SimpleLogger().Write(logWARNING) <<
-            "unresolved target NodeID : " << target;
+            SimpleLogger().Write(logWARNING) << "unresolved target NodeID : " << target;
 #endif
             continue;
         }
-        target = intNodeID->second;
-        BOOST_ASSERT_MSG(source != UINT_MAX && target != UINT_MAX,
-            "nonexisting source or target"
-        );
+        target = internal_id_iter->second;
+        BOOST_ASSERT_MSG(source != UINT_MAX && target != UINT_MAX, "nonexisting source or target");
 
-        if(source > target) {
+        if (source > target)
+        {
             std::swap(source, target);
             std::swap(forward, backward);
         }
 
-        EdgeT inputEdge(source, target, nameID, weight, forward, backward, type, isRoundabout, ignoreInGrid, isAccessRestricted, isContraFlow, is_split );
-        edge_list.push_back(inputEdge);
+        edge_list.emplace_back(source,
+                               target,
+                               nameID,
+                               weight,
+                               forward,
+                               backward,
+                               type,
+                               is_roundabout,
+                               ignore_in_grid,
+                               is_access_restricted,
+                               is_contra_flow,
+                               is_split);
     }
-    std::sort(edge_list.begin(), edge_list.end());
-    for(unsigned i = 1; i < edge_list.size(); ++i) {
-        if( (edge_list[i-1].target() == edge_list[i].target()) && (edge_list[i-1].source() == edge_list[i].source()) ) {
-            bool edgeFlagsAreEquivalent = (edge_list[i-1].isForward() == edge_list[i].isForward()) && (edge_list[i-1].isBackward() == edge_list[i].isBackward());
-            bool edgeFlagsAreSuperSet1 = (edge_list[i-1].isForward() && edge_list[i-1].isBackward()) && (edge_list[i].isBackward() != edge_list[i].isBackward() );
-            bool edgeFlagsAreSuperSet2 = (edge_list[i].isForward() && edge_list[i].isBackward()) && (edge_list[i-1].isBackward() != edge_list[i-1].isBackward() );
 
-            if( edgeFlagsAreEquivalent ) {
-                edge_list[i]._weight = std::min(edge_list[i-1].weight(), edge_list[i].weight());
-                edge_list[i-1]._source = UINT_MAX;
-            } else if (edgeFlagsAreSuperSet1) {
-                if(edge_list[i-1].weight() <= edge_list[i].weight()) {
-                    //edge i-1 is smaller and goes in both directions. Throw away the other edge
+    std::sort(edge_list.begin(), edge_list.end());
+    for (unsigned i = 1; i < edge_list.size(); ++i)
+    {
+        if ((edge_list[i - 1].target() == edge_list[i].target()) &&
+            (edge_list[i - 1].source() == edge_list[i].source()))
+        {
+            const bool edge_flags_equivalent =
+                (edge_list[i - 1].isForward() == edge_list[i].isForward()) &&
+                (edge_list[i - 1].isBackward() == edge_list[i].isBackward());
+            const bool edge_flags_are_superset1 =
+                (edge_list[i - 1].isForward() && edge_list[i - 1].isBackward()) &&
+                (edge_list[i].isBackward() != edge_list[i].isBackward());
+            const bool edge_flags_are_superset_2 =
+                (edge_list[i].isForward() && edge_list[i].isBackward()) &&
+                (edge_list[i - 1].isBackward() != edge_list[i - 1].isBackward());
+
+            if (edge_flags_equivalent)
+            {
+                edge_list[i]._weight = std::min(edge_list[i - 1].weight(), edge_list[i].weight());
+                edge_list[i - 1]._source = UINT_MAX;
+            }
+            else if (edge_flags_are_superset1)
+            {
+                if (edge_list[i - 1].weight() <= edge_list[i].weight())
+                {
+                    // edge i-1 is smaller and goes in both directions. Throw away the other edge
                     edge_list[i]._source = UINT_MAX;
-                } else {
-                    //edge i-1 is open in both directions, but edge i is smaller in one direction. Close edge i-1 in this direction
-                    edge_list[i-1].forward = !edge_list[i].isForward();
-                    edge_list[i-1].backward = !edge_list[i].isBackward();
                 }
-            } else if (edgeFlagsAreSuperSet2) {
-                if(edge_list[i-1].weight() <= edge_list[i].weight()) {
-                     //edge i-1 is smaller for one direction. edge i is open in both. close edge i in the other direction
-                     edge_list[i].forward = !edge_list[i-1].isForward();
-                     edge_list[i].backward = !edge_list[i-1].isBackward();
-                 } else {
-                     //edge i is smaller and goes in both direction. Throw away edge i-1
-                     edge_list[i-1]._source = UINT_MAX;
-                 }
+                else
+                {
+                    // edge i-1 is open in both directions, but edge i is smaller in one direction.
+                    // Close edge i-1 in this direction
+                    edge_list[i - 1].forward = !edge_list[i].isForward();
+                    edge_list[i - 1].backward = !edge_list[i].isBackward();
+                }
+            }
+            else if (edge_flags_are_superset_2)
+            {
+                if (edge_list[i - 1].weight() <= edge_list[i].weight())
+                {
+                    // edge i-1 is smaller for one direction. edge i is open in both. close edge i
+                    // in the other direction
+                    edge_list[i].forward = !edge_list[i - 1].isForward();
+                    edge_list[i].backward = !edge_list[i - 1].isBackward();
+                }
+                else
+                {
+                    // edge i is smaller and goes in both direction. Throw away edge i-1
+                    edge_list[i - 1]._source = UINT_MAX;
+                }
             }
         }
     }
-    typename std::vector<EdgeT>::iterator newEnd = std::remove_if(edge_list.begin(), edge_list.end(), NodesWithoutSourceRemover<EdgeT>());
+    const auto new_end_iter = std::remove_if(edge_list.begin(),
+                                       edge_list.end(),
+                                       [](const EdgeT &edge)
+                                       { return edge.source() == UINT_MAX; });
     ext_to_int_id_map.clear();
-    std::vector<EdgeT>(edge_list.begin(), newEnd).swap(edge_list); //remove excess candidates.
+    edge_list.erase(new_end_iter, edge_list.end()); // remove excess candidates.
+    edge_list.shrink_to_fit();
     SimpleLogger().Write() << "Graph loaded ok and has " << edge_list.size() << " edges";
     return n;
 }
 
-template<typename EdgeT>
-NodeID readDTMPGraphFromStream(
-    std::istream &in,
-    std::vector<EdgeT>& edge_list,
-    std::vector<NodeInfo> * int_to_ext_node_id_map
-) {
-    NodeID n, source, target, id;
-    EdgeID m;
-    int dir, xcoord, ycoord;// direction (0 = open, 1 = forward, 2+ = open)
-    ExternalNodeMap ext_to_int_id_map;
-    in >> n;
-    SimpleLogger().Write(logDEBUG) << "Importing n = " << n << " nodes ";
-    for (NodeID i=0; i<n; ++i) {
-        in >> id >> ycoord >> xcoord;
-        int_to_ext_node_id_map->push_back(NodeInfo(xcoord, ycoord, id));
-        ext_to_int_id_map.insert(std::make_pair(id, i));
-    }
-    in >> m;
-    SimpleLogger().Write(logDEBUG) << " and " << m << " edges";
-
-    edge_list.reserve(m);
-    for (EdgeID i=0; i<m; ++i) {
-        EdgeWeight weight;
-        unsigned speedType(0);
-        short type(0);
-        // NodeID nameID;
-        int length;
-        in >> source >> target >> length >> dir >> speedType;
-
-        if(dir == 3) {
-            dir = 0;
-        }
-        switch(speedType) {
-        case 1:
-            weight = 130;
-            break;
-        case 2:
-            weight = 120;
-            break;
-        case 3:
-            weight = 110;
-            break;
-        case 4:
-            weight = 100;
-            break;
-        case 5:
-            weight = 90;
-            break;
-        case 6:
-            weight = 80;
-            break;
-        case 7:
-            weight = 70;
-            break;
-        case 8:
-            weight = 60;
-            break;
-        case 9:
-            weight = 50;
-            break;
-        case 10:
-            weight = 40;
-            break;
-        case 11:
-            weight = 30;
-            break;
-        case 12:
-            weight = 20;
-            break;
-        case 13:
-            weight = length;
-            break;
-        case 15:
-            weight = 10;
-            break;
-        default:
-            weight = 0;
-            break;
-        }
-
-        weight = length*weight/3.6;
-        if(speedType == 13) {
-            weight = length;
-        }
-        BOOST_ASSERT(length > 0);
-        BOOST_ASSERT(weight > 0);
-        if(dir <0 || dir > 2) {
-            SimpleLogger().Write(logWARNING) << "direction bogus: " << dir;
-        }
-        BOOST_ASSERT(0<=dir && dir<=2);
-
-        bool forward = true;
-        bool backward = true;
-        if (dir == 1) {
-            backward = false;
-        }
-        if (dir == 2) {
-            forward = false;
-        }
-
-        if(length == 0) {
-            throw OSRMException("loaded null length edge");
-        }
-
-        //         translate the external NodeIDs to internal IDs
-        ExternalNodeMap::iterator intNodeID = ext_to_int_id_map.find(source);
-        if( ext_to_int_id_map.find(source) == ext_to_int_id_map.end()) {
-            throw OSRMException("unresolvable source Node ID");
-        }
-        source = intNodeID->second;
-        intNodeID = ext_to_int_id_map.find(target);
-        if(ext_to_int_id_map.find(target) == ext_to_int_id_map.end()) {
-            throw OSRMException("unresolvable target Node ID");
-        }
-        target = intNodeID->second;
-
-        if(source == UINT_MAX || target == UINT_MAX) {
-            throw OSRMException("nonexisting source or target" );
-        }
-
-        EdgeT inputEdge(source, target, 0, weight, forward, backward, type );
-        edge_list.push_back(inputEdge);
-    }
-    ext_to_int_id_map.clear();
-    std::vector<EdgeT>(edge_list.begin(), edge_list.end()).swap(edge_list); //remove excess candidates.
-    std::cout << "ok" << std::endl;
-    return n;
-}
-
-template<typename EdgeT>
-NodeID readDDSGGraphFromStream(std::istream &in, std::vector<EdgeT>& edge_list, std::vector<NodeID> & int_to_ext_node_id_map) {
-    ExternalNodeMap nodeMap;
-    NodeID n, source, target;
-    unsigned numberOfNodes = 0;
-    char d;
-    EdgeID m;
-    int dir;// direction (0 = open, 1 = forward, 2+ = open)
-    in >> d;
-    in >> n;
-    in >> m;
-
-    SimpleLogger().Write(logDEBUG) <<
-        "expecting " << n << " nodes and " << m << " edges ...";
-
-    edge_list.reserve(m);
-    for (EdgeID i=0; i<m; i++) {
-        EdgeWeight weight;
-        in >> source >> target >> weight >> dir;
-
-        BOOST_ASSERT(weight > 0);
-        if(dir <0 || dir > 3) {
-            throw OSRMException( "[error] direction bogus");
-        }
-        BOOST_ASSERT(0<=dir && dir<=3);
-
-        bool forward = true;
-        bool backward = true;
-        if (dir == 1) backward = false;
-        if (dir == 2) forward = false;
-        if (dir == 3) {backward = true; forward = true;}
-
-        if(weight == 0) {
-            throw OSRMException("loaded null length edge");
-        }
-
-        if( nodeMap.find(source) == nodeMap.end()) {
-            nodeMap.insert(std::make_pair(source, numberOfNodes ));
-            int_to_ext_node_id_map.push_back(source);
-            numberOfNodes++;
-        }
-        if( nodeMap.find(target) == nodeMap.end()) {
-            nodeMap.insert(std::make_pair(target, numberOfNodes));
-            int_to_ext_node_id_map.push_back(target);
-            numberOfNodes++;
-        }
-        EdgeT inputEdge(source, target, 0, weight, forward, backward, 1 );
-        edge_list.push_back(inputEdge);
-    }
-    std::vector<EdgeT>(edge_list.begin(), edge_list.end()).swap(edge_list); //remove excess candidates.
-
-    nodeMap.clear();
-    return numberOfNodes;
-}
-
-template<typename NodeT, typename EdgeT>
-unsigned readHSGRFromStream(
-    const boost::filesystem::path & hsgr_file,
-    std::vector<NodeT> & node_list,
-    std::vector<EdgeT> & edge_list,
-    unsigned * check_sum
-) {
-    if ( !boost::filesystem::exists( hsgr_file ) ) {
+template <typename NodeT, typename EdgeT>
+unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
+                            std::vector<NodeT> &node_list,
+                            std::vector<EdgeT> &edge_list,
+                            unsigned *check_sum)
+{
+    if (!boost::filesystem::exists(hsgr_file))
+    {
         throw OSRMException("hsgr file does not exist");
     }
-    if ( 0 == boost::filesystem::file_size( hsgr_file ) ) {
+    if (0 == boost::filesystem::file_size(hsgr_file))
+    {
         throw OSRMException("hsgr file is empty");
     }
 
@@ -434,33 +284,28 @@ unsigned readHSGRFromStream(
 
     UUID uuid_loaded, uuid_orig;
     hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
-    if( !uuid_loaded.TestGraphUtil(uuid_orig) ) {
-        SimpleLogger().Write(logWARNING) <<
-            ".hsgr was prepared with different build. "
-            "Reprocess to get rid of this warning.";
+    if (!uuid_loaded.TestGraphUtil(uuid_orig))
+    {
+        SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build. "
+                                            "Reprocess to get rid of this warning.";
     }
 
     unsigned number_of_nodes = 0;
     unsigned number_of_edges = 0;
-    hsgr_input_stream.read( (char*) check_sum, sizeof(unsigned) );
-    hsgr_input_stream.read( (char*) &number_of_nodes, sizeof(unsigned) );
-    BOOST_ASSERT_MSG( 0 != number_of_nodes, "number of nodes is zero");
-    hsgr_input_stream.read( (char*) &number_of_edges, sizeof(unsigned) );
+    hsgr_input_stream.read((char *)check_sum, sizeof(unsigned));
+    hsgr_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
+    BOOST_ASSERT_MSG(0 != number_of_nodes, "number of nodes is zero");
+    hsgr_input_stream.read((char *)&number_of_edges, sizeof(unsigned));
 
-    SimpleLogger().Write() << "number_of_nodes: " << number_of_nodes << ", number_of_edges: " << number_of_edges;
+    SimpleLogger().Write() << "number_of_nodes: " << number_of_nodes
+                           << ", number_of_edges: " << number_of_edges;
 
     // BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
     node_list.resize(number_of_nodes + 1);
-    hsgr_input_stream.read(
-        (char*) &(node_list[0]),
-        number_of_nodes*sizeof(NodeT)
-    );
+    hsgr_input_stream.read((char *)&(node_list[0]), number_of_nodes * sizeof(NodeT));
 
     edge_list.resize(number_of_edges);
-    hsgr_input_stream.read(
-        (char*) &(edge_list[0]),
-        number_of_edges*sizeof(EdgeT)
-    );
+    hsgr_input_stream.read((char *)&(edge_list[0]), number_of_edges * sizeof(EdgeT));
     hsgr_input_stream.close();
 
     return number_of_nodes;
