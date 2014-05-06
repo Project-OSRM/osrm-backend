@@ -507,10 +507,6 @@ class StaticRTree : boost::noncopyable
             m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
         traversal_queue.emplace(0, current_min_dist);
 
-        BOOST_ASSERT_MSG(std::numeric_limits<double>::epsilon() >
-                             std::abs(traversal_queue.top().min_dist),
-                         "Root element in NN Search has min dist != 0.");
-
         while (!traversal_queue.empty())
         {
             const QueryCandidate current_query_node = traversal_queue.top();
