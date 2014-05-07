@@ -37,7 +37,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/Reply.h>
 #include <osrm/RouteParameters.h>
 
+#include <ctime>
+
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 
 RequestHandler::RequestHandler() : routing_machine(NULL) { }
@@ -48,19 +51,10 @@ void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
         std::string request;
         URIDecode(req.uri, request);
 
-        time_t ltime;
-        struct tm *Tm;
+        std::time_t t = std::time(nullptr);
 
-        ltime=time(NULL);
-        Tm=localtime(&ltime);
-
-        SimpleLogger().Write() <<
-            (Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday    << "-" <<
-            (Tm->tm_mon+1 < 10 ? "0" : "" ) << (Tm->tm_mon+1) << "-" <<
-            1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) <<
-            Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) <<
-            Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) <<
-            Tm->tm_sec << " " << req.endpoint.to_string() << " " <<
+        SimpleLogger().Write() << std::put_time(std::localtime(&t), "%m-%d-%Y %H:%M:%S") <<
+            " " << req.endpoint.to_string() << " " <<
             req.referrer << ( 0 == req.referrer.length() ? "- " :" ") <<
             req.agent << ( 0 == req.agent.length() ? "- " :" ") << request;
 

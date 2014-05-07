@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
-#include <boost/noncopyable.hpp>
-
 #include <string>
 
 template <typename Iterator, class HandlerT>
@@ -42,12 +40,14 @@ namespace http {
     struct Request;
 }
 
-class RequestHandler : private boost::noncopyable {
+class RequestHandler
+{
 
 public:
     typedef APIGrammar<std::string::iterator, RouteParameters> APIGrammarParser;
 
     RequestHandler();
+    RequestHandler(const RequestHandler &) = delete;
 
     void handle_request(const http::Request& req, http::Reply& rep);
     void RegisterRoutingMachine(OSRM * osrm);
