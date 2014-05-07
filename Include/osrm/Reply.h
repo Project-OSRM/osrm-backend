@@ -34,25 +34,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
-namespace http {
+namespace http
+{
 
-const char okHTML[]                  = "";
-const char badRequestHTML[]          = "{\"status\": 400,\"status_message\":\"Bad Request\"}";
-const char internalServerErrorHTML[] = "{\"status\": 500,\"status_message\":\"Internal Server Error\"}";
-const char seperators[]              = { ':', ' ' };
-const char crlf[]                    = { '\r', '\n' };
+const char okHTML[] = "";
+const char badRequestHTML[] = "{\"status\": 400,\"status_message\":\"Bad Request\"}";
+const char internalServerErrorHTML[] =
+    "{\"status\": 500,\"status_message\":\"Internal Server Error\"}";
+const char seperators[] = {':', ' '};
+const char crlf[] = {'\r', '\n'};
 const std::string okString = "HTTP/1.0 200 OK\r\n";
 const std::string badRequestString = "HTTP/1.0 400 Bad Request\r\n";
 const std::string internalServerErrorString = "HTTP/1.0 500 Internal Server Error\r\n";
 
-class Reply {
-public:
-    enum status_type {
-        ok                  = 200,
-        badRequest          = 400,
-        internalServerError = 500
-    } status;
-
+class Reply
+{
+  public:
+    enum status_type
+    { ok = 200,
+      badRequest = 400,
+      internalServerError = 500 } status;
 
     std::vector<Header> headers;
     std::vector<boost::asio::const_buffer> toBuffers();
@@ -63,11 +64,11 @@ public:
     void SetUncompressedSize();
 
     Reply();
-private:
+
+  private:
     std::string ToString(Reply::status_type status);
     boost::asio::const_buffer ToBuffer(Reply::status_type status);
 };
-
 }
 
-#endif //REPLY_H
+#endif // REPLY_H

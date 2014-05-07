@@ -30,16 +30,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-namespace http {
-
-    struct Header {
-        std::string name;
-        std::string value;
-        void Clear() {
-            name.clear();
-            value.clear();
-        }
-    };
+namespace http
+{
+struct Header
+{
+    std::string name;
+    std::string value;
+    void Clear()
+    {
+        name.clear();
+        value.clear();
+    }
+};
 }
 
-#endif //HTTP_HEADER_H
+#endif // HTTP_HEADER_H
