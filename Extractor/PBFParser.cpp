@@ -406,7 +406,7 @@ inline void PBFParser::loadBlock(_ThreadData * threadData) {
 inline bool PBFParser::readPBFBlobHeader(std::fstream& stream, _ThreadData * threadData) {
 	int size(0);
 	stream.read((char *)&size, sizeof(int));
-	size = swapEndian(size);
+	size = SwapEndian(size);
 	if(stream.eof()) {
 		return false;
 	}

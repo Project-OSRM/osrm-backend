@@ -28,25 +28,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MACHINE_INFO_H
 #define MACHINE_INFO_H
 
-enum Endianness {
-    LittleEndian = 1,
-    BigEndian = 2
-};
+enum Endianness
+{ LittleEndian = 1,
+  BigEndian = 2 };
 
-//Function is optimized to a single 'mov eax,1' on GCC, clang and icc using -O3
-inline Endianness getMachineEndianness() {
+// Function is optimized to a single 'mov eax,1' on GCC, clang and icc using -O3
+inline Endianness GetMachineEndianness()
+{
     int i(1);
-    char *p = (char *) &i;
-    if (1 == p[0]) {
+    char *p = (char *)&i;
+    if (1 == p[0])
+    {
         return LittleEndian;
     }
     return BigEndian;
 }
 
 // Reverses Network Byte Order into something usable, compiles down to a bswap-mov combination
-inline unsigned swapEndian(unsigned x) {
-    if(getMachineEndianness() == LittleEndian)
-        return ( (x>>24) | ((x<<8) & 0x00FF0000) | ((x>>8) & 0x0000FF00) | (x<<24) );
+inline unsigned SwapEndian(unsigned x)
+{
+    if (GetMachineEndianness() == LittleEndian)
+    {
+        return ((x >> 24) | ((x << 8) & 0x00FF0000) | ((x >> 8) & 0x0000FF00) | (x << 24));
+    }
     return x;
 }
 
