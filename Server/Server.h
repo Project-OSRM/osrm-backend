@@ -34,83 +34,68 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
 #include <vector>
 
-class Server: private boost::noncopyable {
-public:
-	explicit Server(
-		const std::string& address,
-		const std::string& port,
-		unsigned thread_pool_size
-	) :
-		threadPoolSize(thread_pool_size),
-		acceptor(ioService),
-		newConnection(new http::Connection(ioService, requestHandler)),
-		requestHandler()
-	{
-		boost::asio::ip::tcp::resolver resolver(ioService);
-		boost::asio::ip::tcp::resolver::query query(address, port);
-		boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
+class Server
+{
+  public:
+    explicit Server(const std::string &address, const std::string &port, unsigned thread_pool_size)
+        : thread_pool_size(thread_pool_size), acceptor(io_service),
+          new_connection(new http::Connection(io_service, request_handler)), request_handler()
+    {
+        boost::asio::ip::tcp::resolver resolver(io_service);
+        boost::asio::ip::tcp::resolver::query query(address, port);
+        boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 
-		acceptor.open(endpoint.protocol());
-		acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-		acceptor.bind(endpoint);
-		acceptor.listen();
-		acceptor.async_accept(
-			newConnection->socket(),
-			boost::bind(
-				&Server::handleAccept,
-				this,
-				boost::asio::placeholders::error
-			)
-		);
-	}
+        acceptor.open(endpoint.protocol());
+        acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+        acceptor.bind(endpoint);
+        acceptor.listen();
+        acceptor.async_accept(
+            new_connection->socket(),
+            boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
+    }
 
-	void Run() {
-		std::vector<boost::shared_ptr<boost::thread> > threads;
-		for (unsigned i = 0; i < threadPoolSize; ++i) {
-			boost::shared_ptr<boost::thread> thread = boost::make_shared<boost::thread>(boost::bind(&boost::asio::io_service::run, &ioService));
-			threads.push_back(thread);
-		}
-		for (unsigned i = 0; i < threads.size(); ++i)
-			threads[i]->join();
-	}
+    Server(const Server &) = delete;
 
-	void Stop() {
-		ioService.stop();
-	}
+    void Run()
+    {
+        std::vector<boost::shared_ptr<boost::thread>> threads;
+        for (unsigned i = 0; i < thread_pool_size; ++i)
+        {
+            boost::shared_ptr<boost::thread> thread = boost::make_shared<boost::thread>(
+                boost::bind(&boost::asio::io_service::run, &io_service));
+            threads.push_back(thread);
+        }
+        for (unsigned i = 0; i < threads.size(); ++i)
+            threads[i]->join();
+    }
 
-	RequestHandler & GetRequestHandlerPtr() {
-		return requestHandler;
-	}
+    void Stop() { io_service.stop(); }
 
-private:
-	void handleAccept(const boost::system::error_code& e) {
-		if (!e) {
-			newConnection->start();
-			newConnection.reset(
-				new http::Connection(ioService, requestHandler)
-			);
-			acceptor.async_accept(
-				newConnection->socket(),
-				boost::bind(
-					&Server::handleAccept,
-					this,
-					boost::asio::placeholders::error
-				)
-			);
-		}
-	}
+    RequestHandler &GetRequestHandlerPtr() { return request_handler; }
 
-	unsigned threadPoolSize;
-	boost::asio::io_service ioService;
-	boost::asio::ip::tcp::acceptor acceptor;
-	boost::shared_ptr<http::Connection> newConnection;
-	RequestHandler requestHandler;
+  private:
+    void HandleAccept(const boost::system::error_code &e)
+    {
+        if (!e)
+        {
+            new_connection->start();
+            new_connection.reset(new http::Connection(io_service, request_handler));
+            acceptor.async_accept(
+                new_connection->socket(),
+                boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
+        }
+    }
+
+    unsigned thread_pool_size;
+    boost::asio::io_service io_service;
+    boost::asio::ip::tcp::acceptor acceptor;
+    boost::shared_ptr<http::Connection> new_connection;
+    RequestHandler request_handler;
 };
 
 #endif // SERVER_H

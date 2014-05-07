@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SERVERFACTORY_H_
-#define SERVERFACTORY_H_
+#ifndef SERVER_FACTORY_H
+#define SERVER_FACTORY_H
 
 #include "Server.h"
 #include "../Util/OpenMPWrapper.h"
@@ -35,27 +35,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <zlib.h>
 
-#include <boost/noncopyable.hpp>
+struct ServerFactory
+{
+    ServerFactory() = delete;
+    ServerFactory(const ServerFactory &) = delete;
+    static Server *CreateServer(std::string &ip_address, int ip_port, int threads)
+    {
 
-struct ServerFactory : boost::noncopyable {
-	static Server * CreateServer(
-        std::string& ip_address,
-        int ip_port,
-        int threads
-    ) {
-
-		SimpleLogger().Write() <<
-			"http 1.1 compression handled by zlib version " << zlibVersion();
+        SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
 
         std::string port_stream;
         intToString(ip_port, port_stream);
 
-        return new Server(
-            ip_address,
-            port_stream,
-            std::min( omp_get_num_procs(), threads )
-        );
-	}
+        return new Server(ip_address, port_stream, std::min(omp_get_num_procs(), threads));
+    }
 };
 
-#endif /* SERVERFACTORY_H_ */
+#endif // SERVER_FACTORY_H

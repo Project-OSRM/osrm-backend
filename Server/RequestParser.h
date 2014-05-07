@@ -34,28 +34,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/logic/tribool.hpp>
 #include <boost/tuple/tuple.hpp>
 
-namespace http {
+namespace http
+{
 
 struct Request;
 
-class RequestParser {
-public:
+class RequestParser
+{
+  public:
     RequestParser();
     void Reset();
 
-    boost::tuple<boost::tribool, char*> Parse(
-        Request& req,
-        char* begin,
-        char* end,
-        CompressionType * compressionType
-    );
+    boost::tuple<boost::tribool, char *>
+    Parse(Request &req, char *begin, char *end, CompressionType *compressionType);
 
-private:
-    boost::tribool consume(
-        Request& req,
-        char input,
-        CompressionType * compressionType
-    );
+  private:
+    boost::tribool consume(Request &req, char input, CompressionType *compressionType);
 
     inline bool isChar(int c);
 
@@ -65,29 +59,28 @@ private:
 
     inline bool isDigit(int c);
 
-    enum state {
-        method_start,
-        method,
-        uri_start,
-        uri,
-        http_version_h,
-        http_version_t_1,
-        http_version_t_2,
-        http_version_p,
-        http_version_slash,
-        http_version_major_start,
-        http_version_major,
-        http_version_minor_start,
-        http_version_minor,
-        expecting_newline_1,
-        header_line_start,
-        header_lws,
-        header_name,
-        space_before_header_value,
-        header_value,
-        expecting_newline_2,
-        expecting_newline_3
-    } state_;
+    enum state
+    { method_start,
+      method,
+      uri_start,
+      uri,
+      http_version_h,
+      http_version_t_1,
+      http_version_t_2,
+      http_version_p,
+      http_version_slash,
+      http_version_major_start,
+      http_version_major,
+      http_version_minor_start,
+      http_version_minor,
+      expecting_newline_1,
+      header_line_start,
+      header_lws,
+      header_name,
+      space_before_header_value,
+      header_value,
+      expecting_newline_2,
+      expecting_newline_3 } state_;
 
     Header header;
 };
