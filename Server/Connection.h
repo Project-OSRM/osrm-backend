@@ -43,48 +43,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class RequestHandler;
 
-namespace http {
+namespace http
+{
 
 class RequestParser;
 
 /// Represents a single connection from a client.
-class Connection : 	public boost::enable_shared_from_this<Connection>
+class Connection : public boost::enable_shared_from_this<Connection>
 {
-public:
-	explicit Connection(
-		boost::asio::io_service& io_service,
-		RequestHandler& handler
-	);
-	Connection(const Connection &) = delete;
-	~Connection();
+  public:
+    explicit Connection(boost::asio::io_service &io_service, RequestHandler &handler);
+    Connection(const Connection &) = delete;
+    ~Connection();
 
-	boost::asio::ip::tcp::socket& socket();
+    boost::asio::ip::tcp::socket &socket();
 
-	/// Start the first asynchronous operation for the connection.
-	void start();
+    /// Start the first asynchronous operation for the connection.
+    void start();
 
-private:
-	void handle_read(
-		const boost::system::error_code& e,
-		std::size_t bytes_transferred
-	);
+  private:
+    void handle_read(const boost::system::error_code &e, std::size_t bytes_transferred);
 
-	/// Handle completion of a write operation.
-	void handle_write(const boost::system::error_code& e);
+    /// Handle completion of a write operation.
+    void handle_write(const boost::system::error_code &e);
 
-	void compressBufferCollection(
-		std::vector<std::string> uncompressed_data,
-		CompressionType compression_type,
-	   	std::vector<char> & compressed_data
-   	);
+    void compressBufferCollection(std::vector<std::string> uncompressed_data,
+                                  CompressionType compression_type,
+                                  std::vector<char> &compressed_data);
 
-	boost::asio::io_service::strand strand;
-	boost::asio::ip::tcp::socket TCP_socket;
-	RequestHandler& request_handler;
-	boost::array<char, 8192> incoming_data_buffer;
-	Request request;
-	RequestParser * request_parser;
-	Reply reply;
+    boost::asio::io_service::strand strand;
+    boost::asio::ip::tcp::socket TCP_socket;
+    RequestHandler &request_handler;
+    boost::array<char, 8192> incoming_data_buffer;
+    Request request;
+    RequestParser *request_parser;
+    Reply reply;
 };
 
 } // namespace http
