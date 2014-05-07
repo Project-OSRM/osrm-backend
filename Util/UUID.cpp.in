@@ -27,71 +27,83 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "UUID.h"
 
+#include "OSRMException.h"
+#include "../typedefs.h"
+
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+
+#include <cstring>
+
+#include <algorithm>
+#include <iostream>
+#include <string>
+
 #cmakedefine01 HAS64BITS
 #cmakedefine MD5PREPARE "${MD5PREPARE}"
 #cmakedefine MD5RTREE "${MD5RTREE}"
 #cmakedefine MD5GRAPH "${MD5GRAPH}"
 #cmakedefine MD5OBJECTS "${MD5OBJECTS}"
 
-UUID::UUID() : magic_number(1297240911) {
-    md5_prepare[32] =
-    md5_tree[32]    =
-    md5_graph[32]   =
-    md5_objects[32] = '\0';
+UUID::UUID() : magic_number(1297240911)
+{
+    md5_prepare[32] = md5_tree[32] = md5_graph[32] = md5_objects[32] = '\0';
 
- 	boost::uuids::name_generator gen(named_uuid);
- 	std::string temp_string(__DATE__);
- 	temp_string += __TIME__;
+    boost::uuids::name_generator gen(named_uuid);
+    std::string temp_string(__DATE__);
+    temp_string += __TIME__;
 
- 	std::copy(MD5PREPARE, MD5PREPARE+strlen(MD5PREPARE), md5_prepare);
- 	temp_string += md5_prepare;
- 	std::copy(MD5RTREE, MD5RTREE+32, md5_tree);
- 	temp_string += md5_tree;
- 	std::copy(MD5GRAPH, MD5GRAPH+32, md5_graph);
- 	temp_string += md5_graph;
- 	std::copy(MD5OBJECTS, MD5OBJECTS+32, md5_objects);
- 	temp_string += md5_objects;
+    std::copy(MD5PREPARE, MD5PREPARE + strlen(MD5PREPARE), md5_prepare);
+    temp_string += md5_prepare;
+    std::copy(MD5RTREE, MD5RTREE + 32, md5_tree);
+    temp_string += md5_tree;
+    std::copy(MD5GRAPH, MD5GRAPH + 32, md5_graph);
+    temp_string += md5_graph;
+    std::copy(MD5OBJECTS, MD5OBJECTS + 32, md5_objects);
+    temp_string += md5_objects;
 
-	named_uuid = gen(temp_string);
-	has_64_bits = HAS64BITS;
+    named_uuid = gen(temp_string);
+    has_64_bits = HAS64BITS;
 }
 
-UUID::~UUID() {
+UUID::~UUID() {}
 
-}
+const boost::uuids::uuid &UUID::GetUUID() const { return named_uuid; }
 
-const boost::uuids::uuid & UUID::GetUUID() const {
-	return named_uuid;
-}
+bool UUID::IsMagicNumberOK() const { return 1297240911 == magic_number; }
 
-bool UUID::IsMagicNumberOK() const {
-	return 1297240911 == magic_number;
-}
-
-bool UUID::TestGraphUtil(const UUID & other) const {
-    if(!other.IsMagicNumberOK()) {
+bool UUID::TestGraphUtil(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
         throw OSRMException("hsgr input file misses magic number. Check or reprocess the file");
     }
-	return std::equal(md5_graph, md5_graph+32, other.md5_graph);
+    return std::equal(md5_graph, md5_graph + 32, other.md5_graph);
 }
 
-bool UUID::TestPrepare(const UUID & other) const {
-    if(!other.IsMagicNumberOK()) {
-        throw OSRMException("extracted input file misses magic number. Check or reprocess the file");
+bool UUID::TestPrepare(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
+        throw OSRMException("osrm input file misses magic number. Check or reprocess the file");
     }
-	return std::equal(md5_prepare, md5_prepare+32, other.md5_prepare);
+    return std::equal(md5_prepare, md5_prepare + 32, other.md5_prepare);
 }
 
-bool UUID::TestRTree(const UUID & other) const {
-    if(!other.IsMagicNumberOK()) {
+bool UUID::TestRTree(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
         throw OSRMException("r-tree input file misses magic number. Check or reprocess the file");
     }
-	return std::equal(md5_tree, md5_tree+32, other.md5_tree);
+    return std::equal(md5_tree, md5_tree + 32, other.md5_tree);
 }
 
-bool UUID::TestQueryObjects(const UUID & other) const {
-    if(!other.IsMagicNumberOK()) {
+bool UUID::TestQueryObjects(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
         throw OSRMException("missing magic number. Check or reprocess the file");
     }
-	return std::equal(md5_objects, md5_objects+32, other.md5_objects);
+    return std::equal(md5_objects, md5_objects + 32, other.md5_objects);
 }

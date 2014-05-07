@@ -28,40 +28,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef UUID_H
 #define UUID_H
 
-#include "OSRMException.h"
-#include "../typedefs.h"
+#include <boost/uuid/uuid.hpp>
 
-#include <boost/noncopyable.hpp>
-#include <boost/uuid/uuid.hpp>            // uuid class
-#include <boost/uuid/uuid_generators.hpp> // generators
-#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
-
-#include <cstring>
-
-#include <algorithm>
-#include <iostream>
-#include <string>
-
-//implements a singleton, i.e. there is one and only one conviguration object
-class UUID : boost::noncopyable {
-public:
+// implements a singleton, i.e. there is one and only one conviguration object
+class UUID
+{
+  public:
     UUID();
-	~UUID();
-	const boost::uuids::uuid & GetUUID() const;
-	bool IsMagicNumberOK() const;
-	bool TestGraphUtil(const UUID & other) const;
-	bool TestPrepare(const UUID & other) const;
-	bool TestRTree(const UUID & other) const;
-	bool TestNodeInfo(const UUID & other) const;
-	bool TestQueryObjects(const UUID & other) const;
-private:
+    UUID(const UUID&) = delete;
+    ~UUID();
+    const boost::uuids::uuid &GetUUID() const;
+    bool IsMagicNumberOK() const;
+    bool TestGraphUtil(const UUID &other) const;
+    bool TestPrepare(const UUID &other) const;
+    bool TestRTree(const UUID &other) const;
+    bool TestNodeInfo(const UUID &other) const;
+    bool TestQueryObjects(const UUID &other) const;
+
+  private:
     const unsigned magic_number;
     char md5_prepare[33];
     char md5_tree[33];
-	char md5_graph[33];
-	char md5_objects[33];
+    char md5_graph[33];
+    char md5_objects[33];
 
-	// initialize to {6ba7b810-9dad-11d1-80b4-00c04fd430c8}
+    // initialize to {6ba7b810-9dad-11d1-80b4-00c04fd430c8}
     boost::uuids::uuid named_uuid;
     bool has_64_bits;
 };
