@@ -29,61 +29,69 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LRUCACHE_H
 
 #include <list>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
-template<typename KeyT, typename ValueT>
-class LRUCache {
-private:
-    struct CacheEntry {
+template <typename KeyT, typename ValueT> class LRUCache
+{
+  private:
+    struct CacheEntry
+    {
         CacheEntry(KeyT k, ValueT v) : key(k), value(v) {}
         KeyT key;
         ValueT value;
     };
     unsigned capacity;
     std::list<CacheEntry> itemsInCache;
-    boost::unordered_map<KeyT, typename std::list<CacheEntry>::iterator > positionMap;
-public:
+    std::unordered_map<KeyT, typename std::list<CacheEntry>::iterator> positionMap;
+
+  public:
     explicit LRUCache(unsigned c) : capacity(c) {}
 
-    bool Holds(KeyT key) {
-        if(positionMap.find(key) != positionMap.end()) {
+    bool Holds(KeyT key)
+    {
+        if (positionMap.find(key) != positionMap.end())
+        {
             return true;
         }
         return false;
     }
 
-    void Insert(const KeyT key, ValueT &value) {
+    void Insert(const KeyT key, ValueT &value)
+    {
         itemsInCache.push_front(CacheEntry(key, value));
         positionMap.insert(std::make_pair(key, itemsInCache.begin()));
-        if(itemsInCache.size() > capacity) {
+        if (itemsInCache.size() > capacity)
+        {
             positionMap.erase(itemsInCache.back().key);
             itemsInCache.pop_back();
         }
     }
 
-    void Insert(const KeyT key, ValueT value) {
+    void Insert(const KeyT key, ValueT value)
+    {
         itemsInCache.push_front(CacheEntry(key, value));
         positionMap.insert(std::make_pair(key, itemsInCache.begin()));
-        if(itemsInCache.size() > capacity) {
+        if (itemsInCache.size() > capacity)
+        {
             positionMap.erase(itemsInCache.back().key);
             itemsInCache.pop_back();
         }
     }
 
-    bool Fetch(const KeyT key, ValueT& result) {
-        if(Holds(key)) {
+    bool Fetch(const KeyT key, ValueT &result)
+    {
+        if (Holds(key))
+        {
             CacheEntry e = *(positionMap.find(key)->second);
             result = e.value;
 
-            //move to front
+            // move to front
             itemsInCache.splice(positionMap.find(key)->second, itemsInCache, itemsInCache.begin());
             positionMap.find(key)->second = itemsInCache.begin();
             return true;
         }
         return false;
     }
-    unsigned Size() const {
-        return itemsInCache.size();
-    }
+    unsigned Size() const { return itemsInCache.size(); }
 };
-#endif //LRUCACHE_H
+#endif // LRUCACHE_H

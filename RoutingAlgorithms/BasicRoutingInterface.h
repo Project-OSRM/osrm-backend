@@ -231,8 +231,8 @@ public:
                             )
                         );
                     }
-                    unpacked_path.back().turnInstruction = turn_instruction;
-                    unpacked_path.back().durationOfSegment = ed.distance;
+                    unpacked_path.back().turn_instruction = turn_instruction;
+                    unpacked_path.back().segment_duration = ed.distance;
                 }
             }
         }

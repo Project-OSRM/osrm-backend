@@ -110,7 +110,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         facade = f;
         reply.content.push_back("{\"status\":");
 
-        if (INVALID_EDGE_WEIGHT == raw_route.lengthOfShortestPath)
+        if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
             reply.content.push_back(
@@ -118,14 +118,14 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             return;
         }
 
-        SimpleLogger().Write(logDEBUG) << "distance: " << raw_route.lengthOfShortestPath;
+        SimpleLogger().Write(logDEBUG) << "distance: " << raw_route.shortest_path_length;
 
         // check if first segment is non-zero
         std::string road_name =
             facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
 
         BOOST_ASSERT(raw_route.unpacked_path_segments.size() ==
-                     raw_route.segmentEndCoordinates.size());
+                     raw_route.segment_end_coordinates.size());
 
         description_factory.SetStartSegment(phantom_nodes.source_phantom,
                                             raw_route.source_traversed_in_reverse);
@@ -136,7 +136,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
         {
             const int added_segments = DescribeLeg(raw_route.unpacked_path_segments[i],
-                                                   raw_route.segmentEndCoordinates[i]);
+                                                   raw_route.segment_end_coordinates[i]);
             BOOST_ASSERT(0 < added_segments);
             shortest_leg_end_indices.push_back(added_segments + shortest_leg_end_indices.back());
         }
@@ -159,13 +159,13 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         {
             BuildTextualDescription(description_factory,
                                     reply,
-                                    raw_route.lengthOfShortestPath,
+                                    raw_route.shortest_path_length,
                                     facade,
                                     shortest_path_segments);
         }
         reply.content.push_back("],");
         description_factory.BuildRouteSummary(description_factory.entireLength,
-                                              raw_route.lengthOfShortestPath);
+                                              raw_route.shortest_path_length);
 
         reply.content.push_back("\"route_summary\":");
         reply.content.push_back("{");
@@ -187,7 +187,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         reply.content.push_back(",");
 
         // only one alternative route is computed at this time, so this is hardcoded
-        if (raw_route.lengthOfAlternativePath != INVALID_EDGE_WEIGHT)
+        if (raw_route.alternative_path_length != INVALID_EDGE_WEIGHT)
         {
             alternate_descriptionFactory.SetStartSegment(phantom_nodes.source_phantom,
                                                          raw_route.alt_source_traversed_in_reverse);
@@ -204,7 +204,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
         // //give an array of alternative routes
         reply.content.push_back("\"alternative_geometries\": [");
-        if (config.geometry && INVALID_EDGE_WEIGHT != raw_route.lengthOfAlternativePath)
+        if (config.geometry && INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             // Generate the linestrings for each alternative
             alternate_descriptionFactory.AppendEncodedPolylineString(config.encode_geometry,
@@ -212,7 +212,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         }
         reply.content.push_back("],");
         reply.content.push_back("\"alternative_instructions\":[");
-        if (INVALID_EDGE_WEIGHT != raw_route.lengthOfAlternativePath)
+        if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             reply.content.push_back("[");
             // Generate instructions for each alternative
@@ -220,7 +220,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             {
                 BuildTextualDescription(alternate_descriptionFactory,
                                         reply,
-                                        raw_route.lengthOfAlternativePath,
+                                        raw_route.alternative_path_length,
                                         facade,
                                         alternative_path_segments);
             }
@@ -228,11 +228,11 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         }
         reply.content.push_back("],");
         reply.content.push_back("\"alternative_summaries\":[");
-        if (INVALID_EDGE_WEIGHT != raw_route.lengthOfAlternativePath)
+        if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             // Generate route summary (length, duration) for each alternative
             alternate_descriptionFactory.BuildRouteSummary(
-                alternate_descriptionFactory.entireLength, raw_route.lengthOfAlternativePath);
+                alternate_descriptionFactory.entireLength, raw_route.alternative_path_length);
             reply.content.push_back("{");
             reply.content.push_back("\"total_distance\":");
             reply.content.push_back(alternate_descriptionFactory.summary.lengthString);
@@ -271,16 +271,16 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         // list all viapoints so that the client may display it
         reply.content.push_back("\"via_points\":[");
 
-        BOOST_ASSERT(!raw_route.segmentEndCoordinates.empty());
+        BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
 
         std::string tmp;
         FixedPointCoordinate::convertInternalReversedCoordinateToString(
-            raw_route.segmentEndCoordinates.front().source_phantom.location, tmp);
+            raw_route.segment_end_coordinates.front().source_phantom.location, tmp);
         reply.content.push_back("[");
         reply.content.push_back(tmp);
         reply.content.push_back("]");
 
-        for (const PhantomNodes &nodes : raw_route.segmentEndCoordinates)
+        for (const PhantomNodes &nodes : raw_route.segment_end_coordinates)
         {
             tmp.clear();
             FixedPointCoordinate::convertInternalReversedCoordinateToString(
@@ -303,7 +303,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             }
         }
         reply.content.push_back("],\"alternative_indices\":[");
-        if (INVALID_EDGE_WEIGHT != raw_route.lengthOfAlternativePath)
+        if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             reply.content.push_back("0,");
             tmp.clear();
@@ -314,19 +314,19 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         reply.content.push_back("],");
         reply.content.push_back("\"hint_data\": {");
         reply.content.push_back("\"checksum\":");
-        intToString(raw_route.checkSum, tmp);
+        intToString(raw_route.check_sum, tmp);
         reply.content.push_back(tmp);
         reply.content.push_back(", \"locations\": [");
 
         std::string hint;
-        for (unsigned i = 0; i < raw_route.segmentEndCoordinates.size(); ++i)
+        for (unsigned i = 0; i < raw_route.segment_end_coordinates.size(); ++i)
         {
             reply.content.push_back("\"");
-            EncodeObjectToBase64(raw_route.segmentEndCoordinates[i].source_phantom, hint);
+            EncodeObjectToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
             reply.content.push_back(hint);
             reply.content.push_back("\", ");
         }
-        EncodeObjectToBase64(raw_route.segmentEndCoordinates.back().target_phantom, hint);
+        EncodeObjectToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
         reply.content.push_back("\"");
         reply.content.push_back(hint);
         reply.content.push_back("\"]");

@@ -315,7 +315,7 @@ public:
                 // -- unpacked output
                 raw_route_data.unpacked_path_segments.front()
             );
-            raw_route_data.lengthOfShortestPath = upper_bound_to_shortest_path_distance;
+            raw_route_data.shortest_path_length = upper_bound_to_shortest_path_distance;
         }
 
         if( SPECIAL_NODEID != selected_via_node ) {
@@ -341,7 +341,7 @@ public:
                 raw_route_data.unpacked_alternative
             );
 
-            raw_route_data.lengthOfAlternativePath = length_of_via_path;
+            raw_route_data.alternative_path_length = length_of_via_path;
         }
     }
 

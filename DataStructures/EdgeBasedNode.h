@@ -10,7 +10,8 @@
 
 #include <limits>
 
-struct EdgeBasedNode {
+struct EdgeBasedNode
+{
 
     EdgeBasedNode() :
         forward_edge_based_node_id(SPECIAL_NODEID),
@@ -24,7 +25,7 @@ struct EdgeBasedNode {
         reverse_offset(0),
         packed_geometry_id(SPECIAL_EDGEID),
         fwd_segment_position( std::numeric_limits<unsigned short>::max() ),
-        belongsToTinyComponent(false)
+        is_in_tiny_cc(false)
     { }
 
     explicit EdgeBasedNode(
@@ -52,18 +53,14 @@ struct EdgeBasedNode {
         reverse_offset(reverse_offset),
         packed_geometry_id(packed_geometry_id),
         fwd_segment_position(fwd_segment_position),
-        belongsToTinyComponent(belongs_to_tiny_component)
+        is_in_tiny_cc(belongs_to_tiny_component)
     {
-        BOOST_ASSERT(
-            ( forward_edge_based_node_id != SPECIAL_NODEID ) ||
-            ( reverse_edge_based_node_id != SPECIAL_NODEID )
-        );
+        BOOST_ASSERT((forward_edge_based_node_id != SPECIAL_NODEID) ||
+                     (reverse_edge_based_node_id != SPECIAL_NODEID));
     }
 
-    static inline FixedPointCoordinate Centroid(
-        const FixedPointCoordinate & a,
-        const FixedPointCoordinate & b
-    ) {
+    static inline FixedPointCoordinate Centroid(const FixedPointCoordinate & a, const FixedPointCoordinate & b)
+    {
         FixedPointCoordinate centroid;
         //The coordinates of the midpoint are given by:
         centroid.lat = (a.lat + b.lat)/2;
@@ -71,7 +68,8 @@ struct EdgeBasedNode {
         return centroid;
     }
 
-    bool IsCompressed() {
+    bool IsCompressed() const
+    {
         return packed_geometry_id != SPECIAL_EDGEID;
     }
 
@@ -86,7 +84,7 @@ struct EdgeBasedNode {
     int reverse_offset; // prefix sum of the weight from the edge TODO: short must suffice
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
     unsigned short fwd_segment_position; // segment id in a compressed geometry
-    bool belongsToTinyComponent;
+    bool is_in_tiny_cc;
 };
 
 #endif //EDGE_BASED_NODE_H

@@ -25,63 +25,65 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef XORFASTHASHSTORAGE_H_
-#define XORFASTHASHSTORAGE_H_
+#ifndef XOR_FAST_HASH_STORAGE_H
+#define XOR_FAST_HASH_STORAGE_H
 
 #include "XORFastHash.h"
 
-#include <climits>
+#include <limits>
 #include <vector>
-#include <bitset>
 
-template< typename NodeID, typename Key >
-class XORFastHashStorage {
-public:
-    struct HashCell{
+template <typename NodeID, typename Key> class XORFastHashStorage
+{
+  public:
+    struct HashCell
+    {
         Key key;
         NodeID id;
         unsigned time;
-        HashCell() : key(UINT_MAX), id(UINT_MAX), time(UINT_MAX) {}
-
-        HashCell(const HashCell & other) : key(other.key), id(other.id), time(other.time) { }
-
-        inline operator Key() const {
-            return key;
+        HashCell()
+            : key(std::numeric_limits<unsigned>::max()), id(std::numeric_limits<unsigned>::max()),
+              time(std::numeric_limits<unsigned>::max())
+        {
         }
 
-        inline void operator=(const Key & keyToInsert) {
-            key = keyToInsert;
-        }
+        HashCell(const HashCell &other) : key(other.key), id(other.id), time(other.time) {}
+
+        inline operator Key() const { return key; }
+
+        inline void operator=(const Key &key_to_insert) { key = key_to_insert; }
     };
 
-    explicit XORFastHashStorage( size_t ) : positions(2<<16), currentTimestamp(0) { }
+    explicit XORFastHashStorage(size_t) : positions(2 << 16), current_timestamp(0) {}
 
-    inline HashCell& operator[]( const NodeID node ) {
-        unsigned short position = fastHash(node);
-        while((positions[position].time == currentTimestamp) && (positions[position].id != node)){
-            ++position %= (2<<16);
+    inline HashCell &operator[](const NodeID node)
+    {
+        unsigned short position = fast_hasher(node);
+        while ((positions[position].time == current_timestamp) && (positions[position].id != node))
+        {
+            ++position %= (2 << 16);
         }
 
         positions[position].id = node;
-        positions[position].time = currentTimestamp;
+        positions[position].time = current_timestamp;
         return positions[position];
     }
 
-    inline void Clear() {
-        ++currentTimestamp;
-        if(UINT_MAX == currentTimestamp) {
+    inline void Clear()
+    {
+        ++current_timestamp;
+        if (std::numeric_limits<unsigned>::max() == current_timestamp)
+        {
             positions.clear();
-            positions.resize((2<<16));
+            positions.resize((2 << 16));
         }
     }
 
-private:
-    XORFastHashStorage() : positions(2<<16), currentTimestamp(0) {}
+  private:
+    XORFastHashStorage() : positions(2 << 16), current_timestamp(0) {}
     std::vector<HashCell> positions;
-    XORFastHash fastHash;
-    unsigned currentTimestamp;
+    XORFastHash fast_hasher;
+    unsigned current_timestamp;
 };
 
-
-#endif /* XORFASTHASHSTORAGE_H_ */
-
+#endif // XOR_FAST_HASH_STORAGE_H

@@ -33,25 +33,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-struct OriginalEdgeData{
-    explicit OriginalEdgeData(
-        NodeID via_node,
-        unsigned name_id,
-        TurnInstruction turn_instruction,
-        bool compressed_geometry
-    ) :
-        via_node( via_node ),
-        name_id( name_id ),
-        turn_instruction( turn_instruction ),
-        compressed_geometry( compressed_geometry )
-    { }
+struct OriginalEdgeData
+{
+    explicit OriginalEdgeData(NodeID via_node,
+                              unsigned name_id,
+                              TurnInstruction turn_instruction,
+                              bool compressed_geometry)
+        : via_node(via_node), name_id(name_id), turn_instruction(turn_instruction),
+          compressed_geometry(compressed_geometry)
+    {
+    }
 
-    OriginalEdgeData() :
-        via_node( std::numeric_limits<unsigned>::max() ),
-        name_id( std::numeric_limits<unsigned>::max() ),
-        turn_instruction( std::numeric_limits<unsigned char>::max() ),
-        compressed_geometry( false )
-    { }
+    OriginalEdgeData()
+        : via_node(std::numeric_limits<unsigned>::max()),
+          name_id(std::numeric_limits<unsigned>::max()),
+          turn_instruction(std::numeric_limits<unsigned char>::max()), compressed_geometry(false)
+    {
+    }
 
     NodeID via_node;
     unsigned name_id;
@@ -59,4 +57,4 @@ struct OriginalEdgeData{
     bool compressed_geometry;
 };
 
-#endif //ORIGINAL_EDGE_DATA_H
+#endif // ORIGINAL_EDGE_DATA_H

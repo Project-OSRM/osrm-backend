@@ -91,7 +91,7 @@ int main (int argc, const char * argv[]) {
         route_parameters.alternateRoute = true; //get an alternate route, too
         route_parameters.geometry = true; //retrieve geometry of route
         route_parameters.compression = true; //polyline encoding
-        route_parameters.checkSum = UINT_MAX; //see wiki
+        route_parameters.check_sum = UINT_MAX; //see wiki
         route_parameters.service = "viaroute"; //that's routing
         route_parameters.outputFormat = "json";
         route_parameters.jsonpParameter = ""; //set for jsonp wrapping

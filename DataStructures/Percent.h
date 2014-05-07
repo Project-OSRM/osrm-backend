@@ -31,64 +31,68 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/OpenMPWrapper.h"
 #include <iostream>
 
-class Percent {
-public:
-    /**
-     * Constructor.
-     * @param maxValue the value that corresponds to 100%
-     * @param step the progress is shown in steps of 'step' percent
-     */
-    explicit Percent(unsigned maxValue, unsigned step = 5) {
-        reinit(maxValue, step);
+class Percent
+{
+  public:
+    explicit Percent(unsigned max_value, unsigned step = 5) { reinit(max_value, step); }
+
+   // Reinitializes
+    void reinit(unsigned max_value, unsigned step = 5)
+    {
+        m_max_value = max_value;
+        m_current_value = 0;
+        m_percent_interval = m_max_value / 100;
+        m_next_threshold = m_percent_interval;
+        m_last_percent = 0;
+        m_step = step;
     }
 
-    /** Reinitializes this object. */
-    void reinit(unsigned maxValue, unsigned step = 5) {
-        _maxValue = maxValue;
-        _current_value = 0;
-        _intervalPercent = _maxValue / 100;
-        _nextThreshold = _intervalPercent;
-        _lastPercent = 0;
-        _step = step;
-    }
-
-    /** If there has been significant progress, display it. */
-    void printStatus(unsigned currentValue) {
-        if (currentValue >= _nextThreshold) {
-            _nextThreshold += _intervalPercent;
-            printPercent( currentValue / (double)_maxValue * 100 );
+    // If there has been significant progress, display it.
+    void printStatus(unsigned current_value)
+    {
+        if (current_value >= m_next_threshold)
+        {
+            m_next_threshold += m_percent_interval;
+            printPercent(current_value / (double)m_max_value * 100);
         }
-        if (currentValue + 1 == _maxValue)
+        if (current_value + 1 == m_max_value)
             std::cout << " 100%" << std::endl;
     }
 
-    void printIncrement() {
+    void printIncrement()
+    {
 #pragma omp atomic
-        ++_current_value;
-        printStatus(_current_value);
+        ++m_current_value;
+        printStatus(m_current_value);
     }
 
-    void printAddition(const unsigned addition) {
+    void printAddition(const unsigned addition)
+    {
 #pragma omp atomic
-        _current_value += addition;
-        printStatus(_current_value);
+        m_current_value += addition;
+        printStatus(m_current_value);
     }
-private:
-    unsigned _current_value;
-    unsigned _maxValue;
-    unsigned _intervalPercent;
-    unsigned _nextThreshold;
-    unsigned _lastPercent;
-    unsigned _step;
 
-    /** Displays the new progress. */
-    void printPercent(double percent) {
-        while (percent >= _lastPercent+_step) {
-            _lastPercent+=_step;
-            if (_lastPercent % 10 == 0) {
-                std::cout << " " << _lastPercent << "% ";
+  private:
+    unsigned m_current_value;
+    unsigned m_max_value;
+    unsigned m_percent_interval;
+    unsigned m_next_threshold;
+    unsigned m_last_percent;
+    unsigned m_step;
+
+    // Displays progress.
+    void printPercent(double percent)
+    {
+        while (percent >= m_last_percent + m_step)
+        {
+            m_last_percent += m_step;
+            if (m_last_percent % 10 == 0)
+            {
+                std::cout << " " << m_last_percent << "% ";
             }
-            else {
+            else
+            {
                 std::cout << ".";
             }
             std::cout.flush();

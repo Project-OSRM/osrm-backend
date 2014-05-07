@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef CONCURRENTQUEUE_H_
-#define CONCURRENTQUEUE_H_
+#ifndef CONCURRENT_QUEUE_H
+#define CONCURRENT_QUEUE_H
 
 #include "../typedefs.h"
 
@@ -36,64 +36,59 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 
-template<typename Data>
-class ConcurrentQueue {
+template <typename Data> class ConcurrentQueue
+{
 
-public:
-    explicit ConcurrentQueue(const size_t max_size) : m_internal_queue(max_size) { }
+  public:
+    explicit ConcurrentQueue(const size_t max_size) : m_internal_queue(max_size) {}
 
-    inline void push(const Data & data) {
+    inline void push(const Data &data)
+    {
         boost::mutex::scoped_lock lock(m_mutex);
-        m_not_full.wait(
-            lock,
-            boost::bind(&ConcurrentQueue<Data>::is_not_full, this)
-        );
+        m_not_full.wait(lock, boost::bind(&ConcurrentQueue<Data>::is_not_full, this));
         m_internal_queue.push_back(data);
         lock.unlock();
         m_not_empty.notify_one();
     }
 
-    inline bool empty() const {
-        return m_internal_queue.empty();
-    }
+    inline bool empty() const { return m_internal_queue.empty(); }
 
-    inline void wait_and_pop(Data & popped_value) {
+    inline void wait_and_pop(Data &popped_value)
+    {
         boost::mutex::scoped_lock lock(m_mutex);
-        m_not_empty.wait(
-            lock,
-            boost::bind(&ConcurrentQueue<Data>::is_not_empty, this)
-        );
+        m_not_empty.wait(lock, boost::bind(&ConcurrentQueue<Data>::is_not_empty, this));
         popped_value = m_internal_queue.front();
         m_internal_queue.pop_front();
         lock.unlock();
         m_not_full.notify_one();
     }
 
-    inline bool try_pop(Data& popped_value) {
+    inline bool try_pop(Data &popped_value)
+    {
         boost::mutex::scoped_lock lock(m_mutex);
-        if(m_internal_queue.empty()) {
+        if (m_internal_queue.empty())
+        {
             return false;
         }
-        popped_value=m_internal_queue.front();
+        popped_value = m_internal_queue.front();
         m_internal_queue.pop_front();
         lock.unlock();
         m_not_full.notify_one();
         return true;
     }
 
-private:
-    inline bool is_not_empty() const {
-        return !m_internal_queue.empty();
-    }
+  private:
+    inline bool is_not_empty() const { return !m_internal_queue.empty(); }
 
-    inline bool is_not_full() const {
+    inline bool is_not_full() const
+    {
         return m_internal_queue.size() < m_internal_queue.capacity();
     }
 
-    boost::circular_buffer<Data>    m_internal_queue;
-    boost::mutex                    m_mutex;
-    boost::condition                m_not_empty;
-    boost::condition                m_not_full;
+    boost::circular_buffer<Data> m_internal_queue;
+    boost::mutex m_mutex;
+    boost::condition m_not_empty;
+    boost::condition m_not_full;
 };
 
-#endif /* CONCURRENTQUEUE_H_ */
+#endif // CONCURRENT_QUEUE_H

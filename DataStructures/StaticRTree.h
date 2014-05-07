@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef STATICRTREE_H_
-#define STATICRTREE_H_
+#ifndef STATICRTREE_H
+#define STATICRTREE_H
 
 #include "DeallocatingVector.h"
 #include "HilbertValue.h"
@@ -45,7 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
@@ -67,7 +66,7 @@ static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtre
 template <class DataT,
           class CoordinateListT = std::vector<FixedPointCoordinate>,
           bool UseSharedMemory = false>
-class StaticRTree : boost::noncopyable
+class StaticRTree
 {
   public:
     struct RectangleInt2D
@@ -269,6 +268,9 @@ class StaticRTree : boost::noncopyable
     boost::shared_ptr<CoordinateListT> m_coordinate_list;
 
   public:
+    StaticRTree() = delete;
+    StaticRTree(const StaticRTree &) = delete;
+
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(std::vector<DataT> &input_data_vector,
                          const std::string tree_node_filename,
@@ -524,7 +526,7 @@ class StaticRTree : boost::noncopyable
                     for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         DataT const &current_edge = current_leaf_node.objects[i];
-                        if (ignore_tiny_components && current_edge.belongsToTinyComponent)
+                        if (ignore_tiny_components && current_edge.is_in_tiny_cc)
                         {
                             continue;
                         }
@@ -637,7 +639,7 @@ class StaticRTree : boost::noncopyable
                     for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
                         DataT &current_edge = current_leaf_node.objects[i];
-                        if (ignore_tiny_components && current_edge.belongsToTinyComponent)
+                        if (ignore_tiny_components && current_edge.is_in_tiny_cc)
                         {
                             continue;
                         }
@@ -784,4 +786,4 @@ class StaticRTree : boost::noncopyable
 //[1] "On Packing R-Trees"; I. Kamel, C. Faloutsos; 1993; DOI: 10.1145/170088.170403
 //[2] "Nearest Neighbor Queries", N. Roussopulos et al; 1995; DOI: 10.1145/223784.223794
 
-#endif /* STATICRTREE_H_ */
+#endif // STATICRTREE_H

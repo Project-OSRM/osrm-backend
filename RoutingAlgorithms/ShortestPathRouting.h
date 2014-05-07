@@ -59,8 +59,8 @@ public:
         for (const PhantomNodes & phantom_node_pair : phantom_nodes_vector)
         {
             if( phantom_node_pair.AtLeastOnePhantomNodeIsInvalid() ) {
-                // raw_route_data.lengthOfShortestPath = INT_MAX;
-                // raw_route_data.lengthOfAlternativePath = INT_MAX;
+                // raw_route_data.shortest_path_length = INT_MAX;
+                // raw_route_data.alternative_path_length = INT_MAX;
                 return;
             }
         }
@@ -212,8 +212,8 @@ public:
                 (INVALID_EDGE_WEIGHT == local_upper_bound1) &&
                 (INVALID_EDGE_WEIGHT == local_upper_bound2)
             ) {
-                raw_route_data.lengthOfShortestPath = INVALID_EDGE_WEIGHT;
-                raw_route_data.lengthOfAlternativePath = INVALID_EDGE_WEIGHT;
+                raw_route_data.shortest_path_length = INVALID_EDGE_WEIGHT;
+                raw_route_data.alternative_path_length = INVALID_EDGE_WEIGHT;
                 return;
             }
             if( SPECIAL_NODEID == middle1 ) {
@@ -393,7 +393,7 @@ public:
                 raw_route_data.unpacked_path_segments[i]
             );
         }
-        raw_route_data.lengthOfShortestPath = std::min(distance1, distance2);
+        raw_route_data.shortest_path_length = std::min(distance1, distance2);
     }
 };
 

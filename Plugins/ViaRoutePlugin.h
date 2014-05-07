@@ -76,7 +76,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         }
 
         RawRouteData raw_route;
-        raw_route.checkSum = facade->GetCheckSum();
+        raw_route.check_sum = facade->GetCheckSum();
 
         if (std::any_of(begin(routeParameters.coordinates),
                         end(routeParameters.coordinates),
@@ -89,13 +89,13 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
 
         for (const FixedPointCoordinate &coordinate : routeParameters.coordinates)
         {
-            raw_route.rawViaNodeCoordinates.emplace_back(coordinate);
+            raw_route.raw_via_node_coordinates.emplace_back(coordinate);
         }
 
-        std::vector<PhantomNode> phantom_node_vector(raw_route.rawViaNodeCoordinates.size());
-        const bool checksum_OK = (routeParameters.checkSum == raw_route.checkSum);
+        std::vector<PhantomNode> phantom_node_vector(raw_route.raw_via_node_coordinates.size());
+        const bool checksum_OK = (routeParameters.check_sum == raw_route.check_sum);
 
-        for (unsigned i = 0; i < raw_route.rawViaNodeCoordinates.size(); ++i)
+        for (unsigned i = 0; i < raw_route.raw_via_node_coordinates.size(); ++i)
         {
             if (checksum_OK && i < routeParameters.hints.size() &&
                 !routeParameters.hints[i].empty())
@@ -106,7 +106,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
                     continue;
                 }
             }
-            facade->FindPhantomNodeForCoordinate(raw_route.rawViaNodeCoordinates[i],
+            facade->FindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
                                                  phantom_node_vector[i],
                                                  routeParameters.zoomLevel);
         }
@@ -116,19 +116,19 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         {
             current_phantom_node_pair.source_phantom = phantom_node_vector[i];
             current_phantom_node_pair.target_phantom = phantom_node_vector[i + 1];
-            raw_route.segmentEndCoordinates.emplace_back(current_phantom_node_pair);
+            raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
 
-        if ((routeParameters.alternateRoute) && (1 == raw_route.segmentEndCoordinates.size()))
+        if ((routeParameters.alternateRoute) && (1 == raw_route.segment_end_coordinates.size()))
         {
-            search_engine_ptr->alternative_path(raw_route.segmentEndCoordinates.front(), raw_route);
+            search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(), raw_route);
         }
         else
         {
-            search_engine_ptr->shortest_path(raw_route.segmentEndCoordinates, raw_route);
+            search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, raw_route);
         }
 
-        if (INVALID_EDGE_WEIGHT == raw_route.lengthOfShortestPath)
+        if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
         }
@@ -165,8 +165,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         }
 
         PhantomNodes phantom_nodes;
-        phantom_nodes.source_phantom = raw_route.segmentEndCoordinates.front().source_phantom;
-        phantom_nodes.target_phantom = raw_route.segmentEndCoordinates.back().target_phantom;
+        phantom_nodes.source_phantom = raw_route.segment_end_coordinates.front().source_phantom;
+        phantom_nodes.target_phantom = raw_route.segment_end_coordinates.back().target_phantom;
         descriptor->SetConfig(descriptor_config);
         descriptor->Run(raw_route, phantom_nodes, facade, reply);
 

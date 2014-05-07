@@ -90,9 +90,9 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     {
         path_description.push_back(SegmentInformation(coordinate,
                                                       path_point.name_id,
-                                                      path_point.durationOfSegment,
+                                                      path_point.segment_duration,
                                                       0,
-                                                      path_point.turnInstruction));
+                                                      path_point.turn_instruction));
     }
 }
 

@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RouteParameters::RouteParameters()
     : zoomLevel(18), printInstructions(false), alternateRoute(true), geometry(true),
-      compression(true), deprecatedAPI(false), checkSum(-1)
+      compression(true), deprecatedAPI(false), check_sum(-1)
 {
 }
 
@@ -49,7 +49,7 @@ void RouteParameters::setAlternateRouteFlag(const bool b) { alternateRoute = b; 
 
 void RouteParameters::setDeprecatedAPIFlag(const std::string &) { deprecatedAPI = true; }
 
-void RouteParameters::setChecksum(const unsigned c) { checkSum = c; }
+void RouteParameters::setChecksum(const unsigned c) { check_sum = c; }
 
 void RouteParameters::setInstructionFlag(const bool b) { printInstructions = b; }
 

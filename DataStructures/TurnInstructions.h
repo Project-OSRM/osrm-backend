@@ -25,18 +25,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TURNINSTRUCTIONS_H_
-#define TURNINSTRUCTIONS_H_
-
-#include <boost/noncopyable.hpp>
+#ifndef TURN_INSTRUCTIONS_H
+#define TURN_INSTRUCTIONS_H
 
 typedef unsigned char TurnInstruction;
 
-//This is a hack until c++0x is available enough to use scoped enums
-struct TurnInstructionsClass : boost::noncopyable {
+// This is a hack until c++0x is available enough to use scoped enums
+struct TurnInstructionsClass
+{
+    TurnInstructionsClass() = delete;
+    TurnInstructionsClass(const TurnInstructionsClass&) = delete;
 
-    const static TurnInstruction NoTurn = 0;          //Give no instruction at all
-    const static TurnInstruction GoStraight = 1;      //Tell user to go straight!
+    const static TurnInstruction NoTurn = 0; // Give no instruction at all
+    const static TurnInstruction GoStraight = 1; // Tell user to go straight!
     const static TurnInstruction TurnSlightRight = 2;
     const static TurnInstruction TurnRight = 3;
     const static TurnInstruction TurnSharpRight = 4;
@@ -55,41 +56,51 @@ struct TurnInstructionsClass : boost::noncopyable {
     const static TurnInstruction LeaveAgainstAllowedDirection = 17;
 
     const static TurnInstruction AccessRestrictionFlag = 128;
-    const static TurnInstruction InverseAccessRestrictionFlag = 0x7f; // ~128 does not work without a warning.
+    const static TurnInstruction InverseAccessRestrictionFlag =
+        0x7f; // ~128 does not work without a warning.
 
-    const static int AccessRestrictionPenalty = 1 << 15; //unrelated to the bit set in the restriction flag
+    const static int AccessRestrictionPenalty =
+        1 << 15; // unrelated to the bit set in the restriction flag
 
-    static inline TurnInstruction GetTurnDirectionOfInstruction( const double angle ) {
-        if(angle >= 23 && angle < 67) {
+    static inline TurnInstruction GetTurnDirectionOfInstruction(const double angle)
+    {
+        if (angle >= 23 && angle < 67)
+        {
             return TurnSharpRight;
         }
-        if (angle >= 67 && angle < 113) {
+        if (angle >= 67 && angle < 113)
+        {
             return TurnRight;
         }
-        if (angle >= 113 && angle < 158) {
+        if (angle >= 113 && angle < 158)
+        {
             return TurnSlightRight;
         }
-        if (angle >= 158 && angle < 202) {
+        if (angle >= 158 && angle < 202)
+        {
             return GoStraight;
         }
-        if (angle >= 202 && angle < 248) {
+        if (angle >= 202 && angle < 248)
+        {
             return TurnSlightLeft;
         }
-        if (angle >= 248 && angle < 292) {
+        if (angle >= 248 && angle < 292)
+        {
             return TurnLeft;
         }
-        if (angle >= 292 && angle < 336) {
+        if (angle >= 292 && angle < 336)
+        {
             return TurnSharpLeft;
         }
         return UTurn;
     }
 
-    static inline bool TurnIsNecessary ( const short turnInstruction ) {
-        if(NoTurn == turnInstruction || StayOnRoundAbout == turnInstruction)
+    static inline bool TurnIsNecessary(const short turnInstruction)
+    {
+        if (NoTurn == turnInstruction || StayOnRoundAbout == turnInstruction)
             return false;
         return true;
     }
-
 };
 
-#endif /* TURNINSTRUCTIONS_H_ */
+#endif /* TURN_INSTRUCTIONS_H */

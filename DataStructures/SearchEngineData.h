@@ -44,8 +44,6 @@ struct HeapData
     /* explicit */ HeapData(NodeID p) : parent(p) {}
 };
 
-// typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
-
 struct SearchEngineData
 {
     typedef BinaryHeap<NodeID, NodeID, int, HeapData, UnorderedMapStorage<NodeID, int>> QueryHeap;

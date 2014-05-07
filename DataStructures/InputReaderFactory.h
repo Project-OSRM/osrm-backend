@@ -25,80 +25,99 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-
-#ifndef INPUTREADERFACTORY_H
-#define INPUTREADERFACTORY_H
+#ifndef INPUT_READER_FACTORY_H
+#define INPUT_READER_FACTORY_H
 
 #include <boost/assert.hpp>
 
 #include <bzlib.h>
 #include <libxml/xmlreader.h>
 
-struct BZ2Context {
-    FILE* file;
-    BZFILE* bz2;
+struct BZ2Context
+{
+    FILE *file;
+    BZFILE *bz2;
     int error;
     int nUnused;
     char unused[BZ_MAX_UNUSED];
 };
 
-int readFromBz2Stream( void* pointer, char* buffer, int len ) {
-    void *unusedTmpVoid=NULL;
-    char *unusedTmp=NULL;
-    BZ2Context* context = (BZ2Context*) pointer;
+int readFromBz2Stream(void *pointer, char *buffer, int len)
+{
+    void *unusedTmpVoid = NULL;
+    char *unusedTmp = NULL;
+    BZ2Context *context = (BZ2Context *)pointer;
     int read = 0;
-    while(0 == read && !(BZ_STREAM_END == context->error && 0 == context->nUnused && feof(context->file))) {
+    while (0 == read &&
+           !(BZ_STREAM_END == context->error && 0 == context->nUnused && feof(context->file)))
+    {
         read = BZ2_bzRead(&context->error, context->bz2, buffer, len);
-        if(BZ_OK == context->error) {
+        if (BZ_OK == context->error)
+        {
             return read;
-        } else if(BZ_STREAM_END == context->error) {
+        }
+        else if (BZ_STREAM_END == context->error)
+        {
             BZ2_bzReadGetUnused(&context->error, context->bz2, &unusedTmpVoid, &context->nUnused);
             BOOST_ASSERT_MSG(BZ_OK == context->error, "Could not BZ2_bzReadGetUnused");
-            unusedTmp = (char*)unusedTmpVoid;
-            for(int i=0;i<context->nUnused;i++) {
+            unusedTmp = (char *)unusedTmpVoid;
+            for (int i = 0; i < context->nUnused; i++)
+            {
                 context->unused[i] = unusedTmp[i];
             }
             BZ2_bzReadClose(&context->error, context->bz2);
             BOOST_ASSERT_MSG(BZ_OK == context->error, "Could not BZ2_bzReadClose");
             context->error = BZ_STREAM_END; // set to the stream end for next call to this function
-            if(0 == context->nUnused && feof(context->file)) {
+            if (0 == context->nUnused && feof(context->file))
+            {
                 return read;
-            } else {
-                context->bz2 = BZ2_bzReadOpen(&context->error, context->file, 0, 0, context->unused, context->nUnused);
+            }
+            else
+            {
+                context->bz2 = BZ2_bzReadOpen(
+                    &context->error, context->file, 0, 0, context->unused, context->nUnused);
                 BOOST_ASSERT_MSG(NULL != context->bz2, "Could not open file");
             }
-        } else { BOOST_ASSERT_MSG(false, "Could not read bz2 file"); }
+        }
+        else
+        {
+            BOOST_ASSERT_MSG(false, "Could not read bz2 file");
+        }
     }
     return read;
 }
 
-int closeBz2Stream( void *pointer )
+int closeBz2Stream(void *pointer)
 {
-    BZ2Context* context = (BZ2Context*) pointer;
-    fclose( context->file );
+    BZ2Context *context = (BZ2Context *)pointer;
+    fclose(context->file);
     delete context;
     return 0;
 }
 
-xmlTextReaderPtr inputReaderFactory( const char* name )
+xmlTextReaderPtr inputReaderFactory(const char *name)
 {
     std::string inputName(name);
 
-    if(inputName.find(".osm.bz2")!=std::string::npos)
+    if (inputName.find(".osm.bz2") != std::string::npos)
     {
-        BZ2Context* context = new BZ2Context();
+        BZ2Context *context = new BZ2Context();
         context->error = false;
-        context->file = fopen( name, "r" );
+        context->file = fopen(name, "r");
         int error;
-        context->bz2 = BZ2_bzReadOpen( &error, context->file, 0, 0, context->unused, context->nUnused );
-        if ( context->bz2 == NULL || context->file == NULL ) {
+        context->bz2 =
+            BZ2_bzReadOpen(&error, context->file, 0, 0, context->unused, context->nUnused);
+        if (context->bz2 == NULL || context->file == NULL)
+        {
             delete context;
             return NULL;
         }
-        return xmlReaderForIO( readFromBz2Stream, closeBz2Stream, (void*) context, NULL, NULL, 0 );
-    } else {
+        return xmlReaderForIO(readFromBz2Stream, closeBz2Stream, (void *)context, NULL, NULL, 0);
+    }
+    else
+    {
         return xmlNewTextReaderFilename(name);
     }
 }
 
-#endif // INPUTREADERFACTORY_H
+#endif // INPUT_READER_FACTORY_H

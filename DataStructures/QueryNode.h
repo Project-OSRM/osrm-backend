@@ -36,52 +36,50 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-struct NodeInfo {
-	typedef NodeID key_type; 	//type of NodeID
-	typedef int value_type;		//type of lat,lons
+struct NodeInfo
+{
+    typedef NodeID key_type; // type of NodeID
+    typedef int value_type; // type of lat,lons
 
-	NodeInfo(int lat, int lon, NodeID id) : lat(lat), lon(lon), id(id) { }
-	NodeInfo()
-	 :
-		lat(std::numeric_limits<int>::max()),
-		lon(std::numeric_limits<int>::max()),
-		id(std::numeric_limits<unsigned>::max())
-	{ }
+    NodeInfo(int lat, int lon, NodeID id) : lat(lat), lon(lon), id(id) {}
+    NodeInfo()
+        : lat(std::numeric_limits<int>::max()), lon(std::numeric_limits<int>::max()),
+          id(std::numeric_limits<unsigned>::max())
+    {
+    }
 
-	int lat;
-	int lon;
-	NodeID id;
+    int lat;
+    int lon;
+    NodeID id;
 
-	static NodeInfo min_value() {
-		return NodeInfo(
-			 -90*COORDINATE_PRECISION,
-			-180*COORDINATE_PRECISION,
-			std::numeric_limits<NodeID>::min()
-		);
-	}
+    static NodeInfo min_value()
+    {
+        return NodeInfo(-90 * COORDINATE_PRECISION,
+                        -180 * COORDINATE_PRECISION,
+                        std::numeric_limits<NodeID>::min());
+    }
 
-	static NodeInfo max_value() {
-		return NodeInfo(
-			 90*COORDINATE_PRECISION,
-			180*COORDINATE_PRECISION,
-			std::numeric_limits<NodeID>::max()
-			);
-	}
+    static NodeInfo max_value()
+    {
+        return NodeInfo(90 * COORDINATE_PRECISION,
+                        180 * COORDINATE_PRECISION,
+                        std::numeric_limits<NodeID>::max());
+    }
 
-	value_type operator[](const std::size_t n) const {
-		switch(n) {
-		case 1:
-			return lat;
-			// break;
-		case 0:
-			return lon;
-			// break;
-		default:
-			break;
-		}
-		BOOST_ASSERT_MSG(false, "should not happen");
-		return std::numeric_limits<unsigned>::max();
-	}
+    value_type operator[](const std::size_t n) const
+    {
+        switch (n)
+        {
+        case 1:
+            return lat;
+        case 0:
+            return lon;
+        default:
+            break;
+        }
+        BOOST_ASSERT_MSG(false, "should not happen");
+        return std::numeric_limits<unsigned>::max();
+    }
 };
 
-#endif //QUERY_NODE_H
+#endif // QUERY_NODE_H

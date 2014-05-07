@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef PHANTOMNODES_H_
-#define PHANTOMNODES_H_
+#ifndef PHANTOM_NODES_H
+#define PHANTOM_NODES_H
 
 #include <osrm/Coordinate.h>
 #include "../Util/SimpleLogger.h"
@@ -171,4 +171,4 @@ inline std::ostream& operator<<(std::ostream &out, const PhantomNode & pn)
     return out;
 }
 
-#endif /* PHANTOMNODES_H_ */
+#endif // PHANTOM_NODES_H

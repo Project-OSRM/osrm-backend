@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SEGMENTINFORMATION_H_
-#define SEGMENTINFORMATION_H_
+#ifndef SEGMENT_INFORMATION_H
+#define SEGMENT_INFORMATION_H
 
 #include "TurnInstructions.h"
 
@@ -35,47 +35,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/Coordinate.h>
 
 // Struct fits everything in one cache line
-struct SegmentInformation {
+struct SegmentInformation
+{
     FixedPointCoordinate location;
     NodeID name_id;
     unsigned duration;
     double length;
-    short bearing; //more than enough [0..3600] fits into 12 bits
+    short bearing; // more than enough [0..3600] fits into 12 bits
     TurnInstruction turn_instruction;
     bool necessary;
 
-    explicit SegmentInformation(
-        const FixedPointCoordinate & location,
-        const NodeID name_id,
-        const unsigned duration,
-        const double length,
-        const TurnInstruction turn_instruction,
-        const bool necessary
-    ) :
-        location(location),
-        name_id(name_id),
-        duration(duration),
-        length(length),
-        bearing(0),
-        turn_instruction(turn_instruction),
-        necessary(necessary)
-    { }
+    explicit SegmentInformation(const FixedPointCoordinate &location,
+                                const NodeID name_id,
+                                const unsigned duration,
+                                const double length,
+                                const TurnInstruction turn_instruction,
+                                const bool necessary)
+        : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
+          turn_instruction(turn_instruction), necessary(necessary)
+    {
+    }
 
-    explicit SegmentInformation(
-        const FixedPointCoordinate & location,
-        const NodeID name_id,
-        const unsigned duration,
-        const double length,
-        const TurnInstruction turn_instruction
-    ) :
-        location(location),
-        name_id(name_id),
-        duration(duration),
-        length(length),
-        bearing(0),
-        turn_instruction(turn_instruction),
-        necessary(turn_instruction != 0)
-    { }
+    explicit SegmentInformation(const FixedPointCoordinate &location,
+                                const NodeID name_id,
+                                const unsigned duration,
+                                const double length,
+                                const TurnInstruction turn_instruction)
+        : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
+          turn_instruction(turn_instruction), necessary(turn_instruction != 0)
+    {
+    }
 };
 
-#endif /* SEGMENTINFORMATION_H_ */
+#endif /* SEGMENT_INFORMATION_H */

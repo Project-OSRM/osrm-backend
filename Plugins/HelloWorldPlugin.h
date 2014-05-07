@@ -53,7 +53,7 @@ class HelloWorldPlugin : public BasePlugin
         intToString(routeParameters.zoomLevel, temp_string);
         reply.content.push_back(temp_string);
         reply.content.push_back("\nchecksum: ");
-        intToString(routeParameters.checkSum, temp_string);
+        intToString(routeParameters.check_sum, temp_string);
         reply.content.push_back(temp_string);
         reply.content.push_back("\ninstructions: ");
         reply.content.push_back((routeParameters.printInstructions ? "yes" : "no"));

@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RAWROUTEDATA_H_
-#define RAWROUTEDATA_H_
+#ifndef RAW_ROUTE_DATA_H
+#define RAW_ROUTE_DATA_H
 
 #include "../DataStructures/PhantomNodes.h"
 #include "../typedefs.h"
@@ -37,53 +37,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
-struct PathData {
-    PathData() :
-        node(UINT_MAX),
-        name_id(UINT_MAX),
-        durationOfSegment(UINT_MAX),
-        turnInstruction(UCHAR_MAX)
-    { }
+struct PathData
+{
+    PathData()
+        : node(std::numeric_limits<unsigned>::max()), name_id(std::numeric_limits<unsigned>::max()),
+          segment_duration(std::numeric_limits<unsigned>::max()),
+          turn_instruction(std::numeric_limits<unsigned char>::max())
+    {
+    }
 
-    PathData(
-        NodeID no,
-        unsigned na,
-        unsigned tu,
-        unsigned dur
-    ) :
-        node(no),
-        name_id(na),
-        durationOfSegment(dur),
-        turnInstruction(tu)
-    { }
+    PathData(NodeID no, unsigned na, unsigned tu, unsigned dur)
+        : node(no), name_id(na), segment_duration(dur), turn_instruction(tu)
+    {
+    }
     NodeID node;
     unsigned name_id;
-    unsigned durationOfSegment;
-    short turnInstruction;
+    unsigned segment_duration;
+    short turn_instruction;
 };
 
-struct RawRouteData {
-    std::vector< std::vector<PathData> > unpacked_path_segments;
-    std::vector< PathData > unpacked_alternative;
-    std::vector< PhantomNodes > segmentEndCoordinates;
-    std::vector< FixedPointCoordinate > rawViaNodeCoordinates;
-    unsigned checkSum;
-    int lengthOfShortestPath;
-    int lengthOfAlternativePath;
+struct RawRouteData
+{
+    std::vector<std::vector<PathData>> unpacked_path_segments;
+    std::vector<PathData> unpacked_alternative;
+    std::vector<PhantomNodes> segment_end_coordinates;
+    std::vector<FixedPointCoordinate> raw_via_node_coordinates;
+    unsigned check_sum;
+    int shortest_path_length;
+    int alternative_path_length;
     bool source_traversed_in_reverse;
     bool target_traversed_in_reverse;
     bool alt_source_traversed_in_reverse;
     bool alt_target_traversed_in_reverse;
 
-    RawRouteData() :
-        checkSum(UINT_MAX),
-        lengthOfShortestPath(INT_MAX),
-        lengthOfAlternativePath(INT_MAX),
-        source_traversed_in_reverse(false),
-        target_traversed_in_reverse(false),
-        alt_source_traversed_in_reverse(false),
-        alt_target_traversed_in_reverse(false)
-    { }
+    RawRouteData()
+        : check_sum(std::numeric_limits<unsigned>::max()),
+          shortest_path_length(std::numeric_limits<int>::max()),
+          alternative_path_length(std::numeric_limits<int>::max()),
+          source_traversed_in_reverse(false), target_traversed_in_reverse(false),
+          alt_source_traversed_in_reverse(false), alt_target_traversed_in_reverse(false)
+    {
+    }
 };
 
-#endif /* RAWROUTEDATA_H_ */
+#endif // RAW_ROUTE_DATA_H

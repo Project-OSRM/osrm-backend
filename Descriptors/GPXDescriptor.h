@@ -57,7 +57,7 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
                                 " OpenStreetMap contributors (ODbL)</license></copyright>"
                                 "</metadata>");
         reply.content.push_back("<rte>");
-        bool found_route = (raw_route.lengthOfShortestPath != INVALID_EDGE_WEIGHT) &&
+        bool found_route = (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT) &&
                            (!raw_route.unpacked_path_segments.front().empty());
         if (found_route)
         {

@@ -71,7 +71,7 @@ struct RouteParameters
     bool geometry;
     bool compression;
     bool deprecatedAPI;
-    unsigned checkSum;
+    unsigned check_sum;
     std::string service;
     std::string outputFormat;
     std::string jsonpParameter;
