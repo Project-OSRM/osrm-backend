@@ -39,27 +39,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/noncopyable.hpp>
 
 struct SharedBarriers;
-template<class EdgeDataT>
-class BaseDataFacade;
+template <class EdgeDataT> class BaseDataFacade;
 
-class OSRM_impl : boost::noncopyable {
-private:
+class OSRM_impl
+{
+  private:
     typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
-public:
-    OSRM_impl(
-        const ServerPaths & paths,
-        const bool use_shared_memory
-    );
-    virtual ~OSRM_impl();
-    void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
 
-private:
-    void RegisterPlugin(BasePlugin * plugin);
+  public:
+    OSRM_impl(const ServerPaths &paths, const bool use_shared_memory);
+    OSRM_impl(const OSRM_impl &) = delete;
+    virtual ~OSRM_impl();
+    void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
+
+  private:
+    void RegisterPlugin(BasePlugin *plugin);
     PluginMap plugin_map;
     bool use_shared_memory;
-    SharedBarriers * barrier;
-    //base class pointer to the objects
-    BaseDataFacade<QueryEdge::EdgeData> * query_data_facade;
+    SharedBarriers *barrier;
+    // base class pointer to the objects
+    BaseDataFacade<QueryEdge::EdgeData> *query_data_facade;
 };
 
-#endif //OSRM_IMPL_H
+#endif // OSRM_IMPL_H

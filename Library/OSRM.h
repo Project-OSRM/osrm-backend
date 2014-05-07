@@ -28,22 +28,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_H
 #define OSRM_H
 
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
-#include <osrm/ServerPaths.h>
+#include <ServerPaths.h>
 
 class OSRM_impl;
+struct RouteParameters;
 
-class OSRM {
-private:
-    OSRM_impl * OSRM_pimpl_;
-public:
-    explicit OSRM(
-        const ServerPaths & paths,
-        const bool use_shared_memory = false
-    );
+namespace http
+{
+class Reply;
+}
+
+class OSRM
+{
+  private:
+    OSRM_impl *OSRM_pimpl_;
+
+  public:
+    explicit OSRM(const ServerPaths &paths, const bool use_shared_memory = false);
     ~OSRM();
-    void RunQuery(RouteParameters & route_parameters, http::Reply & reply);
+    void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
 };
 
 #endif // OSRM_H

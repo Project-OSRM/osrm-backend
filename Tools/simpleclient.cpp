@@ -30,7 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
 
-#include <boost/foreach.hpp>
+#include <Reply.h>
+#include <RouteParameters.h>
+#include <ServerPaths.h>
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -107,7 +110,7 @@ int main (int argc, const char * argv[]) {
         //attention: super-inefficient hack below:
 
         std::stringstream my_stream;
-        BOOST_FOREACH(const std::string & line, osrm_reply.content)
+        for (const std::string & line : osrm_reply.content)
         {
             std::cout << line;
             my_stream << line;
