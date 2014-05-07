@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef LUAUTIL_H_
-#define LUAUTIL_H_
+#ifndef LUA_UTIL_H
+#define LUA_UTIL_H
 
 extern "C" {
-    #include <lua.h>
-    #include <lauxlib.h>
-    #include <lualib.h>
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
 }
 
 #include <boost/filesystem/convenience.hpp>
@@ -39,26 +39,27 @@ extern "C" {
 #include <iostream>
 #include <string>
 
-template<typename T>
-void LUA_print(T number) {
-  std::cout << "[LUA] " << number << std::endl;
-}
+template <typename T> void LUA_print(T output) { std::cout << "[LUA] " << output << std::endl; }
 
 // Check if the lua function <name> is defined
-inline bool lua_function_exists(lua_State* lua_state, const char* name) {
-    luabind::object g = luabind::globals(lua_state);
-    luabind::object func = g[name];
-    return func && (luabind::type(func) == LUA_TFUNCTION);
+inline bool lua_function_exists(lua_State *lua_state, const char *name)
+{
+    luabind::object globals_table = luabind::globals(lua_state);
+    luabind::object lua_function = globals_table[name];
+    return lua_function && (luabind::type(lua_function) == LUA_TFUNCTION);
 }
 
-// Add the folder contain the script to the lua load path, so script can easily require() other lua scripts inside that folder, or subfolders.
+// Add the folder contain the script to the lua load path, so script can easily require() other lua
+// scripts inside that folder, or subfolders.
 // See http://lua-users.org/wiki/PackagePath for details on the package.path syntax.
-inline void luaAddScriptFolderToLoadPath(lua_State* myLuaState, const char* fileName) {
-    const boost::filesystem::path profilePath( fileName );
-    std::string folder = profilePath.parent_path().string();
-    //TODO: This code is most probably not Windows safe since it uses UNIX'ish path delimiters
-    const std::string luaCode = "package.path = \"" + folder + "/?.lua;profiles/?.lua;\" .. package.path";
-    luaL_dostring( myLuaState, luaCode.c_str() );
+inline void luaAddScriptFolderToLoadPath(lua_State *lua_state, const char *file_name)
+{
+    const boost::filesystem::path profile_path(file_name);
+    std::string folder = profile_path.parent_path().string();
+    // TODO: This code is most probably not Windows safe since it uses UNIX'ish path delimiters
+    const std::string lua_code =
+        "package.path = \"" + folder + "/?.lua;profiles/?.lua;\" .. package.path";
+    luaL_dostring(lua_state, lua_code.c_str());
 }
 
-#endif /* LUAUTIL_H_ */
+#endif // LUA_UTIL_H
