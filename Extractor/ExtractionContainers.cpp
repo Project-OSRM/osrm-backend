@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ExtractionContainers.h"
 #include "ExtractionWay.h"
+#include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
@@ -41,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ExtractionContainers::ExtractionContainers() {
     //Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
-    name_list.push_back("");
+    name_list.emplace_back("");
 }
 
 ExtractionContainers::~ExtractionContainers() {
