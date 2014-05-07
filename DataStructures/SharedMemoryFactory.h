@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/noncopyable.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/integer.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/xsi_shared_memory.hpp>
 
@@ -44,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include <cstring>
+#include <cstdint>
 
 #include <algorithm>
 #include <exception>
