@@ -48,14 +48,14 @@ namespace http {
 class RequestParser;
 
 /// Represents a single connection from a client.
-class Connection : 	public boost::enable_shared_from_this<Connection>,
-					private boost::noncopyable {
+class Connection : 	public boost::enable_shared_from_this<Connection>
+{
 public:
 	explicit Connection(
 		boost::asio::io_service& io_service,
 		RequestHandler& handler
 	);
-
+	Connection(const Connection &) = delete;
 	~Connection();
 
 	boost::asio::ip::tcp::socket& socket();
