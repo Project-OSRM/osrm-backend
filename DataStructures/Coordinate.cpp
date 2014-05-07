@@ -295,10 +295,9 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
 
 void FixedPointCoordinate::convertInternalLatLonToString(const int value, std::string &output)
 {
-    char buffer[100];
+    char buffer[12];
     buffer[11] = 0; // zero termination
-    char *string = printInt<11, 6>(buffer, value);
-    output = string;
+    output = printInt<11, 6>(buffer, value);
 }
 
 void FixedPointCoordinate::convertInternalCoordinateToString(const FixedPointCoordinate &coord,
