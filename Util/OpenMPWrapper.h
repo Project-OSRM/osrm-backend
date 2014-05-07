@@ -29,13 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OPENMP_WRAPPER_H
 
 #ifdef _OPENMP
-    extern "C" {
-       #include <omp.h>
-    }
+extern "C" {
+#include <omp.h>
+}
 #else
-    inline int  omp_get_num_procs   () { return 1; }
-    inline int  omp_get_max_threads () { return 1; }
-    inline int  omp_get_thread_num  () { return 0; }
-    inline void omp_set_num_threads (int i) {}
-#endif /* _OPENMP */
-#endif /* OPEN_MP_WRAPPER_H */
+inline int omp_get_num_procs() { return 1; }
+inline int omp_get_max_threads() { return 1; }
+inline int omp_get_thread_num() { return 0; }
+inline void omp_set_num_threads(int i) {}
+#endif // _OPENMP
+#endif // OPENMP_WRAPPER_H
