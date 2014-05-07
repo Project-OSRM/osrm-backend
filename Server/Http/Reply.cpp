@@ -25,8 +25,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <boost/foreach.hpp>
-
 #include <osrm/Reply.h>
 
 #include "../../Util/StringUtil.h"
@@ -34,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace http {
 
 void Reply::setSize(const unsigned size) {
-    BOOST_FOREACH ( Header& h,  headers) {
+    for ( Header& h :  headers) {
         if("Content-Length" == h.name) {
             intToString(size,h.value);
         }
@@ -45,7 +43,7 @@ void Reply::setSize(const unsigned size) {
 void Reply::SetUncompressedSize()
 {
     unsigned uncompressed_size = 0;
-    BOOST_FOREACH ( const std::string & current_line, content)
+    for ( const std::string & current_line : content)
     {
         uncompressed_size += current_line.size();
     }
@@ -56,14 +54,14 @@ void Reply::SetUncompressedSize()
 std::vector<boost::asio::const_buffer> Reply::toBuffers(){
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));
-    BOOST_FOREACH(const Header & h, headers) {
+    for (const Header & h : headers) {
         buffers.push_back(boost::asio::buffer(h.name));
         buffers.push_back(boost::asio::buffer(seperators));
         buffers.push_back(boost::asio::buffer(h.value));
         buffers.push_back(boost::asio::buffer(crlf));
     }
     buffers.push_back(boost::asio::buffer(crlf));
-    BOOST_FOREACH(const std::string & line, content) {
+    for (const std::string & line : content) {
         buffers.push_back(boost::asio::buffer(line));
     }
     return buffers;

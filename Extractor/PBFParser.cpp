@@ -42,7 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-#include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/ref.hpp>
 
@@ -226,7 +225,7 @@ inline void PBFParser::parseDenseNode(_ThreadData * threadData) {
 	}
 }
 
-	BOOST_FOREACH(const ImportNode &import_node, extracted_nodes_vector)
+	for(const ImportNode &import_node : extracted_nodes_vector)
 	{
 	    extractor_callbacks->nodeFunction(import_node);
 	}
@@ -365,7 +364,7 @@ inline void PBFParser::parseWay(_ThreadData * threadData) {
     	}
 	}
 
-	BOOST_FOREACH(ExtractionWay & extraction_way, parsed_way_vector)
+	for(ExtractionWay & extraction_way : parsed_way_vector)
 	{
 		if (2 <= extraction_way.path.size())
 		{

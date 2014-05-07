@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 #include <boost/noncopyable.hpp>
 
 #include <stack>

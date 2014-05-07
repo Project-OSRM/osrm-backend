@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/foreach.hpp>
 
 #include <limits>
 
@@ -101,7 +100,7 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
         const unsigned unpacked_size = current_vector.size();
         control_sum += unpacked_size;
         BOOST_ASSERT(UINT_MAX != unpacked_size);
-        BOOST_FOREACH (const CompressedNode current_node, current_vector)
+        for (const CompressedNode current_node : current_vector)
         {
             geometry_out_stream.write((char *)&(current_node.first), sizeof(NodeID));
         }
@@ -200,7 +199,7 @@ void GeometryCompressor::PrintStatistics() const
 
     uint64_t number_of_compressed_geometries = 0;
     uint64_t longest_chain_length = 0;
-    BOOST_FOREACH (const std::vector<CompressedNode> &current_vector, m_compressed_geometries)
+    for (const std::vector<CompressedNode> &current_vector : m_compressed_geometries)
     {
         number_of_compressed_geometries += current_vector.size();
         longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());

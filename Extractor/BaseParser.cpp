@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
-#include <boost/foreach.hpp>
 #include <boost/regex.hpp>
 
 BaseParser::BaseParser(
@@ -76,7 +75,7 @@ void BaseParser::ReadRestrictionExceptions() {
         const unsigned exception_count = restriction_exceptions.size();
         SimpleLogger().Write() <<
             "Found " << exception_count << " exceptions to turn restrictions:";
-        BOOST_FOREACH(const std::string & str, restriction_exceptions) {
+        for(const std::string & str : restriction_exceptions) {
             SimpleLogger().Write() << "  " << str;
         }
     } else {
@@ -124,7 +123,7 @@ bool BaseParser::ShouldIgnoreRestriction(
     //only a few exceptions are actually defined.
     std::vector<std::string> exceptions;
     boost::algorithm::split_regex(exceptions, except_tag_string, boost::regex("[;][ ]*"));
-    BOOST_FOREACH(std::string& current_string, exceptions) {
+    for (std::string& current_string : exceptions) {
         std::vector<std::string>::const_iterator string_iterator;
         string_iterator = std::find(
             restriction_exceptions.begin(),

@@ -37,8 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osrm/Reply.h>
 #include <osrm/RouteParameters.h>
 
-#include <boost/foreach.hpp>
-
 #include <algorithm>
 #include <iostream>
 

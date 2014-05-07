@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SHORTESTPATHROUTING_H_
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 
 #include "BasicRoutingInterface.h"
 #include "../DataStructures/SearchEngineData.h"
@@ -57,10 +56,8 @@ public:
         RawRouteData & raw_route_data
     ) const
     {
-        BOOST_FOREACH(
-            const PhantomNodes & phantom_node_pair,
-            phantom_nodes_vector
-        ){
+        for (const PhantomNodes & phantom_node_pair : phantom_nodes_vector)
+        {
             if( phantom_node_pair.AtLeastOnePhantomNodeIsInvalid() ) {
                 // raw_route_data.lengthOfShortestPath = INT_MAX;
                 // raw_route_data.lengthOfAlternativePath = INT_MAX;
@@ -93,9 +90,8 @@ public:
 
         int current_leg = 0;
         //Get distance to next pair of target nodes.
-        BOOST_FOREACH(
-            const PhantomNodes & phantom_node_pair, phantom_nodes_vector
-        ){
+        for(const PhantomNodes & phantom_node_pair : phantom_nodes_vector)
+        {
             forward_heap1.Clear();	forward_heap2.Clear();
             reverse_heap1.Clear();	reverse_heap2.Clear();
             int local_upper_bound1 = INT_MAX;

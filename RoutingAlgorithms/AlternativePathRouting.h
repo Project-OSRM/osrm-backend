@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/SearchEngineData.h"
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 
 #include <vector>
@@ -199,7 +198,7 @@ public:
 
         unsigned index_into_forward_path = 0;
         //sweep over search space, compute forward sharing for each current edge (u,v)
-        BOOST_FOREACH(const SearchSpaceEdge & current_edge, forward_search_space) {
+        for(const SearchSpaceEdge & current_edge : forward_search_space) {
         	const NodeID u = current_edge.first;
         	const NodeID v = current_edge.second;
         	if(
@@ -217,7 +216,7 @@ public:
 
         unsigned index_into_reverse_path = 0;
         //sweep over search space, compute backward sharing
-        BOOST_FOREACH(const SearchSpaceEdge & current_edge, reverse_search_space) {
+        for (const SearchSpaceEdge & current_edge : reverse_search_space) {
         	const NodeID u = current_edge.first;
         	const NodeID v = current_edge.second;
         	if(
@@ -239,7 +238,8 @@ public:
         // SimpleLogger().Write(logDEBUG) << "rev_search_space size: " << reverse_search_space.size() << ", marked " << approximated_reverse_sharing.size() << " nodes";
 
         std::vector<NodeID> preselected_node_list;
-        BOOST_FOREACH(const NodeID node, via_node_candidate_list) {
+        for (const NodeID node : via_node_candidate_list)
+        {
             boost::unordered_map<NodeID, int>::const_iterator fwd_iterator = approximated_forward_sharing.find(node);
             const int fwd_sharing = (fwd_iterator != approximated_forward_sharing.end()) ? fwd_iterator->second : 0;
             boost::unordered_map<NodeID, int>::const_iterator rev_iterator = approximated_reverse_sharing.find(node);
@@ -269,7 +269,7 @@ public:
         std::vector<RankedCandidateNode> ranked_candidates_list;
 
         //prioritizing via nodes for deep inspection
-        BOOST_FOREACH(const NodeID node, preselected_node_list) {
+        for (const NodeID node : preselected_node_list) {
             int length_of_via_path = 0, sharing_of_via_path = 0;
             ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path, packed_shortest_path);
             const int maximum_allowed_sharing = upper_bound_to_shortest_path_distance*VIAPATH_GAMMA;
@@ -291,7 +291,7 @@ public:
         NodeID selected_via_node = SPECIAL_NODEID;
         int length_of_via_path = INVALID_EDGE_WEIGHT;
         NodeID s_v_middle = SPECIAL_NODEID, v_t_middle = SPECIAL_NODEID;
-        BOOST_FOREACH(const RankedCandidateNode & candidate, ranked_candidates_list){
+        for (const RankedCandidateNode & candidate : ranked_candidates_list){
             if(ViaNodeCandidatePassesTTest(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate, upper_bound_to_shortest_path_distance, &length_of_via_path, &s_v_middle, &v_t_middle)) {
                 // select first admissable
                 selected_via_node = candidate.node;

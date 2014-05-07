@@ -43,7 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/StringUtil.h"
 #include "typedefs.h"
 
-#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -334,7 +333,7 @@ int main (int argc, char *argv[]) {
 
         boost::filesystem::ofstream hsgr_output_stream(graphOut, std::ios::binary);
         hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
-        BOOST_FOREACH(const QueryEdge & edge, contractedEdgeList)
+        for (const QueryEdge & edge : contractedEdgeList)
         {
             BOOST_ASSERT( UINT_MAX != edge.source );
             BOOST_ASSERT( UINT_MAX != edge.target );

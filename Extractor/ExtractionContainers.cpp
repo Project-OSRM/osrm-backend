@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -461,7 +460,7 @@ void ExtractionContainers::PrepareData(
 
         //compute total number of chars
         unsigned total_number_of_chars = 0;
-        BOOST_FOREACH(const std::string & temp_string, name_list) {
+        for (const std::string & temp_string : name_list) {
             total_number_of_chars += temp_string.length();
         }
         //write total number of chars
@@ -471,7 +470,7 @@ void ExtractionContainers::PrepareData(
         );
         //write prefixe sums
         unsigned name_lengths_prefix_sum = 0;
-        BOOST_FOREACH(const std::string & temp_string, name_list) {
+        for (const std::string & temp_string : name_list) {
             name_file_stream.write(
                 (char *)&(name_lengths_prefix_sum),
                 sizeof(unsigned)
@@ -485,7 +484,7 @@ void ExtractionContainers::PrepareData(
         );
 
         //write all chars consecutively
-        BOOST_FOREACH(const std::string & temp_string, name_list) {
+        for (const std::string & temp_string : name_list) {
             const unsigned string_length = temp_string.length();
             name_file_stream.write(temp_string.c_str(), string_length);
         }

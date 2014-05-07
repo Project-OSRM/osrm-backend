@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/StringUtil.h"
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
@@ -263,7 +262,7 @@ public:
                 std::cout << " [flush " << numberOfContractedNodes << " nodes] " << std::flush;
 
                 //Delete old heap data to free memory that we need for the coming operations
-                BOOST_FOREACH(_ThreadData * data, threadData) {
+                for(_ThreadData * data : threadData) {
                 	delete data;
                 }
                 threadData.clear();
@@ -380,7 +379,7 @@ public:
             //insert new edges
             for ( unsigned threadNum = 0; threadNum < maxThreads; ++threadNum ) {
                 _ThreadData& data = *threadData[threadNum];
-                BOOST_FOREACH(const _ContractorEdge& edge, data.insertedEdges) {
+                for(const _ContractorEdge& edge : data.insertedEdges) {
                     _DynamicGraph::EdgeIterator currentEdgeID = _graph->FindEdge(edge.source, edge.target);
                     if(currentEdgeID < _graph->EndEdges(edge.source) ) {
                         _DynamicGraph::EdgeData & currentEdgeData = _graph->GetEdgeData(currentEdgeID);
@@ -436,7 +435,7 @@ public:
 
             p.printStatus(numberOfContractedNodes);
         }
-        BOOST_FOREACH(_ThreadData * data, threadData) {
+        for(_ThreadData * data : threadData) {
         	delete data;
         }
         threadData.clear();
@@ -711,7 +710,7 @@ private:
         std::sort( neighbours.begin(), neighbours.end() );
         neighbours.resize( std::unique( neighbours.begin(), neighbours.end() ) - neighbours.begin() );
 
-        BOOST_FOREACH(const NodeID u, neighbours) {
+        for(const NodeID u : neighbours) {
             priorities[u] = _Evaluate( data, &( nodeData )[u], u );
         }
         return true;
@@ -744,11 +743,13 @@ private:
         neighbours.resize( std::unique( neighbours.begin(), neighbours.end() ) - neighbours.begin() );
 
         //examine all neighbours that are at most 2 hops away
-        BOOST_FOREACH(const NodeID u, neighbours) {
+        for(const NodeID u : neighbours) {
             for ( _DynamicGraph::EdgeIterator e = _graph->BeginEdges( u ) ; e < _graph->EndEdges( u ) ; ++e ) {
                 const NodeID target = _graph->GetTarget( e );
                 if(node==target)
+                {
                     continue;
+                }
 
                 const double targetPriority = priorities[target];
                 assert( targetPriority >= 0 );

@@ -231,7 +231,7 @@ void Connection::compressBufferCollection(
         boost::iostreams::back_inserter(compressed_data)
     );
 
-    BOOST_FOREACH( const std::string & line, uncompressed_data) {
+    for ( const std::string & line : uncompressed_data) {
         compressing_stream << line;
     }
 
