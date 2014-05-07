@@ -28,23 +28,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HILBERTVALUE_H_
 #define HILBERTVALUE_H_
 
-#include <osrm/Coordinate.h>
-
-#include <boost/integer.hpp>
-#include <boost/noncopyable.hpp>
+#include <cstdint>
 
 // computes a 64 bit value that corresponds to the hilbert space filling curve
 
-class HilbertCode : boost::noncopyable
+struct FixedPointCoordinate;
+
+class HilbertCode
 {
-public:
-	uint64_t operator()
-    (
-		const FixedPointCoordinate & current_coordinate
-	) const;
-private:
-	inline uint64_t BitInterleaving( const uint32_t a, const uint32_t b) const;
-	inline void TransposeCoordinate( uint32_t * X) const;
+  public:
+    uint64_t operator()(const FixedPointCoordinate &current_coordinate) const;
+    HilbertCode() {}
+    HilbertCode(const HilbertCode &) = delete;
+
+  private:
+    inline uint64_t BitInterleaving(const uint32_t a, const uint32_t b) const;
+    inline void TransposeCoordinate(uint32_t *X) const;
 };
 
 #endif /* HILBERTVALUE_H_ */
