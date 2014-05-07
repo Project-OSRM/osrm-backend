@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 
 #include <cstdio>
+#include <unistd.h>
 
 #include <ostream>
 #include <iostream>
