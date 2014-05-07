@@ -105,13 +105,13 @@ public:
                 min_lat = std::min(
                         min_lat, std::min(
                             coordinate_list.at(objects[i].u).lat,
-                            coordinate_list.at(objects[i].v).lon
+                            coordinate_list.at(objects[i].v).lat
                         )
                 );
                 max_lat = std::max(
                         max_lat, std::max(
                             coordinate_list.at(objects[i].u).lat,
-                            coordinate_list.at(objects[i].v).lon
+                            coordinate_list.at(objects[i].v).lat
                         )
                 );
             }
