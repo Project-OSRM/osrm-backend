@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-#include <boost/integer.hpp>
+#include <cstdint>
 
 typedef BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf RTreeLeaf;
 typedef StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;

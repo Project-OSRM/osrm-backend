@@ -31,7 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/DeallocatingVector.h"
 
 #include <boost/assert.hpp>
-#include <boost/integer.hpp>
+
+#include <cstdint>
 
 #include <algorithm>
 #include <limits>

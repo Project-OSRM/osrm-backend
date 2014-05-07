@@ -34,13 +34,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
-#include <boost/integer.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
+
+#include <cstdint>
 
 #include <vector>
 #include <fstream>

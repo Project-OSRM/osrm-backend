@@ -45,8 +45,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include <boost/filesystem/fstream.hpp>
-#include <boost/integer.hpp>
 #include <boost/iostreams/seek.hpp>
+
+#include <cstdint>
 
 #include <fstream>
 #include <string>

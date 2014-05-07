@@ -43,7 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/integer.hpp>
 
 #ifdef __APPLE__
 #include <gdal.h>
@@ -52,6 +51,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <gdal/gdal.h>
 #include <gdal/ogrsf_frmts.h>
 #endif
+
+#include <cstdint>
 
 #include <memory>
 #include <stack>
