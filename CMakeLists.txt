@@ -47,7 +47,7 @@ add_executable(osrm-prepare ${PrepareSources})
 
 file(GLOB ServerGlob Server/*.cpp)
 file(GLOB DescriptorGlob Descriptors/*.cpp)
-file(GLOB DatastructureGlob DataStructures/SearchEngineData.cpp)
+file(GLOB DatastructureGlob DataStructures/SearchEngineData.cpp DataStructures/RouteParameters.cpp)
 file(GLOB CoordinateGlob DataStructures/Coordinate.cpp)
 file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB HttpGlob Server/Http/*.cpp)

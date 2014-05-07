@@ -30,23 +30,40 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-#include <boost/fusion/container/vector.hpp>
-#include <boost/fusion/sequence/intrinsic.hpp>
-#include <boost/fusion/include/at_c.hpp>
+#include <boost/fusion/container/vector/vector_fwd.hpp>
 
 #include <string>
 #include <vector>
 
-struct RouteParameters {
-    RouteParameters() :
-        zoomLevel(18),
-        printInstructions(false),
-        alternateRoute(true),
-        geometry(true),
-        compression(true),
-        deprecatedAPI(false),
-        checkSum(-1)
-    { }
+struct RouteParameters
+{
+    RouteParameters();
+
+    void setZoomLevel(const short i);
+
+    void setAlternateRouteFlag(const bool b);
+
+    void setDeprecatedAPIFlag(const std::string &);
+
+    void setChecksum(const unsigned c);
+
+    void setInstructionFlag(const bool b);
+
+    void setService(const std::string &s);
+
+    void setOutputFormat(const std::string &s);
+
+    void setJSONpParameter(const std::string &s);
+
+    void addHint(const std::string &s);
+
+    void setLanguage(const std::string &s);
+
+    void setGeometryFlag(const bool b);
+
+    void setCompressionFlag(const bool b);
+
+    void addCoordinate(const boost::fusion::vector<double, double> &arg_);
 
     short zoomLevel;
     bool printInstructions;
@@ -61,65 +78,6 @@ struct RouteParameters {
     std::string language;
     std::vector<std::string> hints;
     std::vector<FixedPointCoordinate> coordinates;
-
-    void setZoomLevel(const short i) {
-        if (18 >= i && 0 <= i) {
-            zoomLevel = i;
-        }
-    }
-
-    void setAlternateRouteFlag(const bool b) {
-        alternateRoute = b;
-    }
-
-    void setDeprecatedAPIFlag(const std::string &) {
-        deprecatedAPI = true;
-    }
-
-    void setChecksum(const unsigned c) {
-        checkSum = c;
-    }
-
-    void setInstructionFlag(const bool b) {
-        printInstructions = b;
-    }
-
-    void setService( const std::string & s) {
-        service = s;
-    }
-
-    void setOutputFormat(const std::string & s) {
-        outputFormat = s;
-    }
-
-    void setJSONpParameter(const std::string & s) {
-        jsonpParameter = s;
-    }
-
-    void addHint(const std::string & s) {
-        hints.resize( coordinates.size() );
-        if( !hints.empty() ) {
-            hints.back() = s;
-        }
-    }
-
-    void setLanguage(const std::string & s) {
-        language = s;
-    }
-
-    void setGeometryFlag(const bool b) {
-        geometry = b;
-    }
-
-    void setCompressionFlag(const bool b) {
-        compression = b;
-    }
-
-    void addCoordinate(const boost::fusion::vector < double, double > & arg_) {
-        int lat = COORDINATE_PRECISION*boost::fusion::at_c < 0 > (arg_);
-        int lon = COORDINATE_PRECISION*boost::fusion::at_c < 1 > (arg_);
-        coordinates.push_back(FixedPointCoordinate(lat, lon));
-    }
 };
 
-#endif /*ROUTE_PARAMETERS_H*/
+#endif // ROUTE_PARAMETERS_H
