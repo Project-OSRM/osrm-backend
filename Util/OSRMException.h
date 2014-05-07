@@ -31,15 +31,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <exception>
 #include <string>
 
-class OSRMException: public std::exception {
-public:
-    explicit OSRMException(const char * message) : message(message) {}
-    explicit OSRMException(const std::string & message) : message(message) {}
+class OSRMException : public std::exception
+{
+  public:
+    explicit OSRMException(const char *message) : message(message) {}
+    explicit OSRMException(const std::string &message) : message(message) {}
     virtual ~OSRMException() throw() {}
-private:
-    virtual const char* what() const throw() {
-        return message.c_str();
-    }
+
+  private:
+    virtual const char *what() const throw() { return message.c_str(); }
     const std::string message;
 };
 
