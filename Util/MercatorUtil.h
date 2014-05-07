@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef MERCATORUTIL_H_
-#define MERCATORUTIL_H_
+#ifndef MERCATOR_UTIL_H
+#define MERCATOR_UTIL_H
 
 #include <cmath>
 
@@ -34,12 +34,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define M_PI 3.14159265358979323846
 #endif
 
-inline double y2lat(double a) {
-	return 180./M_PI * (2. * atan(exp(a*M_PI/180.)) - M_PI/2.);
+inline double y2lat(const double a)
+{
+    return 180. / M_PI * (2. * atan(exp(a * M_PI / 180.)) - M_PI / 2.);
 }
 
-inline double lat2y(double a) {
-	return 180./M_PI * log(tan(M_PI/4.+a*(M_PI/180.)/2.));
+inline double lat2y(const double a)
+{
+    return 180. / M_PI * log(tan(M_PI / 4. + a * (M_PI / 180.) / 2.));
 }
 
-#endif /* MERCATORUTIL_H_ */
+#endif // MERCATOR_UTIL_H
