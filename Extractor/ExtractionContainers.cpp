@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ExtractionContainers::ExtractionContainers() {
     //Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
-    name_list.emplace_back("");
+    name_list.push_back("");
 }
 
 ExtractionContainers::~ExtractionContainers() {
