@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ostream>
 #include <iostream>
 #include <mutex>
+#include <sstream>
 
 enum LogLevel
 { logINFO,
@@ -51,7 +52,7 @@ const char BLUE[] = "\x1b[34m";
 const char MAGENTA[] = "\x1b[35m";
 const char CYAN[] = "\x1b[36m";
 
-class LogPolicy : boost::noncopyable
+class LogPolicy
 {
   public:
     void Unmute() { m_is_mute = false; }
