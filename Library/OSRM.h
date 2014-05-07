@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_H
 #define OSRM_H
 
-#include <ServerPaths.h>
+#include <osrm/ServerPaths.h>
 
 class OSRM_impl;
 struct RouteParameters;
