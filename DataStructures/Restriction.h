@@ -25,125 +25,102 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef RESTRICTION_H_
-#define RESTRICTION_H_
+#ifndef RESTRICTION_H
+#define RESTRICTION_H
 
 #include "../typedefs.h"
 
 #include <limits>
 
-struct TurnRestriction {
+struct TurnRestriction
+{
     NodeID viaNode;
     NodeID fromNode;
     NodeID toNode;
-    struct Bits { //mostly unused
+    struct Bits
+    { // mostly unused
         Bits()
-         :
-            isOnly(false),
-            unused1(false),
-            unused2(false),
-            unused3(false),
-            unused4(false),
-            unused5(false),
-            unused6(false),
-            unused7(false)
-        { }
+            : isOnly(false), unused1(false), unused2(false), unused3(false), unused4(false),
+              unused5(false), unused6(false), unused7(false)
+        {
+        }
 
-        bool isOnly:1;
-        bool unused1:1;
-        bool unused2:1;
-        bool unused3:1;
-        bool unused4:1;
-        bool unused5:1;
-        bool unused6:1;
-        bool unused7:1;
+        bool isOnly : 1;
+        bool unused1 : 1;
+        bool unused2 : 1;
+        bool unused3 : 1;
+        bool unused4 : 1;
+        bool unused5 : 1;
+        bool unused6 : 1;
+        bool unused7 : 1;
     } flags;
 
-    explicit TurnRestriction(NodeID viaNode) :
-        viaNode(viaNode),
-        fromNode(std::numeric_limits<unsigned>::max()),
-        toNode(std::numeric_limits<unsigned>::max()) {
+    explicit TurnRestriction(NodeID viaNode)
+        : viaNode(viaNode), fromNode(std::numeric_limits<unsigned>::max()),
+          toNode(std::numeric_limits<unsigned>::max())
+    {
     }
 
-    explicit TurnRestriction(const bool isOnly = false) :
-        viaNode(UINT_MAX),
-        fromNode(UINT_MAX),
-        toNode(UINT_MAX) {
+    explicit TurnRestriction(const bool isOnly = false)
+        : viaNode(std::numeric_limits<unsigned>::max()),
+          fromNode(std::numeric_limits<unsigned>::max()),
+          toNode(std::numeric_limits<unsigned>::max())
+    {
         flags.isOnly = isOnly;
     }
 };
 
-struct InputRestrictionContainer {
+struct InputRestrictionContainer
+{
     EdgeID fromWay;
     EdgeID toWay;
     unsigned viaNode;
     TurnRestriction restriction;
 
-    InputRestrictionContainer(
-        EdgeID fromWay,
-        EdgeID toWay,
-        NodeID vn,
-        unsigned vw
-    ) :
-        fromWay(fromWay),
-        toWay(toWay),
-        viaNode(vw)
+    InputRestrictionContainer(EdgeID fromWay, EdgeID toWay, NodeID vn, unsigned vw)
+        : fromWay(fromWay), toWay(toWay), viaNode(vw)
     {
         restriction.viaNode = vn;
     }
-    explicit InputRestrictionContainer(
-        bool isOnly = false
-    ) :
-        fromWay(std::numeric_limits<unsigned>::max()),
-        toWay(std::numeric_limits<unsigned>::max()),
-        viaNode(std::numeric_limits<unsigned>::max())
+    explicit InputRestrictionContainer(bool isOnly = false)
+        : fromWay(std::numeric_limits<unsigned>::max()),
+          toWay(std::numeric_limits<unsigned>::max()), viaNode(std::numeric_limits<unsigned>::max())
     {
         restriction.flags.isOnly = isOnly;
     }
 
-    static InputRestrictionContainer min_value() {
-        return InputRestrictionContainer(0, 0, 0, 0);
-    }
-    static InputRestrictionContainer max_value() {
-        return  InputRestrictionContainer(
-                    std::numeric_limits<unsigned>::max(),
-                    std::numeric_limits<unsigned>::max(),
-                    std::numeric_limits<unsigned>::max(),
-                    std::numeric_limits<unsigned>::max()
-                );
+    static InputRestrictionContainer min_value() { return InputRestrictionContainer(0, 0, 0, 0); }
+    static InputRestrictionContainer max_value()
+    {
+        return InputRestrictionContainer(std::numeric_limits<unsigned>::max(),
+                                         std::numeric_limits<unsigned>::max(),
+                                         std::numeric_limits<unsigned>::max(),
+                                         std::numeric_limits<unsigned>::max());
     }
 };
 
-struct CmpRestrictionContainerByFrom {
+struct CmpRestrictionContainerByFrom
+{
     typedef InputRestrictionContainer value_type;
-    inline bool operator()(
-        const InputRestrictionContainer & a,
-        const InputRestrictionContainer & b
-    ) const {
+    inline bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b)
+        const
+    {
         return a.fromWay < b.fromWay;
     }
-    inline value_type max_value() const {
-        return InputRestrictionContainer::max_value();
-    }
-    inline value_type min_value() const {
-        return InputRestrictionContainer::min_value();
-    }
+    inline value_type max_value() const { return InputRestrictionContainer::max_value(); }
+    inline value_type min_value() const { return InputRestrictionContainer::min_value(); }
 };
 
-struct CmpRestrictionContainerByTo {
+struct CmpRestrictionContainerByTo
+{
     typedef InputRestrictionContainer value_type;
-    inline bool operator()(
-        const InputRestrictionContainer & a,
-        const InputRestrictionContainer & b
-    ) const {
+    inline bool operator()(const InputRestrictionContainer &a, const InputRestrictionContainer &b)
+        const
+    {
         return a.toWay < b.toWay;
     }
-    value_type max_value() const {
-        return InputRestrictionContainer::max_value();
-    }
-    value_type min_value() const {
-        return InputRestrictionContainer::min_value();
-    }
+    value_type max_value() const { return InputRestrictionContainer::max_value(); }
+    value_type min_value() const { return InputRestrictionContainer::min_value(); }
 };
 
-#endif /* RESTRICTION_H_ */
+#endif // RESTRICTION_H
