@@ -25,115 +25,119 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef SIMPLE_LOGGER_H_
-#define SIMPLE_LOGGER_H_
+#ifndef SIMPLE_LOGGER_H
+#define SIMPLE_LOGGER_H
 
 #include <boost/assert.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <cstdio>
 
 #include <ostream>
 #include <iostream>
+#include <mutex>
 
-enum LogLevel { logINFO, logWARNING, logDEBUG };
-static boost::mutex logger_mutex;
+enum LogLevel
+{ logINFO,
+  logWARNING,
+  logDEBUG };
+
+static std::mutex logger_mutex;
+
 const char COL_RESET[] = "\x1b[0m";
-const char RED[]     = "\x1b[31m";
-const char GREEN[]   = "\x1b[32m";
-const char YELLOW[]  = "\x1b[33m";
-const char BLUE[]    = "\x1b[34m";
+const char RED[] = "\x1b[31m";
+const char GREEN[] = "\x1b[32m";
+const char YELLOW[] = "\x1b[33m";
+const char BLUE[] = "\x1b[34m";
 const char MAGENTA[] = "\x1b[35m";
-const char CYAN[]    = "\x1b[36m";
+const char CYAN[] = "\x1b[36m";
 
-class LogPolicy : boost::noncopyable {
-public:
+class LogPolicy : boost::noncopyable
+{
+  public:
+    void Unmute() { m_is_mute = false; }
 
-	void Unmute() {
-		m_is_mute = false;
-	}
+    void Mute() { m_is_mute = true; }
 
-	void Mute() {
-		m_is_mute = true;
-	}
+    bool IsMute() const { return m_is_mute; }
 
-	bool IsMute() const {
-		return m_is_mute;
-	}
-
-    static LogPolicy & GetInstance() {
-	    static LogPolicy runningInstance;
-    	return runningInstance;
+    static LogPolicy &GetInstance()
+    {
+        static LogPolicy runningInstance;
+        return runningInstance;
     }
 
-private:
-	LogPolicy() : m_is_mute(true) { }
-	bool m_is_mute;
+    LogPolicy(const LogPolicy &) = delete;
+
+  private:
+    LogPolicy() : m_is_mute(true) {}
+    bool m_is_mute;
 };
 
 class SimpleLogger
 {
-public:
-	SimpleLogger() : level(logINFO) { }
+  public:
+    SimpleLogger() : level(logINFO) {}
 
-    std::ostringstream& Write(LogLevel l = logINFO)
+    std::ostringstream &Write(LogLevel l = logINFO)
     {
-    	try
-    	{
-			boost::mutex::scoped_lock lock(logger_mutex);
-			level = l;
-			os << "[";
-			switch(level)
-			{
-				case logINFO:
-		    		os << "info";
-		    		break;
-				case logWARNING:
-		    		os << "warn";
-		    		break;
-				case logDEBUG:
+        try
+        {
+            std::lock_guard<std::mutex> lock(logger_mutex);
+            level = l;
+            os << "[";
+            switch (level)
+            {
+            case logINFO:
+                os << "info";
+                break;
+            case logWARNING:
+                os << "warn";
+                break;
+            case logDEBUG:
 #ifndef NDEBUG
-		    		os << "debug";
+                os << "debug";
 #endif
-		    		break;
-				default:
-		    		BOOST_ASSERT_MSG(false, "should not happen");
-		    		break;
-			}
-			os << "] ";
-		}
-		catch (...) { }
-	   	return os;
-   }
+                break;
+            default:
+                BOOST_ASSERT_MSG(false, "should not happen");
+                break;
+            }
+            os << "] ";
+        }
+        catch (...) {}
+        return os;
+    }
 
-	virtual ~SimpleLogger() {
-	   	if(!LogPolicy::GetInstance().IsMute())
-	   	{
-			const bool is_terminal = isatty(fileno(stdout));
-		   	switch(level)
-		   	{
-				case logINFO:
-					std::cout << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
-					break;
-				case logWARNING:
-					std::cerr << (is_terminal ? RED : "")	<< os.str() << (is_terminal ? COL_RESET : "") << std::endl;
-					break;
-				case logDEBUG:
+    virtual ~SimpleLogger()
+    {
+        if (!LogPolicy::GetInstance().IsMute())
+        {
+            const bool is_terminal = isatty(fileno(stdout));
+            switch (level)
+            {
+            case logINFO:
+                std::cout << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
+                break;
+            case logWARNING:
+                std::cerr << (is_terminal ? RED : "") << os.str() << (is_terminal ? COL_RESET : "")
+                          << std::endl;
+                break;
+            case logDEBUG:
 #ifndef NDEBUG
-					std::cout << (is_terminal ? YELLOW : "") << os.str() << (is_terminal ? COL_RESET : "") << std::endl;
+                std::cout << (is_terminal ? YELLOW : "") << os.str()
+                          << (is_terminal ? COL_RESET : "") << std::endl;
 #endif
-					break;
-				default:
-					BOOST_ASSERT_MSG(false, "should not happen");
-					break;
-			}
-	   	}
-	}
+                break;
+            default:
+                BOOST_ASSERT_MSG(false, "should not happen");
+                break;
+            }
+        }
+    }
 
-private:
-	LogLevel level;
-	std::ostringstream os;
+  private:
+    LogLevel level;
+    std::ostringstream os;
 };
 
-#endif /* SIMPLE_LOGGER_H_ */
+#endif /* SIMPLE_LOGGER_H */
