@@ -28,21 +28,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef REQUEST_H
 #define REQUEST_H
 
-#include "../../Util/StringUtil.h"
-
 #include <boost/asio.hpp>
 
 #include <string>
 
-namespace http {
+namespace http
+{
 
-struct Request {
-	std::string uri;
-	std::string referrer;
-	std::string agent;
-	boost::asio::ip::address endpoint;
+struct Request
+{
+    std::string uri;
+    std::string referrer;
+    std::string agent;
+    boost::asio::ip::address endpoint;
 };
 
 } // namespace http
 
-#endif //REQUEST_H
+#endif // REQUEST_H

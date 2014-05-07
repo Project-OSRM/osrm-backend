@@ -25,17 +25,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASIC_DATASTRUCTURES_H
-#define BASIC_DATASTRUCTURES_H
+#ifndef COMPRESSION_TYPE_H
+#define COMPRESSION_TYPE_H
 
-namespace http {
+namespace http
+{
 
-enum CompressionType {
-    noCompression,
-    gzipRFC1952,
-    deflateRFC1951
-};
+enum CompressionType
+{ noCompression,
+  gzipRFC1952,
+  deflateRFC1951 };
 
 } // namespace http
 
-#endif //BASIC_DATASTRUCTURES_H
+#endif // COMPRESSION_TYPE_H

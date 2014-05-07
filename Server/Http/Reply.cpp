@@ -29,12 +29,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../../Util/StringUtil.h"
 
-namespace http {
+namespace http
+{
 
-void Reply::setSize(const unsigned size) {
-    for ( Header& h :  headers) {
-        if("Content-Length" == h.name) {
-            intToString(size,h.value);
+void Reply::setSize(const unsigned size)
+{
+    for (Header &h : headers)
+    {
+        if ("Content-Length" == h.name)
+        {
+            intToString(size, h.value);
         }
     }
 }
@@ -43,35 +47,39 @@ void Reply::setSize(const unsigned size) {
 void Reply::SetUncompressedSize()
 {
     unsigned uncompressed_size = 0;
-    for ( const std::string & current_line : content)
+    for (const std::string &current_line : content)
     {
         uncompressed_size += current_line.size();
     }
     setSize(uncompressed_size);
 }
 
-
-std::vector<boost::asio::const_buffer> Reply::toBuffers(){
+std::vector<boost::asio::const_buffer> Reply::toBuffers()
+{
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));
-    for (const Header & h : headers) {
+    for (const Header &h : headers)
+    {
         buffers.push_back(boost::asio::buffer(h.name));
         buffers.push_back(boost::asio::buffer(seperators));
         buffers.push_back(boost::asio::buffer(h.value));
         buffers.push_back(boost::asio::buffer(crlf));
     }
     buffers.push_back(boost::asio::buffer(crlf));
-    for (const std::string & line : content) {
+    for (const std::string &line : content)
+    {
         buffers.push_back(boost::asio::buffer(line));
     }
     return buffers;
 }
 
-std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
+std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers()
+{
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));
-    for (std::size_t i = 0; i < headers.size(); ++i) {
-        Header& current_header = headers[i];
+    for (std::size_t i = 0; i < headers.size(); ++i)
+    {
+        Header &current_header = headers[i];
         buffers.push_back(boost::asio::buffer(current_header.name));
         buffers.push_back(boost::asio::buffer(seperators));
         buffers.push_back(boost::asio::buffer(current_header.value));
@@ -81,7 +89,8 @@ std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers(){
     return buffers;
 }
 
-Reply Reply::StockReply(Reply::status_type status) {
+Reply Reply::StockReply(Reply::status_type status)
+{
     Reply rep;
     rep.status = status;
     rep.content.clear();
@@ -100,7 +109,8 @@ Reply Reply::StockReply(Reply::status_type status) {
     return rep;
 }
 
-std::string Reply::ToString(Reply::status_type status) {
+std::string Reply::ToString(Reply::status_type status)
+{
     if (Reply::ok == status)
     {
         return okHTML;
@@ -112,7 +122,8 @@ std::string Reply::ToString(Reply::status_type status) {
     return internalServerErrorHTML;
 }
 
-boost::asio::const_buffer Reply::ToBuffer(Reply::status_type status) {
+boost::asio::const_buffer Reply::ToBuffer(Reply::status_type status)
+{
     if (Reply::ok == status)
     {
         return boost::asio::buffer(okString);
@@ -124,9 +135,5 @@ boost::asio::const_buffer Reply::ToBuffer(Reply::status_type status) {
     return boost::asio::buffer(badRequestString);
 }
 
-
-Reply::Reply() : status(ok) {
-
-}
-
+Reply::Reply() : status(ok) {}
 }
