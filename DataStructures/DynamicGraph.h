@@ -178,9 +178,9 @@ class DynamicGraph {
             #pragma omp atomic
             --m_numEdges;
             --node.edges;
-            BOOST_ASSERT(UINT_MAX != node.edges);
+            BOOST_ASSERT(std::numeric_limits<unsigned>::max() != node.edges);
             const unsigned last = node.firstEdge + node.edges;
-            BOOST_ASSERT( UINT_MAX != last);
+            BOOST_ASSERT( std::numeric_limits<unsigned>::max() != last);
             //swap with last edge
             m_edges[e] = m_edges[last];
             makeDummy( last );
