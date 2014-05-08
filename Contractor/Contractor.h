@@ -41,8 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -234,7 +232,7 @@ class Contractor
         std::cout << "merged " << edges.size() - edge << " edges out of " << edges.size()
                   << std::endl;
         edges.resize(edge);
-        _graph = boost::make_shared<_DynamicGraph>(nodes, edges);
+        _graph = std::make_shared<_DynamicGraph>(nodes, edges);
         edges.clear();
         std::vector<_ContractorEdge>().swap(edges);
         BOOST_ASSERT(0 == edges.capacity());
@@ -396,7 +394,7 @@ class Contractor
 
                 // create new graph
                 std::sort(newSetOfEdges.begin(), newSetOfEdges.end());
-                _graph = boost::make_shared<_DynamicGraph>(remainingNodes.size(), newSetOfEdges);
+                _graph = std::make_shared<_DynamicGraph>(remainingNodes.size(), newSetOfEdges);
 
                 newSetOfEdges.clear();
                 flushedContractor = true;
@@ -939,7 +937,7 @@ class Contractor
         return a < b;
     }
 
-    boost::shared_ptr<_DynamicGraph> _graph;
+    std::shared_ptr<_DynamicGraph> _graph;
     std::vector<_DynamicGraph::InputEdge> contractedEdges;
     unsigned edge_storage_slot;
     uint64_t temp_edge_counter;

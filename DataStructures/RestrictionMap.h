@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __RESTRICTION_MAP_H__
 #define __RESTRICTION_MAP_H__
 
+#include <memory>
+
 #include "../typedefs.h"
 #include "DynamicGraph.h"
 #include "Restriction.h"
@@ -42,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class RestrictionMap
 {
 public:
-    RestrictionMap(const boost::shared_ptr<NodeBasedDynamicGraph>& graph,
+    RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph>& graph,
         const std::vector<TurnRestriction> & input_restrictions_list);
 
     void FixupArrivingTurnRestriction(const NodeID u, const NodeID v, const NodeID w);
@@ -59,7 +61,7 @@ private:
     typedef NodeBasedDynamicGraph::EdgeData     EdgeData;
 
     unsigned                                    m_count;
-    boost::shared_ptr<NodeBasedDynamicGraph>    m_graph;
+    std::shared_ptr<NodeBasedDynamicGraph>      m_graph;
     //! index -> list of (target, isOnly)
     std::vector<EmanatingRestrictionsVector>    m_restriction_bucket_list;
     //! maps (start, via) -> bucket index

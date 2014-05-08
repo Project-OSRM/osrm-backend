@@ -1,7 +1,7 @@
 #include "RestrictionMap.h"
 #include "NodeBasedGraph.h"
 
-RestrictionMap::RestrictionMap(const boost::shared_ptr<NodeBasedDynamicGraph>& graph, const std::vector<TurnRestriction> & input_restrictions_list)
+RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph>& graph, const std::vector<TurnRestriction> & input_restrictions_list)
 : m_count(0)
 , m_graph(graph)
 {

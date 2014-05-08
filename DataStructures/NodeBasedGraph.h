@@ -4,9 +4,6 @@
 #include "DynamicGraph.h"
 #include "ImportEdge.h"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-
 struct NodeBasedEdgeData {
     NodeBasedEdgeData() : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID), nameID(std::numeric_limits<unsigned>::max()),
         type(std::numeric_limits<short>::max()), isAccessRestricted(false), shortcut(false), forward(false), backward(false),
@@ -43,7 +40,7 @@ struct NodeBasedEdgeData {
 typedef DynamicGraph<NodeBasedEdgeData> NodeBasedDynamicGraph;
 
 // Factory method to create NodeBasedDynamicGraph from ImportEdges
-inline boost::shared_ptr<NodeBasedDynamicGraph> NodeBasedDynamicGraphFromImportEdges(
+inline std::shared_ptr<NodeBasedDynamicGraph> NodeBasedDynamicGraphFromImportEdges(
     int number_of_nodes,
     std::vector<ImportEdge>& input_edge_list
 ) {
@@ -92,7 +89,7 @@ inline boost::shared_ptr<NodeBasedDynamicGraph> NodeBasedDynamicGraphFromImportE
     }
 
     std::sort( edges_list.begin(), edges_list.end() );
-    auto graph = boost::make_shared<NodeBasedDynamicGraph>(
+    auto graph = std::make_shared<NodeBasedDynamicGraph>(
         number_of_nodes,
         edges_list
     );

@@ -49,7 +49,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "GeometryCompressor.h"
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
@@ -63,7 +62,7 @@ class EdgeBasedGraphFactory : boost::noncopyable
   public:
     struct SpeedProfileProperties;
 
-    explicit EdgeBasedGraphFactory(const boost::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
+    explicit EdgeBasedGraphFactory(const std::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
                                    std::unique_ptr<RestrictionMap> restricion_map,
                                    std::vector<NodeID> &barrier_node_list,
                                    std::vector<NodeID> &traffic_light_node_list,
@@ -107,7 +106,7 @@ class EdgeBasedGraphFactory : boost::noncopyable
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
-    boost::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
+    std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
     boost::unordered_set<NodeID> m_barrier_nodes;
     boost::unordered_set<NodeID> m_traffic_lights;
 

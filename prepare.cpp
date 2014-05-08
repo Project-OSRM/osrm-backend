@@ -49,7 +49,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <luabind/luabind.hpp>
 
-#include <chrono>
 #include <string>
 #include <vector>
 
@@ -275,7 +274,7 @@ int main(int argc, char *argv[])
          */
 
         SimpleLogger().Write() << "Generating edge-expanded graph representation";
-        boost::shared_ptr<NodeBasedDynamicGraph> node_based_graph = NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
+        std::shared_ptr<NodeBasedDynamicGraph> node_based_graph = NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
         std::unique_ptr<RestrictionMap> restriction_map = std::unique_ptr<RestrictionMap>(new RestrictionMap(node_based_graph, restriction_list));
         EdgeBasedGraphFactory * edge_based_graph_factor =
             new EdgeBasedGraphFactory(node_based_graph,

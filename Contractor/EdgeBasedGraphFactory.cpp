@@ -31,14 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 #include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
 
 #include <fstream>
 #include <iomanip>
 #include <numeric>
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
-    const boost::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
+    const std::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
     std::unique_ptr<RestrictionMap> restriction_map,
     std::vector<NodeID> &barrier_node_list,
     std::vector<NodeID> &traffic_light_node_list,
