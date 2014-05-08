@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "EdgeBasedGraphFactory.h"
 #include "../Util/ComputeAngle.h"
+#include "../Util/TimingUtil.h"
 #include "BFSComponentExplorer.h"
 
 #include <boost/assert.hpp>
@@ -258,15 +259,29 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
                                 lua_State *lua_state)
 {
 
+    TIMER_START(geometry);
     CompressGeometry();
+    TIMER_STOP(geometry);
 
+    TIMER_START(renumber);
     RenumberEdges();
+    TIMER_STOP(renumber);
 
+    TIMER_START(generate_nodes);
     GenerateEdgeExpandedNodes();
+    TIMER_STOP(generate_nodes);
 
+    TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(original_edge_data_filename, lua_state);
+    TIMER_STOP(generate_edges);
 
     m_geometry_compressor.SerializeInternalVector(geometry_filename);
+
+    SimpleLogger().Write() << "Timing statistics for edge-expanded graph:";
+    SimpleLogger().Write() << "Geometry compression: " << TIMER_SEC(geometry) << "s";
+    SimpleLogger().Write() << "Renumbering edges: " << TIMER_SEC(renumber) << "s";
+    SimpleLogger().Write() << "Generating nodes: " << TIMER_SEC(generate_nodes) << "s";
+    SimpleLogger().Write() << "Generating edges: " << TIMER_SEC(generate_edges) << "s";
 }
 
 void EdgeBasedGraphFactory::CompressGeometry()
