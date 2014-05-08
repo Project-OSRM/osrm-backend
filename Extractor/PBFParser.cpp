@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/make_shared.hpp>
 #include <boost/ref.hpp>
+#include <boost/thread.hpp>
 
 #include <zlib.h>
 
@@ -69,6 +70,8 @@ PBFParser::PBFParser(
 }
 
 PBFParser::~PBFParser() {
+	SimpleLogger().Write(logDEBUG) << "d'tor pbf";
+
 	if(input.is_open()) {
 		input.close();
 	}
@@ -130,7 +133,7 @@ inline void PBFParser::ReadData() {
 		if (keepRunning) {
 			threadDataQueue->push(threadData);
 		} else {
-			threadDataQueue->push(NULL); // No more data to read, parse stops when NULL encountered
+			threadDataQueue->push(nullptr); // No more data to read, parse stops when nullptr encountered
 			delete threadData;
 		}
 	} while(keepRunning);
@@ -140,9 +143,8 @@ inline void PBFParser::ParseData() {
 	while (true) {
 		_ThreadData *threadData;
 		threadDataQueue->wait_and_pop(threadData);
-		if( NULL==threadData ) {
-			SimpleLogger().Write() << "Parse Data Thread Finished";
-			threadDataQueue->push(NULL); // Signal end of data for other threads
+		if( nullptr==threadData ) {
+			threadDataQueue->push(nullptr); // Signal end of data for other threads
 			break;
 		}
 
