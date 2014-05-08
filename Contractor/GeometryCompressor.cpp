@@ -77,11 +77,11 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 
     // write indices array
     unsigned prefix_sum_of_list_indices = 0;
-    for (unsigned i = 0; i < m_compressed_geometries.size(); ++i)
+    for (auto & elem : m_compressed_geometries)
     {
         geometry_out_stream.write((char *)&prefix_sum_of_list_indices, sizeof(unsigned));
 
-        const std::vector<CompressedNode> &current_vector = m_compressed_geometries.at(i);
+        const std::vector<CompressedNode> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
         BOOST_ASSERT(UINT_MAX != unpacked_size);
         prefix_sum_of_list_indices += unpacked_size;
@@ -94,9 +94,9 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 
     unsigned control_sum = 0;
     // write compressed geometries
-    for (unsigned i = 0; i < m_compressed_geometries.size(); ++i)
+    for (auto & elem : m_compressed_geometries)
     {
-        const std::vector<CompressedNode> &current_vector = m_compressed_geometries[i];
+        const std::vector<CompressedNode> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
         control_sum += unpacked_size;
         BOOST_ASSERT(UINT_MAX != unpacked_size);
