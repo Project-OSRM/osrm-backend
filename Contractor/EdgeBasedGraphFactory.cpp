@@ -224,16 +224,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(
     } else {
         BOOST_ASSERT( !m_geometry_compressor.HasEntryForID(e2) );
 
-        if( forward_data.edgeBasedNodeID != std::numeric_limits<unsigned>::max() ) {
+        if( forward_data.edgeBasedNodeID != SPECIAL_NODEID ) {
             BOOST_ASSERT( forward_data.forward );
         }
-        if( reverse_data.edgeBasedNodeID != std::numeric_limits<unsigned>::max() ) {
+        if( reverse_data.edgeBasedNodeID != SPECIAL_NODEID ) {
             BOOST_ASSERT( reverse_data.forward );
         }
-        if( forward_data.edgeBasedNodeID == std::numeric_limits<unsigned>::max() ) {
+        if( forward_data.edgeBasedNodeID == SPECIAL_NODEID ) {
             BOOST_ASSERT( !forward_data.forward );
         }
-        if( reverse_data.edgeBasedNodeID == std::numeric_limits<unsigned>::max() ) {
+        if( reverse_data.edgeBasedNodeID == SPECIAL_NODEID ) {
             BOOST_ASSERT( !reverse_data.forward );
         }
 
@@ -317,26 +317,26 @@ void EdgeBasedGraphFactory::CompressGeometry()
 
         const bool reverse_edge_order = !(m_node_based_graph->GetEdgeData(m_node_based_graph->BeginEdges(v)).forward);
         const EdgeIterator forward_e2 = m_node_based_graph->BeginEdges(v) + reverse_edge_order;
-        BOOST_ASSERT( std::numeric_limits<unsigned>::max() != forward_e2 );
+        BOOST_ASSERT( SPECIAL_EDGEID != forward_e2 );
         const EdgeIterator reverse_e2 = m_node_based_graph->BeginEdges(v) + 1 - reverse_edge_order;
-        BOOST_ASSERT( std::numeric_limits<unsigned>::max() != reverse_e2 );
+        BOOST_ASSERT( SPECIAL_EDGEID != reverse_e2 );
 
         const EdgeData & fwd_edge_data2 = m_node_based_graph->GetEdgeData(forward_e2);
         const EdgeData & rev_edge_data2 = m_node_based_graph->GetEdgeData(reverse_e2);
 
         const NodeIterator w = m_node_based_graph->GetTarget(forward_e2);
-        BOOST_ASSERT( std::numeric_limits<unsigned>::max() != w );
+        BOOST_ASSERT( SPECIAL_NODEID != w );
         BOOST_ASSERT( v != w );
         const NodeIterator u = m_node_based_graph->GetTarget(reverse_e2);
-        BOOST_ASSERT( std::numeric_limits<unsigned>::max() != u );
+        BOOST_ASSERT( SPECIAL_NODEID != u );
         BOOST_ASSERT( u != v );
 
         const EdgeIterator forward_e1 = m_node_based_graph->FindEdge(u, v);
         BOOST_ASSERT( m_node_based_graph->EndEdges(u) != forward_e1 );
-        BOOST_ASSERT( std::numeric_limits<unsigned>::max() != forward_e1 );
+        BOOST_ASSERT( SPECIAL_EDGEID != forward_e1 );
         BOOST_ASSERT( v == m_node_based_graph->GetTarget(forward_e1));
         const EdgeIterator reverse_e1 = m_node_based_graph->FindEdge(w, v);
-        BOOST_ASSERT( std::numeric_limits<unsigned>::max() != reverse_e1 );
+        BOOST_ASSERT( SPECIAL_EDGEID != reverse_e1 );
         BOOST_ASSERT( v == m_node_based_graph->GetTarget(reverse_e1));
 
         const EdgeData & fwd_edge_data1 = m_node_based_graph->GetEdgeData(forward_e1);
@@ -452,7 +452,7 @@ void EdgeBasedGraphFactory::RenumberEdges()
             edge_data.edgeBasedNodeID = numbered_edges_count;
             ++numbered_edges_count;
 
-            BOOST_ASSERT( std::numeric_limits<unsigned>::max() != edge_data.edgeBasedNodeID);
+            BOOST_ASSERT( SPECIAL_NODEID != edge_data.edgeBasedNodeID);
         }
     }
 
@@ -487,7 +487,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
         u < end;
         ++u
      ) {
-        BOOST_ASSERT( u != std::numeric_limits<unsigned>::max() );
+        BOOST_ASSERT( u != SPECIAL_NODEID );
         BOOST_ASSERT( u < m_node_based_graph->GetNumberOfNodes() );
         p.printIncrement();
         for(
