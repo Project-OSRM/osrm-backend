@@ -43,8 +43,6 @@ enum LogLevel
   logWARNING,
   logDEBUG };
 
-static std::mutex logger_mutex;
-
 const char COL_RESET[] = "\x1b[0m";
 const char RED[] = "\x1b[31m";
 const char GREEN[] = "\x1b[32m";
@@ -80,11 +78,18 @@ class SimpleLogger
   public:
     SimpleLogger() : level(logINFO) {}
 
+    std::mutex& get_mutex()
+    {
+        static std::mutex m;
+        return m;
+    }
+
+
     std::ostringstream &Write(LogLevel l = logINFO)
     {
+        std::lock_guard<std::mutex> lock(get_mutex());
         try
         {
-            std::lock_guard<std::mutex> lock(logger_mutex);
             level = l;
             os << "[";
             switch (level)
@@ -112,6 +117,7 @@ class SimpleLogger
 
     virtual ~SimpleLogger()
     {
+        std::lock_guard<std::mutex> lock(get_mutex());
         if (!LogPolicy::GetInstance().IsMute())
         {
             const bool is_terminal = isatty(fileno(stdout));
