@@ -72,6 +72,14 @@ template <int length, int precision> static inline char *printInt(char *buffer, 
     return buffer;
 }
 
+// convert scoped enums to integers
+template <typename Enumeration>
+auto as_integer(Enumeration const value)
+    -> typename std::underlying_type<Enumeration>::type
+{
+    return static_cast<typename std::underlying_type<Enumeration>::type>(value);
+}
+
 static inline void intToString(const int value, std::string &output)
 {
     output.clear();

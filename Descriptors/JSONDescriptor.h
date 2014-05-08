@@ -438,12 +438,11 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         // Fetch data from Factory and generate a string from it.
         for (const SegmentInformation &segment : description_factory.path_description)
         {
-            TurnInstruction current_instruction =
-                segment.turn_instruction & TurnInstructionsClass::InverseAccessRestrictionFlag;
+            TurnInstruction current_instruction = segment.turn_instruction;
             entered_restricted_area_count += (current_instruction != segment.turn_instruction);
             if (TurnInstructionsClass::TurnIsNecessary(current_instruction))
             {
-                if (TurnInstructionsClass::EnterRoundAbout == current_instruction)
+                if (TurnInstruction::EnterRoundAbout == current_instruction)
                 {
                     round_about.name_id = segment.name_id;
                     round_about.start_index = necessary_segments_running_index;
@@ -455,9 +454,9 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                         reply.content.emplace_back(",");
                     }
                     reply.content.emplace_back("[\"");
-                    if (TurnInstructionsClass::LeaveRoundAbout == current_instruction)
+                    if (TurnInstruction::LeaveRoundAbout == current_instruction)
                     {
-                        intToString(TurnInstructionsClass::EnterRoundAbout, temp_instruction);
+                        intToString(as_integer(TurnInstruction::EnterRoundAbout), temp_instruction);
                         reply.content.emplace_back(temp_instruction);
                         reply.content.emplace_back("-");
                         intToString(round_about.leave_at_exit + 1, temp_instruction);
@@ -466,7 +465,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                     }
                     else
                     {
-                        intToString(current_instruction, temp_instruction);
+                        intToString(as_integer(current_instruction), temp_instruction);
                         reply.content.emplace_back(temp_instruction);
                     }
 
@@ -496,7 +495,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                         Segment(segment.name_id, segment.length, route_segments_list.size()));
                 }
             }
-            else if (TurnInstructionsClass::StayOnRoundAbout == current_instruction)
+            else if (TurnInstruction::StayOnRoundAbout == current_instruction)
             {
                 ++round_about.leave_at_exit;
             }
@@ -508,7 +507,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         if (INVALID_EDGE_WEIGHT != route_length)
         {
             reply.content.emplace_back(",[\"");
-            intToString(TurnInstructionsClass::ReachedYourDestination, temp_instruction);
+            intToString(as_integer(TurnInstruction::ReachedYourDestination), temp_instruction);
             reply.content.emplace_back(temp_instruction);
             reply.content.emplace_back("\",\"");
             reply.content.emplace_back("\",");

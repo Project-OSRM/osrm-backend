@@ -28,76 +28,58 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TURN_INSTRUCTIONS_H
 #define TURN_INSTRUCTIONS_H
 
-typedef unsigned char TurnInstruction;
+enum class TurnInstruction : unsigned char
+{
+    NoTurn = 0, GoStraight, TurnSlightRight, TurnRight, TurnSharpRight, UTurn,
+    TurnSharpLeft, TurnLeft, TurnSlightLeft, ReachViaPoint, HeadOn, EnterRoundAbout,
+    LeaveRoundAbout, StayOnRoundAbout, StartAtEndOfStreet, ReachedYourDestination,
+    EnterAgainstAllowedDirection, LeaveAgainstAllowedDirection,
+    InverseAccessRestrictionFlag = 127,
+    AccessRestrictionFlag = 128,
+    AccessRestrictionPenalty = 129
+};
 
-// This is a hack until c++0x is available enough to use scoped enums
 struct TurnInstructionsClass
 {
     TurnInstructionsClass() = delete;
     TurnInstructionsClass(const TurnInstructionsClass&) = delete;
 
-    const static TurnInstruction NoTurn = 0; // Give no instruction at all
-    const static TurnInstruction GoStraight = 1; // Tell user to go straight!
-    const static TurnInstruction TurnSlightRight = 2;
-    const static TurnInstruction TurnRight = 3;
-    const static TurnInstruction TurnSharpRight = 4;
-    const static TurnInstruction UTurn = 5;
-    const static TurnInstruction TurnSharpLeft = 6;
-    const static TurnInstruction TurnLeft = 7;
-    const static TurnInstruction TurnSlightLeft = 8;
-    const static TurnInstruction ReachViaPoint = 9;
-    const static TurnInstruction HeadOn = 10;
-    const static TurnInstruction EnterRoundAbout = 11;
-    const static TurnInstruction LeaveRoundAbout = 12;
-    const static TurnInstruction StayOnRoundAbout = 13;
-    const static TurnInstruction StartAtEndOfStreet = 14;
-    const static TurnInstruction ReachedYourDestination = 15;
-    const static TurnInstruction EnterAgainstAllowedDirection = 16;
-    const static TurnInstruction LeaveAgainstAllowedDirection = 17;
-
-    const static TurnInstruction AccessRestrictionFlag = 128;
-    const static TurnInstruction InverseAccessRestrictionFlag =
-        0x7f; // ~128 does not work without a warning.
-
-    const static int AccessRestrictionPenalty =
-        1 << 15; // unrelated to the bit set in the restriction flag
-
     static inline TurnInstruction GetTurnDirectionOfInstruction(const double angle)
     {
         if (angle >= 23 && angle < 67)
         {
-            return TurnSharpRight;
+            return TurnInstruction::TurnSharpRight;
         }
         if (angle >= 67 && angle < 113)
         {
-            return TurnRight;
+            return TurnInstruction::TurnRight;
         }
         if (angle >= 113 && angle < 158)
         {
-            return TurnSlightRight;
+            return TurnInstruction::TurnSlightRight;
         }
         if (angle >= 158 && angle < 202)
         {
-            return GoStraight;
+            return TurnInstruction::GoStraight;
         }
         if (angle >= 202 && angle < 248)
         {
-            return TurnSlightLeft;
+            return TurnInstruction::TurnSlightLeft;
         }
         if (angle >= 248 && angle < 292)
         {
-            return TurnLeft;
+            return TurnInstruction::TurnLeft;
         }
         if (angle >= 292 && angle < 336)
         {
-            return TurnSharpLeft;
+            return TurnInstruction::TurnSharpLeft;
         }
-        return UTurn;
+        return TurnInstruction::UTurn;
     }
 
-    static inline bool TurnIsNecessary(const short turnInstruction)
+    static inline bool TurnIsNecessary(const TurnInstruction turn_instruction)
     {
-        if (NoTurn == turnInstruction || StayOnRoundAbout == turnInstruction)
+        if (TurnInstruction::NoTurn == turn_instruction || TurnInstruction::StayOnRoundAbout == turn_instruction)
             return false;
         return true;
     }

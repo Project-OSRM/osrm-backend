@@ -794,7 +794,7 @@ void EdgeBasedGraphFactory::Run(
                 }
                 const int turn_penalty = GetTurnPenalty(u, v, w, lua_state);
                 TurnInstruction turn_instruction = AnalyzeTurn(u, v, w);
-                if (turn_instruction == TurnInstructionsClass::UTurn)
+                if (turn_instruction == TurnInstruction::UTurn)
                 {
                     distance += speed_profile.uTurnPenalty;
                 }
@@ -891,7 +891,7 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
     const NodeID w
 ) const {
     if(u == w) {
-        return TurnInstructionsClass::UTurn;
+        return TurnInstruction::UTurn;
     }
 
     const EdgeIterator edge1 = m_node_based_graph->FindEdge(u, v);
@@ -901,10 +901,10 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
     const EdgeData & data2 = m_node_based_graph->GetEdgeData(edge2);
 
     if(!data1.contraFlow && data2.contraFlow) {
-        return TurnInstructionsClass::EnterAgainstAllowedDirection;
+        return TurnInstruction::EnterAgainstAllowedDirection;
     }
     if(data1.contraFlow && !data2.contraFlow) {
-        return TurnInstructionsClass::LeaveAgainstAllowedDirection;
+        return TurnInstruction::LeaveAgainstAllowedDirection;
     }
 
     //roundabouts need to be handled explicitely
@@ -912,19 +912,19 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
         //Is a turn possible? If yes, we stay on the roundabout!
         if( 1 == m_node_based_graph->GetOutDegree(v) ) {
             //No turn possible.
-            return TurnInstructionsClass::NoTurn;
+            return TurnInstruction::NoTurn;
         }
-        return TurnInstructionsClass::StayOnRoundAbout;
+        return TurnInstruction::StayOnRoundAbout;
     }
     //Does turn start or end on roundabout?
     if(data1.roundabout || data2.roundabout) {
         //We are entering the roundabout
         if( (!data1.roundabout) && data2.roundabout) {
-            return TurnInstructionsClass::EnterRoundAbout;
+            return TurnInstruction::EnterRoundAbout;
         }
         //We are leaving the roundabout
         if(data1.roundabout && (!data2.roundabout) ) {
-            return TurnInstructionsClass::LeaveRoundAbout;
+            return TurnInstruction::LeaveRoundAbout;
         }
     }
 
@@ -934,9 +934,9 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(
         //TODO: Here we should also do a small graph exploration to check for
         //      more complex situations
         if( 0 != data1.nameID ) {
-            return TurnInstructionsClass::NoTurn;
+            return TurnInstruction::NoTurn;
         } else if (m_node_based_graph->GetOutDegree(v) <= 2) {
-            return TurnInstructionsClass::NoTurn;
+            return TurnInstruction::NoTurn;
         }
     }
 

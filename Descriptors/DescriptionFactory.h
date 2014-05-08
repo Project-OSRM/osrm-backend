@@ -119,7 +119,7 @@ class DescriptionFactory
         //    unsigned lastTurn = 0;
         //    for(unsigned i = 1; i < path_description.size(); ++i) {
         //        string1 = sEngine.GetEscapedNameForNameID(path_description[i].name_id);
-        //        if(TurnInstructionsClass::GoStraight == path_description[i].turn_instruction) {
+        //        if(TurnInstruction::GoStraight == path_description[i].turn_instruction) {
         //            if(std::string::npos != string0.find(string1+";")
         //                  || std::string::npos != string0.find(";"+string1)
         //                  || std::string::npos != string0.find(string1+" ;")
@@ -129,7 +129,7 @@ class DescriptionFactory
         //                string1;
         //                for(; lastTurn != i; ++lastTurn)
         //                    path_description[lastTurn].name_id = path_description[i].name_id;
-        //                path_description[i].turn_instruction = TurnInstructionsClass::NoTurn;
+        //                path_description[i].turn_instruction = TurnInstruction::NoTurn;
         //            } else if(std::string::npos != string1.find(string0+";")
         //                  || std::string::npos != string1.find(";"+string0)
         //                    || std::string::npos != string1.find(string0+" ;")
@@ -138,10 +138,10 @@ class DescriptionFactory
         //                SimpleLogger().Write() << "->prev correct: " << string1 << " contains " <<
         //                string0;
         //                path_description[i].name_id = path_description[i-1].name_id;
-        //                path_description[i].turn_instruction = TurnInstructionsClass::NoTurn;
+        //                path_description[i].turn_instruction = TurnInstruction::NoTurn;
         //            }
         //        }
-        //        if (TurnInstructionsClass::NoTurn != path_description[i].turn_instruction) {
+        //        if (TurnInstruction::NoTurn != path_description[i].turn_instruction) {
         //            lastTurn = i;
         //        }
         //        string0 = string1;
@@ -159,7 +159,7 @@ class DescriptionFactory
             path_description[segment_start_index].length = segment_length;
             path_description[segment_start_index].duration = segment_duration;
 
-            if (TurnInstructionsClass::NoTurn != path_description[i].turn_instruction)
+            if (TurnInstruction::NoTurn != path_description[i].turn_instruction)
             {
                 BOOST_ASSERT(path_description[i].necessary);
                 segment_length = 0;
@@ -175,7 +175,7 @@ class DescriptionFactory
             {
                 path_description.pop_back();
                 path_description.back().necessary = true;
-                path_description.back().turn_instruction = TurnInstructionsClass::NoTurn;
+                path_description.back().turn_instruction = TurnInstruction::NoTurn;
                 target_phantom.name_id = (path_description.end() - 2)->name_id;
             }
         }
@@ -184,7 +184,7 @@ class DescriptionFactory
             if (path_description.size() > 2)
             {
                 path_description.erase(path_description.begin());
-                path_description[0].turn_instruction = TurnInstructionsClass::HeadOn;
+                path_description[0].turn_instruction = TurnInstruction::HeadOn;
                 path_description[0].necessary = true;
                 start_phantom.name_id = path_description[0].name_id;
             }

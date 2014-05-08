@@ -68,7 +68,7 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source,
                                          const bool source_traversed_in_reverse)
 {
     start_phantom = source;
-    AppendSegment(source.location, PathData(0, source.name_id, 10, source.forward_weight));
+    AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn, source.forward_weight));
 }
 
 void DescriptionFactory::SetEndSegment(const PhantomNode &target,
@@ -76,7 +76,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
 {
     target_phantom = target;
     path_description.emplace_back(
-        target.location, target.name_id, 0, target.reverse_weight, 0, true);
+        target.location, target.name_id, 0, target.reverse_weight, TurnInstruction::NoTurn, true);
 }
 
 void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,

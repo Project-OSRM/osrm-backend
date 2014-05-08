@@ -62,7 +62,7 @@ struct SegmentInformation
                                 const double length,
                                 const TurnInstruction turn_instruction)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
-          turn_instruction(turn_instruction), necessary(turn_instruction != 0)
+          turn_instruction(turn_instruction), necessary(turn_instruction != TurnInstruction::NoTurn)
     {
     }
 };

@@ -43,12 +43,12 @@ struct PathData
     PathData()
         : node(std::numeric_limits<unsigned>::max()), name_id(std::numeric_limits<unsigned>::max()),
           segment_duration(std::numeric_limits<unsigned>::max()),
-          turn_instruction(std::numeric_limits<TurnInstruction>::max())
+          turn_instruction(TurnInstruction::NoTurn)
     {
     }
 
-    PathData(NodeID no, unsigned na, unsigned tu, unsigned dur)
-        : node(no), name_id(na), segment_duration(dur), turn_instruction(tu)
+    PathData(NodeID node, unsigned name_id, TurnInstruction turn_instruction, unsigned segment_duration)
+        : node(node), name_id(name_id), segment_duration(segment_duration), turn_instruction(turn_instruction)
     {
     }
     NodeID node;

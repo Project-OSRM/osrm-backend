@@ -47,7 +47,7 @@ struct OriginalEdgeData
     OriginalEdgeData()
         : via_node(std::numeric_limits<unsigned>::max()),
           name_id(std::numeric_limits<unsigned>::max()),
-          turn_instruction(std::numeric_limits<unsigned char>::max()), compressed_geometry(false)
+          turn_instruction(TurnInstruction::NoTurn), compressed_geometry(false)
     {
     }
 
