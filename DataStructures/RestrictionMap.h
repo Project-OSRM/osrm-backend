@@ -43,9 +43,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 class RestrictionMap
 {
-public:
-    RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph>& graph,
-        const std::vector<TurnRestriction> & input_restrictions_list);
+  public:
+    RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &graph,
+                   const std::vector<TurnRestriction> &input_restrictions_list);
 
     void FixupArrivingTurnRestriction(const NodeID u, const NodeID v, const NodeID w);
     void FixupStartingTurnRestriction(const NodeID u, const NodeID v, const NodeID w);
@@ -54,16 +54,16 @@ public:
 
     unsigned size() { return m_count; }
 
-private:
-    typedef std::pair<NodeID, NodeID>           RestrictionSource;
-    typedef std::pair<NodeID, bool>             RestrictionTarget;
-    typedef std::vector<RestrictionTarget>      EmanatingRestrictionsVector;
-    typedef NodeBasedDynamicGraph::EdgeData     EdgeData;
+  private:
+    typedef std::pair<NodeID, NodeID> RestrictionSource;
+    typedef std::pair<NodeID, bool> RestrictionTarget;
+    typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
+    typedef NodeBasedDynamicGraph::EdgeData EdgeData;
 
-    unsigned                                    m_count;
-    std::shared_ptr<NodeBasedDynamicGraph>      m_graph;
+    unsigned m_count;
+    std::shared_ptr<NodeBasedDynamicGraph> m_graph;
     //! index -> list of (target, isOnly)
-    std::vector<EmanatingRestrictionsVector>    m_restriction_bucket_list;
+    std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     //! maps (start, via) -> bucket index
     boost::unordered_map<RestrictionSource, unsigned> m_restriction_map;
 };

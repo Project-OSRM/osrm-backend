@@ -12,19 +12,16 @@
  * Explores the components of the given graph while respecting turn restrictions
  * and barriers.
  */
-template<typename GraphT>
-class BFSComponentExplorer
+template <typename GraphT> class BFSComponentExplorer
 {
-public:
+  public:
     typedef typename GraphT::NodeIterator NodeIterator;
     typedef typename GraphT::EdgeIterator EdgeIterator;
 
-    BFSComponentExplorer(const GraphT& dynamicGraph,
-                         const RestrictionMap& restrictions,
-                         const boost::unordered_set<NodeID>& barrier_nodes)
-    : m_graph(dynamicGraph)
-    , m_restriction_map(restrictions)
-    , m_barrier_nodes(barrier_nodes)
+    BFSComponentExplorer(const GraphT &dynamicGraph,
+                         const RestrictionMap &restrictions,
+                         const boost::unordered_set<NodeID> &barrier_nodes)
+        : m_graph(dynamicGraph), m_restriction_map(restrictions), m_barrier_nodes(barrier_nodes)
     {
         BOOST_ASSERT(m_graph.GetNumberOfNodes() > 0);
     }
@@ -39,97 +36,94 @@ public:
         return m_component_index_size[m_component_index_list[node]];
     }
 
-    inline unsigned int getNumberOfComponents()
-    {
-        return m_component_index_size.size();
-    }
+    inline unsigned int getNumberOfComponents() { return m_component_index_size.size(); }
 
     /*!
      * Computes the component sizes.
      */
     void run()
     {
-        std::queue<std::pair<NodeID, NodeID> > bfs_queue;
+        std::queue<std::pair<NodeID, NodeID>> bfs_queue;
         unsigned current_component = 0;
 
-        BOOST_ASSERT( m_component_index_list.empty() );
-        BOOST_ASSERT( m_component_index_size.empty() );
+        BOOST_ASSERT(m_component_index_list.empty());
+        BOOST_ASSERT(m_component_index_size.empty());
 
         unsigned num_nodes = m_graph.GetNumberOfNodes();
 
-        m_component_index_list.resize(
-            num_nodes,
-            std::numeric_limits<unsigned>::max()
-        );
+        m_component_index_list.resize(num_nodes, std::numeric_limits<unsigned>::max());
 
-        BOOST_ASSERT (num_nodes > 0);
+        BOOST_ASSERT(num_nodes > 0);
 
-        //put unexplorered node with parent pointer into queue
-        for( NodeID node = 0; node < num_nodes; ++node) {
-            if(std::numeric_limits<unsigned>::max() == m_component_index_list[node]) {
+        // put unexplorered node with parent pointer into queue
+        for (NodeID node = 0; node < num_nodes; ++node)
+        {
+            if (std::numeric_limits<unsigned>::max() == m_component_index_list[node])
+            {
                 unsigned size = exploreComponent(bfs_queue, node, current_component);
 
-                //push size into vector
+                // push size into vector
                 m_component_index_size.push_back(size);
                 ++current_component;
             }
         }
     }
 
-private:
+  private:
     /*!
      * Explores the current component that starts at node using BFS.
      */
-    inline unsigned exploreComponent(
-        std::queue<std::pair<NodeID, NodeID> > &bfs_queue,
-        NodeID node,
-        unsigned current_component
-    ) {
+    inline unsigned exploreComponent(std::queue<std::pair<NodeID, NodeID>> &bfs_queue,
+                                     NodeID node,
+                                     unsigned current_component)
+    {
         bfs_queue.push(std::make_pair(node, node));
-        //mark node as read
+        // mark node as read
         m_component_index_list[node] = current_component;
 
         unsigned current_component_size = 1;
 
-        while(!bfs_queue.empty()) {
-            //fetch element from BFS queue
+        while (!bfs_queue.empty())
+        {
+            // fetch element from BFS queue
             std::pair<NodeID, NodeID> current_queue_item = bfs_queue.front();
             bfs_queue.pop();
 
-            const NodeID v = current_queue_item.first;  //current node
-            const NodeID u = current_queue_item.second; //parent
-            //increment size counter of current component
+            const NodeID v = current_queue_item.first; // current node
+            const NodeID u = current_queue_item.second; // parent
+            // increment size counter of current component
             ++current_component_size;
             const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
-            if(!is_barrier_node) {
-                const NodeID to_node_of_only_restriction = m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
+            if (!is_barrier_node)
+            {
+                const NodeID to_node_of_only_restriction =
+                    m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
 
-                for(
-                        EdgeIterator e2 = m_graph.BeginEdges(v);
-                        e2 < m_graph.EndEdges(v);
-                        ++e2
-                   ) {
+                for (EdgeIterator e2 = m_graph.BeginEdges(v); e2 < m_graph.EndEdges(v); ++e2)
+                {
                     NodeIterator w = m_graph.GetTarget(e2);
 
-                    if(
-                            to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
-                            w != to_node_of_only_restriction
-                      ) {
+                    if (to_node_of_only_restriction != std::numeric_limits<unsigned>::max() &&
+                        w != to_node_of_only_restriction)
+                    {
                         // At an only_-restriction but not at the right turn
                         continue;
                     }
 
-                    if( u != w ) {
-                        //only add an edge if turn is not a U-turn except
-                        //when it is at the end of a dead-end street.
-                        if (!m_restriction_map.CheckIfTurnIsRestricted(u, v, w)) {
-                            //only add an edge if turn is not prohibited
-                            if(std::numeric_limits<unsigned>::max() == m_component_index_list[w]) {
-                                //insert next (node, parent) only if w has
-                                //not yet been explored
-                                //mark node as read
+                    if (u != w)
+                    {
+                        // only add an edge if turn is not a U-turn except
+                        // when it is at the end of a dead-end street.
+                        if (!m_restriction_map.CheckIfTurnIsRestricted(u, v, w))
+                        {
+                            // only add an edge if turn is not prohibited
+                            if (std::numeric_limits<unsigned>::max() == m_component_index_list[w])
+                            {
+                                // insert next (node, parent) only if w has
+                                // not yet been explored
+                                // mark node as read
                                 m_component_index_list[w] = current_component;
-                                bfs_queue.push(std::make_pair(w,v));
+                                bfs_queue.push(std::make_pair(w, v));
                             }
                         }
                     }
@@ -140,12 +134,12 @@ private:
         return current_component_size;
     }
 
-    std::vector<unsigned>               m_component_index_list;
-    std::vector<NodeID>                 m_component_index_size;
+    std::vector<unsigned> m_component_index_list;
+    std::vector<NodeID> m_component_index_size;
 
-    const GraphT&                       m_graph;
-    const RestrictionMap&               m_restriction_map;
-    const boost::unordered_set<NodeID>& m_barrier_nodes;
+    const GraphT &m_graph;
+    const RestrictionMap &m_restriction_map;
+    const boost::unordered_set<NodeID> &m_barrier_nodes;
 };
 
 #endif
