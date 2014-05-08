@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "EdgeBasedGraphFactory.h"
 #include "../Util/ComputeAngle.h"
-#include "../DataStructures/BFSComponentExplorer.h"
+#include "BFSComponentExplorer.h"
 
 #include <boost/assert.hpp>
 #include <boost/foreach.hpp>

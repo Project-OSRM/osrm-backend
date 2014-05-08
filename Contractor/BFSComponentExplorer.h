@@ -5,8 +5,8 @@
 #include <boost/unordered_set.hpp>
 
 #include "../typedefs.h"
-#include "DynamicGraph.h"
-#include "RestrictionMap.h"
+#include "../DataStructures/DynamicGraph.h"
+#include "../DataStructures/RestrictionMap.h"
 
 /**
  * Explores the components of the given graph while respecting turn restrictions
