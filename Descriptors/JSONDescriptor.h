@@ -78,8 +78,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
   public:
     JSONDescriptor() : facade(nullptr), entered_restricted_area_count(0)
     {
-        shortest_leg_end_indices.push_back(0);
-        alternative_leg_end_indices.push_back(0);
+        shortest_leg_end_indices.emplace_back(0);
+        alternative_leg_end_indices.emplace_back(0);
     }
 
     void SetConfig(const DescriptorConfig &c) { config = c; }
@@ -108,12 +108,12 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
              http::Reply &reply)
     {
         facade = f;
-        reply.content.push_back("{\"status\":");
+        reply.content.emplace_back("{\"status\":");
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
             // We do not need to do much, if there is no route ;-)
-            reply.content.push_back(
+            reply.content.emplace_back(
                 "207,\"status_message\": \"Cannot find route between points\"}");
             return;
         }
@@ -129,8 +129,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
         description_factory.SetStartSegment(phantom_nodes.source_phantom,
                                             raw_route.source_traversed_in_reverse);
-        reply.content.push_back("0,"
-                                "\"status_message\": \"Found route between points\",");
+        reply.content.emplace_back("0,"
+                                   "\"status_message\": \"Found route between points\",");
 
         // for each unpacked segment add the leg to the description
         for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
@@ -138,23 +138,23 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             const int added_segments = DescribeLeg(raw_route.unpacked_path_segments[i],
                                                    raw_route.segment_end_coordinates[i]);
             BOOST_ASSERT(0 < added_segments);
-            shortest_leg_end_indices.push_back(added_segments + shortest_leg_end_indices.back());
+            shortest_leg_end_indices.emplace_back(added_segments + shortest_leg_end_indices.back());
         }
         description_factory.SetEndSegment(phantom_nodes.target_phantom,
                                           raw_route.target_traversed_in_reverse);
         description_factory.Run(facade, config.zoom_level);
 
-        reply.content.push_back("\"route_geometry\": ");
+        reply.content.emplace_back("\"route_geometry\": ");
         if (config.geometry)
         {
             description_factory.AppendEncodedPolylineString(config.encode_geometry, reply.content);
         }
         else
         {
-            reply.content.push_back("[]");
+            reply.content.emplace_back("[]");
         }
 
-        reply.content.push_back(",\"route_instructions\": [");
+        reply.content.emplace_back(",\"route_instructions\": [");
         if (config.instructions)
         {
             BuildTextualDescription(description_factory,
@@ -163,28 +163,28 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                                     facade,
                                     shortest_path_segments);
         }
-        reply.content.push_back("],");
+        reply.content.emplace_back("],");
         description_factory.BuildRouteSummary(description_factory.entireLength,
                                               raw_route.shortest_path_length);
 
-        reply.content.push_back("\"route_summary\":");
-        reply.content.push_back("{");
-        reply.content.push_back("\"total_distance\":");
-        reply.content.push_back(description_factory.summary.lengthString);
-        reply.content.push_back(","
-                                "\"total_time\":");
-        reply.content.push_back(description_factory.summary.durationString);
-        reply.content.push_back(","
-                                "\"start_point\":\"");
-        reply.content.push_back(
+        reply.content.emplace_back("\"route_summary\":");
+        reply.content.emplace_back("{");
+        reply.content.emplace_back("\"total_distance\":");
+        reply.content.emplace_back(description_factory.summary.lengthString);
+        reply.content.emplace_back(","
+                                   "\"total_time\":");
+        reply.content.emplace_back(description_factory.summary.durationString);
+        reply.content.emplace_back(","
+                                   "\"start_point\":\"");
+        reply.content.emplace_back(
             facade->GetEscapedNameForNameID(description_factory.summary.startName));
-        reply.content.push_back("\","
-                                "\"end_point\":\"");
-        reply.content.push_back(
+        reply.content.emplace_back("\","
+                                   "\"end_point\":\"");
+        reply.content.emplace_back(
             facade->GetEscapedNameForNameID(description_factory.summary.destName));
-        reply.content.push_back("\"");
-        reply.content.push_back("}");
-        reply.content.push_back(",");
+        reply.content.emplace_back("\"");
+        reply.content.emplace_back("}");
+        reply.content.emplace_back(",");
 
         // only one alternative route is computed at this time, so this is hardcoded
         if (raw_route.alternative_path_length != INVALID_EDGE_WEIGHT)
@@ -203,18 +203,18 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         alternate_descriptionFactory.Run(facade, config.zoom_level);
 
         // //give an array of alternative routes
-        reply.content.push_back("\"alternative_geometries\": [");
+        reply.content.emplace_back("\"alternative_geometries\": [");
         if (config.geometry && INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             // Generate the linestrings for each alternative
             alternate_descriptionFactory.AppendEncodedPolylineString(config.encode_geometry,
                                                                      reply.content);
         }
-        reply.content.push_back("],");
-        reply.content.push_back("\"alternative_instructions\":[");
+        reply.content.emplace_back("],");
+        reply.content.emplace_back("\"alternative_instructions\":[");
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
-            reply.content.push_back("[");
+            reply.content.emplace_back("[");
             // Generate instructions for each alternative
             if (config.instructions)
             {
@@ -224,113 +224,113 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                                         facade,
                                         alternative_path_segments);
             }
-            reply.content.push_back("]");
+            reply.content.emplace_back("]");
         }
-        reply.content.push_back("],");
-        reply.content.push_back("\"alternative_summaries\":[");
+        reply.content.emplace_back("],");
+        reply.content.emplace_back("\"alternative_summaries\":[");
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             // Generate route summary (length, duration) for each alternative
             alternate_descriptionFactory.BuildRouteSummary(
                 alternate_descriptionFactory.entireLength, raw_route.alternative_path_length);
-            reply.content.push_back("{");
-            reply.content.push_back("\"total_distance\":");
-            reply.content.push_back(alternate_descriptionFactory.summary.lengthString);
-            reply.content.push_back(","
-                                    "\"total_time\":");
-            reply.content.push_back(alternate_descriptionFactory.summary.durationString);
-            reply.content.push_back(","
-                                    "\"start_point\":\"");
-            reply.content.push_back(
+            reply.content.emplace_back("{");
+            reply.content.emplace_back("\"total_distance\":");
+            reply.content.emplace_back(alternate_descriptionFactory.summary.lengthString);
+            reply.content.emplace_back(","
+                                       "\"total_time\":");
+            reply.content.emplace_back(alternate_descriptionFactory.summary.durationString);
+            reply.content.emplace_back(","
+                                       "\"start_point\":\"");
+            reply.content.emplace_back(
                 facade->GetEscapedNameForNameID(description_factory.summary.startName));
-            reply.content.push_back("\","
-                                    "\"end_point\":\"");
-            reply.content.push_back(
+            reply.content.emplace_back("\","
+                                       "\"end_point\":\"");
+            reply.content.emplace_back(
                 facade->GetEscapedNameForNameID(description_factory.summary.destName));
-            reply.content.push_back("\"");
-            reply.content.push_back("}");
+            reply.content.emplace_back("\"");
+            reply.content.emplace_back("}");
         }
-        reply.content.push_back("],");
+        reply.content.emplace_back("],");
 
         // //Get Names for both routes
         RouteNames routeNames;
         GetRouteNames(shortest_path_segments, alternative_path_segments, facade, routeNames);
 
-        reply.content.push_back("\"route_name\":[\"");
-        reply.content.push_back(routeNames.shortest_path_name_1);
-        reply.content.push_back("\",\"");
-        reply.content.push_back(routeNames.shortest_path_name_2);
-        reply.content.push_back("\"],"
-                                "\"alternative_names\":[");
-        reply.content.push_back("[\"");
-        reply.content.push_back(routeNames.alternative_path_name_1);
-        reply.content.push_back("\",\"");
-        reply.content.push_back(routeNames.alternative_path_name_2);
-        reply.content.push_back("\"]");
-        reply.content.push_back("],");
+        reply.content.emplace_back("\"route_name\":[\"");
+        reply.content.emplace_back(routeNames.shortest_path_name_1);
+        reply.content.emplace_back("\",\"");
+        reply.content.emplace_back(routeNames.shortest_path_name_2);
+        reply.content.emplace_back("\"],"
+                                   "\"alternative_names\":[");
+        reply.content.emplace_back("[\"");
+        reply.content.emplace_back(routeNames.alternative_path_name_1);
+        reply.content.emplace_back("\",\"");
+        reply.content.emplace_back(routeNames.alternative_path_name_2);
+        reply.content.emplace_back("\"]");
+        reply.content.emplace_back("],");
         // list all viapoints so that the client may display it
-        reply.content.push_back("\"via_points\":[");
+        reply.content.emplace_back("\"via_points\":[");
 
         BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
 
         std::string tmp;
         FixedPointCoordinate::convertInternalReversedCoordinateToString(
             raw_route.segment_end_coordinates.front().source_phantom.location, tmp);
-        reply.content.push_back("[");
-        reply.content.push_back(tmp);
-        reply.content.push_back("]");
+        reply.content.emplace_back("[");
+        reply.content.emplace_back(tmp);
+        reply.content.emplace_back("]");
 
         for (const PhantomNodes &nodes : raw_route.segment_end_coordinates)
         {
             tmp.clear();
             FixedPointCoordinate::convertInternalReversedCoordinateToString(
                 nodes.target_phantom.location, tmp);
-            reply.content.push_back(",[");
-            reply.content.push_back(tmp);
-            reply.content.push_back("]");
+            reply.content.emplace_back(",[");
+            reply.content.emplace_back(tmp);
+            reply.content.emplace_back("]");
         }
 
-        reply.content.push_back("],");
-        reply.content.push_back("\"via_indices\":[");
+        reply.content.emplace_back("],");
+        reply.content.emplace_back("\"via_indices\":[");
         for (const unsigned index : shortest_leg_end_indices)
         {
             tmp.clear();
             intToString(index, tmp);
-            reply.content.push_back(tmp);
+            reply.content.emplace_back(tmp);
             if (index != shortest_leg_end_indices.back())
             {
-                reply.content.push_back(",");
+                reply.content.emplace_back(",");
             }
         }
-        reply.content.push_back("],\"alternative_indices\":[");
+        reply.content.emplace_back("],\"alternative_indices\":[");
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
-            reply.content.push_back("0,");
+            reply.content.emplace_back("0,");
             tmp.clear();
             intToString(alternate_descriptionFactory.path_description.size(), tmp);
-            reply.content.push_back(tmp);
+            reply.content.emplace_back(tmp);
         }
 
-        reply.content.push_back("],");
-        reply.content.push_back("\"hint_data\": {");
-        reply.content.push_back("\"checksum\":");
+        reply.content.emplace_back("],");
+        reply.content.emplace_back("\"hint_data\": {");
+        reply.content.emplace_back("\"checksum\":");
         intToString(raw_route.check_sum, tmp);
-        reply.content.push_back(tmp);
-        reply.content.push_back(", \"locations\": [");
+        reply.content.emplace_back(tmp);
+        reply.content.emplace_back(", \"locations\": [");
 
         std::string hint;
         for (unsigned i = 0; i < raw_route.segment_end_coordinates.size(); ++i)
         {
-            reply.content.push_back("\"");
+            reply.content.emplace_back("\"");
             EncodeObjectToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
-            reply.content.push_back(hint);
-            reply.content.push_back("\", ");
+            reply.content.emplace_back(hint);
+            reply.content.emplace_back("\", ");
         }
         EncodeObjectToBase64(raw_route.segment_end_coordinates.back().target_phantom, hint);
-        reply.content.push_back("\"");
-        reply.content.push_back(hint);
-        reply.content.push_back("\"]");
-        reply.content.push_back("}}");
+        reply.content.emplace_back("\"");
+        reply.content.emplace_back(hint);
+        reply.content.emplace_back("\"]");
+        reply.content.emplace_back("}}");
     }
 
     // construct routes names
@@ -349,9 +349,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
         if (!shortest_path_segments.empty())
         {
-            std::sort(shortest_path_segments.begin(),
-                      shortest_path_segments.end(),
-                      length_comperator);
+            std::sort(
+                shortest_path_segments.begin(), shortest_path_segments.end(), length_comperator);
             shortest_segment_1 = shortest_path_segments[0];
             if (!alternative_path_segments.empty())
             {
@@ -453,47 +452,47 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                 {
                     if (necessary_segments_running_index)
                     {
-                        reply.content.push_back(",");
+                        reply.content.emplace_back(",");
                     }
-                    reply.content.push_back("[\"");
+                    reply.content.emplace_back("[\"");
                     if (TurnInstructionsClass::LeaveRoundAbout == current_instruction)
                     {
                         intToString(TurnInstructionsClass::EnterRoundAbout, temp_instruction);
-                        reply.content.push_back(temp_instruction);
-                        reply.content.push_back("-");
+                        reply.content.emplace_back(temp_instruction);
+                        reply.content.emplace_back("-");
                         intToString(round_about.leave_at_exit + 1, temp_instruction);
-                        reply.content.push_back(temp_instruction);
+                        reply.content.emplace_back(temp_instruction);
                         round_about.leave_at_exit = 0;
                     }
                     else
                     {
                         intToString(current_instruction, temp_instruction);
-                        reply.content.push_back(temp_instruction);
+                        reply.content.emplace_back(temp_instruction);
                     }
 
-                    reply.content.push_back("\",\"");
-                    reply.content.push_back(facade->GetEscapedNameForNameID(segment.name_id));
-                    reply.content.push_back("\",");
+                    reply.content.emplace_back("\",\"");
+                    reply.content.emplace_back(facade->GetEscapedNameForNameID(segment.name_id));
+                    reply.content.emplace_back("\",");
                     intToString(segment.length, temp_dist);
-                    reply.content.push_back(temp_dist);
-                    reply.content.push_back(",");
+                    reply.content.emplace_back(temp_dist);
+                    reply.content.emplace_back(",");
                     intToString(necessary_segments_running_index, temp_length);
-                    reply.content.push_back(temp_length);
-                    reply.content.push_back(",");
+                    reply.content.emplace_back(temp_length);
+                    reply.content.emplace_back(",");
                     intToString(round(segment.duration / 10.), temp_duration);
-                    reply.content.push_back(temp_duration);
-                    reply.content.push_back(",\"");
+                    reply.content.emplace_back(temp_duration);
+                    reply.content.emplace_back(",\"");
                     intToString(segment.length, temp_length);
-                    reply.content.push_back(temp_length);
-                    reply.content.push_back("m\",\"");
+                    reply.content.emplace_back(temp_length);
+                    reply.content.emplace_back("m\",\"");
                     int bearing_value = round(segment.bearing / 10.);
-                    reply.content.push_back(Azimuth::Get(bearing_value));
-                    reply.content.push_back("\",");
+                    reply.content.emplace_back(Azimuth::Get(bearing_value));
+                    reply.content.emplace_back("\",");
                     intToString(bearing_value, temp_bearing);
-                    reply.content.push_back(temp_bearing);
-                    reply.content.push_back("]");
+                    reply.content.emplace_back(temp_bearing);
+                    reply.content.emplace_back("]");
 
-                    route_segments_list.push_back(
+                    route_segments_list.emplace_back(
                         Segment(segment.name_id, segment.length, route_segments_list.size()));
                 }
             }
@@ -508,23 +507,23 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         }
         if (INVALID_EDGE_WEIGHT != route_length)
         {
-            reply.content.push_back(",[\"");
+            reply.content.emplace_back(",[\"");
             intToString(TurnInstructionsClass::ReachedYourDestination, temp_instruction);
-            reply.content.push_back(temp_instruction);
-            reply.content.push_back("\",\"");
-            reply.content.push_back("\",");
-            reply.content.push_back("0");
-            reply.content.push_back(",");
+            reply.content.emplace_back(temp_instruction);
+            reply.content.emplace_back("\",\"");
+            reply.content.emplace_back("\",");
+            reply.content.emplace_back("0");
+            reply.content.emplace_back(",");
             intToString(necessary_segments_running_index - 1, temp_length);
-            reply.content.push_back(temp_length);
-            reply.content.push_back(",");
-            reply.content.push_back("0");
-            reply.content.push_back(",\"");
-            reply.content.push_back("\",\"");
-            reply.content.push_back(Azimuth::Get(0.0));
-            reply.content.push_back("\",");
-            reply.content.push_back("0.0");
-            reply.content.push_back("]");
+            reply.content.emplace_back(temp_length);
+            reply.content.emplace_back(",");
+            reply.content.emplace_back("0");
+            reply.content.emplace_back(",\"");
+            reply.content.emplace_back("\",\"");
+            reply.content.emplace_back(Azimuth::Get(0.0));
+            reply.content.emplace_back("\",");
+            reply.content.emplace_back("0.0");
+            reply.content.emplace_back("]");
         }
     }
 };

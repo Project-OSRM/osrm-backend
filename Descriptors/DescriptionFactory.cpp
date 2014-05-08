@@ -75,8 +75,8 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
                                        const bool target_traversed_in_reverse)
 {
     target_phantom = target;
-    path_description.push_back(
-        SegmentInformation(target.location, target.name_id, 0, target.reverse_weight, 0, true));
+    path_description.emplace_back(
+        target.location, target.name_id, 0, target.reverse_weight, 0, true);
 }
 
 void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
@@ -88,11 +88,11 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     }
     else
     {
-        path_description.push_back(SegmentInformation(coordinate,
-                                                      path_point.name_id,
-                                                      path_point.segment_duration,
-                                                      0,
-                                                      path_point.turn_instruction));
+        path_description.emplace_back(coordinate,
+                                      path_point.name_id,
+                                      path_point.segment_duration,
+                                      0,
+                                      path_point.turn_instruction);
     }
 }
 
@@ -108,21 +108,21 @@ void DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded,
     {
         polyline_compressor.printUnencodedString(path_description, temp);
     }
-    output.push_back(temp);
+    output.emplace_back(temp);
 }
 
 void DescriptionFactory::AppendEncodedPolylineString(std::vector<std::string> &output) const
 {
     std::string temp;
     polyline_compressor.printEncodedString(path_description, temp);
-    output.push_back(temp);
+    output.emplace_back(temp);
 }
 
 void DescriptionFactory::AppendUnencodedPolylineString(std::vector<std::string> &output) const
 {
     std::string temp;
     polyline_compressor.printUnencodedString(path_description, temp);
-    output.push_back(temp);
+    output.emplace_back(temp);
 }
 
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)

@@ -47,50 +47,51 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
              DataFacadeT *facade,
              http::Reply &reply)
     {
-        reply.content.push_back("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        reply.content.push_back("<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
-                                "xmlns=\"http://www.topografix.com/GPX/1/1\" "
-                                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-                                "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
-                                "\">");
-        reply.content.push_back("<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
-                                " OpenStreetMap contributors (ODbL)</license></copyright>"
-                                "</metadata>");
-        reply.content.push_back("<rte>");
+        reply.content.emplace_back("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        reply.content.emplace_back("<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
+                                   "xmlns=\"http://www.topografix.com/GPX/1/1\" "
+                                   "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                                   "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 gpx.xsd"
+                                   "\">");
+        reply.content.emplace_back("<metadata><copyright author=\"Project OSRM\"><license>Data (c)"
+                                   " OpenStreetMap contributors (ODbL)</license></copyright>"
+                                   "</metadata>");
+        reply.content.emplace_back("<rte>");
         bool found_route = (raw_route.shortest_path_length != INVALID_EDGE_WEIGHT) &&
                            (!raw_route.unpacked_path_segments.front().empty());
         if (found_route)
         {
             FixedPointCoordinate::convertInternalLatLonToString(
                 phantom_node_list.source_phantom.location.lat, tmp);
-            reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
+            reply.content.emplace_back("<rtept lat=\"" + tmp + "\" ");
             FixedPointCoordinate::convertInternalLatLonToString(
                 phantom_node_list.source_phantom.location.lon, tmp);
-            reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
+            reply.content.emplace_back("lon=\"" + tmp + "\"></rtept>");
 
             for (const std::vector<PathData> &path_data_vector : raw_route.unpacked_path_segments)
             {
                 for (const PathData &path_data : path_data_vector)
                 {
-                    FixedPointCoordinate current_coordinate = facade->GetCoordinateOfNode(path_data.node);
+                    FixedPointCoordinate current_coordinate =
+                        facade->GetCoordinateOfNode(path_data.node);
 
                     FixedPointCoordinate::convertInternalLatLonToString(current_coordinate.lat,
                                                                         tmp);
-                    reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
+                    reply.content.emplace_back("<rtept lat=\"" + tmp + "\" ");
                     FixedPointCoordinate::convertInternalLatLonToString(current_coordinate.lon,
                                                                         tmp);
-                    reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
+                    reply.content.emplace_back("lon=\"" + tmp + "\"></rtept>");
                 }
             }
             // Add the via point or the end coordinate
             FixedPointCoordinate::convertInternalLatLonToString(
                 phantom_node_list.target_phantom.location.lat, tmp);
-            reply.content.push_back("<rtept lat=\"" + tmp + "\" ");
+            reply.content.emplace_back("<rtept lat=\"" + tmp + "\" ");
             FixedPointCoordinate::convertInternalLatLonToString(
                 phantom_node_list.target_phantom.location.lon, tmp);
-            reply.content.push_back("lon=\"" + tmp + "\"></rtept>");
+            reply.content.emplace_back("lon=\"" + tmp + "\"></rtept>");
         }
-        reply.content.push_back("</rte></gpx>");
+        reply.content.emplace_back("</rte></gpx>");
     }
 };
 #endif // GPX_DESCRIPTOR_H
