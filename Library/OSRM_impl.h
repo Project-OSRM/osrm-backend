@@ -36,8 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Plugins/BasePlugin.h"
 #include "../Util/ProgramOptions.h"
 
-#include <boost/noncopyable.hpp>
-
 struct SharedBarriers;
 template <class EdgeDataT> class BaseDataFacade;
 
