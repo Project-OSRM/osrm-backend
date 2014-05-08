@@ -32,12 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/circular_buffer.hpp>
 #include <condition_variable>
-#include <functional>
 #include <mutex>
 
 template <typename Data> class ConcurrentQueue
 {
-
   public:
     explicit ConcurrentQueue(const size_t max_size) : m_internal_queue(max_size) {}
 
