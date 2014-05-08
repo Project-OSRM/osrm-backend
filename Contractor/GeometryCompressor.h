@@ -56,7 +56,7 @@ class GeometryCompressor
 
   private:
     void IncreaseFreeList();
-    std::vector<std::vector<CompressedNode> > m_compressed_geometries;
+    std::vector<std::vector<CompressedNode>> m_compressed_geometries;
     std::vector<unsigned> m_free_list;
     boost::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
 };

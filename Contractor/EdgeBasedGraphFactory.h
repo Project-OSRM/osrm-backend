@@ -58,94 +58,76 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <queue>
 #include <vector>
 
-class EdgeBasedGraphFactory : boost::noncopyable {
-public:
+class EdgeBasedGraphFactory : boost::noncopyable
+{
+  public:
     struct SpeedProfileProperties;
 
-    explicit EdgeBasedGraphFactory(
-        const boost::shared_ptr<NodeBasedDynamicGraph>& node_based_graph,
-        std::unique_ptr<RestrictionMap> restricion_map,
-        std::vector<NodeID> & barrier_node_list,
-        std::vector<NodeID> & traffic_light_node_list,
-        std::vector<NodeInfo> & m_node_info_list,
-        SpeedProfileProperties & speed_profile
-    );
+    explicit EdgeBasedGraphFactory(const boost::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
+                                   std::unique_ptr<RestrictionMap> restricion_map,
+                                   std::vector<NodeID> &barrier_node_list,
+                                   std::vector<NodeID> &traffic_light_node_list,
+                                   std::vector<NodeInfo> &m_node_info_list,
+                                   SpeedProfileProperties &speed_profile);
 
-    void Run(
-        const std::string & original_edge_data_filename,
-        const std::string & geometry_filename,
-        lua_State *myLuaState
-    );
+    void Run(const std::string &original_edge_data_filename,
+             const std::string &geometry_filename,
+             lua_State *myLuaState);
 
-    void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
+    void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
 
-    void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
+    void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
 
-    TurnInstruction AnalyzeTurn(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    ) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
 
-    int GetTurnPenalty(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w,
-        lua_State *myLuaState
-    ) const;
+    int GetTurnPenalty(const NodeID u, const NodeID v, const NodeID w, lua_State *myLuaState) const;
 
     unsigned GetNumberOfEdgeBasedNodes() const;
 
-    struct SpeedProfileProperties{
-        SpeedProfileProperties() :
-            trafficSignalPenalty(0),
-            uTurnPenalty(0),
-            has_turn_penalty_function(false)
-        { }
+    struct SpeedProfileProperties
+    {
+        SpeedProfileProperties()
+            : trafficSignalPenalty(0), uTurnPenalty(0), has_turn_penalty_function(false)
+        {
+        }
 
         int trafficSignalPenalty;
         int uTurnPenalty;
         bool has_turn_penalty_function;
     } speed_profile;
 
-private:
+  private:
     typedef NodeBasedDynamicGraph::NodeIterator NodeIterator;
     typedef NodeBasedDynamicGraph::EdgeIterator EdgeIterator;
-    typedef NodeBasedDynamicGraph::EdgeData     EdgeData;
+    typedef NodeBasedDynamicGraph::EdgeData EdgeData;
 
     unsigned m_number_of_edge_based_nodes;
 
-    std::vector<NodeInfo>                       m_node_info_list;
-    std::vector<EdgeBasedNode>                  m_edge_based_node_list;
-    DeallocatingVector<EdgeBasedEdge>           m_edge_based_edge_list;
+    std::vector<NodeInfo> m_node_info_list;
+    std::vector<EdgeBasedNode> m_edge_based_node_list;
+    DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
-    boost::shared_ptr<NodeBasedDynamicGraph>    m_node_based_graph;
-    boost::unordered_set<NodeID>                m_barrier_nodes;
-    boost::unordered_set<NodeID>                m_traffic_lights;
+    boost::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
+    boost::unordered_set<NodeID> m_barrier_nodes;
+    boost::unordered_set<NodeID> m_traffic_lights;
 
-    std::unique_ptr<RestrictionMap>             m_restriction_map;
+    std::unique_ptr<RestrictionMap> m_restriction_map;
 
-    GeometryCompressor                          m_geometry_compressor;
+    GeometryCompressor m_geometry_compressor;
 
     void CompressGeometry();
     void RenumberEdges();
     void GenerateEdgeExpandedNodes();
-    void GenerateEdgeExpandedEdges(
-        const std::string& original_edge_data_filename,
-        lua_State* lua_state
-    );
+    void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
+                                   lua_State *lua_state);
 
-    void InsertEdgeBasedNode(
-        NodeBasedDynamicGraph::NodeIterator u,
-        NodeBasedDynamicGraph::NodeIterator v,
-        NodeBasedDynamicGraph::EdgeIterator e1,
-        bool belongsToTinyComponent
-    );
+    void InsertEdgeBasedNode(NodeBasedDynamicGraph::NodeIterator u,
+                             NodeBasedDynamicGraph::NodeIterator v,
+                             NodeBasedDynamicGraph::EdgeIterator e1,
+                             bool belongsToTinyComponent);
 
-    void FlushVectorToStream(
-        std::ofstream & edge_data_file,
-        std::vector<OriginalEdgeData> & original_edge_data_vector
-    ) const;
+    void FlushVectorToStream(std::ofstream &edge_data_file,
+                             std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 
     unsigned max_id;
 };
