@@ -46,66 +46,66 @@ class HelloWorldPlugin : public BasePlugin
     void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
     {
         reply.status = http::Reply::ok;
-        reply.content.push_back("<html><head><title>Hello World Demonstration "
-                                "Document</title></head><body><h1>Hello, World!</h1>");
-        reply.content.push_back("<pre>");
-        reply.content.push_back("zoom level: ");
-        intToString(routeParameters.zoomLevel, temp_string);
-        reply.content.push_back(temp_string);
-        reply.content.push_back("\nchecksum: ");
+        reply.content.emplace_back("<html><head><title>Hello World Demonstration "
+                                   "Document</title></head><body><h1>Hello, World!</h1>");
+        reply.content.emplace_back("<pre>");
+        reply.content.emplace_back("zoom level: ");
+        intToString(routeParameters.zoom_level, temp_string);
+        reply.content.emplace_back(temp_string);
+        reply.content.emplace_back("\nchecksum: ");
         intToString(routeParameters.check_sum, temp_string);
-        reply.content.push_back(temp_string);
-        reply.content.push_back("\ninstructions: ");
-        reply.content.push_back((routeParameters.printInstructions ? "yes" : "no"));
-        reply.content.push_back(temp_string);
-        reply.content.push_back("\ngeometry: ");
-        reply.content.push_back((routeParameters.geometry ? "yes" : "no"));
-        reply.content.push_back("\ncompression: ");
-        reply.content.push_back((routeParameters.compression ? "yes" : "no"));
-        reply.content.push_back("\noutput format: ");
-        reply.content.push_back(routeParameters.outputFormat);
-        reply.content.push_back("\njson parameter: ");
-        reply.content.push_back(routeParameters.jsonpParameter);
-        reply.content.push_back("\nlanguage: ");
-        reply.content.push_back(routeParameters.language);
-        reply.content.push_back("\nNumber of locations: ");
+        reply.content.emplace_back(temp_string);
+        reply.content.emplace_back("\ninstructions: ");
+        reply.content.emplace_back((routeParameters.print_instructions ? "yes" : "no"));
+        reply.content.emplace_back(temp_string);
+        reply.content.emplace_back("\ngeometry: ");
+        reply.content.emplace_back((routeParameters.geometry ? "yes" : "no"));
+        reply.content.emplace_back("\ncompression: ");
+        reply.content.emplace_back((routeParameters.compression ? "yes" : "no"));
+        reply.content.emplace_back("\noutput format: ");
+        reply.content.emplace_back(routeParameters.output_format);
+        reply.content.emplace_back("\njson parameter: ");
+        reply.content.emplace_back(routeParameters.jsonp_parameter);
+        reply.content.emplace_back("\nlanguage: ");
+        reply.content.emplace_back(routeParameters.language);
+        reply.content.emplace_back("\nNumber of locations: ");
         intToString(routeParameters.coordinates.size(), temp_string);
-        reply.content.push_back(temp_string);
-        reply.content.push_back("\n");
+        reply.content.emplace_back(temp_string);
+        reply.content.emplace_back("\n");
 
         unsigned counter = 0;
         for (const FixedPointCoordinate &coordinate : routeParameters.coordinates)
         {
-            reply.content.push_back("  [");
+            reply.content.emplace_back("  [");
             intToString(counter, temp_string);
-            reply.content.push_back(temp_string);
-            reply.content.push_back("] ");
+            reply.content.emplace_back(temp_string);
+            reply.content.emplace_back("] ");
             doubleToString(coordinate.lat / COORDINATE_PRECISION, temp_string);
-            reply.content.push_back(temp_string);
-            reply.content.push_back(",");
+            reply.content.emplace_back(temp_string);
+            reply.content.emplace_back(",");
             doubleToString(coordinate.lon / COORDINATE_PRECISION, temp_string);
-            reply.content.push_back(temp_string);
-            reply.content.push_back("\n");
+            reply.content.emplace_back(temp_string);
+            reply.content.emplace_back("\n");
             ++counter;
         }
 
-        reply.content.push_back("Number of hints: ");
+        reply.content.emplace_back("Number of hints: ");
         intToString(routeParameters.hints.size(), temp_string);
-        reply.content.push_back(temp_string);
-        reply.content.push_back("\n");
+        reply.content.emplace_back(temp_string);
+        reply.content.emplace_back("\n");
 
         counter = 0;
         for (const std::string &current_string : routeParameters.hints)
         {
-            reply.content.push_back("  [");
+            reply.content.emplace_back("  [");
             intToString(counter, temp_string);
-            reply.content.push_back(temp_string);
-            reply.content.push_back("] ");
-            reply.content.push_back(current_string);
-            reply.content.push_back("\n");
+            reply.content.emplace_back(temp_string);
+            reply.content.emplace_back("] ");
+            reply.content.emplace_back(current_string);
+            reply.content.emplace_back("\n");
             ++counter;
         }
-        reply.content.push_back("</pre></body></html>");
+        reply.content.emplace_back("</pre></body></html>");
     }
 
   private:

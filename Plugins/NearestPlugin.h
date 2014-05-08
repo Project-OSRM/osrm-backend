@@ -49,15 +49,15 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
 
     const std::string GetDescriptor() const { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
         // check number of parameters
-        if (routeParameters.coordinates.empty())
+        if (route_parameters.coordinates.empty())
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
-        if (!routeParameters.coordinates.front().isValid())
+        if (!route_parameters.coordinates.front().isValid())
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
@@ -65,48 +65,48 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
 
         PhantomNode result;
         facade->FindPhantomNodeForCoordinate(
-            routeParameters.coordinates.front(), result, routeParameters.zoomLevel);
+            route_parameters.coordinates.front(), result, route_parameters.zoom_level);
 
         // json
 
-        if (!routeParameters.jsonpParameter.empty())
+        if (!route_parameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(routeParameters.jsonpParameter);
-            reply.content.push_back("(");
+            reply.content.emplace_back(route_parameters.jsonp_parameter);
+            reply.content.emplace_back("(");
         }
 
         reply.status = http::Reply::ok;
-        reply.content.push_back("{\"status\":");
+        reply.content.emplace_back("{\"status\":");
         if (SPECIAL_NODEID != result.forward_node_id)
         {
-            reply.content.push_back("0,");
+            reply.content.emplace_back("0,");
         }
         else
         {
-            reply.content.push_back("207,");
+            reply.content.emplace_back("207,");
         }
-        reply.content.push_back("\"mapped_coordinate\":[");
+        reply.content.emplace_back("\"mapped_coordinate\":[");
         std::string temp_string;
 
         if (SPECIAL_NODEID != result.forward_node_id)
         {
             FixedPointCoordinate::convertInternalLatLonToString(result.location.lat, temp_string);
-            reply.content.push_back(temp_string);
+            reply.content.emplace_back(temp_string);
             FixedPointCoordinate::convertInternalLatLonToString(result.location.lon, temp_string);
-            reply.content.push_back(",");
-            reply.content.push_back(temp_string);
+            reply.content.emplace_back(",");
+            reply.content.emplace_back(temp_string);
         }
-        reply.content.push_back("],\"name\":\"");
+        reply.content.emplace_back("],\"name\":\"");
         if (SPECIAL_NODEID != result.forward_node_id)
         {
             facade->GetName(result.name_id, temp_string);
-            reply.content.push_back(temp_string);
+            reply.content.emplace_back(temp_string);
         }
-        reply.content.push_back("\"}");
+        reply.content.emplace_back("\"}");
         reply.headers.resize(3);
-        if (!routeParameters.jsonpParameter.empty())
+        if (!route_parameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(")");
+            reply.content.emplace_back(")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";

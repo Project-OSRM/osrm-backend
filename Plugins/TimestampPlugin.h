@@ -38,29 +38,29 @@ template <class DataFacadeT> class TimestampPlugin : public BasePlugin
     {
     }
     const std::string GetDescriptor() const { return descriptor_string; }
-    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
         std::string tmp;
 
         // json
-        if (!routeParameters.jsonpParameter.empty())
+        if (!route_parameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(routeParameters.jsonpParameter);
-            reply.content.push_back("(");
+            reply.content.emplace_back(route_parameters.jsonp_parameter);
+            reply.content.emplace_back("(");
         }
 
         reply.status = http::Reply::ok;
-        reply.content.push_back("{");
-        reply.content.push_back("\"status\":");
-        reply.content.push_back("0,");
-        reply.content.push_back("\"timestamp\":\"");
-        reply.content.push_back(facade->GetTimestamp());
-        reply.content.push_back("\"");
-        reply.content.push_back("}");
+        reply.content.emplace_back("{");
+        reply.content.emplace_back("\"status\":");
+        reply.content.emplace_back("0,");
+        reply.content.emplace_back("\"timestamp\":\"");
+        reply.content.emplace_back(facade->GetTimestamp());
+        reply.content.emplace_back("\"");
+        reply.content.emplace_back("}");
         reply.headers.resize(3);
-        if (!routeParameters.jsonpParameter.empty())
+        if (!route_parameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(")");
+            reply.content.emplace_back(")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";

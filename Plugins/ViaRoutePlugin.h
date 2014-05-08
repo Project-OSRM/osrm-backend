@@ -108,7 +108,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             }
             facade->FindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
                                                  phantom_node_vector[i],
-                                                 routeParameters.zoomLevel);
+                                                 routeParameters.zoom_level);
         }
 
         PhantomNodes current_phantom_node_pair;
@@ -119,9 +119,10 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
 
-        if ((routeParameters.alternateRoute) && (1 == raw_route.segment_end_coordinates.size()))
+        if ((routeParameters.alternate_route) && (1 == raw_route.segment_end_coordinates.size()))
         {
-            search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(), raw_route);
+            search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
+                                                raw_route);
         }
         else
         {
@@ -134,19 +135,19 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         }
         reply.status = http::Reply::ok;
 
-        if (!routeParameters.jsonpParameter.empty())
+        if (!routeParameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(routeParameters.jsonpParameter);
-            reply.content.push_back("(");
+            reply.content.emplace_back(routeParameters.jsonp_parameter);
+            reply.content.emplace_back("(");
         }
 
         DescriptorConfig descriptor_config;
 
-        auto iter = descriptorTable.find(routeParameters.outputFormat);
+        auto iter = descriptorTable.find(routeParameters.output_format);
         unsigned descriptor_type = (iter != descriptorTable.end() ? iter->second : 0);
 
-        descriptor_config.zoom_level = routeParameters.zoomLevel;
-        descriptor_config.instructions = routeParameters.printInstructions;
+        descriptor_config.zoom_level = routeParameters.zoom_level;
+        descriptor_config.instructions = routeParameters.print_instructions;
         descriptor_config.geometry = routeParameters.geometry;
         descriptor_config.encode_geometry = routeParameters.compression;
 
@@ -170,9 +171,9 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         descriptor->SetConfig(descriptor_config);
         descriptor->Run(raw_route, phantom_nodes, facade, reply);
 
-        if (!routeParameters.jsonpParameter.empty())
+        if (!routeParameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(")\n");
+            reply.content.emplace_back(")\n");
         }
         reply.headers.resize(3);
         reply.headers[0].name = "Content-Length";
@@ -189,7 +190,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         switch (descriptor_type)
         {
         case 0:
-            if (!routeParameters.jsonpParameter.empty())
+            if (!routeParameters.jsonp_parameter.empty())
             {
                 reply.headers[1].name = "Content-Type";
                 reply.headers[1].value = "text/javascript";
@@ -213,7 +214,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
 
             break;
         default:
-            if (!routeParameters.jsonpParameter.empty())
+            if (!routeParameters.jsonp_parameter.empty())
             {
                 reply.headers[1].name = "Content-Type";
                 reply.headers[1].value = "text/javascript";

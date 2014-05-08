@@ -39,42 +39,42 @@ struct RouteParameters
 {
     RouteParameters();
 
-    void setZoomLevel(const short i);
+    void setZoomLevel(const short level);
 
-    void setAlternateRouteFlag(const bool b);
+    void setAlternateRouteFlag(const bool flag);
 
     void setDeprecatedAPIFlag(const std::string &);
 
-    void setChecksum(const unsigned c);
+    void setChecksum(const unsigned check_sum);
 
-    void setInstructionFlag(const bool b);
+    void setInstructionFlag(const bool flag);
 
-    void setService(const std::string &s);
+    void setService(const std::string &service);
 
-    void setOutputFormat(const std::string &s);
+    void setOutputFormat(const std::string &format);
 
-    void setJSONpParameter(const std::string &s);
+    void setJSONpParameter(const std::string &parameter);
 
-    void addHint(const std::string &s);
+    void addHint(const std::string &hint);
 
-    void setLanguage(const std::string &s);
+    void setLanguage(const std::string &language);
 
-    void setGeometryFlag(const bool b);
+    void setGeometryFlag(const bool flag);
 
-    void setCompressionFlag(const bool b);
+    void setCompressionFlag(const bool flag);
 
-    void addCoordinate(const boost::fusion::vector<double, double> &arg_);
+    void addCoordinate(const boost::fusion::vector<double, double> &coordinates);
 
-    short zoomLevel;
-    bool printInstructions;
-    bool alternateRoute;
+    short zoom_level;
+    bool print_instructions;
+    bool alternate_route;
     bool geometry;
     bool compression;
     bool deprecatedAPI;
     unsigned check_sum;
     std::string service;
-    std::string outputFormat;
-    std::string jsonpParameter;
+    std::string output_format;
+    std::string jsonp_parameter;
     std::string language;
     std::vector<std::string> hints;
     std::vector<FixedPointCoordinate> coordinates;

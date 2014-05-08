@@ -39,10 +39,10 @@ template <class DataFacadeT> class LocatePlugin : public BasePlugin
     explicit LocatePlugin(DataFacadeT *facade) : descriptor_string("locate"), facade(facade) {}
     const std::string GetDescriptor() const { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
         // check number of parameters
-        if (routeParameters.coordinates.empty() || !routeParameters.coordinates.front().isValid())
+        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().isValid())
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
@@ -53,37 +53,38 @@ template <class DataFacadeT> class LocatePlugin : public BasePlugin
         std::string tmp;
         // json
 
-        if (!routeParameters.jsonpParameter.empty())
+        if (!route_parameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(routeParameters.jsonpParameter);
-            reply.content.push_back("(");
+            reply.content.emplace_back(route_parameters.jsonp_parameter);
+            reply.content.emplace_back("(");
         }
         reply.status = http::Reply::ok;
-        reply.content.push_back("{");
-        if (!facade->LocateClosestEndPointForCoordinate(routeParameters.coordinates.front(), result))
+        reply.content.emplace_back("{");
+        if (!facade->LocateClosestEndPointForCoordinate(route_parameters.coordinates.front(),
+                                                        result))
         {
-            reply.content.push_back("\"status\":207,");
-            reply.content.push_back("\"mapped_coordinate\":[]");
+            reply.content.emplace_back("\"status\":207,");
+            reply.content.emplace_back("\"mapped_coordinate\":[]");
         }
         else
         {
             // Write coordinate to stream
             reply.status = http::Reply::ok;
-            reply.content.push_back("\"status\":0,");
-            reply.content.push_back("\"mapped_coordinate\":");
+            reply.content.emplace_back("\"status\":0,");
+            reply.content.emplace_back("\"mapped_coordinate\":");
             FixedPointCoordinate::convertInternalLatLonToString(result.lat, tmp);
-            reply.content.push_back("[");
-            reply.content.push_back(tmp);
+            reply.content.emplace_back("[");
+            reply.content.emplace_back(tmp);
             FixedPointCoordinate::convertInternalLatLonToString(result.lon, tmp);
-            reply.content.push_back(",");
-            reply.content.push_back(tmp);
-            reply.content.push_back("]");
+            reply.content.emplace_back(",");
+            reply.content.emplace_back(tmp);
+            reply.content.emplace_back("]");
         }
-        reply.content.push_back("}");
+        reply.content.emplace_back("}");
         reply.headers.resize(3);
-        if (!routeParameters.jsonpParameter.empty())
+        if (!route_parameters.jsonp_parameter.empty())
         {
-            reply.content.push_back(")");
+            reply.content.emplace_back(")");
             reply.headers[1].name = "Content-Type";
             reply.headers[1].value = "text/javascript";
             reply.headers[2].name = "Content-Disposition";

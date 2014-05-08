@@ -32,51 +32,51 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/fusion/include/at_c.hpp>
 
 RouteParameters::RouteParameters()
-    : zoomLevel(18), printInstructions(false), alternateRoute(true), geometry(true),
+    : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
       compression(true), deprecatedAPI(false), check_sum(-1)
 {
 }
 
-void RouteParameters::setZoomLevel(const short i)
+void RouteParameters::setZoomLevel(const short level)
 {
-    if (18 >= i && 0 <= i)
+    if (18 >= level && 0 <= level)
     {
-        zoomLevel = i;
+        zoom_level = level;
     }
 }
 
-void RouteParameters::setAlternateRouteFlag(const bool b) { alternateRoute = b; }
+void RouteParameters::setAlternateRouteFlag(const bool flag) { alternate_route = flag; }
 
 void RouteParameters::setDeprecatedAPIFlag(const std::string &) { deprecatedAPI = true; }
 
-void RouteParameters::setChecksum(const unsigned c) { check_sum = c; }
+void RouteParameters::setChecksum(const unsigned sum) { check_sum = sum; }
 
-void RouteParameters::setInstructionFlag(const bool b) { printInstructions = b; }
+void RouteParameters::setInstructionFlag(const bool flag) { print_instructions = flag; }
 
-void RouteParameters::setService(const std::string &s) { service = s; }
+void RouteParameters::setService(const std::string &service_string) { service = service_string; }
 
-void RouteParameters::setOutputFormat(const std::string &s) { outputFormat = s; }
+void RouteParameters::setOutputFormat(const std::string &format) { output_format = format; }
 
-void RouteParameters::setJSONpParameter(const std::string &s) { jsonpParameter = s; }
+void RouteParameters::setJSONpParameter(const std::string &parameter) { jsonp_parameter = parameter; }
 
-void RouteParameters::addHint(const std::string &s)
+void RouteParameters::addHint(const std::string &hint)
 {
     hints.resize(coordinates.size());
     if (!hints.empty())
     {
-        hints.back() = s;
+        hints.back() = hint;
     }
 }
 
-void RouteParameters::setLanguage(const std::string &s) { language = s; }
+void RouteParameters::setLanguage(const std::string &language_string) { language = language_string; }
 
-void RouteParameters::setGeometryFlag(const bool b) { geometry = b; }
+void RouteParameters::setGeometryFlag(const bool flag) { geometry = flag; }
 
-void RouteParameters::setCompressionFlag(const bool b) { compression = b; }
+void RouteParameters::setCompressionFlag(const bool flag) { compression = flag; }
 
-void RouteParameters::addCoordinate(const boost::fusion::vector<double, double> &arg_)
+void RouteParameters::addCoordinate(const boost::fusion::vector<double, double> &transmitted_coordinates)
 {
-    int lat = COORDINATE_PRECISION * boost::fusion::at_c<0>(arg_);
-    int lon = COORDINATE_PRECISION * boost::fusion::at_c<1>(arg_);
-    coordinates.push_back(FixedPointCoordinate(lat, lon));
+    int lat = COORDINATE_PRECISION * boost::fusion::at_c<0>(transmitted_coordinates);
+    int lon = COORDINATE_PRECISION * boost::fusion::at_c<1>(transmitted_coordinates);
+    coordinates.emplace_back(lat, lon);
 }
