@@ -36,18 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define M_PI 3.14159265358979323846
 #endif
 
-template<typename digitT>
-digitT round(digitT x) {
-    return std::floor(x + 0.5);
-}
+template <typename digitT> digitT round(digitT x) { return std::floor(x + 0.5); }
 #endif
 
 typedef unsigned int NodeID;
 typedef unsigned int EdgeID;
 typedef int EdgeWeight;
 
-static const NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
-static const EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();
-static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
+constexpr NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
+constexpr EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();
+constexpr EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
 
 #endif /* TYPEDEFS_H_ */
