@@ -78,7 +78,7 @@ class StaticRTree
         int32_t min_lon, max_lon;
         int32_t min_lat, max_lat;
 
-        inline void InitializeMBRectangle(const std::array<DataT, RTREE_LEAF_NODE_SIZE> objects,
+        inline void InitializeMBRectangle(const std::array<DataT, RTREE_LEAF_NODE_SIZE> &objects,
                                           const uint32_t element_count,
                                           const std::vector<NodeInfo> &coordinate_list)
         {
