@@ -70,18 +70,18 @@ unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const
 void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 {
 
-    boost::filesystem::fstream geometry_out_stream(path, std::ios::binary|std::ios::out);
+    boost::filesystem::fstream geometry_out_stream(path, std::ios::binary | std::ios::out);
     const unsigned number_of_compressed_geometries = m_compressed_geometries.size() + 1;
     BOOST_ASSERT(UINT_MAX != number_of_compressed_geometries);
     geometry_out_stream.write((char *)&number_of_compressed_geometries, sizeof(unsigned));
 
     // write indices array
     unsigned prefix_sum_of_list_indices = 0;
-    for (unsigned i = 0; i < m_compressed_geometries.size(); ++i)
+    for (auto &elem : m_compressed_geometries)
     {
         geometry_out_stream.write((char *)&prefix_sum_of_list_indices, sizeof(unsigned));
 
-        const std::vector<CompressedNode> &current_vector = m_compressed_geometries.at(i);
+        const std::vector<CompressedNode> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
         BOOST_ASSERT(UINT_MAX != unpacked_size);
         prefix_sum_of_list_indices += unpacked_size;
@@ -94,9 +94,9 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 
     unsigned control_sum = 0;
     // write compressed geometries
-    for (unsigned i = 0; i < m_compressed_geometries.size(); ++i)
+    for (auto &elem : m_compressed_geometries)
     {
-        const std::vector<CompressedNode> &current_vector = m_compressed_geometries[i];
+        const std::vector<CompressedNode> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
         control_sum += unpacked_size;
         BOOST_ASSERT(UINT_MAX != unpacked_size);
@@ -122,8 +122,8 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_2);
     BOOST_ASSERT(SPECIAL_NODEID != via_node_id);
     BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
-    BOOST_ASSERT(std::numeric_limits<int>::max() != weight1);
-    BOOST_ASSERT(std::numeric_limits<int>::max() != weight2);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight1);
+    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight2);
 
     // append list of removed edge_id plus via node to surviving edge id:
     // <surv_1, .. , surv_n, via_node_id, rem_1, .. rem_n
@@ -146,7 +146,8 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
         m_free_list.pop_back();
     }
 
-    const boost::unordered_map<EdgeID, unsigned>::const_iterator iter = m_edge_id_to_list_index_map.find(edge_id_1);
+    const boost::unordered_map<EdgeID, unsigned>::const_iterator iter =
+        m_edge_id_to_list_index_map.find(edge_id_1);
     BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
     const unsigned edge_bucket_id1 = iter->second;
     BOOST_ASSERT(edge_bucket_id1 == GetPositionForID(edge_id_1));
