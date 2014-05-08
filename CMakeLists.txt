@@ -229,7 +229,7 @@ if(WITH_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   find_package(GDAL)
   if(GDAL_FOUND)
-    add_executable(osrm-components Tools/componentAnalysis.cpp)
+    add_executable(osrm-components Tools/components.cpp)
     include_directories(${GDAL_INCLUDE_DIR})
     target_link_libraries(
       osrm-components
