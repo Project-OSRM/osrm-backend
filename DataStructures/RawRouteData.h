@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RAW_ROUTE_DATA_H
 
 #include "../DataStructures/PhantomNodes.h"
+#include "../DataStructures/TurnInstructions.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -42,7 +43,7 @@ struct PathData
     PathData()
         : node(std::numeric_limits<unsigned>::max()), name_id(std::numeric_limits<unsigned>::max()),
           segment_duration(std::numeric_limits<unsigned>::max()),
-          turn_instruction(std::numeric_limits<unsigned char>::max())
+          turn_instruction(std::numeric_limits<TurnInstruction>::max())
     {
     }
 
@@ -53,7 +54,7 @@ struct PathData
     NodeID node;
     unsigned name_id;
     unsigned segment_duration;
-    short turn_instruction;
+    TurnInstruction turn_instruction;
 };
 
 struct RawRouteData
