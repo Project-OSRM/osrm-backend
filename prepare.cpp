@@ -56,43 +56,53 @@ typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
 typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 
-std::vector<NodeInfo> internalToExternalNodeMapping;
-std::vector<TurnRestriction> inputRestrictions;
-std::vector<NodeID> bollardNodes;
-std::vector<NodeID> trafficLightNodes;
-std::vector<ImportEdge> edgeList;
+std::vector<NodeInfo> internal_to_external_node_map;
+std::vector<TurnRestriction> restriction_list;
+std::vector<NodeID> barrier_node_list;
+std::vector<NodeID> traffic_light_list;
+std::vector<ImportEdge> edge_list;
 
-int main (int argc, char *argv[]) {
-    try {
+int main(int argc, char *argv[])
+{
+    try
+    {
         LogPolicy::GetInstance().Unmute();
-        std::chrono::time_point<std::chrono::steady_clock> startupTime = std::chrono::steady_clock::now();
+        std::chrono::time_point<std::chrono::steady_clock> startup_time =
+            std::chrono::steady_clock::now();
 
         boost::filesystem::path config_file_path, input_path, restrictions_path, profile_path;
         int requested_num_threads;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
-        generic_options.add_options()
-            ("version,v", "Show version")
-            ("help,h", "Show this help message")
-            ("config,c", boost::program_options::value<boost::filesystem::path>(&config_file_path)->default_value("contractor.ini"),
-                  "Path to a configuration file.");
+        generic_options.add_options()("version,v", "Show version")("help,h",
+                                                                   "Show this help message")(
+            "config,c",
+            boost::program_options::value<boost::filesystem::path>(&config_file_path)
+                ->default_value("contractor.ini"),
+            "Path to a configuration file.");
 
         // declare a group of options that will be allowed both on command line and in config file
         boost::program_options::options_description config_options("Configuration");
-        config_options.add_options()
-            ("restrictions,r", boost::program_options::value<boost::filesystem::path>(&restrictions_path),
-                "Restrictions file in .osrm.restrictions format")
-            ("profile,p", boost::program_options::value<boost::filesystem::path>(&profile_path)->default_value("profile.lua"),
-                "Path to LUA routing profile")
-            ("threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
-                "Number of threads to use");
+        config_options.add_options()(
+            "restrictions,r",
+            boost::program_options::value<boost::filesystem::path>(&restrictions_path),
+            "Restrictions file in .osrm.restrictions format")(
+            "profile,p",
+            boost::program_options::value<boost::filesystem::path>(&profile_path)
+                ->default_value("profile.lua"),
+            "Path to LUA routing profile")(
+            "threads,t",
+            boost::program_options::value<int>(&requested_num_threads)->default_value(8),
+            "Number of threads to use");
 
-        // hidden options, will be allowed both on command line and in config file, but will not be shown to the user
+        // hidden options, will be allowed both on command line and in config file, but will not be
+        // shown to the user
         boost::program_options::options_description hidden_options("Hidden options");
-        hidden_options.add_options()
-            ("input,i", boost::program_options::value<boost::filesystem::path>(&input_path),
-                "Input file in .osm, .osm.bz2 or .osm.pbf format");
+        hidden_options.add_options()(
+            "input,i",
+            boost::program_options::value<boost::filesystem::path>(&input_path),
+            "Input file in .osm, .osm.bz2 or .osm.pbf format");
 
         // positional option
         boost::program_options::positional_options_description positional_options;
@@ -105,46 +115,59 @@ int main (int argc, char *argv[]) {
         boost::program_options::options_description config_file_options;
         config_file_options.add(config_options).add(hidden_options);
 
-        boost::program_options::options_description visible_options("Usage: " + boost::filesystem::basename(argv[0]) + " <input.osrm> [options]");
+        boost::program_options::options_description visible_options(
+            "Usage: " + boost::filesystem::basename(argv[0]) + " <input.osrm> [options]");
         visible_options.add(generic_options).add(config_options);
 
         // parse command line options
         boost::program_options::variables_map option_variables;
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).
-            options(cmdline_options).positional(positional_options).run(), option_variables);
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                          .options(cmdline_options)
+                                          .positional(positional_options)
+                                          .run(),
+                                      option_variables);
 
-        if(option_variables.count("version")) {
+        if (option_variables.count("version"))
+        {
             SimpleLogger().Write() << g_GIT_DESCRIPTION;
             return 0;
         }
 
-        if(option_variables.count("help")) {
+        if (option_variables.count("help"))
+        {
             SimpleLogger().Write() << "\n" << visible_options;
             return 0;
         }
 
         boost::program_options::notify(option_variables);
 
-        if(!option_variables.count("restrictions")) {
+        if (!option_variables.count("restrictions"))
+        {
             restrictions_path = std::string(input_path.string() + ".restrictions");
         }
 
-        if(!option_variables.count("input")) {
+        if (!option_variables.count("input"))
+        {
             SimpleLogger().Write() << "\n" << visible_options;
             return 0;
         }
 
-        if(!boost::filesystem::is_regular_file(input_path)) {
-            SimpleLogger().Write(logWARNING) << "Input file " << input_path.string() << " not found!";
+        if (!boost::filesystem::is_regular_file(input_path))
+        {
+            SimpleLogger().Write(logWARNING) << "Input file " << input_path.string()
+                                             << " not found!";
             return 1;
         }
 
-        if(!boost::filesystem::is_regular_file(profile_path)) {
-            SimpleLogger().Write(logWARNING) << "Profile " << profile_path.string() << " not found!";
+        if (!boost::filesystem::is_regular_file(profile_path))
+        {
+            SimpleLogger().Write(logWARNING) << "Profile " << profile_path.string()
+                                             << " not found!";
             return 1;
         }
 
-        if(1 > requested_num_threads) {
+        if (1 > requested_num_threads)
+        {
             SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
             return 1;
         }
@@ -154,286 +177,305 @@ int main (int argc, char *argv[]) {
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Restrictions file: " << restrictions_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
-        SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested " << requested_num_threads << ")";
+        SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested "
+                               << requested_num_threads << ")";
 
         omp_set_num_threads(real_num_threads);
         LogPolicy::GetInstance().Unmute();
-        boost::filesystem::ifstream restrictionsInstream(restrictions_path, std::ios::binary);
+        boost::filesystem::ifstream restriction_stream(restrictions_path, std::ios::binary);
         TurnRestriction restriction;
         UUID uuid_loaded, uuid_orig;
-        unsigned usableRestrictionsCounter(0);
-        restrictionsInstream.read((char*)&uuid_loaded, sizeof(UUID));
-        if( !uuid_loaded.TestPrepare(uuid_orig) ) {
-            SimpleLogger().Write(logWARNING) <<
-                ".restrictions was prepared with different build.\n"
-                "Reprocess to get rid of this warning.";
+        unsigned number_of_usable_restrictions = 0;
+        restriction_stream.read((char *)&uuid_loaded, sizeof(UUID));
+        if (!uuid_loaded.TestPrepare(uuid_orig))
+        {
+            SimpleLogger().Write(logWARNING) << ".restrictions was prepared with different build.\n"
+                                                "Reprocess to get rid of this warning.";
         }
 
-        restrictionsInstream.read(
-            (char*)&usableRestrictionsCounter,
-            sizeof(unsigned)
-        );
-        inputRestrictions.resize(usableRestrictionsCounter);
-        restrictionsInstream.read(
-            (char *)&(inputRestrictions[0]),
-            usableRestrictionsCounter*sizeof(TurnRestriction)
-        );
-        restrictionsInstream.close();
+        restriction_stream.read((char *)&number_of_usable_restrictions, sizeof(unsigned));
+        restriction_list.resize(number_of_usable_restrictions);
+        restriction_stream.read((char *)&(restriction_list[0]),
+                                  number_of_usable_restrictions * sizeof(TurnRestriction));
+        restriction_stream.close();
 
         boost::filesystem::ifstream in;
-        in.open(input_path, std::ios::in|std::ios::binary);
+        in.open(input_path, std::ios::in | std::ios::binary);
 
-        const std::string nodeOut           = input_path.string() + ".nodes";
-        const std::string edgeOut           = input_path.string() + ".edges";
+        const std::string node_filename = input_path.string() + ".nodes";
+        const std::string edge_out = input_path.string() + ".edges";
         const std::string geometry_filename = input_path.string() + ".geometry";
-        const std::string graphOut          = input_path.string() + ".hsgr";
-        const std::string rtree_nodes_path  = input_path.string() + ".ramIndex";
-        const std::string rtree_leafs_path  = input_path.string() + ".fileIndex";
+        const std::string graphOut = input_path.string() + ".hsgr";
+        const std::string rtree_nodes_path = input_path.string() + ".ramIndex";
+        const std::string rtree_leafs_path = input_path.string() + ".fileIndex";
 
         /*** Setup Scripting Environment ***/
 
         // Create a new lua state
-        lua_State *myLuaState = luaL_newstate();
+        lua_State *lua_state = luaL_newstate();
 
         // Connect LuaBind to this lua state
-        luabind::open(myLuaState);
+        luabind::open(lua_state);
 
-        //open utility libraries string library;
-        luaL_openlibs(myLuaState);
+        // open utility libraries string library;
+        luaL_openlibs(lua_state);
 
-        //adjust lua load path
-        luaAddScriptFolderToLoadPath( myLuaState, profile_path.c_str() );
+        // adjust lua load path
+        luaAddScriptFolderToLoadPath(lua_state, profile_path.c_str());
 
         // Now call our function in a lua script
-        if(0 != luaL_dofile(myLuaState, profile_path.c_str() )) {
-            std::cerr <<
-                lua_tostring(myLuaState,-1)   <<
-                " occured in scripting block" <<
-                std::endl;
-        }
-
-        EdgeBasedGraphFactory::SpeedProfileProperties speedProfile;
-
-        if(0 != luaL_dostring( myLuaState, "return traffic_signal_penalty\n")) {
-            std::cerr << lua_tostring(myLuaState,-1) << " occured in scripting block" << std::endl;
+        if (0 != luaL_dofile(lua_state, profile_path.c_str()))
+        {
+            std::cerr << lua_tostring(lua_state, -1) << " occured in scripting block" << std::endl;
             return 1;
         }
-        speedProfile.trafficSignalPenalty = 10*lua_tointeger(myLuaState, -1);
-        SimpleLogger().Write(logDEBUG) << "traffic_signal_penalty: " << speedProfile.trafficSignalPenalty;
 
-        if(0 != luaL_dostring( myLuaState, "return u_turn_penalty\n")) {
-            std::cerr <<
-                lua_tostring(myLuaState,-1)   <<
-                " occured in scripting block" <<
-                std::endl;
+        EdgeBasedGraphFactory::SpeedProfileProperties speed_profile;
+
+        if (0 != luaL_dostring(lua_state, "return traffic_signal_penalty\n"))
+        {
+            std::cerr << lua_tostring(lua_state, -1) << " occured in scripting block" << std::endl;
             return 1;
         }
-        speedProfile.uTurnPenalty = 10*lua_tointeger(myLuaState, -1);
+        speed_profile.trafficSignalPenalty = 10 * lua_tointeger(lua_state, -1);
+        SimpleLogger().Write(logDEBUG)
+            << "traffic_signal_penalty: " << speed_profile.trafficSignalPenalty;
 
-        speedProfile.has_turn_penalty_function = lua_function_exists( myLuaState, "turn_function" );
+        if (0 != luaL_dostring(lua_state, "return u_turn_penalty\n"))
+        {
+            std::cerr << lua_tostring(lua_state, -1) << " occured in scripting block" << std::endl;
+            return 1;
+        }
+        speed_profile.uTurnPenalty = 10 * lua_tointeger(lua_state, -1);
 
-        std::vector<ImportEdge> edgeList;
-        NodeID nodeBasedNodeNumber = readBinaryOSRMGraphFromStream(in, edgeList, bollardNodes, trafficLightNodes, &internalToExternalNodeMapping, inputRestrictions);
+        speed_profile.has_turn_penalty_function = lua_function_exists(lua_state, "turn_function");
+
+        std::vector<ImportEdge> edge_list;
+        NodeID number_of_node_based_nodes = readBinaryOSRMGraphFromStream(in,
+                                                                   edge_list,
+                                                                   barrier_node_list,
+                                                                   traffic_light_list,
+                                                                   &internal_to_external_node_map,
+                                                                   restriction_list);
         in.close();
 
-        if( edgeList.empty() ) {
+        if (edge_list.empty())
+        {
             SimpleLogger().Write(logWARNING) << "The input data is empty, exiting.";
             return 1;
         }
 
-        SimpleLogger().Write() <<
-            inputRestrictions.size() << " restrictions, " <<
-            bollardNodes.size() << " bollard nodes, " <<
-            trafficLightNodes.size() << " traffic lights";
+        SimpleLogger().Write() << restriction_list.size() << " restrictions, "
+                               << barrier_node_list.size() << " bollard nodes, "
+                               << traffic_light_list.size() << " traffic lights";
 
         /***
          * Building an edge-expanded graph from node-based input and turn restrictions
          */
 
         SimpleLogger().Write() << "Generating edge-expanded graph representation";
-        EdgeBasedGraphFactory * edgeBasedGraphFactory = new EdgeBasedGraphFactory (nodeBasedNodeNumber, edgeList, bollardNodes, trafficLightNodes, inputRestrictions, internalToExternalNodeMapping, speedProfile);
-        std::vector<ImportEdge>().swap(edgeList);
-        edgeBasedGraphFactory->Run(edgeOut,geometry_filename, myLuaState);
-        std::vector<TurnRestriction>().swap(inputRestrictions);
-        std::vector<NodeID>().swap(bollardNodes);
-        std::vector<NodeID>().swap(trafficLightNodes);
-        unsigned edgeBasedNodeNumber = edgeBasedGraphFactory->GetNumberOfEdgeBasedNodes();
-        BOOST_ASSERT(
-            edgeBasedNodeNumber != std::numeric_limits<unsigned>::max()
-        );
-        DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
-        edgeBasedGraphFactory->GetEdgeBasedEdges(edgeBasedEdgeList);
-        std::vector<EdgeBasedNode> nodeBasedEdgeList;
-        edgeBasedGraphFactory->GetEdgeBasedNodes(nodeBasedEdgeList);
-        delete edgeBasedGraphFactory;
+        EdgeBasedGraphFactory *edge_based_graph_factor =
+            new EdgeBasedGraphFactory(number_of_node_based_nodes,
+                                      edge_list,
+                                      barrier_node_list,
+                                      traffic_light_list,
+                                      restriction_list,
+                                      internal_to_external_node_map,
+                                      speed_profile);
+        edge_list.clear();
+        edge_list.shrink_to_fit();
 
-        std::chrono::duration<double> expansionHasFinishedTime = std::chrono::steady_clock::now() - startupTime;
+        edge_based_graph_factor->Run(edge_out, geometry_filename, lua_state);
+
+        restriction_list.clear();
+        restriction_list.shrink_to_fit();
+        barrier_node_list.clear();
+        barrier_node_list.shrink_to_fit();
+        traffic_light_list.clear();
+        traffic_light_list.shrink_to_fit();
+
+        unsigned number_of_edge_based_nodes = edge_based_graph_factor->GetNumberOfEdgeBasedNodes();
+        BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
+        DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
+        edge_based_graph_factor->GetEdgeBasedEdges(edgeBasedEdgeList);
+        std::vector<EdgeBasedNode> node_based_edge_list;
+        edge_based_graph_factor->GetEdgeBasedNodes(node_based_edge_list);
+        delete edge_based_graph_factor;
+
+        std::chrono::duration<double> end_of_expansion_time =
+            std::chrono::steady_clock::now() - startup_time;
 
         // Building grid-like nearest-neighbor data structure
         SimpleLogger().Write() << "building r-tree ...";
-        StaticRTree<EdgeBasedNode> * rtree =
-                new StaticRTree<EdgeBasedNode>(
-                    nodeBasedEdgeList,
-                    rtree_nodes_path.c_str(),
-                    rtree_leafs_path.c_str(),
-                    internalToExternalNodeMapping
-                );
+        StaticRTree<EdgeBasedNode> *rtree =
+            new StaticRTree<EdgeBasedNode>(node_based_edge_list,
+                                           rtree_nodes_path.c_str(),
+                                           rtree_leafs_path.c_str(),
+                                           internal_to_external_node_map);
         delete rtree;
-        IteratorbasedCRC32<std::vector<EdgeBasedNode> > crc32;
-        unsigned crc32OfNodeBasedEdgeList = crc32(nodeBasedEdgeList.begin(), nodeBasedEdgeList.end() );
-        nodeBasedEdgeList.clear();
-        std::vector<EdgeBasedNode>(nodeBasedEdgeList).swap(nodeBasedEdgeList);
-        SimpleLogger().Write() << "CRC32: " << crc32OfNodeBasedEdgeList;
+        IteratorbasedCRC32<std::vector<EdgeBasedNode>> crc32;
+        unsigned node_based_edge_list_CRC32 =
+            crc32(node_based_edge_list.begin(), node_based_edge_list.end());
+        node_based_edge_list.clear();
+        node_based_edge_list.shrink_to_fit();
+        SimpleLogger().Write() << "CRC32: " << node_based_edge_list_CRC32;
 
         /***
          * Writing info on original (node-based) nodes
          */
 
         SimpleLogger().Write() << "writing node map ...";
-        boost::filesystem::ofstream mapOutFile(nodeOut, std::ios::binary);
-        const unsigned size_of_mapping = internalToExternalNodeMapping.size();
-        mapOutFile.write((char *)&size_of_mapping, sizeof(unsigned));
-        mapOutFile.write(
-            (char *)&(internalToExternalNodeMapping[0]),
-            size_of_mapping*sizeof(NodeInfo)
-        );
-        mapOutFile.close();
-        std::vector<NodeInfo>().swap(internalToExternalNodeMapping);
+        boost::filesystem::ofstream node_stream(node_filename, std::ios::binary);
+        const unsigned size_of_mapping = internal_to_external_node_map.size();
+        node_stream.write((char *)&size_of_mapping, sizeof(unsigned));
+        node_stream.write((char *)&(internal_to_external_node_map[0]),
+                         size_of_mapping * sizeof(NodeInfo));
+        node_stream.close();
+        internal_to_external_node_map.clear();
+        internal_to_external_node_map.shrink_to_fit();
 
         /***
          * Contracting the edge-expanded graph
          */
 
         SimpleLogger().Write() << "initializing contractor";
-        Contractor* contractor = new Contractor( edgeBasedNodeNumber, edgeBasedEdgeList );
-        std::chrono::time_point<std::chrono::steady_clock> contraction_start_timestamp = std::chrono::steady_clock::now();
+        Contractor *contractor = new Contractor(number_of_edge_based_nodes, edgeBasedEdgeList);
+        std::chrono::time_point<std::chrono::steady_clock> contraction_start_timestamp =
+            std::chrono::steady_clock::now();
 
         contractor->Run();
-        std::chrono::duration<double> contraction_duration = std::chrono::steady_clock::now() - contraction_start_timestamp;
-        SimpleLogger().Write() <<
-            "Contraction took " <<
-            contraction_duration.count() <<
-            " sec";
+        std::chrono::duration<double> contraction_duration =
+            std::chrono::steady_clock::now() - contraction_start_timestamp;
+        SimpleLogger().Write() << "Contraction took " << contraction_duration.count() << " sec";
 
-        DeallocatingVector< QueryEdge > contractedEdgeList;
-        contractor->GetEdges( contractedEdgeList );
+        DeallocatingVector<QueryEdge> contracted_edge_list;
+        contractor->GetEdges(contracted_edge_list);
         delete contractor;
 
         /***
          * Sorting contracted edges in a way that the static query graph can read some in in-place.
          */
 
-        std::sort(contractedEdgeList.begin(), contractedEdgeList.end());
+        std::sort(contracted_edge_list.begin(), contracted_edge_list.end());
         unsigned max_used_node_id = 0;
-        unsigned contracted_edge_count = contractedEdgeList.size();
-        SimpleLogger().Write() <<
-            "Serializing compacted graph of " <<
-            contracted_edge_count <<
-            " edges";
+        unsigned contracted_edge_count = contracted_edge_list.size();
+        SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
+                               << " edges";
 
         boost::filesystem::ofstream hsgr_output_stream(graphOut, std::ios::binary);
-        hsgr_output_stream.write((char*)&uuid_orig, sizeof(UUID) );
-        for (const QueryEdge & edge : contractedEdgeList)
+        hsgr_output_stream.write((char *)&uuid_orig, sizeof(UUID));
+        for (const QueryEdge &edge : contracted_edge_list)
         {
-            BOOST_ASSERT( UINT_MAX != edge.source );
-            BOOST_ASSERT( UINT_MAX != edge.target );
+            BOOST_ASSERT(UINT_MAX != edge.source);
+            BOOST_ASSERT(UINT_MAX != edge.target);
 
             max_used_node_id = std::max(max_used_node_id, edge.source);
             max_used_node_id = std::max(max_used_node_id, edge.target);
         }
-        SimpleLogger().Write(logDEBUG) << "input graph has " << edgeBasedNodeNumber << " nodes";
+        SimpleLogger().Write(logDEBUG) << "input graph has " << number_of_edge_based_nodes << " nodes";
         SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
-        max_used_node_id+=1;
+        max_used_node_id += 1;
 
-        std::vector< StaticGraph<EdgeData>::NodeArrayEntry > node_array;
-        node_array.resize( edgeBasedNodeNumber + 1);
+        std::vector<StaticGraph<EdgeData>::NodeArrayEntry> node_array;
+        node_array.resize(number_of_edge_based_nodes + 1);
 
         SimpleLogger().Write() << "Building node array";
         StaticGraph<EdgeData>::EdgeIterator edge = 0;
         StaticGraph<EdgeData>::EdgeIterator position = 0;
         StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
 
-        for ( StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node)
+        for (StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node)
         {
             lastEdge = edge;
-            while ((edge < contracted_edge_count) && (contractedEdgeList[edge].source == node))
+            while ((edge < contracted_edge_count) && (contracted_edge_list[edge].source == node))
             {
                 ++edge;
             }
             node_array[node].firstEdge = position; //=edge
-            position += edge - lastEdge; //remove
+            position += edge - lastEdge; // remove
         }
 
-        for (unsigned sentinel_counter = max_used_node_id;
-             sentinel_counter != node_array.size();
-             ++sentinel_counter
-            )
+        for (unsigned sentinel_counter = max_used_node_id; sentinel_counter != node_array.size();
+             ++sentinel_counter)
         {
-            //sentinel element, guarded against underflow
+            // sentinel element, guarded against underflow
             node_array[sentinel_counter].firstEdge = contracted_edge_count;
         }
 
         unsigned node_array_size = node_array.size();
-        //serialize crc32, aka checksum
-        hsgr_output_stream.write((char*) &crc32OfNodeBasedEdgeList, sizeof(unsigned));
-        //serialize number of nodes
-        hsgr_output_stream.write((char*) &node_array_size, sizeof(unsigned));
-        //serialize number of edges
-        hsgr_output_stream.write((char*) &contracted_edge_count, sizeof(unsigned));
-        //serialize all nodes
-        hsgr_output_stream.write((char*) &node_array[0], sizeof(StaticGraph<EdgeData>::NodeArrayEntry)*node_array_size);
-        //serialize all edges
+        // serialize crc32, aka checksum
+        hsgr_output_stream.write((char *)&node_based_edge_list_CRC32, sizeof(unsigned));
+        // serialize number of nodes
+        hsgr_output_stream.write((char *)&node_array_size, sizeof(unsigned));
+        // serialize number of edges
+        hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(unsigned));
+        // serialize all nodes
+        hsgr_output_stream.write((char *)&node_array[0],
+                                 sizeof(StaticGraph<EdgeData>::NodeArrayEntry) * node_array_size);
+        // serialize all edges
 
         SimpleLogger().Write() << "Building edge array";
         edge = 0;
-        int usedEdgeCounter = 0;
+        int number_of_used_edges = 0;
 
-        StaticGraph<EdgeData>::EdgeArrayEntry currentEdge;
-        for (unsigned edge = 0; edge < contractedEdgeList.size(); ++edge)
+        StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
+        for (unsigned edge = 0; edge < contracted_edge_list.size(); ++edge)
         {
             // no eigen loops
-            BOOST_ASSERT(contractedEdgeList[edge].source != contractedEdgeList[edge].target);
-            currentEdge.target = contractedEdgeList[edge].target;
-            currentEdge.data = contractedEdgeList[edge].data;
+            BOOST_ASSERT(contracted_edge_list[edge].source != contracted_edge_list[edge].target);
+            current_edge.target = contracted_edge_list[edge].target;
+            current_edge.data = contracted_edge_list[edge].data;
 
             // every target needs to be valid
-            BOOST_ASSERT(currentEdge.target < max_used_node_id);
-            if(currentEdge.data.distance <= 0) {
-                SimpleLogger().Write(logWARNING) <<
-                    "Edge: "     << edge <<
-                    ",source: "  << contractedEdgeList[edge].source <<
-                    ", target: " << contractedEdgeList[edge].target <<
-                    ", dist: "   << currentEdge.data.distance;
+            BOOST_ASSERT(current_edge.target < max_used_node_id);
+            if (current_edge.data.distance <= 0)
+            {
+                SimpleLogger().Write(logWARNING) << "Edge: " << edge
+                                                 << ",source: " << contracted_edge_list[edge].source
+                                                 << ", target: " << contracted_edge_list[edge].target
+                                                 << ", dist: " << current_edge.data.distance;
 
-                SimpleLogger().Write(logWARNING) <<
-                    "Failed at adjacency list of node " << contractedEdgeList[edge].source << "/" << node_array.size()-1;
+                SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
+                                                 << contracted_edge_list[edge].source << "/"
+                                                 << node_array.size() - 1;
                 return 1;
             }
-            hsgr_output_stream.write((char*) &currentEdge, sizeof(StaticGraph<EdgeData>::EdgeArrayEntry));
-            ++usedEdgeCounter;
+            hsgr_output_stream.write((char *)&current_edge,
+                                     sizeof(StaticGraph<EdgeData>::EdgeArrayEntry));
+            ++number_of_used_edges;
         }
         hsgr_output_stream.close();
 
-        std::chrono::duration<double> entire_duration = std::chrono::steady_clock::now() - startupTime;
+        std::chrono::duration<double> entire_duration =
+            std::chrono::steady_clock::now() - startup_time;
 
         SimpleLogger().Write() << "Preprocessing : " << entire_duration.count() << " seconds";
-        SimpleLogger().Write() << "Expansion  : " <<
-            (nodeBasedNodeNumber/expansionHasFinishedTime.count()) << " nodes/sec and " <<
-            (edgeBasedNodeNumber/expansionHasFinishedTime.count()) << " edges/sec";
+        SimpleLogger().Write() << "Expansion  : "
+                               << (number_of_node_based_nodes / end_of_expansion_time.count())
+                               << " nodes/sec and "
+                               << (number_of_edge_based_nodes / end_of_expansion_time.count())
+                               << " edges/sec";
 
-        SimpleLogger().Write() << "Contraction: " <<
-            (edgeBasedNodeNumber/contraction_duration.count()) << " nodes/sec and " <<
-            usedEdgeCounter/contraction_duration.count() << " edges/sec";
+        SimpleLogger().Write() << "Contraction: "
+                               << (number_of_edge_based_nodes / contraction_duration.count())
+                               << " nodes/sec and "
+                               << number_of_used_edges / contraction_duration.count() << " edges/sec";
 
         node_array.clear();
         SimpleLogger().Write() << "finished preprocessing";
-    } catch(boost::program_options::too_many_positional_options_error&) {
+    }
+    catch (boost::program_options::too_many_positional_options_error &)
+    {
         SimpleLogger().Write(logWARNING) << "Only one file can be specified";
         return 1;
-    } catch(boost::program_options::error& e) {
+    }
+    catch (boost::program_options::error &e)
+    {
         SimpleLogger().Write(logWARNING) << e.what();
         return 1;
-    } catch ( const std::exception &e ) {
+    }
+    catch (const std::exception &e)
+    {
         SimpleLogger().Write(logWARNING) << "Exception occured: " << e.what() << std::endl;
         return 1;
     }

@@ -26,9 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Library/OSRM.h"
-
 #include "Server/ServerFactory.h"
-
 #include "Util/GitDescription.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
@@ -38,12 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/mman.h>
 #endif
 
+#include <boost/thread.hpp> // for timed join.
+
 #include <signal.h>
 
-#include <boost/bind.hpp>
-// #include <boost/date_time.hpp>
-#include <boost/thread.hpp>
-
+#include <functional>
 #include <iostream>
 
 #ifdef _WIN32
@@ -51,27 +48,27 @@ boost::function0<void> console_ctrl_function;
 
 BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 {
-  switch (ctrl_type)
-  {
-  case CTRL_C_EVENT:
-  case CTRL_BREAK_EVENT:
-  case CTRL_CLOSE_EVENT:
-  case CTRL_SHUTDOWN_EVENT:
-    console_ctrl_function();
-    return TRUE;
-  default:
-    return FALSE;
-  }
+    switch (ctrl_type)
+    {
+    case CTRL_C_EVENT:
+    case CTRL_BREAK_EVENT:
+    case CTRL_CLOSE_EVENT:
+    case CTRL_SHUTDOWN_EVENT:
+        console_ctrl_function();
+        return TRUE;
+    default:
+        return FALSE;
+    }
 }
 #endif
 
-int main (int argc, const char * argv[])
+int main(int argc, const char *argv[])
 {
     try
     {
         LogPolicy::GetInstance().Unmute();
 
-        bool use_shared_memory = false, trial = false;
+        bool use_shared_memory = false, trial_run = false;
         std::string ip_address;
         int ip_port, requested_thread_num;
 
@@ -84,7 +81,7 @@ int main (int argc, const char * argv[])
                                                                   ip_port,
                                                                   requested_thread_num,
                                                                   use_shared_memory,
-                                                                  trial);
+                                                                  trial_run);
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
             return 0;
@@ -101,11 +98,10 @@ int main (int argc, const char * argv[])
             SimpleLogger().Write(logWARNING) << argv[0] << " could not be locked to RAM";
         }
 #endif
-        SimpleLogger().Write() <<
-            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
-            "compiled at " << __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
+                               << "compiled at " << __DATE__ << ", " __TIME__;
 
-        if(use_shared_memory)
+        if (use_shared_memory)
         {
             SimpleLogger().Write(logDEBUG) << "Loading from shared memory";
         }
@@ -132,21 +128,18 @@ int main (int argc, const char * argv[])
 #endif
 
         OSRM osrm_lib(server_paths, use_shared_memory);
-        Server * routing_server = ServerFactory::CreateServer(
-                        ip_address,
-                        ip_port,
-                        requested_thread_num
-                     );
+        Server *routing_server =
+            ServerFactory::CreateServer(ip_address, ip_port, requested_thread_num);
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
 
-        if( trial )
+        if (trial_run)
         {
             SimpleLogger().Write() << "trial run, quitting after successful initialization";
         }
         else
         {
-            boost::thread server_thread(boost::bind(&Server::Run, routing_server));
+            boost::thread server_thread(std::bind(&Server::Run, routing_server));
 
 #ifndef _WIN32
             sigset_t wait_mask;
@@ -160,7 +153,7 @@ int main (int argc, const char * argv[])
             sigwait(&wait_mask, &sig);
 #else
             // Set console control handler to allow server to be stopped.
-            console_ctrl_function = boost::bind(&Server::Stop, routing_server);
+            console_ctrl_function = std::bind(&Server::Stop, routing_server);
             SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
             SimpleLogger().Write() << "running and waiting for requests";
             routing_server->Run();
@@ -179,7 +172,7 @@ int main (int argc, const char * argv[])
         delete routing_server;
         SimpleLogger().Write() << "shutdown completed";
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         SimpleLogger().Write(logWARNING) << "exception: " << e.what();
         return 1;
