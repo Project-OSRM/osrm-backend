@@ -116,9 +116,13 @@ int main(int argc, char *argv[])
 #ifdef __linux__
             int f =
                 open(test_path.string().c_str(), O_CREAT | O_TRUNC | O_WRONLY | O_SYNC, S_IRWXU);
+            if (-1 == f)
+            {
+                throw OSRMException("Could not open random data file");
+            }
             time1 = std::chrono::steady_clock::now();
             int ret = write(f, random_array, number_of_elements * sizeof(unsigned));
-            if (-1 == ret)
+            if (0 > ret)
             {
                 throw OSRMException("could not write random data file");
             }
