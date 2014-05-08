@@ -42,75 +42,75 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <sstream>
 
-//Dude, real recursions on the OS stack? You must be brave...
-void print_tree(boost::property_tree::ptree const& property_tree, const unsigned recursion_depth)
+// Dude, real recursions on the OS stack? You must be brave...
+void print_tree(boost::property_tree::ptree const &property_tree, const unsigned recursion_depth)
 {
-    boost::property_tree::ptree::const_iterator end = property_tree.end();
-    for (boost::property_tree::ptree::const_iterator tree_iterator = property_tree.begin(); tree_iterator != end; ++tree_iterator)
+    auto end = property_tree.end();
+    for (auto tree_iterator = property_tree.begin(); tree_iterator != end; ++tree_iterator)
     {
-        for (unsigned current_recursion = 0; current_recursion < recursion_depth; ++current_recursion)
+        for (unsigned current_recursion = 0; current_recursion < recursion_depth;
+             ++current_recursion)
         {
             std::cout << " " << std::flush;
         }
-        std::cout << tree_iterator->first << ": " << tree_iterator->second.get_value<std::string>() << std::endl;
-        print_tree(tree_iterator->second, recursion_depth+1);
+        std::cout << tree_iterator->first << ": " << tree_iterator->second.get_value<std::string>()
+                  << std::endl;
+        print_tree(tree_iterator->second, recursion_depth + 1);
     }
 }
 
-
-int main (int argc, const char * argv[]) {
+int main(int argc, const char *argv[])
+{
     LogPolicy::GetInstance().Unmute();
-    try {
+    try
+    {
         std::string ip_address;
         int ip_port, requested_thread_num;
         bool use_shared_memory = false, trial = false;
         ServerPaths server_paths;
-        if( !GenerateServerProgramOptions(
-                argc,
-                argv,
-                server_paths,
-                ip_address,
-                ip_port,
-                requested_thread_num,
-                use_shared_memory,
-                trial
-             )
-        ) {
+        if (!GenerateServerProgramOptions(argc,
+                                          argv,
+                                          server_paths,
+                                          ip_address,
+                                          ip_port,
+                                          requested_thread_num,
+                                          use_shared_memory,
+                                          trial))
+        {
             return 0;
         }
 
-        SimpleLogger().Write() <<
-            "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
-            "compiled at " << __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
+                               << "compiled at " << __DATE__ << ", " __TIME__;
 
-        OSRM routing_machine( server_paths, use_shared_memory );
+        OSRM routing_machine(server_paths, use_shared_memory);
 
         RouteParameters route_parameters;
-        route_parameters.zoom_level = 18; //no generalization
-        route_parameters.print_instructions = true; //turn by turn instructions
-        route_parameters.alternate_route = true; //get an alternate route, too
-        route_parameters.geometry = true; //retrieve geometry of route
-        route_parameters.compression = true; //polyline encoding
-        route_parameters.check_sum = UINT_MAX; //see wiki
-        route_parameters.service = "viaroute"; //that's routing
+        route_parameters.zoom_level = 18;           // no generalization
+        route_parameters.print_instructions = true; // turn by turn instructions
+        route_parameters.alternate_route = true;    // get an alternate route, too
+        route_parameters.geometry = true;           // retrieve geometry of route
+        route_parameters.compression = true;        // polyline encoding
+        route_parameters.check_sum = UINT_MAX;      // see wiki
+        route_parameters.service = "viaroute";      // that's routing
         route_parameters.output_format = "json";
-        route_parameters.jsonp_parameter = ""; //set for jsonp wrapping
-        route_parameters.language = ""; //unused atm
-        //route_parameters.hints.push_back(); // see wiki, saves I/O if done properly
+        route_parameters.jsonp_parameter = ""; // set for jsonp wrapping
+        route_parameters.language = "";        // unused atm
+        // route_parameters.hints.push_back(); // see wiki, saves I/O if done properly
 
-        FixedPointCoordinate start_coordinate(52.519930*COORDINATE_PRECISION,13.438640*COORDINATE_PRECISION);
-        FixedPointCoordinate target_coordinate(52.513191*COORDINATE_PRECISION,13.415852*COORDINATE_PRECISION);
-        route_parameters.coordinates.push_back(start_coordinate);
-        route_parameters.coordinates.push_back(target_coordinate);
-
+        // start_coordinate
+        route_parameters.coordinates.emplace_back(52.519930 * COORDINATE_PRECISION,
+                                                  13.438640 * COORDINATE_PRECISION);
+        // target_coordinate
+        route_parameters.coordinates.emplace_back(52.513191 * COORDINATE_PRECISION,
+                                                  13.415852 * COORDINATE_PRECISION);
         http::Reply osrm_reply;
-
         routing_machine.RunQuery(route_parameters, osrm_reply);
 
-        //attention: super-inefficient hack below:
+        // attention: super-inefficient hack below:
 
         std::stringstream my_stream;
-        for (const std::string & line : osrm_reply.content)
+        for (const std::string &line : osrm_reply.content)
         {
             std::cout << line;
             my_stream << line;
@@ -121,7 +121,9 @@ int main (int argc, const char * argv[]) {
         boost::property_tree::read_json(my_stream, property_tree);
 
         print_tree(property_tree, 0);
-    } catch (std::exception & current_exception) {
+    }
+    catch (std::exception &current_exception)
+    {
         SimpleLogger().Write(logWARNING) << "caught exception: " << current_exception.what();
         return -1;
     }

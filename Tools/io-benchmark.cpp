@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/ref.hpp>
 
 #include <cmath>
 #include <cstdio>
@@ -101,7 +100,7 @@ int main(int argc, char *argv[])
                 throw OSRMException("Data file already exists");
             }
 
-             std::chrono::time_point<std::chrono::steady_clock> time1, time2;
+            std::chrono::time_point<std::chrono::steady_clock> time1, time2;
             int *random_array = new int[number_of_elements];
             std::generate(random_array, random_array + number_of_elements, std::rand);
 #ifdef __APPLE__
@@ -110,7 +109,8 @@ int main(int argc, char *argv[])
             fcntl(fileno(fd), F_RDAHEAD, 0);
             time1 = std::chrono::steady_clock::now();
             write(fileno(fd), (char *)random_array, number_of_elements * sizeof(unsigned));
-            time2 = std::chrono::steady_clock::now();;
+            time2 = std::chrono::steady_clock::now();
+            ;
             fclose(fd);
 #endif
 #ifdef __linux__
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
             time2 = std::chrono::steady_clock::now();
             close(f);
 #endif
-            std::chrono::duration<double> elapsed_seconds = time2-time1;
+            std::chrono::duration<double> elapsed_seconds = time2 - time1;
             delete[] random_array;
             SimpleLogger().Write(logDEBUG) << "writing raw 1GB took " << elapsed_seconds.count()
                                            << "ms";
@@ -142,11 +142,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-
-            //
             // Run Non-Cached I/O benchmarks
-            //
-
             if (!boost::filesystem::exists(test_path))
             {
                 throw OSRMException("data file does not exist");
@@ -190,7 +186,7 @@ int main(int argc, char *argv[])
 #endif
             time2 = std::chrono::steady_clock::now();
 
-            std::chrono::duration<double> elapsed_seconds = time2-time1;
+            std::chrono::duration<double> elapsed_seconds = time2 - time1;
             SimpleLogger().Write(logDEBUG) << "reading raw 1GB took " << elapsed_seconds.count()
                                            << "ms";
             SimpleLogger().Write() << "raw read performance: " << std::setprecision(5) << std::fixed

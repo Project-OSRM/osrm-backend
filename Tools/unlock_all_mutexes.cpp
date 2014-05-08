@@ -31,20 +31,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-int main() {
+int main()
+{
     LogPolicy::GetInstance().Unmute();
     try
     {
-        SimpleLogger().Write() <<
-                "starting up engines, " << g_GIT_DESCRIPTION << ", " <<
-                "compiled at " << __DATE__ << ", " __TIME__;
+        SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
+                               << "compiled at " << __DATE__ << ", " __TIME__;
         SimpleLogger().Write() << "Releasing all locks";
         SharedBarriers barrier;
         barrier.pending_update_mutex.unlock();
         barrier.query_mutex.unlock();
         barrier.update_mutex.unlock();
     }
-    catch(const std::exception & e)
+    catch (const std::exception &e)
     {
         SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
     }

@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         }
 
         std::vector<ImportEdge> edge_list;
-        const NodeID node_based_node_count = readBinaryOSRMGraphFromStream(input_stream,
+        const NodeID number_of_nodes = readBinaryOSRMGraphFromStream(input_stream,
                                                                      edge_list,
                                                                      bollard_node_IDs_vector,
                                                                      traffic_light_node_IDs_vector,
@@ -113,12 +113,13 @@ int main(int argc, char *argv[])
          */
 
         SimpleLogger().Write() << "Starting SCC graph traversal";
-        std::shared_ptr<TarjanSCC> tarjan = std::make_shared<TarjanSCC>(node_based_node_count,
-                                          edge_list,
-                                          bollard_node_IDs_vector,
-                                          traffic_light_node_IDs_vector,
-                                          restrictions_vector,
-                                          internal_to_external_node_map);
+        std::shared_ptr<TarjanSCC> tarjan =
+            std::make_shared<TarjanSCC>(number_of_nodes,
+                                        edge_list,
+                                        bollard_node_IDs_vector,
+                                        traffic_light_node_IDs_vector,
+                                        restrictions_vector,
+                                        internal_to_external_node_map);
         std::vector<ImportEdge>().swap(edge_list);
 
         tarjan->Run();
