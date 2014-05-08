@@ -30,11 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 
-#include <boost/bind.hpp>
 #include <boost/circular_buffer.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
+#include <condition_variable>
+#include <functional>
+#include <mutex>
 
 template <typename Data> class ConcurrentQueue
 {
@@ -44,10 +43,12 @@ template <typename Data> class ConcurrentQueue
 
     inline void push(const Data &data)
     {
-        boost::mutex::scoped_lock lock(m_mutex);
-        m_not_full.wait(lock, boost::bind(&ConcurrentQueue<Data>::is_not_full, this));
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_not_full.wait(lock,
+                        [this]
+                        { return m_internal_queue.size() < m_internal_queue.capacity(); });
         m_internal_queue.push_back(data);
-        lock.unlock();
+        m_mutex.unlock();
         m_not_empty.notify_one();
     }
 
@@ -55,40 +56,35 @@ template <typename Data> class ConcurrentQueue
 
     inline void wait_and_pop(Data &popped_value)
     {
-        boost::mutex::scoped_lock lock(m_mutex);
-        m_not_empty.wait(lock, boost::bind(&ConcurrentQueue<Data>::is_not_empty, this));
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_not_empty.wait(lock,
+                         [this]
+                         { return !m_internal_queue.empty(); });
         popped_value = m_internal_queue.front();
         m_internal_queue.pop_front();
-        lock.unlock();
+        m_mutex.unlock();
         m_not_full.notify_one();
     }
 
     inline bool try_pop(Data &popped_value)
     {
-        boost::mutex::scoped_lock lock(m_mutex);
+        std::unique_lock<std::mutex> lock(m_mutex);
         if (m_internal_queue.empty())
         {
             return false;
         }
         popped_value = m_internal_queue.front();
         m_internal_queue.pop_front();
-        lock.unlock();
+        m_mutex.unlock();
         m_not_full.notify_one();
         return true;
     }
 
   private:
-    inline bool is_not_empty() const { return !m_internal_queue.empty(); }
-
-    inline bool is_not_full() const
-    {
-        return m_internal_queue.size() < m_internal_queue.capacity();
-    }
-
     boost::circular_buffer<Data> m_internal_queue;
-    boost::mutex m_mutex;
-    boost::condition m_not_empty;
-    boost::condition m_not_full;
+    std::mutex m_mutex;
+    std::condition_variable m_not_empty;
+    std::condition_variable m_not_full;
 };
 
 #endif // CONCURRENT_QUEUE_H
