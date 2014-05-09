@@ -97,9 +97,9 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
         RTreeNode *tree_ptr = (RTreeNode *)(shared_memory + data_layout->GetRSearchTreeOffset());
-        m_static_rtree = std::make_shared<
-            StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>(
-            tree_ptr, data_layout->r_search_tree_size, file_index_path, m_coordinate_list);
+        m_static_rtree =
+            std::make_shared<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>(
+                tree_ptr, data_layout->r_search_tree_size, file_index_path, m_coordinate_list);
     }
 
     void LoadGraph()

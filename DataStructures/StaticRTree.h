@@ -72,9 +72,7 @@ class StaticRTree
   public:
     struct RectangleInt2D
     {
-        RectangleInt2D() : min_lon(INT_MAX), max_lon(INT_MIN), min_lat(INT_MAX), max_lat(INT_MIN)
-        {
-        }
+        RectangleInt2D() : min_lon(INT_MAX), max_lon(INT_MIN), min_lat(INT_MAX), max_lat(INT_MIN) {}
 
         int32_t min_lon, max_lon;
         int32_t min_lat, max_lat;
@@ -207,9 +205,7 @@ class StaticRTree
 
     struct TreeNode
     {
-        TreeNode() : child_count(0), child_is_on_disk(false)
-        {
-        }
+        TreeNode() : child_count(0), child_is_on_disk(false) {}
         RectangleT minimum_bounding_rectangle;
         uint32_t child_count : 31;
         bool child_is_on_disk : 1;
@@ -224,9 +220,7 @@ class StaticRTree
         {
         }
 
-        WrappedInputElement() : m_array_index(UINT_MAX), m_hilbert_value(0)
-        {
-        }
+        WrappedInputElement() : m_array_index(UINT_MAX), m_hilbert_value(0) {}
 
         uint32_t m_array_index;
         uint64_t m_hilbert_value;
@@ -239,9 +233,7 @@ class StaticRTree
 
     struct LeafNode
     {
-        LeafNode() : object_count(0)
-        {
-        }
+        LeafNode() : object_count(0) {}
         uint32_t object_count;
         std::array<DataT, RTREE_LEAF_NODE_SIZE> objects;
     };
@@ -252,9 +244,7 @@ class StaticRTree
             : node_id(n_id), min_dist(dist)
         {
         }
-        QueryCandidate() : node_id(UINT_MAX), min_dist(std::numeric_limits<double>::max())
-        {
-        }
+        QueryCandidate() : node_id(UINT_MAX), min_dist(std::numeric_limits<double>::max()) {}
         uint32_t node_id;
         double min_dist;
         inline bool operator<(const QueryCandidate &other) const

@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
         restriction_stream.read((char *)&number_of_usable_restrictions, sizeof(unsigned));
         restriction_list.resize(number_of_usable_restrictions);
         restriction_stream.read((char *)&(restriction_list[0]),
-                                  number_of_usable_restrictions * sizeof(TurnRestriction));
+                                number_of_usable_restrictions * sizeof(TurnRestriction));
         restriction_stream.close();
 
         boost::filesystem::ifstream in;
@@ -253,12 +253,13 @@ int main(int argc, char *argv[])
         speed_profile.has_turn_penalty_function = lua_function_exists(lua_state, "turn_function");
 
         std::vector<ImportEdge> edge_list;
-        NodeID number_of_node_based_nodes = readBinaryOSRMGraphFromStream(in,
-                                                                   edge_list,
-                                                                   barrier_node_list,
-                                                                   traffic_light_list,
-                                                                   &internal_to_external_node_map,
-                                                                   restriction_list);
+        NodeID number_of_node_based_nodes =
+            readBinaryOSRMGraphFromStream(in,
+                                          edge_list,
+                                          barrier_node_list,
+                                          traffic_light_list,
+                                          &internal_to_external_node_map,
+                                          restriction_list);
         in.close();
 
         if (edge_list.empty())
@@ -276,9 +277,11 @@ int main(int argc, char *argv[])
          */
 
         SimpleLogger().Write() << "Generating edge-expanded graph representation";
-        std::shared_ptr<NodeBasedDynamicGraph> node_based_graph = NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
-        std::unique_ptr<RestrictionMap> restriction_map = std::unique_ptr<RestrictionMap>(new RestrictionMap(node_based_graph, restriction_list));
-        EdgeBasedGraphFactory * edge_based_graph_factor =
+        std::shared_ptr<NodeBasedDynamicGraph> node_based_graph =
+            NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
+        std::unique_ptr<RestrictionMap> restriction_map =
+            std::unique_ptr<RestrictionMap>(new RestrictionMap(node_based_graph, restriction_list));
+        EdgeBasedGraphFactory *edge_based_graph_factor =
             new EdgeBasedGraphFactory(node_based_graph,
                                       std::move(restriction_map),
                                       barrier_node_list,
@@ -335,7 +338,7 @@ int main(int argc, char *argv[])
         const unsigned size_of_mapping = internal_to_external_node_map.size();
         node_stream.write((char *)&size_of_mapping, sizeof(unsigned));
         node_stream.write((char *)&(internal_to_external_node_map[0]),
-                         size_of_mapping * sizeof(NodeInfo));
+                          size_of_mapping * sizeof(NodeInfo));
         node_stream.close();
         internal_to_external_node_map.clear();
         internal_to_external_node_map.shrink_to_fit();
@@ -378,7 +381,8 @@ int main(int argc, char *argv[])
             max_used_node_id = std::max(max_used_node_id, edge.source);
             max_used_node_id = std::max(max_used_node_id, edge.target);
         }
-        SimpleLogger().Write(logDEBUG) << "input graph has " << number_of_edge_based_nodes << " nodes";
+        SimpleLogger().Write(logDEBUG) << "input graph has " << number_of_edge_based_nodes
+                                       << " nodes";
         SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
         max_used_node_id += 1;
 
@@ -398,7 +402,7 @@ int main(int argc, char *argv[])
                 ++edge;
             }
             node_array[node].firstEdge = position; //=edge
-            position += edge - lastEdge; // remove
+            position += edge - lastEdge;           // remove
         }
 
         for (unsigned sentinel_counter = max_used_node_id; sentinel_counter != node_array.size();
@@ -436,10 +440,10 @@ int main(int argc, char *argv[])
             BOOST_ASSERT(current_edge.target < max_used_node_id);
             if (current_edge.data.distance <= 0)
             {
-                SimpleLogger().Write(logWARNING) << "Edge: " << edge
-                                                 << ",source: " << contracted_edge_list[edge].source
-                                                 << ", target: " << contracted_edge_list[edge].target
-                                                 << ", dist: " << current_edge.data.distance;
+                SimpleLogger().Write(logWARNING)
+                    << "Edge: " << edge << ",source: " << contracted_edge_list[edge].source
+                    << ", target: " << contracted_edge_list[edge].target
+                    << ", dist: " << current_edge.data.distance;
 
                 SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
                                                  << contracted_edge_list[edge].source << "/"
@@ -465,7 +469,8 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "Contraction: "
                                << (number_of_edge_based_nodes / contraction_duration.count())
                                << " nodes/sec and "
-                               << number_of_used_edges / contraction_duration.count() << " edges/sec";
+                               << number_of_used_edges / contraction_duration.count()
+                               << " edges/sec";
 
         node_array.clear();
         SimpleLogger().Write() << "finished preprocessing";

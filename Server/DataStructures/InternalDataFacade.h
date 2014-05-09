@@ -71,7 +71,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
 
-   std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>>
+    std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>>
     m_static_rtree;
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
