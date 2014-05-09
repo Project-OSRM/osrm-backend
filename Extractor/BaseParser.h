@@ -28,23 +28,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPARSER_H_
 #define BASEPARSER_H_
 
-extern "C" {
-    #include <lua.h>
-    #include <lauxlib.h>
-    #include <lualib.h>
-}
-
-#include <boost/noncopyable.hpp>
 #include <string>
 #include <vector>
 
+struct lua_State;
 class ExtractorCallbacks;
 class ScriptingEnvironment;
 struct ExtractionWay;
 struct ImportNode;
 
-class BaseParser : boost::noncopyable {
+class BaseParser {
 public:
+    BaseParser() = delete;
+    BaseParser(const BaseParser&) = delete;
     BaseParser(
         ExtractorCallbacks * extractor_callbacks,
         ScriptingEnvironment & scripting_environment
