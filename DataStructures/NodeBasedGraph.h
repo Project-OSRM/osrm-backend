@@ -47,16 +47,14 @@ typedef DynamicGraph<NodeBasedEdgeData> NodeBasedDynamicGraph;
 inline std::shared_ptr<NodeBasedDynamicGraph>
 NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge> &input_edge_list)
 {
-    typedef NodeBasedDynamicGraph::InputEdge DynInputEdge;
-
     std::sort(input_edge_list.begin(), input_edge_list.end());
 
     // TODO: remove duplicate edges
-    DeallocatingVector<DynInputEdge> edges_list;
-    DynInputEdge edge;
+    DeallocatingVector<NodeBasedDynamicGraph::InputEdge> edges_list;
+    NodeBasedDynamicGraph::InputEdge edge;
     for (const ImportEdge &import_edge : input_edge_list)
     {
-
+        // TODO: give ImportEdge a proper c'tor to use emplace_back's below
         if (!import_edge.isForward())
         {
             edge.source = import_edge.target();
@@ -100,11 +98,10 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
     std::sort(edges_list.begin(), edges_list.end());
     auto graph = std::make_shared<NodeBasedDynamicGraph>(number_of_nodes, edges_list);
 
-    // FIXME probably unneeded since this is the end of scope
-    DeallocatingVector<DynInputEdge>().swap(edges_list);
+    edges_list.clear();
     BOOST_ASSERT(0 == edges_list.size());
 
     return graph;
 }
 
-#endif
+#endif // __NODE_BASED_GRAPH_H__
