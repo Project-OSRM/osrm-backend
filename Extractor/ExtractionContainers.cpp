@@ -200,8 +200,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 restrictions_iterator->restriction.toNode = way_start_and_end_iterator->firstStart;
             }
 
-            if (std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.fromNode &&
-                std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.toNode)
+            if (std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.fromNode &&
+                std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.toNode)
             {
                 ++number_of_useable_restrictions;
             }
@@ -221,8 +221,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
              restrictions_iterator != restrictions_list.end();
              ++restrictions_iterator)
         {
-            if (std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.fromNode &&
-                std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.toNode)
+            if (std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.fromNode &&
+                std::numeric_limits<unsigned>::max() != restrictions_iterator->restriction.toNode)
             {
                 restrictions_out_stream.write((char *)&(restrictions_iterator->restriction),
                                               sizeof(TurnRestriction));

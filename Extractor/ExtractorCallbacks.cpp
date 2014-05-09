@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -64,7 +65,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
 {
     if ((0 < parsed_way.speed) || (0 < parsed_way.duration))
     { // Only true if the way is specified by the speed profile
-        if (UINT_MAX == parsed_way.id)
+        if (std::numeric_limits<unsigned>::max() == parsed_way.id)
         {
             SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << parsed_way.id
                                            << " of size " << parsed_way.path.size();
