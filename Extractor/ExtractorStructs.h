@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/ImportNode.h"
 #include "../typedefs.h"
 
+#include <limits>
 #include <string>
 
 struct ExtractorRelation
@@ -52,8 +53,8 @@ struct WayIDStartAndEndEdge
     NodeID lastStart;
     NodeID lastTarget;
     WayIDStartAndEndEdge()
-        : wayID(UINT_MAX), firstStart(UINT_MAX), firstTarget(UINT_MAX), lastStart(UINT_MAX),
-          lastTarget(UINT_MAX)
+        : wayID(std::numeric_limits<unsigned>::max()), firstStart(std::numeric_limits<unsigned>::max()), firstTarget(std::numeric_limits<unsigned>::max()), lastStart(std::numeric_limits<unsigned>::max()),
+          lastTarget(std::numeric_limits<unsigned>::max())
     {
     }
 
