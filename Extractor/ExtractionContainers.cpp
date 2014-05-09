@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stxxl/sort>
 
 #include <chrono>
+#include <limits>
 
 ExtractionContainers::ExtractionContainers()
 {
@@ -199,8 +200,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 restrictions_iterator->restriction.toNode = way_start_and_end_iterator->firstStart;
             }
 
-            if (UINT_MAX != restrictions_iterator->restriction.fromNode &&
-                UINT_MAX != restrictions_iterator->restriction.toNode)
+            if (std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.fromNode &&
+                std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.toNode)
             {
                 ++number_of_useable_restrictions;
             }
@@ -220,8 +221,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
              restrictions_iterator != restrictions_list.end();
              ++restrictions_iterator)
         {
-            if (UINT_MAX != restrictions_iterator->restriction.fromNode &&
-                UINT_MAX != restrictions_iterator->restriction.toNode)
+            if (std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.fromNode &&
+                std::numeric_limits<unsigned::max> != restrictions_iterator->restriction.toNode)
             {
                 restrictions_out_stream.write((char *)&(restrictions_iterator->restriction),
                                               sizeof(TurnRestriction));
@@ -336,8 +337,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 continue;
             }
             BOOST_ASSERT(edge_iterator->target == node_iterator->id);
-            if (edge_iterator->source_coordinate.lat != INT_MIN &&
-                edge_iterator->source_coordinate.lon != INT_MIN)
+            if (edge_iterator->source_coordinate.lat != std::numeric_limits<int>::min() &&
+                edge_iterator->source_coordinate.lon != std::numeric_limits<int>::min())
             {
                 BOOST_ASSERT(edge_iterator->speed != -1);
                 BOOST_ASSERT(edge_iterator->type >= 0);
