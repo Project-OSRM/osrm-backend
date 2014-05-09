@@ -173,7 +173,7 @@ inline void PBFParser::ParseData()
 
         loadBlock(thread_data);
 
-        int group_size = group_size = thread_data->PBFprimitiveBlock.primitivegroup_size();
+        int group_size = thread_data->PBFprimitiveBlock.primitivegroup_size();
         for (int i = 0; i < group_size; ++i)
         {
             thread_data->currentGroupID = i;
