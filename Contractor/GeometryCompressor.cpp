@@ -72,7 +72,7 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 
     boost::filesystem::fstream geometry_out_stream(path, std::ios::binary | std::ios::out);
     const unsigned number_of_compressed_geometries = m_compressed_geometries.size() + 1;
-    BOOST_ASSERT(UINT_MAX != number_of_compressed_geometries);
+    BOOST_ASSERT(std::numeric_limits<unsigned>::max() != number_of_compressed_geometries);
     geometry_out_stream.write((char *)&number_of_compressed_geometries, sizeof(unsigned));
 
     // write indices array
@@ -83,7 +83,7 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 
         const std::vector<CompressedNode> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
-        BOOST_ASSERT(UINT_MAX != unpacked_size);
+        BOOST_ASSERT(std::numeric_limits<unsigned>::max() != unpacked_size);
         prefix_sum_of_list_indices += unpacked_size;
     }
     // sentinel element
@@ -99,7 +99,7 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
         const std::vector<CompressedNode> &current_vector = elem;
         const unsigned unpacked_size = current_vector.size();
         control_sum += unpacked_size;
-        BOOST_ASSERT(UINT_MAX != unpacked_size);
+        BOOST_ASSERT(std::numeric_limits<unsigned>::max() != unpacked_size);
         for (const CompressedNode current_node : current_vector)
         {
             geometry_out_stream.write((char *)&(current_node.first), sizeof(NodeID));
