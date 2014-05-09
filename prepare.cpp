@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DataStructures/QueryEdge.h"
 #include "DataStructures/StaticGraph.h"
 #include "DataStructures/StaticRTree.h"
+#include "DataStructures/RestrictionMap.h"
 #include "Util/GitDescription.h"
 #include "Util/GraphLoader.h"
 #include "Util/LuaUtil.h"
@@ -48,7 +49,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <luabind/luabind.hpp>
 
-#include <chrono>
 #include <string>
 #include <vector>
 
@@ -274,12 +274,13 @@ int main(int argc, char *argv[])
          */
 
         SimpleLogger().Write() << "Generating edge-expanded graph representation";
-        EdgeBasedGraphFactory *edge_based_graph_factor =
-            new EdgeBasedGraphFactory(number_of_node_based_nodes,
-                                      edge_list,
+        std::shared_ptr<NodeBasedDynamicGraph> node_based_graph = NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
+        std::unique_ptr<RestrictionMap> restriction_map = std::unique_ptr<RestrictionMap>(new RestrictionMap(node_based_graph, restriction_list));
+        EdgeBasedGraphFactory * edge_based_graph_factor =
+            new EdgeBasedGraphFactory(node_based_graph,
+                                      std::move(restriction_map),
                                       barrier_node_list,
                                       traffic_light_list,
-                                      restriction_list,
                                       internal_to_external_node_map,
                                       speed_profile);
         edge_list.clear();
@@ -301,6 +302,9 @@ int main(int argc, char *argv[])
         std::vector<EdgeBasedNode> node_based_edge_list;
         edge_based_graph_factor->GetEdgeBasedNodes(node_based_edge_list);
         delete edge_based_graph_factor;
+
+        // TODO actually use scoping: Split this up in subfunctions
+        node_based_graph.reset();
 
         std::chrono::duration<double> end_of_expansion_time =
             std::chrono::steady_clock::now() - startup_time;

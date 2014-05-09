@@ -35,20 +35,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/EdgeBasedNode.h"
 #include "../DataStructures/HashTable.h"
-#include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/OriginalEdgeData.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../DataStructures/Restriction.h"
+#include "../DataStructures/NodeBasedGraph.h"
+#include "../DataStructures/RestrictionMap.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/SimpleLogger.h"
 
 #include "GeometryCompressor.h"
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
@@ -57,155 +57,76 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <queue>
 #include <vector>
 
-class EdgeBasedGraphFactory : boost::noncopyable {
-public:
+class EdgeBasedGraphFactory : boost::noncopyable
+{
+  public:
     struct SpeedProfileProperties;
 
-    explicit EdgeBasedGraphFactory(
-        int number_of_nodes,
-        std::vector<ImportEdge> & input_edge_list,
-        std::vector<NodeID> & barrier_node_list,
-        std::vector<NodeID> & traffic_light_node_list,
-        std::vector<TurnRestriction> & input_restrictions_list,
-        std::vector<NodeInfo> & m_node_info_list,
-        SpeedProfileProperties & speed_profile
-    );
+    explicit EdgeBasedGraphFactory(const std::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
+                                   std::unique_ptr<RestrictionMap> restricion_map,
+                                   std::vector<NodeID> &barrier_node_list,
+                                   std::vector<NodeID> &traffic_light_node_list,
+                                   std::vector<NodeInfo> &m_node_info_list,
+                                   SpeedProfileProperties &speed_profile);
 
-    void Run(
-        const std::string & original_edge_data_filename,
-        const std::string & geometry_filename,
-        lua_State *myLuaState
-    );
+    void Run(const std::string &original_edge_data_filename,
+             const std::string &geometry_filename,
+             lua_State *myLuaState);
 
-    void GetEdgeBasedEdges( DeallocatingVector< EdgeBasedEdge >& edges );
+    void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
 
-    void GetEdgeBasedNodes( std::vector< EdgeBasedNode> & nodes);
+    void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
 
-    TurnInstruction AnalyzeTurn(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    ) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
 
-    int GetTurnPenalty(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w,
-        lua_State *myLuaState
-    ) const;
+    int GetTurnPenalty(const NodeID u, const NodeID v, const NodeID w, lua_State *myLuaState) const;
 
     unsigned GetNumberOfEdgeBasedNodes() const;
 
-    struct SpeedProfileProperties{
-        SpeedProfileProperties() :
-            trafficSignalPenalty(0),
-            uTurnPenalty(0),
-            has_turn_penalty_function(false)
-        { }
+    struct SpeedProfileProperties
+    {
+        SpeedProfileProperties()
+            : trafficSignalPenalty(0), uTurnPenalty(0), has_turn_penalty_function(false)
+        {
+        }
 
         int trafficSignalPenalty;
         int uTurnPenalty;
         bool has_turn_penalty_function;
     } speed_profile;
 
-private:
-    struct NodeBasedEdgeData {
-        NodeBasedEdgeData() : distance(INVALID_EDGE_WEIGHT), edgeBasedNodeID(SPECIAL_NODEID), nameID(std::numeric_limits<unsigned>::max()),
-            type(std::numeric_limits<short>::max()), isAccessRestricted(false), shortcut(false), forward(false), backward(false),
-            roundabout(false), ignore_in_grid(false), contraFlow(false)
-        { }
-
-        int distance;
-        unsigned edgeBasedNodeID;
-        unsigned nameID;
-        short type;
-        bool isAccessRestricted:1;
-        bool shortcut:1;
-        bool forward:1;
-        bool backward:1;
-        bool roundabout:1;
-        bool ignore_in_grid:1;
-        bool contraFlow:1;
-
-        void SwapDirectionFlags() {
-            bool temp_flag = forward;
-            forward = backward;
-            backward = temp_flag;
-        }
-
-        bool IsEqualTo( const NodeBasedEdgeData & other ) const {
-            return (forward  == other.forward)          &&
-                   (backward == other.backward)         &&
-                   (nameID == other.nameID)             &&
-                   (ignore_in_grid == other.ignore_in_grid) &&
-                   (contraFlow == other.contraFlow);
-        }
-    };
-
-    unsigned m_turn_restrictions_count;
-    unsigned m_number_of_edge_based_nodes;
-
-    typedef DynamicGraph<NodeBasedEdgeData>     NodeBasedDynamicGraph;
-    typedef NodeBasedDynamicGraph::InputEdge    NodeBasedEdge;
+  private:
     typedef NodeBasedDynamicGraph::NodeIterator NodeIterator;
     typedef NodeBasedDynamicGraph::EdgeIterator EdgeIterator;
-    typedef NodeBasedDynamicGraph::EdgeData     EdgeData;
-    typedef std::pair<NodeID, NodeID>           RestrictionSource;
-    typedef std::pair<NodeID, bool>             RestrictionTarget;
-    typedef std::vector<RestrictionTarget>      EmanatingRestrictionsVector;
-    typedef boost::unordered_map<RestrictionSource, unsigned > RestrictionMap;
+    typedef NodeBasedDynamicGraph::EdgeData EdgeData;
 
-    std::vector<NodeInfo>                       m_node_info_list;
-    std::vector<EmanatingRestrictionsVector>    m_restriction_bucket_list;
-    std::vector<EdgeBasedNode>                  m_edge_based_node_list;
-    DeallocatingVector<EdgeBasedEdge>           m_edge_based_edge_list;
+    unsigned m_number_of_edge_based_nodes;
 
-    boost::shared_ptr<NodeBasedDynamicGraph>    m_node_based_graph;
-    boost::unordered_set<NodeID>                m_barrier_nodes;
-    boost::unordered_set<NodeID>                m_traffic_lights;
+    std::vector<NodeInfo> m_node_info_list;
+    std::vector<EdgeBasedNode> m_edge_based_node_list;
+    DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
-    RestrictionMap                              m_restriction_map;
-    GeometryCompressor                          m_geometry_compressor;
+    std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
+    boost::unordered_set<NodeID> m_barrier_nodes;
+    boost::unordered_set<NodeID> m_traffic_lights;
 
-    NodeID CheckForEmanatingIsOnlyTurn(
-        const NodeID u,
-        const NodeID v
-    ) const;
+    std::unique_ptr<RestrictionMap> m_restriction_map;
 
-    bool CheckIfTurnIsRestricted(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    ) const;
+    GeometryCompressor m_geometry_compressor;
 
-    void InsertEdgeBasedNode(
-        NodeBasedDynamicGraph::NodeIterator u,
-        NodeBasedDynamicGraph::NodeIterator v,
-        NodeBasedDynamicGraph::EdgeIterator e1,
-        bool belongsToTinyComponent
-    );
+    void CompressGeometry();
+    void RenumberEdges();
+    void GenerateEdgeExpandedNodes();
+    void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
+                                   lua_State *lua_state);
 
-    void BFSCompentExplorer(
-        std::vector<unsigned> & component_index_list,
-        std::vector<unsigned> & component_index_size
-    ) const;
+    void InsertEdgeBasedNode(NodeBasedDynamicGraph::NodeIterator u,
+                             NodeBasedDynamicGraph::NodeIterator v,
+                             NodeBasedDynamicGraph::EdgeIterator e1,
+                             bool belongsToTinyComponent);
 
-    void FlushVectorToStream(
-        std::ofstream & edge_data_file,
-        std::vector<OriginalEdgeData> & original_edge_data_vector
-    ) const;
-
-    void FixupArrivingTurnRestriction(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    );
-
-    void FixupStartingTurnRestriction(
-        const NodeID u,
-        const NodeID v,
-        const NodeID w
-    );
+    void FlushVectorToStream(std::ofstream &edge_data_file,
+                             std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 
     unsigned max_id;
 };
