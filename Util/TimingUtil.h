@@ -25,34 +25,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TIMINGUTIL_H_
-#define TIMINGUTIL_H_
+#ifndef TIMINGUTIL_H
+#define TIMINGUTIL_H
 
-#ifdef _WIN32
-#include <sys/timeb.h>
-#include <sys/types.h>
-#include <winsock.h>
-void gettimeofday(struct timeval* t,void* timezone) {
-    struct _timeb timebuffer;
-    _ftime( &timebuffer );
-    t->tv_sec=timebuffer.time;
-    t->tv_usec=1000*timebuffer.millitm;
-}
-#else
-#include <sys/time.h>
-#endif
+#include <chrono>
 
-/** Returns a timestamp (now) in seconds (incl. a fractional part). */
-static inline double get_timestamp() {
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    return double(tp.tv_sec) + tp.tv_usec / 1000000.;
-}
+#define TIMER_START(_X) std::chrono::time_point<std::chrono::steady_clock> _X##_start, _X##_stop; _X##_start = std::chrono::steady_clock::now()
+#define TIMER_STOP(_X) _X##_stop = std::chrono::steady_clock::now()
+#define TIMER_MSEC(_X) std::chrono::duration_cast<std::chrono::milliseconds>(_X##_stop - _X##_start).count()
+#define TIMER_SEC(_X) std::chrono::duration_cast<std::chrono::seconds>(_X##_stop - _X##_start).count()
+#define TIMER_MIN(_X) std::chrono::duration_cast<std::chrono::minutes>(_X##_stop - _X##_start).count()
 
-#define TIMER_START(_X) timeval _X##_start, _X##_stop; gettimeofday(&_X##_start, NULL)
-#define TIMER_STOP(_X) gettimeofday(&_X##_stop, NULL);
-#define TIMER_MSEC(_X) ((_X##_stop.tv_sec - _X##_start.tv_sec) * 1000.0 + (_X##_stop.tv_usec - _X##_start.tv_usec) / 1000.0)
-#define TIMER_SEC(_X) ((_X##_stop.tv_sec - _X##_start.tv_sec) + (_X##_stop.tv_usec - _X##_start.tv_usec) / 1000.0 / 1000.0)
-#define TIMER_MIN(_X) ((_X##_stop.tv_sec - _X##_start.tv_sec) / 60.0)
-
-#endif /* TIMINGUTIL_H_ */
+#endif /* TIMINGUTIL_H */
