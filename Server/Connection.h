@@ -35,8 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -48,7 +48,7 @@ namespace http
 class RequestParser;
 
 /// Represents a single connection from a client.
-class Connection : public boost::enable_shared_from_this<Connection>
+class Connection : public std::enable_shared_from_this<Connection>
 {
   public:
     explicit Connection(boost::asio::io_service &io_service, RequestHandler &handler);

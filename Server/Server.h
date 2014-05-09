@@ -33,10 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
+#include <functional>
+#include <memory>
 #include <vector>
 
 class Server
@@ -63,10 +63,10 @@ class Server
 
     void Run()
     {
-        std::vector<boost::shared_ptr<boost::thread>> threads;
+        std::vector<std::shared_ptr<boost::thread>> threads;
         for (unsigned i = 0; i < thread_pool_size; ++i)
         {
-            boost::shared_ptr<boost::thread> thread = boost::make_shared<boost::thread>(
+            std::shared_ptr<boost::thread> thread = std::make_shared<boost::thread>(
                 boost::bind(&boost::asio::io_service::run, &io_service));
             threads.push_back(thread);
         }
@@ -94,7 +94,7 @@ class Server
     unsigned thread_pool_size;
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::acceptor acceptor;
-    boost::shared_ptr<http::Connection> new_connection;
+    std::shared_ptr<http::Connection> new_connection;
     RequestHandler request_handler;
 };
 
