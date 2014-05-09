@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <unordered_map>
 
+#include <string>
 #include <vector>
 
 #ifndef GEOMETRY_COMPRESSOR_H
