@@ -34,14 +34,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-struct ExtractionWay {
-    ExtractionWay() {
-        Clear();
-    }
+struct ExtractionWay
+{
+    ExtractionWay() { Clear(); }
 
-    inline void Clear(){
-        id = UINT_MAX;
-        nameID = UINT_MAX;
+    inline void Clear()
+    {
+        id = SPECIAL_NODEID;
+        nameID = INVALID_NAMEID;
         path.clear();
         keyVals.clear();
         direction = ExtractionWay::notSure;
@@ -55,9 +55,11 @@ struct ExtractionWay {
         ignoreInGrid = false;
     }
 
-    enum Directions {
-        notSure = 0, oneway, bidirectional, opposite
-    };
+    enum Directions
+    { notSure = 0,
+      oneway,
+      bidirectional,
+      opposite };
     unsigned id;
     unsigned nameID;
     double speed;
@@ -70,9 +72,8 @@ struct ExtractionWay {
     bool roundabout;
     bool isAccessRestricted;
     bool ignoreInGrid;
-    std::vector< NodeID > path;
+    std::vector<NodeID> path;
     HashTable<std::string, std::string> keyVals;
 };
 
-
-#endif //EXTRACTION_WAY_H
+#endif // EXTRACTION_WAY_H

@@ -31,24 +31,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BaseParser.h"
 #include "../DataStructures/ConcurrentQueue.h"
 
-#include <boost/shared_ptr.hpp>
-
 #include <osmpbf/fileformat.pb.h>
 #include <osmpbf/osmformat.pb.h>
 
 #include <fstream>
+#include <memory>
 
-class PBFParser : public BaseParser {
+class PBFParser : public BaseParser
+{
 
-    enum EntityType {
-        TypeDummy     = 0,
-        TypeNode      = 1,
-        TypeWay       = 2,
-        TypeRelation  = 4,
-        TypeDenseNode = 8
-    };
+    enum EntityType
+    { TypeDummy = 0,
+      TypeNode = 1,
+      TypeWay = 2,
+      TypeRelation = 4,
+      TypeDenseNode = 8 };
 
-    struct _ThreadData {
+    struct ParserThreadData
+    {
         int currentGroupID;
         int currentEntityID;
         EntityType entityTypeIndicator;
@@ -62,42 +62,38 @@ class PBFParser : public BaseParser {
         std::vector<char> charBuffer;
     };
 
-public:
-    PBFParser(
-        const char * fileName,
-        ExtractorCallbacks* ec,
-        ScriptingEnvironment& se
-    );
+  public:
+    PBFParser(const char *file_name, ExtractorCallbacks *extractor_callbacks, ScriptingEnvironment &scripting_environment);
     virtual ~PBFParser();
 
     inline bool ReadHeader();
-	inline bool Parse();
+    inline bool Parse();
 
-private:
+  private:
     inline void ReadData();
     inline void ParseData();
-    inline void parseDenseNode   (_ThreadData * threadData);
-    inline void parseNode        (_ThreadData * threadData);
-    inline void parseRelation    (_ThreadData * threadData);
-    inline void parseWay         (_ThreadData * threadData);
+    inline void parseDenseNode(ParserThreadData *thread_data);
+    inline void parseNode(ParserThreadData *thread_data);
+    inline void parseRelation(ParserThreadData *thread_data);
+    inline void parseWay(ParserThreadData *thread_data);
 
-    inline void loadGroup        (_ThreadData * threadData);
-    inline void loadBlock        (_ThreadData * threadData);
-    inline bool readPBFBlobHeader(std::fstream & stream, _ThreadData * threadData);
-    inline bool unpackZLIB       (std::fstream & stream, _ThreadData * threadData);
-    inline bool unpackLZMA       (std::fstream & stream, _ThreadData * threadData);
-    inline bool readBlob         (std::fstream & stream, _ThreadData * threadData);
-    inline bool readNextBlock    (std::fstream & stream, _ThreadData * threadData);
+    inline void loadGroup(ParserThreadData *thread_data);
+    inline void loadBlock(ParserThreadData *thread_data);
+    inline bool readPBFBlobHeader(std::fstream &stream, ParserThreadData *thread_data);
+    inline bool unpackZLIB(std::fstream &stream, ParserThreadData *thread_data);
+    inline bool unpackLZMA(std::fstream &stream, ParserThreadData *thread_data);
+    inline bool readBlob(std::fstream &stream, ParserThreadData *thread_data);
+    inline bool readNextBlock(std::fstream &stream, ParserThreadData *thread_data);
 
     static const int NANO = 1000 * 1000 * 1000;
     static const int MAX_BLOB_HEADER_SIZE = 64 * 1024;
     static const int MAX_BLOB_SIZE = 32 * 1024 * 1024;
 
-    unsigned groupCount;
-    unsigned blockCount;
+    unsigned group_count;
+    unsigned block_count;
 
-    std::fstream input;     // the input stream to parse
-    boost::shared_ptr<ConcurrentQueue < _ThreadData* > > threadDataQueue;
+    std::fstream input; // the input stream to parse
+    std::shared_ptr<ConcurrentQueue<ParserThreadData *>> thread_data_queue;
 };
 
 #endif /* PBFPARSER_H_ */

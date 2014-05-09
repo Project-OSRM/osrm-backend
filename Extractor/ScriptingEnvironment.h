@@ -32,15 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct lua_State;
 
-class ScriptingEnvironment {
-public:
+class ScriptingEnvironment
+{
+  public:
     ScriptingEnvironment();
-    explicit ScriptingEnvironment(const char * fileName);
+    explicit ScriptingEnvironment(const char *file_name);
     virtual ~ScriptingEnvironment();
 
-    lua_State * getLuaStateForThreadID(const int);
+    lua_State *getLuaStateForThreadID(const int);
 
-    std::vector<lua_State *> luaStateVector;
+    std::vector<lua_State *> lua_state_vector;
 };
 
 #endif /* SCRIPTINGENVIRONMENT_H_ */

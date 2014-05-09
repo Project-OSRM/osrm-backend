@@ -35,31 +35,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stxxl/vector>
 
-class ExtractionContainers {
-public:
-    typedef stxxl::vector<NodeID>                    STXXLNodeIDVector;
-    typedef stxxl::vector<ExternalMemoryNode>        STXXLNodeVector;
-    typedef stxxl::vector<InternalExtractorEdge>     STXXLEdgeVector;
-    typedef stxxl::vector<std::string>               STXXLStringVector;
+class ExtractionContainers
+{
+  public:
+    typedef stxxl::vector<NodeID> STXXLNodeIDVector;
+    typedef stxxl::vector<ExternalMemoryNode> STXXLNodeVector;
+    typedef stxxl::vector<InternalExtractorEdge> STXXLEdgeVector;
+    typedef stxxl::vector<std::string> STXXLStringVector;
     typedef stxxl::vector<InputRestrictionContainer> STXXLRestrictionsVector;
-    typedef stxxl::vector<_WayIDStartAndEndEdge>     STXXLWayIDStartEndVector;
+    typedef stxxl::vector<WayIDStartAndEndEdge> STXXLWayIDStartEndVector;
 
-    STXXLNodeIDVector                               used_node_id_list;
-    STXXLNodeVector                                 all_nodes_list;
-    STXXLEdgeVector                                 all_edges_list;
-    STXXLStringVector                               name_list;
-    STXXLRestrictionsVector                         restrictions_list;
-    STXXLWayIDStartEndVector                        way_start_end_id_list;
+    STXXLNodeIDVector used_node_id_list;
+    STXXLNodeVector all_nodes_list;
+    STXXLEdgeVector all_edges_list;
+    STXXLStringVector name_list;
+    STXXLRestrictionsVector restrictions_list;
+    STXXLWayIDStartEndVector way_start_end_id_list;
     const UUID uuid;
 
     ExtractionContainers();
 
     virtual ~ExtractionContainers();
 
-    void PrepareData(
-        const std::string & output_file_name,
-        const std::string & restrictions_file_name
-    );
+    void PrepareData(const std::string &output_file_name,
+                     const std::string &restrictions_file_name);
 };
 
 #endif /* EXTRACTIONCONTAINERS_H_ */

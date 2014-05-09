@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef EXTRACTORCALLBACKS_H_
-#define EXTRACTORCALLBACKS_H_
+#ifndef EXTRACTOR_CALLBACKS_H
+#define EXTRACTOR_CALLBACKS_H
 
 #include "../typedefs.h"
 
@@ -38,29 +38,26 @@ class ExtractionContainers;
 struct ExtractionWay;
 struct InputRestrictionContainer;
 
-class ExtractorCallbacks{
-private:
+class ExtractorCallbacks
+{
+  private:
+    boost::unordered_map<std::string, NodeID> &string_map;
+    ExtractionContainers &external_memory;
 
-    boost::unordered_map<std::string, NodeID> * string_map;
-    ExtractionContainers * externalMemory;
+  public:
+    ExtractorCallbacks() = delete;
+    ExtractorCallbacks(const ExtractorCallbacks &) = delete;
+    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
+                                boost::unordered_map<std::string, NodeID> &string_map);
 
-    ExtractorCallbacks();
-public:
-    explicit ExtractorCallbacks(
-        ExtractionContainers * ext,
-        boost::unordered_map<std::string, NodeID> * string_map
-    );
+    // warning: caller needs to take care of synchronization!
+    void ProcessNode(const ExternalMemoryNode &node);
 
-    ~ExtractorCallbacks();
+    // warning: caller needs to take care of synchronization!
+    bool ProcessRestriction(const InputRestrictionContainer &restriction);
 
-    /** warning: caller needs to take care of synchronization! */
-    void nodeFunction(const ExternalMemoryNode &n);
-
-    bool restrictionFunction(const InputRestrictionContainer &r);
-
-    /** warning: caller needs to take care of synchronization! */
-    void wayFunction(ExtractionWay &w);
-
+    // warning: caller needs to take care of synchronization!
+    void ProcessWay(ExtractionWay &way);
 };
 
-#endif /* EXTRACTORCALLBACKS_H_ */
+#endif /* EXTRACTOR_CALLBACKS_H */

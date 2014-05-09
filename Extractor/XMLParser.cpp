@@ -71,19 +71,19 @@ bool XMLParser::Parse()
         {
             ImportNode n = ReadXMLNode();
             ParseNodeInLua(n, lua_state);
-            extractor_callbacks->nodeFunction(n);
+            extractor_callbacks->ProcessNode(n);
         }
 
         if (xmlStrEqual(currentName, (const xmlChar *)"way") == 1)
         {
             ExtractionWay way = ReadXMLWay();
             ParseWayInLua(way, lua_state);
-            extractor_callbacks->wayFunction(way);
+            extractor_callbacks->ProcessWay(way);
         }
         if (use_turn_restrictions && xmlStrEqual(currentName, (const xmlChar *)"relation") == 1)
         {
             InputRestrictionContainer r = ReadXMLRestriction();
-            if ((UINT_MAX != r.fromWay) && !extractor_callbacks->restrictionFunction(r))
+            if ((UINT_MAX != r.fromWay) && !extractor_callbacks->ProcessRestriction(r))
             {
                 std::cerr << "[XMLParser] restriction not parsed" << std::endl;
             }
@@ -328,8 +328,7 @@ ImportNode XMLParser::ReadXMLNode()
                 xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
                 if (k != NULL && value != NULL)
                 {
-                    node.keyVals.emplace(std::string((char *)(k)),
-                                         std::string((char *)(value)));
+                    node.keyVals.emplace(std::string((char *)(k)), std::string((char *)(value)));
                 }
                 if (k != NULL)
                 {

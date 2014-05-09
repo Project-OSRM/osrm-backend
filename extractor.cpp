@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
         ExtractionContainers extraction_containers;
 
         string_map[""] = 0;
-        extractor_callbacks = new ExtractorCallbacks(&extraction_containers, &string_map);
+        extractor_callbacks = new ExtractorCallbacks(extraction_containers, string_map);
         BaseParser *parser;
         if (file_has_pbf_format)
         {
@@ -241,6 +241,9 @@ int main(int argc, char *argv[])
             std::chrono::steady_clock::now();
 
         parser->Parse();
+        delete parser;
+        delete extractor_callbacks;
+
         std::chrono::duration<double> parsing_duration =
             std::chrono::steady_clock::now() - parsing_start_time;
         SimpleLogger().Write() << "Parsing finished after " << parsing_duration.count()
@@ -253,9 +256,6 @@ int main(int argc, char *argv[])
         }
 
         extraction_containers.PrepareData(output_file_name, restriction_fileName);
-
-        delete parser;
-        delete extractor_callbacks;
 
         std::chrono::duration<double> extraction_duration =
             std::chrono::steady_clock::now() - startup_time;

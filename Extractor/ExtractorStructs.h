@@ -34,97 +34,80 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-struct ExtractorRelation {
-    ExtractorRelation() : type(unknown){}
-    enum {
-        unknown = 0, ferry, turnRestriction
-    } type;
+struct ExtractorRelation
+{
+    ExtractorRelation() : type(unknown) {}
+    enum
+    { unknown = 0,
+      ferry,
+      turnRestriction } type;
     HashTable<std::string, std::string> keyVals;
 };
 
-struct _WayIDStartAndEndEdge {
+struct WayIDStartAndEndEdge
+{
     unsigned wayID;
     NodeID firstStart;
     NodeID firstTarget;
     NodeID lastStart;
     NodeID lastTarget;
-    _WayIDStartAndEndEdge()
-     :
-        wayID(UINT_MAX),
-        firstStart(UINT_MAX),
-        firstTarget(UINT_MAX),
-        lastStart(UINT_MAX),
-        lastTarget(UINT_MAX)
-    { }
-
-    explicit _WayIDStartAndEndEdge(
-        unsigned w,
-        NodeID fs,
-        NodeID ft,
-        NodeID ls,
-        NodeID lt
-    ) :
-        wayID(w),
-        firstStart(fs),
-        firstTarget(ft),
-        lastStart(ls),
-        lastTarget(lt)
-    { }
-
-    static _WayIDStartAndEndEdge min_value() {
-        return _WayIDStartAndEndEdge((std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)(), (std::numeric_limits<unsigned>::min)());
+    WayIDStartAndEndEdge()
+        : wayID(UINT_MAX), firstStart(UINT_MAX), firstTarget(UINT_MAX), lastStart(UINT_MAX),
+          lastTarget(UINT_MAX)
+    {
     }
-    static _WayIDStartAndEndEdge max_value() {
-        return _WayIDStartAndEndEdge((std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)(), (std::numeric_limits<unsigned>::max)());
+
+    explicit WayIDStartAndEndEdge(unsigned w, NodeID fs, NodeID ft, NodeID ls, NodeID lt)
+        : wayID(w), firstStart(fs), firstTarget(ft), lastStart(ls), lastTarget(lt)
+    {
+    }
+
+    static WayIDStartAndEndEdge min_value()
+    {
+        return WayIDStartAndEndEdge((std::numeric_limits<unsigned>::min)(),
+                                    (std::numeric_limits<unsigned>::min)(),
+                                    (std::numeric_limits<unsigned>::min)(),
+                                    (std::numeric_limits<unsigned>::min)(),
+                                    (std::numeric_limits<unsigned>::min)());
+    }
+    static WayIDStartAndEndEdge max_value()
+    {
+        return WayIDStartAndEndEdge((std::numeric_limits<unsigned>::max)(),
+                                    (std::numeric_limits<unsigned>::max)(),
+                                    (std::numeric_limits<unsigned>::max)(),
+                                    (std::numeric_limits<unsigned>::max)(),
+                                    (std::numeric_limits<unsigned>::max)());
     }
 };
 
-struct CmpWayByID {
-    typedef _WayIDStartAndEndEdge value_type;
-    bool operator ()(
-        const _WayIDStartAndEndEdge & a,
-        const _WayIDStartAndEndEdge & b
-    ) const {
+struct CmpWayByID
+{
+    typedef WayIDStartAndEndEdge value_type;
+    bool operator()(const WayIDStartAndEndEdge &a, const WayIDStartAndEndEdge &b) const
+    {
         return a.wayID < b.wayID;
     }
-    value_type max_value() {
-        return _WayIDStartAndEndEdge::max_value();
-    }
-    value_type min_value() {
-        return _WayIDStartAndEndEdge::min_value();
-    }
+    value_type max_value() { return WayIDStartAndEndEdge::max_value(); }
+    value_type min_value() { return WayIDStartAndEndEdge::min_value(); }
 };
 
-struct Cmp {
+struct Cmp
+{
     typedef NodeID value_type;
-    bool operator ()(
-        const NodeID a,
-        const NodeID b
-    ) const {
-        return a < b;
-    }
-    value_type max_value() {
-        return 0xffffffff;
-    }
-    value_type min_value() {
-        return 0x0;
-    }
+    bool operator()(const NodeID a, const NodeID b) const { return a < b; }
+    value_type max_value() { return 0xffffffff; }
+    value_type min_value() { return 0x0; }
 };
 
-struct CmpNodeByID {
+struct CmpNodeByID
+{
     typedef ExternalMemoryNode value_type;
-    bool operator () (
-        const ExternalMemoryNode & a,
-        const ExternalMemoryNode & b
-    ) const {
+    bool operator()(const ExternalMemoryNode &a, const ExternalMemoryNode &b) const
+    {
         return a.id < b.id;
     }
-    value_type max_value()  {
-        return ExternalMemoryNode::max_value();
-    }
-    value_type min_value() {
-        return ExternalMemoryNode::min_value();
-    }
+    value_type max_value() { return ExternalMemoryNode::max_value(); }
+    value_type min_value() { return ExternalMemoryNode::min_value(); }
 };
 
 #endif /* EXTRACTORSTRUCTS_H_ */

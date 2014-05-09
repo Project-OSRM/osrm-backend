@@ -28,92 +28,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INTERNAL_EXTRACTOR_EDGE_H
 #define INTERNAL_EXTRACTOR_EDGE_H
 
-
 #include "../typedefs.h"
 #include <osrm/Coordinate.h>
 
 #include <boost/assert.hpp>
 
-struct InternalExtractorEdge {
+struct InternalExtractorEdge
+{
     InternalExtractorEdge()
-     :
-        start(0),
-        target(0),
-        type(0),
-        direction(0),
-        speed(0),
-        nameID(0),
-        isRoundabout(false),
-        ignoreInGrid(false),
-        isDurationSet(false),
-        isAccessRestricted(false),
-        isContraFlow(false),
-        is_split(false)
-    { }
+        : start(0), target(0), type(0), direction(0), speed(0), name_id(0), is_roundabout(false),
+          is_in_tiny_cc(false), is_duration_set(false), is_access_restricted(false),
+          is_contra_flow(false), is_split(false)
+    {
+    }
 
-
-    explicit InternalExtractorEdge(
-        NodeID start,
-        NodeID target,
-        short type,
-        short direction,
-        double speed,
-        unsigned nameID,
-        bool isRoundabout,
-        bool ignoreInGrid,
-        bool isDurationSet,
-        bool isAccressRestricted,
-        bool isContraFlow,
-        bool is_split
-    ) :
-        start(start),
-        target(target),
-        type(type),
-        direction(direction),
-        speed(speed),
-        nameID(nameID),
-        isRoundabout(isRoundabout),
-        ignoreInGrid(ignoreInGrid),
-        isDurationSet(isDurationSet),
-        isAccessRestricted(isAccressRestricted),
-        isContraFlow(isContraFlow),
-        is_split(is_split)
+    explicit InternalExtractorEdge(NodeID start,
+                                   NodeID target,
+                                   short type,
+                                   short direction,
+                                   double speed,
+                                   unsigned name_id,
+                                   bool is_roundabout,
+                                   bool is_in_tiny_cc,
+                                   bool is_duration_set,
+                                   bool is_access_restricted,
+                                   bool is_contra_flow,
+                                   bool is_split)
+        : start(start), target(target), type(type), direction(direction), speed(speed),
+          name_id(name_id), is_roundabout(is_roundabout), is_in_tiny_cc(is_in_tiny_cc),
+          is_duration_set(is_duration_set), is_access_restricted(is_access_restricted),
+          is_contra_flow(is_contra_flow), is_split(is_split)
     {
         BOOST_ASSERT(0 <= type);
     }
 
     // necessary static util functions for stxxl's sorting
-    static InternalExtractorEdge min_value() {
-        return InternalExtractorEdge(
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
-        );
+    static InternalExtractorEdge min_value()
+    {
+        return InternalExtractorEdge(0, 0, 0, 0, 0, 0, false, false, false, false, false, false);
     }
-    static InternalExtractorEdge max_value() {
+    static InternalExtractorEdge max_value()
+    {
         return InternalExtractorEdge(
-            std::numeric_limits<unsigned>::max(),
-            std::numeric_limits<unsigned>::max(),
-            0,
-            0,
-            0,
-            0,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false
-        );
+            SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, 0, false, false, false, false, false, false);
     }
 
     NodeID start;
@@ -121,53 +78,43 @@ struct InternalExtractorEdge {
     short type;
     short direction;
     double speed;
-    unsigned nameID;
-    bool isRoundabout;
-    bool ignoreInGrid;
-    bool isDurationSet;
-    bool isAccessRestricted;
-    bool isContraFlow;
+    unsigned name_id;
+    bool is_roundabout;
+    bool is_in_tiny_cc;
+    bool is_duration_set;
+    bool is_access_restricted;
+    bool is_contra_flow;
     bool is_split;
 
-    FixedPointCoordinate startCoord;
-    FixedPointCoordinate targetCoord;
+    FixedPointCoordinate source_coordinate;
+    FixedPointCoordinate target_coordinate;
 };
 
-struct CmpEdgeByStartID {
+struct CmpEdgeByStartID
+{
     typedef InternalExtractorEdge value_type;
-    bool operator ()(
-        const InternalExtractorEdge & a,
-        const InternalExtractorEdge & b
-    ) const {
+    bool operator()(const InternalExtractorEdge &a, const InternalExtractorEdge &b) const
+    {
         return a.start < b.start;
     }
 
-    value_type max_value() {
-        return InternalExtractorEdge::max_value();
-    }
+    value_type max_value() { return InternalExtractorEdge::max_value(); }
 
-    value_type min_value() {
-        return InternalExtractorEdge::min_value();
-    }
+    value_type min_value() { return InternalExtractorEdge::min_value(); }
 };
 
-struct CmpEdgeByTargetID {
+struct CmpEdgeByTargetID
+{
     typedef InternalExtractorEdge value_type;
 
-    bool operator ()(
-        const InternalExtractorEdge & a,
-        const InternalExtractorEdge & b
-    ) const {
+    bool operator()(const InternalExtractorEdge &a, const InternalExtractorEdge &b) const
+    {
         return a.target < b.target;
     }
 
-    value_type max_value() {
-        return InternalExtractorEdge::max_value();
-    }
+    value_type max_value() { return InternalExtractorEdge::max_value(); }
 
-    value_type min_value() {
-        return InternalExtractorEdge::min_value();
-    }
+    value_type min_value() { return InternalExtractorEdge::min_value(); }
 };
 
-#endif //INTERNAL_EXTRACTOR_EDGE_H
+#endif // INTERNAL_EXTRACTOR_EDGE_H
