@@ -47,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <zlib.h>
 
 #include <functional>
+#include <limits>
 #include <thread>
 
 PBFParser::PBFParser(const char *fileName,
@@ -355,11 +356,11 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
                         continue;
                     }
                     assert("via" == role);
-                    if (UINT_MAX != currentRestrictionContainer.viaNode)
+                    if (std::numeric_limits<unsigned>::max() != currentRestrictionContainer.viaNode)
                     {
-                        currentRestrictionContainer.viaNode = UINT_MAX;
+                        currentRestrictionContainer.viaNode = std::numeric_limits<unsigned>::max();
                     }
-                    assert(UINT_MAX == currentRestrictionContainer.viaNode);
+                    assert(std::numeric_limits<unsigned>::max() == currentRestrictionContainer.viaNode);
                     currentRestrictionContainer.restriction.viaNode = lastRef;
                     break;
                 case 1: // way
@@ -374,7 +375,7 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
                     }
                     if ("via" == role)
                     {
-                        assert(currentRestrictionContainer.restriction.toNode == UINT_MAX);
+                        assert(currentRestrictionContainer.restriction.toNode == std::numeric_limits<unsigned>::max());
                         currentRestrictionContainer.viaNode = lastRef;
                     }
                     break;
