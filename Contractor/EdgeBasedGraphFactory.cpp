@@ -67,7 +67,6 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
 #ifndef NDEBUG
     for (const EdgeBasedNode &node : m_edge_based_node_list)
     {
-
         BOOST_ASSERT(m_node_info_list.at(node.u).lat != INT_MAX);
         BOOST_ASSERT(m_node_info_list.at(node.u).lon != INT_MAX);
         BOOST_ASSERT(m_node_info_list.at(node.v).lon != INT_MAX);
@@ -117,7 +116,6 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool b
                  m_geometry_compressor.HasEntryForID(e2));
     if (m_geometry_compressor.HasEntryForID(e1))
     {
-
         BOOST_ASSERT(m_geometry_compressor.HasEntryForID(e2));
 
         // reconstruct geometry and put in each individual edge with its offset
