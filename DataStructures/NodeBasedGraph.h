@@ -4,6 +4,8 @@
 #include "DynamicGraph.h"
 #include "ImportEdge.h"
 
+#include <memory>
+
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
