@@ -36,13 +36,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Plugins/BasePlugin.h"
 #include "../Util/ProgramOptions.h"
 
+#include <unordered_map>
+#include <string>
+
 struct SharedBarriers;
 template <class EdgeDataT> class BaseDataFacade;
 
 class OSRM_impl
 {
   private:
-    typedef boost::unordered_map<std::string, BasePlugin *> PluginMap;
+    typedef std::unordered_map<std::string, BasePlugin *> PluginMap;
 
   public:
     OSRM_impl(const ServerPaths &paths, const bool use_shared_memory);

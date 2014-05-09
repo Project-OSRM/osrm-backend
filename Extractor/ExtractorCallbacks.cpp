@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers,
-                                       boost::unordered_map<std::string, NodeID> &string_map)
+                                       std::unordered_map<std::string, NodeID> &string_map)
     : string_map(string_map), external_memory(extraction_containers)
 {
 }

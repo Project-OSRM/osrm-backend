@@ -42,12 +42,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdlib>
 
-#include <boost/unordered_map.hpp>
 
 #include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 
 ExtractorCallbacks *extractor_callbacks;
 UUID uuid;
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
             restriction_fileName.replace(pos, 8, ".osrm.restrictions");
         }
 
-        boost::unordered_map<std::string, NodeID> string_map;
+        std::unordered_map<std::string, NodeID> string_map;
         ExtractionContainers extraction_containers;
 
         string_map[""] = 0;

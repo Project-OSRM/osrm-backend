@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <string>
 
 struct ExternalMemoryNode;
@@ -41,14 +41,14 @@ struct InputRestrictionContainer;
 class ExtractorCallbacks
 {
   private:
-    boost::unordered_map<std::string, NodeID> &string_map;
+    std::unordered_map<std::string, NodeID> &string_map;
     ExtractionContainers &external_memory;
 
   public:
     ExtractorCallbacks() = delete;
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
-                                boost::unordered_map<std::string, NodeID> &string_map);
+                                std::unordered_map<std::string, NodeID> &string_map);
 
     // warning: caller needs to take care of synchronization!
     void ProcessNode(const ExternalMemoryNode &node);

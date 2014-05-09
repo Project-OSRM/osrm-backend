@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 #include <vector>
 
@@ -58,7 +58,7 @@ class GeometryCompressor
     void IncreaseFreeList();
     std::vector<std::vector<CompressedNode>> m_compressed_geometries;
     std::vector<unsigned> m_free_list;
-    boost::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
+    std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
 };
 
 #endif // GEOMETRY_COMPRESSOR_H

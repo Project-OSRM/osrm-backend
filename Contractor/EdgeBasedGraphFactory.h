@@ -42,14 +42,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/RestrictionMap.h"
 #include "GeometryCompressor.h"
 
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-
 #include <algorithm>
 #include <iosfwd>
 #include <memory>
 #include <queue>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 struct lua_State;
@@ -105,8 +104,8 @@ class EdgeBasedGraphFactory
     DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
     std::shared_ptr<NodeBasedDynamicGraph> m_node_based_graph;
-    boost::unordered_set<NodeID> m_barrier_nodes;
-    boost::unordered_set<NodeID> m_traffic_lights;
+    std::unordered_set<NodeID> m_barrier_nodes;
+    std::unordered_set<NodeID> m_traffic_lights;
 
     std::unique_ptr<RestrictionMap> m_restriction_map;
 

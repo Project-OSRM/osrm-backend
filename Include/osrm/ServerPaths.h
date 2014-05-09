@@ -29,10 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SERVER_PATH_H
 
 #include <boost/filesystem.hpp>
-#include <boost/unordered_map.hpp>
 
+#include <unordered_map>
 #include <string>
 
-typedef boost::unordered_map<const std::string, boost::filesystem::path> ServerPaths;
+typedef std::unordered_map<std::string, boost::filesystem::path> ServerPaths;
 
 #endif // SERVER_PATH_H

@@ -1,23 +1,21 @@
 #ifndef __BFS_COMPONENT_EXPLORER_H__
 #define __BFS_COMPONENT_EXPLORER_H__
 
-#include <queue>
-#include <boost/unordered_set.hpp>
-
 #include "../typedefs.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/RestrictionMap.h"
 
-/**
- * Explores the components of the given graph while respecting turn restrictions
- * and barriers.
- */
+#include <queue>
+#include <unordered_set>
+
+// Explores the components of the given graph while respecting turn restrictions
+// and barriers.
 template <typename GraphT> class BFSComponentExplorer
 {
   public:
     BFSComponentExplorer(const GraphT &dynamicGraph,
                          const RestrictionMap &restrictions,
-                         const boost::unordered_set<NodeID> &barrier_nodes)
+                         const std::unordered_set<NodeID> &barrier_nodes)
         : m_graph(dynamicGraph), m_restriction_map(restrictions), m_barrier_nodes(barrier_nodes)
     {
         BOOST_ASSERT(m_graph.GetNumberOfNodes() > 0);
@@ -136,7 +134,7 @@ template <typename GraphT> class BFSComponentExplorer
 
     const GraphT &m_graph;
     const RestrictionMap &m_restriction_map;
-    const boost::unordered_set<NodeID> &m_barrier_nodes;
+    const std::unordered_set<NodeID> &m_barrier_nodes;
 };
 
 #endif
