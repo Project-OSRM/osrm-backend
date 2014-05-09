@@ -70,8 +70,6 @@ PBFParser::PBFParser(
 }
 
 PBFParser::~PBFParser() {
-	SimpleLogger().Write(logDEBUG) << "d'tor pbf";
-
 	if(input.is_open()) {
 		input.close();
 	}
