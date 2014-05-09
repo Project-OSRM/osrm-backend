@@ -36,4 +36,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMER_SEC(_X) std::chrono::duration_cast<std::chrono::seconds>(_X##_stop - _X##_start).count()
 #define TIMER_MIN(_X) std::chrono::duration_cast<std::chrono::minutes>(_X##_stop - _X##_start).count()
 
-#endif /* TIMINGUTIL_H */
+#endif // TIMINGUTIL_H
