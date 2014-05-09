@@ -27,6 +27,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "TemporaryStorage.h"
 
+StreamData::StreamData()
+    : write_mode(true), temp_path(boost::filesystem::unique_path(temp_directory.append(
+                            TemporaryFilePattern.begin(), TemporaryFilePattern.end()))),
+      temp_file(new boost::filesystem::fstream(
+          temp_path, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary)),
+      readWriteMutex(std::make_shared<boost::mutex>())
+{
+    if (temp_file->fail())
+    {
+        throw OSRMException("temporary file could not be created");
+    }
+}
+
 TemporaryStorage::TemporaryStorage() { temp_directory = boost::filesystem::temp_directory_path(); }
 
 TemporaryStorage &TemporaryStorage::GetInstance()
@@ -50,14 +63,8 @@ void TemporaryStorage::RemoveAll()
 int TemporaryStorage::AllocateSlot()
 {
     boost::mutex::scoped_lock lock(mutex);
-    try
-    {
-        stream_data_list.push_back(StreamData());
-    }
-    catch (boost::filesystem::filesystem_error &e)
-    {
-        Abort(e);
-    }
+    try { stream_data_list.push_back(StreamData()); }
+    catch (boost::filesystem::filesystem_error &e) { Abort(e); }
     CheckIfTemporaryDeviceFull();
     return stream_data_list.size() - 1;
 }
@@ -79,10 +86,7 @@ void TemporaryStorage::DeallocateSlot(const int slot_id)
 
         boost::filesystem::remove(data.temp_path);
     }
-    catch (boost::filesystem::filesystem_error &e)
-    {
-        Abort(e);
-    }
+    catch (boost::filesystem::filesystem_error &e) { Abort(e); }
 }
 
 void TemporaryStorage::WriteToSlot(const int slot_id, char *pointer, const std::size_t size)
@@ -103,10 +107,7 @@ void TemporaryStorage::WriteToSlot(const int slot_id, char *pointer, const std::
         }
         data.buffer.insert(data.buffer.end(), pointer, pointer + size);
     }
-    catch (boost::filesystem::filesystem_error &e)
-    {
-        Abort(e);
-    }
+    catch (boost::filesystem::filesystem_error &e) { Abort(e); }
 }
 void TemporaryStorage::ReadFromSlot(const int slot_id, char *pointer, const std::size_t size)
 {
@@ -125,10 +126,7 @@ void TemporaryStorage::ReadFromSlot(const int slot_id, char *pointer, const std:
         BOOST_ASSERT(!data.write_mode);
         data.temp_file->read(pointer, size);
     }
-    catch (boost::filesystem::filesystem_error &e)
-    {
-        Abort(e);
-    }
+    catch (boost::filesystem::filesystem_error &e) { Abort(e); }
 }
 
 uint64_t TemporaryStorage::GetFreeBytesOnTemporaryDevice()
@@ -140,10 +138,7 @@ uint64_t TemporaryStorage::GetFreeBytesOnTemporaryDevice()
         boost::filesystem::space_info s = boost::filesystem::space(p);
         value = s.free;
     }
-    catch (boost::filesystem::filesystem_error &e)
-    {
-        Abort(e);
-    }
+    catch (boost::filesystem::filesystem_error &e) { Abort(e); }
     return value;
 }
 
@@ -166,10 +161,7 @@ boost::filesystem::fstream::pos_type TemporaryStorage::Tell(const int slot_id)
         boost::mutex::scoped_lock lock(*data.readWriteMutex);
         position = data.temp_file->tellp();
     }
-    catch (boost::filesystem::filesystem_error &e)
-    {
-        Abort(e);
-    }
+    catch (boost::filesystem::filesystem_error &e) { Abort(e); }
     return position;
 }
 

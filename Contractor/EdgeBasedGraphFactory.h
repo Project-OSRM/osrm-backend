@@ -34,32 +34,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/EdgeBasedNode.h"
-#include "../DataStructures/HashTable.h"
 #include "../DataStructures/OriginalEdgeData.h"
-#include "../DataStructures/Percent.h"
-#include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/NodeBasedGraph.h"
 #include "../DataStructures/RestrictionMap.h"
-#include "../Util/LuaUtil.h"
-#include "../Util/SimpleLogger.h"
-
 #include "GeometryCompressor.h"
 
-#include <boost/noncopyable.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
 #include <algorithm>
 #include <iosfwd>
+#include <memory>
 #include <queue>
+#include <string>
 #include <vector>
 
-class EdgeBasedGraphFactory : boost::noncopyable
+struct lua_State;
+
+class EdgeBasedGraphFactory
 {
   public:
+    EdgeBasedGraphFactory() = delete;
+    EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
+
     struct SpeedProfileProperties;
 
     explicit EdgeBasedGraphFactory(const std::shared_ptr<NodeBasedDynamicGraph> &node_based_graph,
@@ -71,7 +71,7 @@ class EdgeBasedGraphFactory : boost::noncopyable
 
     void Run(const std::string &original_edge_data_filename,
              const std::string &geometry_filename,
-             lua_State *myLuaState);
+             lua_State *lua_state);
 
     void GetEdgeBasedEdges(DeallocatingVector<EdgeBasedEdge> &edges);
 
@@ -79,7 +79,7 @@ class EdgeBasedGraphFactory : boost::noncopyable
 
     TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
 
-    int GetTurnPenalty(const NodeID u, const NodeID v, const NodeID w, lua_State *myLuaState) const;
+    int GetTurnPenalty(const NodeID u, const NodeID v, const NodeID w, lua_State *lua_state) const;
 
     unsigned GetNumberOfEdgeBasedNodes() const;
 
@@ -96,8 +96,6 @@ class EdgeBasedGraphFactory : boost::noncopyable
     } speed_profile;
 
   private:
-    typedef NodeBasedDynamicGraph::NodeIterator NodeIterator;
-    typedef NodeBasedDynamicGraph::EdgeIterator EdgeIterator;
     typedef NodeBasedDynamicGraph::EdgeData EdgeData;
 
     unsigned m_number_of_edge_based_nodes;
@@ -120,10 +118,7 @@ class EdgeBasedGraphFactory : boost::noncopyable
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    lua_State *lua_state);
 
-    void InsertEdgeBasedNode(NodeBasedDynamicGraph::NodeIterator u,
-                             NodeBasedDynamicGraph::NodeIterator v,
-                             NodeBasedDynamicGraph::EdgeIterator e1,
-                             bool belongsToTinyComponent);
+    void InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool belongsToTinyComponent);
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;

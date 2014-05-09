@@ -42,15 +42,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 #include <fstream>
+#include <memory>
 
-/**
- * This class implements a singleton file storage for temporary data.
- * temporary slots can be accessed by other objects through an int
- * On deallocation every slot gets deallocated
- *
- * Access is sequential, which means, that there is no random access
- * -> Data is written in first phase and reread in second.
- */
+struct StreamData
+{
+    bool write_mode;
+    boost::filesystem::path temp_path;
+    std::shared_ptr<boost::filesystem::fstream> temp_file;
+    std::shared_ptr<boost::mutex> readWriteMutex;
+    std::vector<char> buffer;
+
+    StreamData();
+};
+
+// This class implements a singleton file storage for temporary data.
+// temporary slots can be accessed by other objects through an int
+// On deallocation every slot gets deallocated
+//
+// Access is sequential, which means, that there is no random access
+// -> Data is written in first phase and reread in second.
 
 static boost::filesystem::path temp_directory;
 static std::string TemporaryFilePattern("OSRM-%%%%-%%%%-%%%%");
@@ -78,27 +88,6 @@ class TemporaryStorage
     void Abort(const boost::filesystem::filesystem_error &e);
     void CheckIfTemporaryDeviceFull();
 
-    struct StreamData
-    {
-        bool write_mode;
-        boost::filesystem::path temp_path;
-        std::shared_ptr<boost::filesystem::fstream> temp_file;
-        std::shared_ptr<boost::mutex> readWriteMutex;
-        std::vector<char> buffer;
-
-        StreamData()
-            : write_mode(true), temp_path(boost::filesystem::unique_path(temp_directory.append(
-                                    TemporaryFilePattern.begin(), TemporaryFilePattern.end()))),
-              temp_file(new boost::filesystem::fstream(
-                  temp_path, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary)),
-              readWriteMutex(std::make_shared<boost::mutex>())
-        {
-            if (temp_file->fail())
-            {
-                throw OSRMException("temporary file could not be created");
-            }
-        }
-    };
     // vector of file streams that is used to store temporary data
     boost::mutex mutex;
     std::vector<StreamData> stream_data_list;

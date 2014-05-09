@@ -48,7 +48,7 @@ void GeometryCompressor::IncreaseFreeList()
     m_compressed_geometries.resize(m_compressed_geometries.size() + 100);
     for (unsigned i = 100; i > 0; --i)
     {
-        m_free_list.push_back(current_free_list_maximum);
+        m_free_list.emplace_back(current_free_list_maximum);
         ++current_free_list_maximum;
     }
 }
@@ -60,8 +60,7 @@ bool GeometryCompressor::HasEntryForID(const EdgeID edge_id) const
 
 unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const
 {
-    boost::unordered_map<EdgeID, unsigned>::const_iterator map_iterator;
-    map_iterator = m_edge_id_to_list_index_map.find(edge_id);
+    auto map_iterator = m_edge_id_to_list_index_map.find(edge_id);
     BOOST_ASSERT(map_iterator != m_edge_id_to_list_index_map.end());
     BOOST_ASSERT(map_iterator->second < m_compressed_geometries.size());
     return map_iterator->second;
@@ -77,7 +76,7 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 
     // write indices array
     unsigned prefix_sum_of_list_indices = 0;
-    for (auto &elem : m_compressed_geometries)
+    for (const auto &elem : m_compressed_geometries)
     {
         geometry_out_stream.write((char *)&prefix_sum_of_list_indices, sizeof(unsigned));
 
@@ -146,8 +145,7 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
         m_free_list.pop_back();
     }
 
-    const boost::unordered_map<EdgeID, unsigned>::const_iterator iter =
-        m_edge_id_to_list_index_map.find(edge_id_1);
+    const auto iter = m_edge_id_to_list_index_map.find(edge_id_1);
     BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
     const unsigned edge_bucket_id1 = iter->second;
     BOOST_ASSERT(edge_bucket_id1 == GetPositionForID(edge_id_1));
@@ -157,7 +155,7 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
 
     if (edge_bucket_list1.empty())
     {
-        edge_bucket_list1.push_back(std::make_pair(via_node_id, weight1));
+        edge_bucket_list1.emplace_back(via_node_id, weight1);
     }
 
     BOOST_ASSERT(0 < edge_bucket_list1.size());
@@ -182,13 +180,13 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
                      m_edge_id_to_list_index_map.find(edge_id_2));
         edge_bucket_list2.clear();
         BOOST_ASSERT(0 == edge_bucket_list2.size());
-        m_free_list.push_back(list_to_remove_index);
+        m_free_list.emplace_back(list_to_remove_index);
         BOOST_ASSERT(list_to_remove_index == m_free_list.back());
     }
     else
     {
         // we are certain that the second edge is atomic.
-        edge_bucket_list1.push_back(std::make_pair(target_node_id, weight2));
+        edge_bucket_list1.emplace_back(target_node_id, weight2);
     }
 }
 
