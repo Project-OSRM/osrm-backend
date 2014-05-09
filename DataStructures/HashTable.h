@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
-#include <boost/ref.hpp>
-
 #include <unordered_map>
 
 template <typename Key, typename Value> class HashTable : public std::unordered_map<Key, Value>
@@ -38,8 +36,6 @@ template <typename Key, typename Value> class HashTable : public std::unordered_
     typedef std::unordered_map<Key, Value> super;
 
   public:
-    constexpr static Value default_value();
-
     HashTable() : super() {}
 
     explicit HashTable(const unsigned size) : super(size) {}
@@ -51,9 +47,9 @@ template <typename Key, typename Value> class HashTable : public std::unordered_
         auto iter = super::find(key);
         if (iter == super::end())
         {
-            return boost::cref(default_value);
+            return Value();
         }
-        return boost::cref(iter->second);
+        return iter->second;
     }
 
     inline const bool Holds(Key const &key) const
@@ -65,8 +61,5 @@ template <typename Key, typename Value> class HashTable : public std::unordered_
         return true;
     }
 };
-
-// template<typename Key, typename Value, typename Hash>
-// Value HashTable<Key, Value, Hash>::default_value;
 
 #endif /* HASH_TABLE_H */
