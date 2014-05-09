@@ -45,9 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-
 template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<EdgeDataT>
 {
 
@@ -64,7 +61,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     QueryGraph *m_query_graph;
     std::string m_timestamp;
 
-    boost::shared_ptr<ShM<FixedPointCoordinate, false>::vector> m_coordinate_list;
+    std::shared_ptr<ShM<FixedPointCoordinate, false>::vector> m_coordinate_list;
     ShM<NodeID, false>::vector m_via_node_list;
     ShM<unsigned, false>::vector m_name_ID_list;
     ShM<TurnInstruction, false>::vector m_turn_instruction_list;
@@ -74,7 +71,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
 
-    boost::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>>
+   std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>>
     m_static_rtree;
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
@@ -129,7 +126,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list =
-            boost::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
+            std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
@@ -193,7 +190,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     {
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
-        m_static_rtree = boost::make_shared<StaticRTree<RTreeLeaf>>(
+        m_static_rtree = std::make_shared<StaticRTree<RTreeLeaf>>(
             ram_index_path, file_index_path, m_coordinate_list);
     }
 

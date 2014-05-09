@@ -45,13 +45,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/shared_ptr.hpp>
+
 #include <boost/thread.hpp>
 
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <limits>
+#include <memory>
 #include <queue>
 #include <string>
 #include <vector>
@@ -265,7 +266,7 @@ class StaticRTree
     typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
     uint64_t m_element_count;
     const std::string m_leaf_node_filename;
-    boost::shared_ptr<CoordinateListT> m_coordinate_list;
+    std::shared_ptr<CoordinateListT> m_coordinate_list;
 
   public:
     StaticRTree() = delete;
@@ -422,7 +423,7 @@ class StaticRTree
     // Read-only operation for queries
     explicit StaticRTree(const boost::filesystem::path &node_file,
                          const boost::filesystem::path &leaf_file,
-                         const boost::shared_ptr<CoordinateListT> coordinate_list)
+                         const std::shared_ptr<CoordinateListT> coordinate_list)
         : m_leaf_node_filename(leaf_file.string())
     {
         // open tree node file and load into RAM.
@@ -465,7 +466,7 @@ class StaticRTree
     explicit StaticRTree(TreeNode *tree_node_ptr,
                          const uint32_t number_of_nodes,
                          const boost::filesystem::path &leaf_file,
-                         boost::shared_ptr<CoordinateListT> coordinate_list)
+                         std::shared_ptr<CoordinateListT> coordinate_list)
         : m_search_tree(tree_node_ptr, number_of_nodes), m_leaf_node_filename(leaf_file.string()),
           m_coordinate_list(coordinate_list)
     {

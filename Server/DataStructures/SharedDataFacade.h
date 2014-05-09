@@ -39,10 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/ProgramOptions.h"
 #include "../../Util/SimpleLogger.h"
 
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include <algorithm>
+#include <memory>
 
 template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDataT>
 {
@@ -68,12 +66,12 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     unsigned m_check_sum;
     unsigned m_number_of_nodes;
-    boost::shared_ptr<QueryGraph> m_query_graph;
-    boost::shared_ptr<SharedMemory> m_layout_memory;
-    boost::shared_ptr<SharedMemory> m_large_memory;
+    std::shared_ptr<QueryGraph> m_query_graph;
+    std::shared_ptr<SharedMemory> m_layout_memory;
+    std::shared_ptr<SharedMemory> m_large_memory;
     std::string m_timestamp;
 
-    boost::shared_ptr<ShM<FixedPointCoordinate, true>::vector> m_coordinate_list;
+    std::shared_ptr<ShM<FixedPointCoordinate, true>::vector> m_coordinate_list;
     ShM<NodeID, true>::vector m_via_node_list;
     ShM<unsigned, true>::vector m_name_ID_list;
     ShM<TurnInstruction, true>::vector m_turn_instruction_list;
@@ -83,7 +81,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     ShM<unsigned, true>::vector m_geometry_indices;
     ShM<unsigned, true>::vector m_geometry_list;
 
-    boost::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>
+    std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>
     m_static_rtree;
 
     void LoadTimestamp()
@@ -99,7 +97,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
         RTreeNode *tree_ptr = (RTreeNode *)(shared_memory + data_layout->GetRSearchTreeOffset());
-        m_static_rtree = boost::make_shared<
+        m_static_rtree = std::make_shared<
             StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>(
             tree_ptr, data_layout->r_search_tree_size, file_index_path, m_coordinate_list);
     }
@@ -125,7 +123,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
         FixedPointCoordinate *coordinate_list_ptr =
             (FixedPointCoordinate *)(shared_memory + data_layout->GetCoordinateListOffset());
-        m_coordinate_list = boost::make_shared<ShM<FixedPointCoordinate, true>::vector>(
+        m_coordinate_list = std::make_shared<ShM<FixedPointCoordinate, true>::vector>(
             coordinate_list_ptr, data_layout->coordinate_list_size);
 
         TurnInstruction *turn_instruction_list_ptr =

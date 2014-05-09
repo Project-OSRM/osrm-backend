@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <luabind/luabind.hpp>
 
 #include <chrono>
+#include <memory>
 #include <string>
 #include <vector>
 
