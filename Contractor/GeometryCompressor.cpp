@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/fstream.hpp>
 
 #include <limits>
+#include <string>
 
 int current_free_list_maximum = 0;
 int UniqueNumber() { return ++current_free_list_maximum; }
