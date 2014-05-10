@@ -31,6 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "QueryNode.h"
 #include "../DataStructures/HashTable.h"
 
+#include <limits>
+#include <string>
+
 struct ExternalMemoryNode : NodeInfo
 {
     ExternalMemoryNode(int lat, int lon, unsigned int id, bool bollard, bool traffic_light)
