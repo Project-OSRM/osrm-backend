@@ -40,14 +40,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ctime>
 
 #include <algorithm>
-// #include <iomanip>
 #include <iostream>
 
-RequestHandler::RequestHandler() : routing_machine(NULL) { }
+RequestHandler::RequestHandler() : routing_machine(nullptr) {}
 
-void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
-    //parse command
-    try {
+void RequestHandler::handle_request(const http::Request &req, http::Reply &reply)
+{
+    // parse command
+    try
+    {
         std::string request;
         URIDecode(req.uri, request);
 
@@ -61,57 +62,51 @@ void RequestHandler::handle_request(const http::Request& req, http::Reply& rep){
         time_t ltime;
         struct tm *Tm;
 
-        ltime=time(NULL);
-        Tm=localtime(&ltime);
+        ltime = time(nullptr);
+        Tm = localtime(&ltime);
 
-        SimpleLogger().Write() <<
-            (Tm->tm_mday < 10 ? "0" : "" )  << Tm->tm_mday    << "-" <<
-            (Tm->tm_mon+1 < 10 ? "0" : "" ) << (Tm->tm_mon+1) << "-" <<
-            1900+Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "" ) <<
-            Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "" ) <<
-            Tm->tm_min << ":" << (Tm->tm_sec < 10 ? "0" : "" ) <<
-            Tm->tm_sec << " " << req.endpoint.to_string() << " " <<
-            req.referrer << ( 0 == req.referrer.length() ? "- " :" ") <<
-            req.agent << ( 0 == req.agent.length() ? "- " :" ") << request;
+        SimpleLogger().Write() << (Tm->tm_mday < 10 ? "0" : "") << Tm->tm_mday << "-"
+                               << (Tm->tm_mon + 1 < 10 ? "0" : "") << (Tm->tm_mon + 1) << "-"
+                               << 1900 + Tm->tm_year << " " << (Tm->tm_hour < 10 ? "0" : "")
+                               << Tm->tm_hour << ":" << (Tm->tm_min < 10 ? "0" : "") << Tm->tm_min
+                               << ":" << (Tm->tm_sec < 10 ? "0" : "") << Tm->tm_sec << " "
+                               << req.endpoint.to_string() << " " << req.referrer
+                               << (0 == req.referrer.length() ? "- " : " ") << req.agent
+                               << (0 == req.agent.length() ? "- " : " ") << request;
 
         RouteParameters route_parameters;
         APIGrammarParser api_parser(&route_parameters);
 
-        std::string::iterator it = request.begin();
-        const bool result = boost::spirit::qi::parse(
-            it,
-            request.end(),
-            api_parser
-        );
+        auto it = request.begin();
+        const bool result = boost::spirit::qi::parse(it, request.end(), api_parser);
 
-        if ( !result || (it != request.end()) ) {
-            rep = http::Reply::StockReply(http::Reply::badRequest);
-            rep.content.clear();
+        if (!result || (it != request.end()))
+        {
+            reply = http::Reply::StockReply(http::Reply::badRequest);
+            reply.content.clear();
             const int position = std::distance(request.begin(), it);
-            rep.content.push_back(
-                "{\"status\":400,\"status_message\":\"Query string malformed close to position "
-            );
+            reply.content.push_back(
+                "{\"status\":400,\"status_message\":\"Query string malformed close to position ");
             std::string tmp_position_string;
             intToString(position, tmp_position_string);
-            rep.content.push_back(tmp_position_string);
-            rep.content.push_back("\"}");
-        } else {
-            //parsing done, lets call the right plugin to handle the request
-            BOOST_ASSERT_MSG(
-                routing_machine != NULL,
-                "pointer not init'ed"
-            );
-            routing_machine->RunQuery(route_parameters, rep);
+            reply.content.push_back(tmp_position_string);
+            reply.content.push_back("\"}");
+        }
+        else
+        {
+            // parsing done, lets call the right plugin to handle the request
+            BOOST_ASSERT_MSG(routing_machine != nullptr, "pointer not init'ed");
+            routing_machine->RunQuery(route_parameters, reply);
             return;
         }
-    } catch(const std::exception& e) {
-        rep = http::Reply::StockReply(http::Reply::internalServerError);
-        SimpleLogger().Write(logWARNING) <<
-            "[server error] code: " << e.what() << ", uri: " << req.uri;
+    }
+    catch (const std::exception &e)
+    {
+        reply = http::Reply::StockReply(http::Reply::internalServerError);
+        SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
+                                         << ", uri: " << req.uri;
         return;
     }
 }
 
-void RequestHandler::RegisterRoutingMachine(OSRM * osrm) {
-    routing_machine = osrm;
-}
+void RequestHandler::RegisterRoutingMachine(OSRM *osrm) { routing_machine = osrm; }

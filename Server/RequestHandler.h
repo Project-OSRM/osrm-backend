@@ -30,30 +30,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-template <typename Iterator, class HandlerT>
-struct APIGrammar;
+template <typename Iterator, class HandlerT> struct APIGrammar;
 struct RouteParameters;
 class OSRM;
 
-namespace http {
-    class Reply;
-    struct Request;
+namespace http
+{
+class Reply;
+struct Request;
 }
 
 class RequestHandler
 {
 
-public:
+  public:
     typedef APIGrammar<std::string::iterator, RouteParameters> APIGrammarParser;
 
     RequestHandler();
     RequestHandler(const RequestHandler &) = delete;
 
-    void handle_request(const http::Request& req, http::Reply& rep);
-    void RegisterRoutingMachine(OSRM * osrm);
+    void handle_request(const http::Request &req, http::Reply &rep);
+    void RegisterRoutingMachine(OSRM *osrm);
 
-private:
-    OSRM * routing_machine;
+  private:
+    OSRM *routing_machine;
 };
 
 #endif // REQUEST_HANDLER_H
