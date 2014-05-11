@@ -35,22 +35,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 
 /* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
-template<class CoordinateT>
-inline static double GetAngleBetweenThreeFixedPointCoordinates (
-    const CoordinateT & A,
-    const CoordinateT & C,
-    const CoordinateT & B
-) {
-    const double v1x = (A.lon - C.lon)/COORDINATE_PRECISION;
-    const double v1y = lat2y(A.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
-    const double v2x = (B.lon - C.lon)/COORDINATE_PRECISION;
-    const double v2y = lat2y(B.lat/COORDINATE_PRECISION) - lat2y(C.lat/COORDINATE_PRECISION);
+template <class CoordinateT>
+inline static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT &A,
+                                                               const CoordinateT &C,
+                                                               const CoordinateT &B)
+{
+    const double v1x = (A.lon - C.lon) / COORDINATE_PRECISION;
+    const double v1y = lat2y(A.lat / COORDINATE_PRECISION) - lat2y(C.lat / COORDINATE_PRECISION);
+    const double v2x = (B.lon - C.lon) / COORDINATE_PRECISION;
+    const double v2y = lat2y(B.lat / COORDINATE_PRECISION) - lat2y(C.lat / COORDINATE_PRECISION);
 
-    double angle = (atan2(v2y,v2x) - atan2(v1y,v1x) )*180/M_PI;
-    while(angle < 0)
+    double angle = (atan2(v2y, v2x) - atan2(v1y, v1x)) * 180 / M_PI;
+    while (angle < 0)
         angle += 360;
     return angle;
 }
-
 
 #endif // COMPUTE_ANGLE_H

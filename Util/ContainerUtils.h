@@ -31,36 +31,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <vector>
 
-template<typename T>
-inline void sort_unique_resize(std::vector<T> & vector) {
-	std::sort(vector.begin(), vector.end());
-	unsigned number_of_unique_elements = std::unique(vector.begin(), vector.end()) - vector.begin();
-	vector.resize(number_of_unique_elements);
-}
-
-template<typename T>
-inline void sort_unique_resize_shrink_vector(std::vector<T> & vector) {
-	sort_unique_resize(vector);
-	std::vector<T>().swap(vector);
-}
-
-template<typename T>
-inline void remove_consecutive_duplicates_from_vector(std::vector<T> & vector) {
+template <typename T> inline void sort_unique_resize(std::vector<T> &vector)
+{
+    std::sort(vector.begin(), vector.end());
     unsigned number_of_unique_elements = std::unique(vector.begin(), vector.end()) - vector.begin();
     vector.resize(number_of_unique_elements);
 }
 
-template< typename FwdIter, typename Func >
-Func for_each_pair( FwdIter iter_begin, FwdIter iter_end, Func func ) {
-    if( iter_begin == iter_end ) {
+template <typename T> inline void sort_unique_resize_shrink_vector(std::vector<T> &vector)
+{
+    sort_unique_resize(vector);
+    std::vector<T>().swap(vector);
+}
+
+template <typename T> inline void remove_consecutive_duplicates_from_vector(std::vector<T> &vector)
+{
+    unsigned number_of_unique_elements = std::unique(vector.begin(), vector.end()) - vector.begin();
+    vector.resize(number_of_unique_elements);
+}
+
+template <typename FwdIter, typename Func>
+Func for_each_pair(FwdIter iter_begin, FwdIter iter_end, Func func)
+{
+    if (iter_begin == iter_end)
+    {
         return func;
     }
 
     FwdIter iter_next = iter_begin;
     ++iter_next;
 
-    for( ; iter_next != iter_end; ++iter_begin, ++iter_next ){
-        func( *iter_begin, *iter_next );
+    for (; iter_next != iter_end; ++iter_begin, ++iter_next)
+    {
+        func(*iter_begin, *iter_next);
     }
     return func;
 }
