@@ -64,15 +64,13 @@ double DescriptionFactory::GetBearing(const FixedPointCoordinate &A, const Fixed
     return result;
 }
 
-void DescriptionFactory::SetStartSegment(const PhantomNode &source,
-                                         const bool source_traversed_in_reverse)
+void DescriptionFactory::SetStartSegment(const PhantomNode &source)
 {
     start_phantom = source;
     AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn, source.forward_weight));
 }
 
-void DescriptionFactory::SetEndSegment(const PhantomNode &target,
-                                       const bool target_traversed_in_reverse)
+void DescriptionFactory::SetEndSegment(const PhantomNode &target)
 {
     target_phantom = target;
     path_description.emplace_back(

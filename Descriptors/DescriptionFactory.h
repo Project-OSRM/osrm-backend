@@ -83,8 +83,8 @@ class DescriptionFactory
     void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
     void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode &start_phantom, const bool source_traversed_in_reverse);
-    void SetEndSegment(const PhantomNode &start_phantom, const bool target_traversed_in_reverse);
+    void SetStartSegment(const PhantomNode &start_phantom);
+    void SetEndSegment(const PhantomNode &start_phantom);
     void AppendEncodedPolylineString(const bool return_encoded, std::vector<std::string> &output);
 
     template <class DataFacadeT> void Run(const DataFacadeT *facade, const unsigned zoomLevel)
