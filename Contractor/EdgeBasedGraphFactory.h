@@ -76,9 +76,9 @@ class EdgeBasedGraphFactory
 
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
 
-    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, double angle) const;
 
-    int GetTurnPenalty(const NodeID u, const NodeID v, const NodeID w, lua_State *lua_state) const;
+    int GetTurnPenalty(double angle, lua_State *lua_state) const;
 
     unsigned GetNumberOfEdgeBasedNodes() const;
 
