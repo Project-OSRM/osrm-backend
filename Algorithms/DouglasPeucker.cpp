@@ -62,9 +62,14 @@ DouglasPeucker::DouglasPeucker()
 
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
+    BOOST_ASSERT_MSG(!input_geometry.empty(), "geometry invalid");
+    if (input_geometry.size() <= 2)
+    {
+        return;
+    }
+
     {
         BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
-        BOOST_ASSERT_MSG(1 < input_geometry.size(), "geometry invalid");
         unsigned left_border = 0;
         unsigned right_border = 1;
         // Sweep over array and identify those ranges that need to be checked
