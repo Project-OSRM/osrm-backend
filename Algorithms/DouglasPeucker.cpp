@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "DouglasPeucker.h"
 #include "../DataStructures/SegmentInformation.h"
+#include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
 
@@ -62,11 +63,16 @@ DouglasPeucker::DouglasPeucker()
 
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
+    input_geometry.front().necessary = true;
+    input_geometry.back().necessary = true;
+
     BOOST_ASSERT_MSG(!input_geometry.empty(), "geometry invalid");
-    if (input_geometry.size() <= 2)
+    if (input_geometry.size() < 2)
     {
         return;
     }
+
+    SimpleLogger().Write() << "input_geometry.size()=" << input_geometry.size();
 
     {
         BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
@@ -75,6 +81,10 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         // Sweep over array and identify those ranges that need to be checked
         do
         {
+            if (!input_geometry[left_border].necessary)
+            {
+              SimpleLogger().Write() << "broken interval [" << left_border << "," << right_border << "]";
+            }
             BOOST_ASSERT_MSG(input_geometry[left_border].necessary,
                              "left border must be necessary");
             BOOST_ASSERT_MSG(input_geometry.back().necessary, "right border must be necessary");
