@@ -66,7 +66,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::chrono::time_point<std::chrono::steady_clock> time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
-        stxxl::sort(used_node_id_list.begin(), used_node_id_list.end(), Cmp(), 4294967296);
+        stxxl::sort(used_node_id_list.begin(), used_node_id_list.end(), Cmp(), stxxl_memory);
         std::chrono::time_point<std::chrono::steady_clock> time2 = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = time2 - time1;
         std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
@@ -82,7 +82,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         time1 = std::chrono::steady_clock::now();
 
         std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
-        stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), CmpNodeByID(), 4294967296);
+        stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), CmpNodeByID(), stxxl_memory);
         time2 = std::chrono::steady_clock::now();
         elapsed_seconds = time2 - time1;
         std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
@@ -91,7 +91,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         std::cout << "[extractor] Sorting used ways         ... " << std::flush;
         stxxl::sort(
-            way_start_end_id_list.begin(), way_start_end_id_list.end(), CmpWayByID(), 4294967296);
+            way_start_end_id_list.begin(), way_start_end_id_list.end(), CmpWayByID(), stxxl_memory);
         time2 = std::chrono::steady_clock::now();
         elapsed_seconds = time2 - time1;
         std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
@@ -100,7 +100,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         stxxl::sort(restrictions_list.begin(),
                     restrictions_list.end(),
                     CmpRestrictionContainerByFrom(),
-                    4294967296);
+                    stxxl_memory);
         time2 = std::chrono::steady_clock::now();
         elapsed_seconds = time2 - time1;
         std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
@@ -159,7 +159,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         stxxl::sort(restrictions_list.begin(),
                     restrictions_list.end(),
                     CmpRestrictionContainerByTo(),
-                    4294967296);
+                    stxxl_memory);
         time2 = std::chrono::steady_clock::now();
         elapsed_seconds = time2 - time1;
         std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
@@ -276,7 +276,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         // Sort edges by start.
         std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
-        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByStartID(), 4294967296);
+        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByStartID(), stxxl_memory);
         time2 = std::chrono::steady_clock::now();
         elapsed_seconds = time2 - time1;
         std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
@@ -313,7 +313,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         time1 = std::chrono::steady_clock::now();
         // Sort Edges by target
         std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
-        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByTargetID(), 4294967296);
+        stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByTargetID(), stxxl_memory);
         time2 = std::chrono::steady_clock::now();
         elapsed_seconds = time2 - time1;
         std::cout << "ok, after " << elapsed_seconds.count() << "s" << std::endl;
