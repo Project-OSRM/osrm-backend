@@ -438,9 +438,7 @@ void EdgeBasedGraphFactory::RenumberEdges()
     for (NodeID current_node = 0; current_node < m_node_based_graph->GetNumberOfNodes();
          ++current_node)
     {
-        for (EdgeID current_edge = m_node_based_graph->BeginEdges(current_node);
-             current_edge < m_node_based_graph->EndEdges(current_node);
-             ++current_edge)
+        for (EdgeID current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
         {
             EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
             if (!edge_data.forward)
@@ -483,10 +481,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
         BOOST_ASSERT(u != SPECIAL_NODEID);
         BOOST_ASSERT(u < m_node_based_graph->GetNumberOfNodes());
         p.printIncrement();
-        for (EdgeID e1 = m_node_based_graph->BeginEdges(u),
-                    last_edge = m_node_based_graph->EndEdges(u);
-             e1 < last_edge;
-             ++e1)
+        for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
         {
             const EdgeData &edge_data = m_node_based_graph->GetEdgeData(e1);
             if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
@@ -552,10 +547,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
 
     for (NodeID u = 0, end = m_node_based_graph->GetNumberOfNodes(); u < end; ++u)
     {
-        for (EdgeID e1 = m_node_based_graph->BeginEdges(u),
-                    last_edge_u = m_node_based_graph->EndEdges(u);
-             e1 < last_edge_u;
-             ++e1)
+        for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
         {
             if (!m_node_based_graph->GetEdgeData(e1).forward)
             {
@@ -568,10 +560,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 m_restriction_map->CheckForEmanatingIsOnlyTurn(u, v);
             const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
 
-            for (EdgeID e2 = m_node_based_graph->BeginEdges(v),
-                        last_edge_v = m_node_based_graph->EndEdges(v);
-                 e2 < last_edge_v;
-                 ++e2)
+            for (EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
             {
                 if (!m_node_based_graph->GetEdgeData(e2).forward)
                 {

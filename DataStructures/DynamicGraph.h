@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/DeallocatingVector.h"
 
 #include <boost/assert.hpp>
+#include <boost/range/irange.hpp>
 
 #include <cstdint>
 
@@ -41,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename EdgeDataT> class DynamicGraph
 {
   public:
+    typedef decltype(boost::irange(0u,0u)) EdgeRange;
     typedef EdgeDataT EdgeData;
     typedef unsigned NodeIterator;
     typedef unsigned EdgeIterator;
@@ -131,6 +133,11 @@ template <typename EdgeDataT> class DynamicGraph
     EdgeIterator EndEdges(const NodeIterator n) const
     {
         return EdgeIterator(m_nodes[n].firstEdge + m_nodes[n].edges);
+    }
+
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const
+    {
+        return boost::irange(BeginEdges(node), EndEdges(node));
     }
 
     // adds an edge. Invalidates edge iterators for the source node

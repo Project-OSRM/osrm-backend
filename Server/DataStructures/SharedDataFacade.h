@@ -254,6 +254,8 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     EdgeID EndEdges(const NodeID n) const { return m_query_graph->EndEdges(n); }
 
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const { return m_query_graph->GetAdjacentEdgeRange(node); };
+
     // searches for a specific edge
     EdgeID FindEdge(const NodeID from, const NodeID to) const
     {

@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <boost/range/irange.hpp>
+
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -40,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
   public:
+    typedef decltype(boost::irange(0u,0u)) EdgeRange;
     typedef NodeID NodeIterator;
     typedef NodeID EdgeIterator;
     typedef EdgeDataT EdgeData;
@@ -62,7 +65,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     struct NodeArrayEntry
     {
         // index of the first edge
-        EdgeIterator firstEdge;
+        EdgeIterator first_edge;
     };
 
     struct EdgeArrayEntry
@@ -70,6 +73,11 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         NodeID target;
         EdgeDataT data;
     };
+
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const
+    {
+        return boost::irange(BeginEdges(node), EndEdges(node));
+    }
 
     StaticGraph(const int nodes, std::vector<InputEdge> &graph)
     {
@@ -81,18 +89,20 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         EdgeIterator position = 0;
         for (NodeIterator node = 0; node <= number_of_nodes; ++node)
         {
-            EdgeIterator lastEdge = edge;
+            EdgeIterator last_edge = edge;
             while (edge < number_of_edges && graph[edge].source == node)
+            {
                 ++edge;
-            node_array[node].firstEdge = position; //=edge
-            position += edge - lastEdge;           // remove
+            }
+            node_array[node].first_edge = position; //=edge
+            position += edge - last_edge;           // remove
         }
         edge_array.resize(position); //(edge)
         edge = 0;
         for (NodeIterator node = 0; node < number_of_nodes; ++node)
         {
-            EdgeIterator e = node_array[node + 1].firstEdge;
-            for (EdgeIterator i = node_array[node].firstEdge; i != e; ++i)
+            EdgeIterator e = node_array[node + 1].first_edge;
+            for (EdgeIterator i = node_array[node].first_edge; i != e; ++i)
             {
                 edge_array[i].target = graph[edge].target;
                 edge_array[i].data = graph[edge].data;
@@ -115,10 +125,10 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         Percent p(GetNumberOfNodes());
         for (unsigned u = 0; u < GetNumberOfNodes(); ++u)
         {
-            for (unsigned eid = BeginEdges(u); eid < EndEdges(u); ++eid)
+            for (auto eid : GetAdjacentEdgeRange(u))
             {
-                unsigned v = GetTarget(eid);
-                EdgeData &data = GetEdgeData(eid);
+                const unsigned v = GetTarget(eid);
+                const EdgeData &data = GetEdgeData(eid);
                 if (data.shortcut)
                 {
                     const EdgeID first_edge_id = FindEdgeInEitherDirection(u, data.id);
@@ -144,7 +154,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 #endif
     }
 
-    unsigned GetNumberOfNodes() const { return number_of_nodes; }
+    unsigned GetNumberOfNodes() const { return number_of_nodes -1; }
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
@@ -161,12 +171,12 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
     EdgeIterator BeginEdges(const NodeIterator n) const
     {
-        return EdgeIterator(node_array.at(n).firstEdge);
+        return EdgeIterator(node_array.at(n).first_edge);
     }
 
     EdgeIterator EndEdges(const NodeIterator n) const
     {
-        return EdgeIterator(node_array.at(n + 1).firstEdge);
+        return EdgeIterator(node_array.at(n + 1).first_edge);
     }
 
     // searches for a specific edge
@@ -174,7 +184,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     {
         EdgeIterator smallest_edge = SPECIAL_EDGEID;
         EdgeWeight smallest_weight = INVALID_EDGE_WEIGHT;
-        for (EdgeIterator edge = BeginEdges(from); edge < EndEdges(from); edge++)
+        for (auto edge : GetAdjacentEdgeRange(from))
         {
             const NodeID target = GetTarget(edge);
             const EdgeWeight weight = GetEdgeData(edge).distance;

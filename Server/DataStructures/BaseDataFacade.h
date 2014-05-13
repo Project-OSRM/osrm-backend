@@ -38,9 +38,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../Util/StringUtil.h"
 #include "../../typedefs.h"
 
+#include <boost/range/irange.hpp>
+
 #include <osrm/Coordinate.h>
 
 #include <string>
+
+typedef decltype(boost::irange(0u,0u)) EdgeRange;
 
 template <class EdgeDataT> class BaseDataFacade
 {
@@ -66,6 +70,8 @@ template <class EdgeDataT> class BaseDataFacade
     virtual EdgeID BeginEdges(const NodeID n) const = 0;
 
     virtual EdgeID EndEdges(const NodeID n) const = 0;
+
+    virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
 
     // searches for a specific edge
     virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;

@@ -94,7 +94,7 @@ template <typename GraphT> class BFSComponentExplorer
                 const NodeID to_node_of_only_restriction =
                     m_restriction_map.CheckForEmanatingIsOnlyTurn(u, v);
 
-                for (auto e2 = m_graph.BeginEdges(v); e2 < m_graph.EndEdges(v); ++e2)
+                for (auto e2 : m_graph.GetAdjacentEdgeRange(v))
                 {
                     const NodeID w = m_graph.GetTarget(e2);
 

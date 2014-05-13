@@ -55,8 +55,7 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID u, const NodeID v
     // it is more efficent to get a (small) list of potential start edges
     // than iterating over all buckets
     std::vector<NodeID> predecessors;
-    for (EdgeID current_edge_id = m_graph->BeginEdges(u); current_edge_id < m_graph->EndEdges(u);
-         ++current_edge_id)
+    for (EdgeID current_edge_id : m_graph->GetAdjacentEdgeRange(u))
     {
         const EdgeData &edge_data = m_graph->GetEdgeData(current_edge_id);
         const NodeID target = m_graph->GetTarget(current_edge_id);

@@ -283,8 +283,7 @@ class TarjanSCC
                     ++index;
 
                     // Traverse outgoing edges
-                    EdgeID end_edge = m_node_based_graph->EndEdges(v);
-                    for (auto e2 = m_node_based_graph->BeginEdges(v); e2 < end_edge; ++e2)
+                    for (auto e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
                     {
                         const TarjanDynamicGraph::NodeIterator vprime =
                             m_node_based_graph->GetTarget(e2);
@@ -357,8 +356,7 @@ class TarjanSCC
         for (NodeID u = 0; u < last_u_node; ++u)
         {
             p.printIncrement();
-            EdgeID last_edge = m_node_based_graph->EndEdges(u);
-            for (auto e1 = m_node_based_graph->BeginEdges(u); e1 < last_edge; ++e1)
+            for (auto e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
             {
                 if (!m_node_based_graph->GetEdgeData(e1).reversedEdge)
                 {
