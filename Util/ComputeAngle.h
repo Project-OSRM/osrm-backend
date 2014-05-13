@@ -721,12 +721,11 @@ constexpr unsigned short atan_table[4096] = {
 };
 
 // max value is pi/4
-constexpr double SCALING_FACTOR = 4 / M_PI * 0xFFFF;
+constexpr double SCALING_FACTOR = 4. / M_PI * 0xFFFF;
 
 inline double atan2_lookup(double y, double x)
 {
-    if (((x > 0.) && (x < std::numeric_limits<double>::epsilon())) ||
-        ((x < 0.) && (x > -std::numeric_limits<double>::epsilon())))
+    if (std::abs(x) < std::numeric_limits<double>::epsilon())
     {
         if (y >= 0.)
         {
@@ -803,7 +802,9 @@ inline static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT
 
     double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180 / M_PI;
     while (angle < 0)
+    {
         angle += 360;
+    }
     return angle;
 }
 
