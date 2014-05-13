@@ -628,8 +628,10 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 {
                     distance += speed_profile.trafficSignalPenalty;
                 }
-                const int turn_penalty = GetTurnPenalty(u, v, w, lua_state);
-                TurnInstruction turn_instruction = AnalyzeTurn(u, v, w);
+                const double angle = GetAngleBetweenThreeFixedPointCoordinates(
+                m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
+                const int turn_penalty = GetTurnPenalty(angle, lua_state);
+                TurnInstruction turn_instruction = AnalyzeTurn(u, v, w, angle);
                 if (turn_instruction == TurnInstruction::UTurn)
                 {
                     distance += speed_profile.uTurnPenalty;
@@ -686,13 +688,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
     SimpleLogger().Write() << "  skips " << skipped_barrier_turns_counter << " turns over barriers";
 }
 
-int EdgeBasedGraphFactory::GetTurnPenalty(const NodeID u,
-                                          const NodeID v,
-                                          const NodeID w,
-                                          lua_State *lua_state) const
+int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const
 {
-    const double angle = GetAngleBetweenThreeFixedPointCoordinates(
-        m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
 
     if (speed_profile.has_turn_penalty_function)
     {
@@ -706,7 +703,10 @@ int EdgeBasedGraphFactory::GetTurnPenalty(const NodeID u,
     return 0;
 }
 
-TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w)
+TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u,
+                                                   const NodeID v,
+                                                   const NodeID w,
+                                                   double angle)
     const
 {
     if (u == w)
@@ -771,8 +771,6 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
         }
     }
 
-    const double angle = GetAngleBetweenThreeFixedPointCoordinates(
-        m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
     return TurnInstructionsClass::GetTurnDirectionOfInstruction(angle);
 }
 
