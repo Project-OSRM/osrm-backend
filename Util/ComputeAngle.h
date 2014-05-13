@@ -725,8 +725,8 @@ constexpr double SCALING_FACTOR = 4 / M_PI * 0xFFFF;
 
 inline double atan2_lookup(double y, double x)
 {
-    if ((x > 0.) && (x < std::numeric_limits<double>::epsilon()) ||
-        (x < 0.) && (x > -std::numeric_limits<double>::epsilon()))
+    if (((x > 0.) && (x < std::numeric_limits<double>::epsilon())) ||
+        ((x < 0.) && (x > -std::numeric_limits<double>::epsilon())))
     {
         if (y >= 0.)
         {
