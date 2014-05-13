@@ -725,44 +725,66 @@ constexpr double SCALING_FACTOR = 4 / M_PI * 0xFFFF;
 
 inline double atan2_lookup(double y, double x)
 {
-    if ((x > 0.0) && (x <  std::numeric_limits<double>::epsilon())
-     || (x < 0.0) && (x > -std::numeric_limits<double>::epsilon()))
+    if ((x > 0.) && (x < std::numeric_limits<double>::epsilon()) ||
+        (x < 0.) && (x > -std::numeric_limits<double>::epsilon()))
     {
-        if (y >= 0.0)
-            return M_PI/2.0;
+        if (y >= 0.)
+        {
+            return M_PI / 2.;
+        }
         else
-            return -M_PI/2.0;
+        {
+            return -M_PI / 2.;
+        }
     }
 
     unsigned octant = 0;
 
-    if (x < 0) {
+    if (x < 0.)
+    {
         octant = 1;
         x = -x;
     }
-    if (y < 0) {
+    if (y < 0.)
+    {
         octant |= 2;
         y = -y;
     }
 
     double t = y / x;
-    if (t > 1.0) {
+    if (t > 1.0)
+    {
         octant |= 4;
         t = 1.0 / t;
     }
 
-    double angle = atan_table[(unsigned) (t*4095)] / SCALING_FACTOR;
+    double angle = atan_table[(unsigned)(t * 4095)] / SCALING_FACTOR;
 
     switch (octant)
     {
-        case 0: break;
-        case 1: angle = M_PI - angle; break;
-        case 2: angle = -angle; break;
-        case 3: angle = -M_PI + angle; break;
-        case 4: angle = M_PI/2.0 - angle; break;
-        case 5: angle = M_PI/2.0 + angle; break;
-        case 6: angle = -M_PI/2.0 + angle; break;
-        case 7: angle = -M_PI/2.0 - angle; break;
+    case 0:
+        break;
+    case 1:
+        angle = M_PI - angle;
+        break;
+    case 2:
+        angle = -angle;
+        break;
+    case 3:
+        angle = -M_PI + angle;
+        break;
+    case 4:
+        angle = M_PI / 2.0 - angle;
+        break;
+    case 5:
+        angle = M_PI / 2.0 + angle;
+        break;
+    case 6:
+        angle = -M_PI / 2.0 + angle;
+        break;
+    case 7:
+        angle = -M_PI / 2.0 - angle;
+        break;
     }
 
     return angle;
@@ -784,5 +806,6 @@ inline static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT
         angle += 360;
     return angle;
 }
+
 
 #endif // COMPUTE_ANGLE_H
