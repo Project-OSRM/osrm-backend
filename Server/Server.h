@@ -33,10 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <boost/thread.hpp>
 
 #include <functional>
 #include <memory>
+#include <thread>
 #include <vector>
 
 class Server
@@ -59,19 +59,22 @@ class Server
             boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
     }
 
+    Server() = delete;
     Server(const Server &) = delete;
 
     void Run()
     {
-        std::vector<std::shared_ptr<boost::thread>> threads;
+        std::vector<std::shared_ptr<std::thread>> threads;
         for (unsigned i = 0; i < thread_pool_size; ++i)
         {
-            std::shared_ptr<boost::thread> thread = std::make_shared<boost::thread>(
+            std::shared_ptr<std::thread> thread = std::make_shared<std::thread>(
                 boost::bind(&boost::asio::io_service::run, &io_service));
             threads.push_back(thread);
         }
         for (unsigned i = 0; i < threads.size(); ++i)
+        {
             threads[i]->join();
+        }
     }
 
     void Stop() { io_service.stop(); }
