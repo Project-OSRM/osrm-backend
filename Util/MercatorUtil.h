@@ -30,10 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 inline double y2lat(const double a)
 {
     return 180. / M_PI * (2. * atan(exp(a * M_PI / 180.)) - M_PI / 2.);

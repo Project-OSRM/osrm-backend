@@ -808,5 +808,4 @@ inline static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT
     return angle;
 }
 
-
 #endif // COMPUTE_ANGLE_H
