@@ -40,8 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-#include <boost/ref.hpp>
-
 XMLParser::XMLParser(const char *filename, ExtractorCallbacks *ec, ScriptingEnvironment &se)
     : BaseParser(ec, se)
 {

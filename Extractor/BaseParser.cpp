@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/regex.hpp>
+#include <boost/ref.hpp>
 #include <boost/regex.hpp>
 
 BaseParser::BaseParser(ExtractorCallbacks *extractor_callbacks,
