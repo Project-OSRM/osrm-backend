@@ -120,8 +120,6 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             return;
         }
 
-        SimpleLogger().Write(logDEBUG) << "distance: " << raw_route.shortest_path_length;
-
         // check if first segment is non-zero
         std::string road_name =
             facade->GetEscapedNameForNameID(phantom_nodes.source_phantom.name_id);
@@ -276,7 +274,6 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         TIMER_START(route_render);
         JSON::render(reply.content, json_result);
         TIMER_STOP(route_render);
-        JSON::render(SimpleLogger().Write(), json_result);
         SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
     }
 
