@@ -41,12 +41,8 @@ struct ServerFactory
     ServerFactory(const ServerFactory &) = delete;
     static Server *CreateServer(std::string &ip_address, int ip_port, int threads)
     {
-
         SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
-
-        std::string port_stream;
-        intToString(ip_port, port_stream);
-
+        std::string port_stream = IntToString(ip_port);
         return new Server(ip_address, port_stream, std::min(omp_get_num_procs(), threads));
     }
 };

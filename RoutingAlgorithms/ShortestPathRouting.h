@@ -55,6 +55,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         {
             if (phantom_node_pair.AtLeastOnePhantomNodeIsInvalid())
             {
+                BOOST_ASSERT(false);
                 return;
             }
         }

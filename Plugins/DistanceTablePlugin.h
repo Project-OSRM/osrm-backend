@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+Copyright (c) 2014, Project OSRM, Dennis Luxen, others
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,13 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef VIA_ROUTE_PLUGIN_H
-#define VIA_ROUTE_PLUGIN_H
+#ifndef DISTANCE_TABLE_PLUGIN_H
+#define DISTANCE_TABLE_PLUGIN_H
 
 #include "BasePlugin.h"
 
 #include "../Algorithms/ObjectToBase64.h"
-
+#include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/JSONDescriptor.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimingUtil.h"
 
 #include <cstdlib>
 
@@ -48,28 +49,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
+template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
 {
   private:
-    std::unordered_map<std::string, unsigned> descriptor_table;
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
   public:
-    explicit ViaRoutePlugin(DataFacadeT *facade) : descriptor_string("viaroute"), facade(facade)
+    explicit DistanceTablePlugin(DataFacadeT *facade) : descriptor_string("table"), facade(facade)
     {
         search_engine_ptr = std::make_shared<SearchEngine<DataFacadeT>>(facade);
-
-        descriptor_table.emplace("json", 0);
-        descriptor_table.emplace("gpx", 1);
-        // descriptor_table.emplace("geojson", 2);
     }
 
-    virtual ~ViaRoutePlugin() {}
+    virtual ~DistanceTablePlugin() {}
 
     const std::string GetDescriptor() const { return descriptor_string; }
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
+        SimpleLogger().Write() << "running DT plugin";
+
         // check number of parameters
         if (2 > route_parameters.coordinates.size())
         {
@@ -85,6 +83,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
                         [&](FixedPointCoordinate coordinate)
                         { return !coordinate.isValid(); }))
         {
+            SimpleLogger().Write() << "invalid coordinate";
+
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
@@ -92,12 +92,14 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
         {
             raw_route.raw_via_node_coordinates.emplace_back(coordinate);
+            SimpleLogger().Write() << "adding coordinate " << coordinate;
         }
 
         std::vector<PhantomNode> phantom_node_vector(raw_route.raw_via_node_coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
 
-        for (unsigned i = 0; i < raw_route.raw_via_node_coordinates.size(); ++i)
+        unsigned max_locations = std::min(25, max_locations);
+        for (unsigned i = 0; i < max_locations; ++i)
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
@@ -105,72 +107,42 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
                 DecodeObjectFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
                 if (phantom_node_vector[i].isValid(facade->GetNumberOfNodes()))
                 {
+                    SimpleLogger().Write() << "decoded phantom node for " << phantom_node_vector[i].location;
                     continue;
                 }
             }
+            SimpleLogger().Write() << "looking up coordinate in tree";
             facade->FindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
                                                  phantom_node_vector[i],
                                                  route_parameters.zoom_level);
+            BOOST_ASSERT(phantom_node_vector[i].isValid(facade->GetNumberOfNodes()));
         }
 
-        PhantomNodes current_phantom_node_pair;
-        for (unsigned i = 0; i < phantom_node_vector.size() - 1; ++i)
+        TIMER_START(distance_table);
+        std::shared_ptr<std::vector<EdgeWeight>> result_table = search_engine_ptr->distance_table(phantom_node_vector);
+        TIMER_STOP(distance_table);
+        SimpleLogger().Write() << "table computation took " << TIMER_MSEC(distance_table) << "ms";
+
+        if (!result_table)
         {
-            current_phantom_node_pair.source_phantom = phantom_node_vector[i];
-            current_phantom_node_pair.target_phantom = phantom_node_vector[i + 1];
-            raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
+            SimpleLogger().Write() << "computation failed";
+            reply = http::Reply::StockReply(http::Reply::badRequest);
+            return;
         }
-
-        const bool is_alternate_requested = route_parameters.alternate_route;
-        const bool is_only_one_segment = (1 == raw_route.segment_end_coordinates.size());
-        if (is_alternate_requested && is_only_one_segment)
+        SimpleLogger().Write() << "computation successful";
+        JSON::Object json_object;
+        JSON::Array json_array;
+        const unsigned number_of_locations = phantom_node_vector.size();
+        for(unsigned row = 0; row < number_of_locations; ++row)
         {
-            search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
-                                                raw_route);
+            JSON::Array json_row;
+            auto row_begin_iterator = result_table->begin() + (row*number_of_locations);
+            auto row_end_iterator = result_table->begin() + ((row+1)*number_of_locations);
+            json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
+            json_array.values.push_back(json_row);
         }
-        else
-        {
-            search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, raw_route);
-        }
-
-        if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
-        {
-            SimpleLogger().Write(logDEBUG) << "Error occurred, single path not found";
-        }
-        reply.status = http::Reply::ok;
-
-        DescriptorConfig descriptor_config;
-
-        auto iter = descriptor_table.find(route_parameters.output_format);
-        unsigned descriptor_type = (iter != descriptor_table.end() ? iter->second : 0);
-
-        descriptor_config.zoom_level = route_parameters.zoom_level;
-        descriptor_config.instructions = route_parameters.print_instructions;
-        descriptor_config.geometry = route_parameters.geometry;
-        descriptor_config.encode_geometry = route_parameters.compression;
-
-        std::shared_ptr<BaseDescriptor<DataFacadeT>> descriptor;
-        switch (descriptor_type)
-        {
-        // case 0:
-        //     descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
-        //     break;
-        case 1:
-            descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>();
-            break;
-        // case 2:
-        //      descriptor = std::make_shared<GEOJSONDescriptor<DataFacadeT>>();
-        //      break;
-        default:
-            descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
-            break;
-        }
-
-        PhantomNodes phantom_nodes;
-        phantom_nodes.source_phantom = raw_route.segment_end_coordinates.front().source_phantom;
-        phantom_nodes.target_phantom = raw_route.segment_end_coordinates.back().target_phantom;
-        descriptor->SetConfig(descriptor_config);
-        descriptor->Run(raw_route, phantom_nodes, facade, reply);
+        json_object.values["distance_table"] = json_array;
+        JSON::render(reply.content, json_object);
     }
 
   private:
@@ -178,4 +150,4 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif // VIA_ROUTE_PLUGIN_H
+#endif // DISTANCE_TABLE_PLUGIN_H

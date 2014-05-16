@@ -28,7 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TIMESTAMP_PLUGIN_H
 #define TIMESTAMP_PLUGIN_H
 
+#include "../DataStructures/JSONContainer.h"
 #include "BasePlugin.h"
+
+#include <string>
 
 template <class DataFacadeT> class TimestampPlugin : public BasePlugin
 {
@@ -40,46 +43,12 @@ template <class DataFacadeT> class TimestampPlugin : public BasePlugin
     const std::string GetDescriptor() const { return descriptor_string; }
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
-        std::string tmp;
-
-        // json
-        if (!route_parameters.jsonp_parameter.empty())
-        {
-            reply.content.emplace_back(route_parameters.jsonp_parameter);
-            reply.content.emplace_back("(");
-        }
-
         reply.status = http::Reply::ok;
-        reply.content.emplace_back("{");
-        reply.content.emplace_back("\"status\":");
-        reply.content.emplace_back("0,");
-        reply.content.emplace_back("\"timestamp\":\"");
-        reply.content.emplace_back(facade->GetTimestamp());
-        reply.content.emplace_back("\"");
-        reply.content.emplace_back("}");
-        reply.headers.resize(3);
-        if (!route_parameters.jsonp_parameter.empty())
-        {
-            reply.content.emplace_back(")");
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "text/javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"timestamp.js\"";
-        }
-        else
-        {
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/x-javascript";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"timestamp.json\"";
-        }
-        unsigned content_length = 0;
-        for (const std::string &snippet : reply.content)
-        {
-            content_length += snippet.length();
-        }
-        intToString(content_length, tmp);
-        reply.headers[0].value = tmp;
+        JSON::Object json_result;
+        json_result.values["status"] = 0;
+        const std::string timestamp = facade->GetTimestamp();
+        json_result.values["timestamp"] = timestamp;
+        JSON::render(reply.content, json_result);
     }
 
   private:

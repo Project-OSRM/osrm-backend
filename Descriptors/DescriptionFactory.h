@@ -57,18 +57,17 @@ class DescriptionFactory
   public:
     struct RouteSummary
     {
-        std::string lengthString;
-        std::string durationString;
-        unsigned startName;
-        unsigned destName;
-        RouteSummary() : lengthString("0"), durationString("0"), startName(0), destName(0) {}
+        unsigned distance;
+        EdgeWeight duration;
+        unsigned source_name_id;
+        unsigned target_name_id;
+        RouteSummary() : distance(0), duration(0), source_name_id(0), target_name_id(0) {}
 
-        void BuildDurationAndLengthStrings(const double distance, const unsigned time)
+        void BuildDurationAndLengthStrings(const double raw_distance, const unsigned raw_duration)
         {
             // compute distance/duration for route summary
-            intToString(round(distance), lengthString);
-            int travel_time = round(time / 10.);
-            intToString(std::max(travel_time, 1), durationString);
+            distance = round(raw_distance);
+            duration = round(raw_duration / 10.);
         }
     } summary;
 
@@ -79,13 +78,12 @@ class DescriptionFactory
     DescriptionFactory();
     virtual ~DescriptionFactory();
     double GetBearing(const FixedPointCoordinate &C, const FixedPointCoordinate &B) const;
-    void AppendEncodedPolylineString(std::vector<std::string> &output) const;
-    void AppendUnencodedPolylineString(std::vector<std::string> &output) const;
+    JSON::Value AppendUnencodedPolylineString() const;
     void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode &start_phantom);
     void SetEndSegment(const PhantomNode &start_phantom);
-    void AppendEncodedPolylineString(const bool return_encoded, std::vector<std::string> &output);
+    JSON::Value AppendEncodedPolylineString(const bool return_encoded);
 
     template <class DataFacadeT> void Run(const DataFacadeT *facade, const unsigned zoomLevel)
     {
@@ -198,7 +196,7 @@ class DescriptionFactory
         {
             if (path_description[i].necessary)
             {
-                double angle =
+                const double angle =
                     GetBearing(path_description[i].location, path_description[i + 1].location);
                 path_description[i].bearing = angle * 10;
             }

@@ -94,38 +94,23 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     }
 }
 
-void DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded,
-                                                     std::vector<std::string> &output)
+JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)
 {
-    std::string temp;
     if (return_encoded)
     {
-        polyline_compressor.printEncodedString(path_description, temp);
+        return polyline_compressor.printEncodedString(path_description);
     }
-    else
-    {
-        polyline_compressor.printUnencodedString(path_description, temp);
-    }
-    output.emplace_back(temp);
+    return polyline_compressor.printUnencodedString(path_description);
 }
 
-void DescriptionFactory::AppendEncodedPolylineString(std::vector<std::string> &output) const
+JSON::Value DescriptionFactory::AppendUnencodedPolylineString() const
 {
-    std::string temp;
-    polyline_compressor.printEncodedString(path_description, temp);
-    output.emplace_back(temp);
-}
-
-void DescriptionFactory::AppendUnencodedPolylineString(std::vector<std::string> &output) const
-{
-    std::string temp;
-    polyline_compressor.printUnencodedString(path_description, temp);
-    output.emplace_back(temp);
+    return polyline_compressor.printUnencodedString(path_description);
 }
 
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)
 {
-    summary.startName = start_phantom.name_id;
-    summary.destName = target_phantom.name_id;
+    summary.source_name_id = start_phantom.name_id;
+    summary.target_name_id = target_phantom.name_id;
     summary.BuildDurationAndLengthStrings(distance, time);
 }

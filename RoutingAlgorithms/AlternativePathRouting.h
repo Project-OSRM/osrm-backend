@@ -78,6 +78,7 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
     {
         if (phantom_node_pair.PhantomNodesHaveEqualLocation())
         {
+            BOOST_ASSERT(false);
             return;
         }
 

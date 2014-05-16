@@ -51,7 +51,7 @@ struct DescriptorConfig
 template <class DataFacadeT> class BaseDescriptor
 {
   public:
-    BaseDescriptor() {}
+    BaseDescriptor() {} //TODO: initialize facade here.
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() {}
     virtual void Run(const RawRouteData &raw_route,
