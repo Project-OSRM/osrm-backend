@@ -28,7 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SCRIPTINGENVIRONMENT_H_
 #define SCRIPTINGENVIRONMENT_H_
 
-#include <vector>
+#include <string>
+#include <memory>
+#include <tbb/enumerable_thread_specific.h>
 
 struct lua_State;
 
@@ -37,11 +39,14 @@ class ScriptingEnvironment
   public:
     ScriptingEnvironment();
     explicit ScriptingEnvironment(const char *file_name);
-    virtual ~ScriptingEnvironment();
 
-    lua_State *getLuaStateForThreadID(const int);
+    lua_State *getLuaState();
 
-    std::vector<lua_State *> lua_state_vector;
+  private:
+    void initLuaState(lua_State* lua_state);
+
+    std::string file_name;
+    tbb::enumerable_thread_specific<std::shared_ptr<lua_State>> script_contexts;
 };
 
 #endif /* SCRIPTINGENVIRONMENT_H_ */

@@ -177,6 +177,10 @@ target_link_libraries(osrm-datastore ${Boost_LIBRARIES} UUID GITDESCRIPTION COOR
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 
+find_package(TBB REQUIRED)
+target_link_libraries(osrm-extract ${TBB_LIBRARIES})
+include_directories(${TBB_INCLUDE_DIR})
+
 find_package(Lua52)
 if(NOT LUA52_FOUND)
   find_package(Lua51 REQUIRED)

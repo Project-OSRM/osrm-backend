@@ -40,6 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <tbb/parallel_for.h>
+
 #include <osrm/Coordinate.h>
 
 #include <zlib.h>
@@ -257,16 +259,18 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
             denseTagIndex += 2;
         }
     }
-#pragma omp parallel
-    {
-        const int thread_num = omp_get_thread_num();
-#pragma omp parallel for schedule(guided)
-        for (int i = 0; i < number_of_nodes; ++i)
+
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, extracted_nodes_vector.size()),
+        [this, &extracted_nodes_vector](const tbb::blocked_range<size_t>& range)
         {
-            ImportNode &import_node = extracted_nodes_vector[i];
-            ParseNodeInLua(import_node, scripting_environment.getLuaStateForThreadID(thread_num));
+            lua_State* lua_state = this->scripting_environment.getLuaState();
+            for (size_t i = range.begin(); i != range.end(); i++)
+            {
+                ImportNode &import_node = extracted_nodes_vector[i];
+                ParseNodeInLua(import_node, lua_state);
+            }
         }
-    }
+    );
 
     for (const ImportNode &import_node : extracted_nodes_vector)
     {
@@ -424,16 +428,21 @@ inline void PBFParser::parseWay(ParserThreadData *thread_data)
         }
     }
 
-#pragma omp parallel for schedule(guided)
-    for (int i = 0; i < number_of_ways; ++i)
-    {
-        ExtractionWay &extraction_way = parsed_way_vector[i];
-        if (2 <= extraction_way.path.size())
+    // TODO: investigate if schedule guided will be handled by tbb automatically
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, parsed_way_vector.size()),
+        [this, &parsed_way_vector](const tbb::blocked_range<size_t>& range)
         {
-            ParseWayInLua(extraction_way,
-                          scripting_environment.getLuaStateForThreadID(omp_get_thread_num()));
+            lua_State* lua_state = this->scripting_environment.getLuaState();
+            for (size_t i = range.begin(); i != range.end(); i++)
+            {
+                ExtractionWay &extraction_way = parsed_way_vector[i];
+                if (2 <= extraction_way.path.size())
+                {
+                    ParseWayInLua(extraction_way, lua_state);
+                }
+            }
         }
-    }
+    );
 
     for (ExtractionWay &extraction_way : parsed_way_vector)
     {
