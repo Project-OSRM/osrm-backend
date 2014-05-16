@@ -115,6 +115,12 @@ struct PhantomNode
         );
     }
 
+    bool isValid() const
+    {
+        return location.isValid() &&
+               (name_id != std::numeric_limits<unsigned>::max());
+    }
+
     bool operator==(const PhantomNode & other) const
     {
         return location == other.location;
