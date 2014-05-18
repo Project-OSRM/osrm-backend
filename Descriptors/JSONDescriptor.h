@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BaseDescriptor.h"
 #include "DescriptionFactory.h"
 #include "../Algorithms/ObjectToBase64.h"
+#include "../Algorithms/ExtractRouteNames.h"
 #include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
@@ -46,8 +47,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
     // TODO: initalize in c'tor
     DataFacadeT *facade;
     DescriptorConfig config;
-    DescriptionFactory description_factory;
-    DescriptionFactory alternate_description_factory;
+    DescriptionFactory description_factory, alternate_description_factory;
     FixedPointCoordinate current;
     unsigned entered_restricted_area_count;
     struct RoundAbout
@@ -68,14 +68,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
     };
     std::vector<Segment> shortest_path_segments, alternative_path_segments;
     std::vector<unsigned> shortest_leg_end_indices, alternative_leg_end_indices;
+    ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
 
-    struct RouteNames
-    {
-        std::string shortest_path_name_1;
-        std::string shortest_path_name_2;
-        std::string alternative_path_name_1;
-        std::string alternative_path_name_2;
-    };
 
   public:
     JSONDescriptor() : facade(nullptr), entered_restricted_area_count(0)
@@ -166,14 +160,6 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         json_route_summary.values["end_point"] = facade->GetEscapedNameForNameID(description_factory.summary.target_name_id);
         json_result.values["route_summary"] = json_route_summary;
 
-        // Get Names for both routes
-        RouteNames route_names;
-        JSON::Array json_route_names;
-        GetRouteNames(shortest_path_segments, alternative_path_segments, facade, route_names);
-        json_route_names.values.push_back(route_names.shortest_path_name_1);
-        json_route_names.values.push_back(route_names.shortest_path_name_2);
-        json_result.values["route_name"] = json_route_names;
-
         BOOST_ASSERT(!raw_route.segment_end_coordinates.empty());
 
         JSON::Array json_via_points_array;
@@ -244,16 +230,25 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             json_altenative_indices_array.values.push_back(0);
             json_altenative_indices_array.values.push_back(alternate_description_factory.path_description.size());
             json_result.values["alternative_indices"] = json_altenative_indices_array;
+        } else {
+            json_result.values["found_alternative"] = JSON::False();
+        }
 
+        // Get Names for both routes
+        RouteNames route_names = GenerateRouteNames(shortest_path_segments, alternative_path_segments, facade);
+        JSON::Array json_route_names;
+        json_route_names.values.push_back(route_names.shortest_path_name_1);
+        json_route_names.values.push_back(route_names.shortest_path_name_2);
+        json_result.values["route_name"] = json_route_names;
+
+        if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
+        {
             JSON::Array json_alternate_names_array;
             JSON::Array json_alternate_names;
             json_alternate_names.values.push_back(route_names.alternative_path_name_1);
             json_alternate_names.values.push_back(route_names.alternative_path_name_2);
             json_alternate_names_array.values.push_back(json_alternate_names);
             json_result.values["alternative_names"] = json_alternate_names_array;
-
-        } else {
-            json_result.values["found_alternative"] = JSON::False();
         }
 
         JSON::Object json_hint_object;
@@ -275,96 +270,6 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         JSON::render(reply.content, json_result);
         TIMER_STOP(route_render);
         SimpleLogger().Write(logDEBUG) << "rendering took: " << TIMER_MSEC(route_render);
-    }
-
-    // TODO: break into function object with several functions, i.e. simplify
-    // construct routes names
-    void GetRouteNames(std::vector<Segment> &shortest_path_segments,
-                       std::vector<Segment> &alternative_path_segments,
-                       const DataFacadeT *facade,
-                       RouteNames &route_names)
-    {
-        Segment shortest_segment_1, shortest_segment_2;
-        Segment alternative_segment_1, alternative_segment_2;
-
-        auto length_comperator = [](Segment a, Segment b)
-        { return a.length < b.length; };
-        auto name_id_comperator = [](Segment a, Segment b)
-        { return a.name_id < b.name_id; };
-
-        if (!shortest_path_segments.empty())
-        {
-            std::sort(
-                shortest_path_segments.begin(), shortest_path_segments.end(), length_comperator);
-            shortest_segment_1 = shortest_path_segments[0];
-            if (!alternative_path_segments.empty())
-            {
-                std::sort(alternative_path_segments.begin(),
-                          alternative_path_segments.end(),
-                          length_comperator);
-                alternative_segment_1 = alternative_path_segments[0];
-            }
-            std::vector<Segment> shortest_path_set_difference(shortest_path_segments.size());
-            std::vector<Segment> alternative_path_set_difference(alternative_path_segments.size());
-            std::set_difference(shortest_path_segments.begin(),
-                                shortest_path_segments.end(),
-                                alternative_path_segments.begin(),
-                                alternative_path_segments.end(),
-                                shortest_path_set_difference.begin(),
-                                length_comperator);
-            int size_of_difference = shortest_path_set_difference.size();
-            if (size_of_difference)
-            {
-                int i = 0;
-                while (i < size_of_difference &&
-                       shortest_path_set_difference[i].name_id == shortest_path_segments[0].name_id)
-                {
-                    ++i;
-                }
-                if (i < size_of_difference)
-                {
-                    shortest_segment_2 = shortest_path_set_difference[i];
-                }
-            }
-
-            std::set_difference(alternative_path_segments.begin(),
-                                alternative_path_segments.end(),
-                                shortest_path_segments.begin(),
-                                shortest_path_segments.end(),
-                                alternative_path_set_difference.begin(),
-                                name_id_comperator);
-            size_of_difference = alternative_path_set_difference.size();
-            if (size_of_difference)
-            {
-                int i = 0;
-                while (i < size_of_difference &&
-                       alternative_path_set_difference[i].name_id == alternative_path_segments[0].name_id)
-                {
-                    ++i;
-                }
-                if (i < size_of_difference)
-                {
-                    alternative_segment_2 = alternative_path_set_difference[i];
-                }
-            }
-            if (shortest_segment_1.position > shortest_segment_2.position)
-            {
-                std::swap(shortest_segment_1, shortest_segment_2);
-            }
-            if (alternative_segment_1.position > alternative_segment_2.position)
-            {
-                std::swap(alternative_segment_1, alternative_segment_2);
-            }
-            route_names.shortest_path_name_1 =
-                facade->GetEscapedNameForNameID(shortest_segment_1.name_id);
-            route_names.shortest_path_name_2 =
-                facade->GetEscapedNameForNameID(shortest_segment_2.name_id);
-
-            route_names.alternative_path_name_1 =
-                facade->GetEscapedNameForNameID(alternative_segment_1.name_id);
-            route_names.alternative_path_name_2 =
-                facade->GetEscapedNameForNameID(alternative_segment_2.name_id);
-        }
     }
 
     // TODO: reorder parameters
