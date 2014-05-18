@@ -42,10 +42,9 @@ struct RouteNames
     std::string alternative_path_name_2;
 };
 
+// construct routes names
 template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
 {
-    // TODO: break into function object with several functions, i.e. simplify
-    // construct routes names
     RouteNames operator()(std::vector<SegmentT> &shortest_path_segments,
                           std::vector<SegmentT> &alternative_path_segments,
                           const DataFacadeT *facade)
