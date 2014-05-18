@@ -359,9 +359,10 @@ double FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
     const double lat1 = DegreeToRadian(other.lat / COORDINATE_PRECISION);
     const double lat2 = DegreeToRadian(lat / COORDINATE_PRECISION);
 
-    const double y = sin(delta_long) * cos(lat2);
-    const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
-    double result = RadianToDegree(atan2(y, x));
+    const double y = std::sin(delta_long) * std::cos(lat2);
+    const double x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(delta_long);
+    double result = RadianToDegree(std::atan2(y, x));
+
     while (result < 0.)
     {
         result += 360.;
