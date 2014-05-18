@@ -44,7 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFacadeT>
 {
   private:
-    // TODO: initalize in c'tor
     DataFacadeT *facade;
     DescriptorConfig config;
     DescriptionFactory description_factory, alternate_description_factory;

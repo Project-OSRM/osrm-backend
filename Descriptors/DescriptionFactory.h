@@ -77,7 +77,6 @@ class DescriptionFactory
     std::vector<SegmentInformation> path_description;
     DescriptionFactory();
     virtual ~DescriptionFactory();
-    double GetBearing(const FixedPointCoordinate &C, const FixedPointCoordinate &B) const;
     JSON::Value AppendUnencodedPolylineString() const;
     void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
@@ -196,8 +195,7 @@ class DescriptionFactory
         {
             if (path_description[i].necessary)
             {
-                const double angle =
-                    GetBearing(path_description[i].location, path_description[i + 1].location);
+                const double angle = path_description[i].location.GetBearing(path_description[i + 1].location);
                 path_description[i].bearing = angle * 10;
             }
         }

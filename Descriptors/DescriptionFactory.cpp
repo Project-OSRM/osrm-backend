@@ -31,39 +31,6 @@ DescriptionFactory::DescriptionFactory() : entireLength(0) {}
 
 DescriptionFactory::~DescriptionFactory() {}
 
-inline double DescriptionFactory::DegreeToRadian(const double degree) const
-{
-    return degree * (M_PI / 180.);
-}
-
-inline double DescriptionFactory::RadianToDegree(const double radian) const
-{
-    return radian * (180. / M_PI);
-}
-
-double DescriptionFactory::GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B)
-    const
-{
-    double delta_long = DegreeToRadian(B.lon / COORDINATE_PRECISION - A.lon / COORDINATE_PRECISION);
-
-    const double lat1 = DegreeToRadian(A.lat / COORDINATE_PRECISION);
-    const double lat2 = DegreeToRadian(B.lat / COORDINATE_PRECISION);
-
-    const double y = sin(delta_long) * cos(lat2);
-    const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
-    double result = RadianToDegree(atan2(y, x));
-    while (result < 0.)
-    {
-        result += 360.;
-    }
-
-    while (result >= 360.)
-    {
-        result -= 360.;
-    }
-    return result;
-}
-
 void DescriptionFactory::SetStartSegment(const PhantomNode &source)
 {
     start_phantom = source;

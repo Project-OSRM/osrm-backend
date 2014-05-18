@@ -330,6 +330,59 @@ void FixedPointCoordinate::Output(std::ostream &out) const
     out << "(" << lat / COORDINATE_PRECISION << "," << lon / COORDINATE_PRECISION << ")";
 }
 
+double FixedPointCoordinate::GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B)
+{
+    double delta_long = DegreeToRadian(B.lon / COORDINATE_PRECISION - A.lon / COORDINATE_PRECISION);
+
+    const double lat1 = DegreeToRadian(A.lat / COORDINATE_PRECISION);
+    const double lat2 = DegreeToRadian(B.lat / COORDINATE_PRECISION);
+
+    const double y = sin(delta_long) * cos(lat2);
+    const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
+    double result = RadianToDegree(atan2(y, x));
+    while (result < 0.)
+    {
+        result += 360.;
+    }
+
+    while (result >= 360.)
+    {
+        result -= 360.;
+    }
+    return result;
+}
+
+double FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
+{
+    double delta_long = DegreeToRadian(lon / COORDINATE_PRECISION - other.lon / COORDINATE_PRECISION);
+
+    const double lat1 = DegreeToRadian(other.lat / COORDINATE_PRECISION);
+    const double lat2 = DegreeToRadian(lat / COORDINATE_PRECISION);
+
+    const double y = sin(delta_long) * cos(lat2);
+    const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
+    double result = RadianToDegree(atan2(y, x));
+    while (result < 0.)
+    {
+        result += 360.;
+    }
+
+    while (result >= 360.)
+    {
+        result -= 360.;
+    }
+    return result;
+}
+
+double FixedPointCoordinate::DegreeToRadian(const double degree)
+{
+    return degree * (M_PI / 180.);
+}
+
+double FixedPointCoordinate::RadianToDegree(const double radian)
+{
+    return radian * (180. / M_PI);
+}
 
 // double PointSegmentDistanceSquared( double px, double py,
 //                                     double p1x, double p1y,

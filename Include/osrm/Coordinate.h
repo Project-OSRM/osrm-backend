@@ -74,7 +74,14 @@ struct FixedPointCoordinate
                                                FixedPointCoordinate &nearest_location,
                                                double &r);
 
+    static double GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
+
+    double GetBearing(const FixedPointCoordinate &other) const;
+
     void Output(std::ostream &out) const;
+
+    static double DegreeToRadian(const double degree);
+    static double RadianToDegree(const double radian);
 };
 
 inline std::ostream &operator<<(std::ostream &o, FixedPointCoordinate const &c)
