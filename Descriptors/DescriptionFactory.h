@@ -195,7 +195,7 @@ class DescriptionFactory
         {
             if (path_description[i].necessary)
             {
-                const double angle = path_description[i].location.GetBearing(path_description[i + 1].location);
+                const double angle = path_description[i+1].location.GetBearing(path_description[i].location);
                 path_description[i].bearing = angle * 10;
             }
         }
