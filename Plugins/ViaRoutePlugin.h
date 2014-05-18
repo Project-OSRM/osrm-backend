@@ -160,13 +160,13 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         //     descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
         //     break;
         case 1:
-            descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>();
+            descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>(facade);
             break;
         // case 2:
         //      descriptor = std::make_shared<GEOJSONDescriptor<DataFacadeT>>();
         //      break;
         default:
-            descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
+            descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>(facade);
             break;
         }
 
@@ -175,7 +175,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         phantom_nodes.target_phantom = raw_route.segment_end_coordinates.back().target_phantom;
         descriptor->SetConfig(descriptor_config);
         TIMER_START(descriptor);
-        descriptor->Run(raw_route, phantom_nodes, facade, reply);
+        descriptor->Run(raw_route, phantom_nodes, reply);
         TIMER_STOP(descriptor);
         SimpleLogger().Write() << "descriptor took " << TIMER_MSEC(descriptor) << "ms";
     }

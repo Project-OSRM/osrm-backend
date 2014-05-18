@@ -51,12 +51,11 @@ struct DescriptorConfig
 template <class DataFacadeT> class BaseDescriptor
 {
   public:
-    BaseDescriptor() {} //TODO: initialize facade here.
+    BaseDescriptor() {}
     // Maybe someone can explain the pure virtual destructor thing to me (dennis)
     virtual ~BaseDescriptor() {}
     virtual void Run(const RawRouteData &raw_route,
                      const PhantomNodes &phantom_nodes,
-                     DataFacadeT *facade,
                      http::Reply &reply) = 0;
     virtual void SetConfig(const DescriptorConfig &config) = 0;
 };

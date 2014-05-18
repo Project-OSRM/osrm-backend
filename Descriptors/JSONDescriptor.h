@@ -72,7 +72,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
 
   public:
-    JSONDescriptor() : facade(nullptr), entered_restricted_area_count(0)
+    JSONDescriptor(DataFacadeT *facade) : facade(facade), entered_restricted_area_count(0)
     {
         shortest_leg_end_indices.emplace_back(0);
         alternative_leg_end_indices.emplace_back(0);
@@ -98,12 +98,9 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
     void Run(const RawRouteData &raw_route,
              const PhantomNodes &phantom_nodes,
-             // TODO: move facade initalization to c'tor
-             DataFacadeT *f,
              http::Reply &reply)
     {
         JSON::Object json_result;
-        facade = f;
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
@@ -147,7 +144,6 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             BuildTextualDescription(description_factory,
                                     json_route_instructions,
                                     raw_route.shortest_path_length,
-                                    facade,
                                     shortest_path_segments);
             json_result.values["route_instructions"] = json_route_instructions;
         }
@@ -209,7 +205,6 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                 BuildTextualDescription(alternate_description_factory,
                                         json_current_alt_instructions,
                                         raw_route.alternative_path_length,
-                                        facade,
                                         alternative_path_segments);
                 json_alt_instructions.values.push_back(json_current_alt_instructions);
                 json_result.values["alternative_instructions"] = json_alt_instructions;
@@ -276,7 +271,6 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
     inline void BuildTextualDescription(DescriptionFactory &description_factory,
                                         JSON::Array & json_instruction_array,
                                         const int route_length,
-                                        const DataFacadeT *facade,
                                         std::vector<Segment> &route_segments_list)
     {
         // Segment information has following format:

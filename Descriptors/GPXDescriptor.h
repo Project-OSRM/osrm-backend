@@ -35,6 +35,7 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
   private:
     DescriptorConfig config;
     FixedPointCoordinate current;
+    DataFacadeT * facade;
 
     void AddRoutePoint(const FixedPointCoordinate & coordinate, std::vector<char> & output)
     {
@@ -56,12 +57,13 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
     }
 
   public:
+    GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
+
     void SetConfig(const DescriptorConfig &c) { config = c; }
 
     // TODO: reorder parameters
     void Run(const RawRouteData &raw_route,
              const PhantomNodes &phantom_node_list,
-             DataFacadeT *facade,
              http::Reply &reply)
     {
         std::string header("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
