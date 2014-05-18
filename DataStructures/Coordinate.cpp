@@ -148,7 +148,6 @@ double FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
     return sqrt(x * x + y * y) * earth_radius;
 }
 
-// Yuck! Code duplication. This function is also in EgdeBasedNode.h
 double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &point,
                                                           const FixedPointCoordinate &segA,
                                                           const FixedPointCoordinate &segB)
