@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/MercatorUtil.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TrigonometryTables.h"
 
 #include <boost/assert.hpp>
 
@@ -339,7 +340,7 @@ double FixedPointCoordinate::GetBearing(const FixedPointCoordinate &A, const Fix
 
     const double y = sin(delta_long) * cos(lat2);
     const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
-    double result = RadianToDegree(atan2(y, x));
+    double result = RadianToDegree(atan2_lookup(y, x));
     while (result < 0.)
     {
         result += 360.;
@@ -361,7 +362,7 @@ double FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
 
     const double y = std::sin(delta_long) * std::cos(lat2);
     const double x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(delta_long);
-    double result = RadianToDegree(std::atan2(y, x));
+    double result = RadianToDegree(atan2_lookup(y, x));
 
     while (result < 0.)
     {
