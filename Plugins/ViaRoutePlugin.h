@@ -72,16 +72,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
         // check number of parameters
-        if (2 > route_parameters.coordinates.size())
-        {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
-        }
-
-        RawRouteData raw_route;
-        raw_route.check_sum = facade->GetCheckSum();
-
-        if (std::any_of(begin(route_parameters.coordinates),
+        if (2 > route_parameters.coordinates.size() ||
+            std::any_of(begin(route_parameters.coordinates),
                         end(route_parameters.coordinates),
                         [&](FixedPointCoordinate coordinate)
                         { return !coordinate.isValid(); }))
@@ -90,6 +82,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             return;
         }
 
+        RawRouteData raw_route;
+        raw_route.check_sum = facade->GetCheckSum();
         for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
         {
             raw_route.raw_via_node_coordinates.emplace_back(coordinate);

@@ -76,7 +76,6 @@ class DescriptionFactory
     // I know, declaring this public is considered bad. I'm lazy
     std::vector<SegmentInformation> path_description;
     DescriptionFactory();
-    virtual ~DescriptionFactory();
     JSON::Value AppendUnencodedPolylineString() const;
     void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
@@ -176,14 +175,14 @@ class DescriptionFactory
                 target_phantom.name_id = (path_description.end() - 2)->name_id;
             }
         }
-        if (std::numeric_limits<double>::epsilon() > path_description[0].length)
+        if (std::numeric_limits<double>::epsilon() > path_description.front().length)
         {
             if (path_description.size() > 2)
             {
                 path_description.erase(path_description.begin());
-                path_description[0].turn_instruction = TurnInstruction::HeadOn;
-                path_description[0].necessary = true;
-                start_phantom.name_id = path_description[0].name_id;
+                path_description.front().turn_instruction = TurnInstruction::HeadOn;
+                path_description.front().necessary = true;
+                start_phantom.name_id = path_description.front().name_id;
             }
         }
 

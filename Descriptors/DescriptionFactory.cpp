@@ -29,8 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 DescriptionFactory::DescriptionFactory() : entireLength(0) {}
 
-DescriptionFactory::~DescriptionFactory() {}
-
 void DescriptionFactory::SetStartSegment(const PhantomNode &source)
 {
     start_phantom = source;
@@ -50,15 +48,14 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     if ((1 == path_description.size()) && (path_description.back().location == coordinate))
     {
         path_description.back().name_id = path_point.name_id;
+        return;
     }
-    else
-    {
-        path_description.emplace_back(coordinate,
-                                      path_point.name_id,
-                                      path_point.segment_duration,
-                                      0,
-                                      path_point.turn_instruction);
-    }
+
+    path_description.emplace_back(coordinate,
+                                  path_point.name_id,
+                                  path_point.segment_duration,
+                                  0,
+                                  path_point.turn_instruction);
 }
 
 JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)

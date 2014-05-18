@@ -339,14 +339,17 @@ class TarjanSCC
                                << " many components, marking small components";
 
         // TODO/C++11: prime candidate for lambda function
-        unsigned size_one_counter = 0;
-        for (unsigned i = 0, end = component_size_vector.size(); i < end; ++i)
-        {
-            if (1 == component_size_vector[i])
-            {
-                ++size_one_counter;
-            }
-        }
+        // unsigned size_one_counter = 0;
+        // for (unsigned i = 0, end = component_size_vector.size(); i < end; ++i)
+        // {
+        //     if (1 == component_size_vector[i])
+        //     {
+        //         ++size_one_counter;
+        //     }
+        // }
+        unsigned size_one_counter = std::count_if(component_size_vector.begin(),
+                                                  component_size_vector.end(),
+                                                  [] (unsigned value) { return 1 == value;});
 
         SimpleLogger().Write() << "identified " << size_one_counter << " SCCs of size 1";
 

@@ -63,102 +63,104 @@ bool ExtractorCallbacks::ProcessRestriction(const InputRestrictionContainer &res
 /** warning: caller needs to take care of synchronization! */
 void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
 {
-    if ((0 < parsed_way.speed) || (0 < parsed_way.duration))
+    if ((0 >= parsed_way.speed) && (0 >= parsed_way.duration))
     { // Only true if the way is specified by the speed profile
-        if (std::numeric_limits<unsigned>::max() == parsed_way.id)
-        {
-            SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << parsed_way.id
-                                           << " of size " << parsed_way.path.size();
-            return;
-        }
+        return;
+    }
 
-        if (0 < parsed_way.duration)
-        {
-            // TODO: iterate all way segments and set duration corresponding to the length of each
-            // segment
-            parsed_way.speed = parsed_way.duration / (parsed_way.path.size() - 1);
-        }
+    if (std::numeric_limits<unsigned>::max() == parsed_way.id)
+    {
+        SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << parsed_way.id
+                                       << " of size " << parsed_way.path.size();
+        return;
+    }
 
-        if (std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.speed))
-        {
-            SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << parsed_way.id;
-            return;
-        }
+    if (0 < parsed_way.duration)
+    {
+        // TODO: iterate all way segments and set duration corresponding to the length of each
+        // segment
+        parsed_way.speed = parsed_way.duration / (parsed_way.path.size() - 1);
+    }
 
-        // Get the unique identifier for the street name
-        const auto &string_map_iterator = string_map.find(parsed_way.name);
-        if (string_map.end() == string_map_iterator)
-        {
-            parsed_way.nameID = external_memory.name_list.size();
-            external_memory.name_list.push_back(parsed_way.name);
-            string_map.insert(std::make_pair(parsed_way.name, parsed_way.nameID));
-        }
-        else
-        {
-            parsed_way.nameID = string_map_iterator->second;
-        }
+    if (std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.speed))
+    {
+        SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << parsed_way.id;
+        return;
+    }
 
-        if (ExtractionWay::opposite == parsed_way.direction)
+    // Get the unique identifier for the street name
+    const auto &string_map_iterator = string_map.find(parsed_way.name);
+    if (string_map.end() == string_map_iterator)
+    {
+        parsed_way.nameID = external_memory.name_list.size();
+        external_memory.name_list.push_back(parsed_way.name);
+        string_map.insert(std::make_pair(parsed_way.name, parsed_way.nameID));
+    }
+    else
+    {
+        parsed_way.nameID = string_map_iterator->second;
+    }
+
+    if (ExtractionWay::opposite == parsed_way.direction)
+    {
+        std::reverse(parsed_way.path.begin(), parsed_way.path.end());
+        parsed_way.direction = ExtractionWay::oneway;
+    }
+
+    const bool split_bidirectional_edge =
+        (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
+
+    for (unsigned n = 0; n < parsed_way.path.size() - 1; ++n)
+    {
+        external_memory.all_edges_list.push_back(InternalExtractorEdge(
+            parsed_way.path[n],
+            parsed_way.path[n + 1],
+            parsed_way.type,
+            (split_bidirectional_edge ? ExtractionWay::oneway : parsed_way.direction),
+            parsed_way.speed,
+            parsed_way.nameID,
+            parsed_way.roundabout,
+            parsed_way.ignoreInGrid,
+            (0 < parsed_way.duration),
+            parsed_way.isAccessRestricted,
+            false,
+            split_bidirectional_edge));
+        external_memory.used_node_id_list.push_back(parsed_way.path[n]);
+    }
+    external_memory.used_node_id_list.push_back(parsed_way.path.back());
+
+    // The following information is needed to identify start and end segments of restrictions
+    external_memory.way_start_end_id_list.push_back(
+        WayIDStartAndEndEdge(parsed_way.id,
+                             parsed_way.path[0],
+                             parsed_way.path[1],
+                             parsed_way.path[parsed_way.path.size() - 2],
+                             parsed_way.path.back()));
+
+    if (split_bidirectional_edge)
+    { // Only true if the way should be split
+        std::reverse(parsed_way.path.begin(), parsed_way.path.end());
+        for (std::vector<NodeID>::size_type n = 0; n < parsed_way.path.size() - 1; ++n)
         {
-            std::reverse(parsed_way.path.begin(), parsed_way.path.end());
-            parsed_way.direction = ExtractionWay::oneway;
+            external_memory.all_edges_list.push_back(
+                InternalExtractorEdge(parsed_way.path[n],
+                                      parsed_way.path[n + 1],
+                                      parsed_way.type,
+                                      ExtractionWay::oneway,
+                                      parsed_way.backward_speed,
+                                      parsed_way.nameID,
+                                      parsed_way.roundabout,
+                                      parsed_way.ignoreInGrid,
+                                      (0 < parsed_way.duration),
+                                      parsed_way.isAccessRestricted,
+                                      (ExtractionWay::oneway == parsed_way.direction),
+                                      split_bidirectional_edge));
         }
-
-        const bool split_bidirectional_edge =
-            (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
-
-        for (unsigned n = 0; n < parsed_way.path.size() - 1; ++n)
-        {
-            external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                parsed_way.path[n],
-                parsed_way.path[n + 1],
-                parsed_way.type,
-                (split_bidirectional_edge ? ExtractionWay::oneway : parsed_way.direction),
-                parsed_way.speed,
-                parsed_way.nameID,
-                parsed_way.roundabout,
-                parsed_way.ignoreInGrid,
-                (0 < parsed_way.duration),
-                parsed_way.isAccessRestricted,
-                false,
-                split_bidirectional_edge));
-            external_memory.used_node_id_list.push_back(parsed_way.path[n]);
-        }
-        external_memory.used_node_id_list.push_back(parsed_way.path.back());
-
-        // The following information is needed to identify start and end segments of restrictions
         external_memory.way_start_end_id_list.push_back(
             WayIDStartAndEndEdge(parsed_way.id,
                                  parsed_way.path[0],
                                  parsed_way.path[1],
                                  parsed_way.path[parsed_way.path.size() - 2],
                                  parsed_way.path.back()));
-
-        if (split_bidirectional_edge)
-        { // Only true if the way should be split
-            std::reverse(parsed_way.path.begin(), parsed_way.path.end());
-            for (std::vector<NodeID>::size_type n = 0; n < parsed_way.path.size() - 1; ++n)
-            {
-                external_memory.all_edges_list.push_back(
-                    InternalExtractorEdge(parsed_way.path[n],
-                                          parsed_way.path[n + 1],
-                                          parsed_way.type,
-                                          ExtractionWay::oneway,
-                                          parsed_way.backward_speed,
-                                          parsed_way.nameID,
-                                          parsed_way.roundabout,
-                                          parsed_way.ignoreInGrid,
-                                          (0 < parsed_way.duration),
-                                          parsed_way.isAccessRestricted,
-                                          (ExtractionWay::oneway == parsed_way.direction),
-                                          split_bidirectional_edge));
-            }
-            external_memory.way_start_end_id_list.push_back(
-                WayIDStartAndEndEdge(parsed_way.id,
-                                     parsed_way.path[0],
-                                     parsed_way.path[1],
-                                     parsed_way.path[parsed_way.path.size() - 2],
-                                     parsed_way.path.back()));
-        }
     }
 }
