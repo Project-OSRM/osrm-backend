@@ -43,7 +43,6 @@ Feature: Car - Turn restrictions
             | bj    | no     |
             | jd    | no     |
             | de    | no     |
-            | ej    | no     |
             | av    | yes    |
             | vw    | yes    |
             | wx    | yes    |
