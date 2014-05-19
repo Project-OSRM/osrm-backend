@@ -305,6 +305,12 @@ void EdgeBasedGraphFactory::CompressGeometry()
             continue;
         }
 
+        // check if v is a via node for a turn restriction, i.e. a 'directed' barrier node
+        if (m_restriction_map->IsNodeAViaNode(v))
+        {
+            continue;
+        }
+
         const bool reverse_edge_order =
             !(m_node_based_graph->GetEdgeData(m_node_based_graph->BeginEdges(v)).forward);
         const EdgeID forward_e2 = m_node_based_graph->BeginEdges(v) + reverse_edge_order;

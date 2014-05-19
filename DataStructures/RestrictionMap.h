@@ -36,11 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "NodeBasedGraph.h"
 
 #include <boost/unordered_map.hpp>
+#include <unordered_set>
 
-/*!
- * Makee it efficent to look up if an edge is the start + via node of a TurnRestriction.
- * Is needed by EdgeBasedGraphFactory.
- */
+
+// Make it efficent to look up if an edge is the start + via node of a TurnRestriction
+// EdgeBasedEdgeFactory decides by it if edges are inserted or geometry is compressed
 class RestrictionMap
 {
   public:
@@ -51,7 +51,7 @@ class RestrictionMap
     void FixupStartingTurnRestriction(const NodeID u, const NodeID v, const NodeID w);
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
-
+    bool IsNodeAViaNode(const NodeID node) const;
     unsigned size() { return m_count; }
 
   private:
@@ -66,6 +66,7 @@ class RestrictionMap
     std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     //! maps (start, via) -> bucket index
     boost::unordered_map<RestrictionSource, unsigned> m_restriction_map;
+    std::unordered_set<NodeID> m_no_turn_via_node_set;
 };
 
 #endif

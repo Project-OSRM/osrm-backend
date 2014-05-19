@@ -1,5 +1,39 @@
+/*
+
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
 #include "RestrictionMap.h"
 #include "NodeBasedGraph.h"
+
+#include "../Util/SimpleLogger.h"
+
+bool RestrictionMap::IsNodeAViaNode(const NodeID node) const
+{
+    return m_no_turn_via_node_set.find(node) != m_no_turn_via_node_set.end();
+}
 
 RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &graph,
                                const std::vector<TurnRestriction> &input_restrictions_list)
@@ -9,8 +43,14 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
     // and all end-nodes
     for (auto &restriction : input_restrictions_list)
     {
+
+        m_no_turn_via_node_set.insert(restriction.viaNode);
+
         std::pair<NodeID, NodeID> restriction_source =
             std::make_pair(restriction.fromNode, restriction.viaNode);
+
+        SimpleLogger().Write(logDEBUG) << "restr from: " << restriction.fromNode << ", v: " << restriction.viaNode << ", to: " << restriction.toNode << ", is_only_: " << (restriction.flags.isOnly ? "y" : "n");
+
         unsigned index;
         auto restriction_iter = m_restriction_map.find(restriction_source);
         if (restriction_iter == m_restriction_map.end())
@@ -70,8 +110,11 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID u, const NodeID v
         const std::pair<NodeID, NodeID> restr_start = std::make_pair(x, u);
         auto restriction_iterator = m_restriction_map.find(restr_start);
         if (restriction_iterator == m_restriction_map.end())
+        {
             continue;
+        }
 
+        SimpleLogger().Write(logDEBUG) << "fixing arriving instruction at turn <" << u << "," << v << "," << w << ">";
         const unsigned index = restriction_iterator->second;
         auto &bucket = m_restriction_bucket_list.at(index);
         for (RestrictionTarget &restriction_target : bucket)
@@ -98,6 +141,7 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID u, const NodeID v
     auto restriction_iterator = m_restriction_map.find(old_start);
     if (restriction_iterator != m_restriction_map.end())
     {
+        SimpleLogger().Write(logDEBUG) << "fixing restr start at turn <" << u << "," << v << "," << w << ">";
         const unsigned index = restriction_iterator->second;
         // remove old restriction start (v,w)
         m_restriction_map.erase(restriction_iterator);
@@ -141,6 +185,7 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID 
  */
 bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const
 {
+    // SimpleLogger().Write(logDEBUG) << "checking turn <" << u << "," << v << "," << w << ">";
     BOOST_ASSERT(u != std::numeric_limits<unsigned>::max());
     BOOST_ASSERT(v != std::numeric_limits<unsigned>::max());
     BOOST_ASSERT(w != std::numeric_limits<unsigned>::max());
