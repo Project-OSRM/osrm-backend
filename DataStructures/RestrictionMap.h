@@ -30,12 +30,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <memory>
 
-#include "../typedefs.h"
 #include "DynamicGraph.h"
 #include "Restriction.h"
 #include "NodeBasedGraph.h"
+#include "../Util/StdHashExtensions.h"
+#include "../typedefs.h"
 
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <unordered_set>
 
 
@@ -65,7 +66,7 @@ class RestrictionMap
     //! index -> list of (target, isOnly)
     std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     //! maps (start, via) -> bucket index
-    boost::unordered_map<RestrictionSource, unsigned> m_restriction_map;
+    std::unordered_map<RestrictionSource, unsigned> m_restriction_map;
     std::unordered_set<NodeID> m_no_turn_via_node_set;
 };
 

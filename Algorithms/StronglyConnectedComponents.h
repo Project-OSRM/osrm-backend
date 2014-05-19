@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/TurnInstructions.h"
 
 #include "../Util/SimpleLogger.h"
+#include "../Util/StdHashExtensions.h"
 
 #include <osrm/Coordinate.h>
 
@@ -59,17 +60,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-namespace std
-{
-template <> struct hash<std::pair<NodeID, NodeID>>
-{
-    size_t operator()(const std::pair<NodeID, NodeID> &pair) const
-    {
-        return std::hash<int>()(pair.first) ^ std::hash<int>()(pair.second);
-    }
-};
-}
 
 class TarjanSCC
 {
