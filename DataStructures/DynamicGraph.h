@@ -135,7 +135,7 @@ template <typename EdgeDataT> class DynamicGraph
         return EdgeIterator(m_nodes[n].firstEdge + m_nodes[n].edges);
     }
 
-    EdgeRange GetAdjacentEdgeRange(const NodeID node) const
+    EdgeRange GetAdjacentEdgeRange(const NodeIterator node) const
     {
         return boost::irange(BeginEdges(node), EndEdges(node));
     }
