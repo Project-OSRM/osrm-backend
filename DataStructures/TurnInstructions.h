@@ -80,7 +80,9 @@ struct TurnInstructionsClass
     static inline bool TurnIsNecessary(const TurnInstruction turn_instruction)
     {
         if (TurnInstruction::NoTurn == turn_instruction || TurnInstruction::StayOnRoundAbout == turn_instruction)
+        {
             return false;
+        }
         return true;
     }
 };
