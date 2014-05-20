@@ -49,10 +49,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <luabind/luabind.hpp>
 
+#include <thread>
 #include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <tbb/task_scheduler_init.h>
 
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
@@ -66,6 +69,8 @@ std::vector<ImportEdge> edge_list;
 
 int main(int argc, char *argv[])
 {
+
+
     try
     {
         LogPolicy::GetInstance().Unmute();
@@ -73,7 +78,7 @@ int main(int argc, char *argv[])
             std::chrono::steady_clock::now();
 
         boost::filesystem::path config_file_path, input_path, restrictions_path, profile_path;
-        int requested_num_threads;
+        unsigned int requested_num_threads;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -95,7 +100,7 @@ int main(int argc, char *argv[])
                 ->default_value("profile.lua"),
             "Path to LUA routing profile")(
             "threads,t",
-            boost::program_options::value<int>(&requested_num_threads)->default_value(8),
+            boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(8),
             "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be
@@ -174,7 +179,8 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        int real_num_threads = std::min(omp_get_num_procs(), requested_num_threads);
+        unsigned int hardware_threads = std::max((unsigned int) 1, std::thread::hardware_concurrency());
+        unsigned int real_num_threads = std::min(hardware_threads, requested_num_threads);
 
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Restrictions file: " << restrictions_path.filename().string();
@@ -182,7 +188,8 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested "
                                << requested_num_threads << ")";
 
-        omp_set_num_threads(real_num_threads);
+        tbb::task_scheduler_init init(real_num_threads);
+
         LogPolicy::GetInstance().Unmute();
         boost::filesystem::ifstream restriction_stream(restrictions_path, std::ios::binary);
         TurnRestriction restriction;
