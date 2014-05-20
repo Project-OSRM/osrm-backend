@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INI_FILE_UTIL_H
 #define INI_FILE_UTIL_H
 
+#include "SimpleLogger.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -40,9 +42,19 @@ inline std::string ReadIniFileAndLowerContents(const boost::filesystem::path &pa
     boost::filesystem::fstream config_stream(path);
     std::string input_str((std::istreambuf_iterator<char>(config_stream)),
                           std::istreambuf_iterator<char>());
-    std::regex regex("^([^=]*)"); // match from start of line to '='
-    std::string format("\\L$1\\E"); // replace with downcased substring
-    return std::regex_replace(input_str, regex, format);
+    std::regex regex("\\w+=");
+
+    std::string output = input_str;
+    const std::sregex_token_iterator end;
+    for (std::sregex_token_iterator i(input_str.begin(), input_str.end(), regex); i != end; ++i)
+    {
+        std::string match = *i;
+        std::string new_regex = *i;
+        std::transform(new_regex.begin(), new_regex.end(), new_regex.begin(), ::tolower);
+        SimpleLogger().Write() << match << " - " << new_regex;
+        output = std::regex_replace(output, std::regex(match), new_regex);
+    }
+    return output;
 }
 
 #endif // INI_FILE_UTIL_H
