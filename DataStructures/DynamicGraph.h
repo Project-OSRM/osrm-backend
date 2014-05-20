@@ -117,6 +117,19 @@ template <typename EdgeDataT> class DynamicGraph
 
     unsigned GetOutDegree(const NodeIterator n) const { return m_nodes[n].edges; }
 
+    unsigned GetDirectedOutDegree(const NodeIterator n) const
+    {
+        unsigned degree = 0;
+        for(EdgeIterator edge = BeginEdges(n); edge < EndEdges(n); ++edge)
+        {
+            if (GetEdgeData(edge).forward)
+            {
+                ++degree;
+            }
+        }
+        return degree;
+    }
+
     NodeIterator GetTarget(const EdgeIterator e) const { return NodeIterator(m_edges[e].target); }
 
     void SetTarget(const EdgeIterator e, const NodeIterator n) { m_edges[e].target = n; }

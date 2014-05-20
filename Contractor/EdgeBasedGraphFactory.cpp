@@ -728,7 +728,7 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u,
     if (data1.roundabout && data2.roundabout)
     {
         // Is a turn possible? If yes, we stay on the roundabout!
-        if (1 == m_node_based_graph->GetOutDegree(v))
+        if (1 == m_node_based_graph->GetDirectedOutDegree(v))
         {
             // No turn possible.
             return TurnInstruction::NoTurn;
