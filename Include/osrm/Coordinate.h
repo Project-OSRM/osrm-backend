@@ -49,10 +49,10 @@ struct FixedPointCoordinate
     static double
     ApproximateDistance(const int lat1, const int lon1, const int lat2, const int lon2);
 
-    static double ApproximateDistance(const FixedPointCoordinate &c1,
+    static float ApproximateDistance(const FixedPointCoordinate &c1,
                                       const FixedPointCoordinate &c2);
 
-    static double ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
+    static float ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
                                                const FixedPointCoordinate &c2);
 
     static double
@@ -84,21 +84,6 @@ struct FixedPointCoordinate
 
     static double DegreeToRadian(const double degree);
     static double RadianToDegree(const double radian);
-
-
-    Point ComputePerpendicularFoot(const Point &p, const Point &q, const Point &r, double epsilon) const;
-    double ComputeRatio(const Point & p, const Point & q, const Point & r, double epsilon) const ;
-    FixedPointCoordinate ComputeNearestPointOnSegment(const FixedPointCoordinate &coord_a,
-                                                      const FixedPointCoordinate &coord_b,
-                                                      const Point & r, double lambda) const;
-    double ApproximatePerpendicularDistance(const FixedPointCoordinate &coord_a,
-                                            const FixedPointCoordinate &coord_b,
-                                            const FixedPointCoordinate &query_location,
-                                            FixedPointCoordinate & nearest_location,
-                                            double & ratio,
-                                            double precision = COORDINATE_PRECISION
-                                            ) const;
-
 };
 
 inline std::ostream &operator<<(std::ostream &o, FixedPointCoordinate const &c)

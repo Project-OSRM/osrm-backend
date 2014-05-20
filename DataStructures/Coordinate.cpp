@@ -120,13 +120,13 @@ double FixedPointCoordinate::ApproximateDistance(const FixedPointCoordinate &c1,
     return ApproximateDistance(c1.lat, c1.lon, c2.lat, c2.lon);
 }
 
-double FixedPointCoordinate::ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
+float FixedPointCoordinate::ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
                                                  const FixedPointCoordinate &c2)
 {
     return ApproximateEuclideanDistance(c1.lat, c1.lon, c2.lat, c2.lon);
 }
 
-double FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
+float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
                                                           const int lon1,
                                                           const int lat2,
                                                           const int lon2)
@@ -136,15 +136,15 @@ double FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
     BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
 
-    const double RAD = 0.017453292519943295769236907684886;
-    const double float_lat1 = (lat1 / COORDINATE_PRECISION) * RAD;
-    const double float_lon1 = (lon1 / COORDINATE_PRECISION) * RAD;
-    const double float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
-    const double float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
+    const float RAD = 0.017453292519943295769236907684886;
+    const float float_lat1 = (lat1 / COORDINATE_PRECISION) * RAD;
+    const float float_lon1 = (lon1 / COORDINATE_PRECISION) * RAD;
+    const float float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
+    const float float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
 
-    const double x = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.);
-    const double y = (float_lat2 - float_lat1);
-    const double earth_radius = 6372797.560856;
+    const float x = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.);
+    const float y = (float_lat2 - float_lat1);
+    const float earth_radius = 6372797.560856;
     return sqrt(x * x + y * y) * earth_radius;
 }
 
@@ -211,7 +211,7 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
     }
     BOOST_ASSERT(nearest_location.isValid());
     const double approximated_distance =
-        FixedPointCoordinate::ApproximateDistance(point, nearest_location);
+        FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
     BOOST_ASSERT(0. <= approximated_distance);
     return approximated_distance;
 }
@@ -269,13 +269,11 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
     BOOST_ASSERT(!std::isnan(r));
     if (r <= 0.)
     {
-        nearest_location.lat = coord_a.lat;
-        nearest_location.lon = coord_a.lon;
+        nearest_location = coord_a;
     }
     else if (r >= 1.)
     {
-        nearest_location.lat = coord_b.lat;
-        nearest_location.lon = coord_b.lon;
+        nearest_location = coord_b;
     }
     else
     {
@@ -288,7 +286,7 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
     // TODO: Replace with euclidean approximation when k-NN search is done
     // const double approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
     const double approximated_distance =
-        FixedPointCoordinate::ApproximateDistance(query_location, nearest_location);
+        FixedPointCoordinate::ApproximateEuclideanDistance(query_location, nearest_location);
     BOOST_ASSERT(0. <= approximated_distance);
     return approximated_distance;
 }
@@ -384,141 +382,6 @@ double FixedPointCoordinate::RadianToDegree(const double radian)
 {
     return radian * (180. / M_PI);
 }
-
-
-double
-FixedPointCoordinate::ApproximatePerpendicularDistance(const FixedPointCoordinate &coord_a,
-                                                       const FixedPointCoordinate &coord_b,
-                                                       const FixedPointCoordinate &query_location,
-                                                       FixedPointCoordinate &nearest_location,
-                                                       double &ratio,
-                                                       double precision) const
-{
-    BOOST_ASSERT(query_location.isValid());
-
-    const double epsilon = 1.0 / precision;
-
-    // p, q : the end points of the underlying edge
-    const Point p(lat2y(coord_a.lat / COORDINATE_PRECISION), coord_a.lon / COORDINATE_PRECISION);
-    const Point q(lat2y(coord_b.lat / COORDINATE_PRECISION), coord_b.lon / COORDINATE_PRECISION);
-
-    // r : query location
-    const Point r(lat2y(query_location.lat / COORDINATE_PRECISION),
-                  query_location.lon / COORDINATE_PRECISION);
-
-    const Point foot = ComputePerpendicularFoot(p, q, r, epsilon);
-    ratio = ComputeRatio(p, q, foot, epsilon);
-
-    BOOST_ASSERT(!std::isnan(ratio));
-
-    nearest_location = ComputeNearestPointOnSegment(coord_a, coord_b, foot, ratio);
-
-    BOOST_ASSERT(nearest_location.isValid());
-
-    // TODO: Replace with euclidean approximation when k-NN search is done
-    // const double approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
-    const double approximated_distance =
-        FixedPointCoordinate::ApproximateEuclideanDistance(query_location, nearest_location);
-
-    BOOST_ASSERT(0.0 <= approximated_distance);
-    return approximated_distance;
-}
-
-// Compute the perpendicular foot of point r on the line defined by p and q.
-Point FixedPointCoordinate::ComputePerpendicularFoot(const Point &p,
-                                                     const Point &q,
-                                                     const Point &r,
-                                                     double epsilon) const
-{
-
-    // the projection of r onto the line pq
-    double foot_x, foot_y;
-
-    const bool is_parallel_to_y_axis = std::abs(q.first - p.first) < epsilon;
-
-    if (is_parallel_to_y_axis)
-    {
-        foot_x = q.first;
-        foot_y = r.second;
-    }
-    else
-    {
-        // the slope of the line through (a|b) and (c|d)
-        const double m = (q.second - p.second) / (q.first - p.first);
-
-        // Projection of (x|y) onto the line joining (a|b) and (c|d).
-        foot_x = ((r.first + (m * r.second)) + (m * m * p.first - m * p.second)) / (1.0 + m * m);
-        foot_y = p.second + m * (foot_x - p.first);
-    }
-
-    return Point(foot_x, foot_y);
-}
-
-// Compute the ratio of the line segment pr to line segment pq.
-double FixedPointCoordinate::ComputeRatio(const Point &p,
-                                          const Point &q,
-                                          const Point &r,
-                                          double epsilon) const
-{
-
-    const bool is_parallel_to_x_axis = std::abs(q.second - p.second) < epsilon;
-    const bool is_parallel_to_y_axis = std::abs(q.first - p.first) < epsilon;
-
-    double ratio;
-
-    if (!is_parallel_to_y_axis)
-    {
-        ratio = (r.first - p.first) / (q.first - p.first);
-    }
-    else if (!is_parallel_to_x_axis)
-    {
-        ratio = (r.second - p.second) / (q.second - p.second);
-    }
-    else
-    {
-        // (a|b) and (c|d) are essentially the same point
-        // by convention, we set the ratio to 0 in this case
-        // ratio = ((lat2 == query_location.lat) && (lon2 == query_location.lon)) ? 1. : 0.;
-        ratio = 0.0;
-    }
-
-    // Round to integer if the ratio is close to 0 or 1.
-    if (std::abs(ratio) <= epsilon)
-    {
-        ratio = 0.0;
-    }
-    else if (std::abs(ratio - 1.0) <= epsilon)
-    {
-        ratio = 1.0;
-    }
-
-    return ratio;
-}
-
-// Computes the point on the segment pq which is nearest to a point r = p + lambda * (q-p).
-// p and q are the end points of the underlying edge.
-FixedPointCoordinate FixedPointCoordinate::ComputeNearestPointOnSegment(const FixedPointCoordinate &coord_a,
-                                                                        const FixedPointCoordinate &coord_b,
-                                                                        const Point &r,
-                                                                        double lambda) const
-{
-
-    if (lambda <= 0.0)
-    {
-        return coord_a;
-    }
-    else if (lambda >= 1.0)
-    {
-        return coord_b;
-    }
-    else
-    {
-        // r lies between p and q
-        return FixedPointCoordinate(y2lat(r.first) * COORDINATE_PRECISION,
-                                    r.second * COORDINATE_PRECISION);
-    }
-}
-
 
 // double PointSegmentDistanceSquared( double px, double py,
 //                                     double p1x, double p1y,
