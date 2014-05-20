@@ -150,7 +150,6 @@ inline unsigned GenerateServerProgramOptions(const int argc,
 
     // parse config file
     ServerPaths::iterator path_iterator = paths.find("config");
-    bool use_ini_file = false;
     if (path_iterator != paths.end() && boost::filesystem::is_regular_file(path_iterator->second) &&
         !option_variables.count("base"))
     {
@@ -160,7 +159,6 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                       option_variables);
         boost::program_options::notify(option_variables);
-        use_ini_file = true;
         return INIT_OK_START_ENGINE;
     }
 
