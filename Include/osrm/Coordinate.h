@@ -28,9 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef FIXED_POINT_COORDINATE_H_
 #define FIXED_POINT_COORDINATE_H_
 
+#include <functional>
 #include <iosfwd> //for std::ostream
 
 constexpr double COORDINATE_PRECISION = 1000000.;
+typedef std::pair<double,double> Point;
 
 struct FixedPointCoordinate
 {
@@ -82,6 +84,21 @@ struct FixedPointCoordinate
 
     static double DegreeToRadian(const double degree);
     static double RadianToDegree(const double radian);
+
+
+    Point ComputePerpendicularFoot(const Point &p, const Point &q, const Point &r, double epsilon) const;
+    double ComputeRatio(const Point & p, const Point & q, const Point & r, double epsilon) const ;
+    FixedPointCoordinate ComputeNearestPointOnSegment(const FixedPointCoordinate &coord_a,
+                                                      const FixedPointCoordinate &coord_b,
+                                                      const Point & r, double lambda) const;
+    double ApproximatePerpendicularDistance(const FixedPointCoordinate &coord_a,
+                                            const FixedPointCoordinate &coord_b,
+                                            const FixedPointCoordinate &query_location,
+                                            FixedPointCoordinate & nearest_location,
+                                            double & ratio,
+                                            double precision = COORDINATE_PRECISION
+                                            ) const;
+
 };
 
 inline std::ostream &operator<<(std::ostream &o, FixedPointCoordinate const &c)
