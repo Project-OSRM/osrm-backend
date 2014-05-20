@@ -140,12 +140,7 @@ inline void AssertPathExists(const boost::filesystem::path &path)
 {
     if (!boost::filesystem::is_regular_file(path))
     {
-        SimpleLogger().Write(logDEBUG) << path << " check failed";
         throw OSRMException(path.string() + " not found.");
-    }
-    else
-    {
-        SimpleLogger().Write(logDEBUG) << path << " exists";
     }
 }
 
