@@ -38,8 +38,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/OpenMPWrapper.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimingUtil.h"
 
 #include <boost/assert.hpp>
+
+#include <tbb/enumerable_thread_specific.h>
+#include <tbb/parallel_for.h>
 
 #include <algorithm>
 #include <limits>
@@ -123,6 +127,28 @@ class Contractor
         RemainingNodeData() : id(0), is_independent(false) {}
         NodeID id : 31;
         bool is_independent : 1;
+    };
+
+
+    struct ThreadDataContainer
+    {
+        ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes)  {}
+
+        inline ContractorThreadData* getThreadData()
+        {
+            bool exists = false;
+            auto& ref = data.local(exists);
+            if (!exists)
+            {
+                ref = std::make_shared<ContractorThreadData>(number_of_nodes);
+            }
+
+            return ref.get();
+        }
+
+        int number_of_nodes;
+        typedef tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>> EnumerableThreadData;
+        EnumerableThreadData data;
     };
 
   public:
@@ -262,39 +288,51 @@ class Contractor
 
     void Run()
     {
+        // for the preperation we can use a big grain size, which is much faster (probably cache)
+        constexpr size_t InitGrainSize        = 100000;
+        constexpr size_t PQGrainSize          = 100000;
+        // auto_partitioner will automatically increase the blocksize if we have
+        // a lot of data. It is *important* for the last loop iterations
+        // (which have a very small dataset) that it is devisible.
+        constexpr size_t IndependentGrainSize = 1;
+        constexpr size_t ContractGrainSize    = 1;
+        constexpr size_t NeighboursGrainSize  = 1;
+        constexpr size_t DeleteGrainSize      = 1;
+
         const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
         Percent p(number_of_nodes);
 
-        const unsigned thread_count = omp_get_max_threads();
-        std::vector<ContractorThreadData *> thread_data_list;
-        for (unsigned thread_id = 0; thread_id < thread_count; ++thread_id)
-        {
-            thread_data_list.push_back(new ContractorThreadData(number_of_nodes));
-        }
-        std::cout << "Contractor is using " << thread_count << " threads" << std::endl;
+        ThreadDataContainer thread_data_list(number_of_nodes);
 
         NodeID number_of_contracted_nodes = 0;
         std::vector<RemainingNodeData> remaining_nodes(number_of_nodes);
         std::vector<float> node_priorities(number_of_nodes);
         std::vector<NodePriorityData> node_data(number_of_nodes);
 
-// initialize priorities in parallel
-#pragma omp parallel for schedule(guided)
-        for (int x = 0; x < (int)number_of_nodes; ++x)
-        {
-            remaining_nodes[x].id = x;
-        }
+
+        // initialize priorities in parallel
+        tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, InitGrainSize),
+            [&remaining_nodes](const tbb::blocked_range<int>& range)
+            {
+                for (int x = range.begin(); x != range.end(); ++x)
+                {
+                    remaining_nodes[x].id = x;
+                }
+            }
+        );
+
 
         std::cout << "initializing elimination PQ ..." << std::flush;
-#pragma omp parallel
-        {
-            ContractorThreadData *data = thread_data_list[omp_get_thread_num()];
-#pragma omp parallel for schedule(guided)
-            for (int x = 0; x < (int)number_of_nodes; ++x)
+        tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, PQGrainSize),
+            [this, &node_priorities, &node_data, &thread_data_list](const tbb::blocked_range<int>& range)
             {
-                node_priorities[x] = EvaluateNodePriority(data, &node_data[x], x);
+                ContractorThreadData *data = thread_data_list.getThreadData();
+                for (int x = range.begin(); x != range.end(); ++x)
+                {
+                    node_priorities[x] = this->EvaluateNodePriority(data, &node_data[x], x);
+                }
             }
-        }
+        );
         std::cout << "ok" << std::endl << "preprocessing " << number_of_nodes << " nodes ..."
                   << std::flush;
 
@@ -309,11 +347,7 @@ class Contractor
                 std::cout << " [flush " << number_of_contracted_nodes << " nodes] " << std::flush;
 
                 // Delete old heap data to free memory that we need for the coming operations
-                for (ContractorThreadData *data : thread_data_list)
-                {
-                    delete data;
-                }
-                thread_data_list.clear();
+                thread_data_list.data.clear();
 
                 // Create new priority array
                 std::vector<float> new_node_priority(remaining_nodes.size());
@@ -396,59 +430,67 @@ class Contractor
 
                 // INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
                 // reinitialize heaps and ThreadData objects with appropriate size
-                for (unsigned thread_id = 0; thread_id < thread_count; ++thread_id)
-                {
-                    thread_data_list.push_back(
-                        new ContractorThreadData(contractor_graph->GetNumberOfNodes()));
-                }
+                thread_data_list.number_of_nodes = contractor_graph->GetNumberOfNodes();
             }
 
             const int last = (int)remaining_nodes.size();
-#pragma omp parallel
-            {
-                // determine independent node set
-                ContractorThreadData *const data = thread_data_list[omp_get_thread_num()];
-#pragma omp for schedule(guided)
-                for (int i = 0; i < last; ++i)
+            tbb::parallel_for(tbb::blocked_range<int>(0, last, IndependentGrainSize),
+                [this, &node_priorities, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int>& range)
                 {
-                    const NodeID node = remaining_nodes[i].id;
-                    remaining_nodes[i].is_independent =
-                        IsNodeIndependent(node_priorities, data, node);
+                    ContractorThreadData *data = thread_data_list.getThreadData();
+                    // determine independent node set
+                    for (int i = range.begin(); i != range.end(); ++i)
+                    {
+                        const NodeID node = remaining_nodes[i].id;
+                        remaining_nodes[i].is_independent =
+                            this->IsNodeIndependent(node_priorities, data, node);
+                    }
                 }
-            }
+            );
+
             const auto first = stable_partition(remaining_nodes.begin(),
                                                 remaining_nodes.end(),
                                                 [](RemainingNodeData node_data)
                                                 { return !node_data.is_independent; });
             const int first_independent_node = first - remaining_nodes.begin();
-// contract independent nodes
-#pragma omp parallel
-            {
-                ContractorThreadData *data = thread_data_list[omp_get_thread_num()];
-#pragma omp for schedule(guided) nowait
-                for (int position = first_independent_node; position < last; ++position)
-                {
-                    NodeID x = remaining_nodes[position].id;
-                    ContractNode<false>(data, x);
-                }
 
-                std::sort(data->inserted_edges.begin(), data->inserted_edges.end());
-            }
-#pragma omp parallel
-            {
-                ContractorThreadData *data = thread_data_list[omp_get_thread_num()];
-#pragma omp for schedule(guided) nowait
-                for (int position = first_independent_node; position < last; ++position)
+            // contract independent nodes
+            tbb::parallel_for(tbb::blocked_range<int>(first_independent_node, last, ContractGrainSize),
+                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int>& range)
                 {
-                    NodeID x = remaining_nodes[position].id;
-                    DeleteIncomingEdges(data, x);
+                    ContractorThreadData *data = thread_data_list.getThreadData();
+                    for (int position = range.begin(); position != range.end(); ++position)
+                    {
+                        NodeID x = remaining_nodes[position].id;
+                        this->ContractNode<false>(data, x);
+                    }
                 }
-            }
+            );
+            // make sure we really sort each block
+            tbb::parallel_for(thread_data_list.data.range(),
+                [&](const ThreadDataContainer::EnumerableThreadData::range_type& range)
+                {
+                    for (auto& data : range)
+                        std::sort(data->inserted_edges.begin(),
+                                  data->inserted_edges.end());
+                }
+            );
+            tbb::parallel_for(tbb::blocked_range<int>(first_independent_node, last, DeleteGrainSize),
+                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int>& range)
+                {
+                    ContractorThreadData *data = thread_data_list.getThreadData();
+                    for (int position = range.begin(); position != range.end(); ++position)
+                    {
+                        NodeID x = remaining_nodes[position].id;
+                        this->DeleteIncomingEdges(data, x);
+                    }
+                }
+            );
+
             // insert new edges
-            for (unsigned thread_id = 0; thread_id < thread_count; ++thread_id)
+            for (auto& data : thread_data_list.data)
             {
-                ContractorThreadData &data = *thread_data_list[thread_id];
-                for (const ContractorEdge &edge : data.inserted_edges)
+                for (const ContractorEdge &edge : data->inserted_edges)
                 {
                     auto current_edge_ID = contractor_graph->FindEdge(edge.source, edge.target);
                     if (current_edge_ID < contractor_graph->EndEdges(edge.source))
@@ -466,19 +508,21 @@ class Contractor
                     }
                     contractor_graph->InsertEdge(edge.source, edge.target, edge.data);
                 }
-                data.inserted_edges.clear();
+                data->inserted_edges.clear();
             }
-// update priorities
-#pragma omp parallel
-            {
-                ContractorThreadData *data = thread_data_list[omp_get_thread_num()];
-#pragma omp for schedule(guided) nowait
-                for (int position = first_independent_node; position < last; ++position)
+
+            tbb::parallel_for(tbb::blocked_range<int>(first_independent_node, last, NeighboursGrainSize),
+                [this, &remaining_nodes, &node_priorities, &node_data, &thread_data_list](const tbb::blocked_range<int>& range)
                 {
-                    NodeID x = remaining_nodes[position].id;
-                    UpdateNodeNeighbours(node_priorities, node_data, data, x);
+                    ContractorThreadData *data = thread_data_list.getThreadData();
+                    for (int position = range.begin(); position != range.end(); ++position)
+                    {
+                        NodeID x = remaining_nodes[position].id;
+                        this->UpdateNodeNeighbours(node_priorities, node_data, data, x);
+                    }
                 }
-            }
+            );
+
             // remove contracted nodes from the pool
             number_of_contracted_nodes += last - first_independent_node;
             remaining_nodes.resize(first_independent_node);
@@ -510,11 +554,8 @@ class Contractor
 
             p.printStatus(number_of_contracted_nodes);
         }
-        for (ContractorThreadData *data : thread_data_list)
-        {
-            delete data;
-        }
-        thread_data_list.clear();
+
+        thread_data_list.data.clear();
     }
 
     template <class Edge> inline void GetEdges(DeallocatingVector<Edge> &edges)
@@ -769,7 +810,6 @@ class Contractor
                                                true,
                                                true,
                                                false);
-                        ;
                         inserted_edges.push_back(new_edge);
                         std::swap(new_edge.source, new_edge.target);
                         new_edge.data.forward = false;

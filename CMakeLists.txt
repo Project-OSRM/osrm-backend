@@ -179,6 +179,7 @@ target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(TBB REQUIRED)
 target_link_libraries(osrm-extract ${TBB_LIBRARIES})
+target_link_libraries(osrm-prepare ${TBB_LIBRARIES})
 include_directories(${TBB_INCLUDE_DIR})
 
 find_package(Lua52)
