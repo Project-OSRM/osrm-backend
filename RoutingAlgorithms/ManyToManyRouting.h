@@ -150,7 +150,7 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
             {
                 // get target id from bucket entry
                 const unsigned target_id = current_bucket.target_id;
-                const unsigned target_distance = current_bucket.distance;
+                const int target_distance = current_bucket.distance;
                 const EdgeWeight current_distance =
                     (*result_table)[source_id * number_of_locations + target_id];
                 // check if new distance is better
