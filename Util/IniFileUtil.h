@@ -28,8 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INI_FILE_UTIL_H
 #define INI_FILE_UTIL_H
 
+#include "SimpleLogger.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/regex.hpp>
 
 #include <regex>
 #include <string>
@@ -38,11 +41,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 inline std::string ReadIniFileAndLowerContents(const boost::filesystem::path &path)
 {
     boost::filesystem::fstream config_stream(path);
-    std::string input_str((std::istreambuf_iterator<char>(config_stream)),
+    std::string ini_file_content((std::istreambuf_iterator<char>(config_stream)),
                           std::istreambuf_iterator<char>());
-    std::regex regex("^([^=]*)"); // match from start of line to '='
-    std::string format("\\L$1\\E"); // replace with downcased substring
-    return std::regex_replace(input_str, regex, format);
+    boost::regex regex( "^([^=]*)" ); //match from start of line to '='
+    std::string format( "\\L$1\\E" ); //replace with downcased substring
+    return boost::regex_replace( ini_file_content, regex, format );
 }
 
 #endif // INI_FILE_UTIL_H

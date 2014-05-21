@@ -29,41 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 DescriptionFactory::DescriptionFactory() : entireLength(0) {}
 
-DescriptionFactory::~DescriptionFactory() {}
-
-inline double DescriptionFactory::DegreeToRadian(const double degree) const
-{
-    return degree * (M_PI / 180.);
-}
-
-inline double DescriptionFactory::RadianToDegree(const double radian) const
-{
-    return radian * (180. / M_PI);
-}
-
-double DescriptionFactory::GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B)
-    const
-{
-    double delta_long = DegreeToRadian(B.lon / COORDINATE_PRECISION - A.lon / COORDINATE_PRECISION);
-
-    const double lat1 = DegreeToRadian(A.lat / COORDINATE_PRECISION);
-    const double lat2 = DegreeToRadian(B.lat / COORDINATE_PRECISION);
-
-    const double y = sin(delta_long) * cos(lat2);
-    const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
-    double result = RadianToDegree(atan2(y, x));
-    while (result < 0.)
-    {
-        result += 360.;
-    }
-
-    while (result >= 360.)
-    {
-        result -= 360.;
-    }
-    return result;
-}
-
 void DescriptionFactory::SetStartSegment(const PhantomNode &source)
 {
     start_phantom = source;
@@ -83,49 +48,33 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     if ((1 == path_description.size()) && (path_description.back().location == coordinate))
     {
         path_description.back().name_id = path_point.name_id;
+        return;
     }
-    else
-    {
-        path_description.emplace_back(coordinate,
-                                      path_point.name_id,
-                                      path_point.segment_duration,
-                                      0,
-                                      path_point.turn_instruction);
-    }
+
+    path_description.emplace_back(coordinate,
+                                  path_point.name_id,
+                                  path_point.segment_duration,
+                                  0,
+                                  path_point.turn_instruction);
 }
 
-void DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded,
-                                                     std::vector<std::string> &output)
+JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)
 {
-    std::string temp;
     if (return_encoded)
     {
-        polyline_compressor.printEncodedString(path_description, temp);
+        return polyline_compressor.printEncodedString(path_description);
     }
-    else
-    {
-        polyline_compressor.printUnencodedString(path_description, temp);
-    }
-    output.emplace_back(temp);
+    return polyline_compressor.printUnencodedString(path_description);
 }
 
-void DescriptionFactory::AppendEncodedPolylineString(std::vector<std::string> &output) const
+JSON::Value DescriptionFactory::AppendUnencodedPolylineString() const
 {
-    std::string temp;
-    polyline_compressor.printEncodedString(path_description, temp);
-    output.emplace_back(temp);
-}
-
-void DescriptionFactory::AppendUnencodedPolylineString(std::vector<std::string> &output) const
-{
-    std::string temp;
-    polyline_compressor.printUnencodedString(path_description, temp);
-    output.emplace_back(temp);
+    return polyline_compressor.printUnencodedString(path_description);
 }
 
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)
 {
-    summary.startName = start_phantom.name_id;
-    summary.destName = target_phantom.name_id;
+    summary.source_name_id = start_phantom.name_id;
+    summary.target_name_id = target_phantom.name_id;
     summary.BuildDurationAndLengthStrings(distance, time);
 }

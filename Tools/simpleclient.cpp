@@ -110,10 +110,10 @@ int main(int argc, const char *argv[])
         // attention: super-inefficient hack below:
 
         std::stringstream my_stream;
-        for (const std::string &line : osrm_reply.content)
+        for (const auto &element : osrm_reply.content)
         {
-            std::cout << line;
-            my_stream << line;
+            std::cout << element;
+            my_stream << element;
         }
         std::cout << std::endl;
 

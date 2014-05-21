@@ -35,7 +35,6 @@ Feature: Roundabout Instructions
             | v    | t  | vd,tb | head,enter_roundabout-2,destination |
             | v    | u  | vd,uc | head,enter_roundabout-3,destination |
 
-    @bug
     Scenario: Testbot - Roundabout with oneway links
         Given the node map
             |   |   | p | o |   |   |

@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/TurnInstructions.h"
 
 #include "../Util/SimpleLogger.h"
+#include "../Util/StdHashExtensions.h"
 
 #include <osrm/Coordinate.h>
 
@@ -59,17 +60,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-namespace std
-{
-template <> struct hash<std::pair<NodeID, NodeID>>
-{
-    size_t operator()(const std::pair<NodeID, NodeID> &pair) const
-    {
-        return std::hash<int>()(pair.first) ^ std::hash<int>()(pair.second);
-    }
-};
-}
 
 class TarjanSCC
 {
@@ -339,14 +329,17 @@ class TarjanSCC
                                << " many components, marking small components";
 
         // TODO/C++11: prime candidate for lambda function
-        unsigned size_one_counter = 0;
-        for (unsigned i = 0, end = component_size_vector.size(); i < end; ++i)
-        {
-            if (1 == component_size_vector[i])
-            {
-                ++size_one_counter;
-            }
-        }
+        // unsigned size_one_counter = 0;
+        // for (unsigned i = 0, end = component_size_vector.size(); i < end; ++i)
+        // {
+        //     if (1 == component_size_vector[i])
+        //     {
+        //         ++size_one_counter;
+        //     }
+        // }
+        unsigned size_one_counter = std::count_if(component_size_vector.begin(),
+                                                  component_size_vector.end(),
+                                                  [] (unsigned value) { return 1 == value;});
 
         SimpleLogger().Write() << "identified " << size_one_counter << " SCCs of size 1";
 

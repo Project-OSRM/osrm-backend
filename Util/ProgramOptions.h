@@ -159,6 +159,7 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                       option_variables);
         boost::program_options::notify(option_variables);
+        return INIT_OK_START_ENGINE;
     }
 
     if (1 > requested_num_threads)

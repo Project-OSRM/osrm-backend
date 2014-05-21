@@ -128,7 +128,7 @@ class StaticRTree
                     Contains(lower_left));
         }
 
-        inline double GetMinDist(const FixedPointCoordinate &location) const
+        inline float GetMinDist(const FixedPointCoordinate &location) const
         {
             bool is_contained = Contains(location);
             if (is_contained)
@@ -136,7 +136,7 @@ class StaticRTree
                 return 0.;
             }
 
-            double min_dist = std::numeric_limits<double>::max();
+            float min_dist = std::numeric_limits<float>::max();
             min_dist = std::min(min_dist,
                                 FixedPointCoordinate::ApproximateEuclideanDistance(
                                     location.lat, location.lon, max_lat, min_lon));
@@ -152,9 +152,9 @@ class StaticRTree
             return min_dist;
         }
 
-        inline double GetMinMaxDist(const FixedPointCoordinate &location) const
+        inline float GetMinMaxDist(const FixedPointCoordinate &location) const
         {
-            double min_max_dist = std::numeric_limits<double>::max();
+            float min_max_dist = std::numeric_limits<float>::max();
             // Get minmax distance to each of the four sides
             FixedPointCoordinate upper_left(max_lat, min_lon);
             FixedPointCoordinate upper_right(max_lat, max_lon);
@@ -240,13 +240,13 @@ class StaticRTree
 
     struct QueryCandidate
     {
-        explicit QueryCandidate(const uint32_t n_id, const double dist)
+        explicit QueryCandidate(const uint32_t n_id, const float dist)
             : node_id(n_id), min_dist(dist)
         {
         }
-        QueryCandidate() : node_id(UINT_MAX), min_dist(std::numeric_limits<double>::max()) {}
+        QueryCandidate() : node_id(UINT_MAX), min_dist(std::numeric_limits<float>::max()) {}
         uint32_t node_id;
-        double min_dist;
+        float min_dist;
         inline bool operator<(const QueryCandidate &other) const
         {
             return min_dist < other.min_dist;
@@ -490,13 +490,13 @@ class StaticRTree
     {
         bool ignore_tiny_components = (zoom_level <= 14);
         DataT nearest_edge;
-        double min_dist = std::numeric_limits<double>::max();
-        double min_max_dist = std::numeric_limits<double>::max();
+        float min_dist = std::numeric_limits<float>::max();
+        float min_max_dist = std::numeric_limits<float>::max();
         bool found_a_nearest_edge = false;
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
-        double current_min_dist =
+        float current_min_dist =
             m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
         traversal_queue.emplace(0, current_min_dist);
 
@@ -522,7 +522,7 @@ class StaticRTree
                             continue;
                         }
 
-                        double current_minimum_distance =
+                        float current_minimum_distance =
                             FixedPointCoordinate::ApproximateEuclideanDistance(
                                 input_coordinate.lat,
                                 input_coordinate.lon,
@@ -563,9 +563,9 @@ class StaticRTree
                         const TreeNode &child_tree_node = m_search_tree[child_id];
                         const RectangleT &child_rectangle =
                             child_tree_node.minimum_bounding_rectangle;
-                        const double current_min_dist =
+                        const float current_min_dist =
                             child_rectangle.GetMinDist(input_coordinate);
-                        const double current_min_max_dist =
+                        const float current_min_max_dist =
                             child_rectangle.GetMinMaxDist(input_coordinate);
                         if (current_min_max_dist < min_max_dist)
                         {
@@ -597,19 +597,19 @@ class StaticRTree
         const bool ignore_tiny_components = (zoom_level <= 14);
         DataT nearest_edge;
 
-        double min_dist = std::numeric_limits<double>::max();
-        double min_max_dist = std::numeric_limits<double>::max();
+        float min_dist = std::numeric_limits<float>::max();
+        float min_max_dist = std::numeric_limits<float>::max();
         bool found_a_nearest_edge = false;
 
         FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
-        double current_min_dist =
+        float current_min_dist =
             m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
         traversal_queue.emplace(0, current_min_dist);
 
-        BOOST_ASSERT_MSG(std::numeric_limits<double>::epsilon() >
+        BOOST_ASSERT_MSG(std::numeric_limits<float>::epsilon() >
                              (0. - traversal_queue.top().min_dist),
                          "Root element in NN Search has min dist != 0.");
 
@@ -635,8 +635,8 @@ class StaticRTree
                             continue;
                         }
 
-                        double current_ratio = 0.;
-                        const double current_perpendicular_distance =
+                        float current_ratio = 0.;
+                        const float current_perpendicular_distance =
                             FixedPointCoordinate::ComputePerpendicularDistance(
                                 m_coordinate_list->at(current_edge.u),
                                 m_coordinate_list->at(current_edge.v),
@@ -647,7 +647,7 @@ class StaticRTree
                         BOOST_ASSERT(0. <= current_perpendicular_distance);
 
                         if ((current_perpendicular_distance < min_dist) &&
-                            !DoubleEpsilonCompare(current_perpendicular_distance, min_dist))
+                            !EpsilonCompare(current_perpendicular_distance, min_dist))
                         { // found a new minimum
                             min_dist = current_perpendicular_distance;
                             // TODO: use assignment c'tor in PhantomNode
@@ -685,9 +685,9 @@ class StaticRTree
                         const int32_t child_id = current_tree_node.children[i];
                         TreeNode &child_tree_node = m_search_tree[child_id];
                         RectangleT &child_rectangle = child_tree_node.minimum_bounding_rectangle;
-                        const double current_min_dist =
+                        const float current_min_dist =
                             child_rectangle.GetMinDist(input_coordinate);
-                        const double current_min_max_dist =
+                        const float current_min_max_dist =
                             child_rectangle.GetMinMaxDist(input_coordinate);
                         if (current_min_max_dist < min_max_dist)
                         {
@@ -717,18 +717,18 @@ class StaticRTree
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-        double ratio = 0.;
+        float ratio = 0.f;
 
         if (found_a_nearest_edge)
         {
-            const double distance_1 = FixedPointCoordinate::ApproximateEuclideanDistance(
+            const float distance_1 = FixedPointCoordinate::ApproximateEuclideanDistance(
                 current_start_coordinate, result_phantom_node.location);
 
-            const double distance_2 = FixedPointCoordinate::ApproximateEuclideanDistance(
+            const float distance_2 = FixedPointCoordinate::ApproximateEuclideanDistance(
                 current_start_coordinate, current_end_coordinate);
 
             ratio = distance_1 / distance_2;
-            ratio = std::min(1., ratio);
+            ratio = std::min(1.f, ratio);
 
             if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
             {
@@ -768,9 +768,10 @@ class StaticRTree
         return (a == b && c == d) || (a == c && b == d) || (a == d && b == c);
     }
 
-    inline bool DoubleEpsilonCompare(const double d1, const double d2) const
+    template<typename FloatT>
+    inline bool EpsilonCompare(const FloatT d1, const FloatT d2) const
     {
-        return (std::abs(d1 - d2) < std::numeric_limits<double>::epsilon());
+        return (std::abs(d1 - d2) < std::numeric_limits<FloatT>::epsilon());
     }
 };
 

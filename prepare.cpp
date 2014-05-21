@@ -438,6 +438,7 @@ int main(int argc, char *argv[])
 
             // every target needs to be valid
             BOOST_ASSERT(current_edge.target < max_used_node_id);
+#ifndef NDEBUG
             if (current_edge.data.distance <= 0)
             {
                 SimpleLogger().Write(logWARNING)
@@ -450,6 +451,7 @@ int main(int argc, char *argv[])
                                                  << node_array.size() - 1;
                 return 1;
             }
+#endif
             hsgr_output_stream.write((char *)&current_edge,
                                      sizeof(StaticGraph<EdgeData>::EdgeArrayEntry));
             ++number_of_used_edges;

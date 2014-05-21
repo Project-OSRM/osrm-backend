@@ -28,9 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef FIXED_POINT_COORDINATE_H_
 #define FIXED_POINT_COORDINATE_H_
 
+#include <functional>
 #include <iosfwd> //for std::ostream
 
-constexpr double COORDINATE_PRECISION = 1000000.;
+constexpr float COORDINATE_PRECISION = 1000000.;
 
 struct FixedPointCoordinate
 {
@@ -50,11 +51,13 @@ struct FixedPointCoordinate
     static double ApproximateDistance(const FixedPointCoordinate &c1,
                                       const FixedPointCoordinate &c2);
 
-    static double ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
-                                               const FixedPointCoordinate &c2);
+    static float ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
+                                              const FixedPointCoordinate &c2);
 
-    static double
-    ApproximateEuclideanDistance(const int lat1, const int lon1, const int lat2, const int lon2);
+    static float ApproximateEuclideanDistance(const int lat1, const int lon1, const int lat2, const int lon2);
+
+    static float ApproximateSquaredEuclideanDistance(const FixedPointCoordinate &c1,
+                                                     const FixedPointCoordinate &c2);
 
     static void convertInternalLatLonToString(const int value, std::string &output);
 
@@ -64,17 +67,24 @@ struct FixedPointCoordinate
     static void convertInternalReversedCoordinateToString(const FixedPointCoordinate &coord,
                                                           std::string &output);
 
-    static double ComputePerpendicularDistance(const FixedPointCoordinate &point,
+    static float ComputePerpendicularDistance(const FixedPointCoordinate &point,
                                                const FixedPointCoordinate &segA,
                                                const FixedPointCoordinate &segB);
 
-    static double ComputePerpendicularDistance(const FixedPointCoordinate &coord_a,
+    static float ComputePerpendicularDistance(const FixedPointCoordinate &coord_a,
                                                const FixedPointCoordinate &coord_b,
                                                const FixedPointCoordinate &query_location,
                                                FixedPointCoordinate &nearest_location,
-                                               double &r);
+                                               float &r);
+
+    static float GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
+
+    float GetBearing(const FixedPointCoordinate &other) const;
 
     void Output(std::ostream &out) const;
+
+    static float DegreeToRadian(const float degree);
+    static float RadianToDegree(const float radian);
 };
 
 inline std::ostream &operator<<(std::ostream &o, FixedPointCoordinate const &c)

@@ -51,13 +51,15 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
                     RawRouteData &raw_route_data) const
     {
-        for (const PhantomNodes &phantom_node_pair : phantom_nodes_vector)
+        if(std::any_of(begin(phantom_nodes_vector),
+                        end(phantom_nodes_vector),
+                        [](PhantomNodes phantom_node_pair)
+                        { return phantom_node_pair.AtLeastOnePhantomNodeIsInvalid(); }))
         {
-            if (phantom_node_pair.AtLeastOnePhantomNodeIsInvalid())
-            {
-                return;
-            }
+            BOOST_ASSERT(false);
+            return;
         }
+
         int distance1 = 0;
         int distance2 = 0;
         bool search_from_1st_node = true;

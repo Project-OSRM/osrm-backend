@@ -27,7 +27,7 @@ Feature: Status messages
             | nodes |
             | ab    |
             | cd    |
-        
+
         When I route I should get
             | from | to | route | status | message                          |
             | a    | b  | ab    | 0      | Found route between points       |

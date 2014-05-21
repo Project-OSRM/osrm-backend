@@ -15,5 +15,5 @@ Feature: osrm-routed command line options: invalid options
         When I run "osrm-routed over-the-rainbow.osrm"
         Then stdout should contain "over-the-rainbow.osrm"
         And stderr should contain "exception"
-        And stderr should contain "does not exist"
+        And stderr should contain "not found"
         And it should exit with code 1

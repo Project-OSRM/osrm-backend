@@ -29,7 +29,7 @@ Feature: Projection to nearest point on road
             | a    | d  | abc   | NE      | 45      | 1000m +-7 |
             | d    | a  | abc   | SW      | 225     | 1000m +-7 |
             | c    | d  | abc   | SW      | 225     | 1000m +-7 |
-            | d    | c  | abc   | NE      | 45  +-1 | 1000m +-7 |
+            | d    | c  | abc   | NE      | 45  +-2 | 1000m +-7 |
 
     Scenario: Projection onto way at high latitudes, no distance
         When I route I should get

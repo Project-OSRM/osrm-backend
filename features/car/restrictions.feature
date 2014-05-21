@@ -31,6 +31,34 @@ Feature: Car - Turn restrictions
             | s    | e  | sj,ej |
 
     @no_turning
+    Scenario: Car - No straight on
+        Given the node map
+            | a | b | j | d | e |
+            | v |   |   |   | z |
+            |   | w | x | y |   |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | no     |
+            | bj    | no     |
+            | jd    | no     |
+            | de    | no     |
+            | av    | yes    |
+            | vw    | yes    |
+            | wx    | yes    |
+            | xy    | yes    |
+            | yz    | yes    |
+            | ze    | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction    |
+            | restriction | bj       | jd     | j        | no_straight_on |
+
+        When I route I should get
+            | from | to | route             |
+            | a    | e  | av,vw,wx,xy,yz,ze |
+
+    @no_turning
     Scenario: Car - No right turn
         Given the node map
             |   | n |   |
