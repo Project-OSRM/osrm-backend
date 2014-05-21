@@ -100,11 +100,9 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
                 DecodeObjectFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
                 if (phantom_node_vector[i].isValid(facade->GetNumberOfNodes()))
                 {
-                    SimpleLogger().Write() << "decoded phantom node for " << phantom_node_vector[i].location;
                     continue;
                 }
             }
-            SimpleLogger().Write() << "looking up coordinate in tree";
             facade->FindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
                                                  phantom_node_vector[i],
                                                  route_parameters.zoom_level);
@@ -114,15 +112,12 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         TIMER_START(distance_table);
         std::shared_ptr<std::vector<EdgeWeight>> result_table = search_engine_ptr->distance_table(phantom_node_vector);
         TIMER_STOP(distance_table);
-        SimpleLogger().Write() << "table computation took " << TIMER_MSEC(distance_table) << "ms";
 
         if (!result_table)
         {
-            SimpleLogger().Write() << "computation failed";
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
-        SimpleLogger().Write() << "computation successful";
         JSON::Object json_object;
         JSON::Array json_array;
         const unsigned number_of_locations = phantom_node_vector.size();
