@@ -49,8 +49,6 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
         std::pair<NodeID, NodeID> restriction_source =
             std::make_pair(restriction.fromNode, restriction.viaNode);
 
-        SimpleLogger().Write(logDEBUG) << "restr from: " << restriction.fromNode << ", v: " << restriction.viaNode << ", to: " << restriction.toNode << ", is_only_: " << (restriction.flags.isOnly ? "y" : "n");
-
         unsigned index;
         auto restriction_iter = m_restriction_map.find(restriction_source);
         if (restriction_iter == m_restriction_map.end())
@@ -114,7 +112,6 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID u, const NodeID v
             continue;
         }
 
-        SimpleLogger().Write(logDEBUG) << "fixing arriving instruction at turn <" << u << "," << v << "," << w << ">";
         const unsigned index = restriction_iterator->second;
         auto &bucket = m_restriction_bucket_list.at(index);
         for (RestrictionTarget &restriction_target : bucket)
@@ -141,7 +138,6 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID u, const NodeID v
     auto restriction_iterator = m_restriction_map.find(old_start);
     if (restriction_iterator != m_restriction_map.end())
     {
-        SimpleLogger().Write(logDEBUG) << "fixing restr start at turn <" << u << "," << v << "," << w << ">";
         const unsigned index = restriction_iterator->second;
         // remove old restriction start (v,w)
         m_restriction_map.erase(restriction_iterator);
@@ -207,6 +203,5 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID u, const NodeID v, con
             }
         }
     }
-
     return false;
 }
