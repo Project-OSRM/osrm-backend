@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BOOST_FILE_SYSTEM_FIX_H
 
 #include "OSRMException.h"
+#include "SimpleLogger.h"
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
@@ -134,5 +135,13 @@ inline path unique_path(const path &) { return temp_directory_path(); }
 #ifndef BOOST_FILESYSTEM_VERSION
 #define BOOST_FILESYSTEM_VERSION 3
 #endif
+
+inline void AssertPathExists(const boost::filesystem::path &path)
+{
+    if (!boost::filesystem::is_regular_file(path))
+    {
+        throw OSRMException(path.string() + " not found.");
+    }
+}
 
 #endif /* BOOST_FILE_SYSTEM_FIX_H */

@@ -78,6 +78,7 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
     {
         if (phantom_node_pair.PhantomNodesHaveEqualLocation())
         {
+            BOOST_ASSERT(false);
             return;
         }
 
@@ -604,7 +605,7 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
             }
         }
 
-        for (EdgeID edge = facade->BeginEdges(node); edge < facade->EndEdges(node); ++edge)
+        for (auto edge : facade->GetAdjacentEdgeRange(node))
         {
             const EdgeData &data = facade->GetEdgeData(edge);
             const bool edge_is_forward_directed =

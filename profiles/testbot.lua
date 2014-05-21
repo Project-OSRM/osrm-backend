@@ -55,6 +55,7 @@ function way_function (way)
   local maxspeed = tonumber(way.tags:Find ( "maxspeed"))
   local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
   local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
+  local junction = way.tags:Find("junction")
 
   way.name = name
 
@@ -96,10 +97,14 @@ function way_function (way)
     way.direction = Way.bidirectional
   elseif oneway == "-1" then
     way.direction = Way.opposite
-  elseif oneway == "yes" or oneway == "1" or oneway == "true" then
+  elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
     way.direction = Way.oneway
   else
     way.direction = Way.bidirectional
+  end
+
+  if junction == 'roundabout' then
+    way.roundabout = true
   end
 
   way.type = 1

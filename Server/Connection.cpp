@@ -81,6 +81,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             Header compression_header;
             std::vector<char> compressed_output;
             std::vector<boost::asio::const_buffer> output_buffer;
+
             switch (compression_type)
             {
             case deflateRFC1951:
@@ -158,7 +159,7 @@ void Connection::handle_write(const boost::system::error_code &e)
     }
 }
 
-void Connection::compressBufferCollection(std::vector<std::string> uncompressed_data,
+void Connection::compressBufferCollection(std::vector<char> uncompressed_data,
                                           CompressionType compression_type,
                                           std::vector<char> &compressed_data)
 {
@@ -171,16 +172,10 @@ void Connection::compressBufferCollection(std::vector<std::string> uncompressed_
     }
 
     BOOST_ASSERT(compressed_data.empty());
-    boost::iostreams::filtering_ostream compressing_stream;
-
-    compressing_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
-    compressing_stream.push(boost::iostreams::back_inserter(compressed_data));
-
-    for (const std::string &line : uncompressed_data)
-    {
-        compressing_stream << line;
-    }
-
-    compressing_stream.reset();
+    boost::iostreams::filtering_ostream gzip_stream;
+    gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
+    gzip_stream.push(boost::iostreams::back_inserter(compressed_data));
+    gzip_stream.write(&uncompressed_data[0], uncompressed_data.size());
+    boost::iostreams::close(gzip_stream);
 }
 }

@@ -262,10 +262,10 @@ RequestParser::consume(Request &req, char input, http::CompressionType *compress
             return boost::indeterminate;
         }
         return false;
-    case expecting_newline_3:
+    default: // expecting_newline_3:
         return (input == '\n');
-    default:
-        return false;
+    // default:
+    //     return false;
     }
 }
 

@@ -38,7 +38,7 @@ void Reply::setSize(const unsigned size)
     {
         if ("Content-Length" == h.name)
         {
-            intToString(size, h.value);
+            h.value = IntToString(size);
         }
     }
 }
@@ -47,10 +47,7 @@ void Reply::setSize(const unsigned size)
 void Reply::SetUncompressedSize()
 {
     unsigned uncompressed_size = 0;
-    for (const std::string &current_line : content)
-    {
-        uncompressed_size += current_line.size();
-    }
+    uncompressed_size = content.size();
     setSize(uncompressed_size);
 }
 
@@ -66,10 +63,7 @@ std::vector<boost::asio::const_buffer> Reply::toBuffers()
         buffers.push_back(boost::asio::buffer(crlf));
     }
     buffers.push_back(boost::asio::buffer(crlf));
-    for (const std::string &line : content)
-    {
-        buffers.push_back(boost::asio::buffer(line));
-    }
+    buffers.push_back(boost::asio::buffer(content));
     return buffers;
 }
 
@@ -94,14 +88,15 @@ Reply Reply::StockReply(Reply::status_type status)
     Reply rep;
     rep.status = status;
     rep.content.clear();
-    rep.content.push_back(rep.ToString(status));
+
+    const std::string status_string = rep.ToString(status);
+    rep.content.insert(rep.content.end(), status_string.begin(), status_string.end());
     rep.headers.resize(3);
     rep.headers[0].name = "Access-Control-Allow-Origin";
     rep.headers[0].value = "*";
     rep.headers[1].name = "Content-Length";
 
-    std::string size_string;
-    intToString(rep.content.size(), size_string);
+    std::string size_string = IntToString(rep.content.size());
 
     rep.headers[1].value = size_string;
     rep.headers[2].name = "Content-Type";

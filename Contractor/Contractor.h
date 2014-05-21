@@ -340,10 +340,7 @@ class Contractor
                 for (unsigned i = 0; i < contractor_graph->GetNumberOfNodes(); ++i)
                 {
                     const NodeID start = i;
-                    auto last_edge = contractor_graph->EndEdges(start);
-                    for (auto current_edge = contractor_graph->BeginEdges(start);
-                         current_edge < last_edge;
-                         ++current_edge)
+                    for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(start))
                     {
                         ContractorGraph::EdgeData &data =
                             contractor_graph->GetEdgeData(current_edge);
@@ -531,8 +528,7 @@ class Contractor
             for (NodeID node = 0; node < number_of_nodes; ++node)
             {
                 p.printStatus(node);
-                auto endEdges = contractor_graph->EndEdges(node);
-                for (auto edge = contractor_graph->BeginEdges(node); edge < endEdges; ++edge)
+                for (auto edge : contractor_graph->GetAdjacentEdgeRange(node))
                 {
                     const NodeID target = contractor_graph->GetTarget(edge);
                     const ContractorGraph::EdgeData &data = contractor_graph->GetEdgeData(edge);
@@ -634,8 +630,7 @@ class Contractor
             }
 
             // iterate over all edges of node
-            auto end_edges = contractor_graph->EndEdges(node);
-            for (auto edge = contractor_graph->BeginEdges(node); edge != end_edges; ++edge)
+            for (auto edge : contractor_graph->GetAdjacentEdgeRange(node))
             {
                 const ContractorEdgeData &data = contractor_graph->GetEdgeData(edge);
                 if (!data.forward)
@@ -698,8 +693,7 @@ class Contractor
         int inserted_edges_size = data->inserted_edges.size();
         std::vector<ContractorEdge> &inserted_edges = data->inserted_edges;
 
-        auto end_in_edges = contractor_graph->EndEdges(node);
-        for (auto in_edge = contractor_graph->BeginEdges(node); in_edge != end_in_edges; ++in_edge)
+        for (auto in_edge : contractor_graph->GetAdjacentEdgeRange(node))
         {
             const ContractorEdgeData &in_data = contractor_graph->GetEdgeData(in_edge);
             const NodeID source = contractor_graph->GetTarget(in_edge);
@@ -719,9 +713,7 @@ class Contractor
             int max_distance = 0;
             unsigned number_of_targets = 0;
 
-            auto end_out_edges = contractor_graph->EndEdges(node);
-            for (auto out_edge = contractor_graph->BeginEdges(node); out_edge != end_out_edges;
-                 ++out_edge)
+            for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
             {
                 const ContractorEdgeData &out_data = contractor_graph->GetEdgeData(out_edge);
                 if (!out_data.forward)
@@ -746,10 +738,7 @@ class Contractor
             {
                 Dijkstra(max_distance, number_of_targets, 2000, data, node);
             }
-            for (auto out_edge = contractor_graph->BeginEdges(node),
-                      endOutEdges = contractor_graph->EndEdges(node);
-                 out_edge != endOutEdges;
-                 ++out_edge)
+            for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
             {
                 const ContractorEdgeData &out_data = contractor_graph->GetEdgeData(out_edge);
                 if (!out_data.forward)
@@ -835,7 +824,7 @@ class Contractor
         neighbours.clear();
 
         // find all neighbours
-        for (auto e = contractor_graph->BeginEdges(node); e < contractor_graph->EndEdges(node); ++e)
+        for (auto e : contractor_graph->GetAdjacentEdgeRange(node))
         {
             const NodeID u = contractor_graph->GetTarget(e);
             if (u != node)
@@ -862,8 +851,7 @@ class Contractor
         neighbours.clear();
 
         // find all neighbours
-        auto end_edges = contractor_graph->EndEdges(node);
-        for (auto e = contractor_graph->BeginEdges(node); e < end_edges; ++e)
+        for (auto e : contractor_graph->GetAdjacentEdgeRange(node))
         {
             const NodeID u = contractor_graph->GetTarget(e);
             if (u == node)
@@ -895,7 +883,7 @@ class Contractor
         std::vector<NodeID> &neighbours = data->neighbours;
         neighbours.clear();
 
-        for (auto e = contractor_graph->BeginEdges(node); e < contractor_graph->EndEdges(node); ++e)
+        for (auto e : contractor_graph->GetAdjacentEdgeRange(node))
         {
             const NodeID target = contractor_graph->GetTarget(e);
             if (node == target)
@@ -924,8 +912,7 @@ class Contractor
         // examine all neighbours that are at most 2 hops away
         for (const NodeID u : neighbours)
         {
-            auto end_edges = contractor_graph->EndEdges(u);
-            for (auto e = contractor_graph->BeginEdges(u); e < end_edges; ++e)
+            for (auto e : contractor_graph->GetAdjacentEdgeRange(u))
             {
                 const NodeID target = contractor_graph->GetTarget(e);
                 if (node == target)

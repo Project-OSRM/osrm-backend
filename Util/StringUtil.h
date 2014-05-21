@@ -80,11 +80,12 @@ auto as_integer(Enumeration const value)
     return static_cast<typename std::underlying_type<Enumeration>::type>(value);
 }
 
-static inline void intToString(const int value, std::string &output)
+static inline std::string IntToString(const int value)
 {
-    output.clear();
+    std::string output;
     std::back_insert_iterator<std::string> sink(output);
     boost::spirit::karma::generate(sink, boost::spirit::karma::int_, value);
+    return output;
 }
 
 static inline void int64ToString(const int64_t value, std::string &output)
@@ -168,11 +169,35 @@ static inline double StringToDouble(const char *p)
     return r;
 }
 
-static inline void doubleToString(const double value, std::string &output)
+template <typename T>
+struct scientific_policy : boost::spirit::karma::real_policies<T>
 {
-    output.clear();
+    //  we want the numbers always to be in fixed format
+    static int floatfield(T n) { return boost::spirit::karma::real_policies<T>::fmtflags::fixed; }
+    static unsigned int precision(T) { return 6; }
+};
+typedef
+boost::spirit::karma::real_generator<double, scientific_policy<double> >
+science_type;
+
+static inline std::string FixedDoubleToString(const double value)
+{
+    std::string output;
     std::back_insert_iterator<std::string> sink(output);
-    boost::spirit::karma::generate(sink, boost::spirit::karma::double_, value);
+    boost::spirit::karma::generate(sink, science_type(), value);
+    if (output.size() >= 2 && output[output.size()-2] == '.' && output[output.size()-1] == '0')
+    {
+        output.resize(output.size()-2);
+    }
+    return output;
+}
+
+static inline std::string DoubleToString(const double value)
+{
+    std::string output;
+    std::back_insert_iterator<std::string> sink(output);
+    boost::spirit::karma::generate(sink, value);
+    return output;
 }
 
 static inline void doubleToStringWithTwoDigitsBehindComma(const double value, std::string &output)

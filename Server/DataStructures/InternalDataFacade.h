@@ -79,13 +79,13 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         if (boost::filesystem::exists(timestamp_path))
         {
             SimpleLogger().Write() << "Loading Timestamp";
-            boost::filesystem::ifstream timestampInStream(timestamp_path);
-            if (!timestampInStream)
+            boost::filesystem::ifstream timestamp_stream(timestamp_path);
+            if (!timestamp_stream)
             {
                 SimpleLogger().Write(logWARNING) << timestamp_path << " not found";
             }
-            getline(timestampInStream, m_timestamp);
-            timestampInStream.close();
+            getline(timestamp_stream, m_timestamp);
+            timestamp_stream.close();
         }
         if (m_timestamp.empty())
         {
@@ -279,16 +279,23 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
         // load data
         SimpleLogger().Write() << "loading graph data";
+        AssertPathExists(hsgr_path);
         LoadGraph(hsgr_path);
         SimpleLogger().Write() << "loading egde information";
+        AssertPathExists(nodes_data_path);
+        AssertPathExists(edges_data_path);
         LoadNodeAndEdgeInformation(nodes_data_path, edges_data_path);
         SimpleLogger().Write() << "loading geometries";
+        AssertPathExists(geometries_path);
         LoadGeometries(geometries_path);
         SimpleLogger().Write() << "loading r-tree";
+        AssertPathExists(ram_index_path);
+        AssertPathExists(file_index_path);
         LoadRTree(ram_index_path, file_index_path);
         SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(timestamp_path);
         SimpleLogger().Write() << "loading street names";
+        AssertPathExists(names_data_path);
         LoadStreetNames(names_data_path);
     }
 
@@ -308,6 +315,8 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     EdgeID BeginEdges(const NodeID n) const { return m_query_graph->BeginEdges(n); }
 
     EdgeID EndEdges(const NodeID n) const { return m_query_graph->EndEdges(n); }
+
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const { return m_query_graph->GetAdjacentEdgeRange(node); };
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID from, const NodeID to) const

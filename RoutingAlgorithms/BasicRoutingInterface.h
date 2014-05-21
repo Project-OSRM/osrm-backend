@@ -87,7 +87,7 @@ template <class DataFacadeT> class BasicRoutingInterface
         }
 
         // Stalling
-        for (EdgeID edge = facade->BeginEdges(node); edge < facade->EndEdges(node); ++edge)
+        for (auto edge : facade->GetAdjacentEdgeRange(node))
         {
             const EdgeData &data = facade->GetEdgeData(edge);
             const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
@@ -108,9 +108,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             }
         }
 
-        for (EdgeID edge = facade->BeginEdges(node), end_edge = facade->EndEdges(node);
-             edge < end_edge;
-             ++edge)
+        for (auto edge : facade->GetAdjacentEdgeRange(node))
         {
             const EdgeData &data = facade->GetEdgeData(edge);
             bool forward_directionFlag = (forward_direction ? data.forward : data.backward);
@@ -167,9 +165,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             // The above explanation unclear? Think!
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
             int edge_weight = INT_MAX;
-            for (EdgeID edge_id = facade->BeginEdges(edge.first);
-                 edge_id < facade->EndEdges(edge.first);
-                 ++edge_id)
+            for (auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
                 const int weight = facade->GetEdgeData(edge_id).distance;
                 if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
@@ -181,9 +177,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             }
             if (SPECIAL_EDGEID == smaller_edge_id)
             {
-                for (EdgeID edge_id = facade->BeginEdges(edge.second);
-                     edge_id < facade->EndEdges(edge.second);
-                     ++edge_id)
+                for (auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
                 {
                     const int weight = facade->GetEdgeData(edge_id).distance;
                     if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
@@ -323,9 +317,7 @@ template <class DataFacadeT> class BasicRoutingInterface
 
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
             int edge_weight = INT_MAX;
-            for (EdgeID edge_id = facade->BeginEdges(edge.first);
-                 edge_id < facade->EndEdges(edge.first);
-                 ++edge_id)
+            for (auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
                 const int weight = facade->GetEdgeData(edge_id).distance;
                 if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
@@ -338,9 +330,7 @@ template <class DataFacadeT> class BasicRoutingInterface
 
             if (SPECIAL_EDGEID == smaller_edge_id)
             {
-                for (EdgeID edge_id = facade->BeginEdges(edge.second);
-                     edge_id < facade->EndEdges(edge.second);
-                     ++edge_id)
+                for (auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
                 {
                     const int weight = facade->GetEdgeData(edge_id).distance;
                     if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&

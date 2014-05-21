@@ -45,7 +45,7 @@ struct APIGrammar : qi::grammar<Iterator>
         zoom        = (-qi::lit('&')) >> qi::lit('z')            >> '=' >> qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
         output      = (-qi::lit('&')) >> qi::lit("output")       >> '=' >> string[boost::bind(&HandlerT::setOutputFormat, handler, ::_1)];
         jsonp       = (-qi::lit('&')) >> qi::lit("jsonp")        >> '=' >> stringwithPercent[boost::bind(&HandlerT::setJSONpParameter, handler, ::_1)];
-        checksum    = (-qi::lit('&')) >> qi::lit("checksum")     >> '=' >> qi::int_[boost::bind(&HandlerT::setChecksum, handler, ::_1)];
+        checksum    = (-qi::lit('&')) >> qi::lit("checksum")     >> '=' >> qi::uint_[boost::bind(&HandlerT::setChecksum, handler, ::_1)];
         instruction = (-qi::lit('&')) >> qi::lit("instructions") >> '=' >> qi::bool_[boost::bind(&HandlerT::setInstructionFlag, handler, ::_1)];
         geometry    = (-qi::lit('&')) >> qi::lit("geometry")     >> '=' >> qi::bool_[boost::bind(&HandlerT::setGeometryFlag, handler, ::_1)];
         cmp         = (-qi::lit('&')) >> qi::lit("compression")  >> '=' >> qi::bool_[boost::bind(&HandlerT::setCompressionFlag, handler, ::_1)];

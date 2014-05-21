@@ -40,8 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-#include <boost/ref.hpp>
-
 XMLParser::XMLParser(const char *filename, ExtractorCallbacks *ec, ScriptingEnvironment &se)
     : BaseParser(ec, se)
 {
@@ -103,8 +101,8 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
         const int depth = xmlTextReaderDepth(inputReader);
         while (xmlTextReaderRead(inputReader) == 1)
         {
-            const int childType = xmlTextReaderNodeType(inputReader);
-            if (childType != 1 && childType != 15)
+            const int child_type = xmlTextReaderNodeType(inputReader);
+            if (child_type != 1 && child_type != 15)
             {
                 continue;
             }
@@ -114,13 +112,13 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
             {
                 continue;
             }
-            if (depth == childDepth && childType == 15 &&
+            if (depth == childDepth && child_type == 15 &&
                 xmlStrEqual(childName, (const xmlChar *)"relation") == 1)
             {
                 xmlFree(childName);
                 break;
             }
-            if (childType != 1)
+            if (child_type != 1)
             {
                 xmlFree(childName);
                 continue;
@@ -204,67 +202,68 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
 ExtractionWay XMLParser::ReadXMLWay()
 {
     ExtractionWay way;
-    if (xmlTextReaderIsEmptyElement(inputReader) != 1)
+    if (xmlTextReaderIsEmptyElement(inputReader) == 1)
     {
-        const int depth = xmlTextReaderDepth(inputReader);
-        while (xmlTextReaderRead(inputReader) == 1)
+        return way;
+    }
+    const int depth = xmlTextReaderDepth(inputReader);
+    while (xmlTextReaderRead(inputReader) == 1)
+    {
+        const int child_type = xmlTextReaderNodeType(inputReader);
+        if (child_type != 1 && child_type != 15)
         {
-            const int childType = xmlTextReaderNodeType(inputReader);
-            if (childType != 1 && childType != 15)
-            {
-                continue;
-            }
-            const int childDepth = xmlTextReaderDepth(inputReader);
-            xmlChar *childName = xmlTextReaderName(inputReader);
-            if (childName == NULL)
-            {
-                continue;
-            }
-
-            if (depth == childDepth && childType == 15 &&
-                xmlStrEqual(childName, (const xmlChar *)"way") == 1)
-            {
-                xmlChar *id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
-                way.id = stringToUint((char *)id);
-                xmlFree(id);
-                xmlFree(childName);
-                break;
-            }
-            if (childType != 1)
-            {
-                xmlFree(childName);
-                continue;
-            }
-
-            if (xmlStrEqual(childName, (const xmlChar *)"tag") == 1)
-            {
-                xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
-                xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
-
-                if (k != NULL && value != NULL)
-                {
-                    way.keyVals.Add(std::string((char *)k), std::string((char *)value));
-                }
-                if (k != NULL)
-                {
-                    xmlFree(k);
-                }
-                if (value != NULL)
-                {
-                    xmlFree(value);
-                }
-            }
-            else if (xmlStrEqual(childName, (const xmlChar *)"nd") == 1)
-            {
-                xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
-                if (ref != NULL)
-                {
-                    way.path.push_back(stringToUint((const char *)ref));
-                    xmlFree(ref);
-                }
-            }
-            xmlFree(childName);
+            continue;
         }
+        const int childDepth = xmlTextReaderDepth(inputReader);
+        xmlChar *childName = xmlTextReaderName(inputReader);
+        if (childName == NULL)
+        {
+            continue;
+        }
+
+        if (depth == childDepth && child_type == 15 &&
+            xmlStrEqual(childName, (const xmlChar *)"way") == 1)
+        {
+            xmlChar *id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
+            way.id = stringToUint((char *)id);
+            xmlFree(id);
+            xmlFree(childName);
+            break;
+        }
+        if (child_type != 1)
+        {
+            xmlFree(childName);
+            continue;
+        }
+
+        if (xmlStrEqual(childName, (const xmlChar *)"tag") == 1)
+        {
+            xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
+            xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
+
+            if (k != NULL && value != NULL)
+            {
+                way.keyVals.Add(std::string((char *)k), std::string((char *)value));
+            }
+            if (k != NULL)
+            {
+                xmlFree(k);
+            }
+            if (value != NULL)
+            {
+                xmlFree(value);
+            }
+        }
+        else if (xmlStrEqual(childName, (const xmlChar *)"nd") == 1)
+        {
+            xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
+            if (ref != NULL)
+            {
+                way.path.push_back(stringToUint((const char *)ref));
+                xmlFree(ref);
+            }
+        }
+        xmlFree(childName);
     }
     return way;
 }
@@ -292,56 +291,57 @@ ImportNode XMLParser::ReadXMLNode()
         xmlFree(attribute);
     }
 
-    if (xmlTextReaderIsEmptyElement(inputReader) != 1)
+    if (xmlTextReaderIsEmptyElement(inputReader) == 1)
     {
-        const int depth = xmlTextReaderDepth(inputReader);
-        while (xmlTextReaderRead(inputReader) == 1)
+        return node;
+    }
+    const int depth = xmlTextReaderDepth(inputReader);
+    while (xmlTextReaderRead(inputReader) == 1)
+    {
+        const int child_type = xmlTextReaderNodeType(inputReader);
+        // 1 = Element, 15 = EndElement
+        if (child_type != 1 && child_type != 15)
         {
-            const int childType = xmlTextReaderNodeType(inputReader);
-            // 1 = Element, 15 = EndElement
-            if (childType != 1 && childType != 15)
-            {
-                continue;
-            }
-            const int childDepth = xmlTextReaderDepth(inputReader);
-            xmlChar *childName = xmlTextReaderName(inputReader);
-            if (childName == NULL)
-            {
-                continue;
-            }
-
-            if (depth == childDepth && childType == 15 &&
-                xmlStrEqual(childName, (const xmlChar *)"node") == 1)
-            {
-                xmlFree(childName);
-                break;
-            }
-            if (childType != 1)
-            {
-                xmlFree(childName);
-                continue;
-            }
-
-            if (xmlStrEqual(childName, (const xmlChar *)"tag") == 1)
-            {
-                xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
-                xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
-                if (k != NULL && value != NULL)
-                {
-                    node.keyVals.emplace(std::string((char *)(k)), std::string((char *)(value)));
-                }
-                if (k != NULL)
-                {
-                    xmlFree(k);
-                }
-                if (value != NULL)
-                {
-                    xmlFree(value);
-                }
-            }
-
-            xmlFree(childName);
+            continue;
         }
+        const int childDepth = xmlTextReaderDepth(inputReader);
+        xmlChar *childName = xmlTextReaderName(inputReader);
+        if (childName == NULL)
+        {
+            continue;
+        }
+
+        if (depth == childDepth && child_type == 15 &&
+            xmlStrEqual(childName, (const xmlChar *)"node") == 1)
+        {
+            xmlFree(childName);
+            break;
+        }
+        if (child_type != 1)
+        {
+            xmlFree(childName);
+            continue;
+        }
+
+        if (xmlStrEqual(childName, (const xmlChar *)"tag") == 1)
+        {
+            xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
+            xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
+            if (k != NULL && value != NULL)
+            {
+                node.keyVals.emplace(std::string((char *)(k)), std::string((char *)(value)));
+            }
+            if (k != NULL)
+            {
+                xmlFree(k);
+            }
+            if (value != NULL)
+            {
+                xmlFree(value);
+            }
+        }
+
+        xmlFree(childName);
     }
     return node;
 }

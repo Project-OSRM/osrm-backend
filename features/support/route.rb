@@ -93,10 +93,12 @@ def route_status response
 end
 
 def extract_instruction_list instructions, index, postfix=nil
-  instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
-  map { |r| r[index] }.
-  map { |r| (r=="" || r==nil) ? '""' : "#{r}#{postfix}" }.
-  join(',')
+  if instructions
+    instructions.reject { |r| r[0].to_s=="#{DESTINATION_REACHED}" }.
+    map { |r| r[index] }.
+    map { |r| (r=="" || r==nil) ? '""' : "#{r}#{postfix}" }.
+    join(',')
+  end
 end
 
 def way_list instructions
@@ -112,33 +114,35 @@ def bearing_list instructions
 end
 
 def turn_list instructions
-  types = {
-    0 => :none,
-    1 => :straight,
-    2 => :slight_right,
-    3 => :right,
-    4 => :sharp_right,
-    5 => :u_turn,
-    6 => :sharp_left,
-    7 => :left,
-    8 => :slight_left,
-    9 => :via,
-    10 => :head,
-    11 => :enter_roundabout,
-    12 => :leave_roundabout,
-    13 => :stay_roundabout,
-    14 => :start_end_of_street,
-    15 => :destination,
-    16 => :enter_contraflow,
-    17 => :leave_contraflow
-  }
-  # replace instructions codes with strings
-  # "11-3" (enter roundabout and leave a 3rd exit) gets converted to "enter_roundabout-3"
-  instructions.map do |r|
-    r[0].to_s.gsub(/^\d*/) do |match|
-      types[match.to_i].to_s
-    end
-  end.join(',')
+  if instructions
+    types = {
+      0 => :none,
+      1 => :straight,
+      2 => :slight_right,
+      3 => :right,
+      4 => :sharp_right,
+      5 => :u_turn,
+      6 => :sharp_left,
+      7 => :left,
+      8 => :slight_left,
+      9 => :via,
+      10 => :head,
+      11 => :enter_roundabout,
+      12 => :leave_roundabout,
+      13 => :stay_roundabout,
+      14 => :start_end_of_street,
+      15 => :destination,
+      16 => :enter_contraflow,
+      17 => :leave_contraflow
+    }
+    # replace instructions codes with strings
+    # "11-3" (enter roundabout and leave a 3rd exit) gets converted to "enter_roundabout-3"
+    instructions.map do |r|
+      r[0].to_s.gsub(/^\d*/) do |match|
+        types[match.to_i].to_s
+      end
+    end.join(',')
+  end
 end
 
 def mode_list instructions

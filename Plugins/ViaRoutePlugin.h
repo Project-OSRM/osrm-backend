@@ -25,12 +25,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef VIAROUTEPLUGIN_H_
-#define VIAROUTEPLUGIN_H_
+#ifndef VIA_ROUTE_PLUGIN_H
+#define VIA_ROUTE_PLUGIN_H
 
 #include "BasePlugin.h"
 
 #include "../Algorithms/ObjectToBase64.h"
+
 #include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/SearchEngine.h"
 #include "../Descriptors/BaseDescriptor.h"
@@ -38,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Descriptors/JSONDescriptor.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
+#include "../Util/TimingUtil.h"
 
 #include <cstdlib>
 
@@ -50,7 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
 {
   private:
-    std::unordered_map<std::string, unsigned> descriptorTable;
+    std::unordered_map<std::string, unsigned> descriptor_table;
     std::shared_ptr<SearchEngine<DataFacadeT>> search_engine_ptr;
 
   public:
@@ -58,28 +60,21 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
     {
         search_engine_ptr = std::make_shared<SearchEngine<DataFacadeT>>(facade);
 
-        descriptorTable.emplace("json", 0);
-        descriptorTable.emplace("gpx", 1);
+        descriptor_table.emplace("json", 0);
+        descriptor_table.emplace("gpx", 1);
+        // descriptor_table.emplace("geojson", 2);
     }
 
     virtual ~ViaRoutePlugin() {}
 
     const std::string GetDescriptor() const { return descriptor_string; }
 
-    void HandleRequest(const RouteParameters &routeParameters, http::Reply &reply)
+    void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
         // check number of parameters
-        if (2 > routeParameters.coordinates.size())
-        {
-            reply = http::Reply::StockReply(http::Reply::badRequest);
-            return;
-        }
-
-        RawRouteData raw_route;
-        raw_route.check_sum = facade->GetCheckSum();
-
-        if (std::any_of(begin(routeParameters.coordinates),
-                        end(routeParameters.coordinates),
+        if (2 > route_parameters.coordinates.size() ||
+            std::any_of(begin(route_parameters.coordinates),
+                        end(route_parameters.coordinates),
                         [&](FixedPointCoordinate coordinate)
                         { return !coordinate.isValid(); }))
         {
@@ -87,20 +82,22 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             return;
         }
 
-        for (const FixedPointCoordinate &coordinate : routeParameters.coordinates)
+        RawRouteData raw_route;
+        raw_route.check_sum = facade->GetCheckSum();
+        for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
         {
             raw_route.raw_via_node_coordinates.emplace_back(coordinate);
         }
 
         std::vector<PhantomNode> phantom_node_vector(raw_route.raw_via_node_coordinates.size());
-        const bool checksum_OK = (routeParameters.check_sum == raw_route.check_sum);
+        const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
 
         for (unsigned i = 0; i < raw_route.raw_via_node_coordinates.size(); ++i)
         {
-            if (checksum_OK && i < routeParameters.hints.size() &&
-                !routeParameters.hints[i].empty())
+            if (checksum_OK && i < route_parameters.hints.size() &&
+                !route_parameters.hints[i].empty())
             {
-                DecodeObjectFromBase64(routeParameters.hints[i], phantom_node_vector[i]);
+                DecodeObjectFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
                 if (phantom_node_vector[i].isValid(facade->GetNumberOfNodes()))
                 {
                     continue;
@@ -108,7 +105,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             }
             facade->FindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
                                                  phantom_node_vector[i],
-                                                 routeParameters.zoom_level);
+                                                 route_parameters.zoom_level);
         }
 
         PhantomNodes current_phantom_node_pair;
@@ -119,7 +116,10 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             raw_route.segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
 
-        if ((routeParameters.alternate_route) && (1 == raw_route.segment_end_coordinates.size()))
+        const bool is_alternate_requested = route_parameters.alternate_route;
+        const bool is_only_one_segment = (1 == raw_route.segment_end_coordinates.size());
+        TIMER_START(routing);
+        if (is_alternate_requested && is_only_one_segment)
         {
             search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
                                                 raw_route);
@@ -128,6 +128,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         {
             search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, raw_route);
         }
+        TIMER_STOP(routing);
+        SimpleLogger().Write() << "routing took " << TIMER_MSEC(routing) << "ms";
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
@@ -135,21 +137,15 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         }
         reply.status = http::Reply::ok;
 
-        if (!routeParameters.jsonp_parameter.empty())
-        {
-            reply.content.emplace_back(routeParameters.jsonp_parameter);
-            reply.content.emplace_back("(");
-        }
-
         DescriptorConfig descriptor_config;
 
-        auto iter = descriptorTable.find(routeParameters.output_format);
-        unsigned descriptor_type = (iter != descriptorTable.end() ? iter->second : 0);
+        auto iter = descriptor_table.find(route_parameters.output_format);
+        unsigned descriptor_type = (iter != descriptor_table.end() ? iter->second : 0);
 
-        descriptor_config.zoom_level = routeParameters.zoom_level;
-        descriptor_config.instructions = routeParameters.print_instructions;
-        descriptor_config.geometry = routeParameters.geometry;
-        descriptor_config.encode_geometry = routeParameters.compression;
+        descriptor_config.zoom_level = route_parameters.zoom_level;
+        descriptor_config.instructions = route_parameters.print_instructions;
+        descriptor_config.geometry = route_parameters.geometry;
+        descriptor_config.encode_geometry = route_parameters.compression;
 
         std::shared_ptr<BaseDescriptor<DataFacadeT>> descriptor;
         switch (descriptor_type)
@@ -158,10 +154,13 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         //     descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
         //     break;
         case 1:
-            descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>();
+            descriptor = std::make_shared<GPXDescriptor<DataFacadeT>>(facade);
             break;
+        // case 2:
+        //      descriptor = std::make_shared<GEOJSONDescriptor<DataFacadeT>>();
+        //      break;
         default:
-            descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>();
+            descriptor = std::make_shared<JSONDescriptor<DataFacadeT>>(facade);
             break;
         }
 
@@ -169,68 +168,10 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         phantom_nodes.source_phantom = raw_route.segment_end_coordinates.front().source_phantom;
         phantom_nodes.target_phantom = raw_route.segment_end_coordinates.back().target_phantom;
         descriptor->SetConfig(descriptor_config);
-        descriptor->Run(raw_route, phantom_nodes, facade, reply);
-
-        if (!routeParameters.jsonp_parameter.empty())
-        {
-            reply.content.emplace_back(")\n");
-        }
-        reply.headers.resize(3);
-        reply.headers[0].name = "Content-Length";
-
-        unsigned content_length = 0;
-        for (const std::string &snippet : reply.content)
-        {
-            content_length += snippet.length();
-        }
-        std::string tmp_string;
-        intToString(content_length, tmp_string);
-        reply.headers[0].value = tmp_string;
-
-        switch (descriptor_type)
-        {
-        case 0:
-            if (!routeParameters.jsonp_parameter.empty())
-            {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.js\"";
-            }
-            else
-            {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.json\"";
-            }
-
-            break;
-        case 1:
-            reply.headers[1].name = "Content-Type";
-            reply.headers[1].value = "application/gpx+xml; charset=UTF-8";
-            reply.headers[2].name = "Content-Disposition";
-            reply.headers[2].value = "attachment; filename=\"route.gpx\"";
-
-            break;
-        default:
-            if (!routeParameters.jsonp_parameter.empty())
-            {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.js\"";
-            }
-            else
-            {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"route.json\"";
-            }
-            break;
-        }
-        return;
+        TIMER_START(descriptor);
+        descriptor->Run(raw_route, phantom_nodes, reply);
+        TIMER_STOP(descriptor);
+        SimpleLogger().Write() << "descriptor took " << TIMER_MSEC(descriptor) << "ms";
     }
 
   private:
@@ -238,4 +179,4 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
     DataFacadeT *facade;
 };
 
-#endif /* VIAROUTEPLUGIN_H_ */
+#endif // VIA_ROUTE_PLUGIN_H

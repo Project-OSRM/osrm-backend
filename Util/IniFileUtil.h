@@ -25,33 +25,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef COMPUTE_ANGLE_H
-#define COMPUTE_ANGLE_H
+#ifndef INI_FILE_UTIL_H
+#define INI_FILE_UTIL_H
 
-#include "TrigonometryTables.h"
-#include "../Util/MercatorUtil.h"
-#include <osrm/Coordinate.h>
+#include "SimpleLogger.h"
 
-#include <boost/assert.hpp>
-#include <cmath>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/regex.hpp>
 
-/* Get angle of line segment (A,C)->(C,B), atan2 magic, formerly cosine theorem*/
-template <class CoordinateT>
-inline static double GetAngleBetweenThreeFixedPointCoordinates(const CoordinateT &A,
-                                                               const CoordinateT &C,
-                                                               const CoordinateT &B)
+#include <regex>
+#include <string>
+
+// support old capitalized option names by down-casing them with a regex replace
+inline std::string ReadIniFileAndLowerContents(const boost::filesystem::path &path)
 {
-    const double v1x = (A.lon - C.lon) / COORDINATE_PRECISION;
-    const double v1y = lat2y(A.lat / COORDINATE_PRECISION) - lat2y(C.lat / COORDINATE_PRECISION);
-    const double v2x = (B.lon - C.lon) / COORDINATE_PRECISION;
-    const double v2y = lat2y(B.lat / COORDINATE_PRECISION) - lat2y(C.lat / COORDINATE_PRECISION);
-
-    double angle = (atan2_lookup(v2y, v2x) - atan2_lookup(v1y, v1x)) * 180 / M_PI;
-    while (angle < 0)
-    {
-        angle += 360;
-    }
-    return angle;
+    boost::filesystem::fstream config_stream(path);
+    std::string ini_file_content((std::istreambuf_iterator<char>(config_stream)),
+                          std::istreambuf_iterator<char>());
+    boost::regex regex( "^([^=]*)" ); //match from start of line to '='
+    std::string format( "\\L$1\\E" ); //replace with downcased substring
+    return boost::regex_replace( ini_file_content, regex, format );
 }
 
-#endif // COMPUTE_ANGLE_H
+#endif // INI_FILE_UTIL_H

@@ -305,6 +305,12 @@ void EdgeBasedGraphFactory::CompressGeometry()
             continue;
         }
 
+        // check if v is a via node for a turn restriction, i.e. a 'directed' barrier node
+        if (m_restriction_map->IsNodeAViaNode(v))
+        {
+            continue;
+        }
+
         const bool reverse_edge_order =
             !(m_node_based_graph->GetEdgeData(m_node_based_graph->BeginEdges(v)).forward);
         const EdgeID forward_e2 = m_node_based_graph->BeginEdges(v) + reverse_edge_order;
@@ -438,9 +444,7 @@ void EdgeBasedGraphFactory::RenumberEdges()
     for (NodeID current_node = 0; current_node < m_node_based_graph->GetNumberOfNodes();
          ++current_node)
     {
-        for (EdgeID current_edge = m_node_based_graph->BeginEdges(current_node);
-             current_edge < m_node_based_graph->EndEdges(current_node);
-             ++current_edge)
+        for (EdgeID current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
         {
             EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
             if (!edge_data.forward)
@@ -483,10 +487,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
         BOOST_ASSERT(u != SPECIAL_NODEID);
         BOOST_ASSERT(u < m_node_based_graph->GetNumberOfNodes());
         p.printIncrement();
-        for (EdgeID e1 = m_node_based_graph->BeginEdges(u),
-                    last_edge = m_node_based_graph->EndEdges(u);
-             e1 < last_edge;
-             ++e1)
+        for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
         {
             const EdgeData &edge_data = m_node_based_graph->GetEdgeData(e1);
             if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
@@ -552,10 +553,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
 
     for (NodeID u = 0, end = m_node_based_graph->GetNumberOfNodes(); u < end; ++u)
     {
-        for (EdgeID e1 = m_node_based_graph->BeginEdges(u),
-                    last_edge_u = m_node_based_graph->EndEdges(u);
-             e1 < last_edge_u;
-             ++e1)
+        for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
         {
             if (!m_node_based_graph->GetEdgeData(e1).forward)
             {
@@ -568,10 +566,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 m_restriction_map->CheckForEmanatingIsOnlyTurn(u, v);
             const bool is_barrier_node = (m_barrier_nodes.find(v) != m_barrier_nodes.end());
 
-            for (EdgeID e2 = m_node_based_graph->BeginEdges(v),
-                        last_edge_v = m_node_based_graph->EndEdges(v);
-                 e2 < last_edge_v;
-                 ++e2)
+            for (EdgeID e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
             {
                 if (!m_node_based_graph->GetEdgeData(e2).forward)
                 {
@@ -628,8 +623,10 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                 {
                     distance += speed_profile.trafficSignalPenalty;
                 }
-                const int turn_penalty = GetTurnPenalty(u, v, w, lua_state);
-                TurnInstruction turn_instruction = AnalyzeTurn(u, v, w);
+                const double angle = GetAngleBetweenThreeFixedPointCoordinates(
+                m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
+                const int turn_penalty = GetTurnPenalty(angle, lua_state);
+                TurnInstruction turn_instruction = AnalyzeTurn(u, v, w, angle);
                 if (turn_instruction == TurnInstruction::UTurn)
                 {
                     distance += speed_profile.uTurnPenalty;
@@ -686,13 +683,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
     SimpleLogger().Write() << "  skips " << skipped_barrier_turns_counter << " turns over barriers";
 }
 
-int EdgeBasedGraphFactory::GetTurnPenalty(const NodeID u,
-                                          const NodeID v,
-                                          const NodeID w,
-                                          lua_State *lua_state) const
+int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const
 {
-    const double angle = GetAngleBetweenThreeFixedPointCoordinates(
-        m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
 
     if (speed_profile.has_turn_penalty_function)
     {
@@ -706,7 +698,10 @@ int EdgeBasedGraphFactory::GetTurnPenalty(const NodeID u,
     return 0;
 }
 
-TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w)
+TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u,
+                                                   const NodeID v,
+                                                   const NodeID w,
+                                                   double angle)
     const
 {
     if (u == w)
@@ -733,7 +728,7 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
     if (data1.roundabout && data2.roundabout)
     {
         // Is a turn possible? If yes, we stay on the roundabout!
-        if (1 == m_node_based_graph->GetOutDegree(v))
+        if (1 == m_node_based_graph->GetDirectedOutDegree(v))
         {
             // No turn possible.
             return TurnInstruction::NoTurn;
@@ -771,8 +766,6 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID u, const NodeID 
         }
     }
 
-    const double angle = GetAngleBetweenThreeFixedPointCoordinates(
-        m_node_info_list[u], m_node_info_list[v], m_node_info_list[w]);
     return TurnInstructionsClass::GetTurnDirectionOfInstruction(angle);
 }
 

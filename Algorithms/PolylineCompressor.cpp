@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "PolylineCompressor.h"
+#include "../Util/StringUtil.h"
+
+//TODO: return vector of start indices for each leg
 
 void PolylineCompressor::encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output)
     const
@@ -39,9 +42,9 @@ void PolylineCompressor::encodeVectorSignedNumber(std::vector<int> &numbers, std
             numbers[i] = ~(numbers[i]);
         }
     }
-    for (unsigned i = 0; i < end; ++i)
+    for (const int number: numbers)
     {
-        encodeNumber(numbers[i], output);
+        encodeNumber(number, output);
     }
 }
 
@@ -66,37 +69,36 @@ void PolylineCompressor::encodeNumber(int number_to_encode, std::string &output)
     }
 }
 
-void PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline,
-                                            std::string &output) const
+JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline) const
 {
+    std::string output;
     std::vector<int> delta_numbers;
-    output += "\"";
     if (!polyline.empty())
     {
         FixedPointCoordinate last_coordinate = polyline[0].location;
         delta_numbers.emplace_back(last_coordinate.lat);
         delta_numbers.emplace_back(last_coordinate.lon);
-        for (unsigned i = 1; i < polyline.size(); ++i)
+        for (const auto & segment : polyline)
         {
-            if (polyline[i].necessary)
+            if (segment.necessary)
             {
-                int lat_diff = polyline[i].location.lat - last_coordinate.lat;
-                int lon_diff = polyline[i].location.lon - last_coordinate.lon;
+                int lat_diff = segment.location.lat - last_coordinate.lat;
+                int lon_diff = segment.location.lon - last_coordinate.lon;
                 delta_numbers.emplace_back(lat_diff);
                 delta_numbers.emplace_back(lon_diff);
-                last_coordinate = polyline[i].location;
+                last_coordinate = segment.location;
             }
         }
         encodeVectorSignedNumber(delta_numbers, output);
     }
-    output += "\"";
+    JSON::String return_value(output);
+    return return_value;
 }
 
-void PolylineCompressor::printEncodedString(const std::vector<FixedPointCoordinate> &polyline,
-                                            std::string &output) const
+JSON::String PolylineCompressor::printEncodedString(const std::vector<FixedPointCoordinate> &polyline) const
 {
+    std::string output;
     std::vector<int> delta_numbers(2 * polyline.size());
-    output += "\"";
     if (!polyline.empty())
     {
         delta_numbers[0] = polyline[0].lat;
@@ -110,53 +112,40 @@ void PolylineCompressor::printEncodedString(const std::vector<FixedPointCoordina
         }
         encodeVectorSignedNumber(delta_numbers, output);
     }
-    output += "\"";
+    JSON::String return_value(output);
+    return return_value;
 }
 
-void PolylineCompressor::printUnencodedString(const std::vector<FixedPointCoordinate> &polyline,
-                                              std::string &output) const
+
+JSON::Array PolylineCompressor::printUnencodedString(const std::vector<FixedPointCoordinate> &polyline) const
 {
-    output += "[";
-    std::string tmp;
-    for (unsigned i = 0; i < polyline.size(); i++)
+    JSON::Array json_geometry_array;
+    for( const auto & coordinate : polyline)
     {
-        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].lat, tmp);
-        output += "[";
+        std::string tmp, output;
+        FixedPointCoordinate::convertInternalLatLonToString(coordinate.lat, tmp);
+        output += (tmp + ",");
+        FixedPointCoordinate::convertInternalLatLonToString(coordinate.lon, tmp);
         output += tmp;
-        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].lon, tmp);
-        output += ", ";
-        output += tmp;
-        output += "]";
-        if (i < polyline.size() - 1)
-        {
-            output += ",";
-        }
+        json_geometry_array.values.push_back(output);
     }
-    output += "]";
+    return json_geometry_array;
 }
 
-void PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline,
-                                              std::string &output) const
+JSON::Array PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
 {
-    output += "[";
-    std::string tmp;
-    for (unsigned i = 0; i < polyline.size(); i++)
+    JSON::Array json_geometry_array;
+    for( const auto & segment : polyline)
     {
-        if (!polyline[i].necessary)
+        if (segment.necessary)
         {
-            continue;
-        }
-        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].location.lat, tmp);
-        output += "[";
-        output += tmp;
-        FixedPointCoordinate::convertInternalLatLonToString(polyline[i].location.lon, tmp);
-        output += ", ";
-        output += tmp;
-        output += "]";
-        if (i < polyline.size() - 1)
-        {
-            output += ",";
+            std::string tmp, output;
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lat, tmp);
+            output += (tmp + ",");
+            FixedPointCoordinate::convertInternalLatLonToString(segment.location.lon, tmp);
+            output += tmp;
+            json_geometry_array.values.push_back(output);
         }
     }
-    output += "]";
+    return json_geometry_array;
 }

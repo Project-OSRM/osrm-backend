@@ -36,12 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/mman.h>
 #endif
 
-#include <boost/thread.hpp> // for timed join.
+#include <cstdlib>
 
 #include <signal.h>
 
+#include <chrono>
 #include <functional>
+#include <future>
 #include <iostream>
+#include <thread>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
@@ -139,7 +142,9 @@ int main(int argc, const char *argv[])
         }
         else
         {
-            boost::thread server_thread(std::bind(&Server::Run, routing_server));
+            std::packaged_task<void()> server_task(std::bind(&Server::Run, routing_server));
+            auto future = server_task.get_future();
+            std::thread server_thread(std::move(server_task));
 
 #ifndef _WIN32
             sigset_t wait_mask;
@@ -162,9 +167,16 @@ int main(int argc, const char *argv[])
             routing_server->Stop();
             SimpleLogger().Write() << "stopping threads";
 
-            if (!server_thread.timed_join(boost::posix_time::seconds(2)))
+            auto status = future.wait_for(std::chrono::seconds(2));
+
+            if (status != std::future_status::ready)
             {
                 SimpleLogger().Write(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
+                server_task.reset(); // just kill it
+            }
+            else
+            {
+                server_thread.join();
             }
         }
 

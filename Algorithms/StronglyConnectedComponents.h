@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/TurnInstructions.h"
 
 #include "../Util/SimpleLogger.h"
+#include "../Util/StdHashExtensions.h"
 
 #include <osrm/Coordinate.h>
 
@@ -59,17 +60,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-namespace std
-{
-template <> struct hash<std::pair<NodeID, NodeID>>
-{
-    size_t operator()(const std::pair<NodeID, NodeID> &pair) const
-    {
-        return std::hash<int>()(pair.first) ^ std::hash<int>()(pair.second);
-    }
-};
-}
 
 class TarjanSCC
 {
@@ -283,8 +273,7 @@ class TarjanSCC
                     ++index;
 
                     // Traverse outgoing edges
-                    EdgeID end_edge = m_node_based_graph->EndEdges(v);
-                    for (auto e2 = m_node_based_graph->BeginEdges(v); e2 < end_edge; ++e2)
+                    for (auto e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
                     {
                         const TarjanDynamicGraph::NodeIterator vprime =
                             m_node_based_graph->GetTarget(e2);
@@ -340,14 +329,17 @@ class TarjanSCC
                                << " many components, marking small components";
 
         // TODO/C++11: prime candidate for lambda function
-        unsigned size_one_counter = 0;
-        for (unsigned i = 0, end = component_size_vector.size(); i < end; ++i)
-        {
-            if (1 == component_size_vector[i])
-            {
-                ++size_one_counter;
-            }
-        }
+        // unsigned size_one_counter = 0;
+        // for (unsigned i = 0, end = component_size_vector.size(); i < end; ++i)
+        // {
+        //     if (1 == component_size_vector[i])
+        //     {
+        //         ++size_one_counter;
+        //     }
+        // }
+        unsigned size_one_counter = std::count_if(component_size_vector.begin(),
+                                                  component_size_vector.end(),
+                                                  [] (unsigned value) { return 1 == value;});
 
         SimpleLogger().Write() << "identified " << size_one_counter << " SCCs of size 1";
 
@@ -357,8 +349,7 @@ class TarjanSCC
         for (NodeID u = 0; u < last_u_node; ++u)
         {
             p.printIncrement();
-            EdgeID last_edge = m_node_based_graph->EndEdges(u);
-            for (auto e1 = m_node_based_graph->BeginEdges(u); e1 < last_edge; ++e1)
+            for (auto e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
             {
                 if (!m_node_based_graph->GetEdgeData(e1).reversedEdge)
                 {

@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef POLYLINECOMPRESSOR_H_
 #define POLYLINECOMPRESSOR_H_
 
+#include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/SegmentInformation.h"
-#include "../Util/StringUtil.h"
 
 #include <string>
 #include <vector>
@@ -42,17 +42,13 @@ class PolylineCompressor
     void encodeNumber(int number_to_encode, std::string &output) const;
 
   public:
-    void printEncodedString(const std::vector<SegmentInformation> &polyline,
-                            std::string &output) const;
+    JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
 
-    void printEncodedString(const std::vector<FixedPointCoordinate> &polyline,
-                            std::string &output) const;
+    JSON::String printEncodedString(const std::vector<FixedPointCoordinate> &polyline) const;
 
-    void printUnencodedString(const std::vector<FixedPointCoordinate> &polyline,
-                              std::string &output) const;
+    JSON::Array printUnencodedString(const std::vector<FixedPointCoordinate> &polyline) const;
 
-    void printUnencodedString(const std::vector<SegmentInformation> &polyline,
-                              std::string &output) const;
+    JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
 };
 
 #endif /* POLYLINECOMPRESSOR_H_ */

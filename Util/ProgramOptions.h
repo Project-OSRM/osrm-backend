@@ -29,33 +29,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PROGAM_OPTIONS_H
 
 #include "GitDescription.h"
+#include "IniFileUtil.h"
 #include "OSRMException.h"
 #include "SimpleLogger.h"
 
 #include <osrm/ServerPaths.h>
 
 #include <boost/any.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 #include <fstream>
-#include <regex>
 #include <string>
 
 const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
-
-// support old capitalized option names by down-casing them with a regex replace
-inline void PrepareConfigFile(const boost::filesystem::path &path, std::string &output)
-{
-    std::ifstream config_stream(path.string().c_str());
-    std::string input_str((std::istreambuf_iterator<char>(config_stream)),
-                          std::istreambuf_iterator<char>());
-    std::regex regex("^([^=]*)"); // match from start of line to '='
-    std::string format("\\L$1\\E"); // replace with downcased substring
-    output = std::regex_replace(input_str, regex, format);
-}
 
 // generate boost::program_options object for the routing part
 inline unsigned GenerateServerProgramOptions(const int argc,
@@ -166,12 +154,12 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         !option_variables.count("base"))
     {
         SimpleLogger().Write() << "Reading options from: " << path_iterator->second.string();
-        std::string config_str;
-        PrepareConfigFile(path_iterator->second, config_str);
-        std::stringstream config_stream(config_str);
+        std::string ini_file_contents = ReadIniFileAndLowerContents(path_iterator->second);
+        std::stringstream config_stream(ini_file_contents);
         boost::program_options::store(parse_config_file(config_stream, config_file_options),
                                       option_variables);
         boost::program_options::notify(option_variables);
+        return INIT_OK_START_ENGINE;
     }
 
     if (1 > requested_num_threads)

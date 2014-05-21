@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RequestHandler.h"
 #include "Http/Request.h"
 
+#include "../DataStructures/JSONContainer.h"
 #include "../Library/OSRM.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
@@ -85,18 +86,51 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
             reply = http::Reply::StockReply(http::Reply::badRequest);
             reply.content.clear();
             const int position = std::distance(request.begin(), it);
-            reply.content.push_back(
-                "{\"status\":400,\"status_message\":\"Query string malformed close to position ");
-            std::string tmp_position_string;
-            intToString(position, tmp_position_string);
-            reply.content.push_back(tmp_position_string);
-            reply.content.push_back("\"}");
+            JSON::Object json_result;
+            json_result.values["status"] = 400;
+            std::string tmp_position_string = IntToString(position);
+            std::string message = ("Query string malformed close to position " + IntToString(position));
+            json_result.values["status_message"] = message;
+            JSON::render(reply.content, json_result);
         }
         else
         {
             // parsing done, lets call the right plugin to handle the request
             BOOST_ASSERT_MSG(routing_machine != nullptr, "pointer not init'ed");
+
+            if (!route_parameters.jsonp_parameter.empty())
+            {
+                const std::string json_p = (route_parameters.jsonp_parameter + "(");
+                reply.content.insert(reply.content.end(), json_p.begin(), json_p.end());
+            }
             routing_machine->RunQuery(route_parameters, reply);
+
+            // set headers, still ugly and should be reworked
+            reply.headers.resize(3);
+            if ("gpx" == route_parameters.output_format)
+            {
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "application/gpx+xml; charset=UTF-8";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "attachment; filename=\"route.gpx\"";
+            }
+            else if (!route_parameters.jsonp_parameter.empty())
+            {
+                reply.content.push_back(')');
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "text/javascript";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "attachment; filename=\"response.js\"";
+            }
+            else
+            {
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "application/x-javascript";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "attachment; filename=\"response.json\"";
+            }
+            reply.headers[0].name = "Content-Length";
+            reply.headers[0].value = IntToString(reply.content.size());
             return;
         }
     }

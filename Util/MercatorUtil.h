@@ -28,20 +28,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MERCATOR_UTIL_H
 #define MERCATOR_UTIL_H
 
+#include "SimpleLogger.h"
+
 #include <cmath>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-inline double y2lat(const double a)
+inline float y2lat(const float a)
 {
-    return 180. / M_PI * (2. * atan(exp(a * M_PI / 180.)) - M_PI / 2.);
+    return 180.f / M_PI * (2.f * std::atan(std::exp(a * M_PI / 180.f)) - M_PI / 2.f);
 }
 
-inline double lat2y(const double a)
+inline float lat2y(const float a)
 {
-    return 180. / M_PI * log(tan(M_PI / 4. + a * (M_PI / 180.) / 2.));
+    return 180.f / M_PI * log(tan(M_PI / 4.f + a * (M_PI / 180.f) / 2.f));
 }
 
 #endif // MERCATOR_UTIL_H

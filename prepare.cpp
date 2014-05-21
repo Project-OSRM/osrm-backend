@@ -392,24 +392,24 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "Building node array";
         StaticGraph<EdgeData>::EdgeIterator edge = 0;
         StaticGraph<EdgeData>::EdgeIterator position = 0;
-        StaticGraph<EdgeData>::EdgeIterator lastEdge = edge;
+        StaticGraph<EdgeData>::EdgeIterator last_edge = edge;
 
         for (StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node)
         {
-            lastEdge = edge;
+            last_edge = edge;
             while ((edge < contracted_edge_count) && (contracted_edge_list[edge].source == node))
             {
                 ++edge;
             }
-            node_array[node].firstEdge = position; //=edge
-            position += edge - lastEdge;           // remove
+            node_array[node].first_edge = position; //=edge
+            position += edge - last_edge;           // remove
         }
 
         for (unsigned sentinel_counter = max_used_node_id; sentinel_counter != node_array.size();
              ++sentinel_counter)
         {
             // sentinel element, guarded against underflow
-            node_array[sentinel_counter].firstEdge = contracted_edge_count;
+            node_array[sentinel_counter].first_edge = contracted_edge_count;
         }
 
         unsigned node_array_size = node_array.size();
@@ -438,6 +438,7 @@ int main(int argc, char *argv[])
 
             // every target needs to be valid
             BOOST_ASSERT(current_edge.target < max_used_node_id);
+#ifndef NDEBUG
             if (current_edge.data.distance <= 0)
             {
                 SimpleLogger().Write(logWARNING)
@@ -450,6 +451,7 @@ int main(int argc, char *argv[])
                                                  << node_array.size() - 1;
                 return 1;
             }
+#endif
             hsgr_output_stream.write((char *)&current_edge,
                                      sizeof(StaticGraph<EdgeData>::EdgeArrayEntry));
             ++number_of_used_edges;
