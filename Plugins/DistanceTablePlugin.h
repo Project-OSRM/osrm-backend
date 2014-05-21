@@ -64,8 +64,6 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
-        SimpleLogger().Write() << "running DT plugin";
-
         // check number of parameters
         if (2 > route_parameters.coordinates.size())
         {
@@ -81,8 +79,6 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
                         [&](FixedPointCoordinate coordinate)
                         { return !coordinate.isValid(); }))
         {
-            SimpleLogger().Write() << "invalid coordinate";
-
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
@@ -90,13 +86,12 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
         {
             raw_route.raw_via_node_coordinates.emplace_back(coordinate);
-            SimpleLogger().Write() << "adding coordinate " << coordinate;
         }
 
         std::vector<PhantomNode> phantom_node_vector(raw_route.raw_via_node_coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
 
-        unsigned max_locations = std::min((std::size_t)25, raw_route.raw_via_node_coordinates.size());
+        unsigned max_locations = std::min((std::size_t)100, raw_route.raw_via_node_coordinates.size());
         for (unsigned i = 0; i < max_locations; ++i)
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
