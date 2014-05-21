@@ -461,7 +461,7 @@ class Contractor
                     ContractorThreadData *data = thread_data_list.getThreadData();
                     for (int position = range.begin(); position != range.end(); ++position)
                     {
-                        NodeID x = remaining_nodes[position].id;
+                        const NodeID x = remaining_nodes[position].id;
                         this->ContractNode<false>(data, x);
                     }
                 }
@@ -481,7 +481,7 @@ class Contractor
                     ContractorThreadData *data = thread_data_list.getThreadData();
                     for (int position = range.begin(); position != range.end(); ++position)
                     {
-                        NodeID x = remaining_nodes[position].id;
+                        const NodeID x = remaining_nodes[position].id;
                         this->DeleteIncomingEdges(data, x);
                     }
                 }
@@ -492,7 +492,7 @@ class Contractor
             {
                 for (const ContractorEdge &edge : data->inserted_edges)
                 {
-                    auto current_edge_ID = contractor_graph->FindEdge(edge.source, edge.target);
+                    const EdgeID current_edge_ID = contractor_graph->FindEdge(edge.source, edge.target);
                     if (current_edge_ID < contractor_graph->EndEdges(edge.source))
                     {
                         ContractorGraph::EdgeData &current_data =
