@@ -152,9 +152,9 @@ class StaticRTree
             return min_dist;
         }
 
-        inline double GetMinMaxDist(const FixedPointCoordinate &location) const
+        inline float GetMinMaxDist(const FixedPointCoordinate &location) const
         {
-            double min_max_dist = std::numeric_limits<double>::max();
+            float min_max_dist = std::numeric_limits<double>::max();
             // Get minmax distance to each of the four sides
             FixedPointCoordinate upper_left(max_lat, min_lon);
             FixedPointCoordinate upper_right(max_lat, max_lon);
