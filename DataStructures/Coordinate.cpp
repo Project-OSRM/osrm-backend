@@ -148,20 +148,20 @@ float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
     return sqrt(x * x + y * y) * earth_radius;
 }
 
-double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &point,
+float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &point,
                                                           const FixedPointCoordinate &segA,
                                                           const FixedPointCoordinate &segB)
 {
-    const double x = lat2y(point.lat / COORDINATE_PRECISION);
-    const double y = point.lon / COORDINATE_PRECISION;
-    const double a = lat2y(segA.lat / COORDINATE_PRECISION);
-    const double b = segA.lon / COORDINATE_PRECISION;
-    const double c = lat2y(segB.lat / COORDINATE_PRECISION);
-    const double d = segB.lon / COORDINATE_PRECISION;
-    double p, q, nY;
-    if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
+    const float x = lat2y(point.lat / COORDINATE_PRECISION);
+    const float y = point.lon / COORDINATE_PRECISION;
+    const float a = lat2y(segA.lat / COORDINATE_PRECISION);
+    const float b = segA.lon / COORDINATE_PRECISION;
+    const float c = lat2y(segB.lat / COORDINATE_PRECISION);
+    const float d = segB.lon / COORDINATE_PRECISION;
+    float p, q, nY;
+    if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
     {
-        const double m = (d - b) / (c - a); // slope
+        const float m = (d - b) / (c - a); // slope
         // Projection of (x,y) on line joining (a,b) and (c,d)
         p = ((x + (m * y)) + (m * m * a - m * b)) / (1. + m * m);
         q = b + m * (p - a);
@@ -179,16 +179,16 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
         nY = 0.;
     }
 
-    double r = (p - nY * a) / c;
+    float r = (p - nY * a) / c;
     if (std::isnan(r))
     {
         r = ((segB.lat == point.lat) && (segB.lon == point.lon)) ? 1. : 0.;
     }
-    else if (std::abs(r) <= std::numeric_limits<double>::epsilon())
+    else if (std::abs(r) <= std::numeric_limits<float>::epsilon())
     {
         r = 0.;
     }
-    else if (std::abs(r - 1.) <= std::numeric_limits<double>::epsilon())
+    else if (std::abs(r - 1.) <= std::numeric_limits<float>::epsilon())
     {
         r = 1.;
     }
@@ -210,30 +210,30 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
         nearest_location.lon = q * COORDINATE_PRECISION;
     }
     BOOST_ASSERT(nearest_location.isValid());
-    const double approximated_distance =
+    const float approximated_distance =
         FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
     BOOST_ASSERT(0. <= approximated_distance);
     return approximated_distance;
 }
 
-double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &coord_a,
+float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &coord_a,
                                                    const FixedPointCoordinate &coord_b,
                                                    const FixedPointCoordinate &query_location,
                                                    FixedPointCoordinate &nearest_location,
-                                                   double &r)
+                                                   float &r)
 {
     BOOST_ASSERT(query_location.isValid());
 
-    const double x = lat2y(query_location.lat / COORDINATE_PRECISION);
-    const double y = query_location.lon / COORDINATE_PRECISION;
-    const double a = lat2y(coord_a.lat / COORDINATE_PRECISION);
-    const double b = coord_a.lon / COORDINATE_PRECISION;
-    const double c = lat2y(coord_b.lat / COORDINATE_PRECISION);
-    const double d = coord_b.lon / COORDINATE_PRECISION;
-    double p, q /*,mX*/, nY;
-    if (std::abs(a - c) > std::numeric_limits<double>::epsilon())
+    const float x = lat2y(query_location.lat / COORDINATE_PRECISION);
+    const float y = query_location.lon / COORDINATE_PRECISION;
+    const float a = lat2y(coord_a.lat / COORDINATE_PRECISION);
+    const float b = coord_a.lon / COORDINATE_PRECISION;
+    const float c = lat2y(coord_b.lat / COORDINATE_PRECISION);
+    const float d = coord_b.lon / COORDINATE_PRECISION;
+    float p, q /*,mX*/, nY;
+    if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
     {
-        const double m = (d - b) / (c - a); // slope
+        const float m = (d - b) / (c - a); // slope
         // Projection of (x,y) on line joining (a,b) and (c,d)
         p = ((x + (m * y)) + (m * m * a - m * b)) / (1. + m * m);
         q = b + m * (p - a);
@@ -258,11 +258,11 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
     {
         r = ((coord_b.lat == query_location.lat) && (coord_b.lon == query_location.lon)) ? 1. : 0.;
     }
-    else if (std::abs(r) <= std::numeric_limits<double>::epsilon())
+    else if (std::abs(r) <= std::numeric_limits<float>::epsilon())
     {
         r = 0.;
     }
-    else if (std::abs(r - 1.) <= std::numeric_limits<double>::epsilon())
+    else if (std::abs(r - 1.) <= std::numeric_limits<float>::epsilon())
     {
         r = 1.;
     }
@@ -284,8 +284,8 @@ double FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordi
     BOOST_ASSERT(nearest_location.isValid());
 
     // TODO: Replace with euclidean approximation when k-NN search is done
-    // const double approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
-    const double approximated_distance =
+    // const float approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
+    const float approximated_distance =
         FixedPointCoordinate::ApproximateEuclideanDistance(query_location, nearest_location);
     BOOST_ASSERT(0. <= approximated_distance);
     return approximated_distance;
@@ -328,145 +328,53 @@ void FixedPointCoordinate::Output(std::ostream &out) const
     out << "(" << lat / COORDINATE_PRECISION << "," << lon / COORDINATE_PRECISION << ")";
 }
 
-double FixedPointCoordinate::GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B)
+float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B)
 {
-    double delta_long = DegreeToRadian(B.lon / COORDINATE_PRECISION - A.lon / COORDINATE_PRECISION);
-
-    const double lat1 = DegreeToRadian(A.lat / COORDINATE_PRECISION);
-    const double lat2 = DegreeToRadian(B.lat / COORDINATE_PRECISION);
-
-    const double y = sin(delta_long) * cos(lat2);
-    const double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
-    double result = RadianToDegree(atan2_lookup(y, x));
-    while (result < 0.)
+    const float delta_long = DegreeToRadian(B.lon / COORDINATE_PRECISION - A.lon / COORDINATE_PRECISION);
+    const float lat1 = DegreeToRadian(A.lat / COORDINATE_PRECISION);
+    const float lat2 = DegreeToRadian(B.lat / COORDINATE_PRECISION);
+    const float y = sin(delta_long) * cos(lat2);
+    const float x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(delta_long);
+    float result = RadianToDegree(std::atan2(y, x));
+    while (result < 0.f)
     {
-        result += 360.;
+        result += 360.f;
     }
 
-    while (result >= 360.)
+    while (result >= 360.f)
     {
-        result -= 360.;
+        result -= 360.f;
     }
     return result;
 }
 
-double FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
+float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
 {
-    double delta_long = DegreeToRadian(lon / COORDINATE_PRECISION - other.lon / COORDINATE_PRECISION);
+    const float delta_long = DegreeToRadian(lon / COORDINATE_PRECISION - other.lon / COORDINATE_PRECISION);
+    const float lat1 = DegreeToRadian(other.lat / COORDINATE_PRECISION);
+    const float lat2 = DegreeToRadian(lat / COORDINATE_PRECISION);
+    const float y = std::sin(delta_long) * std::cos(lat2);
+    const float x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(delta_long);
+    float result = RadianToDegree(std::atan2(y, x));
 
-    const double lat1 = DegreeToRadian(other.lat / COORDINATE_PRECISION);
-    const double lat2 = DegreeToRadian(lat / COORDINATE_PRECISION);
-
-    const double y = std::sin(delta_long) * std::cos(lat2);
-    const double x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(delta_long);
-    double result = RadianToDegree(atan2_lookup(y, x));
-
-    while (result < 0.)
+    while (result < 0.f)
     {
-        result += 360.;
+        result += 360.f;
     }
 
-    while (result >= 360.)
+    while (result >= 360.f)
     {
-        result -= 360.;
+        result -= 360.f;
     }
     return result;
 }
 
-double FixedPointCoordinate::DegreeToRadian(const double degree)
+float FixedPointCoordinate::DegreeToRadian(const float degree)
 {
-    return degree * (M_PI / 180.);
+    return degree * (M_PI / 180.f);
 }
 
-double FixedPointCoordinate::RadianToDegree(const double radian)
+float FixedPointCoordinate::RadianToDegree(const float radian) 
 {
-    return radian * (180. / M_PI);
+    return radian * (180.f / M_PI);
 }
-
-// double PointSegmentDistanceSquared( double px, double py,
-//                                     double p1x, double p1y,
-//                                     double p2x, double p2y,
-//                                     double& t,
-//                                     double& qx, double& qy)
-// {
-//     static const double kMinSegmentLenSquared = 0.00000001;  // adjust to suit.  If you use float, you'll probably want something like 0.000001f
-//     static const double kEpsilon = 1.0E-14;  // adjust to suit.  If you use floats, you'll probably want something like 1E-7f
-//     double dx = p2x - p1x;
-//     double dy = p2y - p1y;
-//     double dp1x = px - p1x;
-//     double dp1y = py - p1y;
-//     const double segLenSquared = (dx * dx) + (dy * dy);
-//     if (segLenSquared >= -kMinSegmentLenSquared && segLenSquared <= kMinSegmentLenSquared)
-//     {
-//         // segment is a point.
-//         qx = p1x;
-//         qy = p1y;
-//         t = 0.0;
-//         return ((dp1x * dp1x) + (dp1y * dp1y));
-//     }
-//     else
-//     {
-//         // Project a line from p to the segment [p1,p2].  By considering the line
-//         // extending the segment, parameterized as p1 + (t * (p2 - p1)),
-//         // we find projection of point p onto the line.
-//         // It falls where t = [(p - p1) . (p2 - p1)] / |p2 - p1|^2
-//         t = ((dp1x * dx) + (dp1y * dy)) / segLenSquared;
-//         if (t < kEpsilon)
-//         {
-//             // intersects at or to the "left" of first segment vertex (p1x, p1y).  If t is approximately 0.0, then
-//             // intersection is at p1.  If t is less than that, then there is no intersection (i.e. p is not within
-//             // the 'bounds' of the segment)
-//             if (t > -kEpsilon)
-//             {
-//                 // intersects at 1st segment vertex
-//                 t = 0.0;
-//             }
-//             // set our 'intersection' point to p1.
-//             qx = p1x;
-//             qy = p1y;
-//             // Note: If you wanted the ACTUAL intersection point of where the projected lines would intersect if
-//             // we were doing PointLineDistanceSquared, then qx would be (p1x + (t * dx)) and qy would be (p1y + (t * dy)).
-//         }
-//         else if (t > (1.0 - kEpsilon))
-//         {
-//             // intersects at or to the "right" of second segment vertex (p2x, p2y).  If t is approximately 1.0, then
-//             // intersection is at p2.  If t is greater than that, then there is no intersection (i.e. p is not within
-//             // the 'bounds' of the segment)
-//             if (t < (1.0 + kEpsilon))
-//             {
-//                 // intersects at 2nd segment vertex
-//                 t = 1.0;
-//             }
-//             // set our 'intersection' point to p2.
-//             qx = p2x;
-//             qy = p2y;
-//             // Note: If you wanted the ACTUAL intersection point of where the projected lines would intersect if
-//             // we were doing PointLineDistanceSquared, then qx would be (p1x + (t * dx)) and qy would be (p1y + (t * dy)).
-//         }
-//         else
-//         {
-//             // The projection of the point to the point on the segment that is perpendicular succeeded and the point
-//             // is 'within' the bounds of the segment.  Set the intersection point as that projected point.
-//             qx = p1x + (t * dx);
-//             qy = p1y + (t * dy);
-//         }
-//         // return the squared distance from p to the intersection point.  Note that we return the squared distance
-//         // as an optimization because many times you just need to compare relative distances and the squared values
-//         // works fine for that.  If you want the ACTUAL distance, just take the square root of this value.
-//         double dpqx = px - qx;
-//         double dpqy = py - qy;
-//         return ((dpqx * dpqx) + (dpqy * dpqy));
-//     }
-// }
-
-// public float DistanceOfPointToLine2(PointF p1, PointF p2, PointF p)
-// {
-//   //          (y1-y2)x + (x2-x1)y + (x1y2-x2y1)
-//   //d(P,L) = --------------------------------
-//   //         sqrt( (x2-x1)pow2 + (y2-y1)pow2 )
-
-//   double ch = (p1.Y - p2.Y) * p.X + (p2.X - p1.X) * p.Y + (p1.X * p2.Y - p2.X * p1.Y);
-//   double del = Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
-//   double d = ch / del;
-//   return (float)d;
-// }
