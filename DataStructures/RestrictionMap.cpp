@@ -43,11 +43,10 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
     // and all end-nodes
     for (auto &restriction : input_restrictions_list)
     {
-
+        m_restriction_start_nodes.insert(restriction.fromNode);
         m_no_turn_via_node_set.insert(restriction.viaNode);
 
-        std::pair<NodeID, NodeID> restriction_source =
-            std::make_pair(restriction.fromNode, restriction.viaNode);
+        std::pair<NodeID, NodeID> restriction_source = {restriction.fromNode, restriction.viaNode};
 
         unsigned index;
         auto restriction_iter = m_restriction_map.find(restriction_source);
@@ -74,7 +73,7 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
         }
         ++m_count;
         m_restriction_bucket_list.at(index)
-            .push_back(std::make_pair(restriction.toNode, restriction.flags.isOnly));
+            .emplace_back(restriction.toNode, restriction.flags.isOnly);
     }
 }
 
@@ -88,6 +87,11 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID u, const NodeID v
     BOOST_ASSERT(u != std::numeric_limits<unsigned>::max());
     BOOST_ASSERT(v != std::numeric_limits<unsigned>::max());
     BOOST_ASSERT(w != std::numeric_limits<unsigned>::max());
+
+    if (!RestrictionStartsAtNode(u))
+    {
+        return;
+    }
 
     // find all possible start edges
     // it is more efficent to get a (small) list of potential start edges
@@ -105,8 +109,7 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID u, const NodeID v
 
     for (const NodeID x : predecessors)
     {
-        const std::pair<NodeID, NodeID> restr_start = std::make_pair(x, u);
-        auto restriction_iterator = m_restriction_map.find(restr_start);
+        auto restriction_iterator = m_restriction_map.find({x, u});
         if (restriction_iterator == m_restriction_map.end())
         {
             continue;
@@ -133,9 +136,12 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID u, const NodeID v
     BOOST_ASSERT(v != std::numeric_limits<unsigned>::max());
     BOOST_ASSERT(w != std::numeric_limits<unsigned>::max());
 
-    const std::pair<NodeID, NodeID> old_start = std::make_pair(v, w);
+    if (!RestrictionStartsAtNode(u))
+    {
+        return;
+    }
 
-    auto restriction_iterator = m_restriction_map.find(old_start);
+    auto restriction_iterator = m_restriction_map.find({v, w});
     if (restriction_iterator != m_restriction_map.end())
     {
         const unsigned index = restriction_iterator->second;
@@ -143,8 +149,8 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID u, const NodeID v
         m_restriction_map.erase(restriction_iterator);
 
         // insert new restriction start (u,w) (point to index)
-        const std::pair<NodeID, NodeID> new_start = std::make_pair(u, w);
-        m_restriction_map.insert(std::make_pair(new_start, index));
+        RestrictionSource new_source = {u, w};
+        m_restriction_map.emplace(new_source, index);
     }
 }
 
@@ -157,9 +163,12 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID 
     BOOST_ASSERT(u != std::numeric_limits<unsigned>::max());
     BOOST_ASSERT(v != std::numeric_limits<unsigned>::max());
 
-    const std::pair<NodeID, NodeID> restriction_source = std::make_pair(u, v);
-    auto restriction_iter = m_restriction_map.find(restriction_source);
+    if (!RestrictionStartsAtNode(u))
+    {
+        return std::numeric_limits<unsigned>::max();
+    }
 
+    auto restriction_iter = m_restriction_map.find({u, v});
     if (restriction_iter != m_restriction_map.end())
     {
         const unsigned index = restriction_iter->second;
@@ -172,7 +181,6 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID 
             }
         }
     }
-
     return std::numeric_limits<unsigned>::max();
 }
 
@@ -186,9 +194,12 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID u, const NodeID v, con
     BOOST_ASSERT(v != std::numeric_limits<unsigned>::max());
     BOOST_ASSERT(w != std::numeric_limits<unsigned>::max());
 
-    const std::pair<NodeID, NodeID> restriction_source = std::make_pair(u, v);
-    auto restriction_iter = m_restriction_map.find(restriction_source);
+    if (!RestrictionStartsAtNode(u))
+    {
+        return false;
+    }
 
+    auto restriction_iter = m_restriction_map.find({u, v});
     if (restriction_iter != m_restriction_map.end())
     {
         const unsigned index = restriction_iter->second;
@@ -196,12 +207,20 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID u, const NodeID v, con
         for (const RestrictionTarget &restriction_target : bucket)
         {
             if ((w == restriction_target.first) && // target found
-                (!restriction_target.second)       // and not an only_-restr.
-                )
+                (!restriction_target.second))       // and not an only_-restr.
             {
                 return true;
             }
         }
     }
     return false;
+}
+
+bool RestrictionMap::RestrictionStartsAtNode(const NodeID node) const
+{
+    if (m_restriction_start_nodes.find(node) == m_restriction_start_nodes.end())
+    {
+        return false;
+    }
+    return true;
 }

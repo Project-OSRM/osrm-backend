@@ -56,6 +56,7 @@ class RestrictionMap
     unsigned size() { return m_count; }
 
   private:
+    bool RestrictionStartsAtNode(const NodeID node) const;
     typedef std::pair<NodeID, NodeID> RestrictionSource;
     typedef std::pair<NodeID, bool> RestrictionTarget;
     typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
@@ -67,6 +68,7 @@ class RestrictionMap
     std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     //! maps (start, via) -> bucket index
     std::unordered_map<RestrictionSource, unsigned> m_restriction_map;
+    std::unordered_set<NodeID> m_restriction_start_nodes;
     std::unordered_set<NodeID> m_no_turn_via_node_set;
 };
 
