@@ -64,7 +64,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
 
     if (!uuid_loaded.TestGraphUtil(uuid_orig))
     {
-        SimpleLogger().Write(logWARNING) << ".osrm was prepared with different build."
+        SimpleLogger().Write(logWARNING) << ".osrm was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
     }
 
@@ -287,7 +287,7 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
     hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
     if (!uuid_loaded.TestGraphUtil(uuid_orig))
     {
-        SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build. "
+        SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
     }
 
