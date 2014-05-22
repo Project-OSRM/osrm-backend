@@ -39,7 +39,7 @@ inline float y2lat(const float a)
 
 inline float lat2y(const float a)
 {
-    return 180.f / M_PI * log(tan(M_PI / 4.f + a * (M_PI / 180.f) / 2.f));
+    return 180.f / M_PI * std::log(std::tan(M_PI / 4.f + a * (M_PI / 180.f) / 2.f));
 }
 
 #endif // MERCATOR_UTIL_H
