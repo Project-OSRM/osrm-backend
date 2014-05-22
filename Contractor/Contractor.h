@@ -43,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
+#include <tbb/parallel_sort.h>
 
 #include <algorithm>
 #include <limits>
@@ -188,7 +189,7 @@ class Contractor
         }
         // clear input vector and trim the current set of edges with the well-known swap trick
         input_edge_list.clear();
-        sort(edges.begin(), edges.end());
+        tbb::parallel_sort(edges.begin(), edges.end());
         NodeID edge = 0;
         for (NodeID i = 0; i < edges.size();)
         {

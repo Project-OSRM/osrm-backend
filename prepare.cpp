@@ -55,6 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include <tbb/task_scheduler_init.h>
+#include <tbb/parallel_sort.h>
 
 typedef QueryEdge::EdgeData EdgeData;
 typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
@@ -68,8 +69,6 @@ std::vector<ImportEdge> edge_list;
 
 int main(int argc, char *argv[])
 {
-
-
     try
     {
         LogPolicy::GetInstance().Unmute();

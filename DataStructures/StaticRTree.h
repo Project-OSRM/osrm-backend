@@ -49,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/thread.hpp>
 
 #include <tbb/parallel_for.h>
+#include <tbb/parallel_sort.h>
 
 #include <algorithm>
 #include <array>
@@ -313,7 +314,7 @@ class StaticRTree
         leaf_node_file.write((char *)&m_element_count, sizeof(uint64_t));
 
         // sort the hilbert-value representatives
-        std::sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
+        tbb::parallel_sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
         std::vector<TreeNode> tree_nodes_in_level;
 
         // pack M elements into leaf node and write to leaf file
