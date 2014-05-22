@@ -49,6 +49,7 @@ typedef DynamicGraph<NodeBasedEdgeData> NodeBasedDynamicGraph;
 inline std::shared_ptr<NodeBasedDynamicGraph>
 NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge> &input_edge_list)
 {
+    static_assert(sizeof(NodeBasedEdgeData) == 16, "changing node based edge data size changes memory consumption");
     std::sort(input_edge_list.begin(), input_edge_list.end());
 
     // TODO: remove duplicate edges

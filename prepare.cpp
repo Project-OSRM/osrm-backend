@@ -252,6 +252,8 @@ int main(int argc, char *argv[])
 
         speed_profile.has_turn_penalty_function = lua_function_exists(lua_state, "turn_function");
 
+        static_assert(sizeof(ImportEdge) == 20,
+                      "changing ImportEdge type has influence on memory consumption!");
         std::vector<ImportEdge> edge_list;
         NodeID number_of_node_based_nodes =
             readBinaryOSRMGraphFromStream(in,
@@ -303,6 +305,9 @@ int main(int argc, char *argv[])
         unsigned number_of_edge_based_nodes = edge_based_graph_factor->GetNumberOfEdgeBasedNodes();
         BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
         DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
+        static_assert(sizeof(EdgeBasedEdge) == 16,
+                      "changing ImportEdge type has influence on memory consumption!");
+
         edge_based_graph_factor->GetEdgeBasedEdges(edgeBasedEdgeList);
         std::vector<EdgeBasedNode> node_based_edge_list;
         edge_based_graph_factor->GetEdgeBasedNodes(node_based_edge_list);
