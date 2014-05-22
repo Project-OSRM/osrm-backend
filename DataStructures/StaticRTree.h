@@ -48,6 +48,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/thread.hpp>
 
+#include <tbb/parallel_for.h>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -278,24 +280,33 @@ class StaticRTree
 
         HilbertCode get_hilbert_number;
 
-// generate auxiliary vector of hilbert-values
-#pragma omp parallel for schedule(guided)
-        for (uint64_t element_counter = 0; element_counter < m_element_count; ++element_counter)
-        {
-            input_wrapper_vector[element_counter].m_array_index = element_counter;
-            // Get Hilbert-Value for centroid in mercartor projection
-            DataT const &current_element = input_data_vector[element_counter];
-            FixedPointCoordinate current_centroid =
-                DataT::Centroid(FixedPointCoordinate(coordinate_list.at(current_element.u).lat,
-                                                     coordinate_list.at(current_element.u).lon),
-                                FixedPointCoordinate(coordinate_list.at(current_element.v).lat,
-                                                     coordinate_list.at(current_element.v).lon));
-            current_centroid.lat =
-                COORDINATE_PRECISION * lat2y(current_centroid.lat / COORDINATE_PRECISION);
+        // generate auxiliary vector of hilbert-values
+        tbb::parallel_for(tbb::blocked_range<uint64_t>(0, m_element_count),
+            [&input_data_vector,
+             &input_wrapper_vector,
+             &get_hilbert_number,
+             &coordinate_list](const tbb::blocked_range<uint64_t>& range)
+            {
+                for (uint64_t element_counter = range.begin(); element_counter != range.end(); ++element_counter)
+                {
+                    WrappedInputElement &current_wrapper = input_wrapper_vector[element_counter];
+                    current_wrapper.m_array_index = element_counter;
 
-            uint64_t current_hilbert_value = get_hilbert_number(current_centroid);
-            input_wrapper_vector[element_counter].m_hilbert_value = current_hilbert_value;
-        }
+                    DataT const &current_element = input_data_vector[element_counter];
+
+                    // Get Hilbert-Value for centroid in mercartor projection
+                    FixedPointCoordinate current_centroid =
+                        DataT::Centroid(FixedPointCoordinate(coordinate_list.at(current_element.u).lat,
+                                                             coordinate_list.at(current_element.u).lon),
+                                        FixedPointCoordinate(coordinate_list.at(current_element.v).lat,
+                                                             coordinate_list.at(current_element.v).lon));
+                    current_centroid.lat =
+                        COORDINATE_PRECISION * lat2y(current_centroid.lat / COORDINATE_PRECISION);
+
+                    current_wrapper.m_hilbert_value = get_hilbert_number(current_centroid);
+                }
+            }
+        );
 
         // open leaf file
         boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
@@ -383,17 +394,22 @@ class StaticRTree
         // reverse and renumber tree to have root at index 0
         std::reverse(m_search_tree.begin(), m_search_tree.end());
 
-#pragma omp parallel for schedule(guided)
-        for (uint32_t i = 0; i < m_search_tree.size(); ++i)
-        {
-            TreeNode &current_tree_node = m_search_tree[i];
-            for (uint32_t j = 0; j < current_tree_node.child_count; ++j)
+        uint32_t search_tree_size = m_search_tree.size();
+        tbb::parallel_for(tbb::blocked_range<uint32_t>(0, search_tree_size),
+            [this, &search_tree_size](const tbb::blocked_range<uint32_t>& range)
             {
-                const uint32_t old_id = current_tree_node.children[j];
-                const uint32_t new_id = m_search_tree.size() - old_id - 1;
-                current_tree_node.children[j] = new_id;
+                for (uint32_t i = range.begin(); i != range.end(); ++i)
+                {
+                    TreeNode &current_tree_node = this->m_search_tree[i];
+                    for (uint32_t j = 0; j < current_tree_node.child_count; ++j)
+                    {
+                        const uint32_t old_id = current_tree_node.children[j];
+                        const uint32_t new_id = search_tree_size - old_id - 1;
+                        current_tree_node.children[j] = new_id;
+                    }
+                }
             }
-        }
+        );
 
         // open tree file
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);

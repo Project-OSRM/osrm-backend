@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/OpenMPWrapper.h"
 #include <iostream>
+#include <atomic>
 
 class Percent
 {
@@ -61,20 +62,18 @@ class Percent
 
     void printIncrement()
     {
-#pragma omp atomic
         ++m_current_value;
         printStatus(m_current_value);
     }
 
     void printAddition(const unsigned addition)
     {
-#pragma omp atomic
         m_current_value += addition;
         printStatus(m_current_value);
     }
 
   private:
-    unsigned m_current_value;
+    std::atomic_uint m_current_value;
     unsigned m_max_value;
     unsigned m_percent_interval;
     unsigned m_next_threshold;

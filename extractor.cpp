@@ -42,11 +42,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdlib>
 
+#include <thread>
 #include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <unordered_map>
+
+#include <tbb/task_scheduler_init.h>
 
 ExtractorCallbacks *extractor_callbacks;
 UUID uuid;
@@ -60,7 +63,7 @@ int main(int argc, char *argv[])
             std::chrono::steady_clock::now();
 
         boost::filesystem::path config_file_path, input_path, profile_path;
-        int requested_num_threads;
+        unsigned int requested_num_threads;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -78,7 +81,7 @@ int main(int argc, char *argv[])
                                          &profile_path)->default_value("profile.lua"),
                                      "Path to LUA routing profile")(
             "threads,t",
-            boost::program_options::value<int>(&requested_num_threads)->default_value(8),
+            boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(8),
             "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be
@@ -163,17 +166,18 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        int real_num_threads = std::min(omp_get_num_procs(), requested_num_threads);
+        unsigned int hardware_threads = std::max((unsigned int) 1, std::thread::hardware_concurrency());
+        unsigned int real_num_threads = std::min(hardware_threads, requested_num_threads);
 
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
         SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested "
                                << requested_num_threads << ")";
 
+        tbb::task_scheduler_init init(real_num_threads);
+
         /*** Setup Scripting Environment ***/
         ScriptingEnvironment scripting_environment(profile_path.c_str());
-
-        omp_set_num_threads(real_num_threads);
 
         bool file_has_pbf_format(false);
         std::string output_file_name = input_path.string();

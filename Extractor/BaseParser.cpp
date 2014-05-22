@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BaseParser::BaseParser(ExtractorCallbacks *extractor_callbacks,
                        ScriptingEnvironment &scripting_environment)
     : extractor_callbacks(extractor_callbacks),
-      lua_state(scripting_environment.getLuaStateForThreadID(0)),
+      lua_state(scripting_environment.getLuaState()),
       scripting_environment(scripting_environment), use_turn_restrictions(true)
 {
     ReadUseRestrictionsSetting();
