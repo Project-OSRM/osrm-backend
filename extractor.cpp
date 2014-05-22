@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Extractor/XMLParser.h"
 #include "Util/GitDescription.h"
 #include "Util/MachineInfo.h"
-#include "Util/OpenMPWrapper.h"
 #include "Util/OSRMException.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
@@ -63,7 +62,7 @@ int main(int argc, char *argv[])
             std::chrono::steady_clock::now();
 
         boost::filesystem::path config_file_path, input_path, profile_path;
-        unsigned int requested_num_threads;
+        unsigned requested_num_threads;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -166,8 +165,8 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        unsigned int hardware_threads = std::max((unsigned int) 1, std::thread::hardware_concurrency());
-        unsigned int real_num_threads = std::min(hardware_threads, requested_num_threads);
+        unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
+        unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
 
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();

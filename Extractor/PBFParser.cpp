@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/ImportNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../Util/MachineInfo.h"
-#include "../Util/OpenMPWrapper.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"

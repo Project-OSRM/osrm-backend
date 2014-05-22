@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PERCENT_H
 #define PERCENT_H
 
-#include "../Util/OpenMPWrapper.h"
 #include <iostream>
 #include <atomic>
 

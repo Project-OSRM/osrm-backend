@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/XORFastHash.h"
 #include "../DataStructures/XORFastHashStorage.h"
-#include "../Util/OpenMPWrapper.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"

@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/GitDescription.h"
 #include "Util/GraphLoader.h"
 #include "Util/LuaUtil.h"
-#include "Util/OpenMPWrapper.h"
 #include "Util/OSRMException.h"
 
 #include "Util/SimpleLogger.h"
