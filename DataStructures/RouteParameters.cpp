@@ -76,7 +76,7 @@ void RouteParameters::setCompressionFlag(const bool flag) { compression = flag; 
 
 void RouteParameters::addCoordinate(const boost::fusion::vector<double, double> &transmitted_coordinates)
 {
-    int lat = COORDINATE_PRECISION * boost::fusion::at_c<0>(transmitted_coordinates);
-    int lon = COORDINATE_PRECISION * boost::fusion::at_c<1>(transmitted_coordinates);
+    const int lat = COORDINATE_PRECISION * boost::fusion::at_c<0>(transmitted_coordinates);
+    const int lon = COORDINATE_PRECISION * boost::fusion::at_c<1>(transmitted_coordinates);
     coordinates.emplace_back(lat, lon);
 }
