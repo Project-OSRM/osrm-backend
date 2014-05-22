@@ -39,8 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <unordered_set>
 
-
-// Make it efficent to look up if an edge is the start + via node of a TurnRestriction
+// Efficent look up if an edge is the start + via node of a TurnRestriction
 // EdgeBasedEdgeFactory decides by it if edges are inserted or geometry is compressed
 class RestrictionMap
 {
