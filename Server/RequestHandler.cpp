@@ -118,16 +118,16 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
             {
                 reply.content.push_back(')');
                 reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "text/javascript";
+                reply.headers[1].value = "text/javascript; charset=UTF-8";
                 reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"response.js\"";
+                reply.headers[2].value = "inline; filename=\"response.js\"";
             }
             else
             {
                 reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
+                reply.headers[1].value = "application/x-javascript; charset=UTF-8";
                 reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "attachment; filename=\"response.json\"";
+                reply.headers[2].value = "inline; filename=\"response.json\"";
             }
             reply.headers[0].name = "Content-Length";
             reply.headers[0].value = IntToString(reply.content.size());
