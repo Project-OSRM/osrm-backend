@@ -54,12 +54,15 @@ Feature: Via points
     
     @bug
     Scenario: Via points on ring of oneways
+    # xa it to avoid only having a single ring, which cna trigger edge cases
         Given the node map
+            | x |   |   |   |   |
             | a | 1 | 2 | 3 | b |
             | d |   |   |   | c |
 
         And the ways
             | nodes | oneway |
+            | xa    |        |
             | ab    | yes    |
             | bc    | yes    |
             | cd    | yes    |
