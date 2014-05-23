@@ -121,6 +121,10 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} date_time chrono zlib)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
+  add_definitions(-D_USE_MATH_DEFINES) # define M_PI
+  add_definitions(-D_WIN32_WINNT=0x0501)
 endif()
 
 # disable partitioning of LTO process when possible (fixes Debian issues)
