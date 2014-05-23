@@ -37,7 +37,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class ExtractionContainers
 {
+#ifndef _MSC_VER
     constexpr static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? std::numeric_limits<int>::max() : std::numeric_limits<unsigned>::max());
+#else
+    const static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? INT_MAX : UINT_MAX);
+#endif
   public:
     typedef stxxl::vector<NodeID> STXXLNodeIDVector;
     typedef stxxl::vector<ExternalMemoryNode> STXXLNodeVector;
