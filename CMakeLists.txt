@@ -242,6 +242,7 @@ if(WITH_TOOLS)
   find_package(GDAL)
   if(GDAL_FOUND)
     add_executable(osrm-components Tools/components.cpp)
+   target_link_libraries(osrm-components ${TBB_LIBRARIES})
     include_directories(${GDAL_INCLUDE_DIR})
     target_link_libraries(
       osrm-components

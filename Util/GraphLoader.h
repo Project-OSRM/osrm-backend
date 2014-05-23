@@ -41,6 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
+#include <tbb/parallel_sort.h>
+
 #include <cmath>
 
 #include <algorithm>
@@ -202,7 +204,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                is_split);
     }
 
-    std::sort(edge_list.begin(), edge_list.end());
+    tbb::parallel_sort(edge_list.begin(), edge_list.end());
     for (unsigned i = 1; i < edge_list.size(); ++i)
     {
         if ((edge_list[i - 1].target() == edge_list[i].target()) &&
