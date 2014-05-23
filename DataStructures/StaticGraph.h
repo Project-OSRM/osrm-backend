@@ -33,7 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <boost/assert.hpp>
 #include <boost/range/irange.hpp>
+
+#include <tbb/parallel_sort.h>
 
 #include <algorithm>
 #include <limits>
@@ -81,7 +84,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
     StaticGraph(const int nodes, std::vector<InputEdge> &graph)
     {
-        std::sort(graph.begin(), graph.end());
+        tbb::parallel_sort(graph.begin(), graph.end());
         number_of_nodes = nodes;
         number_of_edges = (EdgeIterator)graph.size();
         node_array.resize(number_of_nodes + 1);
@@ -106,7 +109,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
             {
                 edge_array[i].target = graph[edge].target;
                 edge_array[i].data = graph[edge].data;
-                assert(edge_array[i].data.distance > 0);
+                BOOST_ASSERT(edge_array[i].data.distance > 0);
                 edge++;
             }
         }
@@ -127,26 +130,27 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         {
             for (auto eid : GetAdjacentEdgeRange(u))
             {
-                const unsigned v = GetTarget(eid);
                 const EdgeData &data = GetEdgeData(eid);
-                if (data.shortcut)
+                if (!data.shortcut)
                 {
-                    const EdgeID first_edge_id = FindEdgeInEitherDirection(u, data.id);
-                    if (SPECIAL_EDGEID == first_edge_id)
-                    {
-                        SimpleLogger().Write(logWARNING) << "cannot find first segment of edge ("
-                                                         << u << "," << data.id << "," << v
-                                                         << "), eid: " << eid;
-                        BOOST_ASSERT(false);
-                    }
-                    const EdgeID second_edge_id = FindEdgeInEitherDirection(data.id, v);
-                    if (SPECIAL_EDGEID == second_edge_id)
-                    {
-                        SimpleLogger().Write(logWARNING) << "cannot find second segment of edge ("
-                                                         << u << "," << data.id << "," << v
-                                                         << "), eid: " << eid;
-                        BOOST_ASSERT(false);
-                    }
+                    continue;
+                }
+                const unsigned v = GetTarget(eid);
+                const EdgeID first_edge_id = FindEdgeInEitherDirection(u, data.id);
+                if (SPECIAL_EDGEID == first_edge_id)
+                {
+                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge ("
+                                                     << u << "," << data.id << "," << v
+                                                     << "), eid: " << eid;
+                    BOOST_ASSERT(false);
+                }
+                const EdgeID second_edge_id = FindEdgeInEitherDirection(data.id, v);
+                if (SPECIAL_EDGEID == second_edge_id)
+                {
+                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge ("
+                                                     << u << "," << data.id << "," << v
+                                                     << "), eid: " << eid;
+                    BOOST_ASSERT(false);
                 }
             }
             p.printIncrement();
