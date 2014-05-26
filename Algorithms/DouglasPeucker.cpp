@@ -72,8 +72,6 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         return;
     }
 
-    SimpleLogger().Write() << "input_geometry.size()=" << input_geometry.size();
-
     {
         BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
         unsigned left_border = 0;
@@ -83,7 +81,7 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         {
             if (!input_geometry[left_border].necessary)
             {
-              SimpleLogger().Write() << "broken interval [" << left_border << "," << right_border << "]";
+                SimpleLogger().Write() << "broken interval [" << left_border << "," << right_border << "]";
             }
             BOOST_ASSERT_MSG(input_geometry[left_border].necessary,
                              "left border must be necessary");
