@@ -562,7 +562,7 @@ class Contractor
     {
         Percent p(contractor_graph->GetNumberOfNodes());
         SimpleLogger().Write() << "Getting edges of minimized graph";
-        NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
+        const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
         if (contractor_graph->GetNumberOfNodes())
         {
             Edge new_edge;

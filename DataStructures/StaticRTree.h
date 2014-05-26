@@ -133,7 +133,7 @@ class StaticRTree
 
         inline float GetMinDist(const FixedPointCoordinate &location) const
         {
-            bool is_contained = Contains(location);
+            const bool is_contained = Contains(location);
             if (is_contained)
             {
                 return 0.;
@@ -734,18 +734,13 @@ class StaticRTree
             result_phantom_node.location.lat = input_coordinate.lat;
         }
 
-        float ratio = 0.f;
-
         if (found_a_nearest_edge)
         {
             const float distance_1 = FixedPointCoordinate::ApproximateEuclideanDistance(
                 current_start_coordinate, result_phantom_node.location);
-
             const float distance_2 = FixedPointCoordinate::ApproximateEuclideanDistance(
                 current_start_coordinate, current_end_coordinate);
-
-            ratio = distance_1 / distance_2;
-            ratio = std::min(1.f, ratio);
+            const float ratio = std::min(1.f, distance_1 / distance_2);
 
             if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
             {
@@ -772,7 +767,7 @@ class StaticRTree
             thread_local_rtree_stream->clear(std::ios::goodbit);
             SimpleLogger().Write(logDEBUG) << "Resetting stale filestream";
         }
-        uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
+        const uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
         thread_local_rtree_stream->seekg(seek_pos);
         thread_local_rtree_stream->read((char *)&result_node, sizeof(LeafNode));
     }
