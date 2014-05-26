@@ -210,7 +210,7 @@ class DescriptionFactory
         }
         via_indices.push_back(necessary_pieces);
         BOOST_ASSERT(via_indices.size() >= 2);
-        BOOST_ASSERT(0 != necessary_pieces);
+        // BOOST_ASSERT(0 != necessary_pieces || path_description.empty());
         return;
     }
 };
