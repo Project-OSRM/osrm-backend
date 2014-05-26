@@ -25,7 +25,6 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/UUID-Config.cmake
   DEPENDS
     ${CMAKE_SOURCE_DIR}/Util/UUID.cpp.in
-    ${CMAKE_SOURCE_DIR}/cmake/UUID-Config.cmake
   COMMENT "Configuring UUID.cpp"
   VERBATIM)
 
@@ -63,14 +62,13 @@ set(
   ${HttpGlob}
 )
 add_library(COORDLIB STATIC ${CoordinateGlob})
-add_library(OSRM ${OSRMSources} Util/GitDescription.cpp Util/UUID.cpp)
 add_library(UUID STATIC Util/UUID.cpp)
+add_library(OSRM ${OSRMSources} Util/GitDescription.cpp)
 add_library(GITDESCRIPTION STATIC Util/GitDescription.cpp)
 add_dependencies(UUID UUIDConfigure)
 add_dependencies(GITDESCRIPTION GIT_DESCRIPTION)
 
 add_executable(osrm-routed routed.cpp ${ServerGlob})
-set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS -DROUTED)
 add_executable(osrm-datastore datastore.cpp)
 
 # Check the release mode
@@ -130,10 +128,7 @@ set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    ${LTO_FLAGS} ${LTO_P
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
 
 # Activate C++11
-ADD_DEFINITIONS(
-    -std=c++11 # Or -std=c++0x
-    # Other flags
-)
+ADD_DEFINITIONS(-std=c++11)
 
 # Configuring other platform dependencies
 if(APPLE)
@@ -141,10 +136,6 @@ if(APPLE)
   message(STATUS "Set Architecture to x64 on OS X")
   exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
   string(REGEX MATCH "[0-9]+" DARWIN_VERSION ${DARWIN_VERSION})
-#  if(DARWIN_VERSION GREATER 12 AND NOT OSXLIBSTD)
-#    message(STATUS "Activating -std=c++11 flag for >= OS X 10.9")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-#  endif()
   if(OSXLIBSTD)
     message(STATUS "linking against ${OSXLIBSTD}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=${OSXLIBSTD}")
@@ -256,7 +247,7 @@ if(WITH_TOOLS)
   add_executable(osrm-unlock-all Tools/unlock_all_mutexes.cpp)
   target_link_libraries(osrm-unlock-all ${Boost_LIBRARIES} GITDESCRIPTION)
   if(UNIX AND NOT APPLE)
-      target_link_libraries(osrm-unlock-all rt)
+    target_link_libraries(osrm-unlock-all rt)
   endif()
 endif()
 
