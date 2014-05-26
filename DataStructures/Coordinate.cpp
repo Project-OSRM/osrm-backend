@@ -254,11 +254,11 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
     // not calculate the explicit values of m an n as we
     // are just interested in the ratio
-    if (std::isnan(r))
+    if (std::isnan(ratio))
     {
         ratio = ((coord_b.lat == query_location.lat) && (coord_b.lon == query_location.lon)) ? 1. : 0.;
     }
-    else if (std::abs(r) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio) <= std::numeric_limits<float>::epsilon())
     {
         ratio = 0.;
     }
