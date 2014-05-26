@@ -118,7 +118,6 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
 
         const bool is_alternate_requested = route_parameters.alternate_route;
         const bool is_only_one_segment = (1 == raw_route.segment_end_coordinates.size());
-        TIMER_START(routing);
         if (is_alternate_requested && is_only_one_segment)
         {
             search_engine_ptr->alternative_path(raw_route.segment_end_coordinates.front(),
@@ -128,8 +127,6 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         {
             search_engine_ptr->shortest_path(raw_route.segment_end_coordinates, raw_route);
         }
-        TIMER_STOP(routing);
-        SimpleLogger().Write() << "routing took " << TIMER_MSEC(routing) << "ms";
 
         if (INVALID_EDGE_WEIGHT == raw_route.shortest_path_length)
         {
@@ -168,10 +165,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
         phantom_nodes.source_phantom = raw_route.segment_end_coordinates.front().source_phantom;
         phantom_nodes.target_phantom = raw_route.segment_end_coordinates.back().target_phantom;
         descriptor->SetConfig(descriptor_config);
-        TIMER_START(descriptor);
         descriptor->Run(raw_route, phantom_nodes, reply);
-        TIMER_STOP(descriptor);
-        SimpleLogger().Write() << "descriptor took " << TIMER_MSEC(descriptor) << "ms";
     }
 
   private:
