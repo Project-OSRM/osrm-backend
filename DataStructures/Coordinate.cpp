@@ -49,13 +49,13 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon
 #ifndef NDEBUG
     if (0 != (std::abs(lat) >> 30))
     {
-        std::bitset<32> y(lat);
-        SimpleLogger().Write(logDEBUG) << "broken lat: " << lat << ", bits: " << y;
+        std::bitset<32> y_coordinate_vector(lat);
+        SimpleLogger().Write(logDEBUG) << "broken lat: " << lat << ", bits: " << y_coordinate_vector;
     }
     if (0 != (std::abs(lon) >> 30))
     {
-        std::bitset<32> x(lon);
-        SimpleLogger().Write(logDEBUG) << "broken lon: " << lon << ", bits: " << x;
+        std::bitset<32> x_coordinate_vector(lon);
+        SimpleLogger().Write(logDEBUG) << "broken lon: " << lon << ", bits: " << x_coordinate_vector;
     }
 #endif
 }
@@ -114,22 +114,22 @@ double FixedPointCoordinate::ApproximateDistance(const int lat1,
     return earth * cHarv;
 }
 
-double FixedPointCoordinate::ApproximateDistance(const FixedPointCoordinate &c1,
-                                                 const FixedPointCoordinate &c2)
+double FixedPointCoordinate::ApproximateDistance(const FixedPointCoordinate &coordinate_1,
+                                                 const FixedPointCoordinate &coordinate_2)
 {
-    return ApproximateDistance(c1.lat, c1.lon, c2.lat, c2.lon);
+    return ApproximateDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat, coordinate_2.lon);
 }
 
-float FixedPointCoordinate::ApproximateEuclideanDistance(const FixedPointCoordinate &c1,
-                                                 const FixedPointCoordinate &c2)
+float FixedPointCoordinate::ApproximateEuclideanDistance(const FixedPointCoordinate &coordinate_1,
+                                                         const FixedPointCoordinate &coordinate_2)
 {
-    return ApproximateEuclideanDistance(c1.lat, c1.lon, c2.lat, c2.lon);
+    return ApproximateEuclideanDistance(coordinate_1.lat, coordinate_1.lon, coordinate_2.lat, coordinate_2.lon);
 }
 
 float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
-                                                          const int lon1,
-                                                          const int lat2,
-                                                          const int lon2)
+                                                         const int lon1,
+                                                         const int lat2,
+                                                         const int lon2)
 {
     BOOST_ASSERT(lat1 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon1 != std::numeric_limits<int>::min());
@@ -142,15 +142,15 @@ float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
     const float float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
     const float float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
 
-    const float x = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.);
-    const float y = float_lat2 - float_lat1;
+    const float x_value = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.);
+    const float y_value = float_lat2 - float_lat1;
     const float earth_radius = 6372797.560856;
-    return sqrt(x * x + y * y) * earth_radius;
+    return sqrt(x_value * x_value + y_value * y_value) * earth_radius;
 }
 
 float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &point,
-                                                          const FixedPointCoordinate &segA,
-                                                          const FixedPointCoordinate &segB)
+                                                         const FixedPointCoordinate &segA,
+                                                         const FixedPointCoordinate &segB)
 {
     const float x = lat2y(point.lat / COORDINATE_PRECISION);
     const float y = point.lon / COORDINATE_PRECISION;
@@ -217,10 +217,10 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
 }
 
 float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &coord_a,
-                                                   const FixedPointCoordinate &coord_b,
-                                                   const FixedPointCoordinate &query_location,
-                                                   FixedPointCoordinate &nearest_location,
-                                                   float &r)
+                                                         const FixedPointCoordinate &coord_b,
+                                                         const FixedPointCoordinate &query_location,
+                                                         FixedPointCoordinate &nearest_location,
+                                                         float &ratio)
 {
     BOOST_ASSERT(query_location.isValid());
 
@@ -251,27 +251,27 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
         nY = 0.;
     }
 
-    r = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
+    ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
     // not calculate the explicit values of m an n as we
     // are just interested in the ratio
     if (std::isnan(r))
     {
-        r = ((coord_b.lat == query_location.lat) && (coord_b.lon == query_location.lon)) ? 1. : 0.;
+        ratio = ((coord_b.lat == query_location.lat) && (coord_b.lon == query_location.lon)) ? 1. : 0.;
     }
     else if (std::abs(r) <= std::numeric_limits<float>::epsilon())
     {
-        r = 0.;
+        ratio = 0.;
     }
-    else if (std::abs(r - 1.) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio - 1.) <= std::numeric_limits<float>::epsilon())
     {
-        r = 1.;
+        ratio = 1.;
     }
-    BOOST_ASSERT(!std::isnan(r));
-    if (r <= 0.)
+    BOOST_ASSERT(!std::isnan(ratio));
+    if (ratio <= 0.)
     {
         nearest_location = coord_a;
     }
-    else if (r >= 1.)
+    else if (ratio >= 1.)
     {
         nearest_location = coord_b;
     }
@@ -353,9 +353,9 @@ float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
     const float delta_long = DegreeToRadian(lon / COORDINATE_PRECISION - other.lon / COORDINATE_PRECISION);
     const float lat1 = DegreeToRadian(other.lat / COORDINATE_PRECISION);
     const float lat2 = DegreeToRadian(lat / COORDINATE_PRECISION);
-    const float y = std::sin(delta_long) * std::cos(lat2);
-    const float x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(delta_long);
-    float result = RadianToDegree(std::atan2(y, x));
+    const float y_value = std::sin(delta_long) * std::cos(lat2);
+    const float x_value = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(delta_long);
+    float result = RadianToDegree(std::atan2(y_value, x_value));
 
     while (result < 0.f)
     {
