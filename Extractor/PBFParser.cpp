@@ -298,8 +298,8 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
         std::string except_tag_string;
         const OSMPBF::Relation &inputRelation =
             thread_data->PBFprimitiveBlock.primitivegroup(thread_data->currentGroupID).relations(i);
-        bool isRestriction = false;
-        bool isOnlyRestriction = false;
+        bool is_restriction = false;
+        bool is_only_restriction = false;
         for (int k = 0, endOfKeys = inputRelation.keys_size(); k < endOfKeys; ++k)
         {
             const std::string &key =
@@ -310,7 +310,7 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
             {
                 if ("restriction" == val)
                 {
-                    isRestriction = true;
+                    is_restriction = true;
                 }
                 else
                 {
@@ -319,7 +319,7 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
             }
             if (("restriction" == key) && (val.find("only_") == 0))
             {
-                isOnlyRestriction = true;
+                is_only_restriction = true;
             }
             if ("except" == key)
             {
@@ -327,15 +327,15 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
             }
         }
 
-        if (isRestriction && ShouldIgnoreRestriction(except_tag_string))
+        if (is_restriction && ShouldIgnoreRestriction(except_tag_string))
         {
             continue;
         }
 
-        if (isRestriction)
+        if (is_restriction)
         {
             int64_t lastRef = 0;
-            InputRestrictionContainer currentRestrictionContainer(isOnlyRestriction);
+            InputRestrictionContainer current_restriction_container(is_only_restriction);
             for (int rolesIndex = 0, last_role = inputRelation.roles_sid_size();
                  rolesIndex < last_role;
                  ++rolesIndex)
@@ -357,27 +357,27 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
                         continue;
                     }
                     assert("via" == role);
-                    if (std::numeric_limits<unsigned>::max() != currentRestrictionContainer.viaNode)
+                    if (std::numeric_limits<unsigned>::max() != current_restriction_container.viaNode)
                     {
-                        currentRestrictionContainer.viaNode = std::numeric_limits<unsigned>::max();
+                        current_restriction_container.viaNode = std::numeric_limits<unsigned>::max();
                     }
-                    assert(std::numeric_limits<unsigned>::max() == currentRestrictionContainer.viaNode);
-                    currentRestrictionContainer.restriction.viaNode = lastRef;
+                    assert(std::numeric_limits<unsigned>::max() == current_restriction_container.viaNode);
+                    current_restriction_container.restriction.viaNode = lastRef;
                     break;
                 case 1: // way
                     assert("from" == role || "to" == role || "via" == role);
                     if ("from" == role)
                     {
-                        currentRestrictionContainer.fromWay = lastRef;
+                        current_restriction_container.fromWay = lastRef;
                     }
                     if ("to" == role)
                     {
-                        currentRestrictionContainer.toWay = lastRef;
+                        current_restriction_container.toWay = lastRef;
                     }
                     if ("via" == role)
                     {
-                        assert(currentRestrictionContainer.restriction.toNode == std::numeric_limits<unsigned>::max());
-                        currentRestrictionContainer.viaNode = lastRef;
+                        assert(current_restriction_container.restriction.toNode == std::numeric_limits<unsigned>::max());
+                        current_restriction_container.viaNode = lastRef;
                     }
                     break;
                 case 2: // relation, not used. relations relating to relations are evil.
@@ -390,7 +390,7 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
                     break;
                 }
             }
-            if (!extractor_callbacks->ProcessRestriction(currentRestrictionContainer))
+            if (!extractor_callbacks->ProcessRestriction(current_restriction_container))
             {
                 std::cerr << "[PBFParser] relation not parsed" << std::endl;
             }
