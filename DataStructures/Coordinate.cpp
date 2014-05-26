@@ -143,7 +143,7 @@ float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
     const float float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
 
     const float x = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.);
-    const float y = (float_lat2 - float_lat1);
+    const float y = float_lat2 - float_lat1;
     const float earth_radius = 6372797.560856;
     return sqrt(x * x + y * y) * earth_radius;
 }
@@ -374,7 +374,7 @@ float FixedPointCoordinate::DegreeToRadian(const float degree)
     return degree * (M_PI / 180.f);
 }
 
-float FixedPointCoordinate::RadianToDegree(const float radian) 
+float FixedPointCoordinate::RadianToDegree(const float radian)
 {
     return radian * (180.f / M_PI);
 }
