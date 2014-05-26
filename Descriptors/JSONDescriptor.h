@@ -115,7 +115,10 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         // for each unpacked segment add the leg to the description
         for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
         {
-            const int added_segments = DescribeLeg(raw_route.unpacked_path_segments[i],
+#ifndef NDEBUG
+            const int added_segments = 
+#endif
+            DescribeLeg(raw_route.unpacked_path_segments[i],
                                                    raw_route.segment_end_coordinates[i]);
             BOOST_ASSERT(0 < added_segments);
             description_factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom);
