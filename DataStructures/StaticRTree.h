@@ -646,7 +646,7 @@ class StaticRTree
                     LoadLeafFromDisk(current_tree_node.children[0], current_leaf_node);
                     for (uint32_t i = 0; i < current_leaf_node.object_count; ++i)
                     {
-                        DataT &current_edge = current_leaf_node.objects[i];
+                        const DataT &current_edge = current_leaf_node.objects[i];
                         if (ignore_tiny_components && current_edge.is_in_tiny_cc)
                         {
                             continue;
@@ -700,8 +700,8 @@ class StaticRTree
                     for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
                     {
                         const int32_t child_id = current_tree_node.children[i];
-                        TreeNode &child_tree_node = m_search_tree[child_id];
-                        RectangleT &child_rectangle = child_tree_node.minimum_bounding_rectangle;
+                        const TreeNode &child_tree_node = m_search_tree[child_id];
+                        const RectangleT &child_rectangle = child_tree_node.minimum_bounding_rectangle;
                         const float current_min_dist =
                             child_rectangle.GetMinDist(input_coordinate);
                         const float current_min_max_dist =
