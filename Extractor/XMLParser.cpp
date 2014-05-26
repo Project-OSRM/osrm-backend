@@ -46,7 +46,7 @@ XMLParser::XMLParser(const char *filename, ExtractorCallbacks *ec, ScriptingEnvi
     inputReader = inputReaderFactory(filename);
 }
 
-bool XMLParser::ReadHeader() { return (xmlTextReaderRead(inputReader) == 1); }
+bool XMLParser::ReadHeader() { return xmlTextReaderRead(inputReader) == 1; }
 bool XMLParser::Parse()
 {
     while (xmlTextReaderRead(inputReader) == 1)
