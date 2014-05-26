@@ -176,6 +176,9 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                 raw_route_data.alternative_path_length = INVALID_EDGE_WEIGHT;
                 return;
             }
+
+            search_from_1st_node = true;
+            search_from_2nd_node = true;
             if (SPECIAL_NODEID == middle1)
             {
                 search_from_1st_node = false;
@@ -244,7 +247,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                 }
             }
 
-            // remove one path if both legs end at the same segment
+            // remove the shorter path if both legs end at the same segment
             if (0 < current_leg)
             {
                 const NodeID start_id_of_leg1 = temporary_packed_leg1.front();
