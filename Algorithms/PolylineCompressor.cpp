@@ -95,43 +95,6 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
     return return_value;
 }
 
-JSON::String PolylineCompressor::printEncodedString(const std::vector<FixedPointCoordinate> &polyline) const
-{
-    std::string output;
-    std::vector<int> delta_numbers(2 * polyline.size());
-    if (!polyline.empty())
-    {
-        delta_numbers[0] = polyline[0].lat;
-        delta_numbers[1] = polyline[0].lon;
-        for (unsigned i = 1; i < polyline.size(); ++i)
-        {
-            int lat_diff = polyline[i].lat - polyline[i - 1].lat;
-            int lon_diff = polyline[i].lon - polyline[i - 1].lon;
-            delta_numbers[(2 * i)] = (lat_diff);
-            delta_numbers[(2 * i) + 1] = (lon_diff);
-        }
-        encodeVectorSignedNumber(delta_numbers, output);
-    }
-    JSON::String return_value(output);
-    return return_value;
-}
-
-
-JSON::Array PolylineCompressor::printUnencodedString(const std::vector<FixedPointCoordinate> &polyline) const
-{
-    JSON::Array json_geometry_array;
-    for( const auto & coordinate : polyline)
-    {
-        std::string tmp, output;
-        FixedPointCoordinate::convertInternalLatLonToString(coordinate.lat, tmp);
-        output += (tmp + ",");
-        FixedPointCoordinate::convertInternalLatLonToString(coordinate.lon, tmp);
-        output += tmp;
-        json_geometry_array.values.push_back(output);
-    }
-    return json_geometry_array;
-}
-
 JSON::Array PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
 {
     JSON::Array json_geometry_array;

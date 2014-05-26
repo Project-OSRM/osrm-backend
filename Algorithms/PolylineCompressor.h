@@ -44,10 +44,6 @@ class PolylineCompressor
   public:
     JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
 
-    JSON::String printEncodedString(const std::vector<FixedPointCoordinate> &polyline) const;
-
-    JSON::Array printUnencodedString(const std::vector<FixedPointCoordinate> &polyline) const;
-
     JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
 };
 
