@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
     }
     catch (std::exception &e)
     {
-        SimpleLogger().Write(logWARNING) << "Exception occured: " << e.what();
+        SimpleLogger().Write(logWARNING) << e.what();
         return 1;
     }
     return 0;
