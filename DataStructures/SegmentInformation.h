@@ -40,29 +40,31 @@ struct SegmentInformation
     FixedPointCoordinate location;
     NodeID name_id;
     unsigned duration;
-    double length;
+    float length;
     short bearing; // more than enough [0..3600] fits into 12 bits
     TurnInstruction turn_instruction;
-    bool necessary;
+    bool necessary:1;
+    bool is_via_location:1;
 
     explicit SegmentInformation(const FixedPointCoordinate &location,
                                 const NodeID name_id,
                                 const unsigned duration,
-                                const double length,
+                                const float length,
                                 const TurnInstruction turn_instruction,
-                                const bool necessary)
+                                const bool necessary,
+                                const bool is_via_location)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
-          turn_instruction(turn_instruction), necessary(necessary)
+          turn_instruction(turn_instruction), necessary(necessary), is_via_location(is_via_location)
     {
     }
 
     explicit SegmentInformation(const FixedPointCoordinate &location,
                                 const NodeID name_id,
                                 const unsigned duration,
-                                const double length,
+                                const float length,
                                 const TurnInstruction turn_instruction)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
-          turn_instruction(turn_instruction), necessary(turn_instruction != TurnInstruction::NoTurn)
+          turn_instruction(turn_instruction), necessary(turn_instruction != TurnInstruction::NoTurn), is_via_location(false)
     {
     }
 };
