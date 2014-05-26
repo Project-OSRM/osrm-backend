@@ -62,9 +62,7 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
     void SetConfig(const DescriptorConfig &c) { config = c; }
 
     // TODO: reorder parameters
-    void Run(const RawRouteData &raw_route,
-             const PhantomNodes &phantom_node_list,
-             http::Reply &reply)
+    void Run(const RawRouteData &raw_route, http::Reply &reply)
     {
         std::string header("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                            "<gpx creator=\"OSRM Routing Engine\" version=\"1.1\" "
@@ -81,7 +79,7 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
                                  (!raw_route.unpacked_path_segments.front().empty());
         if (found_route)
         {
-            AddRoutePoint(phantom_node_list.source_phantom.location, reply.content);
+            AddRoutePoint(raw_route.segment_end_coordinates.front().source_phantom.location, reply.content);
 
             for (const std::vector<PathData> &path_data_vector : raw_route.unpacked_path_segments)
             {
@@ -92,7 +90,7 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
                     AddRoutePoint(current_coordinate, reply.content);
                 }
             }
-            AddRoutePoint(phantom_node_list.target_phantom.location, reply.content);
+            AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location, reply.content);
 
         }
         std::string footer("</rte></gpx>");

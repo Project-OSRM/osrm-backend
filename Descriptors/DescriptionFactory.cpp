@@ -27,7 +27,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "DescriptionFactory.h"
 
-DescriptionFactory::DescriptionFactory() : entireLength(0) {}
+DescriptionFactory::DescriptionFactory() : entireLength(0)
+{
+    via_indices.push_back(0);
+}
+
+std::vector<unsigned> const & DescriptionFactory::GetViaIndices() const
+{
+    return via_indices;
+}
+
 
 void DescriptionFactory::SetStartSegment(const PhantomNode &source)
 {
@@ -39,7 +48,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target)
 {
     target_phantom = target;
     path_description.emplace_back(
-        target.location, target.name_id, 0, target.reverse_weight, TurnInstruction::NoTurn, true);
+        target.location, target.name_id, 0, target.reverse_weight, TurnInstruction::NoTurn, true, true);
 }
 
 void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,

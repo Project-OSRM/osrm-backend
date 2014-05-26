@@ -54,6 +54,8 @@ class DescriptionFactory
     double DegreeToRadian(const double degree) const;
     double RadianToDegree(const double degree) const;
 
+    std::vector<unsigned> via_indices;
+
   public:
     struct RouteSummary
     {
@@ -82,6 +84,7 @@ class DescriptionFactory
     void SetStartSegment(const PhantomNode &start_phantom);
     void SetEndSegment(const PhantomNode &start_phantom);
     JSON::Value AppendEncodedPolylineString(const bool return_encoded);
+    std::vector<unsigned> const & GetViaIndices() const;
 
     template <class DataFacadeT> void Run(const DataFacadeT *facade, const unsigned zoomLevel)
     {
@@ -190,14 +193,24 @@ class DescriptionFactory
         polyline_generalizer.Run(path_description, zoomLevel);
 
         // fix what needs to be fixed else
+        unsigned necessary_pieces = 0;
         for (unsigned i = 0; i < path_description.size() - 1 && path_description.size() >= 2; ++i)
         {
             if (path_description[i].necessary)
             {
+                if (path_description[i].is_via_location)
+                {
+                    via_indices.push_back(necessary_pieces);
+                }
+
                 const double angle = path_description[i+1].location.GetBearing(path_description[i].location);
                 path_description[i].bearing = angle * 10;
+                ++necessary_pieces;
             }
         }
+        via_indices.push_back(necessary_pieces);
+        BOOST_ASSERT(via_indices.size() >= 2);
+        BOOST_ASSERT(0 != necessary_pieces);
         return;
     }
 };

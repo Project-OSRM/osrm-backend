@@ -161,11 +161,8 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
             break;
         }
 
-        PhantomNodes phantom_nodes;
-        phantom_nodes.source_phantom = raw_route.segment_end_coordinates.front().source_phantom;
-        phantom_nodes.target_phantom = raw_route.segment_end_coordinates.back().target_phantom;
         descriptor->SetConfig(descriptor_config);
-        descriptor->Run(raw_route, phantom_nodes, reply);
+        descriptor->Run(raw_route, reply);
     }
 
   private:
