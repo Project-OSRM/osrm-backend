@@ -52,7 +52,7 @@ void PolylineCompressor::encodeNumber(int number_to_encode, std::string &output)
 {
     while (number_to_encode >= 0x20)
     {
-        int next_value = (0x20 | (number_to_encode & 0x1f)) + 63;
+        const int next_value = (0x20 | (number_to_encode & 0x1f)) + 63;
         output += static_cast<char>(next_value);
         if (92 == next_value)
         {
