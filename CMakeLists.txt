@@ -8,8 +8,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(GetGitRevisionDescription)
 git_describe(GIT_DESCRIPTION)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
 set(bitness 32)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(bitness 64)
