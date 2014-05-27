@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PolylineCompressor.h"
 #include "../Util/StringUtil.h"
 
-//TODO: return vector of start indices for each leg
-
 void PolylineCompressor::encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output)
     const
 {
