@@ -188,6 +188,8 @@ int main(int argc, char *argv[])
             if (pos != std::string::npos)
             {
                 file_has_pbf_format = true;
+            } else {
+                pos = output_file_name.find(".osm.xml");
             }
         }
         if (pos == std::string::npos)
