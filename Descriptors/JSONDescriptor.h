@@ -84,6 +84,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
+        description_factory.SetEndSegment(leg_phantoms.target_phantom);
         ++added_element_count;
         BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
         return added_element_count;
@@ -116,12 +117,11 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
         {
 #ifndef NDEBUG
-            const int added_segments = 
+            const int added_segments =
 #endif
             DescribeLeg(raw_route.unpacked_path_segments[i],
                                                    raw_route.segment_end_coordinates[i]);
             BOOST_ASSERT(0 < added_segments);
-            description_factory.SetEndSegment(raw_route.segment_end_coordinates[i].target_phantom);
         }
         description_factory.Run(facade, config.zoom_level);
 
