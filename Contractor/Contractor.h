@@ -187,7 +187,8 @@ class Contractor
             edges.push_back(new_edge);
             ++diter;
         }
-        // clear input vector and trim the current set of edges with the well-known swap trick
+        // clear input vector
+        edges.shrink_to_fit();
         input_edge_list.clear();
         tbb::parallel_sort(edges.begin(), edges.end());
         NodeID edge = 0;
@@ -416,7 +417,8 @@ class Contractor
                 // Replace old priorities array by new one
                 node_priorities.swap(new_node_priority);
                 // Delete old node_priorities vector
-                std::vector<float>().swap(new_node_priority);
+                new_node_priority.clear();
+                new_node_priority.shrink_to_fit();
                 // old Graph is removed
                 contractor_graph.reset();
 
@@ -526,7 +528,7 @@ class Contractor
             // remove contracted nodes from the pool
             number_of_contracted_nodes += last - first_independent_node;
             remaining_nodes.resize(first_independent_node);
-            std::vector<RemainingNodeData>(remaining_nodes).swap(remaining_nodes);
+            remaining_nodes.shrink_to_fit();
             //            unsigned maxdegree = 0;
             //            unsigned avgdegree = 0;
             //            unsigned mindegree = UINT_MAX;
