@@ -193,22 +193,21 @@ class DescriptionFactory
         polyline_generalizer.Run(path_description, zoomLevel);
 
         // fix what needs to be fixed else
-        unsigned necessary_pieces = 0;
+        unsigned necessary_pieces = 0; // a running index that counts the necessary pieces
         for (unsigned i = 0; i < path_description.size() - 1 && path_description.size() >= 2; ++i)
         {
             if (path_description[i].necessary)
             {
+                ++necessary_pieces;
                 if (path_description[i].is_via_location)
-                {
+                {   //mark the end of a leg
                     via_indices.push_back(necessary_pieces);
                 }
-
                 const double angle = path_description[i+1].location.GetBearing(path_description[i].location);
                 path_description[i].bearing = angle * 10;
-                ++necessary_pieces;
             }
         }
-        via_indices.push_back(necessary_pieces);
+        via_indices.push_back(necessary_pieces+1);
         BOOST_ASSERT(via_indices.size() >= 2);
         // BOOST_ASSERT(0 != necessary_pieces || path_description.empty());
         return;
