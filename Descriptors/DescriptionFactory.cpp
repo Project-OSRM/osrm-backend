@@ -38,17 +38,21 @@ std::vector<unsigned> const & DescriptionFactory::GetViaIndices() const
 }
 
 
-void DescriptionFactory::SetStartSegment(const PhantomNode &source)
+void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool traversed_in_reverse)
 {
     start_phantom = source;
-    AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn, source.forward_weight));
+    const EdgeWeight segment_duration = (!traversed_in_reverse ? source.forward_weight : source.reverse_weight);
+    AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration));
+    BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
-void DescriptionFactory::SetEndSegment(const PhantomNode &target)
+void DescriptionFactory::SetEndSegment(const PhantomNode &target, const bool traversed_in_reverse)
 {
     target_phantom = target;
+    const EdgeWeight segment_duration = (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     path_description.emplace_back(
-        target.location, target.name_id, 0, target.reverse_weight, TurnInstruction::NoTurn, true, true);
+        target.location, target.name_id, segment_duration, 0, TurnInstruction::NoTurn, true, true);
+    BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
 void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,

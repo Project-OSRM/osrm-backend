@@ -213,8 +213,7 @@ Feature: Estimation of travel time
             | 4    | 3  | ab    | 10s +-1 |
             | 4    | 2  | ab    | 20s +-1 |
             | 4    | 1  | ab    | 30s +-1 |
-    
-    @bug
+
     Scenario: Total travel time should match sum of times of individual ways
         Given a grid size of 1000 meters
         And the node map

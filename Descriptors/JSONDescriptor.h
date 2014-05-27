@@ -73,7 +73,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
     void SetConfig(const DescriptorConfig &c) { config = c; }
 
-    unsigned DescribeLeg(const std::vector<PathData> route_leg, const PhantomNodes &leg_phantoms)
+    unsigned DescribeLeg(const std::vector<PathData> route_leg, const PhantomNodes &leg_phantoms, const bool target_traversed_in_reverse)
     {
         unsigned added_element_count = 0;
         // Get all the coordinates for the computed route
@@ -84,7 +84,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
-        description_factory.SetEndSegment(leg_phantoms.target_phantom);
+        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse);
         ++added_element_count;
         BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
         return added_element_count;
@@ -109,7 +109,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         BOOST_ASSERT(raw_route.unpacked_path_segments.size() ==
                      raw_route.segment_end_coordinates.size());
 
-        description_factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom);
+        description_factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
+                                            raw_route.source_traversed_in_reverse.front());
         json_result.values["status"] = 0;
         json_result.values["status_message"] = "Found route between points";
 
@@ -120,7 +121,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             const int added_segments =
 #endif
             DescribeLeg(raw_route.unpacked_path_segments[i],
-                                                   raw_route.segment_end_coordinates[i]);
+                        raw_route.segment_end_coordinates[i],
+                        raw_route.target_traversed_in_reverse[i]);
             BOOST_ASSERT(0 < added_segments);
         }
         description_factory.Run(facade, config.zoom_level);
@@ -175,7 +177,9 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         if (INVALID_EDGE_WEIGHT != raw_route.alternative_path_length)
         {
             json_result.values["found_alternative"] = JSON::True();
-            alternate_description_factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom);
+            BOOST_ASSERT(!raw_route.alt_source_traversed_in_reverse.empty());
+            alternate_description_factory.SetStartSegment(raw_route.segment_end_coordinates.front().source_phantom,
+                                                          raw_route.alt_source_traversed_in_reverse.front());
             // Get all the coordinates for the computed route
             for (const PathData &path_data : raw_route.unpacked_alternative)
             {

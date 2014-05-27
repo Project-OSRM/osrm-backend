@@ -307,10 +307,10 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         {
             BOOST_ASSERT(!packed_shortest_path.empty());
             raw_route_data.unpacked_path_segments.resize(1);
-            raw_route_data.source_traversed_in_reverse =
-                (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id);
-            raw_route_data.target_traversed_in_reverse =
-                (packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_node_id);
+            raw_route_data.source_traversed_in_reverse.push_back(
+                (packed_shortest_path.front() != phantom_node_pair.source_phantom.forward_node_id));
+            raw_route_data.target_traversed_in_reverse.push_back(
+                (packed_shortest_path.back() != phantom_node_pair.target_phantom.forward_node_id));
 
             super::UnpackPath(
                 // -- packed input
@@ -334,16 +334,19 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
                                         v_t_middle,
                                         packed_alternate_path);
 
-            raw_route_data.source_traversed_in_reverse =
-                (packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id);
-            raw_route_data.target_traversed_in_reverse =
-                (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id);
+            raw_route_data.alt_source_traversed_in_reverse.push_back(
+                (packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id));
+            raw_route_data.alt_target_traversed_in_reverse.push_back(
+                (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id));
 
             // unpack the alternate path
             super::UnpackPath(
                 packed_alternate_path, phantom_node_pair, raw_route_data.unpacked_alternative);
 
             raw_route_data.alternative_path_length = length_of_via_path;
+            SimpleLogger().Write() << "length of via path: " << length_of_via_path << " & selected_via_node: " << selected_via_node;
+        } else {
+            BOOST_ASSERT(raw_route_data.alternative_path_length == INVALID_EDGE_WEIGHT);
         }
     }
 

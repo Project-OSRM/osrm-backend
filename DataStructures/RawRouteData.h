@@ -34,15 +34,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-#include <limits>
-
 #include <vector>
 
 struct PathData
 {
     PathData()
-        : node(std::numeric_limits<unsigned>::max()), name_id(std::numeric_limits<unsigned>::max()),
-          segment_duration(std::numeric_limits<unsigned>::max()),
+        : node(SPECIAL_NODEID), name_id(INVALID_EDGE_WEIGHT),
+          segment_duration(INVALID_EDGE_WEIGHT),
           turn_instruction(TurnInstruction::NoTurn)
     {
     }
@@ -63,20 +61,18 @@ struct RawRouteData
     std::vector<PathData> unpacked_alternative;
     std::vector<PhantomNodes> segment_end_coordinates;
     std::vector<FixedPointCoordinate> raw_via_node_coordinates;
+    std::vector<bool> source_traversed_in_reverse;
+    std::vector<bool> target_traversed_in_reverse;
+    std::vector<bool> alt_source_traversed_in_reverse;
+    std::vector<bool> alt_target_traversed_in_reverse;
     unsigned check_sum;
     int shortest_path_length;
     int alternative_path_length;
-    bool source_traversed_in_reverse;
-    bool target_traversed_in_reverse;
-    bool alt_source_traversed_in_reverse;
-    bool alt_target_traversed_in_reverse;
 
     RawRouteData()
-        : check_sum(std::numeric_limits<unsigned>::max()),
-          shortest_path_length(std::numeric_limits<int>::max()),
-          alternative_path_length(std::numeric_limits<int>::max()),
-          source_traversed_in_reverse(false), target_traversed_in_reverse(false),
-          alt_source_traversed_in_reverse(false), alt_target_traversed_in_reverse(false)
+        : check_sum(SPECIAL_NODEID),
+          shortest_path_length(INVALID_EDGE_WEIGHT),
+          alternative_path_length(INVALID_EDGE_WEIGHT)
     {
     }
 };

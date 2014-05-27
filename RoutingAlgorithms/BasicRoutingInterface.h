@@ -231,8 +231,7 @@ template <class DataFacadeT> class BasicRoutingInterface
                     BOOST_ASSERT(start_index <= end_index);
                     for (int i = start_index; i < end_index; ++i)
                     {
-                        unpacked_path.emplace_back(PathData{
-                            id_vector[i], name_index, TurnInstruction::NoTurn, 0});
+                        unpacked_path.emplace_back(id_vector[i], name_index, TurnInstruction::NoTurn, 0);
                     }
                     unpacked_path.back().turn_instruction = turn_instruction;
                     unpacked_path.back().segment_duration = ed.distance;

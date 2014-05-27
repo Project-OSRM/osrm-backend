@@ -81,8 +81,8 @@ class DescriptionFactory
     JSON::Value AppendUnencodedPolylineString() const;
     void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode &start_phantom);
-    void SetEndSegment(const PhantomNode &start_phantom);
+    void SetStartSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
+    void SetEndSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
     JSON::Value AppendEncodedPolylineString(const bool return_encoded);
     std::vector<unsigned> const & GetViaIndices() const;
 
@@ -155,6 +155,7 @@ class DescriptionFactory
             entireLength += path_description[i].length;
             segment_length += path_description[i].length;
             segment_duration += path_description[i].duration;
+            SimpleLogger().Write() << "length: " << path_description[i].length << ", duration: " << path_description[i].duration;
             path_description[segment_start_index].length = segment_length;
             path_description[segment_start_index].duration = segment_duration;
 
@@ -172,6 +173,7 @@ class DescriptionFactory
         {
             if (path_description.size() > 2)
             {
+                SimpleLogger().Write() << "removing last segment";
                 path_description.pop_back();
                 path_description.back().necessary = true;
                 path_description.back().turn_instruction = TurnInstruction::NoTurn;
@@ -182,6 +184,7 @@ class DescriptionFactory
         {
             if (path_description.size() > 2)
             {
+                SimpleLogger().Write() << "removing first segment";
                 path_description.erase(path_description.begin());
                 path_description.front().turn_instruction = TurnInstruction::HeadOn;
                 path_description.front().necessary = true;
