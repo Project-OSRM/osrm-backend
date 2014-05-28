@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Server.h"
 #include "../Util/SimpleLogger.h"
-#include "../Util/StringUtil.h"
 
 #include <zlib.h>
 
@@ -41,10 +40,9 @@ struct ServerFactory
     static Server *CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
     {
         SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
-        std::string port_stream = IntToString(ip_port);
-        unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
-        unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
-        return new Server(ip_address, port_stream, real_num_threads);
+        const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
+        const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
+        return new Server(ip_address, ip_port, real_num_threads);
     }
 };
 

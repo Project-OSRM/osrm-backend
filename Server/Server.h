@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "../Util/StringUtil.h"
+
 #include "Connection.h"
 #include "RequestHandler.h"
 
@@ -42,12 +44,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Server
 {
   public:
-    explicit Server(const std::string &address, const std::string &port, unsigned thread_pool_size)
+    explicit Server(const std::string &address, const int port, const unsigned thread_pool_size)
         : thread_pool_size(thread_pool_size), acceptor(io_service),
           new_connection(new http::Connection(io_service, request_handler)), request_handler()
     {
+        const std::string port_string = IntToString(port);
+
         boost::asio::ip::tcp::resolver resolver(io_service);
-        boost::asio::ip::tcp::resolver::query query(address, port);
+        boost::asio::ip::tcp::resolver::query query(address, port_string);
         boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 
         acceptor.open(endpoint.protocol());
