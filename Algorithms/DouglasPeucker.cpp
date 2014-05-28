@@ -104,17 +104,17 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         BOOST_ASSERT_MSG(input_geometry[pair.second].necessary, "right border must be necessary");
         BOOST_ASSERT_MSG(pair.second < input_geometry.size(), "right border outside of geometry");
         BOOST_ASSERT_MSG(pair.first < pair.second, "left border on the wrong side");
-        double max_distance = std::numeric_limits<double>::min();
+        float max_distance = std::numeric_limits<float>::min();
 
         unsigned farthest_element_index = pair.second;
         // find index idx of element with max_distance
         for (unsigned i = pair.first + 1; i < pair.second; ++i)
         {
-            const double temp_dist = FixedPointCoordinate::ComputePerpendicularDistance(
+            const float temp_dist = FixedPointCoordinate::ComputePerpendicularDistance(
                 input_geometry[i].location,
                 input_geometry[pair.first].location,
                 input_geometry[pair.second].location);
-            const double distance = std::abs(temp_dist);
+            const float distance = std::abs(temp_dist);
             if (distance > douglas_peucker_thresholds[zoom_level] && distance > max_distance)
             {
                 farthest_element_index = i;

@@ -44,15 +44,11 @@ struct SegmentInformation;
 class DouglasPeucker
 {
   private:
-    std::vector<double> douglas_peucker_thresholds;
+    std::vector<float> douglas_peucker_thresholds;
 
     typedef std::pair<unsigned, unsigned> GeometryRange;
     // Stack to simulate the recursion
     std::stack<GeometryRange> recursion_stack;
-
-    double ComputeDistance(const FixedPointCoordinate &point,
-                           const FixedPointCoordinate &segA,
-                           const FixedPointCoordinate &segB) const;
 
   public:
     DouglasPeucker();
