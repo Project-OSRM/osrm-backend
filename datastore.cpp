@@ -98,40 +98,25 @@ int main(const int argc, const char *argv[])
         {
             SimpleLogger().Write() << "spring-cleaning all shared memory regions";
             // find all existing shmem regions and remove them.
-            if (SharedMemory::RegionExists(DATA_1))
+            if (SharedMemory::RegionExists(DATA_1) && !SharedMemory::Remove(DATA_1))
             {
-                if (!SharedMemory::Remove(DATA_1))
-                {
-                    SimpleLogger().Write(logWARNING) << "could not delete DATA_1";
-                }
+                SimpleLogger().Write(logWARNING) << "could not delete DATA_1";
             }
-            if (SharedMemory::RegionExists(LAYOUT_1))
+            if (SharedMemory::RegionExists(LAYOUT_1) && !SharedMemory::Remove(LAYOUT_1))
             {
-                if (!SharedMemory::Remove(LAYOUT_1))
-                {
-                    SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_1";
-                }
+                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_1";
             }
-            if (SharedMemory::RegionExists(DATA_2))
+            if (SharedMemory::RegionExists(DATA_2) && !SharedMemory::Remove(DATA_2))
             {
-                if (!SharedMemory::Remove(DATA_2))
-                {
-                    SimpleLogger().Write(logWARNING) << "could not delete DATA_2";
-                }
+                SimpleLogger().Write(logWARNING) << "could not delete DATA_2";
             }
-            if (SharedMemory::RegionExists(LAYOUT_2))
+            if (SharedMemory::RegionExists(LAYOUT_2) && !SharedMemory::Remove(LAYOUT_2))
             {
-                if (!SharedMemory::Remove(LAYOUT_2))
-                {
-                    SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_2";
-                }
+                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_2";
             }
-            if (SharedMemory::RegionExists(CURRENT_REGIONS))
+            if (SharedMemory::RegionExists(CURRENT_REGIONS) && !SharedMemory::Remove(CURRENT_REGIONS))
             {
-                if (!SharedMemory::Remove(CURRENT_REGIONS))
-                {
-                    SimpleLogger().Write(logWARNING) << "could not delete CURRENT_REGIONS";
-                }
+                SimpleLogger().Write(logWARNING) << "could not delete CURRENT_REGIONS";
             }
             return 0;
         }
