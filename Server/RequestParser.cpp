@@ -36,11 +36,11 @@ RequestParser::RequestParser() : state_(method_start) {}
 void RequestParser::Reset() { state_ = method_start; }
 
 boost::tuple<boost::tribool, char *>
-RequestParser::Parse(Request &req, char *begin, char *end, http::CompressionType *compressionType)
+RequestParser::Parse(Request &req, char *begin, char *end, http::CompressionType *compression_type)
 {
     while (begin != end)
     {
-        boost::tribool result = consume(req, *begin++, compressionType);
+        boost::tribool result = consume(req, *begin++, compression_type);
         if (result || !result)
         {
             return boost::make_tuple(result, begin);
@@ -51,7 +51,7 @@ RequestParser::Parse(Request &req, char *begin, char *end, http::CompressionType
 }
 
 boost::tribool
-RequestParser::consume(Request &req, char input, http::CompressionType *compressionType)
+RequestParser::consume(Request &req, char input, http::CompressionType *compression_type)
 {
     switch (state_)
     {
@@ -177,11 +177,11 @@ RequestParser::consume(Request &req, char input, http::CompressionType *compress
             /* giving gzip precedence over deflate */
             if (header.value.find("deflate") != std::string::npos)
             {
-                *compressionType = deflateRFC1951;
+                *compression_type = deflateRFC1951;
             }
             if (header.value.find("gzip") != std::string::npos)
             {
-                *compressionType = gzipRFC1952;
+                *compression_type = gzipRFC1952;
             }
         }
 
