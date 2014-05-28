@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <cctype>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 // precision:  position after decimal point
