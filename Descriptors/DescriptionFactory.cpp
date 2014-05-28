@@ -41,7 +41,7 @@ std::vector<unsigned> const & DescriptionFactory::GetViaIndices() const
 void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool traversed_in_reverse)
 {
     start_phantom = source;
-    const EdgeWeight segment_duration = (!traversed_in_reverse ? source.forward_weight : source.reverse_weight);
+    const EdgeWeight segment_duration = (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
     AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
