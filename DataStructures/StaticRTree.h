@@ -618,7 +618,7 @@ class StaticRTree
         float min_max_dist = std::numeric_limits<float>::max();
         bool found_a_nearest_edge = false;
 
-        FixedPointCoordinate nearest, current_start_coordinate, current_end_coordinate;
+        FixedPointCoordinate nearest, current_source_coordinate, current_target_coordinate;
 
         // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
@@ -683,12 +683,12 @@ class StaticRTree
                                 current_edge.fwd_segment_position;
 
                             result_phantom_node.location = nearest;
-                            current_start_coordinate.lat =
+                            current_source_coordinate.lat =
                                 m_coordinate_list->at(current_edge.u).lat;
-                            current_start_coordinate.lon =
+                            current_source_coordinate.lon =
                                 m_coordinate_list->at(current_edge.u).lon;
-                            current_end_coordinate.lat = m_coordinate_list->at(current_edge.v).lat;
-                            current_end_coordinate.lon = m_coordinate_list->at(current_edge.v).lon;
+                            current_target_coordinate.lat = m_coordinate_list->at(current_edge.v).lat;
+                            current_target_coordinate.lon = m_coordinate_list->at(current_edge.v).lon;
                             nearest_edge = current_edge;
                             found_a_nearest_edge = true;
                         }
@@ -737,9 +737,9 @@ class StaticRTree
         if (found_a_nearest_edge)
         {
             const float distance_1 = FixedPointCoordinate::ApproximateEuclideanDistance(
-                current_start_coordinate, result_phantom_node.location);
+                current_source_coordinate, result_phantom_node.location);
             const float distance_2 = FixedPointCoordinate::ApproximateEuclideanDistance(
-                current_start_coordinate, current_end_coordinate);
+                current_source_coordinate, current_target_coordinate);
             const float ratio = std::min(1.f, distance_1 / distance_2);
 
             if (SPECIAL_NODEID != result_phantom_node.forward_node_id)
