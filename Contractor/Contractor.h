@@ -374,8 +374,8 @@ class Contractor
                 // walk over all nodes
                 for (unsigned i = 0; i < contractor_graph->GetNumberOfNodes(); ++i)
                 {
-                    const NodeID start = i;
-                    for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(start))
+                    const NodeID source = i;
+                    for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
                     {
                         ContractorGraph::EdgeData &data =
                             contractor_graph->GetEdgeData(current_edge);
@@ -384,7 +384,7 @@ class Contractor
                         {
                             // Save edges of this node w/o renumbering.
                             temporary_storage.WriteToSlot(
-                                edge_storage_slot, (char *)&start, sizeof(NodeID));
+                                edge_storage_slot, (char *)&source, sizeof(NodeID));
                             temporary_storage.WriteToSlot(
                                 edge_storage_slot, (char *)&target, sizeof(NodeID));
                             temporary_storage.WriteToSlot(edge_storage_slot,
@@ -397,12 +397,12 @@ class Contractor
                             // node is not yet contracted.
                             // add (renumbered) outgoing edges to new DynamicGraph.
                             ContractorEdge new_edge;
-                            new_edge.source = new_node_id_from_orig_id_map[start];
+                            new_edge.source = new_node_id_from_orig_id_map[source];
                             new_edge.target = new_node_id_from_orig_id_map[target];
                             new_edge.data = data;
                             new_edge.data.is_original_via_node_ID = true;
-                            BOOST_ASSERT_MSG(UINT_MAX != new_node_id_from_orig_id_map[start],
-                                             "new start id not resolveable");
+                            BOOST_ASSERT_MSG(UINT_MAX != new_node_id_from_orig_id_map[source],
+                                             "new source id not resolveable");
                             BOOST_ASSERT_MSG(UINT_MAX != new_node_id_from_orig_id_map[target],
                                              "new target id not resolveable");
                             new_edge_set.push_back(new_edge);
@@ -612,18 +612,18 @@ class Contractor
         BOOST_ASSERT(0 == orig_node_id_to_new_id_map.capacity());
         TemporaryStorage &temporary_storage = TemporaryStorage::GetInstance();
         // loads edges of graph before renumbering, no need for further numbering action.
-        NodeID start;
+        NodeID source;
         NodeID target;
         ContractorGraph::EdgeData data;
 
         Edge restored_edge;
         for (unsigned i = 0; i < temp_edge_counter; ++i)
         {
-            temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&start, sizeof(NodeID));
+            temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&source, sizeof(NodeID));
             temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&target, sizeof(NodeID));
             temporary_storage.ReadFromSlot(
                 edge_storage_slot, (char *)&data, sizeof(ContractorGraph::EdgeData));
-            restored_edge.source = start;
+            restored_edge.source = source;
             restored_edge.target = target;
             restored_edge.data.distance = data.distance;
             restored_edge.data.shortcut = data.shortcut;
