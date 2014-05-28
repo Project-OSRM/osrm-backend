@@ -45,13 +45,13 @@ struct PathData
     {
     }
 
-    PathData(NodeID node, unsigned name_id, TurnInstruction turn_instruction, unsigned segment_duration)
+    PathData(NodeID node, unsigned name_id, TurnInstruction turn_instruction, EdgeWeight segment_duration)
         : node(node), name_id(name_id), segment_duration(segment_duration), turn_instruction(turn_instruction)
     {
     }
     NodeID node;
     unsigned name_id;
-    unsigned segment_duration;
+    EdgeWeight segment_duration;
     TurnInstruction turn_instruction;
 };
 
