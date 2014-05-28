@@ -113,20 +113,20 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
                 reply.headers[2].name = "Content-Disposition";
                 reply.headers[2].value = "attachment; filename=\"route.gpx\"";
             }
-            else if (!route_parameters.jsonp_parameter.empty())
+            else if (route_parameters.jsonp_parameter.empty())
+            {
+                reply.headers[1].name = "Content-Type";
+                reply.headers[1].value = "application/x-javascript; charset=UTF-8";
+                reply.headers[2].name = "Content-Disposition";
+                reply.headers[2].value = "inline; filename=\"response.json\"";
+            }
+            else
             {
                 reply.content.push_back(')');
                 reply.headers[1].name = "Content-Type";
                 reply.headers[1].value = "text/javascript; charset=UTF-8";
                 reply.headers[2].name = "Content-Disposition";
                 reply.headers[2].value = "inline; filename=\"response.js\"";
-            }
-            else
-            {
-                reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript; charset=UTF-8";
-                reply.headers[2].name = "Content-Disposition";
-                reply.headers[2].value = "inline; filename=\"response.json\"";
             }
             reply.headers[0].name = "Content-Length";
             reply.headers[0].value = IntToString(reply.content.size());
