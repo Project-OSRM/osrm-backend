@@ -34,6 +34,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct PhantomNode
 {
+    PhantomNode(NodeID forward_node_id, NodeID reverse_node_id, unsigned name_id,
+                int forward_weight, int reverse_weight, int forward_offset, int reverse_offset,
+                unsigned packed_geometry_id, FixedPointCoordinate &location,
+                unsigned short fwd_segment_position) :
+        forward_node_id(forward_node_id),
+        reverse_node_id(reverse_node_id),
+        name_id(name_id),
+        forward_weight(forward_weight),
+        reverse_weight(reverse_weight),
+        forward_offset(forward_offset),
+        reverse_offset(reverse_offset),
+        packed_geometry_id(packed_geometry_id),
+        location(location),
+        fwd_segment_position(fwd_segment_position)
+    { }
+
     PhantomNode() :
         forward_node_id(SPECIAL_NODEID),
         reverse_node_id(SPECIAL_NODEID),
