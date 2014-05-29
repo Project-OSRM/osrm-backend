@@ -102,7 +102,7 @@ class StaticRTree
             }
         }
 
-        inline void AugmentMBRectangle(const RectangleInt2D &other)
+        inline void MergeBoundingBoxes(const RectangleInt2D &other)
         {
             min_lon = std::min(min_lon, other.min_lon);
             max_lon = std::max(max_lon, other.max_lon);
@@ -252,7 +252,8 @@ class StaticRTree
         float min_dist;
         inline bool operator<(const QueryCandidate &other) const
         {
-            return min_dist < other.min_dist;
+            // Attn: this is reversed order. std::pq is a max pq!
+            return other.min_dist < min_dist;
         }
     };
 
@@ -376,7 +377,7 @@ class StaticRTree
                         parent_node.children[current_child_node_index] = m_search_tree.size();
                         m_search_tree.emplace_back(current_child_node);
                         // augment MBR of parent
-                        parent_node.minimum_bounding_rectangle.AugmentMBRectangle(
+                        parent_node.minimum_bounding_rectangle.MergeBoundingBoxes(
                             current_child_node.minimum_bounding_rectangle);
                         // increase counters
                         ++parent_node.child_count;
@@ -573,31 +574,11 @@ class StaticRTree
                 }
                 else
                 {
-                    // traverse children, prune if global mindist is smaller than local one
-                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
-                    {
-                        const int32_t child_id = current_tree_node.children[i];
-                        const TreeNode &child_tree_node = m_search_tree[child_id];
-                        const RectangleT &child_rectangle =
-                            child_tree_node.minimum_bounding_rectangle;
-                        const float current_min_dist =
-                            child_rectangle.GetMinDist(input_coordinate);
-                        const float current_min_max_dist =
-                            child_rectangle.GetMinMaxDist(input_coordinate);
-                        if (current_min_max_dist < min_max_dist)
-                        {
-                            min_max_dist = current_min_max_dist;
-                        }
-                        if (current_min_dist > min_max_dist)
-                        {
-                            continue;
-                        }
-                        if (current_min_dist > min_dist)
-                        { // upward pruning
-                            continue;
-                        }
-                        traversal_queue.emplace(child_id, current_min_dist);
-                    }
+                    min_max_dist = ExploreTreeNode(current_tree_node,
+                                                   input_coordinate,
+                                                   min_dist,
+                                                   min_max_dist,
+                                                   traversal_queue);
                 }
             }
         }
@@ -609,8 +590,6 @@ class StaticRTree
                                       PhantomNode &result_phantom_node,
                                       const unsigned zoom_level)
     {
-        // SimpleLogger().Write() << "searching for coordinate " << input_coordinate;
-
         const bool ignore_tiny_components = (zoom_level <= 14);
         DataT nearest_edge;
 
@@ -620,11 +599,9 @@ class StaticRTree
 
         FixedPointCoordinate nearest, current_source_coordinate, current_target_coordinate;
 
-        // initialize queue with root element
         std::priority_queue<QueryCandidate> traversal_queue;
-        float current_min_dist =
-            m_search_tree[0].minimum_bounding_rectangle.GetMinDist(input_coordinate);
-        traversal_queue.emplace(0, current_min_dist);
+        traversal_queue.emplace(0, 0.f);
+        // min_max_dist = std::min(min_max_dist, m_search_tree[0].minimum_bounding_rectangle.GetMinMaxDist(input_coordinate));
 
         BOOST_ASSERT_MSG(std::numeric_limits<float>::epsilon() >
                              (0. - traversal_queue.top().min_dist),
@@ -636,8 +613,8 @@ class StaticRTree
             const QueryCandidate current_query_node = traversal_queue.top();
             traversal_queue.pop();
 
-            const bool prune_downward = (current_query_node.min_dist >= min_max_dist);
-            const bool prune_upward = (current_query_node.min_dist >= min_dist);
+            const bool prune_downward = (current_query_node.min_dist > min_max_dist);
+            const bool prune_upward = (current_query_node.min_dist > min_dist);
             if (!prune_downward && !prune_upward)
             { // downward pruning
                 const TreeNode &current_tree_node = m_search_tree[current_query_node.node_id];
@@ -696,30 +673,11 @@ class StaticRTree
                 }
                 else
                 {
-                    // traverse children, prune if global mindist is smaller than local one
-                    for (uint32_t i = 0; i < current_tree_node.child_count; ++i)
-                    {
-                        const int32_t child_id = current_tree_node.children[i];
-                        const TreeNode &child_tree_node = m_search_tree[child_id];
-                        const RectangleT &child_rectangle = child_tree_node.minimum_bounding_rectangle;
-                        const float current_min_dist =
-                            child_rectangle.GetMinDist(input_coordinate);
-                        const float current_min_max_dist =
-                            child_rectangle.GetMinMaxDist(input_coordinate);
-                        if (current_min_max_dist < min_max_dist)
-                        {
-                            min_max_dist = current_min_max_dist;
-                        }
-                        if (current_min_dist > min_max_dist)
-                        {
-                            continue;
-                        }
-                        if (current_min_dist > min_dist)
-                        { // upward pruning
-                            continue;
-                        }
-                        traversal_queue.emplace(child_id, current_min_dist);
-                    }
+                    min_max_dist = ExploreTreeNode(current_tree_node,
+                                                   input_coordinate,
+                                                   min_dist,
+                                                   min_max_dist,
+                                                   traversal_queue);
                 }
             }
         }
@@ -755,6 +713,38 @@ class StaticRTree
     }
 
   private:
+
+    template <class QueueT>
+    inline float ExploreTreeNode(const TreeNode & parent,
+                                 const FixedPointCoordinate & input_coordinate,
+                                 const float min_dist,
+                                 const float min_max_dist,
+                                 QueueT & traversal_queue)
+    {
+        float new_min_max_dist = min_max_dist;
+        // traverse children, prune if global mindist is smaller than local one
+        for (uint32_t i = 0; i < parent.child_count; ++i)
+        {
+            const int32_t child_id = parent.children[i];
+            const TreeNode &child_tree_node = m_search_tree[child_id];
+            const RectangleT &child_rectangle = child_tree_node.minimum_bounding_rectangle;
+            const float lower_bound_to_element = child_rectangle.GetMinDist(input_coordinate);
+            const float upper_bound_to_element = child_rectangle.GetMinMaxDist(input_coordinate);
+            new_min_max_dist = std::min(new_min_max_dist, upper_bound_to_element);
+            if (lower_bound_to_element > new_min_max_dist)
+            {
+                continue;
+            }
+            if (lower_bound_to_element > min_dist)
+            {
+                continue;
+            }
+            traversal_queue.emplace(child_id, lower_bound_to_element);
+        }
+        return new_min_max_dist;
+    }
+
+
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode &result_node)
     {
         if (!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open())
