@@ -29,19 +29,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 bool NodeBasedEdge::operator<(const NodeBasedEdge &e) const
 {
-    if (source() == e.source())
+    if (source == e.source)
     {
-        if (target() == e.target())
+        if (target == e.target)
         {
-            if (weight() == e.weight())
+            if (weight == e.weight)
             {
-                return (isForward() && isBackward() && ((!e.isForward()) || (!e.isBackward())));
+                return (forward && backward && ((!e.forward) || (!e.backward)));
             }
-            return (weight() < e.weight());
+            return (weight < e.weight);
         }
-        return (target() < e.target());
+        return (target < e.target);
     }
-    return (source() < e.source());
+    return (source < e.source);
 }
 
     NodeBasedEdge::NodeBasedEdge(NodeID s,
@@ -56,8 +56,8 @@ bool NodeBasedEdge::operator<(const NodeBasedEdge &e) const
                            bool ar,
                            bool cf,
                            bool is_split)
-        : _source(s), _target(t), _name(n), _weight(w), _type(ty), forward(f), backward(b),
-          _roundabout(ra), _ignoreInGrid(ig), _accessRestricted(ar), _contraFlow(cf),
+        : source(s), target(t), name(n), weight(w), type(ty), forward(f), backward(b),
+          roundabout(ra), ignoreInGrid(ig), accessRestricted(ar), contraFlow(cf),
           is_split(is_split)
     {
         if (ty < 0)
@@ -65,24 +65,6 @@ bool NodeBasedEdge::operator<(const NodeBasedEdge &e) const
             throw OSRMException("negative edge type");
         }
     }
-
-    NodeID NodeBasedEdge::target() const { return _target; }
-    NodeID NodeBasedEdge::source() const { return _source; }
-    NodeID NodeBasedEdge::name() const { return _name; }
-    EdgeWeight NodeBasedEdge::weight() const { return _weight; }
-    short NodeBasedEdge::type() const
-    {
-        BOOST_ASSERT_MSG(_type >= 0, "type of ImportEdge invalid");
-        return _type;
-    }
-    bool NodeBasedEdge::isBackward() const { return backward; }
-    bool NodeBasedEdge::isForward() const { return forward; }
-    bool NodeBasedEdge::isLocatable() const { return _type != 14; }
-    bool NodeBasedEdge::isRoundabout() const { return _roundabout; }
-    bool NodeBasedEdge::ignoreInGrid() const { return _ignoreInGrid; }
-    bool NodeBasedEdge::isAccessRestricted() const { return _accessRestricted; }
-    bool NodeBasedEdge::isContraFlow() const { return _contraFlow; }
-    bool NodeBasedEdge::IsSplit() const { return is_split; }
 
     bool EdgeBasedEdge::operator<(const EdgeBasedEdge &e) const
     {

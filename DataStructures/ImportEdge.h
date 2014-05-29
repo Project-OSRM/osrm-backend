@@ -52,32 +52,17 @@ class NodeBasedEdge
                            bool cf,
                            bool is_split);
 
-    NodeID target() const;
-    NodeID source() const;
-    NodeID name() const;
-    EdgeWeight weight() const;
-    short type() const;
-    bool isBackward() const;
-    bool isForward() const;
-    bool isLocatable() const;
-    bool isRoundabout() const;
-    bool ignoreInGrid() const;
-    bool isAccessRestricted() const;
-    bool isContraFlow() const;
-    bool IsSplit() const;
-
-    // TODO: names need to be fixed.
-    NodeID _source;
-    NodeID _target;
-    NodeID _name;
-    EdgeWeight _weight;
-    short _type;
+    NodeID source;
+    NodeID target;
+    NodeID name;
+    EdgeWeight weight;
+    short type;
     bool forward : 1;
     bool backward : 1;
-    bool _roundabout : 1;
-    bool _ignoreInGrid : 1;
-    bool _accessRestricted : 1;
-    bool _contraFlow : 1;
+    bool roundabout : 1;
+    bool ignoreInGrid : 1;
+    bool accessRestricted : 1;
+    bool contraFlow : 1;
     bool is_split : 1;
 
     NodeBasedEdge() = delete;

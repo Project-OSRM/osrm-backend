@@ -207,52 +207,52 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     tbb::parallel_sort(edge_list.begin(), edge_list.end());
     for (unsigned i = 1; i < edge_list.size(); ++i)
     {
-        if ((edge_list[i - 1].target() == edge_list[i].target()) &&
-            (edge_list[i - 1].source() == edge_list[i].source()))
+        if ((edge_list[i - 1].target == edge_list[i].target) &&
+            (edge_list[i - 1].source == edge_list[i].source))
         {
             const bool edge_flags_equivalent =
-                (edge_list[i - 1].isForward() == edge_list[i].isForward()) &&
-                (edge_list[i - 1].isBackward() == edge_list[i].isBackward());
+                (edge_list[i - 1].forward == edge_list[i].forward) &&
+                (edge_list[i - 1].backward == edge_list[i].backward);
             const bool edge_flags_are_superset1 =
-                (edge_list[i - 1].isForward() && edge_list[i - 1].isBackward()) &&
-                (edge_list[i].isBackward() != edge_list[i].isBackward());
+                (edge_list[i - 1].forward && edge_list[i - 1].backward) &&
+                (edge_list[i].backward != edge_list[i].backward);
             const bool edge_flags_are_superset_2 =
-                (edge_list[i].isForward() && edge_list[i].isBackward()) &&
-                (edge_list[i - 1].isBackward() != edge_list[i - 1].isBackward());
+                (edge_list[i].forward && edge_list[i].backward) &&
+                (edge_list[i - 1].backward != edge_list[i - 1].backward);
 
             if (edge_flags_equivalent)
             {
-                edge_list[i]._weight = std::min(edge_list[i - 1].weight(), edge_list[i].weight());
-                edge_list[i - 1]._source = UINT_MAX;
+                edge_list[i].weight = std::min(edge_list[i - 1].weight, edge_list[i].weight);
+                edge_list[i - 1].source = UINT_MAX;
             }
             else if (edge_flags_are_superset1)
             {
-                if (edge_list[i - 1].weight() <= edge_list[i].weight())
+                if (edge_list[i - 1].weight <= edge_list[i].weight)
                 {
                     // edge i-1 is smaller and goes in both directions. Throw away the other edge
-                    edge_list[i]._source = UINT_MAX;
+                    edge_list[i].source = UINT_MAX;
                 }
                 else
                 {
                     // edge i-1 is open in both directions, but edge i is smaller in one direction.
                     // Close edge i-1 in this direction
-                    edge_list[i - 1].forward = !edge_list[i].isForward();
-                    edge_list[i - 1].backward = !edge_list[i].isBackward();
+                    edge_list[i - 1].forward = !edge_list[i].forward;
+                    edge_list[i - 1].backward = !edge_list[i].backward;
                 }
             }
             else if (edge_flags_are_superset_2)
             {
-                if (edge_list[i - 1].weight() <= edge_list[i].weight())
+                if (edge_list[i - 1].weight <= edge_list[i].weight)
                 {
                     // edge i-1 is smaller for one direction. edge i is open in both. close edge i
                     // in the other direction
-                    edge_list[i].forward = !edge_list[i - 1].isForward();
-                    edge_list[i].backward = !edge_list[i - 1].isBackward();
+                    edge_list[i].forward = !edge_list[i - 1].forward;
+                    edge_list[i].backward = !edge_list[i - 1].backward;
                 }
                 else
                 {
                     // edge i is smaller and goes in both direction. Throw away edge i-1
-                    edge_list[i - 1]._source = UINT_MAX;
+                    edge_list[i - 1].source = UINT_MAX;
                 }
             }
         }
@@ -260,7 +260,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     const auto new_end_iter = std::remove_if(edge_list.begin(),
                                        edge_list.end(),
                                        [](const EdgeT &edge)
-                                       { return edge.source() == UINT_MAX; });
+                                       { return edge.source == SPECIAL_NODEID; });
     ext_to_int_id_map.clear();
     edge_list.erase(new_end_iter, edge_list.end()); // remove excess candidates.
     edge_list.shrink_to_fit();

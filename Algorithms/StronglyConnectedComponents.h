@@ -152,52 +152,48 @@ class TarjanSCC
         DeallocatingVector<TarjanEdge> edge_list;
         for (const NodeBasedEdge &input_edge : input_edges)
         {
-            if (input_edge.source() == input_edge.target())
+            if (input_edge.source == input_edge.target)
             {
                 continue;
             }
 
             TarjanEdge edge;
-            if (input_edge.isForward())
+            if (input_edge.forward)
             {
-                edge.source = input_edge.source();
-                edge.target = input_edge.target();
-                edge.data.forward = input_edge.isForward();
-                edge.data.backward = input_edge.isBackward();
+                edge.source = input_edge.source;
+                edge.target = input_edge.target;
+                edge.data.forward = input_edge.forward;
+                edge.data.backward = input_edge.backward;
             }
             else
             {
-                edge.source = input_edge.target();
-                edge.target = input_edge.source();
-                edge.data.backward = input_edge.isForward();
-                edge.data.forward = input_edge.isBackward();
+                edge.source = input_edge.target;
+                edge.target = input_edge.source;
+                edge.data.backward = input_edge.forward;
+                edge.data.forward = input_edge.backward;
             }
 
-            edge.data.distance = (std::max)((int)input_edge.weight(), 1);
+            edge.data.distance = (std::max)((int)input_edge.weight, 1);
             BOOST_ASSERT(edge.data.distance > 0);
             edge.data.shortcut = false;
-            // edge.data.roundabout = input_edge.isRoundabout();
-            // edge.data.ignoreInGrid = input_edge.ignoreInGrid();
-            edge.data.name_id = input_edge.name();
-            edge.data.type = input_edge.type();
-            // edge.data.isAccessRestricted = input_edge.isAccessRestricted();
+            edge.data.name_id = input_edge.name;
+            edge.data.type = input_edge.type;
             edge.data.reversedEdge = false;
             edge_list.push_back(edge);
             if (edge.data.backward)
             {
                 std::swap(edge.source, edge.target);
-                edge.data.forward = input_edge.isBackward();
-                edge.data.backward = input_edge.isForward();
+                edge.data.forward = input_edge.backward;
+                edge.data.backward = input_edge.forward;
                 edge.data.reversedEdge = true;
                 edge_list.push_back(edge);
             }
         }
-        std::vector<NodeBasedEdge>().swap(input_edges);
+        input_edges.shrink_to_fit();
         BOOST_ASSERT_MSG(0 == input_edges.size() && 0 == input_edges.capacity(),
                          "input edge vector not properly deallocated");
 
         std::sort(edge_list.begin(), edge_list.end());
-
         m_node_based_graph = std::make_shared<TarjanDynamicGraph>(number_of_nodes, edge_list);
     }
 

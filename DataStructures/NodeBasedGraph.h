@@ -60,19 +60,19 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
     for (const ImportEdge &import_edge : input_edge_list)
     {
         // TODO: give ImportEdge a proper c'tor to use emplace_back's below
-        if (!import_edge.isForward())
+        if (!import_edge.forward)
         {
-            edge.source = import_edge.target();
-            edge.target = import_edge.source();
-            edge.data.backward = import_edge.isForward();
-            edge.data.forward = import_edge.isBackward();
+            edge.source = import_edge.target;
+            edge.target = import_edge.source;
+            edge.data.backward = import_edge.forward;
+            edge.data.forward = import_edge.backward;
         }
         else
         {
-            edge.source = import_edge.source();
-            edge.target = import_edge.target();
-            edge.data.forward = import_edge.isForward();
-            edge.data.backward = import_edge.isBackward();
+            edge.source = import_edge.source;
+            edge.target = import_edge.target;
+            edge.data.forward = import_edge.forward;
+            edge.data.backward = import_edge.backward;
         }
 
         if (edge.source == edge.target)
@@ -80,18 +80,18 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
             continue;
         }
 
-        edge.data.distance = (std::max)((int)import_edge.weight(), 1);
+        edge.data.distance = (std::max)((int)import_edge.weight, 1);
         BOOST_ASSERT(edge.data.distance > 0);
         edge.data.shortcut = false;
-        edge.data.roundabout = import_edge.isRoundabout();
-        edge.data.ignore_in_grid = import_edge.ignoreInGrid();
-        edge.data.nameID = import_edge.name();
-        edge.data.type = import_edge.type();
-        edge.data.isAccessRestricted = import_edge.isAccessRestricted();
-        edge.data.contraFlow = import_edge.isContraFlow();
+        edge.data.roundabout = import_edge.roundabout;
+        edge.data.ignore_in_grid = import_edge.ignoreInGrid;
+        edge.data.nameID = import_edge.name;
+        edge.data.type = import_edge.type;
+        edge.data.isAccessRestricted = import_edge.accessRestricted;
+        edge.data.contraFlow = import_edge.contraFlow;
         edges_list.push_back(edge);
 
-        if (!import_edge.IsSplit())
+        if (!import_edge.is_split)
         {
             using std::swap; // enable ADL
             swap(edge.source, edge.target);
