@@ -344,7 +344,6 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
                 packed_alternate_path, phantom_node_pair, raw_route_data.unpacked_alternative);
 
             raw_route_data.alternative_path_length = length_of_via_path;
-            SimpleLogger().Write() << "length of via path: " << length_of_via_path << " & selected_via_node: " << selected_via_node;
         } else {
             BOOST_ASSERT(raw_route_data.alternative_path_length == INVALID_EDGE_WEIGHT);
         }
