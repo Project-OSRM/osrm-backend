@@ -187,8 +187,20 @@ int main(const int argc, const char *argv[])
 
         // get the shared memory segment to use
         bool use_first_segment = SharedMemory::RegionExists(LAYOUT_2);
-        SharedDataType LAYOUT = (use_first_segment ? LAYOUT_1 : LAYOUT_2);
-        SharedDataType DATA = (use_first_segment ? DATA_1 : DATA_2);
+        const SharedDataType LAYOUT =   [&] {
+                                                if(use_first_segment)
+                                                {
+                                                    return LAYOUT_1;
+                                                }
+                                                return LAYOUT_2;
+                                            }();
+        const SharedDataType DATA =     [&] {
+                                                if(use_first_segment)
+                                                {
+                                                   return DATA_1;
+                                                }
+                                                return DATA_2;
+                                            }();
 
         // Allocate a memory layout in shared memory, deallocate previous
         SharedMemory *layout_memory = SharedMemoryFactory::Get(LAYOUT, sizeof(SharedDataLayout));
