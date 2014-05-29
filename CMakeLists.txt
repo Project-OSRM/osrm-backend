@@ -35,6 +35,8 @@ configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp
 )
 file(GLOB ExtractorGlob Extractor/*.cpp)
+file(GLOB ImporterGlob DataStructures/Import*.cpp)
+add_library(IMPORT STATIC ${ImporterGlob})
 set(ExtractorSources extractor.cpp ${ExtractorGlob})
 add_executable(osrm-extract ${ExtractorSources})
 
@@ -157,8 +159,8 @@ endif()
 include_directories(${Boost_INCLUDE_DIRS})
 
 target_link_libraries(OSRM ${Boost_LIBRARIES} COORDLIB)
-target_link_libraries(osrm-extract ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
-target_link_libraries(osrm-prepare ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
+target_link_libraries(osrm-extract ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB IMPORT)
+target_link_libraries(osrm-prepare ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB IMPORT)
 target_link_libraries(osrm-routed ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
 
@@ -231,7 +233,7 @@ if(WITH_TOOLS)
   find_package(GDAL)
   if(GDAL_FOUND)
     add_executable(osrm-components Tools/components.cpp)
-   target_link_libraries(osrm-components ${TBB_LIBRARIES})
+    target_link_libraries(osrm-components ${TBB_LIBRARIES} IMPORT)
     include_directories(${GDAL_INCLUDE_DIR})
     target_link_libraries(
       osrm-components
