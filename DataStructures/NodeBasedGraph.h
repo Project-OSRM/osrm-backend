@@ -84,11 +84,11 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         BOOST_ASSERT(edge.data.distance > 0);
         edge.data.shortcut = false;
         edge.data.roundabout = import_edge.roundabout;
-        edge.data.ignore_in_grid = import_edge.ignoreInGrid;
-        edge.data.nameID = import_edge.name;
+        edge.data.ignore_in_grid = import_edge.in_tiny_cc;
+        edge.data.nameID = import_edge.name_id;
         edge.data.type = import_edge.type;
-        edge.data.isAccessRestricted = import_edge.accessRestricted;
-        edge.data.contraFlow = import_edge.contraFlow;
+        edge.data.isAccessRestricted = import_edge.access_restricted;
+        edge.data.contraFlow = import_edge.contra_flow;
         edges_list.push_back(edge);
 
         if (!import_edge.is_split)

@@ -176,7 +176,7 @@ class TarjanSCC
             edge.data.distance = (std::max)((int)input_edge.weight, 1);
             BOOST_ASSERT(edge.data.distance > 0);
             edge.data.shortcut = false;
-            edge.data.name_id = input_edge.name;
+            edge.data.name_id = input_edge.name_id;
             edge.data.type = input_edge.type;
             edge.data.reversedEdge = false;
             edge_list.push_back(edge);

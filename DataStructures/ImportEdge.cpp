@@ -44,72 +44,58 @@ bool NodeBasedEdge::operator<(const NodeBasedEdge &e) const
     return (source < e.source);
 }
 
-    NodeBasedEdge::NodeBasedEdge(NodeID s,
-                           NodeID t,
-                           NodeID n,
-                           EdgeWeight w,
-                           bool f,
-                           bool b,
-                           short ty,
-                           bool ra,
-                           bool ig,
-                           bool ar,
-                           bool cf,
-                           bool is_split)
-        : source(s), target(t), name(n), weight(w), type(ty), forward(f), backward(b),
-          roundabout(ra), ignoreInGrid(ig), accessRestricted(ar), contraFlow(cf),
-          is_split(is_split)
-    {
-        if (ty < 0)
-        {
-            throw OSRMException("negative edge type");
-        }
-    }
+NodeBasedEdge::NodeBasedEdge(NodeID source,
+                             NodeID target,
+                             NodeID name_id,
+                             EdgeWeight weight,
+                             bool forward,
+                             bool backward,
+                             short type,
+                             bool roundabout,
+                             bool in_tiny_cc,
+                             bool access_restricted,
+                             bool contra_flow,
+                             bool is_split)
+    : source(source), target(target), name_id(name_id), weight(weight), type(type),
+      forward(forward), backward(backward), roundabout(roundabout), in_tiny_cc(in_tiny_cc),
+      access_restricted(access_restricted), contra_flow(contra_flow), is_split(is_split)
+{
+    BOOST_ASSERT_MSG(type > 0, "negative edge type");
+}
 
-    bool EdgeBasedEdge::operator<(const EdgeBasedEdge &e) const
+bool EdgeBasedEdge::operator<(const EdgeBasedEdge &e) const
+{
+    if (source == e.source)
     {
-        if (source() == e.source())
+        if (target == e.target)
         {
-            if (target() == e.target())
+            if (weight == e.weight)
             {
-                if (weight() == e.weight())
-                {
-                    return (isForward() && isBackward() && ((!e.isForward()) || (!e.isBackward())));
-                }
-                return (weight() < e.weight());
+                return (forward && backward && ((!e.forward) || (!e.backward)));
             }
-            return (target() < e.target());
+            return (weight < e.weight);
         }
-        return (source() < e.source());
+        return (target < e.target);
     }
+    return (source < e.source);
+}
 
-    template <class EdgeT>
-    EdgeBasedEdge::EdgeBasedEdge(const EdgeT &myEdge)
-        : m_source(myEdge.source), m_target(myEdge.target), m_edgeID(myEdge.data.via),
-          m_weight(myEdge.data.distance), m_forward(myEdge.data.forward),
-          m_backward(myEdge.data.backward)
-    {
-    }
+template <class EdgeT>
+EdgeBasedEdge::EdgeBasedEdge(const EdgeT &myEdge)
+    : source(myEdge.source), target(myEdge.target), edge_id(myEdge.data.via),
+      weight(myEdge.data.distance), forward(myEdge.data.forward),
+      backward(myEdge.data.backward)
+{
+}
 
-    /** Default constructor. target and weight are set to 0.*/
-    EdgeBasedEdge::EdgeBasedEdge()
-        : m_source(0), m_target(0), m_edgeID(0), m_weight(0), m_forward(false), m_backward(false)
-    {
-    }
+/** Default constructor. target and weight are set to 0.*/
+EdgeBasedEdge::EdgeBasedEdge()
+    : source(0), target(0), edge_id(0), weight(0), forward(false), backward(false)
+{
+}
 
-    EdgeBasedEdge::EdgeBasedEdge(const NodeID s,
-                           const NodeID t,
-                           const NodeID v,
-                           const EdgeWeight w,
-                           const bool f,
-                           const bool b)
-        : m_source(s), m_target(t), m_edgeID(v), m_weight(w), m_forward(f), m_backward(b)
-    {
-    }
-
-    NodeID EdgeBasedEdge::target() const { return m_target; }
-    NodeID EdgeBasedEdge::source() const { return m_source; }
-    EdgeWeight EdgeBasedEdge::weight() const { return m_weight; }
-    NodeID EdgeBasedEdge::id() const { return m_edgeID; }
-    bool EdgeBasedEdge::isBackward() const { return m_backward; }
-    bool EdgeBasedEdge::isForward() const { return m_forward; }
+EdgeBasedEdge::EdgeBasedEdge(
+    const NodeID s, const NodeID t, const NodeID v, const EdgeWeight w, const bool f, const bool b)
+    : source(s), target(t), edge_id(v), weight(w), forward(f), backward(b)
+{
+}

@@ -33,74 +33,61 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
-class NodeBasedEdge
+struct NodeBasedEdge
 {
-
-  public:
     bool operator<(const NodeBasedEdge &e) const;
 
-    explicit NodeBasedEdge(NodeID s,
-                           NodeID t,
-                           NodeID n,
-                           EdgeWeight w,
-                           bool f,
-                           bool b,
-                           short ty,
-                           bool ra,
-                           bool ig,
-                           bool ar,
-                           bool cf,
+    explicit NodeBasedEdge(NodeID source,
+                           NodeID target,
+                           NodeID name_id,
+                           EdgeWeight weight,
+                           bool forward,
+                           bool backward,
+                           short type,
+                           bool roundabout,
+                           bool in_tiny_cc,
+                           bool access_restricted,
+                           bool contra_flow,
                            bool is_split);
 
     NodeID source;
     NodeID target;
-    NodeID name;
+    NodeID name_id;
     EdgeWeight weight;
     short type;
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;
-    bool ignoreInGrid : 1;
-    bool accessRestricted : 1;
-    bool contraFlow : 1;
+    bool in_tiny_cc : 1;
+    bool access_restricted : 1;
+    bool contra_flow : 1;
     bool is_split : 1;
 
     NodeBasedEdge() = delete;
 };
 
-class EdgeBasedEdge
+struct EdgeBasedEdge
 {
 
   public:
     bool operator<(const EdgeBasedEdge &e) const;
 
-    template <class EdgeT>
-    explicit EdgeBasedEdge(const EdgeT &myEdge);
+    template <class EdgeT> explicit EdgeBasedEdge(const EdgeT &myEdge);
 
-    /** Default constructor. target and weight are set to 0.*/
     EdgeBasedEdge();
 
-    explicit EdgeBasedEdge(const NodeID s,
-                           const NodeID t,
-                           const NodeID v,
-                           const EdgeWeight w,
-                           const bool f,
-                           const bool b);
-
-    NodeID target() const;
-    NodeID source() const;
-    EdgeWeight weight() const;
-    NodeID id() const;
-    bool isBackward() const;
-    bool isForward() const;
-
-  private:
-    NodeID m_source;
-    NodeID m_target;
-    NodeID m_edgeID;
-    EdgeWeight m_weight : 30;
-    bool m_forward : 1;
-    bool m_backward : 1;
+    explicit EdgeBasedEdge(const NodeID source,
+                           const NodeID target,
+                           const NodeID edge_id,
+                           const EdgeWeight weight,
+                           const bool forward,
+                           const bool backward);
+    NodeID source;
+    NodeID target;
+    NodeID edge_id;
+    EdgeWeight weight : 30;
+    bool forward : 1;
+    bool backward : 1;
 };
 
 typedef NodeBasedEdge ImportEdge;

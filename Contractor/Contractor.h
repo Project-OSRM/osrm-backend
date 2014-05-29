@@ -164,14 +164,15 @@ class Contractor
         ContractorEdge new_edge;
         while (diter != dend)
         {
-            new_edge.source = diter->source();
-            new_edge.target = diter->target();
-            new_edge.data = ContractorEdgeData((std::max)((int)diter->weight(), 1),
-                                               1,
-                                               diter->id(),
-                                               false,
-                                               diter->isForward(),
-                                               diter->isBackward());
+            new_edge.source = diter->source;
+            new_edge.target = diter->target;
+            new_edge.data = { static_cast<unsigned int>(std::max(diter->weight, 1)),
+                              1,
+                              diter->edge_id,
+                              false,
+                              diter->forward,
+                              diter->backward};
+
             BOOST_ASSERT_MSG(new_edge.data.distance > 0, "edge distance < 1");
 #ifndef NDEBUG
             if (new_edge.data.distance > 24 * 60 * 60 * 10)
@@ -182,8 +183,8 @@ class Contractor
 #endif
             edges.push_back(new_edge);
             std::swap(new_edge.source, new_edge.target);
-            new_edge.data.forward = diter->isBackward();
-            new_edge.data.backward = diter->isForward();
+            new_edge.data.forward = diter->backward;
+            new_edge.data.backward = diter->forward;
             edges.push_back(new_edge);
             ++diter;
         }
