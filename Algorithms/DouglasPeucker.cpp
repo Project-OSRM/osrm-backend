@@ -38,25 +38,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 
 DouglasPeucker::DouglasPeucker()
-    : douglas_peucker_thresholds({262144.f, // z0
-                                  131072.f, // z1
-                                  65536.f,  // z2
-                                  32768.f,  // z3
-                                  16384.f,  // z4
-                                  8192.f,   // z5
-                                  4096.f,   // z6
-                                  2048.f,   // z7
-                                  960.f,    // z8
-                                  480.f,    // z9
-                                  240.f,    // z10
-                                  90.f,     // z11
-                                  50.f,     // z12
-                                  25.f,     // z13
-                                  15.f,     // z14
-                                  5.f,      // z15
-                                  .65f,     // z16
-                                  .5f,      // z17
-                                  .35f      // z18
+    : douglas_peucker_thresholds({2621440, // z0
+                                  1310720, // z1
+                                  655360,  // z2
+                                  327680,  // z3
+                                  163840,  // z4
+                                  81920,   // z5
+                                  40960,   // z6
+                                  20480,   // z7
+                                  9600,    // z8
+                                  4800,    // z9
+                                  2800,    // z10
+                                  900,     // z11
+                                  600,     // z12
+                                  275,     // z13
+                                  160,     // z14
+                                  60,      // z15
+                                  8,       // z16
+                                  6,       // z17
+                                  4        // z18
       })
 {
 }
@@ -79,16 +79,10 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         // Sweep over array and identify those ranges that need to be checked
         do
         {
-            if (!input_geometry[left_border].necessary)
-            {
-                SimpleLogger().Write() << "broken interval [" << left_border << "," << right_border << "]";
-            }
-            BOOST_ASSERT_MSG(input_geometry[left_border].necessary,
-                             "left border must be necessary");
-            BOOST_ASSERT_MSG(input_geometry.back().necessary, "right border must be necessary");
-
             if (input_geometry[right_border].necessary)
             {
+                BOOST_ASSERT(input_geometry[left_border].necessary);
+                BOOST_ASSERT(input_geometry[right_border].necessary);
                 recursion_stack.emplace(left_border, right_border);
                 left_border = right_border;
             }
@@ -104,24 +98,24 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         BOOST_ASSERT_MSG(input_geometry[pair.second].necessary, "right border must be necessary");
         BOOST_ASSERT_MSG(pair.second < input_geometry.size(), "right border outside of geometry");
         BOOST_ASSERT_MSG(pair.first < pair.second, "left border on the wrong side");
-        float max_distance = std::numeric_limits<float>::min();
+        int max_int_distance = 0;
 
         unsigned farthest_element_index = pair.second;
         // find index idx of element with max_distance
         for (unsigned i = pair.first + 1; i < pair.second; ++i)
         {
-            const float temp_dist = FixedPointCoordinate::ComputePerpendicularDistance(
+            const int int_dist = FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
                 input_geometry[i].location,
                 input_geometry[pair.first].location,
                 input_geometry[pair.second].location);
-            const float distance = std::abs(temp_dist);
-            if (distance > douglas_peucker_thresholds[zoom_level] && distance > max_distance)
+
+            if (int_dist > max_int_distance && int_dist > douglas_peucker_thresholds[zoom_level])
             {
                 farthest_element_index = i;
-                max_distance = distance;
+                max_int_distance = int_dist;
             }
         }
-        if (max_distance > douglas_peucker_thresholds[zoom_level])
+        if (max_int_distance > douglas_peucker_thresholds[zoom_level])
         {
             //  mark idx as necessary
             input_geometry[farthest_element_index].necessary = true;

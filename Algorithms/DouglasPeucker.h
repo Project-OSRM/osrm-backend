@@ -44,7 +44,7 @@ struct SegmentInformation;
 class DouglasPeucker
 {
   private:
-    std::vector<float> douglas_peucker_thresholds;
+    std::vector<int> douglas_peucker_thresholds;
 
     typedef std::pair<unsigned, unsigned> GeometryRange;
     // Stack to simulate the recursion
