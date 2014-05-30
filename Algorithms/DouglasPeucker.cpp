@@ -37,34 +37,75 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
+struct CoordinatePairCalculator
+{
+    CoordinatePairCalculator() = delete;
+    CoordinatePairCalculator(const FixedPointCoordinate & coordinate_a, const FixedPointCoordinate &coordinate_b)
+    {
+        const float RAD = 0.017453292519943295769236907684886;
+        first_lat = (coordinate_a.lat / COORDINATE_PRECISION) * RAD;
+        first_lon = (coordinate_a.lon / COORDINATE_PRECISION) * RAD;
+        second_lat = (coordinate_b.lat / COORDINATE_PRECISION) * RAD;
+        second_lon = (coordinate_b.lon / COORDINATE_PRECISION) * RAD;
+    }
+
+    int operator()(FixedPointCoordinate & other) const
+    {
+        const float RAD = 0.017453292519943295769236907684886;
+        const float earth_radius = 6372797.560856;
+        const float float_lat1 = (other.lat / COORDINATE_PRECISION) * RAD;
+        const float float_lon1 = (other.lon / COORDINATE_PRECISION) * RAD;
+
+        const float x_value_1 = (first_lon - float_lon1) * cos((float_lat1 + first_lat) / 2.);
+        const float y_value_1 = first_lat - float_lat1;
+        const float dist1 = sqrt(std::pow(x_value_1, 2) + std::pow(y_value_1,2)) * earth_radius;
+
+        const float x_value_2 = (second_lon - float_lon1) * cos((float_lat1 + second_lat) / 2.);
+        const float y_value_2 = second_lat - float_lat1;
+        const float dist2 = sqrt(std::pow(x_value_2, 2) + std::pow(y_value_2,2)) * earth_radius;
+
+        const int other_dist = std::min(dist1, dist2);
+        return other_dist;
+    }
+
+    float first_lat;
+    float first_lon;
+    float second_lat;
+    float second_lon;
+
+};
+
 DouglasPeucker::DouglasPeucker()
-    : douglas_peucker_thresholds({2621440, // z0
-                                  1310720, // z1
-                                  655360,  // z2
-                                  327680,  // z3
-                                  163840,  // z4
-                                  81920,   // z5
-                                  40960,   // z6
-                                  20480,   // z7
-                                  9600,    // z8
-                                  4800,    // z9
-                                  2800,    // z10
-                                  900,     // z11
-                                  600,     // z12
-                                  275,     // z13
-                                  160,     // z14
-                                  60,      // z15
-                                  8,       // z16
-                                  6,       // z17
-                                  4        // z18
+    : douglas_peucker_thresholds({512440, // z0
+                                  256720, // z1
+                                  122560, // z2
+                                  56780,  // z3
+                                  28800,  // z4
+                                  14400,  // z5
+                                  7200,   // z6
+                                  3200,   // z7
+                                  2400,   // z8
+                                  1000,   // z9
+                                  600,    // z10
+                                  120,    // z11
+                                  60,     // z12
+                                  45,     // z13
+                                  36,     // z14
+                                  20,     // z15
+                                  8,      // z16
+                                  6,      // z17
+                                  4       // z18
       })
 {
 }
 
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
+
     input_geometry.front().necessary = true;
     input_geometry.back().necessary = true;
+
+    unsigned point_count = 2;
 
     BOOST_ASSERT_MSG(!input_geometry.empty(), "geometry invalid");
     if (input_geometry.size() < 2)
@@ -101,24 +142,23 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         int max_int_distance = 0;
 
         unsigned farthest_element_index = pair.second;
-        // find index idx of element with max_distance
+        const CoordinatePairCalculator DistCalc(input_geometry[pair.first].location, input_geometry[pair.second].location);
+
         for (unsigned i = pair.first + 1; i < pair.second; ++i)
         {
-            const int int_dist = FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
-                input_geometry[i].location,
-                input_geometry[pair.first].location,
-                input_geometry[pair.second].location);
+            const int distance = DistCalc(input_geometry[i].location);
 
-            if (int_dist > max_int_distance && int_dist > douglas_peucker_thresholds[zoom_level])
+            if (distance > max_int_distance && distance > douglas_peucker_thresholds[zoom_level])
             {
                 farthest_element_index = i;
-                max_int_distance = int_dist;
+                max_int_distance = distance;
             }
         }
         if (max_int_distance > douglas_peucker_thresholds[zoom_level])
         {
             //  mark idx as necessary
             input_geometry[farthest_element_index].necessary = true;
+            ++point_count;
             if (1 < (farthest_element_index - pair.first))
             {
                 recursion_stack.emplace(pair.first, farthest_element_index);
@@ -129,4 +169,5 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
             }
         }
     }
+    SimpleLogger().Write() << "size: " << input_geometry.size() << ", necessary: " << point_count;
 }
