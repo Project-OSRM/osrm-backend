@@ -149,27 +149,27 @@ float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
 }
 
 float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &point,
-                                                         const FixedPointCoordinate &segA,
-                                                         const FixedPointCoordinate &segB)
+                                                         const FixedPointCoordinate &source_coordinate,
+                                                         const FixedPointCoordinate &target_coordinate)
 {
-    const float x = lat2y(point.lat / COORDINATE_PRECISION);
-    const float y = point.lon / COORDINATE_PRECISION;
-    const float a = lat2y(segA.lat / COORDINATE_PRECISION);
-    const float b = segA.lon / COORDINATE_PRECISION;
-    const float c = lat2y(segB.lat / COORDINATE_PRECISION);
-    const float d = segB.lon / COORDINATE_PRECISION;
+    const float x_value = lat2y(point.lat / COORDINATE_PRECISION);
+    const float y_value = point.lon / COORDINATE_PRECISION;
+    const float a = lat2y(source_coordinate.lat / COORDINATE_PRECISION);
+    const float b = source_coordinate.lon / COORDINATE_PRECISION;
+    const float c = lat2y(target_coordinate.lat / COORDINATE_PRECISION);
+    const float d = target_coordinate.lon / COORDINATE_PRECISION;
     float p, q, nY;
     if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
     {
-        const float m = (d - b) / (c - a); // slope
+        const float slope = (d - b) / (c - a); // slope
         // Projection of (x,y) on line joining (a,b) and (c,d)
-        p = ((x + (m * y)) + (m * m * a - m * b)) / (1. + m * m);
-        q = b + m * (p - a);
+        p = ((x_value + (slope * y_value)) + (slope * slope * a - slope * b)) / (1. + slope * slope);
+        q = b + slope * (p - a);
     }
     else
     {
         p = c;
-        q = y;
+        q = y_value;
     }
     nY = (d * p - c * q) / (a * d - b * c);
 
@@ -179,30 +179,30 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
         nY = 0.;
     }
 
-    float r = (p - nY * a) / c;
-    if (std::isnan(r))
+    float ratio = (p - nY * a) / c;
+    if (std::isnan(ratio))
     {
-        r = ((segB.lat == point.lat) && (segB.lon == point.lon)) ? 1. : 0.;
+        ratio = ((target_coordinate.lat == point.lat) && (target_coordinate.lon == point.lon)) ? 1. : 0.;
     }
-    else if (std::abs(r) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio) <= std::numeric_limits<float>::epsilon())
     {
-        r = 0.;
+        ratio = 0.;
     }
-    else if (std::abs(r - 1.) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio - 1.) <= std::numeric_limits<float>::epsilon())
     {
-        r = 1.;
+        ratio = 1.;
     }
     FixedPointCoordinate nearest_location;
-    BOOST_ASSERT(!std::isnan(r));
-    if (r <= 0.)
+    BOOST_ASSERT(!std::isnan(ratio));
+    if (ratio <= 0.)
     { // point is "left" of edge
-        nearest_location.lat = segA.lat;
-        nearest_location.lon = segA.lon;
+        nearest_location.lat = source_coordinate.lat;
+        nearest_location.lon = source_coordinate.lon;
     }
-    else if (r >= 1.)
+    else if (ratio >= 1.)
     { // point is "right" of edge
-        nearest_location.lat = segB.lat;
-        nearest_location.lon = segB.lon;
+        nearest_location.lat = target_coordinate.lat;
+        nearest_location.lon = target_coordinate.lon;
     }
     else
     { // point lies in between
@@ -210,10 +210,10 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
         nearest_location.lon = q * COORDINATE_PRECISION;
     }
     BOOST_ASSERT(nearest_location.isValid());
-    const float approximated_distance =
+    const float approximate_distance =
         FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
-    BOOST_ASSERT(0. <= approximated_distance);
-    return approximated_distance;
+    BOOST_ASSERT(0. <= approximate_distance);
+    return approximate_distance;
 }
 
 float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &coord_a,
@@ -284,11 +284,11 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     BOOST_ASSERT(nearest_location.isValid());
 
     // TODO: Replace with euclidean approximation when k-NN search is done
-    // const float approximated_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
-    const float approximated_distance =
+    // const float approximate_distance = FixedPointCoordinate::ApproximateEuclideanDistance(
+    const float approximate_distance =
         FixedPointCoordinate::ApproximateEuclideanDistance(query_location, nearest_location);
-    BOOST_ASSERT(0. <= approximated_distance);
-    return approximated_distance;
+    BOOST_ASSERT(0. <= approximate_distance);
+    return approximate_distance;
 }
 
 void FixedPointCoordinate::convertInternalLatLonToString(const int value, std::string &output)
