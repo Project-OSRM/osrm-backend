@@ -38,25 +38,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 
 DouglasPeucker::DouglasPeucker()
-    : douglas_peucker_thresholds({262144., // z0
-                                  131072., // z1
-                                  65536.,  // z2
-                                  32768.,  // z3
-                                  16384.,  // z4
-                                  8192.,   // z5
-                                  4096.,   // z6
-                                  2048.,   // z7
-                                  960.,    // z8
-                                  480.,    // z9
-                                  240.,    // z10
-                                  90.,     // z11
-                                  50.,     // z12
-                                  25.,     // z13
-                                  15.,     // z14
-                                  5.,      // z15
-                                  .65,     // z16
-                                  .5,      // z17
-                                  .35      // z18
+    : douglas_peucker_thresholds({262144.f, // z0
+                                  131072.f, // z1
+                                  65536.f,  // z2
+                                  32768.f,  // z3
+                                  16384.f,  // z4
+                                  8192.f,   // z5
+                                  4096.f,   // z6
+                                  2048.f,   // z7
+                                  960.f,    // z8
+                                  480.f,    // z9
+                                  240.f,    // z10
+                                  90.f,     // z11
+                                  50.f,     // z12
+                                  25.f,     // z13
+                                  15.f,     // z14
+                                  5.f,      // z15
+                                  .65f,     // z16
+                                  .5f,      // z17
+                                  .35f      // z18
       })
 {
 }
