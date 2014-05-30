@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ImportEdge.h"
 
-bool NodeBasedEdge::operator<(const NodeBasedEdge & other) const
+bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 {
     if (source == other.source)
     {
@@ -83,8 +83,7 @@ bool EdgeBasedEdge::operator<(const EdgeBasedEdge &other) const
 template <class EdgeT>
 EdgeBasedEdge::EdgeBasedEdge(const EdgeT &other)
     : source(other.source), target(other.target), edge_id(other.data.via),
-      weight(other.data.distance), forward(other.data.forward),
-      backward(other.data.backward)
+      weight(other.data.distance), forward(other.data.forward), backward(other.data.backward)
 {
 }
 
@@ -94,8 +93,13 @@ EdgeBasedEdge::EdgeBasedEdge()
 {
 }
 
-EdgeBasedEdge::EdgeBasedEdge(
-    const NodeID source, const NodeID target, const NodeID edge_id, const EdgeWeight weight, const bool forward, const bool backward)
-    : source(source), target(target), edge_id(edge_id), weight(weight), forward(forward), backward(backward)
+EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
+                             const NodeID target,
+                             const NodeID edge_id,
+                             const EdgeWeight weight,
+                             const bool forward,
+                             const bool backward)
+    : source(source), target(target), edge_id(edge_id), weight(weight), forward(forward),
+      backward(backward)
 {
 }
