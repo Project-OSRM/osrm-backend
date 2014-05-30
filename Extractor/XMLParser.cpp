@@ -287,7 +287,7 @@ ImportNode XMLParser::ReadXMLNode()
     attribute = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
     if (attribute != NULL)
     {
-        node.id = stringToUint((const char *)attribute);
+        node.node_id = stringToUint((const char *)attribute);
         xmlFree(attribute);
     }
 

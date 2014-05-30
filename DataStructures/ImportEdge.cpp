@@ -27,21 +27,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ImportEdge.h"
 
-bool NodeBasedEdge::operator<(const NodeBasedEdge &e) const
+bool NodeBasedEdge::operator<(const NodeBasedEdge & other) const
 {
-    if (source == e.source)
+    if (source == other.source)
     {
-        if (target == e.target)
+        if (target == other.target)
         {
-            if (weight == e.weight)
+            if (weight == other.weight)
             {
-                return (forward && backward && ((!e.forward) || (!e.backward)));
+                return forward && backward && ((!other.forward) || (!other.backward));
             }
-            return (weight < e.weight);
+            return weight < other.weight;
         }
-        return (target < e.target);
+        return target < other.target;
     }
-    return (source < e.source);
+    return source < other.source;
 }
 
 NodeBasedEdge::NodeBasedEdge(NodeID source,
@@ -63,28 +63,28 @@ NodeBasedEdge::NodeBasedEdge(NodeID source,
     BOOST_ASSERT_MSG(type > 0, "negative edge type");
 }
 
-bool EdgeBasedEdge::operator<(const EdgeBasedEdge &e) const
+bool EdgeBasedEdge::operator<(const EdgeBasedEdge &other) const
 {
-    if (source == e.source)
+    if (source == other.source)
     {
-        if (target == e.target)
+        if (target == other.target)
         {
-            if (weight == e.weight)
+            if (weight == other.weight)
             {
-                return (forward && backward && ((!e.forward) || (!e.backward)));
+                return forward && backward && ((!other.forward) || (!other.backward));
             }
-            return (weight < e.weight);
+            return weight < other.weight;
         }
-        return (target < e.target);
+        return target < other.target;
     }
-    return (source < e.source);
+    return source < other.source;
 }
 
 template <class EdgeT>
-EdgeBasedEdge::EdgeBasedEdge(const EdgeT &myEdge)
-    : source(myEdge.source), target(myEdge.target), edge_id(myEdge.data.via),
-      weight(myEdge.data.distance), forward(myEdge.data.forward),
-      backward(myEdge.data.backward)
+EdgeBasedEdge::EdgeBasedEdge(const EdgeT &other)
+    : source(other.source), target(other.target), edge_id(other.data.via),
+      weight(other.data.distance), forward(other.data.forward),
+      backward(other.data.backward)
 {
 }
 
@@ -95,7 +95,7 @@ EdgeBasedEdge::EdgeBasedEdge()
 }
 
 EdgeBasedEdge::EdgeBasedEdge(
-    const NodeID s, const NodeID t, const NodeID v, const EdgeWeight w, const bool f, const bool b)
-    : source(s), target(t), edge_id(v), weight(w), forward(f), backward(b)
+    const NodeID source, const NodeID target, const NodeID edge_id, const EdgeWeight weight, const bool forward, const bool backward)
+    : source(source), target(target), edge_id(edge_id), weight(weight), forward(forward), backward(backward)
 {
 }

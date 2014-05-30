@@ -243,17 +243,17 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         auto node_id_iterator = used_node_id_list.begin();
         while (node_id_iterator != used_node_id_list.end() && node_iterator != all_nodes_list.end())
         {
-            if (*node_id_iterator < node_iterator->id)
+            if (*node_id_iterator < node_iterator->node_id)
             {
                 ++node_id_iterator;
                 continue;
             }
-            if (*node_id_iterator > node_iterator->id)
+            if (*node_id_iterator > node_iterator->node_id)
             {
                 ++node_iterator;
                 continue;
             }
-            BOOST_ASSERT(*node_id_iterator == node_iterator->id);
+            BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
 
             file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
 
@@ -291,18 +291,18 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         auto edge_iterator = all_edges_list.begin();
         while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
         {
-            if (edge_iterator->start < node_iterator->id)
+            if (edge_iterator->start < node_iterator->node_id)
             {
                 ++edge_iterator;
                 continue;
             }
-            if (edge_iterator->start > node_iterator->id)
+            if (edge_iterator->start > node_iterator->node_id)
             {
                 node_iterator++;
                 continue;
             }
 
-            BOOST_ASSERT(edge_iterator->start == node_iterator->id);
+            BOOST_ASSERT(edge_iterator->start == node_iterator->node_id);
             edge_iterator->source_coordinate.lat = node_iterator->lat;
             edge_iterator->source_coordinate.lon = node_iterator->lon;
             ++edge_iterator;
@@ -327,17 +327,17 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         while (edge_iterator != all_edges_list.end() && node_iterator != all_nodes_list.end())
         {
-            if (edge_iterator->target < node_iterator->id)
+            if (edge_iterator->target < node_iterator->node_id)
             {
                 ++edge_iterator;
                 continue;
             }
-            if (edge_iterator->target > node_iterator->id)
+            if (edge_iterator->target > node_iterator->node_id)
             {
                 ++node_iterator;
                 continue;
             }
-            BOOST_ASSERT(edge_iterator->target == node_iterator->id);
+            BOOST_ASSERT(edge_iterator->target == node_iterator->node_id);
             if (edge_iterator->source_coordinate.lat != std::numeric_limits<int>::min() &&
                 edge_iterator->source_coordinate.lon != std::numeric_limits<int>::min())
             {

@@ -232,7 +232,7 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
         m_lastDenseID += dense.id(i);
         m_lastDenseLatitude += dense.lat(i);
         m_lastDenseLongitude += dense.lon(i);
-        extracted_nodes_vector[i].id = m_lastDenseID;
+        extracted_nodes_vector[i].node_id = m_lastDenseID;
         extracted_nodes_vector[i].lat =
             COORDINATE_PRECISION *
             ((double)m_lastDenseLatitude * thread_data->PBFprimitiveBlock.granularity() +
@@ -405,24 +405,24 @@ inline void PBFParser::parseWay(ParserThreadData *thread_data)
     std::vector<ExtractionWay> parsed_way_vector(number_of_ways);
     for (int i = 0; i < number_of_ways; ++i)
     {
-        const OSMPBF::Way &inputWay =
+        const OSMPBF::Way &input_way =
             thread_data->PBFprimitiveBlock.primitivegroup(thread_data->currentGroupID).ways(i);
-        parsed_way_vector[i].id = inputWay.id();
-        unsigned pathNode(0);
-        const int number_of_referenced_nodes = inputWay.refs_size();
+        parsed_way_vector[i].id = input_way.id();
+        unsigned node_id_in_path = 0;
+        const int number_of_referenced_nodes = input_way.refs_size();
         for (int j = 0; j < number_of_referenced_nodes; ++j)
         {
-            pathNode += inputWay.refs(j);
-            parsed_way_vector[i].path.push_back(pathNode);
+            node_id_in_path += input_way.refs(j);
+            parsed_way_vector[i].path.push_back(node_id_in_path);
         }
-        assert(inputWay.keys_size() == inputWay.vals_size());
-        const int number_of_keys = inputWay.keys_size();
+        assert(input_way.keys_size() == input_way.vals_size());
+        const int number_of_keys = input_way.keys_size();
         for (int j = 0; j < number_of_keys; ++j)
         {
             const std::string &key =
-                thread_data->PBFprimitiveBlock.stringtable().s(inputWay.keys(j));
+                thread_data->PBFprimitiveBlock.stringtable().s(input_way.keys(j));
             const std::string &val =
-                thread_data->PBFprimitiveBlock.stringtable().s(inputWay.vals(j));
+                thread_data->PBFprimitiveBlock.stringtable().s(input_way.vals(j));
             parsed_way_vector[i].keyVals.emplace(key, val);
         }
     }

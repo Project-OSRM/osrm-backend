@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ExternalMemoryNode::ExternalMemoryNode(
-    int lat, int lon, unsigned int id, bool bollard, bool traffic_light)
-    : NodeInfo(lat, lon, id), bollard(bollard), trafficLight(traffic_light)
+    int lat, int lon, unsigned int node_id, bool bollard, bool traffic_light)
+    : NodeInfo(lat, lon, node_id), bollard(bollard), trafficLight(traffic_light)
 {
 }
 
@@ -59,7 +59,7 @@ void ImportNode::Clear()
     keyVals.clear();
     lat = 0;
     lon = 0;
-    id = 0;
+    node_id = 0;
     bollard = false;
     trafficLight = false;
 }
