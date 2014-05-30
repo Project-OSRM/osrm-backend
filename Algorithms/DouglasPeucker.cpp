@@ -169,5 +169,4 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
             }
         }
     }
-    SimpleLogger().Write() << "size: " << input_geometry.size() << ", necessary: " << point_count;
 }
