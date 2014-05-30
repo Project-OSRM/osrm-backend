@@ -77,6 +77,9 @@ struct FixedPointCoordinate
                                                FixedPointCoordinate &nearest_location,
                                                float &r);
 
+    static int OrderedPerpendicularDistanceApproximation(const FixedPointCoordinate& point, const FixedPointCoordinate& segA, const FixedPointCoordinate& segB);
+
+
     static float GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
 
     float GetBearing(const FixedPointCoordinate &other) const;
