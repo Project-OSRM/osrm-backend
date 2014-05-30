@@ -77,11 +77,11 @@ class DescriptionFactory
     std::vector<SegmentInformation> path_description;
     DescriptionFactory();
     JSON::Value AppendUnencodedPolylineString() const;
-    void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
+    void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data, const bool use_elevation, const int elevation);
     void BuildRouteSummary(const double distance, const unsigned time);
-    void SetStartSegment(const PhantomNode &start_phantom);
-    void SetEndSegment(const PhantomNode &start_phantom);
-    JSON::Value AppendEncodedPolylineString(const bool return_encoded);
+    void SetStartSegment(const PhantomNode &start_phantom, const bool use_elevation, const int elevation);
+    void SetEndSegment(const PhantomNode &start_phantom, const bool use_elevation, const int elevation);
+    JSON::Value AppendEncodedPolylineString(const bool return_encoded, const bool use_elevation = false);
 
     template <class DataFacadeT> void Run(const DataFacadeT *facade, const unsigned zoomLevel)
     {

@@ -36,20 +36,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-struct NodeInfo
+#include "osrm/OSRM_config.h"
+
+struct NodeInfo : public Coordinate
 {
     typedef NodeID key_type; // type of NodeID
     typedef int value_type; // type of lat,lons
 
-    NodeInfo(int lat, int lon, NodeID id) : lat(lat), lon(lon), id(id) {}
-    NodeInfo()
-        : lat(std::numeric_limits<int>::max()), lon(std::numeric_limits<int>::max()),
-          id(std::numeric_limits<unsigned>::max())
+    NodeInfo(int lat, int lon, NodeID id) : Coordinate(lat, lon, MAX), id(id) {
+    }
+    NodeInfo() : Coordinate(MAX, MAX, MAX), id(std::numeric_limits<unsigned>::max())
     {
     }
 
-    int lat;
-    int lon;
     NodeID id;
 
     static NodeInfo min_value()
@@ -70,6 +69,8 @@ struct NodeInfo
     {
         switch (n)
         {
+        case 2:
+            return getEle();
         case 1:
             return lat;
         case 0:

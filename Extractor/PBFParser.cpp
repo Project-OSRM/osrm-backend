@@ -50,8 +50,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PBFParser::PBFParser(const char *fileName,
                      ExtractorCallbacks *extractor_callbacks,
-                     ScriptingEnvironment &scripting_environment)
-    : BaseParser(extractor_callbacks, scripting_environment)
+                     ScriptingEnvironment &scripting_environment,
+                     const bool use_elevation)
+    : BaseParser(extractor_callbacks, scripting_environment, use_elevation)
 {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     // TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
@@ -270,7 +271,7 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
 
     for (const ImportNode &import_node : extracted_nodes_vector)
     {
-        extractor_callbacks->ProcessNode(import_node);
+        extractor_callbacks->ProcessNode(import_node, use_elevation);
     }
 }
 

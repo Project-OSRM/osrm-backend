@@ -63,7 +63,7 @@ class PBFParser : public BaseParser
     };
 
   public:
-    PBFParser(const char *file_name, ExtractorCallbacks *extractor_callbacks, ScriptingEnvironment &scripting_environment);
+    PBFParser(const char *file_name, ExtractorCallbacks *extractor_callbacks, ScriptingEnvironment &scripting_environment, const bool use_elevation);
     virtual ~PBFParser();
 
     inline bool ReadHeader();

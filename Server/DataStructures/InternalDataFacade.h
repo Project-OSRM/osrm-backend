@@ -60,6 +60,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     unsigned m_number_of_nodes;
     QueryGraph *m_query_graph;
     std::string m_timestamp;
+    bool m_use_elevation;
 
     std::shared_ptr<ShM<FixedPointCoordinate, false>::vector> m_coordinate_list;
     ShM<NodeID, false>::vector m_via_node_list;
@@ -125,14 +126,14 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         NodeInfo current_node;
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
-        m_coordinate_list =
-            std::make_shared<std::vector<FixedPointCoordinate>>(number_of_coordinates);
+        m_coordinate_list = std::make_shared<std::vector<FixedPointCoordinate>>();
+        m_coordinate_list->reserve(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
-            m_coordinate_list->at(i) = FixedPointCoordinate(current_node.lat, current_node.lon);
-            BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lat) >> 30) == 0);
-            BOOST_ASSERT((std::abs(m_coordinate_list->at(i).lon) >> 30) == 0);
+            m_coordinate_list->emplace_back(current_node.lat, current_node.lon, current_node.getEle());
+            BOOST_ASSERT((std::abs(m_coordinate_list->back().lat) >> 30) == 0);
+            BOOST_ASSERT((std::abs(m_coordinate_list->back().lon) >> 30) == 0);
         }
         nodes_input_stream.close();
 
@@ -220,7 +221,8 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         m_static_rtree.reset();
     }
 
-    explicit InternalDataFacade(const ServerPaths &server_paths)
+    explicit InternalDataFacade(const ServerPaths &server_paths, const bool use_elevation)
+        : m_use_elevation(use_elevation)
     {
         // generate paths of data files
         if (server_paths.find("hsgrdata") == server_paths.end())

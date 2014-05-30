@@ -53,7 +53,8 @@ inline unsigned GenerateServerProgramOptions(const int argc,
                                              int &ip_port,
                                              int &requested_num_threads,
                                              bool &use_shared_memory,
-                                             bool &trial)
+                                             bool &trial,
+                                             bool &use_elevation)
 {
 
     // declare a group of options that will be allowed only on command line
@@ -96,6 +97,8 @@ inline unsigned GenerateServerProgramOptions(const int argc,
         boost::program_options::value<std::string>(&ip_address)->default_value("0.0.0.0"),
         "IP address")(
         "port,p", boost::program_options::value<int>(&ip_port)->default_value(5000), "TCP/IP port")(
+        "elevation,e", boost::program_options::value<bool>(&use_elevation)->implicit_value(true),
+            "Enable elevation output support")(
         "threads,t",
         boost::program_options::value<int>(&requested_num_threads)->default_value(8),
         "Number of threads to use")(

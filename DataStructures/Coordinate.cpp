@@ -39,12 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <limits>
 
-FixedPointCoordinate::FixedPointCoordinate()
-    : lat(std::numeric_limits<int>::min()), lon(std::numeric_limits<int>::min())
+FixedPointCoordinate::FixedPointCoordinate() : Coordinate(MIN, MIN, MIN)
 {
 }
 
-FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon)
+FixedPointCoordinate::FixedPointCoordinate(int lat, int lon, int ele) : Coordinate(lat, lon, ele)
 {
 #ifndef NDEBUG
     if (0 != (std::abs(lat) >> 30))
@@ -62,12 +61,13 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon
 
 void FixedPointCoordinate::Reset()
 {
-    lat = std::numeric_limits<int>::min();
-    lon = std::numeric_limits<int>::min();
+    lat = MIN;
+    lon = MIN;
+    setEle(MIN);
 }
 bool FixedPointCoordinate::isSet() const
 {
-    return (std::numeric_limits<int>::min() != lat) && (std::numeric_limits<int>::min() != lon);
+    return (MIN != lat) && (MIN != lon);
 }
 bool FixedPointCoordinate::isValid() const
 {
@@ -308,6 +308,13 @@ void FixedPointCoordinate::convertInternalCoordinateToString(const FixedPointCoo
     output += ",";
     convertInternalLatLonToString(coord.lat, tmp);
     output += tmp;
+}
+
+void FixedPointCoordinate::convertInternalElevationToString(const int value, std::string &output)
+{
+    char buffer[12];
+    buffer[sizeof(buffer)-1] = 0; // zero termination
+    output = printInt<sizeof(buffer)-1, ELEVATION_NUM_DIGITS>(buffer, value);
 }
 
 void

@@ -249,11 +249,11 @@ def write_input_data
   end
 end
 
-def extract_data
+def extract_data use_ele=false
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
-    log "== Extracting #{@osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+    log "== Extracting #{@osm_file}.osm#{' with elevation' if use_ele}...", :preprocess
+    unless system "#{BIN_PATH}/osrm-extract #{'-e 1' if use_ele} #{@osm_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
@@ -261,11 +261,11 @@ def extract_data
   end
 end
 
-def prepare_data
+def prepare_data use_ele=false
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
-    log "== Preparing #{@osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
+    log "== Preparing #{@osm_file}.osm#{' with elevation' if use_ele}...", :preprocess
+    unless system "#{BIN_PATH}/osrm-prepare #{'-e 1' if use_ele} #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>>#{PREPROCESS_LOG_FILE}"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
     end
@@ -273,9 +273,9 @@ def prepare_data
   end
 end
 
-def reprocess
+def reprocess use_ele=false
   write_input_data
-  extract_data unless extracted?
-  prepare_data unless prepared?
+  extract_data use_ele unless extracted?
+  prepare_data use_ele unless prepared?
   log_preprocess_done
 end

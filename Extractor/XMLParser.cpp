@@ -40,8 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-XMLParser::XMLParser(const char *filename, ExtractorCallbacks *ec, ScriptingEnvironment &se)
-    : BaseParser(ec, se)
+XMLParser::XMLParser(const char * filename, ExtractorCallbacks* ec, ScriptingEnvironment& se,
+                     const bool use_elevation) : BaseParser(ec, se, use_elevation)
 {
     inputReader = inputReaderFactory(filename);
 }
@@ -69,7 +69,7 @@ bool XMLParser::Parse()
         {
             ImportNode n = ReadXMLNode();
             ParseNodeInLua(n, lua_state);
-            extractor_callbacks->ProcessNode(n);
+            extractor_callbacks->ProcessNode(n, use_elevation);
         }
 
         if (xmlStrEqual(currentName, (const xmlChar *)"way") == 1)

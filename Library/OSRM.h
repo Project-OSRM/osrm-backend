@@ -44,7 +44,11 @@ class OSRM
     OSRM_impl *OSRM_pimpl_;
 
   public:
-    explicit OSRM(const ServerPaths &paths, const bool use_shared_memory = false);
+    explicit OSRM(
+        const ServerPaths &paths,
+        const bool use_shared_memory = false,
+        const bool use_elevation = false
+    );
     ~OSRM();
     void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
 };

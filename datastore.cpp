@@ -89,10 +89,12 @@ int main(const int argc, const char *argv[])
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
         ServerPaths server_paths;
-        if (!GenerateDataStoreOptions(argc, argv, server_paths))
+        bool use_elevation;
+        if (!GenerateDataStoreOptions(argc, argv, server_paths, use_elevation))
         {
             return 0;
         }
+        SimpleLogger().Write() << "Using elevation: " << use_elevation;
         if (server_paths.find("hsgrdata") == server_paths.end())
         {
             throw OSRMException("no hsgr file found");
@@ -362,7 +364,7 @@ int main(const int argc, const char *argv[])
         for (unsigned i = 0; i < coordinate_list_size; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(NodeInfo));
-            coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon);
+            coordinates_ptr[i] = FixedPointCoordinate(current_node.lat, current_node.lon, current_node.getEle());
         }
         nodes_input_stream.close();
 

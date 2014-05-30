@@ -43,7 +43,8 @@ class BaseParser
     BaseParser() = delete;
     BaseParser(const BaseParser &) = delete;
     BaseParser(ExtractorCallbacks *extractor_callbacks,
-               ScriptingEnvironment &scripting_environment);
+               ScriptingEnvironment &scripting_environment,
+               const bool use_elevation);
     virtual ~BaseParser() {}
     virtual bool ReadHeader() = 0;
     virtual bool Parse() = 0;
@@ -62,6 +63,7 @@ class BaseParser
     ScriptingEnvironment &scripting_environment;
     std::vector<std::string> restriction_exceptions;
     bool use_turn_restrictions;
+    bool use_elevation;
 };
 
 #endif /* BASEPARSER_H_ */
