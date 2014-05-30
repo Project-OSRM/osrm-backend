@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <iosfwd> //for std::ostream
 
-#include <OSRM_config.h>
+#include "OSRM_config.h"
 
 constexpr float COORDINATE_PRECISION = 1000000.;
 

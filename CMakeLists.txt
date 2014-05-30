@@ -19,7 +19,6 @@ else()
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
-include_directories(${CMAKE_BINARY_DIR})
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -284,4 +283,4 @@ install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
 
 # Configure file for the elevation feature
 configure_file(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}_config.h.in
-               ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_config.h)
+               ${CMAKE_SOURCE_DIR}/Include/osrm/${PROJECT_NAME}_config.h)
