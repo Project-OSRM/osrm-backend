@@ -68,6 +68,11 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         return;
     }
 
+    if (parsed_way.path.size() <= 1)
+    { // safe-guard against broken data
+        return;
+    }
+
     if (std::numeric_limits<unsigned>::max() == parsed_way.id)
     {
         SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << parsed_way.id
@@ -110,7 +115,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
     const bool split_bidirectional_edge =
         (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
 
-    for (unsigned n = 0; n < parsed_way.path.size() - 1; ++n)
+    for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
     {
         external_memory.all_edges_list.push_back(InternalExtractorEdge(
             parsed_way.path[n],
