@@ -364,7 +364,15 @@ int main(const int argc, const char *argv[])
 
             const unsigned bucket = i / 32;
             const unsigned offset = i % 32;
-            unsigned value = ((0 == offset) ? 0 : geometries_indicator_ptr[bucket]);
+            const unsigned value = [&]
+                {
+                    unsigned return_value = 0;
+                    if(0 != offset)
+                    {
+                        return_value = geometries_indicator_ptr[bucket];
+                    }
+                    return return_value;
+                }();
             if (current_edge_data.compressed_geometry)
             {
                 geometries_indicator_ptr[bucket] = (value | (1 << offset));
