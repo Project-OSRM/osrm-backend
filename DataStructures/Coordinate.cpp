@@ -163,7 +163,7 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &p
     const float b = source_coordinate.lon / COORDINATE_PRECISION;
     const float c = lat2y(target_coordinate.lat / COORDINATE_PRECISION);
     const float d = target_coordinate.lon / COORDINATE_PRECISION;
-    float p, q, nY;
+    float p, q;
     if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
     {
         const float slope = (d - b) / (c - a); // slope
@@ -177,8 +177,8 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &p
         p = c;
         q = y_value;
     }
-    nY = (d * p - c * q) / (a * d - b * c);
 
+    float nY = (d * p - c * q) / (a * d - b * c);
     // discretize the result to coordinate precision. it's a hack!
     if (std::abs(nY) < (1. / COORDINATE_PRECISION))
     {
@@ -203,13 +203,11 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &p
     BOOST_ASSERT(!std::isnan(ratio));
     if (ratio <= 0.)
     { // point is "left" of edge
-        nearest_location.lat = source_coordinate.lat;
-        nearest_location.lon = source_coordinate.lon;
+        nearest_location = source_coordinate;
     }
     else if (ratio >= 1.)
     { // point is "right" of edge
-        nearest_location.lat = target_coordinate.lat;
-        nearest_location.lon = target_coordinate.lon;
+        nearest_location = target_coordinate;
     }
     else
     { // point lies in between
@@ -217,10 +215,7 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &p
         nearest_location.lon = q * COORDINATE_PRECISION;
     }
     BOOST_ASSERT(nearest_location.isValid());
-    const float approximate_distance =
-        FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
-    BOOST_ASSERT(0. <= approximate_distance);
-    return approximate_distance;
+    return FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
 }
 
 float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &coord_a,
@@ -399,20 +394,20 @@ int FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
     const float c = lat2y(segment_target.lat / COORDINATE_PRECISION);
     const float d = segment_target.lon / COORDINATE_PRECISION;
     float p, q;
-    if (a != c)
+    if (a == c)
+    {
+        p = c;
+        q = y;
+    }
+    else
     {
         const float m = (d - b) / (c - a); // slope
         // Projection of (x,y) on line joining (a,b) and (c,d)
         p = ((x + (m * y)) + (m * m * a - m * b)) / (1.f + m * m);
         q = b + m * (p - a);
     }
-    else
-    {
-        p = c;
-        q = y;
-    }
-    const float nY = (d * p - c * q) / (a * d - b * c);
 
+    const float nY = (d * p - c * q) / (a * d - b * c);
     float ratio = (p - nY * a) / c; // These values are actually n/m+n and m/m+n , we need
     // not calculate the explicit values of m an n as we
     // are just interested in the ratio
@@ -438,6 +433,5 @@ int FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
         dx = input_point.lon - q * COORDINATE_PRECISION;
         dy = input_point.lat - y2lat(p) * COORDINATE_PRECISION;
     }
-    const int dist = sqrt(dx * dx + dy * dy);
-    return dist;
+    return sqrt(dx * dx + dy * dy);
 }
