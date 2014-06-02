@@ -93,104 +93,108 @@ bool XMLParser::Parse()
 
 InputRestrictionContainer XMLParser::ReadXMLRestriction()
 {
+
     InputRestrictionContainer restriction;
-    std::string except_tag_string;
 
-    if (xmlTextReaderIsEmptyElement(inputReader) != 1)
+    if (xmlTextReaderIsEmptyElement(inputReader) == 1)
     {
-        const int depth = xmlTextReaderDepth(inputReader);
-        while (xmlTextReaderRead(inputReader) == 1)
-        {
-            const int child_type = xmlTextReaderNodeType(inputReader);
-            if (child_type != 1 && child_type != 15)
-            {
-                continue;
-            }
-            const int childDepth = xmlTextReaderDepth(inputReader);
-            xmlChar *childName = xmlTextReaderName(inputReader);
-            if (childName == NULL)
-            {
-                continue;
-            }
-            if (depth == childDepth && child_type == 15 &&
-                xmlStrEqual(childName, (const xmlChar *)"relation") == 1)
-            {
-                xmlFree(childName);
-                break;
-            }
-            if (child_type != 1)
-            {
-                xmlFree(childName);
-                continue;
-            }
-
-            if (xmlStrEqual(childName, (const xmlChar *)"tag") == 1)
-            {
-                xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
-                xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
-                if (k != NULL && value != NULL)
-                {
-                    if (xmlStrEqual(k, (const xmlChar *)"restriction") &&
-                        (0 == std::string((const char *)value).find("only_")))
-                    {
-                        restriction.restriction.flags.isOnly = true;
-                    }
-                    if (xmlStrEqual(k, (const xmlChar *)"except"))
-                    {
-                        except_tag_string = (const char *)value;
-                    }
-                }
-
-                if (k != NULL)
-                {
-                    xmlFree(k);
-                }
-                if (value != NULL)
-                {
-                    xmlFree(value);
-                }
-            }
-            else if (xmlStrEqual(childName, (const xmlChar *)"member") == 1)
-            {
-                xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
-                if (ref != NULL)
-                {
-                    xmlChar *role = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"role");
-                    xmlChar *type = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"type");
-
-                    if (xmlStrEqual(role, (const xmlChar *)"to") &&
-                        xmlStrEqual(type, (const xmlChar *)"way"))
-                    {
-                        restriction.toWay = stringToUint((const char *)ref);
-                    }
-                    if (xmlStrEqual(role, (const xmlChar *)"from") &&
-                        xmlStrEqual(type, (const xmlChar *)"way"))
-                    {
-                        restriction.fromWay = stringToUint((const char *)ref);
-                    }
-                    if (xmlStrEqual(role, (const xmlChar *)"via") &&
-                        xmlStrEqual(type, (const xmlChar *)"node"))
-                    {
-                        restriction.restriction.viaNode = stringToUint((const char *)ref);
-                    }
-
-                    if (NULL != type)
-                    {
-                        xmlFree(type);
-                    }
-                    if (NULL != role)
-                    {
-                        xmlFree(role);
-                    }
-                    if (NULL != ref)
-                    {
-                        xmlFree(ref);
-                    }
-                }
-            }
-            xmlFree(childName);
-        }
+        return restriction;
     }
+
+    std::string except_tag_string;
+    const int depth = xmlTextReaderDepth(inputReader);
+    while (xmlTextReaderRead(inputReader) == 1)
+    {
+        const int child_type = xmlTextReaderNodeType(inputReader);
+        if (child_type != 1 && child_type != 15)
+        {
+            continue;
+        }
+        const int child_depth = xmlTextReaderDepth(inputReader);
+        xmlChar *child_name = xmlTextReaderName(inputReader);
+        if (child_name == NULL)
+        {
+            continue;
+        }
+        if (depth == child_depth && child_type == 15 &&
+            xmlStrEqual(child_name, (const xmlChar *)"relation") == 1)
+        {
+            xmlFree(child_name);
+            break;
+        }
+        if (child_type != 1)
+        {
+            xmlFree(child_name);
+            continue;
+        }
+
+        if (xmlStrEqual(child_name, (const xmlChar *)"tag") == 1)
+        {
+            xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
+            xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
+            if (k != NULL && value != NULL)
+            {
+                if (xmlStrEqual(k, (const xmlChar *)"restriction") &&
+                    (0 == std::string((const char *)value).find("only_")))
+                {
+                    restriction.restriction.flags.isOnly = true;
+                }
+                if (xmlStrEqual(k, (const xmlChar *)"except"))
+                {
+                    except_tag_string = (const char *)value;
+                }
+            }
+
+            if (k != NULL)
+            {
+                xmlFree(k);
+            }
+            if (value != NULL)
+            {
+                xmlFree(value);
+            }
+        }
+        else if (xmlStrEqual(child_name, (const xmlChar *)"member") == 1)
+        {
+            xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
+            if (ref != NULL)
+            {
+                xmlChar *role = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"role");
+                xmlChar *type = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"type");
+
+                if (xmlStrEqual(role, (const xmlChar *)"to") &&
+                    xmlStrEqual(type, (const xmlChar *)"way"))
+                {
+                    restriction.toWay = stringToUint((const char *)ref);
+                }
+                if (xmlStrEqual(role, (const xmlChar *)"from") &&
+                    xmlStrEqual(type, (const xmlChar *)"way"))
+                {
+                    restriction.fromWay = stringToUint((const char *)ref);
+                }
+                if (xmlStrEqual(role, (const xmlChar *)"via") &&
+                    xmlStrEqual(type, (const xmlChar *)"node"))
+                {
+                    restriction.restriction.viaNode = stringToUint((const char *)ref);
+                }
+
+                if (NULL != type)
+                {
+                    xmlFree(type);
+                }
+                if (NULL != role)
+                {
+                    xmlFree(role);
+                }
+                if (NULL != ref)
+                {
+                    xmlFree(ref);
+                }
+            }
+        }
+        xmlFree(child_name);
+    }
+
 
     if (ShouldIgnoreRestriction(except_tag_string))
     {
@@ -214,29 +218,29 @@ ExtractionWay XMLParser::ReadXMLWay()
         {
             continue;
         }
-        const int childDepth = xmlTextReaderDepth(inputReader);
-        xmlChar *childName = xmlTextReaderName(inputReader);
-        if (childName == NULL)
+        const int child_depth = xmlTextReaderDepth(inputReader);
+        xmlChar *child_name = xmlTextReaderName(inputReader);
+        if (child_name == NULL)
         {
             continue;
         }
 
-        if (depth == childDepth && child_type == 15 &&
-            xmlStrEqual(childName, (const xmlChar *)"way") == 1)
+        if (depth == child_depth && child_type == 15 &&
+            xmlStrEqual(child_name, (const xmlChar *)"way") == 1)
         {
             xmlChar *id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
             way.id = stringToUint((char *)id);
             xmlFree(id);
-            xmlFree(childName);
+            xmlFree(child_name);
             break;
         }
         if (child_type != 1)
         {
-            xmlFree(childName);
+            xmlFree(child_name);
             continue;
         }
 
-        if (xmlStrEqual(childName, (const xmlChar *)"tag") == 1)
+        if (xmlStrEqual(child_name, (const xmlChar *)"tag") == 1)
         {
             xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
@@ -254,7 +258,7 @@ ExtractionWay XMLParser::ReadXMLWay()
                 xmlFree(value);
             }
         }
-        else if (xmlStrEqual(childName, (const xmlChar *)"nd") == 1)
+        else if (xmlStrEqual(child_name, (const xmlChar *)"nd") == 1)
         {
             xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
             if (ref != NULL)
@@ -263,7 +267,7 @@ ExtractionWay XMLParser::ReadXMLWay()
                 xmlFree(ref);
             }
         }
-        xmlFree(childName);
+        xmlFree(child_name);
     }
     return way;
 }
@@ -304,26 +308,26 @@ ImportNode XMLParser::ReadXMLNode()
         {
             continue;
         }
-        const int childDepth = xmlTextReaderDepth(inputReader);
-        xmlChar *childName = xmlTextReaderName(inputReader);
-        if (childName == NULL)
+        const int child_depth = xmlTextReaderDepth(inputReader);
+        xmlChar *child_name = xmlTextReaderName(inputReader);
+        if (child_name == NULL)
         {
             continue;
         }
 
-        if (depth == childDepth && child_type == 15 &&
-            xmlStrEqual(childName, (const xmlChar *)"node") == 1)
+        if (depth == child_depth && child_type == 15 &&
+            xmlStrEqual(child_name, (const xmlChar *)"node") == 1)
         {
-            xmlFree(childName);
+            xmlFree(child_name);
             break;
         }
         if (child_type != 1)
         {
-            xmlFree(childName);
+            xmlFree(child_name);
             continue;
         }
 
-        if (xmlStrEqual(childName, (const xmlChar *)"tag") == 1)
+        if (xmlStrEqual(child_name, (const xmlChar *)"tag") == 1)
         {
             xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
@@ -341,7 +345,7 @@ ImportNode XMLParser::ReadXMLNode()
             }
         }
 
-        xmlFree(childName);
+        xmlFree(child_name);
     }
     return node;
 }
