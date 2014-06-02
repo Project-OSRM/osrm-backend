@@ -35,8 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <string>
 
-int current_free_list_maximum = 0;
-int UniqueNumber() { return ++current_free_list_maximum; }
+int free_list_maximum = 0;
+int UniqueNumber() { return ++free_list_maximum; }
 
 GeometryCompressor::GeometryCompressor()
 {
@@ -49,14 +49,15 @@ void GeometryCompressor::IncreaseFreeList()
     m_compressed_geometries.resize(m_compressed_geometries.size() + 100);
     for (unsigned i = 100; i > 0; --i)
     {
-        m_free_list.emplace_back(current_free_list_maximum);
-        ++current_free_list_maximum;
+        m_free_list.emplace_back(free_list_maximum);
+        ++free_list_maximum;
     }
 }
 
 bool GeometryCompressor::HasEntryForID(const EdgeID edge_id) const
 {
-    return (m_edge_id_to_list_index_map.find(edge_id) != m_edge_id_to_list_index_map.end());
+    auto iter = m_edge_id_to_list_index_map.find(edge_id);
+    return iter != m_edge_id_to_list_index_map.end();
 }
 
 unsigned GeometryCompressor::GetPositionForID(const EdgeID edge_id) const
@@ -71,9 +72,9 @@ void GeometryCompressor::SerializeInternalVector(const std::string &path) const
 {
 
     boost::filesystem::fstream geometry_out_stream(path, std::ios::binary | std::ios::out);
-    const unsigned number_of_compressed_geometries = m_compressed_geometries.size() + 1;
-    BOOST_ASSERT(std::numeric_limits<unsigned>::max() != number_of_compressed_geometries);
-    geometry_out_stream.write((char *)&number_of_compressed_geometries, sizeof(unsigned));
+    const unsigned compressed_geometries = m_compressed_geometries.size() + 1;
+    BOOST_ASSERT(std::numeric_limits<unsigned>::max() != compressed_geometries);
+    geometry_out_stream.write((char *)&compressed_geometries, sizeof(unsigned));
 
     // write indices array
     unsigned prefix_sum_of_list_indices = 0;
@@ -146,6 +147,7 @@ void GeometryCompressor::CompressEdge(const EdgeID edge_id_1,
         m_free_list.pop_back();
     }
 
+    // find bucket index
     const auto iter = m_edge_id_to_list_index_map.find(edge_id_1);
     BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
     const unsigned edge_bucket_id1 = iter->second;
@@ -197,23 +199,23 @@ void GeometryCompressor::PrintStatistics() const
     BOOST_ASSERT(0 == compressed_edges % 2);
     BOOST_ASSERT(m_compressed_geometries.size() + m_free_list.size() > 0);
 
-    uint64_t number_of_compressed_geometries = 0;
+    uint64_t compressed_geometries = 0;
     uint64_t longest_chain_length = 0;
     for (const std::vector<CompressedNode> &current_vector : m_compressed_geometries)
     {
-        number_of_compressed_geometries += current_vector.size();
+        compressed_geometries += current_vector.size();
         longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());
     }
 
     SimpleLogger().Write() << "Geometry successfully removed:"
                               "\n  compressed edges: " << compressed_edges
-                           << "\n  compressed geometries: " << number_of_compressed_geometries
+                           << "\n  compressed geometries: " << compressed_geometries
                            << "\n  longest chain length: " << longest_chain_length
                            << "\n  cmpr ratio: "
                            << ((float)compressed_edges /
-                               std::max(number_of_compressed_geometries, (uint64_t)1))
+                               std::max(compressed_geometries, (uint64_t)1))
                            << "\n  avg chain length: "
-                           << (float)number_of_compressed_geometries /
+                           << (float)compressed_geometries /
                                   std::max((uint64_t)1, compressed_edges);
 }
 
