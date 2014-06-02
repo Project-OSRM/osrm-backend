@@ -40,8 +40,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct CoordinatePairCalculator
 {
     CoordinatePairCalculator() = delete;
-    CoordinatePairCalculator(const FixedPointCoordinate & coordinate_a, const FixedPointCoordinate &coordinate_b)
+    CoordinatePairCalculator(const FixedPointCoordinate &coordinate_a,
+                             const FixedPointCoordinate &coordinate_b)
     {
+        // initialize distance calculator with two fixed coordinates a, b
         const float RAD = 0.017453292519943295769236907684886;
         first_lat = (coordinate_a.lat / COORDINATE_PRECISION) * RAD;
         first_lon = (coordinate_a.lon / COORDINATE_PRECISION) * RAD;
@@ -49,30 +51,32 @@ struct CoordinatePairCalculator
         second_lon = (coordinate_b.lon / COORDINATE_PRECISION) * RAD;
     }
 
-    int operator()(FixedPointCoordinate & other) const
+    int operator()(FixedPointCoordinate &other) const
     {
+        // set third coordinate c
         const float RAD = 0.017453292519943295769236907684886;
         const float earth_radius = 6372797.560856;
         const float float_lat1 = (other.lat / COORDINATE_PRECISION) * RAD;
         const float float_lon1 = (other.lon / COORDINATE_PRECISION) * RAD;
 
+        // compute distance (a,c)
         const float x_value_1 = (first_lon - float_lon1) * cos((float_lat1 + first_lat) / 2.);
         const float y_value_1 = first_lat - float_lat1;
-        const float dist1 = sqrt(std::pow(x_value_1, 2) + std::pow(y_value_1,2)) * earth_radius;
+        const float dist1 = sqrt(std::pow(x_value_1, 2) + std::pow(y_value_1, 2)) * earth_radius;
 
+        // compute distance (b,c)
         const float x_value_2 = (second_lon - float_lon1) * cos((float_lat1 + second_lat) / 2.);
         const float y_value_2 = second_lat - float_lat1;
-        const float dist2 = sqrt(std::pow(x_value_2, 2) + std::pow(y_value_2,2)) * earth_radius;
+        const float dist2 = sqrt(std::pow(x_value_2, 2) + std::pow(y_value_2, 2)) * earth_radius;
 
-        const int other_dist = std::min(dist1, dist2);
-        return other_dist;
+        // return the minimum
+        return std::min(dist1, dist2);
     }
 
     float first_lat;
     float first_lon;
     float second_lat;
     float second_lon;
-
 };
 
 DouglasPeucker::DouglasPeucker()
@@ -101,17 +105,16 @@ DouglasPeucker::DouglasPeucker()
 
 void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const unsigned zoom_level)
 {
-
-    input_geometry.front().necessary = true;
-    input_geometry.back().necessary = true;
-
-    unsigned point_count = 2;
-
+    // check if input data is invalid
     BOOST_ASSERT_MSG(!input_geometry.empty(), "geometry invalid");
+
     if (input_geometry.size() < 2)
     {
         return;
     }
+
+    input_geometry.front().necessary = true;
+    input_geometry.back().necessary = true;
 
     {
         BOOST_ASSERT_MSG(zoom_level < 19, "unsupported zoom level");
@@ -130,6 +133,8 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
             ++right_border;
         } while (right_border < input_geometry.size());
     }
+
+    // mark locations as 'necessary' by divide-and-conquer
     while (!recursion_stack.empty())
     {
         // pop next element
@@ -141,31 +146,34 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         BOOST_ASSERT_MSG(pair.first < pair.second, "left border on the wrong side");
         int max_int_distance = 0;
 
-        unsigned farthest_element_index = pair.second;
-        const CoordinatePairCalculator DistCalc(input_geometry[pair.first].location, input_geometry[pair.second].location);
+        unsigned farthest_entry_index = pair.second;
+        const CoordinatePairCalculator DistCalc(input_geometry[pair.first].location,
+                                                input_geometry[pair.second].location);
 
+        // sweep over range to find the maximum
         for (unsigned i = pair.first + 1; i < pair.second; ++i)
         {
             const int distance = DistCalc(input_geometry[i].location);
 
             if (distance > max_int_distance && distance > douglas_peucker_thresholds[zoom_level])
             {
-                farthest_element_index = i;
+                farthest_entry_index = i;
                 max_int_distance = distance;
             }
         }
+
+        // check if maximum violates a zoom level dependent threshold
         if (max_int_distance > douglas_peucker_thresholds[zoom_level])
         {
             //  mark idx as necessary
-            input_geometry[farthest_element_index].necessary = true;
-            ++point_count;
-            if (1 < (farthest_element_index - pair.first))
+            input_geometry[farthest_entry_index].necessary = true;
+            if (1 < (farthest_entry_index - pair.first))
             {
-                recursion_stack.emplace(pair.first, farthest_element_index);
+                recursion_stack.emplace(pair.first, farthest_entry_index);
             }
-            if (1 < (pair.second - farthest_element_index))
+            if (1 < (pair.second - farthest_entry_index))
             {
-                recursion_stack.emplace(farthest_element_index, pair.second);
+                recursion_stack.emplace(farthest_entry_index, pair.second);
             }
         }
     }
