@@ -395,15 +395,19 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::string name_file_streamName = (output_file_name + ".names");
         boost::filesystem::ofstream name_file_stream(name_file_streamName, std::ios::binary);
 
+        unsigned total_length = 0;
         std::vector<unsigned> name_lengths;
         for (const std::string &temp_string : name_list)
         {
-            name_lengths.push_back(temp_string.length());
+            const unsigned string_length = std::min(temp_string.length(), 255lu);
+            name_lengths.push_back(string_length);
+            total_length += string_length;
         }
 
         RangeTable<> table(name_lengths);
         name_file_stream << table;
 
+        name_file_stream.write((char*) &total_length, sizeof(unsigned));
         // write all chars consecutively
         for (const std::string &temp_string : name_list)
         {
