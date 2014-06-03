@@ -43,26 +43,6 @@ def request_route waypoints, params={}
   request_path "viaroute", waypoints, defaults.merge(params)
 end
 
-def parse_response response
-  if response.code == "200" && response.body.empty? == false
-    json = JSON.parse response.body
-    if json['status'] == 0
-      route = way_list json['route_instructions']
-      if route.empty?
-        "Empty route: #{json['route_instructions']}"
-      else
-        "Route: #{route}"
-      end
-    elsif json['status'] == 207
-      "No route"
-    else
-      "Status: #{json['status']}"
-    end
-  else
-    "HTTP: #{response.code}"
-  end
-end
-
 def got_route? response
   if response.code == "200" && !response.body.empty?
     json = JSON.parse response.body
