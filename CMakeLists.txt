@@ -16,6 +16,8 @@ else()
   message(WARNING "Building on a 32 bit system is unsupported")
 endif()
 
+OPTION(WITH_TOOLS "Build ORSM tools" OFF)
+
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
