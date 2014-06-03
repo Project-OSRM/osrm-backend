@@ -39,7 +39,7 @@ struct SegmentInformation
 {
     FixedPointCoordinate location;
     NodeID name_id;
-    unsigned duration;
+    EdgeWeight duration;
     float length;
     short bearing; // more than enough [0..3600] fits into 12 bits
     TurnInstruction turn_instruction;
@@ -48,7 +48,7 @@ struct SegmentInformation
 
     explicit SegmentInformation(const FixedPointCoordinate &location,
                                 const NodeID name_id,
-                                const unsigned duration,
+                                const EdgeWeight duration,
                                 const float length,
                                 const TurnInstruction turn_instruction,
                                 const bool necessary,
@@ -60,7 +60,7 @@ struct SegmentInformation
 
     explicit SegmentInformation(const FixedPointCoordinate &location,
                                 const NodeID name_id,
-                                const unsigned duration,
+                                const EdgeWeight duration,
                                 const float length,
                                 const TurnInstruction turn_instruction)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
