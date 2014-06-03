@@ -65,6 +65,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
 {
     if (!e)
     {
+        // no error detected, let's parse the request
         CompressionType compression_type(noCompression);
         boost::tribool result;
         boost::tie(result, boost::tuples::ignore) =
@@ -73,6 +74,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
                                   incoming_data_buffer.data() + bytes_transferred,
                                   &compression_type);
 
+        // the request has been parsed
         if (result)
         {
             request.endpoint = TCP_socket.remote_endpoint().address();
@@ -82,6 +84,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             std::vector<char> compressed_output;
             std::vector<boost::asio::const_buffer> output_buffer;
 
+            // compress the result w/ gzip/deflate if requested
             switch (compression_type)
             {
             case deflateRFC1951:
@@ -127,7 +130,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             }
         }
         else if (!result)
-        {
+        {   // request is not parseable
             reply = Reply::StockReply(Reply::badRequest);
 
             boost::asio::async_write(TCP_socket,
@@ -138,6 +141,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
         }
         else
         {
+            // we don't have a result yet, so continue reading
             TCP_socket.async_read_some(
                 boost::asio::buffer(incoming_data_buffer),
                 strand.wrap(boost::bind(&Connection::handle_read,
