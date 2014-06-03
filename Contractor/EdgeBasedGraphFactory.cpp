@@ -244,6 +244,9 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool b
 void EdgeBasedGraphFactory::FlushVectorToStream(
     std::ofstream &edge_data_file, std::vector<OriginalEdgeData> &original_edge_data_vector) const
 {
+    if (original_edge_data_vector.empty()) {
+        return;
+    }
     edge_data_file.write((char *)&(original_edge_data_vector[0]),
                          original_edge_data_vector.size() * sizeof(OriginalEdgeData));
     original_edge_data_vector.clear();
