@@ -112,7 +112,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         parsed_way.direction = ExtractionWay::oneway;
     }
 
-    const bool split_bidirectional_edge =
+    const bool split_edge =
         (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
 
     for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
@@ -121,7 +121,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
             parsed_way.path[n],
             parsed_way.path[n + 1],
             parsed_way.type,
-            (split_bidirectional_edge ? ExtractionWay::oneway : parsed_way.direction),
+            (split_edge ? ExtractionWay::oneway : parsed_way.direction),
             parsed_way.speed,
             parsed_way.nameID,
             parsed_way.roundabout,
@@ -129,7 +129,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
             (0 < parsed_way.duration),
             parsed_way.isAccessRestricted,
             false,
-            split_bidirectional_edge));
+            split_edge));
         external_memory.used_node_id_list.push_back(parsed_way.path[n]);
     }
     external_memory.used_node_id_list.push_back(parsed_way.path.back());
@@ -142,7 +142,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
                              parsed_way.path[parsed_way.path.size() - 2],
                              parsed_way.path.back()));
 
-    if (split_bidirectional_edge)
+    if (split_edge)
     { // Only true if the way should be split
         std::reverse(parsed_way.path.begin(), parsed_way.path.end());
         for (std::vector<NodeID>::size_type n = 0; n < parsed_way.path.size() - 1; ++n)
@@ -159,7 +159,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
                                       (0 < parsed_way.duration),
                                       parsed_way.isAccessRestricted,
                                       (ExtractionWay::oneway == parsed_way.direction),
-                                      split_bidirectional_edge));
+                                      split_edge));
         }
         external_memory.way_start_end_id_list.push_back(
             WayIDStartAndEndEdge(parsed_way.id,
