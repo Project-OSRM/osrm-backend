@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/BoostFileSystemFix.h"
 #include "Util/DataStoreOptions.h"
 #include "Util/SimpleLogger.h"
-#include "Util/UUID.h"
+#include "Util/FingerPrint.h"
 #include "typedefs.h"
 
 #ifdef __linux__
@@ -241,11 +241,11 @@ int main(const int argc, const char *argv[])
 
         boost::filesystem::ifstream hsgr_input_stream(hsgr_path, std::ios::binary);
 
-        UUID uuid_loaded, uuid_orig;
-        hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
-        if (uuid_loaded.TestGraphUtil(uuid_orig))
+        FingerPrint fingerprint_loaded, fingerprint_orig;
+        hsgr_input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+        if (fingerprint_loaded.TestGraphUtil(fingerprint_orig))
         {
-            SimpleLogger().Write(logDEBUG) << "UUID checked out ok";
+            SimpleLogger().Write(logDEBUG) << "Fingerprint checked out ok";
         }
         else
         {

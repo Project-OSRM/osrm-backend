@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "UUID.h"
+#include "FingerPrint.h"
 
 #include "OSRMException.h"
 
@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #cmakedefine MD5GRAPH "${MD5GRAPH}"
 #cmakedefine MD5OBJECTS "${MD5OBJECTS}"
 
-UUID::UUID() : magic_number(1297240911)
+FingerPrint::FingerPrint() : magic_number(1297240911)
 {
     md5_prepare[32] = md5_tree[32] = md5_graph[32] = md5_objects[32] = '\0';
 
@@ -65,13 +65,13 @@ UUID::UUID() : magic_number(1297240911)
     has_64_bits = HAS64BITS;
 }
 
-UUID::~UUID() {}
+FingerPrint::~FingerPrint() {}
 
-const boost::uuids::uuid &UUID::GetUUID() const { return named_uuid; }
+const boost::uuids::uuid &FingerPrint::GetFingerPrint() const { return named_uuid; }
 
-bool UUID::IsMagicNumberOK() const { return 1297240911 == magic_number; }
+bool FingerPrint::IsMagicNumberOK() const { return 1297240911 == magic_number; }
 
-bool UUID::TestGraphUtil(const UUID &other) const
+bool FingerPrint::TestGraphUtil(const FingerPrint &other) const
 {
     if (!other.IsMagicNumberOK())
     {
@@ -80,7 +80,7 @@ bool UUID::TestGraphUtil(const UUID &other) const
     return std::equal(md5_graph, md5_graph + 32, other.md5_graph);
 }
 
-bool UUID::TestPrepare(const UUID &other) const
+bool FingerPrint::TestPrepare(const FingerPrint &other) const
 {
     if (!other.IsMagicNumberOK())
     {
@@ -89,7 +89,7 @@ bool UUID::TestPrepare(const UUID &other) const
     return std::equal(md5_prepare, md5_prepare + 32, other.md5_prepare);
 }
 
-bool UUID::TestRTree(const UUID &other) const
+bool FingerPrint::TestRTree(const FingerPrint &other) const
 {
     if (!other.IsMagicNumberOK())
     {
@@ -98,7 +98,7 @@ bool UUID::TestRTree(const UUID &other) const
     return std::equal(md5_tree, md5_tree + 32, other.md5_tree);
 }
 
-bool UUID::TestQueryObjects(const UUID &other) const
+bool FingerPrint::TestQueryObjects(const FingerPrint &other) const
 {
     if (!other.IsMagicNumberOK())
     {

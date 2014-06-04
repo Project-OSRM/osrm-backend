@@ -215,7 +215,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         // serialize restrictions
         std::ofstream restrictions_out_stream;
         restrictions_out_stream.open(restrictions_file_name.c_str(), std::ios::binary);
-        restrictions_out_stream.write((char *)&uuid, sizeof(UUID));
+        restrictions_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
         restrictions_out_stream.write((char *)&number_of_useable_restrictions, sizeof(unsigned));
         // for (restrictions_iterator = restrictions_list.begin();
         //      restrictions_iterator != restrictions_list.end();
@@ -233,7 +233,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         std::ofstream file_out_stream;
         file_out_stream.open(output_file_name.c_str(), std::ios::binary);
-        file_out_stream.write((char *)&uuid, sizeof(UUID));
+        file_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
         file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
         time1 = std::chrono::steady_clock::now();
         std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
@@ -268,7 +268,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         std::cout << "[extractor] setting number of nodes   ... " << std::flush;
         std::ios::pos_type previous_file_position = file_out_stream.tellp();
-        file_out_stream.seekp(std::ios::beg + sizeof(UUID));
+        file_out_stream.seekp(std::ios::beg + sizeof(FingerPrint));
         file_out_stream.write((char *)&number_of_used_nodes, sizeof(unsigned));
         file_out_stream.seekp(previous_file_position);
 

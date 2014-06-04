@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/GitDescription.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
-#include "Util/UUID.h"
+#include "Util/FingerPrint.h"
 
 #ifdef __linux__
 #include <sys/mman.h>
