@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
-#include "Util/UUID.h"
+#include "Util/FingerPrint.h"
 #include "typedefs.h"
 
 #include <cstdlib>
@@ -51,7 +51,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tbb/task_scheduler_init.h>
 
 ExtractorCallbacks *extractor_callbacks;
-UUID uuid;
+FingerPrint fingerprint;
 
 int main(int argc, char *argv[])
 {

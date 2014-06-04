@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/GraphLoader.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
-#include "../Util/UUID.h"
+#include "../Util/FingerPrint.h"
 
 #include <fstream>
 #include <memory>
@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
     {
         SimpleLogger().Write() << "Using restrictions from file: " << argv[2];
         std::ifstream restriction_ifstream(argv[2], std::ios::binary);
-        const UUID uuid_orig;
-        UUID uuid_loaded;
-        restriction_ifstream.read((char *)&uuid_loaded, sizeof(UUID));
+        const FingerPrint fingerprint_orig;
+        FingerPrint fingerprint_loaded;
+        restriction_ifstream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
 
-        if (!uuid_loaded.TestGraphUtil(uuid_orig))
+        if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
         {
             SimpleLogger().Write(logWARNING) << argv[2] << " was prepared with a different build. "
                                                            "Reprocess to get rid of this warning.";

@@ -20,15 +20,15 @@ OPTION(WITH_TOOLS "Build ORSM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
 
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/UUID.cpp UUID.cpp.alwaysbuild
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/UUID-Config.cmake
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake
   DEPENDS
-    ${CMAKE_SOURCE_DIR}/Util/UUID.cpp.in
-  COMMENT "Configuring UUID.cpp"
+    ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp.in
+  COMMENT "Configuring FingerPrint.cpp"
   VERBATIM)
 
-add_custom_target(UUIDConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/UUID.cpp)
+add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
 
@@ -64,10 +64,10 @@ set(
   ${HttpGlob}
 )
 add_library(COORDLIB STATIC ${CoordinateGlob})
-add_library(UUID STATIC Util/UUID.cpp)
-add_library(OSRM ${OSRMSources} Util/GitDescription.cpp Util/UUID.cpp)
+add_library(FINGERPRINT STATIC Util/FingerPrint.cpp)
+add_library(OSRM ${OSRMSources} Util/GitDescription.cpp Util/FingerPrint.cpp)
 add_library(GITDESCRIPTION STATIC Util/GitDescription.cpp)
-add_dependencies(UUID UUIDConfigure)
+add_dependencies(FINGERPRINT FingerPrintConfigure)
 add_dependencies(GITDESCRIPTION GIT_DESCRIPTION)
 
 add_executable(osrm-routed routed.cpp ${ServerGlob})
@@ -161,10 +161,10 @@ endif()
 include_directories(${Boost_INCLUDE_DIRS})
 
 target_link_libraries(OSRM ${Boost_LIBRARIES} COORDLIB)
-target_link_libraries(osrm-extract ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB IMPORT)
-target_link_libraries(osrm-prepare ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB IMPORT)
-target_link_libraries(osrm-routed ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION)
-target_link_libraries(osrm-datastore ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
+target_link_libraries(osrm-extract ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB IMPORT)
+target_link_libraries(osrm-prepare ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB IMPORT)
+target_link_libraries(osrm-routed ${Boost_LIBRARIES} OSRM FINGERPRINT GITDESCRIPTION)
+target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
 
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
@@ -239,10 +239,10 @@ if(WITH_TOOLS)
     include_directories(${GDAL_INCLUDE_DIR})
     target_link_libraries(
       osrm-components
-      ${GDAL_LIBRARIES} ${Boost_LIBRARIES} UUID GITDESCRIPTION COORDLIB)
+      ${GDAL_LIBRARIES} ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
   endif()
   add_executable(osrm-cli Tools/simpleclient.cpp)
-  target_link_libraries(osrm-cli ${Boost_LIBRARIES} OSRM UUID GITDESCRIPTION)
+  target_link_libraries(osrm-cli ${Boost_LIBRARIES} OSRM FINGERPRINT GITDESCRIPTION)
   target_link_libraries(osrm-cli ${TBB_LIBRARIES})
   add_executable(osrm-io-benchmark Tools/io-benchmark.cpp)
   target_link_libraries(osrm-io-benchmark ${Boost_LIBRARIES} GITDESCRIPTION)

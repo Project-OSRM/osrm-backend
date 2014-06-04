@@ -191,10 +191,10 @@ int main(int argc, char *argv[])
         LogPolicy::GetInstance().Unmute();
         boost::filesystem::ifstream restriction_stream(restrictions_path, std::ios::binary);
         TurnRestriction restriction;
-        UUID uuid_loaded, uuid_orig;
+        FingerPrint fingerprint_loaded, fingerprint_orig;
         unsigned number_of_usable_restrictions = 0;
-        restriction_stream.read((char *)&uuid_loaded, sizeof(UUID));
-        if (!uuid_loaded.TestPrepare(uuid_orig))
+        restriction_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+        if (!fingerprint_loaded.TestPrepare(fingerprint_orig))
         {
             SimpleLogger().Write(logWARNING) << ".restrictions was prepared with different build.\n"
                                                 "Reprocess to get rid of this warning.";
@@ -382,7 +382,7 @@ int main(int argc, char *argv[])
                                << " edges";
 
         boost::filesystem::ofstream hsgr_output_stream(graphOut, std::ios::binary);
-        hsgr_output_stream.write((char *)&uuid_orig, sizeof(UUID));
+        hsgr_output_stream.write((char *)&fingerprint_orig, sizeof(FingerPrint));
         for (const QueryEdge &edge : contracted_edge_list)
         {
             BOOST_ASSERT(UINT_MAX != edge.source);

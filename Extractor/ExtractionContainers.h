@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "InternalExtractorEdge.h"
 #include "ExtractorStructs.h"
 #include "../DataStructures/Restriction.h"
-#include "../Util/UUID.h"
+#include "../Util/FingerPrint.h"
 
 #include <stxxl/vector>
 
@@ -52,7 +52,7 @@ class ExtractionContainers
     STXXLStringVector name_list;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
-    const UUID uuid;
+    const FingerPrint fingerprint;
 
     ExtractionContainers();
 

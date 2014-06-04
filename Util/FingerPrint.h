@@ -25,25 +25,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef UUID_H
-#define UUID_H
+#ifndef FINGERPRINT_H
+#define FINGERPRINT_H
 
 #include <boost/uuid/uuid.hpp>
 
 // implements a singleton, i.e. there is one and only one conviguration object
-class UUID
+class FingerPrint
 {
   public:
-    UUID();
-    UUID(const UUID&) = delete;
-    ~UUID();
-    const boost::uuids::uuid &GetUUID() const;
+    FingerPrint();
+    FingerPrint(const FingerPrint&) = delete;
+    ~FingerPrint();
+    const boost::uuids::uuid &GetFingerPrint() const;
     bool IsMagicNumberOK() const;
-    bool TestGraphUtil(const UUID &other) const;
-    bool TestPrepare(const UUID &other) const;
-    bool TestRTree(const UUID &other) const;
-    bool TestNodeInfo(const UUID &other) const;
-    bool TestQueryObjects(const UUID &other) const;
+    bool TestGraphUtil(const FingerPrint &other) const;
+    bool TestPrepare(const FingerPrint &other) const;
+    bool TestRTree(const FingerPrint &other) const;
+    bool TestNodeInfo(const FingerPrint &other) const;
+    bool TestQueryObjects(const FingerPrint &other) const;
 
   private:
     const unsigned magic_number;
@@ -57,4 +57,4 @@ class UUID
     bool has_64_bits;
 };
 
-#endif /* UUID_H */
+#endif /* FingerPrint_H */

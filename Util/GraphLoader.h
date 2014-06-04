@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Restriction.h"
 #include "../Util/SimpleLogger.h"
-#include "../Util/UUID.h"
+#include "../Util/FingerPrint.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
@@ -60,11 +60,11 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                      std::vector<NodeInfo> *int_to_ext_node_id_map,
                                      std::vector<TurnRestriction> &restriction_list)
 {
-    const UUID uuid_orig;
-    UUID uuid_loaded;
-    input_stream.read((char *)&uuid_loaded, sizeof(UUID));
+    const FingerPrint fingerprint_orig;
+    FingerPrint fingerprint_loaded;
+    input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
 
-    if (!uuid_loaded.TestGraphUtil(uuid_orig))
+    if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
     {
         SimpleLogger().Write(logWARNING) << ".osrm was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
@@ -285,9 +285,9 @@ unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
 
     boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);
 
-    UUID uuid_loaded, uuid_orig;
-    hsgr_input_stream.read((char *)&uuid_loaded, sizeof(UUID));
-    if (!uuid_loaded.TestGraphUtil(uuid_orig))
+    FingerPrint fingerprint_loaded, fingerprint_orig;
+    hsgr_input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+    if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
     {
         SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build.\n"
                                             "Reprocess to get rid of this warning.";
