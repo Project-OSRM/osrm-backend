@@ -46,7 +46,6 @@ template <typename Data> class ConcurrentQueue
                         [this]
                         { return m_internal_queue.size() < m_internal_queue.capacity(); });
         m_internal_queue.push_back(data);
-        m_mutex.unlock();
         m_not_empty.notify_one();
     }
 
@@ -60,7 +59,6 @@ template <typename Data> class ConcurrentQueue
                          { return !m_internal_queue.empty(); });
         popped_value = m_internal_queue.front();
         m_internal_queue.pop_front();
-        m_mutex.unlock();
         m_not_full.notify_one();
     }
 
@@ -73,7 +71,6 @@ template <typename Data> class ConcurrentQueue
         }
         popped_value = m_internal_queue.front();
         m_internal_queue.pop_front();
-        m_mutex.unlock();
         m_not_full.notify_one();
         return true;
     }
