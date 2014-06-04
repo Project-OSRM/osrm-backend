@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/GitDescription.h"
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
+#include "../Util/TimingUtil.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -100,17 +101,15 @@ int main(int argc, char *argv[])
                 throw OSRMException("Data file already exists");
             }
 
-            std::chrono::time_point<std::chrono::steady_clock> time1, time2;
             int *random_array = new int[number_of_elements];
             std::generate(random_array, random_array + number_of_elements, std::rand);
 #ifdef __APPLE__
             FILE *fd = fopen(test_path.string().c_str(), "w");
             fcntl(fileno(fd), F_NOCACHE, 1);
             fcntl(fileno(fd), F_RDAHEAD, 0);
-            time1 = std::chrono::steady_clock::now();
+            TIMER_START(write_1gb);
             write(fileno(fd), (char *)random_array, number_of_elements * sizeof(unsigned));
-            time2 = std::chrono::steady_clock::now();
-            ;
+            TIMER_STOP(write_1gb);
             fclose(fd);
 #endif
 #ifdef __linux__
@@ -120,21 +119,20 @@ int main(int argc, char *argv[])
             {
                 throw OSRMException("Could not open random data file");
             }
-            time1 = std::chrono::steady_clock::now();
+            TIMER_START(write_1gb);
             int ret = write(f, random_array, number_of_elements * sizeof(unsigned));
             if (0 > ret)
             {
                 throw OSRMException("could not write random data file");
             }
-            time2 = std::chrono::steady_clock::now();
+            TIMER_STOP(write_1gb);
             close(f);
 #endif
-            std::chrono::duration<double> elapsed_seconds = time2 - time1;
             delete[] random_array;
-            SimpleLogger().Write(logDEBUG) << "writing raw 1GB took " << elapsed_seconds.count()
-                                           << "ms";
+            SimpleLogger().Write(logDEBUG) << "writing raw 1GB took " << TIMER_SEC(write_1gb)
+                                           << "s";
             SimpleLogger().Write() << "raw write performance: " << std::setprecision(5)
-                                   << std::fixed << 1024 * 1024 / (elapsed_seconds.count())
+                                   << std::fixed << 1024 * 1024 / TIMER_SEC(write_1gb)
                                    << "MB/sec";
 
             SimpleLogger().Write(logDEBUG)
@@ -148,7 +146,6 @@ int main(int argc, char *argv[])
                 throw OSRMException("data file does not exist");
             }
 
-            std::chrono::time_point<std::chrono::steady_clock> time1, time2;
             // volatiles do not get optimized
             Statistics stats;
 
@@ -170,7 +167,7 @@ int main(int argc, char *argv[])
             }
             char *raw_array = (char *)memalign(512, number_of_elements * sizeof(unsigned));
 #endif
-            time1 = std::chrono::steady_clock::now();
+            TIMER_START(read_1gb);
 #ifdef __APPLE__
             read(fileno(fd), raw_array, number_of_elements * sizeof(unsigned));
             close(fileno(fd));
@@ -184,13 +181,12 @@ int main(int argc, char *argv[])
             f = open(test_path.string().c_str(), O_RDONLY | O_DIRECT | O_SYNC);
             SimpleLogger().Write(logDEBUG) << "opened, error: " << strerror(errno);
 #endif
-            time2 = std::chrono::steady_clock::now();
+            TIMER_STOP(read_1gb);
 
-            std::chrono::duration<double> elapsed_seconds = time2 - time1;
-            SimpleLogger().Write(logDEBUG) << "reading raw 1GB took " << elapsed_seconds.count()
-                                           << "ms";
+            SimpleLogger().Write(logDEBUG) << "reading raw 1GB took " << TIMER_SEC(read_1gb)
+                                           << "s";
             SimpleLogger().Write() << "raw read performance: " << std::setprecision(5) << std::fixed
-                                   << 1024 * 1024 / (elapsed_seconds.count()) << "MB/sec";
+                                   << 1024 * 1024 / TIMER_SEC(read_1gb) << "MB/sec";
 
             std::vector<double> timing_results_raw_random;
             SimpleLogger().Write(logDEBUG) << "running 1000 random I/Os of 4KB";
@@ -207,7 +203,7 @@ int main(int argc, char *argv[])
             {
                 unsigned block_to_read = std::rand() % number_of_blocks;
                 off_t current_offset = block_to_read * 4096;
-                time1 = std::chrono::steady_clock::now();
+                TIMER_START(random_access);
 #ifdef __APPLE__
                 int ret1 = fseek(fd, current_offset, SEEK_SET);
                 int ret2 = read(fileno(fd), (char *)&single_block[0], 4096);
@@ -222,7 +218,7 @@ int main(int argc, char *argv[])
                 int ret1 = lseek(f, current_offset, SEEK_SET);
                 int ret2 = read(f, (char *)single_block, 4096);
 #endif
-                time2 = std::chrono::steady_clock::now();
+                TIMER_STOP(random_access);
                 if (((off_t) - 1) == ret1)
                 {
                     SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
@@ -235,7 +231,7 @@ int main(int argc, char *argv[])
                     SimpleLogger().Write(logWARNING) << "read error " << strerror(errno);
                     throw OSRMException("read error");
                 }
-                timing_results_raw_random.push_back(elapsed_seconds.count());
+                timing_results_raw_random.push_back(TIMER_SEC(random_access));
             }
 
             // Do statistics
@@ -267,7 +263,7 @@ int main(int argc, char *argv[])
             for (unsigned i = 0; i < 1000; ++i)
             {
                 off_t current_offset = i * 4096;
-                time1 = std::chrono::steady_clock::now();
+                TIMER_START(read_every_100);
 #ifdef __APPLE__
                 int ret1 = fseek(fd, current_offset, SEEK_SET);
                 int ret2 = read(fileno(fd), (char *)&single_block, 4096);
@@ -283,7 +279,7 @@ int main(int argc, char *argv[])
 
                 int ret2 = read(f, (char *)single_block, 4096);
 #endif
-                time2 = std::chrono::steady_clock::now();
+                TIMER_STOP(read_every_100);
                 if (((off_t) - 1) == ret1)
                 {
                     SimpleLogger().Write(logWARNING) << "offset: " << current_offset;
@@ -296,7 +292,7 @@ int main(int argc, char *argv[])
                     SimpleLogger().Write(logWARNING) << "read error " << strerror(errno);
                     throw OSRMException("read error");
                 }
-                timing_results_raw_seq.push_back(elapsed_seconds.count());
+                timing_results_raw_seq.push_back(TIMER_SEC(read_every_100));
             }
 #ifdef __APPLE__
             fclose(fd);

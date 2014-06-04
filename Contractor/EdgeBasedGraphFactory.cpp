@@ -273,10 +273,10 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
     m_geometry_compressor.SerializeInternalVector(geometry_filename);
 
     SimpleLogger().Write() << "Timing statistics for edge-expanded graph:";
-    SimpleLogger().Write() << "Geometry compression: " << TIMER_MSEC(geometry)*0.001 << "s";
-    SimpleLogger().Write() << "Renumbering edges: " << TIMER_MSEC(renumber)*0.001 << "s";
-    SimpleLogger().Write() << "Generating nodes: " << TIMER_MSEC(generate_nodes)*0.001 << "s";
-    SimpleLogger().Write() << "Generating edges: " << TIMER_MSEC(generate_edges)*0.001 << "s";
+    SimpleLogger().Write() << "Geometry compression: " << TIMER_SEC(geometry) << "s";
+    SimpleLogger().Write() << "Renumbering edges: " << TIMER_SEC(renumber) << "s";
+    SimpleLogger().Write() << "Generating nodes: " << TIMER_SEC(generate_nodes) << "s";
+    SimpleLogger().Write() << "Generating edges: " << TIMER_SEC(generate_edges) << "s";
 }
 
 void EdgeBasedGraphFactory::CompressGeometry()

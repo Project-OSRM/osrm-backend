@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
+#include "Util/TimingUtil.h"
 #include "typedefs.h"
 
 #include <boost/filesystem.hpp>
@@ -72,8 +73,8 @@ int main(int argc, char *argv[])
     try
     {
         LogPolicy::GetInstance().Unmute();
-        std::chrono::time_point<std::chrono::steady_clock> startup_time =
-            std::chrono::steady_clock::now();
+        TIMER_START(preparing);
+        TIMER_START(expansion);
 
         boost::filesystem::path config_file_path, input_path, restrictions_path, profile_path;
         unsigned int requested_num_threads;
@@ -321,8 +322,7 @@ int main(int argc, char *argv[])
         // TODO actually use scoping: Split this up in subfunctions
         node_based_graph.reset();
 
-        std::chrono::duration<double> end_of_expansion_time =
-            std::chrono::steady_clock::now() - startup_time;
+        TIMER_STOP(expansion);
 
         // Building grid-like nearest-neighbor data structure
         SimpleLogger().Write() << "building r-tree ...";
@@ -359,13 +359,12 @@ int main(int argc, char *argv[])
 
         SimpleLogger().Write() << "initializing contractor";
         Contractor *contractor = new Contractor(number_of_edge_based_nodes, edgeBasedEdgeList);
-        std::chrono::time_point<std::chrono::steady_clock> contraction_start_timestamp =
-            std::chrono::steady_clock::now();
 
+        TIMER_START(contraction);
         contractor->Run();
-        std::chrono::duration<double> contraction_duration =
-            std::chrono::steady_clock::now() - contraction_start_timestamp;
-        SimpleLogger().Write() << "Contraction took " << contraction_duration.count() << " sec";
+        TIMER_STOP(contraction);
+
+        SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
         DeallocatingVector<QueryEdge> contracted_edge_list;
         contractor->GetEdges(contracted_edge_list);
@@ -468,20 +467,19 @@ int main(int argc, char *argv[])
         }
         hsgr_output_stream.close();
 
-        std::chrono::duration<double> entire_duration =
-            std::chrono::steady_clock::now() - startup_time;
+        TIMER_STOP(preparing);
 
-        SimpleLogger().Write() << "Preprocessing : " << entire_duration.count() << " seconds";
+        SimpleLogger().Write() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
         SimpleLogger().Write() << "Expansion  : "
-                               << (number_of_node_based_nodes / end_of_expansion_time.count())
+                               << (number_of_node_based_nodes / TIMER_SEC(expansion))
                                << " nodes/sec and "
-                               << (number_of_edge_based_nodes / end_of_expansion_time.count())
+                               << (number_of_edge_based_nodes / TIMER_SEC(expansion))
                                << " edges/sec";
 
         SimpleLogger().Write() << "Contraction: "
-                               << (number_of_edge_based_nodes / contraction_duration.count())
+                               << (number_of_edge_based_nodes / TIMER_SEC(contraction))
                                << " nodes/sec and "
-                               << number_of_used_edges / contraction_duration.count()
+                               << number_of_used_edges / TIMER_SEC(contraction)
                                << " edges/sec";
 
         node_array.clear();
