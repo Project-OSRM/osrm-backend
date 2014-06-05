@@ -84,6 +84,12 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>
     m_static_rtree;
 
+    void LoadChecksum()
+    {
+        m_check_sum = data_layout->checksum;
+        SimpleLogger().Write() << "set checksum: " << m_check_sum;
+    }
+
     void LoadTimestamp()
     {
         char *timestamp_ptr = shared_memory + data_layout->GetTimeStampOffset();
@@ -224,6 +230,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             shared_memory = (char *)(m_large_memory->Ptr());
 
             LoadGraph();
+            LoadChecksum();
             LoadNodeAndEdgeInformation();
             LoadGeometries();
             LoadRTree(ram_index_path);

@@ -95,6 +95,7 @@ struct SharedDataLayout
         SimpleLogger().Write(logDEBUG)
             << "geometries_index_list_size: " << geometries_index_list_size;
         SimpleLogger().Write(logDEBUG) << "geometries_list_size:       " << geometries_list_size;
+        SimpleLogger().Write(logDEBUG) << "checksum:                   " << checksum;
         SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
         SimpleLogger().Write(logDEBUG) << "ram index file name:        " << ram_index_file_name;
     }
