@@ -210,9 +210,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         restrictions_out_stream.open(restrictions_file_name.c_str(), std::ios::binary);
         restrictions_out_stream.write((char *)&fingerprint, sizeof(FingerPrint));
         restrictions_out_stream.write((char *)&number_of_useable_restrictions, sizeof(unsigned));
-        // for (restrictions_iterator = restrictions_list.begin();
-        //      restrictions_iterator != restrictions_list.end();
-        //      ++restrictions_iterator)
+
         for(const auto & restriction_container : restrictions_list)
         {
             if (std::numeric_limits<unsigned>::max() != restriction_container.restriction.fromNode &&
