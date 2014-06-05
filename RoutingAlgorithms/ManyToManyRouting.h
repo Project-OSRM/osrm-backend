@@ -154,7 +154,8 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
                 const EdgeWeight current_distance =
                     (*result_table)[source_id * number_of_locations + target_id];
                 // check if new distance is better
-                if ((source_distance + target_distance) < current_distance)
+                const EdgeWeight new_distance = source_distance + target_distance;
+                if (new_distance > 0 && new_distance < current_distance)
                 {
                     (*result_table)[source_id * number_of_locations + target_id] =
                         (source_distance + target_distance);
