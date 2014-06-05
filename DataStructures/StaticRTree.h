@@ -424,7 +424,7 @@ class StaticRTree
         tree_node_file.close();
 
         TIMER_STOP(construction);
-        SimpleLogger().Write() << "finished r-tree construction in " << TIMER_MSEC(construction)/1000. << " seconds";
+        SimpleLogger().Write() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
     }
 
     // Read-only operation for queries

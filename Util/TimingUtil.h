@@ -30,10 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <chrono>
 
-#define TIMER_START(_X) std::chrono::time_point<std::chrono::steady_clock> _X##_start, _X##_stop; _X##_start = std::chrono::steady_clock::now()
+#define TIMER_START(_X) auto _X##_start = std::chrono::steady_clock::now(), _X##_stop = _X##_start
 #define TIMER_STOP(_X) _X##_stop = std::chrono::steady_clock::now()
 #define TIMER_MSEC(_X) std::chrono::duration_cast<std::chrono::milliseconds>(_X##_stop - _X##_start).count()
-#define TIMER_SEC(_X) std::chrono::duration_cast<std::chrono::seconds>(_X##_stop - _X##_start).count()
+#define TIMER_SEC(_X) (0.001*std::chrono::duration_cast<std::chrono::milliseconds>(_X##_stop - _X##_start).count())
 #define TIMER_MIN(_X) std::chrono::duration_cast<std::chrono::minutes>(_X##_stop - _X##_start).count()
 
 #endif // TIMINGUTIL_H
