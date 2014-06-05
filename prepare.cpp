@@ -261,8 +261,12 @@ int main(int argc, char *argv[])
 
         speed_profile.has_turn_penalty_function = lua_function_exists(lua_state, "turn_function");
 
+        #ifdef WIN32
+        #pragma message ("Memory consumption on Windows can be higher due to memory alignment")
+        #else
         static_assert(sizeof(ImportEdge) == 20,
                       "changing ImportEdge type has influence on memory consumption!");
+        #endif
         std::vector<ImportEdge> edge_list;
         NodeID number_of_node_based_nodes =
             readBinaryOSRMGraphFromStream(in,
@@ -314,8 +318,10 @@ int main(int argc, char *argv[])
         unsigned number_of_edge_based_nodes = edge_based_graph_factor->GetNumberOfEdgeBasedNodes();
         BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
         DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
+        #ifndef WIN32
         static_assert(sizeof(EdgeBasedEdge) == 16,
                       "changing ImportEdge type has influence on memory consumption!");
+        #endif
 
         edge_based_graph_factor->GetEdgeBasedEdges(edgeBasedEdgeList);
         std::vector<EdgeBasedNode> node_based_edge_list;
