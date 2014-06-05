@@ -75,6 +75,8 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         }
         std::vector<SegmentT> shortest_path_set_difference(shortest_path_segments.size());
         std::vector<SegmentT> alternative_path_set_difference(alternative_path_segments.size());
+        std::sort(shortest_path_segments.begin(), shortest_path_segments.end(), name_id_comperator);
+        std::sort(alternative_path_segments.begin(), alternative_path_segments.end(), name_id_comperator);
         std::set_difference(shortest_path_segments.begin(),
                             shortest_path_segments.end(),
                             alternative_path_segments.begin(),
