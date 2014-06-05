@@ -203,8 +203,11 @@ int main(int argc, char *argv[])
 
         restriction_stream.read((char *)&number_of_usable_restrictions, sizeof(unsigned));
         restriction_list.resize(number_of_usable_restrictions);
-        restriction_stream.read((char *)&(restriction_list[0]),
+        if (number_of_usable_restrictions > 0)
+        {
+            restriction_stream.read((char *)&(restriction_list[0]),
                                 number_of_usable_restrictions * sizeof(TurnRestriction));
+        }
         restriction_stream.close();
 
         boost::filesystem::ifstream in;
@@ -347,8 +350,11 @@ int main(int argc, char *argv[])
         boost::filesystem::ofstream node_stream(node_filename, std::ios::binary);
         const unsigned size_of_mapping = internal_to_external_node_map.size();
         node_stream.write((char *)&size_of_mapping, sizeof(unsigned));
-        node_stream.write((char *)&(internal_to_external_node_map[0]),
+        if (size_of_mapping > 0)
+        {
+            node_stream.write((char *)&(internal_to_external_node_map[0]),
                           size_of_mapping * sizeof(NodeInfo));
+        }
         node_stream.close();
         internal_to_external_node_map.clear();
         internal_to_external_node_map.shrink_to_fit();
@@ -429,8 +435,11 @@ int main(int argc, char *argv[])
         // serialize number of edges
         hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(unsigned));
         // serialize all nodes
-        hsgr_output_stream.write((char *)&node_array[0],
+        if (node_array_size > 0)
+        {
+            hsgr_output_stream.write((char *)&node_array[0],
                                  sizeof(StaticGraph<EdgeData>::NodeArrayEntry) * node_array_size);
+        }
         // serialize all edges
 
         SimpleLogger().Write() << "Building edge array";

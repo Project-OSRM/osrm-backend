@@ -332,12 +332,17 @@ int main(const int argc, const char *argv[])
         // Loading street names
         unsigned *name_index_ptr =
             (unsigned *)(shared_memory_ptr + shared_layout_ptr->GetNameIndexOffset());
-
-        name_stream.read((char *)name_index_ptr,
+        if (shared_layout_ptr->name_index_list_size > 0)
+        {
+             name_stream.read((char *)name_index_ptr,
                          shared_layout_ptr->name_index_list_size * sizeof(unsigned));
+        }
 
         char *name_char_ptr = shared_memory_ptr + shared_layout_ptr->GetNameListOffset();
-        name_stream.read(name_char_ptr, shared_layout_ptr->name_char_list_size * sizeof(char));
+        if (shared_layout_ptr->name_char_list_size > 0)
+        {
+             name_stream.read(name_char_ptr, shared_layout_ptr->name_char_list_size * sizeof(char));
+        }
         name_stream.close();
 
         // load original edge information
@@ -387,10 +392,12 @@ int main(const int argc, const char *argv[])
         geometry_input_stream.seekg(0, geometry_input_stream.beg);
         geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
         BOOST_ASSERT(temporary_value == shared_layout_ptr->geometries_index_list_size);
-
-        geometry_input_stream.read((char *)geometries_index_ptr,
+        if (shared_layout_ptr->geometries_index_list_size > 0)
+        {
+            geometry_input_stream.read((char *)geometries_index_ptr,
                                    shared_layout_ptr->geometries_index_list_size *
                                        sizeof(unsigned));
+        }
 
         unsigned *geometries_list_ptr =
             (unsigned *)(shared_memory_ptr + shared_layout_ptr->GetGeometryListOffset());
@@ -398,8 +405,11 @@ int main(const int argc, const char *argv[])
         geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
         BOOST_ASSERT(temporary_value == shared_layout_ptr->geometries_list_size);
 
-        geometry_input_stream.read((char *)geometries_list_ptr,
+        if (shared_layout_ptr->geometries_list_size > 0)
+        {
+            geometry_input_stream.read((char *)geometries_list_ptr,
                                    shared_layout_ptr->geometries_list_size * sizeof(unsigned));
+        }
 
         // Loading list of coordinates
         FixedPointCoordinate *coordinates_ptr =
@@ -423,24 +433,33 @@ int main(const int argc, const char *argv[])
         char *rtree_ptr =
             static_cast<char *>(shared_memory_ptr + shared_layout_ptr->GetRSearchTreeOffset());
 
-        tree_node_file.read(rtree_ptr, sizeof(RTreeNode) * tree_size);
+        if (tree_size > 0)
+        { 
+             tree_node_file.read(rtree_ptr, sizeof(RTreeNode) * tree_size);
+        }
         tree_node_file.close();
 
         // load the nodes of the search graph
         QueryGraph::NodeArrayEntry *graph_node_list_ptr =
             (QueryGraph::NodeArrayEntry *)(shared_memory_ptr +
                                            shared_layout_ptr->GetGraphNodeListOffset());
-        hsgr_input_stream.read((char *)graph_node_list_ptr,
+        if (shared_layout_ptr->graph_node_list_size > 0)
+        {
+            hsgr_input_stream.read((char *)graph_node_list_ptr,
                                shared_layout_ptr->graph_node_list_size *
                                    sizeof(QueryGraph::NodeArrayEntry));
+        }
 
         // load the edges of the search graph
         QueryGraph::EdgeArrayEntry *graph_edge_list_ptr =
             (QueryGraph::EdgeArrayEntry *)(shared_memory_ptr +
                                            shared_layout_ptr->GetGraphEdgeListOffset());
-        hsgr_input_stream.read((char *)graph_edge_list_ptr,
+        if (shared_layout_ptr->graph_edge_list_size > 0)
+        {
+            hsgr_input_stream.read((char *)graph_edge_list_ptr,
                                shared_layout_ptr->graph_edge_list_size *
                                    sizeof(QueryGraph::EdgeArrayEntry));
+        }
         hsgr_input_stream.close();
 
         // acquire lock

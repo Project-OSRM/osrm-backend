@@ -450,7 +450,10 @@ class StaticRTree
         tree_node_file.read((char *)&tree_size, sizeof(uint32_t));
 
         m_search_tree.resize(tree_size);
-        tree_node_file.read((char *)&m_search_tree[0], sizeof(TreeNode) * tree_size);
+        if (tree_size > 0)
+        {
+            tree_node_file.read((char *)&m_search_tree[0], sizeof(TreeNode) * tree_size);
+        }
         tree_node_file.close();
         // open leaf node file and store thread specific pointer
         if (!boost::filesystem::exists(leaf_file))
