@@ -28,230 +28,145 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_DATA_TYPE_H_
 #define SHARED_DATA_TYPE_H_
 
-#include "BaseDataFacade.h"
-
-#include "../../DataStructures/QueryEdge.h"
-#include "../../DataStructures/StaticGraph.h"
-#include "../../DataStructures/StaticRTree.h"
-#include "../../DataStructures/TurnInstructions.h"
-
-#include "../../typedefs.h"
-
-#include <osrm/Coordinate.h>
+#include "../../Util/SimpleLogger.h"
 
 #include <cstdint>
 
-typedef BaseDataFacade<QueryEdge::EdgeData>::RTreeLeaf RTreeLeaf;
-typedef StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>::TreeNode RTreeNode;
-typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
+#include <array>
+
+// Added at the start and end of each block as sanity check
+constexpr char CANARY[] = "OSRM";
 
 struct SharedDataLayout
 {
-    uint64_t name_index_list_size;
-    uint64_t name_char_list_size;
-    uint64_t name_id_list_size;
-    uint64_t via_node_list_size;
-    uint64_t graph_node_list_size;
-    uint64_t graph_edge_list_size;
-    uint64_t coordinate_list_size;
-    uint64_t turn_instruction_list_size;
-    uint64_t r_search_tree_size;
-    uint64_t geometries_index_list_size;
-    uint64_t geometries_list_size;
-    uint64_t geometries_indicators;
+    enum BlockID {
+        NAME_OFFSETS = 0,
+        NAME_BLOCKS,
+        NAME_CHAR_LIST,
+        NAME_ID_LIST,
+        VIA_NODE_LIST,
+        GRAPH_NODE_LIST,
+        GRAPH_EDGE_LIST,
+        COORDINATE_LIST,
+        TURN_INSTRUCTION,
+        R_SEARCH_TREE,
+        GEOMETRIES_INDEX,
+        GEOMETRIES_LIST,
+        GEOMETRIES_INDICATORS,
+        HSGR_CHECKSUM,
+        TIMESTAMP,
+        FILE_INDEX_PATH,
+        NUM_BLOCKS
+    };
 
-    unsigned checksum;
-    unsigned timestamp_length;
-
-    char ram_index_file_name[1024];
+    std::array<uint64_t, NUM_BLOCKS> num_entries;
+    std::array<uint64_t, NUM_BLOCKS> entry_size;
 
     SharedDataLayout()
-        : name_index_list_size(0), name_char_list_size(0), name_id_list_size(0),
-          via_node_list_size(0), graph_node_list_size(0), graph_edge_list_size(0),
-          coordinate_list_size(0), turn_instruction_list_size(0), r_search_tree_size(0),
-          geometries_index_list_size(0), geometries_list_size(0), geometries_indicators(0),
-          checksum(0), timestamp_length(0)
-
+    : num_entries()
+    , entry_size()
     {
-        ram_index_file_name[0] = '\0';
     }
 
     void PrintInformation() const
     {
         SimpleLogger().Write(logDEBUG) << "-";
-        SimpleLogger().Write(logDEBUG) << "name_index_list_size:       " << name_index_list_size;
-        SimpleLogger().Write(logDEBUG) << "name_char_list_size:        " << name_char_list_size;
-        SimpleLogger().Write(logDEBUG) << "name_id_list_size:          " << name_id_list_size;
-        SimpleLogger().Write(logDEBUG) << "via_node_list_size:         " << via_node_list_size;
-        SimpleLogger().Write(logDEBUG) << "graph_node_list_size:       " << graph_node_list_size;
-        SimpleLogger().Write(logDEBUG) << "graph_edge_list_size:       " << graph_edge_list_size;
-        SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << timestamp_length;
-        SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << coordinate_list_size;
-        SimpleLogger().Write(logDEBUG)
-            << "turn_instruction_list_size: " << turn_instruction_list_size;
-        SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << r_search_tree_size;
-        SimpleLogger().Write(logDEBUG) << "geometries_indicators:      " << geometries_indicators
-                                       << "/" << ((geometries_indicators / 8) + 1);
-        SimpleLogger().Write(logDEBUG)
-            << "geometries_index_list_size: " << geometries_index_list_size;
-        SimpleLogger().Write(logDEBUG) << "geometries_list_size:       " << geometries_list_size;
-        SimpleLogger().Write(logDEBUG) << "checksum:                   " << checksum;
-        SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << sizeof(checksum);
-        SimpleLogger().Write(logDEBUG) << "ram index file name:        " << ram_index_file_name;
+        SimpleLogger().Write(logDEBUG) << "name_offsets_size:          " << num_entries[NAME_OFFSETS];
+        SimpleLogger().Write(logDEBUG) << "name_blocks_size:           " << num_entries[NAME_BLOCKS];
+        SimpleLogger().Write(logDEBUG) << "name_char_list_size:        " << num_entries[NAME_CHAR_LIST];
+        SimpleLogger().Write(logDEBUG) << "name_id_list_size:          " << num_entries[NAME_ID_LIST];
+        SimpleLogger().Write(logDEBUG) << "via_node_list_size:         " << num_entries[VIA_NODE_LIST];
+        SimpleLogger().Write(logDEBUG) << "graph_node_list_size:       " << num_entries[GRAPH_NODE_LIST];
+        SimpleLogger().Write(logDEBUG) << "graph_edge_list_size:       " << num_entries[GRAPH_EDGE_LIST];
+        SimpleLogger().Write(logDEBUG) << "timestamp_length:           " << num_entries[TIMESTAMP];
+        SimpleLogger().Write(logDEBUG) << "coordinate_list_size:       " << num_entries[COORDINATE_LIST];
+        SimpleLogger().Write(logDEBUG) << "turn_instruction_list_size: " << num_entries[TURN_INSTRUCTION];
+        SimpleLogger().Write(logDEBUG) << "r_search_tree_size:         " << num_entries[R_SEARCH_TREE];
+        SimpleLogger().Write(logDEBUG) << "geometries_indicators:      " << num_entries[GEOMETRIES_INDICATORS]
+                                       << "/" << ((num_entries[GEOMETRIES_INDICATORS] / 8) + 1);
+        SimpleLogger().Write(logDEBUG) << "geometries_index_list_size: " << num_entries[GEOMETRIES_INDEX];
+        SimpleLogger().Write(logDEBUG) << "geometries_list_size:       " << num_entries[GEOMETRIES_LIST];
+        SimpleLogger().Write(logDEBUG) << "sizeof(checksum):           " << entry_size[HSGR_CHECKSUM];
+
+        SimpleLogger().Write(logDEBUG) << "NAME_OFFSETS         " << ": " << GetBlockSize(NAME_OFFSETS         );
+        SimpleLogger().Write(logDEBUG) << "NAME_BLOCKS          " << ": " << GetBlockSize(NAME_BLOCKS          );
+        SimpleLogger().Write(logDEBUG) << "NAME_CHAR_LIST       " << ": " << GetBlockSize(NAME_CHAR_LIST       );
+        SimpleLogger().Write(logDEBUG) << "NAME_ID_LIST         " << ": " << GetBlockSize(NAME_ID_LIST         );
+        SimpleLogger().Write(logDEBUG) << "VIA_NODE_LIST        " << ": " << GetBlockSize(VIA_NODE_LIST        );
+        SimpleLogger().Write(logDEBUG) << "GRAPH_NODE_LIST      " << ": " << GetBlockSize(GRAPH_NODE_LIST      );
+        SimpleLogger().Write(logDEBUG) << "GRAPH_EDGE_LIST      " << ": " << GetBlockSize(GRAPH_EDGE_LIST      );
+        SimpleLogger().Write(logDEBUG) << "COORDINATE_LIST      " << ": " << GetBlockSize(COORDINATE_LIST      );
+        SimpleLogger().Write(logDEBUG) << "TURN_INSTRUCTION     " << ": " << GetBlockSize(TURN_INSTRUCTION     );
+        SimpleLogger().Write(logDEBUG) << "R_SEARCH_TREE        " << ": " << GetBlockSize(R_SEARCH_TREE        );
+        SimpleLogger().Write(logDEBUG) << "GEOMETRIES_INDEX     " << ": " << GetBlockSize(GEOMETRIES_INDEX     );
+        SimpleLogger().Write(logDEBUG) << "GEOMETRIES_LIST      " << ": " << GetBlockSize(GEOMETRIES_LIST      );
+        SimpleLogger().Write(logDEBUG) << "GEOMETRIES_INDICATORS" << ": " << GetBlockSize(GEOMETRIES_INDICATORS);
+        SimpleLogger().Write(logDEBUG) << "HSGR_CHECKSUM        " << ": " << GetBlockSize(HSGR_CHECKSUM        );
+        SimpleLogger().Write(logDEBUG) << "TIMESTAMP            " << ": " << GetBlockSize(TIMESTAMP            );
+        SimpleLogger().Write(logDEBUG) << "FILE_INDEX_PATH      " << ": " << GetBlockSize(FILE_INDEX_PATH      );
     }
 
-    uint64_t GetSizeOfLayout() const
+    template<typename T>
+    inline void SetBlockSize(BlockID bid, uint64_t entries)
     {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char)) +
-            (coordinate_list_size * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
-            (r_search_tree_size * sizeof(RTreeNode)) +
-            (geometries_indicators / 32 + 1) * sizeof(unsigned) +
-            (geometries_index_list_size * sizeof(unsigned)) +
-            (geometries_list_size * sizeof(unsigned)) + sizeof(checksum) + 1024 * sizeof(char);
-        return result;
+        num_entries[bid] = entries;
+        entry_size[bid] = sizeof(T);
     }
 
-    uint64_t GetNameIndexOffset() const { return 0; }
-    uint64_t GetNameListOffset() const
+    inline uint64_t GetBlockSize(BlockID bid) const
     {
-        uint64_t result = (name_index_list_size * sizeof(unsigned));
-        return result;
+        // special encoding
+        if (bid == GEOMETRIES_INDICATORS)
+        {
+            return (num_entries[GEOMETRIES_INDICATORS]/32 + 1) * entry_size[GEOMETRIES_INDICATORS];
+        }
+
+        return num_entries[bid] * entry_size[bid];
     }
-    uint64_t GetNameIDListOffset() const
+
+    inline uint64_t GetSizeOfLayout() const
     {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char));
-        return result;
+        return GetBlockOffset(NUM_BLOCKS) + NUM_BLOCKS*2*sizeof(CANARY);
     }
-    uint64_t GetViaNodeListOffset() const
+
+    inline uint64_t GetBlockOffset(BlockID bid) const
     {
-        uint64_t result = (name_index_list_size * sizeof(unsigned)) +
-                          (name_char_list_size * sizeof(char)) +
-                          (name_id_list_size * sizeof(unsigned));
-        return result;
-    }
-    uint64_t GetGraphNodeListOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID));
-        return result;
-    }
-    uint64_t GetGraphEdgeListOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry));
-        return result;
-    }
-    uint64_t GetTimeStampOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry));
-        return result;
-    }
-    uint64_t GetCoordinateListOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char));
-        return result;
-    }
-    uint64_t GetTurnInstructionListOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char)) +
-            (coordinate_list_size * sizeof(FixedPointCoordinate));
-        return result;
-    }
-    uint64_t GetRSearchTreeOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char)) +
-            (coordinate_list_size * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructionsClass));
-        return result;
-    }
-    uint64_t GetGeometriesIndicatorOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char)) +
-            (coordinate_list_size * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
-            (r_search_tree_size * sizeof(RTreeNode));
+        uint64_t result = sizeof(CANARY);
+        for (unsigned i = 0; i < bid; i++)
+        {
+            result += GetBlockSize((BlockID) i) + 2*sizeof(CANARY);
+        }
         return result;
     }
 
-    uint64_t GetGeometriesIndexListOffset() const
+    template<typename T, bool WRITE_CANARY=false>
+    inline T* GetBlockPtr(char* shared_memory, BlockID bid)
     {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char)) +
-            (coordinate_list_size * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
-            (r_search_tree_size * sizeof(RTreeNode)) +
-            (geometries_indicators / 32 + 1) * sizeof(unsigned);
-        return result;
-    }
+        T* ptr = (T*)(shared_memory + GetBlockOffset(bid));
+        if (WRITE_CANARY)
+        {
+            char* start_canary_ptr = shared_memory + GetBlockOffset(bid) - sizeof(CANARY);
+            char* end_canary_ptr = shared_memory + GetBlockOffset(bid) + GetBlockSize(bid);
+            std::copy(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
+            std::copy(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
+        }
+        else
+        {
+            char* start_canary_ptr = shared_memory + GetBlockOffset(bid) - sizeof(CANARY);
+            char* end_canary_ptr = shared_memory + GetBlockOffset(bid) + GetBlockSize(bid);
+            bool start_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
+            bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
+            if (!start_canary_alive)
+            {
+                throw OSRMException("Start canary of block corrupted.");
+            }
+            if (!end_canary_alive)
+            {
+                throw OSRMException("End canary of block corrupted.");
+            }
+        }
 
-    uint64_t GetGeometryListOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char)) +
-            (coordinate_list_size * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
-            (r_search_tree_size * sizeof(RTreeNode)) +
-            (geometries_indicators / 32 + 1) * sizeof(unsigned) +
-            (geometries_index_list_size * sizeof(unsigned));
-        return result;
-    }
-    uint64_t GetChecksumOffset() const
-    {
-        uint64_t result =
-            (name_index_list_size * sizeof(unsigned)) + (name_char_list_size * sizeof(char)) +
-            (name_id_list_size * sizeof(unsigned)) + (via_node_list_size * sizeof(NodeID)) +
-            (graph_node_list_size * sizeof(QueryGraph::NodeArrayEntry)) +
-            (graph_edge_list_size * sizeof(QueryGraph::EdgeArrayEntry)) +
-            (timestamp_length * sizeof(char)) +
-            (coordinate_list_size * sizeof(FixedPointCoordinate)) +
-            (turn_instruction_list_size * sizeof(TurnInstructionsClass)) +
-            (r_search_tree_size * sizeof(RTreeNode)) +
-            (geometries_indicators / 32 + 1) * sizeof(unsigned) +
-            (geometries_index_list_size * sizeof(unsigned)) +
-            (geometries_list_size * sizeof(unsigned));
-        return result;
+        return ptr;
     }
 };
 

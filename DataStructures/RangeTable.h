@@ -1,12 +1,18 @@
 #ifndef __RANGE_TABLE_H__
 #define __RANGE_TABLE_H__
 
+#include <boost/range/irange.hpp>
+
+#include <fstream>
 #include <vector>
 
 #if defined(__GNUC__) && defined(__SSE2__)
 #define OSRM_USE_SSE
 #include <xmmintrin.h>
 #endif
+
+#include "SharedMemoryFactory.h"
+#include "SharedMemoryVectorWrapper.h"
 
 /*
  * These pre-declarations are needed because parsing C++ is hard
@@ -20,9 +26,6 @@ std::ostream& operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, USE_SHA
 
 template<unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY>
 std::istream& operator>>(std::istream &in, RangeTable<BLOCK_SIZE, USE_SHARED_MEMORY> &table);
-
-#include "SharedMemoryFactory.h"
-#include "SharedMemoryVectorWrapper.h"
 
 /**
  * Stores adjacent ranges in a compressed format.
@@ -49,6 +52,7 @@ public:
 
     typedef typename ShM<BlockT, USE_SHARED_MEMORY>::vector   BlockContainerT;
     typedef typename ShM<unsigned, USE_SHARED_MEMORY>::vector OffsetContainerT;
+    typedef decltype(boost::irange(0u,0u))                    RangeT;
 
     friend std::ostream& operator<< <>(std::ostream &out, const RangeTable &table);
     friend std::istream& operator>> <>(std::istream &in, RangeTable &table);
@@ -56,7 +60,8 @@ public:
     RangeTable() {}
 
     // for loading from shared memory
-    explicit RangeTable(OffsetContainerT& external_offsets, BlockContainerT& external_blocks)
+    explicit RangeTable(OffsetContainerT& external_offsets, BlockContainerT& external_blocks, unsigned sum_lengths)
+    : sum_lengths(sum_lengths)
     {
         block_offsets.swap(external_offsets);
         diff_blocks.swap(external_blocks);
@@ -134,7 +139,7 @@ public:
         sum_lengths = lengths_prefix_sum;
     }
 
-    inline void GetRange(const unsigned id, unsigned& begin_idx, unsigned& end_idx) const
+    inline RangeT GetRange(const unsigned id) const
     {
         BOOST_ASSERT(id < block_offsets.size() + diff_blocks.size() * BLOCK_SIZE);
         // internal_idx 0 is implicitly stored in block_offsets[block_idx]
@@ -143,6 +148,8 @@ public:
 
         BOOST_ASSERT(block_idx < diff_blocks.size());
 
+        unsigned begin_idx = 0;
+        unsigned end_idx = 0;
         begin_idx = block_offsets[block_idx];
         const BlockT& block = diff_blocks[block_idx];
         if (internal_idx > 0)
@@ -163,6 +170,9 @@ public:
         }
 
         BOOST_ASSERT(begin_idx < sum_lengths && end_idx <= sum_lengths);
+        BOOST_ASSERT(begin_idx <= end_idx);
+
+        return boost::irange(begin_idx, end_idx);
     }
 private:
 

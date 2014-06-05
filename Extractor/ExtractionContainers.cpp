@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
+#include "../DataStructures/RangeTable.h"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -64,6 +65,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     {
         unsigned number_of_used_nodes = 0;
         unsigned number_of_used_edges = 0;
+
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
         TIMER_START(sorting_used_nodes);
         stxxl::sort(used_node_id_list.begin(), used_node_id_list.end(), Cmp(), stxxl_memory);

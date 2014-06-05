@@ -381,18 +381,16 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             result = "";
             return;
         }
-        unsigned begin_index;
-        unsigned end_index;
-        m_name_table.GetRange(name_id, begin_index, end_index);
-        BOOST_ASSERT_MSG(begin_index < m_names_char_list.size(), "begin index of name too high");
-        BOOST_ASSERT_MSG(end_index < m_names_char_list.size(), "end index of name too high");
+        auto range = m_name_table.GetRange(name_id);
 
-        BOOST_ASSERT_MSG(begin_index <= end_index, "string ends before begin");
         result.clear();
-        result.resize(end_index - begin_index);
-        std::copy(m_names_char_list.begin() + begin_index,
-                  m_names_char_list.begin() + end_index,
-                  result.begin());
+        if (range.begin() != range.end())
+        {
+            result.resize(range.back() - range.front());
+            std::copy(m_names_char_list.begin() + range.front(),
+                      m_names_char_list.begin() + range.back(),
+                      result.begin());
+        }
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const
