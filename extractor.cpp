@@ -30,13 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Extractor/ScriptingEnvironment.h"
 #include "Extractor/PBFParser.h"
 #include "Extractor/XMLParser.h"
+#include "Util/FingerPrint.h"
 #include "Util/GitDescription.h"
 #include "Util/MachineInfo.h"
 #include "Util/OSRMException.h"
 #include "Util/ProgramOptions.h"
 #include "Util/SimpleLogger.h"
 #include "Util/StringUtil.h"
-#include "Util/FingerPrint.h"
+#include "Util/TimingUtil.h"
 #include "typedefs.h"
 
 #include <cstdlib>
@@ -58,8 +59,8 @@ int main(int argc, char *argv[])
     try
     {
         LogPolicy::GetInstance().Unmute();
-        std::chrono::time_point<std::chrono::steady_clock> startup_time =
-            std::chrono::steady_clock::now();
+
+        TIMER_START(extracting);
 
         boost::filesystem::path config_file_path, input_path, profile_path;
         unsigned requested_num_threads;
@@ -240,16 +241,14 @@ int main(int argc, char *argv[])
             throw OSRMException("Parser not initialized!");
         }
         SimpleLogger().Write() << "Parsing in progress..";
-        std::chrono::time_point<std::chrono::steady_clock> parsing_start_time =
-            std::chrono::steady_clock::now();
+        TIMER_START(parsing);
 
         parser->Parse();
         delete parser;
         delete extractor_callbacks;
 
-        std::chrono::duration<double> parsing_duration =
-            std::chrono::steady_clock::now() - parsing_start_time;
-        SimpleLogger().Write() << "Parsing finished after " << parsing_duration.count()
+        TIMER_STOP(parsing);
+        SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing)
                                << " seconds";
 
         if (extraction_containers.all_edges_list.empty())
@@ -260,9 +259,8 @@ int main(int argc, char *argv[])
 
         extraction_containers.PrepareData(output_file_name, restriction_fileName);
 
-        std::chrono::duration<double> extraction_duration =
-            std::chrono::steady_clock::now() - startup_time;
-        SimpleLogger().Write() << "extraction finished after " << extraction_duration.count()
+        TIMER_STOP(extracting);
+        SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting)
                                << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: "
                                << "./osrm-prepare " << output_file_name << std::endl;
