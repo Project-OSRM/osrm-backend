@@ -263,6 +263,11 @@ function way_function (way)
   end
   way.type = 1
 
+  -- scale speeds to get better avg driving times
+  way.speed = way.speed * max_to_average_speed_factor
+  if maxspeed_backward > 0 then
+    way.backward_speed = way.backward_speed*max_to_average_speed_factor
+  end
   return
 end
 

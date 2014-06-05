@@ -13,12 +13,12 @@ OSRM will use 4/5 of the projected free-flow speed.
         And the ways
             | nodes | highway | maxspeed |
             | ab    | trunk   |          |
-            | bc    | trunk   | 60       |
+            | bc    | trunk   | 60 +-1   |
 
         When I route I should get
             | from | to | route | speed       |
-            | a    | b  | ab    | 85 km/h +-1 |
-            | b    | c  | bc    | 48 km/h +-1 |
+            | a    | b  | ab    | 67 km/h +-1 |
+            | b    | c  | bc    | 38 km/h +-1 |
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
@@ -27,25 +27,25 @@ OSRM will use 4/5 of the projected free-flow speed.
         And the ways
             | nodes | highway     | maxspeed |
             | ab    | residential |          |
-            | bc    | residential | 90       |
+            | bc    | residential | 90 +-1   |
 
         When I route I should get
             | from | to | route | speed       |
-            | a    | b  | ab    | 25 km/h +-1 |
-            | b    | c  | bc    | 72 km/h +-1 |
+            | a    | b  | ab    | 20 km/h +-1 |
+            | b    | c  | bc    | 57 km/h +-1 |
 
     Scenario: Car - Forward/backward maxspeed
         Given a grid size of 100 meters
 
         Then routability should be
             | highway | maxspeed | maxspeed:forward | maxspeed:backward | forw        | backw       |
-            | primary |          |                  |                   | 65 km/h +-1 | 65 km/h +-1 |
-            | primary | 60       |                  |                   | 48 km/h +-1 | 48 km/h +-1 |
-            | primary |          | 60               |                   | 48 km/h +-1 | 65 km/h +-1 |
-            | primary |          |                  | 60                | 65 km/h +-1 | 48 km/h +-1 |
-            | primary | 15       | 60               |                   | 48 km/h +-1 | 12 km/h +-1 |
-            | primary | 15       |                  | 60                | 12 km/h +-1 | 48 km/h +-1 |
-            | primary | 15       | 30               | 60                | 24 km/h +-1 | 48 km/h +-1 |
+            | primary |          |                  |                   | 51 km/h +-1 | 51 km/h +-1 |
+            | primary | 60       |                  |                   | 37 km/h +-1 | 37 km/h +-1 |
+            | primary |          | 60               |                   | 37 km/h +-1 | 65 km/h +-1 |
+            | primary |          |                  | 60                | 51 km/h +-1 | 37 km/h +-1 |
+            | primary | 15       | 60               |                   | 37 km/h +-1 | 12 km/h +-1 |
+            | primary | 15       |                  | 60                | 9 km/h +-1  | 37 km/h +-1 |
+            | primary | 15       | 30               | 60                | 19 km/h +-1 | 37 km/h +-1 |
 
     Scenario: Car - Maxspeed should not allow routing on unroutable ways
         Then routability should be
