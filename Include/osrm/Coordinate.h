@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
 #include <iosfwd> //for std::ostream
+#include <string>
 
 constexpr float COORDINATE_PRECISION = 1000000.;
 
