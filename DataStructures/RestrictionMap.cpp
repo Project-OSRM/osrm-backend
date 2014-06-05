@@ -36,12 +36,12 @@ bool RestrictionMap::IsNodeAViaNode(const NodeID node) const
 }
 
 RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &graph,
-                               const std::vector<TurnRestriction> &input_restrictions_list)
+                               const std::vector<TurnRestriction> &restriction_list)
     : m_count(0), m_graph(graph)
 {
     // decompose restriction consisting of a start, via and end node into a
     // a pair of starting edge and a list of all end nodes
-    for (auto &restriction : input_restrictions_list)
+    for (auto &restriction : restriction_list)
     {
         m_restriction_start_nodes.insert(restriction.fromNode);
         m_no_turn_via_node_set.insert(restriction.viaNode);
@@ -78,33 +78,35 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
 }
 
 // Replace end v with w in each turn restriction containing u as via node
-void RestrictionMap::FixupArrivingTurnRestriction(const NodeID u, const NodeID v, const NodeID w)
+void RestrictionMap::FixupArrivingTurnRestriction(const NodeID node_u,
+                                                  const NodeID node_v,
+                                                  const NodeID node_w)
 {
-    BOOST_ASSERT(u != SPECIAL_NODEID);
-    BOOST_ASSERT(v != SPECIAL_NODEID);
-    BOOST_ASSERT(w != SPECIAL_NODEID);
+    BOOST_ASSERT(node_u != SPECIAL_NODEID);
+    BOOST_ASSERT(node_v != SPECIAL_NODEID);
+    BOOST_ASSERT(node_w != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(u))
+    if (!RestrictionStartsAtNode(node_u))
     {
         return;
     }
 
-    // find all potential start edges
-    // it is more efficent to get a (small) list of potential start edges than iterating over all buckets
+    // find all potential start edges. It is more efficent to get a (small) list
+    // of potential start edges than iterating over all buckets
     std::vector<NodeID> predecessors;
-    for (const EdgeID current_edge_id : m_graph->GetAdjacentEdgeRange(u))
+    for (const EdgeID current_edge_id : m_graph->GetAdjacentEdgeRange(node_u))
     {
         const EdgeData &edge_data = m_graph->GetEdgeData(current_edge_id);
         const NodeID target = m_graph->GetTarget(current_edge_id);
-        if (edge_data.backward && (v != target))
+        if (edge_data.backward && (node_v != target))
         {
             predecessors.push_back(target);
         }
     }
 
-    for (const NodeID x : predecessors)
+    for (const NodeID node_x : predecessors)
     {
-        auto restriction_iterator = m_restriction_map.find({x, u});
+        auto restriction_iterator = m_restriction_map.find({node_x, node_u});
         if (restriction_iterator == m_restriction_map.end())
         {
             continue;
@@ -114,27 +116,29 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID u, const NodeID v
         auto &bucket = m_restriction_bucket_list.at(index);
         for (RestrictionTarget &restriction_target : bucket)
         {
-            if (v == restriction_target.first)
+            if (node_v == restriction_target.first)
             {
-                restriction_target.first = w;
+                restriction_target.first = node_w;
             }
         }
     }
 }
 
 // Replaces start edge (v, w) with (u, w). Only start node changes.
-void RestrictionMap::FixupStartingTurnRestriction(const NodeID u, const NodeID v, const NodeID w)
+void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
+                                                  const NodeID node_v,
+                                                  const NodeID node_w)
 {
-    BOOST_ASSERT(u != SPECIAL_NODEID);
-    BOOST_ASSERT(v != SPECIAL_NODEID);
-    BOOST_ASSERT(w != SPECIAL_NODEID);
+    BOOST_ASSERT(node_u != SPECIAL_NODEID);
+    BOOST_ASSERT(node_v != SPECIAL_NODEID);
+    BOOST_ASSERT(node_w != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(u))
+    if (!RestrictionStartsAtNode(node_u))
     {
         return;
     }
 
-    const auto restriction_iterator = m_restriction_map.find({v, w});
+    const auto restriction_iterator = m_restriction_map.find({node_v, node_w});
     if (restriction_iterator != m_restriction_map.end())
     {
         const unsigned index = restriction_iterator->second;
@@ -142,24 +146,25 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID u, const NodeID v
         m_restriction_map.erase(restriction_iterator);
 
         // insert new restriction start (u,w) (point to index)
-        RestrictionSource new_source = {u, w};
+        RestrictionSource new_source = {node_u, node_w};
         m_restriction_map.emplace(new_source, index);
     }
 }
 
 // Check if edge (u, v) is the start of any turn restriction.
 // If so returns id of first target node.
-NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const
+NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID node_u,
+                                                   const NodeID node_v) const
 {
-    BOOST_ASSERT(u != SPECIAL_NODEID);
-    BOOST_ASSERT(v != SPECIAL_NODEID);
+    BOOST_ASSERT(node_u != SPECIAL_NODEID);
+    BOOST_ASSERT(node_v != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(u))
+    if (!RestrictionStartsAtNode(node_u))
     {
         return SPECIAL_NODEID;
     }
 
-    auto restriction_iter = m_restriction_map.find({u, v});
+    auto restriction_iter = m_restriction_map.find({node_u, node_v});
     if (restriction_iter != m_restriction_map.end())
     {
         const unsigned index = restriction_iter->second;
@@ -176,25 +181,27 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID 
 }
 
 // Checks if turn <u,v,w> is actually a turn restriction.
-bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const
+bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
+                                             const NodeID node_v,
+                                             const NodeID node_w) const
 {
-    BOOST_ASSERT(u != SPECIAL_NODEID);
-    BOOST_ASSERT(v != SPECIAL_NODEID);
-    BOOST_ASSERT(w != SPECIAL_NODEID);
+    BOOST_ASSERT(node_u != SPECIAL_NODEID);
+    BOOST_ASSERT(node_v != SPECIAL_NODEID);
+    BOOST_ASSERT(node_w != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(u))
+    if (!RestrictionStartsAtNode(node_u))
     {
         return false;
     }
 
-    auto restriction_iter = m_restriction_map.find({u, v});
+    auto restriction_iter = m_restriction_map.find({node_u, node_v});
     if (restriction_iter != m_restriction_map.end())
     {
         const unsigned index = restriction_iter->second;
         const auto &bucket = m_restriction_bucket_list.at(index);
         for (const RestrictionTarget &restriction_target : bucket)
         {
-            if ((w == restriction_target.first) && // target found
+            if ((node_w == restriction_target.first) && // target found
                 (!restriction_target.second))       // and not an only_-restr.
             {
                 return true;
