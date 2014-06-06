@@ -310,7 +310,7 @@ int main(const int argc, const char *argv[])
         shared_layout_ptr->coordinate_list_size = coordinate_list_size;
 
         // load geometries sizes
-        std::ifstream geometry_input_stream(geometries_data_path.c_str(), std::ios::binary);
+        std::ifstream geometry_input_stream(geometries_data_path.string().c_str(), std::ios::binary);
         unsigned number_of_geometries_indices = 0;
         unsigned number_of_compressed_geometries = 0;
 
