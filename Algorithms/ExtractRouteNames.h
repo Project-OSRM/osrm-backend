@@ -134,8 +134,12 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         std::sort(alternative_path_set_difference.begin(),
                   alternative_path_set_difference.end(),
                   length_comperator);
-        alternative_segment_2 = PickNextLongestSegment(alternative_path_set_difference,
+
+        if (!alternative_path_segments.empty())
+        {
+            alternative_segment_2 = PickNextLongestSegment(alternative_path_set_difference,
                                                        alternative_path_segments[0].name_id);
+        }
 
         // move the segments into the order in which they occur.
         if (shortest_segment_1.position > shortest_segment_2.position)
