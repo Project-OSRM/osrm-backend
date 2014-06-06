@@ -140,15 +140,15 @@ float FixedPointCoordinate::ApproximateEuclideanDistance(const int lat1,
     BOOST_ASSERT(lat2 != std::numeric_limits<int>::min());
     BOOST_ASSERT(lon2 != std::numeric_limits<int>::min());
 
-    const float RAD = 0.017453292519943295769236907684886;
+    const float RAD = 0.017453292519943295769236907684886f;
     const float float_lat1 = (lat1 / COORDINATE_PRECISION) * RAD;
     const float float_lon1 = (lon1 / COORDINATE_PRECISION) * RAD;
     const float float_lat2 = (lat2 / COORDINATE_PRECISION) * RAD;
     const float float_lon2 = (lon2 / COORDINATE_PRECISION) * RAD;
 
-    const float x_value = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.);
+    const float x_value = (float_lon2 - float_lon1) * cos((float_lat1 + float_lat2) / 2.f);
     const float y_value = float_lat2 - float_lat1;
-    const float earth_radius = 6372797.560856;
+    const float earth_radius = 6372797.560856f;
     return sqrt(x_value * x_value + y_value * y_value) * earth_radius;
 }
 
@@ -170,7 +170,7 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
         const float slope = (d - b) / (c - a); // slope
         // Projection of (x,y) on line joining (a,b) and (c,d)
         p = ((x_value + (slope * y_value)) + (slope * slope * a - slope * b)) /
-            (1. + slope * slope);
+            (1.f + slope * slope);
         q = b + slope * (p - a);
     }
     else
@@ -181,34 +181,34 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
 
     float nY = (d * p - c * q) / (a * d - b * c);
     // discretize the result to coordinate precision. it's a hack!
-    if (std::abs(nY) < (1. / COORDINATE_PRECISION))
+    if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
     {
-        nY = 0.;
+        nY = 0.f;
     }
 
     // compute ratio
     float ratio = (p - nY * a) / c;
     if (std::isnan(ratio))
     {
-        ratio = (target_coordinate == point ? 1. : 0.);
+        ratio = (target_coordinate == point ? 1.f : 0.f);
     }
     else if (std::abs(ratio) <= std::numeric_limits<float>::epsilon())
     {
-        ratio = 0.;
+        ratio = 0.f;
     }
-    else if (std::abs(ratio - 1.) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio - 1.f) <= std::numeric_limits<float>::epsilon())
     {
-        ratio = 1.;
+        ratio = 1.f;
     }
 
     //compute the nearest location
     FixedPointCoordinate nearest_location;
     BOOST_ASSERT(!std::isnan(ratio));
-    if (ratio <= 0.)
+    if (ratio <= 0.f)
     { // point is "left" of edge
         nearest_location = source_coordinate;
     }
-    else if (ratio >= 1.)
+    else if (ratio >= 1.f)
     { // point is "right" of edge
         nearest_location = target_coordinate;
     }
@@ -241,7 +241,7 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     {
         const float m = (d - b) / (c - a); // slope
         // Projection of (x,y) on line joining (a,b) and (c,d)
-        p = ((x + (m * y)) + (m * m * a - m * b)) / (1. + m * m);
+        p = ((x + (m * y)) + (m * m * a - m * b)) / (1.f + m * m);
         q = b + m * (p - a);
     }
     else
@@ -252,9 +252,9 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     nY = (d * p - c * q) / (a * d - b * c);
 
     // discretize the result to coordinate precision. it's a hack!
-    if (std::abs(nY) < (1. / COORDINATE_PRECISION))
+    if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
     {
-        nY = 0.;
+        nY = 0.f;
     }
 
     // compute ratio
@@ -263,20 +263,20 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     // are just interested in the ratio
     if (std::isnan(ratio))
     {
-        ratio = (segment_target == query_location ? 1. : 0.);
+        ratio = (segment_target == query_location ? 1.f : 0.f);
     }
     else if (std::abs(ratio) <= std::numeric_limits<float>::epsilon())
     {
         ratio = 0.;
     }
-    else if (std::abs(ratio - 1.) <= std::numeric_limits<float>::epsilon())
+    else if (std::abs(ratio - 1.f) <= std::numeric_limits<float>::epsilon())
     {
-        ratio = 1.;
+        ratio = 1.f;
     }
 
     // compute nearest location
     BOOST_ASSERT(!std::isnan(ratio));
-    if (ratio <= 0.)
+    if (ratio <= 0.f)
     {
         nearest_location = segment_source;
     }
@@ -443,5 +443,5 @@ int FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
     }
 
     // return an approximation in the plane
-    return sqrt(dx * dx + dy * dy);
+    return static_cast<int>(sqrt(dx * dx + dy * dy));
 }
