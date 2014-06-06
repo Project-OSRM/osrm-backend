@@ -172,16 +172,22 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
 
         m_geometry_indices.resize(number_of_indices);
-        geometry_stream.read((char *)&(m_geometry_indices[0]),
+        if (number_of_indices > 0)
+        {
+            geometry_stream.read((char *)&(m_geometry_indices[0]),
                              number_of_indices * sizeof(unsigned));
+        }
 
         geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
 
         BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
         m_geometry_list.resize(number_of_compressed_geometries);
 
-        geometry_stream.read((char *)&(m_geometry_list[0]),
+        if (number_of_compressed_geometries > 0)
+        {
+            geometry_stream.read((char *)&(m_geometry_list[0]),
                              number_of_compressed_geometries * sizeof(unsigned));
+        }
         geometry_stream.close();
     }
 

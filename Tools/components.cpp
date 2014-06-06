@@ -79,8 +79,11 @@ int main(int argc, char *argv[])
         restriction_ifstream.read((char *)&usable_restriction_count, sizeof(uint32_t));
         restrictions_vector.resize(usable_restriction_count);
 
-        restriction_ifstream.read((char *)&(restrictions_vector[0]),
-                                  usable_restriction_count * sizeof(TurnRestriction));
+        if (usable_restriction_count>0)
+        {
+            restriction_ifstream.read((char *)&(restrictions_vector[0]),
+                                 usable_restriction_count * sizeof(TurnRestriction));
+        }
         restriction_ifstream.close();
 
         std::ifstream input_stream;
