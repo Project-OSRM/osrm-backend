@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/MercatorUtil.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
-#include "../Util/TrigonometryTables.h"
 
 #include <boost/assert.hpp>
 
