@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MERCATOR_UTIL_H
 #define MERCATOR_UTIL_H
 
-#include "SimpleLogger.h"
-
 #include <cmath>
 
 inline float y2lat(const float a)
