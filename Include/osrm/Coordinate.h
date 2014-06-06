@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iosfwd> //for std::ostream
 #include <string>
 
-constexpr float COORDINATE_PRECISION = 1000000.f;
+const float COORDINATE_PRECISION = 1000000.f;
 
 struct FixedPointCoordinate
 {
