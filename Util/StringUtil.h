@@ -96,7 +96,7 @@ static inline void int64ToString(const int64_t value, std::string &output)
     boost::spirit::karma::generate(sink, boost::spirit::karma::long_long, value);
 }
 
-static inline int stringToInt(const std::string &input)
+static inline int StringToInt(const std::string &input)
 {
     auto first_digit = input.begin();
     // Delete any trailing white-spaces
@@ -109,7 +109,7 @@ static inline int stringToInt(const std::string &input)
     return value;
 }
 
-static inline unsigned stringToUint(const std::string &input)
+static inline unsigned StringToUint(const std::string &input)
 {
     auto first_digit = input.begin();
     // Delete any trailing white-spaces
@@ -117,12 +117,12 @@ static inline unsigned stringToUint(const std::string &input)
     {
         ++first_digit;
     }
-    int value = 0;
+    unsigned value = 0;
     boost::spirit::qi::parse(first_digit, input.end(), boost::spirit::uint_, value);
     return value;
 }
 
-static inline uint64_t stringToInt64(const std::string &input)
+static inline uint64_t StringToInt64(const std::string &input)
 {
     auto first_digit = input.begin();
     // Delete any trailing white-spaces

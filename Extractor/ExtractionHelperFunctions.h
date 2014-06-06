@@ -68,18 +68,18 @@ inline unsigned parseDuration(const std::string &s)
     {
         if (1 == result.size())
         {
-            minutes = stringToInt(result[0]);
+            minutes = StringToUint(result[0]);
         }
         if (2 == result.size())
         {
-            minutes = stringToInt(result[1]);
-            hours = stringToInt(result[0]);
+            minutes = StringToUint(result[1]);
+            hours = StringToUint(result[0]);
         }
         if (3 == result.size())
         {
-            seconds = stringToInt(result[2]);
-            minutes = stringToInt(result[1]);
-            hours = stringToInt(result[0]);
+            seconds = StringToUint(result[2]);
+            minutes = StringToUint(result[1]);
+            hours = StringToUint(result[0]);
         }
         return 10 * (3600 * hours + 60 * minutes + seconds);
     }

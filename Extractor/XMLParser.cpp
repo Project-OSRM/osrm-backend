@@ -165,17 +165,17 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
                 if (xmlStrEqual(role, (const xmlChar *)"to") &&
                     xmlStrEqual(type, (const xmlChar *)"way"))
                 {
-                    restriction.toWay = stringToUint((const char *)ref);
+                    restriction.toWay = StringToUint((const char *)ref);
                 }
                 if (xmlStrEqual(role, (const xmlChar *)"from") &&
                     xmlStrEqual(type, (const xmlChar *)"way"))
                 {
-                    restriction.fromWay = stringToUint((const char *)ref);
+                    restriction.fromWay = StringToUint((const char *)ref);
                 }
                 if (xmlStrEqual(role, (const xmlChar *)"via") &&
                     xmlStrEqual(type, (const xmlChar *)"node"))
                 {
-                    restriction.restriction.viaNode = stringToUint((const char *)ref);
+                    restriction.restriction.viaNode = StringToUint((const char *)ref);
                 }
 
                 if (NULL != type)
@@ -229,7 +229,7 @@ ExtractionWay XMLParser::ReadXMLWay()
             xmlStrEqual(child_name, (const xmlChar *)"way") == 1)
         {
             xmlChar *id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
-            way.id = stringToUint((char *)id);
+            way.id = StringToUint((char *)id);
             xmlFree(id);
             xmlFree(child_name);
             break;
@@ -263,7 +263,7 @@ ExtractionWay XMLParser::ReadXMLWay()
             xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
             if (ref != NULL)
             {
-                way.path.push_back(stringToUint((const char *)ref));
+                way.path.push_back(StringToUint((const char *)ref));
                 xmlFree(ref);
             }
         }
@@ -291,7 +291,7 @@ ImportNode XMLParser::ReadXMLNode()
     attribute = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
     if (attribute != NULL)
     {
-        node.node_id = stringToUint((const char *)attribute);
+        node.node_id = StringToUint((const char *)attribute);
         xmlFree(attribute);
     }
 
