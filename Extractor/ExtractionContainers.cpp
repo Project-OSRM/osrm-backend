@@ -395,32 +395,19 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::string name_file_streamName = (output_file_name + ".names");
         boost::filesystem::ofstream name_file_stream(name_file_streamName, std::ios::binary);
 
-        // write number of names
-        const unsigned number_of_names = name_list.size() + 1;
-        name_file_stream.write((char *)&(number_of_names), sizeof(unsigned));
+        std::vector<unsigned> name_lengths;
+        for (const std::string &temp_string : name_list)
+        {
+            name_lengths.push_back(temp_string.length());
+        }
 
-        // compute total number of chars
-        unsigned total_number_of_chars = 0;
-        for (const std::string &temp_string : name_list)
-        {
-            total_number_of_chars += temp_string.length();
-        }
-        // write total number of chars
-        name_file_stream.write((char *)&(total_number_of_chars), sizeof(unsigned));
-        // write prefixe sums
-        unsigned name_lengths_prefix_sum = 0;
-        for (const std::string &temp_string : name_list)
-        {
-            name_file_stream.write((char *)&(name_lengths_prefix_sum), sizeof(unsigned));
-            name_lengths_prefix_sum += temp_string.length();
-        }
-        // duplicate on purpose!
-        name_file_stream.write((char *)&(name_lengths_prefix_sum), sizeof(unsigned));
+        RangeTable<> table(name_lengths);
+        name_file_stream << table;
 
         // write all chars consecutively
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = temp_string.length();
+            const unsigned string_length = std::min(temp_string.length(), 255lu);
             name_file_stream.write(temp_string.c_str(), string_length);
         }
 
