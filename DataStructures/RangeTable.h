@@ -60,7 +60,7 @@ public:
     RangeTable() {}
 
     // for loading from shared memory
-    explicit RangeTable(OffsetContainerT& external_offsets, BlockContainerT& external_blocks, unsigned sum_lengths)
+    explicit RangeTable(OffsetContainerT& external_offsets, BlockContainerT& external_blocks, const unsigned sum_lengths)
     : sum_lengths(sum_lengths)
     {
         block_offsets.swap(external_offsets);
@@ -70,9 +70,12 @@ public:
     // construct table from length vector
     explicit RangeTable(std::vector<unsigned> lengths)
     {
-        unsigned number_of_blocks = (lengths.size() + 1) / (BLOCK_SIZE + 1);
-        if (lengths.size() % (BLOCK_SIZE + 1) != 0)
-            number_of_blocks += 1;
+        const unsigned number_of_blocks = [&lengths]() {
+            unsigned num = (lengths.size() + 1) / (BLOCK_SIZE + 1);
+            if (lengths.size() % (BLOCK_SIZE + 1) != 0)
+                num += 1;
+            return num;
+        }();
 
         block_offsets.reserve(number_of_blocks);
         diff_blocks.reserve(number_of_blocks);
@@ -143,8 +146,8 @@ public:
     {
         BOOST_ASSERT(id < block_offsets.size() + diff_blocks.size() * BLOCK_SIZE);
         // internal_idx 0 is implicitly stored in block_offsets[block_idx]
-        unsigned internal_idx = id % (BLOCK_SIZE + 1);
-        unsigned block_idx = id / (BLOCK_SIZE + 1);
+        const unsigned internal_idx = id % (BLOCK_SIZE + 1);
+        const unsigned block_idx = id / (BLOCK_SIZE + 1);
 
         BOOST_ASSERT(block_idx < diff_blocks.size());
 
@@ -241,7 +244,7 @@ template<unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY>
 std::ostream& operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, USE_SHARED_MEMORY> &table)
 {
     // write number of block
-    unsigned number_of_blocks = table.diff_blocks.size();
+    const unsigned number_of_blocks = table.diff_blocks.size();
     out.write((char *) &number_of_blocks, sizeof(unsigned));
     // write total length
     out.write((char *) &table.sum_lengths, sizeof(unsigned));
