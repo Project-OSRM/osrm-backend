@@ -68,12 +68,14 @@ public:
     }
 
     // construct table from length vector
-    explicit RangeTable(std::vector<unsigned> lengths)
+    explicit RangeTable(const std::vector<unsigned>& lengths)
     {
         const unsigned number_of_blocks = [&lengths]() {
             unsigned num = (lengths.size() + 1) / (BLOCK_SIZE + 1);
-            if (lengths.size() % (BLOCK_SIZE + 1) != 0)
+            if ((lengths.size() + 1) % (BLOCK_SIZE + 1) != 0)
+            {
                 num += 1;
+            }
             return num;
         }();
 
@@ -132,7 +134,8 @@ public:
 
         while (block_idx != 0)
         {
-            block.uint8_blocks[block_idx - 1] = 0;
+            block.uint8_blocks[block_idx - 1] = last_length;
+            last_length = 0;
             block_idx = (block_idx + 1) % (BLOCK_SIZE + 1);
         }
         diff_blocks.push_back(block);
