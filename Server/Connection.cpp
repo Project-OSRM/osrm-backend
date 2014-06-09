@@ -83,7 +83,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
         request.endpoint = TCP_socket.remote_endpoint().address();
         request_handler.handle_request(request, reply);
 
-        Header compression_header;
+        // Header compression_header;
         std::vector<char> compressed_output;
         std::vector<boost::asio::const_buffer> output_buffer;
 
@@ -92,9 +92,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
         {
         case deflateRFC1951:
             //use deflate for compression
-            compression_header.name = "Content-Encoding";
-            compression_header.value = "deflate";
-            reply.headers.insert(reply.headers.begin(), compression_header);
+            reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
             compressBufferCollection(reply.content, compression_type, compressed_output);
             reply.setSize(compressed_output.size());
             output_buffer = reply.HeaderstoBuffers();
@@ -102,9 +100,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             break;
         case gzipRFC1952:
             //use gzip for compression
-            compression_header.name = "Content-Encoding";
-            compression_header.value = "gzip";
-            reply.headers.insert(reply.headers.begin(), compression_header);
+            reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
             compressBufferCollection(reply.content, compression_type, compressed_output);
             reply.setSize(compressed_output.size());
             output_buffer = reply.HeaderstoBuffers();
