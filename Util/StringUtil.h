@@ -89,6 +89,14 @@ static inline std::string IntToString(const int value)
     return output;
 }
 
+static inline std::string UintToString(const unsigned value)
+{
+    std::string output;
+    std::back_insert_iterator<std::string> sink(output);
+    boost::spirit::karma::generate(sink, boost::spirit::karma::uint_, value);
+    return output;
+}
+
 static inline void int64ToString(const int64_t value, std::string &output)
 {
     output.clear();
