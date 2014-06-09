@@ -63,92 +63,85 @@ void Connection::start()
 
 void Connection::handle_read(const boost::system::error_code &e, std::size_t bytes_transferred)
 {
-    if (!e)
+    if (e)
     {
-        // no error detected, let's parse the request
-        CompressionType compression_type(noCompression);
-        boost::tribool result;
-        boost::tie(result, boost::tuples::ignore) =
-            request_parser->Parse(request,
-                                  incoming_data_buffer.data(),
-                                  incoming_data_buffer.data() + bytes_transferred,
-                                  &compression_type);
+        return;
+    }
 
-        // the request has been parsed
-        if (result)
+    // no error detected, let's parse the request
+    CompressionType compression_type(noCompression);
+    boost::tribool result;
+    boost::tie(result, boost::tuples::ignore) =
+        request_parser->Parse(request,
+                              incoming_data_buffer.data(),
+                              incoming_data_buffer.data() + bytes_transferred,
+                              &compression_type);
+
+    // the request has been parsed
+    if (result)
+    {
+        request.endpoint = TCP_socket.remote_endpoint().address();
+        request_handler.handle_request(request, reply);
+
+        Header compression_header;
+        std::vector<char> compressed_output;
+        std::vector<boost::asio::const_buffer> output_buffer;
+
+        // compress the result w/ gzip/deflate if requested
+        switch (compression_type)
         {
-            request.endpoint = TCP_socket.remote_endpoint().address();
-            request_handler.handle_request(request, reply);
-
-            Header compression_header;
-            std::vector<char> compressed_output;
-            std::vector<boost::asio::const_buffer> output_buffer;
-
-            // compress the result w/ gzip/deflate if requested
-            switch (compression_type)
-            {
-            case deflateRFC1951:
-                compression_header.name = "Content-Encoding";
-                compression_header.value = "deflate";
-                reply.headers.insert(reply.headers.begin(), compression_header);
-                compressBufferCollection(reply.content, compression_type, compressed_output);
-                reply.setSize(compressed_output.size());
-                output_buffer = reply.HeaderstoBuffers();
-                output_buffer.push_back(boost::asio::buffer(compressed_output));
-                boost::asio::async_write(
-                    TCP_socket,
-                    output_buffer,
-                    strand.wrap(boost::bind(&Connection::handle_write,
-                                            this->shared_from_this(),
-                                            boost::asio::placeholders::error)));
-                break;
-            case gzipRFC1952:
-                compression_header.name = "Content-Encoding";
-                compression_header.value = "gzip";
-                reply.headers.insert(reply.headers.begin(), compression_header);
-                compressBufferCollection(reply.content, compression_type, compressed_output);
-                reply.setSize(compressed_output.size());
-                output_buffer = reply.HeaderstoBuffers();
-                output_buffer.push_back(boost::asio::buffer(compressed_output));
-                boost::asio::async_write(
-                    TCP_socket,
-                    output_buffer,
-                    strand.wrap(boost::bind(&Connection::handle_write,
-                                            this->shared_from_this(),
-                                            boost::asio::placeholders::error)));
-                break;
-            case noCompression:
-                reply.SetUncompressedSize();
-                output_buffer = reply.toBuffers();
-                boost::asio::async_write(
-                    TCP_socket,
-                    output_buffer,
-                    strand.wrap(boost::bind(&Connection::handle_write,
-                                            this->shared_from_this(),
-                                            boost::asio::placeholders::error)));
-                break;
-            }
+        case deflateRFC1951:
+            //use deflate for compression
+            compression_header.name = "Content-Encoding";
+            compression_header.value = "deflate";
+            reply.headers.insert(reply.headers.begin(), compression_header);
+            compressBufferCollection(reply.content, compression_type, compressed_output);
+            reply.setSize(compressed_output.size());
+            output_buffer = reply.HeaderstoBuffers();
+            output_buffer.push_back(boost::asio::buffer(compressed_output));
+            break;
+        case gzipRFC1952:
+            //use gzip for compression
+            compression_header.name = "Content-Encoding";
+            compression_header.value = "gzip";
+            reply.headers.insert(reply.headers.begin(), compression_header);
+            compressBufferCollection(reply.content, compression_type, compressed_output);
+            reply.setSize(compressed_output.size());
+            output_buffer = reply.HeaderstoBuffers();
+            output_buffer.push_back(boost::asio::buffer(compressed_output));
+            break;
+        case noCompression:
+            //don't use any compression
+            reply.SetUncompressedSize();
+            output_buffer = reply.toBuffers();
+            break;
         }
-        else if (!result)
-        {   // request is not parseable
-            reply = Reply::StockReply(Reply::badRequest);
+        boost::asio::async_write(
+            TCP_socket,
+            output_buffer,
+            strand.wrap(boost::bind(&Connection::handle_write,
+                                    this->shared_from_this(),
+                                    boost::asio::placeholders::error)));
+    }
+    else if (!result)
+    {   // request is not parseable
+        reply = Reply::StockReply(Reply::badRequest);
 
-            boost::asio::async_write(TCP_socket,
-                                     reply.toBuffers(),
-                                     strand.wrap(boost::bind(&Connection::handle_write,
-                                                             this->shared_from_this(),
-                                                             boost::asio::placeholders::error)));
-        }
-        else
-        {
-            // we don't have a result yet, so continue reading
-            TCP_socket.async_read_some(
-                boost::asio::buffer(incoming_data_buffer),
-                strand.wrap(boost::bind(&Connection::handle_read,
-                                        this->shared_from_this(),
-                                        boost::asio::placeholders::error,
-                                        boost::asio::placeholders::bytes_transferred)));
-        }
+        boost::asio::async_write(TCP_socket,
+                                 reply.toBuffers(),
+                                 strand.wrap(boost::bind(&Connection::handle_write,
+                                                         this->shared_from_this(),
+                                                         boost::asio::placeholders::error)));
+    }
+    else
+    {
+        // we don't have a result yet, so continue reading
+        TCP_socket.async_read_some(
+            boost::asio::buffer(incoming_data_buffer),
+            strand.wrap(boost::bind(&Connection::handle_read,
+                                    this->shared_from_this(),
+                                    boost::asio::placeholders::error,
+                                    boost::asio::placeholders::bytes_transferred)));
     }
 }
 
