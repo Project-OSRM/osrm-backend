@@ -94,7 +94,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             //use deflate for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
             compressBufferCollection(reply.content, compression_type, compressed_output);
-            reply.setSize(compressed_output.size());
+            reply.SetSize(compressed_output.size());
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
@@ -102,14 +102,14 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             //use gzip for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
             compressBufferCollection(reply.content, compression_type, compressed_output);
-            reply.setSize(compressed_output.size());
+            reply.SetSize(compressed_output.size());
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
         case noCompression:
             //don't use any compression
             reply.SetUncompressedSize();
-            output_buffer = reply.toBuffers();
+            output_buffer = reply.ToBuffers();
             break;
         }
         boost::asio::async_write(
@@ -124,7 +124,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
         reply = Reply::StockReply(Reply::badRequest);
 
         boost::asio::async_write(TCP_socket,
-                                 reply.toBuffers(),
+                                 reply.ToBuffers(),
                                  strand.wrap(boost::bind(&Connection::handle_write,
                                                          this->shared_from_this(),
                                                          boost::asio::placeholders::error)));
