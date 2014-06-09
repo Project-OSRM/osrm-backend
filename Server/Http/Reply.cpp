@@ -32,13 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace http
 {
 
-void Reply::setSize(const unsigned size)
+void Reply::SetSize(const unsigned size)
 {
     for (Header &h : headers)
     {
         if ("Content-Length" == h.name)
         {
-            h.value = IntToString(size);
+            h.value = UintToString(size);
         }
     }
 }
@@ -48,10 +48,10 @@ void Reply::SetUncompressedSize()
 {
     unsigned uncompressed_size = 0;
     uncompressed_size = content.size();
-    setSize(uncompressed_size);
+    SetSize(uncompressed_size);
 }
 
-std::vector<boost::asio::const_buffer> Reply::toBuffers()
+std::vector<boost::asio::const_buffer> Reply::ToBuffers()
 {
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(ToBuffer(status));
@@ -85,23 +85,16 @@ std::vector<boost::asio::const_buffer> Reply::HeaderstoBuffers()
 
 Reply Reply::StockReply(Reply::status_type status)
 {
-    Reply rep;
-    rep.status = status;
-    rep.content.clear();
+    Reply reply;
+    reply.status = status;
+    reply.content.clear();
 
-    const std::string status_string = rep.ToString(status);
-    rep.content.insert(rep.content.end(), status_string.begin(), status_string.end());
-    rep.headers.resize(3);
-    rep.headers[0].name = "Access-Control-Allow-Origin";
-    rep.headers[0].value = "*";
-    rep.headers[1].name = "Content-Length";
-
-    std::string size_string = IntToString(rep.content.size());
-
-    rep.headers[1].value = size_string;
-    rep.headers[2].name = "Content-Type";
-    rep.headers[2].value = "text/html";
-    return rep;
+    const std::string status_string = reply.ToString(status);
+    reply.content.insert(reply.content.end(), status_string.begin(), status_string.end());
+    reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
+    reply.headers.emplace_back("Content-Length", UintToString(reply.content.size()));
+    reply.headers.emplace_back("Content-Type", "text/html");
+    return reply;
 }
 
 std::string Reply::ToString(Reply::status_type status)
