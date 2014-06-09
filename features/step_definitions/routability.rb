@@ -19,7 +19,7 @@ def test_routability_row i
       else
         # if we hit the wrong way segment, we assume it's
         # because the one we tested was not unroutable
-        r = {}
+        r[:status] = nil
       end
     end
     result[direction] = r
