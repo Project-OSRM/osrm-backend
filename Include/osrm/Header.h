@@ -29,18 +29,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define HTTP_HEADER_H
 
 #include <string>
+#include <algorithm>
 
 namespace http
 {
 struct Header
 {
-    std::string name;
-    std::string value;
+    Header& operator=(const Header& other) = default;
+    Header(const std::string & name, const std::string & value) : name(name), value(value) {}
+    Header(const Header && other) : name(std::move(other.name)), value(std::move(other.value)) {}
+
     void Clear()
     {
         name.clear();
         value.clear();
     }
+
+    std::string name;
+    std::string value;
 };
 }
 
