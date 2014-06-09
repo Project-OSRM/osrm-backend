@@ -386,9 +386,9 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         result.clear();
         if (range.begin() != range.end())
         {
-            result.resize(range.back() - range.front());
+            result.resize(range.back() - range.front() + 1);
             std::copy(m_names_char_list.begin() + range.front(),
-                      m_names_char_list.begin() + range.back(),
+                      m_names_char_list.begin() + range.back() + 1,
                       result.begin());
         }
     }
