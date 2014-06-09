@@ -123,8 +123,10 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         // Sweep over array and identify those ranges that need to be checked
         do
         {
+            // traverse list until new border element found
             if (input_geometry[right_border].necessary)
             {
+                // sanity checks
                 BOOST_ASSERT(input_geometry[left_border].necessary);
                 BOOST_ASSERT(input_geometry[right_border].necessary);
                 recursion_stack.emplace(left_border, right_border);
@@ -140,12 +142,13 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         // pop next element
         const GeometryRange pair = recursion_stack.top();
         recursion_stack.pop();
+        // sanity checks
         BOOST_ASSERT_MSG(input_geometry[pair.first].necessary, "left border mus be necessary");
         BOOST_ASSERT_MSG(input_geometry[pair.second].necessary, "right border must be necessary");
         BOOST_ASSERT_MSG(pair.second < input_geometry.size(), "right border outside of geometry");
         BOOST_ASSERT_MSG(pair.first < pair.second, "left border on the wrong side");
-        int max_int_distance = 0;
 
+        int max_int_distance = 0;
         unsigned farthest_entry_index = pair.second;
         const CoordinatePairCalculator DistCalc(input_geometry[pair.first].location,
                                                 input_geometry[pair.second].location);
@@ -154,7 +157,7 @@ void DouglasPeucker::Run(std::vector<SegmentInformation> &input_geometry, const 
         for (unsigned i = pair.first + 1; i < pair.second; ++i)
         {
             const int distance = DistCalc(input_geometry[i].location);
-
+            // found new feasible maximum?
             if (distance > max_int_distance && distance > douglas_peucker_thresholds[zoom_level])
             {
                 farthest_entry_index = i;
