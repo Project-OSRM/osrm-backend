@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../Util/SimpleLogger.h"
 
-bool RestrictionMap::IsNodeAViaNode(const NodeID node) const
+bool RestrictionMap::IsViaNode(const NodeID node) const
 {
     return m_no_turn_via_node_set.find(node) != m_no_turn_via_node_set.end();
 }
@@ -86,7 +86,7 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID node_u,
     BOOST_ASSERT(node_v != SPECIAL_NODEID);
     BOOST_ASSERT(node_w != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(node_u))
+    if (!IsViaNode(node_u))
     {
         return;
     }
@@ -106,7 +106,7 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID node_u,
 
     for (const NodeID node_x : predecessors)
     {
-        auto restriction_iterator = m_restriction_map.find({node_x, node_u});
+        const auto restriction_iterator = m_restriction_map.find({node_x, node_u});
         if (restriction_iterator == m_restriction_map.end())
         {
             continue;
@@ -133,7 +133,7 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
     BOOST_ASSERT(node_v != SPECIAL_NODEID);
     BOOST_ASSERT(node_w != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(node_u))
+    if (!IsSourceNode(node_v))
     {
         return;
     }
@@ -144,8 +144,8 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
         const unsigned index = restriction_iterator->second;
         // remove old restriction start (v,w)
         m_restriction_map.erase(restriction_iterator);
-
-        // insert new restriction start (u,w) (point to index)
+        m_restriction_start_nodes.emplace(node_u);
+        // insert new restriction start (u,w) (pointing to index)
         RestrictionSource new_source = {node_u, node_w};
         m_restriction_map.emplace(new_source, index);
     }
@@ -159,7 +159,7 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID node_u,
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
     BOOST_ASSERT(node_v != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(node_u))
+    if (!IsSourceNode(node_u))
     {
         return SPECIAL_NODEID;
     }
@@ -185,11 +185,13 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
                                              const NodeID node_v,
                                              const NodeID node_w) const
 {
+    // return false;
+
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
     BOOST_ASSERT(node_v != SPECIAL_NODEID);
     BOOST_ASSERT(node_w != SPECIAL_NODEID);
 
-    if (!RestrictionStartsAtNode(node_u))
+    if (!IsSourceNode(node_u))
     {
         return false;
     }
@@ -212,7 +214,7 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
 }
 
 // check of node is the start of any restriction
-bool RestrictionMap::RestrictionStartsAtNode(const NodeID node) const
+bool RestrictionMap::IsSourceNode(const NodeID node) const
 {
     if (m_restriction_start_nodes.find(node) == m_restriction_start_nodes.end())
     {

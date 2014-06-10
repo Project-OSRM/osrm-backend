@@ -51,11 +51,11 @@ class RestrictionMap
     void FixupStartingTurnRestriction(const NodeID u, const NodeID v, const NodeID w);
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
-    bool IsNodeAViaNode(const NodeID node) const;
+    bool IsViaNode(const NodeID node) const;
     unsigned size() { return m_count; }
 
   private:
-    bool RestrictionStartsAtNode(const NodeID node) const;
+    bool IsSourceNode(const NodeID node) const;
     typedef std::pair<NodeID, NodeID> RestrictionSource;
     typedef std::pair<NodeID, bool> RestrictionTarget;
     typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;

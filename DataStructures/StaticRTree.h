@@ -46,8 +46,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-
 #include <boost/thread.hpp>
+#include <boost/variant.hpp>
 
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
@@ -256,6 +256,27 @@ class StaticRTree
             return other.min_dist < min_dist;
         }
     };
+
+    template<typename InnerNode, typename LeafNode>
+    struct IncrementalQueryCandidate
+    {
+        explicit IncrementalQueryCandidate(const float dist, const uint32_t n_id)
+            : min_dist(dist), node_id(n_id)
+        {
+        }
+        IncrementalQueryCandidate() : min_dist(std::numeric_limits<float>::max()), node_id(UINT_MAX) {}
+        float min_dist;
+        uint32_t node_id;
+        inline bool operator<(const IncrementalQueryCandidate &other) const
+        {
+            // Attn: this is reversed order. std::pq is a max pq!
+            return other.min_dist < min_dist;
+        }
+
+        boost::variant<InnerNode, LeafNode> NodeWrapper;
+    };
+
+
 
     typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
     uint64_t m_element_count;
@@ -580,6 +601,18 @@ class StaticRTree
         return result_coordinate.isValid();
     }
 
+    // implementation of the Hjaltason/Samet query [3]
+    bool IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                      PhantomNode &result_phantom_node,
+                                      const unsigned zoom_level)
+    {
+        bool found_result = false;
+
+
+        // BOOST_ASSERT(found_result);
+        return found_result;
+    }
+
     bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                       PhantomNode &result_phantom_node,
                                       const unsigned zoom_level)
@@ -753,5 +786,5 @@ class StaticRTree
 
 //[1] "On Packing R-Trees"; I. Kamel, C. Faloutsos; 1993; DOI: 10.1145/170088.170403
 //[2] "Nearest Neighbor Queries", N. Roussopulos et al; 1995; DOI: 10.1145/223784.223794
-
+//[3] "Distance Browsing in Spatial Databases"; G. Hjaltason, H. Samet; 1999; ACM Trans. DB Sys Vol.24 No.2, pp.265-318
 #endif // STATICRTREE_H
