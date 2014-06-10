@@ -165,7 +165,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
     void LoadGeometries(const boost::filesystem::path &geometry_file)
     {
-        std::ifstream geometry_stream(geometry_file.c_str(), std::ios::binary);
+        std::ifstream geometry_stream(geometry_file.string().c_str(), std::ios::binary);
         unsigned number_of_indices = 0;
         unsigned number_of_compressed_geometries = 0;
 
