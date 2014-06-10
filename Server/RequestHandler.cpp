@@ -79,15 +79,15 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         RouteParameters route_parameters;
         APIGrammarParser api_parser(&route_parameters);
 
-        auto it = request.begin();
-        const bool result = boost::spirit::qi::parse(it, request.end(), api_parser);
+        auto iter = request.begin();
+        const bool result = boost::spirit::qi::parse(iter, request.end(), api_parser);
 
         // check if the was an error with the request
-        if (!result || (it != request.end()))
+        if (!result || (iter != request.end()))
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             reply.content.clear();
-            const int position = std::distance(request.begin(), it);
+            const int position = std::distance(request.begin(), iter);
             JSON::Object json_result;
             json_result.values["status"] = 400;
             std::string message = ("Query string malformed close to position " + IntToString(position));
