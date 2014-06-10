@@ -309,7 +309,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
         }
 
         // check if v is a via node for a turn restriction, i.e. a 'directed' barrier node
-        if (m_restriction_map->IsNodeAViaNode(v))
+        if (m_restriction_map->IsViaNode(v))
         {
             continue;
         }
@@ -608,6 +608,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                     (to_node_of_only_restriction == SPECIAL_NODEID) &&
                     (w != to_node_of_only_restriction))
                 {
+                    // We are at an only_-restriction but not at the right turn.
                     ++restricted_turns_counter;
                     continue;
                 }
