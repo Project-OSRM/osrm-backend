@@ -91,7 +91,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
         switch (compression_type)
         {
         case deflateRFC1951:
-            //use deflate for compression
+            // use deflate for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
             compressBufferCollection(reply.content, compression_type, compressed_output);
             reply.SetSize(compressed_output.size());
@@ -99,7 +99,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
         case gzipRFC1952:
-            //use gzip for compression
+            // use gzip for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
             compressBufferCollection(reply.content, compression_type, compressed_output);
             reply.SetSize(compressed_output.size());
@@ -107,20 +107,19 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
         case noCompression:
-            //don't use any compression
+            // don't use any compression
             reply.SetUncompressedSize();
             output_buffer = reply.ToBuffers();
             break;
         }
-        boost::asio::async_write(
-            TCP_socket,
-            output_buffer,
-            strand.wrap(boost::bind(&Connection::handle_write,
-                                    this->shared_from_this(),
-                                    boost::asio::placeholders::error)));
+        boost::asio::async_write(TCP_socket,
+                                 output_buffer,
+                                 strand.wrap(boost::bind(&Connection::handle_write,
+                                                         this->shared_from_this(),
+                                                         boost::asio::placeholders::error)));
     }
     else if (!result)
-    {   // request is not parseable
+    { // request is not parseable
         reply = Reply::StockReply(Reply::badRequest);
 
         boost::asio::async_write(TCP_socket,
