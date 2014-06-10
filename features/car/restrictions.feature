@@ -277,3 +277,38 @@ Feature: Car - Turn restrictions
             | from | to | route |
             | s    | a  | sj,aj |
             | s    | b  | sj,bj |
+
+    @except
+    Scenario: Car - Several only_ restrictions at the same segment
+        Given the node map
+            |   |   |   |   | y |   |   |   |   |
+            | i | j | f | b | x | a | e | g | h |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   | c |   | d |   |   |   |
+
+        And the ways
+            | nodes | oneway |
+            | fb    | no     |
+            | bx    | -1     |
+            | xa    | no     |
+            | ae    | no     |
+            | cb    | no     |
+            | dc    | -1     |
+            | da    | no     |
+            | fj    | no     |
+            | jf    | no     |
+            | ge    | no     |
+            | hg    | no     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction      |
+            | restriction | ae       | xa     | a        | only_straight_on |
+            | restriction | xb       | fb     | b        | only_straight_on |
+            | restriction | cb       | bx     | b        | only_right_turn  |
+            | restriction | da       | ae     | a        | only_right_turn  |
+
+        When I route I should get
+            | from | to | route                            |
+            | e    | f  | ae,xa,bx,fb                      |
+            | c    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb |
+            | d    | f  | da,ae,ge,hg,hg,ge,ae,xa,bx,fb    |
