@@ -90,7 +90,8 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
             const int position = std::distance(request.begin(), iter);
             JSON::Object json_result;
             json_result.values["status"] = 400;
-            std::string message = ("Query string malformed close to position " + IntToString(position));
+            std::string message = "Query string malformed close to position ";
+            message += UintToString(position);
             json_result.values["status_message"] = message;
             JSON::render(reply.content, json_result);
             return;
