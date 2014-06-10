@@ -6,11 +6,6 @@
 #include <fstream>
 #include <vector>
 
-#if defined(__GNUC__) && defined(__SSE2__)
-#define OSRM_USE_SSE
-#include <xmmintrin.h>
-#endif
-
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
@@ -40,16 +35,8 @@ template<unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY>
 class RangeTable
 {
 public:
-    union BlockT
-    {
-        unsigned char uint8_blocks[BLOCK_SIZE];
-#ifdef OSRM_USE_SSE
-        static_assert(BLOCK_SIZE % 16 == 0,
-        "If SSE instructions are enabled, only multiples of 16 are supported as BLOCK_SIZE");
-        __m128i uint128_blocks[BLOCK_SIZE/16];
-#endif
-    };
 
+    typedef std::array<unsigned char, BLOCK_SIZE> BlockT;
     typedef typename ShM<BlockT, USE_SHARED_MEMORY>::vector   BlockContainerT;
     typedef typename ShM<unsigned, USE_SHARED_MEMORY>::vector OffsetContainerT;
     typedef decltype(boost::irange(0u,0u))                    RangeT;
@@ -98,7 +85,7 @@ public:
             }
             else
             {
-                block.uint8_blocks[block_idx - 1] = last_length;
+                block[block_idx - 1] = last_length;
                 block_sum += last_length;
             }
 
@@ -134,7 +121,7 @@ public:
 
         while (block_idx != 0)
         {
-            block.uint8_blocks[block_idx - 1] = last_length;
+            block[block_idx - 1] = last_length;
             last_length = 0;
             block_idx = (block_idx + 1) % (BLOCK_SIZE + 1);
         }
@@ -167,7 +154,7 @@ public:
         if (internal_idx < BLOCK_SIZE)
         {
             // note internal_idx - 1 is the *current* index for uint8_blocks
-            end_idx = begin_idx + block.uint8_blocks[internal_idx];
+            end_idx = begin_idx + block[internal_idx];
         }
         else
         {
@@ -191,54 +178,14 @@ private:
     unsigned sum_lengths;
 };
 
-#ifdef OSRM_USE_SSE
-// For blocksize 16 we can use SSE instructions
-// FIXME only implemented for non-shared memory
-template<>
-unsigned RangeTable<16>::PrefixSumAtIndex(int index, const BlockT& block) const
-{
-    union OffsetT
-    {
-        unsigned short  u16[8];
-        __m128i         u128;
-    };
-    OffsetT offsets;
-
-    // converts lower 8 bytes to 8 shorts
-    offsets.u128 = _mm_unpacklo_epi8(block.uint128_blocks[0], _mm_set1_epi8(0));
-    offsets.u128 = _mm_add_epi16(offsets.u128, _mm_slli_si128(offsets.u128, 2));
-    if (index < 2)
-        return offsets.u16[index];
-    offsets.u128 = _mm_add_epi16(offsets.u128, _mm_slli_si128(offsets.u128, 4));
-    if (index < 4)
-        return offsets.u16[index];
-    offsets.u128 = _mm_add_epi16(offsets.u128, _mm_slli_si128(offsets.u128, 8));
-
-    if (index < 8)
-        return offsets.u16[index];
-    unsigned temp = offsets.u16[7];
-    index -= 8;
-
-    // converts upper 8 bytes to 8 shorts
-    offsets.u128 = _mm_unpackhi_epi8(block.uint128_blocks[0], _mm_set1_epi8(0));
-    offsets.u128 = _mm_add_epi16(offsets.u128, _mm_slli_si128(offsets.u128, 2));
-    if (index < 2)
-        return (temp + offsets.u16[index]);
-    offsets.u128 = _mm_add_epi16(offsets.u128, _mm_slli_si128(offsets.u128, 4));
-    if (index < 4)
-        return (temp + offsets.u16[index]);
-    offsets.u128 = _mm_add_epi16(offsets.u128, _mm_slli_si128(offsets.u128, 8));
-
-    return (temp + offsets.u16[index]);
-}
-#endif
-
 template<unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY>
 unsigned RangeTable<BLOCK_SIZE, USE_SHARED_MEMORY>::PrefixSumAtIndex(int index, const BlockT& block) const
 {
+    // this loop looks inefficent, but a modern compiler
+    // will emit nice SIMD here, at least for sensible block sizes. (I checked.)
     unsigned sum = 0;
     for (int i = 0; i <= index; i++)
-        sum += block.uint8_blocks[i];
+        sum += block[i];
 
     return sum;
 }
