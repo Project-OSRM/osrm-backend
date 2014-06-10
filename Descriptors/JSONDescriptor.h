@@ -51,19 +51,19 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
     unsigned entered_restricted_area_count;
     struct RoundAbout
     {
-        RoundAbout() : start_index(INT_MAX), name_id(INT_MAX), leave_at_exit(INT_MAX) {}
+        RoundAbout() : start_index(INT_MAX), name_id(INVALID_NAMEID), leave_at_exit(INT_MAX) {}
         int start_index;
-        int name_id;
+        unsigned name_id;
         int leave_at_exit;
     } round_about;
 
     struct Segment
     {
-        Segment() : name_id(-1), length(-1), position(-1) {}
-        Segment(int n, int l, int p) : name_id(n), length(l), position(p) {}
-        int name_id;
+        Segment() : name_id(INVALID_NAMEID), length(-1), position(0) {}
+        Segment(unsigned n, int l, unsigned p) : name_id(n), length(l), position(p) {}
+        unsigned name_id;
         int length;
-        int position;
+        unsigned position;
     };
     std::vector<Segment> shortest_path_segments, alternative_path_segments;
     ExtractRouteNames<DataFacadeT, Segment> GenerateRouteNames;
