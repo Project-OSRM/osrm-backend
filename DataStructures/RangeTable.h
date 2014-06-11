@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <vector>
+#include <array>
 
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
