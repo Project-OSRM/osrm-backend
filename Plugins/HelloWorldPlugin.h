@@ -55,7 +55,7 @@ class HelloWorldPlugin : public BasePlugin
         temp_string = IntToString(routeParameters.zoom_level);
         json_result.values["zoom_level"] = temp_string;
 
-        temp_string = IntToString(routeParameters.check_sum);
+        temp_string = UintToString(routeParameters.check_sum);
         json_result.values["check_sum"] = temp_string;
         json_result.values["instructions"] = (routeParameters.print_instructions ? "yes" : "no");
         json_result.values["geometry"] = (routeParameters.geometry ? "yes" : "no");
@@ -65,7 +65,7 @@ class HelloWorldPlugin : public BasePlugin
         json_result.values["jsonp_parameter"] = (!routeParameters.jsonp_parameter.empty() ? "yes" : "no");
         json_result.values["language"] = (!routeParameters.language.empty() ? "yes" : "no");
 
-        temp_string = IntToString(routeParameters.coordinates.size());
+        temp_string = UintToString(routeParameters.coordinates.size());
         json_result.values["location_count"] = temp_string;
 
         JSON::Array json_locations;
