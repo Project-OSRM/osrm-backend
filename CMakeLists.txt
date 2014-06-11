@@ -20,7 +20,6 @@ if (WIN32 AND MSVC_VERSION LESS 1800)
   message(FATAL_ERROR "Building with Microsoft compiler needs Visual Studio 2013 or later (Express version works too)")
 endif()
 
-
 OPTION(WITH_TOOLS "Build ORSM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
