@@ -67,8 +67,8 @@ class DescriptionFactory
         void BuildDurationAndLengthStrings(const double raw_distance, const unsigned raw_duration)
         {
             // compute distance/duration for route summary
-            distance = round(raw_distance);
-            duration = round(raw_duration / 10.);
+            distance = static_cast<unsigned>(round(raw_distance));
+            duration = static_cast<unsigned>(round(raw_duration / 10.));
         }
     } summary;
 
