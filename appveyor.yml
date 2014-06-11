@@ -7,9 +7,7 @@ environment:
 branches:
   # whitelist
   only:
-    - win-038
-#   - develop
-#TODO: replace with develop branch when merged
+    - develop
 
 # Operating system (build VM template)
 os: Windows Server 2012 R2
@@ -50,12 +48,15 @@ artifacts:
   - path: osrm_Release.zip
     name: osrm_Release.zip
 
-#deploy:
-#  provider: FTP
-#  server: ftp.mample.com
-#  username: user
-#  password:
-#    secure: XMdn4xfPcYlZFYgvbytc8Q==
-#  folder: osrm
-#  enable_ssl: true|false (disabled by default)
-#  artifact: /.*\.zip/
+deploy:
+  provider: FTP
+  server:
+    secure: ef7oiQTTXFGt8NdNiOHm/uRFVrUttzyFbIlnaeHhQvw=
+  username:
+    secure: Bw+Se2GTJxA6+GtRkEc//tQSBHOuFIuJHBjFwR9cD+8=
+  password:
+    secure: eqwESZqxMXC/j5mOCpaXuw==
+  folder: /
+  enable_ssl: true
+  active_mode: false
+
