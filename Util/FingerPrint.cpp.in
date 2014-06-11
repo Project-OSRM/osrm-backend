@@ -29,13 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OSRMException.h"
 
-#include <boost/uuid/uuid_generators.hpp> // generators
-#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+#include <boost/uuid/name_generator.hpp>
 
 #include <cstring>
 
 #include <algorithm>
-#include <iostream>
 #include <string>
 
 #cmakedefine01 HAS64BITS

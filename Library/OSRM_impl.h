@@ -28,13 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OSRM_IMPL_H
 #define OSRM_IMPL_H
 
-#include <osrm/Reply.h>
-#include <osrm/RouteParameters.h>
+class BasePlugin;
+namespace http { class Reply; }
+struct RouteParameters;
+
 #include <osrm/ServerPaths.h>
 
 #include "../DataStructures/QueryEdge.h"
-#include "../Plugins/BasePlugin.h"
-#include "../Util/ProgramOptions.h"
 
 #include <unordered_map>
 #include <string>

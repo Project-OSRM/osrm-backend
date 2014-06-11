@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "SearchEngineData.h"
 
+#include "BinaryHeap.h"
+
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
 {
     if (forwardHeap.get())

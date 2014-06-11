@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef POLYLINECOMPRESSOR_H_
 #define POLYLINECOMPRESSOR_H_
 
+struct SegmentInformation;
+
 #include "../DataStructures/JSONContainer.h"
-#include "../DataStructures/SegmentInformation.h"
 
 #include <string>
 #include <vector>

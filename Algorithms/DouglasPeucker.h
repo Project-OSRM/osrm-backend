@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DOUGLASPEUCKER_H_
 
 #include <stack>
+#include <utility>
 #include <vector>
 
 /* This class object computes the bitvector of indicating generalized input
@@ -38,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * bit indicating if the points is present in the generalization.
  * Note: points may also be pre-selected*/
 
-struct FixedPointCoordinate;
 struct SegmentInformation;
 
 class DouglasPeucker

@@ -31,10 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/DouglasPeucker.h"
 #include "../Algorithms/PolylineCompressor.h"
 #include "../DataStructures/PhantomNodes.h"
-#include "../DataStructures/RawRouteData.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -42,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <vector>
 
+struct PathData;
 /* This class is fed with all way segments in consecutive order
  *  and produces the description plus the encoded polyline */
 

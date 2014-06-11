@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ImportEdge.h"
 
+#include <boost/assert.hpp>
+
 bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 {
     if (source == other.source)

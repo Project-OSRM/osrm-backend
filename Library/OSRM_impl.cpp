@@ -25,22 +25,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
+namespace boost { namespace interprocess { class named_mutex; } }
+
 #include "OSRM_impl.h"
 #include "OSRM.h"
 
+#include <osrm/Reply.h>
+#include <osrm/RouteParameters.h>
+#include <osrm/ServerPaths.h>
+
+#include "../Plugins/BasePlugin.h"
 #include "../Plugins/DistanceTablePlugin.h"
 #include "../Plugins/HelloWorldPlugin.h"
 #include "../Plugins/LocatePlugin.h"
 #include "../Plugins/NearestPlugin.h"
 #include "../Plugins/TimestampPlugin.h"
 #include "../Plugins/ViaRoutePlugin.h"
-
 #include "../Server/DataStructures/BaseDataFacade.h"
 #include "../Server/DataStructures/InternalDataFacade.h"
 #include "../Server/DataStructures/SharedBarriers.h"
 #include "../Server/DataStructures/SharedDataFacade.h"
+#include "../Util/SimpleLogger.h"
 
 #include <boost/assert.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+
+#include <algorithm>
+#include <fstream>
+#include <utility>
+#include <vector>
 
 OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memory)
     : use_shared_memory(use_shared_memory)

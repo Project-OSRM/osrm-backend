@@ -26,12 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "DataStructures/OriginalEdgeData.h"
-#include "DataStructures/QueryEdge.h"
 #include "DataStructures/SharedMemoryFactory.h"
-#include "DataStructures/SharedMemoryVectorWrapper.h"
-#include "DataStructures/StaticGraph.h"
-#include "DataStructures/StaticRTree.h"
-#include "Server/DataStructures/BaseDataFacade.h"
 #include "Server/DataStructures/SharedDataType.h"
 #include "Server/DataStructures/SharedBarriers.h"
 #include "Util/BoostFileSystemFix.h"
@@ -51,7 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fstream>
 #include <string>
-#include <vector>
 
 int main(const int argc, const char *argv[])
 {
@@ -434,7 +428,7 @@ int main(const int argc, const char *argv[])
             static_cast<char *>(shared_memory_ptr + shared_layout_ptr->GetRSearchTreeOffset());
 
         if (tree_size > 0)
-        { 
+        {
              tree_node_file.read(rtree_ptr, sizeof(RTreeNode) * tree_size);
         }
         tree_node_file.close();

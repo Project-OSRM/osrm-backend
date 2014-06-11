@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 
-
 ExternalMemoryNode::ExternalMemoryNode(
     int lat, int lon, unsigned int node_id, bool bollard, bool traffic_light)
     : NodeInfo(lat, lon, node_id), bollard(bollard), trafficLight(traffic_light)

@@ -26,7 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "PolylineCompressor.h"
-#include "../Util/StringUtil.h"
+#include "../DataStructures/SegmentInformation.h"
+
+#include <osrm/Coordinate.h>
 
 void PolylineCompressor::encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output)
     const

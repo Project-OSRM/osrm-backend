@@ -28,10 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef IMPORT_EDGE_H
 #define IMPORT_EDGE_H
 
-#include "../Util/OSRMException.h"
 #include "../typedefs.h"
-
-#include <boost/assert.hpp>
 
 struct NodeBasedEdge
 {
