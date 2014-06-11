@@ -41,7 +41,7 @@ struct NodeInfo
     typedef NodeID key_type; // type of NodeID
     typedef int value_type; // type of lat,lons
 
-    NodeInfo(int lat, int lon, NodeID node_id) : lat(lat), lon(lon), node_id(node_id) {}
+    explicit NodeInfo(int lat, int lon, NodeID node_id) : lat(lat), lon(lon), node_id(node_id) {}
     NodeInfo()
         : lat(std::numeric_limits<int>::max()), lon(std::numeric_limits<int>::max()),
           node_id(std::numeric_limits<unsigned>::max())
