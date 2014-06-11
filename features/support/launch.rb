@@ -1,6 +1,12 @@
 require 'socket'
 require 'open3'
 
+if ENV['OS']==/Windows.*/ then
+  TERMSIGNAL='TERM'
+else
+  TERMSIGNAL=9
+end
+
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
 class OSRMBackgroundLauncher
@@ -39,9 +45,15 @@ class OSRMBackgroundLauncher
 
   def osrm_up?
     if @pid
-      `ps -o state -p #{@pid}`.split[1].to_s =~ /^[DRST]/
-    else
-      false
+      begin
+        if Process.waitpid(@pid, Process::WNOHANG) then
+           false
+        else
+           true
+        end
+      rescue Errno::ESRCH, Errno::ECHILD
+        false
+      end
     end
   end
 
@@ -53,7 +65,7 @@ class OSRMBackgroundLauncher
 
   def osrm_down
     if @pid
-      Process.kill 'TERM', @pid
+      Process.kill TERMSIGNAL, @pid
       wait_for_shutdown
     end
   end
@@ -67,7 +79,7 @@ class OSRMBackgroundLauncher
   def wait_for_connection
     while true
       begin
-        socket = TCPSocket.new('localhost', OSRM_PORT)
+        socket = TCPSocket.new('127.0.0.1', OSRM_PORT)
         return
       rescue Errno::ECONNREFUSED
         sleep 0.1

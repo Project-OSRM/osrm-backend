@@ -44,6 +44,13 @@ unless File.exists? TEST_FOLDER
   raise "*** Test folder #{TEST_FOLDER} doesn't exist."
 end
 
+if ENV['OS']=~/Windows.*/ then
+   EXE='.exe'
+   QQ='"'
+else
+   EXE=''
+   QQ=''
+end
 
 AfterConfiguration do |config|
   clear_log_files

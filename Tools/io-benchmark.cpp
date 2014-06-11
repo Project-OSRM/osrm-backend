@@ -79,6 +79,11 @@ int main(int argc, char *argv[])
     SimpleLogger().Write() << "Not supported on FreeBSD";
     return 0;
 #endif
+#ifdef WIN32
+    SimpleLogger().Write() << "Not supported on Windows";
+    return 0;
+#else
+
 
     if (1 == argc)
     {
@@ -339,4 +344,5 @@ int main(int argc, char *argv[])
         return -1;
     }
     return 0;
+#endif
 }

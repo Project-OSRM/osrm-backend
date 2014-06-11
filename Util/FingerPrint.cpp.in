@@ -50,13 +50,13 @@ FingerPrint::FingerPrint() : magic_number(1297240911)
     std::string temp_string(__DATE__);
     temp_string += __TIME__;
 
-    std::copy(MD5PREPARE, MD5PREPARE + strlen(MD5PREPARE), md5_prepare);
+    std::memcpy(md5_prepare, MD5PREPARE, strlen(MD5PREPARE));
     temp_string += md5_prepare;
-    std::copy(MD5RTREE, MD5RTREE + 32, md5_tree);
+    std::memcpy(md5_tree, MD5RTREE, 32);
     temp_string += md5_tree;
-    std::copy(MD5GRAPH, MD5GRAPH + 32, md5_graph);
+    std::memcpy(md5_graph, MD5GRAPH, 32);
     temp_string += md5_graph;
-    std::copy(MD5OBJECTS, MD5OBJECTS + 32, md5_objects);
+    std::memcpy(md5_objects, MD5OBJECTS, 32);
     temp_string += md5_objects;
 
     named_uuid = gen(temp_string);

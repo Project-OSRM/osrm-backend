@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRIGONOMETRY_TABLES_H
 #define TRIGONOMETRY_TABLES_H
 
+#include "../typedefs.h"
 #include <cmath>
 
 #include <limits>

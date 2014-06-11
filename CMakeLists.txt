@@ -16,6 +16,11 @@ else()
   message(WARNING "Building on a 32 bit system is unsupported")
 endif()
 
+if (WIN32 AND MSVC_VERSION LESS 1800)
+  message(FATAL_ERROR "Building with Microsoft compiler needs Visual Studio 2013 or later (Express version works too)")
+endif()
+
+
 OPTION(WITH_TOOLS "Build ORSM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
@@ -115,6 +120,11 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -ipo -fPIC")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
+  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} date_time chrono zlib)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
+  add_definitions(-D_USE_MATH_DEFINES) # define M_PI
+  add_definitions(-D_WIN32_WINNT=0x0501)
 endif()
 
 # disable partitioning of LTO process when possible (fixes Debian issues)
@@ -130,7 +140,9 @@ set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    ${LTO_FLAGS} ${LTO_P
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LTO_FLAGS} ${LTO_PARTITION_FLAGS}")
 
 # Activate C++11
-ADD_DEFINITIONS(-std=c++11)
+if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  ADD_DEFINITIONS(-std=c++11)
+endif()
 
 # Configuring other platform dependencies
 if(APPLE)
@@ -172,6 +184,10 @@ target_link_libraries(osrm-datastore ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(OSRM ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(TBB REQUIRED)
+if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+  set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
+endif()
+target_link_libraries(osrm-datastore ${TBB_LIBRARIES})
 target_link_libraries(osrm-extract ${TBB_LIBRARIES})
 target_link_libraries(osrm-prepare ${TBB_LIBRARIES})
 target_link_libraries(osrm-routed ${TBB_LIBRARIES})
