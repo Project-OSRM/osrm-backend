@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !defined(__MINGW64__)
 #include <cpuid.h>
 #else
 #include <boost/crc.hpp> // for boost::crc_32_type
