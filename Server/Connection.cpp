@@ -41,12 +41,9 @@ namespace http
 {
 
 Connection::Connection(boost::asio::io_service &io_service, RequestHandler &handler)
-    : strand(io_service), TCP_socket(io_service), request_handler(handler),
-      request_parser(new RequestParser())
+    : strand(io_service), TCP_socket(io_service), request_handler(handler)
 {
 }
-
-Connection::~Connection() { delete request_parser; }
 
 boost::asio::ip::tcp::socket &Connection::socket() { return TCP_socket; }
 
@@ -61,9 +58,9 @@ void Connection::start()
                                 boost::asio::placeholders::bytes_transferred)));
 }
 
-void Connection::handle_read(const boost::system::error_code &e, std::size_t bytes_transferred)
+void Connection::handle_read(const boost::system::error_code &error, std::size_t bytes_transferred)
 {
-    if (e)
+    if (error)
     {
         return;
     }
@@ -72,7 +69,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
     CompressionType compression_type(noCompression);
     boost::tribool result;
     boost::tie(result, boost::tuples::ignore) =
-        request_parser->Parse(request,
+        request_parser.Parse(request,
                               incoming_data_buffer.data(),
                               incoming_data_buffer.data() + bytes_transferred,
                               &compression_type);
@@ -93,7 +90,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
         case deflateRFC1951:
             // use deflate for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
-            compressBufferCollection(reply.content, compression_type, compressed_output);
+            CompressBufferCollection(reply.content, compression_type, compressed_output);
             reply.SetSize(compressed_output.size());
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
@@ -101,7 +98,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
         case gzipRFC1952:
             // use gzip for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
-            compressBufferCollection(reply.content, compression_type, compressed_output);
+            CompressBufferCollection(reply.content, compression_type, compressed_output);
             reply.SetSize(compressed_output.size());
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
@@ -112,6 +109,7 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
             output_buffer = reply.ToBuffers();
             break;
         }
+        // write result to stream
         boost::asio::async_write(TCP_socket,
                                  output_buffer,
                                  strand.wrap(boost::bind(&Connection::handle_write,
@@ -141,29 +139,32 @@ void Connection::handle_read(const boost::system::error_code &e, std::size_t byt
 }
 
 /// Handle completion of a write operation.
-void Connection::handle_write(const boost::system::error_code &e)
+void Connection::handle_write(const boost::system::error_code &error)
 {
-    if (!e)
+    if (!error)
     {
         // Initiate graceful connection closure.
-        boost::system::error_code ignoredEC;
-        TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignoredEC);
+        boost::system::error_code ignore_error;
+        TCP_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignore_error);
     }
 }
 
-void Connection::compressBufferCollection(std::vector<char> uncompressed_data,
+void Connection::CompressBufferCollection(std::vector<char> uncompressed_data,
                                           CompressionType compression_type,
                                           std::vector<char> &compressed_data)
 {
     boost::iostreams::gzip_params compression_parameters;
 
+    // there's a trade-off between speed and size. speed wins
     compression_parameters.level = boost::iostreams::zlib::best_speed;
+    // check which compression flavor is used
     if (deflateRFC1951 == compression_type)
     {
         compression_parameters.noheader = true;
     }
 
     BOOST_ASSERT(compressed_data.empty());
+    // plug data into boost's compression stream
     boost::iostreams::filtering_ostream gzip_stream;
     gzip_stream.push(boost::iostreams::gzip_compressor(compression_parameters));
     gzip_stream.push(boost::iostreams::back_inserter(compressed_data));

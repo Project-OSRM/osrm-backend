@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include "RequestParser.h"
 #include "Http/CompressionType.h"
 #include "Http/Request.h"
 
@@ -68,15 +69,13 @@ class RequestHandler;
 namespace http
 {
 
-class RequestParser;
-
 /// Represents a single connection from a client.
 class Connection : public std::enable_shared_from_this<Connection>
 {
   public:
     explicit Connection(boost::asio::io_service &io_service, RequestHandler &handler);
     Connection(const Connection &) = delete;
-    ~Connection();
+    Connection() = delete;
 
     boost::asio::ip::tcp::socket &socket();
 
@@ -89,7 +88,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     /// Handle completion of a write operation.
     void handle_write(const boost::system::error_code &e);
 
-    void compressBufferCollection(std::vector<char> uncompressed_data,
+    void CompressBufferCollection(std::vector<char> uncompressed_data,
                                   CompressionType compression_type,
                                   std::vector<char> &compressed_data);
 
@@ -98,7 +97,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     RequestHandler &request_handler;
     boost::array<char, 8192> incoming_data_buffer;
     Request request;
-    RequestParser *request_parser;
+    RequestParser request_parser;
     Reply reply;
 };
 
