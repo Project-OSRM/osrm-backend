@@ -41,8 +41,9 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.c
   VERBATIM)
 
 add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp)
+add_custom_target(tests DEPENDS datastructure-tests)
 
-set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
+set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
@@ -65,6 +66,7 @@ file(GLOB CoordinateGlob DataStructures/Coordinate.cpp)
 file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB HttpGlob Server/Http/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
+file(GLOB DataStructureTestsGlob UnitTests/DataStructures/*.cpp)
 
 set(
   OSRMSources
@@ -83,6 +85,9 @@ add_dependencies(FINGERPRINT FingerPrintConfigure)
 
 add_executable(osrm-routed routed.cpp ${ServerGlob})
 add_executable(osrm-datastore datastore.cpp)
+
+# Unit tests
+add_executable(datastructure-tests EXCLUDE_FROM_ALL UnitTests/datastructure_tests.cpp ${DataStructureTestsGlob})
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -113,6 +118,8 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
     endif()
   endif (HAS_LTO_FLAG)
 endif()
+
+add_definitions(-DBOOST_TEST_DYN_LINK)
 
 # Configuring compilers
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -189,6 +196,8 @@ target_link_libraries(osrm-extract ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION
 target_link_libraries(osrm-prepare ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB IMPORT)
 target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM FINGERPRINT GITDESCRIPTION)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
+
+target_link_libraries(datastructure-tests ${Boost_LIBRARIES})
 
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
