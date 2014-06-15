@@ -120,7 +120,7 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         }
         else if (route_parameters.jsonp_parameter.empty())
         {   // json file
-            reply.headers.emplace_back("Content-Type", "application/x-javascript; charset=UTF-8");
+            reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
             reply.headers.emplace_back("Content-Disposition", "inline; filename=\"response.json\"");
         }
         else
