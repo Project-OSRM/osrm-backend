@@ -766,7 +766,9 @@ class StaticRTree
         }
         const uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
         thread_local_rtree_stream->seekg(seek_pos);
+        BOOST_ASSERT_MSG(thread_local_rtree_stream->good(), "Seeking to position in leaf file failed.");
         thread_local_rtree_stream->read((char *)&result_node, sizeof(LeafNode));
+        BOOST_ASSERT_MSG(thread_local_rtree_stream->good(), "Reading from leaf file failed.");
     }
 
     inline bool EdgesAreEquivalent(const FixedPointCoordinate &a,

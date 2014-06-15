@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
+#include "../DataStructures/RangeTable.h"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -64,6 +65,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     {
         unsigned number_of_used_nodes = 0;
         unsigned number_of_used_edges = 0;
+
         std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
         TIMER_START(sorting_used_nodes);
         stxxl::sort(used_node_id_list.begin(), used_node_id_list.end(), Cmp(), stxxl_memory);
@@ -395,32 +397,23 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::string name_file_streamName = (output_file_name + ".names");
         boost::filesystem::ofstream name_file_stream(name_file_streamName, std::ios::binary);
 
-        // write number of names
-        const unsigned number_of_names = name_list.size() + 1;
-        name_file_stream.write((char *)&(number_of_names), sizeof(unsigned));
-
-        // compute total number of chars
-        unsigned total_number_of_chars = 0;
+        unsigned total_length = 0;
+        std::vector<unsigned> name_lengths;
         for (const std::string &temp_string : name_list)
         {
-            total_number_of_chars += temp_string.length();
+            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
+            name_lengths.push_back(string_length);
+            total_length += string_length;
         }
-        // write total number of chars
-        name_file_stream.write((char *)&(total_number_of_chars), sizeof(unsigned));
-        // write prefixe sums
-        unsigned name_lengths_prefix_sum = 0;
-        for (const std::string &temp_string : name_list)
-        {
-            name_file_stream.write((char *)&(name_lengths_prefix_sum), sizeof(unsigned));
-            name_lengths_prefix_sum += temp_string.length();
-        }
-        // duplicate on purpose!
-        name_file_stream.write((char *)&(name_lengths_prefix_sum), sizeof(unsigned));
 
+        RangeTable<> table(name_lengths);
+        name_file_stream << table;
+
+        name_file_stream.write((char*) &total_length, sizeof(unsigned));
         // write all chars consecutively
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = temp_string.length();
+            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
             name_file_stream.write(temp_string.c_str(), string_length);
         }
 

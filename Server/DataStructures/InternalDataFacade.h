@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/SharedMemoryVectorWrapper.h"
 #include "../../DataStructures/StaticGraph.h"
 #include "../../DataStructures/StaticRTree.h"
+#include "../../DataStructures/RangeTable.h"
 #include "../../Util/BoostFileSystemFix.h"
 #include "../../Util/GraphLoader.h"
 #include "../../Util/ProgramOptions.h"
@@ -66,13 +67,13 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     ShM<unsigned, false>::vector m_name_ID_list;
     ShM<TurnInstruction, false>::vector m_turn_instruction_list;
     ShM<char, false>::vector m_names_char_list;
-    ShM<unsigned, false>::vector m_name_begin_indices;
     ShM<bool, false>::vector m_egde_is_compressed;
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
 
     std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>>
     m_static_rtree;
+    RangeTable<16, false> m_name_table;
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
     {
@@ -203,16 +204,12 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     void LoadStreetNames(const boost::filesystem::path &names_file)
     {
         boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
-        unsigned number_of_names = 0;
+
+        name_stream >> m_name_table;
+
         unsigned number_of_chars = 0;
-        name_stream.read((char *)&number_of_names, sizeof(unsigned));
         name_stream.read((char *)&number_of_chars, sizeof(unsigned));
-        BOOST_ASSERT_MSG(0 != number_of_names, "name file broken");
         BOOST_ASSERT_MSG(0 != number_of_chars, "name file broken");
-
-        m_name_begin_indices.resize(number_of_names);
-        name_stream.read((char *)&m_name_begin_indices[0], number_of_names * sizeof(unsigned));
-
         m_names_char_list.resize(number_of_chars + 1); //+1 gives sentinel element
         name_stream.read((char *)&m_names_char_list[0], number_of_chars * sizeof(char));
         BOOST_ASSERT_MSG(0 != m_names_char_list.size(), "could not load any names");
@@ -384,18 +381,16 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
             result = "";
             return;
         }
-        BOOST_ASSERT_MSG(name_id < m_name_begin_indices.size(), "name id too high");
-        const unsigned begin_index = m_name_begin_indices[name_id];
-        const unsigned end_index = m_name_begin_indices[name_id + 1];
-        BOOST_ASSERT_MSG(begin_index < m_names_char_list.size(), "begin index of name too high");
-        BOOST_ASSERT_MSG(end_index < m_names_char_list.size(), "end index of name too high");
+        auto range = m_name_table.GetRange(name_id);
 
-        BOOST_ASSERT_MSG(begin_index <= end_index, "string ends before begin");
         result.clear();
-        result.resize(end_index - begin_index);
-        std::copy(m_names_char_list.begin() + begin_index,
-                  m_names_char_list.begin() + end_index,
-                  result.begin());
+        if (range.begin() != range.end())
+        {
+            result.resize(range.back() - range.front() + 1);
+            std::copy(m_names_char_list.begin() + range.front(),
+                      m_names_char_list.begin() + range.back() + 1,
+                      result.begin());
+        }
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const
