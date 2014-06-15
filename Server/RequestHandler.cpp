@@ -125,7 +125,7 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
             else
             {
                 reply.headers[1].name = "Content-Type";
-                reply.headers[1].value = "application/x-javascript";
+                reply.headers[1].value = "application/json";
                 reply.headers[2].name = "Content-Disposition";
                 reply.headers[2].value = "attachment; filename=\"response.json\"";
             }
