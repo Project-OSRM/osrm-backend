@@ -401,7 +401,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         std::vector<unsigned> name_lengths;
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = std::min(temp_string.length(), 255lu);
+            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
             name_lengths.push_back(string_length);
             total_length += string_length;
         }
