@@ -1,14 +1,14 @@
 #ifndef __RANGE_TABLE_H__
 #define __RANGE_TABLE_H__
 
+#include "SharedMemoryFactory.h"
+#include "SharedMemoryVectorWrapper.h"
+
 #include <boost/range/irange.hpp>
 
 #include <fstream>
 #include <vector>
 #include <array>
-
-#include "SharedMemoryFactory.h"
-#include "SharedMemoryVectorWrapper.h"
 
 /*
  * These pre-declarations are needed because parsing C++ is hard
@@ -94,7 +94,7 @@ public:
                 || lengths_prefix_sum == (block_offsets[block_counter]+block_sum));
 
             // block is full
-            if (block_idx == BLOCK_SIZE)
+            if (BLOCK_SIZE == block_idx)
             {
                 diff_blocks.push_back(block);
                 block_counter++;
@@ -113,14 +113,14 @@ public:
         BOOST_ASSERT (block_counter == (number_of_blocks - 1));
 
         // one block missing: starts with guard value
-        if (block_idx == 0)
+        if (0 == block_idx)
         {
             // the last value is used as sentinel
             block_offsets.push_back(lengths_prefix_sum);
             block_idx = (block_idx + 1) % BLOCK_SIZE;
         }
 
-        while (block_idx != 0)
+        while (0 != block_idx)
         {
             block[block_idx - 1] = last_length;
             last_length = 0;
@@ -185,8 +185,10 @@ unsigned RangeTable<BLOCK_SIZE, USE_SHARED_MEMORY>::PrefixSumAtIndex(int index, 
     // this loop looks inefficent, but a modern compiler
     // will emit nice SIMD here, at least for sensible block sizes. (I checked.)
     unsigned sum = 0;
-    for (int i = 0; i <= index; i++)
+    for (int i = 0; i <= index; ++i)
+    {
         sum += block[i];
+    }
 
     return sum;
 }
