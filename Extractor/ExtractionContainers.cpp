@@ -413,7 +413,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         // write all chars consecutively
         for (const std::string &temp_string : name_list)
         {
-            const unsigned string_length = std::min(temp_string.length(), 255lu);
+            const unsigned string_length = std::min(static_cast<unsigned>(temp_string.length()), 255u);
             name_file_stream.write(temp_string.c_str(), string_length);
         }
 
