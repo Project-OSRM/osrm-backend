@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
                 ->default_value("profile.lua"),
             "Path to LUA routing profile")(
             "threads,t",
-            boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(8),
+            boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(tbb::task_scheduler_init::default_num_threads()),
             "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be
@@ -178,16 +178,20 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        unsigned int hardware_threads = std::max((unsigned int) 1, std::thread::hardware_concurrency());
-        unsigned int real_num_threads = std::min(hardware_threads, requested_num_threads);
+        const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
 
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Restrictions file: " << restrictions_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
-        SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested "
-                               << requested_num_threads << ")";
+        SimpleLogger().Write() << "Threads: " << requested_num_threads;
+        if (recommended_num_threads != requested_num_threads)
+        {
+            SimpleLogger().Write(logWARNING) << "The recommended number of threads is "
+                                             << recommended_num_threads
+                                             << "! This setting may have performance side-effects.";
+        }
 
-        tbb::task_scheduler_init init(real_num_threads);
+        tbb::task_scheduler_init init(requested_num_threads);
 
         LogPolicy::GetInstance().Unmute();
         boost::filesystem::ifstream restriction_stream(restrictions_path, std::ios::binary);

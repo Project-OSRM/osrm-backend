@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
                                          &profile_path)->default_value("profile.lua"),
                                      "Path to LUA routing profile")(
             "threads,t",
-            boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(8),
+            boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(tbb::task_scheduler_init::default_num_threads()),
             "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be
@@ -166,15 +166,19 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
-        unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
+        const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
 
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
-        SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested "
-                               << requested_num_threads << ")";
+        SimpleLogger().Write() << "Threads: " << requested_num_threads;
+        if (recommended_num_threads != requested_num_threads)
+        {
+            SimpleLogger().Write(logWARNING) << "The recommended number of threads is "
+                                             << recommended_num_threads
+                                             << "! This setting may have performance side-effects.";
+        }
 
-        tbb::task_scheduler_init init(real_num_threads);
+        tbb::task_scheduler_init init(requested_num_threads);
 
         /*** Setup Scripting Environment ***/
         ScriptingEnvironment scripting_environment(profile_path.string().c_str());
@@ -229,7 +233,10 @@ int main(int argc, char *argv[])
         BaseParser *parser;
         if (file_has_pbf_format)
         {
-            parser = new PBFParser(input_path.string().c_str(), extractor_callbacks, scripting_environment);
+            parser = new PBFParser(input_path.string().c_str(),
+                                   extractor_callbacks,
+                                   scripting_environment,
+                                   requested_num_threads);
         }
         else
         {

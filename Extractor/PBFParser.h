@@ -63,7 +63,10 @@ class PBFParser : public BaseParser
     };
 
   public:
-    PBFParser(const char *file_name, ExtractorCallbacks *extractor_callbacks, ScriptingEnvironment &scripting_environment);
+    PBFParser(const char *file_name,
+              ExtractorCallbacks *extractor_callbacks,
+              ScriptingEnvironment &scripting_environment,
+              unsigned num_parser_threads=0);
     virtual ~PBFParser();
 
     inline bool ReadHeader();
@@ -94,6 +97,7 @@ class PBFParser : public BaseParser
 
     std::fstream input; // the input stream to parse
     std::shared_ptr<ConcurrentQueue<ParserThreadData *>> thread_data_queue;
+    unsigned num_parser_threads;
 };
 
 #endif /* PBFPARSER_H_ */
