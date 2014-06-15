@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <tbb/parallel_for.h>
+#include <tbb/task_scheduler_init.h>
 
 #include <osrm/Coordinate.h>
 
@@ -51,9 +52,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PBFParser::PBFParser(const char *fileName,
                      ExtractorCallbacks *extractor_callbacks,
-                     ScriptingEnvironment &scripting_environment)
+                     ScriptingEnvironment &scripting_environment,
+                     unsigned num_threads)
     : BaseParser(extractor_callbacks, scripting_environment)
 {
+    if (0 == num_threads)
+    {
+        num_parser_threads = tbb::task_scheduler_init::default_num_threads();
+    }
+    else
+    {
+        num_parser_threads = num_threads;
+    }
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     // TODO: What is the bottleneck here? Filling the queue or reading the stuff from disk?
     // NOTE: With Lua scripting, it is parsing the stuff. I/O is virtually for free.
@@ -160,6 +171,8 @@ inline void PBFParser::ReadData()
 
 inline void PBFParser::ParseData()
 {
+    tbb::task_scheduler_init init(num_parser_threads);
+
     while (true)
     {
         ParserThreadData *thread_data;
