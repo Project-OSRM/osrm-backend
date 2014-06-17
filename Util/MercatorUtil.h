@@ -32,12 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 inline float y2lat(const float a)
 {
-    return 180.f / static_cast<float>(M_PI) * (2.f * std::atan(std::exp(a * static_cast<float>(M_PI) / 180.f)) - static_cast<float>(M_PI) / 2.f);
+    return 180.f * static_cast<float>(M_1_PI) * (2.f * std::atan(std::exp(a * static_cast<float>(M_PI) / 180.f)) - static_cast<float>(M_PI_2));
 }
 
 inline float lat2y(const float a)
 {
-    return 180.f / static_cast<float>(M_PI) * std::log(std::tan(static_cast<float>(M_PI) / 4.f + a * (static_cast<float>(M_PI) / 180.f) / 2.f));
+    return 180.f * static_cast<float>(M_1_PI) * std::log(std::tan(static_cast<float>(M_PI_4) + a * (static_cast<float>(M_PI) / 180.f) / 2.f));
 }
 
 #endif // MERCATOR_UTIL_H
