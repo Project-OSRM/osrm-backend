@@ -92,7 +92,7 @@ template <typename EdgeDataT> class DynamicGraph
             position += m_nodes[node].edges;
         }
         m_nodes.back().firstEdge = position;
-        m_edges.reserve(position * 1.1);
+        m_edges.reserve(static_cast<std::size_t>(position * 1.1));
         m_edges.resize(position);
         edge = 0;
         for (NodeIterator node = 0; node < m_numNodes; ++node)
