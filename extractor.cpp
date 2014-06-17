@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "To prepare the data for routing, run: "
                                << "./osrm-prepare " << output_file_name << std::endl;
     }
-    catch (boost::program_options::too_many_positional_options_error &e)
+    catch (boost::program_options::too_many_positional_options_error &)
     {
         SimpleLogger().Write(logWARNING) << "Only one input file can be specified";
         return 1;
