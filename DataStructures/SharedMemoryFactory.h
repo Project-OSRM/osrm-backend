@@ -289,6 +289,7 @@ class SharedMemory : boost::noncopyable
         OSRMLockFile lock_file;
         sprintf(key, "%s.%d", "osrm.lock", id);
     }
+
     static bool RegionExists(const char *key)
     {
         bool result = true;
