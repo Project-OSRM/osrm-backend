@@ -128,8 +128,8 @@ template <> class SharedMemoryWrapper<bool>
 
     bool at(const std::size_t index) const
     {
-        const unsigned bucket = index / 32;
-        const unsigned offset = index % 32;
+        const std::size_t bucket = index / 32;
+        const unsigned offset = static_cast<unsigned>(index % 32);
         return m_ptr[bucket] & (1 << offset);
     }
 
