@@ -28,11 +28,11 @@ Feature: Projection to nearest point on road
             | b    | c  | abc   | NE      | 45      | 1000m +-7 |
             | a    | d  | abc   | NE      | 45      | 1000m +-7 |
             | d    | a  | abc   | SW      | 225     | 1000m +-7 |
-            | c    | d  | abc   | SW      | 225     | 1000m +-7 |
-            | d    | c  | abc   | NE      | 45  +-2 | 1000m +-7 |
+            | c    | d  | abc   | SW      | 225     | 1000m +-8 |
+            | d    | c  | abc   | NE      | 45  +-5 | 1000m +-8 |
 
     Scenario: Projection onto way at high latitudes, no distance
         When I route I should get
             | from | to | route | distance |
-            | d    | b  | abc   | 0m  +-4  |
-            | b    | d  | abc   | 0m  +-4  |
+            | d    | b  | abc   | 0m  +-5  |
+            | b    | d  | abc   | 0m  +-5  |
