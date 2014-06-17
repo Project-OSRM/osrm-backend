@@ -271,8 +271,8 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
             int length_of_via_path = 0, sharing_of_via_path = 0;
             ComputeLengthAndSharingOfViaPath(
                 node, &length_of_via_path, &sharing_of_via_path, packed_shortest_path);
-            const int maximum_allowed_sharing =
-                upper_bound_to_shortest_path_distance * VIAPATH_GAMMA;
+            const int maximum_allowed_sharing = static_cast<int>(
+                upper_bound_to_shortest_path_distance * VIAPATH_GAMMA);
             if (sharing_of_via_path <= maximum_allowed_sharing &&
                 length_of_via_path <= upper_bound_to_shortest_path_distance * (1 + VIAPATH_EPSILON))
             {
@@ -774,11 +774,12 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         int t_test_path_length = unpacked_until_distance;
         unpacked_until_distance = 0;
         // Traverse path s-->v
-        for (unsigned i = 0, packed_path_length = packed_v_t_path.size() - 1;
+        BOOST_ASSERT(!packed_v_t_path.empty());
+        for (unsigned i = 0, packed_path_length = static_cast<unsigned>(packed_v_t_path.size() - 1);
              (i < packed_path_length) && unpack_stack.empty();
              ++i)
         {
-            EdgeID edgeID =
+            const EdgeID edgeID =
                 facade->FindEdgeInEitherDirection(packed_v_t_path[i], packed_v_t_path[i + 1]);
             int length_of_current_edge = facade->GetEdgeData(edgeID).distance;
             if (length_of_current_edge + unpacked_until_distance >= T_threshold)
