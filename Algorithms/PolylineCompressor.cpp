@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 void PolylineCompressor::encodeVectorSignedNumber(std::vector<int> &numbers, std::string &output)
     const
 {
-    const unsigned end = numbers.size();
+    const unsigned end = static_cast<unsigned>(numbers.size());
     for (unsigned i = 0; i < end; ++i)
     {
         numbers[i] <<= 1;
