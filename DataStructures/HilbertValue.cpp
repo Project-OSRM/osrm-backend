@@ -32,8 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 uint64_t HilbertCode::operator()(const FixedPointCoordinate &current_coordinate) const
 {
     unsigned location[2];
-    location[0] = current_coordinate.lat + (90 * COORDINATE_PRECISION);
-    location[1] = current_coordinate.lon + (180 * COORDINATE_PRECISION);
+    location[0] = current_coordinate.lat + static_cast<int>(90 * COORDINATE_PRECISION);
+    location[1] = current_coordinate.lon + static_cast<int>(180 * COORDINATE_PRECISION);
 
     TransposeCoordinate(location);
     return BitInterleaving(location[0], location[1]);
