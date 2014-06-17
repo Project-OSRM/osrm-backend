@@ -54,15 +54,15 @@ struct NodeInfo
 
     static NodeInfo min_value()
     {
-        return NodeInfo(-90 * COORDINATE_PRECISION,
-                        -180 * COORDINATE_PRECISION,
+        return NodeInfo(static_cast<int>(-90 * COORDINATE_PRECISION),
+                        static_cast<int>(-180 * COORDINATE_PRECISION),
                         std::numeric_limits<NodeID>::min());
     }
 
     static NodeInfo max_value()
     {
-        return NodeInfo(90 * COORDINATE_PRECISION,
-                        180 * COORDINATE_PRECISION,
+        return NodeInfo(static_cast<int>(90 * COORDINATE_PRECISION),
+                        static_cast<int>(180 * COORDINATE_PRECISION),
                         std::numeric_limits<NodeID>::max());
     }
 
