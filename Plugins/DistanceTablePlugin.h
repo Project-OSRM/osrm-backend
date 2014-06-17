@@ -91,7 +91,7 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         std::vector<PhantomNode> phantom_node_vector(raw_route.raw_via_node_coordinates.size());
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
 
-        unsigned max_locations = std::min((std::size_t)100, raw_route.raw_via_node_coordinates.size());
+        unsigned max_locations = std::min(100u, static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
         for (unsigned i = 0; i < max_locations; ++i)
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
@@ -120,7 +120,7 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         }
         JSON::Object json_object;
         JSON::Array json_array;
-        const unsigned number_of_locations = phantom_node_vector.size();
+        const unsigned number_of_locations = static_cast<unsigned>(phantom_node_vector.size());
         for(unsigned row = 0; row < number_of_locations; ++row)
         {
             JSON::Array json_row;
