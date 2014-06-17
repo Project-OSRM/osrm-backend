@@ -91,7 +91,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
             // use deflate for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "deflate"});
             CompressBufferCollection(reply.content, compression_type, compressed_output);
-            reply.SetSize(compressed_output.size());
+            reply.SetSize(static_cast<unsigned>(compressed_output.size()));
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
@@ -99,7 +99,7 @@ void Connection::handle_read(const boost::system::error_code &error, std::size_t
             // use gzip for compression
             reply.headers.insert(reply.headers.begin(), {"Content-Encoding", "gzip"});
             CompressBufferCollection(reply.content, compression_type, compressed_output);
-            reply.SetSize(compressed_output.size());
+            reply.SetSize(static_cast<unsigned>(compressed_output.size()));
             output_buffer = reply.HeaderstoBuffers();
             output_buffer.push_back(boost::asio::buffer(compressed_output));
             break;
