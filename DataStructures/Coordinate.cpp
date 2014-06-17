@@ -213,8 +213,8 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
     }
     else
     { // point lies in between
-        nearest_location.lat = y2lat(p) * COORDINATE_PRECISION;
-        nearest_location.lon = q * COORDINATE_PRECISION;
+        nearest_location.lat = static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
+        nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
     BOOST_ASSERT(nearest_location.isValid());
     return FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
@@ -286,8 +286,8 @@ float FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordin
     else
     {
         // point lies in between
-        nearest_location.lat = y2lat(p) * COORDINATE_PRECISION;
-        nearest_location.lon = q * COORDINATE_PRECISION;
+        nearest_location.lat = static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
+        nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
     BOOST_ASSERT(nearest_location.isValid());
 
@@ -379,9 +379,9 @@ float FixedPointCoordinate::GetBearing(const FixedPointCoordinate &other) const
     return result;
 }
 
-float FixedPointCoordinate::DegreeToRadian(const float degree) { return degree * (M_PI / 180.f); }
+float FixedPointCoordinate::DegreeToRadian(const float degree) { return degree * (static_cast<float>(M_PI) / 180.f); }
 
-float FixedPointCoordinate::RadianToDegree(const float radian) { return radian * (180.f / M_PI); }
+float FixedPointCoordinate::RadianToDegree(const float radian) { return radian * (180.f * static_cast<float>(M_1_PI)); }
 
 // This distance computation does integer arithmetic only and is a lot faster than
 // the other distance function which are numerically correct('ish).
@@ -437,8 +437,8 @@ int FixedPointCoordinate::OrderedPerpendicularDistanceApproximation(
     else
     {
         // point lies in between
-        dx = input_point.lon - q * COORDINATE_PRECISION;
-        dy = input_point.lat - y2lat(p) * COORDINATE_PRECISION;
+        dx = input_point.lon - static_cast<int>(q * COORDINATE_PRECISION);
+        dy = input_point.lat - static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
     }
 
     // return an approximation in the plane
