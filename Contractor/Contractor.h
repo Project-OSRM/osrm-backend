@@ -455,7 +455,7 @@ class Contractor
                                                 remaining_nodes.end(),
                                                 [](RemainingNodeData node_data)
                                                 { return !node_data.is_independent; });
-            const int first_independent_node = first - remaining_nodes.begin();
+            const int first_independent_node = static_cast<int>(first - remaining_nodes.begin());
 
             // contract independent nodes
             tbb::parallel_for(tbb::blocked_range<int>(first_independent_node, last, ContractGrainSize),
@@ -716,14 +716,14 @@ class Contractor
         float result;
         if (0 == (stats.edges_deleted_count * stats.original_edges_deleted_count))
         {
-            result = 1 * node_data->depth;
+            result = 1.f * node_data->depth;
         }
         else
         {
-            result = 2 * (((float)stats.edges_added_count) / stats.edges_deleted_count) +
-                     4 * (((float)stats.original_edges_added_count) /
-                          stats.original_edges_deleted_count) +
-                     1 * node_data->depth;
+            result = 2.f * (((float)stats.edges_added_count) / stats.edges_deleted_count) +
+                     4.f * (((float)stats.original_edges_added_count) /
+                            stats.original_edges_deleted_count) +
+                     1.f * node_data->depth;
         }
         BOOST_ASSERT(result >= 0);
         return result;
