@@ -203,7 +203,7 @@ class DescriptionFactory
                     via_indices.push_back(necessary_pieces);
                 }
                 const double angle = path_description[i+1].location.GetBearing(path_description[i].location);
-                path_description[i].bearing = static_cast<unsigned>(angle) * 10;
+                path_description[i].bearing = static_cast<unsigned>(angle * 10);
             }
         }
         via_indices.push_back(necessary_pieces+1);
