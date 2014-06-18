@@ -101,30 +101,31 @@ void RequestHandler::handle_request(const http::Request &req, http::Reply &reply
         BOOST_ASSERT_MSG(routing_machine != nullptr, "pointer not init'ed");
 
         if (!route_parameters.jsonp_parameter.empty())
-        {   // prepend response with jsonp parameter
+        { // prepend response with jsonp parameter
             const std::string json_p = (route_parameters.jsonp_parameter + "(");
             reply.content.insert(reply.content.end(), json_p.begin(), json_p.end());
         }
         routing_machine->RunQuery(route_parameters, reply);
         if (!route_parameters.jsonp_parameter.empty())
-        {   // append brace to jsonp response
+        { // append brace to jsonp response
             reply.content.push_back(')');
         }
 
         // set headers
-        reply.headers.emplace_back("Content-Length", UintToString(static_cast<unsigned>(reply.content.size())));
+        reply.headers.emplace_back("Content-Length",
+                                   UintToString(static_cast<unsigned>(reply.content.size())));
         if ("gpx" == route_parameters.output_format)
-        {   // gpx file
+        { // gpx file
             reply.headers.emplace_back("Content-Type", "application/gpx+xml; charset=UTF-8");
             reply.headers.emplace_back("Content-Disposition", "attachment; filename=\"route.gpx\"");
         }
         else if (route_parameters.jsonp_parameter.empty())
-        {   // json file
+        { // json file
             reply.headers.emplace_back("Content-Type", "application/json; charset=UTF-8");
             reply.headers.emplace_back("Content-Disposition", "inline; filename=\"response.json\"");
         }
         else
-        {   // jsonp
+        { // jsonp
             reply.headers.emplace_back("Content-Type", "text/javascript; charset=UTF-8");
             reply.headers.emplace_back("Content-Disposition", "inline; filename=\"response.js\"");
         }
