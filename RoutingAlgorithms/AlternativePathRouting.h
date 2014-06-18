@@ -581,7 +581,7 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
     {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
-        const int scaled_distance = distance / (1. + VIAPATH_EPSILON);
+        const int scaled_distance = static_cast<int>(distance / (1. + VIAPATH_EPSILON));
         if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_distance) &&
             (scaled_distance > *upper_bound_to_shortest_path_distance))
         {
