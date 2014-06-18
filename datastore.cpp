@@ -121,7 +121,8 @@ int main(const int argc, const char *argv[])
             {
                 SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_2";
             }
-            if (SharedMemory::RegionExists(CURRENT_REGIONS) && !SharedMemory::Remove(CURRENT_REGIONS))
+            if (SharedMemory::RegionExists(CURRENT_REGIONS) &&
+                !SharedMemory::Remove(CURRENT_REGIONS))
             {
                 SimpleLogger().Write(logWARNING) << "could not delete CURRENT_REGIONS";
             }
@@ -194,27 +195,30 @@ int main(const int argc, const char *argv[])
 
         // get the shared memory segment to use
         bool use_first_segment = SharedMemory::RegionExists(LAYOUT_2);
-        const SharedDataType LAYOUT =   [&] {
-                                                if(use_first_segment)
-                                                {
-                                                    return LAYOUT_1;
-                                                }
-                                                return LAYOUT_2;
-                                            }();
-        const SharedDataType DATA =     [&] {
-                                                if(use_first_segment)
-                                                {
-                                                   return DATA_1;
-                                                }
-                                                return DATA_2;
-                                            }();
+        const SharedDataType LAYOUT = [&]
+        {
+            if (use_first_segment)
+            {
+                return LAYOUT_1;
+            }
+            return LAYOUT_2;
+        }();
+        const SharedDataType DATA = [&]
+        {
+            if (use_first_segment)
+            {
+                return DATA_1;
+            }
+            return DATA_2;
+        }();
 
         // Allocate a memory layout in shared memory, deallocate previous
         SharedMemory *layout_memory = SharedMemoryFactory::Get(LAYOUT, sizeof(SharedDataLayout));
         SharedDataLayout *shared_layout_ptr = static_cast<SharedDataLayout *>(layout_memory->Ptr());
         shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
 
-        shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::FILE_INDEX_PATH, file_index_path.length() + 1);
+        shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::FILE_INDEX_PATH,
+                                              file_index_path.length() + 1);
 
         // collect number of elements to store in shared memory object
         SimpleLogger().Write() << "load names from: " << names_data_path;
@@ -223,7 +227,8 @@ int main(const int argc, const char *argv[])
         unsigned name_blocks = 0;
         name_stream.read((char *)&name_blocks, sizeof(unsigned));
         shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_OFFSETS, name_blocks);
-        shared_layout_ptr->SetBlockSize<typename RangeTable<16, true>::BlockT>(SharedDataLayout::NAME_BLOCKS, name_blocks);
+        shared_layout_ptr->SetBlockSize<typename RangeTable<16, true>::BlockT>(
+            SharedDataLayout::NAME_BLOCKS, name_blocks);
         SimpleLogger().Write() << "name offsets size: " << name_blocks;
         BOOST_ASSERT_MSG(0 != name_blocks, "name file broken");
 
@@ -237,11 +242,15 @@ int main(const int argc, const char *argv[])
         edges_input_stream.read((char *)&number_of_original_edges, sizeof(unsigned));
 
         // note: settings this all to the same size is correct, we extract them from the same struct
-        shared_layout_ptr->SetBlockSize<NodeID>(SharedDataLayout::VIA_NODE_LIST, number_of_original_edges);
-        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_ID_LIST, number_of_original_edges);
-        shared_layout_ptr->SetBlockSize<TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION, number_of_original_edges);
+        shared_layout_ptr->SetBlockSize<NodeID>(SharedDataLayout::VIA_NODE_LIST,
+                                                number_of_original_edges);
+        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_ID_LIST,
+                                                  number_of_original_edges);
+        shared_layout_ptr->SetBlockSize<TurnInstruction>(SharedDataLayout::TURN_INSTRUCTION,
+                                                         number_of_original_edges);
         // note: there are 32 geometry indicators in one unsigned block
-        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDICATORS, number_of_original_edges);
+        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDICATORS,
+                                                  number_of_original_edges);
 
         boost::filesystem::ifstream hsgr_input_stream(hsgr_path, std::ios::binary);
 
@@ -266,13 +275,15 @@ int main(const int argc, const char *argv[])
         hsgr_input_stream.read((char *)&number_of_graph_nodes, sizeof(unsigned));
 
         BOOST_ASSERT_MSG((0 != number_of_graph_nodes), "number of nodes is zero");
-        shared_layout_ptr->SetBlockSize<QueryGraph::NodeArrayEntry>(SharedDataLayout::GRAPH_NODE_LIST, number_of_graph_nodes);
+        shared_layout_ptr->SetBlockSize<QueryGraph::NodeArrayEntry>(
+            SharedDataLayout::GRAPH_NODE_LIST, number_of_graph_nodes);
 
         // load graph edge size
         unsigned number_of_graph_edges = 0;
         hsgr_input_stream.read((char *)&number_of_graph_edges, sizeof(unsigned));
         BOOST_ASSERT_MSG(0 != number_of_graph_edges, "number of graph edges is zero");
-        shared_layout_ptr->SetBlockSize<QueryGraph::EdgeArrayEntry>(SharedDataLayout::GRAPH_EDGE_LIST, number_of_graph_edges);
+        shared_layout_ptr->SetBlockSize<QueryGraph::EdgeArrayEntry>(
+            SharedDataLayout::GRAPH_EDGE_LIST, number_of_graph_edges);
 
         // load rsearch tree size
         boost::filesystem::ifstream tree_node_file(ram_index_path, std::ios::binary);
@@ -311,19 +322,23 @@ int main(const int argc, const char *argv[])
         boost::filesystem::ifstream nodes_input_stream(nodes_data_path, std::ios::binary);
         unsigned coordinate_list_size = 0;
         nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
-        shared_layout_ptr->SetBlockSize<FixedPointCoordinate>(SharedDataLayout::COORDINATE_LIST, coordinate_list_size);
+        shared_layout_ptr->SetBlockSize<FixedPointCoordinate>(SharedDataLayout::COORDINATE_LIST,
+                                                              coordinate_list_size);
 
         // load geometries sizes
-        std::ifstream geometry_input_stream(geometries_data_path.string().c_str(), std::ios::binary);
+        std::ifstream geometry_input_stream(geometries_data_path.string().c_str(),
+                                            std::ios::binary);
         unsigned number_of_geometries_indices = 0;
         unsigned number_of_compressed_geometries = 0;
 
         geometry_input_stream.read((char *)&number_of_geometries_indices, sizeof(unsigned));
-        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDEX, number_of_geometries_indices);
+        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDEX,
+                                                  number_of_geometries_indices);
         boost::iostreams::seek(
             geometry_input_stream, number_of_geometries_indices * sizeof(unsigned), BOOST_IOS::cur);
         geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
-        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_LIST, number_of_compressed_geometries);
+        shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_LIST,
+                                                  number_of_compressed_geometries);
 
         // allocate shared memory block
         SimpleLogger().Write() << "allocating shared memory of "
@@ -335,68 +350,67 @@ int main(const int argc, const char *argv[])
         // read actual data into shared memory object //
 
         // hsgr checksum
-        unsigned* checksum_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(shared_memory_ptr,
-                                                                          SharedDataLayout::HSGR_CHECKSUM);
+        unsigned *checksum_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::HSGR_CHECKSUM);
         *checksum_ptr = checksum;
 
         // ram index file name
-        char* file_index_path_ptr = shared_layout_ptr->GetBlockPtr<char, true>(shared_memory_ptr,
-                                                                        SharedDataLayout::FILE_INDEX_PATH);
+        char *file_index_path_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
+            shared_memory_ptr, SharedDataLayout::FILE_INDEX_PATH);
         // make sure we have 0 ending
         std::fill(file_index_path_ptr,
                   file_index_path_ptr +
-                    shared_layout_ptr->GetBlockSize(SharedDataLayout::FILE_INDEX_PATH),
+                      shared_layout_ptr->GetBlockSize(SharedDataLayout::FILE_INDEX_PATH),
                   0);
         std::copy(file_index_path.begin(), file_index_path.end(), file_index_path_ptr);
 
         // Loading street names
-        unsigned *name_offsets_ptr =
-            shared_layout_ptr->GetBlockPtr<unsigned, true>(shared_memory_ptr,
-                                                           SharedDataLayout::NAME_OFFSETS);
+        unsigned *name_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::NAME_OFFSETS);
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_OFFSETS) > 0)
         {
             name_stream.read((char *)name_offsets_ptr,
                              shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_OFFSETS));
         }
 
-        unsigned *name_blocks_ptr =
-            shared_layout_ptr->GetBlockPtr<unsigned, true>(shared_memory_ptr,
-                                                           SharedDataLayout::NAME_BLOCKS);
+        unsigned *name_blocks_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::NAME_BLOCKS);
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_BLOCKS) > 0)
         {
             name_stream.read((char *)name_blocks_ptr,
                              shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_BLOCKS));
         }
 
-        char *name_char_ptr =
-            shared_layout_ptr->GetBlockPtr<char, true>(shared_memory_ptr,
-                                                       SharedDataLayout::NAME_CHAR_LIST);
+        char *name_char_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
+            shared_memory_ptr, SharedDataLayout::NAME_CHAR_LIST);
         unsigned temp_length;
-        name_stream.read((char*) &temp_length, sizeof(unsigned));
+        name_stream.read((char *)&temp_length, sizeof(unsigned));
 
-        BOOST_ASSERT_MSG(temp_length == shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST),
+        BOOST_ASSERT_MSG(temp_length ==
+                             shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST),
                          "Name file corrupted!");
 
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST) > 0)
         {
-            name_stream.read(name_char_ptr, shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST));
+            name_stream.read(name_char_ptr,
+                             shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST));
         }
 
         name_stream.close();
 
         // load original edge information
-        NodeID *via_node_ptr = shared_layout_ptr->GetBlockPtr<NodeID, true>(shared_memory_ptr,
-                                                                            SharedDataLayout::VIA_NODE_LIST);
+        NodeID *via_node_ptr = shared_layout_ptr->GetBlockPtr<NodeID, true>(
+            shared_memory_ptr, SharedDataLayout::VIA_NODE_LIST);
 
-        unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(shared_memory_ptr,
-                                                                               SharedDataLayout::NAME_ID_LIST);
+        unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::NAME_ID_LIST);
 
         TurnInstruction *turn_instructions_ptr =
-            shared_layout_ptr->GetBlockPtr<TurnInstruction, true>(shared_memory_ptr,
-                                                                  SharedDataLayout::TURN_INSTRUCTION);
+            shared_layout_ptr->GetBlockPtr<TurnInstruction, true>(
+                shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
 
-        unsigned *geometries_indicator_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(shared_memory_ptr,
-                                                                                            SharedDataLayout::GEOMETRIES_INDICATORS);
+        unsigned *geometries_indicator_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::GEOMETRIES_INDICATORS);
 
         OriginalEdgeData current_edge_data;
         for (unsigned i = 0; i < number_of_original_edges; ++i)
@@ -409,14 +423,14 @@ int main(const int argc, const char *argv[])
             const unsigned bucket = i / 32;
             const unsigned offset = i % 32;
             const unsigned value = [&]
+            {
+                unsigned return_value = 0;
+                if (0 != offset)
                 {
-                    unsigned return_value = 0;
-                    if(0 != offset)
-                    {
-                        return_value = geometries_indicator_ptr[bucket];
-                    }
-                    return return_value;
-                }();
+                    return_value = geometries_indicator_ptr[bucket];
+                }
+                return return_value;
+            }();
             if (current_edge_data.compressed_geometry)
             {
                 geometries_indicator_ptr[bucket] = (value | (1 << offset));
@@ -426,33 +440,37 @@ int main(const int argc, const char *argv[])
 
         // load compressed geometry
         unsigned temporary_value;
-        unsigned *geometries_index_ptr =
-                         shared_layout_ptr->GetBlockPtr<unsigned, true>(shared_memory_ptr, SharedDataLayout::GEOMETRIES_INDEX);
+        unsigned *geometries_index_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::GEOMETRIES_INDEX);
         geometry_input_stream.seekg(0, geometry_input_stream.beg);
         geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
-        BOOST_ASSERT(temporary_value == shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_INDEX]);
+        BOOST_ASSERT(temporary_value ==
+                     shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_INDEX]);
 
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_INDEX) > 0)
         {
-            geometry_input_stream.read((char *)geometries_index_ptr,
-                                   shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_INDEX));
+            geometry_input_stream.read(
+                (char *)geometries_index_ptr,
+                shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_INDEX));
         }
-        unsigned *geometries_list_ptr =
-            shared_layout_ptr->GetBlockPtr<unsigned, true>(shared_memory_ptr, SharedDataLayout::GEOMETRIES_LIST);
+        unsigned *geometries_list_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::GEOMETRIES_LIST);
 
         geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
-        BOOST_ASSERT(temporary_value == shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_LIST]);
+        BOOST_ASSERT(temporary_value ==
+                     shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_LIST]);
 
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_LIST) > 0)
         {
-            geometry_input_stream.read((char *)geometries_list_ptr,
-                                   shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_LIST));
+            geometry_input_stream.read(
+                (char *)geometries_list_ptr,
+                shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_LIST));
         }
 
         // Loading list of coordinates
         FixedPointCoordinate *coordinates_ptr =
-            shared_layout_ptr->GetBlockPtr<FixedPointCoordinate, true>(shared_memory_ptr,
-                                                                       SharedDataLayout::COORDINATE_LIST);
+            shared_layout_ptr->GetBlockPtr<FixedPointCoordinate, true>(
+                shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
 
         NodeInfo current_node;
         for (unsigned i = 0; i < coordinate_list_size; ++i)
@@ -463,12 +481,13 @@ int main(const int argc, const char *argv[])
         nodes_input_stream.close();
 
         // store timestamp
-        char *timestamp_ptr = shared_layout_ptr->GetBlockPtr<char, true>(shared_memory_ptr, SharedDataLayout::TIMESTAMP);
+        char *timestamp_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
+            shared_memory_ptr, SharedDataLayout::TIMESTAMP);
         std::copy(m_timestamp.c_str(), m_timestamp.c_str() + m_timestamp.length(), timestamp_ptr);
 
         // store search tree portion of rtree
-        char *rtree_ptr = shared_layout_ptr->GetBlockPtr<char, true>(shared_memory_ptr, SharedDataLayout::R_SEARCH_TREE);
-
+        char *rtree_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
+            shared_memory_ptr, SharedDataLayout::R_SEARCH_TREE);
 
         if (tree_size > 0)
         {
@@ -478,22 +497,24 @@ int main(const int argc, const char *argv[])
 
         // load the nodes of the search graph
         QueryGraph::NodeArrayEntry *graph_node_list_ptr =
-               shared_layout_ptr->GetBlockPtr<QueryGraph::NodeArrayEntry, true>(shared_memory_ptr,
-                                                                          SharedDataLayout::GRAPH_NODE_LIST);
+            shared_layout_ptr->GetBlockPtr<QueryGraph::NodeArrayEntry, true>(
+                shared_memory_ptr, SharedDataLayout::GRAPH_NODE_LIST);
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GRAPH_NODE_LIST) > 0)
         {
-            hsgr_input_stream.read((char *)graph_node_list_ptr,
-                               shared_layout_ptr->GetBlockSize(SharedDataLayout::GRAPH_NODE_LIST));
+            hsgr_input_stream.read(
+                (char *)graph_node_list_ptr,
+                shared_layout_ptr->GetBlockSize(SharedDataLayout::GRAPH_NODE_LIST));
         }
 
         // load the edges of the search graph
         QueryGraph::EdgeArrayEntry *graph_edge_list_ptr =
-                                           shared_layout_ptr->GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(shared_memory_ptr,
-                                                SharedDataLayout::GRAPH_EDGE_LIST);
+            shared_layout_ptr->GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(
+                shared_memory_ptr, SharedDataLayout::GRAPH_EDGE_LIST);
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GRAPH_EDGE_LIST) > 0)
         {
-            hsgr_input_stream.read((char *)graph_edge_list_ptr,
-                               shared_layout_ptr->GetBlockSize(SharedDataLayout::GRAPH_EDGE_LIST));
+            hsgr_input_stream.read(
+                (char *)graph_edge_list_ptr,
+                shared_layout_ptr->GetBlockSize(SharedDataLayout::GRAPH_EDGE_LIST));
         }
         hsgr_input_stream.close();
 
