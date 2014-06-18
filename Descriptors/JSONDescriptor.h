@@ -347,7 +347,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                         UintToString(static_cast<unsigned>(segment.length)) + "m");
                     const double bearing_value = segment.bearing / 10.;
                     json_instruction_row.values.push_back(Azimuth::Get(bearing_value));
-                    json_instruction_row.values.push_back(bearing_value);
+                    json_instruction_row.values.push_back(static_cast<unsigned>(round(bearing_value)));
 
                     route_segments_list.emplace_back(
                         segment.name_id, segment.length, route_segments_list.size());
