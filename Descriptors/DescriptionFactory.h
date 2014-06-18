@@ -145,7 +145,7 @@ class DescriptionFactory
         //        string0 = string1;
         //    }
 
-        double segment_length = 0.;
+        float segment_length = 0.;
         unsigned segment_duration = 0;
         unsigned segment_start_index = 0;
 
