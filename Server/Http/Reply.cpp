@@ -90,7 +90,7 @@ Reply Reply::StockReply(Reply::status_type status)
     const std::string status_string = reply.ToString(status);
     reply.content.insert(reply.content.end(), status_string.begin(), status_string.end());
     reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
-    reply.headers.emplace_back("Content-Length", UintToString(reply.content.size()));
+    reply.headers.emplace_back("Content-Length", UintToString(static_cast<unsigned>(reply.content.size())));
     reply.headers.emplace_back("Content-Type", "text/html");
     return reply;
 }
