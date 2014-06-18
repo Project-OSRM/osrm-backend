@@ -708,7 +708,7 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         {
             return false;
         }
-        const int T_threshold = VIAPATH_EPSILON * lengthOfShortestPath;
+        const int T_threshold = static_cast<int>(VIAPATH_EPSILON * lengthOfShortestPath);
         int unpacked_until_distance = 0;
 
         std::stack<SearchSpaceEdge> unpack_stack;
