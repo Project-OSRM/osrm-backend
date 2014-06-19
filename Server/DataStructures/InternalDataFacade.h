@@ -203,7 +203,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         name_stream.read((char *)&number_of_names, sizeof(unsigned));
         name_stream.read((char *)&number_of_chars, sizeof(unsigned));
         BOOST_ASSERT_MSG(0 != number_of_names, "name file broken");
-        BOOST_ASSERT_MSG(0 != number_of_chars, "name file broken");
+//        BOOST_ASSERT_MSG(0 != number_of_chars, "name file broken");
 
         m_name_begin_indices.resize(number_of_names);
         name_stream.read((char *)&m_name_begin_indices[0], number_of_names * sizeof(unsigned));
