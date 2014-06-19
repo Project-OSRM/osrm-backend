@@ -338,7 +338,7 @@ class DeallocatingVector
         {
             const std::size_t number_of_necessary_buckets = 1 + (new_size / bucketSizeC);
 
-            for (unsigned i = number_of_necessary_buckets; i < bucket_list.size(); ++i)
+            for (std::size_t i = number_of_necessary_buckets; i < bucket_list.size(); ++i)
             {
                 delete[] bucket_list[i];
             }
