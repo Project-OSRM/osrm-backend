@@ -100,6 +100,10 @@ class StaticRTree
                                    std::max(coordinate_list.at(objects[i].u).lat,
                                             coordinate_list.at(objects[i].v).lat));
             }
+            BOOST_ASSERT(min_lat != std::numeric_limits<int>::min());
+            BOOST_ASSERT(min_lon != std::numeric_limits<int>::min());
+            BOOST_ASSERT(max_lat != std::numeric_limits<int>::min());
+            BOOST_ASSERT(max_lon != std::numeric_limits<int>::min());
         }
 
         inline void MergeBoundingBoxes(const RectangleInt2D &other)
@@ -108,6 +112,10 @@ class StaticRTree
             max_lon = std::max(max_lon, other.max_lon);
             min_lat = std::min(min_lat, other.min_lat);
             max_lat = std::max(max_lat, other.max_lat);
+            BOOST_ASSERT(min_lat != std::numeric_limits<int>::min());
+            BOOST_ASSERT(min_lon != std::numeric_limits<int>::min());
+            BOOST_ASSERT(max_lat != std::numeric_limits<int>::min());
+            BOOST_ASSERT(max_lon != std::numeric_limits<int>::min());
         }
 
         inline FixedPointCoordinate Centroid() const
@@ -397,7 +405,7 @@ class StaticRTree
                         // add tree node to parent entry
                         parent_node.children[current_child_node_index] = m_search_tree.size();
                         m_search_tree.emplace_back(current_child_node);
-                        // augment MBR of parent
+                        // merge MBRs
                         parent_node.minimum_bounding_rectangle.MergeBoundingBoxes(
                             current_child_node.minimum_bounding_rectangle);
                         // increase counters
