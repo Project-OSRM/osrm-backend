@@ -72,7 +72,11 @@ struct RawRouteData
     bool alt_target_traversed_in_reverse;
 
     RawRouteData()
-        : check_sum(std::numeric_limits<unsigned>::max()),
+        : unpacked_path_segments(),
+          unpacked_alternative(),
+          segment_end_coordinates(),
+          raw_via_node_coordinates(),
+          check_sum(std::numeric_limits<unsigned>::max()),
           shortest_path_length(std::numeric_limits<int>::max()),
           alternative_path_length(std::numeric_limits<int>::max()),
           source_traversed_in_reverse(false), target_traversed_in_reverse(false),

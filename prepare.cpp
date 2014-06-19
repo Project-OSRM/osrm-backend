@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
 
         boost::filesystem::path config_file_path, input_path, restrictions_path, profile_path;
         int requested_num_threads;
+        bool use_elevation;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -92,8 +93,9 @@ int main(int argc, char *argv[])
             "Restrictions file in .osrm.restrictions format")(
             "profile,p",
             boost::program_options::value<boost::filesystem::path>(&profile_path)
-                ->default_value("profile.lua"),
-            "Path to LUA routing profile")(
+                ->default_value("profile.lua"),"Path to LUA routing profile")(
+            "elevation,e", boost::program_options::value<bool>(&use_elevation)->default_value(true),
+                "Process node elevations")(
             "threads,t",
             boost::program_options::value<int>(&requested_num_threads)->default_value(8),
             "Number of threads to use");
@@ -179,6 +181,7 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "Input file: " << input_path.filename().string();
         SimpleLogger().Write() << "Restrictions file: " << restrictions_path.filename().string();
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
+        SimpleLogger().Write() << "Using elevation: " << use_elevation;
         SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested "
                                << requested_num_threads << ")";
 
@@ -261,7 +264,8 @@ int main(int argc, char *argv[])
                                           barrier_node_list,
                                           traffic_light_list,
                                           &internal_to_external_node_map,
-                                          restriction_list);
+                                          restriction_list,
+                                          use_elevation);
         in.close();
 
         if (edge_list.empty())

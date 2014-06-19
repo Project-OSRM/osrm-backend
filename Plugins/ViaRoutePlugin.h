@@ -144,6 +144,7 @@ template <class DataFacadeT> class ViaRoutePlugin : public BasePlugin
 
         descriptor_config.zoom_level = route_parameters.zoom_level;
         descriptor_config.instructions = route_parameters.print_instructions;
+        descriptor_config.elevation = route_parameters.print_elevation;
         descriptor_config.geometry = route_parameters.geometry;
         descriptor_config.encode_geometry = route_parameters.compression;
 

@@ -1,0 +1,10 @@
+#ifndef OSRM_CONFIG
+#define OSRM_CONFIG
+#include <limits>
+
+#cmakedefine OSRM_HAS_ELEVATION
+constexpr int OSRM_BAD_ELEVATION_VALUE = std::numeric_limits<int>::max();
+constexpr int ELEVATION_NUM_DIGITS = 2;
+constexpr float ELEVATION_PRECISION = 100.;
+
+#endif // OSRM_CONFIG

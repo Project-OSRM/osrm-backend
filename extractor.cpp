@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 
         boost::filesystem::path config_file_path, input_path, profile_path;
         int requested_num_threads;
+        bool use_elevation = false;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -73,13 +74,13 @@ int main(int argc, char *argv[])
 
         // declare a group of options that will be allowed both on command line and in config file
         boost::program_options::options_description config_options("Configuration");
-        config_options.add_options()("profile,p",
-                                     boost::program_options::value<boost::filesystem::path>(
-                                         &profile_path)->default_value("profile.lua"),
-                                     "Path to LUA routing profile")(
-            "threads,t",
-            boost::program_options::value<int>(&requested_num_threads)->default_value(8),
-            "Number of threads to use");
+        config_options.add_options()(
+            "profile,p", boost::program_options::value<boost::filesystem::path>(
+                &profile_path)->default_value("profile.lua"), "Path to LUA routing profile")(
+            "elevation,e", boost::program_options::value<bool>(&use_elevation)->default_value(true),
+                "Retrieve node elevations")(
+            "threads,t", boost::program_options::value<int>(&requested_num_threads)->default_value(8),
+                "Number of threads to use");
 
         // hidden options, will be allowed both on command line and in config file, but will not be
         // shown to the user
@@ -169,6 +170,7 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "Profile: " << profile_path.filename().string();
         SimpleLogger().Write() << "Threads: " << real_num_threads << " (requested "
                                << requested_num_threads << ")";
+        SimpleLogger().Write() << "Using elevation: " << use_elevation;
 
         /*** Setup Scripting Environment ***/
         ScriptingEnvironment scripting_environment(profile_path.c_str());
@@ -223,11 +225,11 @@ int main(int argc, char *argv[])
         BaseParser *parser;
         if (file_has_pbf_format)
         {
-            parser = new PBFParser(input_path.c_str(), extractor_callbacks, scripting_environment);
+            parser = new PBFParser(input_path.c_str(), extractor_callbacks, scripting_environment, use_elevation);
         }
         else
         {
-            parser = new XMLParser(input_path.c_str(), extractor_callbacks, scripting_environment);
+            parser = new XMLParser(input_path.c_str(), extractor_callbacks, scripting_environment, use_elevation);
         }
 
         if (!parser->ReadHeader())

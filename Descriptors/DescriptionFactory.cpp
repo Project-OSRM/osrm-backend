@@ -29,21 +29,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 DescriptionFactory::DescriptionFactory() : entireLength(0) {}
 
-void DescriptionFactory::SetStartSegment(const PhantomNode &source)
+void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool use_elevation, const int elevation)
 {
     start_phantom = source;
-    AppendSegment(source.location, PathData(0, source.name_id, TurnInstruction::HeadOn, source.forward_weight));
+    AppendSegment(source.location,
+        PathData(0, source.name_id, TurnInstruction::HeadOn, source.forward_weight),
+        use_elevation, elevation);
 }
 
-void DescriptionFactory::SetEndSegment(const PhantomNode &target)
+void DescriptionFactory::SetEndSegment(const PhantomNode &target, const bool use_elevation, const int elevation)
 {
     target_phantom = target;
     path_description.emplace_back(
         target.location, target.name_id, 0, target.reverse_weight, TurnInstruction::NoTurn, true);
+    if (use_elevation)
+    {
+        path_description.back().location.setEle(elevation);
+    }
 }
 
 void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
-                                       const PathData &path_point)
+                                       const PathData &path_point,
+                                       const bool use_elevation, const int elevation)
 {
     if ((1 == path_description.size()) && (path_description.back().location == coordinate))
     {
@@ -56,15 +63,20 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.segment_duration,
                                   0,
                                   path_point.turn_instruction);
+
+    if (use_elevation)
+    {
+        path_description.back().location.setEle(elevation);
+    }
 }
 
-JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)
+JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded, const bool use_elevation)
 {
     if (return_encoded)
     {
-        return polyline_compressor.printEncodedString(path_description);
+        return polyline_compressor.printEncodedString(path_description, use_elevation);
     }
-    return polyline_compressor.printUnencodedString(path_description);
+    return polyline_compressor.printUnencodedString(path_description, use_elevation);
 }
 
 JSON::Value DescriptionFactory::AppendUnencodedPolylineString() const

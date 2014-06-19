@@ -42,13 +42,13 @@ class PolylineCompressor
     void encodeNumber(int number_to_encode, std::string &output) const;
 
   public:
-    JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline) const;
+    JSON::String printEncodedString(const std::vector<SegmentInformation> &polyline, const bool use_elevation = false) const;
 
     JSON::String printEncodedString(const std::vector<FixedPointCoordinate> &polyline) const;
 
     JSON::Array printUnencodedString(const std::vector<FixedPointCoordinate> &polyline) const;
 
-    JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline) const;
+    JSON::Array printUnencodedString(const std::vector<SegmentInformation> &polyline, const bool use_elevation = false) const;
 };
 
 #endif /* POLYLINECOMPRESSOR_H_ */

@@ -280,3 +280,7 @@ endforeach ()
 
 configure_file(${CMAKE_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
+
+# Configure file for the elevation feature
+configure_file(${CMAKE_SOURCE_DIR}/${PROJECT_NAME}_config.h.in
+               ${CMAKE_SOURCE_DIR}/Include/osrm/${PROJECT_NAME}_config.h)

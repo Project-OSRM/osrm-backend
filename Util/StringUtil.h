@@ -39,18 +39,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // precision:  position after decimal point
 // length: maximum number of digits including comma and decimals
+// handle value=min_int (-min_int = min_int)
 template <int length, int precision> static inline char *printInt(char *buffer, int value)
 {
-    bool minus = false;
-    if (value < 0)
+    bool minus = true;
+    if (value > 0)
     {
-        minus = true;
+        minus = false;
         value = -value;
     }
     buffer += length - 1;
     for (int i = 0; i < precision; i++)
     {
-        *buffer = '0' + (value % 10);
+        *buffer = '0' - (value % 10);
         value /= 10;
         buffer--;
     }
@@ -58,7 +59,7 @@ template <int length, int precision> static inline char *printInt(char *buffer, 
     buffer--;
     for (int i = precision + 1; i < length; i++)
     {
-        *buffer = '0' + (value % 10);
+        *buffer = '0' - (value % 10);
         value /= 10;
         if (value == 0)
             break;

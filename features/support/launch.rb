@@ -4,11 +4,11 @@ require 'open3'
 OSRM_ROUTED_LOG_FILE = 'osrm-routed.log'
 
 class OSRMBackgroundLauncher
-  def initialize input_file, &block
+  def initialize (input_file, use_ele=false, &block)
     @input_file = input_file
     Dir.chdir TEST_FOLDER do
       begin
-        launch
+        launch use_ele
         yield
       ensure
         shutdown
@@ -18,9 +18,9 @@ class OSRMBackgroundLauncher
 
   private
 
-  def launch
+  def launch use_ele
     Timeout.timeout(OSRM_TIMEOUT) do
-      osrm_up
+      osrm_up use_ele
       wait_for_connection
     end
   rescue Timeout::Error
@@ -45,9 +45,9 @@ class OSRMBackgroundLauncher
     end
   end
 
-  def osrm_up
+  def osrm_up use_ele=false
     return if osrm_up?
-    @pid = Process.spawn("#{BIN_PATH}/osrm-routed #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
+    @pid = Process.spawn("#{BIN_PATH}/osrm-routed #{'-e 1' if use_ele} #{@input_file} --port #{OSRM_PORT}",:out=>OSRM_ROUTED_LOG_FILE, :err=>OSRM_ROUTED_LOG_FILE)
     Process.detach(@pid)    # avoid zombie processes
   end
 

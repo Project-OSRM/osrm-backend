@@ -66,7 +66,7 @@ int main(int argc, const char *argv[])
     {
         std::string ip_address;
         int ip_port, requested_thread_num;
-        bool use_shared_memory = false, trial = false;
+        bool use_shared_memory = false, trial = false, use_elevation = false;
         ServerPaths server_paths;
         if (!GenerateServerProgramOptions(argc,
                                           argv,
@@ -75,7 +75,7 @@ int main(int argc, const char *argv[])
                                           ip_port,
                                           requested_thread_num,
                                           use_shared_memory,
-                                          trial))
+                                          trial, use_elevation))
         {
             return 0;
         }
