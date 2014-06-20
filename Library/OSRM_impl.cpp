@@ -80,6 +80,7 @@ OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memo
 
 OSRM_impl::~OSRM_impl()
 {
+    delete query_data_facade;
     for (PluginMap::value_type &plugin_pointer : plugin_map)
     {
         delete plugin_pointer.second;
