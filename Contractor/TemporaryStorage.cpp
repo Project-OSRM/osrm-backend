@@ -28,7 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TemporaryStorage.h"
 
 StreamData::StreamData()
-    : write_mode(true), temp_path(boost::filesystem::unique_path(temp_directory / TemporaryFilePattern)),
+    : write_mode(true),
+      temp_path(boost::filesystem::unique_path(temp_directory / TemporaryFilePattern)),
       temp_file(new boost::filesystem::fstream(
           temp_path, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary)),
       readWriteMutex(std::make_shared<boost::mutex>())
