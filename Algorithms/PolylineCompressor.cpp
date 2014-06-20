@@ -42,7 +42,7 @@ void PolylineCompressor::encodeVectorSignedNumber(std::vector<int> &numbers, std
             numbers[i] = ~(numbers[i]);
         }
     }
-    for (const int number: numbers)
+    for (const int number : numbers)
     {
         encodeNumber(number, output);
     }
@@ -69,7 +69,8 @@ void PolylineCompressor::encodeNumber(int number_to_encode, std::string &output)
     }
 }
 
-JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline) const
+JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline)
+    const
 {
     std::string output;
     std::vector<int> delta_numbers;
@@ -78,7 +79,7 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
         FixedPointCoordinate last_coordinate = polyline[0].location;
         delta_numbers.emplace_back(last_coordinate.lat);
         delta_numbers.emplace_back(last_coordinate.lon);
-        for (const auto & segment : polyline)
+        for (const auto &segment : polyline)
         {
             if (segment.necessary)
             {
@@ -95,10 +96,11 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
     return return_value;
 }
 
-JSON::Array PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
+JSON::Array
+PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
 {
     JSON::Array json_geometry_array;
-    for( const auto & segment : polyline)
+    for (const auto &segment : polyline)
     {
         if (segment.necessary)
         {
