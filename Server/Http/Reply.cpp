@@ -44,10 +44,7 @@ void Reply::SetSize(const unsigned size)
 }
 
 // Sets the size of the uncompressed output.
-void Reply::SetUncompressedSize()
-{
-    SetSize(static_cast<unsigned>(content.size()));
-}
+void Reply::SetUncompressedSize() { SetSize(static_cast<unsigned>(content.size())); }
 
 std::vector<boost::asio::const_buffer> Reply::ToBuffers()
 {
@@ -90,7 +87,8 @@ Reply Reply::StockReply(Reply::status_type status)
     const std::string status_string = reply.ToString(status);
     reply.content.insert(reply.content.end(), status_string.begin(), status_string.end());
     reply.headers.emplace_back("Access-Control-Allow-Origin", "*");
-    reply.headers.emplace_back("Content-Length", UintToString(static_cast<unsigned>(reply.content.size())));
+    reply.headers.emplace_back("Content-Length",
+                               UintToString(static_cast<unsigned>(reply.content.size())));
     reply.headers.emplace_back("Content-Type", "text/html");
     return reply;
 }
