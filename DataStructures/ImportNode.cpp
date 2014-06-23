@@ -55,7 +55,7 @@ ExternalMemoryNode ExternalMemoryNode::max_value()
 
 void ImportNode::Clear()
 {
-    keyVals.clear();
+    keyVals.Clear();
     lat = 0;
     lon = 0;
     node_id = 0;
