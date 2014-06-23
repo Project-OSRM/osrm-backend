@@ -267,7 +267,7 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
             const int keyValue = dense.keys_vals(denseTagIndex + 1);
             const std::string &key = thread_data->PBFprimitiveBlock.stringtable().s(tagValue);
             const std::string &value = thread_data->PBFprimitiveBlock.stringtable().s(keyValue);
-            extracted_nodes_vector[i].keyVals.emplace(key, value);
+            extracted_nodes_vector[i].keyVals.Add(std::move(key), std::move(value));
             denseTagIndex += 2;
         }
     }
@@ -276,7 +276,7 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
         [this, &extracted_nodes_vector](const tbb::blocked_range<size_t>& range)
         {
             lua_State* lua_state = this->scripting_environment.getLuaState();
-            for (size_t i = range.begin(); i != range.end(); i++)
+            for (size_t i = range.begin(); i != range.end(); ++i)
             {
                 ImportNode &import_node = extracted_nodes_vector[i];
                 ParseNodeInLua(import_node, lua_state);
@@ -436,7 +436,7 @@ inline void PBFParser::parseWay(ParserThreadData *thread_data)
                 thread_data->PBFprimitiveBlock.stringtable().s(input_way.keys(j));
             const std::string &val =
                 thread_data->PBFprimitiveBlock.stringtable().s(input_way.vals(j));
-            parsed_way_vector[i].keyVals.emplace(key, val);
+            parsed_way_vector[i].keyVals.Add(std::move(key), std::move(val));
         }
     }
 
