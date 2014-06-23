@@ -77,7 +77,7 @@ class HelloWorldPlugin : public BasePlugin
 
             json_coordinates.values.push_back(coordinate.lat / COORDINATE_PRECISION);
             json_coordinates.values.push_back(coordinate.lon / COORDINATE_PRECISION);
-            json_location.values[IntToString(counter)] = json_coordinates;
+            json_location.values[UintToString(counter)] = json_coordinates;
             json_locations.values.push_back(json_location);
             ++counter;
         }
@@ -88,7 +88,6 @@ class HelloWorldPlugin : public BasePlugin
         counter = 0;
         for (const std::string &current_hint : routeParameters.hints)
         {
-            // JSON::String json_hint_string = current_hint;
             json_hints.values.push_back(current_hint);
             ++counter;
         }
