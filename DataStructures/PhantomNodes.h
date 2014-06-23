@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <vector>
+
 struct PhantomNode
 {
     PhantomNode(NodeID forward_node_id, NodeID reverse_node_id, unsigned name_id,
@@ -142,6 +144,8 @@ struct PhantomNode
         return location == other.location;
     }
 };
+
+typedef std::vector<std::vector<PhantomNode>> PhantomNodeArray;
 
 struct PhantomNodes
 {
