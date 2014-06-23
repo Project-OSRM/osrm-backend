@@ -28,37 +28,50 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef HASH_TABLE_H
 #define HASH_TABLE_H
 
-#include <unordered_map>
+#include <vector>
 
-template <typename Key, typename Value> class HashTable : public std::unordered_map<Key, Value>
+template <typename Key, typename Value>
+class HashTable
 {
   private:
-    typedef std::unordered_map<Key, Value> super;
+    typedef std::pair<Key, Value> KeyValPair;
+    std::vector<KeyValPair> table;
 
   public:
-    HashTable() : super() {}
+    HashTable() {}
 
-    explicit HashTable(const unsigned size) : super(size) {}
+    inline void Add(Key const &key, Value const &value)
+    {
+        table.emplace_back(std::move(key), std::move(value));
+    }
 
-    inline void Add(Key const &key, Value const &value) { super::emplace(key, value); }
+    inline void Clear()
+    {
+        table.clear();
+    }
 
     inline const Value Find(Key const &key) const
     {
-        auto iter = super::find(key);
-        if (iter == super::end())
+        for (const auto &key_val_pair : table)
         {
-            return Value();
+            if (key_val_pair.first == key)
+            {
+                return key_val_pair.second;
+            }
         }
-        return iter->second;
+        return Value();
     }
 
     inline const bool Holds(Key const &key) const
     {
-        if (super::find(key) == super::end())
+        for (const auto &key_val_pair : table)
         {
-            return false;
+            if (key_val_pair.first == key)
+            {
+                return true;
+            }
         }
-        return true;
+        return false;
     }
 };
 

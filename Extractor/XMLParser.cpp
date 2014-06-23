@@ -40,7 +40,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-XMLParser::XMLParser(const char *filename, ExtractorCallbacks *extractor_callbacks, ScriptingEnvironment &scripting_environment)
+XMLParser::XMLParser(const char *filename,
+                     ExtractorCallbacks *extractor_callbacks,
+                     ScriptingEnvironment &scripting_environment)
     : BaseParser(extractor_callbacks, scripting_environment)
 {
     inputReader = inputReaderFactory(filename);
@@ -81,7 +83,8 @@ bool XMLParser::Parse()
         if (use_turn_restrictions && xmlStrEqual(currentName, (const xmlChar *)"relation") == 1)
         {
             InputRestrictionContainer current_restriction = ReadXMLRestriction();
-            if ((UINT_MAX != current_restriction.fromWay) && !extractor_callbacks->ProcessRestriction(current_restriction))
+            if ((UINT_MAX != current_restriction.fromWay) &&
+                !extractor_callbacks->ProcessRestriction(current_restriction))
             {
                 std::cerr << "[XMLParser] restriction not parsed" << std::endl;
             }
@@ -135,7 +138,7 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
             if (key != NULL && value != NULL)
             {
                 if (xmlStrEqual(key, (const xmlChar *)"restriction") &&
-                    StringStartsWith((const char*)value, "only_") )
+                    StringStartsWith((const char *)value, "only_"))
                 {
                     restriction.restriction.flags.isOnly = true;
                 }
@@ -194,7 +197,6 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
         }
         xmlFree(child_name);
     }
-
 
     if (ShouldIgnoreRestriction(except_tag_string))
     {

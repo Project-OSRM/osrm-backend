@@ -43,7 +43,7 @@ struct ExtractionWay
         id = SPECIAL_NODEID;
         nameID = INVALID_NAMEID;
         path.clear();
-        keyVals.clear();
+        keyVals.Clear();
         direction = ExtractionWay::notSure;
         speed = -1;
         backward_speed = -1;
