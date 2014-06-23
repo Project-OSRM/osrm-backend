@@ -77,7 +77,6 @@ class DescriptionFactory
     // I know, declaring this public is considered bad. I'm lazy
     std::vector<SegmentInformation> path_description;
     DescriptionFactory();
-    JSON::Value AppendUnencodedPolylineString() const;
     void AppendSegment(const FixedPointCoordinate &coordinate, const PathData &data);
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
