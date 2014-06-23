@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasePlugin.h"
 #include "../DataStructures/JSONContainer.h"
 #include "../DataStructures/PhantomNodes.h"
-#include "../Util/StringUtil.h"
 
 #include <string>
 
@@ -42,28 +41,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <class DataFacadeT> class NearestPlugin : public BasePlugin
 {
   public:
-    explicit NearestPlugin(DataFacadeT *facade) : facade(facade), descriptor_string("nearest")
-    {
-    }
+    explicit NearestPlugin(DataFacadeT *facade) : facade(facade), descriptor_string("nearest") {}
 
     const std::string GetDescriptor() const { return descriptor_string; }
 
     void HandleRequest(const RouteParameters &route_parameters, http::Reply &reply)
     {
         // check number of parameters
-        if (route_parameters.coordinates.empty() ||
-            !route_parameters.coordinates.front().isValid())
+        if (route_parameters.coordinates.empty() || !route_parameters.coordinates.front().isValid())
         {
             reply = http::Reply::StockReply(http::Reply::badRequest);
             return;
         }
 
-        PhantomNode phantom_node;
-        facade->FindPhantomNodeForCoordinate(
-            route_parameters.coordinates.front(), phantom_node, route_parameters.zoom_level);
+        std::vector<PhantomNode> phantom_node_vector;
+        facade->IncrementalFindPhantomNodeForCoordinate(route_parameters.coordinates.front(),
+                                                        phantom_node_vector,
+                                                        route_parameters.zoom_level,
+                                                        1);
 
         JSON::Object json_result;
-        if (!phantom_node.isValid())
+        if (phantom_node_vector.empty() || !phantom_node_vector.front().isValid())
         {
             json_result.values["status"] = 207;
         }
@@ -71,12 +69,14 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
         {
             reply.status = http::Reply::ok;
             json_result.values["status"] = 0;
-                        JSON::Array json_coordinate;
-            json_coordinate.values.push_back(phantom_node.location.lat/COORDINATE_PRECISION);
-            json_coordinate.values.push_back(phantom_node.location.lon/COORDINATE_PRECISION);
+            JSON::Array json_coordinate;
+            json_coordinate.values.push_back(phantom_node_vector.front().location.lat /
+                                             COORDINATE_PRECISION);
+            json_coordinate.values.push_back(phantom_node_vector.front().location.lon /
+                                             COORDINATE_PRECISION);
             json_result.values["mapped_coordinate"] = json_coordinate;
             std::string temp_string;
-            facade->GetName(phantom_node.name_id, temp_string);
+            facade->GetName(phantom_node_vector.front().name_id, temp_string);
             json_result.values["name"] = temp_string;
         }
 
