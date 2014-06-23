@@ -92,14 +92,12 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
                     query_heap.Insert(phantom_node.forward_node_id,
                                       phantom_node.GetForwardWeightPlusOffset(),
                                       phantom_node.forward_node_id);
-                    SimpleLogger().Write(logDEBUG) << "[" << target_id << "] rev insert: " << phantom_node.forward_node_id;
                 }
                 if (SPECIAL_NODEID != phantom_node.reverse_node_id)
                 {
                     query_heap.Insert(phantom_node.reverse_node_id,
                                       phantom_node.GetReverseWeightPlusOffset(),
                                       phantom_node.reverse_node_id);
-                    SimpleLogger().Write(logDEBUG) << "[" << target_id << "] rev insert: " << phantom_node.reverse_node_id;
                 }
             }
 
@@ -124,14 +122,12 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
                     query_heap.Insert(phantom_node.forward_node_id,
                                       -phantom_node.GetForwardWeightPlusOffset(),
                                       phantom_node.forward_node_id);
-                    SimpleLogger().Write(logDEBUG) << "[" << source_id << "] fwd insert: " << phantom_node.forward_node_id;
                 }
                 if (SPECIAL_NODEID != phantom_node.reverse_node_id)
                 {
                     query_heap.Insert(phantom_node.reverse_node_id,
                                       -phantom_node.GetReverseWeightPlusOffset(),
                                       phantom_node.reverse_node_id);
-                    SimpleLogger().Write(logDEBUG) << "[" << source_id << "] fwd insert: " << phantom_node.reverse_node_id;
                 }
             }
 
