@@ -40,8 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 
-XMLParser::XMLParser(const char *filename, ExtractorCallbacks *ec, ScriptingEnvironment &se)
-    : BaseParser(ec, se)
+XMLParser::XMLParser(const char *filename, ExtractorCallbacks *extractor_callbacks, ScriptingEnvironment &scripting_environment)
+    : BaseParser(extractor_callbacks, scripting_environment)
 {
     inputReader = inputReaderFactory(filename);
 }
@@ -67,9 +67,9 @@ bool XMLParser::Parse()
 
         if (xmlStrEqual(currentName, (const xmlChar *)"node") == 1)
         {
-            ImportNode n = ReadXMLNode();
-            ParseNodeInLua(n, lua_state);
-            extractor_callbacks->ProcessNode(n);
+            ImportNode current_node = ReadXMLNode();
+            ParseNodeInLua(current_node, lua_state);
+            extractor_callbacks->ProcessNode(current_node);
         }
 
         if (xmlStrEqual(currentName, (const xmlChar *)"way") == 1)
@@ -80,8 +80,8 @@ bool XMLParser::Parse()
         }
         if (use_turn_restrictions && xmlStrEqual(currentName, (const xmlChar *)"relation") == 1)
         {
-            InputRestrictionContainer r = ReadXMLRestriction();
-            if ((UINT_MAX != r.fromWay) && !extractor_callbacks->ProcessRestriction(r))
+            InputRestrictionContainer current_restriction = ReadXMLRestriction();
+            if ((UINT_MAX != current_restriction.fromWay) && !extractor_callbacks->ProcessRestriction(current_restriction))
             {
                 std::cerr << "[XMLParser] restriction not parsed" << std::endl;
             }
@@ -130,24 +130,24 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
 
         if (xmlStrEqual(child_name, (const xmlChar *)"tag") == 1)
         {
-            xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
+            xmlChar *key = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
-            if (k != NULL && value != NULL)
+            if (key != NULL && value != NULL)
             {
-                if (xmlStrEqual(k, (const xmlChar *)"restriction") &&
-                    (0 == std::string((const char *)value).find("only_")))
+                if (xmlStrEqual(key, (const xmlChar *)"restriction") &&
+                    StringStartsWith((const char*)value, "only_") )
                 {
                     restriction.restriction.flags.isOnly = true;
                 }
-                if (xmlStrEqual(k, (const xmlChar *)"except"))
+                if (xmlStrEqual(key, (const xmlChar *)"except"))
                 {
                     except_tag_string = (const char *)value;
                 }
             }
 
-            if (k != NULL)
+            if (key != NULL)
             {
-                xmlFree(k);
+                xmlFree(key);
             }
             if (value != NULL)
             {
@@ -228,9 +228,9 @@ ExtractionWay XMLParser::ReadXMLWay()
         if (depth == child_depth && child_type == 15 &&
             xmlStrEqual(child_name, (const xmlChar *)"way") == 1)
         {
-            xmlChar *id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
-            way.id = StringToUint((char *)id);
-            xmlFree(id);
+            xmlChar *node_id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
+            way.id = StringToUint((char *)node_id);
+            xmlFree(node_id);
             xmlFree(child_name);
             break;
         }
@@ -242,16 +242,16 @@ ExtractionWay XMLParser::ReadXMLWay()
 
         if (xmlStrEqual(child_name, (const xmlChar *)"tag") == 1)
         {
-            xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
+            xmlChar *key = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
 
-            if (k != NULL && value != NULL)
+            if (key != NULL && value != NULL)
             {
-                way.keyVals.Add(std::string((char *)k), std::string((char *)value));
+                way.keyVals.Add(std::string((char *)key), std::string((char *)value));
             }
-            if (k != NULL)
+            if (key != NULL)
             {
-                xmlFree(k);
+                xmlFree(key);
             }
             if (value != NULL)
             {
@@ -329,15 +329,15 @@ ImportNode XMLParser::ReadXMLNode()
 
         if (xmlStrEqual(child_name, (const xmlChar *)"tag") == 1)
         {
-            xmlChar *k = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
+            xmlChar *key = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
-            if (k != NULL && value != NULL)
+            if (key != NULL && value != NULL)
             {
-                node.keyVals.emplace(std::string((char *)(k)), std::string((char *)(value)));
+                node.keyVals.Add(std::string((char *)(key)), std::string((char *)(value)));
             }
-            if (k != NULL)
+            if (key != NULL)
             {
-                xmlFree(k);
+                xmlFree(key);
             }
             if (value != NULL)
             {
