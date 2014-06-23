@@ -64,12 +64,13 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
 
     ~ManyToManyRouting() {}
 
-    std::shared_ptr<std::vector<EdgeWeight>>
-    operator()(const std::vector<PhantomNode> &phantom_nodes_vector) const
+    std::shared_ptr<std::vector<EdgeWeight>> operator()(const PhantomNodeArray &phantom_nodes_array)
+        const
     {
-        const unsigned number_of_locations = static_cast<unsigned>(phantom_nodes_vector.size());
-        std::shared_ptr<std::vector<EdgeWeight>> result_table = std::make_shared<std::vector<EdgeWeight>>(
-            number_of_locations * number_of_locations, std::numeric_limits<EdgeWeight>::max());
+        const unsigned number_of_locations = static_cast<unsigned>(phantom_nodes_array.size());
+        std::shared_ptr<std::vector<EdgeWeight>> result_table =
+            std::make_shared<std::vector<EdgeWeight>>(number_of_locations * number_of_locations,
+                                                      std::numeric_limits<EdgeWeight>::max());
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
             super::facade->GetNumberOfNodes());
@@ -79,17 +80,27 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
         SearchSpaceWithBuckets search_space_with_buckets;
 
         unsigned target_id = 0;
-        for (const PhantomNode &phantom_node : phantom_nodes_vector)
+        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
         {
             query_heap.Clear();
             // insert target(s) at distance 0
-            if (SPECIAL_NODEID != phantom_node.forward_node_id)
+
+            for (const PhantomNode &phantom_node : phantom_node_vector)
             {
-                query_heap.Insert(phantom_node.forward_node_id, phantom_node.GetForwardWeightPlusOffset(), phantom_node.forward_node_id);
-            }
-            if (SPECIAL_NODEID != phantom_node.reverse_node_id)
-            {
-                query_heap.Insert(phantom_node.reverse_node_id, phantom_node.GetReverseWeightPlusOffset(), phantom_node.reverse_node_id);
+                if (SPECIAL_NODEID != phantom_node.forward_node_id)
+                {
+                    query_heap.Insert(phantom_node.forward_node_id,
+                                      phantom_node.GetForwardWeightPlusOffset(),
+                                      phantom_node.forward_node_id);
+                    SimpleLogger().Write(logDEBUG) << "[" << target_id << "] rev insert: " << phantom_node.forward_node_id;
+                }
+                if (SPECIAL_NODEID != phantom_node.reverse_node_id)
+                {
+                    query_heap.Insert(phantom_node.reverse_node_id,
+                                      phantom_node.GetReverseWeightPlusOffset(),
+                                      phantom_node.reverse_node_id);
+                    SimpleLogger().Write(logDEBUG) << "[" << target_id << "] rev insert: " << phantom_node.reverse_node_id;
+                }
             }
 
             // explore search space
@@ -102,17 +113,26 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
 
         // for each source do forward search
         unsigned source_id = 0;
-        for (const PhantomNode &phantom_node : phantom_nodes_vector)
+        for (const std::vector<PhantomNode> &phantom_node_vector : phantom_nodes_array)
         {
             query_heap.Clear();
-            // insert sources at distance 0
-            if (SPECIAL_NODEID != phantom_node.forward_node_id)
+            for (const PhantomNode &phantom_node : phantom_node_vector)
             {
-                query_heap.Insert(phantom_node.forward_node_id, -phantom_node.GetForwardWeightPlusOffset(), phantom_node.forward_node_id);
-            }
-            if (SPECIAL_NODEID != phantom_node.reverse_node_id)
-            {
-                query_heap.Insert(phantom_node.reverse_node_id, -phantom_node.GetReverseWeightPlusOffset(), phantom_node.reverse_node_id);
+                // insert sources at distance 0
+                if (SPECIAL_NODEID != phantom_node.forward_node_id)
+                {
+                    query_heap.Insert(phantom_node.forward_node_id,
+                                      -phantom_node.GetForwardWeightPlusOffset(),
+                                      phantom_node.forward_node_id);
+                    SimpleLogger().Write(logDEBUG) << "[" << source_id << "] fwd insert: " << phantom_node.forward_node_id;
+                }
+                if (SPECIAL_NODEID != phantom_node.reverse_node_id)
+                {
+                    query_heap.Insert(phantom_node.reverse_node_id,
+                                      -phantom_node.GetReverseWeightPlusOffset(),
+                                      phantom_node.reverse_node_id);
+                    SimpleLogger().Write(logDEBUG) << "[" << source_id << "] fwd insert: " << phantom_node.reverse_node_id;
+                }
             }
 
             // explore search space
@@ -221,7 +241,8 @@ template <class DataFacadeT> class ManyToManyRouting : public BasicRoutingInterf
 
     // Stalling
     template <bool forward_direction>
-    inline bool StallAtNode(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap) const
+    inline bool StallAtNode(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap)
+        const
     {
         for (auto edge : super::facade->GetAdjacentEdgeRange(node))
         {

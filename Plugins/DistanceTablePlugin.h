@@ -85,31 +85,37 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
 
         for (const FixedPointCoordinate &coordinate : route_parameters.coordinates)
         {
-            raw_route.raw_via_node_coordinates.emplace_back(coordinate);
+            raw_route.raw_via_node_coordinates.emplace_back(std::move(coordinate));
         }
 
         const bool checksum_OK = (route_parameters.check_sum == raw_route.check_sum);
-        unsigned max_locations = std::min(100u, static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
-        std::vector<PhantomNode> phantom_node_vector(max_locations);
+        unsigned max_locations =
+            std::min(100u, static_cast<unsigned>(raw_route.raw_via_node_coordinates.size()));
+        PhantomNodeArray phantom_node_vector(max_locations);
         for (unsigned i = 0; i < max_locations; ++i)
         {
             if (checksum_OK && i < route_parameters.hints.size() &&
                 !route_parameters.hints[i].empty())
             {
-                DecodeObjectFromBase64(route_parameters.hints[i], phantom_node_vector[i]);
-                if (phantom_node_vector[i].isValid(facade->GetNumberOfNodes()))
+                PhantomNode current_phantom_node;
+                DecodeObjectFromBase64(route_parameters.hints[i], current_phantom_node);
+                if (current_phantom_node.isValid(facade->GetNumberOfNodes()))
                 {
+                    phantom_node_vector[i].emplace_back(std::move(current_phantom_node));
                     continue;
                 }
             }
-            facade->FindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
-                                                 phantom_node_vector[i],
-                                                 route_parameters.zoom_level);
-            BOOST_ASSERT(phantom_node_vector[i].isValid(facade->GetNumberOfNodes()));
+            facade->IncrementalFindPhantomNodeForCoordinate(raw_route.raw_via_node_coordinates[i],
+                                                            phantom_node_vector[i],
+                                                            route_parameters.zoom_level,
+                                                            1);
+
+            BOOST_ASSERT(phantom_node_vector[i].front().isValid(facade->GetNumberOfNodes()));
         }
 
         TIMER_START(distance_table);
-        std::shared_ptr<std::vector<EdgeWeight>> result_table = search_engine_ptr->distance_table(phantom_node_vector);
+        std::shared_ptr<std::vector<EdgeWeight>> result_table =
+            search_engine_ptr->distance_table(phantom_node_vector);
         TIMER_STOP(distance_table);
 
         if (!result_table)
@@ -120,11 +126,11 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
         JSON::Object json_object;
         JSON::Array json_array;
         const unsigned number_of_locations = static_cast<unsigned>(phantom_node_vector.size());
-        for(unsigned row = 0; row < number_of_locations; ++row)
+        for (unsigned row = 0; row < number_of_locations; ++row)
         {
             JSON::Array json_row;
-            auto row_begin_iterator = result_table->begin() + (row*number_of_locations);
-            auto row_end_iterator = result_table->begin() + ((row+1)*number_of_locations);
+            auto row_begin_iterator = result_table->begin() + (row * number_of_locations);
+            auto row_end_iterator = result_table->begin() + ((row + 1) * number_of_locations);
             json_row.values.insert(json_row.values.end(), row_begin_iterator, row_end_iterator);
             json_array.values.push_back(json_row);
         }
