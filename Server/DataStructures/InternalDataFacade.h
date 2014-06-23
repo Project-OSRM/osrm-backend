@@ -176,7 +176,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         if (number_of_indices > 0)
         {
             geometry_stream.read((char *)&(m_geometry_indices[0]),
-                             number_of_indices * sizeof(unsigned));
+                                 number_of_indices * sizeof(unsigned));
         }
 
         geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
@@ -187,7 +187,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         if (number_of_compressed_geometries > 0)
         {
             geometry_stream.read((char *)&(m_geometry_list[0]),
-                             number_of_compressed_geometries * sizeof(unsigned));
+                                 number_of_compressed_geometries * sizeof(unsigned));
         }
         geometry_stream.close();
     }
@@ -319,7 +319,10 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
     EdgeID EndEdges(const NodeID n) const { return m_query_graph->EndEdges(n); }
 
-    EdgeRange GetAdjacentEdgeRange(const NodeID node) const { return m_query_graph->GetAdjacentEdgeRange(node); };
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const
+    {
+        return m_query_graph->GetAdjacentEdgeRange(node);
+    };
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID from, const NodeID to) const
@@ -362,9 +365,18 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
                                       PhantomNode &resulting_phantom_node,
                                       const unsigned zoom_level) const
     {
-        const bool found = m_static_rtree->FindPhantomNodeForCoordinate(
+        return m_static_rtree->FindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node, zoom_level);
-        return found;
+    }
+
+    bool
+    IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
+                                            std::vector<PhantomNode> &resulting_phantom_node_vector,
+                                            const unsigned zoom_level,
+                                            const unsigned number_of_results) const
+    {
+        return m_static_rtree->IncrementalFindPhantomNodeForCoordinate(
+            input_coordinate, resulting_phantom_node_vector, zoom_level, number_of_results);
     }
 
     unsigned GetCheckSum() const { return m_check_sum; }
