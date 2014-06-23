@@ -113,10 +113,10 @@ template <class DataFacadeT> class DistanceTablePlugin : public BasePlugin
             BOOST_ASSERT(phantom_node_vector[i].front().isValid(facade->GetNumberOfNodes()));
         }
 
-        TIMER_START(distance_table);
+        // TIMER_START(distance_table);
         std::shared_ptr<std::vector<EdgeWeight>> result_table =
             search_engine_ptr->distance_table(phantom_node_vector);
-        TIMER_STOP(distance_table);
+        // TIMER_STOP(distance_table);
 
         if (!result_table)
         {
