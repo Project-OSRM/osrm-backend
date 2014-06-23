@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SHARED_DATA_TYPE_H_
 #define SHARED_DATA_TYPE_H_
 
+#include "../../Util/OSRMException.h"
 #include "../../Util/SimpleLogger.h"
 
 #include <cstdint>
@@ -132,7 +133,7 @@ struct SharedDataLayout
     inline uint64_t GetBlockOffset(BlockID bid) const
     {
         uint64_t result = sizeof(CANARY);
-        for (unsigned i = 0; i < bid; i++)
+        for (auto i = 0; i < bid; i++)
         {
             result += GetBlockSize((BlockID) i) + 2*sizeof(CANARY);
         }
