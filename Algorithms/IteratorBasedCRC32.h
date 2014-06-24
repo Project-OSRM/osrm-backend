@@ -105,7 +105,7 @@ template <class ContainerT> class IteratorbasedCRC32
     {
         static const int SSE42_BIT = 0x00100000;
         const unsigned ecx = cpuid();
-        const bool has_SSE42 = ecx & SSE42_BIT;
+        const bool has_SSE42 = (ecx & SSE42_BIT) != 0;
         if (has_SSE42)
         {
             SimpleLogger().Write() << "using hardware based CRC32 computation";
