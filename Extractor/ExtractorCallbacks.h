@@ -31,6 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <unordered_map>
+
+#include <boost/locale.hpp>
+
 #include <string>
 
 struct ExternalMemoryNode;
@@ -43,6 +46,7 @@ class ExtractorCallbacks
   private:
     std::unordered_map<std::string, NodeID> &string_map;
     ExtractionContainers &external_memory;
+    std::locale global_loc;
 
   public:
     ExtractorCallbacks() = delete;
@@ -58,6 +62,12 @@ class ExtractorCallbacks
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(ExtractionWay &way);
+
+private:
+    inline std::string to_upper(const std::string& str) const
+    {
+        return boost::locale::to_upper(str, global_loc);
+    }
 };
 
 #endif /* EXTRACTOR_CALLBACKS_H */

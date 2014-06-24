@@ -43,6 +43,11 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
                                        std::unordered_map<std::string, NodeID> &string_map)
     : string_map(string_map), external_memory(extraction_containers)
 {
+    // Create system default locale
+    boost::locale::generator gen;
+    global_loc = gen("");
+    std::locale::global(global_loc);
+    std::wcout.imbue(global_loc);
 }
 
 /** warning: caller needs to take care of synchronization! */
@@ -94,12 +99,13 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
     }
 
     // Get the unique identifier for the street name
-    const auto &string_map_iterator = string_map.find(parsed_way.name);
+    const std::string& upper_way_name = to_upper(parsed_way.name);
+    const auto &string_map_iterator = string_map.find(upper_way_name);
     if (string_map.end() == string_map_iterator)
     {
         parsed_way.nameID = external_memory.name_list.size();
         external_memory.name_list.push_back(parsed_way.name);
-        string_map.insert(std::make_pair(parsed_way.name, parsed_way.nameID));
+        string_map.insert(std::make_pair(upper_way_name, parsed_way.nameID));
     }
     else
     {
