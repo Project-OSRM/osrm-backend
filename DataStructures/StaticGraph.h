@@ -162,11 +162,11 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 #endif
     }
 
-    unsigned GetNumberOfNodes() const { return number_of_nodes -1; }
+    unsigned GetNumberOfNodes() const { return number_of_nodes; }
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
-    unsigned GetOutDegree(const NodeIterator n) const { return BeginEdges(n) - EndEdges(n) - 1; }
+    unsigned GetOutDegree(const NodeIterator n) const { return EndEdges(n) - BeginEdges(n); }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
     {
