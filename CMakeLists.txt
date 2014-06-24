@@ -196,7 +196,6 @@ target_link_libraries(osrm-extract ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION
 target_link_libraries(osrm-prepare ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB IMPORT)
 target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM FINGERPRINT GITDESCRIPTION)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
-
 target_link_libraries(datastructure-tests ${Boost_LIBRARIES})
 
 find_package(Threads REQUIRED)
@@ -204,6 +203,8 @@ target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(osrm-datastore ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(osrm-prepare ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(OSRM ${CMAKE_THREAD_LIBS_INIT})
+
+target_link_libraries(datastructure-tests ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(TBB REQUIRED)
 if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
@@ -213,6 +214,7 @@ target_link_libraries(osrm-datastore ${TBB_LIBRARIES})
 target_link_libraries(osrm-extract ${TBB_LIBRARIES})
 target_link_libraries(osrm-prepare ${TBB_LIBRARIES})
 target_link_libraries(osrm-routed ${TBB_LIBRARIES})
+target_link_libraries(datastructure-tests ${TBB_LIBRARIES})
 include_directories(${TBB_INCLUDE_DIR})
 
 find_package(Lua52)
