@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <boost/assert.hpp>
+
 #include <tbb/parallel_for.h>
 #include <tbb/task_scheduler_init.h>
 
@@ -113,7 +115,7 @@ inline bool PBFParser::ReadHeader()
     if (readBlob(input, &init_data))
     {
         if (!init_data.PBFHeaderBlock.ParseFromArray(&(init_data.charBuffer[0]),
-                                                    init_data.charBuffer.size()))
+                                                     static_cast<int>(init_data.charBuffer.size())))
         {
             std::cerr << "[error] Header not parseable!" << std::endl;
             return false;
@@ -245,17 +247,17 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
         m_lastDenseID += dense.id(i);
         m_lastDenseLatitude += dense.lat(i);
         m_lastDenseLongitude += dense.lon(i);
-        extracted_nodes_vector[i].node_id = m_lastDenseID;
-        extracted_nodes_vector[i].lat =
+        extracted_nodes_vector[i].node_id = static_cast<NodeID>(m_lastDenseID);
+        extracted_nodes_vector[i].lat = static_cast<int>(
             COORDINATE_PRECISION *
             ((double)m_lastDenseLatitude * thread_data->PBFprimitiveBlock.granularity() +
              thread_data->PBFprimitiveBlock.lat_offset()) /
-            NANO;
-        extracted_nodes_vector[i].lon =
+            NANO);
+        extracted_nodes_vector[i].lon = static_cast<int>(
             COORDINATE_PRECISION *
             ((double)m_lastDenseLongitude * thread_data->PBFprimitiveBlock.granularity() +
              thread_data->PBFprimitiveBlock.lon_offset()) /
-            NANO;
+            NANO);
         while (denseTagIndex < dense.keys_vals_size())
         {
             const int tagValue = dense.keys_vals(denseTagIndex);
@@ -273,16 +275,15 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
     }
 
     tbb::parallel_for(tbb::blocked_range<size_t>(0, extracted_nodes_vector.size()),
-        [this, &extracted_nodes_vector](const tbb::blocked_range<size_t>& range)
+                      [this, &extracted_nodes_vector](const tbb::blocked_range<size_t> &range)
+                      {
+        lua_State *lua_state = this->scripting_environment.getLuaState();
+        for (size_t i = range.begin(); i != range.end(); ++i)
         {
-            lua_State* lua_state = this->scripting_environment.getLuaState();
-            for (size_t i = range.begin(); i != range.end(); ++i)
-            {
-                ImportNode &import_node = extracted_nodes_vector[i];
-                ParseNodeInLua(import_node, lua_state);
-            }
+            ImportNode &import_node = extracted_nodes_vector[i];
+            ParseNodeInLua(import_node, lua_state);
         }
-    );
+    });
 
     for (const ImportNode &import_node : extracted_nodes_vector)
     {
@@ -347,7 +348,7 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
 
         if (is_restriction)
         {
-            int64_t lastRef = 0;
+            int64_t last_ref = 0;
             InputRestrictionContainer current_restriction_container(is_only_restriction);
             for (int rolesIndex = 0, last_role = inputRelation.roles_sid_size();
                  rolesIndex < last_role;
@@ -355,7 +356,7 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
             {
                 const std::string &role = thread_data->PBFprimitiveBlock.stringtable().s(
                     inputRelation.roles_sid(rolesIndex));
-                lastRef += inputRelation.memids(rolesIndex);
+                last_ref += inputRelation.memids(rolesIndex);
 
                 if (!("from" == role || "to" == role || "via" == role))
                 {
@@ -369,37 +370,42 @@ inline void PBFParser::parseRelation(ParserThreadData *thread_data)
                     { // Only via should be a node
                         continue;
                     }
-                    assert("via" == role);
-                    if (std::numeric_limits<unsigned>::max() != current_restriction_container.viaNode)
+                    BOOST_ASSERT("via" == role);
+                    if (std::numeric_limits<unsigned>::max() !=
+                        current_restriction_container.viaNode)
                     {
-                        current_restriction_container.viaNode = std::numeric_limits<unsigned>::max();
+                        current_restriction_container.viaNode =
+                            std::numeric_limits<unsigned>::max();
                     }
-                    assert(std::numeric_limits<unsigned>::max() == current_restriction_container.viaNode);
-                    current_restriction_container.restriction.viaNode = lastRef;
+                    BOOST_ASSERT(std::numeric_limits<unsigned>::max() ==
+                                 current_restriction_container.viaNode);
+                    current_restriction_container.restriction.viaNode =
+                        static_cast<NodeID>(last_ref);
                     break;
                 case 1: // way
-                    assert("from" == role || "to" == role || "via" == role);
+                    BOOST_ASSERT("from" == role || "to" == role || "via" == role);
                     if ("from" == role)
                     {
-                        current_restriction_container.fromWay = lastRef;
+                        current_restriction_container.fromWay = static_cast<EdgeID>(last_ref);
                     }
                     if ("to" == role)
                     {
-                        current_restriction_container.toWay = lastRef;
+                        current_restriction_container.toWay = static_cast<EdgeID>(last_ref);
                     }
                     if ("via" == role)
                     {
-                        assert(current_restriction_container.restriction.toNode == std::numeric_limits<unsigned>::max());
-                        current_restriction_container.viaNode = lastRef;
+                        BOOST_ASSERT(current_restriction_container.restriction.toNode ==
+                                     std::numeric_limits<unsigned>::max());
+                        current_restriction_container.viaNode = static_cast<NodeID>(last_ref);
                     }
                     break;
                 case 2: // relation, not used. relations relating to relations are evil.
                     continue;
-                    assert(false);
+                    BOOST_ASSERT(false);
                     break;
 
                 default: // should not happen
-                    assert(false);
+                    BOOST_ASSERT(false);
                     break;
                 }
             }
@@ -420,17 +426,17 @@ inline void PBFParser::parseWay(ParserThreadData *thread_data)
     {
         const OSMPBF::Way &input_way =
             thread_data->PBFprimitiveBlock.primitivegroup(thread_data->currentGroupID).ways(i);
-        parsed_way_vector[i].id = input_way.id();
+        parsed_way_vector[i].id = static_cast<EdgeID>(input_way.id());
         unsigned node_id_in_path = 0;
-        const int number_of_referenced_nodes = input_way.refs_size();
-        for (int j = 0; j < number_of_referenced_nodes; ++j)
+        const auto number_of_referenced_nodes = input_way.refs_size();
+        for (auto j = 0; j < number_of_referenced_nodes; ++j)
         {
-            node_id_in_path += input_way.refs(j);
+            node_id_in_path += static_cast<NodeID>(input_way.refs(j));
             parsed_way_vector[i].path.push_back(node_id_in_path);
         }
-        assert(input_way.keys_size() == input_way.vals_size());
-        const int number_of_keys = input_way.keys_size();
-        for (int j = 0; j < number_of_keys; ++j)
+        BOOST_ASSERT(input_way.keys_size() == input_way.vals_size());
+        const auto number_of_keys = input_way.keys_size();
+        for (auto j = 0; j < number_of_keys; ++j)
         {
             const std::string &key =
                 thread_data->PBFprimitiveBlock.stringtable().s(input_way.keys(j));
@@ -442,19 +448,18 @@ inline void PBFParser::parseWay(ParserThreadData *thread_data)
 
     // TODO: investigate if schedule guided will be handled by tbb automatically
     tbb::parallel_for(tbb::blocked_range<size_t>(0, parsed_way_vector.size()),
-        [this, &parsed_way_vector](const tbb::blocked_range<size_t>& range)
+                      [this, &parsed_way_vector](const tbb::blocked_range<size_t> &range)
+                      {
+        lua_State *lua_state = this->scripting_environment.getLuaState();
+        for (size_t i = range.begin(); i != range.end(); i++)
         {
-            lua_State* lua_state = this->scripting_environment.getLuaState();
-            for (size_t i = range.begin(); i != range.end(); i++)
+            ExtractionWay &extraction_way = parsed_way_vector[i];
+            if (2 <= extraction_way.path.size())
             {
-                ExtractionWay &extraction_way = parsed_way_vector[i];
-                if (2 <= extraction_way.path.size())
-                {
-                    ParseWayInLua(extraction_way, lua_state);
-                }
+                ParseWayInLua(extraction_way, lua_state);
             }
         }
-    );
+    });
 
     for (ExtractionWay &extraction_way : parsed_way_vector)
     {
@@ -489,9 +494,9 @@ inline void PBFParser::loadGroup(ParserThreadData *thread_data)
     if (group.has_dense())
     {
         thread_data->entityTypeIndicator = TypeDenseNode;
-        assert(0 != group.dense().id_size());
+        BOOST_ASSERT(0 != group.dense().id_size());
     }
-    assert(thread_data->entityTypeIndicator != TypeDummy);
+    BOOST_ASSERT(thread_data->entityTypeIndicator != TypeDummy);
 }
 
 inline void PBFParser::loadBlock(ParserThreadData *thread_data)
@@ -522,51 +527,51 @@ inline bool PBFParser::readPBFBlobHeader(std::fstream &stream, ParserThreadData 
     return dataSuccessfullyParsed;
 }
 
-inline bool PBFParser::unpackZLIB(std::fstream &, ParserThreadData *thread_data)
+inline bool PBFParser::unpackZLIB(ParserThreadData *thread_data)
 {
-    unsigned rawSize = thread_data->PBFBlob.raw_size();
-    char *unpackedDataArray = new char[rawSize];
-    z_stream compressedDataStream;
-    compressedDataStream.next_in = (unsigned char *)thread_data->PBFBlob.zlib_data().data();
-    compressedDataStream.avail_in = thread_data->PBFBlob.zlib_data().size();
-    compressedDataStream.next_out = (unsigned char *)unpackedDataArray;
-    compressedDataStream.avail_out = rawSize;
-    compressedDataStream.zalloc = Z_NULL;
-    compressedDataStream.zfree = Z_NULL;
-    compressedDataStream.opaque = Z_NULL;
-    int ret = inflateInit(&compressedDataStream);
-    if (ret != Z_OK)
+    auto raw_size = thread_data->PBFBlob.raw_size();
+    char *unpacked_data_array = new char[raw_size];
+    z_stream compressed_data_stream;
+    compressed_data_stream.next_in = (unsigned char *)thread_data->PBFBlob.zlib_data().data();
+    compressed_data_stream.avail_in = thread_data->PBFBlob.zlib_data().size();
+    compressed_data_stream.next_out = (unsigned char *)unpacked_data_array;
+    compressed_data_stream.avail_out = raw_size;
+    compressed_data_stream.zalloc = Z_NULL;
+    compressed_data_stream.zfree = Z_NULL;
+    compressed_data_stream.opaque = Z_NULL;
+    int return_code = inflateInit(&compressed_data_stream);
+    if (return_code != Z_OK)
     {
         std::cerr << "[error] failed to init zlib stream" << std::endl;
-        delete[] unpackedDataArray;
+        delete[] unpacked_data_array;
         return false;
     }
 
-    ret = inflate(&compressedDataStream, Z_FINISH);
-    if (ret != Z_STREAM_END)
+    return_code = inflate(&compressed_data_stream, Z_FINISH);
+    if (return_code != Z_STREAM_END)
     {
         std::cerr << "[error] failed to inflate zlib stream" << std::endl;
-        std::cerr << "[error] Error type: " << ret << std::endl;
-        delete[] unpackedDataArray;
+        std::cerr << "[error] Error type: " << return_code << std::endl;
+        delete[] unpacked_data_array;
         return false;
     }
 
-    ret = inflateEnd(&compressedDataStream);
-    if (ret != Z_OK)
+    return_code = inflateEnd(&compressed_data_stream);
+    if (return_code != Z_OK)
     {
         std::cerr << "[error] failed to deinit zlib stream" << std::endl;
-        delete[] unpackedDataArray;
+        delete[] unpacked_data_array;
         return false;
     }
 
     thread_data->charBuffer.clear();
-    thread_data->charBuffer.resize(rawSize);
-    std::copy(unpackedDataArray, unpackedDataArray + rawSize, thread_data->charBuffer.begin());
-    delete[] unpackedDataArray;
+    thread_data->charBuffer.resize(raw_size);
+    std::copy(unpacked_data_array, unpacked_data_array + raw_size, thread_data->charBuffer.begin());
+    delete[] unpacked_data_array;
     return true;
 }
 
-inline bool PBFParser::unpackLZMA(std::fstream &, ParserThreadData *) { return false; }
+inline bool PBFParser::unpackLZMA(ParserThreadData *) { return false; }
 
 inline bool PBFParser::readBlob(std::fstream &stream, ParserThreadData *thread_data)
 {
@@ -601,7 +606,7 @@ inline bool PBFParser::readBlob(std::fstream &stream, ParserThreadData *thread_d
     }
     else if (thread_data->PBFBlob.has_zlib_data())
     {
-        if (!unpackZLIB(stream, thread_data))
+        if (!unpackZLIB(thread_data))
         {
             std::cerr << "[error] zlib data encountered that could not be unpacked" << std::endl;
             delete[] data;
@@ -610,7 +615,7 @@ inline bool PBFParser::readBlob(std::fstream &stream, ParserThreadData *thread_d
     }
     else if (thread_data->PBFBlob.has_lzma_data())
     {
-        if (!unpackLZMA(stream, thread_data))
+        if (!unpackLZMA(thread_data))
         {
             std::cerr << "[error] lzma data encountered that could not be unpacked" << std::endl;
         }
@@ -650,7 +655,7 @@ bool PBFParser::readNextBlock(std::fstream &stream, ParserThreadData *thread_dat
     }
 
     if (!thread_data->PBFprimitiveBlock.ParseFromArray(&(thread_data->charBuffer[0]),
-                                                      thread_data->charBuffer.size()))
+                                                       thread_data->charBuffer.size()))
     {
         std::cerr << "failed to parse PrimitiveBlock" << std::endl;
         return false;

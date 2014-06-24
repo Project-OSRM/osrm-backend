@@ -66,7 +66,7 @@ class PBFParser : public BaseParser
     PBFParser(const char *file_name,
               ExtractorCallbacks *extractor_callbacks,
               ScriptingEnvironment &scripting_environment,
-              unsigned num_parser_threads=0);
+              unsigned num_parser_threads = 0);
     virtual ~PBFParser();
 
     inline bool ReadHeader();
@@ -83,8 +83,8 @@ class PBFParser : public BaseParser
     inline void loadGroup(ParserThreadData *thread_data);
     inline void loadBlock(ParserThreadData *thread_data);
     inline bool readPBFBlobHeader(std::fstream &stream, ParserThreadData *thread_data);
-    inline bool unpackZLIB(std::fstream &stream, ParserThreadData *thread_data);
-    inline bool unpackLZMA(std::fstream &stream, ParserThreadData *thread_data);
+    inline bool unpackZLIB(ParserThreadData *thread_data);
+    inline bool unpackLZMA(ParserThreadData *thread_data);
     inline bool readBlob(std::fstream &stream, ParserThreadData *thread_data);
     inline bool readNextBlock(std::fstream &stream, ParserThreadData *thread_data);
 
