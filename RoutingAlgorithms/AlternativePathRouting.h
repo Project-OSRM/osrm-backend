@@ -76,11 +76,6 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
 
     void operator()(const PhantomNodes &phantom_node_pair, RawRouteData &raw_route_data)
     {
-        if (phantom_node_pair.PhantomNodesHaveEqualLocation())
-        {
-            return;
-        }
-
         std::vector<NodeID> alternative_path;
         std::vector<NodeID> via_node_candidate_list;
         std::vector<SearchSpaceEdge> forward_search_space;

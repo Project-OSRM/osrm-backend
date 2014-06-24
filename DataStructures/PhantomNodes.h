@@ -95,17 +95,6 @@ struct PhantomNode
         return result;
     }
 
-    void Reset()
-    {
-        forward_node_id = SPECIAL_NODEID;
-        name_id = SPECIAL_NODEID;
-        forward_weight = INVALID_EDGE_WEIGHT;
-        reverse_weight = INVALID_EDGE_WEIGHT;
-        forward_offset = 0;
-        reverse_offset = 0;
-        location.Reset();
-    }
-
     bool isBidirected() const
     {
         return (forward_node_id != SPECIAL_NODEID) &&
@@ -147,32 +136,16 @@ struct PhantomNode
 
 typedef std::vector<std::vector<PhantomNode>> PhantomNodeArray;
 
+struct PhantomNodeLists
+{
+    std::vector<PhantomNode> source_phantom_list;
+    std::vector<PhantomNode> target_phantom_list;
+};
+
 struct PhantomNodes
 {
     PhantomNode source_phantom;
     PhantomNode target_phantom;
-
-    void Reset()
-    {
-        source_phantom.Reset();
-        target_phantom.Reset();
-    }
-
-    bool PhantomsAreOnSameNodeBasedEdge() const
-    {
-        return (source_phantom.forward_node_id == target_phantom.forward_node_id);
-    }
-
-    bool AtLeastOnePhantomNodeIsInvalid() const
-    {
-        return ((source_phantom.forward_node_id == SPECIAL_NODEID) && (source_phantom.reverse_node_id == SPECIAL_NODEID)) ||
-               ((target_phantom.forward_node_id == SPECIAL_NODEID) && (target_phantom.reverse_node_id == SPECIAL_NODEID));
-    }
-
-    bool PhantomNodesHaveEqualLocation() const
-    {
-        return source_phantom == target_phantom;
-    }
 };
 
 inline std::ostream& operator<<(std::ostream &out, const PhantomNodes & pn)
