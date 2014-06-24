@@ -34,7 +34,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.c
 
 add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp)
 
-set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread)
+set(BOOST_COMPONENTS locale date_time filesystem iostreams program_options regex system thread)
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/Util/GitDescription.cpp.in
