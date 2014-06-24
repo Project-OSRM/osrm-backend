@@ -46,13 +46,18 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 }
 
 /** warning: caller needs to take care of synchronization! */
-void ExtractorCallbacks::ProcessNode(const ExternalMemoryNode &n)
+void ExtractorCallbacks::ProcessNode(const ImportNode &n, const bool use_elevation)
 {
     if (n.lat <= 85 * COORDINATE_PRECISION && n.lat >= -85 * COORDINATE_PRECISION)
     {
         external_memory.all_nodes_list.push_back(n);
+        if (use_elevation && n.keyVals.Holds("ele")) {
+            int elevation = static_cast<int>(ELEVATION_PRECISION * std::stod(n.keyVals.Find("ele")));
+            external_memory.all_nodes_list.back().setEle(elevation);
+        }
     }
 }
+
 
 bool ExtractorCallbacks::ProcessRestriction(const InputRestrictionContainer &restriction)
 {

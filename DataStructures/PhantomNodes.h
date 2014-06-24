@@ -61,6 +61,7 @@ struct PhantomNode
         forward_offset(0),
         reverse_offset(0),
         packed_geometry_id(SPECIAL_EDGEID),
+        location(),
         fwd_segment_position(0)
     { }
 

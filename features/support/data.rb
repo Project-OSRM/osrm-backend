@@ -11,8 +11,17 @@ class Location
   end
 end
 
+def set_elevation_data_enabled enabled
+  raise '*** Elevation data enabled must either be "on" or "off"' unless ['onf','off'].include? enabled.to_s
+  @elevation_data_enabled = enabled.to_s == 'on'
+end
+
+def elevation_data_enabled
+  return @elevation_data_enabled || true
+end
+
 def set_input_format format
-  raise '*** Input format must be eiter "osm" or "pbf"' unless ['pbf','osm'].include? format.to_s
+  raise '*** Input format must either be "osm" or "pbf"' unless ['pbf','osm'].include? format.to_s
   @input_format = format.to_s
 end
 
@@ -33,6 +42,19 @@ end
 
 def set_origin origin
   @origin = origin
+end
+
+def set_query_parameter name,value
+   raise '*** Query parameter name must either be "compression" or "elevation"' unless ['compression','elevation'].include? name.to_s
+   raise '*** Query parameter value must either be "on" or "off"' unless ['on','off'].include? value.to_s
+   if not @query_parameter
+      @query_parameter = Hash.new
+   end
+   @query_parameter[name.to_s] = value.to_s == 'on'
+end
+
+def query_parameter
+   @query_parameter || {}
 end
 
 def build_ways_from_table table
@@ -250,10 +272,11 @@ def write_input_data
 end
 
 def extract_data
+  use_ele = elevation_data_enabled
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
-    log "== Extracting #{@osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-extract #{@osm_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    log "== Extracting #{@osm_file}.osm#{' with elevation' if use_ele}...", :preprocess
+    unless system "#{BIN_PATH}/osrm-extract #{'-e 1' if use_ele} #{@osm_file}.osm#{'.pbf' if pbf?} --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise ExtractError.new $?.exitstatus, "osrm-extract exited with code #{$?.exitstatus}."
     end
@@ -262,10 +285,11 @@ def extract_data
 end
 
 def prepare_data
+  use_ele = elevation_data_enabled
   Dir.chdir TEST_FOLDER do
     log_preprocess_info
-    log "== Preparing #{@osm_file}.osm...", :preprocess
-    unless system "#{BIN_PATH}/osrm-prepare #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua >>#{PREPROCESS_LOG_FILE} 2>&1"
+    log "== Preparing #{@osm_file}.osm#{' with elevation' if use_ele}...", :preprocess
+    unless system "#{BIN_PATH}/osrm-prepare #{'-e 1' if use_ele} #{@osm_file}.osrm  --profile #{PROFILES_PATH}/#{@profile}.lua 1>>#{PREPROCESS_LOG_FILE} 2>&1"
       log "*** Exited with code #{$?.exitstatus}.", :preprocess
       raise PrepareError.new $?.exitstatus, "osrm-prepare exited with code #{$?.exitstatus}."
     end

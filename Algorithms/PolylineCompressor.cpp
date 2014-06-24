@@ -69,8 +69,8 @@ void PolylineCompressor::encodeNumber(int number_to_encode, std::string &output)
     }
 }
 
-JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInformation> &polyline)
-    const
+JSON::String PolylineCompressor::printEncodedString(
+const std::vector<SegmentInformation> &polyline, const bool use_elevation) const
 {
     std::string output;
     std::vector<int> delta_numbers;
@@ -79,6 +79,10 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
         FixedPointCoordinate last_coordinate = polyline[0].location;
         delta_numbers.emplace_back(last_coordinate.lat);
         delta_numbers.emplace_back(last_coordinate.lon);
+        if (use_elevation) {
+            delta_numbers.emplace_back(last_coordinate.getEle());
+        }
+
         // iterate after skipping the first, already handled, segment
         for (auto it = ++polyline.cbegin(); it != polyline.cend(); ++it)
         {
@@ -89,6 +93,10 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
                 int lon_diff = segment.location.lon - last_coordinate.lon;
                 delta_numbers.emplace_back(lat_diff);
                 delta_numbers.emplace_back(lon_diff);
+                if (use_elevation) {
+                    int ele_diff = segment.location.getEle() - last_coordinate.getEle();
+                    delta_numbers.emplace_back(ele_diff);
+                }
                 last_coordinate = segment.location;
             }
         }
@@ -99,7 +107,8 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
 }
 
 JSON::Array
-PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline) const
+PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &polyline,
+    const bool use_elevation) const
 {
     JSON::Array json_geometry_array;
     for (const auto &segment : polyline)
@@ -111,6 +120,10 @@ PolylineCompressor::printUnencodedString(const std::vector<SegmentInformation> &
             output += (tmp + ",");
             FixedPointCoordinate::convertInternalLatLonToString(segment.location.lon, tmp);
             output += tmp;
+            if (use_elevation) {
+               FixedPointCoordinate::convertInternalElevationToString(segment.location.getEle(), tmp);
+               output += std::string(",")+ tmp;
+            }
             json_geometry_array.values.push_back(output);
         }
     }

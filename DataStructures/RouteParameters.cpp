@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/fusion/include/at_c.hpp>
 
 RouteParameters::RouteParameters()
-    : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
+    : zoom_level(18), print_instructions(false), print_elevation(false),
+      alternate_route(true), geometry(true),
       compression(true), deprecatedAPI(false), check_sum(-1)
 {
 }
@@ -52,6 +53,8 @@ void RouteParameters::setDeprecatedAPIFlag(const std::string &) { deprecatedAPI 
 void RouteParameters::setChecksum(const unsigned sum) { check_sum = sum; }
 
 void RouteParameters::setInstructionFlag(const bool flag) { print_instructions = flag; }
+
+void RouteParameters::setElevationFlag(const bool ele) { print_elevation = ele; }
 
 void RouteParameters::setService(const std::string &service_string) { service = service_string; }
 

@@ -42,8 +42,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 XMLParser::XMLParser(const char *filename,
                      ExtractorCallbacks *extractor_callbacks,
-                     ScriptingEnvironment &scripting_environment)
-    : BaseParser(extractor_callbacks, scripting_environment)
+                     ScriptingEnvironment &scripting_environment,
+                     const bool use_elevation)
+    : BaseParser(extractor_callbacks, scripting_environment, use_elevation)
 {
     inputReader = inputReaderFactory(filename);
 }
@@ -71,7 +72,7 @@ bool XMLParser::Parse()
         {
             ImportNode current_node = ReadXMLNode();
             ParseNodeInLua(current_node, lua_state);
-            extractor_callbacks->ProcessNode(current_node);
+            extractor_callbacks->ProcessNode(current_node, use_elevation);
         }
 
         if (xmlStrEqual(currentName, (const xmlChar *)"way") == 1)

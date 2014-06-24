@@ -56,8 +56,8 @@ namespace boost { namespace interprocess { class named_mutex; } }
 #include <utility>
 #include <vector>
 
-OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memory)
-    : use_shared_memory(use_shared_memory)
+OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memory, const bool use_elevation)
+    : use_shared_memory(use_shared_memory), use_elevation(use_elevation)
 {
     if (use_shared_memory)
     {
@@ -66,7 +66,10 @@ OSRM_impl::OSRM_impl(const ServerPaths &server_paths, const bool use_shared_memo
     }
     else
     {
-        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(server_paths);
+        query_data_facade = new InternalDataFacade<QueryEdge::EdgeData>(
+            server_paths,
+            use_elevation
+        );
     }
 
     // The following plugins handle all requests.
@@ -154,10 +157,11 @@ void OSRM_impl::RunQuery(RouteParameters &route_parameters, http::Reply &reply)
 
 // proxy code for compilation firewall
 
-OSRM::OSRM(const ServerPaths &paths, const bool use_shared_memory)
-    : OSRM_pimpl_(new OSRM_impl(paths, use_shared_memory))
-{
-}
+OSRM::OSRM(
+    const ServerPaths &paths,
+    const bool use_shared_memory,
+    const bool use_elevation
+) : OSRM_pimpl_(new OSRM_impl(paths, use_shared_memory, use_elevation)) { }
 
 OSRM::~OSRM() { delete OSRM_pimpl_; }
 

@@ -55,8 +55,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 PBFParser::PBFParser(const char *fileName,
                      ExtractorCallbacks *extractor_callbacks,
                      ScriptingEnvironment &scripting_environment,
+                     const bool use_elevation,
                      unsigned num_threads)
-    : BaseParser(extractor_callbacks, scripting_environment)
+    : BaseParser(extractor_callbacks, scripting_environment, use_elevation)
 {
     if (0 == num_threads)
     {
@@ -287,7 +288,7 @@ inline void PBFParser::parseDenseNode(ParserThreadData *thread_data)
 
     for (const ImportNode &import_node : extracted_nodes_vector)
     {
-        extractor_callbacks->ProcessNode(import_node);
+        extractor_callbacks->ProcessNode(import_node, use_elevation);
     }
 }
 

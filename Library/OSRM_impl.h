@@ -48,7 +48,7 @@ class OSRM_impl
     typedef std::unordered_map<std::string, BasePlugin *> PluginMap;
 
   public:
-    OSRM_impl(const ServerPaths &paths, const bool use_shared_memory);
+    OSRM_impl(const ServerPaths &paths, const bool use_shared_memory, const bool use_elevation);
     OSRM_impl(const OSRM_impl &) = delete;
     virtual ~OSRM_impl();
     void RunQuery(RouteParameters &route_parameters, http::Reply &reply);
@@ -57,6 +57,7 @@ class OSRM_impl
     void RegisterPlugin(BasePlugin *plugin);
     PluginMap plugin_map;
     bool use_shared_memory;
+    bool use_elevation;
     SharedBarriers *barrier;
     // base class pointer to the objects
     BaseDataFacade<QueryEdge::EdgeData> *query_data_facade;
