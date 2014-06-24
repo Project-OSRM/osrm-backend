@@ -72,7 +72,6 @@ add_library(FINGERPRINT STATIC Util/FingerPrint.cpp)
 add_library(OSRM ${OSRMSources} Util/GitDescription.cpp Util/FingerPrint.cpp)
 add_library(GITDESCRIPTION STATIC Util/GitDescription.cpp)
 add_dependencies(FINGERPRINT FingerPrintConfigure)
-add_dependencies(GITDESCRIPTION GIT_DESCRIPTION)
 
 add_executable(osrm-routed routed.cpp ${ServerGlob})
 add_executable(osrm-datastore datastore.cpp)
