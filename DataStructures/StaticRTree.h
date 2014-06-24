@@ -809,7 +809,7 @@ class StaticRTree
             {
                 // SimpleLogger().Write(logDEBUG) << "flushing queue of " << traversal_queue.size() << " elements";
                 // work-around for traversal_queue.clear();
-                traversal_queue = {};
+                traversal_queue = std::priority_queue<IncrementalQueryCandidate>{};
             }
         }
 
