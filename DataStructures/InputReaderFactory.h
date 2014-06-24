@@ -44,8 +44,8 @@ struct BZ2Context
 
 int readFromBz2Stream(void *pointer, char *buffer, int len)
 {
-    void *unusedTmpVoid = NULL;
-    char *unusedTmp = NULL;
+    void *unusedTmpVoid = nullptr;
+    char *unusedTmp = nullptr;
     BZ2Context *context = (BZ2Context *)pointer;
     int read = 0;
     while (0 == read &&
@@ -76,7 +76,7 @@ int readFromBz2Stream(void *pointer, char *buffer, int len)
             {
                 context->bz2 = BZ2_bzReadOpen(
                     &context->error, context->file, 0, 0, context->unused, context->nUnused);
-                BOOST_ASSERT_MSG(NULL != context->bz2, "Could not open file");
+                BOOST_ASSERT_MSG(nullptr != context->bz2, "Could not open file");
             }
         }
         else
@@ -107,12 +107,12 @@ xmlTextReaderPtr inputReaderFactory(const char *name)
         int error;
         context->bz2 =
             BZ2_bzReadOpen(&error, context->file, 0, 0, context->unused, context->nUnused);
-        if (context->bz2 == NULL || context->file == NULL)
+        if (context->bz2 == nullptr || context->file == nullptr)
         {
             delete context;
-            return NULL;
+            return nullptr;
         }
-        return xmlReaderForIO(readFromBz2Stream, closeBz2Stream, (void *)context, NULL, NULL, 0);
+        return xmlReaderForIO(readFromBz2Stream, closeBz2Stream, (void *)context, nullptr, nullptr, 0);
     }
     else
     {

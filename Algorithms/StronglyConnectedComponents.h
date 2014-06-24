@@ -214,20 +214,20 @@ class TarjanSCC
         const char *pszDriverName = "ESRI Shapefile";
         OGRSFDriver *poDriver =
             OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(pszDriverName);
-        if (NULL == poDriver)
+        if (nullptr == poDriver)
         {
             throw OSRMException("ESRI Shapefile driver not available");
         }
-        OGRDataSource *poDS = poDriver->CreateDataSource("component.shp", NULL);
+        OGRDataSource *poDS = poDriver->CreateDataSource("component.shp", nullptr);
 
-        if (NULL == poDS)
+        if (nullptr == poDS)
         {
             throw OSRMException("Creation of output file failed");
         }
 
-        OGRLayer *poLayer = poDS->CreateLayer("component", NULL, wkbLineString, NULL);
+        OGRLayer *poLayer = poDS->CreateLayer("component", nullptr, wkbLineString, nullptr);
 
-        if (NULL == poLayer)
+        if (nullptr == poLayer)
         {
             throw OSRMException("Layer creation failed.");
         }
@@ -325,15 +325,6 @@ class TarjanSCC
         SimpleLogger().Write() << "identified: " << component_size_vector.size()
                                << " many components, marking small components";
 
-        // TODO/C++11: prime candidate for lambda function
-        // unsigned size_one_counter = 0;
-        // for (unsigned i = 0, end = component_size_vector.size(); i < end; ++i)
-        // {
-        //     if (1 == component_size_vector[i])
-        //     {
-        //         ++size_one_counter;
-        //     }
-        // }
         unsigned size_one_counter = std::count_if(component_size_vector.begin(),
                                                   component_size_vector.end(),
                                                   [] (unsigned value) { return 1 == value;});

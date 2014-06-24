@@ -62,7 +62,7 @@ bool XMLParser::Parse()
         }
 
         xmlChar *currentName = xmlTextReaderName(inputReader);
-        if (currentName == NULL)
+        if (currentName == nullptr)
         {
             continue;
         }
@@ -115,7 +115,7 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
         }
         const int child_depth = xmlTextReaderDepth(inputReader);
         xmlChar *child_name = xmlTextReaderName(inputReader);
-        if (child_name == NULL)
+        if (child_name == nullptr)
         {
             continue;
         }
@@ -135,7 +135,7 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
         {
             xmlChar *key = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
-            if (key != NULL && value != NULL)
+            if (key != nullptr && value != nullptr)
             {
                 if (xmlStrEqual(key, (const xmlChar *)"restriction") &&
                     StringStartsWith((const char *)value, "only_"))
@@ -148,11 +148,11 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
                 }
             }
 
-            if (key != NULL)
+            if (key != nullptr)
             {
                 xmlFree(key);
             }
-            if (value != NULL)
+            if (value != nullptr)
             {
                 xmlFree(value);
             }
@@ -160,7 +160,7 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
         else if (xmlStrEqual(child_name, (const xmlChar *)"member") == 1)
         {
             xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
-            if (ref != NULL)
+            if (ref != nullptr)
             {
                 xmlChar *role = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"role");
                 xmlChar *type = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"type");
@@ -181,15 +181,15 @@ InputRestrictionContainer XMLParser::ReadXMLRestriction()
                     restriction.restriction.viaNode = StringToUint((const char *)ref);
                 }
 
-                if (NULL != type)
+                if (nullptr != type)
                 {
                     xmlFree(type);
                 }
-                if (NULL != role)
+                if (nullptr != role)
                 {
                     xmlFree(role);
                 }
-                if (NULL != ref)
+                if (nullptr != ref)
                 {
                     xmlFree(ref);
                 }
@@ -222,7 +222,7 @@ ExtractionWay XMLParser::ReadXMLWay()
         }
         const int child_depth = xmlTextReaderDepth(inputReader);
         xmlChar *child_name = xmlTextReaderName(inputReader);
-        if (child_name == NULL)
+        if (child_name == nullptr)
         {
             continue;
         }
@@ -247,15 +247,15 @@ ExtractionWay XMLParser::ReadXMLWay()
             xmlChar *key = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
 
-            if (key != NULL && value != NULL)
+            if (key != nullptr && value != nullptr)
             {
                 way.keyVals.Add(std::string((char *)key), std::string((char *)value));
             }
-            if (key != NULL)
+            if (key != nullptr)
             {
                 xmlFree(key);
             }
-            if (value != NULL)
+            if (value != nullptr)
             {
                 xmlFree(value);
             }
@@ -263,7 +263,7 @@ ExtractionWay XMLParser::ReadXMLWay()
         else if (xmlStrEqual(child_name, (const xmlChar *)"nd") == 1)
         {
             xmlChar *ref = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"ref");
-            if (ref != NULL)
+            if (ref != nullptr)
             {
                 way.path.push_back(StringToUint((const char *)ref));
                 xmlFree(ref);
@@ -279,19 +279,19 @@ ImportNode XMLParser::ReadXMLNode()
     ImportNode node;
 
     xmlChar *attribute = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"lat");
-    if (attribute != NULL)
+    if (attribute != nullptr)
     {
         node.lat = static_cast<int>(COORDINATE_PRECISION * StringToDouble((const char *)attribute));
         xmlFree(attribute);
     }
     attribute = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"lon");
-    if (attribute != NULL)
+    if (attribute != nullptr)
     {
         node.lon = static_cast<int>(COORDINATE_PRECISION * StringToDouble((const char *)attribute));
         xmlFree(attribute);
     }
     attribute = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
-    if (attribute != NULL)
+    if (attribute != nullptr)
     {
         node.node_id = StringToUint((const char *)attribute);
         xmlFree(attribute);
@@ -312,7 +312,7 @@ ImportNode XMLParser::ReadXMLNode()
         }
         const int child_depth = xmlTextReaderDepth(inputReader);
         xmlChar *child_name = xmlTextReaderName(inputReader);
-        if (child_name == NULL)
+        if (child_name == nullptr)
         {
             continue;
         }
@@ -333,15 +333,15 @@ ImportNode XMLParser::ReadXMLNode()
         {
             xmlChar *key = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"k");
             xmlChar *value = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"v");
-            if (key != NULL && value != NULL)
+            if (key != nullptr && value != nullptr)
             {
                 node.keyVals.Add(std::string((char *)(key)), std::string((char *)(value)));
             }
-            if (key != NULL)
+            if (key != nullptr)
             {
                 xmlFree(key);
             }
-            if (value != NULL)
+            if (value != nullptr)
             {
                 xmlFree(value);
             }

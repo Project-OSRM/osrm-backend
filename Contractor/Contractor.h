@@ -731,7 +731,7 @@ class Contractor
 
     template <bool RUNSIMULATION>
     inline bool
-    ContractNode(ContractorThreadData *data, NodeID node, ContractionStats *stats = NULL)
+    ContractNode(ContractorThreadData *data, NodeID node, ContractionStats *stats = nullptr)
     {
         ContractorHeap &heap = data->heap;
         int inserted_edges_size = data->inserted_edges.size();
@@ -743,7 +743,7 @@ class Contractor
             const NodeID source = contractor_graph->GetTarget(in_edge);
             if (RUNSIMULATION)
             {
-                BOOST_ASSERT(stats != NULL);
+                BOOST_ASSERT(stats != nullptr);
                 ++stats->edges_deleted_count;
                 stats->original_edges_deleted_count += in_data.originalEdges;
             }
@@ -796,7 +796,7 @@ class Contractor
                 {
                     if (RUNSIMULATION)
                     {
-                        BOOST_ASSERT(stats != NULL);
+                        BOOST_ASSERT(stats != nullptr);
                         stats->edges_added_count += 2;
                         stats->original_edges_added_count +=
                             2 * (out_data.originalEdges + in_data.originalEdges);
