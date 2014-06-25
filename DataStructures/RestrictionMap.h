@@ -39,8 +39,63 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <unordered_set>
 
-// Efficent look up if an edge is the start + via node of a TurnRestriction
-// EdgeBasedEdgeFactory decides by it if edges are inserted or geometry is compressed
+
+struct RestrictionSource//: public std::pair<NodeID, NodeID>
+{
+    NodeID start;
+    NodeID via;
+
+    RestrictionSource(NodeID _start, NodeID _via)//:std::pair<NodeID, NodeID>(from, via) {}
+        : start(_start), via(_via) {}
+    inline NodeID StartNode() const { return start; }
+    inline NodeID ViaNode() const { return via; }
+
+    friend inline bool operator==(const RestrictionSource& lhs, const RestrictionSource& rhs)
+    {
+        return (lhs.start == rhs.start && lhs.via == rhs.via);
+    }
+};
+
+struct RestrictionTarget//: public std::pair<NodeID, bool>
+{
+    NodeID target;
+    bool is_only;
+
+    RestrictionTarget(NodeID _target, bool _only)//:std::pair<NodeID, bool>(to, _only) {}
+        : target(_target), is_only(_only)  {}
+    inline NodeID TargetNode() const { return target; }
+    inline NodeID IsOnly() const { return is_only; } //!< an only_-restriction
+    inline void SetTarget(NodeID _target) { target = _target; } //!< an only_-restriction
+
+    friend inline bool operator==(const RestrictionTarget& lhs, const RestrictionTarget& rhs)
+    {
+        return (lhs.target == rhs.target && lhs.is_only == rhs.is_only);
+    }
+};
+
+namespace std
+{
+    template <> struct hash<RestrictionSource>
+    {
+        size_t operator()(const RestrictionSource &r_source) const
+        {
+            return std::hash<int>()(r_source.StartNode()) ^ std::hash<int>()(r_source.ViaNode());
+        }
+    };
+
+    template <> struct hash<RestrictionTarget>
+    {
+        size_t operator()(const RestrictionTarget &r_target) const
+        {
+            return std::hash<int>()(r_target.TargetNode()) ^ std::hash<bool>()(r_target.IsOnly());
+        }
+    };
+}
+
+/**
+    \brief Efficent look up if an edge is the start + via node of a TurnRestriction
+    EdgeBasedEdgeFactory decides by it if edges are inserted or geometry is compressed
+*/
 class RestrictionMap
 {
   public:
