@@ -40,36 +40,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_set>
 
 
-struct RestrictionSource//: public std::pair<NodeID, NodeID>
+struct RestrictionSource
 {
-    NodeID start;
-    NodeID via;
+    NodeID start_node;
+    NodeID via_node;
 
-    RestrictionSource(NodeID _start, NodeID _via)//:std::pair<NodeID, NodeID>(from, via) {}
-        : start(_start), via(_via) {}
-    inline NodeID StartNode() const { return start; }
-    inline NodeID ViaNode() const { return via; }
+    RestrictionSource(NodeID start, NodeID via)
+        : start_node(start), via_node(via) {}
+    inline NodeID StartNode() const { return start_node; }
+    inline NodeID ViaNode() const { return via_node; }
 
     friend inline bool operator==(const RestrictionSource& lhs, const RestrictionSource& rhs)
     {
-        return (lhs.start == rhs.start && lhs.via == rhs.via);
+        return (lhs.start_node == rhs.start_node && lhs.via_node == rhs.via_node);
     }
 };
 
-struct RestrictionTarget//: public std::pair<NodeID, bool>
+struct RestrictionTarget
 {
-    NodeID target;
+    NodeID target_node;
     bool is_only;
 
-    RestrictionTarget(NodeID _target, bool _only)//:std::pair<NodeID, bool>(to, _only) {}
-        : target(_target), is_only(_only)  {}
-    inline NodeID TargetNode() const { return target; }
+    RestrictionTarget(NodeID target, bool only)
+        : target_node(target), is_only(only)  {}
+    inline NodeID TargetNode() const { return target_node; }
     inline NodeID IsOnly() const { return is_only; } //!< an only_-restriction
-    inline void SetTarget(NodeID _target) { target = _target; } //!< an only_-restriction
+    inline void SetTarget(NodeID target) { target_node = target; } //!< an only_-restriction
 
     friend inline bool operator==(const RestrictionTarget& lhs, const RestrictionTarget& rhs)
     {
-        return (lhs.target == rhs.target && lhs.is_only == rhs.is_only);
+        return (lhs.target_node == rhs.target_node && lhs.is_only == rhs.is_only);
     }
 };
 
@@ -111,8 +111,6 @@ class RestrictionMap
 
   private:
     bool IsSourceNode(const NodeID node) const;
-    typedef std::pair<NodeID, NodeID> RestrictionSource;
-    typedef std::pair<NodeID, bool> RestrictionTarget;
     typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
     typedef NodeBasedDynamicGraph::EdgeData EdgeData;
 

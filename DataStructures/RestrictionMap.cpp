@@ -46,7 +46,7 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
         m_restriction_start_nodes.insert(restriction.fromNode);
         m_no_turn_via_node_set.insert(restriction.viaNode);
 
-        std::pair<NodeID, NodeID> restriction_source = {restriction.fromNode, restriction.viaNode};
+        RestrictionSource restriction_source(restriction.fromNode, restriction.viaNode);
 
         unsigned index;
         auto restriction_iter = m_restriction_map.find(restriction_source);
@@ -60,7 +60,7 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
         {
             index = restriction_iter->second;
             // Map already contains an is_only_*-restriction
-            if (m_restriction_bucket_list.at(index).begin()->second)
+            if (m_restriction_bucket_list.at(index).begin()->IsOnly())
             {
                 continue;
             }
@@ -116,9 +116,9 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID node_u,
         auto &bucket = m_restriction_bucket_list.at(index);
         for (RestrictionTarget &restriction_target : bucket)
         {
-            if (node_v == restriction_target.first)
+            if (node_v == restriction_target.TargetNode())
             {
-                restriction_target.first = node_w;
+                restriction_target.SetTarget(node_w);
             }
         }
     }
@@ -169,11 +169,11 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID node_u,
     {
         const unsigned index = restriction_iter->second;
         auto &bucket = m_restriction_bucket_list.at(index);
-        for (const RestrictionSource &restriction_target : bucket)
+        for (const RestrictionTarget &restriction_target : bucket)
         {
-            if (restriction_target.second)
+            if (restriction_target.IsOnly())
             {
-                return restriction_target.first;
+                return restriction_target.TargetNode();
             }
         }
     }
@@ -203,8 +203,9 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
         const auto &bucket = m_restriction_bucket_list.at(index);
         for (const RestrictionTarget &restriction_target : bucket)
         {
-            if ((node_w == restriction_target.first) && // target found
-                (!restriction_target.second))       // and not an only_-restr.
+            if ((node_w == restriction_target.TargetNode()) && // target found
+                (!restriction_target.IsOnly())       // and not an only_-restr.
+                )
             {
                 return true;
             }
