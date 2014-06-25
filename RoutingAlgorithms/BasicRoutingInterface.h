@@ -158,6 +158,13 @@ template <class DataFacadeT> class BasicRoutingInterface
         std::pair<NodeID, NodeID> edge;
         while (!recursion_stack.empty())
         {
+            /*
+            Graphical representation of variables:
+
+            edge.first         edge.second
+                *------------------>*
+                       edge_id
+            */
             edge = recursion_stack.top();
             recursion_stack.pop();
 
@@ -175,6 +182,14 @@ template <class DataFacadeT> class BasicRoutingInterface
                     edge_weight = weight;
                 }
             }
+
+            /*
+                Graphical representation of variables:
+
+                edge.first         edge.second
+                    *<------------------*
+                           edge_id
+            */
             if (SPECIAL_EDGEID == smaller_edge_id)
             {
                 for (auto edge_id : facade->GetAdjacentEdgeRange(edge.second))

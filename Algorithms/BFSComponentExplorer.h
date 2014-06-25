@@ -72,6 +72,14 @@ template <typename GraphT> class BFSComponentExplorer
                                      NodeID node,
                                      unsigned current_component)
     {
+        /*
+           Graphical representation of variables:
+
+           u           v           w
+           *---------->*---------->*
+                            e2
+        */
+
         bfs_queue.emplace(node, node);
         // mark node as read
         m_component_index_list[node] = current_component;
