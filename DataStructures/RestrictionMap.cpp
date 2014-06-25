@@ -46,7 +46,7 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
         m_restriction_start_nodes.insert(restriction.fromNode);
         m_no_turn_via_node_set.insert(restriction.viaNode);
 
-        RestrictionSource restriction_source(restriction.fromNode, restriction.viaNode);
+        RestrictionSource restriction_source{restriction.fromNode, restriction.viaNode};
 
         unsigned index;
         auto restriction_iter = m_restriction_map.find(restriction_source);
@@ -60,7 +60,7 @@ RestrictionMap::RestrictionMap(const std::shared_ptr<NodeBasedDynamicGraph> &gra
         {
             index = restriction_iter->second;
             // Map already contains an is_only_*-restriction
-            if (m_restriction_bucket_list.at(index).begin()->IsOnly())
+            if (m_restriction_bucket_list.at(index).begin()->is_only)
             {
                 continue;
             }
@@ -106,7 +106,7 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID node_u,
 
     for (const NodeID node_x : predecessors)
     {
-        const auto restriction_iterator = m_restriction_map.find({node_x, node_u});
+        const auto restriction_iterator = m_restriction_map.find(RestrictionSource{node_x, node_u});
         if (restriction_iterator == m_restriction_map.end())
         {
             continue;
@@ -116,9 +116,9 @@ void RestrictionMap::FixupArrivingTurnRestriction(const NodeID node_u,
         auto &bucket = m_restriction_bucket_list.at(index);
         for (RestrictionTarget &restriction_target : bucket)
         {
-            if (node_v == restriction_target.TargetNode())
+            if (node_v == restriction_target.target_node)
             {
-                restriction_target.SetTarget(node_w);
+                restriction_target.target_node = node_w;
             }
         }
     }
@@ -138,7 +138,7 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
         return;
     }
 
-    const auto restriction_iterator = m_restriction_map.find({node_v, node_w});
+    const auto restriction_iterator = m_restriction_map.find(RestrictionSource{node_v, node_w});
     if (restriction_iterator != m_restriction_map.end())
     {
         const unsigned index = restriction_iterator->second;
@@ -146,7 +146,7 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
         m_restriction_map.erase(restriction_iterator);
         m_restriction_start_nodes.emplace(node_u);
         // insert new restriction start (u,w) (pointing to index)
-        RestrictionSource new_source = {node_u, node_w};
+        RestrictionSource new_source{node_u, node_w};
         m_restriction_map.emplace(new_source, index);
     }
 }
@@ -164,16 +164,16 @@ NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID node_u,
         return SPECIAL_NODEID;
     }
 
-    auto restriction_iter = m_restriction_map.find({node_u, node_v});
+    auto restriction_iter = m_restriction_map.find(RestrictionSource{node_u, node_v});
     if (restriction_iter != m_restriction_map.end())
     {
         const unsigned index = restriction_iter->second;
         auto &bucket = m_restriction_bucket_list.at(index);
         for (const RestrictionTarget &restriction_target : bucket)
         {
-            if (restriction_target.IsOnly())
+            if (restriction_target.is_only)
             {
-                return restriction_target.TargetNode();
+                return restriction_target.target_node;
             }
         }
     }
@@ -196,15 +196,15 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
         return false;
     }
 
-    auto restriction_iter = m_restriction_map.find({node_u, node_v});
+    auto restriction_iter = m_restriction_map.find(RestrictionSource{node_u, node_v});
     if (restriction_iter != m_restriction_map.end())
     {
         const unsigned index = restriction_iter->second;
         const auto &bucket = m_restriction_bucket_list.at(index);
         for (const RestrictionTarget &restriction_target : bucket)
         {
-            if ((node_w == restriction_target.TargetNode()) && // target found
-                (!restriction_target.IsOnly())       // and not an only_-restr.
+            if ((node_w == restriction_target.target_node) && // target found
+                (!restriction_target.is_only)       // and not an only_-restr.
                 )
             {
                 return true;

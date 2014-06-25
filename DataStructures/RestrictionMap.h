@@ -45,10 +45,8 @@ struct RestrictionSource
     NodeID start_node;
     NodeID via_node;
 
-    RestrictionSource(NodeID start, NodeID via)
+    explicit RestrictionSource(NodeID start, NodeID via)
         : start_node(start), via_node(via) {}
-    inline NodeID StartNode() const { return start_node; }
-    inline NodeID ViaNode() const { return via_node; }
 
     friend inline bool operator==(const RestrictionSource& lhs, const RestrictionSource& rhs)
     {
@@ -61,11 +59,8 @@ struct RestrictionTarget
     NodeID target_node;
     bool is_only;
 
-    RestrictionTarget(NodeID target, bool only)
+    explicit RestrictionTarget(NodeID target, bool only)
         : target_node(target), is_only(only)  {}
-    inline NodeID TargetNode() const { return target_node; }
-    inline NodeID IsOnly() const { return is_only; } //!< an only_-restriction
-    inline void SetTarget(NodeID target) { target_node = target; } //!< an only_-restriction
 
     friend inline bool operator==(const RestrictionTarget& lhs, const RestrictionTarget& rhs)
     {
@@ -79,7 +74,7 @@ namespace std
     {
         size_t operator()(const RestrictionSource &r_source) const
         {
-            return std::hash<int>()(r_source.StartNode()) ^ std::hash<int>()(r_source.ViaNode());
+            return std::hash<int>()(r_source.start_node) ^ std::hash<int>()(r_source.via_node);
         }
     };
 
@@ -87,7 +82,7 @@ namespace std
     {
         size_t operator()(const RestrictionTarget &r_target) const
         {
-            return std::hash<int>()(r_target.TargetNode()) ^ std::hash<bool>()(r_target.IsOnly());
+            return std::hash<int>()(r_target.target_node) ^ std::hash<bool>()(r_target.is_only);
         }
     };
 }
