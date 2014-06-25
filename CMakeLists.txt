@@ -263,6 +263,8 @@ if(WITH_TOOLS)
     target_link_libraries(
       osrm-components
       ${GDAL_LIBRARIES} ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
+  else()
+    message(FATAL_ERROR "libgdal and/or development headers not found")
   endif()
   add_executable(osrm-cli Tools/simpleclient.cpp)
   target_link_libraries(osrm-cli ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM FINGERPRINT GITDESCRIPTION)
