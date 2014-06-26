@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
 
-// this is largely inspired by boost's hash combine
+// this is largely inspired by boost's hash combine as can be found in
+// "The C++ Standard Library" 2nd Edition. Nicolai M. Josuttis. 2012.
 template<typename T>
 inline void hash_combine(std::size_t &seed, const T& val)
 {
