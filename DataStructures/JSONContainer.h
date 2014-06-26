@@ -33,8 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../ThirdParty/variant/variant.hpp"
 #include "../Util/StringUtil.h"
 
-// #include <boost/variant.hpp>
-
 #include <iostream>
 #include <vector>
 #include <string>
@@ -43,14 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace JSON
 {
 
-// struct String;
-// struct Number;
 struct Object;
 struct Array;
-// struct True;
-// struct False;
-// struct Null;
-
 
 struct String
 {

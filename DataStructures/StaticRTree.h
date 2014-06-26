@@ -49,7 +49,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/thread.hpp>
-// #include <boost/variant.hpp>
 
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
@@ -324,23 +323,8 @@ class StaticRTree
             return other.min_dist < min_dist;
         }
 
-        // inline bool RepresentsTreeNode() const
-        // {
-        //     return mapbox::util::apply_visitor(decide_type_visitor(), node);
-        // }
-
         float min_dist;
         IncrementalQueryNodeType node;
-
-      // private:
-      //   class decide_type_visitor : public mapbox::util::static_visitor<bool>
-      //   {
-      //     public:
-      //       bool operator()(const TreeNode &) const { return true; }
-
-      //       template<typename AnotherType>
-      //       bool operator()(const AnotherType &) const { return false; }
-      //   };
     };
 
     typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
