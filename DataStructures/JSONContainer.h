@@ -30,9 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JSON_CONTAINER_H
 #define JSON_CONTAINER_H
 
+#include "../ThirdParty/variant/variant.hpp"
 #include "../Util/StringUtil.h"
 
-#include <boost/variant.hpp>
+// #include <boost/variant.hpp>
 
 #include <iostream>
 #include <vector>
@@ -42,21 +43,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace JSON
 {
 
-struct String;
-struct Number;
+// struct String;
+// struct Number;
 struct Object;
 struct Array;
-struct True;
-struct False;
-struct Null;
+// struct True;
+// struct False;
+// struct Null;
 
-typedef boost::variant<boost::recursive_wrapper<String>,
-                       boost::recursive_wrapper<Number>,
-                       boost::recursive_wrapper<Object>,
-                       boost::recursive_wrapper<Array>,
-                       boost::recursive_wrapper<True>,
-                       boost::recursive_wrapper<False>,
-                       boost::recursive_wrapper<Null> > Value;
 
 struct String
 {
@@ -73,16 +67,6 @@ struct Number
     double value;
 };
 
-struct Object
-{
-    std::unordered_map<std::string, Value> values;
-};
-
-struct Array
-{
-    std::vector<Value> values;
-};
-
 struct True
 {
 };
@@ -95,7 +79,25 @@ struct Null
 {
 };
 
-struct Renderer : boost::static_visitor<>
+typedef mapbox::util::variant<String,
+                       Number,
+                       mapbox::util::recursive_wrapper<Object>,
+                       mapbox::util::recursive_wrapper<Array>,
+                       True,
+                       False,
+                       Null > Value;
+
+struct Object
+{
+    std::unordered_map<std::string, Value> values;
+};
+
+struct Array
+{
+    std::vector<Value> values;
+};
+
+struct Renderer : mapbox::util::static_visitor<>
 {
     Renderer(std::ostream &_out) : out(_out) {}
 
@@ -114,7 +116,7 @@ struct Renderer : boost::static_visitor<>
         while (iterator != object.values.end())
         {
             out << "\"" << (*iterator).first << "\":";
-            boost::apply_visitor(Renderer(out), (*iterator).second);
+            mapbox::util::apply_visitor(Renderer(out), (*iterator).second);
             if (++iterator != object.values.end())
             {
                 out << ",";
@@ -130,7 +132,7 @@ struct Renderer : boost::static_visitor<>
         iterator = array.values.begin();
         while (iterator != array.values.end())
         {
-            boost::apply_visitor(Renderer(out), *iterator);
+            mapbox::util::apply_visitor(Renderer(out), *iterator);
             if (++iterator != array.values.end())
             {
                 out << ",";
@@ -149,7 +151,7 @@ struct Renderer : boost::static_visitor<>
     std::ostream &out;
 };
 
-struct ArrayRenderer : boost::static_visitor<>
+struct ArrayRenderer : mapbox::util::static_visitor<>
 {
     ArrayRenderer(std::vector<char> &_out) : out(_out) {}
 
@@ -176,7 +178,7 @@ struct ArrayRenderer : boost::static_visitor<>
             out.push_back('\"');
             out.push_back(':');
 
-            boost::apply_visitor(ArrayRenderer(out), (*iterator).second);
+            mapbox::util::apply_visitor(ArrayRenderer(out), (*iterator).second);
             if (++iterator != object.values.end())
             {
                 out.push_back(',');
@@ -192,7 +194,7 @@ struct ArrayRenderer : boost::static_visitor<>
         iterator = array.values.begin();
         while (iterator != array.values.end())
         {
-            boost::apply_visitor(ArrayRenderer(out), *iterator);
+            mapbox::util::apply_visitor(ArrayRenderer(out), *iterator);
             if (++iterator != array.values.end())
             {
                 out.push_back(',');
@@ -223,13 +225,13 @@ struct ArrayRenderer : boost::static_visitor<>
 inline void render(std::ostream &out, const Object &object)
 {
     Value value = object;
-    boost::apply_visitor(Renderer(out), value);
+    mapbox::util::apply_visitor(Renderer(out), value);
 }
 
 inline void render(std::vector<char> &out, const Object &object)
 {
     Value value = object;
-    boost::apply_visitor(ArrayRenderer(out), value);
+    mapbox::util::apply_visitor(ArrayRenderer(out), value);
 }
 
 } // namespace JSON

@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
 
+#include "../ThirdParty/variant/variant.hpp"
 #include "../Util/MercatorUtil.h"
 #include "../Util/NumericUtil.h"
 #include "../Util/OSRMException.h"
@@ -48,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/thread.hpp>
-#include <boost/variant.hpp>
+// #include <boost/variant.hpp>
 
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
@@ -307,7 +308,7 @@ class StaticRTree
         }
     };
 
-    typedef boost::variant<TreeNode, EdgeDataT> IncrementalQueryNodeType;
+    typedef mapbox::util::variant<TreeNode, EdgeDataT> IncrementalQueryNodeType;
     struct IncrementalQueryCandidate
     {
         explicit IncrementalQueryCandidate(const float dist, const IncrementalQueryNodeType &node)
@@ -323,23 +324,23 @@ class StaticRTree
             return other.min_dist < min_dist;
         }
 
-        inline bool RepresentsTreeNode() const
-        {
-            return boost::apply_visitor(decide_type_visitor(), node);
-        }
+        // inline bool RepresentsTreeNode() const
+        // {
+        //     return mapbox::util::apply_visitor(decide_type_visitor(), node);
+        // }
 
         float min_dist;
         IncrementalQueryNodeType node;
 
-      private:
-        class decide_type_visitor : public boost::static_visitor<bool>
-        {
-          public:
-            bool operator()(const TreeNode &) const { return true; }
+      // private:
+      //   class decide_type_visitor : public mapbox::util::static_visitor<bool>
+      //   {
+      //     public:
+      //       bool operator()(const TreeNode &) const { return true; }
 
-            template<typename AnotherType>
-            bool operator()(const AnotherType &) const { return false; }
-        };
+      //       template<typename AnotherType>
+      //       bool operator()(const AnotherType &) const { return false; }
+      //   };
     };
 
     typename ShM<TreeNode, UseSharedMemory>::vector m_search_tree;
@@ -700,9 +701,9 @@ class StaticRTree
                 continue;
             }
 
-            if (current_query_node.RepresentsTreeNode())
+            if (current_query_node.node.template is<TreeNode>())
             {
-                const TreeNode & current_tree_node = boost::get<TreeNode>(current_query_node.node);
+                const TreeNode & current_tree_node = current_query_node.node.template get<TreeNode>();
                 if (current_tree_node.child_is_on_disk)
                 {
                     ++loaded_leafs;
@@ -775,7 +776,7 @@ class StaticRTree
             {
                 ++inspected_segments;
                 // inspecting an actual road segment
-                const EdgeDataT & current_segment = boost::get<EdgeDataT>(current_query_node.node);
+                const EdgeDataT & current_segment = current_query_node.node.template get<EdgeDataT>();
 
                 // don't collect too many results from small components
                 if (number_of_results_found_in_big_cc == number_of_results && !current_segment.is_in_tiny_cc)
