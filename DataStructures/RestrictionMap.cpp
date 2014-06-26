@@ -153,8 +153,7 @@ void RestrictionMap::FixupStartingTurnRestriction(const NodeID node_u,
 
 // Check if edge (u, v) is the start of any turn restriction.
 // If so returns id of first target node.
-NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID node_u,
-                                                   const NodeID node_v) const
+NodeID RestrictionMap::CheckForEmanatingIsOnlyTurn(const NodeID node_u, const NodeID node_v) const
 {
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
     BOOST_ASSERT(node_v != SPECIAL_NODEID);
@@ -204,7 +203,7 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
         for (const RestrictionTarget &restriction_target : bucket)
         {
             if ((node_w == restriction_target.target_node) && // target found
-                (!restriction_target.is_only)       // and not an only_-restr.
+                (!restriction_target.is_only)                 // and not an only_-restr.
                 )
             {
                 return true;

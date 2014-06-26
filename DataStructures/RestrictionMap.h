@@ -39,16 +39,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <unordered_set>
 
-
 struct RestrictionSource
 {
     NodeID start_node;
     NodeID via_node;
 
-    RestrictionSource(NodeID start, NodeID via)
-        : start_node(start), via_node(via) {}
+    RestrictionSource(NodeID start, NodeID via) : start_node(start), via_node(via)
+    {
+    }
 
-    friend inline bool operator==(const RestrictionSource& lhs, const RestrictionSource& rhs)
+    friend inline bool operator==(const RestrictionSource &lhs, const RestrictionSource &rhs)
     {
         return (lhs.start_node == rhs.start_node && lhs.via_node == rhs.via_node);
     }
@@ -59,10 +59,11 @@ struct RestrictionTarget
     NodeID target_node;
     bool is_only;
 
-    explicit RestrictionTarget(NodeID target, bool only)
-        : target_node(target), is_only(only)  {}
+    explicit RestrictionTarget(NodeID target, bool only) : target_node(target), is_only(only)
+    {
+    }
 
-    friend inline bool operator==(const RestrictionTarget& lhs, const RestrictionTarget& rhs)
+    friend inline bool operator==(const RestrictionTarget &lhs, const RestrictionTarget &rhs)
     {
         return (lhs.target_node == rhs.target_node && lhs.is_only == rhs.is_only);
     }
@@ -70,21 +71,21 @@ struct RestrictionTarget
 
 namespace std
 {
-    template <> struct hash<RestrictionSource>
+template <> struct hash<RestrictionSource>
+{
+    size_t operator()(const RestrictionSource &r_source) const
     {
-        size_t operator()(const RestrictionSource &r_source) const
-        {
-            return hash_val(r_source.start_node, r_source.via_node);
-        }
-    };
+        return hash_val(r_source.start_node, r_source.via_node);
+    }
+};
 
-    template <> struct hash<RestrictionTarget>
+template <> struct hash<RestrictionTarget>
+{
+    size_t operator()(const RestrictionTarget &r_target) const
     {
-        size_t operator()(const RestrictionTarget &r_target) const
-        {
-            return hash_val(r_target.target_node, r_target.is_only);
-        }
-    };
+        return hash_val(r_target.target_node, r_target.is_only);
+    }
+};
 }
 
 /**
@@ -102,7 +103,10 @@ class RestrictionMap
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
     bool IsViaNode(const NodeID node) const;
-    unsigned size() { return m_count; }
+    unsigned size()
+    {
+        return m_count;
+    }
 
   private:
     bool IsSourceNode(const NodeID node) const;
