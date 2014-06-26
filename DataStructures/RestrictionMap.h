@@ -45,7 +45,7 @@ struct RestrictionSource
     NodeID start_node;
     NodeID via_node;
 
-    explicit RestrictionSource(NodeID start, NodeID via)
+    RestrictionSource(NodeID start, NodeID via)
         : start_node(start), via_node(via) {}
 
     friend inline bool operator==(const RestrictionSource& lhs, const RestrictionSource& rhs)
@@ -74,7 +74,7 @@ namespace std
     {
         size_t operator()(const RestrictionSource &r_source) const
         {
-            return std::hash<int>()(r_source.start_node) ^ std::hash<int>()(r_source.via_node);
+            return hash_val(r_source.start_node, r_source.via_node);
         }
     };
 
@@ -82,7 +82,7 @@ namespace std
     {
         size_t operator()(const RestrictionTarget &r_target) const
         {
-            return std::hash<int>()(r_target.target_node) ^ std::hash<bool>()(r_target.is_only);
+            return hash_val(r_target.target_node, r_target.is_only);
         }
     };
 }
