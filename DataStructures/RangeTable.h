@@ -45,7 +45,7 @@ public:
     friend std::ostream& operator<< <>(std::ostream &out, const RangeTable &table);
     friend std::istream& operator>> <>(std::istream &in, RangeTable &table);
 
-    RangeTable() {}
+    RangeTable() : sum_lengths(0) {}
 
     // for loading from shared memory
     explicit RangeTable(OffsetContainerT& external_offsets, BlockContainerT& external_blocks, const unsigned sum_lengths)
