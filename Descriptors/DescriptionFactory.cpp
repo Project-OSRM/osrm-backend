@@ -85,11 +85,6 @@ JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_en
     return polyline_compressor.printUnencodedString(path_description);
 }
 
-JSON::Value DescriptionFactory::AppendUnencodedPolylineString() const
-{
-    return polyline_compressor.printUnencodedString(path_description);
-}
-
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)
 {
     summary.source_name_id = start_phantom.name_id;

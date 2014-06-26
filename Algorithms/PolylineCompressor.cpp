@@ -79,8 +79,10 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
         FixedPointCoordinate last_coordinate = polyline[0].location;
         delta_numbers.emplace_back(last_coordinate.lat);
         delta_numbers.emplace_back(last_coordinate.lon);
-        for (const auto &segment : polyline)
+        // iterate after skipping the first, already handled, segment
+        for (auto it = ++polyline.cbegin(); it != polyline.cend(); ++it)
         {
+            const auto &segment = *it;
             if (segment.necessary)
             {
                 int lat_diff = segment.location.lat - last_coordinate.lat;

@@ -77,6 +77,9 @@ When /^I route I should get$/ do |table|
         if table.headers.include? 'end'
           got['end'] = instructions ? json['route_summary']['end_point'] : nil
         end
+        if table.headers.include? 'geometry'
+            got['geometry'] = json['route_geometry']
+        end
         if table.headers.include? 'route'
           got['route'] = (instructions || '').strip
           if table.headers.include?('distance')
