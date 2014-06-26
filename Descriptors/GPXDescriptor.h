@@ -37,10 +37,12 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
     FixedPointCoordinate current;
     DataFacadeT * facade;
 
-    void AddRoutePoint(const FixedPointCoordinate & coordinate, std::vector<char> & output)
+
+    void AddRoutePoint(const FixedPointCoordinate &coordinate, std::vector<char> &output)
     {
         const std::string route_point_head = "<rtept lat=\"";
         const std::string route_point_middle = " lon=\"";
+        const std::string route_point_ele = " ele=\"";
         const std::string route_point_tail = "\"></rtept>";
 
         std::string tmp;
@@ -53,8 +55,17 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
         FixedPointCoordinate::convertInternalLatLonToString(coordinate.lon, tmp);
         output.insert(output.end(), route_point_middle.begin(), route_point_middle.end());
         output.insert(output.end(), tmp.begin(), tmp.end());
+
+        if (config.elevation) {
+            output.push_back('\"');
+            FixedPointCoordinate::convertInternalElevationToString(coordinate.getEle(), tmp);
+            output.insert(output.end(), route_point_ele.cbegin(), route_point_ele.cend());
+            output.insert(output.end(), tmp.cbegin(), tmp.cend());
+        }
+
         output.insert(output.end(), route_point_tail.begin(), route_point_tail.end());
     }
+
 
   public:
     GPXDescriptor(DataFacadeT *facade) : facade(facade) {}
@@ -79,18 +90,18 @@ template <class DataFacadeT> class GPXDescriptor : public BaseDescriptor<DataFac
                                  (!raw_route.unpacked_path_segments.front().empty());
         if (found_route)
         {
-            AddRoutePoint(raw_route.segment_end_coordinates.front().source_phantom.location, reply.content);
+            const auto &coordinates = raw_route.segment_end_coordinates;
+            AddRoutePoint(coordinates.front().source_phantom.location, reply.content);
 
             for (const std::vector<PathData> &path_data_vector : raw_route.unpacked_path_segments)
             {
                 for (const PathData &path_data : path_data_vector)
                 {
-                    const FixedPointCoordinate current_coordinate =
-                        facade->GetCoordinateOfNode(path_data.node);
-                    AddRoutePoint(current_coordinate, reply.content);
+                    const FixedPointCoordinate coordinate = facade->GetCoordinateOfNode(path_data.node);
+                    AddRoutePoint(coordinate, reply.content);
                 }
             }
-            AddRoutePoint(raw_route.segment_end_coordinates.back().target_phantom.location, reply.content);
+            AddRoutePoint(coordinates.back().target_phantom.location, reply.content);
 
         }
         std::string footer("</rte></gpx>");

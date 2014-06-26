@@ -30,17 +30,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
 #include <iosfwd> //for std::ostream
-#include <string>
+#include <limits>
+
+#include "OSRM_config.h"
 
 const float COORDINATE_PRECISION = 1000000.f;
 
-struct FixedPointCoordinate
+struct _Point2D
 {
     int lat;
     int lon;
+    constexpr static int MIN = std::numeric_limits<int>::min();
+    constexpr static int MAX = std::numeric_limits<int>::max();
 
+    _Point2D() : lat(MIN), lon(MIN) {};
+    _Point2D(int lat, int lon, int ele) : lat(lat), lon(lon) {}
+
+    inline int getEle() const { return MIN; }
+    inline void setEle(int ele) {}
+};
+
+struct _Point3D
+{
+    int lat;
+    int lon;
+    static constexpr int MIN = std::numeric_limits<int>::min();
+    static constexpr int MAX = std::numeric_limits<int>::max();
+
+    _Point3D() : lat(MIN), lon(MIN) {};
+    _Point3D(int lat, int lon, int ele) : lat(lat), lon(lon), ele(ele) {}
+
+    inline int getEle() const { return ele; }
+    inline void setEle(int ele) { this->ele = ele; }
+private:
+    int ele;
+};
+
+#ifdef OSRM_HAS_ELEVATION
+typedef _Point3D Coordinate;
+#else
+typedef _Point2D Coordinate;
+#endif
+
+struct FixedPointCoordinate : public Coordinate
+{
     FixedPointCoordinate();
-    explicit FixedPointCoordinate(int lat, int lon);
+    explicit FixedPointCoordinate(int lat, int lon, int ele = MIN);
     void Reset();
     bool isSet() const;
     bool isValid() const;
@@ -67,6 +102,8 @@ struct FixedPointCoordinate
 
     static void convertInternalCoordinateToString(const FixedPointCoordinate &coordinate,
                                                   std::string &output);
+
+    static void convertInternalElevationToString(const int value, std::string &output);
 
     static void convertInternalReversedCoordinateToString(const FixedPointCoordinate &coordinate,
                                                           std::string &output);

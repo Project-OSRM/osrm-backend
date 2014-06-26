@@ -38,12 +38,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <limits>
 
-FixedPointCoordinate::FixedPointCoordinate()
-    : lat(std::numeric_limits<int>::min()), lon(std::numeric_limits<int>::min())
+FixedPointCoordinate::FixedPointCoordinate() : Coordinate(MIN, MIN, MIN)
 {
 }
 
-FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon)
+FixedPointCoordinate::FixedPointCoordinate(int lat, int lon, int ele) : Coordinate(lat, lon, ele)
 {
 #ifndef NDEBUG
     if (0 != (std::abs(lat) >> 30))
@@ -63,12 +62,13 @@ FixedPointCoordinate::FixedPointCoordinate(int lat, int lon) : lat(lat), lon(lon
 
 void FixedPointCoordinate::Reset()
 {
-    lat = std::numeric_limits<int>::min();
-    lon = std::numeric_limits<int>::min();
+    lat = MIN;
+    lon = MIN;
+    setEle(MIN);
 }
 bool FixedPointCoordinate::isSet() const
 {
-    return (std::numeric_limits<int>::min() != lat) && (std::numeric_limits<int>::min() != lon);
+    return (MIN != lat) && (MIN != lon);
 }
 bool FixedPointCoordinate::isValid() const
 {
@@ -216,6 +216,13 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
         nearest_location.lat = static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
+
+    // Interpolate the elevation of the projection using both ends
+    const float distance_1 = ApproximateEuclideanDistance(source_coordinate, nearest_location);
+    const float distance_2 = ApproximateEuclideanDistance(source_coordinate, target_coordinate);
+    float eleRatio = std::min(1.f, distance_1 / distance_2);
+    nearest_location.setEle(source_coordinate.getEle() * (1.0 - eleRatio) + target_coordinate.getEle() * eleRatio);
+
     BOOST_ASSERT(nearest_location.isValid());
     return FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
 }
@@ -314,6 +321,13 @@ void FixedPointCoordinate::convertInternalCoordinateToString(const FixedPointCoo
     output += ",";
     convertInternalLatLonToString(coord.lat, tmp);
     output += tmp;
+}
+
+void FixedPointCoordinate::convertInternalElevationToString(const int value, std::string &output)
+{
+    char buffer[12];
+    buffer[sizeof(buffer)-1] = 0; // zero termination
+    output = printInt<sizeof(buffer)-1, ELEVATION_NUM_DIGITS>(buffer, value);
 }
 
 void

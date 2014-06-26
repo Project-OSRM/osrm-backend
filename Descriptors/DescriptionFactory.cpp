@@ -76,13 +76,13 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.turn_instruction);
 }
 
-JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)
+JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded, const bool use_elevation)
 {
     if (return_encoded)
     {
-        return polyline_compressor.printEncodedString(path_description);
+        return polyline_compressor.printEncodedString(path_description, use_elevation);
     }
-    return polyline_compressor.printUnencodedString(path_description);
+    return polyline_compressor.printUnencodedString(path_description, use_elevation);
 }
 
 void DescriptionFactory::BuildRouteSummary(const double distance, const unsigned time)

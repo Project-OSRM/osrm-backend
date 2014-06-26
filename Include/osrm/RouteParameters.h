@@ -49,6 +49,8 @@ struct RouteParameters
 
     void setInstructionFlag(const bool flag);
 
+    void setElevationFlag(const bool ele);
+
     void setService(const std::string &service);
 
     void setOutputFormat(const std::string &format);
@@ -67,6 +69,7 @@ struct RouteParameters
 
     short zoom_level;
     bool print_instructions;
+    bool print_elevation;
     bool alternate_route;
     bool geometry;
     bool compression;
@@ -79,5 +82,6 @@ struct RouteParameters
     std::vector<std::string> hints;
     std::vector<FixedPointCoordinate> coordinates;
 };
+
 
 #endif // ROUTE_PARAMETERS_H

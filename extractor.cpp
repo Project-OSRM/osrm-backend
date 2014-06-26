@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
 
         boost::filesystem::path config_file_path, input_path, profile_path;
         unsigned requested_num_threads;
+        bool use_elevation = false;
 
         // declare a group of options that will be allowed only on command line
         boost::program_options::options_description generic_options("Options");
@@ -80,6 +81,8 @@ int main(int argc, char *argv[])
                                      boost::program_options::value<boost::filesystem::path>(
                                          &profile_path)->default_value("profile.lua"),
                                      "Path to LUA routing profile")(
+            "elevation,e", boost::program_options::value<bool>(&use_elevation)->default_value(true),
+                "Retrieve node elevations")(
             "threads,t",
             boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(tbb::task_scheduler_init::default_num_threads()),
             "Number of threads to use");
@@ -177,6 +180,7 @@ int main(int argc, char *argv[])
                                              << recommended_num_threads
                                              << "! This setting may have performance side-effects.";
         }
+        SimpleLogger().Write() << "Using elevation: " << use_elevation;
 
         tbb::task_scheduler_init init(requested_num_threads);
 
@@ -236,11 +240,12 @@ int main(int argc, char *argv[])
             parser = new PBFParser(input_path.string().c_str(),
                                    extractor_callbacks,
                                    scripting_environment,
+                                   use_elevation,
                                    requested_num_threads);
         }
         else
         {
-            parser = new XMLParser(input_path.string().c_str(), extractor_callbacks, scripting_environment);
+            parser = new XMLParser(input_path.string().c_str(), extractor_callbacks, scripting_environment, use_elevation);
         }
 
         if (!parser->ReadHeader())

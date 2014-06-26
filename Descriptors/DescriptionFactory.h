@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/PhantomNodes.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
+#include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <osrm/Coordinate.h>
@@ -81,7 +82,7 @@ class DescriptionFactory
     void BuildRouteSummary(const double distance, const unsigned time);
     void SetStartSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
     void SetEndSegment(const PhantomNode &start_phantom, const bool traversed_in_reverse);
-    JSON::Value AppendEncodedPolylineString(const bool return_encoded);
+    JSON::Value AppendEncodedPolylineString(const bool return_encoded, const bool use_elevation);
     std::vector<unsigned> const & GetViaIndices() const;
 
     template <class DataFacadeT> void Run(const DataFacadeT *facade, const unsigned zoomLevel)

@@ -123,17 +123,19 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 #ifndef NDEBUG
             const int added_segments =
 #endif
-                DescribeLeg(raw_route.unpacked_path_segments[i],
+            DescribeLeg(raw_route.unpacked_path_segments[i],
                             raw_route.segment_end_coordinates[i],
                             raw_route.target_traversed_in_reverse[i]);
             BOOST_ASSERT(0 < added_segments);
         }
+
         description_factory.Run(facade, config.zoom_level);
 
         if (config.geometry)
         {
             JSON::Value route_geometry =
-                description_factory.AppendEncodedPolylineString(config.encode_geometry);
+                description_factory.AppendEncodedPolylineString(config.encode_geometry,
+                config.elevation);
             json_result.values["route_geometry"] = route_geometry;
         }
         if (config.instructions)
@@ -207,7 +209,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             {
                 JSON::Value alternate_geometry_string =
                     alternate_description_factory.AppendEncodedPolylineString(
-                        config.encode_geometry);
+                        config.encode_geometry, config.elevation);
                 JSON::Array json_alternate_geometries_array;
                 json_alternate_geometries_array.values.push_back(alternate_geometry_string);
                 json_result.values["alternative_geometries"] = json_alternate_geometries_array;

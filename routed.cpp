@@ -72,6 +72,7 @@ int main(int argc, const char *argv[])
         LogPolicy::GetInstance().Unmute();
 
         bool use_shared_memory = false, trial_run = false;
+        bool use_elevation = false;
         std::string ip_address;
         int ip_port, requested_thread_num;
 
@@ -84,7 +85,8 @@ int main(int argc, const char *argv[])
                                                                   ip_port,
                                                                   requested_thread_num,
                                                                   use_shared_memory,
-                                                                  trial_run);
+                                                                  trial_run,
+                                                                  use_elevation);
         if (init_result == INIT_OK_DO_NOT_START_ENGINE)
         {
             return 0;
@@ -103,6 +105,8 @@ int main(int argc, const char *argv[])
 #endif
         SimpleLogger().Write() << "starting up engines, " << g_GIT_DESCRIPTION << ", "
                                << "compiled at " << __DATE__ << ", " __TIME__;
+
+        SimpleLogger().Write() << "Using elevation: " << use_elevation;
 
         if (use_shared_memory)
         {
@@ -130,7 +134,7 @@ int main(int argc, const char *argv[])
         pthread_sigmask(SIG_BLOCK, &new_mask, &old_mask);
 #endif
 
-        OSRM osrm_lib(server_paths, use_shared_memory);
+        OSRM osrm_lib(server_paths, use_shared_memory, use_elevation);
         Server *routing_server =
             ServerFactory::CreateServer(ip_address, ip_port, requested_thread_num);
 

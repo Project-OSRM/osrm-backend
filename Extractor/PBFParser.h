@@ -66,6 +66,7 @@ class PBFParser : public BaseParser
     PBFParser(const char *file_name,
               ExtractorCallbacks *extractor_callbacks,
               ScriptingEnvironment &scripting_environment,
+              const bool use_elevation,
               unsigned num_parser_threads = 0);
     virtual ~PBFParser();
 
