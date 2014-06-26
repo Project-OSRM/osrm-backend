@@ -149,6 +149,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   add_definitions(-DNOMINMAX) # avoid min and max macros that can break compilation
   add_definitions(-D_USE_MATH_DEFINES) # define M_PI
   add_definitions(-D_WIN32_WINNT=0x0501)
+  set_target_properties(OSRM PROPERTIES STATIC_LIBRARY_FLAGS "/machine:x64")
 endif()
 
 # disable partitioning of LTO process when possible (fixes Debian issues)
