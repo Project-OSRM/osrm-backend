@@ -66,7 +66,7 @@ file(GLOB CoordinateGlob DataStructures/Coordinate.cpp)
 file(GLOB AlgorithmGlob Algorithms/*.cpp)
 file(GLOB HttpGlob Server/Http/*.cpp)
 file(GLOB LibOSRMGlob Library/*.cpp)
-file(GLOB DataStructureTestsGlob UnitTests/DataStructures/*.cpp)
+file(GLOB DataStructureTestsGlob UnitTests/DataStructures/*.cpp DataStructures/HilbertValue.cpp)
 
 set(
   OSRMSources
@@ -196,7 +196,7 @@ target_link_libraries(osrm-extract ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION
 target_link_libraries(osrm-prepare ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB IMPORT)
 target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM FINGERPRINT GITDESCRIPTION)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
-target_link_libraries(datastructure-tests ${Boost_LIBRARIES})
+target_link_libraries(datastructure-tests ${Boost_LIBRARIES} COORDLIB)
 
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
