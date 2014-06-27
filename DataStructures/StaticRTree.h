@@ -60,15 +60,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-// tuning parameters
-const static uint32_t RTREE_BRANCHING_FACTOR = 64;
-const static uint32_t RTREE_LEAF_NODE_SIZE = 1024;
-
-
 // Implements a static, i.e. packed, R-tree
 template <class EdgeDataT,
           class CoordinateListT = std::vector<FixedPointCoordinate>,
-          bool UseSharedMemory = false>
+          bool UseSharedMemory = false,
+          uint32_t BRANCHING_FACTOR=64,
+          uint32_t LEAF_NODE_SIZE=1024>
 class StaticRTree
 {
   public:
@@ -79,7 +76,7 @@ class StaticRTree
         int32_t min_lon, max_lon;
         int32_t min_lat, max_lat;
 
-        inline void InitializeMBRectangle(const std::array<EdgeDataT, RTREE_LEAF_NODE_SIZE> &objects,
+        inline void InitializeMBRectangle(const std::array<EdgeDataT, LEAF_NODE_SIZE> &objects,
                                           const uint32_t element_count,
                                           const std::vector<NodeInfo> &coordinate_list)
         {
@@ -219,7 +216,7 @@ class StaticRTree
         RectangleT minimum_bounding_rectangle;
         uint32_t child_count : 31;
         bool child_is_on_disk : 1;
-        uint32_t children[RTREE_BRANCHING_FACTOR];
+        uint32_t children[BRANCHING_FACTOR];
     };
 
   private:
@@ -243,9 +240,9 @@ class StaticRTree
 
     struct LeafNode
     {
-        LeafNode() : object_count(0) {}
+        LeafNode() : object_count(0), objects() {}
         uint32_t object_count;
-        std::array<EdgeDataT, RTREE_LEAF_NODE_SIZE> objects;
+        std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
     };
 
     struct QueryCandidate
@@ -369,7 +366,7 @@ class StaticRTree
             TreeNode current_node;
             // SimpleLogger().Write() << "reading " << tree_size << " tree nodes in " <<
             // (sizeof(TreeNode)*tree_size) << " bytes";
-            for (uint32_t current_element_index = 0; RTREE_LEAF_NODE_SIZE > current_element_index;
+            for (uint32_t current_element_index = 0; LEAF_NODE_SIZE > current_element_index;
                  ++current_element_index)
             {
                 if (m_element_count > (processed_objects_count + current_element_index))
@@ -406,9 +403,9 @@ class StaticRTree
             while (processed_tree_nodes_in_level < tree_nodes_in_level.size())
             {
                 TreeNode parent_node;
-                // pack RTREE_BRANCHING_FACTOR elements into tree_nodes each
+                // pack BRANCHING_FACTOR elements into tree_nodes each
                 for (uint32_t current_child_node_index = 0;
-                     RTREE_BRANCHING_FACTOR > current_child_node_index;
+                     BRANCHING_FACTOR > current_child_node_index;
                      ++current_child_node_index)
                 {
                     if (processed_tree_nodes_in_level < tree_nodes_in_level.size())
@@ -621,7 +618,7 @@ class StaticRTree
                                             std::vector<PhantomNode> &result_phantom_node_vector,
                                             const unsigned zoom_level,
                                             const unsigned number_of_results,
-                                            const unsigned max_checked_segments = 4*RTREE_LEAF_NODE_SIZE)
+                                            const unsigned max_checked_segments = 4*LEAF_NODE_SIZE)
     {
         // TIMER_START(samet);
         // SimpleLogger().Write(logDEBUG) << "searching for " << number_of_results << " results";
