@@ -300,7 +300,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
     {
         // Segment information has following format:
         //["instruction id","streetname",length,position,time,"length","earth_direction",azimuth]
-        unsigned necessary_segments_running_index = 1;
+        unsigned necessary_segments_running_index = 0;
         round_about.leave_at_exit = 0;
         round_about.name_id = 0;
         std::string temp_dist, temp_length, temp_duration, temp_bearing, temp_instruction;
