@@ -32,12 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../typedefs.h"
 #include "../DataStructures/DeallocatingVector.h"
-#include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/EdgeBasedNode.h"
 #include "../DataStructures/OriginalEdgeData.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/TurnInstructions.h"
-#include "../DataStructures/Restriction.h"
 #include "../DataStructures/NodeBasedGraph.h"
 #include "../DataStructures/RestrictionMap.h"
 #include "GeometryCompressor.h"
