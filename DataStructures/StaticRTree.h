@@ -64,7 +64,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 const static uint32_t RTREE_BRANCHING_FACTOR = 64;
 const static uint32_t RTREE_LEAF_NODE_SIZE = 1024;
 
-static boost::thread_specific_ptr<boost::filesystem::ifstream> thread_local_rtree_stream;
 
 // Implements a static, i.e. packed, R-tree
 template <class EdgeDataT,
@@ -304,6 +303,7 @@ class StaticRTree
     uint64_t m_element_count;
     const std::string m_leaf_node_filename;
     std::shared_ptr<CoordinateListT> m_coordinate_list;
+    boost::filesystem::ifstream leaves_stream;
 
   public:
     StaticRTree() = delete;
@@ -507,9 +507,8 @@ class StaticRTree
             throw OSRMException("mem index file is empty");
         }
 
-        boost::filesystem::ifstream leaf_node_file(leaf_file, std::ios::binary);
-        leaf_node_file.read((char *)&m_element_count, sizeof(uint64_t));
-        leaf_node_file.close();
+        leaves_stream.open(leaf_file, std::ios::binary);
+        leaves_stream.read((char *)&m_element_count, sizeof(uint64_t));
 
         // SimpleLogger().Write() << tree_size << " nodes in search tree";
         // SimpleLogger().Write() << m_element_count << " elements in leafs";
@@ -532,14 +531,8 @@ class StaticRTree
             throw OSRMException("mem index file is empty");
         }
 
-        boost::filesystem::ifstream leaf_node_file(leaf_file, std::ios::binary);
-        leaf_node_file.read((char *)&m_element_count, sizeof(uint64_t));
-        leaf_node_file.close();
-
-        if (thread_local_rtree_stream.get())
-        {
-            thread_local_rtree_stream->close();
-        }
+        leaves_stream.open(leaf_file, std::ios::binary);
+        leaves_stream.read((char *)&m_element_count, sizeof(uint64_t));
 
         // SimpleLogger().Write() << tree_size << " nodes in search tree";
         // SimpleLogger().Write() << m_element_count << " elements in leafs";
@@ -988,22 +981,21 @@ class StaticRTree
 
     inline void LoadLeafFromDisk(const uint32_t leaf_id, LeafNode &result_node)
     {
-        if (!thread_local_rtree_stream.get() || !thread_local_rtree_stream->is_open())
+        if (!leaves_stream.is_open())
         {
-            thread_local_rtree_stream.reset(new boost::filesystem::ifstream(
-                m_leaf_node_filename, std::ios::in | std::ios::binary));
+            leaves_stream.open(m_leaf_node_filename, std::ios::in | std::ios::binary);
         }
-        if (!thread_local_rtree_stream->good())
+        if (!leaves_stream.good())
         {
-            thread_local_rtree_stream->clear(std::ios::goodbit);
+            leaves_stream.clear(std::ios::goodbit);
             SimpleLogger().Write(logDEBUG) << "Resetting stale filestream";
         }
         const uint64_t seek_pos = sizeof(uint64_t) + leaf_id * sizeof(LeafNode);
-        thread_local_rtree_stream->seekg(seek_pos);
-        BOOST_ASSERT_MSG(thread_local_rtree_stream->good(),
+        leaves_stream.seekg(seek_pos);
+        BOOST_ASSERT_MSG(leaves_stream.good(),
                          "Seeking to position in leaf file failed.");
-        thread_local_rtree_stream->read((char *)&result_node, sizeof(LeafNode));
-        BOOST_ASSERT_MSG(thread_local_rtree_stream->good(), "Reading from leaf file failed.");
+        leaves_stream.read((char *)&result_node, sizeof(LeafNode));
+        BOOST_ASSERT_MSG(leaves_stream.good(), "Reading from leaf file failed.");
     }
 
     inline bool EdgesAreEquivalent(const FixedPointCoordinate &a,
