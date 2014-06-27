@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STD_HASH_EXTENSIONS_H
 #define STD_HASH_EXTENSIONS_H
 
-#include "../typedefs.h"
-
 #include <functional>
 
 // this is largely inspired by boost's hash combine as can be found in
@@ -63,9 +61,9 @@ inline std::size_t hash_val( const Types&... args)
 
 namespace std
 {
-template <> struct hash<std::pair<NodeID, NodeID>>
+template <typename T1, typename T2> struct hash<std::pair<T1, T2>>
 {
-    size_t operator()(const std::pair<NodeID, NodeID> &pair) const
+    size_t operator()(const std::pair<T1, T2> &pair) const
     {
         return hash_val(pair.first, pair.second);
     }
