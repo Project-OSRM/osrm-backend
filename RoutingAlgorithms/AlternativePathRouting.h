@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 
 #include <unordered_map>
+#include <unordered_set>
+
 #include <vector>
 
 const double VIAPATH_ALPHA = 0.10;
@@ -170,49 +172,55 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         super::RetrievePackedPathFromSingleHeap(forward_heap1, middle_node, packed_forward_path);
         super::RetrievePackedPathFromSingleHeap(reverse_heap1, middle_node, packed_reverse_path);
 
+        // this set is is used as an indicator if a node is on the shortest path
+        std::unordered_set<NodeID> nodes_in_path(packed_forward_path.size() + packed_reverse_path.size());
+        nodes_in_path.insert(packed_forward_path.begin(), packed_forward_path.end());
+        nodes_in_path.insert(middle_node);
+        nodes_in_path.insert(packed_reverse_path.begin(), packed_reverse_path.end());
+
         std::unordered_map<NodeID, int> approximated_forward_sharing;
         std::unordered_map<NodeID, int> approximated_reverse_sharing;
 
-        unsigned index_into_forward_path = 0;
         // sweep over search space, compute forward sharing for each current edge (u,v)
         for (const SearchSpaceEdge &current_edge : forward_search_space)
         {
             const NodeID u = current_edge.first;
             const NodeID v = current_edge.second;
-            if ((packed_forward_path.size() < index_into_forward_path) &&
-                (current_edge == forward_search_space[index_into_forward_path]))
+
+            if (nodes_in_path.find(v) != nodes_in_path.end())
             {
-                // current_edge is on shortest path => sharing(u):=queue.GetKey(u);
-                ++index_into_forward_path;
-                approximated_forward_sharing[v] = forward_heap1.GetKey(u);
+                // current_edge is on shortest path => sharing(v):=queue.GetKey(v);
+                approximated_forward_sharing.emplace(v, forward_heap1.GetKey(v));
             }
             else
             {
-                // sharing (s) = sharing (t)
-                approximated_forward_sharing[v] = approximated_forward_sharing[u];
+                // current edge is not on shortest path. Check if we know a value for the other endpoint
+                const auto sharing_of_u_iterator = approximated_forward_sharing.find(u);
+                if(sharing_of_u_iterator != approximated_forward_sharing.end())
+                {
+                    approximated_forward_sharing.emplace(v, sharing_of_u_iterator->second);
+                }
             }
         }
 
-        unsigned index_into_reverse_path = 0;
         // sweep over search space, compute backward sharing
         for (const SearchSpaceEdge &current_edge : reverse_search_space)
         {
             const NodeID u = current_edge.first;
             const NodeID v = current_edge.second;
-            if ((packed_reverse_path.size() < index_into_reverse_path) &&
-                (current_edge == reverse_search_space[index_into_reverse_path]))
+            if (nodes_in_path.find(v) != nodes_in_path.end())
             {
                 // current_edge is on shortest path => sharing(u):=queue.GetKey(u);
-                ++index_into_reverse_path;
-                approximated_reverse_sharing[v] = reverse_heap1.GetKey(u);
+                approximated_reverse_sharing.emplace(v, reverse_heap1.GetKey(v));
             }
             else
             {
-                // sharing (s) = sharing (t)
-                const auto rev_iterator = approximated_reverse_sharing.find(u);
-                const int rev_sharing =
-                    (rev_iterator != approximated_reverse_sharing.end()) ? rev_iterator->second : 0;
-                approximated_reverse_sharing[v] = rev_sharing;
+                // current edge is not on shortest path. Check if we know a value for the other endpoint
+                const auto sharing_of_u_iterator = approximated_reverse_sharing.find(u);
+                if(sharing_of_u_iterator != approximated_reverse_sharing.end())
+                {
+                    approximated_reverse_sharing.emplace(v, sharing_of_u_iterator->second);
+                }
             }
         }
 
@@ -250,8 +258,6 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
                 preselected_node_list.emplace_back(node);
             }
         }
-
-        // SimpleLogger().Write() << preselected_node_list.size() << " passed preselection";
 
         std::vector<NodeID> &packed_shortest_path = packed_forward_path;
         std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
