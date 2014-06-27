@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-// #define constexpr const static
 #endif
 
 typedef unsigned int NodeID;
