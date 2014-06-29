@@ -143,19 +143,25 @@ class StaticRTree
                 return 0.;
             }
 
+            const FixedPointCoordinate upper_left(max_lat, min_lon);
+            const FixedPointCoordinate upper_right(max_lat, max_lon);
+            const FixedPointCoordinate lower_right(min_lat, max_lon);
+            const FixedPointCoordinate lower_left(min_lat, min_lon);
+
             float min_dist = std::numeric_limits<float>::max();
             min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ApproximateEuclideanDistance(
-                                    location.lat, location.lon, max_lat, min_lon));
+                                FixedPointCoordinate::ComputePerpendicularDistance(
+                                    upper_left, upper_right, location));
             min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ApproximateEuclideanDistance(
-                                    location.lat, location.lon, max_lat, max_lon));
+                                FixedPointCoordinate::ComputePerpendicularDistance(
+                                    upper_right, lower_right, location));
             min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ApproximateEuclideanDistance(
-                                    location.lat, location.lon, min_lat, max_lon));
+                                FixedPointCoordinate::ComputePerpendicularDistance(
+                                    lower_right, lower_left, location));
             min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ApproximateEuclideanDistance(
-                                    location.lat, location.lon, min_lat, min_lon));
+                                FixedPointCoordinate::ComputePerpendicularDistance(
+                                    lower_left, upper_left, location));
+
             return min_dist;
         }
 
@@ -163,10 +169,10 @@ class StaticRTree
         {
             float min_max_dist = std::numeric_limits<float>::max();
             // Get minmax distance to each of the four sides
-            FixedPointCoordinate upper_left(max_lat, min_lon);
-            FixedPointCoordinate upper_right(max_lat, max_lon);
-            FixedPointCoordinate lower_right(min_lat, max_lon);
-            FixedPointCoordinate lower_left(min_lat, min_lon);
+            const FixedPointCoordinate upper_left(max_lat, min_lon);
+            const FixedPointCoordinate upper_right(max_lat, max_lon);
+            const FixedPointCoordinate lower_right(min_lat, max_lon);
+            const FixedPointCoordinate lower_left(min_lat, min_lon);
 
             min_max_dist = std::min(
                 min_max_dist,
