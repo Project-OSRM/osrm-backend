@@ -838,15 +838,6 @@ class StaticRTree
                                       PhantomNode &result_phantom_node,
                                       const unsigned zoom_level)
     {
-
-        std::vector<PhantomNode> result_phantom_node_vector;
-        IncrementalFindPhantomNodeForCoordinate(input_coordinate, result_phantom_node_vector, zoom_level, 2);
-        // if (!result_phantom_node_vector.empty())
-        // {
-        //     result_phantom_node = result_phantom_node_vector.front();
-        // }
-        // return !result_phantom_node_vector.empty();
-
         const bool ignore_tiny_components = (zoom_level <= 14);
         EdgeDataT nearest_edge;
 
