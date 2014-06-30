@@ -40,7 +40,7 @@ struct FixedPointCoordinate
     int lon;
 
     FixedPointCoordinate();
-    explicit FixedPointCoordinate(int lat, int lon);
+    FixedPointCoordinate(int lat, int lon);
     void Reset();
     bool isSet() const;
     bool isValid() const;
@@ -55,10 +55,8 @@ struct FixedPointCoordinate
     static float ApproximateEuclideanDistance(const FixedPointCoordinate &first_coordinate,
                                               const FixedPointCoordinate &second_coordinate);
 
-    static float ApproximateEuclideanDistance(const int lat1,
-                                              const int lon1,
-                                              const int lat2,
-                                              const int lon2);
+    static float
+    ApproximateEuclideanDistance(const int lat1, const int lon1, const int lat2, const int lon2);
 
     static float ApproximateSquaredEuclideanDistance(const FixedPointCoordinate &first_coordinate,
                                                      const FixedPointCoordinate &second_coordinate);
@@ -81,10 +79,10 @@ struct FixedPointCoordinate
                                               FixedPointCoordinate &nearest_location,
                                               float &ratio);
 
-    static int OrderedPerpendicularDistanceApproximation(const FixedPointCoordinate& segment_source,
-                                                         const FixedPointCoordinate& segment_target,
-                                                         const FixedPointCoordinate& query_location);
-
+    static int
+    OrderedPerpendicularDistanceApproximation(const FixedPointCoordinate &segment_source,
+                                              const FixedPointCoordinate &segment_target,
+                                              const FixedPointCoordinate &query_location);
 
     static float GetBearing(const FixedPointCoordinate &A, const FixedPointCoordinate &B);
 

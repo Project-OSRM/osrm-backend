@@ -54,7 +54,7 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
 
         for (const SegmentT &segment : segment_list)
         {
-            if (segment.name_id != blocked_name_id && segment.length > result_segment.length)
+            if (segment.name_id != blocked_name_id && segment.length > result_segment.length && segment.name_id != 0)
             {
                 result_segment = segment;
             }
@@ -111,7 +111,7 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
                   shortest_path_set_difference.end(),
                   length_comperator);
         shortest_segment_2 =
-            PickNextLongestSegment(shortest_path_set_difference, shortest_path_segments[0].name_id);
+            PickNextLongestSegment(shortest_path_set_difference, shortest_segment_1.name_id);
 
         // compute the set difference (for alternative path) depending on names between shortest and
         // alternative
@@ -138,7 +138,7 @@ template <class DataFacadeT, class SegmentT> struct ExtractRouteNames
         if (!alternative_path_segments.empty())
         {
             alternative_segment_2 = PickNextLongestSegment(alternative_path_set_difference,
-                                                       alternative_path_segments[0].name_id);
+                                                       alternative_segment_1.name_id);
         }
 
         // move the segments into the order in which they occur.

@@ -76,17 +76,13 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
     std::vector<int> delta_numbers;
     if (!polyline.empty())
     {
-        FixedPointCoordinate last_coordinate = polyline[0].location;
-        delta_numbers.emplace_back(last_coordinate.lat);
-        delta_numbers.emplace_back(last_coordinate.lon);
-        // iterate after skipping the first, already handled, segment
-        for (auto it = ++polyline.cbegin(); it != polyline.cend(); ++it)
+        FixedPointCoordinate last_coordinate = {0, 0};
+        for (const auto &segment : polyline)
         {
-            const auto &segment = *it;
             if (segment.necessary)
             {
-                int lat_diff = segment.location.lat - last_coordinate.lat;
-                int lon_diff = segment.location.lon - last_coordinate.lon;
+                const int lat_diff = segment.location.lat - last_coordinate.lat;
+                const int lon_diff = segment.location.lon - last_coordinate.lon;
                 delta_numbers.emplace_back(lat_diff);
                 delta_numbers.emplace_back(lon_diff);
                 last_coordinate = segment.location;
