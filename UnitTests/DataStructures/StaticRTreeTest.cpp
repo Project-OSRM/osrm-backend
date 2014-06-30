@@ -231,6 +231,35 @@ struct RandomGraphFixture
     std::vector<TestData> edges;
 };
 
+struct GraphFixture
+{
+    GraphFixture(const std::vector<std::pair<float, float>>& input_coords,
+                 const std::vector<std::pair<unsigned, unsigned>>& input_edges)
+    : coords(std::make_shared<std::vector<FixedPointCoordinate>>())
+    {
+
+        for (unsigned i = 0; i < input_coords.size(); i++)
+        {
+            FixedPointCoordinate c(input_coords[i].first * COORDINATE_PRECISION, input_coords[i].second * COORDINATE_PRECISION);
+            coords->emplace_back(c);
+            nodes.emplace_back(NodeInfo(c.lat, c.lon, i));
+        }
+
+        for (const auto& pair : input_edges)
+        {
+            TestData d;
+            d.u = pair.first;
+            d.v = pair.second;
+            edges.emplace_back(d);
+        }
+
+    }
+
+    std::vector<NodeInfo> nodes;
+    std::shared_ptr<std::vector<FixedPointCoordinate>> coords;
+    std::vector<TestData> edges;
+};
+
 
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE*3,  TEST_LEAF_NODE_SIZE/2>  TestRandomGraphFixture_LeafHalfFull;
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE*5,  TEST_LEAF_NODE_SIZE>    TestRandomGraphFixture_LeafFull;
@@ -240,7 +269,8 @@ typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE*TEST_BRANCHING_FACTOR*3,
 typedef RandomGraphFixture<TEST_LEAF_NODE_SIZE*TEST_BRANCHING_FACTOR*3,
                            TEST_LEAF_NODE_SIZE*TEST_BRANCHING_FACTOR*2> TestRandomGraphFixture_MultipleLevels;
 
-void simple_verify_rtree(TestStaticRTree& rtree, const std::shared_ptr<std::vector<FixedPointCoordinate>>& coords, const std::vector<TestData>& edges)
+template<typename RTreeT>
+void simple_verify_rtree(RTreeT& rtree, const std::shared_ptr<std::vector<FixedPointCoordinate>>& coords, const std::vector<TestData>& edges)
 {
     BOOST_TEST_MESSAGE("Verify end points");
     for (const auto& e : edges)
@@ -266,7 +296,8 @@ void simple_verify_rtree(TestStaticRTree& rtree, const std::shared_ptr<std::vect
     }
 }
 
-void sampling_verify_rtree(TestStaticRTree& rtree, LinearSearchNN& lsnn, unsigned num_samples)
+template<typename RTreeT>
+void sampling_verify_rtree(RTreeT& rtree, LinearSearchNN& lsnn, unsigned num_samples)
 {
     std::mt19937 g(RANDOM_SEED);
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
@@ -296,11 +327,11 @@ void sampling_verify_rtree(TestStaticRTree& rtree, LinearSearchNN& lsnn, unsigne
     }
 }
 
-template<typename FixtureT>
-void construction_test(const std::string& prefix, FixtureT* fixture)
+template<typename FixtureT, typename RTreeT=TestStaticRTree>
+void build_rtree(const std::string& prefix, FixtureT* fixture, std::string& leaves_path, std::string& nodes_path)
 {
-    const std::string nodes_path = prefix + ".ramIndex";
-    const std::string leaves_path = prefix + ".fileIndex";
+    nodes_path = prefix + ".ramIndex";
+    leaves_path = prefix + ".fileIndex";
     const std::string coords_path = prefix + ".nodes";
 
     boost::filesystem::ofstream node_stream(coords_path, std::ios::binary);
@@ -309,12 +340,20 @@ void construction_test(const std::string& prefix, FixtureT* fixture)
     node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(NodeInfo));
     node_stream.close();
 
-    TestStaticRTree::Build(fixture->edges, nodes_path, leaves_path, fixture->nodes);
-    TestStaticRTree rtree_querry(nodes_path, leaves_path, fixture->coords);
+    RTreeT::Build(fixture->edges, nodes_path, leaves_path, fixture->nodes);
+}
+
+template<typename FixtureT, typename RTreeT=TestStaticRTree>
+void construction_test(const std::string& prefix, FixtureT* fixture)
+{
+    std::string leaves_path;
+    std::string nodes_path;
+    build_rtree<FixtureT, RTreeT>(prefix, fixture, leaves_path, nodes_path);
+    RTreeT rtree(nodes_path, leaves_path, fixture->coords);
     LinearSearchNN lsnn(fixture->coords, fixture->edges);
 
-    simple_verify_rtree(rtree_querry, fixture->coords, fixture->edges);
-    sampling_verify_rtree(rtree_querry, lsnn, 100);
+    simple_verify_rtree(rtree, fixture->coords, fixture->edges);
+    sampling_verify_rtree(rtree, lsnn, 100);
 }
 
 BOOST_FIXTURE_TEST_CASE(construct_half_leaf_test, TestRandomGraphFixture_LeafHalfFull)
@@ -342,6 +381,60 @@ BOOST_FIXTURE_TEST_CASE(construct_multiple_levels_test, TestRandomGraphFixture_M
     construction_test("test_5", this);
 }
 
+/*
+ * Bug: If you querry a point that lies between two BBs that have a gap,
+ * one BB will be pruned, even if it could contain a nearer match.
+ */
+BOOST_AUTO_TEST_CASE(regression_test)
+{
+    typedef std::pair<float, float> Coord;
+    typedef std::pair<unsigned, unsigned> Edge;
+    GraphFixture fixture({
+        Coord(40.0, 0.0),
+        Coord(35.0, 5.0),
+
+        Coord(5.0, 5.0),
+        Coord(0.0, 10.0),
+
+        Coord(20.0, 10.0),
+        Coord(20.0, 5.0),
+
+        Coord(40.0, 100.0),
+        Coord(35.0, 105.0),
+
+        Coord(5.0, 105.0),
+        Coord(0.0, 110.0),
+    },
+    {
+        Edge(0, 1),
+        Edge(2, 3),
+        Edge(4, 5),
+        Edge(6, 7),
+        Edge(8, 9)
+    }
+    );
+
+    typedef StaticRTree<TestData,
+                    std::vector<FixedPointCoordinate>,
+                    false,
+                    2,
+                    3> MiniStaticRTree;
+
+    std::string leaves_path;
+    std::string nodes_path;
+    build_rtree<GraphFixture, MiniStaticRTree>("test_regression", &fixture, leaves_path, nodes_path);
+    MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
+
+    // query a node just right of the center of the gap
+    FixedPointCoordinate input(20.0 * COORDINATE_PRECISION, 55.1 * COORDINATE_PRECISION);
+    FixedPointCoordinate result;
+    rtree.LocateClosestEndPointForCoordinate(input, result, 1);
+    FixedPointCoordinate result_ln;
+    LinearSearchNN lsnn(fixture.coords, fixture.edges);
+    lsnn.LocateClosestEndPointForCoordinate(input, result_ln, 1);
+
+    BOOST_CHECK_EQUAL(result_ln, result);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
