@@ -63,21 +63,28 @@ typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
 // delete a shared memory region. report warning if it could not be deleted
 void delete_region(const SharedDataType region)
 {
-    if (SharedMemory::RegionExists(region) )
+    if (SharedMemory::RegionExists(region))
     {
-        if( !SharedMemory::Remove(region))
+        if (!SharedMemory::Remove(region))
         {
             const std::string name = [&]
             {
                 switch (region)
                 {
-                    case CURRENT_REGIONS:   return "CURRENT_REGIONS";
-                    case LAYOUT_1:          return "LAYOUT_1";
-                    case DATA_1:            return "DATA_1";
-                    case LAYOUT_2:          return "LAYOUT_2";
-                    case DATA_2:            return "DATA_2";
-                    case LAYOUT_NONE:       return "LAYOUT_NONE";
-                    case DATA_NONE:         return "DATA_NONE";
+                case CURRENT_REGIONS:
+                    return "CURRENT_REGIONS";
+                case LAYOUT_1:
+                    return "LAYOUT_1";
+                case DATA_1:
+                    return "DATA_1";
+                case LAYOUT_2:
+                    return "LAYOUT_2";
+                case DATA_2:
+                    return "DATA_2";
+                case LAYOUT_NONE:
+                    return "LAYOUT_NONE";
+                case DATA_NONE:
+                    return "DATA_NONE";
                 }
             }();
 
@@ -228,7 +235,8 @@ int main(const int argc, const char *argv[])
         }();
 
         // Allocate a memory layout in shared memory, deallocate previous
-        SharedMemory *layout_memory = SharedMemoryFactory::Get(layout_region, sizeof(SharedDataLayout));
+        SharedMemory *layout_memory =
+            SharedMemoryFactory::Get(layout_region, sizeof(SharedDataLayout));
         SharedDataLayout *shared_layout_ptr = static_cast<SharedDataLayout *>(layout_memory->Ptr());
         shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
 
