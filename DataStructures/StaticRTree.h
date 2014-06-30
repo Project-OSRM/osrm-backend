@@ -200,8 +200,8 @@ class StaticRTree
 
         inline bool Contains(const FixedPointCoordinate &location) const
         {
-            const bool lats_contained = (location.lat > min_lat) && (location.lat < max_lat);
-            const bool lons_contained = (location.lon > min_lon) && (location.lon < max_lon);
+            const bool lats_contained = (location.lat >= min_lat) && (location.lat <= max_lat);
+            const bool lons_contained = (location.lon >= min_lon) && (location.lon <= max_lon);
             return lats_contained && lons_contained;
         }
 
