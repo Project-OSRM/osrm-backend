@@ -76,7 +76,7 @@ JSON::String PolylineCompressor::printEncodedString(const std::vector<SegmentInf
     std::vector<int> delta_numbers;
     if (!polyline.empty())
     {
-        FixedPointCoordinate last_coordinate = FixedPointCoordinate{0, 0};
+        FixedPointCoordinate last_coordinate = {0, 0};
         for (const auto &segment : polyline)
         {
             if (segment.necessary)
