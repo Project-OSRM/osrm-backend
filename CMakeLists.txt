@@ -21,6 +21,7 @@ if (WIN32 AND MSVC_VERSION LESS 1800)
 endif()
 
 OPTION(WITH_TOOLS "Build ORSM tools" OFF)
+OPTION(BUILD_TOOLS "Build ORSM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
 
@@ -253,7 +254,7 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries(osrm-extract ${ZLIB_LIBRARY})
 target_link_libraries(osrm-routed ${ZLIB_LIBRARY})
 
-if(WITH_TOOLS)
+if(WITH_TOOLS OR BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
   find_package(GDAL)
   if(GDAL_FOUND)
