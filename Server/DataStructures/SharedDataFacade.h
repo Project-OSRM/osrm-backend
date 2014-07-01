@@ -246,10 +246,6 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             m_large_memory.reset(SharedMemoryFactory::Get(CURRENT_DATA));
             shared_memory = (char *)(m_large_memory->Ptr());
 
-            std::ofstream out("debug.bin");
-            out.write(shared_memory, data_layout->GetSizeOfLayout());
-            out.close();
-
             const char *file_index_ptr =
                 data_layout->GetBlockPtr<char>(shared_memory, SharedDataLayout::FILE_INDEX_PATH);
             boost::filesystem::path file_index_path(file_index_ptr);
