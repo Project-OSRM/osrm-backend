@@ -432,12 +432,14 @@ int main(int argc, char *argv[])
             position += edge - last_edge;           // remove
         }
 
-        for (unsigned sentinel_counter = max_used_node_id; sentinel_counter != node_array.size();
+        for (unsigned sentinel_counter = max_used_node_id; sentinel_counter < node_array.size();
              ++sentinel_counter)
         {
             // sentinel element, guarded against underflow
             node_array[sentinel_counter].first_edge = contracted_edge_count;
         }
+
+        SimpleLogger().Write() << "Serializing node array";
 
         const unsigned node_array_size = node_array.size();
         // serialize crc32, aka checksum
