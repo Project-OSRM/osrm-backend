@@ -56,6 +56,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdint>
 
+#include <limits>
 #include <memory>
 #include <stack>
 #include <unordered_map>
@@ -67,7 +68,7 @@ class TarjanSCC
   private:
     struct TarjanNode
     {
-        TarjanNode() : index(UINT_MAX), low_link(UINT_MAX), on_stack(false) {}
+        TarjanNode() : index(std::numeric_limits<unsigned>::max()), low_link(std::numeric_limits<unsigned>::max()), on_stack(false) {}
         unsigned index;
         unsigned low_link;
         bool on_stack;
@@ -101,8 +102,8 @@ class TarjanSCC
     std::vector<NodeInfo> m_coordinate_list;
     std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
     std::shared_ptr<TarjanDynamicGraph> m_node_based_graph;
-    std::unordered_set<NodeID> m_barrier_node_list;
-    std::unordered_set<NodeID> m_traffic_light_list;
+    std::unordered_set<NodeID> barrier_node_list;
+    std::unordered_set<NodeID> traffic_light_list;
     unsigned m_restriction_counter;
     RestrictionMap m_restriction_map;
 
@@ -119,9 +120,8 @@ class TarjanSCC
         {
             std::pair<NodeID, NodeID> restrictionSource = {restriction.fromNode,
                                                            restriction.viaNode};
-            unsigned index;
-            RestrictionMap::iterator restriction_iterator =
-                m_restriction_map.find(restrictionSource);
+            unsigned index = 0;
+            auto restriction_iterator = m_restriction_map.find(restrictionSource);
             if (restriction_iterator == m_restriction_map.end())
             {
                 index = m_restriction_bucket_list.size();
@@ -147,8 +147,8 @@ class TarjanSCC
                 .emplace_back(restriction.toNode, restriction.flags.isOnly);
         }
 
-        m_barrier_node_list.insert(bn.begin(), bn.end());
-        m_traffic_light_list.insert(tl.begin(), tl.end());
+        barrier_node_list.insert(bn.begin(), bn.end());
+        traffic_light_list.insert(tl.begin(), tl.end());
 
         DeallocatingVector<TarjanEdge> edge_list;
         for (const NodeBasedEdge &input_edge : input_edges)
@@ -237,7 +237,7 @@ class TarjanSCC
         std::stack<std::pair<bool, TarjanStackFrame>> recursion_stack;
         // true = stuff before, false = stuff after call
         std::stack<NodeID> tarjan_stack;
-        std::vector<unsigned> components_index(m_node_based_graph->GetNumberOfNodes(), UINT_MAX);
+        std::vector<unsigned> components_index(m_node_based_graph->GetNumberOfNodes(), std::numeric_limits<unsigned>::max());
         std::vector<NodeID> component_size_vector;
         std::vector<TarjanNode> tarjan_node_list(m_node_based_graph->GetNumberOfNodes());
         unsigned component_index = 0, size_of_current_component = 0;
@@ -245,7 +245,7 @@ class TarjanSCC
         NodeID last_node = m_node_based_graph->GetNumberOfNodes();
         for (NodeID node = 0; node < last_node; ++node)
         {
-            if (UINT_MAX == components_index[node])
+            if (std::numeric_limits<unsigned>::max() == components_index[node])
             {
                 recursion_stack.emplace(true, TarjanStackFrame(node, node));
             }
@@ -274,7 +274,7 @@ class TarjanSCC
                     {
                         const TarjanDynamicGraph::NodeIterator vprime =
                             m_node_based_graph->GetTarget(e2);
-                        if (UINT_MAX == tarjan_node_list[vprime].index)
+                        if (std::numeric_limits<unsigned>::max() == tarjan_node_list[vprime].index)
                         {
                             recursion_stack.emplace(true, TarjanStackFrame(vprime, v));
                         }
@@ -325,9 +325,9 @@ class TarjanSCC
         SimpleLogger().Write() << "identified: " << component_size_vector.size()
                                << " many components, marking small components";
 
-        unsigned size_one_counter = std::count_if(component_size_vector.begin(),
-                                                  component_size_vector.end(),
-                                                  [] (unsigned value) { return 1 == value;});
+        const unsigned size_one_counter = std::count_if(component_size_vector.begin(),
+                                                        component_size_vector.end(),
+                                                        [] (unsigned value) { return 1 == value;});
 
         SimpleLogger().Write() << "identified " << size_one_counter << " SCCs of size 1";
 
@@ -346,16 +346,16 @@ class TarjanSCC
                 const TarjanDynamicGraph::NodeIterator v = m_node_based_graph->GetTarget(e1);
 
                 total_network_distance +=
-                    100 * FixedPointCoordinate::ApproximateDistance(m_coordinate_list[u].lat,
-                                                                    m_coordinate_list[u].lon,
-                                                                    m_coordinate_list[v].lat,
-                                                                    m_coordinate_list[v].lon);
+                    100 * FixedPointCoordinate::ApproximateEuclideanDistance(m_coordinate_list[u].lat,
+                                                                             m_coordinate_list[u].lon,
+                                                                             m_coordinate_list[v].lat,
+                                                                             m_coordinate_list[v].lon);
 
                 if (SHRT_MAX != m_node_based_graph->GetEdgeData(e1).type)
                 {
-                    BOOST_ASSERT(e1 != UINT_MAX);
-                    BOOST_ASSERT(u != UINT_MAX);
-                    BOOST_ASSERT(v != UINT_MAX);
+                    BOOST_ASSERT(e1 != SPECIAL_EDGEID);
+                    BOOST_ASSERT(u != SPECIAL_NODEID);
+                    BOOST_ASSERT(v != SPECIAL_NODEID);
 
                     const unsigned size_of_containing_component =
                         std::min(component_size_vector[components_index[u]],
@@ -383,11 +383,13 @@ class TarjanSCC
             }
         }
         OGRDataSource::DestroyDataSource(poDS);
-        std::vector<NodeID>().swap(component_size_vector);
+        component_size_vector.clear();
+        component_size_vector.shrink_to_fit();
         BOOST_ASSERT_MSG(0 == component_size_vector.size() && 0 == component_size_vector.capacity(),
                          "component_size_vector not properly deallocated");
 
-        std::vector<NodeID>().swap(components_index);
+        components_index.clear();
+        components_index.shrink_to_fit();
         BOOST_ASSERT_MSG(0 == components_index.size() && 0 == components_index.capacity(),
                          "icomponents_index not properly deallocated");
 
@@ -412,7 +414,7 @@ class TarjanSCC
                 }
             }
         }
-        return UINT_MAX;
+        return std::numeric_limits<unsigned>::max();
     }
 
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const
