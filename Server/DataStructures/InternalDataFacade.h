@@ -220,7 +220,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     }
 
   public:
-    ~InternalDataFacade()
+    virtual ~InternalDataFacade()
     {
         delete m_query_graph;
         m_static_rtree.reset();

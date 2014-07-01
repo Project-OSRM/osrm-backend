@@ -210,6 +210,8 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     }
 
   public:
+    virtual ~SharedDataFacade() {}
+
     SharedDataFacade()
     {
         data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
