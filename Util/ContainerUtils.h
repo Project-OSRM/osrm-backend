@@ -38,34 +38,34 @@ template <typename T> inline void sort_unique_resize(std::vector<T> &vector)
     vector.resize(number_of_unique_elements);
 }
 
-template <typename T> inline void sort_unique_resize_shrink_vector(std::vector<T> &vector)
-{
-    sort_unique_resize(vector);
-    vector.shrink_to_fit();
-}
+// template <typename T> inline void sort_unique_resize_shrink_vector(std::vector<T> &vector)
+// {
+//     sort_unique_resize(vector);
+//     vector.shrink_to_fit();
+// }
 
-template <typename T> inline void remove_consecutive_duplicates_from_vector(std::vector<T> &vector)
-{
-    const auto number_of_unique_elements = std::unique(vector.begin(), vector.end()) - vector.begin();
-    vector.resize(number_of_unique_elements);
-}
+// template <typename T> inline void remove_consecutive_duplicates_from_vector(std::vector<T> &vector)
+// {
+//     const auto number_of_unique_elements = std::unique(vector.begin(), vector.end()) - vector.begin();
+//     vector.resize(number_of_unique_elements);
+// }
 
-template <typename FwdIter, typename Func>
-Func for_each_pair(FwdIter iter_begin, FwdIter iter_end, Func func)
-{
-    if (iter_begin == iter_end)
-    {
-        return func;
-    }
+// template <typename FwdIter, typename Func>
+// Func for_each_pair(FwdIter iter_begin, FwdIter iter_end, Func func)
+// {
+//     if (iter_begin == iter_end)
+//     {
+//         return func;
+//     }
 
-    FwdIter iter_next = iter_begin;
-    ++iter_next;
+//     FwdIter iter_next = iter_begin;
+//     ++iter_next;
 
-    for (; iter_next != iter_end; ++iter_begin, ++iter_next)
-    {
-        func(*iter_begin, *iter_next);
-    }
-    return func;
-}
+//     for (; iter_next != iter_end; ++iter_begin, ++iter_next)
+//     {
+//         func(*iter_begin, *iter_next);
+//     }
+//     return func;
+// }
 
 #endif /* CONTAINERUTILS_H_ */
