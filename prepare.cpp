@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
                                            internal_to_external_node_map);
         delete rtree;
         IteratorbasedCRC32<std::vector<EdgeBasedNode>> crc32;
-        unsigned node_based_edge_list_CRC32 =
+        const unsigned node_based_edge_list_CRC32 =
             crc32(node_based_edge_list.begin(), node_based_edge_list.end());
         node_based_edge_list.clear();
         node_based_edge_list.shrink_to_fit();
@@ -437,7 +437,7 @@ int main(int argc, char *argv[])
             node_array[sentinel_counter].first_edge = contracted_edge_count;
         }
 
-        unsigned node_array_size = node_array.size();
+        const unsigned node_array_size = node_array.size();
         // serialize crc32, aka checksum
         hsgr_output_stream.write((char *)&node_based_edge_list_CRC32, sizeof(unsigned));
         // serialize number of nodes
@@ -482,6 +482,7 @@ int main(int argc, char *argv[])
 #endif
             hsgr_output_stream.write((char *)&current_edge,
                                      sizeof(StaticGraph<EdgeData>::EdgeArrayEntry));
+
             ++number_of_used_edges;
         }
         hsgr_output_stream.close();
