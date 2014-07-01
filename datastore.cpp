@@ -83,7 +83,7 @@ void delete_region(const SharedDataType region)
                     return "DATA_2";
                 case LAYOUT_NONE:
                     return "LAYOUT_NONE";
-                case DATA_NONE:
+                default: // DATA_NONE:
                     return "DATA_NONE";
                 }
             }();
