@@ -319,6 +319,8 @@ int main(int argc, char *argv[])
         traffic_light_list.clear();
         traffic_light_list.shrink_to_fit();
 
+        lua_close(lua_state);
+
         unsigned number_of_edge_based_nodes = edge_based_graph_factor->GetNumberOfEdgeBasedNodes();
         BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
         DeallocatingVector<EdgeBasedEdge> edgeBasedEdgeList;
