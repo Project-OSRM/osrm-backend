@@ -107,6 +107,7 @@ int main(const int argc, const char *argv[])
     SharedBarriers barrier;
 
 #ifdef __linux__
+    // try to disable swapping on Linux
     const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
     if (-1 == mlockall(lock_flags))
     {
