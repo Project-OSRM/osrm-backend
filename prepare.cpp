@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
         StaticGraph<EdgeData>::EdgeIterator position = 0;
         StaticGraph<EdgeData>::EdgeIterator last_edge = edge;
 
-        for (StaticGraph<EdgeData>::NodeIterator node = 0; node < max_used_node_id; ++node)
+        for (auto node = 0; node < max_used_node_id; ++node)
         {
             last_edge = edge;
             while ((edge < contracted_edge_count) && (contracted_edge_list[edge].source == node))
