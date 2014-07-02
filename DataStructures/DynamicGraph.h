@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename EdgeDataT> class DynamicGraph
 {
   public:
-    typedef decltype(boost::irange(0u,0u)) EdgeRange;
+    typedef decltype(boost::irange(0u, 0u)) EdgeRange;
     typedef EdgeDataT EdgeData;
     typedef unsigned NodeIterator;
     typedef unsigned EdgeIterator;
@@ -57,7 +57,9 @@ template <typename EdgeDataT> class DynamicGraph
         bool operator<(const InputEdge &right) const
         {
             if (source != right.source)
+            {
                 return source < right.source;
+            }
             return target < right.target;
         }
     };
@@ -65,46 +67,43 @@ template <typename EdgeDataT> class DynamicGraph
     // Constructs an empty graph with a given number of nodes.
     explicit DynamicGraph(int32_t nodes) : number_of_nodes(nodes), number_of_edges(0)
     {
-        m_nodes.reserve(number_of_nodes);
-        m_nodes.resize(number_of_nodes);
+        node_list.reserve(number_of_nodes);
+        node_list.resize(number_of_nodes);
 
-        m_edges.reserve(number_of_nodes * 1.1);
-        m_edges.resize(number_of_nodes);
+        edge_list.reserve(number_of_nodes * 1.1);
+        edge_list.resize(number_of_nodes);
     }
 
     template <class ContainerT> DynamicGraph(const int32_t nodes, const ContainerT &graph)
     {
         number_of_nodes = nodes;
         number_of_edges = (EdgeIterator)graph.size();
-        m_nodes.reserve(number_of_nodes + 1);
-        m_nodes.resize(number_of_nodes + 1);
+        node_list.reserve(number_of_nodes + 1);
+        node_list.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
-        for (NodeIterator node = 0; node < number_of_nodes; ++node)
+        for (const auto node : boost::irange(0u, number_of_nodes))
         {
             EdgeIterator lastEdge = edge;
             while (edge < number_of_edges && graph[edge].source == node)
             {
                 ++edge;
             }
-            m_nodes[node].firstEdge = position;
-            m_nodes[node].edges = edge - lastEdge;
-            position += m_nodes[node].edges;
+            node_list[node].firstEdge = position;
+            node_list[node].edges = edge - lastEdge;
+            position += node_list[node].edges;
         }
-        m_nodes.back().firstEdge = position;
-        m_edges.reserve(static_cast<std::size_t>(position * 1.1));
-        m_edges.resize(position);
+        node_list.back().firstEdge = position;
+        edge_list.reserve(edge_list.size() * 1.1);
+        edge_list.resize(position);
         edge = 0;
-        for (NodeIterator node = 0; node < number_of_nodes; ++node)
+        for (const auto node : boost::irange(0u, number_of_nodes))
         {
-            for (EdgeIterator i = m_nodes[node].firstEdge,
-                              e = m_nodes[node].firstEdge + m_nodes[node].edges;
-                 i != e;
-                 ++i)
+            for (const auto i : boost::irange(node_list[node].firstEdge,
+                                              node_list[node].firstEdge + node_list[node].edges))
             {
-                m_edges[i].target = graph[edge].target;
-                m_edges[i].data = graph[edge].data;
-                // BOOST_ASSERT_MSG(graph[edge].data.distance > 0, "edge distance invalid");
+                edge_list[i].target = graph[edge].target;
+                edge_list[i].data = graph[edge].data;
                 ++edge;
             }
         }
@@ -116,12 +115,12 @@ template <typename EdgeDataT> class DynamicGraph
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
-    unsigned GetOutDegree(const NodeIterator n) const { return m_nodes[n].edges; }
+    unsigned GetOutDegree(const NodeIterator n) const { return node_list[n].edges; }
 
     unsigned GetDirectedOutDegree(const NodeIterator n) const
     {
         unsigned degree = 0;
-        for(EdgeIterator edge = BeginEdges(n); edge < EndEdges(n); ++edge)
+        for (const auto edge : boost::irange(BeginEdges(n), EndEdges(n)))
         {
             if (GetEdgeData(edge).forward)
             {
@@ -131,22 +130,22 @@ template <typename EdgeDataT> class DynamicGraph
         return degree;
     }
 
-    NodeIterator GetTarget(const EdgeIterator e) const { return NodeIterator(m_edges[e].target); }
+    NodeIterator GetTarget(const EdgeIterator e) const { return NodeIterator(edge_list[e].target); }
 
-    void SetTarget(const EdgeIterator e, const NodeIterator n) { m_edges[e].target = n; }
+    void SetTarget(const EdgeIterator e, const NodeIterator n) { edge_list[e].target = n; }
 
-    EdgeDataT &GetEdgeData(const EdgeIterator e) { return m_edges[e].data; }
+    EdgeDataT &GetEdgeData(const EdgeIterator e) { return edge_list[e].data; }
 
-    const EdgeDataT &GetEdgeData(const EdgeIterator e) const { return m_edges[e].data; }
+    const EdgeDataT &GetEdgeData(const EdgeIterator e) const { return edge_list[e].data; }
 
     EdgeIterator BeginEdges(const NodeIterator n) const
     {
-        return EdgeIterator(m_nodes[n].firstEdge);
+        return EdgeIterator(node_list[n].firstEdge);
     }
 
     EdgeIterator EndEdges(const NodeIterator n) const
     {
-        return EdgeIterator(m_nodes[n].firstEdge + m_nodes[n].edges);
+        return EdgeIterator(node_list[n].firstEdge + node_list[n].edges);
     }
 
     EdgeRange GetAdjacentEdgeRange(const NodeIterator node) const
@@ -156,8 +155,8 @@ template <typename EdgeDataT> class DynamicGraph
 
     NodeIterator InsertNode()
     {
-        m_nodes.emplace_back(m_nodes.back());
-        number_of_nodes +=1;
+        node_list.emplace_back(node_list.back());
+        number_of_nodes += 1;
 
         return number_of_nodes;
     }
@@ -165,37 +164,39 @@ template <typename EdgeDataT> class DynamicGraph
     // adds an edge. Invalidates edge iterators for the source node
     EdgeIterator InsertEdge(const NodeIterator from, const NodeIterator to, const EdgeDataT &data)
     {
-        Node &node = m_nodes[from];
+        Node &node = node_list[from];
         EdgeIterator newFirstEdge = node.edges + node.firstEdge;
-        if (newFirstEdge >= m_edges.size() || !isDummy(newFirstEdge))
+        if (newFirstEdge >= edge_list.size() || !isDummy(newFirstEdge))
         {
             if (node.firstEdge != 0 && isDummy(node.firstEdge - 1))
             {
                 node.firstEdge--;
-                m_edges[node.firstEdge] = m_edges[node.firstEdge + node.edges];
+                edge_list[node.firstEdge] = edge_list[node.firstEdge + node.edges];
             }
             else
             {
-                EdgeIterator newFirstEdge = (EdgeIterator)m_edges.size();
+                EdgeIterator newFirstEdge = (EdgeIterator)edge_list.size();
                 unsigned newSize = node.edges * 1.1 + 2;
-                EdgeIterator requiredCapacity = newSize + m_edges.size();
-                EdgeIterator oldCapacity = m_edges.capacity();
+                EdgeIterator requiredCapacity = newSize + edge_list.size();
+                EdgeIterator oldCapacity = edge_list.capacity();
                 if (requiredCapacity >= oldCapacity)
                 {
-                    m_edges.reserve(requiredCapacity * 1.1);
+                    edge_list.reserve(requiredCapacity * 1.1);
                 }
-                m_edges.resize(m_edges.size() + newSize);
-                for (EdgeIterator i = 0; i < node.edges; ++i)
+                edge_list.resize(edge_list.size() + newSize);
+                for (const auto i : boost::irange(0u, node.edges))
                 {
-                    m_edges[newFirstEdge + i] = m_edges[node.firstEdge + i];
+                    edge_list[newFirstEdge + i] = edge_list[node.firstEdge + i];
                     makeDummy(node.firstEdge + i);
                 }
-                for (EdgeIterator i = node.edges + 1; i < newSize; ++i)
+                for (const auto i : boost::irange(node.edges + 1, newSize))
+                {
                     makeDummy(newFirstEdge + i);
+                }
                 node.firstEdge = newFirstEdge;
             }
         }
-        Edge &edge = m_edges[node.firstEdge + node.edges];
+        Edge &edge = edge_list[node.firstEdge + node.edges];
         edge.target = to;
         edge.data = data;
         ++number_of_edges;
@@ -206,14 +207,14 @@ template <typename EdgeDataT> class DynamicGraph
     // removes an edge. Invalidates edge iterators for the source node
     void DeleteEdge(const NodeIterator source, const EdgeIterator e)
     {
-        Node &node = m_nodes[source];
+        Node &node = node_list[source];
         --number_of_edges;
         --node.edges;
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != node.edges);
         const unsigned last = node.firstEdge + node.edges;
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != last);
         // swap with last edge
-        m_edges[e] = m_edges[last];
+        edge_list[e] = edge_list[last];
         makeDummy(last);
     }
 
@@ -223,19 +224,19 @@ template <typename EdgeDataT> class DynamicGraph
         int32_t deleted = 0;
         for (EdgeIterator i = BeginEdges(source), iend = EndEdges(source); i < iend - deleted; ++i)
         {
-            if (m_edges[i].target == target)
+            if (edge_list[i].target == target)
             {
                 do
                 {
                     deleted++;
-                    m_edges[i] = m_edges[iend - deleted];
+                    edge_list[i] = edge_list[iend - deleted];
                     makeDummy(iend - deleted);
-                } while (i < iend - deleted && m_edges[i].target == target);
+                } while (i < iend - deleted && edge_list[i].target == target);
             }
         }
 
         number_of_edges -= deleted;
-        m_nodes[source].edges -= deleted;
+        node_list[source].edges -= deleted;
 
         return deleted;
     }
@@ -243,9 +244,9 @@ template <typename EdgeDataT> class DynamicGraph
     // searches for a specific edge
     EdgeIterator FindEdge(const NodeIterator from, const NodeIterator to) const
     {
-        for (EdgeIterator i = BeginEdges(from), iend = EndEdges(from); i != iend; ++i)
+        for (const auto i : boost::irange(BeginEdges(from), EndEdges(from)))
         {
-            if (to == m_edges[i].target)
+            if (to == edge_list[i].target)
             {
                 return i;
             }
@@ -256,12 +257,12 @@ template <typename EdgeDataT> class DynamicGraph
   protected:
     bool isDummy(const EdgeIterator edge) const
     {
-        return m_edges[edge].target == (std::numeric_limits<NodeIterator>::max)();
+        return edge_list[edge].target == (std::numeric_limits<NodeIterator>::max)();
     }
 
     void makeDummy(const EdgeIterator edge)
     {
-        m_edges[edge].target = (std::numeric_limits<NodeIterator>::max)();
+        edge_list[edge].target = (std::numeric_limits<NodeIterator>::max)();
     }
 
     struct Node
@@ -281,8 +282,8 @@ template <typename EdgeDataT> class DynamicGraph
     NodeIterator number_of_nodes;
     std::atomic_uint number_of_edges;
 
-    std::vector<Node> m_nodes;
-    DeallocatingVector<Edge> m_edges;
+    std::vector<Node> node_list;
+    DeallocatingVector<Edge> edge_list;
 };
 
 #endif // DYNAMICGRAPH_H
