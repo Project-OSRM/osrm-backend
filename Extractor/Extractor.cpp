@@ -151,8 +151,8 @@ bool Extractor::ParseArguments(int argc, char *argv[])
 
 void Extractor::GenerateOutputFilesNames()
 {
-    output_file_name = input_path.c_str();
-    restriction_file_name = input_path.c_str();
+    output_file_name = input_path.string();
+    restriction_file_name = input_path.string();
     std::string::size_type pos = output_file_name.find(".osm.bz2");
     if (pos == std::string::npos)
     {
