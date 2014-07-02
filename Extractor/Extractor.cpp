@@ -26,12 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Extractor.h"
-
-
 #include "ExtractorCallbacks.h"
 #include "ExtractionContainers.h"
-#include "ScriptingEnvironment.h"
 #include "PBFParser.h"
+#include "ScriptingEnvironment.h"
 #include "XMLParser.h"
 #include "../Util/GitDescription.h"
 #include "../Util/MachineInfo.h"
@@ -43,14 +41,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/program_options.hpp>
+#include <tbb/task_scheduler_init.h>
+
 #include <cstdlib>
+
 #include <thread>
 #include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <unordered_map>
-#include <tbb/task_scheduler_init.h>
+
 
 Extractor::Extractor(const char* git_desc) :
         git_description(git_desc),

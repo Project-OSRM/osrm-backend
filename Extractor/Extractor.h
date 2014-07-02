@@ -25,7 +25,6 @@ protected:
     std::string restriction_file_name;
     bool file_has_pbf_format;
 
-protected:
     /** \brief Parses "extractor's" command line arguments */
     bool ParseArguments(int argc, char *argv[]);
 
