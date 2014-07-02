@@ -63,27 +63,27 @@ template <typename EdgeDataT> class DynamicGraph
     };
 
     // Constructs an empty graph with a given number of nodes.
-    explicit DynamicGraph(int32_t nodes) : m_numNodes(nodes), m_numEdges(0)
+    explicit DynamicGraph(int32_t nodes) : number_of_nodes(nodes), number_of_edges(0)
     {
-        m_nodes.reserve(m_numNodes);
-        m_nodes.resize(m_numNodes);
+        m_nodes.reserve(number_of_nodes);
+        m_nodes.resize(number_of_nodes);
 
-        m_edges.reserve(m_numNodes * 1.1);
-        m_edges.resize(m_numNodes);
+        m_edges.reserve(number_of_nodes * 1.1);
+        m_edges.resize(number_of_nodes);
     }
 
     template <class ContainerT> DynamicGraph(const int32_t nodes, const ContainerT &graph)
     {
-        m_numNodes = nodes;
-        m_numEdges = (EdgeIterator)graph.size();
-        m_nodes.reserve(m_numNodes + 1);
-        m_nodes.resize(m_numNodes + 1);
+        number_of_nodes = nodes;
+        number_of_edges = (EdgeIterator)graph.size();
+        m_nodes.reserve(number_of_nodes + 1);
+        m_nodes.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
-        for (NodeIterator node = 0; node < m_numNodes; ++node)
+        for (NodeIterator node = 0; node < number_of_nodes; ++node)
         {
             EdgeIterator lastEdge = edge;
-            while (edge < m_numEdges && graph[edge].source == node)
+            while (edge < number_of_edges && graph[edge].source == node)
             {
                 ++edge;
             }
@@ -95,7 +95,7 @@ template <typename EdgeDataT> class DynamicGraph
         m_edges.reserve(static_cast<std::size_t>(position * 1.1));
         m_edges.resize(position);
         edge = 0;
-        for (NodeIterator node = 0; node < m_numNodes; ++node)
+        for (NodeIterator node = 0; node < number_of_nodes; ++node)
         {
             for (EdgeIterator i = m_nodes[node].firstEdge,
                               e = m_nodes[node].firstEdge + m_nodes[node].edges;
@@ -112,9 +112,9 @@ template <typename EdgeDataT> class DynamicGraph
 
     ~DynamicGraph() {}
 
-    unsigned GetNumberOfNodes() const { return m_numNodes; }
+    unsigned GetNumberOfNodes() const { return number_of_nodes; }
 
-    unsigned GetNumberOfEdges() const { return m_numEdges; }
+    unsigned GetNumberOfEdges() const { return number_of_edges; }
 
     unsigned GetOutDegree(const NodeIterator n) const { return m_nodes[n].edges; }
 
@@ -154,6 +154,14 @@ template <typename EdgeDataT> class DynamicGraph
         return boost::irange(BeginEdges(node), EndEdges(node));
     }
 
+    NodeIterator InsertNode()
+    {
+        m_nodes.emplace_back(m_nodes.back());
+        number_of_nodes +=1;
+
+        return number_of_nodes;
+    }
+
     // adds an edge. Invalidates edge iterators for the source node
     EdgeIterator InsertEdge(const NodeIterator from, const NodeIterator to, const EdgeDataT &data)
     {
@@ -190,7 +198,7 @@ template <typename EdgeDataT> class DynamicGraph
         Edge &edge = m_edges[node.firstEdge + node.edges];
         edge.target = to;
         edge.data = data;
-        ++m_numEdges;
+        ++number_of_edges;
         ++node.edges;
         return EdgeIterator(node.firstEdge + node.edges);
     }
@@ -199,7 +207,7 @@ template <typename EdgeDataT> class DynamicGraph
     void DeleteEdge(const NodeIterator source, const EdgeIterator e)
     {
         Node &node = m_nodes[source];
-        --m_numEdges;
+        --number_of_edges;
         --node.edges;
         BOOST_ASSERT(std::numeric_limits<unsigned>::max() != node.edges);
         const unsigned last = node.firstEdge + node.edges;
@@ -226,7 +234,7 @@ template <typename EdgeDataT> class DynamicGraph
             }
         }
 
-        m_numEdges -= deleted;
+        number_of_edges -= deleted;
         m_nodes[source].edges -= deleted;
 
         return deleted;
@@ -270,8 +278,8 @@ template <typename EdgeDataT> class DynamicGraph
         EdgeDataT data;
     };
 
-    NodeIterator m_numNodes;
-    std::atomic_uint m_numEdges;
+    NodeIterator number_of_nodes;
+    std::atomic_uint number_of_edges;
 
     std::vector<Node> m_nodes;
     DeallocatingVector<Edge> m_edges;
