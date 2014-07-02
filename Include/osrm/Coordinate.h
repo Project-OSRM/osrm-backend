@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef FIXED_POINT_COORDINATE_H_
 #define FIXED_POINT_COORDINATE_H_
 
-#include <functional>
 #include <iosfwd> //for std::ostream
 #include <string>
 
