@@ -268,6 +268,118 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     return n;
 }
 
+template <typename EdgeT>
+NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream, std::vector<EdgeT> &edge_list)
+{
+    const FingerPrint fingerprint_orig;
+    FingerPrint fingerprint_loaded;
+    input_stream.read((char *)&fingerprint_loaded, sizeof(FingerPrint));
+
+    if (!fingerprint_loaded.TestGraphUtil(fingerprint_orig))
+    {
+        SimpleLogger().Write(logWARNING) << ".osrm was prepared with different build.\n"
+                                            "Reprocess to get rid of this warning.";
+    }
+
+    NodeID n, source, target;
+    EdgeID m;
+    short dir; // direction (0 = open, 1 = forward, 2+ = open)
+    std::unordered_map<NodeID, NodeID> ext_to_int_id_map;
+    std::vector<NodeInfo> int_to_ext_node_id_map;
+
+    input_stream.read((char *)&n, sizeof(NodeID));
+    SimpleLogger().Write() << "Importing n = " << n << " nodes ";
+    ExternalMemoryNode current_node;
+    for (NodeID i = 0; i < n; ++i)
+    {
+        input_stream.read((char *)&current_node, sizeof(ExternalMemoryNode));
+        int_to_ext_node_id_map.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
+        ext_to_int_id_map.emplace(current_node.node_id, i);
+    }
+
+    input_stream.read((char *)&m, sizeof(unsigned));
+    SimpleLogger().Write() << " and " << m << " edges ";
+
+    edge_list.reserve(m);
+    EdgeWeight weight;
+    short type;
+    NodeID nameID;
+    int length;
+    bool is_roundabout, ignore_in_grid, is_access_restricted, is_contra_flow, is_split;
+
+    for (EdgeID i = 0; i < m; ++i)
+    {
+        input_stream.read((char *)&source, sizeof(unsigned));
+        input_stream.read((char *)&target, sizeof(unsigned));
+        input_stream.read((char *)&length, sizeof(int));
+        input_stream.read((char *)&dir, sizeof(short));
+        input_stream.read((char *)&weight, sizeof(int));
+        input_stream.read((char *)&type, sizeof(short));
+        input_stream.read((char *)&nameID, sizeof(unsigned));
+        input_stream.read((char *)&is_roundabout, sizeof(bool));
+        input_stream.read((char *)&ignore_in_grid, sizeof(bool));
+        input_stream.read((char *)&is_access_restricted, sizeof(bool));
+        input_stream.read((char *)&is_contra_flow, sizeof(bool));
+        input_stream.read((char *)&is_split, sizeof(bool));
+
+        BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
+        BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
+        BOOST_ASSERT_MSG(0 <= dir && dir <= 2, "loaded bogus direction");
+
+        BOOST_ASSERT(type >= 0);
+
+        // translate the external NodeIDs to internal IDs
+        auto internal_id_iter = ext_to_int_id_map.find(source);
+        if (ext_to_int_id_map.find(source) == ext_to_int_id_map.end())
+        {
+#ifndef NDEBUG
+            SimpleLogger().Write(logWARNING) << " unresolved source NodeID: " << source;
+#endif
+            continue;
+        }
+        source = internal_id_iter->second;
+        internal_id_iter = ext_to_int_id_map.find(target);
+        if (ext_to_int_id_map.find(target) == ext_to_int_id_map.end())
+        {
+#ifndef NDEBUG
+            SimpleLogger().Write(logWARNING) << "unresolved target NodeID : " << target;
+#endif
+            continue;
+        }
+        target = internal_id_iter->second;
+        BOOST_ASSERT_MSG(source != UINT_MAX && target != UINT_MAX, "nonexisting source or target");
+
+        if (source > target)
+        {
+            std::swap(source, target);
+        }
+
+        edge_list.emplace_back(source,
+                               target);
+    }
+
+    tbb::parallel_sort(edge_list.begin(), edge_list.end());
+    for (unsigned i = 1; i < edge_list.size(); ++i)
+    {
+        if ((edge_list[i - 1].target == edge_list[i].target) &&
+            (edge_list[i - 1].source == edge_list[i].source))
+        {
+                edge_list[i].capacity = std::min(edge_list[i - 1].capacity, edge_list[i].capacity);
+                edge_list[i - 1].source = UINT_MAX;
+        }
+    }
+    const auto new_end_iter = std::remove_if(edge_list.begin(),
+                                       edge_list.end(),
+                                       [](const EdgeT &edge)
+                                       { return edge.source == SPECIAL_NODEID; });
+    ext_to_int_id_map.clear();
+    edge_list.erase(new_end_iter, edge_list.end()); // remove excess candidates.
+    edge_list.shrink_to_fit();
+    SimpleLogger().Write() << "Graph loaded ok and has " << n << " nodes and " << edge_list.size() << " edges";
+    return n;
+}
+
+
 template <typename NodeT, typename EdgeT>
 unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
                             std::vector<NodeT> &node_list,

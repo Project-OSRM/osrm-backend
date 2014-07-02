@@ -104,7 +104,7 @@ template <typename EdgeDataT> class DynamicGraph
             {
                 m_edges[i].target = graph[edge].target;
                 m_edges[i].data = graph[edge].data;
-                BOOST_ASSERT_MSG(graph[edge].data.distance > 0, "edge distance invalid");
+                // BOOST_ASSERT_MSG(graph[edge].data.distance > 0, "edge distance invalid");
                 ++edge;
             }
         }
