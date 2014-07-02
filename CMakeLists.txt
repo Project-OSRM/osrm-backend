@@ -186,6 +186,7 @@ target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTI
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(osrm-datastore ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(osrm-prepare ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(OSRM ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(TBB REQUIRED)
