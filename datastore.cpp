@@ -63,33 +63,30 @@ typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
 // delete a shared memory region. report warning if it could not be deleted
 void delete_region(const SharedDataType region)
 {
-    if (SharedMemory::RegionExists(region))
+    if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
     {
-        if (!SharedMemory::Remove(region))
+        const std::string name = [&]
         {
-            const std::string name = [&]
+            switch (region)
             {
-                switch (region)
-                {
-                case CURRENT_REGIONS:
-                    return "CURRENT_REGIONS";
-                case LAYOUT_1:
-                    return "LAYOUT_1";
-                case DATA_1:
-                    return "DATA_1";
-                case LAYOUT_2:
-                    return "LAYOUT_2";
-                case DATA_2:
-                    return "DATA_2";
-                case LAYOUT_NONE:
-                    return "LAYOUT_NONE";
-                default: // DATA_NONE:
-                    return "DATA_NONE";
-                }
-            }();
+            case CURRENT_REGIONS:
+                return "CURRENT_REGIONS";
+            case LAYOUT_1:
+                return "LAYOUT_1";
+            case DATA_1:
+                return "DATA_1";
+            case LAYOUT_2:
+                return "LAYOUT_2";
+            case DATA_2:
+                return "DATA_2";
+            case LAYOUT_NONE:
+                return "LAYOUT_NONE";
+            default: // DATA_NONE:
+                return "DATA_NONE";
+            }
+        }();
 
-            SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
-        }
+        SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
     }
 }
 
