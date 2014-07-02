@@ -118,7 +118,6 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_definitions(-DM_PI=3.141592653589793238462643383) # define M_PI
     add_definitions(-DWIN32)
     SET(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
-    SET(OPTIONAL_OMP_LIB gomp)
   endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   # using Intel C++
@@ -185,7 +184,7 @@ target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSR
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
 
 find_package(Threads REQUIRED)
-target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT} ${OPTIONAL_OMP_LIB})
+target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(osrm-datastore ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(OSRM ${CMAKE_THREAD_LIBS_INIT})
 
