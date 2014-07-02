@@ -1,13 +1,10 @@
-#pragma once
-
-#include <vector>
-
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/noncopyable.hpp>
+#ifndef EXTRACTOR_H_
+#define EXTRACTOR_H_
 
 #include "../Util/FingerPrint.h"
+
+#include <boost/filesystem.hpp>
+
 
 class ExtractorCallbacks;
 
@@ -42,3 +39,4 @@ public:
 
     int Execute(int argc, char *argv[]);
 };
+#endif /* EXTRACTOR_H_ */

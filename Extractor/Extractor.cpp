@@ -42,15 +42,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
 
+#include <boost/program_options.hpp>
 #include <cstdlib>
-
 #include <thread>
 #include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <unordered_map>
-
 #include <tbb/task_scheduler_init.h>
 
 Extractor::Extractor(const char* git_desc) :
