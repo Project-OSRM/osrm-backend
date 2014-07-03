@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/program_options.hpp>
+
 #include <tbb/task_scheduler_init.h>
 
 #include <cstdlib>
