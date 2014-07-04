@@ -268,8 +268,10 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     return n;
 }
 
-template <typename EdgeT>
-NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream, std::vector<EdgeT> &edge_list)
+template <typename EdgeT, typename CoordinateT>
+NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
+                                     std::vector<EdgeT> &edge_list,
+                                     std::vector<CoordinateT> & coordinate_list)
 {
     const FingerPrint fingerprint_orig;
     FingerPrint fingerprint_loaded;
@@ -285,7 +287,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream, std::vector<Edg
     EdgeID m;
     short dir; // direction (0 = open, 1 = forward, 2+ = open)
     std::unordered_map<NodeID, NodeID> ext_to_int_id_map;
-    std::vector<NodeInfo> int_to_ext_node_id_map;
 
     input_stream.read((char *)&n, sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
@@ -293,7 +294,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream, std::vector<Edg
     for (NodeID i = 0; i < n; ++i)
     {
         input_stream.read((char *)&current_node, sizeof(ExternalMemoryNode));
-        int_to_ext_node_id_map.emplace_back(current_node.lat, current_node.lon, current_node.node_id);
+        coordinate_list.emplace_back(current_node.lat, current_node.lon);
         ext_to_int_id_map.emplace(current_node.node_id, i);
     }
 
