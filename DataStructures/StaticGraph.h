@@ -90,7 +90,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         node_array.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
-        for (NodeIterator node = 0; node <= number_of_nodes; ++node)
+        for (const auto node : boost::irange(0u, number_of_nodes+1))
         {
             EdgeIterator last_edge = edge;
             while (edge < number_of_edges && graph[edge].source == node)
@@ -102,7 +102,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         }
         edge_array.resize(position); //(edge)
         edge = 0;
-        for (NodeIterator node = 0; node < number_of_nodes; ++node)
+        for (const auto node : boost::irange(0u, number_of_nodes))
         {
             EdgeIterator e = node_array[node + 1].first_edge;
             for (EdgeIterator i = node_array[node].first_edge; i != e; ++i)
@@ -126,7 +126,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
-        for (unsigned u = 0; u < GetNumberOfNodes(); ++u)
+        for (const auto u : boost::irange(0u, GetNumberOfEdges()))
         {
             for (auto eid : GetAdjacentEdgeRange(u))
             {
