@@ -266,6 +266,15 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             LoadNames();
 
             data_layout->PrintInformation();
+
+            SimpleLogger().Write() << "number of geometries: " << m_coordinate_list->size();
+            for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
+            {
+                if(!GetCoordinateOfNode(i).isValid())
+                {
+                    SimpleLogger().Write() << "coordinate " << i << " not valid";
+                }
+            }
         }
     }
 
@@ -310,7 +319,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     }
 
     // node and edge information access
-    FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const
+    FixedPointCoordinate GetCoordinateOfNode(const NodeID id) const
     {
         return m_coordinate_list->at(id);
     };
