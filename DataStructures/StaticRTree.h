@@ -143,24 +143,63 @@ class StaticRTree
                 return 0.;
             }
 
-            const FixedPointCoordinate upper_left(max_lat, min_lon);
-            const FixedPointCoordinate upper_right(max_lat, max_lon);
-            const FixedPointCoordinate lower_right(min_lat, max_lon);
-            const FixedPointCoordinate lower_left(min_lat, min_lon);
+            enum Direction
+            {
+                INVALID    = 0,
+                NORTH      = 1,
+                SOUTH      = 2,
+                EAST       = 4,
+                NORTH_EAST = 5,
+                SOUTH_EAST = 6,
+                WEST       = 8,
+                NORTH_WEST = 9,
+                SOUTH_WEST = 10
+            };
+
+            Direction d = INVALID;
+            if (location.lat > max_lat)
+                d = (Direction) (d | NORTH);
+            else if (location.lat < min_lat)
+                d = (Direction) (d | SOUTH);
+            if (location.lon > max_lon)
+                d = (Direction) (d | EAST);
+            else if (location.lon < min_lon)
+                d = (Direction) (d | WEST);
+
+            BOOST_ASSERT(d != INVALID);
 
             float min_dist = std::numeric_limits<float>::max();
-            min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ComputePerpendicularDistance(
-                                    upper_left, upper_right, location));
-            min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ComputePerpendicularDistance(
-                                    upper_right, lower_right, location));
-            min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ComputePerpendicularDistance(
-                                    lower_right, lower_left, location));
-            min_dist = std::min(min_dist,
-                                FixedPointCoordinate::ComputePerpendicularDistance(
-                                    lower_left, upper_left, location));
+            switch (d)
+            {
+                case NORTH:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, location.lon));
+                    break;
+                case SOUTH:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, location.lon));
+                    break;
+                case WEST:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, min_lon));
+                    break;
+                case EAST:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(location.lat, max_lon));
+                    break;
+                case NORTH_EAST:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, max_lon));
+                    break;
+                case NORTH_WEST:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(max_lat, min_lon));
+                    break;
+                case SOUTH_EAST:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, max_lon));
+                    break;
+                case SOUTH_WEST:
+                    min_dist = FixedPointCoordinate::ApproximateEuclideanDistance(location, FixedPointCoordinate(min_lat, min_lon));
+                    break;
+                default:
+                    break;
+            }
+
+            BOOST_ASSERT(min_dist != std::numeric_limits<float>::max());
 
             return min_dist;
         }
