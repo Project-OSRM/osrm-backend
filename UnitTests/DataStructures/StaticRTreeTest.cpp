@@ -436,5 +436,72 @@ BOOST_AUTO_TEST_CASE(regression_test)
     BOOST_CHECK_EQUAL(result_ln, result);
 }
 
+void TestRectangle(double width, double height, double center_lat, double center_lon)
+{
+    FixedPointCoordinate center(center_lat*COORDINATE_PRECISION, center_lon*COORDINATE_PRECISION);
+
+    TestStaticRTree::RectangleT rect;
+    rect.min_lat = center.lat - height/2.0 * COORDINATE_PRECISION;
+    rect.max_lat = center.lat + height/2.0 * COORDINATE_PRECISION;
+    rect.min_lon = center.lon - width/2.0  * COORDINATE_PRECISION;
+    rect.max_lon = center.lon + width/2.0  * COORDINATE_PRECISION;
+
+    unsigned offset = 5*COORDINATE_PRECISION;
+    FixedPointCoordinate north(rect.max_lat + offset, center.lon);
+    FixedPointCoordinate south(rect.min_lat - offset, center.lon);
+    FixedPointCoordinate west(center.lat, rect.min_lon - offset);
+    FixedPointCoordinate east(center.lat, rect.max_lon + offset);
+    FixedPointCoordinate north_east(rect.max_lat + offset, rect.max_lon + offset);
+    FixedPointCoordinate north_west(rect.max_lat + offset, rect.min_lon - offset);
+    FixedPointCoordinate south_east(rect.min_lat - offset, rect.max_lon + offset);
+    FixedPointCoordinate south_west(rect.min_lat - offset, rect.min_lon - offset);
+
+
+    /* Distance to line segments of rectangle */
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(north),
+        FixedPointCoordinate::ApproximateEuclideanDistance(north, FixedPointCoordinate(rect.max_lat, north.lon))
+    );
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(south),
+        FixedPointCoordinate::ApproximateEuclideanDistance(south, FixedPointCoordinate(rect.min_lat, south.lon))
+    );
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(west),
+        FixedPointCoordinate::ApproximateEuclideanDistance(west, FixedPointCoordinate(west.lat, rect.min_lon))
+    );
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(east),
+        FixedPointCoordinate::ApproximateEuclideanDistance(east, FixedPointCoordinate(east.lat, rect.max_lon))
+    );
+
+    /* Distance to corner points */
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(north_east),
+        FixedPointCoordinate::ApproximateEuclideanDistance(north_east, FixedPointCoordinate(rect.max_lat, rect.max_lon))
+    );
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(north_west),
+        FixedPointCoordinate::ApproximateEuclideanDistance(north_west, FixedPointCoordinate(rect.max_lat, rect.min_lon))
+    );
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(south_east),
+        FixedPointCoordinate::ApproximateEuclideanDistance(south_east, FixedPointCoordinate(rect.min_lat, rect.max_lon))
+    );
+    BOOST_CHECK_EQUAL(
+        rect.GetMinDist(south_west),
+        FixedPointCoordinate::ApproximateEuclideanDistance(south_west, FixedPointCoordinate(rect.min_lat, rect.min_lon))
+    );
+}
+
+BOOST_AUTO_TEST_CASE(rectangle_test)
+{
+    TestRectangle(10, 10, 5, 5);
+    TestRectangle(10, 10, -5, 5);
+    TestRectangle(10, 10, 5, -5);
+    TestRectangle(10, 10, -5, -5);
+    TestRectangle(10, 10, 0, 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
