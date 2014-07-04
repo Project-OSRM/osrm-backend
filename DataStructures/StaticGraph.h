@@ -126,7 +126,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
 #ifndef NDEBUG
         Percent p(GetNumberOfNodes());
-        for (const auto u : boost::irange(0u, GetNumberOfEdges()))
+        for (const auto u : boost::irange(0u, GetNumberOfNodes()))
         {
             for (auto eid : GetAdjacentEdgeRange(u))
             {
