@@ -276,7 +276,6 @@ template <class DataFacadeT> class BasicRoutingInterface
             if (is_local_path)
             {
                 start_index = phantom_node_pair.source_phantom.fwd_segment_position;
-                end_index = phantom_node_pair.target_phantom.fwd_segment_position;
                 if (target_traversed_in_reverse)
                 {
                     start_index =
@@ -290,6 +289,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             for (int i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
             {
                 BOOST_ASSERT(i >= -1);
+                BOOST_ASSERT(i < id_vector.size());
                 unpacked_path.emplace_back(PathData{id_vector[i],
                                            phantom_node_pair.target_phantom.name_id,
                                            TurnInstruction::NoTurn,
