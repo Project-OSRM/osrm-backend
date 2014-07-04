@@ -42,6 +42,7 @@ add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.c
 
 add_custom_target(FingerPrintConfigure DEPENDS ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp)
 add_custom_target(tests DEPENDS datastructure-tests)
+add_custom_target(benchmarks DEPENDS rtree-bench)
 
 set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
 
@@ -88,6 +89,9 @@ add_executable(osrm-datastore datastore.cpp)
 
 # Unit tests
 add_executable(datastructure-tests EXCLUDE_FROM_ALL UnitTests/datastructure_tests.cpp ${DataStructureTestsGlob})
+
+# Benchmarks
+add_executable(rtree-bench EXCLUDE_FROM_ALL Benchmarks/StaticRTreeBench.cpp)
 
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
@@ -197,14 +201,15 @@ target_link_libraries(osrm-prepare ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION
 target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} OSRM FINGERPRINT GITDESCRIPTION)
 target_link_libraries(osrm-datastore ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
 target_link_libraries(datastructure-tests ${Boost_LIBRARIES} COORDLIB)
+target_link_libraries(rtree-bench ${Boost_LIBRARIES} COORDLIB)
 
 find_package(Threads REQUIRED)
 target_link_libraries(osrm-extract ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(osrm-datastore ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(osrm-prepare ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(OSRM ${CMAKE_THREAD_LIBS_INIT})
-
 target_link_libraries(datastructure-tests ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(rtree-bench ${CMAKE_THREAD_LIBS_INIT})
 
 find_package(TBB REQUIRED)
 if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
@@ -215,6 +220,7 @@ target_link_libraries(osrm-extract ${TBB_LIBRARIES})
 target_link_libraries(osrm-prepare ${TBB_LIBRARIES})
 target_link_libraries(osrm-routed ${TBB_LIBRARIES})
 target_link_libraries(datastructure-tests ${TBB_LIBRARIES})
+target_link_libraries(rtree-bench ${TBB_LIBRARIES})
 include_directories(${TBB_INCLUDE_DIR})
 
 find_package(Lua52)
