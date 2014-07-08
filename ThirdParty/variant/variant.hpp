@@ -487,6 +487,8 @@ private:
 
 } // namespace detail
 
+struct no_init {};
+
 template<typename... Types>
 class variant
 {
@@ -503,11 +505,15 @@ private:
 
 public:
 
+
     VARIANT_INLINE variant()
         : type_index(sizeof...(Types) - 1)
     {
         new (&data) typename detail::select_type<0, Types...>::type();
     }
+
+    VARIANT_INLINE variant(no_init)
+        : type_index(detail::invalid_value) {}
 
     template <typename T, class = typename std::enable_if<
                          detail::is_valid_type<T, Types...>::value>::type>
