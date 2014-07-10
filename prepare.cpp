@@ -33,8 +33,7 @@ int main(int argc, char *argv[])
 {
     try
     {
-        Prepare prepare;
-        return prepare.Process(argc, argv);
+        return Prepare().Process(argc, argv);
     }
     catch (boost::program_options::too_many_positional_options_error &)
     {
@@ -51,5 +50,4 @@ int main(int argc, char *argv[])
         SimpleLogger().Write(logWARNING) << "Exception occured: " << e.what() << std::endl;
         return 1;
     }
-    return 0;
 }
