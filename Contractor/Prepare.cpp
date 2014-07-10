@@ -26,27 +26,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Prepare.h"
+
+#include "Contractor.h"
+
 #include "../Algorithms/IteratorBasedCRC32.h"
-#include "../Contractor/Contractor.h"
-#include "../Contractor/EdgeBasedGraphFactory.h"
 #include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
-#include "../DataStructures/StaticGraph.h"
 #include "../DataStructures/StaticRTree.h"
 #include "../DataStructures/RestrictionMap.h"
+
 #include "../Util/GitDescription.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/OSRMException.h"
-
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-
-#include <luabind/luabind.hpp>
+#include <boost/range.hpp>
 
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_sort.h>
@@ -56,7 +54,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <thread>
 #include <vector>
-
 
 Prepare::Prepare() :
     requested_num_threads(1)
@@ -74,8 +71,8 @@ int Prepare::Process(int argc, char *argv[])
     TIMER_START(expansion);
 
     if(!ParseArguments(argc, argv))
-        return 0;
-
+{        return 0;
+}
     if (!boost::filesystem::is_regular_file(input_path))
     {
         SimpleLogger().Write(logWARNING) << "Input file " << input_path.string()
@@ -113,12 +110,10 @@ int Prepare::Process(int argc, char *argv[])
 
     LogPolicy::GetInstance().Unmute();
 
-
     FingerPrint fingerprint_orig;
     CheckRestrictionsFile(fingerprint_orig);
 
-    boost::filesystem::ifstream in;
-        in.open(input_path, std::ios::in | std::ios::binary);
+    boost::filesystem::ifstream in(input_path, std::ios::in | std::ios::binary);
 
     node_filename = input_path.string() + ".nodes";
     edge_out = input_path.string() + ".edges";
@@ -137,10 +132,10 @@ int Prepare::Process(int argc, char *argv[])
     EdgeBasedGraphFactory::SpeedProfileProperties speed_profile;
 
     if(!SetupScriptingEnvironment(lua_state, speed_profile))
-        return 1;
+       { return 1;}
 
     #ifdef WIN32
-    #pragma message ("Memory consumption on Windows can be higher due to memory alignment")
+    #pragma message ("Memory consumption on Windows can be higher due to different bit packing")
     #else
     static_assert(sizeof(ImportEdge) == 20,
                   "changing ImportEdge type has influence on memory consumption!");
@@ -237,7 +232,7 @@ int Prepare::Process(int argc, char *argv[])
     StaticGraph<EdgeData>::EdgeIterator last_edge = edge;
 
     // initializing 'first_edge'-field of nodes:
-    for (auto node = 0u; node < max_used_node_id; ++node)
+    for (const auto node : boost::irange(0u, max_used_node_id))
     {
         last_edge = edge;
         while ((edge < contracted_edge_count) && (contracted_edge_list[edge].source == node))
@@ -248,8 +243,7 @@ int Prepare::Process(int argc, char *argv[])
         position += edge - last_edge;           // remove
     }
 
-    for (unsigned sentinel_counter = max_used_node_id; sentinel_counter < node_array.size();
-             ++sentinel_counter)
+    for(const auto sentinel_counter : boost::irange(max_used_node_id, (unsigned)node_array.size()))
     {
         // sentinel element, guarded against underflow
         node_array[sentinel_counter].first_edge = contracted_edge_count;
@@ -277,7 +271,7 @@ int Prepare::Process(int argc, char *argv[])
     int number_of_used_edges = 0;
 
     StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
-    for (unsigned edge = 0; edge < contracted_edge_list.size(); ++edge)
+    for (const auto edge : boost::irange(0u, (unsigned) contracted_edge_list.size()))
     {
         // no eigen loops
         BOOST_ASSERT(contracted_edge_list[edge].source != contracted_edge_list[edge].target);
@@ -477,8 +471,8 @@ bool Prepare::SetupScriptingEnvironment(lua_State *lua_state, EdgeBasedGraphFact
         std::cerr << lua_tostring(lua_state, -1) << " occured in scripting block" << std::endl;
         return false;
     }
-    speed_profile.uTurnPenalty = 10 * lua_tointeger(lua_state, -1);
 
+    speed_profile.uTurnPenalty = 10 * lua_tointeger(lua_state, -1);
     speed_profile.has_turn_penalty_function = lua_function_exists(lua_state, "turn_function");
 
     return true;
@@ -499,7 +493,7 @@ void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
         NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
     std::unique_ptr<RestrictionMap> restriction_map =
         std::unique_ptr<RestrictionMap>(new RestrictionMap(node_based_graph, restriction_list));
-    EdgeBasedGraphFactory *edge_based_graph_factor =
+    EdgeBasedGraphFactory *edge_based_graph_factory =
         new EdgeBasedGraphFactory(node_based_graph,
                                   std::move(restriction_map),
                                   barrier_node_list,
@@ -509,7 +503,7 @@ void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
     edge_list.clear();
     edge_list.shrink_to_fit();
 
-    edge_based_graph_factor->Run(edge_out, geometry_filename, lua_state);
+    edge_based_graph_factory->Run(edge_out, geometry_filename, lua_state);
 
     restriction_list.clear();
     restriction_list.shrink_to_fit();
@@ -518,18 +512,18 @@ void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
     traffic_light_list.clear();
     traffic_light_list.shrink_to_fit();
 
-    number_of_edge_based_nodes = edge_based_graph_factor->GetNumberOfEdgeBasedNodes();
+    number_of_edge_based_nodes = edge_based_graph_factory->GetNumberOfEdgeBasedNodes();
+
     BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
     #ifndef WIN32
     static_assert(sizeof(EdgeBasedEdge) == 16,
                   "changing ImportEdge type has influence on memory consumption!");
     #endif
 
-    edge_based_graph_factor->GetEdgeBasedEdges(edge_based_edge_list);
-    edge_based_graph_factor->GetEdgeBasedNodes(node_based_edge_list);
-    delete edge_based_graph_factor;
+    edge_based_graph_factory->GetEdgeBasedEdges(edge_based_edge_list);
+    edge_based_graph_factory->GetEdgeBasedNodes(node_based_edge_list);
+    delete edge_based_graph_factory;
 
-    // TODO actually use scoping: Split this up in subfunctions
     node_based_graph.reset();
 }
 
@@ -553,18 +547,16 @@ void Prepare::WriteNodeMapping()
 }
 
 /**
-    \brief Building grid-like nearest-neighbor data structure
+    \brief Building rtree-based nearest-neighbor data structure
 
     Saves info to files: '.ramIndex' and '.fileIndex'.
  */
 void Prepare::BuildRTree(std::vector<EdgeBasedNode> &node_based_edge_list)
 {
     SimpleLogger().Write() << "building r-tree ...";
-    StaticRTree<EdgeBasedNode> *rtree =
-            new StaticRTree<EdgeBasedNode>(node_based_edge_list,
-                                           rtree_nodes_path.c_str(),
-                                           rtree_leafs_path.c_str(),
-                                           internal_to_external_node_map);
-    delete rtree;
+    StaticRTree<EdgeBasedNode>(node_based_edge_list,
+                               rtree_nodes_path.c_str(),
+                               rtree_leafs_path.c_str(),
+                               internal_to_external_node_map);
 }
 
