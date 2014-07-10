@@ -72,7 +72,7 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     path_description.emplace_back(coordinate,
                                   path_point.name_id,
                                   path_point.segment_duration,
-                                  0,
+                                  0.f,
                                   path_point.turn_instruction);
 }
 
