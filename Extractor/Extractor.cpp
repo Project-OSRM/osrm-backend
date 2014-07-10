@@ -26,17 +26,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Extractor.h"
+
 #include "ExtractorCallbacks.h"
 #include "ExtractionContainers.h"
 #include "PBFParser.h"
 #include "ScriptingEnvironment.h"
 #include "XMLParser.h"
+
 #include "../Util/GitDescription.h"
-#include "../Util/MachineInfo.h"
 #include "../Util/OSRMException.h"
 #include "../Util/ProgramOptions.h"
 #include "../Util/SimpleLogger.h"
-#include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
 #include "../typedefs.h"
 
@@ -46,31 +46,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdlib>
 
-#include <thread>
 #include <chrono>
-#include <iostream>
 #include <fstream>
-#include <string>
+#include <iostream>
+#include <thread>
 #include <unordered_map>
 
-
-Extractor::Extractor(const char* git_desc) :
-        git_description(git_desc),
-        requested_num_threads(0),
-        file_has_pbf_format(false)
+Extractor::Extractor() : requested_num_threads(0), file_has_pbf_format(false)
 {
 }
 
-Extractor::~Extractor()
-{
-}
+Extractor::~Extractor() {}
 
 bool Extractor::ParseArguments(int argc, char *argv[])
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h",
-                                                               "Show this help message")(
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
         "config,c",
         boost::program_options::value<boost::filesystem::path>(&config_file_path)
             ->default_value("extractor.ini"),
@@ -83,7 +75,8 @@ bool Extractor::ParseArguments(int argc, char *argv[])
                                      &profile_path)->default_value("profile.lua"),
                                  "Path to LUA routing profile")(
         "threads,t",
-        boost::program_options::value<unsigned int>(&requested_num_threads)->default_value(tbb::task_scheduler_init::default_num_threads()),
+        boost::program_options::value<unsigned int>(&requested_num_threads)
+            ->default_value(tbb::task_scheduler_init::default_num_threads()),
         "Number of threads to use");
 
     // hidden options, will be allowed both on command line and in config file, but will not be
@@ -119,7 +112,7 @@ bool Extractor::ParseArguments(int argc, char *argv[])
 
     if (option_variables.count("version"))
     {
-        SimpleLogger().Write() << git_description;
+        SimpleLogger().Write() << g_GIT_DESCRIPTION;
         return false;
     }
 
@@ -162,7 +155,9 @@ void Extractor::GenerateOutputFilesNames()
         if (pos != std::string::npos)
         {
             file_has_pbf_format = true;
-        } else {
+        }
+        else
+        {
             pos = output_file_name.find(".osm.xml");
         }
     }
@@ -195,7 +190,7 @@ void Extractor::GenerateOutputFilesNames()
     }
 }
 
-int Extractor::Execute(int argc, char *argv[])
+int Extractor::Run(int argc, char *argv[])
 {
     try
     {
@@ -203,7 +198,7 @@ int Extractor::Execute(int argc, char *argv[])
 
         TIMER_START(extracting);
 
-        if(!ParseArguments(argc, argv))
+        if (!ParseArguments(argc, argv))
             return 0;
 
         if (1 > requested_num_threads)
@@ -260,13 +255,16 @@ int Extractor::Execute(int argc, char *argv[])
         }
         else
         {
-            parser = new XMLParser(input_path.string().c_str(), extractor_callbacks, scripting_environment);
+            parser = new XMLParser(input_path.string().c_str(),
+                                   extractor_callbacks,
+                                   scripting_environment);
         }
 
         if (!parser->ReadHeader())
         {
             throw OSRMException("Parser not initialized!");
         }
+
         SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
@@ -275,8 +273,7 @@ int Extractor::Execute(int argc, char *argv[])
         delete extractor_callbacks;
 
         TIMER_STOP(parsing);
-        SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing)
-                               << " seconds";
+        SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing) << " seconds";
 
         if (extraction_containers.all_edges_list.empty())
         {
@@ -287,8 +284,7 @@ int Extractor::Execute(int argc, char *argv[])
         extraction_containers.PrepareData(output_file_name, restriction_file_name);
 
         TIMER_STOP(extracting);
-        SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting)
-                               << "s";
+        SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting) << "s";
         SimpleLogger().Write() << "To prepare the data for routing, run: "
                                << "./osrm-prepare " << output_file_name << std::endl;
     }

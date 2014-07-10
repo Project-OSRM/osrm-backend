@@ -26,10 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "Extractor/Extractor.h"
-#include "Util/GitDescription.h"
 
 int main (int argc, char *argv[])
 {
-    Extractor extractor(g_GIT_DESCRIPTION);
-    return extractor.Execute(argc, argv);
+    return Extractor().Run(argc, argv);
 }

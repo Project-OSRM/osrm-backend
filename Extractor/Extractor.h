@@ -1,21 +1,18 @@
 #ifndef EXTRACTOR_H_
 #define EXTRACTOR_H_
 
-#include "../Util/FingerPrint.h"
-
 #include <boost/filesystem.hpp>
 
+#include <string>
 
 class ExtractorCallbacks;
 
 /** \brief Class of 'extract' utility. */
 class Extractor
 {
-    ExtractorCallbacks * extractor_callbacks;
-    FingerPrint fingerprint;
-    const char* git_description;
+    ExtractorCallbacks *extractor_callbacks;
 
-protected:
+  protected:
     unsigned requested_num_threads;
     boost::filesystem::path config_file_path;
     boost::filesystem::path input_path;
@@ -31,11 +28,11 @@ protected:
     /** \brief Parses config file, if present in options */
     void GenerateOutputFilesNames();
 
-public:
-    explicit Extractor(const char* git_desc);
-    Extractor(const Extractor&) = delete;
+  public:
+    explicit Extractor();
+    Extractor(const Extractor &) = delete;
     virtual ~Extractor();
 
-    int Execute(int argc, char *argv[]);
+    int Run(int argc, char *argv[]);
 };
 #endif /* EXTRACTOR_H_ */
