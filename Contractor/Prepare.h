@@ -6,7 +6,6 @@
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
 
-#include <boost/noncopyable.hpp>
 #include <boost/filesystem.hpp>
 
 #include <luabind/luabind.hpp>
