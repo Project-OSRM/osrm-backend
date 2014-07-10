@@ -63,10 +63,15 @@ template <class DataFacadeT> class BasicRoutingInterface
                             SearchEngineData::QueryHeap &reverse_heap,
                             NodeID *middle_node_id,
                             int *upper_bound,
+                            const int min_edge_offset,
                             const bool forward_direction) const
     {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
+
+        // const NodeID parentnode = forward_heap.GetData(node).parent;
+        // SimpleLogger().Write() << (forward_direction ? "[fwd] " : "[rev] ") << "settled edge (" << parentnode << "," << node << "), dist: " << distance;
+
         if (reverse_heap.WasInserted(node))
         {
             const int new_distance = reverse_heap.GetKey(node) + distance;
@@ -76,12 +81,16 @@ template <class DataFacadeT> class BasicRoutingInterface
                 {
                     *middle_node_id = node;
                     *upper_bound = new_distance;
+                //     SimpleLogger().Write() << "accepted middle node " << node << " at distance " << new_distance;
+                // } else {
+                //     SimpleLogger().Write() << "discared middle node " << node << " at distance " << new_distance;
                 }
             }
         }
 
-        if (distance > *upper_bound)
+        if (distance + min_edge_offset > *upper_bound)
         {
+            // SimpleLogger().Write() << "min_edge_offset: " << min_edge_offset;
             forward_heap.DeleteAll();
             return;
         }

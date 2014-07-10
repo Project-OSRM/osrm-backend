@@ -86,6 +86,8 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             middle1 = UINT_MAX;
             middle2 = UINT_MAX;
 
+            int min_edge_offset = 0;
+
             // insert new starting nodes into forward heap, adjusted by previous distances.
             if (search_from_1st_node &&
                 phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
@@ -94,10 +96,15 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                     phantom_node_pair.source_phantom.forward_node_id,
                     distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.source_phantom.forward_node_id);
+                min_edge_offset = std::min(min_edge_offset, distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-a2 insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
                 forward_heap2.Insert(
                     phantom_node_pair.source_phantom.forward_node_id,
                     distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.source_phantom.forward_node_id);
+                min_edge_offset = std::min(min_edge_offset, distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-b2 insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
+
             }
             if (search_from_2nd_node &&
                 phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID)
@@ -106,10 +113,16 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                     phantom_node_pair.source_phantom.reverse_node_id,
                     distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.source_phantom.reverse_node_id);
+                min_edge_offset = std::min(min_edge_offset, distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-a2 insert: " << phantom_node_pair.source_phantom.reverse_node_id <<
+                //                     ", w: " << distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
                 forward_heap2.Insert(
                     phantom_node_pair.source_phantom.reverse_node_id,
                     distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.source_phantom.reverse_node_id);
+                min_edge_offset = std::min(min_edge_offset, distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-b2 insert: " << phantom_node_pair.source_phantom.reverse_node_id <<
+                //                     ", w: " << distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             }
 
             // insert new backward nodes into backward heap, unadjusted.
@@ -118,13 +131,17 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                 reverse_heap1.Insert(phantom_node_pair.target_phantom.forward_node_id,
                                      phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
                                      phantom_node_pair.target_phantom.forward_node_id);
-            }
+                // SimpleLogger().Write(logDEBUG) << "rev-a insert: " << phantom_node_pair.target_phantom.forward_node_id <<
+                //                     ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
+           }
 
             if (phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID)
             {
                 reverse_heap2.Insert(phantom_node_pair.target_phantom.reverse_node_id,
                                      phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),
                                      phantom_node_pair.target_phantom.reverse_node_id);
+                // SimpleLogger().Write(logDEBUG) << "rev-a insert: " << phantom_node_pair.target_phantom.reverse_node_id <<
+                //                     ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
             }
 
             // run two-Target Dijkstra routing step.
@@ -133,12 +150,12 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                 if (0 < forward_heap1.Size())
                 {
                     super::RoutingStep(
-                        forward_heap1, reverse_heap1, &middle1, &local_upper_bound1, true);
+                        forward_heap1, reverse_heap1, &middle1, &local_upper_bound1, min_edge_offset, true);
                 }
                 if (0 < reverse_heap1.Size())
                 {
                     super::RoutingStep(
-                        reverse_heap1, forward_heap1, &middle1, &local_upper_bound1, false);
+                        reverse_heap1, forward_heap1, &middle1, &local_upper_bound1, min_edge_offset, false);
                 }
             }
 
@@ -149,12 +166,12 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                     if (0 < forward_heap2.Size())
                     {
                         super::RoutingStep(
-                            forward_heap2, reverse_heap2, &middle2, &local_upper_bound2, true);
+                            forward_heap2, reverse_heap2, &middle2, &local_upper_bound2, min_edge_offset, true);
                     }
                     if (0 < reverse_heap2.Size())
                     {
                         super::RoutingStep(
-                            reverse_heap2, forward_heap2, &middle2, &local_upper_bound2, false);
+                            reverse_heap2, forward_heap2, &middle2, &local_upper_bound2, min_edge_offset, false);
                     }
                 }
             }
