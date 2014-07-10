@@ -17,22 +17,22 @@
  */
 class Prepare
 {
-public:
+  public:
     typedef QueryEdge::EdgeData EdgeData;
     typedef DynamicGraph<EdgeData>::InputEdge InputEdge;
     typedef StaticGraph<EdgeData>::InputEdge StaticEdge;
 
-
     explicit Prepare();
-    Prepare(const Prepare&) = delete;
+    Prepare(const Prepare &) = delete;
     ~Prepare();
 
     int Process(int argc, char *argv[]);
 
-protected:
+  protected:
     bool ParseArguments(int argc, char *argv[]);
     void CheckRestrictionsFile(FingerPrint &fingerprint_orig);
-    bool SetupScriptingEnvironment(lua_State *myLuaState, EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
+    bool SetupScriptingEnvironment(lua_State *myLuaState,
+                                   EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
     void BuildEdgeExpandedGraph(lua_State *myLuaState,
                                 NodeID nodeBasedNodeNumber,
                                 unsigned &nodeBasedEdgesNumber,
@@ -42,7 +42,7 @@ protected:
     void WriteNodeMapping();
     void BuildRTree(std::vector<EdgeBasedNode> &node_based_edge_list);
 
-private:
+  private:
     std::vector<NodeInfo> internal_to_external_node_map;
     std::vector<TurnRestriction> restriction_list;
     std::vector<NodeID> barrier_node_list;
