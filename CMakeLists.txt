@@ -264,6 +264,7 @@ if(WITH_TOOLS OR BUILD_TOOLS)
     target_link_libraries(
       osrm-components
       ${GDAL_LIBRARIES} ${Boost_LIBRARIES} FINGERPRINT GITDESCRIPTION COORDLIB)
+    install(TARGETS osrm-components DESTINATION bin)
   else()
     message(FATAL_ERROR "libgdal and/or development headers not found")
   endif()
@@ -277,6 +278,10 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   if(UNIX AND NOT APPLE)
     target_link_libraries(osrm-unlock-all rt)
   endif()
+
+  install(TARGETS osrm-cli DESTINATION bin)
+  install(TARGETS osrm-io-benchmark DESTINATION bin)
+  install(TARGETS osrm-unlock-all DESTINATION bin)
 endif()
 
 file(GLOB InstallGlob Include/osrm/*.h Library/OSRM.h)
