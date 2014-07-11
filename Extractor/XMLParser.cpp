@@ -230,9 +230,9 @@ ExtractionWay XMLParser::ReadXMLWay()
         if (depth == child_depth && child_type == 15 &&
             xmlStrEqual(child_name, (const xmlChar *)"way") == 1)
         {
-            xmlChar *node_id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
-            way.id = StringToUint((char *)node_id);
-            xmlFree(node_id);
+            xmlChar *way_id = xmlTextReaderGetAttribute(inputReader, (const xmlChar *)"id");
+            way.id = StringToUint((char *)way_id);
+            xmlFree(way_id);
             xmlFree(child_name);
             break;
         }
