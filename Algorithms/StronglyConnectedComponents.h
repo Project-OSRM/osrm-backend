@@ -190,6 +190,7 @@ class TarjanSCC
                 edge_list.push_back(edge);
             }
         }
+        input_edges.clear();
         input_edges.shrink_to_fit();
         BOOST_ASSERT_MSG(0 == input_edges.size() && 0 == input_edges.capacity(),
                          "input edge vector not properly deallocated");
