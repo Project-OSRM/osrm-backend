@@ -122,7 +122,7 @@ static inline unsigned StringToUint(const std::string &input)
 {
     auto first_digit = input.begin();
     // Delete any trailing white-spaces
-    while (first_digit != input.end() && std::isspace(*first_digit))
+    while (first_digit != input.end() && (std::isspace(*first_digit) || '-' == *first_digit))
     {
         ++first_digit;
     }
