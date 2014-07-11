@@ -10,8 +10,6 @@ class ExtractorCallbacks;
 /** \brief Class of 'extract' utility. */
 class Extractor
 {
-    ExtractorCallbacks *extractor_callbacks;
-
   protected:
     unsigned requested_num_threads;
     boost::filesystem::path config_file_path;

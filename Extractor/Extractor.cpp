@@ -244,7 +244,7 @@ int Extractor::Run(int argc, char *argv[])
         ExtractionContainers extraction_containers;
 
         string_map[""] = 0;
-        extractor_callbacks = new ExtractorCallbacks(extraction_containers, string_map);
+        auto extractor_callbacks = new ExtractorCallbacks(extraction_containers, string_map);
         BaseParser *parser;
         if (file_has_pbf_format)
         {
