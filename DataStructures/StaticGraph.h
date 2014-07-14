@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <limits>
+#include <utility>
 #include <vector>
 
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
@@ -55,7 +56,9 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         EdgeDataT data;
         NodeIterator source;
         NodeIterator target;
-        InputEdge(NodeIterator source, NodeIterator target, EdgeDataT data) : source(source), target(target), data(data) { }
+
+        template<typename... Ts>
+        InputEdge(NodeIterator source, NodeIterator target, Ts &&...data) : source(source), target(target), data(std::forward<Ts>(data)...) { }
         bool operator<(const InputEdge &right) const
         {
             if (source != right.source)
