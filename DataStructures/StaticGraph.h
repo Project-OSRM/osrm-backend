@@ -55,6 +55,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         EdgeDataT data;
         NodeIterator source;
         NodeIterator target;
+        InputEdge(NodeIterator source, NodeIterator target, EdgeDataT data) : source(source), target(target), data(data) { }
         bool operator<(const InputEdge &right) const
         {
             if (source != right.source)
