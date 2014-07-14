@@ -60,15 +60,15 @@ class Contractor
               is_original_via_node_ID(false)
         {
         }
-        ContractorEdgeData(unsigned _distance,
-                           unsigned _originalEdges,
-                           unsigned _id,
-                           bool _shortcut,
-                           bool _forward,
-                           bool _backward)
-            : distance(_distance), id(_id),
-              originalEdges(std::min((unsigned)1 << 28, _originalEdges)), shortcut(_shortcut),
-              forward(_forward), backward(_backward), is_original_via_node_ID(false)
+        ContractorEdgeData(unsigned distance,
+                           unsigned original_edges,
+                           unsigned id,
+                           bool shortcut,
+                           bool forward,
+                           bool backward)
+            : distance(distance), id(id),
+              originalEdges(std::min((unsigned)1 << 28, original_edges)), shortcut(shortcut),
+              forward(forward), backward(backward), is_original_via_node_ID(false)
         {
         }
         unsigned distance;
