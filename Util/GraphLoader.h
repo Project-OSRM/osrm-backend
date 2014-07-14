@@ -365,7 +365,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         if ((edge_list[i - 1].target == edge_list[i].target) &&
             (edge_list[i - 1].source == edge_list[i].source))
         {
-                edge_list[i].capacity = std::min(edge_list[i - 1].capacity, edge_list[i].capacity);
+                edge_list[i].distance = std::min(edge_list[i - 1].distance, edge_list[i].distance);
                 edge_list[i - 1].source = UINT_MAX;
         }
     }
