@@ -53,9 +53,9 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     class InputEdge
     {
       public:
-        EdgeDataT data;
         NodeIterator source;
         NodeIterator target;
+        EdgeDataT data;
 
         template<typename... Ts>
         InputEdge(NodeIterator source, NodeIterator target, Ts &&...data) : source(source), target(target), data(std::forward<Ts>(data)...) { }
