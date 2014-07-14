@@ -54,6 +54,10 @@ template <typename EdgeDataT> class DynamicGraph
         NodeIterator source;
         NodeIterator target;
         EdgeDataT data;
+
+        template<typename... Ts>
+        InputEdge(NodeIterator source, NodeIterator target, Ts &&...data) : source(source), target(target), data(std::forward<Ts>(data)...) { }
+
         bool operator<(const InputEdge &right) const
         {
             if (source != right.source)
