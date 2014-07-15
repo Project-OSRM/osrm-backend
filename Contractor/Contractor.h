@@ -176,16 +176,16 @@ class Contractor
                 1,
                 diter->edge_id,
                 false,
-                static_cast<bool>(diter->forward),
-                static_cast<bool>(diter->backward));
+                diter->forward ? true : false,
+                diter->backward ? true : false);
 
             edges.emplace_back(diter->target, diter->source,
                 static_cast<unsigned int>(std::max(diter->weight, 1)),
                 1,
                 diter->edge_id,
                 false,
-                static_cast<bool>(diter->backward),
-                static_cast<bool>(diter->forward));
+                diter->backward ? true : false,
+                diter->forward ? true : false);
         }
         // clear input vector
         input_edge_list.clear();
@@ -726,7 +726,7 @@ class Contractor
 
     template <bool RUNSIMULATION>
     inline bool
-    ContractNode(ContractorThreadData *data, NodeID node, ContractionStats *stats = nullptr)
+    ContractNode(ContractorThreadData *data, const NodeID node, ContractionStats *stats = nullptr)
     {
         ContractorHeap &heap = data->heap;
         int inserted_edges_size = data->inserted_edges.size();
