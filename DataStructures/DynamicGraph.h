@@ -55,6 +55,8 @@ template <typename EdgeDataT> class DynamicGraph
         NodeIterator target;
         EdgeDataT data;
 
+        InputEdge() : source(std::numeric_limits<NodeIterator>::max()), target(std::numeric_limits<NodeIterator>::max()) { }
+
         template<typename... Ts>
         InputEdge(NodeIterator source, NodeIterator target, Ts &&...data) : source(source), target(target), data(std::forward<Ts>(data)...) { }
 
