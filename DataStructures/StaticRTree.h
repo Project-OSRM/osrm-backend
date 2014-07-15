@@ -516,7 +516,7 @@ class StaticRTree
     }
 
     explicit StaticRTree(TreeNode *tree_node_ptr,
-                         const uint32_t number_of_nodes,
+                         const uint64_t number_of_nodes,
                          const boost::filesystem::path &leaf_file,
                          std::shared_ptr<CoordinateListT> coordinate_list)
         : m_search_tree(tree_node_ptr, number_of_nodes), m_leaf_node_filename(leaf_file.string()),
