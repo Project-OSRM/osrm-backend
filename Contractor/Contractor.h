@@ -872,7 +872,7 @@ class Contractor
         std::sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
-        for (const auto i : boost::irange(0ul, neighbours.size()))
+        for (const auto i : boost::irange(0u, (unsigned)neighbours.size()))
         {
             contractor_graph->DeleteEdgesTo(neighbours[i], node);
         }
