@@ -350,7 +350,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                     json_instruction_row.values.push_back(static_cast<unsigned>(round(bearing_value)));
 
                     route_segments_list.emplace_back(
-                        segment.name_id, static_cast<int>(segment.length), route_segments_list.size());
+                        segment.name_id, static_cast<int>(segment.length), static_cast<unsigned>(route_segments_list.size()));
                     json_instruction_array.values.push_back(json_instruction_row);
                 }
             }
