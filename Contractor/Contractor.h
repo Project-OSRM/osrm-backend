@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/TimingUtil.h"
 
 #include <boost/assert.hpp>
+#include <boost/range/irange.hpp>
 
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
@@ -158,39 +159,38 @@ class Contractor
         edges.reserve(input_edge_list.size() * 2);
         temp_edge_counter = 0;
 
-        auto diter = input_edge_list.dbegin();
-        auto dend = input_edge_list.dend();
+        const auto dend = input_edge_list.dend();
 
-        ContractorEdge new_edge;
-        while (diter != dend)
+        for (auto diter = input_edge_list.dbegin(); diter != dend; ++diter)
         {
-            new_edge.source = diter->source;
-            new_edge.target = diter->target;
-            new_edge.data = { static_cast<unsigned int>(std::max(diter->weight, 1)),
-                              1,
-                              diter->edge_id,
-                              false,
-                              diter->forward,
-                              diter->backward};
-
-            BOOST_ASSERT_MSG(new_edge.data.distance > 0, "edge distance < 1");
+            BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(diter->weight, 1)) > 0, "edge distance < 1");
 #ifndef NDEBUG
-            if (new_edge.data.distance > 24 * 60 * 60 * 10)
+            if (static_cast<unsigned int>(std::max(diter->weight, 1)) > 24 * 60 * 60 * 10)
             {
                 SimpleLogger().Write(logWARNING) << "Edge weight large -> "
-                                                 << new_edge.data.distance;
+                                                 << static_cast<unsigned int>(std::max(diter->weight, 1));
             }
 #endif
-            edges.push_back(new_edge);
-            std::swap(new_edge.source, new_edge.target);
-            new_edge.data.forward = diter->backward;
-            new_edge.data.backward = diter->forward;
-            edges.push_back(new_edge);
-            ++diter;
+            edges.emplace_back(diter->source, diter->target,
+                static_cast<unsigned int>(std::max(diter->weight, 1)),
+                1,
+                diter->edge_id,
+                false,
+                static_cast<bool>(diter->forward),
+                static_cast<bool>(diter->backward));
+
+            edges.emplace_back(diter->target, diter->source,
+                static_cast<unsigned int>(std::max(diter->weight, 1)),
+                1,
+                diter->edge_id,
+                false,
+                static_cast<bool>(diter->backward),
+                static_cast<bool>(diter->forward));
         }
         // clear input vector
-        edges.shrink_to_fit();
         input_edge_list.clear();
+        edges.shrink_to_fit();
+
         tbb::parallel_sort(edges.begin(), edges.end());
         NodeID edge = 0;
         for (NodeID i = 0; i < edges.size();)
@@ -201,7 +201,7 @@ class Contractor
             // remove eigenloops
             if (source == target)
             {
-                i++;
+                ++i;
                 continue;
             }
             ContractorEdge forward_edge;
@@ -362,7 +362,7 @@ class Contractor
 
                 // build forward and backward renumbering map and remap ids in remaining_nodes and
                 // Priorities.
-                for (unsigned new_node_id = 0; new_node_id < remaining_nodes.size(); ++new_node_id)
+                for (const auto new_node_id : boost::irange(0u, (unsigned)remaining_nodes.size()))
                 {
                     // create renumbering maps in both directions
                     orig_node_id_to_new_id_map[new_node_id] = remaining_nodes[new_node_id].id;
@@ -373,7 +373,7 @@ class Contractor
                 }
                 TemporaryStorage &temporary_storage = TemporaryStorage::GetInstance();
                 // walk over all nodes
-                for (unsigned i = 0; i < contractor_graph->GetNumberOfNodes(); ++i)
+                for (const auto i : boost::irange(0u, (unsigned)contractor_graph->GetNumberOfNodes()))
                 {
                     const NodeID source = i;
                     for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
@@ -381,7 +381,7 @@ class Contractor
                         ContractorGraph::EdgeData &data =
                             contractor_graph->GetEdgeData(current_edge);
                         const NodeID target = contractor_graph->GetTarget(current_edge);
-                        if (UINT_MAX == new_node_id_from_orig_id_map[i])
+                        if (SPECIAL_NODEID == new_node_id_from_orig_id_map[i])
                         {
                             // Save edges of this node w/o renumbering.
                             temporary_storage.WriteToSlot(
@@ -397,10 +397,12 @@ class Contractor
                         {
                             // node is not yet contracted.
                             // add (renumbered) outgoing edges to new DynamicGraph.
-                            ContractorEdge new_edge;
-                            new_edge.source = new_node_id_from_orig_id_map[source];
-                            new_edge.target = new_node_id_from_orig_id_map[target];
-                            new_edge.data = data;
+                            ContractorEdge new_edge = {
+                                new_node_id_from_orig_id_map[source],
+                                new_node_id_from_orig_id_map[target],
+                                data
+                            };
+
                             new_edge.data.is_original_via_node_ID = true;
                             BOOST_ASSERT_MSG(UINT_MAX != new_node_id_from_orig_id_map[source],
                                              "new source id not resolveable");
@@ -569,7 +571,7 @@ class Contractor
         if (contractor_graph->GetNumberOfNodes())
         {
             Edge new_edge;
-            for (NodeID node = 0; node < number_of_nodes; ++node)
+            for (const auto node : boost::irange(0u, number_of_nodes))
             {
                 p.printStatus(node);
                 for (auto edge : contractor_graph->GetAdjacentEdgeRange(node))
@@ -612,26 +614,19 @@ class Contractor
 
         BOOST_ASSERT(0 == orig_node_id_to_new_id_map.capacity());
         TemporaryStorage &temporary_storage = TemporaryStorage::GetInstance();
+
         // loads edges of graph before renumbering, no need for further numbering action.
         NodeID source;
         NodeID target;
         ContractorGraph::EdgeData data;
 
-        Edge restored_edge;
-        for (unsigned i = 0; i < temp_edge_counter; ++i)
+        for (auto i  = 0; i < temp_edge_counter; ++i)
         {
             temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&source, sizeof(NodeID));
             temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&target, sizeof(NodeID));
             temporary_storage.ReadFromSlot(
                 edge_storage_slot, (char *)&data, sizeof(ContractorGraph::EdgeData));
-            restored_edge.source = source;
-            restored_edge.target = target;
-            restored_edge.data.distance = data.distance;
-            restored_edge.data.shortcut = data.shortcut;
-            restored_edge.data.id = data.id;
-            restored_edge.data.forward = data.forward;
-            restored_edge.data.backward = data.backward;
-            edges.push_back(restored_edge);
+            edges.emplace_back(source, target, data);
         }
         temporary_storage.DeallocateSlot(edge_storage_slot);
     }
@@ -648,7 +643,7 @@ class Contractor
 
         int nodes = 0;
         unsigned number_of_targets_found = 0;
-        while (heap.Size() > 0)
+        while (!heap.Empty())
         {
             const NodeID node = heap.DeleteMin();
             const int distance = heap.GetKey(node);
@@ -658,12 +653,12 @@ class Contractor
             {
                 return;
             }
-            // Destination settled?
             if (distance > max_distance)
             {
                 return;
             }
 
+            // Destination settled?
             if (heap.GetData(node).target)
             {
                 ++number_of_targets_found;
@@ -803,21 +798,19 @@ class Contractor
                     }
                     else
                     {
-                        ContractorEdge new_edge;
-                        new_edge.source = source;
-                        new_edge.target = target;
-                        new_edge.data =
-                            ContractorEdgeData(path_distance,
-                                               out_data.originalEdges + in_data.originalEdges,
-                                               node /*, 0, in_data.turnInstruction*/,
-                                               true,
-                                               true,
-                                               false);
-                        inserted_edges.push_back(new_edge);
-                        std::swap(new_edge.source, new_edge.target);
-                        new_edge.data.forward = false;
-                        new_edge.data.backward = true;
-                        inserted_edges.push_back(new_edge);
+                        inserted_edges.emplace_back(source, target, path_distance,
+                                                    out_data.originalEdges + in_data.originalEdges,
+                                                    node,
+                                                    true,
+                                                    true,
+                                                    false);
+
+                        inserted_edges.emplace_back(target, source, path_distance,
+                                                    out_data.originalEdges + in_data.originalEdges,
+                                                    node,
+                                                    true,
+                                                    false,
+                                                    true);
                     }
                 }
             }
@@ -879,7 +872,7 @@ class Contractor
         std::sort(neighbours.begin(), neighbours.end());
         neighbours.resize(std::unique(neighbours.begin(), neighbours.end()) - neighbours.begin());
 
-        for (int i = 0, e = (int)neighbours.size(); i < e; ++i)
+        for (const auto i : boost::irange(0ul, neighbours.size()))
         {
             contractor_graph->DeleteEdgesTo(neighbours[i], node);
         }
@@ -917,7 +910,7 @@ class Contractor
     }
 
     inline bool IsNodeIndependent(
-        const std::vector<float> &priorities /*, const std::vector< NodePriorityData >& node_data*/,
+        const std::vector<float> &priorities,
         ContractorThreadData *const data,
         NodeID node) const
     {
@@ -963,7 +956,7 @@ class Contractor
                     continue;
                 }
                 const float target_priority = priorities[target];
-                assert(target_priority >= 0);
+                BOOST_ASSERT(target_priority >= 0);
                 // found a neighbour with lower priority?
                 if (priority > target_priority)
                 {
