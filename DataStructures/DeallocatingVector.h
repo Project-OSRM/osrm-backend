@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 template <typename ElementT,
@@ -306,7 +307,8 @@ class DeallocatingVector
         ++current_size;
     }
 
-    inline void emplace_back(const ElementT &&element)
+    template<typename...Ts>
+    inline void emplace_back(Ts &&... element)
     {
         const std::size_t current_capacity = capacity();
         if (current_size == current_capacity)
@@ -315,7 +317,7 @@ class DeallocatingVector
         }
 
         const std::size_t current_index = size() % bucketSizeC;
-        bucket_list.back()[current_index] = element;
+        bucket_list.back()[current_index] = ElementT(std::forward<Ts>(element)...);
         ++current_size;
     }
 
