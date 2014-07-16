@@ -36,7 +36,7 @@ struct QueryEdge
     NodeID target;
     struct EdgeData
     {
-        EdgeData() {}
+        EdgeData() : id(0), shortcut(false), distance(0), forward(false), backward(false) {}
 
         template <class OtherT> EdgeData(const OtherT &other)
         {
