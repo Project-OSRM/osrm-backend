@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
-      compression(true), deprecatedAPI(false), check_sum(-1)
+      compression(true), deprecatedAPI(false), uturn_default(false), check_sum(-1)
 {
 }
 
@@ -46,6 +46,26 @@ void RouteParameters::setZoomLevel(const short level)
 }
 
 void RouteParameters::setAlternateRouteFlag(const bool flag) { alternate_route = flag; }
+
+void RouteParameters::setUTurn(const bool flag)
+{
+    uturns.resize(coordinates.size(), uturn_default);
+    if (!uturns.empty())
+    {
+        uturns.back() = flag;
+    }
+}
+
+void RouteParameters::setAllUTurns(const bool flag)
+{
+    // if the flag flips the default, then we erase everything.
+    if (flag)
+    {
+        uturn_default = flag;
+        uturns.clear();
+        uturns.resize(coordinates.size(), uturn_default);
+    }
+}
 
 void RouteParameters::setDeprecatedAPIFlag(const std::string &) { deprecatedAPI = true; }
 
