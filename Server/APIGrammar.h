@@ -39,7 +39,7 @@ struct APIGrammar : qi::grammar<Iterator>
 {
     explicit APIGrammar(HandlerT * h) : APIGrammar::base_type(api_call), handler(h)
     {
-        api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >> *(query) >> +(uturns);
+        api_call = qi::lit('/') >> string[boost::bind(&HandlerT::setService, handler, ::_1)] >> *(query) >> -(uturns);
         query    = ('?') >> (+(zoom | output | jsonp | checksum | location | hint | u | cmp | language | instruction | geometry | alt_route | old_API));
 
         zoom        = (-qi::lit('&')) >> qi::lit('z')            >> '=' >> qi::short_[boost::bind(&HandlerT::setZoomLevel, handler, ::_1)];
