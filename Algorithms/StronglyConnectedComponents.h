@@ -82,9 +82,6 @@ class TarjanSCC
     {
         TarjanEdgeData()
             : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID)
-            // , shortcut(false),
-            //   type(std::numeric_limits<short>::max()), forward(false), backward(false),
-            //   reversedEdge(false)
         {
         }
         TarjanEdgeData(int distance, unsigned name_id)//, bool shortcut, short type, bool forward, bool backward, bool reversedEdge) :
@@ -92,11 +89,6 @@ class TarjanSCC
         {}
         int distance;
         unsigned name_id;
-        // bool shortcut : 1;
-        // short type;
-        // bool forward : 1;
-        // bool backward : 1;
-        // bool reversedEdge : 1;
     };
 
     struct TarjanStackFrame
