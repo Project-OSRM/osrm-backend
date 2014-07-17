@@ -338,13 +338,9 @@ class TarjanSCC
             p.printIncrement();
             for (auto e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
             {
-                // if (!m_node_based_graph->GetEdgeData(e1).reversedEdge)
-                // {
-                //     continue;
-                // }
                 const TarjanDynamicGraph::NodeIterator v = m_node_based_graph->GetTarget(e1);
 
-                if (u < v || SPECIAL_EDGEID == m_node_based_graph->FindEdge(v, u))
+                if (u < v || m_node_based_graph->EndEdges(v) == m_node_based_graph->FindEdge(v, u))
                 {
                     total_network_distance +=
                         100 * FixedPointCoordinate::ApproximateEuclideanDistance(
@@ -352,9 +348,7 @@ class TarjanSCC
                                   m_coordinate_list[u].lon,
                                   m_coordinate_list[v].lat,
                                   m_coordinate_list[v].lon);
-                }
-                if (true) // SHRT_MAX != m_node_based_graph->GetEdgeData(e1).type)
-                {
+
                     BOOST_ASSERT(e1 != SPECIAL_EDGEID);
                     BOOST_ASSERT(u != SPECIAL_NODEID);
                     BOOST_ASSERT(v != SPECIAL_NODEID);
