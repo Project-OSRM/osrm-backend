@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/OSRMException.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StdHashExtensions.h"
+#include "../Util/TimingUtil.h"
 
 #include <osrm/Coordinate.h>
 
@@ -113,6 +114,7 @@ class TarjanSCC
               std::vector<NodeInfo> &nI)
         : m_coordinate_list(nI), m_restriction_counter(irs.size())
     {
+        TIMER_START(SCC_LOAD);
         for (const TurnRestriction &restriction : irs)
         {
             std::pair<NodeID, NodeID> restriction_source = {restriction.fromNode,
@@ -177,12 +179,15 @@ class TarjanSCC
 
         std::sort(edge_list.begin(), edge_list.end());
         m_node_based_graph = std::make_shared<TarjanDynamicGraph>(number_of_nodes, edge_list);
+        TIMER_STOP(SCC_LOAD);
+        SimpleLogger().Write() << "Loading data into SCC took " << TIMER_MSEC(SCC_LOAD)/1000. << "s";
     }
 
     ~TarjanSCC() { m_node_based_graph.reset(); }
 
     void Run()
     {
+        TIMER_START(SCC_RUN_SETUP);
         // remove files from previous run if exist
         DeleteFileIfExists("component.dbf");
         DeleteFileIfExists("component.shx");
@@ -215,7 +220,10 @@ class TarjanSCC
         {
             throw OSRMException("Layer creation failed.");
         }
+        TIMER_STOP(SCC_RUN_SETUP);
+        SimpleLogger().Write() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP)/1000. << "s";
 
+        TIMER_START(SCC_RUN);
         // The following is a hack to distinguish between stuff that happens
         // before the recursive call and stuff that happens after
         std::stack<std::pair<bool, TarjanStackFrame>> recursion_stack;
@@ -307,8 +315,12 @@ class TarjanSCC
             }
         }
 
+        TIMER_STOP(SCC_RUN);
+        SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN)/1000. << "s";
         SimpleLogger().Write() << "identified: " << component_size_vector.size()
                                << " many components, marking small components";
+
+        TIMER_START(SCC_OUTPUT);
 
         const unsigned size_one_counter = std::count_if(component_size_vector.begin(),
                                                         component_size_vector.end(),
@@ -380,6 +392,8 @@ class TarjanSCC
         components_index.shrink_to_fit();
         BOOST_ASSERT_MSG(0 == components_index.size() && 0 == components_index.capacity(),
                          "components_index not properly deallocated");
+        TIMER_STOP(SCC_OUTPUT);
+        SimpleLogger().Write() << "generating output took: " << TIMER_MSEC(SCC_OUTPUT)/1000. << "s";
 
         SimpleLogger().Write() << "total network distance: "
                                << (uint64_t)total_network_distance / 100 / 1000. << " km";
