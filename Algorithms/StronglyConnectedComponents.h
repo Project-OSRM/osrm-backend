@@ -172,13 +172,8 @@ class TarjanSCC
                 continue;
             }
 
-            // TarjanEdge edge;
             if (input_edge.forward)
             {
-                // edge.source = input_edge.source;
-                // edge.target = input_edge.target;
-                // edge.data.forward = input_edge.forward;
-                // edge.data.backward = input_edge.backward;
                 edge_list.emplace_back(input_edge.source,
                                        input_edge.target,
                                        (std::max)((int)input_edge.weight, 1),
@@ -190,28 +185,7 @@ class TarjanSCC
                                        input_edge.source,
                                        (std::max)((int)input_edge.weight, 1),
                                        input_edge.name_id);
-
-                // edge.source = input_edge.target;
-                // edge.target = input_edge.source;
-                // edge.data.backward = input_edge.forward;
-                // edge.data.forward = input_edge.backward;
             }
-
-            // edge.data.distance = (std::max)((int)input_edge.weight, 1);
-            // BOOST_ASSERT(edge.data.distance > 0);
-            // edge.data.shortcut = false;
-            // edge.data.name_id = input_edge.name_id;
-            // edge.data.type = input_edge.type;
-            // edge.data.reversedEdge = false;
-            // edge_list.push_back(edge);
-            // if (edge.data.backward)
-            // {
-            //     std::swap(edge.source, edge.target);
-            //     edge.data.forward = input_edge.backward;
-            //     edge.data.backward = input_edge.forward;
-            //     edge.data.reversedEdge = true;
-            //     edge_list.push_back(edge);
-            // }
         }
         input_edges.clear();
         input_edges.shrink_to_fit();
