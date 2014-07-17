@@ -103,8 +103,8 @@ class TarjanSCC
     typedef DynamicGraph<TarjanEdgeData> TarjanDynamicGraph;
     typedef TarjanDynamicGraph::InputEdge TarjanEdge;
     typedef std::pair<NodeID, NodeID> RestrictionSource;
-    typedef std::pair<NodeID, bool> restriction_target;
-    typedef std::vector<restriction_target> EmanatingRestrictionsVector;
+    typedef std::pair<NodeID, bool> RestrictionTarget;
+    typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
     typedef std::unordered_map<RestrictionSource, unsigned> RestrictionMap;
 
     std::vector<NodeInfo> m_coordinate_list;
@@ -126,15 +126,15 @@ class TarjanSCC
     {
         for (const TurnRestriction &restriction : irs)
         {
-            std::pair<NodeID, NodeID> restrictionSource = {restriction.fromNode,
-                                                           restriction.viaNode};
+            std::pair<NodeID, NodeID> restriction_source = {restriction.fromNode,
+                                                            restriction.viaNode};
             unsigned index = 0;
-            auto restriction_iterator = m_restriction_map.find(restrictionSource);
+            const auto restriction_iterator = m_restriction_map.find(restriction_source);
             if (restriction_iterator == m_restriction_map.end())
             {
                 index = m_restriction_bucket_list.size();
                 m_restriction_bucket_list.resize(index + 1);
-                m_restriction_map.emplace(restrictionSource, index);
+                m_restriction_map.emplace(restriction_source, index);
             }
             else
             {
@@ -332,39 +332,42 @@ class TarjanSCC
 
         uint64_t total_network_distance = 0;
         p.reinit(m_node_based_graph->GetNumberOfNodes());
-        NodeID last_u_node = m_node_based_graph->GetNumberOfNodes();
-        for (NodeID u = 0; u < last_u_node; ++u)
+        // const NodeID last_u_node = m_node_based_graph->GetNumberOfNodes();
+        for (const NodeID source : boost::irange(0u, last_node))
         {
             p.printIncrement();
-            for (auto e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
+            for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(source))
             {
-                const TarjanDynamicGraph::NodeIterator v = m_node_based_graph->GetTarget(e1);
+                const TarjanDynamicGraph::NodeIterator target =
+                    m_node_based_graph->GetTarget(current_edge);
 
-                if (u < v || m_node_based_graph->EndEdges(v) == m_node_based_graph->FindEdge(v, u))
+                if (source < target ||
+                    m_node_based_graph->EndEdges(target) ==
+                        m_node_based_graph->FindEdge(target, source))
                 {
                     total_network_distance +=
                         100 * FixedPointCoordinate::ApproximateEuclideanDistance(
-                                  m_coordinate_list[u].lat,
-                                  m_coordinate_list[u].lon,
-                                  m_coordinate_list[v].lat,
-                                  m_coordinate_list[v].lon);
+                                  m_coordinate_list[source].lat,
+                                  m_coordinate_list[source].lon,
+                                  m_coordinate_list[target].lat,
+                                  m_coordinate_list[target].lon);
 
-                    BOOST_ASSERT(e1 != SPECIAL_EDGEID);
-                    BOOST_ASSERT(u != SPECIAL_NODEID);
-                    BOOST_ASSERT(v != SPECIAL_NODEID);
+                    BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
+                    BOOST_ASSERT(source != SPECIAL_NODEID);
+                    BOOST_ASSERT(target != SPECIAL_NODEID);
 
                     const unsigned size_of_containing_component =
-                        std::min(component_size_vector[components_index[u]],
-                                 component_size_vector[components_index[v]]);
+                        std::min(component_size_vector[components_index[source]],
+                                 component_size_vector[components_index[target]]);
 
                     // edges that end on bollard nodes may actually be in two distinct components
                     if (size_of_containing_component < 10)
                     {
                         OGRLineString lineString;
-                        lineString.addPoint(m_coordinate_list[u].lon / COORDINATE_PRECISION,
-                                            m_coordinate_list[u].lat / COORDINATE_PRECISION);
-                        lineString.addPoint(m_coordinate_list[v].lon / COORDINATE_PRECISION,
-                                            m_coordinate_list[v].lat / COORDINATE_PRECISION);
+                        lineString.addPoint(m_coordinate_list[source].lon / COORDINATE_PRECISION,
+                                            m_coordinate_list[source].lat / COORDINATE_PRECISION);
+                        lineString.addPoint(m_coordinate_list[target].lon / COORDINATE_PRECISION,
+                                            m_coordinate_list[target].lat / COORDINATE_PRECISION);
 
                         OGRFeature *poFeature = OGRFeature::CreateFeature(poLayer->GetLayerDefn());
 
@@ -397,8 +400,7 @@ class TarjanSCC
     unsigned CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const
     {
         std::pair<NodeID, NodeID> restriction_source = {u, v};
-        RestrictionMap::const_iterator restriction_iterator =
-            m_restriction_map.find(restriction_source);
+        const auto restriction_iterator = m_restriction_map.find(restriction_source);
         if (restriction_iterator != m_restriction_map.end())
         {
             const unsigned index = restriction_iterator->second;
@@ -417,12 +419,11 @@ class TarjanSCC
     {
         // only add an edge if turn is not a U-turn except it is the end of dead-end street.
         std::pair<NodeID, NodeID> restriction_source = {u, v};
-        RestrictionMap::const_iterator restriction_iterator =
-            m_restriction_map.find(restriction_source);
+        const auto restriction_iterator = m_restriction_map.find(restriction_source);
         if (restriction_iterator != m_restriction_map.end())
         {
             const unsigned index = restriction_iterator->second;
-            for (const restriction_target &restriction_target : m_restriction_bucket_list.at(index))
+            for (const RestrictionTarget &restriction_target : m_restriction_bucket_list.at(index))
             {
                 if (w == restriction_target.first)
                 {
