@@ -81,13 +81,14 @@ class TarjanSCC
 
     struct TarjanEdgeData
     {
-        TarjanEdgeData()
-            : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID)
+        TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
+        TarjanEdgeData(int distance, unsigned name_id) //, bool shortcut, short type, bool forward,
+            // bool backward, bool reversedEdge) :
+            : distance(distance),
+              name_id(name_id) //, shortcut(shortcut), type(type), forward(forward),
+        // backward(backward), reversedEdge(reversedEdge)
         {
         }
-        TarjanEdgeData(int distance, unsigned name_id)//, bool shortcut, short type, bool forward, bool backward, bool reversedEdge) :
-         :distance(distance), name_id(name_id)//, shortcut(shortcut), type(type), forward(forward), backward(backward), reversedEdge(reversedEdge)
-        {}
         int distance;
         unsigned name_id;
     };
@@ -238,7 +239,7 @@ class TarjanSCC
         unsigned component_index = 0, size_of_current_component = 0;
         int index = 0;
         NodeID last_node = m_node_based_graph->GetNumberOfNodes();
-        for(const NodeID node : boost::irange(0u, last_node))
+        for (const NodeID node : boost::irange(0u, last_node))
         {
             if (SPECIAL_NODEID == components_index[node])
             {
@@ -265,7 +266,7 @@ class TarjanSCC
                     ++index;
 
                     // Traverse outgoing edges
-                    for (auto e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
+                    for (const auto e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
                     {
                         const TarjanDynamicGraph::NodeIterator vprime =
                             m_node_based_graph->GetTarget(e2);
@@ -343,13 +344,16 @@ class TarjanSCC
                 // }
                 const TarjanDynamicGraph::NodeIterator v = m_node_based_graph->GetTarget(e1);
 
-                total_network_distance += 100 * FixedPointCoordinate::ApproximateEuclideanDistance(
-                                                    m_coordinate_list[u].lat,
-                                                    m_coordinate_list[u].lon,
-                                                    m_coordinate_list[v].lat,
-                                                    m_coordinate_list[v].lon);
-
-                if (true) //SHRT_MAX != m_node_based_graph->GetEdgeData(e1).type)
+                if (u < v || SPECIAL_EDGEID == m_node_based_graph->FindEdge(v, u))
+                {
+                    total_network_distance +=
+                        100 * FixedPointCoordinate::ApproximateEuclideanDistance(
+                                  m_coordinate_list[u].lat,
+                                  m_coordinate_list[u].lon,
+                                  m_coordinate_list[v].lat,
+                                  m_coordinate_list[v].lon);
+                }
+                if (true) // SHRT_MAX != m_node_based_graph->GetEdgeData(e1).type)
                 {
                     BOOST_ASSERT(e1 != SPECIAL_EDGEID);
                     BOOST_ASSERT(u != SPECIAL_NODEID);
