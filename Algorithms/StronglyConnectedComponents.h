@@ -249,7 +249,10 @@ class TarjanSCC
             throw OSRMException("Creation of output file failed");
         }
 
-        OGRLayer *poLayer = poDS->CreateLayer("component", nullptr, wkbLineString, nullptr);
+        OGRSpatialReference *poSRS = new OGRSpatialReference();
+        poSRS->importFromEPSG(4326);
+
+        OGRLayer *poLayer = poDS->CreateLayer("component", poSRS, wkbLineString, nullptr);
 
         if (nullptr == poLayer)
         {
@@ -262,7 +265,7 @@ class TarjanSCC
         // true = stuff before, false = stuff after call
         std::stack<NodeID> tarjan_stack;
         std::vector<unsigned> components_index(m_node_based_graph->GetNumberOfNodes(),
-                                               std::numeric_limits<unsigned>::max());
+                                               SPECIAL_NODEID);
         std::vector<NodeID> component_size_vector;
         std::vector<TarjanNode> tarjan_node_list(m_node_based_graph->GetNumberOfNodes());
         unsigned component_index = 0, size_of_current_component = 0;
