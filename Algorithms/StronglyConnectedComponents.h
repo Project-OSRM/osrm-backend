@@ -57,7 +57,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdint>
 
-#include <limits>
 #include <memory>
 #include <stack>
 #include <unordered_map>
@@ -69,11 +68,7 @@ class TarjanSCC
   private:
     struct TarjanNode
     {
-        TarjanNode()
-            : index(std::numeric_limits<unsigned>::max()),
-              low_link(std::numeric_limits<unsigned>::max()), on_stack(false)
-        {
-        }
+        TarjanNode() : index(SPECIAL_NODEID), low_link(SPECIAL_NODEID), on_stack(false) {}
         unsigned index;
         unsigned low_link;
         bool on_stack;
@@ -82,13 +77,7 @@ class TarjanSCC
     struct TarjanEdgeData
     {
         TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
-        TarjanEdgeData(int distance, unsigned name_id) //, bool shortcut, short type, bool forward,
-            // bool backward, bool reversedEdge) :
-            : distance(distance),
-              name_id(name_id) //, shortcut(shortcut), type(type), forward(forward),
-        // backward(backward), reversedEdge(reversedEdge)
-        {
-        }
+        TarjanEdgeData(int distance, unsigned name_id) : distance(distance), name_id(name_id) {}
         int distance;
         unsigned name_id;
     };
@@ -250,7 +239,7 @@ class TarjanSCC
             {
                 const bool before_recursion = recursion_stack.top().first;
                 TarjanStackFrame currentFrame = recursion_stack.top().second;
-                NodeID v = currentFrame.v;
+                const NodeID v = currentFrame.v;
                 recursion_stack.pop();
 
                 if (before_recursion)
@@ -266,11 +255,11 @@ class TarjanSCC
                     ++index;
 
                     // Traverse outgoing edges
-                    for (const auto e2 : m_node_based_graph->GetAdjacentEdgeRange(v))
+                    for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(v))
                     {
                         const TarjanDynamicGraph::NodeIterator vprime =
-                            m_node_based_graph->GetTarget(e2);
-                        if (std::numeric_limits<unsigned>::max() == tarjan_node_list[vprime].index)
+                            m_node_based_graph->GetTarget(current_edge);
+                        if (SPECIAL_NODEID == tarjan_node_list[vprime].index)
                         {
                             recursion_stack.emplace(true, TarjanStackFrame(vprime, v));
                         }
@@ -390,7 +379,7 @@ class TarjanSCC
         components_index.clear();
         components_index.shrink_to_fit();
         BOOST_ASSERT_MSG(0 == components_index.size() && 0 == components_index.capacity(),
-                         "icomponents_index not properly deallocated");
+                         "components_index not properly deallocated");
 
         SimpleLogger().Write() << "total network distance: "
                                << (uint64_t)total_network_distance / 100 / 1000. << " km";
@@ -412,7 +401,7 @@ class TarjanSCC
                 }
             }
         }
-        return std::numeric_limits<unsigned>::max();
+        return SPECIAL_NODEID;
     }
 
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const
