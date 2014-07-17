@@ -68,7 +68,11 @@ class TarjanSCC
   private:
     struct TarjanNode
     {
-        TarjanNode() : index(std::numeric_limits<unsigned>::max()), low_link(std::numeric_limits<unsigned>::max()), on_stack(false) {}
+        TarjanNode()
+            : index(std::numeric_limits<unsigned>::max()),
+              low_link(std::numeric_limits<unsigned>::max()), on_stack(false)
+        {
+        }
         unsigned index;
         unsigned low_link;
         bool on_stack;
@@ -76,13 +80,23 @@ class TarjanSCC
 
     struct TarjanEdgeData
     {
+        TarjanEdgeData()
+            : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID)
+            // , shortcut(false),
+            //   type(std::numeric_limits<short>::max()), forward(false), backward(false),
+            //   reversedEdge(false)
+        {
+        }
+        TarjanEdgeData(int distance, unsigned name_id)//, bool shortcut, short type, bool forward, bool backward, bool reversedEdge) :
+         :distance(distance), name_id(name_id)//, shortcut(shortcut), type(type), forward(forward), backward(backward), reversedEdge(reversedEdge)
+        {}
         int distance;
-        unsigned name_id : 31;
-        bool shortcut : 1;
-        short type;
-        bool forward : 1;
-        bool backward : 1;
-        bool reversedEdge : 1;
+        unsigned name_id;
+        // bool shortcut : 1;
+        // short type;
+        // bool forward : 1;
+        // bool backward : 1;
+        // bool reversedEdge : 1;
     };
 
     struct TarjanStackFrame
@@ -158,37 +172,46 @@ class TarjanSCC
                 continue;
             }
 
-            TarjanEdge edge;
+            // TarjanEdge edge;
             if (input_edge.forward)
             {
-                edge.source = input_edge.source;
-                edge.target = input_edge.target;
-                edge.data.forward = input_edge.forward;
-                edge.data.backward = input_edge.backward;
+                // edge.source = input_edge.source;
+                // edge.target = input_edge.target;
+                // edge.data.forward = input_edge.forward;
+                // edge.data.backward = input_edge.backward;
+                edge_list.emplace_back(input_edge.source,
+                                       input_edge.target,
+                                       (std::max)((int)input_edge.weight, 1),
+                                       input_edge.name_id);
             }
-            else
+            if (input_edge.backward)
             {
-                edge.source = input_edge.target;
-                edge.target = input_edge.source;
-                edge.data.backward = input_edge.forward;
-                edge.data.forward = input_edge.backward;
+                edge_list.emplace_back(input_edge.target,
+                                       input_edge.source,
+                                       (std::max)((int)input_edge.weight, 1),
+                                       input_edge.name_id);
+
+                // edge.source = input_edge.target;
+                // edge.target = input_edge.source;
+                // edge.data.backward = input_edge.forward;
+                // edge.data.forward = input_edge.backward;
             }
 
-            edge.data.distance = (std::max)((int)input_edge.weight, 1);
-            BOOST_ASSERT(edge.data.distance > 0);
-            edge.data.shortcut = false;
-            edge.data.name_id = input_edge.name_id;
-            edge.data.type = input_edge.type;
-            edge.data.reversedEdge = false;
-            edge_list.push_back(edge);
-            if (edge.data.backward)
-            {
-                std::swap(edge.source, edge.target);
-                edge.data.forward = input_edge.backward;
-                edge.data.backward = input_edge.forward;
-                edge.data.reversedEdge = true;
-                edge_list.push_back(edge);
-            }
+            // edge.data.distance = (std::max)((int)input_edge.weight, 1);
+            // BOOST_ASSERT(edge.data.distance > 0);
+            // edge.data.shortcut = false;
+            // edge.data.name_id = input_edge.name_id;
+            // edge.data.type = input_edge.type;
+            // edge.data.reversedEdge = false;
+            // edge_list.push_back(edge);
+            // if (edge.data.backward)
+            // {
+            //     std::swap(edge.source, edge.target);
+            //     edge.data.forward = input_edge.backward;
+            //     edge.data.backward = input_edge.forward;
+            //     edge.data.reversedEdge = true;
+            //     edge_list.push_back(edge);
+            // }
         }
         input_edges.clear();
         input_edges.shrink_to_fit();
@@ -238,7 +261,8 @@ class TarjanSCC
         std::stack<std::pair<bool, TarjanStackFrame>> recursion_stack;
         // true = stuff before, false = stuff after call
         std::stack<NodeID> tarjan_stack;
-        std::vector<unsigned> components_index(m_node_based_graph->GetNumberOfNodes(), std::numeric_limits<unsigned>::max());
+        std::vector<unsigned> components_index(m_node_based_graph->GetNumberOfNodes(),
+                                               std::numeric_limits<unsigned>::max());
         std::vector<NodeID> component_size_vector;
         std::vector<TarjanNode> tarjan_node_list(m_node_based_graph->GetNumberOfNodes());
         unsigned component_index = 0, size_of_current_component = 0;
@@ -328,7 +352,10 @@ class TarjanSCC
 
         const unsigned size_one_counter = std::count_if(component_size_vector.begin(),
                                                         component_size_vector.end(),
-                                                        [] (unsigned value) { return 1 == value;});
+                                                        [](unsigned value)
+                                                        {
+            return 1 == value;
+        });
 
         SimpleLogger().Write() << "identified " << size_one_counter << " SCCs of size 1";
 
@@ -340,19 +367,19 @@ class TarjanSCC
             p.printIncrement();
             for (auto e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
             {
-                if (!m_node_based_graph->GetEdgeData(e1).reversedEdge)
-                {
-                    continue;
-                }
+                // if (!m_node_based_graph->GetEdgeData(e1).reversedEdge)
+                // {
+                //     continue;
+                // }
                 const TarjanDynamicGraph::NodeIterator v = m_node_based_graph->GetTarget(e1);
 
-                total_network_distance +=
-                    100 * FixedPointCoordinate::ApproximateEuclideanDistance(m_coordinate_list[u].lat,
-                                                                             m_coordinate_list[u].lon,
-                                                                             m_coordinate_list[v].lat,
-                                                                             m_coordinate_list[v].lon);
+                total_network_distance += 100 * FixedPointCoordinate::ApproximateEuclideanDistance(
+                                                    m_coordinate_list[u].lat,
+                                                    m_coordinate_list[u].lon,
+                                                    m_coordinate_list[v].lat,
+                                                    m_coordinate_list[v].lon);
 
-                if (SHRT_MAX != m_node_based_graph->GetEdgeData(e1).type)
+                if (true) //SHRT_MAX != m_node_based_graph->GetEdgeData(e1).type)
                 {
                     BOOST_ASSERT(e1 != SPECIAL_EDGEID);
                     BOOST_ASSERT(u != SPECIAL_NODEID);
@@ -394,8 +421,8 @@ class TarjanSCC
         BOOST_ASSERT_MSG(0 == components_index.size() && 0 == components_index.capacity(),
                          "icomponents_index not properly deallocated");
 
-        SimpleLogger().Write() << "total network distance: " << (uint64_t)total_network_distance /
-                                                                    100 / 1000. << " km";
+        SimpleLogger().Write() << "total network distance: "
+                               << (uint64_t)total_network_distance / 100 / 1000. << " km";
     }
 
   private:
