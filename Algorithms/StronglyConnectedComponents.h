@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/range/irange.hpp>
 
 #ifdef __APPLE__
 #include <gdal.h>
@@ -237,9 +238,9 @@ class TarjanSCC
         unsigned component_index = 0, size_of_current_component = 0;
         int index = 0;
         NodeID last_node = m_node_based_graph->GetNumberOfNodes();
-        for (NodeID node = 0; node < last_node; ++node)
+        for(const NodeID node : boost::irange(0u, last_node))
         {
-            if (std::numeric_limits<unsigned>::max() == components_index[node])
+            if (SPECIAL_NODEID == components_index[node])
             {
                 recursion_stack.emplace(true, TarjanStackFrame(node, node));
             }
