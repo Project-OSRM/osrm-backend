@@ -160,7 +160,6 @@ class Contractor
         temp_edge_counter = 0;
 
         const auto dend = input_edge_list.dend();
-
         for (auto diter = input_edge_list.dbegin(); diter != dend; ++diter)
         {
             BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(diter->weight, 1)) > 0, "edge distance < 1");

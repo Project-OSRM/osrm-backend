@@ -48,6 +48,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem.hpp>
 #include <boost/range/irange.hpp>
 
+#include <tbb/parallel_sort.h>
+
 #ifdef __APPLE__
 #include <gdal.h>
 #include <ogrsf_frmts.h>
@@ -177,7 +179,7 @@ class TarjanSCC
         BOOST_ASSERT_MSG(0 == input_edges.size() && 0 == input_edges.capacity(),
                          "input edge vector not properly deallocated");
 
-        std::sort(edge_list.begin(), edge_list.end());
+        tbb::parallel_sort(edge_list.begin(), edge_list.end());
         m_node_based_graph = std::make_shared<TarjanDynamicGraph>(number_of_nodes, edge_list);
         TIMER_STOP(SCC_LOAD);
         SimpleLogger().Write() << "Loading data into SCC took " << TIMER_MSEC(SCC_LOAD)/1000. << "s";

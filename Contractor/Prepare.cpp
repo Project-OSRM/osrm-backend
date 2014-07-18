@@ -202,7 +202,7 @@ int Prepare::Process(int argc, char *argv[])
      * Sorting contracted edges in a way that the static query graph can read some in in-place.
      */
 
-    std::sort(contracted_edge_list.begin(), contracted_edge_list.end());
+    tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
     unsigned max_used_node_id = 0;
     unsigned contracted_edge_count = contracted_edge_list.size();
     SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
