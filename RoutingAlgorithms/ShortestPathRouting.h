@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SHORTEST_PATH_ROUTING_H
 
 #include <boost/assert.hpp>
+#include <boost/range/irange.hpp>
 
 #include "BasicRoutingInterface.h"
 #include "../DataStructures/SearchEngineData.h"
@@ -73,7 +74,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         QueryHeap &forward_heap2 = *(engine_working_data.forwardHeap2);
         QueryHeap &reverse_heap2 = *(engine_working_data.backwardHeap2);
 
-        int current_leg = 0;
+        std::size_t current_leg = 0;
         // Get distance to next pair of target nodes.
         for (const PhantomNodes &phantom_node_pair : phantom_nodes_vector)
         {
@@ -308,24 +309,24 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         }
         raw_route_data.unpacked_path_segments.resize(packed_legs1.size());
 
-        for (unsigned i = 0; i < packed_legs1.size(); ++i)
+        for (const std::size_t index : boost::irange((std::size_t)0, packed_legs1.size()))
         {
             BOOST_ASSERT(!phantom_nodes_vector.empty());
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size());
 
-            PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[i];
+            PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[index];
             super::UnpackPath(
                 // -- packed input
-                packed_legs1[i],
+                packed_legs1[index],
                 // -- start and end of (sub-)route
                 unpack_phantom_node_pair,
                 // -- unpacked output
-                raw_route_data.unpacked_path_segments[i]);
+                raw_route_data.unpacked_path_segments[index]);
 
             raw_route_data.source_traversed_in_reverse.push_back(
-            (packed_legs1[i].front() != phantom_nodes_vector[i].source_phantom.forward_node_id));
+            (packed_legs1[index].front() != phantom_nodes_vector[index].source_phantom.forward_node_id));
             raw_route_data.target_traversed_in_reverse.push_back(
-            (packed_legs1[i].back() != phantom_nodes_vector[i].target_phantom.forward_node_id));
+            (packed_legs1[index].back() != phantom_nodes_vector[index].target_phantom.forward_node_id));
         }
         raw_route_data.shortest_path_length = std::min(distance1, distance2);
     }

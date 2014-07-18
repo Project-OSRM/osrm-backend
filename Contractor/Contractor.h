@@ -619,7 +619,7 @@ class Contractor
         NodeID target;
         ContractorGraph::EdgeData data;
 
-        for (auto i  = 0; i < temp_edge_counter; ++i)
+        for (uint64_t i = 0; i < temp_edge_counter; ++i)
         {
             temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&source, sizeof(NodeID));
             temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&target, sizeof(NodeID));
