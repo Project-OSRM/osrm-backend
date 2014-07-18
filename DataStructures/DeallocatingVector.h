@@ -50,14 +50,10 @@ template <typename ElementT> struct DeallocatingVectorIteratorState
     std::size_t index;
     std::vector<ElementT *> *bucket_list;
 
-    inline DeallocatingVectorIteratorState &operator=(const DeallocatingVectorIteratorState &a)
+    inline DeallocatingVectorIteratorState &operator=(const DeallocatingVectorIteratorState &other)
     {
-        if (this != &a)
-        {
-            this->DeallocatingVectorIteratorState::
-                ~DeallocatingVectorIteratorState();        // explicit non-virtual destructor call
-            new (this) DeallocatingVectorIteratorState(a); // placement new
-        }
+        index = other.index;
+        bucket_list = other.bucket_list;
         return *this;
     }
 };
@@ -100,6 +96,13 @@ class DeallocatingVectorIterator
     {
         const std::size_t current_bucket = current_state.index / ELEMENTS_PER_BLOCK;
         const std::size_t current_index = current_state.index % ELEMENTS_PER_BLOCK;
+        return (current_state.bucket_list->at(current_bucket)[current_index]);
+    }
+
+    ElementT &operator[](const std::size_t index) const
+    {
+        const std::size_t current_bucket = (index + current_state.index) / ELEMENTS_PER_BLOCK;
+        const std::size_t current_index = (index + current_state.index) % ELEMENTS_PER_BLOCK;
         return (current_state.bucket_list->at(current_bucket)[current_index]);
     }
 };
