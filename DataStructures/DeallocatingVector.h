@@ -234,11 +234,14 @@ class DeallocatingVector
             }
         }
         else
-        {
+        {   // down-size
             const std::size_t number_of_necessary_buckets = 1 + (new_size / ELEMENTS_PER_BLOCK);
-            for (auto bucket : bucket_list)
+            for (auto bucket_index : boost::irange(number_of_necessary_buckets, bucket_list.size()))
             {
-                delete[] bucket;
+                if (nullptr != bucket_list[bucket_index])
+                {
+                    delete[] bucket_list[bucket_index];
+                }
             }
             bucket_list.resize(number_of_necessary_buckets);
         }
