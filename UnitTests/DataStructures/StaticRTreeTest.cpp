@@ -340,7 +340,7 @@ void build_rtree(const std::string& prefix, FixtureT* fixture, std::string& leav
     node_stream.write((char *)&(fixture->nodes[0]), num_nodes * sizeof(NodeInfo));
     node_stream.close();
 
-    RTreeT::Build(fixture->edges, nodes_path, leaves_path, fixture->nodes);
+    RTreeT r(fixture->edges, nodes_path, leaves_path, fixture->nodes);
 }
 
 template<typename FixtureT, typename RTreeT=TestStaticRTree>

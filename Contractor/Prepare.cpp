@@ -170,10 +170,7 @@ int Prepare::Process(int argc, char *argv[])
 
     TIMER_STOP(expansion);
 
-    StaticRTree<EdgeBasedNode>::Build(node_based_edge_list,
-                                      rtree_nodes_path.c_str(),
-                                      rtree_leafs_path.c_str(),
-                                      internal_to_external_node_map);
+    BuildRTree(node_based_edge_list);
 
     IteratorbasedCRC32<std::vector<EdgeBasedNode>> crc32;
     const unsigned node_based_edge_list_CRC32 =
@@ -547,3 +544,16 @@ void Prepare::WriteNodeMapping()
     internal_to_external_node_map.shrink_to_fit();
 }
 
+/**
+    \brief Building rtree-based nearest-neighbor data structure
+
+    Saves info to files: '.ramIndex' and '.fileIndex'.
+ */
+void Prepare::BuildRTree(std::vector<EdgeBasedNode> &node_based_edge_list)
+{
+    SimpleLogger().Write() << "building r-tree ...";
+    StaticRTree<EdgeBasedNode>(node_based_edge_list,
+                               rtree_nodes_path.c_str(),
+                               rtree_leafs_path.c_str(),
+                               internal_to_external_node_map);
+}

@@ -40,6 +40,7 @@ class Prepare
                                 DeallocatingVector<EdgeBasedEdge> &edgeBasedEdgeList,
                                 EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
     void WriteNodeMapping();
+    void BuildRTree(std::vector<EdgeBasedNode> &node_based_edge_list);
 
   private:
     std::vector<NodeInfo> internal_to_external_node_map;

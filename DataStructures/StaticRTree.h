@@ -352,24 +352,24 @@ class StaticRTree
     StaticRTree(const StaticRTree &) = delete;
 
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
-    static void Build(std::vector<EdgeDataT> &input_data_vector,
+    explicit StaticRTree(std::vector<EdgeDataT> &input_data_vector,
                          const std::string tree_node_filename,
                          const std::string leaf_node_filename,
                          const std::vector<NodeInfo> &coordinate_list)
+        : m_element_count(input_data_vector.size()), m_leaf_node_filename(leaf_node_filename)
     {
-        uint64_t element_count = input_data_vector.size();
-        SimpleLogger().Write() << "constructing r-tree of " << element_count
+        SimpleLogger().Write() << "constructing r-tree of " << m_element_count
                                << " edge elements build on-top of " << coordinate_list.size()
                                << " coordinates";
 
         TIMER_START(construction);
-        std::vector<WrappedInputElement> input_wrapper_vector(element_count);
+        std::vector<WrappedInputElement> input_wrapper_vector(m_element_count);
 
         HilbertCode get_hilbert_number;
 
         // generate auxiliary vector of hilbert-values
         tbb::parallel_for(
-            tbb::blocked_range<uint64_t>(0, element_count),
+            tbb::blocked_range<uint64_t>(0, m_element_count),
             [&input_data_vector, &input_wrapper_vector, &get_hilbert_number, &coordinate_list](
                 const tbb::blocked_range<uint64_t> &range)
             {
@@ -396,7 +396,7 @@ class StaticRTree
 
         // open leaf file
         boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
-        leaf_node_file.write((char *) &element_count, sizeof(uint64_t));
+        leaf_node_file.write((char *)&m_element_count, sizeof(uint64_t));
 
         // sort the hilbert-value representatives
         tbb::parallel_sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
@@ -404,7 +404,7 @@ class StaticRTree
 
         // pack M elements into leaf node and write to leaf file
         uint64_t processed_objects_count = 0;
-        while (processed_objects_count < element_count)
+        while (processed_objects_count < m_element_count)
         {
 
             LeafNode current_leaf;
@@ -414,7 +414,7 @@ class StaticRTree
             for (uint32_t current_element_index = 0; LEAF_NODE_SIZE > current_element_index;
                  ++current_element_index)
             {
-                if (element_count > (processed_objects_count + current_element_index))
+                if (m_element_count > (processed_objects_count + current_element_index))
                 {
                     uint32_t index_of_next_object =
                         input_wrapper_vector[processed_objects_count + current_element_index]
@@ -440,8 +440,6 @@ class StaticRTree
         // close leaf file
         leaf_node_file.close();
 
-        typename ShM<TreeNode, UseSharedMemory>::vector search_tree;
-
         uint32_t processing_level = 0;
         while (1 < tree_nodes_in_level.size())
         {
@@ -460,8 +458,8 @@ class StaticRTree
                         TreeNode &current_child_node =
                             tree_nodes_in_level[processed_tree_nodes_in_level];
                         // add tree node to parent entry
-                        parent_node.children[current_child_node_index] = search_tree.size();
-                        search_tree.emplace_back(current_child_node);
+                        parent_node.children[current_child_node_index] = m_search_tree.size();
+                        m_search_tree.emplace_back(current_child_node);
                         // merge MBRs
                         parent_node.minimum_bounding_rectangle.MergeBoundingBoxes(
                             current_child_node.minimum_bounding_rectangle);
@@ -477,18 +475,18 @@ class StaticRTree
         }
         BOOST_ASSERT_MSG(1 == tree_nodes_in_level.size(), "tree broken, more than one root node");
         // last remaining entry is the root node, store it
-        search_tree.emplace_back(tree_nodes_in_level[0]);
+        m_search_tree.emplace_back(tree_nodes_in_level[0]);
 
         // reverse and renumber tree to have root at index 0
-        std::reverse(search_tree.begin(), search_tree.end());
+        std::reverse(m_search_tree.begin(), m_search_tree.end());
 
-        uint32_t search_tree_size = search_tree.size();
+        uint32_t search_tree_size = m_search_tree.size();
         tbb::parallel_for(tbb::blocked_range<uint32_t>(0, search_tree_size),
-        [&search_tree, &search_tree_size](const tbb::blocked_range<uint32_t> &range)
-        {
+                          [this, &search_tree_size](const tbb::blocked_range<uint32_t> &range)
+                          {
             for (uint32_t i = range.begin(); i != range.end(); ++i)
             {
-                TreeNode &current_tree_node = search_tree[i];
+                TreeNode &current_tree_node = this->m_search_tree[i];
                 for (uint32_t j = 0; j < current_tree_node.child_count; ++j)
                 {
                     const uint32_t old_id = current_tree_node.children[j];
@@ -501,10 +499,10 @@ class StaticRTree
         // open tree file
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);
 
-        uint32_t size_of_tree = search_tree.size();
+        uint32_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
-        tree_node_file.write((char *) &size_of_tree, sizeof(uint32_t));
-        tree_node_file.write((char *) &search_tree[0], sizeof(TreeNode) * size_of_tree);
+        tree_node_file.write((char *)&size_of_tree, sizeof(uint32_t));
+        tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
         // close tree node file.
         tree_node_file.close();
 
