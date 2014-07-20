@@ -26,10 +26,10 @@ typedef StaticRTree<TestData,
 
 // Choosen by a fair W20 dice roll (this value is completely arbitrary)
 constexpr unsigned RANDOM_SEED = 15;
-constexpr int32_t WORLD_MIN_LAT = -90*COORDINATE_PRECISION;
-constexpr int32_t WORLD_MAX_LAT = 90*COORDINATE_PRECISION;
-constexpr int32_t WORLD_MIN_LON = -180*COORDINATE_PRECISION;
-constexpr int32_t WORLD_MAX_LON = 180*COORDINATE_PRECISION;
+static const int32_t WORLD_MIN_LAT = -90*COORDINATE_PRECISION;
+static const int32_t WORLD_MAX_LAT = 90*COORDINATE_PRECISION;
+static const int32_t WORLD_MIN_LON = -180*COORDINATE_PRECISION;
+static const int32_t WORLD_MAX_LON = 180*COORDINATE_PRECISION;
 
 class LinearSearchNN
 {
@@ -168,11 +168,7 @@ private:
 };
 
 
-template<unsigned NUM_NODES, unsigned NUM_EDGES,
-         int32_t MIN_LON=WORLD_MIN_LON,
-         int32_t MAX_LON=WORLD_MAX_LON,
-         int32_t MIN_LAT=WORLD_MIN_LAT,
-         int32_t MAX_LAT=WORLD_MAX_LAT>
+template<unsigned NUM_NODES, unsigned NUM_EDGES>
 struct RandomGraphFixture
 {
     struct TupleHash
@@ -196,8 +192,8 @@ struct RandomGraphFixture
 
         std::mt19937 g(RANDOM_SEED);
 
-        std::uniform_int_distribution<> lat_udist(MIN_LAT, MAX_LAT);
-        std::uniform_int_distribution<> lon_udist(MIN_LON, MAX_LON);
+        std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
+        std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
 
         for (unsigned i = 0; i < NUM_NODES; i++)
         {
