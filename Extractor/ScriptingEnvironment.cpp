@@ -35,6 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <sstream>
+
 ScriptingEnvironment::ScriptingEnvironment() {}
 ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
 : file_name(file_name)
@@ -101,7 +103,10 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 
     if (0 != luaL_dofile(lua_state, file_name.c_str()))
     {
-        throw OSRMException("ERROR occured in scripting block");
+        luabind::object error_msg(luabind::from_stack(lua_state, -1));
+        std::ostringstream error_stream;
+        error_stream << error_msg;
+        throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
     }
 }
 
