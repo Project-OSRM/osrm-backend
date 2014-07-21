@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/SearchEngineData.h"
 
 #include <boost/assert.hpp>
+#include <boost/range/irange.hpp>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -98,8 +99,10 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
 
         int upper_bound_to_shortest_path_distance = INVALID_EDGE_WEIGHT;
         NodeID middle_node = SPECIAL_NODEID;
-        EdgeWeight min_edge_offset = std::min(0, -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset());
-        min_edge_offset = std::min(min_edge_offset, -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+        EdgeWeight min_edge_offset =
+            std::min(0, -phantom_node_pair.source_phantom.GetForwardWeightPlusOffset());
+        min_edge_offset = std::min(min_edge_offset,
+                                   -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
 
         if (phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
         {
@@ -112,8 +115,8 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         }
         if (phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID)
         {
-        //     SimpleLogger().Write(logDEBUG) << "fwd-b insert: " <<
-        //     phantom_node_pair.source_phantom.reverse_node_id << ", w: " <<
+            //     SimpleLogger().Write(logDEBUG) << "fwd-b insert: " <<
+            //     phantom_node_pair.source_phantom.reverse_node_id << ", w: " <<
             // -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             forward_heap1.Insert(phantom_node_pair.source_phantom.reverse_node_id,
                                  -phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
@@ -178,7 +181,8 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         super::RetrievePackedPathFromSingleHeap(reverse_heap1, middle_node, packed_reverse_path);
 
         // this set is is used as an indicator if a node is on the shortest path
-        std::unordered_set<NodeID> nodes_in_path(packed_forward_path.size() + packed_reverse_path.size());
+        std::unordered_set<NodeID> nodes_in_path(packed_forward_path.size() +
+                                                 packed_reverse_path.size());
         nodes_in_path.insert(packed_forward_path.begin(), packed_forward_path.end());
         nodes_in_path.insert(middle_node);
         nodes_in_path.insert(packed_reverse_path.begin(), packed_reverse_path.end());
@@ -199,9 +203,10 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
             }
             else
             {
-                // current edge is not on shortest path. Check if we know a value for the other endpoint
+                // current edge is not on shortest path. Check if we know a value for the other
+                // endpoint
                 const auto sharing_of_u_iterator = approximated_forward_sharing.find(u);
-                if(sharing_of_u_iterator != approximated_forward_sharing.end())
+                if (sharing_of_u_iterator != approximated_forward_sharing.end())
                 {
                     approximated_forward_sharing.emplace(v, sharing_of_u_iterator->second);
                 }
@@ -220,9 +225,10 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
             }
             else
             {
-                // current edge is not on shortest path. Check if we know a value for the other endpoint
+                // current edge is not on shortest path. Check if we know a value for the other
+                // endpoint
                 const auto sharing_of_u_iterator = approximated_reverse_sharing.find(u);
-                if(sharing_of_u_iterator != approximated_reverse_sharing.end())
+                if (sharing_of_u_iterator != approximated_reverse_sharing.end())
                 {
                     approximated_reverse_sharing.emplace(v, sharing_of_u_iterator->second);
                 }
@@ -275,10 +281,13 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         for (const NodeID node : preselected_node_list)
         {
             int length_of_via_path = 0, sharing_of_via_path = 0;
-            ComputeLengthAndSharingOfViaPath(
-                node, &length_of_via_path, &sharing_of_via_path, packed_shortest_path, min_edge_offset);
-            const int maximum_allowed_sharing = static_cast<int>(
-                upper_bound_to_shortest_path_distance * VIAPATH_GAMMA);
+            ComputeLengthAndSharingOfViaPath(node,
+                                             &length_of_via_path,
+                                             &sharing_of_via_path,
+                                             packed_shortest_path,
+                                             min_edge_offset);
+            const int maximum_allowed_sharing =
+                static_cast<int>(upper_bound_to_shortest_path_distance * VIAPATH_GAMMA);
             if (sharing_of_via_path <= maximum_allowed_sharing &&
                 length_of_via_path <= upper_bound_to_shortest_path_distance * (1 + VIAPATH_EPSILON))
             {
@@ -341,8 +350,8 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
                                         v_t_middle,
                                         packed_alternate_path);
 
-            raw_route_data.alt_source_traversed_in_reverse.push_back(
-                (packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id));
+            raw_route_data.alt_source_traversed_in_reverse.push_back((
+                packed_alternate_path.front() != phantom_node_pair.source_phantom.forward_node_id));
             raw_route_data.alt_target_traversed_in_reverse.push_back(
                 (packed_alternate_path.back() != phantom_node_pair.target_phantom.forward_node_id));
 
@@ -351,7 +360,9 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
                 packed_alternate_path, phantom_node_pair, raw_route_data.unpacked_alternative);
 
             raw_route_data.alternative_path_length = length_of_via_path;
-        } else {
+        }
+        else
+        {
             BOOST_ASSERT(raw_route_data.alternative_path_length == INVALID_EDGE_WEIGHT);
         }
     }
@@ -443,48 +454,52 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
 
         // partial unpacking, compute sharing
         // First partially unpack s-->v until paths deviate, note length of common path.
-        const unsigned s_v_min_path_size =
+        const int64_t s_v_min_path_size =
             std::min(packed_s_v_path.size(), packed_shortest_path.size()) - 1;
-        for (unsigned i = 0; i < s_v_min_path_size; ++i)
+        for (const int64_t current_node : boost::irange((int64_t)0, s_v_min_path_size))
         {
-            if (packed_s_v_path[i] == packed_shortest_path[i] &&
-                packed_s_v_path[i + 1] == packed_shortest_path[i + 1])
+            if (packed_s_v_path[current_node] == packed_shortest_path[current_node] &&
+                packed_s_v_path[current_node + 1] == packed_shortest_path[current_node + 1])
             {
-                EdgeID edgeID =
-                    facade->FindEdgeInEitherDirection(packed_s_v_path[i], packed_s_v_path[i + 1]);
+                EdgeID edgeID = facade->FindEdgeInEitherDirection(
+                    packed_s_v_path[current_node], packed_s_v_path[current_node + 1]);
                 *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
             }
             else
             {
-                if (packed_s_v_path[i] == packed_shortest_path[i])
+                if (packed_s_v_path[current_node] == packed_shortest_path[current_node])
                 {
-                    super::UnpackEdge(
-                        packed_s_v_path[i], packed_s_v_path[i + 1], partially_unpacked_via_path);
-                    super::UnpackEdge(packed_shortest_path[i],
-                                      packed_shortest_path[i + 1],
+                    super::UnpackEdge(packed_s_v_path[current_node],
+                                      packed_s_v_path[current_node + 1],
+                                      partially_unpacked_via_path);
+                    super::UnpackEdge(packed_shortest_path[current_node],
+                                      packed_shortest_path[current_node + 1],
                                       partially_unpacked_shortest_path);
                     break;
                 }
             }
         }
         // traverse partially unpacked edge and note common prefix
-        for (int i = 0,
-                 packed_path_length = std::min(partially_unpacked_via_path.size(),
-                                               partially_unpacked_shortest_path.size()) -
-                                      1;
-             (i < packed_path_length) &&
-                 (partially_unpacked_via_path[i] == partially_unpacked_shortest_path[i] &&
-                  partially_unpacked_via_path[i + 1] == partially_unpacked_shortest_path[i + 1]);
-             ++i)
+        const int64_t packed_path_length =
+            std::min(partially_unpacked_via_path.size(), partially_unpacked_shortest_path.size()) -
+            1;
+        for (int64_t current_node = 0;
+             (current_node < packed_path_length) &&
+                 (partially_unpacked_via_path[current_node] ==
+                      partially_unpacked_shortest_path[current_node] &&
+                  partially_unpacked_via_path[current_node + 1] ==
+                      partially_unpacked_shortest_path[current_node + 1]);
+             ++current_node)
         {
-            EdgeID edgeID = facade->FindEdgeInEitherDirection(partially_unpacked_via_path[i],
-                                                              partially_unpacked_via_path[i + 1]);
-            *sharing_of_via_path += facade->GetEdgeData(edgeID).distance;
+            EdgeID selected_edge =
+                facade->FindEdgeInEitherDirection(partially_unpacked_via_path[current_node],
+                                                  partially_unpacked_via_path[current_node + 1]);
+            *sharing_of_via_path += facade->GetEdgeData(selected_edge).distance;
         }
 
         // Second, partially unpack v-->t in reverse order until paths deviate and note lengths
-        int via_path_index = packed_v_t_path.size() - 1;
-        int shortest_path_index = packed_shortest_path.size() - 1;
+        int64_t via_path_index = packed_v_t_path.size() - 1;
+        int64_t shortest_path_index = packed_shortest_path.size() - 1;
         for (; via_path_index > 0 && shortest_path_index > 0;
              --via_path_index, --shortest_path_index)
         {
@@ -593,9 +608,11 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
         // const NodeID parentnode = forward_heap.GetData(node).parent;
-        // SimpleLogger().Write() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled edge (" << parentnode << "," << node << "), dist: " << distance;
+        // SimpleLogger().Write() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled edge ("
+        // << parentnode << "," << node << "), dist: " << distance;
 
-        const int scaled_distance = static_cast<int>((distance + min_edge_offset) / (1. + VIAPATH_EPSILON));
+        const int scaled_distance =
+            static_cast<int>((distance + min_edge_offset) / (1. + VIAPATH_EPSILON));
         if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_distance) &&
             (scaled_distance > *upper_bound_to_shortest_path_distance))
         {
@@ -615,9 +632,11 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
                 {
                     *middle_node = node;
                     *upper_bound_to_shortest_path_distance = new_distance;
-                //     SimpleLogger().Write() << "accepted middle_node " << *middle_node << " at distance " << new_distance;
-                // } else {
-                //     SimpleLogger().Write() << "discarded middle_node " << *middle_node << " at distance " << new_distance;
+                    //     SimpleLogger().Write() << "accepted middle_node " << *middle_node << " at
+                    //     distance " << new_distance;
+                    // } else {
+                    //     SimpleLogger().Write() << "discarded middle_node " << *middle_node << "
+                    //     at distance " << new_distance;
                 }
             }
         }
@@ -868,11 +887,13 @@ template <class DataFacadeT> class AlternativeRouting : private BasicRoutingInte
         {
             if (!forward_heap3.Empty())
             {
-                super::RoutingStep(forward_heap3, reverse_heap3, &middle, &upper_bound, min_edge_offset, true);
+                super::RoutingStep(
+                    forward_heap3, reverse_heap3, &middle, &upper_bound, min_edge_offset, true);
             }
             if (!reverse_heap3.Empty())
             {
-                super::RoutingStep(reverse_heap3, forward_heap3, &middle, &upper_bound, min_edge_offset, false);
+                super::RoutingStep(
+                    reverse_heap3, forward_heap3, &middle, &upper_bound, min_edge_offset, false);
             }
         }
         return (upper_bound <= t_test_path_length);
