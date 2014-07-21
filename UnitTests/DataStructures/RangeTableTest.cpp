@@ -1,8 +1,9 @@
+#include "../../DataStructures/RangeTable.h"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 
-#include "../../DataStructures/RangeTable.h"
+#include <numeric>
 
 constexpr unsigned BLOCK_SIZE = 16;
 typedef RangeTable<BLOCK_SIZE, false> TestRangeTable;
