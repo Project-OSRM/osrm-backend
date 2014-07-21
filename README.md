@@ -2,7 +2,7 @@
 
 For instructions on how to compile and run OSRM, please consult the Wiki at
 
-https://github.com/DennisOSRM/Project-OSRM/wiki
+https://github.com/Project-OSRM/osrm-backend/wiki
 
 or use our free and daily updated online service at
 
@@ -35,6 +35,7 @@ When using the code in a (scientific) publication, please cite
 
 | build config |  branch | status |
 |:-------------|:--------|:------------|
-| Project OSRM | master  | [![Build Status](https://travis-ci.org/DennisOSRM/Project-OSRM.png?branch=master)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
-| Project OSRM | develop | [![Build Status](https://travis-ci.org/DennisOSRM/Project-OSRM.png?branch=develop)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
+| Linux        | master  | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
+| Lunux        | develop | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=develop)](https://travis-ci.org/DennisOSRM/Project-OSRM) |
+| Windows      | master/develop | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
 | LUAbind fork | master  | [![Build Status](https://travis-ci.org/DennisOSRM/luabind.png?branch=master)](https://travis-ci.org/DennisOSRM/luabind) |
