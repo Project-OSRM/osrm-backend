@@ -242,18 +242,18 @@ template <class DataFacadeT> class BasicRoutingInterface
                     facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id),
                                                     id_vector);
 
-                    const int start_index =
+                    const std::size_t start_index =
                         (unpacked_path.empty()
                              ? ((start_traversed_in_reverse)
                                     ? id_vector.size() -
                                           phantom_node_pair.source_phantom.fwd_segment_position - 1
                                     : phantom_node_pair.source_phantom.fwd_segment_position)
                              : 0);
-                    const int end_index = id_vector.size();
+                    const std::size_t end_index = id_vector.size();
 
                     BOOST_ASSERT(start_index >= 0);
                     BOOST_ASSERT(start_index <= end_index);
-                    for (int i = start_index; i < end_index; ++i)
+                    for (std::size_t i = start_index; i < end_index; ++i)
                     {
                         unpacked_path.emplace_back(id_vector[i], name_index, TurnInstruction::NoTurn, 0);
                     }
@@ -267,21 +267,11 @@ template <class DataFacadeT> class BasicRoutingInterface
             std::vector<unsigned> id_vector;
             facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.packed_geometry_id,
                                             id_vector);
-            if (target_traversed_in_reverse)
-            {
-                std::reverse(id_vector.begin(), id_vector.end());
-            }
             const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id ==
                                         phantom_node_pair.target_phantom.packed_geometry_id) &&
                                        unpacked_path.empty();
 
-            int start_index = 0;
-            int end_index = phantom_node_pair.target_phantom.fwd_segment_position;
-            if (target_traversed_in_reverse)
-            {
-                end_index =
-                    id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
-            }
+            std::size_t start_index = 0;
             if (is_local_path)
             {
                 start_index = phantom_node_pair.source_phantom.fwd_segment_position;
@@ -289,16 +279,26 @@ template <class DataFacadeT> class BasicRoutingInterface
                 {
                     start_index =
                         id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position;
-                    end_index =
-                        id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
                 }
             }
 
-            BOOST_ASSERT(start_index >= 0);
-            for (int i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
+            std::size_t end_index = phantom_node_pair.target_phantom.fwd_segment_position;
+            if (target_traversed_in_reverse)
             {
-                BOOST_ASSERT(i >= -1);
-                BOOST_ASSERT(i < (int)id_vector.size());
+                std::reverse(id_vector.begin(), id_vector.end());
+                end_index =
+                    id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
+            }
+
+            if (start_index > end_index)
+            {
+                start_index = std::min(start_index, id_vector.size()-1);
+            }
+
+            SimpleLogger().Write() << "start_index: " << start_index << ", end_index: " << end_index;
+            for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
+            {
+                BOOST_ASSERT(i < id_vector.size());
                 unpacked_path.emplace_back(PathData{id_vector[i],
                                            phantom_node_pair.target_phantom.name_id,
                                            TurnInstruction::NoTurn,
