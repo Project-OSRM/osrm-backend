@@ -313,8 +313,8 @@ template <class DataFacadeT> class BasicRoutingInterface
         // the last node.
         if (unpacked_path.size() > 1)
         {
-            const unsigned last_index = unpacked_path.size() - 1;
-            const unsigned second_to_last_index = last_index - 1;
+            const std::size_t last_index = unpacked_path.size() - 1;
+            const std::size_t second_to_last_index = last_index - 1;
 
             // looks like a trivially true check but tests for underflow
             BOOST_ASSERT(last_index > second_to_last_index);
