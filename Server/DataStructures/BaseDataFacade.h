@@ -95,16 +95,16 @@ template <class EdgeDataT> class BaseDataFacade
 
     virtual bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                                     FixedPointCoordinate &result,
-                                                    const unsigned zoom_level = 18) const = 0;
+                                                    const unsigned zoom_level = 18) = 0;
 
     virtual bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                               PhantomNode &resulting_phantom_node,
-                                              const unsigned zoom_level) const = 0;
+                                              const unsigned zoom_level) = 0;
 
     virtual bool IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                               std::vector<PhantomNode> &resulting_phantom_node_vector,
                                               const unsigned zoom_level,
-                                              const unsigned number_of_results) const = 0;
+                                              const unsigned number_of_results) = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 

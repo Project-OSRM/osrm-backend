@@ -117,7 +117,8 @@ public:
         {
             // the last value is used as sentinel
             block_offsets.push_back(lengths_prefix_sum);
-            block_idx = (block_idx + 1) % BLOCK_SIZE;
+            block_idx = 1;
+            last_length = 0;
         }
 
         while (0 != block_idx)
