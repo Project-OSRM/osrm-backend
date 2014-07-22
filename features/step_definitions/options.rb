@@ -47,3 +47,7 @@ end
 Then /^stdout should contain (\d+) lines?$/ do |lines|
   expect(@stdout.lines.count).to eq( lines.to_i )
 end
+
+Given (/^the query options$/) do |table|
+  @query_params = table.rows_hash
+end
