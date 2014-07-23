@@ -42,7 +42,7 @@ build_script:
   - msbuild /clp:Verbosity=minimal /nologo tests.vcxproj
   - if "%APPVEYOR_REPO_BRANCH%"=="develop" (7z a %P%/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip)
   - set PATH=%PATH%;c:/projects/osrm/libs/bin
-  - cd c:/projects/osrm/build
+  - cd c:/projects/osrm/build/%Configuration%
   - datastructure-tests.exe
 
 test: off
