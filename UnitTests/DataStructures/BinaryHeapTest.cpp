@@ -15,22 +15,20 @@ struct TestData
 };
 
 typedef NodeID TestNodeID;
-typedef int    TestKey;
-typedef int    TestWeight;
+typedef int TestKey;
+typedef int TestWeight;
 typedef boost::mpl::list<ArrayStorage<TestNodeID, TestKey>,
                          MapStorage<TestNodeID, TestKey>,
                          UnorderedMapStorage<TestNodeID, TestKey>> storage_types;
 
-
-template<unsigned NUM_ELEM>
-struct RandomDataFixture
+template <unsigned NUM_ELEM> struct RandomDataFixture
 {
     RandomDataFixture()
     {
         for (unsigned i = 0; i < NUM_ELEM; i++)
         {
-            data.push_back(TestData {i*3});
-            weights.push_back((i+1)*100);
+            data.push_back(TestData{i * 3});
+            weights.push_back((i + 1) * 100);
             ids.push_back(i);
             order.push_back(i);
         }
@@ -41,10 +39,10 @@ struct RandomDataFixture
         std::shuffle(order.begin(), order.end(), g);
     }
 
-    std::vector<TestData>   data;
+    std::vector<TestData> data;
     std::vector<TestWeight> weights;
     std::vector<TestNodeID> ids;
-    std::vector<unsigned>   order;
+    std::vector<unsigned> order;
 };
 
 constexpr unsigned NUM_NODES = 100;
@@ -74,10 +72,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(insert_test, T, storage_types, RandomDataFixtur
 
     for (auto id : ids)
     {
-        const auto& d = heap.GetData(id);
+        const auto &d = heap.GetData(id);
         BOOST_CHECK_EQUAL(d.value, data[id].value);
 
-        const auto& w = heap.GetKey(id);
+        const auto &w = heap.GetKey(id);
         BOOST_CHECK_EQUAL(w, weights[id]);
     }
 }
@@ -97,8 +95,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(delete_min_test, T, storage_types, RandomDataFi
 
         BOOST_CHECK_EQUAL(heap.Min(), id);
         BOOST_CHECK_EQUAL(id, heap.DeleteMin());
-        if (id+1 < NUM_NODES)
-            BOOST_CHECK_EQUAL(heap.Min(), id+1);
+        if (id + 1 < NUM_NODES)
+            BOOST_CHECK_EQUAL(heap.Min(), id + 1);
 
         BOOST_CHECK(heap.WasRemoved(id));
     }
@@ -151,4 +149,3 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, storage_types, RandomData
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

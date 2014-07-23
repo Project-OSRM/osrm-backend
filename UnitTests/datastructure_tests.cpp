@@ -5,4 +5,3 @@
 /*
  * This file will contain an automatically generated main function.
  */
-

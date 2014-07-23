@@ -21,17 +21,18 @@ void ConstructionTest(std::vector<unsigned> lengths, std::vector<unsigned> offse
     {
         auto range = table.GetRange(i);
         BOOST_CHECK_EQUAL(range.front(), offsets[i]);
-        BOOST_CHECK_EQUAL(range.back()+1, offsets[i+1]);
+        BOOST_CHECK_EQUAL(range.back() + 1, offsets[i + 1]);
     }
 }
 
-void ComputeLengthsOffsets(std::vector<unsigned>& lengths, std::vector<unsigned>& offsets, unsigned num)
+void
+ComputeLengthsOffsets(std::vector<unsigned> &lengths, std::vector<unsigned> &offsets, unsigned num)
 {
     lengths.resize(num);
-    offsets.resize(num+1);
+    offsets.resize(num + 1);
     std::iota(lengths.begin(), lengths.end(), 1);
     offsets[0] = 0;
-    std::partial_sum(lengths.begin(), lengths.end(), offsets.begin()+1);
+    std::partial_sum(lengths.begin(), lengths.end(), offsets.begin() + 1);
 
     std::stringstream l_ss;
     l_ss << "Lengths: ";
@@ -49,7 +50,7 @@ BOOST_AUTO_TEST_CASE(serialization_test)
 {
     std::vector<unsigned> lengths;
     std::vector<unsigned> offsets;
-    ComputeLengthsOffsets(lengths, offsets, (BLOCK_SIZE+1)*10);
+    ComputeLengthsOffsets(lengths, offsets, (BLOCK_SIZE + 1) * 10);
 
     TestRangeTable in_table(lengths);
     TestRangeTable out_table;
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(serialization_test)
     {
         auto range = out_table.GetRange(i);
         BOOST_CHECK_EQUAL(range.front(), offsets[i]);
-        BOOST_CHECK_EQUAL(range.back()+1, offsets[i+1]);
+        BOOST_CHECK_EQUAL(range.back() + 1, offsets[i + 1]);
     }
 }
 
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(construction_test)
     // [(153)] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     std::vector<unsigned> full_lengths;
     std::vector<unsigned> full_offsets;
-    ComputeLengthsOffsets(full_lengths, full_offsets, BLOCK_SIZE+1);
+    ComputeLengthsOffsets(full_lengths, full_offsets, BLOCK_SIZE + 1);
     ConstructionTest(full_lengths, full_offsets);
 
     // first block full and offset of next block not sentinel, but the first differential value
@@ -90,13 +91,13 @@ BOOST_AUTO_TEST_CASE(construction_test)
     // [153] {(17), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     std::vector<unsigned> over_full_lengths;
     std::vector<unsigned> over_full_offsets;
-    ComputeLengthsOffsets(over_full_lengths, over_full_offsets, BLOCK_SIZE+2);
+    ComputeLengthsOffsets(over_full_lengths, over_full_offsets, BLOCK_SIZE + 2);
     ConstructionTest(over_full_lengths, over_full_offsets);
 
     // test multiple blocks
     std::vector<unsigned> multiple_lengths;
     std::vector<unsigned> multiple_offsets;
-    ComputeLengthsOffsets(multiple_lengths, multiple_offsets, (BLOCK_SIZE+1)*10);
+    ComputeLengthsOffsets(multiple_lengths, multiple_offsets, (BLOCK_SIZE + 1) * 10);
     ConstructionTest(multiple_lengths, multiple_offsets);
 }
 
