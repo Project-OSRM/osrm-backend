@@ -1,8 +1,10 @@
 #include "../../DataStructures/StaticRTree.h"
 #include "../../DataStructures/QueryNode.h"
 #include "../../DataStructures/EdgeBasedNode.h"
-#include "../../Include/osrm/Coordinate.h"
+#include "../../Util/NumericUtil.h"
 #include "../../typedefs.h"
+
+#include <osrm/Coordinate.h>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -154,12 +156,6 @@ public:
         }
 
         return result_phantom_node.location.isValid();
-    }
-
-    template<typename FloatT>
-    inline bool EpsilonCompare(const FloatT d1, const FloatT d2) const
-    {
-        return (std::abs(d1 - d2) < std::numeric_limits<FloatT>::epsilon());
     }
 
 private:
