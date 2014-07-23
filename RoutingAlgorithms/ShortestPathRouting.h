@@ -89,7 +89,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             middle2 = UINT_MAX;
 
             const bool allow_u_turn = current_leg > 0 && uturn_indicators.size() > current_leg && uturn_indicators[current_leg-1];
-            int min_edge_offset = 0;
+            EdgeWeight min_edge_offset = 0;
 
             // insert new starting nodes into forward heap, adjusted by previous distances.
             if ((allow_u_turn || search_from_1st_node) &&
