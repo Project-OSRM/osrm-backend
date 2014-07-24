@@ -989,7 +989,7 @@ class Contractor
 
     std::shared_ptr<ContractorGraph> contractor_graph;
     std::vector<ContractorGraph::InputEdge> contracted_edge_list;
-    unsigned edge_storage_slot;
+    std::size_t edge_storage_slot;
     uint64_t temp_edge_counter;
     std::vector<NodeID> orig_node_id_to_new_id_map;
     XORFastHash fast_hash;

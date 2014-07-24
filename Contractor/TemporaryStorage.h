@@ -70,10 +70,10 @@ class TemporaryStorage
     static TemporaryStorage &GetInstance();
     virtual ~TemporaryStorage();
 
-    int AllocateSlot();
-    void DeallocateSlot(const int slot_id);
-    void WriteToSlot(const int slot_id, char *pointer, const std::size_t size);
-    void ReadFromSlot(const int slot_id, char *pointer, const std::size_t size);
+    std::size_t AllocateSlot();
+    void DeallocateSlot(const std::size_t slot_id);
+    void WriteToSlot(const std::size_t slot_id, char *pointer, const std::size_t size);
+    void ReadFromSlot(const std::size_t slot_id, char *pointer, const std::size_t size);
     // returns the number of free bytes
     uint64_t GetFreeBytesOnTemporaryDevice();
     boost::filesystem::fstream::pos_type Tell(const int slot_id);

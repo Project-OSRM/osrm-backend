@@ -27,6 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "TemporaryStorage.h"
 
+#include <boost/range/irange.hpp>
+
+
 StreamData::StreamData()
     : write_mode(true),
       temp_path(boost::filesystem::unique_path(temp_directory / TemporaryFilePattern)),
@@ -53,14 +56,14 @@ TemporaryStorage::~TemporaryStorage() { RemoveAll(); }
 void TemporaryStorage::RemoveAll()
 {
     boost::mutex::scoped_lock lock(mutex);
-    for (unsigned slot_id = 0; slot_id < stream_data_list.size(); ++slot_id)
+    for (const auto slot_id : boost::irange((std::size_t)0, stream_data_list.size()))
     {
         DeallocateSlot(slot_id);
     }
     stream_data_list.clear();
 }
 
-int TemporaryStorage::AllocateSlot()
+std::size_t TemporaryStorage::AllocateSlot()
 {
     boost::mutex::scoped_lock lock(mutex);
     try { stream_data_list.push_back(StreamData()); }
@@ -69,7 +72,7 @@ int TemporaryStorage::AllocateSlot()
     return stream_data_list.size() - 1;
 }
 
-void TemporaryStorage::DeallocateSlot(const int slot_id)
+void TemporaryStorage::DeallocateSlot(const std::size_t slot_id)
 {
     try
     {
@@ -89,7 +92,7 @@ void TemporaryStorage::DeallocateSlot(const int slot_id)
     catch (boost::filesystem::filesystem_error &e) { Abort(e); }
 }
 
-void TemporaryStorage::WriteToSlot(const int slot_id, char *pointer, const std::size_t size)
+void TemporaryStorage::WriteToSlot(const std::size_t slot_id, char *pointer, const std::size_t size)
 {
     try
     {
@@ -109,7 +112,7 @@ void TemporaryStorage::WriteToSlot(const int slot_id, char *pointer, const std::
     }
     catch (boost::filesystem::filesystem_error &e) { Abort(e); }
 }
-void TemporaryStorage::ReadFromSlot(const int slot_id, char *pointer, const std::size_t size)
+void TemporaryStorage::ReadFromSlot(const std::size_t slot_id, char *pointer, const std::size_t size)
 {
     try
     {
