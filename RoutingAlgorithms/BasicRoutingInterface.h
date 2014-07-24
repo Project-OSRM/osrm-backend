@@ -388,20 +388,10 @@ template <class DataFacadeT> class BasicRoutingInterface
                                            const NodeID middle_node_id,
                                            std::vector<NodeID> &packed_path) const
     {
-        NodeID current_node_id = middle_node_id;
-        while (current_node_id != forward_heap.GetData(current_node_id).parent)
-        {
-            current_node_id = forward_heap.GetData(current_node_id).parent;
-            packed_path.emplace_back(current_node_id);
-        }
+        RetrievePackedPathFromSingleHeap(forward_heap, middle_node_id, packed_path);
         std::reverse(packed_path.begin(), packed_path.end());
         packed_path.emplace_back(middle_node_id);
-        current_node_id = middle_node_id;
-        while (current_node_id != reverse_heap.GetData(current_node_id).parent)
-        {
-            current_node_id = reverse_heap.GetData(current_node_id).parent;
-            packed_path.emplace_back(current_node_id);
-        }
+        RetrievePackedPathFromSingleHeap(reverse_heap, middle_node_id, packed_path);
     }
 
     inline void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
