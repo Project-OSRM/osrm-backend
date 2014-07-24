@@ -975,8 +975,8 @@ class Contractor
     // This bias function takes up 22 assembly instructions in total on X86
     inline bool bias(const NodeID a, const NodeID b) const
     {
-        unsigned short hasha = fast_hash(a);
-        unsigned short hashb = fast_hash(b);
+        const unsigned short hasha = fast_hash(a);
+        const unsigned short hashb = fast_hash(b);
 
         // The compiler optimizes that to conditional register flags but without branching
         // statements!
