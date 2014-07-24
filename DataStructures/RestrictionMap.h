@@ -103,7 +103,7 @@ class RestrictionMap
     NodeID CheckForEmanatingIsOnlyTurn(const NodeID u, const NodeID v) const;
     bool CheckIfTurnIsRestricted(const NodeID u, const NodeID v, const NodeID w) const;
     bool IsViaNode(const NodeID node) const;
-    unsigned size()
+    std::size_t size()
     {
         return m_count;
     }
@@ -113,7 +113,7 @@ class RestrictionMap
     typedef std::vector<RestrictionTarget> EmanatingRestrictionsVector;
     typedef NodeBasedDynamicGraph::EdgeData EdgeData;
 
-    unsigned m_count;
+    std::size_t m_count;
     std::shared_ptr<NodeBasedDynamicGraph> m_graph;
     //! index -> list of (target, isOnly)
     std::vector<EmanatingRestrictionsVector> m_restriction_bucket_list;
