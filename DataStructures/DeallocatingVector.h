@@ -296,6 +296,17 @@ class DeallocatingVector
         const std::size_t _index = current_size % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
+
+    template<class InputIterator>
+    const inline void append(InputIterator first, const InputIterator last)
+    {
+        InputIterator position = first;
+        while (position != last)
+        {
+            push_back(*position);
+            ++position;
+        }
+    }
 };
 
 #endif /* DEALLOCATINGVECTOR_H_ */

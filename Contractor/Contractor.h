@@ -28,19 +28,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef CONTRACTOR_H
 #define CONTRACTOR_H
 
-#include "TemporaryStorage.h"
 #include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/DynamicGraph.h"
 #include "../DataStructures/Percent.h"
+#include "../DataStructures/QueryEdge.h"
 #include "../DataStructures/XORFastHash.h"
 #include "../DataStructures/XORFastHashStorage.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
+#include "../typedefs.h"
 
 #include <boost/assert.hpp>
 #include <boost/range/irange.hpp>
+
+#include <stxxl/vector>
 
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
@@ -157,7 +160,6 @@ class Contractor
     {
         std::vector<ContractorEdge> edges;
         edges.reserve(input_edge_list.size() * 2);
-        temp_edge_counter = 0;
 
         const auto dend = input_edge_list.dend();
         for (auto diter = input_edge_list.dbegin(); diter != dend; ++diter)
@@ -279,13 +281,10 @@ class Contractor
         //            << "); via: " << contractor_graph->GetEdgeData(i).via;
         //        }
 
-        // Create temporary file
-
-        edge_storage_slot = TemporaryStorage::GetInstance().AllocateSlot();
         std::cout << "contractor finished initalization" << std::endl;
     }
 
-    ~Contractor() { TemporaryStorage::GetInstance().DeallocateSlot(edge_storage_slot); }
+    ~Contractor() { }
 
     void Run()
     {
@@ -370,7 +369,6 @@ class Contractor
                         node_priorities[remaining_nodes[new_node_id].id];
                     remaining_nodes[new_node_id].id = new_node_id;
                 }
-                TemporaryStorage &temporary_storage = TemporaryStorage::GetInstance();
                 // walk over all nodes
                 for (const auto i : boost::irange(0u, (unsigned)contractor_graph->GetNumberOfNodes()))
                 {
@@ -382,15 +380,7 @@ class Contractor
                         const NodeID target = contractor_graph->GetTarget(current_edge);
                         if (SPECIAL_NODEID == new_node_id_from_orig_id_map[i])
                         {
-                            // Save edges of this node w/o renumbering.
-                            temporary_storage.WriteToSlot(
-                                edge_storage_slot, (char *)&source, sizeof(NodeID));
-                            temporary_storage.WriteToSlot(
-                                edge_storage_slot, (char *)&target, sizeof(NodeID));
-                            temporary_storage.WriteToSlot(edge_storage_slot,
-                                                          (char *)&data,
-                                                          sizeof(ContractorGraph::EdgeData));
-                            ++temp_edge_counter;
+                            external_edge_list.push_back({source, target, data});
                         }
                         else
                         {
@@ -612,22 +602,8 @@ class Contractor
         orig_node_id_to_new_id_map.shrink_to_fit();
 
         BOOST_ASSERT(0 == orig_node_id_to_new_id_map.capacity());
-        TemporaryStorage &temporary_storage = TemporaryStorage::GetInstance();
 
-        // loads edges of graph before renumbering, no need for further numbering action.
-        NodeID source;
-        NodeID target;
-        ContractorGraph::EdgeData data;
-
-        for (uint64_t i = 0; i < temp_edge_counter; ++i)
-        {
-            temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&source, sizeof(NodeID));
-            temporary_storage.ReadFromSlot(edge_storage_slot, (char *)&target, sizeof(NodeID));
-            temporary_storage.ReadFromSlot(
-                edge_storage_slot, (char *)&data, sizeof(ContractorGraph::EdgeData));
-            edges.emplace_back(source, target, data);
-        }
-        temporary_storage.DeallocateSlot(edge_storage_slot);
+        edges.append(external_edge_list.begin(), external_edge_list.end());
     }
 
   private:
@@ -989,8 +965,7 @@ class Contractor
 
     std::shared_ptr<ContractorGraph> contractor_graph;
     std::vector<ContractorGraph::InputEdge> contracted_edge_list;
-    std::size_t edge_storage_slot;
-    uint64_t temp_edge_counter;
+    stxxl::vector<QueryEdge> external_edge_list;
     std::vector<NodeID> orig_node_id_to_new_id_map;
     XORFastHash fast_hash;
 };

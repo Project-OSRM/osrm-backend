@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/filesystem/fstream.hpp>
+#include <boost/program_options.hpp>
 #include <boost/range.hpp>
 
 #include <tbb/task_scheduler_init.h>
