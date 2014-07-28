@@ -604,6 +604,7 @@ class Contractor
         BOOST_ASSERT(0 == orig_node_id_to_new_id_map.capacity());
 
         edges.append(external_edge_list.begin(), external_edge_list.end());
+        external_edge_list.clear();
     }
 
   private:
