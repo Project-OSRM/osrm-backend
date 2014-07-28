@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Server.h"
 #include "../Util/SimpleLogger.h"
-#include "../Util/SmartPointerUtil.h"
 
 #include <zlib.h>
 
