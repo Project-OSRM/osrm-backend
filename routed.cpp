@@ -131,7 +131,7 @@ int main(int argc, const char *argv[])
 #endif
 
         OSRM osrm_lib(server_paths, use_shared_memory);
-        auto routing_server =
+        Server *routing_server =
             ServerFactory::CreateServer(ip_address, ip_port, requested_thread_num);
 
         routing_server->GetRequestHandlerPtr().RegisterRoutingMachine(&osrm_lib);
@@ -181,7 +181,7 @@ int main(int argc, const char *argv[])
         }
 
         SimpleLogger().Write() << "freeing objects";
-        routing_server.reset();
+        delete routing_server;
         SimpleLogger().Write() << "shutdown completed";
     }
     catch (const std::exception &e)
