@@ -242,9 +242,9 @@ class TarjanSCC
         std::vector<TarjanNode> tarjan_node_list(m_node_based_graph->GetNumberOfNodes());
         unsigned component_index = 0, size_of_current_component = 0;
         int index = 0;
-        NodeID last_node = m_node_based_graph->GetNumberOfNodes();
+        const NodeID last_node = m_node_based_graph->GetNumberOfNodes();
         std::vector<bool> processing_node_before_recursion(m_node_based_graph->GetNumberOfNodes(), true);
-        for (NodeID node = 0; node < last_node; ++node)
+        for(const NodeID node : boost::irange(0u, last_node))
         {
             if (UINT_MAX == components_index[node])
             {
@@ -259,7 +259,9 @@ class TarjanSCC
                 const bool before_recursion = processing_node_before_recursion[v];
 
                 if (before_recursion && tarjan_node_list[v].index != UINT_MAX)
+                {
                     continue;
+                }
 
                 if (before_recursion)
                 {
