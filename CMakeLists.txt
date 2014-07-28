@@ -304,10 +304,13 @@ if(WITH_TOOLS OR BUILD_TOOLS)
   if(UNIX AND NOT APPLE)
     target_link_libraries(osrm-unlock-all rt)
   endif()
+  add_executable(osrm-check-hsgr Tools/check-hsgr.cpp)
+  target_link_libraries(osrm-check-hsgr ${Boost_LIBRARIES} GITDESCRIPTION FINGERPRINT)
 
   install(TARGETS osrm-cli DESTINATION bin)
   install(TARGETS osrm-io-benchmark DESTINATION bin)
   install(TARGETS osrm-unlock-all DESTINATION bin)
+  install(TARGETS osrm-check-hsgr DESTINATION bin)
 endif()
 
 file(GLOB InstallGlob Include/osrm/*.h Library/OSRM.h)

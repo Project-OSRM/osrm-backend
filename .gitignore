@@ -79,6 +79,7 @@ stxxl.errlog
 /osrm-prepare
 /osrm-unlock-all
 /osrm-cli
+/osrm-check-hsgr
 /nohup.out
 
 # Sandbox folder #

@@ -127,39 +127,6 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
         node_array.swap(nodes);
         edge_array.swap(edges);
-
-#ifndef NDEBUG
-        Percent p(GetNumberOfNodes());
-        for (const auto u : boost::irange(0u, GetNumberOfNodes()))
-        {
-            for (auto eid : GetAdjacentEdgeRange(u))
-            {
-                const EdgeData &data = GetEdgeData(eid);
-                if (!data.shortcut)
-                {
-                    continue;
-                }
-                const unsigned v = GetTarget(eid);
-                const EdgeID first_edge_id = FindEdgeInEitherDirection(u, data.id);
-                if (SPECIAL_EDGEID == first_edge_id)
-                {
-                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge ("
-                                                     << u << "," << data.id << "," << v
-                                                     << "), eid: " << eid;
-                    BOOST_ASSERT(false);
-                }
-                const EdgeID second_edge_id = FindEdgeInEitherDirection(data.id, v);
-                if (SPECIAL_EDGEID == second_edge_id)
-                {
-                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge ("
-                                                     << u << "," << data.id << "," << v
-                                                     << "), eid: " << eid;
-                    BOOST_ASSERT(false);
-                }
-            }
-            p.printIncrement();
-        }
-#endif
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
