@@ -63,7 +63,7 @@ class Server
             boost::bind(&Server::HandleAccept, this, boost::asio::placeholders::error));
     }
 
-    Server() = delete;
+    // Server() = delete;
     // Server(const Server &) = delete;
 
     void Run()
