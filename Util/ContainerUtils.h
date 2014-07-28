@@ -50,22 +50,23 @@ template <typename T> inline void sort_unique_resize(std::vector<T> &vector)
 //     vector.resize(number_of_unique_elements);
 // }
 
-// template <typename FwdIter, typename Func>
-// Func for_each_pair(FwdIter iter_begin, FwdIter iter_end, Func func)
-// {
-//     if (iter_begin == iter_end)
-//     {
-//         return func;
-//     }
+template <typename ForwardIterator, typename Function>
+Function for_each_pair(ForwardIterator begin, ForwardIterator end, Function function)
+{
+    if (begin == end)
+    {
+        return function;
+    }
 
-//     FwdIter iter_next = iter_begin;
-//     ++iter_next;
+    ForwardIterator next = begin;
+    ++next;
 
-//     for (; iter_next != iter_end; ++iter_begin, ++iter_next)
-//     {
-//         func(*iter_begin, *iter_next);
-//     }
-//     return func;
-// }
+    while (next != end)
+    {
+        function(*begin, *next);
+        ++begin; ++next;
+    }
+    return function;
+}
 
 #endif /* CONTAINERUTILS_H_ */
