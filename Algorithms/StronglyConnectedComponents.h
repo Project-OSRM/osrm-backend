@@ -234,7 +234,7 @@ class TarjanSCC
 
         // The following is a hack to distinguish between stuff that happens
         // before the recursive call and stuff that happens after
-        std::stack<std::pair<bool, TarjanStackFrame>> recursion_stack;
+        std::stack<TarjanStackFrame> recursion_stack;
         // true = stuff before, false = stuff after call
         std::stack<NodeID> tarjan_stack;
         std::vector<unsigned> components_index(m_node_based_graph->GetNumberOfNodes(), UINT_MAX);
@@ -243,24 +243,29 @@ class TarjanSCC
         unsigned component_index = 0, size_of_current_component = 0;
         int index = 0;
         NodeID last_node = m_node_based_graph->GetNumberOfNodes();
+        std::vector<bool> processing_node_before_recursion(m_node_based_graph->GetNumberOfNodes(), true);
         for (NodeID node = 0; node < last_node; ++node)
         {
             if (UINT_MAX == components_index[node])
             {
-                recursion_stack.emplace(true, TarjanStackFrame(node, node));
+                recursion_stack.emplace(TarjanStackFrame(node, node));
             }
 
             while (!recursion_stack.empty())
             {
-                const bool before_recursion = recursion_stack.top().first;
-                TarjanStackFrame currentFrame = recursion_stack.top().second;
+                TarjanStackFrame currentFrame = recursion_stack.top();
                 NodeID v = currentFrame.v;
                 recursion_stack.pop();
+                const bool before_recursion = processing_node_before_recursion[v];
+
+                if (before_recursion && tarjan_node_list[v].index != UINT_MAX)
+                    continue;
 
                 if (before_recursion)
                 {
                     // Mark frame to handle tail of recursion
-                    recursion_stack.emplace(false, currentFrame);
+                    recursion_stack.emplace(currentFrame);
+                    processing_node_before_recursion[v] = false;
 
                     // Mark essential information for SCC
                     tarjan_node_list[v].index = index;
@@ -276,7 +281,7 @@ class TarjanSCC
                             m_node_based_graph->GetTarget(e2);
                         if (UINT_MAX == tarjan_node_list[vprime].index)
                         {
-                            recursion_stack.emplace(true, TarjanStackFrame(vprime, v));
+                            recursion_stack.emplace(TarjanStackFrame(vprime, v));
                         }
                         else
                         {
@@ -290,6 +295,7 @@ class TarjanSCC
                 }
                 else
                 {
+                    processing_node_before_recursion[v] = true;
                     tarjan_node_list[currentFrame.parent].low_link =
                         std::min(tarjan_node_list[currentFrame.parent].low_link,
                                  tarjan_node_list[v].low_link);
