@@ -64,7 +64,7 @@ class Server
     }
 
     Server() = delete;
-    Server(const Server &) = delete;
+    // Server(const Server &) = delete;
 
     void Run()
     {
