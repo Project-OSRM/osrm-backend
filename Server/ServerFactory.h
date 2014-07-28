@@ -33,18 +33,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <zlib.h>
 
-#include <memory>
-
 struct ServerFactory
 {
     ServerFactory() = delete;
     ServerFactory(const ServerFactory &) = delete;
-    static std::unique_ptr<Server> CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
+    static Server *CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
     {
         SimpleLogger().Write() << "http 1.1 compression handled by zlib version " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
-        return osrm::make_unique<Server>(ip_address, ip_port, real_num_threads);
+        return new Server(ip_address, ip_port, real_num_threads);
     }
 };
 
