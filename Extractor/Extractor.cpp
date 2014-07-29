@@ -29,9 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ExtractorCallbacks.h"
 #include "ExtractionContainers.h"
-#include "PBFParser.h"
+// #include "PBFParser.h"
 #include "ScriptingEnvironment.h"
-#include "XMLParser.h"
+// #include "XMLParser.h"
 
 #include "../Util/GitDescription.h"
 #include "../Util/OSRMException.h"
@@ -41,6 +41,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../typedefs.h"
 
 #include <boost/program_options.hpp>
+
+#include <osmium/io/any_input.hpp>
+#include <osmium/osm.hpp>
 
 #include <tbb/task_scheduler_init.h>
 
@@ -245,31 +248,48 @@ int Extractor::Run(int argc, char *argv[])
 
         string_map[""] = 0;
         auto extractor_callbacks = new ExtractorCallbacks(extraction_containers, string_map);
-        BaseParser *parser;
-        if (file_has_pbf_format)
-        {
-            parser = new PBFParser(input_path.string().c_str(),
-                                   extractor_callbacks,
-                                   scripting_environment,
-                                   requested_num_threads);
-        }
-        else
-        {
-            parser = new XMLParser(input_path.string().c_str(),
-                                   extractor_callbacks,
-                                   scripting_environment);
-        }
 
-        if (!parser->ReadHeader())
-        {
-            throw OSRMException("Parser not initialized!");
-        }
+        unsigned number_of_nodes = 0;
+        unsigned number_of_ways = 0;
+        unsigned number_of_relations = 0;
+        unsigned number_of_others = 0;
 
-        SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
+        try {
+            osmium::io::Reader reader(input_path.string());
+            osmium::io::Header header = reader.header();
+            header.set("generator", "osmium_convert");
 
-        parser->Parse();
-        delete parser;
+            SimpleLogger().Write() << "File generator: " << header.get("generator");
+            SimpleLogger().Write() << "File generator: " << header.get("generator");
+
+            while (osmium::memory::Buffer buffer = reader.read()) {
+                for (const osmium::OSMEntity &entity : buffer)
+                {
+                    switch(entity.type())
+                    {
+                        case osmium::item_type::node:
+                            ++number_of_nodes;
+                            break;
+                        case osmium::item_type::way:
+                            ++number_of_ways;
+                            break;
+                        case osmium::item_type::relation:
+                            ++number_of_relations;
+                            break;
+                        default:
+                            ++number_of_others;
+                            break;
+                    }
+                }
+            }
+            reader.close();
+        } catch (std::exception& e) {
+            std::cerr << e.what() << "\n";
+            exit(1);
+        }
+
+        SimpleLogger().Write() << "nodes: " << number_of_nodes << ", ways: " << number_of_ways << ", relations: " << number_of_relations << ", others: " << number_of_others;
         delete extractor_callbacks;
 
         TIMER_STOP(parsing);
