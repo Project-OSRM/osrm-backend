@@ -80,10 +80,8 @@ namespace osmium {
                 return item_type::relation_member_list_with_full_members;
             case 'O':
                 return item_type::outer_ring;
-            case 'I':
+            default: //case 'I':
                 return item_type::inner_ring;
-            default:
-                return item_type::undefined;
         }
         return item_type::undefined; // to silence the warning
     }
@@ -112,7 +110,7 @@ namespace osmium {
                 return 'F';
             case item_type::outer_ring:
                 return 'O';
-            case item_type::inner_ring:
+            default: //case item_type::inner_ring:
                 return 'I';
         }
         return 'X'; // to silence the warning
