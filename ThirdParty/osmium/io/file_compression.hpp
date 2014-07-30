@@ -51,10 +51,10 @@ namespace osmium {
                     return "none";
                 case file_compression::gzip:
                     return "gzip";
-                case file_compression::bzip2:
+                default: //case file_compression::bzip2:
                     return "bzip2";
             }
-            return "";
+            // return "";
         }
 
         template <typename TChar, typename TTraits>

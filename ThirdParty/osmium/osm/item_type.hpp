@@ -83,7 +83,7 @@ namespace osmium {
             default: //case 'I':
                 return item_type::inner_ring;
         }
-        return item_type::undefined; // to silence the warning
+        // return item_type::undefined; // to silence the warning
     }
 
     inline char item_type_to_char(const item_type type) {
@@ -113,7 +113,7 @@ namespace osmium {
             default: //case item_type::inner_ring:
                 return 'I';
         }
-        return 'X'; // to silence the warning
+        // return 'X'; // to silence the warning
     }
 
     inline const char* item_type_to_name(const item_type type) {
@@ -140,10 +140,10 @@ namespace osmium {
                 return "relation_member_list_with_full_members";
             case item_type::outer_ring:
                 return "outer_ring";
-            case item_type::inner_ring:
+            default: //case item_type::inner_ring:
                 return "inner_ring";
         }
-        return "undefined"; // to silence the warning
+        // return "undefined"; // to silence the warning
     }
 
     template <typename TChar, typename TTraits>

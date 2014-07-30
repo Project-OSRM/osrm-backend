@@ -56,10 +56,10 @@ namespace osmium {
                 return item_type::node;
             case OSMPBF::Relation::WAY:
                 return item_type::way;
-            case OSMPBF::Relation::RELATION:
+            default: //case OSMPBF::Relation::RELATION:
                 return item_type::relation;
-            default:
-                throw std::runtime_error("Unknown relation member type");
+            // default:
+            //     throw std::runtime_error("Unknown relation member type");
         }
     }
 

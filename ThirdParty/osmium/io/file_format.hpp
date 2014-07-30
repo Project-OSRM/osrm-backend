@@ -57,10 +57,10 @@ namespace osmium {
                     return "PBF";
                 case file_format::opl:
                     return "OPL";
-                case file_format::json:
+                default: //case file_format::json:
                     return "JSON";
             }
-            return "";
+            // return "";
         }
 
         template <typename TChar, typename TTraits>

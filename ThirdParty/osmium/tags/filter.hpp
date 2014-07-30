@@ -106,7 +106,7 @@ namespace osmium {
 
         public:
 
-            typedef Filter<TKey, TValue> filter_type;
+            typedef Filter<TKey, TValue, TKeyComp, TValueComp> filter_type;
             typedef const osmium::Tag& argument_type;
             typedef bool result_type;
             typedef boost::filter_iterator<filter_type, osmium::TagList::const_iterator> iterator;
