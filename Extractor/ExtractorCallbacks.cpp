@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractorCallbacks.h"
 #include "ExtractionContainers.h"
 #include "ExtractionWay.h"
+#include "ScriptingEnvironment.h"
 
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/ImportNode.h"
@@ -46,12 +47,16 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 }
 
 /** warning: caller needs to take care of synchronization! */
-void ExtractorCallbacks::ProcessNode(const ExternalMemoryNode &n)
+
+void ExtractorCallbacks::ProcessNode(const osmium::Node &current_node, ExtractionNode &result_node)
 {
-    if (n.lat <= 85 * COORDINATE_PRECISION && n.lat >= -85 * COORDINATE_PRECISION)
-    {
-        external_memory.all_nodes_list.push_back(n);
-    }
+  ExternalMemoryNode node;
+  node.bollard = result_node.barrier;
+  node.trafficLight = result_node.traffic_lights;
+  node.lat = current_node.location().lat()*COORDINATE_PRECISION;
+  node.lon = current_node.location().lon()*COORDINATE_PRECISION;
+  node.node_id = current_node.id();
+  external_memory.all_nodes_list.push_back(node);
 }
 
 bool ExtractorCallbacks::ProcessRestriction(const InputRestrictionContainer &restriction)
@@ -61,22 +66,25 @@ bool ExtractorCallbacks::ProcessRestriction(const InputRestrictionContainer &res
 }
 
 /** warning: caller needs to take care of synchronization! */
-void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
+void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWay &parsed_way)
 {
+    SimpleLogger().Write() << "processing way with speed: " << parsed_way.speed << ", name: " << parsed_way.name;
     if ((0 >= parsed_way.speed) && (0 >= parsed_way.duration))
     { // Only true if the way is specified by the speed profile
+        SimpleLogger().Write(logDEBUG) << "returning early, speed";
         return;
     }
 
-    if (parsed_way.path.size() <= 1)
+    if (current_way.nodes().size() <= 1)
     { // safe-guard against broken data
+        SimpleLogger().Write(logDEBUG) << "returning early, size";
         return;
     }
 
-    if (std::numeric_limits<unsigned>::max() == parsed_way.id)
+    if (std::numeric_limits<unsigned>::max() == current_way.id())
     {
         SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << parsed_way.id
-                                       << " of size " << parsed_way.path.size();
+                                       << " of size " << current_way.nodes().size();
         return;
     }
 
@@ -84,7 +92,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
     {
         // TODO: iterate all way segments and set duration corresponding to the length of each
         // segment
-        parsed_way.speed = parsed_way.duration / (parsed_way.path.size() - 1);
+        parsed_way.speed = parsed_way.duration / (current_way.nodes().size() - 1);
     }
 
     if (std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.speed))
@@ -100,6 +108,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         parsed_way.nameID = external_memory.name_list.size();
         external_memory.name_list.push_back(parsed_way.name);
         string_map.insert(std::make_pair(parsed_way.name, parsed_way.nameID));
+        SimpleLogger().Write() << "inserted name " << parsed_way.name << " at " << parsed_way.nameID;
     }
     else
     {
@@ -108,18 +117,19 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
 
     if (ExtractionWay::opposite == parsed_way.direction)
     {
-        std::reverse(parsed_way.path.begin(), parsed_way.path.end());
+        // std::reverse(current_way.nodes().begin(), current_way.nodes().end());
         parsed_way.direction = ExtractionWay::oneway;
     }
 
     const bool split_edge =
         (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
 
-    for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
+    for (unsigned n = 0; n < (current_way.nodes().size() - 1); ++n)
     {
+        SimpleLogger().Write() << "adding edge (" << current_way.nodes()[n].ref() << "," << current_way.nodes()[n+1].ref() << ")";
         external_memory.all_edges_list.push_back(InternalExtractorEdge(
-            parsed_way.path[n],
-            parsed_way.path[n + 1],
+            current_way.nodes()[n].ref(),
+            current_way.nodes()[n + 1].ref(),
             parsed_way.type,
             (split_edge ? ExtractionWay::oneway : parsed_way.direction),
             parsed_way.speed,
@@ -130,26 +140,26 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
             parsed_way.isAccessRestricted,
             false,
             split_edge));
-        external_memory.used_node_id_list.push_back(parsed_way.path[n]);
+        external_memory.used_node_id_list.push_back(current_way.nodes()[n].ref());
     }
-    external_memory.used_node_id_list.push_back(parsed_way.path.back());
+    external_memory.used_node_id_list.push_back(current_way.nodes().back().ref());
 
     // The following information is needed to identify start and end segments of restrictions
     external_memory.way_start_end_id_list.push_back(
         WayIDStartAndEndEdge(parsed_way.id,
-                             parsed_way.path[0],
-                             parsed_way.path[1],
-                             parsed_way.path[parsed_way.path.size() - 2],
-                             parsed_way.path.back()));
+                             current_way.nodes()[0].ref(),
+                             current_way.nodes()[1].ref(),
+                             current_way.nodes()[current_way.nodes().size() - 2].ref(),
+                             current_way.nodes().back().ref()));
 
     if (split_edge)
     { // Only true if the way should be split
-        std::reverse(parsed_way.path.begin(), parsed_way.path.end());
-        for (std::vector<NodeID>::size_type n = 0; n < parsed_way.path.size() - 1; ++n)
+        // std::reverse(current_way.nodes().begin(), current_way.nodes().end());
+        for (std::vector<NodeID>::size_type n = 0; n < current_way.nodes().size() - 1; ++n)
         {
             external_memory.all_edges_list.push_back(
-                InternalExtractorEdge(parsed_way.path[n],
-                                      parsed_way.path[n + 1],
+                InternalExtractorEdge(current_way.nodes()[n].ref(),
+                                      current_way.nodes()[n + 1].ref(),
                                       parsed_way.type,
                                       ExtractionWay::oneway,
                                       parsed_way.backward_speed,
@@ -163,9 +173,9 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         }
         external_memory.way_start_end_id_list.push_back(
             WayIDStartAndEndEdge(parsed_way.id,
-                                 parsed_way.path[0],
-                                 parsed_way.path[1],
-                                 parsed_way.path[parsed_way.path.size() - 2],
-                                 parsed_way.path.back()));
+                                 current_way.nodes()[0].ref(),
+                                 current_way.nodes()[1].ref(),
+                                 current_way.nodes()[current_way.nodes().size() - 2].ref(),
+                                 current_way.nodes().back().ref()));
     }
 }

@@ -35,6 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
+#include <luabind/tag_function.hpp>
+
 #include <osmium/osm.hpp>
 
 #include <sstream>
@@ -48,6 +50,11 @@ ScriptingEnvironment::ScriptingEnvironment(const char *file_name)
 
 void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 {
+
+    typedef double (osmium::Location::* location_member_ptr_type)() const;
+    // typedef osmium::Location (osmium::Node::* node_member_ptr_type)() const;
+    typedef osmium::TagList& (osmium::Node::* node_member_ptr_type)();
+
     using namespace osmium;
     luabind::open(lua_state);
     // open utility libraries string library;
@@ -67,11 +74,37 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
         // .def("Holds", &HashTable<std::string, std::string>::Holds),
 
         luabind::class_<osmium::Location>("Location")
-        .def("lat", &osmium::Location::lat)
-        .def("lon", &osmium::Location::lon)
+        .def<location_member_ptr_type>("lat", &osmium::Location::lat)
+        .def<location_member_ptr_type>("lon", &osmium::Location::lon),
 
-        // luabind::class_<osmium::Node>("Node")
-        // .def_readonly("location", &osmium::Node::location)
+        // luabind::class_<osmium::TagList>("TagList")
+        // .def("get_value_by_key", &osmium::TagList::get_value_by_key),
+
+        luabind::class_<osmium::Node>("Node")
+        // .def<node_member_ptr_type>("tags", &osmium::Node::tags)
+        .def("get_value_by_key", &osmium::Node::get_value_by_key),
+
+        luabind::class_<ExtractionNode>("ResultNode")
+        .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
+        .def_readwrite("barrier", &ExtractionNode::barrier),
+
+        luabind::class_<ExtractionWay>("ResultWay")
+        .def_readwrite("speed", &ExtractionWay::speed)
+        .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
+        .def_readwrite("name", &ExtractionWay::name)
+        .def_readwrite("duration", &ExtractionWay::duration)
+        .def_readwrite("direction", &ExtractionWay::direction)
+        .def_readwrite("roundabout", &ExtractionWay::roundabout)
+        .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
+        .enum_("constants")[
+            luabind::value("notSure", 0),
+            luabind::value("oneway", 1),
+            luabind::value("bidirectional", 2),
+            luabind::value("opposite", 3)
+        ],
+
+        luabind::class_<osmium::Way>("Way")
+        .def("get_value_by_key", &osmium::Way::get_value_by_key)
     ];
 
         // .def(luabind::constructor<>())

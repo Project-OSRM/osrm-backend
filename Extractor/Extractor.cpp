@@ -42,6 +42,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/program_options.hpp>
 
+#include <luabind/luabind.hpp>
+
 #include <osmium/io/any_input.hpp>
 #include <osmium/osm.hpp>
 
@@ -54,10 +56,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <thread>
 #include <unordered_map>
+#include <sstream>
 
-Extractor::Extractor() : requested_num_threads(0), file_has_pbf_format(false)
+int theCallback(lua_State *L) // This is so I can use my own function as an
+// exception handler, pcall_log()
 {
+    luabind::object error_msg(luabind::from_stack(L, -1));
+    std::ostringstream error_stream;
+    error_stream << error_msg;
+    throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
 }
+
+Extractor::Extractor() : requested_num_threads(0), file_has_pbf_format(false) {}
 
 Extractor::~Extractor() {}
 
@@ -255,7 +265,8 @@ int Extractor::Run(int argc, char *argv[])
         unsigned number_of_others = 0;
 
         TIMER_START(parsing);
-        try {
+        try
+        {
             osmium::io::Reader reader(input_path.string());
             osmium::io::Header header = reader.header();
             header.set("generator", "osmium_convert");
@@ -263,33 +274,86 @@ int Extractor::Run(int argc, char *argv[])
             SimpleLogger().Write() << "File generator: " << header.get("generator");
             SimpleLogger().Write() << "File generator: " << header.get("generator");
 
-            while (osmium::memory::Buffer buffer = reader.read()) {
-                for (const osmium::OSMEntity &entity : buffer)
+            lua_State *lua_state = scripting_environment.getLuaState();
+            luabind::set_pcall_callback(&theCallback);
+
+            ExtractionNode result_node;
+            ExtractionWay result_way;
+            while (osmium::memory::Buffer buffer = reader.read())
+            {
+                for (osmium::OSMEntity &entity : buffer)
                 {
-                    switch(entity.type())
+                    switch (entity.type())
                     {
-                        case osmium::item_type::node:
-                            ++number_of_nodes;
-                            break;
-                        case osmium::item_type::way:
-                            ++number_of_ways;
-                            break;
-                        case osmium::item_type::relation:
-                            ++number_of_relations;
-                            break;
-                        default:
-                            ++number_of_others;
-                            break;
+                    case osmium::item_type::node:
+                        ++number_of_nodes;
+                        try
+
+                        {
+                            luabind::call_function<void>(
+                                lua_state,
+                                "node_function",
+                                boost::ref(static_cast<osmium::Node &>(entity)),
+                                boost::ref(result_node));
+                        }
+                        catch (luabind::error e)
+                        {
+                            std::cout << "erroring: " << e.what();
+                            luabind::object error_msg(luabind::from_stack(lua_state, -1));
+                            std::ostringstream error_stream;
+                            error_stream << error_msg;
+                            throw OSRMException("ERROR occured in profile script:\n" +
+                                                error_stream.str());
+                        }
+                        extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
+                                                         result_node);
+                        break;
+                    case osmium::item_type::way:
+                        ++number_of_ways;
+                        try
+
+                        {
+                            result_way.speed = -1;
+                            luabind::call_function<void>(
+                                lua_state,
+                                "way_function",
+                                boost::ref(static_cast<osmium::Way &>(entity)),
+                                boost::ref(result_way));
+                            SimpleLogger().Write() << "speed: " << result_way.speed;
+                        }
+                        catch (luabind::error e)
+                        {
+                            std::cout << "erroring: " << e.what();
+                            luabind::object error_msg(luabind::from_stack(lua_state, -1));
+                            std::ostringstream error_stream;
+                            error_stream << error_msg;
+                            throw OSRMException("ERROR occured in profile script:\n" +
+                                                error_stream.str());
+                        }
+                        extractor_callbacks->ProcessWay(static_cast<osmium::Way&>(entity),
+                                                        result_way);
+
+                        break;
+                    case osmium::item_type::relation:
+                        ++number_of_relations;
+                        break;
+                    default:
+                        ++number_of_others;
+                        break;
                     }
                 }
             }
             reader.close();
-        } catch (std::exception& e) {
+        }
+        catch (std::exception &e)
+        {
             std::cerr << e.what() << "\n";
             exit(1);
         }
 
-        SimpleLogger().Write() << "nodes: " << number_of_nodes << ", ways: " << number_of_ways << ", relations: " << number_of_relations << ", others: " << number_of_others;
+        SimpleLogger().Write() << "nodes: " << number_of_nodes << ", ways: " << number_of_ways
+                               << ", relations: " << number_of_relations
+                               << ", others: " << number_of_others;
         delete extractor_callbacks;
 
         TIMER_STOP(parsing);

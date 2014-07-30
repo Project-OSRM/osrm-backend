@@ -34,6 +34,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct lua_State;
 
+struct ExtractionNode
+{
+    ExtractionNode() : traffic_lights(false), barrier(false) { }
+
+    bool traffic_lights;
+    bool barrier;
+};
+
+
 class ScriptingEnvironment
 {
   public:

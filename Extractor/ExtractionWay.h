@@ -42,13 +42,13 @@ struct ExtractionWay
     {
         id = SPECIAL_NODEID;
         nameID = INVALID_NAMEID;
-        path.clear();
-        keyVals.Clear();
+        // path.clear();
+        // keyVals.Clear();
         direction = ExtractionWay::notSure;
         speed = -1;
         backward_speed = -1;
         duration = -1;
-        type = -1;
+        type = 1;
         access = true;
         roundabout = false;
         isAccessRestricted = false;
@@ -72,8 +72,8 @@ struct ExtractionWay
     bool roundabout;
     bool isAccessRestricted;
     bool ignoreInGrid;
-    std::vector<NodeID> path;
-    HashTable<std::string, std::string> keyVals;
+    // std::vector<NodeID> path;
+    // HashTable<std::string, std::string> keyVals;
 };
 
 #endif // EXTRACTION_WAY_H
