@@ -28,38 +28,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BASEPARSER_H_
 #define BASEPARSER_H_
 
+#include "../DataStructures/Restriction.h"
+
+#include <boost/optional.hpp>
+
+#include <osmium/osm.hpp>
+#include <osmium/tags/regex_filter.hpp>
+
+
+
 #include <string>
 #include <vector>
 
 struct lua_State;
-class ExtractorCallbacks;
 class ScriptingEnvironment;
-struct ExtractionWay;
-struct ImportNode;
+
+// TODO: rename to RestrictionParser
 
 class BaseParser
 {
   public:
-    BaseParser() = delete;
-    BaseParser(const BaseParser &) = delete;
-    BaseParser(ExtractorCallbacks *extractor_callbacks,
-               ScriptingEnvironment &scripting_environment);
-    virtual ~BaseParser() {}
-    virtual bool ReadHeader() = 0;
-    virtual bool Parse() = 0;
+    BaseParser(ScriptingEnvironment &scripting_environment);
 
-    virtual void ParseNodeInLua(ImportNode &node, lua_State *lua_state);
-    virtual void ParseWayInLua(ExtractionWay &way, lua_State *lua_state);
-    virtual void report_errors(lua_State *lua_state, const int status) const;
+    boost::optional<InputRestrictionContainer> TryParse(osmium::Relation& relation) const;
 
-  protected:
-    virtual void ReadUseRestrictionsSetting();
-    virtual void ReadRestrictionExceptions();
-    virtual bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
+    void ReadUseRestrictionsSetting();
+    void ReadRestrictionExceptions();
+  private:
+    bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
 
-    ExtractorCallbacks *extractor_callbacks;
     lua_State *lua_state;
-    ScriptingEnvironment &scripting_environment;
     std::vector<std::string> restriction_exceptions;
     bool use_turn_restrictions;
 };

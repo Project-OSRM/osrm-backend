@@ -27,11 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Extractor.h"
 
+#include "BaseParser.h"
 #include "ExtractorCallbacks.h"
 #include "ExtractionContainers.h"
-// #include "PBFParser.h"
 #include "ScriptingEnvironment.h"
-// #include "XMLParser.h"
 
 #include "../Util/GitDescription.h"
 #include "../Util/OSRMException.h"
@@ -50,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tbb/task_scheduler_init.h>
 
 #include <cstdlib>
+#include <cstring>
 
 #include <chrono>
 #include <fstream>
@@ -269,13 +269,18 @@ int Extractor::Run(int argc, char *argv[])
         {
             osmium::io::Reader reader(input_path.string());
             osmium::io::Header header = reader.header();
-            header.set("generator", "osmium_convert");
 
             SimpleLogger().Write() << "File generator: " << header.get("generator");
-            SimpleLogger().Write() << "File generator: " << header.get("generator");
+            SimpleLogger().Write() << "Timestamp: " << header.get("osmosis_replication_timestamp");
+            SimpleLogger().Write()
+                << "sequence: " << header.get("osmosis_replication_sequence_number");
+            SimpleLogger().Write()
+                << "replication url: " << header.get("osmosis_replication_base_url");
 
             lua_State *lua_state = scripting_environment.getLuaState();
             luabind::set_pcall_callback(&theCallback);
+
+            BaseParser restriction_parser(scripting_environment);
 
             ExtractionNode result_node;
             ExtractionWay result_way;
@@ -287,55 +292,32 @@ int Extractor::Run(int argc, char *argv[])
                     {
                     case osmium::item_type::node:
                         ++number_of_nodes;
-                        try
-
-                        {
-                            luabind::call_function<void>(
-                                lua_state,
-                                "node_function",
-                                boost::ref(static_cast<osmium::Node &>(entity)),
-                                boost::ref(result_node));
-                        }
-                        catch (luabind::error e)
-                        {
-                            std::cout << "erroring: " << e.what();
-                            luabind::object error_msg(luabind::from_stack(lua_state, -1));
-                            std::ostringstream error_stream;
-                            error_stream << error_msg;
-                            throw OSRMException("ERROR occured in profile script:\n" +
-                                                error_stream.str());
-                        }
+                        result_node.Clear();
+                        luabind::call_function<void>(
+                            lua_state,
+                            "node_function",
+                            boost::cref(static_cast<osmium::Node &>(entity)),
+                            boost::ref(result_node));
                         extractor_callbacks->ProcessNode(static_cast<osmium::Node &>(entity),
                                                          result_node);
                         break;
                     case osmium::item_type::way:
                         ++number_of_ways;
-                        try
-
-                        {
-                            result_way.speed = -1;
-                            luabind::call_function<void>(
-                                lua_state,
-                                "way_function",
-                                boost::ref(static_cast<osmium::Way &>(entity)),
-                                boost::ref(result_way));
-                            SimpleLogger().Write() << "speed: " << result_way.speed;
-                        }
-                        catch (luabind::error e)
-                        {
-                            std::cout << "erroring: " << e.what();
-                            luabind::object error_msg(luabind::from_stack(lua_state, -1));
-                            std::ostringstream error_stream;
-                            error_stream << error_msg;
-                            throw OSRMException("ERROR occured in profile script:\n" +
-                                                error_stream.str());
-                        }
-                        extractor_callbacks->ProcessWay(static_cast<osmium::Way&>(entity),
+                        result_way.Clear();
+                        luabind::call_function<void>(
+                            lua_state,
+                            "way_function",
+                            boost::cref(static_cast<osmium::Way &>(entity)),
+                            boost::ref(result_way));
+                        extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity),
                                                         result_way);
 
                         break;
                     case osmium::item_type::relation:
                         ++number_of_relations;
+                        extractor_callbacks->ProcessRestriction(
+                            restriction_parser.TryParse(static_cast<osmium::Relation &>(entity)));
+
                         break;
                     default:
                         ++number_of_others;
@@ -345,10 +327,18 @@ int Extractor::Run(int argc, char *argv[])
             }
             reader.close();
         }
-        catch (std::exception &e)
+        catch (const luabind::error &e)
         {
-            std::cerr << e.what() << "\n";
-            exit(1);
+            lua_State *lua_state = scripting_environment.getLuaState();
+            luabind::object error_msg(luabind::from_stack(lua_state, -1));
+            std::ostringstream error_stream;
+            error_stream << error_msg;
+            throw OSRMException("ERROR occured in profile script:\n" + error_stream.str());
+        }
+        catch (const std::exception &e)
+        {
+            SimpleLogger().Write(logWARNING) << e.what();
+            std::abort();
         }
 
         SimpleLogger().Write() << "nodes: " << number_of_nodes << ", ways: " << number_of_ways

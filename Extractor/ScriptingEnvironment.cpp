@@ -68,17 +68,12 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
         luabind::def("durationIsValid", durationIsValid),
         luabind::def("parseDuration", parseDuration),
 
-        // luabind::class_<HashTable<std::string, std::string>>("keyVals")
-        // .def("Add", &HashTable<std::string, std::string>::Add)
-        // .def("Find", &HashTable<std::string, std::string>::Find)
-        // .def("Holds", &HashTable<std::string, std::string>::Holds),
+        luabind::class_<std::vector<std::string>>("vector")
+        .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(&std::vector<std::string>::push_back)),
 
         luabind::class_<osmium::Location>("Location")
         .def<location_member_ptr_type>("lat", &osmium::Location::lat)
         .def<location_member_ptr_type>("lon", &osmium::Location::lon),
-
-        // luabind::class_<osmium::TagList>("TagList")
-        // .def("get_value_by_key", &osmium::TagList::get_value_by_key),
 
         luabind::class_<osmium::Node>("Node")
         // .def<node_member_ptr_type>("tags", &osmium::Node::tags)
@@ -92,10 +87,11 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
         .def_readwrite("speed", &ExtractionWay::speed)
         .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
         .def_readwrite("name", &ExtractionWay::name)
-        .def_readwrite("duration", &ExtractionWay::duration)
         .def_readwrite("direction", &ExtractionWay::direction)
         .def_readwrite("roundabout", &ExtractionWay::roundabout)
         .def_readwrite("is_access_restricted", &ExtractionWay::isAccessRestricted)
+        .def_readwrite("ignore_in_index", &ExtractionWay::ignoreInGrid)
+        .def_readwrite("duration", &ExtractionWay::duration)
         .enum_("constants")[
             luabind::value("notSure", 0),
             luabind::value("oneway", 1),

@@ -39,11 +39,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/ref.hpp>
 #include <boost/regex.hpp>
 
-BaseParser::BaseParser(ExtractorCallbacks *extractor_callbacks,
-                       ScriptingEnvironment &scripting_environment)
-    : extractor_callbacks(extractor_callbacks),
-      lua_state(scripting_environment.getLuaState()),
-      scripting_environment(scripting_environment), use_turn_restrictions(true)
+#include <cstring>
+
+BaseParser::BaseParser(ScriptingEnvironment &scripting_environment)
+    : lua_state(scripting_environment.getLuaState()), use_turn_restrictions(true)
 {
     ReadUseRestrictionsSetting();
     ReadRestrictionExceptions();
@@ -91,23 +90,117 @@ void BaseParser::ReadRestrictionExceptions()
     }
 }
 
-void BaseParser::report_errors(lua_State *lua_state, const int status) const
+boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation &relation) const
 {
-    if (0 != status)
+    osmium::tags::KeyPrefixFilter filter(false);
+    filter.add(true, "restriction");
+
+    const osmium::TagList &tag_list = relation.tags();
+
+    osmium::tags::KeyPrefixFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
+    osmium::tags::KeyPrefixFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
+
+    // if it's a restriction, continue;
+    if (std::distance(fi_begin, fi_end) == 0)
     {
-        std::cerr << "-- " << lua_tostring(lua_state, -1) << std::endl;
-        lua_pop(lua_state, 1); // remove error message
+        return boost::optional<InputRestrictionContainer>();
     }
-}
 
-void BaseParser::ParseNodeInLua(ImportNode &node, lua_State *local_lua_state)
-{
-    luabind::call_function<void>(local_lua_state, "node_function", boost::ref(node));
-}
+    // check if the restriction should be ignored
+    const char *except = relation.get_value_by_key("except");
+    if (except != nullptr)
+    {
+        if (ShouldIgnoreRestriction(except))
+        {
+            return boost::optional<InputRestrictionContainer>();
+        }
+    }
 
-void BaseParser::ParseWayInLua(ExtractionWay &way, lua_State *local_lua_state)
-{
-    luabind::call_function<void>(local_lua_state, "way_function", boost::ref(way));
+    SimpleLogger().Write() << "http://www.openstreetmap.org/relation/" << relation.id();
+    SimpleLogger().Write() << "number of entries: " << std::distance(fi_begin, fi_end);
+
+    bool is_only_restriction = false;
+
+    for (auto iter = fi_begin; iter != fi_end; ++iter)
+    {
+        if (std::string("restriction") == iter->key() ||
+            std::string("restriction::hgv") == iter->key())
+        {
+            SimpleLogger().Write() << "restriction type: " << iter->key() << "=" << iter->value();
+            const std::string restriction_value(iter->value());
+
+            if (restriction_value.find("only_") == 0)
+            {
+                is_only_restriction = true;
+            }
+        }
+    }
+
+    SimpleLogger().Write() << "No of members: " << relation.members().size();
+
+    InputRestrictionContainer restriction_container(is_only_restriction);
+
+    for (const auto &member : relation.members())
+    {
+        const char *role = member.role();
+        if (strcmp("from", role) != 0 && strcmp("to", role) != 0 && strcmp("via", role) != 0)
+        {
+            continue;
+        }
+
+        switch (member.type())
+        {
+        case osmium::item_type::node:
+            // Make sure nodes appear only in the role if a via node
+            if (0 == strcmp("from", role) || 0 == strcmp("to", role))
+            {
+                continue;
+            }
+            BOOST_ASSERT(0 == strcmp("via", role));
+            // set the via node id
+            SimpleLogger().Write() << "via: " << member.ref();
+
+            restriction_container.viaNode = member.ref();
+            ;
+            break;
+
+        case osmium::item_type::way:
+            BOOST_ASSERT(0 == strcmp("from", role) || 0 == strcmp("to", role) ||
+                         0 == strcmp("via", role));
+            if (0 == strcmp("from", role))
+            {
+                SimpleLogger().Write() << "from: " << member.ref();
+                restriction_container.fromWay = member.ref();
+            }
+            else if (0 == strcmp("to", role))
+            {
+                SimpleLogger().Write() << "to: " << member.ref();
+                restriction_container.toWay = member.ref();
+            }
+            else if (0 == strcmp("via", role))
+            {
+                // not yet suppported
+                // restriction.viaWay = static_cast<const osmium::Way&>(member.get_object()).id();
+            }
+            break;
+        case osmium::item_type::relation:
+            // not yet supported, but who knows what the future holds...
+            continue;
+            BOOST_ASSERT(false);
+
+            break;
+        default:
+            BOOST_ASSERT(false);
+        }
+    }
+
+    SimpleLogger().Write() << (restriction_container.restriction.flags.isOnly ? "only" : "no")
+                           << " Restriction "
+                           << "<" << restriction_container.fromWay << "->"
+                           << restriction_container.viaNode << "->" << restriction_container.toWay
+                           << ">";
+
+    return boost::optional<InputRestrictionContainer>(restriction_container);
 }
 
 bool BaseParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const

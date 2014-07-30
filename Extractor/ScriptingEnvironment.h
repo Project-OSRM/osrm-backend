@@ -37,7 +37,10 @@ struct lua_State;
 struct ExtractionNode
 {
     ExtractionNode() : traffic_lights(false), barrier(false) { }
-
+    void Clear()
+    {
+        traffic_lights = barrier = false;
+    }
     bool traffic_lights;
     bool barrier;
 };
