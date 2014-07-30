@@ -129,6 +129,11 @@ namespace osmium {
 
     public:
 
+
+        const char* get_value_by_key(const char* key, const char* default_value = nullptr) const noexcept {
+            return tags().get_value_by_key(key, default_value);
+        }
+
         /// Get ID of this object.
         object_id_type id() const {
             return m_id;
