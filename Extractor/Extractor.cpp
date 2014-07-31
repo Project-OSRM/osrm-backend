@@ -270,12 +270,12 @@ int Extractor::Run(int argc, char *argv[])
             osmium::io::Reader reader(input_path.string());
             osmium::io::Header header = reader.header();
 
-            SimpleLogger().Write() << "File generator: " << header.get("generator");
-            SimpleLogger().Write() << "Timestamp: " << header.get("osmosis_replication_timestamp");
-            SimpleLogger().Write()
-                << "sequence: " << header.get("osmosis_replication_sequence_number");
-            SimpleLogger().Write()
-                << "replication url: " << header.get("osmosis_replication_base_url");
+            // SimpleLogger().Write() << "File generator: " << header.get("generator");
+            // SimpleLogger().Write() << "Timestamp: " << header.get("osmosis_replication_timestamp");
+            // SimpleLogger().Write()
+            //     << "sequence: " << header.get("osmosis_replication_sequence_number");
+            // SimpleLogger().Write()
+            //     << "replication url: " << header.get("osmosis_replication_base_url");
 
             lua_State *lua_state = scripting_environment.getLuaState();
             luabind::set_pcall_callback(&theCallback);

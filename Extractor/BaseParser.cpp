@@ -160,7 +160,7 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
             // set the via node id
             SimpleLogger().Write() << "via: " << member.ref();
 
-            restriction_container.viaNode = member.ref();
+            restriction_container.restriction.via.node = restriction_container.restriction.via.node = member.ref();
             ;
             break;
 
@@ -170,17 +170,17 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
             if (0 == strcmp("from", role))
             {
                 SimpleLogger().Write() << "from: " << member.ref();
-                restriction_container.fromWay = member.ref();
+                restriction_container.restriction.from.way = member.ref();
             }
             else if (0 == strcmp("to", role))
             {
                 SimpleLogger().Write() << "to: " << member.ref();
-                restriction_container.toWay = member.ref();
+                restriction_container.restriction.to.way = member.ref();
             }
             else if (0 == strcmp("via", role))
             {
                 // not yet suppported
-                // restriction.viaWay = static_cast<const osmium::Way&>(member.get_object()).id();
+                // restriction_container.restriction.via.way = member.ref();
             }
             break;
         case osmium::item_type::relation:
@@ -194,10 +194,10 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
         }
     }
 
-    SimpleLogger().Write() << (restriction_container.restriction.flags.isOnly ? "only" : "no")
-                           << " Restriction "
-                           << "<" << restriction_container.fromWay << "->"
-                           << restriction_container.viaNode << "->" << restriction_container.toWay
+    SimpleLogger().Write() << (restriction_container.restriction.flags.is_only ? "only" : "no")
+                           << "-restriction "
+                           << "<" << restriction_container.restriction.from.node << "->"
+                           << restriction_container.restriction.via.node << "->" << restriction_container.restriction.to.node
                            << ">";
 
     return boost::optional<InputRestrictionContainer>(restriction_container);
