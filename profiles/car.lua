@@ -173,7 +173,8 @@ function way_function (way, result)
   end
 
   -- check if piece of road is on a roundabout
-  if "roundabout" == way:get_value_by_key("junction", "") then
+  local junction = way:get_value_by_key("junction", "")
+  if "roundabout" == junction then
     result.roundabout = true;
   end
 
