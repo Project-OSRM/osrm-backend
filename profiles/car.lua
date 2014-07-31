@@ -8,7 +8,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags = { "motorcar", "motor_vehicle", "vehicle" }
 access_tags_hierachy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
-ignore_in_grid = { ["ferry"] = true }
+ignore_in_index = { ["ferry"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
 speed_profile = {
@@ -32,6 +32,8 @@ speed_profile = {
   ["default"] = 10
 }
 
+
+traffic_signal_penalty          = 2
 traffic_signal_penalty          = 2
 
 -- End of globals
@@ -48,14 +50,14 @@ local max = math.max
 
 local speed_reduction = 0.8
 
-local function find_access_tag(source,access_tags_hierachy)
+local function find_access_tag(source, access_tags_hierachy)
   for i,v in ipairs(access_tags_hierachy) do
-    local has_tag = source.tags:Holds(v)
-    if has_tag then
-      return source.tags:Find(v)
+    local access_tag = source:get_value_by_key(v, "")
+    if "" ~= access_tag then
+      return access_tag
     end
   end
-  return nil
+  return ""
 end
 
 function get_exceptions(vector)
@@ -86,201 +88,190 @@ end
 --   return penalty
 -- end
 
-function node_function (node)
-  local access = find_access_tag(node, access_tags_hierachy)
-
-  --flag node if it carries a traffic light
-  if node.tags:Holds("highway") then
-    if node.tags:Find("highway") == "traffic_signals" then
-      node.traffic_light = true;
-    end
-  end
-
-  -- parse access and barrier tags
-  if access and access ~= "" then
-    if access_tag_blacklist[access] then
-      node.bollard = true
-    end
-  elseif node.tags:Holds("barrier") then
-    local barrier = node.tags:Find("barrier")
-    if barrier_whitelist[barrier] then
-      return
-    else
-      node.bollard = true
-    end
+function get_exceptions(vector)
+  for i,v in ipairs(restriction_exception_tags) do
+    vector:Add(v)
   end
 end
 
-function way_function (way)
-
-  local is_highway = way.tags:Holds("highway")
-  local is_route = way.tags:Holds("route")
-
-  if not (is_highway or is_route) then
-    return
+local function parse_maxspeed(source)
+  if not source then
+    return 0
   end
+  local n = tonumber(source:match("%d*"))
+  if not n then
+    n = 0
+  end
+  if string.match(source, "mph") or string.match(source, "mp/h") then
+    n = (n*1609)/1000;
+  end
+  return n
+end
 
-  -- we dont route over areas
-  local is_area = way.tags:Holds("area")
-  if ignore_areas and is_area then
-    local area = way.tags:Find("area")
-    if "yes" == area then
-      return
+function node_function (node, result)
+  -- parse access and barrier tags
+  local access = find_access_tag(node, access_tags_hierachy)
+  if access ~= "" then
+    if access_tag_blacklist[access] then
+      result.barrier = true
+    end
+  else
+    local barrier = node:get_value_by_key("barrier", "")
+    if "" ~= barrier then
+      if barrier_whitelist[barrier] then
+        return
+      else
+        result.barrier = true
+      end
     end
   end
 
+  -- check if node is a traffic light
+  local tag = node:get_value_by_key("highway", "")
+  if "traffic_signals" == tag then
+    result.traffic_lights = true;
+  end
+end
+
+function way_function (way, result)
+  -- Second, parse the way according to these properties
+  local highway = way:get_value_by_key("highway", "")
+  local route = way:get_value_by_key("route", "")
+  -- leave early of this way is not accessible
+  if "" == highway and "" == route then
+    return
+  end
+
+ -- we dont route over areas
+  local area = way:get_value_by_key("area", "")
+  if "yes" == area then
+    return
+  end
+
   -- check if oneway tag is unsupported
-  local oneway = way.tags:Find("oneway")
+  local oneway = way:get_value_by_key("oneway", "")
   if "reversible" == oneway then
     return
   end
 
-  local is_impassable = way.tags:Holds("impassable")
-  if is_impassable then
-    local impassable = way.tags:Find("impassable")
-    if "yes" == impassable then
-      return
-    end
-  end
-
-  local is_status = way.tags:Holds("status")
-  if is_status then
-    local status = way.tags:Find("status")
-    if "impassable" == status then
-      return
-    end
-  end
-
-  -- Check if we are allowed to access the way
-  local access = find_access_tag(way, access_tags_hierachy)
-  if access_tag_blacklist[access] then
+  -- check if way is impassable 1
+  local impassable = way:get_value_by_key("impassable", "")
+  if "yes" == impassable then
     return
   end
 
-  -- Second, parse the way according to these properties
-  local highway = way.tags:Find("highway")
-  local route = way.tags:Find("route")
-
-  -- Handling ferries and piers
-  local route_speed = speed_profile[route]
-  if(route_speed and route_speed > 0) then
-    highway = route;
-    local duration  = way.tags:Find("duration")
-    if durationIsValid(duration) then
-      way.duration = max( parseDuration(duration), 1 );
-    end
-    way.direction = Way.bidirectional
-    way.speed = route_speed
-  end
-
-  -- leave early of this way is not accessible
-  if "" == highway then
+  -- check if way is impassable 2
+  local status = way:get_value_by_key("status", "")
+  if "impassable" == status then
     return
   end
 
-  if way.speed == -1 then
-    local highway_speed = speed_profile[highway]
-    local max_speed = parse_maxspeed( way.tags:Find("maxspeed") )
-    -- Set the avg speed on the way if it is accessible by road class
-    if highway_speed then
-      if max_speed > highway_speed then
-        way.speed = max_speed
-        -- max_speed = math.huge
-      else
-        way.speed = highway_speed
-      end
-    else
-      -- Set the avg speed on ways that are marked accessible
-      if access_tag_whitelist[access] then
-        way.speed = speed_profile["default"]
-      end
-    end
-    if 0 == max_speed then
-      max_speed = math.huge
-    end
-    way.speed = min(way.speed, max_speed)
+  -- check if piece of road is on a roundabout
+  if "roundabout" == way:get_value_by_key("junction", "") then
+    result.roundabout = true;
   end
 
-  if -1 == way.speed then
-    return
-  end
-
-  -- parse the remaining tags
-  local name = way.tags:Find("name")
-  local ref = way.tags:Find("ref")
-  local junction = way.tags:Find("junction")
-  -- local barrier = way.tags:Find("barrier")
-  -- local cycleway = way.tags:Find("cycleway")
-  local service  = way.tags:Find("service")
+  -- parse the name tags
+  local name = way:get_value_by_key("name", "")
+  local ref = way:get_value_by_key("ref", "")
 
   -- Set the name that will be used for instructions
   if "" ~= ref then
-    way.name = ref
+    result.name = ref
   elseif "" ~= name then
-    way.name = name
+    result.name = name
 --  else
-      --    way.name = highway  -- if no name exists, use way type
-  end
-
-  if "roundabout" == junction then
-    way.roundabout = true;
+      --    result.name = highway  -- if no name exists, use way type
   end
 
   -- Set access restriction flag if access is allowed under certain restrictions only
+  local access = way:get_value_by_key("access", "")
   if access ~= "" and access_tag_restricted[access] then
-    way.is_access_restricted = true
+    result.is_access_restricted = true
   end
 
   -- Set access restriction flag if service is allowed under certain restrictions only
+  local service = way:get_value_by_key("service", "")
   if service ~= "" and service_tag_restricted[service] then
-    way.is_access_restricted = true
+    result.is_access_restricted = true
   end
 
   -- Set direction according to tags on way
-  way.direction = Way.bidirectional
+  result.direction = ResultWay.bidirectional
   if obey_oneway  then
     if oneway == "-1" then
-      way.direction = Way.opposite
+      result.direction = ResultWay.opposite
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
-      way.direction = Way.oneway
+      result.direction = ResultWay.oneway
     end
   end
 
-  -- Override speed settings if explicit forward/backward maxspeeds are given
-  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
-  if maxspeed_forward > 0 then
-    if Way.bidirectional == way.direction then
-      way.backward_speed = way.speed
+  -- parse, extract, massage speed information
+  local route_speed = speed_profile[route]
+  if(route_speed and route_speed > 0) then
+    highway = route;
+    local duration  = way:get_value_by_key("duration", "")
+    if durationIsValid(duration) then
+      result.duration = max( parseDuration(duration), 1 );
     end
-    way.speed = maxspeed_forward
+    result.direction = ResultWay.bidirectional
+    result.speed = route_speed
+  end
+
+  if result.speed == -1 then
+    local highway_speed = speed_profile[highway]
+    local max_speed = parse_maxspeed(way:get_value_by_key("maxspeed", ""))
+    -- Set the avg speed on the way if it is accessible by road class
+    if highway_speed then
+      if max_speed > highway_speed then
+        result.speed = max_speed
+      else
+        result.speed = highway_speed
+      end
+    else
+      -- Set the avg speed on ways that are marked accessible
+      if access_tag_whitelist[access] then
+        result.speed = speed_profile["default"]
+      end
+    end
+    if 0 == max_speed then
+      max_speed = math.huge
+    end
+    result.speed = min(result.speed, max_speed)
+  end
+
+  -- -- Override speed settings if explicit forward/backward maxspeeds are given
+  local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward", ""))
+  local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward", ""))
+  if maxspeed_forward > 0 then
+    if ResultWay.bidirectional == result.direction then
+  --     result.backward_speed = result.speed
+    end
+  --   result.speed = maxspeed_forward
   end
   if maxspeed_backward > 0 then
-    way.backward_speed = maxspeed_backward
+  --   result.backward_speed = maxspeed_backward
   end
 
-  -- Override general direction settings of there is a specific one for our mode of travel
-  if ignore_in_grid[highway] then
-    way.ignore_in_grid = true
+  -- return if we couldn't determine a speed for the way
+  if -1 == result.speed then
+    return
   end
-  way.type = 1
+
+  -- mark if the way should be invisible to the nearest neighbor index
+  if ignore_in_index[highway] then
+    result.ignore_in_index = true
+  end
 
   -- scale speeds to get better avg driving times
-  way.speed = way.speed * speed_reduction
-  if maxspeed_backward > 0 then
-    way.backward_speed = way.backward_speed*speed_reduction
+  result.speed = result.speed * speed_reduction
+  if result.backward_speed > 0 then
+    result.backward_speed = result.backward_speed*speed_reduction
   end
-  return
-end
 
--- These are wrappers to parse vectors of nodes and ways and thus to speed up any tracing JIT
-function node_vector_function(vector)
-  for v in vector.nodes do
-    node_function(v)
-  end
 end
