@@ -166,6 +166,12 @@ function way_function (way, result)
     return
   end
 
+  -- Check if access is forbidden
+  local access = way:get_value_by_key("access", "")
+  if access ~= "" and access_tag_blacklist[access] then
+    return
+  end
+
   -- check if piece of road is on a roundabout
   if "roundabout" == way:get_value_by_key("junction", "") then
     result.roundabout = true;
@@ -185,7 +191,6 @@ function way_function (way, result)
   end
 
   -- Set access restriction flag if access is allowed under certain restrictions only
-  local access = way:get_value_by_key("access", "")
   if access ~= "" and access_tag_restricted[access] then
     result.is_access_restricted = true
   end
@@ -252,10 +257,10 @@ function way_function (way, result)
     if ResultWay.bidirectional == result.direction then
       result.backward_speed = result.speed
     end
-  --   result.speed = maxspeed_forward
+    result.speed = maxspeed_forward
   end
   if maxspeed_backward > 0 then
-  --   result.backward_speed = maxspeed_backward
+    result.backward_speed = maxspeed_backward
   end
 
   -- return if we couldn't determine a speed for the way

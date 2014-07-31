@@ -308,7 +308,7 @@ function way_function (way, result)
           result.backward_speed = walking_speed
         elseif result.direction == ResultWay.opposite then
           result.backward_speed = walking_speed
-          result.speed = way.speed
+          result.speed = result.speed
         end
       end
     end
@@ -358,6 +358,7 @@ function way_function (way, result)
   if maxspeed_backward ~= nil and maxspeed_backward > 0 then
     result.backward_speed = maxspeed_backward
   end
+
 end
 
 function turn_function (angle)
