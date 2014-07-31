@@ -201,6 +201,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                 current = facade->GetCoordinateOfNode(path_data.node);
                 alternate_description_factory.AppendSegment(current, path_data);
             }
+            alternate_description_factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom, raw_route.alt_source_traversed_in_reverse.back());
             alternate_description_factory.Run(facade, config.zoom_level);
 
             if (config.geometry)
