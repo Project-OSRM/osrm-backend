@@ -250,7 +250,7 @@ function way_function (way, result)
   local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward", ""))
   if maxspeed_forward > 0 then
     if ResultWay.bidirectional == result.direction then
-  --     result.backward_speed = result.speed
+      result.backward_speed = result.speed
     end
   --   result.speed = maxspeed_forward
   end

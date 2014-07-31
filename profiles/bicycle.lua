@@ -142,8 +142,6 @@ function node_function (node, result)
 			result.barrier = true
 		end
 	end
-
-	-- return 1
 end
 
 function way_function (way, result)
@@ -179,9 +177,9 @@ function way_function (way, result)
   local name = way:get_value_by_key("name", "")
   local ref = way:get_value_by_key("ref", "")
   local junction = way:get_value_by_key("junction", "")
-  local maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed", "") )
-  local maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward", ""))
-  local maxspeed_backward = parse_maxspeed(way:get_value_by_key( "maxspeed:backward", ""))
+  local maxspeed = parse_maxspeed(way:get_value_by_key ("maxspeed", ""))
+  local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward", ""))
+  local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward", ""))
   local barrier = way:get_value_by_key("barrier", "")
   local oneway = way:get_value_by_key("oneway", "")
   local onewayClass = way:get_value_by_key("oneway:bicycle", "")
@@ -360,9 +358,6 @@ function way_function (way, result)
   if maxspeed_backward ~= nil and maxspeed_backward > 0 then
     result.backward_speed = maxspeed_backward
   end
-
-  -- result.type = 1
-  -- return 1
 end
 
 function turn_function (angle)
