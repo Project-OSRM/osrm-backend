@@ -2,12 +2,12 @@ local ipairs = ipairs
 
 module "Access"
 
-function find_access_tag(source,access_tags_hierachy)
-    for i,v in ipairs(access_tags_hierachy) do
-        local tag = source.tags:Find(v)
-        if tag ~= '' then
-            return tag
-        end
+function find_access_tag(source, access_tags_hierachy)
+  for i,v in ipairs(access_tags_hierachy) do
+    local access_tag = source:get_value_by_key(v, "")
+    if "" ~= access_tag then
+      return access_tag
     end
-    return nil
+  end
+  return ""
 end
