@@ -73,7 +73,7 @@ void ExtractorCallbacks::ProcessRestriction(const boost::optional<InputRestricti
 /** warning: caller needs to take care of synchronization! */
 void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWay &parsed_way)
 {
-    SimpleLogger().Write() << "processing way with speed: " << parsed_way.speed << ", name: " <<
+    SimpleLogger().Write() << "processing way with speed: " << parsed_way.speed << ", backward_speed: " << parsed_way.backward_speed << ", name: " <<
     parsed_way.name;
     if ((0 >= parsed_way.speed) && (0 >= parsed_way.duration))
     { // Only true if the way is specified by the speed profile
@@ -126,7 +126,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWa
     auto pair_wise_segment_split = [&](const osmium::NodeRef &first_node,
                                        const osmium::NodeRef &last_node) {
         SimpleLogger().Write() << "adding edge (" << first_node.ref() << "," <<
-        last_node.ref() << ")";
+        last_node.ref() << "), speed: " << parsed_way.speed;
         external_memory.all_edges_list.push_back(
             InternalExtractorEdge(first_node.ref(),
                                   last_node.ref(),
@@ -151,7 +151,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWa
     if (is_opposite_way)
     {
         SimpleLogger().Write() << "opposite";
-        // std::reverse(current_way.nodes().begin(), current_way.nodes().end());
         parsed_way.direction = ExtractionWay::oneway;
         for_each_pair(current_way.nodes().crbegin(), current_way.nodes().crend(), pair_wise_segment_split);
         external_memory.used_node_id_list.push_back(current_way.nodes().front().ref());
@@ -204,11 +203,15 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWa
 
     if (split_edge)
     { // Only true if the way should be split
-        for (std::vector<NodeID>::size_type n = current_way.nodes().size() - 1; n != 0; --n)
+
+        auto pair_wise_segment_split_2 = [&](const osmium::NodeRef &first_node,
+                                             const osmium::NodeRef &last_node)
         {
+            SimpleLogger().Write() << "adding edge (" << last_node.ref() << "," <<
+            first_node.ref() << "), speed: " << parsed_way.backward_speed;
             external_memory.all_edges_list.push_back(
-                InternalExtractorEdge(current_way.nodes()[n-1].ref(),
-                                      current_way.nodes()[n].ref(),
+                InternalExtractorEdge(last_node.ref(),
+                                      first_node.ref(),
                                       1, // used to be: parsed_way.type, TODO: remove
                                       ExtractionWay::oneway,
                                       parsed_way.backward_speed,
@@ -219,12 +222,45 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWa
                                       parsed_way.isAccessRestricted,
                                       (ExtractionWay::oneway == parsed_way.direction),
                                       split_edge));
-        }
+
+        };
+    if (is_opposite_way)
+    {
+        SimpleLogger().Write() << "opposite2";
+        for_each_pair(current_way.nodes().crbegin(), current_way.nodes().crend(), pair_wise_segment_split_2);
+        external_memory.used_node_id_list.push_back(current_way.nodes().front().ref());
+    }
+    else
+    {
+        for_each_pair(current_way.nodes().cbegin(), current_way.nodes().cend(), pair_wise_segment_split_2);
+        external_memory.used_node_id_list.push_back(current_way.nodes().back().ref());
+    }
+
+
+        //TODO: for_each_pair + lambda
+        // for (std::vector<NodeID>::size_type n = current_way.nodes().size() - 1; n != 0; --n)
+        // {
+        // SimpleLogger().Write() << "adding edge (" << current_way.nodes()[n].ref() << "," <<
+        // current_way.nodes()[n-1].ref() << "), speed: " << parsed_way.backward_speed;
+        //      external_memory.all_edges_list.push_back(
+        //         InternalExtractorEdge(current_way.nodes()[n].ref(),
+        //                               current_way.nodes()[n-1].ref(),
+        //                               1, // used to be: parsed_way.type, TODO: remove
+        //                               ExtractionWay::oneway,
+        //                               parsed_way.backward_speed,
+        //                               name_id,
+        //                               parsed_way.roundabout,
+        //                               parsed_way.ignoreInGrid,
+        //                               (0 < parsed_way.duration),
+        //                               parsed_way.isAccessRestricted,
+        //                               (ExtractionWay::oneway == parsed_way.direction),
+        //                               split_edge));
+        // }
         external_memory.way_start_end_id_list.push_back(
             {(EdgeID)current_way.id(),
+             (NodeID)current_way.nodes()[1].ref(),
              (NodeID)current_way.nodes()[0].ref(),
-             (NodeID)(NodeID)current_way.nodes()[1].ref(),
-             (NodeID)current_way.nodes()[current_way.nodes().size() - 2].ref(),
-             (NodeID)current_way.nodes().back().ref()});
+             (NodeID)current_way.nodes().back().ref(),
+             (NodeID)current_way.nodes()[current_way.nodes().size() - 2].ref()});
     }
 }
