@@ -270,8 +270,10 @@ int Extractor::Run(int argc, char *argv[])
             osmium::io::Reader reader(input_path.string());
             osmium::io::Header header = reader.header();
 
-            // SimpleLogger().Write() << "File generator: " << header.get("generator");
-            // SimpleLogger().Write() << "Timestamp: " << header.get("osmosis_replication_timestamp");
+            SimpleLogger().Write() << "File generator: " << header.get("generator");
+
+            // TODO: write timestamp if non-empty
+            SimpleLogger().Write() << "Timestamp: " << header.get("osmosis_replication_timestamp");
             // SimpleLogger().Write()
             //     << "sequence: " << header.get("osmosis_replication_sequence_number");
             // SimpleLogger().Write()
