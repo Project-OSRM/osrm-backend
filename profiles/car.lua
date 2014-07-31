@@ -167,7 +167,7 @@ function way_function (way, result)
   end
 
   -- Check if access is forbidden
-  local access = way:get_value_by_key("access", "")
+  local access = find_access_tag(way, access_tags_hierachy)
   if access ~= "" and access_tag_blacklist[access] then
     return
   end
