@@ -251,6 +251,11 @@ function way_function (way, result)
     result.speed = min(result.speed, max_speed)
   end
 
+  -- return if we couldn't determine a speed for the way
+  if -1 == result.speed then
+    return
+  end
+
   -- -- Override speed settings if explicit forward/backward maxspeeds are given
   local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward", ""))
   local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward", ""))
@@ -262,11 +267,6 @@ function way_function (way, result)
   end
   if maxspeed_backward > 0 then
     result.backward_speed = maxspeed_backward
-  end
-
-  -- return if we couldn't determine a speed for the way
-  if -1 == result.speed then
-    return
   end
 
   -- mark if the way should be invisible to the nearest neighbor index
