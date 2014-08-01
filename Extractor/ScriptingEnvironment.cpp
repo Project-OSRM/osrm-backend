@@ -53,7 +53,7 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
 
     typedef double (osmium::Location::* location_member_ptr_type)() const;
     // typedef osmium::Location (osmium::Node::* node_member_ptr_type)() const;
-    typedef osmium::TagList& (osmium::Node::* node_member_ptr_type)();
+    // typedef osmium::TagList& (osmium::Node::* node_member_ptr_type)();
 
     using namespace osmium;
     luabind::open(lua_state);
