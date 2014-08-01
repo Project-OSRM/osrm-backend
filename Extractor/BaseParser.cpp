@@ -165,8 +165,7 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
             // set the via node id
             SimpleLogger().Write() << "via: " << member.ref();
 
-            restriction_container.restriction.via.node = restriction_container.restriction.via.node = member.ref();
-            ;
+            restriction_container.restriction.via.node = member.ref();
             break;
 
         case osmium::item_type::way:
