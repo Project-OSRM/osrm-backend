@@ -121,8 +121,8 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
         }
     }
 
-    SimpleLogger().Write() << "http://www.openstreetmap.org/relation/" << relation.id();
-    SimpleLogger().Write() << "number of entries: " << std::distance(fi_begin, fi_end);
+    // SimpleLogger().Write() << "http://www.openstreetmap.org/relation/" << relation.id();
+    // SimpleLogger().Write() << "number of entries: " << std::distance(fi_begin, fi_end);
 
     bool is_only_restriction = false;
 
@@ -131,7 +131,7 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
         if (std::string("restriction") == iter->key() ||
             std::string("restriction::hgv") == iter->key())
         {
-            SimpleLogger().Write() << "restriction type: " << iter->key() << "=" << iter->value();
+            // SimpleLogger().Write() << "restriction type: " << iter->key() << "=" << iter->value();
             const std::string restriction_value(iter->value());
 
             if (restriction_value.find("only_") == 0)
@@ -141,7 +141,7 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
         }
     }
 
-    SimpleLogger().Write() << "No of members: " << relation.members().size();
+    // SimpleLogger().Write() << "No of members: " << relation.members().size();
 
     InputRestrictionContainer restriction_container(is_only_restriction);
 
@@ -163,7 +163,7 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
             }
             BOOST_ASSERT(0 == strcmp("via", role));
             // set the via node id
-            SimpleLogger().Write() << "via: " << member.ref();
+            // SimpleLogger().Write() << "via: " << member.ref();
 
             restriction_container.restriction.via.node = member.ref();
             break;
@@ -173,12 +173,12 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
                          0 == strcmp("via", role));
             if (0 == strcmp("from", role))
             {
-                SimpleLogger().Write() << "from: " << member.ref();
+                // SimpleLogger().Write() << "from: " << member.ref();
                 restriction_container.restriction.from.way = member.ref();
             }
             else if (0 == strcmp("to", role))
             {
-                SimpleLogger().Write() << "to: " << member.ref();
+                // SimpleLogger().Write() << "to: " << member.ref();
                 restriction_container.restriction.to.way = member.ref();
             }
             else if (0 == strcmp("via", role))
@@ -198,11 +198,11 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
         }
     }
 
-    SimpleLogger().Write() << (restriction_container.restriction.flags.is_only ? "only" : "no")
-                           << "-restriction "
-                           << "<" << restriction_container.restriction.from.node << "->"
-                           << restriction_container.restriction.via.node << "->" << restriction_container.restriction.to.node
-                           << ">";
+    // SimpleLogger().Write() << (restriction_container.restriction.flags.is_only ? "only" : "no")
+    //                        << "-restriction "
+    //                        << "<" << restriction_container.restriction.from.node << "->"
+    //                        << restriction_container.restriction.via.node << "->" << restriction_container.restriction.to.node
+    //                        << ">";
 
     return boost::optional<InputRestrictionContainer>(restriction_container);
 }

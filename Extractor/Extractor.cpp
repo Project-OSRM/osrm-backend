@@ -264,6 +264,7 @@ int Extractor::Run(int argc, char *argv[])
         unsigned number_of_relations = 0;
         unsigned number_of_others = 0;
 
+        SimpleLogger().Write() << "parsing in progress";
         TIMER_START(parsing);
         try
         {
@@ -288,6 +289,7 @@ int Extractor::Run(int argc, char *argv[])
             ExtractionWay result_way;
             while (osmium::memory::Buffer buffer = reader.read())
             {
+                SimpleLogger().Write() << "buffer size " << std::distance(buffer.cbegin(), buffer.cend());
                 for (osmium::OSMEntity &entity : buffer)
                 {
                     switch (entity.type())
@@ -319,7 +321,6 @@ int Extractor::Run(int argc, char *argv[])
                         ++number_of_relations;
                         extractor_callbacks->ProcessRestriction(
                             restriction_parser.TryParse(static_cast<osmium::Relation &>(entity)));
-
                         break;
                     default:
                         ++number_of_others;
