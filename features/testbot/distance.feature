@@ -196,18 +196,18 @@ Feature: Distance calculation
             | x    | j  | xj    | 424m +-2 |
             | x    | k  | xk    | 360m +-2 |
             | x    | l  | xl    | 316m +-2 |
-            | x    | m  | xm    | 3000 +-2 |
-            | x    | n  | xn    | 3162 +-2 |
-            | x    | o  | xo    | 3606 +-2 |
-            | x    | p  | xp    | 4243 +-2 |
-            | x    | q  | xq    | 3606 +-2 |
-            | x    | r  | xr    | 3162 +-2 |
-            | x    | s  | xs    | 3000 +-2 |
-            | x    | t  | xt    | 3162 +-2 |
-            | x    | u  | xu    | 3606 +-2 |
-            | x    | v  | xv    | 4243 +-2 |
-            | x    | w  | xw    | 3606 +-2 |
-            | x    | y  | xy    | 3162 +-2 |
+            | x    | m  | xm    | 300m +-2 |
+            | x    | n  | xn    | 316m +-2 |
+            | x    | o  | xo    | 360m +-2 |
+            | x    | p  | xp    | 424m +-2 |
+            | x    | q  | xq    | 360m +-2 |
+            | x    | r  | xr    | 316m +-2 |
+            | x    | s  | xs    | 300m +-2 |
+            | x    | t  | xt    | 316m +-2 |
+            | x    | u  | xu    | 360m +-2 |
+            | x    | v  | xv    | 424m +-2 |
+            | x    | w  | xw    | 360m +-2 |
+            | x    | y  | xy    | 316m +-2 |
 
     @maze
     Scenario: Distance of a maze of short segments
