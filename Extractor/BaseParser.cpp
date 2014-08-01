@@ -50,13 +50,12 @@ BaseParser::BaseParser(ScriptingEnvironment &scripting_environment)
 
 void BaseParser::ReadUseRestrictionsSetting()
 {
-    if (0 != luaL_dostring(lua_state, "return use_turn_restrictions\n"))
+    if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n"))
     {
-        use_turn_restrictions = false;
-    }
-    else if (lua_isboolean(lua_state, -1))
-    {
-        use_turn_restrictions = lua_toboolean(lua_state, -1);
+        if (lua_isboolean(lua_state, -1))
+        {
+            use_turn_restrictions = lua_toboolean(lua_state, -1);
+        }
     }
 
     if (use_turn_restrictions)
@@ -92,6 +91,12 @@ void BaseParser::ReadRestrictionExceptions()
 
 boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation &relation) const
 {
+    // return if turn restrictions should be ignored
+    if (!use_turn_restrictions)
+    {
+        return boost::optional<InputRestrictionContainer>();
+    }
+
     osmium::tags::KeyPrefixFilter filter(false);
     filter.add(true, "restriction");
 
