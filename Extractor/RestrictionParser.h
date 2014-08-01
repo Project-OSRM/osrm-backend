@@ -43,10 +43,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct lua_State;
 class ScriptingEnvironment;
 
-class BaseParser
+class RestrictionParser
 {
   public:
-    BaseParser(ScriptingEnvironment &scripting_environment);
+    RestrictionParser(ScriptingEnvironment &scripting_environment);
 
     boost::optional<InputRestrictionContainer> TryParse(osmium::Relation& relation) const;
 
