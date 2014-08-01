@@ -25,7 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "BaseParser.h"
+#include "RestrictionParser.h"
 #include "ExtractionWay.h"
 #include "ScriptingEnvironment.h"
 
@@ -41,14 +41,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 
-BaseParser::BaseParser(ScriptingEnvironment &scripting_environment)
+RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment)
     : lua_state(scripting_environment.getLuaState()), use_turn_restrictions(true)
 {
     ReadUseRestrictionsSetting();
     ReadRestrictionExceptions();
 }
 
-void BaseParser::ReadUseRestrictionsSetting()
+void RestrictionParser::ReadUseRestrictionsSetting()
 {
     if (0 == luaL_dostring(lua_state, "return use_turn_restrictions\n"))
     {
@@ -68,7 +68,7 @@ void BaseParser::ReadUseRestrictionsSetting()
     }
 }
 
-void BaseParser::ReadRestrictionExceptions()
+void RestrictionParser::ReadRestrictionExceptions()
 {
     if (lua_function_exists(lua_state, "get_exceptions"))
     {
@@ -89,7 +89,7 @@ void BaseParser::ReadRestrictionExceptions()
     }
 }
 
-boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation &relation) const
+boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::Relation &relation) const
 {
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
@@ -207,7 +207,7 @@ boost::optional<InputRestrictionContainer> BaseParser::TryParse(osmium::Relation
     return boost::optional<InputRestrictionContainer>(restriction_container);
 }
 
-bool BaseParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const
+bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const
 {
     // should this restriction be ignored? yes if there's an overlap between:
     // a) the list of modes in the except tag of the restriction

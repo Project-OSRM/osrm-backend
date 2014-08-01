@@ -27,9 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Extractor.h"
 
-#include "BaseParser.h"
 #include "ExtractorCallbacks.h"
 #include "ExtractionContainers.h"
+#include "RestrictionParser.h"
 #include "ScriptingEnvironment.h"
 
 #include "../Util/GitDescription.h"

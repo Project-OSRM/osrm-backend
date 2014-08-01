@@ -25,8 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef BASEPARSER_H_
-#define BASEPARSER_H_
+#ifndef RESTRICTION_PARSER_H_
+#define RESTRICTION_PARSER_H_
 
 #include "../DataStructures/Restriction.h"
 
@@ -42,8 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 struct lua_State;
 class ScriptingEnvironment;
-
-// TODO: rename to RestrictionParser
 
 class BaseParser
 {
@@ -62,4 +60,4 @@ class BaseParser
     bool use_turn_restrictions;
 };
 
-#endif /* BASEPARSER_H_ */
+#endif /* RESTRICTION_PARSER_H_ */
