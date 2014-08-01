@@ -340,7 +340,7 @@ int Extractor::Run(int argc, char *argv[])
         catch (const std::exception &e)
         {
             SimpleLogger().Write(logWARNING) << e.what();
-            std::abort();
+            return 1;
         }
 
         SimpleLogger().Write() << "nodes: " << number_of_nodes << ", ways: " << number_of_ways
