@@ -294,12 +294,6 @@ int Extractor::Run(int argc, char *argv[])
             timestamp_out.write(timestamp.c_str(), timestamp.length());
             timestamp_out.close();
 
-
-            // SimpleLogger().Write()
-            //     << "sequence: " << header.get("osmosis_replication_sequence_number");
-            // SimpleLogger().Write()
-            //     << "replication url: " << header.get("osmosis_replication_base_url");
-
             lua_State *lua_state = scripting_environment.getLuaState();
             luabind::set_pcall_callback(&theCallback);
 
@@ -334,7 +328,6 @@ int Extractor::Run(int argc, char *argv[])
                             boost::ref(result_way));
                         extractor_callbacks->ProcessWay(static_cast<osmium::Way &>(entity),
                                                         result_way);
-
                         break;
                     case osmium::item_type::relation:
                         ++number_of_relations;
