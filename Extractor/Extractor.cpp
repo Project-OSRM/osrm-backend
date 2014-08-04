@@ -297,7 +297,7 @@ int Extractor::Run(int argc, char *argv[])
             lua_State *lua_state = scripting_environment.getLuaState();
             luabind::set_pcall_callback(&theCallback);
 
-            BaseParser restriction_parser(scripting_environment);
+            RestrictionParser restriction_parser(scripting_environment);
 
             ExtractionNode result_node;
             ExtractionWay result_way;
