@@ -121,9 +121,6 @@ boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::R
         }
     }
 
-    // SimpleLogger().Write() << "http://www.openstreetmap.org/relation/" << relation.id();
-    // SimpleLogger().Write() << "number of entries: " << std::distance(fi_begin, fi_end);
-
     bool is_only_restriction = false;
 
     for (auto iter = fi_begin; iter != fi_end; ++iter)
@@ -131,7 +128,6 @@ boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::R
         if (std::string("restriction") == iter->key() ||
             std::string("restriction::hgv") == iter->key())
         {
-            // SimpleLogger().Write() << "restriction type: " << iter->key() << "=" << iter->value();
             const std::string restriction_value(iter->value());
 
             if (restriction_value.find("only_") == 0)
@@ -140,8 +136,6 @@ boost::optional<InputRestrictionContainer> RestrictionParser::TryParse(osmium::R
             }
         }
     }
-
-    // SimpleLogger().Write() << "No of members: " << relation.members().size();
 
     InputRestrictionContainer restriction_container(is_only_restriction);
 

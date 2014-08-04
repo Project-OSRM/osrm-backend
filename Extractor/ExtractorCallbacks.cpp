@@ -130,7 +130,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWa
         external_memory.all_edges_list.push_back(
             InternalExtractorEdge(first_node.ref(),
                                   last_node.ref(),
-                                  1, // used to be: parsed_way.type, TODO: remove
                                   (split_edge ? ExtractionWay::oneway : parsed_way.direction),
                                   parsed_way.speed,
                                   name_id,
@@ -180,7 +179,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWa
             external_memory.all_edges_list.push_back(
                 InternalExtractorEdge(last_node.ref(),
                                       first_node.ref(),
-                                      1, // used to be: parsed_way.type, TODO: remove
                                       ExtractionWay::oneway,
                                       parsed_way.backward_speed,
                                       name_id,
