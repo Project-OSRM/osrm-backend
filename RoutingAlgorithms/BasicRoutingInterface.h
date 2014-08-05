@@ -180,7 +180,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             // facade->FindEdge does not suffice here in case of shortcuts.
             // The above explanation unclear? Think!
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            int edge_weight = INT_MAX;
+            int edge_weight = std::numeric_limits<EdgeWeight>::max();
             for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
                 const int weight = facade->GetEdgeData(edge_id).distance;
@@ -339,7 +339,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             recursion_stack.pop();
 
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            int edge_weight = INT_MAX;
+            int edge_weight = std::numeric_limits<EdgeWeight>::max();
             for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
                 const int weight = facade->GetEdgeData(edge_id).distance;
@@ -364,7 +364,7 @@ template <class DataFacadeT> class BasicRoutingInterface
                     }
                 }
             }
-            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge weight invalid");
+            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(), "edge weight invalid");
 
             const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
             if (ed.shortcut)
