@@ -33,13 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/ObjectToBase64.h"
 #include "../Algorithms/ExtractRouteNames.h"
 #include "../DataStructures/JSONContainer.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/Azimuth.h"
 #include "../Util/StringUtil.h"
 #include "../Util/TimingUtil.h"
-
-#include <boost/range/irange.hpp>
 
 #include <algorithm>
 
@@ -120,7 +119,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         json_result.values["status_message"] = "Found route between points";
 
         // for each unpacked segment add the leg to the description
-        for (const auto i : boost::irange((std::size_t)0, raw_route.unpacked_path_segments.size()))
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
         {
 #ifndef NDEBUG
             const int added_segments =
@@ -278,7 +277,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         json_hint_object.values["checksum"] = raw_route.check_sum;
         JSON::Array json_location_hint_array;
         std::string hint;
-        for (const auto i : boost::irange((std::size_t)0, raw_route.segment_end_coordinates.size()))
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
         {
             EncodeObjectToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
             json_location_hint_array.values.push_back(hint);

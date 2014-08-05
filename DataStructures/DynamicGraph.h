@@ -28,10 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DYNAMICGRAPH_H
 #define DYNAMICGRAPH_H
 
-#include "../DataStructures/DeallocatingVector.h"
+#include "DeallocatingVector.h"
+#include "Range.h"
 
 #include <boost/assert.hpp>
-#include <boost/range/irange.hpp>
 
 #include <cstdint>
 
@@ -43,10 +43,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename EdgeDataT> class DynamicGraph
 {
   public:
-    typedef decltype(boost::irange(0u, 0u)) EdgeRange;
     typedef EdgeDataT EdgeData;
     typedef unsigned NodeIterator;
     typedef unsigned EdgeIterator;
+    typedef osrm::range<EdgeIterator> EdgeRange;
 
     class InputEdge
     {
@@ -88,7 +88,7 @@ template <typename EdgeDataT> class DynamicGraph
         node_list.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
-        for (const auto node : boost::irange(0u, number_of_nodes))
+        for (const auto node : osrm::irange(0u, number_of_nodes))
         {
             EdgeIterator lastEdge = edge;
             while (edge < number_of_edges && graph[edge].source == node)
@@ -103,9 +103,9 @@ template <typename EdgeDataT> class DynamicGraph
         edge_list.reserve((std::size_t)edge_list.size() * 1.1);
         edge_list.resize(position);
         edge = 0;
-        for (const auto node : boost::irange(0u, number_of_nodes))
+        for (const auto node : osrm::irange(0u, number_of_nodes))
         {
-            for (const auto i : boost::irange(node_list[node].firstEdge,
+            for (const auto i : osrm::irange(node_list[node].firstEdge,
                                               node_list[node].firstEdge + node_list[node].edges))
             {
                 edge_list[i].target = graph[edge].target;
@@ -126,7 +126,7 @@ template <typename EdgeDataT> class DynamicGraph
     unsigned GetDirectedOutDegree(const NodeIterator n) const
     {
         unsigned degree = 0;
-        for (const auto edge : boost::irange(BeginEdges(n), EndEdges(n)))
+        for (const auto edge : osrm::irange(BeginEdges(n), EndEdges(n)))
         {
             if (GetEdgeData(edge).forward)
             {
@@ -156,7 +156,7 @@ template <typename EdgeDataT> class DynamicGraph
 
     EdgeRange GetAdjacentEdgeRange(const NodeIterator node) const
     {
-        return boost::irange(BeginEdges(node), EndEdges(node));
+        return osrm::irange(BeginEdges(node), EndEdges(node));
     }
 
     NodeIterator InsertNode()
@@ -190,12 +190,12 @@ template <typename EdgeDataT> class DynamicGraph
                     edge_list.reserve(requiredCapacity * 1.1);
                 }
                 edge_list.resize(edge_list.size() + newSize);
-                for (const auto i : boost::irange(0u, node.edges))
+                for (const auto i : osrm::irange(0u, node.edges))
                 {
                     edge_list[newFirstEdge + i] = edge_list[node.firstEdge + i];
                     makeDummy(node.firstEdge + i);
                 }
-                for (const auto i : boost::irange(node.edges + 1, newSize))
+                for (const auto i : osrm::irange(node.edges + 1, newSize))
                 {
                     makeDummy(newFirstEdge + i);
                 }
@@ -250,7 +250,7 @@ template <typename EdgeDataT> class DynamicGraph
     // searches for a specific edge
     EdgeIterator FindEdge(const NodeIterator from, const NodeIterator to) const
     {
-        for (const auto i : boost::irange(BeginEdges(from), EndEdges(from)))
+        for (const auto i : osrm::irange(BeginEdges(from), EndEdges(from)))
         {
             if (to == edge_list[i].target)
             {

@@ -28,13 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "EdgeBasedGraphFactory.h"
 #include "../Algorithms/BFSComponentExplorer.h"
 #include "../DataStructures/Percent.h"
+#include "../DataStructures/Range.h"
 #include "../Util/ComputeAngle.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/SimpleLogger.h"
 #include "../Util/TimingUtil.h"
 
 #include <boost/assert.hpp>
-#include <boost/range.hpp>
 
 #include <fstream>
 #include <limits>
@@ -134,7 +134,7 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID u, const NodeID v, const
         // TODO: move to lambda function with C++11
         int temp_sum = 0;
 
-        for (const auto i : boost::irange(0u, geometry_size))
+        for (const auto i : osrm::irange(0u, geometry_size))
         {
             forward_dist_prefix_sum[i] = temp_sum;
             temp_sum += forward_geometry[i].second;
@@ -143,7 +143,7 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID u, const NodeID v, const
         }
 
         temp_sum = 0;
-        for (const auto i : boost::irange(0u, geometry_size))
+        for (const auto i : osrm::irange(0u, geometry_size))
         {
             temp_sum += reverse_geometry[reverse_geometry.size() - 1 - i].second;
             reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
@@ -162,7 +162,7 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID u, const NodeID v, const
         }
 
         // traverse arrays from start and end respectively
-        for (const auto i : boost::irange(0u, geometry_size))
+        for (const auto i : osrm::irange(0u, geometry_size))
         {
             BOOST_ASSERT(current_edge_source_coordinate_id ==
                          reverse_geometry[geometry_size - 1 - i].first);
@@ -287,7 +287,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
     Percent p(original_number_of_nodes);
     unsigned removed_node_count = 0;
 
-    for (const NodeID v : boost::irange(0u, original_number_of_nodes))
+    for (const NodeID v : osrm::irange(0u, original_number_of_nodes))
     {
         p.printStatus(v);
 
@@ -418,7 +418,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
     unsigned new_node_count = 0;
     unsigned new_edge_count = 0;
 
-    for(const auto i : boost::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+    for(const auto i : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         if (m_node_based_graph->GetOutDegree(i) > 0)
         {

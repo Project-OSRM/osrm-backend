@@ -28,13 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATIC_GRAPH_H
 #define STATIC_GRAPH_H
 
-#include "../DataStructures/Percent.h"
-#include "../DataStructures/SharedMemoryVectorWrapper.h"
+#include "Percent.h"
+#include "Range.h"
+#include "SharedMemoryVectorWrapper.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
-#include <boost/range/irange.hpp>
 
 #include <tbb/parallel_sort.h>
 
@@ -46,10 +46,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
   public:
-    typedef decltype(boost::irange(0u,0u)) EdgeRange;
     typedef NodeID NodeIterator;
     typedef NodeID EdgeIterator;
     typedef EdgeDataT EdgeData;
+    typedef osrm::range<EdgeIterator> EdgeRange;
+
     class InputEdge
     {
       public:
@@ -83,7 +84,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const
     {
-        return boost::irange(BeginEdges(node), EndEdges(node));
+        return osrm::irange(BeginEdges(node), EndEdges(node));
     }
 
     StaticGraph(const int nodes, std::vector<InputEdge> &graph)
@@ -94,7 +95,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         node_array.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
-        for (const auto node : boost::irange(0u, number_of_nodes+1))
+        for (const auto node : osrm::irange(0u, number_of_nodes+1))
         {
             EdgeIterator last_edge = edge;
             while (edge < number_of_edges && graph[edge].source == node)
@@ -106,7 +107,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         }
         edge_array.resize(position); //(edge)
         edge = 0;
-        for (const auto node : boost::irange(0u, number_of_nodes))
+        for (const auto node : osrm::irange(0u, number_of_nodes))
         {
             EdgeIterator e = node_array[node + 1].first_edge;
             for (EdgeIterator i = node_array[node].first_edge; i != e; ++i)

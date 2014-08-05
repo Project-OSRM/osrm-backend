@@ -29,9 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SHORTEST_PATH_ROUTING_H
 
 #include <boost/assert.hpp>
-#include <boost/range/irange.hpp>
 
 #include "BasicRoutingInterface.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngineData.h"
 #include "../typedefs.h"
 
@@ -57,8 +57,8 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         int distance2 = 0;
         bool search_from_1st_node = true;
         bool search_from_2nd_node = true;
-        NodeID middle1 = UINT_MAX;
-        NodeID middle2 = UINT_MAX;
+        NodeID middle1 = SPECIAL_NODEID;
+        NodeID middle2 = SPECIAL_NODEID;
         std::vector<std::vector<NodeID>> packed_legs1(phantom_nodes_vector.size());
         std::vector<std::vector<NodeID>> packed_legs2(phantom_nodes_vector.size());
 
@@ -82,11 +82,11 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             forward_heap2.Clear();
             reverse_heap1.Clear();
             reverse_heap2.Clear();
-            int local_upper_bound1 = INT_MAX;
-            int local_upper_bound2 = INT_MAX;
+            int local_upper_bound1 = INVALID_EDGE_WEIGHT;
+            int local_upper_bound2 = INVALID_EDGE_WEIGHT;
 
-            middle1 = UINT_MAX;
-            middle2 = UINT_MAX;
+            middle1 = SPECIAL_NODEID;
+            middle2 = SPECIAL_NODEID;
 
             const bool allow_u_turn = current_leg > 0 && uturn_indicators.size() > current_leg && uturn_indicators[current_leg-1];
             EdgeWeight min_edge_offset = 0;
@@ -200,7 +200,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             }
 
             // Was at most one of the two paths not found?
-            BOOST_ASSERT_MSG((INT_MAX != distance1 || INT_MAX != distance2), "no path found");
+            BOOST_ASSERT_MSG((INVALID_EDGE_WEIGHT != distance1 || INVALID_EDGE_WEIGHT != distance2), "no path found");
 
             // Unpack paths if they exist
             std::vector<NodeID> temporary_packed_leg1;
@@ -309,7 +309,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         }
         raw_route_data.unpacked_path_segments.resize(packed_legs1.size());
 
-        for (const std::size_t index : boost::irange((std::size_t)0, packed_legs1.size()))
+        for (const std::size_t index : osrm::irange<std::size_t>(0, packed_legs1.size()))
         {
             BOOST_ASSERT(!phantom_nodes_vector.empty());
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size());

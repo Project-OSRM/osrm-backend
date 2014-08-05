@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/ImportEdge.h"
 #include "../DataStructures/QueryNode.h"
 #include "../DataStructures/Percent.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/TurnInstructions.h"
 
@@ -46,7 +47,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/range/irange.hpp>
 
 #include <tbb/parallel_sort.h>
 
@@ -239,7 +239,7 @@ class TarjanSCC
         int index = 0;
         const NodeID last_node = m_node_based_graph->GetNumberOfNodes();
         std::vector<bool> processing_node_before_recursion(m_node_based_graph->GetNumberOfNodes(), true);
-        for(const NodeID node : boost::irange(0u, last_node))
+        for(const NodeID node : osrm::irange(0u, last_node))
         {
             if (SPECIAL_NODEID == components_index[node])
             {
@@ -344,7 +344,7 @@ class TarjanSCC
         uint64_t total_network_distance = 0;
         p.reinit(m_node_based_graph->GetNumberOfNodes());
         // const NodeID last_u_node = m_node_based_graph->GetNumberOfNodes();
-        for (const NodeID source : boost::irange(0u, last_node))
+        for (const NodeID source : osrm::irange(0u, last_node))
         {
             p.printIncrement();
             for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(source))

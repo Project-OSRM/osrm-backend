@@ -33,18 +33,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../../DataStructures/EdgeBasedNode.h"
 #include "../../DataStructures/ImportNode.h"
 #include "../../DataStructures/PhantomNodes.h"
+#include "../../DataStructures/Range.h"
 #include "../../DataStructures/TurnInstructions.h"
 #include "../../Util/OSRMException.h"
 #include "../../Util/StringUtil.h"
 #include "../../typedefs.h"
 
-#include <boost/range/irange.hpp>
-
 #include <osrm/Coordinate.h>
 
 #include <string>
 
-typedef decltype(boost::irange(0u,0u)) EdgeRange;
+typedef osrm::range<EdgeID> EdgeRange;
 
 template <class EdgeDataT> class BaseDataFacade
 {

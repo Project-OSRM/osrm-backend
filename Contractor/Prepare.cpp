@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/IteratorBasedCRC32.h"
 #include "../DataStructures/BinaryHeap.h"
 #include "../DataStructures/DeallocatingVector.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/StaticRTree.h"
 #include "../DataStructures/RestrictionMap.h"
 
@@ -45,7 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>
-#include <boost/range.hpp>
 
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_sort.h>
@@ -232,7 +232,7 @@ int Prepare::Process(int argc, char *argv[])
     StaticGraph<EdgeData>::EdgeIterator last_edge = edge;
 
     // initializing 'first_edge'-field of nodes:
-    for (const auto node : boost::irange(0u, max_used_node_id))
+    for (const auto node : osrm::irange(0u, max_used_node_id))
     {
         last_edge = edge;
         while ((edge < contracted_edge_count) && (contracted_edge_list[edge].source == node))
@@ -243,7 +243,7 @@ int Prepare::Process(int argc, char *argv[])
         position += edge - last_edge;           // remove
     }
 
-    for (const auto sentinel_counter : boost::irange(max_used_node_id, (unsigned)node_array.size()))
+    for (const auto sentinel_counter : osrm::irange<unsigned>(max_used_node_id, node_array.size()))
     {
         // sentinel element, guarded against underflow
         node_array[sentinel_counter].first_edge = contracted_edge_count;
@@ -271,7 +271,7 @@ int Prepare::Process(int argc, char *argv[])
     int number_of_used_edges = 0;
 
     StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
-    for (const auto edge : boost::irange(0u, (unsigned)contracted_edge_list.size()))
+    for (const auto edge : osrm::irange<std::size_t>(0, contracted_edge_list.size()))
     {
         // no eigen loops
         BOOST_ASSERT(contracted_edge_list[edge].source != contracted_edge_list[edge].target);
