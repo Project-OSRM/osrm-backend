@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../DataStructures/DeallocatingVector.h"
 #include "../DataStructures/Percent.h"
 #include "../DataStructures/QueryEdge.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/StaticGraph.h"
 #include "../Util/GraphLoader.h"
 #include "../Util/SimpleLogger.h"
@@ -72,7 +73,7 @@ int main(int argc, char *argv[])
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
 
         Percent p(m_query_graph->GetNumberOfNodes());
-        for (const auto u : boost::irange(0u, m_query_graph->GetNumberOfNodes()))
+        for (const auto u : osrm::irange(0u, m_query_graph->GetNumberOfNodes()))
         {
             for (const auto eid : m_query_graph->GetAdjacentEdgeRange(u))
             {
