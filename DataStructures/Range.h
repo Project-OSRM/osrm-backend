@@ -49,7 +49,7 @@ template <typename Integer> class range
     const range &begin() const { return *this; }
     const range &end() const { return *this; }
     Integer front() const { return iter; }
-    Integer back() const { return last-1; }
+    Integer back() const { return last - 1; }
 
     // Iterator functions
     bool operator!=(const range &) const { return iter < last; }
@@ -57,6 +57,7 @@ template <typename Integer> class range
     Integer operator*() const { return iter; }
 };
 
+// convenience function to construct an integer range with type deduction
 template <typename Integer> range<Integer> irange(Integer first, Integer last)
 {
     return range<Integer>(first, last);
