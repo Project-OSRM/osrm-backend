@@ -213,8 +213,8 @@ int Prepare::Process(int argc, char *argv[])
     hsgr_output_stream.write((char *)&fingerprint_orig, sizeof(FingerPrint));
     for (const QueryEdge &edge : contracted_edge_list)
     {
-        BOOST_ASSERT(UINT_MAX != edge.source);
-        BOOST_ASSERT(UINT_MAX != edge.target);
+        BOOST_ASSERT(SPECIAL_NODEID != edge.source);
+        BOOST_ASSERT(SPECIAL_NODEID != edge.target);
 
         max_used_node_id = std::max(max_used_node_id, edge.source);
         max_used_node_id = std::max(max_used_node_id, edge.target);
