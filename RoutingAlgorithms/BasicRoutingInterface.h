@@ -295,7 +295,6 @@ template <class DataFacadeT> class BasicRoutingInterface
                 start_index = std::min(start_index, id_vector.size()-1);
             }
 
-            SimpleLogger().Write() << "start_index: " << start_index << ", end_index: " << end_index;
             for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
             {
                 BOOST_ASSERT(i < id_vector.size());
