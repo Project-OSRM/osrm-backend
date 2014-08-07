@@ -204,24 +204,26 @@ int Prepare::Process(int argc, char *argv[])
      */
 
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
-    unsigned max_used_node_id = 0;
-    unsigned contracted_edge_count = contracted_edge_list.size();
+    const unsigned contracted_edge_count = contracted_edge_list.size();
     SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
                            << " edges";
 
     boost::filesystem::ofstream hsgr_output_stream(graph_out, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint_orig, sizeof(FingerPrint));
-    for (const QueryEdge &edge : contracted_edge_list)
-    {
-        BOOST_ASSERT(SPECIAL_NODEID != edge.source);
-        BOOST_ASSERT(SPECIAL_NODEID != edge.target);
+    const unsigned max_used_node_id = 1 + [&contracted_edge_list] {
+        unsigned tmp_max = 0;
+        for (const QueryEdge &edge : contracted_edge_list)
+        {
+            BOOST_ASSERT(SPECIAL_NODEID != edge.source);
+            BOOST_ASSERT(SPECIAL_NODEID != edge.target);
+            tmp_max = std::max(tmp_max, edge.source);
+            tmp_max = std::max(tmp_max, edge.target);
+        }
+        return tmp_max;
+    }();
 
-        max_used_node_id = std::max(max_used_node_id, edge.source);
-        max_used_node_id = std::max(max_used_node_id, edge.target);
-    }
     SimpleLogger().Write(logDEBUG) << "input graph has " << number_of_edge_based_nodes << " nodes";
     SimpleLogger().Write(logDEBUG) << "contracted graph has " << max_used_node_id << " nodes";
-    max_used_node_id += 1;
 
     std::vector<StaticGraph<EdgeData>::NodeArrayEntry> node_array;
     node_array.resize(number_of_edge_based_nodes + 1);
