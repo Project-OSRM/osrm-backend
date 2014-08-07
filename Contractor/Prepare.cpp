@@ -210,7 +210,8 @@ int Prepare::Process(int argc, char *argv[])
 
     boost::filesystem::ofstream hsgr_output_stream(graph_out, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint_orig, sizeof(FingerPrint));
-    const unsigned max_used_node_id = 1 + [&contracted_edge_list] {
+    const unsigned max_used_node_id = 1 + [&contracted_edge_list]
+    {
         unsigned tmp_max = 0;
         for (const QueryEdge &edge : contracted_edge_list)
         {
@@ -494,13 +495,13 @@ void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
         NodeBasedDynamicGraphFromImportEdges(number_of_node_based_nodes, edge_list);
     std::unique_ptr<RestrictionMap> restriction_map =
         std::unique_ptr<RestrictionMap>(new RestrictionMap(node_based_graph, restriction_list));
-    EdgeBasedGraphFactory *edge_based_graph_factory =
-        new EdgeBasedGraphFactory(node_based_graph,
-                                  std::move(restriction_map),
-                                  barrier_node_list,
-                                  traffic_light_list,
-                                  internal_to_external_node_map,
-                                  speed_profile);
+    std::shared_ptr<EdgeBasedGraphFactory> edge_based_graph_factory =
+        std::make_shared<EdgeBasedGraphFactory>(node_based_graph,
+                                                std::move(restriction_map),
+                                                barrier_node_list,
+                                                traffic_light_list,
+                                                internal_to_external_node_map,
+                                                speed_profile);
     edge_list.clear();
     edge_list.shrink_to_fit();
 
@@ -523,8 +524,8 @@ void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     edge_based_graph_factory->GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory->GetEdgeBasedNodes(node_based_edge_list);
-    delete edge_based_graph_factory;
 
+    edge_based_graph_factory.reset();
     node_based_graph.reset();
 }
 
