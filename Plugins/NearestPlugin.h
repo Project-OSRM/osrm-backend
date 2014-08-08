@@ -60,9 +60,6 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
                                                         route_parameters.zoom_level,
                                                         number_of_results);
         
-        
-        
-        
         JSON::Object json_result;
         if (phantom_node_vector.empty() || !phantom_node_vector.front().isValid())
         {
@@ -107,6 +104,7 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
                 json_result.values["name"] = temp_string;
             }
         }
+        
         JSON::render(reply.content, json_result);
     }
 

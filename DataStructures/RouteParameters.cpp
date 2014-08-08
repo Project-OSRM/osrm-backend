@@ -45,7 +45,13 @@ void RouteParameters::setZoomLevel(const short level)
     }
 }
 
-void RouteParameters::setNumberOfResults(const short number) { num_results = number; }
+void RouteParameters::setNumberOfResults(const short number)
+{
+    if (number > 0 && number <= 100)
+    {
+        num_results = number;
+    }
+}
 
 void RouteParameters::setAlternateRouteFlag(const bool flag) { alternate_route = flag; }
 
