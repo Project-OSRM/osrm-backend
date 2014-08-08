@@ -108,7 +108,7 @@ int Prepare::Process(int argc, char *argv[])
     FingerPrint fingerprint_orig;
     CheckRestrictionsFile(fingerprint_orig);
 
-    boost::filesystem::ifstream in(input_path, std::ios::in | std::ios::binary);
+    boost::filesystem::ifstream input_stream(input_path, std::ios::in | std::ios::binary);
 
     node_filename = input_path.string() + ".nodes";
     edge_out = input_path.string() + ".edges";
@@ -138,13 +138,13 @@ int Prepare::Process(int argc, char *argv[])
                   "changing ImportEdge type has influence on memory consumption!");
 #endif
     NodeID number_of_node_based_nodes =
-        readBinaryOSRMGraphFromStream(in,
+        readBinaryOSRMGraphFromStream(input_stream,
                                       edge_list,
                                       barrier_node_list,
                                       traffic_light_list,
                                       &internal_to_external_node_map,
                                       restriction_list);
-    in.close();
+    input_stream.close();
 
     if (edge_list.empty())
     {
