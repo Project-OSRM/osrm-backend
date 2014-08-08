@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RouteParameters::RouteParameters()
     : zoom_level(18), print_instructions(false), alternate_route(true), geometry(true),
-      compression(true), deprecatedAPI(false), check_sum(-1)
+      compression(true), deprecatedAPI(false), check_sum(-1), num_results(1)
 {
 }
 
@@ -44,6 +44,8 @@ void RouteParameters::setZoomLevel(const short level)
         zoom_level = level;
     }
 }
+
+void RouteParameters::setNumberOfResults(const short number) { num_results = number; }
 
 void RouteParameters::setAlternateRouteFlag(const bool flag) { alternate_route = flag; }
 
