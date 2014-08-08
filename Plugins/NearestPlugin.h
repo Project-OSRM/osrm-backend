@@ -59,6 +59,10 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
                                                         phantom_node_vector,
                                                         route_parameters.zoom_level,
                                                         number_of_results);
+        
+        
+        
+        
         JSON::Object json_result;
         if (phantom_node_vector.empty() || !phantom_node_vector.front().isValid())
         {
@@ -68,24 +72,40 @@ template <class DataFacadeT> class NearestPlugin : public BasePlugin
         {
             reply.status = http::Reply::ok;
             json_result.values["status"] = 0;
-            JSON::Array results;
             
-            int vector_length = phantom_node_vector.size();
-            for (int i = 0; i < number_of_results && i < vector_length; i++)
+            if (number_of_results > 1)
+            {
+                JSON::Array results;
+                
+                int vector_length = phantom_node_vector.size();
+                for (int i = 0; i < number_of_results && i < vector_length; i++)
+                {
+                    JSON::Array json_coordinate;
+                    JSON::Object result;
+                    json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
+                                                     COORDINATE_PRECISION);
+                    json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
+                                                     COORDINATE_PRECISION);
+                    result.values["mapped coordinate"] = json_coordinate;
+                    std::string temp_string;
+                    facade->GetName(phantom_node_vector.front().name_id, temp_string);
+                    result.values["name"] = temp_string;
+                    results.values.push_back(result);
+                }
+                json_result.values["results"] = results;
+            }
+            else
             {
                 JSON::Array json_coordinate;
-                JSON::Object result;
-                json_coordinate.values.push_back(phantom_node_vector.at(i).location.lat /
+                json_coordinate.values.push_back(phantom_node_vector.front().location.lat /
                                                  COORDINATE_PRECISION);
-                json_coordinate.values.push_back(phantom_node_vector.at(i).location.lon /
+                json_coordinate.values.push_back(phantom_node_vector.front().location.lon /
                                                  COORDINATE_PRECISION);
-                result.values["mapped coordinate"] = json_coordinate;
+                json_result.values["mapped_coordinate"] = json_coordinate;
                 std::string temp_string;
                 facade->GetName(phantom_node_vector.front().name_id, temp_string);
-                result.values["name"] = temp_string;
-                results.values.push_back(result);
+                json_result.values["name"] = temp_string;
             }
-            json_result.values["results"] = results;
         }
         JSON::render(reply.content, json_result);
     }
