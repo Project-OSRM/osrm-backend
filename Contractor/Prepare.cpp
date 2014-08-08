@@ -161,12 +161,11 @@ int Prepare::Process(int argc, char *argv[])
     DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
 
     // init node_based_edge_list, edge_based_edge_list by edgeList
-    BuildEdgeExpandedGraph(lua_state,
-                           number_of_node_based_nodes,
-                           number_of_edge_based_nodes,
-                           node_based_edge_list,
-                           edge_based_edge_list,
-                           speed_profile);
+    number_of_edge_based_nodes = BuildEdgeExpandedGraph(lua_state,
+                                                        number_of_node_based_nodes,
+                                                        node_based_edge_list,
+                                                        edge_based_edge_list,
+                                                        speed_profile);
     lua_close(lua_state);
 
     TIMER_STOP(expansion);
@@ -483,9 +482,8 @@ Prepare::SetupScriptingEnvironment(lua_State *lua_state,
 /**
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
-void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
+std::size_t Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
                                      NodeID number_of_node_based_nodes,
-                                     unsigned &number_of_edge_based_nodes,
                                      std::vector<EdgeBasedNode> &node_based_edge_list,
                                      DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
                                      EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile)
@@ -514,7 +512,7 @@ void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
     traffic_light_list.clear();
     traffic_light_list.shrink_to_fit();
 
-    number_of_edge_based_nodes = edge_based_graph_factory->GetNumberOfEdgeBasedNodes();
+    const std::size_t number_of_edge_based_nodes = edge_based_graph_factory->GetNumberOfEdgeBasedNodes();
 
     BOOST_ASSERT(number_of_edge_based_nodes != std::numeric_limits<unsigned>::max());
 #ifndef WIN32
@@ -527,6 +525,8 @@ void Prepare::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     edge_based_graph_factory.reset();
     node_based_graph.reset();
+
+    return number_of_edge_based_nodes;
 }
 
 /**

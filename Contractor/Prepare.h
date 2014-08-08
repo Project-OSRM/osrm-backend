@@ -33,12 +33,11 @@ class Prepare
     void CheckRestrictionsFile(FingerPrint &fingerprint_orig);
     bool SetupScriptingEnvironment(lua_State *myLuaState,
                                    EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
-    void BuildEdgeExpandedGraph(lua_State *myLuaState,
-                                NodeID nodeBasedNodeNumber,
-                                unsigned &nodeBasedEdgesNumber,
-                                std::vector<EdgeBasedNode> &nodeBasedEdgeList,
-                                DeallocatingVector<EdgeBasedEdge> &edgeBasedEdgeList,
-                                EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
+    std::size_t BuildEdgeExpandedGraph(lua_State *myLuaState,
+                                       NodeID nodeBasedNodeNumber,
+                                       std::vector<EdgeBasedNode> &nodeBasedEdgeList,
+                                       DeallocatingVector<EdgeBasedEdge> &edgeBasedEdgeList,
+                                       EdgeBasedGraphFactory::SpeedProfileProperties &speed_profile);
     void WriteNodeMapping();
     void BuildRTree(std::vector<EdgeBasedNode> &node_based_edge_list);
 
