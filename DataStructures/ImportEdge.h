@@ -44,7 +44,7 @@ struct NodeBasedEdge
                            bool roundabout,
                            bool in_tiny_cc,
                            bool access_restricted,
-                           bool contra_flow,
+                           TravelMode travel_mode,
                            bool is_split);
 
     NodeID source;
@@ -57,7 +57,7 @@ struct NodeBasedEdge
     bool roundabout : 1;
     bool in_tiny_cc : 1;
     bool access_restricted : 1;
-    bool contra_flow : 1;
+    TravelMode travel_mode : 1;
     bool is_split : 1;
 
     NodeBasedEdge() = delete;

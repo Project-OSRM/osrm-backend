@@ -718,11 +718,11 @@ TurnInstruction EdgeBasedGraphFactory::AnalyzeTurn(const NodeID node_u,
     const EdgeData &data1 = m_node_based_graph->GetEdgeData(edge1);
     const EdgeData &data2 = m_node_based_graph->GetEdgeData(edge2);
 
-    if (!data1.contraFlow && data2.contraFlow)
+    if (!data1.travel_mode && data2.travel_mode)
     {
         return TurnInstruction::EnterAgainstAllowedDirection;
     }
-    if (data1.contraFlow && !data2.contraFlow)
+    if (data1.travel_mode && !data2.travel_mode)
     {
         return TurnInstruction::LeaveAgainstAllowedDirection;
     }

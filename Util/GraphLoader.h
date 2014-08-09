@@ -129,8 +129,8 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     short type;
     NodeID nameID;
     int length;
-    bool is_roundabout, ignore_in_grid, is_access_restricted, is_contra_flow, is_split;
-
+    bool is_roundabout, ignore_in_grid, is_access_restricted, is_split;
+    TravelMode travel_mode;
     for (EdgeID i = 0; i < m; ++i)
     {
         input_stream.read((char *)&source, sizeof(unsigned));
@@ -143,7 +143,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&is_roundabout, sizeof(bool));
         input_stream.read((char *)&ignore_in_grid, sizeof(bool));
         input_stream.read((char *)&is_access_restricted, sizeof(bool));
-        input_stream.read((char *)&is_contra_flow, sizeof(bool));
+        input_stream.read((char *)&travel_mode, sizeof(TravelMode));
         input_stream.read((char *)&is_split, sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
@@ -200,7 +200,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
                                is_roundabout,
                                ignore_in_grid,
                                is_access_restricted,
-                               is_contra_flow,
+                               travel_mode,
                                is_split);
     }
 
@@ -306,7 +306,8 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
     short type;
     NodeID nameID;
     int length;
-    bool is_roundabout, ignore_in_grid, is_access_restricted, is_contra_flow, is_split;
+    bool is_roundabout, ignore_in_grid, is_access_restricted, is_split;
+    TravelMode travel_mode;
 
     for (EdgeID i = 0; i < m; ++i)
     {
@@ -320,7 +321,7 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&is_roundabout, sizeof(bool));
         input_stream.read((char *)&ignore_in_grid, sizeof(bool));
         input_stream.read((char *)&is_access_restricted, sizeof(bool));
-        input_stream.read((char *)&is_contra_flow, sizeof(bool));
+        input_stream.read((char *)&travel_mode, sizeof(TravelMode));
         input_stream.read((char *)&is_split, sizeof(bool));
 
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge");

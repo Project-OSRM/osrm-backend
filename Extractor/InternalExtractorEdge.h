@@ -38,7 +38,7 @@ struct InternalExtractorEdge
     InternalExtractorEdge()
         : start(0), target(0), type(0), direction(0), speed(0), name_id(0), is_roundabout(false),
           is_in_tiny_cc(false), is_duration_set(false), is_access_restricted(false),
-          is_contra_flow(false), is_split(false)
+          travel_mode(0), is_split(false)
     {
     }
 
@@ -52,12 +52,12 @@ struct InternalExtractorEdge
                                    bool is_in_tiny_cc,
                                    bool is_duration_set,
                                    bool is_access_restricted,
-                                   bool is_contra_flow,
+                                   TravelMode travel_mode,
                                    bool is_split)
         : start(start), target(target), type(type), direction(direction), speed(speed),
           name_id(name_id), is_roundabout(is_roundabout), is_in_tiny_cc(is_in_tiny_cc),
           is_duration_set(is_duration_set), is_access_restricted(is_access_restricted),
-          is_contra_flow(is_contra_flow), is_split(is_split)
+          travel_mode(travel_mode), is_split(is_split)
     {
         BOOST_ASSERT(0 <= type);
     }
@@ -83,7 +83,7 @@ struct InternalExtractorEdge
     bool is_in_tiny_cc;
     bool is_duration_set;
     bool is_access_restricted;
-    bool is_contra_flow;
+    TravelMode travel_mode;
     bool is_split;
 
     FixedPointCoordinate source_coordinate;
