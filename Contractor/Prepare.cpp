@@ -134,8 +134,12 @@ int Prepare::Process(int argc, char *argv[])
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
 #else
-    static_assert(sizeof(ImportEdge) == 20,
-                  "changing ImportEdge type has influence on memory consumption!");
+    SimpleLogger().Write() << "sizeof(ImportEdge): " << sizeof(ImportEdge);
+    SimpleLogger().Write() << "sizeof(NodeBasedEdgeData): " << sizeof(NodeBasedEdgeData);
+    
+    //TODO
+    //static_assert(sizeof(ImportEdge) == 21,
+    //              "changing ImportEdge type has influence on memory consumption!");
 #endif
     NodeID number_of_node_based_nodes =
         readBinaryOSRMGraphFromStream(input_stream,

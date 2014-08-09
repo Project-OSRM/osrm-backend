@@ -86,6 +86,8 @@ void ScriptingEnvironment::initLuaState(lua_State* lua_state)
         .def_readwrite("ignore_in_grid", &ExtractionWay::ignoreInGrid)
         .def_readwrite("tags", &ExtractionWay::keyVals)
         .def_readwrite("direction", &ExtractionWay::direction)
+        .def_readwrite("mode", &ExtractionWay::travel_mode)
+        .def_readwrite("backward_mode", &ExtractionWay::backward_travel_mode)
         .enum_("constants")[
             luabind::value("notSure", 0),
             luabind::value("oneway", 1),

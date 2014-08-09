@@ -45,8 +45,10 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
     start_phantom = source;
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? source.reverse_weight : source.forward_weight);
+    const TravelMode travel_mode =
+          (traversed_in_reverse ? source.backward_travel_mode : source.travel_mode);
     AppendSegment(source.location,
-                  PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration));
+                  PathData(0, source.name_id, TurnInstruction::HeadOn, segment_duration, travel_mode));
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -57,6 +59,7 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
     target_phantom = target;
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
+<<<<<<< HEAD
     path_description.emplace_back(target.location,
                                   target.name_id,
                                   segment_duration,
@@ -64,7 +67,8 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
                                   is_via_location ? TurnInstruction::ReachViaLocation
                                                   : TurnInstruction::NoTurn,
                                   true,
-                                  true);
+                                  true,
+                                  travel_mode);
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -81,7 +85,8 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                   path_point.name_id,
                                   path_point.segment_duration,
                                   0.f,
-                                  path_point.turn_instruction);
+                                  path_point.turn_instruction,
+                                  path_point.travel_mode);
 }
 
 JSON::Value DescriptionFactory::AppendEncodedPolylineString(const bool return_encoded)

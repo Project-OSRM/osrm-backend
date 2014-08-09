@@ -39,7 +39,8 @@ struct PhantomNode
     PhantomNode(NodeID forward_node_id, NodeID reverse_node_id, unsigned name_id,
                 int forward_weight, int reverse_weight, int forward_offset, int reverse_offset,
                 unsigned packed_geometry_id, FixedPointCoordinate &location,
-                unsigned short fwd_segment_position) :
+                unsigned short fwd_segment_position,
+                TravelMode travel_mode, TravelMode backward_travel_mode) :
         forward_node_id(forward_node_id),
         reverse_node_id(reverse_node_id),
         name_id(name_id),
@@ -49,7 +50,9 @@ struct PhantomNode
         reverse_offset(reverse_offset),
         packed_geometry_id(packed_geometry_id),
         location(location),
-        fwd_segment_position(fwd_segment_position)
+        fwd_segment_position(fwd_segment_position),
+        travel_mode(travel_mode),
+        backward_travel_mode(backward_travel_mode)
     { }
 
     PhantomNode() :
@@ -61,7 +64,9 @@ struct PhantomNode
         forward_offset(0),
         reverse_offset(0),
         packed_geometry_id(SPECIAL_EDGEID),
-        fwd_segment_position(0)
+        fwd_segment_position(0),
+        travel_mode(0),
+        backward_travel_mode(0)
     { }
 
     NodeID forward_node_id;
@@ -74,7 +79,9 @@ struct PhantomNode
     unsigned packed_geometry_id;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
-
+    TravelMode travel_mode;
+    TravelMode backward_travel_mode;
+    
     int GetForwardWeightPlusOffset() const
     {
         if (SPECIAL_NODEID == forward_node_id)

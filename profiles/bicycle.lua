@@ -94,7 +94,13 @@ u_turn_penalty      = 20
 use_turn_restrictions   = false
 turn_penalty      = 60
 turn_bias         = 1.4
--- End of globals
+
+
+--modes
+mode_normal = 1
+mode_pushing = 2
+mode_ferry = 3
+mode_train = 4
 
 
 local function parse_maxspeed(source)
@@ -229,6 +235,7 @@ function way_function (way)
     -- public_transport platforms (new tagging platform)
     way.speed = platform_speeds[public_transport]
     elseif railway and railway_speeds[railway] then
+      way.mode = mode_train
      -- railways
     if access and access_tag_whitelist[access] then
       way.speed = railway_speeds[railway]
@@ -251,11 +258,14 @@ function way_function (way)
       if pedestrian_speeds[highway] then
         -- pedestrian-only ways and areas
         way.speed = pedestrian_speeds[highway]
+        way.mode = mode_pushing
       elseif man_made and man_made_speeds[man_made] then
         -- man made structures
         way.speed = man_made_speeds[man_made]
+        way.mode = mode_pushing
       elseif foot == 'yes' then
         way.speed = walking_speed
+        way.mode = mode_pushing
       end
     end
   end
@@ -308,9 +318,11 @@ function way_function (way)
       if junction ~= "roundabout" then
         if way.direction == Way.oneway then
           way.backward_speed = walking_speed
+          way.mode = mode_pushing
         elseif way.direction == Way.opposite then
           way.backward_speed = walking_speed
           way.speed = way.speed
+          way.mode = mode_pushing
         end
       end
     end

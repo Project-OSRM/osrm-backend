@@ -45,16 +45,19 @@ struct SegmentInformation
     TurnInstruction turn_instruction;
     bool necessary:1;
     bool is_via_location:1;
-
+    TravelMode  travel_mode;
+    
     explicit SegmentInformation(const FixedPointCoordinate &location,
                                 const NodeID name_id,
                                 const EdgeWeight duration,
                                 const float length,
                                 const TurnInstruction turn_instruction,
                                 const bool necessary,
-                                const bool is_via_location)
+                                const bool is_via_location,
+                                const TravelMode travel_mode)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
-          turn_instruction(turn_instruction), necessary(necessary), is_via_location(is_via_location)
+          turn_instruction(turn_instruction), necessary(necessary), is_via_location(is_via_location),
+          travel_mode(travel_mode)
     {
     }
 
@@ -62,9 +65,11 @@ struct SegmentInformation
                                 const NodeID name_id,
                                 const EdgeWeight duration,
                                 const float length,
-                                const TurnInstruction turn_instruction)
+                                const TurnInstruction turn_instruction,
+                                const TravelMode travel_mode)
         : location(location), name_id(name_id), duration(duration), length(length), bearing(0),
-          turn_instruction(turn_instruction), necessary(turn_instruction != TurnInstruction::NoTurn), is_via_location(false)
+          turn_instruction(turn_instruction), necessary(turn_instruction != TurnInstruction::NoTurn), is_via_location(false),
+          travel_mode(travel_mode)
     {
     }
 };

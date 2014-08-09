@@ -112,8 +112,10 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         parsed_way.direction = ExtractionWay::oneway;
     }
 
-    const bool split_edge =
-        (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
+    bool split_edge = parsed_way.IsBidirectional() && parsed_way.HasDiffDirections();
+    
+    //const bool split_edge =
+    //    (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
 
     for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
     {
@@ -128,7 +130,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
             parsed_way.ignoreInGrid,
             (0 < parsed_way.duration),
             parsed_way.isAccessRestricted,
-            false,
+            parsed_way.travel_mode,
             split_edge));
         external_memory.used_node_id_list.push_back(parsed_way.path[n]);
     }
@@ -158,7 +160,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
                                       parsed_way.ignoreInGrid,
                                       (0 < parsed_way.duration),
                                       parsed_way.isAccessRestricted,
-                                      (ExtractionWay::oneway == parsed_way.direction),
+                                      parsed_way.backward_travel_mode,
                                       split_edge));
         }
         external_memory.way_start_end_id_list.push_back(

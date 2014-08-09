@@ -801,7 +801,9 @@ class StaticRTree
                          current_segment.reverse_offset,
                          current_segment.packed_geometry_id,
                          foot_point_coordinate_on_segment,
-                         current_segment.fwd_segment_position);
+                         current_segment.fwd_segment_position,
+                         current_segment.travel_mode,
+                         current_segment.backward_travel_mode);
 
                     // Hack to fix rounding errors and wandering via nodes.
                     FixUpRoundingIssue(input_coordinate, result_phantom_node_vector.back());
@@ -1077,7 +1079,9 @@ class StaticRTree
                                                    current_edge.reverse_offset,
                                                    current_edge.packed_geometry_id,
                                                    nearest,
-                                                   current_edge.fwd_segment_position};
+                                                   current_edge.fwd_segment_position,
+                                                   current_edge.travel_mode,
+                                                   current_edge.backward_travel_mode};
                             nearest_edge = current_edge;
                         }
                     }

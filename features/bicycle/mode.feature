@@ -1,4 +1,4 @@
-routing @bicycle @mode
+@routing @bicycle @mode
 Feature: Bike - Mode flag
 
 # bicycle modes:

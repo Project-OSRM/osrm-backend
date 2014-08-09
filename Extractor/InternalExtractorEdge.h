@@ -65,12 +65,12 @@ struct InternalExtractorEdge
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_value()
     {
-        return InternalExtractorEdge(0, 0, 0, 0, 0, 0, false, false, false, false, false, false);
+        return InternalExtractorEdge(0, 0, 0, 0, 0, 0, false, false, false, false, 0, false);
     }
     static InternalExtractorEdge max_value()
     {
         return InternalExtractorEdge(
-            SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, 0, false, false, false, false, false, false);
+            SPECIAL_NODEID, SPECIAL_NODEID, 0, 0, 0, 0, false, false, false, false, 0, false);
     }
 
     NodeID start;

@@ -6,6 +6,14 @@
 -- Secondary road:  18km/h = 18000m/3600s = 100m/20s
 -- Tertiary road:  12km/h = 12000m/3600s = 100m/30s
 
+-- modes:
+-- 1: normal
+-- 2: route
+-- 3: river downstream
+-- 4: river upstream
+-- 5: steps down
+-- 6: steps up
+
 speed_profile = {
   ["primary"] = 36,
   ["secondary"] = 18,
@@ -61,12 +69,16 @@ function way_function (way)
 
   if route ~= nil and durationIsValid(duration) then
     way.duration = math.max( 1, parseDuration(duration) )
+  	way.mode = 2
+  	way.backward_mode = 2
   else
     local speed_forw = speed_profile[highway] or speed_profile['default']
     local speed_back = speed_forw
 
     if highway == "river" then
       local temp_speed = speed_forw;
+    	way.mode = 3
+    	way.backward_mode = 4
       speed_forw = temp_speed*1.5
       speed_back = temp_speed/1.5
     end

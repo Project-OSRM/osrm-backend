@@ -53,6 +53,8 @@ struct ExtractionWay
         roundabout = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
+        travel_mode = 0;
+        backward_travel_mode = 0;
     }
 
     enum Directions
@@ -60,6 +62,22 @@ struct ExtractionWay
       oneway,
       bidirectional,
       opposite };
+    
+    inline bool IsBidirectional() { return travel_mode!=0 && backward_travel_mode!=0; }
+    inline bool IsOneway() { return travel_mode!=0 && backward_travel_mode==0; }
+    inline bool IsOpposite() { return travel_mode==0 && backward_travel_mode!=0; }
+    inline bool HasDiffDirections() { return (travel_mode != backward_travel_mode) || (speed != backward_speed); }
+    inline Directions Direction()
+    {
+        if( IsOneway() ) {
+            return ExtractionWay::oneway;
+        }
+        if( IsOpposite() ) {
+            return ExtractionWay::opposite;
+        }
+        return ExtractionWay::bidirectional;
+    }
+
     unsigned id;
     unsigned nameID;
     double speed;
@@ -74,6 +92,8 @@ struct ExtractionWay
     bool ignoreInGrid;
     std::vector<NodeID> path;
     HashTable<std::string, std::string> keyVals;
+    TravelMode travel_mode;
+    TravelMode backward_travel_mode;
 };
 
 #endif // EXTRACTION_WAY_H

@@ -181,7 +181,9 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
                                                 reverse_dist_prefix_sum[i],
                                                 m_geometry_compressor.GetPositionForID(e1),
                                                 i,
-                                                belongs_to_tiny_cc);
+                                                belongs_to_tiny_cc,
+                                                forward_data.travel_mode,
+                                                reverse_data.travel_mode);
             current_edge_source_coordinate_id = current_edge_target_coordinate_id;
 
             BOOST_ASSERT(m_edge_based_node_list.back().IsCompressed());
@@ -231,7 +233,9 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
                                             0,
                                             SPECIAL_EDGEID,
                                             0,
-                                            belongs_to_tiny_cc);
+                                            belongs_to_tiny_cc,
+                                            forward_data.travel_mode,
+                                            reverse_data.travel_mode);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -648,7 +652,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(const std::string &original_edg
                     (edge_is_compressed ? m_geometry_compressor.GetPositionForID(e1) : v),
                     edge_data1.nameID,
                     turn_instruction,
-                    edge_is_compressed);
+                    edge_is_compressed,
+                    edge_data2.travel_mode);
 
                 ++original_edges_counter;
 
