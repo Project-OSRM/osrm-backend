@@ -53,12 +53,13 @@ void BaseParser::ReadUseRestrictionsSetting()
 {
     if (0 != luaL_dostring(lua_state, "return use_turn_restrictions\n"))
     {
-        throw OSRMException("ERROR occured in scripting block");
+        use_turn_restrictions = false;
     }
-    if (lua_isboolean(lua_state, -1))
+    else if (lua_isboolean(lua_state, -1))
     {
         use_turn_restrictions = lua_toboolean(lua_state, -1);
     }
+
     if (use_turn_restrictions)
     {
         SimpleLogger().Write() << "Using turn restrictions";

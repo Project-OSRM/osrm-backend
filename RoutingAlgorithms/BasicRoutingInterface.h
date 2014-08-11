@@ -63,10 +63,15 @@ template <class DataFacadeT> class BasicRoutingInterface
                             SearchEngineData::QueryHeap &reverse_heap,
                             NodeID *middle_node_id,
                             int *upper_bound,
+                            const int min_edge_offset,
                             const bool forward_direction) const
     {
         const NodeID node = forward_heap.DeleteMin();
         const int distance = forward_heap.GetKey(node);
+
+        // const NodeID parentnode = forward_heap.GetData(node).parent;
+        // SimpleLogger().Write() << (forward_direction ? "[fwd] " : "[rev] ") << "settled edge (" << parentnode << "," << node << "), dist: " << distance;
+
         if (reverse_heap.WasInserted(node))
         {
             const int new_distance = reverse_heap.GetKey(node) + distance;
@@ -76,18 +81,22 @@ template <class DataFacadeT> class BasicRoutingInterface
                 {
                     *middle_node_id = node;
                     *upper_bound = new_distance;
+                //     SimpleLogger().Write() << "accepted middle node " << node << " at distance " << new_distance;
+                // } else {
+                //     SimpleLogger().Write() << "discared middle node " << node << " at distance " << new_distance;
                 }
             }
         }
 
-        if (distance > *upper_bound)
+        if (distance + min_edge_offset > *upper_bound)
         {
+            // SimpleLogger().Write() << "min_edge_offset: " << min_edge_offset;
             forward_heap.DeleteAll();
             return;
         }
 
         // Stalling
-        for (auto edge : facade->GetAdjacentEdgeRange(node))
+        for (const auto edge : facade->GetAdjacentEdgeRange(node))
         {
             const EdgeData &data = facade->GetEdgeData(edge);
             const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
@@ -108,7 +117,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             }
         }
 
-        for (auto edge : facade->GetAdjacentEdgeRange(node))
+        for (const auto edge : facade->GetAdjacentEdgeRange(node))
         {
             const EdgeData &data = facade->GetEdgeData(edge);
             bool forward_directionFlag = (forward_direction ? data.forward : data.backward);
@@ -171,8 +180,8 @@ template <class DataFacadeT> class BasicRoutingInterface
             // facade->FindEdge does not suffice here in case of shortcuts.
             // The above explanation unclear? Think!
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            int edge_weight = INT_MAX;
-            for (auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
+            int edge_weight = std::numeric_limits<EdgeWeight>::max();
+            for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
                 const int weight = facade->GetEdgeData(edge_id).distance;
                 if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
@@ -192,7 +201,7 @@ template <class DataFacadeT> class BasicRoutingInterface
             */
             if (SPECIAL_EDGEID == smaller_edge_id)
             {
-                for (auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
+                for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
                 {
                     const int weight = facade->GetEdgeData(edge_id).distance;
                     if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
@@ -233,18 +242,18 @@ template <class DataFacadeT> class BasicRoutingInterface
                     facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id),
                                                     id_vector);
 
-                    const int start_index =
+                    const std::size_t start_index =
                         (unpacked_path.empty()
                              ? ((start_traversed_in_reverse)
                                     ? id_vector.size() -
                                           phantom_node_pair.source_phantom.fwd_segment_position - 1
                                     : phantom_node_pair.source_phantom.fwd_segment_position)
                              : 0);
-                    const int end_index = id_vector.size();
+                    const std::size_t end_index = id_vector.size();
 
                     BOOST_ASSERT(start_index >= 0);
                     BOOST_ASSERT(start_index <= end_index);
-                    for (int i = start_index; i < end_index; ++i)
+                    for (std::size_t i = start_index; i < end_index; ++i)
                     {
                         unpacked_path.emplace_back(id_vector[i], name_index, TurnInstruction::NoTurn, 0);
                     }
@@ -258,38 +267,37 @@ template <class DataFacadeT> class BasicRoutingInterface
             std::vector<unsigned> id_vector;
             facade->GetUncompressedGeometry(phantom_node_pair.target_phantom.packed_geometry_id,
                                             id_vector);
-            if (target_traversed_in_reverse)
-            {
-                std::reverse(id_vector.begin(), id_vector.end());
-            }
             const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id ==
                                         phantom_node_pair.target_phantom.packed_geometry_id) &&
                                        unpacked_path.empty();
 
-            int start_index = 0;
-            int end_index = phantom_node_pair.target_phantom.fwd_segment_position;
-            if (target_traversed_in_reverse)
-            {
-                end_index =
-                    id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
-            }
+            std::size_t start_index = 0;
             if (is_local_path)
             {
                 start_index = phantom_node_pair.source_phantom.fwd_segment_position;
-                end_index = phantom_node_pair.target_phantom.fwd_segment_position;
                 if (target_traversed_in_reverse)
                 {
                     start_index =
                         id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position;
-                    end_index =
-                        id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
                 }
             }
 
-            BOOST_ASSERT(start_index >= 0);
-            for (int i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
+            std::size_t end_index = phantom_node_pair.target_phantom.fwd_segment_position;
+            if (target_traversed_in_reverse)
             {
-                BOOST_ASSERT(i >= -1);
+                std::reverse(id_vector.begin(), id_vector.end());
+                end_index =
+                    id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position;
+            }
+
+            if (start_index > end_index)
+            {
+                start_index = std::min(start_index, id_vector.size()-1);
+            }
+
+            for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
+            {
+                BOOST_ASSERT(i < id_vector.size());
                 unpacked_path.emplace_back(PathData{id_vector[i],
                                            phantom_node_pair.target_phantom.name_id,
                                            TurnInstruction::NoTurn,
@@ -304,8 +312,8 @@ template <class DataFacadeT> class BasicRoutingInterface
         // the last node.
         if (unpacked_path.size() > 1)
         {
-            const unsigned last_index = unpacked_path.size() - 1;
-            const unsigned second_to_last_index = last_index - 1;
+            const std::size_t last_index = unpacked_path.size() - 1;
+            const std::size_t second_to_last_index = last_index - 1;
 
             // looks like a trivially true check but tests for underflow
             BOOST_ASSERT(last_index > second_to_last_index);
@@ -330,8 +338,8 @@ template <class DataFacadeT> class BasicRoutingInterface
             recursion_stack.pop();
 
             EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            int edge_weight = INT_MAX;
-            for (auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
+            int edge_weight = std::numeric_limits<EdgeWeight>::max();
+            for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
             {
                 const int weight = facade->GetEdgeData(edge_id).distance;
                 if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
@@ -344,7 +352,7 @@ template <class DataFacadeT> class BasicRoutingInterface
 
             if (SPECIAL_EDGEID == smaller_edge_id)
             {
-                for (auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
+                for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
                 {
                     const int weight = facade->GetEdgeData(edge_id).distance;
                     if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
@@ -355,7 +363,7 @@ template <class DataFacadeT> class BasicRoutingInterface
                     }
                 }
             }
-            BOOST_ASSERT_MSG(edge_weight != INT_MAX, "edge weight invalid");
+            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(), "edge weight invalid");
 
             const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
             if (ed.shortcut)
@@ -379,20 +387,10 @@ template <class DataFacadeT> class BasicRoutingInterface
                                            const NodeID middle_node_id,
                                            std::vector<NodeID> &packed_path) const
     {
-        NodeID current_node_id = middle_node_id;
-        while (current_node_id != forward_heap.GetData(current_node_id).parent)
-        {
-            current_node_id = forward_heap.GetData(current_node_id).parent;
-            packed_path.emplace_back(current_node_id);
-        }
+        RetrievePackedPathFromSingleHeap(forward_heap, middle_node_id, packed_path);
         std::reverse(packed_path.begin(), packed_path.end());
         packed_path.emplace_back(middle_node_id);
-        current_node_id = middle_node_id;
-        while (current_node_id != reverse_heap.GetData(current_node_id).parent)
-        {
-            current_node_id = reverse_heap.GetData(current_node_id).parent;
-            packed_path.emplace_back(current_node_id);
-        }
+        RetrievePackedPathFromSingleHeap(reverse_heap, middle_node_id, packed_path);
     }
 
     inline void RetrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,

@@ -312,3 +312,72 @@ Feature: Car - Turn restrictions
             | e    | f  | ae,xa,bx,fb                      |
             | c    | f  | dc,da,ae,ge,hg,hg,ge,ae,xa,bx,fb |
             | d    | f  | da,ae,ge,hg,hg,ge,ae,xa,bx,fb    |
+
+    @except
+    Scenario: Car - two only_ restrictions share same to-way
+        Given the node map
+            |   |   | e |   |   |   | f |   |   |
+            |   |   |   |   | a |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   | c |   | x |   | d |   |   |
+            |   |   |   |   | y |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | b |   |   |   |   |
+
+        And the ways
+            | nodes | oneway |
+            | ef    | no     |
+            | ce    | no     |
+            | fd    | no     |
+            | ca    | no     |
+            | ad    | no     |
+            | ax    | no     |
+            | xy    | no     |
+            | yb    | no     |
+            | cb    | no     |
+            | db    | no     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction      |
+            | restriction | ax       | xy     | x        | only_straight_on |
+            | restriction | by       | xy     | y        | only_straight_on |
+
+        When I route I should get
+            | from | to | route    |
+            | a    | b  | ax,xy,yb |
+            | b    | a  | yb,xy,ax |
+
+    @except
+    Scenario: Car - two only_ restrictions share same from-way
+        Given the node map
+            |   |   | e |   |   |   | f |   |   |
+            |   |   |   |   | a |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   | c |   | x |   | d |   |   |
+            |   |   |   |   | y |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | b |   |   |   |   |
+
+        And the ways
+            | nodes | oneway |
+            | ef    | no     |
+            | ce    | no     |
+            | fd    | no     |
+            | ca    | no     |
+            | ad    | no     |
+            | ax    | no     |
+            | xy    | no     |
+            | yb    | no     |
+            | cb    | no     |
+            | db    | no     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction      |
+            | restriction | xy       | xa     | x        | only_straight_on |
+            | restriction | xy       | yb     | y        | only_straight_on |
+
+        When I route I should get
+            | from | to | route    |
+            | a    | b  | ax,xy,yb |
+            | b    | a  | yb,xy,ax |
+

@@ -1,10 +1,9 @@
 #ifndef __RANGE_TABLE_H__
 #define __RANGE_TABLE_H__
 
+#include "Range.h"
 #include "SharedMemoryFactory.h"
 #include "SharedMemoryVectorWrapper.h"
-
-#include <boost/range/irange.hpp>
 
 #include <fstream>
 #include <vector>
@@ -40,7 +39,7 @@ public:
     typedef std::array<unsigned char, BLOCK_SIZE> BlockT;
     typedef typename ShM<BlockT, USE_SHARED_MEMORY>::vector   BlockContainerT;
     typedef typename ShM<unsigned, USE_SHARED_MEMORY>::vector OffsetContainerT;
-    typedef decltype(boost::irange(0u,0u))                    RangeT;
+    typedef osrm::range<unsigned>                            RangeT;
 
     friend std::ostream& operator<< <>(std::ostream &out, const RangeTable &table);
     friend std::istream& operator>> <>(std::istream &in, RangeTable &table);
@@ -117,7 +116,8 @@ public:
         {
             // the last value is used as sentinel
             block_offsets.push_back(lengths_prefix_sum);
-            block_idx = (block_idx + 1) % BLOCK_SIZE;
+            block_idx = 1;
+            last_length = 0;
         }
 
         while (0 != block_idx)
@@ -166,7 +166,7 @@ public:
         BOOST_ASSERT(begin_idx < sum_lengths && end_idx <= sum_lengths);
         BOOST_ASSERT(begin_idx <= end_idx);
 
-        return boost::irange(begin_idx, end_idx);
+        return osrm::irange(begin_idx, end_idx);
     }
 private:
 

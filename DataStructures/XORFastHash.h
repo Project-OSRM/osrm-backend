@@ -70,7 +70,7 @@ class XORFastHash
 
     inline unsigned short operator()(const unsigned originalValue) const
     {
-        unsigned short lsb = ((originalValue) & 0xffff);
+        unsigned short lsb = ((originalValue)&0xffff);
         unsigned short msb = (((originalValue) >> 16) & 0xffff);
         return table1[lsb] ^ table2[msb];
     }
@@ -104,7 +104,7 @@ class XORMiniHash
     }
     unsigned char operator()(const unsigned originalValue) const
     {
-        unsigned char byte1 = ((originalValue) & 0xff);
+        unsigned char byte1 = ((originalValue)&0xff);
         unsigned char byte2 = ((originalValue >> 8) & 0xff);
         unsigned char byte3 = ((originalValue >> 16) & 0xff);
         unsigned char byte4 = ((originalValue >> 24) & 0xff);

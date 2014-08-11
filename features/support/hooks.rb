@@ -18,7 +18,7 @@ Before do |scenario|
       @scenario_title = scenario.scenario_outline.name
   end
 
-
+  @query_params = {}
   @scenario_time = Time.now.strftime("%Y-%m-%dT%H:%m:%SZ")
   reset_data
   @has_logged_preprocess_info = false

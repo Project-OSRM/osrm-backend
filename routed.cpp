@@ -169,14 +169,14 @@ int main(int argc, const char *argv[])
 
             auto status = future.wait_for(std::chrono::seconds(2));
 
-            if (status != std::future_status::ready)
+            if (status == std::future_status::ready)
             {
-                SimpleLogger().Write(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
-                server_task.reset(); // just kill it
+               server_thread.join();
             }
             else
             {
-                server_thread.join();
+                SimpleLogger().Write(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
+                server_task.reset(); // just kill it
             }
         }
 

@@ -27,7 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <osrm/Coordinate.h>
 #include "../Util/MercatorUtil.h"
+#ifndef NDEBUG
 #include "../Util/SimpleLogger.h"
+#endif
 #include "../Util/StringUtil.h"
 
 #include <boost/assert.hpp>
@@ -159,10 +161,10 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
     // initialize values
     const float x_value = lat2y(point.lat / COORDINATE_PRECISION);
     const float y_value = point.lon / COORDINATE_PRECISION;
-    const float a = lat2y(source_coordinate.lat / COORDINATE_PRECISION);
-    const float b = source_coordinate.lon / COORDINATE_PRECISION;
-    const float c = lat2y(target_coordinate.lat / COORDINATE_PRECISION);
-    const float d = target_coordinate.lon / COORDINATE_PRECISION;
+    float a = lat2y(source_coordinate.lat / COORDINATE_PRECISION);
+    float b = source_coordinate.lon / COORDINATE_PRECISION;
+    float c = lat2y(target_coordinate.lat / COORDINATE_PRECISION);
+    float d = target_coordinate.lon / COORDINATE_PRECISION;
     float p, q;
     if (std::abs(a - c) > std::numeric_limits<float>::epsilon())
     {
@@ -178,15 +180,35 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
         q = y_value;
     }
 
-    float nY = (d * p - c * q) / (a * d - b * c);
-    // discretize the result to coordinate precision. it's a hack!
-    if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
+    float ratio;
+    bool inverse_ratio = false;
+
+    // straight line segment on equator
+    if (std::abs(c) < std::numeric_limits<float>::epsilon() && std::abs(a) < std::numeric_limits<float>::epsilon())
     {
-        nY = 0.f;
+        ratio = (q - b) / (d - b);
+    }
+    else
+    {
+        if (std::abs(c) < std::numeric_limits<float>::epsilon())
+        {
+            // swap start/end
+            std::swap(a, c);
+            std::swap(b, d);
+            inverse_ratio = true;
+        }
+
+        float nY = (d * p - c * q) / (a * d - b * c);
+        // discretize the result to coordinate precision. it's a hack!
+        if (std::abs(nY) < (1.f / COORDINATE_PRECISION))
+        {
+            nY = 0.f;
+        }
+
+        // compute ratio
+        ratio = (p - nY * a) / c;
     }
 
-    // compute ratio
-    float ratio = (p - nY * a) / c;
     if (std::isnan(ratio))
     {
         ratio = (target_coordinate == point ? 1.f : 0.f);
@@ -198,6 +220,12 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
     else if (std::abs(ratio - 1.f) <= std::numeric_limits<float>::epsilon())
     {
         ratio = 1.f;
+    }
+
+    // we need to do this, if we switched start/end coordinates
+    if (inverse_ratio)
+    {
+        ratio = 1.0f - ratio;
     }
 
     //compute the nearest location
@@ -216,6 +244,7 @@ FixedPointCoordinate::ComputePerpendicularDistance(const FixedPointCoordinate &s
         nearest_location.lat = static_cast<int>(y2lat(p) * COORDINATE_PRECISION);
         nearest_location.lon = static_cast<int>(q * COORDINATE_PRECISION);
     }
+
     BOOST_ASSERT(nearest_location.isValid());
     return FixedPointCoordinate::ApproximateEuclideanDistance(point, nearest_location);
 }

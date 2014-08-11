@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "EdgeBasedGraphFactory.h"
 #include "../Algorithms/BFSComponentExplorer.h"
 #include "../DataStructures/Percent.h"
+#include "../DataStructures/Range.h"
 #include "../Util/ComputeAngle.h"
 #include "../Util/LuaUtil.h"
 #include "../Util/SimpleLogger.h"
@@ -77,20 +78,16 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
 }
 
 void
-EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool belongs_to_tiny_cc)
+EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID u, const NodeID v, const bool belongs_to_tiny_cc)
 {
     // merge edges together into one EdgeBasedNode
     BOOST_ASSERT(u != SPECIAL_NODEID);
     BOOST_ASSERT(v != SPECIAL_NODEID);
-    BOOST_ASSERT(e1 != SPECIAL_EDGEID);
 
-#ifndef NDEBUG
     // find forward edge id and
-    const EdgeID e1b = m_node_based_graph->FindEdge(u, v);
-    BOOST_ASSERT(e1 == e1b);
-#endif
-
+    const EdgeID e1 = m_node_based_graph->FindEdge(u, v);
     BOOST_ASSERT(e1 != SPECIAL_EDGEID);
+
     const EdgeData &forward_data = m_node_based_graph->GetEdgeData(e1);
 
     // find reverse edge id and
@@ -125,6 +122,8 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool b
             m_geometry_compressor.GetBucketReference(e2);
         BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
         BOOST_ASSERT(0 != forward_geometry.size());
+        const unsigned geometry_size = forward_geometry.size();
+        BOOST_ASSERT(geometry_size > 1);
 
         // reconstruct bidirectional edge with individual weights and put each into the NN index
 
@@ -135,7 +134,7 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool b
         // TODO: move to lambda function with C++11
         int temp_sum = 0;
 
-        for (unsigned i = 0; i < forward_geometry.size(); ++i)
+        for (const auto i : osrm::irange(0u, geometry_size))
         {
             forward_dist_prefix_sum[i] = temp_sum;
             temp_sum += forward_geometry[i].second;
@@ -144,20 +143,16 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool b
         }
 
         temp_sum = 0;
-        for (unsigned i = 0; i < reverse_geometry.size(); ++i)
+        for (const auto i : osrm::irange(0u, geometry_size))
         {
             temp_sum += reverse_geometry[reverse_geometry.size() - 1 - i].second;
             reverse_dist_prefix_sum[i] = reverse_data.distance - temp_sum;
-            BOOST_ASSERT(reverse_data.distance >= temp_sum);
+            // BOOST_ASSERT(reverse_data.distance >= temp_sum);
         }
 
-        BOOST_ASSERT(forward_geometry.size() == reverse_geometry.size());
-
-        const unsigned geometry_size = forward_geometry.size();
-        BOOST_ASSERT(geometry_size > 1);
         NodeID current_edge_source_coordinate_id = u;
 
-        if (forward_data.edgeBasedNodeID != SPECIAL_NODEID)
+        if (SPECIAL_NODEID != forward_data.edgeBasedNodeID)
         {
             max_id = std::max(forward_data.edgeBasedNodeID, max_id);
         }
@@ -167,7 +162,7 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool b
         }
 
         // traverse arrays from start and end respectively
-        for (unsigned i = 0; i < geometry_size; ++i)
+        for (const auto i : osrm::irange(0u, geometry_size))
         {
             BOOST_ASSERT(current_edge_source_coordinate_id ==
                          reverse_geometry[geometry_size - 1 - i].first);
@@ -225,18 +220,18 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(NodeID u, NodeID v, EdgeID e1, bool b
         BOOST_ASSERT(forward_data.edgeBasedNodeID != SPECIAL_NODEID ||
                      reverse_data.edgeBasedNodeID != SPECIAL_NODEID);
 
-        m_edge_based_node_list.emplace_back(EdgeBasedNode(forward_data.edgeBasedNodeID,
-                                                          reverse_data.edgeBasedNodeID,
-                                                          u,
-                                                          v,
-                                                          forward_data.nameID,
-                                                          forward_data.distance,
-                                                          reverse_data.distance,
-                                                          0,
-                                                          0,
-                                                          SPECIAL_EDGEID,
-                                                          0,
-                                                          belongs_to_tiny_cc));
+        m_edge_based_node_list.emplace_back(forward_data.edgeBasedNodeID,
+                                            reverse_data.edgeBasedNodeID,
+                                            u,
+                                            v,
+                                            forward_data.nameID,
+                                            forward_data.distance,
+                                            reverse_data.distance,
+                                            0,
+                                            0,
+                                            SPECIAL_EDGEID,
+                                            0,
+                                            belongs_to_tiny_cc);
         BOOST_ASSERT(!m_edge_based_node_list.back().IsCompressed());
     }
 }
@@ -292,7 +287,7 @@ void EdgeBasedGraphFactory::CompressGeometry()
     Percent p(original_number_of_nodes);
     unsigned removed_node_count = 0;
 
-    for (NodeID v = 0; v < original_number_of_nodes; ++v)
+    for (const NodeID v : osrm::irange(0u, original_number_of_nodes))
     {
         p.printStatus(v);
 
@@ -422,7 +417,8 @@ void EdgeBasedGraphFactory::CompressGeometry()
 
     unsigned new_node_count = 0;
     unsigned new_edge_count = 0;
-    for (unsigned i = 0; i < m_node_based_graph->GetNumberOfNodes(); ++i)
+
+    for(const auto i : osrm::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         if (m_node_based_graph->GetOutDegree(i) > 0)
         {
@@ -493,10 +489,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
         for (EdgeID e1 : m_node_based_graph->GetAdjacentEdgeRange(u))
         {
             const EdgeData &edge_data = m_node_based_graph->GetEdgeData(e1);
-            if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
-            {
-                // continue;
-            }
+            // if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
+            // {
+            //     continue;
+            // }
             BOOST_ASSERT(e1 != SPECIAL_EDGEID);
             const NodeID v = m_node_based_graph->GetTarget(e1);
 
@@ -516,7 +512,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
                                                         component_explorer.GetComponentSize(v));
 
             const bool component_is_tiny = (size_of_component < 1000);
-            InsertEdgeBasedNode(u, v, e1, component_is_tiny);
+            if (edge_data.edgeBasedNodeID == SPECIAL_NODEID)
+            {
+                InsertEdgeBasedNode(v, u, component_is_tiny);
+            }
+            else
+            {
+                InsertEdgeBasedNode(u, v, component_is_tiny);
+            }
         }
     }
 

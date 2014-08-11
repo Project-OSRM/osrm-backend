@@ -43,6 +43,10 @@ struct RouteParameters
 
     void setAlternateRouteFlag(const bool flag);
 
+    void setUTurn(const bool flag);
+
+    void setAllUTurns(const bool flag);
+
     void setDeprecatedAPIFlag(const std::string &);
 
     void setChecksum(const unsigned check_sum);
@@ -71,12 +75,14 @@ struct RouteParameters
     bool geometry;
     bool compression;
     bool deprecatedAPI;
+    bool uturn_default;
     unsigned check_sum;
     std::string service;
     std::string output_format;
     std::string jsonp_parameter;
     std::string language;
     std::vector<std::string> hints;
+    std::vector<bool> uturns;
     std::vector<FixedPointCoordinate> coordinates;
 };
 

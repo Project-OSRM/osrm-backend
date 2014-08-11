@@ -28,33 +28,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STATIC_GRAPH_H
 #define STATIC_GRAPH_H
 
-#include "../DataStructures/Percent.h"
-#include "../DataStructures/SharedMemoryVectorWrapper.h"
+#include "Percent.h"
+#include "Range.h"
+#include "SharedMemoryVectorWrapper.h"
 #include "../Util/SimpleLogger.h"
 #include "../typedefs.h"
 
 #include <boost/assert.hpp>
-#include <boost/range/irange.hpp>
 
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
 #include <limits>
+#include <utility>
 #include <vector>
 
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
   public:
-    typedef decltype(boost::irange(0u,0u)) EdgeRange;
     typedef NodeID NodeIterator;
     typedef NodeID EdgeIterator;
     typedef EdgeDataT EdgeData;
+    typedef osrm::range<EdgeIterator> EdgeRange;
+
     class InputEdge
     {
       public:
-        EdgeDataT data;
         NodeIterator source;
         NodeIterator target;
+        EdgeDataT data;
+
+        template<typename... Ts>
+        InputEdge(NodeIterator source, NodeIterator target, Ts &&...data) : source(source), target(target), data(std::forward<Ts>(data)...) { }
         bool operator<(const InputEdge &right) const
         {
             if (source != right.source)
@@ -79,7 +84,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const
     {
-        return boost::irange(BeginEdges(node), EndEdges(node));
+        return osrm::irange(BeginEdges(node), EndEdges(node));
     }
 
     StaticGraph(const int nodes, std::vector<InputEdge> &graph)
@@ -90,7 +95,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         node_array.resize(number_of_nodes + 1);
         EdgeIterator edge = 0;
         EdgeIterator position = 0;
-        for (NodeIterator node = 0; node <= number_of_nodes; ++node)
+        for (const auto node : osrm::irange(0u, number_of_nodes+1))
         {
             EdgeIterator last_edge = edge;
             while (edge < number_of_edges && graph[edge].source == node)
@@ -102,7 +107,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         }
         edge_array.resize(position); //(edge)
         edge = 0;
-        for (NodeIterator node = 0; node < number_of_nodes; ++node)
+        for (const auto node : osrm::irange(0u, number_of_nodes))
         {
             EdgeIterator e = node_array[node + 1].first_edge;
             for (EdgeIterator i = node_array[node].first_edge; i != e; ++i)
@@ -123,46 +128,13 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 
         node_array.swap(nodes);
         edge_array.swap(edges);
-
-#ifndef NDEBUG
-        Percent p(GetNumberOfNodes());
-        for (unsigned u = 0; u < GetNumberOfNodes(); ++u)
-        {
-            for (auto eid : GetAdjacentEdgeRange(u))
-            {
-                const EdgeData &data = GetEdgeData(eid);
-                if (!data.shortcut)
-                {
-                    continue;
-                }
-                const unsigned v = GetTarget(eid);
-                const EdgeID first_edge_id = FindEdgeInEitherDirection(u, data.id);
-                if (SPECIAL_EDGEID == first_edge_id)
-                {
-                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge ("
-                                                     << u << "," << data.id << "," << v
-                                                     << "), eid: " << eid;
-                    BOOST_ASSERT(false);
-                }
-                const EdgeID second_edge_id = FindEdgeInEitherDirection(data.id, v);
-                if (SPECIAL_EDGEID == second_edge_id)
-                {
-                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge ("
-                                                     << u << "," << data.id << "," << v
-                                                     << "), eid: " << eid;
-                    BOOST_ASSERT(false);
-                }
-            }
-            p.printIncrement();
-        }
-#endif
     }
 
-    unsigned GetNumberOfNodes() const { return number_of_nodes -1; }
+    unsigned GetNumberOfNodes() const { return number_of_nodes; }
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
-    unsigned GetOutDegree(const NodeIterator n) const { return BeginEdges(n) - EndEdges(n) - 1; }
+    unsigned GetOutDegree(const NodeIterator n) const { return EndEdges(n) - BeginEdges(n); }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
     {

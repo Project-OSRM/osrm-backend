@@ -112,6 +112,14 @@ function node_function (node)
 end
 
 function way_function (way)
+
+  local is_highway = way.tags:Holds("highway")
+  local is_route = way.tags:Holds("route")
+
+  if not (is_highway or is_route) then
+    return
+  end
+
   -- we dont route over areas
   local is_area = way.tags:Holds("area")
   if ignore_areas and is_area then

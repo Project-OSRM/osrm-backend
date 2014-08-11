@@ -83,8 +83,9 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     ShM<unsigned, true>::vector m_geometry_indices;
     ShM<unsigned, true>::vector m_geometry_list;
 
-    std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>
+    boost::thread_specific_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>
     m_static_rtree;
+    boost::filesystem::path file_index_path;
 
     std::shared_ptr<RangeTable<16, true>> m_name_table;
 
@@ -105,18 +106,19 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
                   m_timestamp.begin());
     }
 
-    void LoadRTree(const boost::filesystem::path &file_index_path)
+    void LoadRTree()
     {
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
         RTreeNode *tree_ptr =
             data_layout->GetBlockPtr<RTreeNode>(shared_memory, SharedDataLayout::R_SEARCH_TREE);
-        m_static_rtree =
-            std::make_shared<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>>(
+        m_static_rtree.reset(
+            new StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, true>::vector, true>(
                 tree_ptr,
                 data_layout->num_entries[SharedDataLayout::R_SEARCH_TREE],
                 file_index_path,
-                m_coordinate_list);
+                m_coordinate_list)
+        );
     }
 
     void LoadGraph()
@@ -210,6 +212,8 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     }
 
   public:
+    virtual ~SharedDataFacade() {}
+
     SharedDataFacade()
     {
         data_timestamp_ptr = (SharedDataTimestamp *)SharedMemoryFactory::Get(
@@ -244,13 +248,9 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             m_large_memory.reset(SharedMemoryFactory::Get(CURRENT_DATA));
             shared_memory = (char *)(m_large_memory->Ptr());
 
-            std::ofstream out("debug.bin");
-            out.write(shared_memory, data_layout->GetSizeOfLayout());
-            out.close();
-
             const char *file_index_ptr =
                 data_layout->GetBlockPtr<char>(shared_memory, SharedDataLayout::FILE_INDEX_PATH);
-            boost::filesystem::path file_index_path(file_index_ptr);
+            file_index_path = boost::filesystem::path(file_index_ptr);
             if (!boost::filesystem::exists(file_index_path))
             {
                 SimpleLogger().Write(logDEBUG) << "Leaf file name " << file_index_path.string();
@@ -262,12 +262,20 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             LoadChecksum();
             LoadNodeAndEdgeInformation();
             LoadGeometries();
-            LoadRTree(file_index_path);
             LoadTimestamp();
             LoadViaNodeList();
             LoadNames();
 
             data_layout->PrintInformation();
+
+            SimpleLogger().Write() << "number of geometries: " << m_coordinate_list->size();
+            for (unsigned i = 0; i < m_coordinate_list->size(); ++i)
+            {
+                if(!GetCoordinateOfNode(i).isValid())
+                {
+                    SimpleLogger().Write() << "coordinate " << i << " not valid";
+                }
+            }
         }
     }
 
@@ -312,7 +320,7 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     }
 
     // node and edge information access
-    FixedPointCoordinate GetCoordinateOfNode(const unsigned id) const
+    FixedPointCoordinate GetCoordinateOfNode(const NodeID id) const
     {
         return m_coordinate_list->at(id);
     };
@@ -342,16 +350,26 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             FixedPointCoordinate &result,
-                                            const unsigned zoom_level = 18) const
+                                            const unsigned zoom_level = 18)
     {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+        }
+
         return m_static_rtree->LocateClosestEndPointForCoordinate(
             input_coordinate, result, zoom_level);
     }
 
     bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                       PhantomNode &resulting_phantom_node,
-                                      const unsigned zoom_level) const
+                                      const unsigned zoom_level)
     {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+        }
+
         return m_static_rtree->FindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node, zoom_level);
     }
@@ -360,8 +378,13 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
                                             const unsigned zoom_level,
-                                            const unsigned number_of_results) const
+                                            const unsigned number_of_results)
     {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+        }
+
         return m_static_rtree->IncrementalFindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node_vector, zoom_level, number_of_results);
     }

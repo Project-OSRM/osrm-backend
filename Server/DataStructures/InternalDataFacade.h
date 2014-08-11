@@ -71,8 +71,10 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     ShM<unsigned, false>::vector m_geometry_indices;
     ShM<unsigned, false>::vector m_geometry_list;
 
-    std::shared_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>>
+    boost::thread_specific_ptr<StaticRTree<RTreeLeaf, ShM<FixedPointCoordinate, false>::vector, false>>
     m_static_rtree;
+    boost::filesystem::path ram_index_path;
+    boost::filesystem::path file_index_path;
     RangeTable<16, false> m_name_table;
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
@@ -192,13 +194,13 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         geometry_stream.close();
     }
 
-    void LoadRTree(const boost::filesystem::path &ram_index_path,
-                   const boost::filesystem::path &file_index_path)
+    void LoadRTree()
     {
         BOOST_ASSERT_MSG(!m_coordinate_list->empty(), "coordinates must be loaded before r-tree");
 
-        m_static_rtree = std::make_shared<StaticRTree<RTreeLeaf>>(
-            ram_index_path, file_index_path, m_coordinate_list);
+        m_static_rtree.reset(
+            new StaticRTree<RTreeLeaf>(ram_index_path, file_index_path, m_coordinate_list)
+        );
     }
 
     void LoadStreetNames(const boost::filesystem::path &names_file)
@@ -220,7 +222,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     }
 
   public:
-    ~InternalDataFacade()
+    virtual ~InternalDataFacade()
     {
         delete m_query_graph;
         m_static_rtree.reset();
@@ -266,10 +268,10 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         const boost::filesystem::path &timestamp_path = paths_iterator->second;
         paths_iterator = server_paths.find("ramindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &ram_index_path = paths_iterator->second;
+        ram_index_path = paths_iterator->second;
         paths_iterator = server_paths.find("fileindex");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
-        const boost::filesystem::path &file_index_path = paths_iterator->second;
+        file_index_path = paths_iterator->second;
         paths_iterator = server_paths.find("nodesdata");
         BOOST_ASSERT(server_paths.end() != paths_iterator);
         const boost::filesystem::path &nodes_data_path = paths_iterator->second;
@@ -297,7 +299,6 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         SimpleLogger().Write() << "loading r-tree";
         AssertPathExists(ram_index_path);
         AssertPathExists(file_index_path);
-        LoadRTree(ram_index_path, file_index_path);
         SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(timestamp_path);
         SimpleLogger().Write() << "loading street names";
@@ -358,16 +359,26 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             FixedPointCoordinate &result,
-                                            const unsigned zoom_level = 18) const
+                                            const unsigned zoom_level = 18)
     {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+        }
+
         return m_static_rtree->LocateClosestEndPointForCoordinate(
             input_coordinate, result, zoom_level);
     }
 
     bool FindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                       PhantomNode &resulting_phantom_node,
-                                      const unsigned zoom_level) const
+                                      const unsigned zoom_level)
     {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+        }
+
         return m_static_rtree->FindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node, zoom_level);
     }
@@ -376,8 +387,13 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
     IncrementalFindPhantomNodeForCoordinate(const FixedPointCoordinate &input_coordinate,
                                             std::vector<PhantomNode> &resulting_phantom_node_vector,
                                             const unsigned zoom_level,
-                                            const unsigned number_of_results) const
+                                            const unsigned number_of_results)
     {
+        if (!m_static_rtree.get())
+        {
+            LoadRTree();
+        }
+
         return m_static_rtree->IncrementalFindPhantomNodeForCoordinate(
             input_coordinate, resulting_phantom_node_vector, zoom_level, number_of_results);
     }
