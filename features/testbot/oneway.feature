@@ -42,3 +42,57 @@ Feature: Testbot - oneways
             | g    | f  | gh,ha,ab,bc,cd,de,ef |
             | h    | g  | ha,ab,bc,cd,de,ef,fg |
             | a    | h  | ab,bc,cd,de,ef,fg,gh |
+
+    Scenario: Testbot - Simple oneway
+        Then routability should be
+            | highway | foot | oneway | forw | backw |
+            | primary | no   | yes    | x    |       |
+
+    Scenario: Simple reverse oneway
+        Then routability should be
+            | highway | foot | oneway | forw | backw |
+            | primary | no   | -1     |      | x     |
+
+    Scenario: Testbot - Around the Block
+        Given the node map
+            | a | b |
+            | d | c |
+
+        And the ways
+            | nodes | oneway | foot |
+            | ab    | yes    | no   |
+            | bc    |        | no   |
+            | cd    |        | no   |
+            | da    |        | no   |
+
+        When I route I should get
+            | from | to | route    |
+            | a    | b  | ab       |
+            | b    | a  | bc,cd,da |
+
+    Scenario: Testbot - Handle various oneway tag values
+        Then routability should be
+            | foot | oneway   | forw | backw |
+            | no   |          | x    | x     |
+            | no   | nonsense | x    | x     |
+            | no   | no       | x    | x     |
+            | no   | false    | x    | x     |
+            | no   | 0        | x    | x     |
+            | no   | yes      | x    |       |
+            | no   | true     | x    |       |
+            | no   | 1        | x    |       |
+            | no   | -1       |      | x     |
+
+    Scenario: Testbot - Two consecutive oneways
+        Given the node map
+            | a | b | c |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | yes    |
+            | bc    | yes    |
+
+
+        When I route I should get
+            | from | to | route |
+            | a    | c  | ab,bc |

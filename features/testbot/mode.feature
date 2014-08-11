@@ -97,10 +97,22 @@ Feature: Testbot - Mode flag
         | 0    | 1  | ab    | 5     | 60s +-1 |
         | 1    | 0  | ab    | 6     | 60s +-1 |
 
-    Scenario: Testbot - Modes for opposite direction
+    Scenario: Testbot - Modes for oneway
         Given the node map
-        |   | 0 | 1 |   |
-        | a |   |   | b |
+        | a | b |
+
+        And the ways
+        | nodes | highway | oneway |
+        | ab    | steps   | yes    |
+
+        When I route I should get
+        | from | to | route | modes |
+        | a    | b  | ab    | 5     |
+        | b    | a  |       |       |
+
+    Scenario: Testbot - Modes for reverse oneway
+        Given the node map
+        | a | b |
 
         And the ways
         | nodes | highway | oneway |
@@ -108,8 +120,8 @@ Feature: Testbot - Mode flag
 
         When I route I should get
         | from | to | route | modes |
-        | 0    | 1  |       |       |
-        | 1    | 0  | ab    | 6     |
+        | b    | a  | ab    | 6     |
+        | a    | b  |       |       |
         
     @via
     Scenario: Testbot - Modes and via point at dead end
@@ -144,18 +156,3 @@ Feature: Testbot - Mode flag
         | waypoints | route    | modes |
         | a,0,d     | ab,bc,cd | 1,3,1 |
         | d,0,a     | cd,bc,ab | 1,4,1 |
-
-    Scenario: Testbot - Modes for opposite direction
-        Given the node map
-        | a | b | c | d | e |
-
-        And the ways
-        | nodes | highway |
-        | ab    | primary |
-        | bc    | primary |
-        | cd    | river   |
-        | de    | river   |
-        
-        When I route I should get
-        | from | to | route       | modes   |
-        | a    | e  | ab,bc,cd,de | 1,1,3,3 |
