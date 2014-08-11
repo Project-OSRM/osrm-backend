@@ -38,6 +38,7 @@ Thumbs.db
 /build/
 /Util/FingerPrint.cpp
 /Util/GitDescription.cpp
+/cmake/postinst
 
 # Eclipse related files #
 #########################
