@@ -340,3 +340,8 @@ endforeach ()
 
 configure_file(${CMAKE_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
+
+if(BUILD_DEBIAN_PACKAGE)
+  include(CPackDebianConfig)
+  include(CPack)
+endif()
