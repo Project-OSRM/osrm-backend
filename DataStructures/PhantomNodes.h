@@ -79,8 +79,8 @@ struct PhantomNode
     unsigned packed_geometry_id;
     FixedPointCoordinate location;
     unsigned short fwd_segment_position;
-    TravelMode travel_mode;
-    TravelMode backward_travel_mode;
+    TravelMode travel_mode : 4;
+    TravelMode backward_travel_mode : 4;
     
     int GetForwardWeightPlusOffset() const
     {

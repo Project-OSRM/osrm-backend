@@ -83,7 +83,7 @@ struct InternalExtractorEdge
     bool is_in_tiny_cc;
     bool is_duration_set;
     bool is_access_restricted;
-    TravelMode travel_mode;
+    TravelMode travel_mode : 4;
     bool is_split;
 
     FixedPointCoordinate source_coordinate;

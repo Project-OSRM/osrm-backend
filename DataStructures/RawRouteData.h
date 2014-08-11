@@ -59,7 +59,7 @@ struct PathData
     unsigned name_id;
     EdgeWeight segment_duration;
     TurnInstruction turn_instruction;
-    TravelMode travel_mode;
+    TravelMode travel_mode : 4;
 };
 
 struct RawRouteData

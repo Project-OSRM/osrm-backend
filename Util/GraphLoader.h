@@ -146,9 +146,6 @@ NodeID readBinaryOSRMGraphFromStream(std::istream &input_stream,
         input_stream.read((char *)&travel_mode, sizeof(TravelMode));
         input_stream.read((char *)&is_split, sizeof(bool));
 
-        
-        SimpleLogger().Write() << "mode read: " << (int)travel_mode;
-        
         BOOST_ASSERT_MSG(length > 0, "loaded null length edge");
         BOOST_ASSERT_MSG(weight > 0, "loaded null weight");
         BOOST_ASSERT_MSG(0 <= dir && dir <= 2, "loaded bogus direction");

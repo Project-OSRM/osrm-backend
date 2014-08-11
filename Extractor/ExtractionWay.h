@@ -63,6 +63,7 @@ struct ExtractionWay
       bidirectional,
       opposite };
     
+    inline bool HasDuration() { return duration>0; }
     inline bool IsBidirectional() { return travel_mode!=0 && backward_travel_mode!=0; }
     inline bool IsOneway() { return travel_mode!=0 && backward_travel_mode==0; }
     inline bool IsOpposite() { return travel_mode==0 && backward_travel_mode!=0; }
@@ -78,6 +79,11 @@ struct ExtractionWay
         return ExtractionWay::bidirectional;
     }
 
+    inline void set_mode(const TravelMode m) { travel_mode = m; }
+    inline const TravelMode get_mode() { return travel_mode; }
+    inline void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
+    inline const TravelMode get_backward_mode() { return backward_travel_mode; }
+
     unsigned id;
     unsigned nameID;
     double speed;
@@ -92,8 +98,8 @@ struct ExtractionWay
     bool ignoreInGrid;
     std::vector<NodeID> path;
     HashTable<std::string, std::string> keyVals;
-    TravelMode travel_mode;
-    TravelMode backward_travel_mode;
+    TravelMode travel_mode : 4;
+    TravelMode backward_travel_mode : 4;
 };
 
 #endif // EXTRACTION_WAY_H

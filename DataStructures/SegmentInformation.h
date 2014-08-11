@@ -45,7 +45,7 @@ struct SegmentInformation
     TurnInstruction turn_instruction;
     bool necessary:1;
     bool is_via_location:1;
-    TravelMode  travel_mode;
+    TravelMode  travel_mode : 4;
     
     explicit SegmentInformation(const FixedPointCoordinate &location,
                                 const NodeID name_id,

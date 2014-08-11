@@ -58,7 +58,7 @@ struct NodeBasedEdge
     bool in_tiny_cc : 1;
     bool access_restricted : 1;
     bool is_split : 1;
-    TravelMode travel_mode;
+    TravelMode travel_mode : 4;
 
     NodeBasedEdge() = delete;
 };

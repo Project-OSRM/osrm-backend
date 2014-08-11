@@ -29,7 +29,7 @@ struct NodeBasedEdgeData
     bool backward : 1;
     bool roundabout : 1;
     bool ignore_in_grid : 1;
-    TravelMode travel_mode;
+    TravelMode travel_mode : 4;
 
     void SwapDirectionFlags()
     {

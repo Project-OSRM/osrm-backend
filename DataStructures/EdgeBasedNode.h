@@ -43,7 +43,7 @@ struct EdgeBasedNode
         unsigned packed_geometry_id,
         unsigned short fwd_segment_position,
         bool belongs_to_tiny_component,
-        TravelMode travel_mode,
+        TravelMode travel_mode ,
         TravelMode backward_travel_mode
     ) :
         forward_edge_based_node_id(forward_edge_based_node_id),
@@ -91,8 +91,8 @@ struct EdgeBasedNode
     unsigned packed_geometry_id; // if set, then the edge represents a packed geometry
     unsigned short fwd_segment_position; // segment id in a compressed geometry
     bool is_in_tiny_cc;
-    TravelMode travel_mode;
-    TravelMode backward_travel_mode;
+    TravelMode travel_mode : 4;
+    TravelMode backward_travel_mode : 4;
 };
 
 #endif //EDGE_BASED_NODE_H

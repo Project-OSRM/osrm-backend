@@ -376,7 +376,11 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
                 file_out_stream.write((char *)&edge_iterator->is_roundabout, sizeof(bool));
                 file_out_stream.write((char *)&edge_iterator->is_in_tiny_cc, sizeof(bool));
                 file_out_stream.write((char *)&edge_iterator->is_access_restricted, sizeof(bool));
-                file_out_stream.write((char *)&edge_iterator->travel_mode, sizeof(TravelMode));
+
+                // cannot take adress of bit field, so use local
+                const TravelMode  travel_mode = edge_iterator->travel_mode;
+                file_out_stream.write((char *)&travel_mode, sizeof(TravelMode));
+
                 file_out_stream.write((char *)&edge_iterator->is_split, sizeof(bool));
                 ++number_of_used_edges;
             }
