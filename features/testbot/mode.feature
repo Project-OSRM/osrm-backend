@@ -144,3 +144,18 @@ Feature: Testbot - Mode flag
         | waypoints | route    | modes |
         | a,0,d     | ab,bc,cd | 1,3,1 |
         | d,0,a     | cd,bc,ab | 1,4,1 |
+
+    Scenario: Testbot - Modes for opposite direction
+        Given the node map
+        | a | b | c | d | e |
+
+        And the ways
+        | nodes | highway |
+        | ab    | primary |
+        | bc    | primary |
+        | cd    | river   |
+        | de    | river   |
+        
+        When I route I should get
+        | from | to | route       | modes   |
+        | a    | e  | ab,bc,cd,de | 1,1,3,3 |

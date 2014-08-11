@@ -309,6 +309,13 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         }
         raw_route_data.unpacked_path_segments.resize(packed_legs1.size());
 
+        //TODO - needed?
+        // set mode of first instruction
+        // if the best route started from the opposite edge, use backward mode rather than forward
+        //if( packed_legs1.front() == phantom_nodes_vector[0].source_phantom.reverse_node_id ) {
+        //    phantom_nodes_vector[0].source_phantom.travel_mode = phantom_nodes_vector[0].source_phantom.backward_travel_mode;
+        //}
+        
         for (const std::size_t index : osrm::irange<std::size_t>(0, packed_legs1.size()))
         {
             BOOST_ASSERT(!phantom_nodes_vector.empty());

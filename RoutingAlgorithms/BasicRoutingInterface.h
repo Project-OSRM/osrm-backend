@@ -228,7 +228,7 @@ template <class DataFacadeT> class BasicRoutingInterface
                 unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
                 const TurnInstruction turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const TravelMode travel_mode = facade->GetTravelModeForEdgeID(ed.id);
-                
+                                
                 if (!facade->EdgeIsCompressed(ed.id))
                 {
                     BOOST_ASSERT(!facade->EdgeIsCompressed(ed.id));

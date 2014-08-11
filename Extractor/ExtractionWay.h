@@ -53,7 +53,7 @@ struct ExtractionWay
         roundabout = false;
         isAccessRestricted = false;
         ignoreInGrid = false;
-        travel_mode = 0;
+        travel_mode = 1;
         backward_travel_mode = 0;
     }
 

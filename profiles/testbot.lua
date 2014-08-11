@@ -18,6 +18,7 @@ speed_profile = {
   ["primary"] = 36,
   ["secondary"] = 18,
   ["tertiary"] = 12,
+  ["steps"] = 6,
   ["default"] = 24
 }
 
@@ -81,7 +82,10 @@ function way_function (way)
     	way.backward_mode = 4
       speed_forw = temp_speed*1.5
       speed_back = temp_speed/1.5
-    end
+    elseif highway == "steps" then
+      way.mode = 5
+      way.backward_mode = 6
+   	end
 
     if maxspeed_forward ~= nil and maxspeed_forward > 0 then
       speed_forw = maxspeed_forward

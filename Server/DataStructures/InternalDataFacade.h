@@ -155,6 +155,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
         for (unsigned i = 0; i < number_of_edges; ++i)
         {
             edges_input_stream.read((char *)&(current_edge_data), sizeof(OriginalEdgeData));
+            std::cout << "read mode: " << (long)current_edge_data.travel_mode << std::endl;
             m_via_node_list[i] = current_edge_data.via_node;
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
@@ -361,7 +362,7 @@ template <class EdgeDataT> class InternalDataFacade : public BaseDataFacade<Edge
 
     TravelMode GetTravelModeForEdgeID(const unsigned id) const
     {
-      return 15;//m_travel_mode_list.at(id);
+      return m_travel_mode_list.at(id);
     }
 
     bool LocateClosestEndPointForCoordinate(const FixedPointCoordinate &input_coordinate,
