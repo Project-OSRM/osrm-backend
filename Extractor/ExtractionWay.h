@@ -63,22 +63,6 @@ struct ExtractionWay
       bidirectional,
       opposite };
     
-    inline bool HasDuration() { return duration>0; }
-    inline bool IsBidirectional() { return travel_mode!=0 && backward_travel_mode!=0; }
-    inline bool IsOneway() { return travel_mode!=0 && backward_travel_mode==0; }
-    inline bool IsOpposite() { return travel_mode==0 && backward_travel_mode!=0; }
-    inline bool HasDiffDirections() { return (travel_mode != backward_travel_mode) || (speed != backward_speed); }
-    inline Directions Direction()
-    {
-        if( IsOneway() ) {
-            return ExtractionWay::oneway;
-        }
-        if( IsOpposite() ) {
-            return ExtractionWay::opposite;
-        }
-        return ExtractionWay::bidirectional;
-    }
-
     inline void set_mode(const TravelMode m) { travel_mode = m; }
     inline const TravelMode get_mode() { return travel_mode; }
     inline void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
