@@ -59,7 +59,8 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
     target_phantom = target;
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
-<<<<<<< HEAD
+    const TravelMode travel_mode =
+          (traversed_in_reverse ? target.backward_travel_mode : target.travel_mode);
     path_description.emplace_back(target.location,
                                   target.name_id,
                                   segment_duration,
