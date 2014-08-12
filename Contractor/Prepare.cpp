@@ -134,7 +134,6 @@ int Prepare::Process(int argc, char *argv[])
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
 #else
-    //TODO
     static_assert(sizeof(ImportEdge) == 20,
                   "changing ImportEdge type has influence on memory consumption!");
 #endif
