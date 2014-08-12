@@ -152,8 +152,6 @@ template <class EdgeDataT> class SharedDataFacade : public BaseDataFacade<EdgeDa
             data_layout->num_entries[SharedDataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list.swap(turn_instruction_list);
         
-        //TODO m_travel_mode_list
-        
         unsigned *name_id_list_ptr =
             data_layout->GetBlockPtr<unsigned>(shared_memory, SharedDataLayout::NAME_ID_LIST);
         typename ShM<unsigned, true>::vector name_id_list(
