@@ -60,7 +60,7 @@ NodeBasedEdge::NodeBasedEdge(NodeID source,
                              bool is_split)
     : source(source), target(target), name_id(name_id), weight(weight), type(type),
       forward(forward), backward(backward), roundabout(roundabout), in_tiny_cc(in_tiny_cc),
-      access_restricted(access_restricted), travel_mode(travel_mode), is_split(is_split)
+      access_restricted(access_restricted), is_split(is_split), travel_mode(travel_mode)
 {
     BOOST_ASSERT_MSG(type > 0, "negative edge type");
 }
