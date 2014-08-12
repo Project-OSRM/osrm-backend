@@ -69,6 +69,11 @@ struct RawRouteData
     int shortest_path_length;
     int alternative_path_length;
 
+    bool is_via_leg(const std::size_t leg) const
+    {
+        return (leg != unpacked_path_segments.size() - 1);
+    }
+
     RawRouteData()
         : check_sum(SPECIAL_NODEID),
           shortest_path_length(INVALID_EDGE_WEIGHT),

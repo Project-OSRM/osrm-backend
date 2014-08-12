@@ -76,7 +76,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
     unsigned DescribeLeg(const std::vector<PathData> route_leg,
                          const PhantomNodes &leg_phantoms,
-                         const bool target_traversed_in_reverse)
+                         const bool target_traversed_in_reverse,
+                         const bool is_via_leg)
     {
         unsigned added_element_count = 0;
         // Get all the coordinates for the computed route
@@ -87,7 +88,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
-        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse);
+        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
         ++added_element_count;
         BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
         return added_element_count;
@@ -126,7 +127,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 #endif
             DescribeLeg(raw_route.unpacked_path_segments[i],
                         raw_route.segment_end_coordinates[i],
-                        raw_route.target_traversed_in_reverse[i]);
+                        raw_route.target_traversed_in_reverse[i],
+                        raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
         description_factory.Run(facade, config.zoom_level);
