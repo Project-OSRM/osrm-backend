@@ -106,14 +106,28 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
         parsed_way.nameID = string_map_iterator->second;
     }
 
+    if (0 == parsed_way.travel_mode )
+    {
+        parsed_way.direction = ExtractionWay::opposite;
+    }
+
+    if (0 == parsed_way.backward_travel_mode )
+    {
+        parsed_way.direction = ExtractionWay::oneway;
+    }
+
     if (ExtractionWay::opposite == parsed_way.direction)
     {
         std::reverse(parsed_way.path.begin(), parsed_way.path.end());
         parsed_way.direction = ExtractionWay::oneway;
     }
 
-    bool split_edge = parsed_way.IsBidirectional() && parsed_way.HasDiffDirections();
-    
+    const bool split_edge =
+      (parsed_way.speed>0) && (parsed_way.travel_mode>0) &&
+      (parsed_way.backward_speed>0) && (parsed_way.backward_travel_mode>0) &&
+      ((parsed_way.speed != parsed_way.backward_speed) ||
+      (parsed_way.travel_mode != parsed_way.backward_travel_mode));
+
     for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
     {
         external_memory.all_edges_list.push_back(InternalExtractorEdge(

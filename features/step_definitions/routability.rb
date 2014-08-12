@@ -54,11 +54,11 @@ Then /^routability should be$/ do |table|
         want = shortcuts_hash[row[direction]] || row[direction]     #expand shortcuts
         case want
         when '', 'x'
-          output_row[direction] = result[direction][:status].to_s
+          output_row[direction] = result[direction][:time] ? result[direction][:status].to_s : ''
         when /^\d+s/
-          output_row[direction] = "#{result[direction][:time]}s"
+          output_row[direction] = result[direction][:time] ? "#{result[direction][:time]}s" : ''
         when /^\d+ km\/h/
-          output_row[direction] = "#{result[direction][:speed]} km/h"
+          output_row[direction] = result[direction][:speed] ? "#{result[direction][:speed]} km/h" : ''
         else
           raise "*** Unknown expectation format: #{want}"
         end
