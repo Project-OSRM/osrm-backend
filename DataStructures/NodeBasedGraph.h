@@ -59,8 +59,7 @@ using SimpleNodeBasedDynamicGraph = DynamicGraph<SimpleEdgeData>;
 inline std::shared_ptr<NodeBasedDynamicGraph>
 NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge> &input_edge_list)
 {
-    //TODO
-    //static_assert(sizeof(NodeBasedEdgeData) == 16, "changing node based edge data size changes memory consumption");
+    static_assert(sizeof(NodeBasedEdgeData) == 16, "changing node based edge data size changes memory consumption");
 
     DeallocatingVector<NodeBasedDynamicGraph::InputEdge> edges_list;
     NodeBasedDynamicGraph::InputEdge edge;
