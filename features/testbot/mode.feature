@@ -156,3 +156,15 @@ Feature: Testbot - Mode flag
         | waypoints | route    | modes |
         | a,0,d     | ab,bc,cd | 1,3,1 |
         | d,0,a     | cd,bc,ab | 1,4,1 |
+
+    Scenario: Testbot - Modes when starting on opposite oneway
+        Given the node map
+        | a | b |
+
+        And the ways
+        | nodes | highway | oneway |
+        | ab    | river   | -1     |
+
+        When I route I should get
+        | from | to | route | modes |
+        | b    | a  | ab    | 4     |

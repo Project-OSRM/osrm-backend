@@ -54,7 +54,7 @@ struct ExtractionWay
         isAccessRestricted = false;
         ignoreInGrid = false;
         travel_mode = 1;
-        backward_travel_mode = 0;
+        backward_travel_mode = 1;
     }
 
     enum Directions

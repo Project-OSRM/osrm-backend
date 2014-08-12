@@ -95,6 +95,7 @@ NodeBasedDynamicGraphFromImportEdges(int number_of_nodes, std::vector<ImportEdge
         edge.data.type = import_edge.type;
         edge.data.isAccessRestricted = import_edge.access_restricted;
         edge.data.travel_mode = import_edge.travel_mode;
+
         edges_list.push_back(edge);
 
         if (!import_edge.is_split)

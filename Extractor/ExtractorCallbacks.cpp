@@ -114,9 +114,6 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
 
     bool split_edge = parsed_way.IsBidirectional() && parsed_way.HasDiffDirections();
     
-    //const bool split_edge =
-    //    (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
-
     for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
     {
         external_memory.all_edges_list.push_back(InternalExtractorEdge(
