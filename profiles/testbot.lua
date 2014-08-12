@@ -104,19 +104,15 @@ function way_function (way)
     end
 
     way.speed = speed_forw
-    if speed_back ~= way_forw then
-      way.backward_speed = speed_back
-    end
+    way.backward_speed = speed_back
   end
 
   if oneway == "no" or oneway == "0" or oneway == "false" then
-    way.direction = Way.bidirectional
+    -- nothing to do
   elseif oneway == "-1" then
-    way.direction = Way.opposite
+    way.mode = 0
   elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
-    way.direction = Way.oneway
-  else
-    way.direction = Way.bidirectional
+    way.backward_mode = 0
   end
 
   if junction == 'roundabout' then

@@ -200,6 +200,7 @@ function way_function (way)
   local area = way.tags:Find("area")
   local foot = way.tags:Find("foot")
   local surface = way.tags:Find("surface")
+	local bicycle = way.tags:Find("bicycle")
 
   -- name
   if "" ~= ref and "" ~= name then
@@ -223,6 +224,7 @@ function way_function (way)
   if route_speeds[route] then
     -- ferries (doesn't cover routes tagged using relations)
     way.mode = mode_ferry
+    way.backward_mode = mode_ferry
     way.direction = Way.bidirectional
     way.ignore_in_grid = true
     if durationIsValid(duration) then
@@ -241,6 +243,7 @@ function way_function (way)
     way.backward_speed = platform_speeds[public_transport]
     elseif railway and railway_speeds[railway] then
       way.mode = mode_train
+      way.backward_mode = mode_train
      -- railways
     if access and access_tag_whitelist[access] then
       way.speed = railway_speeds[railway]
@@ -371,18 +374,6 @@ function way_function (way)
 
   -- maxspeed
   MaxSpeed.limit( way, maxspeed, maxspeed_forward, maxspeed_backward )
-
-
-  -- Override speed settings if explicit forward/backward maxspeeds are given
-  if way.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
-    if Way.bidirectional == way.direction then
-      way.backward_speed = way.speed
-    end
-    way.speed = maxspeed_forward
-  end
-  if maxspeed_backward ~= nil and maxspeed_backward > 0 then
-    way.backward_speed = maxspeed_backward
-  end
 
   way.type = 1
   return 1

@@ -148,4 +148,30 @@ Feature: Bike - Mode flag
     	 | c    | a  | bc,ab    | head,left,destination       | 2,1   |
     	 | d    | b  | cd,bc    | head,right,destination      | 1,2   |
     	 | a    | c  | ab,bc    | head,right,destination      | 1,2   |
-    	 | b    | d  | bc,cd    | head,left,destination       | 2,1   |
+         | b    | d  | bc,cd    | head,left,destination       | 2,1   |
+
+    Scenario: Bicycle - Modes when starting on forward oneway
+        Given the node map
+         | a | b |
+
+        And the ways
+         | nodes | oneway |
+         | ab    | yes    |
+
+        When I route I should get
+         | from | to | route | modes |
+         | a    | b  | ab    | 2     |
+         | b    | a  |       |       |
+
+    Scenario: Bicycle - Modes when starting on reverse oneway
+        Given the node map
+         | a | b |
+
+        And the ways
+         | nodes | oneway |
+         | ab    | -1     |
+
+        When I route I should get
+         | from | to | route | modes |
+         | a    | b  |       |       |
+         | b    | a  | ab    | 2     |
