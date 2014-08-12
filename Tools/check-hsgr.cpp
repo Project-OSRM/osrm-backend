@@ -73,29 +73,29 @@ int main(int argc, char *argv[])
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
 
         Percent p(m_query_graph->GetNumberOfNodes());
-        for (const auto u : osrm::irange(0u, m_query_graph->GetNumberOfNodes()))
+        for (const auto node_u : osrm::irange(0u, m_query_graph->GetNumberOfNodes()))
         {
-            for (const auto eid : m_query_graph->GetAdjacentEdgeRange(u))
+            for (const auto eid : m_query_graph->GetAdjacentEdgeRange(node_u))
             {
                 const EdgeData &data = m_query_graph->GetEdgeData(eid);
                 if (!data.shortcut)
                 {
                     continue;
                 }
-                const unsigned v = m_query_graph->GetTarget(eid);
-                const EdgeID first_edge_id = m_query_graph->FindEdgeInEitherDirection(u, data.id);
+                const unsigned node_v = m_query_graph->GetTarget(eid);
+                const EdgeID first_edge_id = m_query_graph->FindEdgeInEitherDirection(node_u, data.id);
                 if (SPECIAL_EDGEID == first_edge_id)
                 {
-                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge (" << u
-                                                     << "," << data.id << "," << v << "), eid: " << eid;
+                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge (" << node_u
+                                                     << "," << data.id << "," << node_v << "), eid: " << eid;
                     BOOST_ASSERT(false);
                     return 1;
                 }
-                const EdgeID second_edge_id = m_query_graph->FindEdgeInEitherDirection(data.id, v);
+                const EdgeID second_edge_id = m_query_graph->FindEdgeInEitherDirection(data.id, node_v);
                 if (SPECIAL_EDGEID == second_edge_id)
                 {
-                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge (" << u
-                                                     << "," << data.id << "," << v << "), eid: " << eid;
+                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge (" << node_u
+                                                     << "," << data.id << "," << node_v << "), eid: " << eid;
                     BOOST_ASSERT(false);
                     return 1;
                 }
