@@ -23,6 +23,7 @@ before_script:
  - cmake .. $CMAKEOPTIONS
 script:
  - make -j 2
+ - make -j 2 tests
  - cd ..
  - cucumber -p verify
 after_script:
