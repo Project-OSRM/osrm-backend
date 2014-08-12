@@ -60,12 +60,54 @@ typedef StaticGraph<QueryEdge::EdgeData> QueryGraph;
 #include <fstream>
 #include <string>
 
+// delete a shared memory region. report warning if it could not be deleted
+void delete_region(const SharedDataType region)
+{
+    if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
+    {
+        const std::string name = [&]
+        {
+            switch (region)
+            {
+            case CURRENT_REGIONS:
+                return "CURRENT_REGIONS";
+            case LAYOUT_1:
+                return "LAYOUT_1";
+            case DATA_1:
+                return "DATA_1";
+            case LAYOUT_2:
+                return "LAYOUT_2";
+            case DATA_2:
+                return "DATA_2";
+            case LAYOUT_NONE:
+                return "LAYOUT_NONE";
+            default: // DATA_NONE:
+                return "DATA_NONE";
+            }
+        }();
+
+        SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
+    }
+}
+
+// find all existing shmem regions and remove them.
+void springclean()
+{
+    SimpleLogger().Write() << "spring-cleaning all shared memory regions";
+    delete_region(DATA_1);
+    delete_region(LAYOUT_1);
+    delete_region(DATA_2);
+    delete_region(LAYOUT_2);
+    delete_region(CURRENT_REGIONS);
+}
+
 int main(const int argc, const char *argv[])
 {
     LogPolicy::GetInstance().Unmute();
     SharedBarriers barrier;
 
 #ifdef __linux__
+    // try to disable swapping on Linux
     const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
     if (-1 == mlockall(lock_flags))
     {
@@ -96,36 +138,14 @@ int main(const int argc, const char *argv[])
         SimpleLogger().Write(logDEBUG) << "Checking input parameters";
 
         ServerPaths server_paths;
-        bool springclean = false;
-        if (!GenerateDataStoreOptions(argc, argv, server_paths, springclean))
+        bool should_springclean = false;
+        if (!GenerateDataStoreOptions(argc, argv, server_paths, should_springclean))
         {
             return 0;
         }
-        if (springclean)
+        if (should_springclean)
         {
-            SimpleLogger().Write() << "spring-cleaning all shared memory regions";
-            // find all existing shmem regions and remove them.
-            if (SharedMemory::RegionExists(DATA_1) && !SharedMemory::Remove(DATA_1))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete DATA_1";
-            }
-            if (SharedMemory::RegionExists(LAYOUT_1) && !SharedMemory::Remove(LAYOUT_1))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_1";
-            }
-            if (SharedMemory::RegionExists(DATA_2) && !SharedMemory::Remove(DATA_2))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete DATA_2";
-            }
-            if (SharedMemory::RegionExists(LAYOUT_2) && !SharedMemory::Remove(LAYOUT_2))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_2";
-            }
-            if (SharedMemory::RegionExists(CURRENT_REGIONS) &&
-                !SharedMemory::Remove(CURRENT_REGIONS))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete CURRENT_REGIONS";
-            }
+            springclean();
             return 0;
         }
 
@@ -193,27 +213,28 @@ int main(const int argc, const char *argv[])
         BOOST_ASSERT(!paths_iterator->second.empty());
         const boost::filesystem::path &geometries_data_path = paths_iterator->second;
 
-        // get the shared memory segment to use
-        bool use_first_segment = SharedMemory::RegionExists(LAYOUT_2);
-        const SharedDataType LAYOUT = [&]
+        // determine segment to use
+        bool segment2_in_use = SharedMemory::RegionExists(LAYOUT_2);
+        const SharedDataType layout_region = [&]
         {
-            if (use_first_segment)
-            {
-                return LAYOUT_1;
-            }
-            return LAYOUT_2;
+            return segment2_in_use ? LAYOUT_1 : LAYOUT_2;
         }();
-        const SharedDataType DATA = [&]
+        const SharedDataType data_region = [&]
         {
-            if (use_first_segment)
-            {
-                return DATA_1;
-            }
-            return DATA_2;
+            return segment2_in_use ? DATA_1 : DATA_2;
+        }();
+        const SharedDataType previous_layout_region = [&]
+        {
+            return segment2_in_use ? LAYOUT_2 : LAYOUT_1;
+        }();
+        const SharedDataType previous_data_region = [&]
+        {
+            return segment2_in_use ? DATA_2 : DATA_1;
         }();
 
         // Allocate a memory layout in shared memory, deallocate previous
-        SharedMemory *layout_memory = SharedMemoryFactory::Get(LAYOUT, sizeof(SharedDataLayout));
+        SharedMemory *layout_memory =
+            SharedMemoryFactory::Get(layout_region, sizeof(SharedDataLayout));
         SharedDataLayout *shared_layout_ptr = static_cast<SharedDataLayout *>(layout_memory->Ptr());
         shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
 
@@ -344,7 +365,7 @@ int main(const int argc, const char *argv[])
         SimpleLogger().Write() << "allocating shared memory of "
                                << shared_layout_ptr->GetSizeOfLayout() << " bytes";
         SharedMemory *shared_memory =
-            SharedMemoryFactory::Get(DATA, shared_layout_ptr->GetSizeOfLayout());
+            SharedMemoryFactory::Get(data_region, shared_layout_ptr->GetSizeOfLayout());
         char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
 
         // read actual data into shared memory object //
@@ -533,35 +554,11 @@ int main(const int argc, const char *argv[])
             barrier.no_running_queries_condition.wait(query_lock);
         }
 
-        data_timestamp_ptr->layout = LAYOUT;
-        data_timestamp_ptr->data = DATA;
+        data_timestamp_ptr->layout = layout_region;
+        data_timestamp_ptr->data = data_region;
         data_timestamp_ptr->timestamp += 1;
-        if (use_first_segment)
-        {
-            BOOST_ASSERT(DATA == DATA_1);
-            BOOST_ASSERT(LAYOUT == LAYOUT_1);
-            if (!SharedMemory::Remove(DATA_2))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete DATA_2";
-            }
-            if (!SharedMemory::Remove(LAYOUT_2))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_2";
-            }
-        }
-        else
-        {
-            BOOST_ASSERT(DATA == DATA_2);
-            BOOST_ASSERT(LAYOUT == LAYOUT_2);
-            if (!SharedMemory::Remove(DATA_1))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete DATA_1";
-            }
-            if (!SharedMemory::Remove(LAYOUT_1))
-            {
-                SimpleLogger().Write(logWARNING) << "could not delete LAYOUT_1";
-            }
-        }
+        delete_region(previous_data_region);
+        delete_region(previous_layout_region);
         SimpleLogger().Write() << "all data loaded";
 
         shared_layout_ptr->PrintInformation();

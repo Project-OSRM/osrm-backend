@@ -7,7 +7,7 @@ When /^I route I should get$/ do |table|
         got = {'request' => row['request'] }
         response = request_url row['request']
       else
-        params = {}
+        params = @query_params
         waypoints = []
         if row['from'] and row['to']
           node = find_node_by_name(row['from'])

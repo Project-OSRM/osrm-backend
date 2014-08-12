@@ -31,8 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/uuid/name_generator.hpp>
 
-#include <cstring>
-
 #include <algorithm>
 #include <string>
 

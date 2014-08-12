@@ -38,6 +38,7 @@ Thumbs.db
 /build/
 /Util/FingerPrint.cpp
 /Util/GitDescription.cpp
+/cmake/postinst
 
 # Eclipse related files #
 #########################
@@ -79,6 +80,7 @@ stxxl.errlog
 /osrm-prepare
 /osrm-unlock-all
 /osrm-cli
+/osrm-check-hsgr
 /nohup.out
 
 # Sandbox folder #

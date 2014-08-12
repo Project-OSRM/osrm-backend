@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/assert.hpp>
 
 #include "BasicRoutingInterface.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SearchEngineData.h"
 #include "../typedefs.h"
 
@@ -49,14 +50,15 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
     ~ShortestPathRouting() {}
 
     void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
+                    const std::vector<bool> &uturn_indicators,
                     RawRouteData &raw_route_data) const
     {
         int distance1 = 0;
         int distance2 = 0;
         bool search_from_1st_node = true;
         bool search_from_2nd_node = true;
-        NodeID middle1 = UINT_MAX;
-        NodeID middle2 = UINT_MAX;
+        NodeID middle1 = SPECIAL_NODEID;
+        NodeID middle2 = SPECIAL_NODEID;
         std::vector<std::vector<NodeID>> packed_legs1(phantom_nodes_vector.size());
         std::vector<std::vector<NodeID>> packed_legs2(phantom_nodes_vector.size());
 
@@ -72,7 +74,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         QueryHeap &forward_heap2 = *(engine_working_data.forwardHeap2);
         QueryHeap &reverse_heap2 = *(engine_working_data.backwardHeap2);
 
-        int current_leg = 0;
+        std::size_t current_leg = 0;
         // Get distance to next pair of target nodes.
         for (const PhantomNodes &phantom_node_pair : phantom_nodes_vector)
         {
@@ -80,36 +82,50 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             forward_heap2.Clear();
             reverse_heap1.Clear();
             reverse_heap2.Clear();
-            int local_upper_bound1 = INT_MAX;
-            int local_upper_bound2 = INT_MAX;
+            int local_upper_bound1 = INVALID_EDGE_WEIGHT;
+            int local_upper_bound2 = INVALID_EDGE_WEIGHT;
 
-            middle1 = UINT_MAX;
-            middle2 = UINT_MAX;
+            middle1 = SPECIAL_NODEID;
+            middle2 = SPECIAL_NODEID;
+
+            const bool allow_u_turn = current_leg > 0 && uturn_indicators.size() > current_leg && uturn_indicators[current_leg-1];
+            EdgeWeight min_edge_offset = 0;
 
             // insert new starting nodes into forward heap, adjusted by previous distances.
-            if (search_from_1st_node &&
+            if ((allow_u_turn || search_from_1st_node) &&
                 phantom_node_pair.source_phantom.forward_node_id != SPECIAL_NODEID)
             {
                 forward_heap1.Insert(
                     phantom_node_pair.source_phantom.forward_node_id,
-                    distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
+                    (allow_u_turn ? 0 : distance1) - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.source_phantom.forward_node_id);
+                min_edge_offset = std::min(min_edge_offset, (allow_u_turn ? 0 : distance1) - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-a2 insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << (allow_u_turn ? 0 : distance1) - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
                 forward_heap2.Insert(
                     phantom_node_pair.source_phantom.forward_node_id,
-                    distance1 - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
+                    (allow_u_turn ? 0 : distance1) - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset(),
                     phantom_node_pair.source_phantom.forward_node_id);
+                min_edge_offset = std::min(min_edge_offset, (allow_u_turn ? 0 : distance1) - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-b2 insert: " << phantom_node_pair.source_phantom.forward_node_id << ", w: " << (allow_u_turn ? 0 : distance1) - phantom_node_pair.source_phantom.GetForwardWeightPlusOffset();
+
             }
-            if (search_from_2nd_node &&
+            if ((allow_u_turn || search_from_2nd_node) &&
                 phantom_node_pair.source_phantom.reverse_node_id != SPECIAL_NODEID)
             {
                 forward_heap1.Insert(
                     phantom_node_pair.source_phantom.reverse_node_id,
-                    distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
+                    (allow_u_turn ? 0 : distance2) - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.source_phantom.reverse_node_id);
+                min_edge_offset = std::min(min_edge_offset, (allow_u_turn ? 0 : distance2) - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-a2 insert: " << phantom_node_pair.source_phantom.reverse_node_id <<
+                //                     ", w: " << (allow_u_turn ? 0 : distance2) - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
                 forward_heap2.Insert(
                     phantom_node_pair.source_phantom.reverse_node_id,
-                    distance2 - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
+                    (allow_u_turn ? 0 : distance2) - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset(),
                     phantom_node_pair.source_phantom.reverse_node_id);
+                min_edge_offset = std::min(min_edge_offset, (allow_u_turn ? 0 : distance2) - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset());
+                // SimpleLogger().Write(logDEBUG) << "fwd-b2 insert: " << phantom_node_pair.source_phantom.reverse_node_id <<
+                //                     ", w: " << (allow_u_turn ? 0 : distance2) - phantom_node_pair.source_phantom.GetReverseWeightPlusOffset();
             }
 
             // insert new backward nodes into backward heap, unadjusted.
@@ -118,27 +134,31 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                 reverse_heap1.Insert(phantom_node_pair.target_phantom.forward_node_id,
                                      phantom_node_pair.target_phantom.GetForwardWeightPlusOffset(),
                                      phantom_node_pair.target_phantom.forward_node_id);
-            }
+                // SimpleLogger().Write(logDEBUG) << "rev-a insert: " << phantom_node_pair.target_phantom.forward_node_id <<
+                //                     ", w: " << phantom_node_pair.target_phantom.GetForwardWeightPlusOffset();
+           }
 
             if (phantom_node_pair.target_phantom.reverse_node_id != SPECIAL_NODEID)
             {
                 reverse_heap2.Insert(phantom_node_pair.target_phantom.reverse_node_id,
                                      phantom_node_pair.target_phantom.GetReverseWeightPlusOffset(),
                                      phantom_node_pair.target_phantom.reverse_node_id);
+                // SimpleLogger().Write(logDEBUG) << "rev-a insert: " << phantom_node_pair.target_phantom.reverse_node_id <<
+                //                     ", w: " << phantom_node_pair.target_phantom.GetReverseWeightPlusOffset();
             }
 
             // run two-Target Dijkstra routing step.
             while (0 < (forward_heap1.Size() + reverse_heap1.Size()))
             {
-                if (0 < forward_heap1.Size())
+                if (!forward_heap1.Empty())
                 {
                     super::RoutingStep(
-                        forward_heap1, reverse_heap1, &middle1, &local_upper_bound1, true);
+                        forward_heap1, reverse_heap1, &middle1, &local_upper_bound1, min_edge_offset, true);
                 }
-                if (0 < reverse_heap1.Size())
+                if (!reverse_heap1.Empty())
                 {
                     super::RoutingStep(
-                        reverse_heap1, forward_heap1, &middle1, &local_upper_bound1, false);
+                        reverse_heap1, forward_heap1, &middle1, &local_upper_bound1, min_edge_offset, false);
                 }
             }
 
@@ -146,15 +166,15 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             {
                 while (0 < (forward_heap2.Size() + reverse_heap2.Size()))
                 {
-                    if (0 < forward_heap2.Size())
+                    if (!forward_heap2.Empty())
                     {
                         super::RoutingStep(
-                            forward_heap2, reverse_heap2, &middle2, &local_upper_bound2, true);
+                            forward_heap2, reverse_heap2, &middle2, &local_upper_bound2, min_edge_offset, true);
                     }
-                    if (0 < reverse_heap2.Size())
+                    if (!reverse_heap2.Empty())
                     {
                         super::RoutingStep(
-                            reverse_heap2, forward_heap2, &middle2, &local_upper_bound2, false);
+                            reverse_heap2, forward_heap2, &middle2, &local_upper_bound2, min_edge_offset, false);
                     }
                 }
             }
@@ -180,7 +200,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             }
 
             // Was at most one of the two paths not found?
-            BOOST_ASSERT_MSG((INT_MAX != distance1 || INT_MAX != distance2), "no path found");
+            BOOST_ASSERT_MSG((INVALID_EDGE_WEIGHT != distance1 || INVALID_EDGE_WEIGHT != distance2), "no path found");
 
             // Unpack paths if they exist
             std::vector<NodeID> temporary_packed_leg1;
@@ -202,15 +222,17 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             }
 
             // if one of the paths was not found, replace it with the other one.
-            if (temporary_packed_leg1.empty())
+            if ((allow_u_turn && local_upper_bound1 > local_upper_bound2) || temporary_packed_leg1.empty())
             {
+                temporary_packed_leg1.clear();
                 temporary_packed_leg1.insert(temporary_packed_leg1.end(),
                                              temporary_packed_leg2.begin(),
                                              temporary_packed_leg2.end());
                 local_upper_bound1 = local_upper_bound2;
             }
-            if (temporary_packed_leg2.empty())
+            if ((allow_u_turn && local_upper_bound2 > local_upper_bound1) || temporary_packed_leg2.empty())
             {
+                temporary_packed_leg2.clear();
                 temporary_packed_leg2.insert(temporary_packed_leg2.end(),
                                              temporary_packed_leg1.begin(),
                                              temporary_packed_leg1.end());
@@ -223,7 +245,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
             BOOST_ASSERT((0 == current_leg) || !packed_legs1[current_leg - 1].empty());
             BOOST_ASSERT((0 == current_leg) || !packed_legs2[current_leg - 1].empty());
 
-            if (0 < current_leg)
+            if (!allow_u_turn && 0 < current_leg)
             {
                 const NodeID end_id_of_segment1 = packed_legs1[current_leg - 1].back();
                 const NodeID end_id_of_segment2 = packed_legs2[current_leg - 1].back();
@@ -236,13 +258,8 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                     std::swap(temporary_packed_leg1, temporary_packed_leg2);
                     std::swap(local_upper_bound1, local_upper_bound2);
                 }
-            }
 
-            // remove the shorter path if both legs end at the same segment
-            if (0 < current_leg)
-            {
-                const NodeID start_id_of_leg1 = temporary_packed_leg1.front();
-                const NodeID start_id_of_leg2 = temporary_packed_leg2.front();
+                // remove the shorter path if both legs end at the same segment
                 if (start_id_of_leg1 == start_id_of_leg2)
                 {
                     const NodeID last_id_of_packed_legs1 = packed_legs1[current_leg - 1].back();
@@ -270,7 +287,7 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
                                              temporary_packed_leg2.end());
             BOOST_ASSERT(packed_legs2[current_leg].size() == temporary_packed_leg2.size());
 
-            if ((packed_legs1[current_leg].back() == packed_legs2[current_leg].back()) &&
+            if (!allow_u_turn && (packed_legs1[current_leg].back() == packed_legs2[current_leg].back()) &&
                 phantom_node_pair.target_phantom.isBidirected())
             {
                 const NodeID last_node_id = packed_legs2[current_leg].back();
@@ -292,24 +309,24 @@ template <class DataFacadeT> class ShortestPathRouting : public BasicRoutingInte
         }
         raw_route_data.unpacked_path_segments.resize(packed_legs1.size());
 
-        for (unsigned i = 0; i < packed_legs1.size(); ++i)
+        for (const std::size_t index : osrm::irange<std::size_t>(0, packed_legs1.size()))
         {
             BOOST_ASSERT(!phantom_nodes_vector.empty());
             BOOST_ASSERT(packed_legs1.size() == raw_route_data.unpacked_path_segments.size());
 
-            PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[i];
+            PhantomNodes unpack_phantom_node_pair = phantom_nodes_vector[index];
             super::UnpackPath(
                 // -- packed input
-                packed_legs1[i],
+                packed_legs1[index],
                 // -- start and end of (sub-)route
                 unpack_phantom_node_pair,
                 // -- unpacked output
-                raw_route_data.unpacked_path_segments[i]);
+                raw_route_data.unpacked_path_segments[index]);
 
             raw_route_data.source_traversed_in_reverse.push_back(
-            (packed_legs1[i].front() != phantom_nodes_vector[i].source_phantom.forward_node_id));
+            (packed_legs1[index].front() != phantom_nodes_vector[index].source_phantom.forward_node_id));
             raw_route_data.target_traversed_in_reverse.push_back(
-            (packed_legs1[i].back() != phantom_nodes_vector[i].target_phantom.forward_node_id));
+            (packed_legs1[index].back() != phantom_nodes_vector[index].target_phantom.forward_node_id));
         }
         raw_route_data.shortest_path_length = std::min(distance1, distance2);
     }

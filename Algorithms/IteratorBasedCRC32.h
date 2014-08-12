@@ -34,9 +34,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(__x86_64__) && !defined(__MINGW64__)
 #include <cpuid.h>
-#else
+#endif
+
 #include <boost/crc.hpp> // for boost::crc_32_type
 
+#if defined(__MINGW64__)
 inline void __get_cpuid(int param, unsigned *eax, unsigned *ebx, unsigned *ecx, unsigned *edx)
 {
     *ecx = 0;
@@ -51,17 +53,12 @@ template <class ContainerT> class IteratorbasedCRC32
 
     bool use_SSE42_CRC_function;
 
-#if !defined(__x86_64__)
     boost::crc_optimal<32, 0x1EDC6F41, 0x0, 0x0, true, true> CRC32_processor;
-#endif
+
     unsigned SoftwareBasedCRC32(char *str, unsigned len)
     {
-#if !defined(__x86_64__)
         CRC32_processor.process_bytes(str, len);
         return CRC32_processor.checksum();
-#else
-        return 0;
-#endif
     }
 
     // adapted from http://byteworm.com/2010/10/13/crc32/

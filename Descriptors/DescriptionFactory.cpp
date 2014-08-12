@@ -50,13 +50,19 @@ void DescriptionFactory::SetStartSegment(const PhantomNode &source, const bool t
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
-void DescriptionFactory::SetEndSegment(const PhantomNode &target, const bool traversed_in_reverse)
+void DescriptionFactory::SetEndSegment(const PhantomNode &target, const bool traversed_in_reverse, const bool is_via_location)
 {
     target_phantom = target;
     const EdgeWeight segment_duration =
         (traversed_in_reverse ? target.reverse_weight : target.forward_weight);
     path_description.emplace_back(
-        target.location, target.name_id, segment_duration, 0.f, TurnInstruction::NoTurn, true, true);
+        target.location,
+        target.name_id,
+        segment_duration,
+        0.f,
+        is_via_location ? TurnInstruction::ReachViaLocation : TurnInstruction::NoTurn,
+        true,
+        true);
     BOOST_ASSERT(path_description.back().duration == segment_duration);
 }
 
@@ -72,7 +78,7 @@ void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
     path_description.emplace_back(coordinate,
                                   path_point.name_id,
                                   path_point.segment_duration,
-                                  0,
+                                  0.f,
                                   path_point.turn_instruction);
 }
 

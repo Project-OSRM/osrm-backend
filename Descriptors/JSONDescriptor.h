@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../Algorithms/ObjectToBase64.h"
 #include "../Algorithms/ExtractRouteNames.h"
 #include "../DataStructures/JSONContainer.h"
+#include "../DataStructures/Range.h"
 #include "../DataStructures/SegmentInformation.h"
 #include "../DataStructures/TurnInstructions.h"
 #include "../Util/Azimuth.h"
@@ -75,7 +76,8 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
 
     unsigned DescribeLeg(const std::vector<PathData> route_leg,
                          const PhantomNodes &leg_phantoms,
-                         const bool target_traversed_in_reverse)
+                         const bool target_traversed_in_reverse,
+                         const bool is_via_leg)
     {
         unsigned added_element_count = 0;
         // Get all the coordinates for the computed route
@@ -86,7 +88,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             description_factory.AppendSegment(current_coordinate, path_data);
             ++added_element_count;
         }
-        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse);
+        description_factory.SetEndSegment(leg_phantoms.target_phantom, target_traversed_in_reverse, is_via_leg);
         ++added_element_count;
         BOOST_ASSERT((route_leg.size() + 1) == added_element_count);
         return added_element_count;
@@ -118,14 +120,15 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         json_result.values["status_message"] = "Found route between points";
 
         // for each unpacked segment add the leg to the description
-        for (unsigned i = 0; i < raw_route.unpacked_path_segments.size(); ++i)
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.unpacked_path_segments.size()))
         {
 #ifndef NDEBUG
             const int added_segments =
 #endif
-                DescribeLeg(raw_route.unpacked_path_segments[i],
-                            raw_route.segment_end_coordinates[i],
-                            raw_route.target_traversed_in_reverse[i]);
+            DescribeLeg(raw_route.unpacked_path_segments[i],
+                        raw_route.segment_end_coordinates[i],
+                        raw_route.target_traversed_in_reverse[i],
+                        raw_route.is_via_leg(i));
             BOOST_ASSERT(0 < added_segments);
         }
         description_factory.Run(facade, config.zoom_level);
@@ -201,6 +204,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                 current = facade->GetCoordinateOfNode(path_data.node);
                 alternate_description_factory.AppendSegment(current, path_data);
             }
+            alternate_description_factory.SetEndSegment(raw_route.segment_end_coordinates.back().target_phantom, raw_route.alt_source_traversed_in_reverse.back());
             alternate_description_factory.Run(facade, config.zoom_level);
 
             if (config.geometry)
@@ -275,7 +279,7 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
         json_hint_object.values["checksum"] = raw_route.check_sum;
         JSON::Array json_location_hint_array;
         std::string hint;
-        for (unsigned i = 0; i < raw_route.segment_end_coordinates.size(); ++i)
+        for (const auto i : osrm::irange<std::size_t>(0, raw_route.segment_end_coordinates.size()))
         {
             EncodeObjectToBase64(raw_route.segment_end_coordinates[i].source_phantom, hint);
             json_location_hint_array.values.push_back(hint);
@@ -344,13 +348,13 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
                     json_instruction_row.values.push_back(necessary_segments_running_index);
                     json_instruction_row.values.push_back(round(segment.duration / 10));
                     json_instruction_row.values.push_back(
-                        UintToString(static_cast<unsigned>(segment.length)) + "m");
+                        UintToString(static_cast<int>(segment.length)) + "m");
                     const double bearing_value = (segment.bearing / 10.) ;
                     json_instruction_row.values.push_back(Azimuth::Get(bearing_value));
                     json_instruction_row.values.push_back(static_cast<unsigned>(round(bearing_value)));
 
                     route_segments_list.emplace_back(
-                        segment.name_id, segment.length, route_segments_list.size());
+                        segment.name_id, static_cast<int>(segment.length), static_cast<unsigned>(route_segments_list.size()));
                     json_instruction_array.values.push_back(json_instruction_row);
                 }
             }
@@ -364,21 +368,17 @@ template <class DataFacadeT> class JSONDescriptor : public BaseDescriptor<DataFa
             }
         }
 
-        // TODO: check if this in an invariant
-        if (INVALID_EDGE_WEIGHT != route_length)
-        {
-            JSON::Array json_last_instruction_row;
-            temp_instruction = IntToString(as_integer(TurnInstruction::ReachedYourDestination));
-            json_last_instruction_row.values.push_back(temp_instruction);
-            json_last_instruction_row.values.push_back("");
-            json_last_instruction_row.values.push_back(0);
-            json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
-            json_last_instruction_row.values.push_back(0);
-            json_last_instruction_row.values.push_back("0m");
-            json_last_instruction_row.values.push_back(Azimuth::Get(0.0));
-            json_last_instruction_row.values.push_back(0.);
-            json_instruction_array.values.push_back(json_last_instruction_row);
-        }
+        JSON::Array json_last_instruction_row;
+        temp_instruction = IntToString(as_integer(TurnInstruction::ReachedYourDestination));
+        json_last_instruction_row.values.push_back(temp_instruction);
+        json_last_instruction_row.values.push_back("");
+        json_last_instruction_row.values.push_back(0);
+        json_last_instruction_row.values.push_back(necessary_segments_running_index - 1);
+        json_last_instruction_row.values.push_back(0);
+        json_last_instruction_row.values.push_back("0m");
+        json_last_instruction_row.values.push_back(Azimuth::Get(0.0));
+        json_last_instruction_row.values.push_back(0.);
+        json_instruction_array.values.push_back(json_last_instruction_row);
     }
 };
 

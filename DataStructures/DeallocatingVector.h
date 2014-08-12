@@ -28,250 +28,154 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEALLOCATINGVECTOR_H_
 #define DEALLOCATINGVECTOR_H_
 
-#include <boost/assert.hpp>
-#include <cstring>
+#include "Range.h"
+
+#include <boost/iterator/iterator_facade.hpp>
+
+#include <utility>
 #include <vector>
 
-template <typename ElementT,
-          std::size_t bucketSizeC = 8388608 / sizeof(ElementT),
-          bool DeallocateC = false>
-class DeallocatingVectorIterator : public std::iterator<std::random_access_iterator_tag, ElementT>
+template <typename ElementT> struct DeallocatingVectorIteratorState
 {
-  protected:
-    class DeallocatingVectorIteratorState
-    {
-      private:
-        // make constructors explicit, so we do not mix random access and deallocation iterators.
-        DeallocatingVectorIteratorState();
-
-      public:
-        explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r)
-            : index(r.index), bucket_list(r.bucket_list)
-        {
-        }
-        explicit DeallocatingVectorIteratorState(const std::size_t idx,
-                                                 std::vector<ElementT *> &input_list)
-            : index(idx), bucket_list(input_list)
-        {
-        }
-        std::size_t index;
-        std::vector<ElementT *> &bucket_list;
-
-        inline bool operator!=(const DeallocatingVectorIteratorState &other)
-        {
-            return index != other.index;
-        }
-
-        inline bool operator==(const DeallocatingVectorIteratorState &other)
-        {
-            return index == other.index;
-        }
-
-        bool operator<(const DeallocatingVectorIteratorState &other) const
-        {
-            return index < other.index;
-        }
-
-        bool operator>(const DeallocatingVectorIteratorState &other) const
-        {
-            return index > other.index;
-        }
-
-        bool operator>=(const DeallocatingVectorIteratorState &other) const
-        {
-            return index >= other.index;
-        }
-
-        // This is a hack to make assignment operator possible with reference member
-        inline DeallocatingVectorIteratorState &operator=(const DeallocatingVectorIteratorState &a)
-        {
-            if (this != &a)
-            {
-                this->DeallocatingVectorIteratorState::
-                    ~DeallocatingVectorIteratorState();        // explicit non-virtual destructor
-                new (this) DeallocatingVectorIteratorState(a); // placement new
-            }
-            return *this;
-        }
-    };
-
-    DeallocatingVectorIteratorState current_state;
-
-  public:
-    typedef std::random_access_iterator_tag iterator_category;
-    typedef typename std::iterator<std::random_access_iterator_tag, ElementT>::value_type
-    value_type;
-    typedef typename std::iterator<std::random_access_iterator_tag, ElementT>::difference_type
-    difference_type;
-    typedef typename std::iterator<std::random_access_iterator_tag, ElementT>::reference reference;
-    typedef typename std::iterator<std::random_access_iterator_tag, ElementT>::pointer pointer;
-
-    DeallocatingVectorIterator() {}
-
-    template <typename T2>
-    explicit DeallocatingVectorIterator(const DeallocatingVectorIterator<T2> &r)
-        : current_state(r.current_state)
+    DeallocatingVectorIteratorState() : index(-1), bucket_list(nullptr) {}
+    explicit DeallocatingVectorIteratorState(const DeallocatingVectorIteratorState &r)
+        : index(r.index), bucket_list(r.bucket_list)
     {
     }
-
-    DeallocatingVectorIterator(std::size_t idx, std::vector<ElementT *> &input_list)
-        : current_state(idx, input_list)
+    explicit DeallocatingVectorIteratorState(const std::size_t idx,
+                                             std::vector<ElementT *> *input_list)
+        : index(idx), bucket_list(input_list)
     {
     }
-    explicit DeallocatingVectorIterator(const DeallocatingVectorIteratorState &r) : current_state(r) {}
+    std::size_t index;
+    std::vector<ElementT *> *bucket_list;
 
-    template <typename T2>
-    DeallocatingVectorIterator &operator=(const DeallocatingVectorIterator<T2> &r)
+    inline DeallocatingVectorIteratorState &operator=(const DeallocatingVectorIteratorState &other)
     {
-        if (DeallocateC)
-        {
-            BOOST_ASSERT(false);
-        }
-        current_state = r.current_state;
+        index = other.index;
+        bucket_list = other.bucket_list;
         return *this;
-    }
-
-    inline DeallocatingVectorIterator &operator++()
-    { // prefix
-        ++current_state.index;
-        return *this;
-    }
-
-    inline DeallocatingVectorIterator &operator--()
-    { // prefix
-        if (DeallocateC)
-        {
-            BOOST_ASSERT(false);
-        }
-        --current_state.index;
-        return *this;
-    }
-
-    inline DeallocatingVectorIterator operator++(int)
-    { // postfix
-        DeallocatingVectorIteratorState my_state(current_state);
-        current_state.index++;
-        return DeallocatingVectorIterator(my_state);
-    }
-    inline DeallocatingVectorIterator operator--(int)
-    { // postfix
-        if (DeallocateC)
-        {
-            BOOST_ASSERT(false);
-        }
-        DeallocatingVectorIteratorState my_state(current_state);
-        current_state.index--;
-        return DeallocatingVectorIterator(my_state);
-    }
-
-    inline DeallocatingVectorIterator operator+(const difference_type &n) const
-    {
-        DeallocatingVectorIteratorState my_state(current_state);
-        my_state.index += n;
-        return DeallocatingVectorIterator(my_state);
-    }
-
-    inline DeallocatingVectorIterator &operator+=(const difference_type &n)
-    {
-        current_state.index += n;
-        return *this;
-    }
-
-    inline DeallocatingVectorIterator operator-(const difference_type &n) const
-    {
-        if (DeallocateC)
-        {
-            BOOST_ASSERT(false);
-        }
-        DeallocatingVectorIteratorState my_state(current_state);
-        my_state.index -= n;
-        return DeallocatingVectorIterator(my_state);
-    }
-
-    inline DeallocatingVectorIterator &operator-=(const difference_type &n) const
-    {
-        if (DeallocateC)
-        {
-            BOOST_ASSERT(false);
-        }
-        current_state.index -= n;
-        return *this;
-    }
-
-    inline reference operator*() const
-    {
-        std::size_t current_bucket = current_state.index / bucketSizeC;
-        std::size_t current_index = current_state.index % bucketSizeC;
-        return (current_state.bucket_list[current_bucket][current_index]);
-    }
-
-    inline pointer operator->() const
-    {
-        std::size_t current_bucket = current_state.index / bucketSizeC;
-        std::size_t current_index = current_state.index % bucketSizeC;
-        return &(current_state.bucket_list[current_bucket][current_index]);
-    }
-
-    inline bool operator!=(const DeallocatingVectorIterator &other)
-    {
-        return current_state != other.current_state;
-    }
-
-    inline bool operator==(const DeallocatingVectorIterator &other)
-    {
-        return current_state == other.current_state;
-    }
-
-    inline bool operator<(const DeallocatingVectorIterator &other) const
-    {
-        return current_state < other.current_state;
-    }
-
-    inline bool operator>(const DeallocatingVectorIterator &other) const
-    {
-        return current_state > other.current_state;
-    }
-
-    inline bool operator>=(const DeallocatingVectorIterator &other) const
-    {
-        return current_state >= other.current_state;
-    }
-
-    difference_type operator-(const DeallocatingVectorIterator &other)
-    {
-        if (DeallocateC)
-        {
-            BOOST_ASSERT(false);
-        }
-        return current_state.index - other.current_state.index;
     }
 };
 
-template <typename ElementT, std::size_t bucketSizeC = 8388608 / sizeof(ElementT)>
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
+class DeallocatingVectorIterator
+    : public boost::iterator_facade<DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>,
+                                    ElementT,
+                                    std::random_access_iterator_tag>
+{
+    DeallocatingVectorIteratorState<ElementT> current_state;
+
+  public:
+    DeallocatingVectorIterator() {}
+    DeallocatingVectorIterator(std::size_t idx, std::vector<ElementT *> *input_list)
+        : current_state(idx, input_list)
+    {
+    }
+
+    friend class boost::iterator_core_access;
+
+    void advance(std::size_t n) { current_state.index += n; }
+
+    void increment() { advance(1); }
+
+    void decrement() { advance(-1); }
+
+    bool equal(DeallocatingVectorIterator const &other) const
+    {
+        return current_state.index == other.current_state.index;
+    }
+
+    std::ptrdiff_t distance_to(DeallocatingVectorIterator const &other) const
+    {
+        // it is important to implement it 'other minus this'. otherwise sorting breaks
+        return other.current_state.index - current_state.index;
+    }
+
+    ElementT &dereference() const
+    {
+        const std::size_t current_bucket = current_state.index / ELEMENTS_PER_BLOCK;
+        const std::size_t current_index = current_state.index % ELEMENTS_PER_BLOCK;
+        return (current_state.bucket_list->at(current_bucket)[current_index]);
+    }
+
+    ElementT &operator[](const std::size_t index) const
+    {
+        const std::size_t current_bucket = (index + current_state.index) / ELEMENTS_PER_BLOCK;
+        const std::size_t current_index = (index + current_state.index) % ELEMENTS_PER_BLOCK;
+        return (current_state.bucket_list->at(current_bucket)[current_index]);
+    }
+};
+
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
+class DeallocatingVectorRemoveIterator
+    : public boost::iterator_facade<DeallocatingVectorRemoveIterator<ElementT, ELEMENTS_PER_BLOCK>,
+                                    ElementT,
+                                    boost::forward_traversal_tag>
+{
+    DeallocatingVectorIteratorState<ElementT> current_state;
+
+  public:
+    DeallocatingVectorRemoveIterator(std::size_t idx, std::vector<ElementT *> *input_list)
+        : current_state(idx, input_list)
+    {
+    }
+
+    friend class boost::iterator_core_access;
+
+    void increment()
+    {
+        const std::size_t old_bucket = current_state.index / ELEMENTS_PER_BLOCK;
+
+        ++current_state.index;
+        const std::size_t new_bucket = current_state.index / ELEMENTS_PER_BLOCK;
+        if (old_bucket != new_bucket)
+        {
+            // delete old bucket entry
+            if (nullptr != current_state.bucket_list->at(old_bucket))
+            {
+                delete[] current_state.bucket_list->at(old_bucket);
+                current_state.bucket_list->at(old_bucket) = nullptr;
+            }
+        }
+    }
+
+    bool equal(DeallocatingVectorRemoveIterator const &other) const
+    {
+        return current_state.index == other.current_state.index;
+    }
+
+    std::ptrdiff_t distance_to(DeallocatingVectorRemoveIterator const &other) const
+    {
+        return other.current_state.index - current_state.index;
+    }
+
+    ElementT &dereference() const
+    {
+        const std::size_t current_bucket = current_state.index / ELEMENTS_PER_BLOCK;
+        const std::size_t current_index = current_state.index % ELEMENTS_PER_BLOCK;
+        return (current_state.bucket_list->at(current_bucket)[current_index]);
+    }
+};
+
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK = 8388608 / sizeof(ElementT)>
 class DeallocatingVector
 {
-  private:
     std::size_t current_size;
     std::vector<ElementT *> bucket_list;
 
   public:
-    typedef ElementT value_type;
-    typedef DeallocatingVectorIterator<ElementT, bucketSizeC, false> iterator;
-    typedef DeallocatingVectorIterator<ElementT, bucketSizeC, false> const_iterator;
+    typedef DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK> iterator;
+    typedef DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK> const_iterator;
 
-    // this iterator deallocates all buckets that have been visited. Iterators to visited objects
-    // become invalid.
-    typedef DeallocatingVectorIterator<ElementT, bucketSizeC, true> deallocation_iterator;
+    // this forward-only iterator deallocates all buckets that have been visited
+    typedef DeallocatingVectorRemoveIterator<ElementT, ELEMENTS_PER_BLOCK> deallocation_iterator;
 
-    DeallocatingVector() : current_size(0)
-    {
-        // initial bucket
-        bucket_list.emplace_back(new ElementT[bucketSizeC]);
-    }
+    DeallocatingVector() : current_size(0) { bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]); }
 
     ~DeallocatingVector() { clear(); }
 
-    inline void swap(DeallocatingVector<ElementT, bucketSizeC> &other)
+    inline void swap(DeallocatingVector<ElementT, ELEMENTS_PER_BLOCK> &other)
     {
         std::swap(current_size, other.current_size);
         bucket_list.swap(other.bucket_list);
@@ -280,16 +184,15 @@ class DeallocatingVector
     inline void clear()
     {
         // Delete[]'ing ptr's to all Buckets
-        for (unsigned i = 0; i < bucket_list.size(); ++i)
+        for (auto bucket : bucket_list)
         {
-            if (nullptr != bucket_list[i])
+            if (nullptr != bucket)
             {
-                delete[] bucket_list[i];
-                bucket_list[i] = nullptr;
+                delete[] bucket;
+                bucket = nullptr;
             }
         }
-        // Removing all ptrs from vector
-        std::vector<ElementT *>().swap(bucket_list);
+        bucket_list.clear(); bucket_list.shrink_to_fit();
         current_size = 0;
     }
 
@@ -298,103 +201,112 @@ class DeallocatingVector
         const std::size_t current_capacity = capacity();
         if (current_size == current_capacity)
         {
-            bucket_list.push_back(new ElementT[bucketSizeC]);
+            bucket_list.push_back(new ElementT[ELEMENTS_PER_BLOCK]);
         }
 
-        std::size_t current_index = size() % bucketSizeC;
+        std::size_t current_index = size() % ELEMENTS_PER_BLOCK;
         bucket_list.back()[current_index] = element;
         ++current_size;
     }
 
-    inline void emplace_back(const ElementT &&element)
+    template <typename... Ts> inline void emplace_back(Ts &&... element)
     {
         const std::size_t current_capacity = capacity();
         if (current_size == current_capacity)
         {
-            bucket_list.push_back(new ElementT[bucketSizeC]);
+            bucket_list.push_back(new ElementT[ELEMENTS_PER_BLOCK]);
         }
 
-        const std::size_t current_index = size() % bucketSizeC;
-        bucket_list.back()[current_index] = element;
+        const std::size_t current_index = size() % ELEMENTS_PER_BLOCK;
+        bucket_list.back()[current_index] = ElementT(std::forward<Ts>(element)...);
         ++current_size;
     }
 
-    inline void reserve(const std::size_t) const
-    {
-        // don't do anything
-    }
+    inline void reserve(const std::size_t) const { /* don't do anything */ }
 
     inline void resize(const std::size_t new_size)
     {
-        if (new_size > current_size)
+        if (new_size >= current_size)
         {
             while (capacity() < new_size)
             {
-                bucket_list.push_back(new ElementT[bucketSizeC]);
+                bucket_list.push_back(new ElementT[ELEMENTS_PER_BLOCK]);
             }
-            current_size = new_size;
         }
-        if (new_size < current_size)
-        {
-            const std::size_t number_of_necessary_buckets = 1 + (new_size / bucketSizeC);
-
-            for (std::size_t i = number_of_necessary_buckets; i < bucket_list.size(); ++i)
+        else
+        {   // down-size
+            const std::size_t number_of_necessary_buckets = 1 + (new_size / ELEMENTS_PER_BLOCK);
+            for (const auto bucket_index : osrm::irange(number_of_necessary_buckets, bucket_list.size()))
             {
-                delete[] bucket_list[i];
+                if (nullptr != bucket_list[bucket_index])
+                {
+                    delete[] bucket_list[bucket_index];
+                }
             }
             bucket_list.resize(number_of_necessary_buckets);
-            current_size = new_size;
         }
+        current_size = new_size;
     }
 
     inline std::size_t size() const { return current_size; }
 
-    inline std::size_t capacity() const { return bucket_list.size() * bucketSizeC; }
+    inline std::size_t capacity() const { return bucket_list.size() * ELEMENTS_PER_BLOCK; }
 
-    inline iterator begin() { return iterator(static_cast<std::size_t>(0), bucket_list); }
+    inline iterator begin() { return iterator(static_cast<std::size_t>(0), &bucket_list); }
 
-    inline iterator end() { return iterator(size(), bucket_list); }
+    inline iterator end() { return iterator(size(), &bucket_list); }
 
     inline deallocation_iterator dbegin()
     {
-        return deallocation_iterator(static_cast<std::size_t>(0), bucket_list);
+        return deallocation_iterator(static_cast<std::size_t>(0), &bucket_list);
     }
 
-    inline deallocation_iterator dend() { return deallocation_iterator(size(), bucket_list); }
+    inline deallocation_iterator dend() { return deallocation_iterator(size(), &bucket_list); }
 
     inline const_iterator begin() const
     {
-        return const_iterator(static_cast<std::size_t>(0), bucket_list);
+        return const_iterator(static_cast<std::size_t>(0), &bucket_list);
     }
 
-    inline const_iterator end() const { return const_iterator(size(), bucket_list); }
+    inline const_iterator end() const { return const_iterator(size(), &bucket_list); }
 
     inline ElementT &operator[](const std::size_t index)
     {
-        std::size_t _bucket = index / bucketSizeC;
-        std::size_t _index = index % bucketSizeC;
+        const std::size_t _bucket = index / ELEMENTS_PER_BLOCK;
+        const std::size_t _index = index % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
 
     const inline ElementT &operator[](const std::size_t index) const
     {
-        std::size_t _bucket = index / bucketSizeC;
-        std::size_t _index = index % bucketSizeC;
+        const std::size_t _bucket = index / ELEMENTS_PER_BLOCK;
+        const std::size_t _index = index % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
 
     inline ElementT &back()
     {
-        std::size_t _bucket = current_size / bucketSizeC;
-        std::size_t _index = current_size % bucketSizeC;
+        const std::size_t _bucket = current_size / ELEMENTS_PER_BLOCK;
+        const std::size_t _index = current_size % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
 
     const inline ElementT &back() const
     {
-        std::size_t _bucket = current_size / bucketSizeC;
-        std::size_t _index = current_size % bucketSizeC;
+        const std::size_t _bucket = current_size / ELEMENTS_PER_BLOCK;
+        const std::size_t _index = current_size % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
+    }
+
+    template<class InputIterator>
+    const inline void append(InputIterator first, const InputIterator last)
+    {
+        InputIterator position = first;
+        while (position != last)
+        {
+            push_back(*position);
+            ++position;
+        }
     }
 };
 

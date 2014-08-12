@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #endif
 
+#include <atomic>
 #include <ostream>
 #include <iostream>
 #include <mutex>
@@ -77,7 +78,7 @@ class LogPolicy
 
   private:
     LogPolicy() : m_is_mute(true) {}
-    bool m_is_mute;
+    std::atomic<bool> m_is_mute;
 };
 
 class SimpleLogger

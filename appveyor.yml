@@ -38,7 +38,12 @@ build_script:
   - set TBB_ARCH_PLATFORM=intel64/vc12
   - cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%Configuration% -DBZIP2_INCLUDE_DIR=%P%/libs/include -DBZIP2_LIBRARIES=%P%/libs/lib/libbz2.lib -DCMAKE_INSTALL_PREFIX=%P%/libs -DBOOST_ROOT=%P%/boost_min -DBoost_USE_STATIC_LIBS=ON
   - nmake
+  - nmake tests
+  - nmake benchmarks
   - if "%APPVEYOR_REPO_BRANCH%"=="develop" (7z a %P%/osrm_%Configuration%.zip *.exe *.pdb %P%/libs/bin/*.dll -tzip)
+  - set PATH=%PATH%;c:/projects/osrm/libs/bin
+  - cd c:/projects/osrm/build
+  - datastructure-tests.exe
 
 test: off
 
