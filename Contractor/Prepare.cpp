@@ -172,7 +172,16 @@ int Prepare::Process(int argc, char *argv[])
 
     BuildRTree(node_based_edge_list);
 
-    IteratorbasedCRC32<std::vector<EdgeBasedNode>> crc32;
+    IteratorbasedCRC32 crc32;
+    if (crc32.using_hardware())
+    {
+        SimpleLogger().Write() << "using hardware based CRC32 computation";
+    }
+    else
+    {
+        SimpleLogger().Write() << "using software based CRC32 computation";
+    }
+
     const unsigned node_based_edge_list_CRC32 =
         crc32(node_based_edge_list.begin(), node_based_edge_list.end());
     node_based_edge_list.clear();
