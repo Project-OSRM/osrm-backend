@@ -135,9 +135,9 @@ Feature: Testbot - Mode flag
         | bd    | steps   |
 
         When I route I should get
-        | waypoints | route         | modes   |
-        | a,d,c     | abc,bd,bd,abc | 1,5,6,1 |
-        | c,d,a     | abc,bd,bd,abc | 1,5,6,1 |
+        | waypoints | route            | modes     | turns                                   |
+        | a,d,c     | abc,bd,bd,bd,abc | 1,5,5,6,1 | head,right,via,u_turn,right,destination |
+        | c,d,a     | abc,bd,bd,bd,abc | 1,5,5,6,1 | head,left,via,u_turn,left,destination   |
 
     @via
     Scenario: Testbot - Modes and via point at river
@@ -153,9 +153,9 @@ Feature: Testbot - Mode flag
         | cd    | primary |
 
         When I route I should get
-        | waypoints | route    | modes |
-        | a,0,d     | ab,bc,cd | 1,3,1 |
-        | d,0,a     | cd,bc,ab | 1,4,1 |
+        | waypoints | route       | modes   | turns                                  |
+        | a,0,d     | ab,bc,bc,cd | 1,3,3,1 | head,straight,via,straight,destination |
+        | d,0,a     | cd,bc,bc,ab | 1,4,4,1 | head,straight,via,straight,destination |
 
     Scenario: Testbot - Modes when starting on forward oneway
         Given the node map
@@ -182,3 +182,18 @@ Feature: Testbot - Mode flag
         | from | to | route | modes |
         | a    | b  |       |       |
         | b    | a  | ab    | 4     |
+
+    Scenario: Testbot - Modes for each direction
+       Given the node map
+        | b | c |   |   |   |
+        |   |   |   | e | d |
+
+       And the ways
+        | nodes | highway |
+        | bc    | primary |
+        | ce    | river   |
+        | ed    | primary |
+
+       When I route I should get
+        | from | to | route | modes   |
+        | e    | b  | ce,bc | 4,1     |

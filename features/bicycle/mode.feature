@@ -160,8 +160,8 @@ Feature: Bike - Mode flag
 
         When I route I should get
          | from | to | route | modes |
-         | a    | b  | ab    | 2     |
-         | b    | a  |       |       |
+         | a    | b  | ab    | 1     |
+         | b    | a  | ab    | 2     |
 
     Scenario: Bicycle - Modes when starting on reverse oneway
         Given the node map
@@ -173,5 +173,5 @@ Feature: Bike - Mode flag
 
         When I route I should get
          | from | to | route | modes |
-         | a    | b  |       |       |
-         | b    | a  | ab    | 2     |
+         | a    | b  | ab    | 2     |
+         | b    | a  | ab    | 1     |

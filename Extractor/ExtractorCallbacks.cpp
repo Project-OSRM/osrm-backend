@@ -120,6 +120,8 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
     {
         std::reverse(parsed_way.path.begin(), parsed_way.path.end());
         parsed_way.direction = ExtractionWay::oneway;
+        parsed_way.travel_mode = parsed_way.backward_travel_mode;
+        parsed_way.backward_travel_mode = 0;
     }
 
     const bool split_edge =
@@ -128,6 +130,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
       ((parsed_way.speed != parsed_way.backward_speed) ||
       (parsed_way.travel_mode != parsed_way.backward_travel_mode));
 
+    BOOST_ASSERT(parsed_way.travel_mode>0);
     for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
     {
         external_memory.all_edges_list.push_back(InternalExtractorEdge(
@@ -157,6 +160,7 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
 
     if (split_edge)
     { // Only true if the way should be split
+        BOOST_ASSERT(parsed_way.backward_travel_mode>0);
         std::reverse(parsed_way.path.begin(), parsed_way.path.end());
         for (std::vector<NodeID>::size_type n = 0; n < parsed_way.path.size() - 1; ++n)
         {
