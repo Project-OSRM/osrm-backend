@@ -183,7 +183,7 @@ Feature: Testbot - Mode flag
         | a    | b  |       |       |
         | b    | a  | ab    | 4     |
 
-    Scenario: Testbot - Modes for each direction
+    Scenario: Testbot - Starting at a tricky node
        Given the node map
         | b | c |   |   |   |
         |   |   |   | e | d |
