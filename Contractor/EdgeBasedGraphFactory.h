@@ -74,7 +74,7 @@ class EdgeBasedGraphFactory
 
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
 
-    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, double angle) const;
+    TurnInstruction AnalyzeTurn(const NodeID u, const NodeID v, const NodeID w, const double angle) const;
 
     int GetTurnPenalty(double angle, lua_State *lua_state) const;
 
@@ -83,12 +83,12 @@ class EdgeBasedGraphFactory
     struct SpeedProfileProperties
     {
         SpeedProfileProperties()
-            : trafficSignalPenalty(0), uTurnPenalty(0), has_turn_penalty_function(false)
+            : traffic_signal_penalty(0), u_turn_penalty(0), has_turn_penalty_function(false)
         {
         }
 
-        int trafficSignalPenalty;
-        int uTurnPenalty;
+        int traffic_signal_penalty;
+        int u_turn_penalty;
         bool has_turn_penalty_function;
     } speed_profile;
 
@@ -120,7 +120,7 @@ class EdgeBasedGraphFactory
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 
-    unsigned max_id;
+    NodeID max_id;
 };
 
 #endif /* EDGEBASEDGRAPHFACTORY_H_ */

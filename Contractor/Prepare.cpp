@@ -463,9 +463,9 @@ Prepare::SetupScriptingEnvironment(lua_State *lua_state,
         std::cerr << lua_tostring(lua_state, -1) << " occured in scripting block" << std::endl;
         return false;
     }
-    speed_profile.trafficSignalPenalty = 10 * lua_tointeger(lua_state, -1);
+    speed_profile.traffic_signal_penalty = 10 * lua_tointeger(lua_state, -1);
     SimpleLogger().Write(logDEBUG)
-        << "traffic_signal_penalty: " << speed_profile.trafficSignalPenalty;
+        << "traffic_signal_penalty: " << speed_profile.traffic_signal_penalty;
 
     if (0 != luaL_dostring(lua_state, "return u_turn_penalty\n"))
     {
@@ -473,7 +473,7 @@ Prepare::SetupScriptingEnvironment(lua_State *lua_state,
         return false;
     }
 
-    speed_profile.uTurnPenalty = 10 * lua_tointeger(lua_state, -1);
+    speed_profile.u_turn_penalty = 10 * lua_tointeger(lua_state, -1);
     speed_profile.has_turn_penalty_function = lua_function_exists(lua_state, "turn_function");
 
     return true;
