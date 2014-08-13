@@ -1,0 +1,109 @@
+/*
+
+Copyright (c) 2013, Project OSRM, Dennis Luxen, others
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+*/
+
+#include "UUID.h"
+
+#include "OSRMException.h"
+#include "../typedefs.h"
+
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+
+#include <cstring>
+
+#include <algorithm>
+#include <iostream>
+#include <string>
+
+#define HAS64BITS 0
+#define MD5PREPARE "0942f9ef6f5912b4fbeae8249dd4df4b"
+#define MD5RTREE "40c04fc573a4cea3832d0587908807c9"
+#define MD5GRAPH "9f3a0e84509ff908655bbe2464d852b7"
+#define MD5OBJECTS "7135d52fa59aa3f2babbb8f307d8dde3"
+
+UUID::UUID() : magic_number(1297240911)
+{
+    md5_prepare[32] = md5_tree[32] = md5_graph[32] = md5_objects[32] = '\0';
+
+    boost::uuids::name_generator gen(named_uuid);
+    std::string temp_string(__DATE__);
+    temp_string += __TIME__;
+
+    std::copy(MD5PREPARE, MD5PREPARE + strlen(MD5PREPARE), md5_prepare);
+    temp_string += md5_prepare;
+    std::copy(MD5RTREE, MD5RTREE + 32, md5_tree);
+    temp_string += md5_tree;
+    std::copy(MD5GRAPH, MD5GRAPH + 32, md5_graph);
+    temp_string += md5_graph;
+    std::copy(MD5OBJECTS, MD5OBJECTS + 32, md5_objects);
+    temp_string += md5_objects;
+
+    named_uuid = gen(temp_string);
+    has_64_bits = HAS64BITS;
+}
+
+UUID::~UUID() {}
+
+const boost::uuids::uuid &UUID::GetUUID() const { return named_uuid; }
+
+bool UUID::IsMagicNumberOK() const { return 1297240911 == magic_number; }
+
+bool UUID::TestGraphUtil(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
+        throw OSRMException("hsgr input file misses magic number. Check or reprocess the file");
+    }
+    return std::equal(md5_graph, md5_graph + 32, other.md5_graph);
+}
+
+bool UUID::TestPrepare(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
+        throw OSRMException("osrm input file misses magic number. Check or reprocess the file");
+    }
+    return std::equal(md5_prepare, md5_prepare + 32, other.md5_prepare);
+}
+
+bool UUID::TestRTree(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
+        throw OSRMException("r-tree input file misses magic number. Check or reprocess the file");
+    }
+    return std::equal(md5_tree, md5_tree + 32, other.md5_tree);
+}
+
+bool UUID::TestQueryObjects(const UUID &other) const
+{
+    if (!other.IsMagicNumberOK())
+    {
+        throw OSRMException("missing magic number. Check or reprocess the file");
+    }
+    return std::equal(md5_objects, md5_objects + 32, other.md5_objects);
+}

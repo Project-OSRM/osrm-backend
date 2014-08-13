@@ -184,16 +184,19 @@ Feature: Testbot - Mode flag
         | b    | a  | ab    | 4     |
 
     Scenario: Testbot - Starting at a tricky node
+        Given a grid size of 1 meters
        Given the node map
-        | b | c |   |   |   |
-        |   |   |   | e | d |
+        | a | 1 |   |   |   |
+        |   | 2 | b |   | c |
+        |   | 3 |   |   |   |
 
        And the ways
         | nodes | highway |
+        | ab    | river   |
         | bc    | primary |
-        | ce    | river   |
-        | ed    | primary |
 
        When I route I should get
-        | from | to | route | modes   |
-        | e    | b  | ce,bc | 4,1     |
+        | from | to | route | modes |
+        | 1    | a  | ab    | 4     |
+        | 2    | a  | ab    | 4     |
+        | 3    | a  | ab    | 4     |
