@@ -60,14 +60,16 @@ int main(int argc, char *argv[])
         SimpleLogger().Write() << "loading graph from " << hsgr_path.string();
 
         unsigned m_check_sum = 0;
-        unsigned m_number_of_nodes = readHSGRFromStream(hsgr_path, node_list, edge_list, &m_check_sum);
+        unsigned m_number_of_nodes =
+            readHSGRFromStream(hsgr_path, node_list, edge_list, &m_check_sum);
         SimpleLogger().Write() << "announced " << m_number_of_nodes
                                << " nodes, checksum: " << m_check_sum;
         BOOST_ASSERT_MSG(0 != node_list.size(), "node list empty");
         // BOOST_ASSERT_MSG(0 != edge_list.size(), "edge list empty");
         SimpleLogger().Write() << "loaded " << node_list.size() << " nodes and " << edge_list.size()
                                << " edges";
-        std::shared_ptr<QueryGraph> m_query_graph = std::make_shared<QueryGraph>(node_list, edge_list);
+        std::shared_ptr<QueryGraph> m_query_graph =
+            std::make_shared<QueryGraph>(node_list, edge_list);
 
         BOOST_ASSERT_MSG(0 == node_list.size(), "node list not flushed");
         BOOST_ASSERT_MSG(0 == edge_list.size(), "edge list not flushed");
@@ -83,19 +85,21 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 const unsigned node_v = m_query_graph->GetTarget(eid);
-                const EdgeID first_edge_id = m_query_graph->FindEdgeInEitherDirection(node_u, data.id);
-                if (SPECIAL_EDGEID == first_edge_id)
+                const EdgeID edge_id_1 = m_query_graph->FindEdgeInEitherDirection(node_u, data.id);
+                if (SPECIAL_EDGEID == edge_id_1)
                 {
-                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge (" << node_u
-                                                     << "," << data.id << "," << node_v << "), eid: " << eid;
+                    SimpleLogger().Write(logWARNING) << "cannot find first segment of edge ("
+                                                     << node_u << "," << data.id << "," << node_v
+                                                     << "), eid: " << eid;
                     BOOST_ASSERT(false);
                     return 1;
                 }
-                const EdgeID second_edge_id = m_query_graph->FindEdgeInEitherDirection(data.id, node_v);
-                if (SPECIAL_EDGEID == second_edge_id)
+                const EdgeID edge_id_2 = m_query_graph->FindEdgeInEitherDirection(data.id, node_v);
+                if (SPECIAL_EDGEID == edge_id_2)
                 {
-                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge (" << node_u
-                                                     << "," << data.id << "," << node_v << "), eid: " << eid;
+                    SimpleLogger().Write(logWARNING) << "cannot find second segment of edge ("
+                                                     << node_u << "," << data.id << "," << node_v
+                                                     << "), eid: " << eid;
                     BOOST_ASSERT(false);
                     return 1;
                 }
