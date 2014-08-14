@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <sstream>
 
-int theCallback(lua_State *L) // This is so I can use my own function as an
+int lua_error_callback(lua_State *L) // This is so I can use my own function as an
 // exception handler, pcall_log()
 {
     luabind::object error_msg(luabind::from_stack(L, -1));
@@ -295,7 +295,7 @@ int Extractor::Run(int argc, char *argv[])
             timestamp_out.close();
 
             lua_State *lua_state = scripting_environment.getLuaState();
-            luabind::set_pcall_callback(&theCallback);
+            luabind::set_pcall_callback(&lua_error_callback);
 
             RestrictionParser restriction_parser(scripting_environment);
 
