@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 
 // Added at the start and end of each block as sanity check
-constexpr char CANARY[] = "OSRM";
+static const char CANARY[] = "OSRM";
 
 struct SharedDataLayout
 {
