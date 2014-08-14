@@ -183,7 +183,7 @@ Feature: Testbot - Mode flag
         | a    | b  |       |       |
         | b    | a  | ab    | 4     |
 
-    Scenario: Testbot - Starting at a tricky node
+    Scenario: Testbot - Starting at a tricky node, 1m
         Given a grid size of 1 meters
        Given the node map
         | a | 1 |   |   |   |
@@ -200,3 +200,30 @@ Feature: Testbot - Mode flag
         | 1    | a  | ab    | 4     |
         | 2    | a  | ab    | 4     |
         | 3    | a  | ab    | 4     |
+
+    Scenario: Testbot - Starting at a tricky node, 100m
+       Given the node map
+        |   | a |   |   |   |
+        |   |   |   | b | c |
+
+       And the ways
+        | nodes | highway |
+        | ab    | river   |
+        | bc    | primary |
+
+       When I route I should get
+        | from | to | route | modes |
+        | b    | a  | ab    | 4     |
+
+    Scenario: Testbot - Mode changes on straight way
+       Given the node map
+        | a | b | c |
+
+       And the ways
+        | nodes | highway |name   |
+        | ab    | primary |Street |
+        | bc    | river   |Street |
+
+       When I route I should get
+        | from | to | route         | modes | turns                     |
+        | a    | c  | Street,Street | 1,4   | head,straight,destination |
