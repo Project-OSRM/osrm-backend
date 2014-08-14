@@ -28,9 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExtractorCallbacks.h"
 #include "ExtractionContainers.h"
 #include "ExtractionWay.h"
+#include "ScriptingEnvironment.h"
 
 #include "../DataStructures/Restriction.h"
 #include "../DataStructures/ImportNode.h"
+#include "../Util/ContainerUtils.h"
 #include "../Util/SimpleLogger.h"
 
 #include <osrm/Coordinate.h>
@@ -46,37 +48,49 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 }
 
 /** warning: caller needs to take care of synchronization! */
-void ExtractorCallbacks::ProcessNode(const ExternalMemoryNode &n)
+
+void ExtractorCallbacks::ProcessNode(const osmium::Node &osm_input_node, const ExtractionNode &result_node)
 {
-    if (n.lat <= 85 * COORDINATE_PRECISION && n.lat >= -85 * COORDINATE_PRECISION)
-    {
-        external_memory.all_nodes_list.push_back(n);
-    }
+    //TODO: sort out datatype issues
+    ExternalMemoryNode node;
+    node.bollard = result_node.barrier;
+    node.trafficLight = result_node.traffic_lights;
+    node.lat = osm_input_node.location().lat() * COORDINATE_PRECISION;
+    node.lon = osm_input_node.location().lon() * COORDINATE_PRECISION;
+    node.node_id = osm_input_node.id();
+    external_memory.all_nodes_list.push_back(node);
 }
 
-bool ExtractorCallbacks::ProcessRestriction(const InputRestrictionContainer &restriction)
+void ExtractorCallbacks::ProcessRestriction(const boost::optional<InputRestrictionContainer> &restriction)
 {
-    external_memory.restrictions_list.push_back(restriction);
-    return true;
+    if (!restriction.is_initialized())
+    {
+      return;
+    }
+    external_memory.restrictions_list.push_back(restriction.get());
 }
 
 /** warning: caller needs to take care of synchronization! */
-void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
+void ExtractorCallbacks::ProcessWay(const osmium::Way &current_way, ExtractionWay &parsed_way)
 {
+    // SimpleLogger().Write() << "processing way with speed: " << parsed_way.speed << ", backward_speed: " << parsed_way.backward_speed << ", name: " <<
+    // parsed_way.name;
     if ((0 >= parsed_way.speed) && (0 >= parsed_way.duration))
     { // Only true if the way is specified by the speed profile
+        SimpleLogger().Write(logDEBUG) << "returning early, speed";
         return;
     }
 
-    if (parsed_way.path.size() <= 1)
+    if (current_way.nodes().size() <= 1)
     { // safe-guard against broken data
+        SimpleLogger().Write(logDEBUG) << "returning early, size";
         return;
     }
 
-    if (std::numeric_limits<unsigned>::max() == parsed_way.id)
+    if (std::numeric_limits<unsigned>::max() == current_way.id())
     {
-        SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << parsed_way.id
-                                       << " of size " << parsed_way.path.size();
+        SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << current_way.id()
+                                       << " of size " << current_way.nodes().size();
         return;
     }
 
@@ -84,88 +98,115 @@ void ExtractorCallbacks::ProcessWay(ExtractionWay &parsed_way)
     {
         // TODO: iterate all way segments and set duration corresponding to the length of each
         // segment
-        parsed_way.speed = parsed_way.duration / (parsed_way.path.size() - 1);
+        parsed_way.speed = parsed_way.duration / (current_way.nodes().size() - 1);
     }
 
     if (std::numeric_limits<double>::epsilon() >= std::abs(-1. - parsed_way.speed))
     {
-        SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << parsed_way.id;
+        SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: " << current_way.id();
         return;
     }
 
     // Get the unique identifier for the street name
     const auto &string_map_iterator = string_map.find(parsed_way.name);
+    unsigned name_id = external_memory.name_list.size();
     if (string_map.end() == string_map_iterator)
     {
-        parsed_way.nameID = external_memory.name_list.size();
         external_memory.name_list.push_back(parsed_way.name);
-        string_map.insert(std::make_pair(parsed_way.name, parsed_way.nameID));
+        string_map.insert(std::make_pair(parsed_way.name, name_id));
     }
     else
     {
-        parsed_way.nameID = string_map_iterator->second;
-    }
-
-    if (ExtractionWay::opposite == parsed_way.direction)
-    {
-        std::reverse(parsed_way.path.begin(), parsed_way.path.end());
-        parsed_way.direction = ExtractionWay::oneway;
+        name_id = string_map_iterator->second;
     }
 
     const bool split_edge =
         (parsed_way.backward_speed > 0) && (parsed_way.speed != parsed_way.backward_speed);
 
-    for (unsigned n = 0; n < (parsed_way.path.size() - 1); ++n)
+    auto pair_wise_segment_split = [&](const osmium::NodeRef &first_node,
+                                       const osmium::NodeRef &last_node) {
+        // SimpleLogger().Write() << "adding edge (" << first_node.ref() << "," <<
+        // last_node.ref() << "), speed: " << parsed_way.speed;
+        external_memory.all_edges_list.push_back(
+            InternalExtractorEdge(first_node.ref(),
+                                  last_node.ref(),
+                                  (split_edge ? ExtractionWay::oneway : parsed_way.direction),
+                                  parsed_way.speed,
+                                  name_id,
+                                  parsed_way.roundabout,
+                                  parsed_way.ignoreInGrid,
+                                  (0 < parsed_way.duration),
+                                  parsed_way.isAccessRestricted,
+                                  false,
+                                  split_edge));
+        external_memory.used_node_id_list.push_back(first_node.ref());
+
+    };
+
+    const bool is_opposite_way = ExtractionWay::opposite == parsed_way.direction;
+
+
+    // TODO: implement this with iterator reverser adaptor, range-based for
+    if (is_opposite_way)
     {
-        external_memory.all_edges_list.push_back(InternalExtractorEdge(
-            parsed_way.path[n],
-            parsed_way.path[n + 1],
-            parsed_way.type,
-            (split_edge ? ExtractionWay::oneway : parsed_way.direction),
-            parsed_way.speed,
-            parsed_way.nameID,
-            parsed_way.roundabout,
-            parsed_way.ignoreInGrid,
-            (0 < parsed_way.duration),
-            parsed_way.isAccessRestricted,
-            false,
-            split_edge));
-        external_memory.used_node_id_list.push_back(parsed_way.path[n]);
+        // SimpleLogger().Write() << "opposite";
+        parsed_way.direction = ExtractionWay::oneway;
+        for_each_pair(current_way.nodes().crbegin(), current_way.nodes().crend(), pair_wise_segment_split);
+        external_memory.used_node_id_list.push_back(current_way.nodes().front().ref());
     }
-    external_memory.used_node_id_list.push_back(parsed_way.path.back());
+    else
+    {
+        for_each_pair(current_way.nodes().cbegin(), current_way.nodes().cend(), pair_wise_segment_split);
+        external_memory.used_node_id_list.push_back(current_way.nodes().back().ref());
+    }
 
     // The following information is needed to identify start and end segments of restrictions
     external_memory.way_start_end_id_list.push_back(
-        WayIDStartAndEndEdge(parsed_way.id,
-                             parsed_way.path[0],
-                             parsed_way.path[1],
-                             parsed_way.path[parsed_way.path.size() - 2],
-                             parsed_way.path.back()));
+        {(EdgeID)current_way.id(),
+         (NodeID)current_way.nodes()[0].ref(),
+         (NodeID)current_way.nodes()[1].ref(),
+         (NodeID)current_way.nodes()[current_way.nodes().size() - 2].ref(),
+         (NodeID)current_way.nodes().back().ref()});
 
     if (split_edge)
     { // Only true if the way should be split
-        std::reverse(parsed_way.path.begin(), parsed_way.path.end());
-        for (std::vector<NodeID>::size_type n = 0; n < parsed_way.path.size() - 1; ++n)
+
+        auto pair_wise_segment_split_2 = [&](const osmium::NodeRef &first_node,
+                                             const osmium::NodeRef &last_node)
         {
+            // SimpleLogger().Write() << "adding edge (" << last_node.ref() << "," <<
+            // first_node.ref() << "), speed: " << parsed_way.backward_speed;
             external_memory.all_edges_list.push_back(
-                InternalExtractorEdge(parsed_way.path[n],
-                                      parsed_way.path[n + 1],
-                                      parsed_way.type,
+                InternalExtractorEdge(last_node.ref(),
+                                      first_node.ref(),
                                       ExtractionWay::oneway,
                                       parsed_way.backward_speed,
-                                      parsed_way.nameID,
+                                      name_id,
                                       parsed_way.roundabout,
                                       parsed_way.ignoreInGrid,
                                       (0 < parsed_way.duration),
                                       parsed_way.isAccessRestricted,
                                       (ExtractionWay::oneway == parsed_way.direction),
                                       split_edge));
-        }
+
+        };
+    if (is_opposite_way)
+    {
+        // SimpleLogger().Write() << "opposite2";
+        for_each_pair(current_way.nodes().crbegin(), current_way.nodes().crend(), pair_wise_segment_split_2);
+        external_memory.used_node_id_list.push_back(current_way.nodes().front().ref());
+    }
+    else
+    {
+        for_each_pair(current_way.nodes().cbegin(), current_way.nodes().cend(), pair_wise_segment_split_2);
+        external_memory.used_node_id_list.push_back(current_way.nodes().back().ref());
+    }
+
         external_memory.way_start_end_id_list.push_back(
-            WayIDStartAndEndEdge(parsed_way.id,
-                                 parsed_way.path[0],
-                                 parsed_way.path[1],
-                                 parsed_way.path[parsed_way.path.size() - 2],
-                                 parsed_way.path.back()));
+            {(EdgeID)current_way.id(),
+             (NodeID)current_way.nodes()[1].ref(),
+             (NodeID)current_way.nodes()[0].ref(),
+             (NodeID)current_way.nodes().back().ref(),
+             (NodeID)current_way.nodes()[current_way.nodes().size() - 2].ref()});
     }
 }

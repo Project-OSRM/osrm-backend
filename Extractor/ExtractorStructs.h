@@ -58,7 +58,7 @@ struct WayIDStartAndEndEdge
     {
     }
 
-    explicit WayIDStartAndEndEdge(unsigned w, NodeID fs, NodeID ft, NodeID ls, NodeID lt)
+    WayIDStartAndEndEdge(unsigned w, NodeID fs, NodeID ft, NodeID ls, NodeID lt)
         : wayID(w), firstStart(fs), firstTarget(ft), lastStart(ls), lastTarget(lt)
     {
     }

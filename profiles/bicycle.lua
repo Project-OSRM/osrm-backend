@@ -87,7 +87,6 @@ surface_speeds = {
 take_minimum_of_speeds  = true
 obey_oneway       = true
 obey_bollards       = false
-use_restrictions    = true
 ignore_areas      = true    -- future feature
 traffic_signal_penalty  = 5
 u_turn_penalty      = 20
@@ -118,42 +117,40 @@ function get_exceptions(vector)
   end
 end
 
-function node_function (node)
-  local barrier = node.tags:Find ("barrier")
+function node_function (node, result)
+  local barrier = node:get_value_by_key("barrier", "")
   local access = Access.find_access_tag(node, access_tags_hierachy)
-  local traffic_signal = node.tags:Find("highway")
+  local traffic_signal = node:get_value_by_key("highway", "")
 
 	-- flag node if it carries a traffic light
 	if traffic_signal == "traffic_signals" then
-		node.traffic_light = true
+		result.traffic_lights = true
 	end
 
 	-- parse access and barrier tags
 	if access and access ~= "" then
 		if access_tag_blacklist[access] then
-			node.bollard = true
+			result.barrier = true
 		else
-			node.bollard = false
+			result.barrier = false
 		end
 	elseif barrier and barrier ~= "" then
 		if barrier_whitelist[barrier] then
-			node.bollard = false
+			result.barrier = false
 		else
-			node.bollard = true
+			result.barrier = true
 		end
 	end
-
-	-- return 1
 end
 
-function way_function (way)
+function way_function (way, result)
   -- initial routability check, filters out buildings, boundaries, etc
-  local highway = way.tags:Find("highway")
-  local route = way.tags:Find("route")
-  local man_made = way.tags:Find("man_made")
-  local railway = way.tags:Find("railway")
-  local amenity = way.tags:Find("amenity")
-  local public_transport = way.tags:Find("public_transport")
+  local highway = way:get_value_by_key("highway", "")
+  local route = way:get_value_by_key("route", "")
+  local man_made = way:get_value_by_key("man_made", "")
+  local railway = way:get_value_by_key("railway", "")
+  local amenity = way:get_value_by_key("amenity", "")
+  local public_transport = way:get_value_by_key("public_transport", "")
   if (not highway or highway == '') and
   (not route or route == '') and
   (not railway or railway=='') and
@@ -176,73 +173,73 @@ function way_function (way)
   end
 
   -- other tags
-  local name = way.tags:Find("name")
-  local ref = way.tags:Find("ref")
-  local junction = way.tags:Find("junction")
-  local maxspeed = parse_maxspeed(way.tags:Find ( "maxspeed") )
-  local maxspeed_forward = parse_maxspeed(way.tags:Find( "maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way.tags:Find( "maxspeed:backward"))
-  local barrier = way.tags:Find("barrier")
-  local oneway = way.tags:Find("oneway")
-  local onewayClass = way.tags:Find("oneway:bicycle")
-  local cycleway = way.tags:Find("cycleway")
-  local cycleway_left = way.tags:Find("cycleway:left")
-  local cycleway_right = way.tags:Find("cycleway:right")
-  local duration = way.tags:Find("duration")
-  local service = way.tags:Find("service")
-  local area = way.tags:Find("area")
-  local foot = way.tags:Find("foot")
-  local surface = way.tags:Find("surface")
+  local name = way:get_value_by_key("name", "")
+  local ref = way:get_value_by_key("ref", "")
+  local junction = way:get_value_by_key("junction", "")
+  local maxspeed = parse_maxspeed(way:get_value_by_key ("maxspeed", ""))
+  local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward", ""))
+  local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward", ""))
+  local barrier = way:get_value_by_key("barrier", "")
+  local oneway = way:get_value_by_key("oneway", "")
+  local onewayClass = way:get_value_by_key("oneway:bicycle", "")
+  local cycleway = way:get_value_by_key("cycleway", "")
+  local cycleway_left = way:get_value_by_key("cycleway:left", "")
+  local cycleway_right = way:get_value_by_key("cycleway:right", "")
+  local duration = way:get_value_by_key("duration", "")
+  local service = way:get_value_by_key("service", "")
+  local area = way:get_value_by_key("area", "")
+  local foot = way:get_value_by_key("foot", "")
+  local surface = way:get_value_by_key("surface", "")
 
   -- name
   if "" ~= ref and "" ~= name then
-    way.name = name .. ' / ' .. ref
+    result.name = name .. ' / ' .. ref
   elseif "" ~= ref then
-    way.name = ref
+    result.name = ref
   elseif "" ~= name then
-    way.name = name
+    result.name = name
   else
     -- if no name exists, use way type
     -- this encoding scheme is excepted to be a temporary solution
-    way.name = "{highway:"..highway.."}"
+    result.name = "{highway:"..highway.."}"
   end
 
   -- roundabout handling
   if "roundabout" == junction then
-    way.roundabout = true;
+    result.roundabout = true;
   end
 
   -- speed
   if route_speeds[route] then
     -- ferries (doesn't cover routes tagged using relations)
-    way.direction = Way.bidirectional
-    way.ignore_in_grid = true
+    result.direction = ResultWay.bidirectional
+    result.ignore_in_grid = true
     if durationIsValid(duration) then
-      way.duration = math.max( 1, parseDuration(duration) )
+      result.duration = math.max( 1, parseDuration(duration) )
     else
-       way.speed = route_speeds[route]
+       result.speed = route_speeds[route]
     end
   elseif railway and platform_speeds[railway] then
     -- railway platforms (old tagging scheme)
-    way.speed = platform_speeds[railway]
+    result.speed = platform_speeds[railway]
   elseif platform_speeds[public_transport] then
     -- public_transport platforms (new tagging platform)
-    way.speed = platform_speeds[public_transport]
+    result.speed = platform_speeds[public_transport]
     elseif railway and railway_speeds[railway] then
      -- railways
     if access and access_tag_whitelist[access] then
-      way.speed = railway_speeds[railway]
-      way.direction = Way.bidirectional
+      result.speed = railway_speeds[railway]
+      result.direction = ResultWay.bidirectional
     end
   elseif amenity and amenity_speeds[amenity] then
     -- parking areas
-    way.speed = amenity_speeds[amenity]
+    result.speed = amenity_speeds[amenity]
   elseif bicycle_speeds[highway] then
     -- regular ways
-    way.speed = bicycle_speeds[highway]
+    result.speed = bicycle_speeds[highway]
   elseif access and access_tag_whitelist[access] then
     -- unknown way, but valid access tag
-    way.speed = default_speed
+    result.speed = default_speed
   else
     -- biking not allowed, maybe we can push our bike?
     -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
@@ -250,94 +247,94 @@ function way_function (way)
     if foot ~= 'no' then
       if pedestrian_speeds[highway] then
         -- pedestrian-only ways and areas
-        way.speed = pedestrian_speeds[highway]
+        result.speed = pedestrian_speeds[highway]
       elseif man_made and man_made_speeds[man_made] then
         -- man made structures
-        way.speed = man_made_speeds[man_made]
+        result.speed = man_made_speeds[man_made]
       elseif foot == 'yes' then
-        way.speed = walking_speed
+        result.speed = walking_speed
       end
     end
   end
 
   -- direction
-  way.direction = Way.bidirectional
+  result.direction = ResultWay.bidirectional
   local impliedOneway = false
   if junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
-    way.direction = Way.oneway
+    result.direction = ResultWay.oneway
     impliedOneway = true
   end
 
   if onewayClass == "yes" or onewayClass == "1" or onewayClass == "true" then
-    way.direction = Way.oneway
+    result.direction = ResultWay.oneway
   elseif onewayClass == "no" or onewayClass == "0" or onewayClass == "false" then
-    way.direction = Way.bidirectional
+    result.direction = ResultWay.bidirectional
   elseif onewayClass == "-1" then
-    way.direction = Way.opposite
+    result.direction = ResultWay.opposite
   elseif oneway == "no" or oneway == "0" or oneway == "false" then
-    way.direction = Way.bidirectional
+    result.direction = ResultWay.bidirectional
   elseif cycleway and string.find(cycleway, "opposite") == 1 then
     if impliedOneway then
-      way.direction = Way.opposite
+      result.direction = ResultWay.opposite
     else
-      way.direction = Way.bidirectional
+      result.direction = ResultWay.bidirectional
     end
   elseif cycleway_left and cycleway_tags[cycleway_left] and cycleway_right and cycleway_tags[cycleway_right] then
-    way.direction = Way.bidirectional
+    result.direction = ResultWay.bidirectional
   elseif cycleway_left and cycleway_tags[cycleway_left] then
     if impliedOneway then
-      way.direction = Way.opposite
+      result.direction = ResultWay.opposite
     else
-      way.direction = Way.bidirectional
+      result.direction = ResultWay.bidirectional
     end
   elseif cycleway_right and cycleway_tags[cycleway_right] then
     if impliedOneway then
-      way.direction = Way.oneway
+      result.direction = ResultWay.oneway
     else
-      way.direction = Way.bidirectional
+      result.direction = ResultWay.bidirectional
     end
   elseif oneway == "-1" then
-    way.direction = Way.opposite
+    result.direction = ResultWay.opposite
   elseif oneway == "yes" or oneway == "1" or oneway == "true" then
-    way.direction = Way.oneway
+    result.direction = ResultWay.oneway
   end
 
   -- pushing bikes
   if bicycle_speeds[highway] or pedestrian_speeds[highway] then
     if foot ~= 'no' then
       if junction ~= "roundabout" then
-        if way.direction == Way.oneway then
-          way.backward_speed = walking_speed
-        elseif way.direction == Way.opposite then
-          way.backward_speed = walking_speed
-          way.speed = way.speed
+        if result.direction == ResultWay.oneway then
+          result.backward_speed = walking_speed
+        elseif result.direction == ResultWay.opposite then
+          result.backward_speed = walking_speed
+          result.speed = result.speed
         end
       end
     end
-    if way.backward_speed == way.speed then
+    if result.backward_speed == result.speed then
       -- TODO: no way yet to mark a way as pedestrian mode if forward/backward speeds are equal
-      way.direction = Way.bidirectional
+      result.direction = ResultWay.bidirectional
     end
   end
 
   -- cycleways
   if cycleway and cycleway_tags[cycleway] then
-    way.speed = bicycle_speeds["cycleway"]
+    result.speed = bicycle_speeds["cycleway"]
   elseif cycleway_left and cycleway_tags[cycleway_left] then
-    way.speed = bicycle_speeds["cycleway"]
+    result.speed = bicycle_speeds["cycleway"]
   elseif cycleway_right and cycleway_tags[cycleway_right] then
-    way.speed = bicycle_speeds["cycleway"]
+    result.speed = bicycle_speeds["cycleway"]
   end
 
   -- surfaces
   if surface then
     surface_speed = surface_speeds[surface]
     if surface_speed then
-      if way.speed > 0 then
-        way.speed = surface_speed
+      if result.speed > 0 then
+        result.speed = surface_speed
       end
-      if way.backward_speed > 0 then
-        way.backward_speed  = surface_speed
+      if result.backward_speed > 0 then
+        result.backward_speed  = surface_speed
       end
     end
   end
@@ -346,23 +343,21 @@ function way_function (way)
   -- TODO: maxspeed of backward direction
   if take_minimum_of_speeds then
     if maxspeed and maxspeed>0 then
-      way.speed = math.min(way.speed, maxspeed)
+      result.speed = math.min(result.speed, maxspeed)
     end
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
-  if way.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
-    if Way.bidirectional == way.direction then
-      way.backward_speed = way.speed
+  if result.speed > 0 and maxspeed_forward ~= nil and maxspeed_forward > 0 then
+    if ResultWay.bidirectional == result.direction then
+      result.backward_speed = result.speed
     end
-    way.speed = maxspeed_forward
+    result.speed = maxspeed_forward
   end
   if maxspeed_backward ~= nil and maxspeed_backward > 0 then
-    way.backward_speed = maxspeed_backward
+    result.backward_speed = maxspeed_backward
   end
 
-  way.type = 1
-  return 1
 end
 
 function turn_function (angle)

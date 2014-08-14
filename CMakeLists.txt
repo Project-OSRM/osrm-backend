@@ -31,6 +31,7 @@ OPTION(WITH_TOOLS "Build OSRM tools" OFF)
 OPTION(BUILD_TOOLS "Build OSRM tools" OFF)
 
 include_directories(${CMAKE_SOURCE_DIR}/Include/)
+include_directories(${CMAKE_SOURCE_DIR}/ThirdParty/)
 
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/Util/FingerPrint.cpp FingerPrint.cpp.alwaysbuild
   COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -251,9 +252,9 @@ else()
 endif()
 include_directories(${LUA_INCLUDE_DIR})
 
-find_package(LibXml2 REQUIRED)
-include_directories(${LIBXML2_INCLUDE_DIR})
-target_link_libraries(osrm-extract ${LIBXML2_LIBRARIES})
+find_package(EXPAT REQUIRED)
+include_directories(${EXPAT_INCLUDE_DIRS})
+target_link_libraries(osrm-extract ${EXPAT_LIBRARIES})
 
 find_package( STXXL REQUIRED )
 include_directories(${STXXL_INCLUDE_DIR})

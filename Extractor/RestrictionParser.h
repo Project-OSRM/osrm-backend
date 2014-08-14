@@ -25,30 +25,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef XMLPARSER_H_
-#define XMLPARSER_H_
+#ifndef RESTRICTION_PARSER_H_
+#define RESTRICTION_PARSER_H_
 
-#include "BaseParser.h"
 #include "../DataStructures/Restriction.h"
 
-#include <libxml/xmlreader.h>
+#include <boost/optional.hpp>
 
-class ExtractorCallbacks;
+#include <osmium/osm.hpp>
+#include <osmium/tags/regex_filter.hpp>
 
-class XMLParser : public BaseParser
+
+
+#include <string>
+#include <vector>
+
+struct lua_State;
+class ScriptingEnvironment;
+
+class RestrictionParser
 {
   public:
-    XMLParser(const char *filename,
-              ExtractorCallbacks *extractor_callbacks,
-              ScriptingEnvironment &scripting_environment);
-    bool ReadHeader();
-    bool Parse();
+    RestrictionParser(ScriptingEnvironment &scripting_environment);
 
+    boost::optional<InputRestrictionContainer> TryParse(osmium::Relation& relation) const;
+
+    void ReadUseRestrictionsSetting();
+    void ReadRestrictionExceptions();
   private:
-    InputRestrictionContainer ReadXMLRestriction();
-    ExtractionWay ReadXMLWay();
-    ImportNode ReadXMLNode();
-    xmlTextReaderPtr inputReader;
+    bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
+
+    lua_State *lua_state;
+    std::vector<std::string> restriction_exceptions;
+    bool use_turn_restrictions;
 };
 
-#endif /* XMLPARSER_H_ */
+#endif /* RESTRICTION_PARSER_H_ */

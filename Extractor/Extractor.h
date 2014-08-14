@@ -18,6 +18,7 @@ class Extractor
 
     std::string output_file_name;
     std::string restriction_file_name;
+    std::string timestamp_file_name;
     bool file_has_pbf_format;
 
     /** \brief Parses "extractor's" command line arguments */

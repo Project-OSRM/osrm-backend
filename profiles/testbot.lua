@@ -36,31 +36,30 @@ function limit_speed(speed, limits)
   return speed
 end
 
-function node_function (node)
-  local traffic_signal = node.tags:Find("highway")
+function node_function(node, result)
+  local traffic_signal = node:get_value_by_key("highway", "")
 
   if traffic_signal == "traffic_signals" then
-    node.traffic_light = true;
+    result.traffic_lights = true;
     -- TODO: a way to set the penalty value
   end
-  return 1
 end
 
-function way_function (way)
-  local highway = way.tags:Find("highway")
-  local name = way.tags:Find("name")
-  local oneway = way.tags:Find("oneway")
-  local route = way.tags:Find("route")
-  local duration = way.tags:Find("duration")
-  local maxspeed = tonumber(way.tags:Find ( "maxspeed"))
-  local maxspeed_forward = tonumber(way.tags:Find( "maxspeed:forward"))
-  local maxspeed_backward = tonumber(way.tags:Find( "maxspeed:backward"))
-  local junction = way.tags:Find("junction")
+function way_function (way, result)
+  local highway = way:get_value_by_key("highway", "")
+  local name = way:get_value_by_key("name", "")
+  local oneway = way:get_value_by_key("oneway", "")
+  local route = way:get_value_by_key("route", "")
+  local duration = way:get_value_by_key("duration", "")
+  local maxspeed = tonumber(way:get_value_by_key("maxspeed", ""))
+  local maxspeed_forward = tonumber(way:get_value_by_key("maxspeed:forward", ""))
+  local maxspeed_backward = tonumber(way:get_value_by_key("maxspeed:backward", ""))
+  local junction = way:get_value_by_key("junction", "")
 
-  way.name = name
+  result.name = name
 
   if route ~= nil and durationIsValid(duration) then
-    way.duration = math.max( 1, parseDuration(duration) )
+    result.duration = math.max( 1, parseDuration(duration) )
   else
     local speed_forw = speed_profile[highway] or speed_profile['default']
     local speed_back = speed_forw
@@ -87,26 +86,23 @@ function way_function (way)
       end
     end
 
-    way.speed = speed_forw
+    result.speed = speed_forw
     if speed_back ~= way_forw then
-      way.backward_speed = speed_back
+      result.backward_speed = speed_back
     end
   end
 
   if oneway == "no" or oneway == "0" or oneway == "false" then
-    way.direction = Way.bidirectional
+    result.direction = ResultWay.bidirectional
   elseif oneway == "-1" then
-    way.direction = Way.opposite
+    result.direction = ResultWay.opposite
   elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
-    way.direction = Way.oneway
+    result.direction = ResultWay.oneway
   else
-    way.direction = Way.bidirectional
+    result.direction = ResultWay.bidirectional
   end
 
   if junction == 'roundabout' then
-    way.roundabout = true
+    result.roundabout = true
   end
-
-  way.type = 1
-  return 1
 end
