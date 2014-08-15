@@ -76,9 +76,12 @@ void DescriptionFactory::SetEndSegment(const PhantomNode &target,
 void DescriptionFactory::AppendSegment(const FixedPointCoordinate &coordinate,
                                        const PathData &path_point)
 {
-    if ((1 == path_description.size()) && (path_description.back().location == coordinate))
+    //if the start location is on top of a node, the first movement might be zero-length,
+    //in which case we dont' add a new description, but instead update the existing one
+    if ((1 == path_description.size()) && (path_description.front().location == coordinate))
     {
-        path_description.back().name_id = path_point.name_id;
+        path_description.front().name_id = path_point.name_id;
+        path_description.front().travel_mode = path_point.travel_mode;
         return;
     }
 
